@@ -62,6 +62,7 @@ services:
   # earlier HF-download bootstrap was removed.
   # ---------------------------------------------------------------
   eyes:
+    profiles: [disabled]
     build:
       context: ../inference-server/eyes
       dockerfile: Dockerfile
