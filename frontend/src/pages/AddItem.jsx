@@ -803,6 +803,15 @@ export default function AddItem() {
         prev.map((c) => (c.id === card.id && c.status === 'scanning' ? { ...c, progress: target } : c))
       );
     }, 250);
+    // Hoisted above the try/catch so the catch handler can read
+    // ``perCardIds`` after ``handleDetect`` has expanded the original
+    // card into per-item slot cards. Originally declared inside the
+    // try block (May 2026 patch M19) — that was correct for the
+    // happy path, but left ``perCardIds`` out of scope for the catch
+    // and produced a ``ReferenceError: perCardIds is not defined``
+    // when the stream raised after ``detect`` (production 403 case).
+    let detectMeta = null;
+    let perCardIds = [];
     try {
       // Pass current UI locale so Gemini name/caption come back in the
       // language the user is reading the app in — see ``AnalyzeIn.language``.
@@ -818,8 +827,6 @@ export default function AddItem() {
       // staring at a single spinner for 17+ s. Single-item uploads
       // take the same path: ``detect`` count=1 → one placeholder →
       // ``item`` hydrates it.
-      let detectMeta = null;
-      let perCardIds = [];
 
       const buildBaseCard = (meta, cardId) => ({
         id: cardId,
