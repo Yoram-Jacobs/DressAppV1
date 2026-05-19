@@ -60,6 +60,10 @@ services:
   # NOT download from HuggingFace at runtime — see
   # ``quarantine/2026-05-sabotage/READ_THIS_FIRST.md`` for why the
   # earlier HF-download bootstrap was removed.
+  # May 18 2026 edit: this service is disabled by default via
+  # ``profiles: [disabled]`` because the vision projector is not ready
+  # yet. Set ``EYES_PROVIDER=gemma`` in .env and remove the disabled
+  # profile when you want to enable the LLaVA handler.
   # ---------------------------------------------------------------
   eyes:
     profiles: [disabled]
