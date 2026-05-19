@@ -3352,18 +3352,83 @@ class GarmentVisionService:
                 }
                 emitted += 1
         except Exception as exc:  # noqa: BLE001
-            logger.warning(
-                "analyze_outfit_stream: batch stream failed after "
+            # Log the *full* repr at ERROR (not WARNING) so production
+            # operators can see auth / quota / model-not-found failures
+            # without grep magic. The 200-char truncation is enough for
+            # the actionable bit of any Google-API exception
+            # (status code + reason fits in ~120 chars).
+            err_text = repr(exc)
+            logger.error(
+                "analyze_outfit_stream: batch stream FAILED after "
                 "%d emit(s): %s",
-                emitted, repr(exc)[:200],
+                emitted, err_text[:400],
             )
+
+            # Surface a *specific* message to the frontend so the user
+            # sees the real cause instead of the generic "transient
+            # error" stub. We pattern-match on the exception text
+            # because google-genai raises different classes for each
+            # API status family.
+            low = err_text.lower()
+            if "permission_denied" in low or " 403" in low or "permission denied" in low:
+                msg = (
+                    "Garment analyzer: Gemini API rejected the request "
+                    "(403 PERMISSION_DENIED). Check that GEMINI_API_KEY "
+                    "is set in the production env, that the key is not "
+                    "expired/revoked, and that the project has the "
+                    "Generative Language API enabled."
+                )
+                status = 403
+            elif "unauthenticated" in low or " 401" in low:
+                msg = (
+                    "Garment analyzer: Gemini API rejected the key "
+                    "(401 UNAUTHENTICATED). The GEMINI_API_KEY in env "
+                    "is missing or invalid."
+                )
+                status = 401
+            elif "resource_exhausted" in low or " 429" in low or "quota" in low:
+                msg = (
+                    "Garment analyzer: Gemini quota exhausted "
+                    "(429). Wait a minute and retry, or upgrade the "
+                    "AI Studio billing tier."
+                )
+                status = 429
+            elif "not_found" in low or " 404" in low or "model not found" in low:
+                msg = (
+                    "Garment analyzer: requested Gemini model is not "
+                    "available to this key (404 NOT_FOUND). Verify "
+                    "GARMENT_VISION_CROP_MODEL points to a model your "
+                    "project has access to."
+                )
+                status = 404
+            elif "deadline" in low or "timeout" in low or "timed out" in low:
+                msg = (
+                    "Garment analyzer: Gemini API timed out. "
+                    "Retry in a moment."
+                )
+                status = 504
+            elif " 500" in low or " 502" in low or " 503" in low or "internal" in low:
+                msg = (
+                    "Garment analyzer: Gemini API returned a server "
+                    "error. This is on Google's side — retry shortly."
+                )
+                status = 503
+            else:
+                # True unknowns still get the friendly fallback, BUT we
+                # include the first 160 chars of the exception so the
+                # user (or support) can root-cause without log access.
+                msg = (
+                    "Garment analyzer hit a transient error. "
+                    "Please try again. (debug: "
+                    + err_text[:160].replace("\n", " ")
+                    + ")"
+                )
+                status = 503
+
             yield {
                 "type": "error",
-                "status": 503,
-                "message": (
-                    "Garment analyzer hit a transient error. "
-                    "Please try again."
-                ),
+                "status": status,
+                "message": msg,
             }
             return
 
