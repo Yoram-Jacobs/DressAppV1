@@ -8,6 +8,15 @@
         <meta name="application-name" content="DressApp" />
         <meta name="apple-mobile-web-app-title" content="DressApp" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        <!--
+            W3C standard equivalent of the Apple-prefixed tag above.
+            Required by Chrome 102+; Chrome now logs a deprecation
+            warning if only the apple-prefixed version is present.
+            We keep both so iOS Safari (which understands the
+            apple- prefix) and Chrome (which prefers the standard
+            name) both get the right hint.
+        -->
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="format-detection" content="telephone=no" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
