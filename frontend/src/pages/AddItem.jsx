@@ -1031,6 +1031,18 @@ export default function AddItem() {
     );
   };
 
+  const createItemWithTimeout = async (body, timeoutMs = 45000) => {
+    let timer;
+    try {
+      const timeout = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error('Save timed out')), timeoutMs);
+      });
+      return await Promise.race([api.createItem(body), timeout]);
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+
   // Phase Q: patch top-level card props (e.g., `useReconstructed` toggle).
   const patchCard = (cardId, patch) => {
     setCards((prev) =>
@@ -1229,14 +1241,14 @@ export default function AddItem() {
       setPendingAutoSave(false);
       nav('/closet');
     }
-
+    
     // Step 4+5 — parallel persistence + reconciliation. Runs after
     // navigation; failures surface via ``closetStore.recordSaveFailures``
     // which the Closet page renders as a single end-of-batch dialog.
     const settle = async () => {
       const tempIds = Array.from(ghosts.keys());
       const results = await Promise.allSettled(
-        tempIds.map((tid) => api.createItem(ghosts.get(tid).body)),
+        tempIds.map((tid) => createItemWithTimeout(ghosts.get(tid).body)),
       );
       const failures = [];
       const polishCandidates = [];
@@ -1284,7 +1296,7 @@ export default function AddItem() {
     // is a separate React tree at this point.
     settle().catch(() => { /* recorded individually above */ });
   };
-
+  
   // Patch M20.2 — Auto-save queue driver.
   //
   // When the user pressed Save mid-batch, ``pendingAutoSave`` is set
