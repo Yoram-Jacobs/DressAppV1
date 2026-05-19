@@ -970,9 +970,24 @@ export default function AddItem() {
     } catch (err) {
       clearInterval(tick);
       const msg = err?.response?.data?.detail || err?.message || t('addItem.analyzeFailed');
+      // Bug-fix May 2026 — when ``handleDetect`` has already replaced
+      // the original ``card.id`` with per-item slot cards
+      // (``perCardIds`` populated), the stream error that follows
+      // (e.g. production Gemini 403) must be written onto THOSE new
+      // cards. Otherwise ``prev.map((c) => c.id === card.id)`` would
+      // match nothing (the original id is gone) and the per-item
+      // cards would stay in ``status: 'scanning'`` forever, showing
+      // placeholder values like "Cream Linen Blazer" as if Gemini
+      // had populated them — the exact mis-state reported on
+      // production after the May 18 outage.
+      const erroredIds = perCardIds && perCardIds.length > 0
+        ? new Set(perCardIds)
+        : new Set([card.id]);
       setCards((prev) =>
         prev.map((c) =>
-          c.id === card.id ? { ...c, status: 'error', progress: 0, error: msg } : c
+          erroredIds.has(c.id)
+            ? { ...c, status: 'error', progress: 0, error: msg }
+            : c
         )
       );
       toast.error(msg);
