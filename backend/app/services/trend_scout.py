@@ -34,10 +34,9 @@ import uuid
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
-from emergentintegrations.llm.chat import LlmChat, UserMessage
-
 from app.config import settings
 from app.db.database import get_db
+from app.services.gemini_client import GeminiClient
 
 logger = logging.getLogger(__name__)
 
@@ -346,24 +345,20 @@ def rank_cards_for_user(
 
 
 async def _generate_one(bucket: dict[str, str]) -> dict[str, Any] | None:
-    api_key = settings.gemini_chat_key
-    if not api_key:
+    if not settings.GEMINI_API_KEY:
         raise RuntimeError(
-            "No Gemini chat key set (GEMINI_API_KEY / EMERGENT_LLM_KEY) — "
-            "cannot run Trend-Scout"
+            "No GEMINI_API_KEY set — cannot run Trend-Scout"
         )
-    chat = LlmChat(
-        api_key=api_key,
-        session_id=f"fashionscout-{bucket['slug']}-{uuid.uuid4().hex[:8]}",
-        system_message=SYSTEM_PROMPT,
-    )
     # Phase: Flash is fast/cheap and ample for trend scouting (per user
     # preference — Pro reserved for the Stylist).
-    chat.with_model(
-        settings.DEFAULT_STYLIST_PROVIDER, "gemini-2.5-flash"
-    )
+    client = GeminiClient(api_key=settings.GEMINI_API_KEY)
     try:
-        raw = await chat.send_message(UserMessage(text=bucket["prompt"]))
+        raw = await client.text(
+            system=SYSTEM_PROMPT,
+            user_text=bucket["prompt"],
+            model="gemini-2.5-flash",
+            response_mime_type="application/json",
+        )
     except Exception as exc:  # noqa: BLE001
         logger.warning("Fashion-Scout LLM call failed for %s: %s", bucket["slug"], exc)
         return None
@@ -662,8 +657,7 @@ async def _translate_card(
     Returns a fresh document with a new id so the cached list operates on
     stable primary keys.
     """
-    api_key = settings.gemini_chat_key
-    if not api_key:
+    if not settings.GEMINI_API_KEY:
         return None
     lang_name = {
         "en": "English",
@@ -697,28 +691,25 @@ async def _translate_card(
         " Preserve URLs verbatim (do not translate them). Tag remains"
         " short, uppercase, in the target language."
     )
-    chat = LlmChat(
-        api_key=api_key,
-        session_id=f"scoutxl-{uuid.uuid4().hex[:8]}",
-        system_message=system_prompt,
+    client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+    payload_text = json.dumps(
+        {
+            "headline": card.get("headline"),
+            "body": card.get("body"),
+            "tag": card.get("tag"),
+            "source_name": card.get("source_name"),
+            "source_url": card.get("source_url"),
+            "image_url": card.get("image_url"),
+            "video_url": card.get("video_url"),
+        },
+        ensure_ascii=False,
     )
-    chat.with_model(settings.DEFAULT_STYLIST_PROVIDER, "gemini-2.5-flash")
     try:
-        raw = await chat.send_message(
-            UserMessage(
-                text=json.dumps(
-                    {
-                        "headline": card.get("headline"),
-                        "body": card.get("body"),
-                        "tag": card.get("tag"),
-                        "source_name": card.get("source_name"),
-                        "source_url": card.get("source_url"),
-                        "image_url": card.get("image_url"),
-                        "video_url": card.get("video_url"),
-                    },
-                    ensure_ascii=False,
-                )
-            )
+        raw = await client.text(
+            system=system_prompt,
+            user_text=payload_text,
+            model="gemini-2.5-flash",
+            response_mime_type="application/json",
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning(

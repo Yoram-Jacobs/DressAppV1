@@ -10,9 +10,8 @@ import logging
 import re
 import uuid
 
-from emergentintegrations.llm.chat import LlmChat, UserMessage
-
 from app.config import settings
+from app.services.gemini_client import GeminiClient
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +44,7 @@ async def generate_session_title(text: str, language: str = "en") -> str:
     text = (text or "").strip()
     if not text:
         return "New conversation"
-    api_key = settings.gemini_chat_key
-    if not api_key:
+    if not settings.GEMINI_API_KEY:
         return _fallback_title(text)
 
     lang_code = (language or "en").lower()
@@ -58,18 +56,14 @@ async def generate_session_title(text: str, language: str = "en") -> str:
         "the target language uses it. Do NOT prefix with words like 'Topic:' "
         "or 'Title:'."
     )
-    chat = LlmChat(
-        api_key=api_key,
-        session_id=f"title-{uuid.uuid4().hex[:10]}",
-        system_message=system_msg,
-    )
-    chat.with_model(
-        settings.DEFAULT_STYLIST_PROVIDER,
-        # Flash is more than enough for a 5-word summary.
-        "gemini-2.5-flash",
-    )
+    client = GeminiClient(api_key=settings.GEMINI_API_KEY)
     try:
-        raw = await chat.send_message(UserMessage(text=text[:400]))
+        # Flash is more than enough for a 5-word summary.
+        raw = await client.text(
+            system=system_msg,
+            user_text=text[:400],
+            model="gemini-2.5-flash",
+        )
     except Exception as exc:  # noqa: BLE001
         logger.warning("Session title generation failed: %s", exc)
         return _fallback_title(text)

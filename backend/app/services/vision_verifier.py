@@ -113,34 +113,22 @@ async def audit(
     montage = _make_montage(candidate_crops)
     if montage is None:
         return {**default, "skipped": True}
-    api_key = settings.gemini_chat_key
-    if not api_key:
-        logger.info("vision_verifier: no Gemini chat key, skipping")
+    if not settings.GEMINI_API_KEY:
+        logger.info("vision_verifier: no GEMINI_API_KEY, skipping")
         return {**default, "skipped": True}
     try:
-        from emergentintegrations.llm.chat import (
-            ImageContent,
-            LlmChat,
-            UserMessage,
-        )
+        from app.services.gemini_client import GeminiClient
 
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"verifier-{uuid.uuid4().hex[:10]}",
-            system_message=(
+        client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+        raw = await client.vision(
+            system=(
                 "You are a precise clothing parser auditor. "
                 "Respond with strict JSON only — no prose, no code fences."
             ),
+            user_parts=[_AUDIT_PROMPT, original_image, montage],
+            model="gemini-2.5-flash",
+            response_mime_type="application/json",
         )
-        chat.with_model("gemini", "gemini-2.5-flash")
-        msg = UserMessage(
-            text=_AUDIT_PROMPT,
-            file_contents=[
-                ImageContent(image_base64=_b64(original_image)),
-                ImageContent(image_base64=_b64(montage)),
-            ],
-        )
-        raw = await chat.send_message(msg)
         parsed = _extract_json(raw or "") or default
         verdict = parsed.get("verdict") or "ok"
         out = {
