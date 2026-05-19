@@ -150,6 +150,13 @@ def _load_model() -> None:
         )
         _processor = SegformerImageProcessor.from_pretrained(model_id)
         _model = SegformerForSemanticSegmentation.from_pretrained(model_id)
+        # NOTE: ``.eval()`` here is PyTorch's nn.Module method that
+        # puts the SegFormer into inference mode (disables dropout /
+        # freezes batchnorm). It is NOT the Python builtin ``eval()``
+        # — static analysers that grep for ``.eval(`` will
+        # false-positive on this line. Do NOT "fix" by swapping in
+        # ``ast.literal_eval`` (would break the entire clothing-parser
+        # pipeline).
         _model.eval()
         _id2label = {int(k): v for k, v in _model.config.id2label.items()}
         logger.info(
