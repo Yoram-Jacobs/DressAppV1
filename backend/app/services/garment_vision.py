@@ -41,11 +41,11 @@ import time
 import uuid
 from typing import Any, AsyncIterator
 
-from emergentintegrations.llm.chat import ImageContent, LlmChat, UserMessage
 from PIL import Image
 
 from app.config import settings
 from app.services import provider_activity
+from app.services.gemini_client import GeminiClient, GeminiUnavailable
 
 logger = logging.getLogger(__name__)
 
@@ -1594,19 +1594,21 @@ def _scan_complete_json_objects(
     return objects, start_pos
 
 
-def _build_batch_litellm_messages(
-    n: int,
-    crops_bytes: list[bytes],
+def _build_batch_prompts(
     *,
+    n: int,
     language: str | None,
     kind_hints: list[str | None] | None = None,
-) -> list[dict[str, Any]]:
-    """Build the litellm-shape ``messages`` list for a batched analyze.
+) -> tuple[str, str]:
+    """Build ``(system_prompt, user_text)`` for a batched garment analysis.
 
-    Used by both the one-shot and streaming batched paths. Produces the
-    OpenAI / Gemini multimodal shape (``role``+``content`` with image
-    parts as ``{"type": "image_url", ...}``) so we can pass it straight
-    into ``litellm.acompletion`` either with or without ``stream=True``.
+    Used by both the one-shot batched path
+    (:meth:`GarmentVisionService.analyze_batch`) and the streaming
+    batched path (:meth:`GarmentVisionService.analyze_batch_stream`).
+    The image parts themselves are constructed at the call site, since
+    the native google-genai SDK accepts raw bytes / PIL images directly
+    and we don't need to reshape them into OpenAI ``image_url`` blocks
+    any more.
 
     Patch M21 (May 2026) — ``kind_hints`` is a list of per-crop
     SegFormer kind strings (or ``None`` for crops without a hint).
@@ -1668,23 +1670,7 @@ def _build_batch_litellm_messages(
         f"Analyse the {n} cropped garment image(s) below in order. "
         f"Return a JSON array of {n} GarmentAnalysis entries."
     )
-    image_parts: list[dict[str, Any]] = [
-        {
-            "type": "image_url",
-            "image_url": {
-                "url": "data:image/jpeg;base64,"
-                + base64.b64encode(_shrink_for_vision(b)).decode("ascii"),
-            },
-        }
-        for b in crops_bytes
-    ]
-    return [
-        {"role": "system", "content": system_prompt},
-        {
-            "role": "user",
-            "content": [{"type": "text", "text": user_text}, *image_parts],
-        },
-    ]
+    return system_prompt, user_text
 
 
 class GarmentVisionService:
@@ -1700,9 +1686,17 @@ class GarmentVisionService:
         # Per-crop analyser (multi-item pipeline).
         self.crop_model = settings.GARMENT_VISION_CROP_MODEL
         self.max_items = settings.GARMENT_VISION_MAX_ITEMS
-        # Gemini chat key — direct GEMINI_API_KEY (production) wins,
-        # else EMERGENT_LLM_KEY (dev). litellm handles routing.
+        # Gemini chat key — direct GEMINI_API_KEY from .env. The
+        # historical EMERGENT_LLM_KEY routing was removed in the
+        # google-genai migration; ``gemini_chat_key`` returns
+        # GEMINI_API_KEY (canonical) and is retained so this constructor
+        # keeps failing-fast when the operator forgot to configure the
+        # native key.
         self.api_key = settings.gemini_chat_key
+        # Native google-genai client (single SDK touchpoint). Lazily
+        # created on first use so a missing key only blows up on the
+        # gemini-needing branch — Gemma-only deployments stay green.
+        self._gemini: GeminiClient | None = None
         # Fail fast when the service cannot actually run anything.
         if self.provider == "gemini" and not self.api_key:
             raise RuntimeError(
@@ -1724,6 +1718,21 @@ class GarmentVisionService:
             )
 
     # -------------------- public API --------------------
+    def _get_gemini(self) -> GeminiClient:
+        """Lazy accessor for the native google-genai client.
+
+        Created on first use so a missing GEMINI_API_KEY only raises
+        when the gemini path is actually exercised — Gemma-only
+        deployments stay green even with an empty Gemini key.
+        """
+        if self._gemini is None:
+            if not self.api_key:
+                raise RuntimeError(
+                    "Gemini path requires GEMINI_API_KEY in /app/backend/.env."
+                )
+            self._gemini = GeminiClient(api_key=self.api_key)
+        return self._gemini
+
     async def _detect_via_clothing_parser(
         self, image_bytes: bytes,
     ) -> list[dict[str, Any]] | None:
@@ -1789,25 +1798,24 @@ class GarmentVisionService:
             return []
 
         shrunk = _shrink_for_vision(image_bytes, max_side=1024, q=80)
-        b64 = base64.b64encode(shrunk).decode("ascii")
-        chat = LlmChat(
-            api_key=self.api_key,
-            session_id=f"theeyes-detect-{uuid.uuid4().hex[:12]}",
-            system_message=DETECT_SYSTEM_PROMPT,
-        )
-        chat.with_model(self.detect_provider, self.detect_model)
-        msg = UserMessage(
-            text=(
-                "List every fashion item visible in this photograph. "
-                "Return the JSON object only."
-            ),
-            file_contents=[ImageContent(b64)],
-        )
+        gem = self._get_gemini()
         t0 = time.perf_counter()
         ok = False
         last_err: str | None = None
         try:
-            raw = await chat.send_message(msg)
+            raw = await gem.vision(
+                system=DETECT_SYSTEM_PROMPT,
+                user_parts=[
+                    (
+                        "List every fashion item visible in this photograph. "
+                        "Return the JSON object only."
+                    ),
+                    shrunk,
+                ],
+                model=self.detect_model,
+                temperature=0.1,
+                response_mime_type="application/json",
+            )
             ok = True
         except Exception as exc:  # noqa: BLE001
             last_err = repr(exc)
@@ -2000,25 +2008,22 @@ class GarmentVisionService:
         if raw is None:
             if not self.api_key:
                 raise RuntimeError(
-                    "Gemini Eyes path requires GEMINI_API_KEY or "
-                    "EMERGENT_LLM_KEY to be set."
+                    "Gemini Eyes path requires GEMINI_API_KEY to be set "
+                    "(see /app/backend/.env)."
                 )
             gemini_model = model or self.model
-            chat = LlmChat(
-                api_key=self.api_key,
-                session_id=f"theeyes-{uuid.uuid4().hex[:12]}",
-                system_message=system_prompt,
-            )
-            chat.with_model("gemini", gemini_model)
-            msg = UserMessage(
-                text=user_text,
-                file_contents=[ImageContent(b64)],
-            )
+            gem = self._get_gemini()
             t0 = time.perf_counter()
             ok = False
             last_err: str | None = None
             try:
-                raw = await chat.send_message(msg)
+                raw = await gem.vision(
+                    system=system_prompt,
+                    user_parts=[user_text, shrunk],
+                    model=gemini_model,
+                    temperature=0.1,
+                    response_mime_type="application/json",
+                )
                 ok = True
             except Exception as exc:  # noqa: BLE001
                 last_err = repr(exc)
@@ -2796,24 +2801,25 @@ class GarmentVisionService:
             f"Return a JSON array of {n} GarmentAnalysis entries."
         )
 
-        file_contents = [
-            ImageContent(base64.b64encode(_shrink_for_vision(b)).decode("ascii"))
-            for b in crops_bytes
-        ]
+        # Build native google-genai user parts: text first, then each
+        # crop as image bytes. Order matches the legacy ImageContent
+        # sequence so prompt + numbering semantics stay identical.
+        user_parts: list[Any] = [user_text]
+        for b in crops_bytes:
+            user_parts.append(_shrink_for_vision(b))
 
-        chat = LlmChat(
-            api_key=self.api_key,
-            session_id=f"theeyes-batch-{uuid.uuid4().hex[:12]}",
-            system_message=system_prompt,
-        )
-        chat.with_model("gemini", self.crop_model)
-        msg = UserMessage(text=user_text, file_contents=file_contents)
-
+        gem = self._get_gemini()
         t0 = time.perf_counter()
         ok = False
         last_err: str | None = None
         try:
-            raw = await chat.send_message(msg)
+            raw = await gem.vision(
+                system=system_prompt,
+                user_parts=user_parts,
+                model=self.crop_model,
+                temperature=0.1,
+                response_mime_type="application/json",
+            )
             ok = True
         except Exception as exc:  # noqa: BLE001
             last_err = repr(exc)
@@ -2926,50 +2932,45 @@ class GarmentVisionService:
             return
         if not self.api_key:
             raise RuntimeError(
-                "analyze_batch_stream: requires GEMINI_API_KEY or EMERGENT_LLM_KEY"
+                "analyze_batch_stream: requires GEMINI_API_KEY"
             )
 
-        # litellm needs the model in ``provider/model`` form. Both
-        # EMERGENT_LLM_KEY and direct Google AI Studio keys accept the
-        # ``gemini/...`` prefix because it routes via Google's
-        # GenerativeAI API.
-        model_id = (
-            self.crop_model
-            if "/" in self.crop_model
-            else f"gemini/{self.crop_model}"
-        )
-        messages = _build_batch_litellm_messages(
-            n, crops_bytes, language=language, kind_hints=kind_hints,
+        # Native google-genai streaming. Builds the same system prompt /
+        # user-text payload that ``analyze_batch`` uses (delegating to
+        # :func:`_build_batch_prompts` keeps both batched paths in
+        # lock-step), then drives ``client.stream_vision`` for
+        # incremental JSON deltas. The legacy
+        # ``litellm.acompletion(stream=True)`` path that routed via
+        # Emergent's proxy was the prime suspect for the May 2026
+        # streaming hang: the proxy buffered the full response before
+        # flushing, so the frontend's NDJSON reader saw nothing until
+        # the very end (or a 502 if Caddy's upstream timeout hit).
+        # Native streaming bypasses that.
+        system_prompt, user_text = _build_batch_prompts(
+            n=n, language=language, kind_hints=kind_hints,
         )
 
-        import litellm  # local import — keeps cold-start light
+        user_parts: list[Any] = [user_text]
+        for b in crops_bytes:
+            user_parts.append(_shrink_for_vision(b))
+
+        gem = self._get_gemini()
 
         t0 = time.perf_counter()
         emitted = 0
         ok = False
         last_err: str | None = None
         try:
-            stream = await litellm.acompletion(
-                model=model_id,
-                messages=messages,
-                api_key=self.api_key,
-                stream=True,
-                # Gemini's response_format="json" hint keeps it inside
-                # the array shape and stops it wandering into prose.
-                temperature=0.2,
-            )
             text_buf = ""
             scan_pos = 0
             yielded_count = 0
-            async for chunk in stream:
-                # ``litellm`` normalises chunk shape across providers.
-                # The OpenAI-compatible delta lives at
-                # ``choices[0].delta.content`` and may be ``None`` on
-                # the trailing finish chunk.
-                try:
-                    delta = chunk.choices[0].delta.content
-                except Exception:  # noqa: BLE001
-                    delta = None
+            async for delta in gem.stream_vision(
+                system=system_prompt,
+                user_parts=user_parts,
+                model=self.crop_model,
+                temperature=0.2,
+                response_mime_type="application/json",
+            ):
                 if not delta:
                     continue
                 text_buf += delta

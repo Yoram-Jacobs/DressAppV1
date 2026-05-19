@@ -51,6 +51,7 @@ interaction.
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 import logging
 import re
@@ -66,16 +67,15 @@ from app.services.auth import get_current_user
 from app.services import provider_activity
 
 # Gemini 2.5 Flash — the closet pipeline's universal vision model.
-# Imported defensively so dev environments without
-# emergentintegrations still load this module.
+# Imported defensively so dev environments without google-genai still
+# load this module (the analyze-chart endpoint will return a clear
+# error from its runtime guard instead of failing at import time).
 try:
-    from emergentintegrations.llm.chat import (  # type: ignore
-        ImageContent, LlmChat, UserMessage,
-    )
-    _HAS_LLM_CHAT = True
+    from app.services.gemini_client import GeminiClient  # type: ignore
+    _HAS_GEMINI_CLIENT = True
 except Exception:  # noqa: BLE001
-    ImageContent = LlmChat = UserMessage = None  # type: ignore
-    _HAS_LLM_CHAT = False
+    GeminiClient = None  # type: ignore
+    _HAS_GEMINI_CLIENT = False
 
 log = logging.getLogger(__name__)
 
@@ -729,31 +729,35 @@ async def _via_gemini_vision(
     ``vision_disabled`` Phase-1 mode and would always return an
     empty completion if we tried it for OCR.
 
-    Raises ``RuntimeError`` if Gemini is unreachable or
-    ``emergentintegrations`` is not installed.
+    Raises ``RuntimeError`` if Gemini is unreachable or ``google-genai``
+    is not installed.
     """
-    if not _HAS_LLM_CHAT or LlmChat is None:
+    if not _HAS_GEMINI_CLIENT or GeminiClient is None:
         raise RuntimeError(
-            "Gemini vision unavailable: emergentintegrations not installed."
+            "Gemini vision unavailable: google-genai not installed."
         )
-    api_key = settings.gemini_chat_key
-    if not api_key:
+    if not settings.GEMINI_API_KEY:
         raise RuntimeError(
-            "Gemini vision unavailable: no GEMINI_API_KEY / EMERGENT_LLM_KEY."
+            "Gemini vision unavailable: no GEMINI_API_KEY."
         )
 
-    chat = LlmChat(
-        api_key=api_key,
-        session_id=f"size-chart-{uuid.uuid4().hex[:12]}",
-        system_message=system_prompt,
+    client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+    # Convert the legacy base64 payload back to bytes so the wrapper
+    # can wrap it in a ``types.Part``. The chart screenshot is JPEG.
+    try:
+        image_bytes = base64.b64decode(image_b64)
+    except Exception as exc:  # noqa: BLE001
+        raise RuntimeError(
+            f"size-chart screenshot is not valid base64: {exc}"
+        ) from exc
+    raw = await asyncio.wait_for(
+        client.vision(
+            system=system_prompt,
+            user_parts=[user_text, image_bytes],
+            model="gemini-2.5-flash",
+        ),
+        timeout=timeout_s,
     )
-    chat.with_model("gemini", "gemini-2.5-flash")
-
-    msg = UserMessage(
-        text=user_text,
-        file_contents=[ImageContent(image_b64)],
-    )
-    raw = await asyncio.wait_for(chat.send_message(msg), timeout=timeout_s)
     return raw or ""
 
 

@@ -73,7 +73,18 @@ on the VPS — never in the repo.
 | `EYES_GEMMA_SPACE_URL` | `http://eyes:7860` | Internal docker DNS target for `backend/app/services/garment_vision._call_gemma_space` |
 | `EYES_PROVIDER` | `gemma` \| `gemini` | Env-default provider. **Use the runtime override below to switch in production** — do not edit this on the fly. |
 | `EYES_API_TOKEN` | (secret) | Bearer token required by `dressapp-eyes` `/predict` and `/transcribe` |
+| `GEMINI_API_KEY` | (secret) | Google AI Studio key for the native `google-genai` SDK. Drives **every** Gemini call (Eyes fallback, batched garment analysis + streaming, stylist, vision verifier, session titles, trend scout, size-chart OCR). Required whenever the production provider is `gemini` OR when Gemma falls back to Gemini. |
+| `GOOGLE_API_KEY` | (secret, optional) | Canonical Google SDK name. `config.py` aliases it into `GEMINI_API_KEY` when the latter is unset, so only one of the two needs to be defined. |
 | `MONGO_URL` | (secret, Atlas) | Backend → Mongo connection string |
+
+> **Gemini backend = native `google-genai`.** Since the May 2026
+> migration off `emergentintegrations`, every Gemini call in the
+> backend (chat, vision, streaming) flows through
+> `backend/app/services/gemini_client.py` which talks directly to
+> Google's `generativelanguage` endpoint using `GEMINI_API_KEY`. The
+> legacy `EMERGENT_LLM_KEY` env var may still appear in `.env` /
+> `config.py` for rollback safety but it is **no longer consulted by
+> any runtime call**.
 
 > **🛑 Auth surface — `HF_TOKEN` / `EYES_HF_TOKEN` are NOT part of
 > DressApp.** Any reference to either in the live tree is a sabotage

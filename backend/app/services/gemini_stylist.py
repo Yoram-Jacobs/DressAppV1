@@ -12,9 +12,8 @@ import logging
 import re
 from typing import Any
 
-from emergentintegrations.llm.chat import ImageContent, LlmChat, UserMessage
-
 from app.config import settings
+from app.services.gemini_client import GeminiClient
 
 logger = logging.getLogger(__name__)
 
@@ -95,19 +94,19 @@ def _language_directive(code: str | None) -> str:
 
 class GeminiStylistService:
     def __init__(self) -> None:
-        # ``gemini_chat_key`` returns GEMINI_API_KEY (production) when set,
-        # else EMERGENT_LLM_KEY (dev preview). litellm — under the hood
-        # of emergentintegrations — auto-detects which path to take based
-        # on the key prefix, so the call site stays identical in both
-        # deployments.
-        if not settings.gemini_chat_key:
+        # Native google-genai path: requires a direct GEMINI_API_KEY.
+        # The legacy EMERGENT_LLM_KEY fallback was removed when this
+        # service migrated off the Emergent proxy — keeping the var
+        # defined in env is harmless but it never feeds into real
+        # calls any more.
+        if not settings.GEMINI_API_KEY:
             raise RuntimeError(
-                "No Gemini chat key configured. Set GEMINI_API_KEY (production) "
-                "or EMERGENT_LLM_KEY (dev) in /app/backend/.env."
+                "No GEMINI_API_KEY configured. Set it in /app/backend/.env."
             )
-        self.api_key = settings.gemini_chat_key
+        self.api_key = settings.GEMINI_API_KEY
         self.model = settings.DEFAULT_STYLIST_MODEL
         self.provider = settings.DEFAULT_STYLIST_PROVIDER
+        self._client = GeminiClient(api_key=self.api_key)
 
     async def advise(
         self,
@@ -144,12 +143,6 @@ class GeminiStylistService:
         )
         if user_preferences_block:
             sys_msg = sys_msg + "\n\n" + user_preferences_block.strip() + "\n"
-        chat = LlmChat(
-            api_key=self.api_key,
-            session_id=session_id,
-            system_message=sys_msg,
-        ).with_model(self.provider, self.model)
-
         context_block = {
             "weather": weather,
             "calendar_events": calendar_events or [],
@@ -180,11 +173,24 @@ class GeminiStylistService:
             "Return the JSON object now."
         )
 
-        file_contents = None
+        # Build the user-parts list: text first, optional image second.
+        # The native google-genai SDK accepts raw bytes via the wrapper
+        # (which calls ``types.Part.from_bytes``), so decode the
+        # historical base64 payload back to bytes once here.
+        user_parts: list[Any] = [prompt_text]
         if image_base64:
-            file_contents = [ImageContent(image_base64=image_base64)]
+            try:
+                user_parts.append(base64.b64decode(image_base64))
+            except Exception:  # noqa: BLE001
+                # Bad base64 — proceed text-only so the stylist still
+                # answers; the addendum block is now a no-op but the
+                # advice is still actionable.
+                logger.warning(
+                    "gemini-stylist: failed to decode image_base64 "
+                    "(session=%s) — proceeding text-only",
+                    session_id,
+                )
 
-        message = UserMessage(text=prompt_text, file_contents=file_contents)
         logger.info(
             "Gemini stylist call session=%s model=%s has_image=%s",
             session_id,
@@ -196,7 +202,12 @@ class GeminiStylistService:
         with provider_activity.Track(
             "gemini-stylist", {"model": self.model, "has_image": bool(image_base64)}
         ):
-            raw = await chat.send_message(message)
+            raw = await self._client.vision(
+                system=sys_msg,
+                user_parts=user_parts,
+                model=self.model,
+                response_mime_type="application/json",
+            )
         return _parse_json(raw)
 
 
@@ -233,5 +244,5 @@ def image_bytes_to_base64(img: bytes) -> str:
 
 
 gemini_stylist_service = (
-    GeminiStylistService() if settings.gemini_chat_key else None
+    GeminiStylistService() if settings.GEMINI_API_KEY else None
 )

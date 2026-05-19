@@ -38,3 +38,9 @@ scipy==1.17.1
 # Local background matting (background_matting.py)
 rembg==2.0.60
 onnxruntime==1.19.2
+
+# Native Google Gemini SDK — primary chat/vision/streaming client for
+# garment_vision, gemini_stylist, vision_verifier, session_titles,
+# trend_scout, and api/v1/sizes. Pinned identically to requirements.txt
+# so ML-deploy and lightweight-deploy stay in lockstep.
+google-genai==2.4.0
