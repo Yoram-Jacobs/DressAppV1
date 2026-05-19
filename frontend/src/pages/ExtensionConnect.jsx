@@ -170,7 +170,26 @@ export default function ExtensionConnect() {
         const ev = new MessageEvent('message', { data: payload, origin: window.location.origin });
         window.dispatchEvent(ev);
         if (window.opener && !window.opener.closed) {
-          window.opener.postMessage(payload, '*');
+          // SECURITY: never postMessage an auth token with targetOrigin='*'
+          // — any other tab listening could read it. We derive the
+          // opener's origin from document.referrer (set by the browser
+          // when the opener navigated us here) and only post if we have
+          // a concrete https origin to target. If we can't determine it
+          // (referrer policy stripped it, etc.) we skip the opener path
+          // entirely — the in-page MessageEvent above is the canonical
+          // delivery channel; the opener notification is just a UX
+          // courtesy so the merchant page can self-close.
+          let openerOrigin = '';
+          try {
+            if (document.referrer) {
+              openerOrigin = new URL(document.referrer).origin;
+            }
+          } catch (_originErr) {
+            openerOrigin = '';
+          }
+          if (openerOrigin && openerOrigin.startsWith('https://')) {
+            window.opener.postMessage(payload, openerOrigin);
+          }
         }
         delivered = true;
       } catch (e) {

@@ -571,7 +571,12 @@ export default function ItemDetail() {
       try {
         const { closetStore } = await import('@/lib/closetStore');
         closetStore.upsert(updated);
-      } catch { /* non-blocking */ }
+      } catch (storeErr) {
+        // Non-blocking: server save already succeeded; this is just
+        // the optimistic local cache failing to sync. Logged so a
+        // bundler/dynamic-import regression doesn't pass silently.
+        console.warn('ItemDetail: closetStore sync after save failed', storeErr);
+      }
       toast.success(t('itemDetail.detailsSaved'));
       // Per UX spec: after a successful edit, take the user back
       // to the closet so they immediately see the updated item in
@@ -779,9 +784,11 @@ export default function ItemDetail() {
     try {
       const mod = await import('@/lib/closetStore');
       closetStoreRef = mod.closetStore;
-    } catch {
+    } catch (importErr) {
       // If we can't import the store for some weird reason, fall
       // back to the old serialised path so we don't lose the delete.
+      // Logged so a bundler / chunk-loading regression is visible.
+      console.warn('ItemDetail: closetStore import failed during delete', importErr);
     }
     const snapshot = item;
     if (closetStoreRef) closetStoreRef.remove(id);

@@ -79,6 +79,13 @@ class FashionClipService:
                 mdl = CLIPModel.from_pretrained(
                     self.model_id, low_cpu_mem_usage=False,
                 )
+                # NOTE: ``.eval()`` here is PyTorch's nn.Module method
+                # that sets the model to inference mode (disables
+                # dropout / batchnorm updates). It is NOT the Python
+                # builtin ``eval()`` — static analysers that grep for
+                # ``.eval(`` will false-positive on this line. Do NOT
+                # "fix" by swapping in ``ast.literal_eval`` (would
+                # break the entire FashionCLIP pipeline).
                 mdl.eval().to(dev)
                 proc = CLIPProcessor.from_pretrained(self.model_id)
                 return mdl, proc, dev
