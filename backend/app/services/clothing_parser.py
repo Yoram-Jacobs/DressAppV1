@@ -1513,6 +1513,20 @@ def apply_alpha_intersection(
     # admitted the halo and rembg agrees → keep. Where dilation admitted
     # the halo but rembg disagrees → still wipe (rembg has final say).
     new_alpha = np.minimum(arr[:, :, 3], soft_mask).astype(np.uint8)
+    
+    # Patch 12j (May 2026) — phantom guard. If the intersection wiped out
+    # > 95% of the solid alpha (e.g. SegFormer and rembg completely
+    # disagreed, or head-subtraction erased the only visible garment),
+    # the refined image is perceptually empty and will surface as a "white
+    # window" in the closet. Bail out and let the caller keep the untouched
+    # rembg output.
+    if float((new_alpha >= 128).mean()) < 0.05:
+        logger.info(
+            "apply_alpha_intersection: intersection wiped out >95%% of solid "
+            "alpha — returning None to preserve rembg-only output."
+        )
+        return None
+
     arr[:, :, 3] = new_alpha
     out = Image.fromarray(arr, mode="RGBA")
     buf = io.BytesIO()
