@@ -747,7 +747,10 @@ _BBOX_PAD_TRBL_BY_CATEGORY: dict[str, tuple[float, float, float, float]] = {
     # Outerwear: collar overlaps neckline of underlying top — tighten
     # top edge. Hem of an open coat shows pants behind — tighten
     # bottom too. Sides loose to keep the silhouette.
-    "outerwear":  (0.01, 0.03, -0.010, 0.03),
+    # Patch 12m: Outerwear bottom padding changed from -0.010 to 0.020.
+    # The negative padding was amputating the bottom hem of longline
+    # jackets and trench coats. Alpha intersection already handles the pants.
+    "outerwear":  (0.01, 0.03, 0.020, 0.03),
     # Footwear: top edge tight (avoid trouser hem leaking) — now
     # negative so we bite past the SegFormer bbox top. Bottom / sides
     # loose so the heel + sole stay in frame.
