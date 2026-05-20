@@ -1420,8 +1420,14 @@ def _solid_alpha_coverage(png_bytes: bytes) -> float | None:
     """
     try:
         img = Image.open(io.BytesIO(png_bytes))
-        if img.mode != "RGBA":
+        has_alpha = (
+            img.mode in ("RGBA", "LA")
+            or (img.mode == "P" and "transparency" in img.info)
+        )
+        if not has_alpha:
             return None
+        if img.mode != "RGBA":
+            img = img.convert("RGBA")
         import numpy as _np
         arr = _np.asarray(img)
         if arr.ndim != 3 or arr.shape[2] != 4:
