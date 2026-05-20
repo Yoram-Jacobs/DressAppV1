@@ -116,6 +116,7 @@ class CreateItemIn(BaseModel):
     # Media
     original_image_url: str | None = None
     image_base64: str | None = None
+    crop_base64: str | None = None
     image_mime: str = "image/jpeg"
     # Phase Q — Wardrobe Reconstructor (optional; set by /analyze response)
     reconstructed_image_b64: str | None = None
@@ -785,20 +786,24 @@ async def create_item(
     )
     doc = item.model_dump()
 
-    # Patch 7 (May 2026) — restore the closet thumbnail for legacy
-    # uploads. ``AddItem.buildCreatePayload`` sends the per-garment crop
-    # in ``image_base64`` (cheaper than re-encoding it twice into a
-    # data URL on the wire), and historically the HF-segmentation
-    # branch populated ``segmented_image_url`` as a side effect so the
-    # missing ``original_image_url`` went unnoticed. After Patch 4
-    # removed HF, every legacy (``from_one_pass=False``) save would
-    # land with NO image URL at all and the Closet card would render
-    # blank. Derive ``original_image_url`` from ``image_base64`` here
-    # whenever the client didn't ship one explicitly.
-    if raw_bytes and not doc.get("original_image_url") and payload.image_base64:
+    # Phase P / Patch 7 Fix: Maintain both the uncropped photo (original_image_url)
+    # and the tight crop from /analyze (segmented_image_url). This ensures the
+    # uncropped user photo is preserved forever, but the UX still gets the crop 
+    # to display while the background matte is pending.
+    if payload.image_base64:
         _mime = payload.image_mime or "image/jpeg"
+        if not _mime.startswith("image/"):
+            _mime = "image/jpeg"
         doc["original_image_url"] = (
             f"data:{_mime};base64,{payload.image_base64}"
+        )
+    
+    if payload.crop_base64:
+        _mime = payload.image_mime or "image/jpeg"
+        if not _mime.startswith("image/"):
+            _mime = "image/jpeg"
+        doc["segmented_image_url"] = (
+            f"data:{_mime};base64,{payload.crop_base64}"
         )
 
     # Phase Z2.1 — if the client didn't compute a phash (older client,
@@ -842,15 +847,13 @@ async def create_item(
     # analyzer marks each item with ``defer_matte=true`` and the
     # frontend echoes it here so we queue the same background task as
     # the one-pass path. Either flag triggers the same code.
-    needs_bg_matte = (payload.from_one_pass or payload.defer_matte) and raw_bytes
+    needs_bg_matte = (payload.from_one_pass or payload.defer_matte) and (payload.crop_base64 or payload.image_base64)
     if needs_bg_matte:
         doc["clean_image_status"] = "pending"
         # Snapshot what the background task needs: the item id and the
-        # raw bytes. We do NOT capture ``doc`` directly because the
-        # callback may run after the response goes out and the local
-        # dict is mutated downstream.
+        # raw bytes. Use crop_base64 if available, fallback to full image.
         item_id_for_bg = doc["id"]
-        raw_for_bg = raw_bytes
+        raw_for_bg = _bytes_from_data_url(payload.crop_base64) if payload.crop_base64 else raw_bytes
         background_tasks.add_task(
             _run_background_matte,
             item_id_for_bg,

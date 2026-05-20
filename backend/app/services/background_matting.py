@@ -233,7 +233,20 @@ async def _faithfulness_ok(original: bytes, matted: bytes) -> bool:
         if svc is None:
             return True
         a = await svc.embed_image(original)
-        b = await svc.embed_image(matted)
+        
+        # Composite matted PNG onto white before CLIP embedding
+        try:
+            matted_im = Image.open(io.BytesIO(matted)).convert("RGBA")
+            white_bg = Image.new("RGB", matted_im.size, (255, 255, 255))
+            white_bg.paste(matted_im, mask=matted_im)
+            buf = io.BytesIO()
+            white_bg.save(buf, format="JPEG", quality=90)
+            matted_for_clip = buf.getvalue()
+        except Exception as exc:  # noqa: BLE001
+            logger.info("background_matting: composite for clip failed: %s", exc)
+            matted_for_clip = matted
+
+        b = await svc.embed_image(matted_for_clip)
         if a is None or b is None:
             return True
         a_np = np.asarray(a, dtype=np.float32)
@@ -290,7 +303,7 @@ async def remove_background(image_bytes: bytes) -> dict[str, Any]:
 
     ok = await _faithfulness_ok(image_bytes, matted)
     return {
-        "image_png": matted,  # Guard is now purely advisory; never drop the matte
+        "image_png": matted if ok else None,
         "provider": provider,
         "faithful": ok,
     }

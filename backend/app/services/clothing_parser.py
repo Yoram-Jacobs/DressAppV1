@@ -595,7 +595,7 @@ def _mask_bbox(mask: np.ndarray) -> tuple[int, int, int, int] | None:
     return int(ys.min()), int(xs.min()), int(ys.max()), int(xs.max())
 
 
-def _postprocess_mask(mask: np.ndarray, keep_largest: bool = True) -> np.ndarray:
+def _postprocess_mask(mask: np.ndarray, keep_top_k: int = 1) -> np.ndarray:
     """Clean up a noisy SegFormer binary mask into a clean garment cutout.
 
     Raw SegFormer output is per-pixel argmax with no spatial regularisation,
@@ -614,7 +614,7 @@ def _postprocess_mask(mask: np.ndarray, keep_largest: bool = True) -> np.ndarray
         thin gaps where the mask broke around belts, straps, etc.
       * `binary_fill_holes` fills any enclosed background blob inside the
         garment — eliminating the see-through "stains".
-      * keep only the **largest connected component** so floating specks
+      * keep only the **top K connected components** so floating specks
         don't drag random crops of the user's couch into the cutout.
 
     Kernel size scales with image dimensions so it works equally well on
@@ -645,15 +645,15 @@ def _postprocess_mask(mask: np.ndarray, keep_largest: bool = True) -> np.ndarray
     if filled is None:  # type: ignore[truthy-bool]
         filled = closed
 
-    # 3) Keep only the largest connected component. Drops floating specks
+    # 3) Keep only the top K connected components. Drops floating specks
     #    far from the main garment which would otherwise pollute the
     #    cutout with random scenery.
-    if keep_largest:
+    if keep_top_k > 0:
         labeled, n = ndimage.label(filled)
-        if n > 1:
-            sizes = ndimage.sum(filled, labeled, range(1, n + 1))
-            biggest = int(np.argmax(sizes)) + 1
-            filled = labeled == biggest
+        if n > keep_top_k:
+            sizes = np.array(ndimage.sum(filled, labeled, range(1, n + 1)))
+            top_labels = np.argsort(sizes)[-keep_top_k:] + 1
+            filled = np.isin(labeled, top_labels)
 
     return filled.astype(np.uint8)
 
@@ -1048,7 +1048,7 @@ async def parse_garments(image_bytes: bytes) -> list[dict[str, Any]]:
     for item in by_label.values():
         item["mask"] = _postprocess_mask(
             item["mask"],
-            keep_largest=(item["label"] != "Shoes"),
+            keep_top_k=2 if item["label"] == "Shoes" else 1,
         )
 
     # 2c) Patch 12 (May 2026) — inter-label overlap suppression. Before

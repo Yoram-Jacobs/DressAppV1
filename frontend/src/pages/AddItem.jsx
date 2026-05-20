@@ -835,7 +835,8 @@ export default function AddItem() {
         previewUrl: meta.crop_base64
           ? `data:${meta.crop_mime || 'image/jpeg'};base64,${meta.crop_base64}`
           : card.previewUrl,
-        base64: meta.crop_base64 || card.base64,
+        base64: card.base64,
+        cropBase64: meta.crop_base64 || undefined,
         originalCropUrl: meta.crop_base64
           ? `data:${meta.crop_mime || 'image/jpeg'};base64,${meta.crop_base64}`
           : null,
@@ -2142,6 +2143,7 @@ function buildCreatePayload(card) {
     marketplace_intent: f.marketplace_intent || 'own',
     tags: f.tags || [],
     image_base64: asBase64 || undefined,
+    crop_base64: card.cropBase64 || undefined,
     image_mime: asBase64 ? (card.mime || card.file?.type || 'image/jpeg') : undefined,
     // Phase Q: forward the reconstructed image when the user kept it
     reconstructed_image_b64: card.useReconstructed && card.reconstructedB64
