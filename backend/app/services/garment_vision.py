@@ -1527,17 +1527,14 @@ def _fit_crop_to_card(
     oy = (canvas_h - new_h) // 2
 
     try:
-        if has_alpha:
-            canvas = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
-            canvas.paste(img, (ox, oy), img)
-            buf = io.BytesIO()
-            canvas.save(buf, format="PNG", optimize=True)
-            return buf.getvalue(), "image/png"
-        canvas = Image.new("RGB", (canvas_w, canvas_h), (255, 255, 255))
+        canvas = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        # Support pasting both RGB and RGBA correctly
+        if img.mode != "RGBA":
+            img = img.convert("RGBA")
         canvas.paste(img, (ox, oy))
         buf = io.BytesIO()
-        canvas.save(buf, format="JPEG", quality=90, optimize=True)
-        return buf.getvalue(), "image/jpeg"
+        canvas.save(buf, format="PNG", optimize=True)
+        return buf.getvalue(), "image/png"
     except Exception:  # noqa: BLE001
         return crop_bytes, crop_mime
 
