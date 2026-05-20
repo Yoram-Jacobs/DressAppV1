@@ -68,10 +68,22 @@ function _set(patch) {
 
 let _pollerHandle = null;
 
+/** Patch pending items in the local closet cache when polish tracking ends. */
+function _syncClosetPolishTerminal(id, status) {
+  try {
+    const live = (closetStore.getSnapshot().items || []).find((it) => it.id === id);
+    if (!live || live.clean_image_status !== 'pending') return;
+    closetStore.upsert({ ...live, clean_image_status: status });
+  } catch { /* swallow */ }
+}
+
 async function _pollOnce() {
   const pendingIds = Array.from(_state.polishPendingIds);
+  // #region agent log
+  fetch('http://127.0.0.1:7938/ingest/6b654633-da7f-4c98-bcca-fdab5f578abc',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8ced3d'},body:JSON.stringify({sessionId:'8ced3d',hypothesisId:'H5',location:'workStore.js:_pollOnce:entry',message:'poll tick',data:{pendingCount:pendingIds.length,pendingIds:pendingIds.slice(0,5),pollerActive:_pollerHandle!=null,batchTotal:_state.polishBatchTotal,batchDone:_state.polishBatchCompleted},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   if (pendingIds.length === 0) {
-    // Nothing to do this tick. Don't notify, no state churn.
+    _maybeStopPoller();
     return;
   }
 
@@ -84,11 +96,15 @@ async function _pollOnce() {
     (id) => now - (_state._polishStartedAt[id] || now) > ITEM_POLL_TIMEOUT_MS,
   );
   if (timedOut.length) {
+    // #region agent log
+    fetch('http://127.0.0.1:7938/ingest/6b654633-da7f-4c98-bcca-fdab5f578abc',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8ced3d'},body:JSON.stringify({sessionId:'8ced3d',hypothesisId:'H3',location:'workStore.js:_pollOnce:timeout',message:'polish items timed out',data:{timedOut},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     const next = new Set(_state.polishPendingIds);
     const nextStartedAt = { ..._state._polishStartedAt };
     for (const id of timedOut) {
       next.delete(id);
       delete nextStartedAt[id];
+      _syncClosetPolishTerminal(id, 'failed');
     }
     _set({
       polishPendingIds: next,
@@ -96,6 +112,7 @@ async function _pollOnce() {
       polishBatchCompleted: _state.polishBatchCompleted + timedOut.length,
     });
     if (next.size === 0) _onBatchDrained();
+    _maybeStopPoller();
     return;
   }
 
@@ -105,13 +122,27 @@ async function _pollOnce() {
     pendingIds.map((id) => api.getItem(id).catch(() => null)),
   );
 
+  // #region agent log
+  fetch('http://127.0.0.1:7938/ingest/6b654633-da7f-4c98-bcca-fdab5f578abc',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8ced3d'},body:JSON.stringify({sessionId:'8ced3d',hypothesisId:'H2,H3',location:'workStore.js:_pollOnce:afterGet',message:'getItem results',data:{requested:pendingIds.length,nullCount:results.filter((r)=>!r||!r.id).length,statuses:results.filter(Boolean).map((it)=>({id:it.id,status:it.clean_image_status,hasCleanUrl:!!it.clean_image_url}))},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+
   let drained = false;
   const nextSet = new Set(_state.polishPendingIds);
   const nextStartedAt = { ..._state._polishStartedAt };
   let newlyCompleted = 0;
 
-  for (const item of results) {
-    if (!item || !item.id) continue;
+  for (let i = 0; i < pendingIds.length; i += 1) {
+    const id = pendingIds[i];
+    const item = results[i];
+    if (!item || !item.id) {
+      // GET failed (404 / network) — stop tracking so the floater
+      // and per-card badge don't spin forever on phantom ids.
+      nextSet.delete(id);
+      delete nextStartedAt[id];
+      _syncClosetPolishTerminal(id, 'failed');
+      newlyCompleted += 1;
+      continue;
+    }
     // Always push the freshest doc into closetStore so the Closet
     // page picks it up next render — even if the status is still
     // "pending" we want the latest analysis fields / thumbnails.
@@ -134,7 +165,11 @@ async function _pollOnce() {
       polishBatchCompleted: _state.polishBatchCompleted + newlyCompleted,
     });
   }
+  // #region agent log
+  fetch('http://127.0.0.1:7938/ingest/6b654633-da7f-4c98-bcca-fdab5f578abc',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8ced3d'},body:JSON.stringify({sessionId:'8ced3d',hypothesisId:'H3,H4',location:'workStore.js:_pollOnce:exit',message:'poll outcome',data:{newlyCompleted,remaining:nextSet.size,drained,stateNotified:newlyCompleted>0},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   if (drained) _onBatchDrained();
+  _maybeStopPoller();
 }
 
 function _onBatchDrained() {
@@ -156,6 +191,9 @@ function _onBatchDrained() {
 
 function _ensurePollerRunning() {
   if (_pollerHandle != null) return;
+  // #region agent log
+  fetch('http://127.0.0.1:7938/ingest/6b654633-da7f-4c98-bcca-fdab5f578abc',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8ced3d'},body:JSON.stringify({sessionId:'8ced3d',hypothesisId:'H5',location:'workStore.js:_ensurePollerRunning',message:'poller started',data:{pendingCount:_state.polishPendingIds.size},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   _pollerHandle = setInterval(() => {
     _pollOnce().catch(() => { /* swallow */ });
   }, POLL_INTERVAL_MS);
@@ -254,13 +292,25 @@ export const workStore = {
         added += 1;
       }
     }
-    if (added === 0) return;
-    _set({
-      polishPendingIds: nextSet,
-      _polishStartedAt: nextStartedAt,
-      polishBatchTotal: _state.polishBatchTotal + added,
-    });
-    _ensurePollerRunning();
+    // #region agent log
+    fetch('http://127.0.0.1:7938/ingest/6b654633-da7f-4c98-bcca-fdab5f578abc',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8ced3d'},body:JSON.stringify({sessionId:'8ced3d',hypothesisId:'H1,H5',location:'workStore.js:registerPolishItems',message:'register polish',data:{inputCount:ids.length,added,alreadyTracked:ids.length-added,pollerActive:_pollerHandle!=null,ids:ids.slice(0,5)},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+    if (added > 0) {
+      _set({
+        polishPendingIds: nextSet,
+        _polishStartedAt: nextStartedAt,
+        polishBatchTotal: _state.polishBatchTotal + added,
+      });
+    }
+    // Always (re)start the poller when anything is still pending —
+    // a prior ``added === 0`` early-return used to skip
+    // ``_ensurePollerRunning`` and leave the floater/card badge
+    // stuck after HMR or a Closet re-register.
+    if (nextSet.size > 0) {
+      const kickImmediate = added > 0 || _pollerHandle == null;
+      _ensurePollerRunning();
+      if (kickImmediate) _pollOnce().catch(() => { /* swallow */ });
+    }
   },
 
   /**

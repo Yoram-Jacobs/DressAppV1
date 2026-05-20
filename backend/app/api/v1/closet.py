@@ -326,6 +326,76 @@ def _pick_segformer_mask_for_category(
     return max(candidates, key=_area).get("mask")
 
 
+def _bytes_from_data_url(url: str | None) -> bytes | None:
+    """Decode a ``data:<mime>;base64,...`` URL to raw bytes (soft-fail)."""
+    if not isinstance(url, str) or not url.startswith("data:"):
+        return None
+    try:
+        _header, b64 = url.split(",", 1)
+        return base64.b64decode(b64, validate=True)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+# Re-queue matte for items whose BackgroundTask never ran or died
+# mid-flight (process restart, OOM) — otherwise ``clean_image_status``
+# stays ``pending`` forever and the frontend poll never converges.
+_STALE_MATTE_RETRY_SECONDS = 90
+_STALE_MATTE_RETRY_COOLDOWN_SECONDS = 5 * 60
+
+
+async def _maybe_retry_stale_matte(
+    item: dict[str, Any],
+    background_tasks: BackgroundTasks,
+) -> None:
+    if item.get("clean_image_status") != "pending" or item.get("clean_image_url"):
+        return
+    updated_raw = item.get("updated_at")
+    if not updated_raw:
+        return
+    try:
+        updated_at = datetime.fromisoformat(
+            str(updated_raw).replace("Z", "+00:00"),
+        )
+    except Exception:  # noqa: BLE001
+        return
+    age_s = (datetime.now(timezone.utc) - updated_at).total_seconds()
+    if age_s < _STALE_MATTE_RETRY_SECONDS:
+        return
+    last_retry_raw = item.get("matte_last_retry_at")
+    if last_retry_raw:
+        try:
+            last_retry = datetime.fromisoformat(
+                str(last_retry_raw).replace("Z", "+00:00"),
+            )
+            if (
+                datetime.now(timezone.utc) - last_retry
+            ).total_seconds() < _STALE_MATTE_RETRY_COOLDOWN_SECONDS:
+                return
+        except Exception:  # noqa: BLE001
+            pass
+    raw_bytes = _bytes_from_data_url(item.get("original_image_url"))
+    if not raw_bytes:
+        return
+    item_id = item["id"]
+    now_iso = datetime.now(timezone.utc).isoformat()
+    db = get_db()
+    await db.closet_items.update_one(
+        {"id": item_id},
+        {"$set": {"matte_last_retry_at": now_iso}},
+    )
+    logger.info(
+        "Re-queuing stale background matte for item %s (pending %.0fs)",
+        item_id, age_s,
+    )
+    background_tasks.add_task(
+        _run_background_matte,
+        item_id,
+        raw_bytes,
+        item.get("category"),
+    )
+
+
 async def _run_background_matte(
     item_id: str,
     raw_bytes: bytes,
@@ -4143,13 +4213,16 @@ async def repair_item_image(
 
 @router.get("/{item_id}")
 async def get_item(
-    item_id: str, user: dict = Depends(get_current_user)
+    item_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     item = await repos.find_one(
         get_db().closet_items, {"id": item_id, "user_id": user["id"]}
     )
     if not item:
         raise HTTPException(404, "Item not found")
+    await _maybe_retry_stale_matte(item, background_tasks)
     return item
 
 
