@@ -329,7 +329,7 @@ export default function AddItem() {
 
     // No duplicates → straight through.
     if (!matches.length) {
-      if (isBatch) return continueInteractive(fingerprints, {});
+      if (isBatch) return handleBatchBackground(fingerprints, 0);
       return continueInteractive(fingerprints, /* duplicateAcks */ {});
     }
 
@@ -360,7 +360,7 @@ export default function AddItem() {
         );
         return;
       }
-      return continueInteractive(survivors.map(f => fingerprints.find(x => x.file === f)), {});
+      return handleBatchBackground(survivors.map(f => fingerprints.find(x => x.file === f)), skipped);
     }
 
     // INTERACTIVE path (≤5 photos): open the scrollable confirm
@@ -491,289 +491,129 @@ export default function AddItem() {
   // time, items 2..N actually get analysed instead of silently
   // falling through to the "save raw image" branch.
   // ------------------------------------------------------------------
-  const handleBatchBackground = async (files, skippedDuplicates = 0) => {
+    const handleBatchBackground = async (fingerprints, skippedDuplicates = 0) => {
     setBgBatch({
-      total: files.length,
+      total: fingerprints.length,
       processed: 0,
       saved: 0,
       failed: 0,
-      // Items where the analyze call failed and we had to save the
-      // raw photo with blank fields. Surfaced in the final toast so
-      // the user knows which ones need cleanup in /closet.
-      analyzeFailed: 0,
-      // Items the analyzer flagged as potential_duplicate of an
-      // already-saved closet entry. The batch path no longer
-      // auto-saves these — instead each one is kicked over to the
-      // interactive `cards` list so the existing
-      // DuplicateConfirmDialog can ask the user to confirm/discard.
-      // We track the count so the final toast tells the user how
-      // many items still need their attention before we navigate.
+      fallbackSaves: 0,
+      skippedDuplicates,
       pendingDuplicates: 0,
-      // Phase Z2 — pre-flight skipped this many photos because their
-      // SHA-256 hash already existed in the closet. Surfaced in the
-      // final toast so the user knows none of their selection went
-      // missing silently.
-      skippedDuplicates: skippedDuplicates || 0,
+      analyzeFailed: 0,
     });
-    toast.success(
-      t('addItem.bgUpload.started', {
-        count: files.length,
-        defaultValue: `Uploading ${files.length} photos in the background…`,
-      })
-    );
 
-    const queue = [...files];
-
-    // Try analysis with a single retry on failure. The first failure
-    // is usually a transient timeout / cold-start; a 1.2s pause and a
-    // second attempt clears most of those without piling more work
-    // onto an already-stressed backend.
-    //
-    // We pass ``language: i18n.language`` so The Eyes' Gemini prompt
-    // produces ``name`` / ``title`` / ``caption`` in the locale the
-    // user is currently viewing the UI in \u2014 not whatever was on
-    // their profile at signup. Enum / category strings stay canonical
-    // English; the frontend i18n layer translates those for display.
     const requestLang = (i18n.language || '').split('-')[0] || 'en';
-    const analyzeWithRetry = async (b64) => {
-      try {
-        return await api.analyzeItemImage({ image_base64: b64, language: requestLang });
-      } catch (firstErr) {
-        await new Promise((r) => setTimeout(r, 1200));
-        try {
-          return await api.analyzeItemImage({ image_base64: b64, language: requestLang });
-        } catch (_secondErr) {
-          throw firstErr;
-        }
-      }
+    const b64List = await Promise.all(fingerprints.map(fp => fileToBase64(fp.file)));
+    
+    let totalItemsExpected = 0;
+    
+    const handleDetect = (frame) => {
+      // detect frame gives us total items across all images
+      const metas = frame.items_meta || [];
+      totalItemsExpected = metas.length;
+      // We can bump processed to something to show it started
+      setBgBatch(b => b ? { ...b, processed: 1 } : null);
     };
 
-    const processOne = async (file) => {
-      let createdHere = 0;
-      let failedHere = 0;
-      let analyzeFailedHere = 0;
-      let b64 = null;
-      // Phase Z2 — recompute the fingerprint here so each saved item
-      // carries source_sha256/filename/size in the DB, even on the
-      // batch path. (We already verified upstream none of these are
-      // duplicates of existing closet items, otherwise the pre-flight
-      // gate would have dropped them; the hash is stored so *future*
-      // uploads of the same file are caught for free.)
-      let sha256 = null;
-      let phash = null;
-      try {
-        [sha256, phash] = await Promise.all([
-          sha256File(file),
-          aHashFile(file),
-        ]);
-      } catch (_) {
-        sha256 = null;
-        phash = null;
-      }
+    const handleItem = async (frame) => {
+      const idx = frame.image_index;
+      const fp = fingerprints[idx];
       const sourceMeta = {
-        sourceSha256: sha256,
-        sourcePhash: phash,
-        sourceFilename: file?.name || null,
-        sourceSizeBytes: typeof file?.size === 'number' ? file.size : null,
+        sourceSha256: fp.sha256 || null,
+        sourcePhash: fp.phash || null,
+        sourceColorSig: fp.color_sig || null,
+        sourceFilename: fp.file?.name || null,
+        sourceSizeBytes: typeof fp.file?.size === 'number' ? fp.file.size : null,
       };
-      try {
-        b64 = await fileToBase64(file);
-      } catch (_) {
-        failedHere += 1;
-        setBgBatch((b) => (b ? { ...b, processed: b.processed + 1, failed: b.failed + failedHere } : null));
+      
+      const analysis = frame.analysis || {};
+      const cropB64 = frame.crop_base64 || b64List[idx];
+      const mime = frame.crop_mime || fp.file?.type || 'image/jpeg';
+      
+      const cardLike = {
+        base64: cropB64,
+        mime,
+        file: null,
+        fields: hydrate(analysis, user),
+        useReconstructed: false,
+        ...sourceMeta,
+      };
+
+      if (frame.potential_duplicate) {
+        const dupCard = {
+          id: `bgdup-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          file: null,
+          mime,
+          previewUrl: `data:${mime};base64,${cropB64}`,
+          base64: cropB64,
+          originalCropUrl: `data:${mime};base64,${cropB64}`,
+          status: 'ready',
+          progress: 100,
+          fields: cardLike.fields,
+          potentialDuplicate: frame.potential_duplicate,
+          pendingBatchSave: true,
+        };
+        setCards((prev) => [...prev, dupCard]);
+        setBgBatch((b) => b ? { ...b, pendingDuplicates: (b.pendingDuplicates || 0) + 1, processed: b.processed + 1 } : b);
         return;
       }
 
-      // Try analysis; on failure, fall back to saving the raw image
-      // with blank fields so the user still gets the item in /closet.
-      // Track the analyze-failure count separately so the final toast
-      // can tell the user "X items need fields filled in".
-      let analysisItems = null;
       try {
-        const resp = await analyzeWithRetry(b64);
-        analysisItems =
-          Array.isArray(resp?.items) && resp.items.length > 0
-            ? resp.items
-            : [{ analysis: resp, crop_base64: b64, crop_mime: file.type || 'image/jpeg' }];
+        const created = await api.createItem(buildCreatePayload(cardLike));
+        if (created && created.id) {
+          try {
+            const { closetStore } = await import('@/lib/closetStore');
+            closetStore.upsert(created);
+          } catch { /* ignore */ }
+        }
+        setBgBatch(b => b ? { ...b, saved: b.saved + 1, processed: b.processed + 1 } : null);
       } catch (_) {
-        analyzeFailedHere += 1;
-        analysisItems = [
-          { analysis: {}, crop_base64: b64, crop_mime: file.type || 'image/jpeg' },
-        ];
+        setBgBatch(b => b ? { ...b, failed: b.failed + 1, processed: b.processed + 1 } : null);
       }
-
-      for (const it of analysisItems) {
-        const cardLike = {
-          base64: it.crop_base64 || b64,
-          mime: it.crop_mime || file.type || 'image/jpeg',
-          file: null,
-          fields: hydrate(it.analysis || {}, user),
-          useReconstructed: false,
-          // Phase Z2 — fingerprint passthrough into buildCreatePayload
-          // so the row stored in Mongo carries source_sha256 etc. and
-          // future uploads of the same file get caught by the
-          // client-side duplicate check against ``closetStore``
-          // (Phase Z3 — was /closet/preflight before).
-          ...sourceMeta,
-        };
-
-        // Duplicate gate (regression fix, restored): if the analyzer
-        // flagged this item as a likely re-upload of something already
-        // in the user's closet, do NOT silently auto-save. Surface the
-        // crop as an interactive card so the existing
-        // DuplicateConfirmDialog can ask the user whether to add it
-        // anyway. The batch path keeps processing the rest of the
-        // queue while the dialog is open — duplicates pile up one
-        // card at a time and the modal pops them serially.
-        if (it.potential_duplicate) {
-          const mime = cardLike.mime;
-          const dupCard = {
-            id: `bgdup-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-            file: null,
-            mime,
-            previewUrl: cardLike.base64
-              ? `data:${mime};base64,${cardLike.base64}`
-              : null,
-            base64: cardLike.base64,
-            originalCropUrl: cardLike.base64
-              ? `data:${mime};base64,${cardLike.base64}`
-              : null,
-            status: 'ready',
-            progress: 100,
-            fields: cardLike.fields,
-            potentialDuplicate: it.potential_duplicate,
-            // Flag set on cards that were redirected here mid-batch.
-            // The DuplicateConfirmDialog's onConfirm uses this to
-            // immediately POST /closet (instead of waiting for the
-            // user to click "Save All"), keeping the batch flow
-            // close to the original "fire-and-forget" feel.
-            pendingBatchSave: true,
-          };
-          setCards((prev) => [...prev, dupCard]);
-          setBgBatch((b) =>
-            b ? { ...b, pendingDuplicates: (b.pendingDuplicates || 0) + 1 } : b,
-          );
-          continue;
-        }
-
-        try {
-          const created = await api.createItem(buildCreatePayload(cardLike));
-          createdHere += 1;
-          // Patch the global closet store so /closet shows the new
-          // card the moment the user navigates there — no full
-          // refetch required. ``created`` is the persisted document
-          // returned by POST /closet (already includes id,
-          // created_at, etc.).
-          if (created && created.id) {
-            try {
-              const { closetStore } = await import('@/lib/closetStore');
-              closetStore.upsert(created);
-            } catch { /* store import failure should never block upload */ }
-          }
-        } catch (_) {
-          failedHere += 1;
-        }
-      }
-
-      setBgBatch((b) =>
-        b
-          ? {
-              ...b,
-              processed: b.processed + 1,
-              saved: b.saved + createdHere,
-              failed: b.failed + failedHere,
-              analyzeFailed: (b.analyzeFailed || 0) + analyzeFailedHere,
-            }
-          : null
-      );
     };
 
-    // Sequential worker — process one file at a time. The earlier
-    // CONCURRENCY=3 implementation tried to run 3 analyse calls in
-    // parallel and got bitten by VPS RAM limits on production: the
-    // first item completed, items 2..N OOM'd inside rembg, fell into
-    // the catch above, and got saved as raw photos with empty fields.
-    while (queue.length) {
-      const next = queue.shift();
-      if (next) {
-        // eslint-disable-next-line no-await-in-loop
-        await processOne(next);
-      }
+    const handleItemSkip = (frame) => {
+      setBgBatch(b => b ? { ...b, processed: b.processed + 1 } : null);
+    };
+
+    try {
+      await api.analyzeItemImage(
+        { images_base64: b64List, language: requestLang },
+        { onDetect: handleDetect, onItem: handleItem, onItemSkip: handleItemSkip }
+      );
+    } catch (err) {
+      // Stream failed. Try to save all remaining as fallbacks?
+      // For now just error out gracefully
+      setBgBatch(b => b ? { ...b, failed: b.failed + (b.total - b.processed) } : null);
     }
 
-    // Read final counts from state via functional update so we don't
-    // race with React batching.
+    // Final checks and navigation
     setBgBatch((b) => {
       const saved = b?.saved ?? 0;
       const failed = b?.failed ?? 0;
       const analyzeFailed = b?.analyzeFailed ?? 0;
       const pendingDuplicates = b?.pendingDuplicates ?? 0;
-      const skippedDuplicates = b?.skippedDuplicates ?? 0;
-      // Phase Z2 — appended to whichever toast variant fires below
-      // so the user knows the pre-flight silently dropped some
-      // photos that were already in the closet.
-      const dupTrailer = skippedDuplicates
-        ? ' ' +
-          t('addItem.bgUpload.skippedDupSuffix', {
-            count: skippedDuplicates,
-            defaultValue: `(skipped ${skippedDuplicates} already in closet)`,
-          })
-        : '';
+      const skippedDups = b?.skippedDuplicates ?? 0;
+      
+      const dupTrailer = skippedDups ? ' (skipped ' + skippedDups + ' already in closet)' : '';
+      
       if (pendingDuplicates) {
-        // Some uploads matched existing closet items — we surfaced
-        // them as interactive cards so the duplicate-confirm dialog
-        // can ask the user. Don't auto-navigate to /closet: the user
-        // needs to confirm/discard each one first.
-        toast.message(
-          t('addItem.bgUpload.duplicatesPending', {
-            saved,
-            pending: pendingDuplicates,
-            defaultValue: `Saved ${saved} new items · ${pendingDuplicates} look like duplicates — review them below.`,
-          }) + dupTrailer,
-        );
-      } else if (saved && !failed && !analyzeFailed) {
-        toast.success(
-          t('addItem.bgUpload.done', {
-            count: saved,
-            defaultValue: `Saved ${saved} items. Edit any misfits in your closet.`,
-          }) + dupTrailer,
-        );
-      } else if (saved && analyzeFailed && !failed) {
-        // All items saved, but some skipped analysis — tell the user
-        // which need attention so they're not surprised by blank
-        // cards in the closet.
-        toast.message(
-          t('addItem.bgUpload.partialAnalyze', {
-            saved,
-            analyzeFailed,
-            defaultValue: `Saved ${saved} items · ${analyzeFailed} need fields filled in (analysis failed).`,
-          }) + dupTrailer,
-        );
+        toast.message(`Saved ${saved} new items. ${pendingDuplicates} duplicates pending.` + dupTrailer);
+      } else if (saved && !failed) {
+        toast.success(`Saved ${saved} items.` + dupTrailer);
       } else if (saved && failed) {
-        toast.message(
-          t('addItem.bgUpload.partial', {
-            saved,
-            failed,
-            defaultValue: `Saved ${saved} · ${failed} failed`,
-          }) + dupTrailer,
-        );
-      } else if (!saved && !pendingDuplicates && !skippedDuplicates) {
-        toast.error(
-          t('addItem.bgUpload.failed', {
-            defaultValue: 'Could not save any items. Please try again.',
-          })
-        );
+        toast.message(`Saved ${saved} · ${failed} failed` + dupTrailer);
+      } else if (!saved && !pendingDuplicates && !skippedDups) {
+        toast.error('Could not save any items. Please try again.');
       }
-      // Brief pause so the user sees the final 100% before navigating.
-      // Only auto-navigate when there are no pending duplicates — those
-      // need the user's explicit confirm/discard click first.
+      
       setTimeout(() => {
         if (saved && !pendingDuplicates) nav('/closet');
       }, 1200);
       return null;
     });
   };
-
 
   const analyzeCards = async (cardsList) => {
     const cardsToProcess = cardsList.filter((card) => {
