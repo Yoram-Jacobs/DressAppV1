@@ -617,7 +617,17 @@ def _shrink_for_vision(image_bytes: bytes, *, max_side: int = 1280, q: int = 82)
     """Keep the API payload light; Gemini vision is happy with ~1280px long side."""
     try:
         img = Image.open(io.BytesIO(image_bytes))
-        img = img.convert("RGB")
+        has_alpha = (
+            img.mode in ("RGBA", "LA")
+            or (img.mode == "P" and "transparency" in img.info)
+        )
+        if has_alpha:
+            img = img.convert("RGBA")
+            bg = Image.new("RGB", img.size, (255, 255, 255))
+            bg.paste(img, mask=img)
+            img = bg
+        else:
+            img = img.convert("RGB")
         img.thumbnail((max_side, max_side))
         buf = io.BytesIO()
         img.save(buf, format="JPEG", quality=q, optimize=True)
