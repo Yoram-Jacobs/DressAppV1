@@ -290,7 +290,7 @@ async def remove_background(image_bytes: bytes) -> dict[str, Any]:
 
     ok = await _faithfulness_ok(image_bytes, matted)
     return {
-        "image_png": matted if ok else None,
+        "image_png": matted,  # Guard is now purely advisory; never drop the matte
         "provider": provider,
         "faithful": ok,
     }
