@@ -278,7 +278,7 @@ _CATEGORY_TO_SEGFORMER_KIND: dict[str, str] = {
 def _pick_segformer_mask_for_category(
     garments: list[dict[str, Any]],
     category: str | None,
-) -> Any | None:
+) -> tuple[np.ndarray | None, np.ndarray | None]:
     """Return the best SegFormer per-garment mask (full-res ``np.uint8``
     H×W array) to AND against rembg, given the item's user-facing
     category. Returns ``None`` if SegFormer found nothing usable.
@@ -318,12 +318,13 @@ def _pick_segformer_mask_for_category(
         if matches:
             best = max(matches, key=_area)
             if _area(best) > 0:
-                return best.get("mask")
+                return best.get("mask"), best.get("_human_mask_full")
     # Fallback: largest mask of any garment kind.
     candidates = [g for g in garments if _area(g) > 0]
     if not candidates:
-        return None
-    return max(candidates, key=_area).get("mask")
+        return None, None
+    best_fallback = max(candidates, key=_area)
+    return best_fallback.get("mask"), best_fallback.get("_human_mask_full")
 
 
 def _bytes_from_data_url(url: str | None) -> bytes | None:
@@ -462,10 +463,11 @@ async def _run_background_matte(
     #    to the intersection step after rembg returns. Wrapped tight
     #    so any failure here is invisible to rembg downstream.
     seg_mask = None
+    human_mask = None
     if settings.USE_LOCAL_CLOTHING_PARSER:
         try:
             garments = await _cp.parse_garments(raw_bytes)
-            seg_mask = _pick_segformer_mask_for_category(garments, category)
+            seg_mask, human_mask = _pick_segformer_mask_for_category(garments, category)
             if seg_mask is None and garments:
                 logger.info(
                     "Background matte SegFormer: parsed %d instance(s) for item %s "
@@ -478,6 +480,7 @@ async def _run_background_matte(
                 item_id, repr(exc)[:160],
             )
             seg_mask = None
+            human_mask = None
 
     # 2. rembg + CLIP guard (unchanged — the matte primitive).
     try:
@@ -520,6 +523,8 @@ async def _run_background_matte(
                 # the user vocabulary and the SegFormer-kind
                 # vocabulary case-insensitively.
                 category=category,
+                human_mask=human_mask,
+                is_padded_canvas=True,
             )
             if refined:
                 logger.info(
@@ -538,27 +543,6 @@ async def _run_background_matte(
                 "Background matte alpha intersection skipped for item %s: %s",
                 item_id, repr(exc)[:160],
             )
-
-    # Patch 12n (May 2026) — Phantom guard for the background task.
-    # The hot-path matting (_matte_crops) drops crops with < 5% solid
-    # alpha, but the background task was blindly persisting them to
-    # clean_image_url. When rembg fails to find a foreground and returns
-    # an empty/near-empty matte, this guards against surfacing an empty
-    # "white window" card in the closet.
-    if result:
-        try:
-            from app.services.garment_vision import _solid_alpha_coverage, _PHANTOM_DROP_PCT
-            cov = _solid_alpha_coverage(result)
-            if cov is not None and cov < _PHANTOM_DROP_PCT:
-                logger.info(
-                    "Background matte resulted in phantom card (alpha coverage "
-                    "%.1f%% < %.0f%%) for item %s — marking as failed",
-                    cov * 100, _PHANTOM_DROP_PCT * 100, item_id,
-                )
-                result = None
-                out = {"rejected_reason": "phantom card (empty alpha)"}
-        except Exception as exc:  # noqa: BLE001
-            logger.info("Background matte phantom guard failed: %s", exc)
 
     if not result:
         # Distinguish "rembg produced nothing" from "rembg produced

@@ -1248,6 +1248,7 @@ def apply_alpha_intersection(
     *,
     category: str | None = None,
     human_mask: np.ndarray | None = None,
+    is_padded_canvas: bool = False,
 ) -> bytes | None:
     """Refine a rembg-matted PNG by AND-ing its alpha with a SegFormer mask.
 
@@ -1394,7 +1395,7 @@ def apply_alpha_intersection(
         mask_coverage = float((mask_resized > 127).mean())
     except Exception:  # noqa: BLE001
         mask_coverage = 1.0  # if mean() fails, don't gatekeep — let dilation try.
-    if mask_coverage < _MIN_MASK_CONFIDENCE:
+    if mask_coverage < _MIN_MASK_CONFIDENCE and not is_padded_canvas:
         logger.info(
             "apply_alpha_intersection: SegFormer mask too patchy "
             "(%.1f%% coverage < %.0f%% threshold) — falling back to "
