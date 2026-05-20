@@ -539,6 +539,27 @@ async def _run_background_matte(
                 item_id, repr(exc)[:160],
             )
 
+    # Patch 12n (May 2026) — Phantom guard for the background task.
+    # The hot-path matting (_matte_crops) drops crops with < 5% solid
+    # alpha, but the background task was blindly persisting them to
+    # clean_image_url. When rembg fails to find a foreground and returns
+    # an empty/near-empty matte, this guards against surfacing an empty
+    # "white window" card in the closet.
+    if result:
+        try:
+            from app.services.garment_vision import _solid_alpha_coverage, _PHANTOM_DROP_PCT
+            cov = _solid_alpha_coverage(result)
+            if cov is not None and cov < _PHANTOM_DROP_PCT:
+                logger.info(
+                    "Background matte resulted in phantom card (alpha coverage "
+                    "%.1f%% < %.0f%%) for item %s — marking as failed",
+                    cov * 100, _PHANTOM_DROP_PCT * 100, item_id,
+                )
+                result = None
+                out = {"rejected_reason": "phantom card (empty alpha)"}
+        except Exception as exc:  # noqa: BLE001
+            logger.info("Background matte phantom guard failed: %s", exc)
+
     if not result:
         # Distinguish "rembg produced nothing" from "rembg produced
         # something but CLIP rejected it" in the log so we can tell
