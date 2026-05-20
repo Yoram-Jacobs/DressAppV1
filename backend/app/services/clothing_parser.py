@@ -595,7 +595,7 @@ def _mask_bbox(mask: np.ndarray) -> tuple[int, int, int, int] | None:
     return int(ys.min()), int(xs.min()), int(ys.max()), int(xs.max())
 
 
-def _postprocess_mask(mask: np.ndarray) -> np.ndarray:
+def _postprocess_mask(mask: np.ndarray, keep_largest: bool = True) -> np.ndarray:
     """Clean up a noisy SegFormer binary mask into a clean garment cutout.
 
     Raw SegFormer output is per-pixel argmax with no spatial regularisation,
@@ -648,11 +648,12 @@ def _postprocess_mask(mask: np.ndarray) -> np.ndarray:
     # 3) Keep only the largest connected component. Drops floating specks
     #    far from the main garment which would otherwise pollute the
     #    cutout with random scenery.
-    labeled, n = ndimage.label(filled)
-    if n > 1:
-        sizes = ndimage.sum(filled, labeled, range(1, n + 1))
-        biggest = int(np.argmax(sizes)) + 1
-        filled = labeled == biggest
+    if keep_largest:
+        labeled, n = ndimage.label(filled)
+        if n > 1:
+            sizes = ndimage.sum(filled, labeled, range(1, n + 1))
+            biggest = int(np.argmax(sizes)) + 1
+            filled = labeled == biggest
 
     return filled.astype(np.uint8)
 
@@ -1045,7 +1046,10 @@ async def parse_garments(image_bytes: bytes) -> list[dict[str, Any]]:
     #     edges, drop floating specks. Without this step the alpha
     #     channel on cropped PNGs looks like swiss cheese.
     for item in by_label.values():
-        item["mask"] = _postprocess_mask(item["mask"])
+        item["mask"] = _postprocess_mask(
+            item["mask"],
+            keep_largest=(item["label"] != "Shoes"),
+        )
 
     # 2c) Patch 12 (May 2026) — inter-label overlap suppression. Before
     #     this step a long coat fires both "Upper-clothes" and "Dress"
