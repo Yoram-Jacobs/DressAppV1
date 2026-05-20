@@ -542,16 +542,16 @@ export const api = {
       .then((r) => r.data),
 
   // wardrobe reconstructor (Phase Q — now used as fallback only)
-  repairItemImage: (itemId, { userHint = null, force = false } = {}) =>
+  repairItemImage: (itemId, { userHint = null, force = false, preview = false } = {}) =>
     client
       .post(`/closet/${itemId}/repair`, {
         user_hint: userHint || null,
         force,
-      })
+      }, { params: { preview } })
       .then((r) => r.data),
   // Clean background (Phase V Fix 2 — non-generative matting)
-  cleanItemBackground: (itemId) =>
-    client.post(`/closet/${itemId}/clean-background`).then((r) => r.data),
+  cleanItemBackground: (itemId, preview = false) =>
+    client.post(`/closet/${itemId}/clean-background`, null, { params: { preview } }).then((r) => r.data),
   // Re-run The Eyes on the item's stored image and patch the analysis
   // fields back onto the doc. Used by the "Analyze" action on the
   // edit page after a photo replace, or to recover from a bad first

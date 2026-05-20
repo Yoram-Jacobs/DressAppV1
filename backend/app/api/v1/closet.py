@@ -1273,6 +1273,7 @@ async def preflight_duplicates(
 class AnalyzeIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     image_base64: str | None = None
+    images_base64: list[str] | None = None
     image_url: str | None = None
     # When True (default), run the multi-item detect\u2192crop\u2192analyse pipeline
     # so a single outfit photo expands into one card per garment / accessory.
@@ -1351,13 +1352,19 @@ async def analyze_item_image(
     """
     if garment_vision_service is None:
         raise HTTPException(503, "Garment analyzer not configured")
-    if not payload.image_base64 and not payload.image_url:
-        raise HTTPException(400, "image_base64 or image_url is required")
+    if not payload.image_base64 and not payload.image_url and not payload.images_base64:
+        raise HTTPException(400, "image_base64, images_base64, or image_url is required")
 
-    raw: bytes | None = None
-    if payload.image_base64:
+    raw_list: list[bytes] = []
+    if payload.images_base64:
+        for b64 in payload.images_base64:
+            try:
+                raw_list.append(base64.b64decode(b64, validate=True))
+            except Exception as exc:
+                raise HTTPException(400, f"Invalid image_base64 in array: {exc}") from exc
+    elif payload.image_base64:
         try:
-            raw = base64.b64decode(payload.image_base64, validate=True)
+            raw_list.append(base64.b64decode(payload.image_base64, validate=True))
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(400, f"Invalid image_base64: {exc}") from exc
     elif payload.image_url:
@@ -1365,8 +1372,9 @@ async def analyze_item_image(
         async with httpx.AsyncClient(timeout=30.0) as c:
             resp = await c.get(payload.image_url, follow_redirects=True)
             resp.raise_for_status()
-            raw = resp.content
-    if not raw:
+            raw_list.append(resp.content)
+            
+    if not raw_list:
         raise HTTPException(400, "Could not load image bytes")
 
     # Multi-item pipeline (default). Degrades gracefully to single.
@@ -1400,9 +1408,17 @@ async def analyze_item_image(
                 async with _ANALYZE_LOCK:
                     saw_detect = False
                     items_meta: list[dict[str, Any]] = []
-                    async for frame in garment_vision_service.analyze_outfit_stream(
-                        raw, language=user_lang,
-                    ):
+                    
+                    if payload.images_base64:
+                        streamer = garment_vision_service.analyze_outfits_stream(
+                            raw_list, language=user_lang,
+                        )
+                    else:
+                        streamer = garment_vision_service.analyze_outfit_stream(
+                            raw_list[0], language=user_lang,
+                        )
+                        
+                    async for frame in streamer:
                         ftype = frame.get("type")
                         if ftype == "detect":
                             saw_detect = True
@@ -1427,12 +1443,14 @@ async def analyze_item_image(
                                 out_frame = {
                                     "type": "item_skip",
                                     "index": idx,
+                                    "image_index": frame.get("image_index"),
                                     "reason": "unidentifiable",
                                 }
                             else:
                                 out_frame = {
                                     "type": "item",
                                     "index": idx,
+                                    "image_index": frame.get("image_index"),
                                     "label": meta.get("label"),
                                     "kind": meta.get("kind"),
                                     "bbox": meta.get("bbox"),
@@ -3699,6 +3717,7 @@ class RepairItemIn(BaseModel):
 @router.post("/{item_id}/clean-background")
 async def clean_item_background(
     item_id: str,
+    preview: bool = False,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Phase V Fix 2 (revised May 2026, Patch 12h) — Edit Item → "Clean
@@ -3853,20 +3872,25 @@ async def clean_item_background(
         "segformer_refined": intersection_applied,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
-    await db.closet_items.update_one(
-        {"id": item_id},
-        {
-            "$set": {
-                "reconstructed_image_url": data_url,
-                "reconstruction_metadata": meta,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+    if not preview:
+        await db.closet_items.update_one(
+            {"id": item_id},
+            {
+                "$set": {
+                    "reconstructed_image_url": data_url,
+                    "reconstruction_metadata": meta,
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                },
+                # Invalidate the cached thumbnail so /closet list regenerates
+                # it from the fresh reconstructed image on the next read.
+                "$unset": {"thumbnail_data_url": ""},
             },
-            # Invalidate the cached thumbnail so /closet list regenerates
-            # it from the fresh reconstructed image on the next read.
-            "$unset": {"thumbnail_data_url": ""},
-        },
-    )
-    item = await repos.find_one(db.closet_items, {"id": item_id}) or item
+        )
+        item = await repos.find_one(db.closet_items, {"id": item_id}) or item
+    else:
+        item["reconstructed_image_url"] = data_url
+        item["reconstruction_metadata"] = meta
+        
     return {"item": item, "applied": True, "reconstruction": meta}
 
 
@@ -4211,11 +4235,16 @@ async def repair_item_image(
         "reconstruction_metadata": meta,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
-    await db.closet_items.update_one(
-        {"id": item_id},
-        {"$set": update_doc, "$unset": {"thumbnail_data_url": ""}},
-    )
-    item = await repos.find_one(db.closet_items, {"id": item_id}) or item
+    if not preview:
+        await db.closet_items.update_one(
+            {"id": item_id},
+            {"$set": update_doc, "$unset": {"thumbnail_data_url": ""}},
+        )
+        item = await repos.find_one(db.closet_items, {"id": item_id}) or item
+    else:
+        item["reconstructed_image_url"] = data_url
+        item["reconstruction_metadata"] = meta
+        
     return {"item": item, "reconstruction": out, "applied": True}
 
 

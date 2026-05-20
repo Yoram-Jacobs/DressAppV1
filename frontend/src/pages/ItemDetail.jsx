@@ -142,6 +142,8 @@ const EDITABLE_FIELDS = [
   'cultural_tags',
   'tags',
   'notes',
+  'reconstructed_image_url',
+  'reconstruction_metadata',
 ];
 
 /** Pick the subset of fields we mutate + normalise to a stable shape.
@@ -215,6 +217,8 @@ function toFormState(item, user = null) {
     cultural_tags: Array.isArray(item.cultural_tags) ? item.cultural_tags : [],
     tags: Array.isArray(item.tags) ? item.tags : [],
     notes: item.notes || '',
+    reconstructed_image_url: item.reconstructed_image_url || null,
+    reconstruction_metadata: item.reconstruction_metadata || null,
   };
 }
 
@@ -648,24 +652,14 @@ export default function ItemDetail() {
       });
     }, 350);
     try {
-      const res = await api.cleanItemBackground(id);
+      const res = await api.cleanItemBackground(id, true);
       if (res.applied) {
         toast.success(t('itemDetail.cleanBackground.success'));
-        // Phase Z2.6 — only refresh the baseline ``item`` so the
-        // image preview picks up the new ``reconstructed_image_url``.
-        // We intentionally DO NOT call ``setForm(toFormState(...))``
-        // here — that would clobber any pending field edits the user
-        // had in flight (title, condition, colour, marketplace
-        // intent…), and would re-align ``form`` with the new baseline
-        // such that ``diffPatch`` returns ``{}`` and the Save button
-        // disables even though the user *did* have unsaved changes.
-        //
-        // The ``patch`` memo below recomputes against the new
-        // ``item`` baseline, so the user's editable-field drafts
-        // remain visible AND still register as dirty. Image URLs are
-        // not part of the form schema, so the swap has no spurious
-        // side-effect on ``isDirty``.
-        setItem(res.item);
+        setForm((prev) => ({
+          ...prev,
+          reconstructed_image_url: res.item.reconstructed_image_url,
+          reconstruction_metadata: res.item.reconstruction_metadata,
+        }));
         setCleanBackgroundHint('');
       } else {
         toast.warning(res.detail || t('itemDetail.cleanBackground.rejected'));
@@ -694,18 +688,13 @@ export default function ItemDetail() {
     if (reshootingPhoto) return;
     setReshootingPhoto(true);
     try {
-      const res = await api.repairItemImage(id);
+      const res = await api.repairItemImage(id, { preview: true });
       if (res?.applied && res.item) {
-        // Phase Z2.6 — same fix as Clean Background. Only refresh
-        // the baseline ``item`` so the image preview swaps to the
-        // new ``reconstructed_image_url``; do NOT clobber the
-        // form-state with ``setForm(toFormState(...))`` (would wipe
-        // pending edits). The /repair endpoint only mutates image
-        // fields (reconstructed_image_url + reconstruction_metadata
-        // + updated_at + $unset thumbnail_data_url), so ``diffPatch``
-        // against the new baseline correctly reflects only the
-        // user's editable-field drafts.
-        setItem(res.item);
+        setForm((prev) => ({
+          ...prev,
+          reconstructed_image_url: res.item.reconstructed_image_url,
+          reconstruction_metadata: res.item.reconstruction_metadata,
+        }));
         toast.success(
           t('item.reshootSuccess', { defaultValue: 'Photo restored.' }),
         );
@@ -811,13 +800,14 @@ export default function ItemDetail() {
     );
   }
 
-  const hasReconstruction = !!item.reconstructed_image_url;
+  const mergedItem = { ...item, ...form };
+  const hasReconstruction = !!mergedItem.reconstructed_image_url;
   // Phase O.6 — image priority centralised via ``lib/itemImage``. When
   // the user has toggled "Show original" we deliberately skip the
   // reconstruction layer so they can compare the un-restyled photo;
   // every other field (clean rembg PNG / segmented JPG / raw original)
   // still falls back in the canonical order.
-  const preferredImage = bestImageUrl(item, {
+  const preferredImage = bestImageUrl(mergedItem, {
     skipReconstruction: showingOriginal,
   });
   // "Repair photo" CTA visibility:
@@ -827,9 +817,9 @@ export default function ItemDetail() {
   // Hidden once the item carries a ``reconstructed_image_url`` so we
   // don't repeatedly nudge for a feature the user already used.
   const showRepairPhotoCta =
-    !!item.reconstruction_advised && !item.reconstructed_image_url;
+    !!mergedItem.reconstruction_advised && !mergedItem.reconstructed_image_url;
   const reconstructionReasons =
-    (item.reconstruction_metadata && item.reconstruction_metadata.reasons) || [];
+    (mergedItem.reconstruction_metadata && mergedItem.reconstruction_metadata.reasons) || [];
 
   /* ========================= RENDER ========================= */
   return (
