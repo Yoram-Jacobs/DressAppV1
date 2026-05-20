@@ -837,7 +837,13 @@ export default function ItemDetail() {
       {/* Top bar */}
       <div className="flex items-center justify-between gap-3 mb-4">
         <button
-          onClick={() => nav(-1)}
+          onClick={() => {
+            if (window.history.state && window.history.state.idx > 0) {
+              nav(-1);
+            } else {
+              nav('/closet', { replace: true });
+            }
+          }}
           className="inline-flex items-center text-sm text-muted-foreground"
           data-testid="item-back"
         >

@@ -1635,12 +1635,12 @@ def _build_batch_prompts(
     :func:`_enforce_segformer_category` which catches the cases where
     Gemini ignores the hint.
     """
-    # Patch M21 — Build the per-crop hint block when SegFormer hints
     # are supplied. We deliberately only emit the block when there's
-    # at least one usable hint, so legacy callers (no hints) don't see
-    # an empty bullet list confusing the model.
+    # at least one usable hint AND we have multiple crops (n > 1).
+    # If there's only 1 crop, there are no adjacent garments to leak,
+    # so we let Gemini make its own decision without being forced.
     hint_block = ""
-    if kind_hints and len(kind_hints) == n:
+    if n > 1 and kind_hints and len(kind_hints) == n:
         bullets: list[str] = []
         for i, k in enumerate(kind_hints, 1):
             if not k:
@@ -2472,6 +2472,7 @@ class GarmentVisionService:
         sem: asyncio.Semaphore,
         *,
         think: bool = False,
+        enforce_category: bool = True,
     ) -> dict[str, Any] | None:
         """Analyse a single crop + (optionally) reconstruct.
 
@@ -2497,11 +2498,12 @@ class GarmentVisionService:
                 # its system prompt yet — but layer 2 (post-validate)
                 # is enough on its own; the prompt hint is just an
                 # optimisation.
-                _enforce_segformer_category(
-                    analysis,
-                    segformer_kind=det.get("kind"),
-                    label=det.get("label"),
-                )
+                if enforce_category:
+                    _enforce_segformer_category(
+                        analysis,
+                        segformer_kind=det.get("kind"),
+                        label=det.get("label"),
+                    )
             except Exception as exc:  # noqa: BLE001
                 logger.warning(
                     "crop analyze failed for label=%s: %s",
@@ -2646,10 +2648,11 @@ class GarmentVisionService:
         if batched_analyses is not None and len(batched_analyses) == len(crops):
             results = await self._build_batched_results(crops, batched_analyses)
         else:
+            enforce_category = len(crops) > 1
             sem = asyncio.Semaphore(6)
             results = await asyncio.gather(
                 *[
-                    self._analyse_one_crop(d, b, m, language, sem, think=think)
+                    self._analyse_one_crop(d, b, m, language, sem, think=think, enforce_category=enforce_category)
                     for d, b, m in crops
                 ]
             )
@@ -2764,12 +2767,9 @@ class GarmentVisionService:
                 "analyze_batch: requires GEMINI_API_KEY or EMERGENT_LLM_KEY"
             )
 
-        # Patch M21 — Build the SegFormer kind hint block (layer 1 of
-        # the category enforcement). Mirrors
-        # :func:`_build_batch_litellm_messages` so the one-shot and
         # streaming paths emit equivalent prompts.
         hint_block = ""
-        if kind_hints and len(kind_hints) == n:
+        if n > 1 and kind_hints and len(kind_hints) == n:
             bullets: list[str] = []
             for i, k in enumerate(kind_hints, 1):
                 if not k:
