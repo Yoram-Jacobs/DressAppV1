@@ -775,8 +775,10 @@ export default function AddItem() {
       };
 
       const images_base64 = cardsToProcess.map(c => c.base64);
+      const payload = { images_base64, language: requestLang };
+
       const resp = await api.analyzeItemImage(
-        { images_base64, language: requestLang },
+        payload,
         {
           onDetect: handleDetect,
           onItem: handleItem,
