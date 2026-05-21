@@ -3237,7 +3237,10 @@ class GarmentVisionService:
         ``items_meta`` would have come out empty.
         """
         try:
-            if await self._is_single_item(image_bytes):
+            count = await self._gatekeep_image(image_bytes)
+            if count == 0:
+                detections = []
+            elif count == 1:
                 detections = [{"label": "garment", "kind": "garment", "bbox": [0, 0, 1000, 1000], "defer_matte": True}]
             else:
                 detections = await self.detect_items(image_bytes)
@@ -3483,8 +3486,8 @@ class GarmentVisionService:
 
         yield {"type": "done", "count": emitted}
 
-    async def _is_single_item(self, image_bytes: bytes) -> bool:
-        """Fast pre-check to bypass SegFormer for single-item photos."""
+    async def _gatekeep_image(self, image_bytes: bytes) -> int:
+        """Fast pre-check to count garments and route the pipeline."""
         import io
         import asyncio
         from PIL import Image
@@ -3500,9 +3503,8 @@ class GarmentVisionService:
 
             client = self._get_gemini()
             prompt = (
-                "Does this image contain ONLY ONE MAIN GARMENT taking up most of the frame (like a product photo of a single t-shirt or pants), "
-                "or does it contain a person wearing MULTIPLE GARMENTS (a full outfit, e.g. a shirt AND pants)? "
-                "Reply with exactly one word: 'SINGLE' or 'MULTIPLE'."
+                "How many distinct clothing garments, shoes, or accessories are clearly visible in this image? "
+                "Return ONLY a raw integer (e.g. 0, 1, 2, 3)."
             )
             model = getattr(self, "flash_model", "gemini-2.5-flash")
             
@@ -3516,13 +3518,21 @@ class GarmentVisionService:
                 )
                 
             resp = await asyncio.wait_for(_call_vision(), timeout=6.0)
-            return "single" in resp.lower()
+            
+            # Extract the integer from the response
+            resp_str = resp.strip()
+            # If there's any non-digit chars, try to find the first number
+            import re
+            match = re.search(r'\d+', resp_str)
+            if match:
+                return int(match.group())
+            return 2 # Fallback to SegFormer if unparseable
         except asyncio.TimeoutError:
-            logger.warning("_is_single_item timed out after 6s, falling back to SegFormer")
-            return False
+            logger.warning("_gatekeep_image timed out after 6s, falling back to SegFormer")
+            return 2
         except Exception as exc:
-            logger.warning("_is_single_item check failed: %s", repr(exc)[:160])
-            return False
+            logger.warning("_gatekeep_image check failed: %s", repr(exc)[:160])
+            return 2
 
     async def analyze_outfits_stream(
         self,
@@ -3549,7 +3559,10 @@ class GarmentVisionService:
         # 1. Detect on all photos concurrently
         async def _detect_and_crop(idx: int, img_bytes: bytes) -> tuple[int, list[tuple[dict[str, Any], bytes, str]]]:
             try:
-                if await self._is_single_item(img_bytes):
+                count = await self._gatekeep_image(img_bytes)
+                if count == 0:
+                    detections = []
+                elif count == 1:
                     detections = [{"label": "garment", "kind": "garment", "bbox": [0, 0, 1000, 1000], "defer_matte": True}]
                 else:
                     detections = await self.detect_items(img_bytes)
