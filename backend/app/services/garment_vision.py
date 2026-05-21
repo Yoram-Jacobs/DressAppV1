@@ -3484,8 +3484,20 @@ class GarmentVisionService:
         yield {"type": "done", "count": emitted}
 
     async def _is_single_item(self, image_bytes: bytes) -> bool:
-        """Fast pre-check to bypass Owl-ViT for single-item photos."""
+        """Fast pre-check to bypass SegFormer for single-item photos."""
+        import io
+        import asyncio
+        from PIL import Image
         try:
+            # Resize image to tiny thumbnail (512x512) to make the Gemini upload extremely fast
+            with Image.open(io.BytesIO(image_bytes)) as img:
+                img.thumbnail((512, 512))
+                if img.mode != "RGB":
+                    img = img.convert("RGB")
+                out = io.BytesIO()
+                img.save(out, format="JPEG", quality=80)
+                small_bytes = out.getvalue()
+
             client = self._get_gemini()
             prompt = (
                 "Does this image contain ONLY ONE MAIN GARMENT taking up most of the frame (like a product photo of a single t-shirt or pants), "
@@ -3493,13 +3505,21 @@ class GarmentVisionService:
                 "Reply with exactly one word: 'SINGLE' or 'MULTIPLE'."
             )
             model = getattr(self, "flash_model", "gemini-2.5-flash")
-            resp = await client.vision(
-                user_parts=[prompt, image_bytes],
-                model=model,
-                temperature=0.0,
-                max_tokens=10,
-            )
+            
+            # Put a strict 6-second timeout so it never hangs the pipeline
+            async def _call_vision():
+                return await client.vision(
+                    user_parts=[prompt, small_bytes],
+                    model=model,
+                    temperature=0.0,
+                    max_tokens=10,
+                )
+                
+            resp = await asyncio.wait_for(_call_vision(), timeout=6.0)
             return "single" in resp.lower()
+        except asyncio.TimeoutError:
+            logger.warning("_is_single_item timed out after 6s, falling back to SegFormer")
+            return False
         except Exception as exc:
             logger.warning("_is_single_item check failed: %s", repr(exc)[:160])
             return False
