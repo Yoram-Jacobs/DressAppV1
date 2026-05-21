@@ -3205,7 +3205,10 @@ class GarmentVisionService:
         ``items_meta`` would have come out empty.
         """
         try:
-            detections = await self.detect_items(image_bytes)
+            if await self._is_single_item(image_bytes):
+                detections = [{"label": "garment", "kind": "garment", "bbox": [0, 0, 1000, 1000], "defer_matte": True}]
+            else:
+                detections = await self.detect_items(image_bytes)
         except Exception as exc:  # noqa: BLE001
             logger.warning(
                 "analyze_outfit_stream: detect_items failed (%s)",
@@ -3448,6 +3451,27 @@ class GarmentVisionService:
 
         yield {"type": "done", "count": emitted}
 
+    async def _is_single_item(self, image_bytes: bytes) -> bool:
+        """Fast pre-check to bypass Owl-ViT for single-item photos."""
+        try:
+            client = self._get_gemini()
+            prompt = (
+                "Does this image contain ONLY ONE MAIN GARMENT taking up most of the frame (like a product photo of a single t-shirt or pants), "
+                "or does it contain a person wearing MULTIPLE GARMENTS (a full outfit, e.g. a shirt AND pants)? "
+                "Reply with exactly one word: 'SINGLE' or 'MULTIPLE'."
+            )
+            model = getattr(self, "flash_model", "gemini-1.5-flash-latest")
+            resp = await client.vision(
+                user_parts=[prompt, image_bytes],
+                model=model,
+                temperature=0.0,
+                max_tokens=10,
+            )
+            return "single" in resp.lower()
+        except Exception as exc:
+            logger.warning("_is_single_item check failed: %s", repr(exc)[:160])
+            return False
+
     async def analyze_outfits_stream(
         self,
         images_bytes_list: list[bytes],
@@ -3473,7 +3497,10 @@ class GarmentVisionService:
         # 1. Detect on all photos concurrently
         async def _detect_and_crop(idx: int, img_bytes: bytes) -> tuple[int, list[tuple[dict[str, Any], bytes, str]]]:
             try:
-                detections = await self.detect_items(img_bytes)
+                if await self._is_single_item(img_bytes):
+                    detections = [{"label": "garment", "kind": "garment", "bbox": [0, 0, 1000, 1000], "defer_matte": True}]
+                else:
+                    detections = await self.detect_items(img_bytes)
             except Exception as exc:
                 logger.warning("analyze_outfits_stream: detect_items failed for idx %d: %s", idx, repr(exc)[:160])
                 return idx, []
@@ -3610,20 +3637,20 @@ class GarmentVisionService:
                         emitted += 1
                         continue
 
-                needs_reconstruction = False
-                reasons: list[str] = []
-                if should_reconstruct is not None and slot_idx < len(flat_crops):
-                    try:
-                        det = flat_crops[slot_idx][1]
-                        needs, raw_reasons = should_reconstruct(analysis, det.get("bbox"))
-                        if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
-                            needs_reconstruction = True
-                            reasons = list(raw_reasons)
-                    except Exception as exc:
-                        logger.warning(
-                            "reconstruction gate failed (streamed) slot=%d: %s",
-                            slot_idx, repr(exc)[:160],
-                        )
+                    needs_reconstruction = False
+                    reasons: list[str] = []
+                    if should_reconstruct is not None and slot_idx < len(flat_crops):
+                        try:
+                            det = flat_crops[slot_idx][1]
+                            needs, raw_reasons = should_reconstruct(analysis, det.get("bbox"))
+                            if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
+                                needs_reconstruction = True
+                                reasons = list(raw_reasons)
+                        except Exception as exc:
+                            logger.warning(
+                                "reconstruction gate failed (streamed) slot=%d: %s",
+                                slot_idx, repr(exc)[:160],
+                            )
 
                     yield {
                         "type": "item",
