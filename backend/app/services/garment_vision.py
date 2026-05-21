@@ -3508,7 +3508,8 @@ class GarmentVisionService:
             )
             model = getattr(self, "flash_model", "gemini-2.5-flash")
             
-            # Put a strict 6-second timeout so it never hangs the pipeline
+            # Put a strict 12-second timeout so it never hangs the pipeline indefinitely,
+            # but gives the LLM enough time to respond under load.
             async def _call_vision():
                 return await client.vision(
                     user_parts=[prompt, small_bytes],
@@ -3516,7 +3517,7 @@ class GarmentVisionService:
                     temperature=0.0,
                 )
                 
-            resp = await asyncio.wait_for(_call_vision(), timeout=6.0)
+            resp = await asyncio.wait_for(_call_vision(), timeout=12.0)
             
             # Extract the integer from the response
             resp_str = resp.strip()
@@ -3527,7 +3528,7 @@ class GarmentVisionService:
                 return int(match.group())
             return 2 # Fallback to SegFormer if unparseable
         except asyncio.TimeoutError:
-            logger.warning("_gatekeep_image timed out after 6s, falling back to SegFormer")
+            logger.warning("_gatekeep_image timed out after 12s, falling back to SegFormer")
             return 2
         except Exception as exc:
             import traceback

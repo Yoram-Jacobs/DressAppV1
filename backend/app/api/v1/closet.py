@@ -1419,7 +1419,8 @@ async def analyze_item_image(
                         if ftype == "detect":
                             saw_detect = True
                             items_meta = frame.get("items_meta") or []
-                            yield (json.dumps(frame, ensure_ascii=False) + "\n").encode("utf-8")
+                            # Pad with 8KB whitespace to force Vercel/Nginx to flush the chunk
+                            yield (json.dumps(frame, ensure_ascii=False) + " " * 8192 + "\n").encode("utf-8")
                         elif ftype == "item":
                             idx = frame.get("index", -1)
                             meta = (
