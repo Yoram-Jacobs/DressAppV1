@@ -41,5 +41,9 @@ The primary goal was to restore the legacy `analyze_outfit` architecture (which 
 1. **Frontend:** User selects `N` photos. `AddItem.jsx` extracts `base64` for all `N` photos and calls `api.analyzeItemImage({ images_base64 })`.
 2. **Backend API:** `/closet/analyze` routes the array to `analyze_outfits_stream`.
 3. **Backend Detection:** Sequentially runs SegFormer on each photo to extract `N*M` total bounding box crops.
-4. **Backend Analysis:** Streams all `N*M` crops in a single batched multimodal request to Gemini.
+4. **Backend Analysis:** Streams all `N*M` crops in a single batched multimodal request to Gemini. For single-crop uploads (e.g. 1 pre-cropped product photo), it hits a fast-path that uses structured JSON schema generation instead of array streaming, cutting latency by ~15-20s.
 5. **Stream Return:** Yields frames back to the frontend with `image_index`, allowing `AddItem.jsx` to update preview cards (1-5) or the background progress bar (6+) seamlessly.
+
+### E. Single-Item Latency Bottleneck
+- **Issue:** Single-item photos took 25+ seconds to process because they were routed through the `analyze_batch_stream` endpoint which forces Gemini to format a JSON array without structured schemas. Additionally, multi-image detection was sequential.
+- **Fix:** Refactored `_detect_and_crop` to run concurrently using `asyncio.gather`. Created a fast-path for single-crop uploads (`len(flat_crops) == 1`) that uses `_analyse_one_crop` (which utilizes Gemini JSON Schema structured outputs), dropping single-photo latency significantly.
