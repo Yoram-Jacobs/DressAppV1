@@ -110,7 +110,15 @@ def _rembg_remove(image_bytes: bytes) -> bytes | None:
             original = ImageOps.exif_transpose(original).convert("RGB")
         except Exception:  # noqa: BLE001
             # Not a decodable image — let rembg attempt anyway.
-            out = remove(image_bytes, session=sess)
+            out = remove(
+                image_bytes,
+                session=sess,
+                post_process_mask=True,
+                alpha_matting=True,
+                alpha_matting_foreground_threshold=240,
+                alpha_matting_background_threshold=10,
+                alpha_matting_erode_size=10,
+            )
             return out or None
 
         # 2) Build a downscaled copy for rembg if needed.
@@ -132,7 +140,15 @@ def _rembg_remove(image_bytes: bytes) -> bytes | None:
             inference_bytes = image_bytes
 
         # 3) Run rembg — yields PNG with alpha at the inference resolution.
-        out = remove(inference_bytes, session=sess)
+        out = remove(
+            inference_bytes,
+            session=sess,
+            post_process_mask=True,
+            alpha_matting=True,
+            alpha_matting_foreground_threshold=240,
+            alpha_matting_background_threshold=10,
+            alpha_matting_erode_size=10,
+        )
         if not out:
             return None
 

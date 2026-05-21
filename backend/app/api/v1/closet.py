@@ -1399,11 +1399,69 @@ async def analyze_item_image(
     accept = (request.headers.get("accept") or "").lower()
     wants_ndjson = "application/x-ndjson" in accept
 
-    if wants_ndjson and payload.multi:
+    if wants_ndjson:
         async def _ndjson_stream():
             # Frame producer — translates ``analyze_outfit_stream``
             # frames into NDJSON lines + the per-item augmentation
             # the existing closet save flow expects.
+            
+            if not payload.multi:
+                try:
+                    if not raw_list:
+                        return
+                    raw = raw_list[0]
+                    crop_b64 = base64.b64encode(raw).decode("ascii")
+                    meta = [{
+                        "image_index": 0,
+                        "label": "garment",
+                        "kind": "garment",
+                        "bbox": [0, 0, 1000, 1000],
+                        "crop_base64": crop_b64,
+                        "crop_mime": "image/jpeg",
+                        "defer_matte": False,
+                    }]
+                    yield (json.dumps({"type": "detect", "count": 1, "items_meta": meta}, ensure_ascii=False) + "\n").encode("utf-8")
+                    
+                    async with _ANALYZE_LOCK:
+                        parsed = await garment_vision_service.analyze(raw, language=user_lang)
+                    
+                    from app.services.garment_vision import _is_unidentifiable
+                    analysis = _safe_analysis(parsed)
+                    if _is_unidentifiable(analysis):
+                        yield (json.dumps({
+                            "type": "item_skip",
+                            "index": 0,
+                            "image_index": 0,
+                            "reason": "unidentifiable"
+                        }, ensure_ascii=False) + "\n").encode("utf-8")
+                    else:
+                        yield (json.dumps({
+                            "type": "item",
+                            "index": 0,
+                            "image_index": 0,
+                            "label": analysis.get("item_type") or analysis.get("sub_category") or "garment",
+                            "kind": "garment",
+                            "bbox": [0, 0, 1000, 1000],
+                            "crop_base64": crop_b64,
+                            "crop_mime": "image/jpeg",
+                            "analysis": analysis,
+                            "needs_reconstruction": False,
+                            "reconstruction_reasons": [],
+                            "potential_duplicate": None,
+                            "fromOnePass": True,
+                            "reconstruction_advised": False,
+                            "defer_matte": False
+                        }, ensure_ascii=False) + "\n").encode("utf-8")
+                        
+                    yield (json.dumps({"type": "done", "count": 1}, ensure_ascii=False) + "\n").encode("utf-8")
+                except Exception as exc:
+                    yield (json.dumps({
+                        "type": "error",
+                        "status": 503,
+                        "message": str(exc)
+                    }, ensure_ascii=False) + "\n").encode("utf-8")
+                return
+
             try:
                 async with _ANALYZE_LOCK:
                     saw_detect = False
@@ -3780,11 +3838,31 @@ async def clean_item_background(
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(400, "Stored crop is corrupted.") from exc
 
-    result = await background_matting.remove_background(crop_bytes)
-    if not result.get("image_png"):
+    from app.services import clothing_parser as _cp
+
+    if settings.USE_LOCAL_CLOTHING_PARSER:
+        # Patch: Run rembg and SegFormer concurrently to halve the latency
+        bg_task = asyncio.create_task(background_matting.remove_background(crop_bytes))
+        cp_task = asyncio.create_task(_cp.parse_garments(crop_bytes))
+        await asyncio.gather(bg_task, cp_task, return_exceptions=True)
+        
+        result = bg_task.result() if not bg_task.exception() else {}
+        if cp_task.exception():
+            logger.info(
+                "/clean-background SegFormer skipped for item %s: %s",
+                item_id, repr(cp_task.exception())[:160],
+            )
+            garments = []
+        else:
+            garments = cp_task.result()
+    else:
+        result = await background_matting.remove_background(crop_bytes)
+        garments = []
+
+    if not result or not result.get("image_png"):
         reason = (
             "faithfulness_guard_rejected"
-            if result.get("provider") and not result.get("faithful")
+            if result and result.get("provider") and not result.get("faithful")
             else "matting_unavailable"
         )
         return {
@@ -3806,14 +3884,11 @@ async def clean_item_background(
     # crop. All SegFormer / intersection failures are SOFT — they fall
     # back to the rembg-only output that ``remove_background`` already
     # returned, so this never regresses the legacy behaviour.
-    from app.services import clothing_parser as _cp
-
     refined_png: bytes = result["image_png"]
     intersection_applied = False
     if settings.USE_LOCAL_CLOTHING_PARSER:
         seg_mask = None
         try:
-            garments = await _cp.parse_garments(crop_bytes)
             seg_mask = _pick_segformer_mask_for_category(
                 garments, item.get("category")
             )
@@ -3825,7 +3900,7 @@ async def clean_item_background(
                 )
         except Exception as exc:  # noqa: BLE001
             logger.info(
-                "/clean-background SegFormer skipped for item %s: %s",
+                "/clean-background SegFormer mask pick skipped for item %s: %s",
                 item_id, repr(exc)[:160],
             )
             seg_mask = None
