@@ -44,6 +44,12 @@ The primary goal was to restore the legacy `analyze_outfit` architecture (which 
 4. **Backend Analysis:** Streams all `N*M` crops in a single batched multimodal request to Gemini. For single-crop uploads (e.g. 1 pre-cropped product photo), it hits a fast-path that uses structured JSON schema generation instead of array streaming, cutting latency by ~15-20s.
 5. **Stream Return:** Yields frames back to the frontend with `image_index`, allowing `AddItem.jsx` to update preview cards (1-5) or the background progress bar (6+) seamlessly.
 
-### E. Single-Item Latency Bottleneck
-- **Issue:** Single-item photos took 25+ seconds to process because they were routed through the `analyze_batch_stream` endpoint which forces Gemini to format a JSON array without structured schemas. Additionally, multi-image detection was sequential.
-- **Fix:** Refactored `_detect_and_crop` to run concurrently using `asyncio.gather`. Created a fast-path for single-crop uploads (`len(flat_crops) == 1`) that uses `_analyse_one_crop` (which utilizes Gemini JSON Schema structured outputs), dropping single-photo latency significantly.
+### E. Streaming Unification (Single vs Multiple Items)
+- **Issue:** Previously, a fast-path for single-item uploads (`len(flat_crops) == 1`) bypassed the streaming pipeline in favor of a legacy JSON schema endpoint. While intended to save overhead, it completely broke the streaming UI effect for single items and camera uploads.
+- **Fix:** Removed the single-item fast-path. All workflows (Single Item, Camera Upload, Outfits) now route strictly through `analyze_outfits_stream` and `analyze_batch_stream`. 
+- **Streaming Clarification:** For a *single item*, the LLM only generates *one* JSON block. Because our frontend parser requires a complete JSON object to render a card, the item will not appear progressively field-by-field. The expected behavior is that the user sees "Scanning..." for ~20 seconds (Gemini's Time-To-First-Token) and then the item appears instantly. *Visible progressive streaming* (staggered loading) only occurs on multi-item shots (e.g., item 1 at 20s, item 2 at 22s).
+
+### F. Form Accessibility & Extension Quirks
+- **Issue:** The Chrome console threw accessibility warnings about missing `id` and `name` attributes, and third-party extensions threw generic "message channel closed" errors.
+- **Fix:** Refactored the `AddItem.jsx` and `WeightedList.jsx` React components to generate unique, per-card `idPrefix` keys. Applied `id` and `htmlFor` attributes to all `<Input>`, `<Select>`, and `<Label>` components, resolving all browser accessibility warnings and ensuring correct autofill behavior.
+- **Clarification:** Confirmed that the "A listener indicated an asynchronous response..." console error originates strictly from third-party Chrome extensions and has absolutely no impact on the frontend streaming pipeline or backend latency.
