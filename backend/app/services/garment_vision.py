@@ -3656,47 +3656,79 @@ class GarmentVisionService:
             except Exception:
                 should_reconstruct = None  # type: ignore[assignment]
 
-            async for slot_idx, analysis in self.analyze_batch_stream(
-                crops_bytes, language=language, kind_hints=kind_hints,
-            ):
-                image_idx = flat_crops[slot_idx][0] if slot_idx < len(flat_crops) else -1
+            if len(flat_crops) == 1 and flat_crops[0][1].get("bbox") == [0, 0, 1000, 1000]:
+                logger.info("analyze_outfits_stream: using FAST single-item path for already-cropped image")
+                slot_idx = 0
+                idx, det, crop_b, crop_m = flat_crops[0]
+                analysis = await self.analyze(
+                    crop_b, language=language, think=False, one_pass=False
+                )
                 
-                if not isinstance(analysis, dict) or not analysis:
-                    yield {
-                        "type": "item",
-                        "index": slot_idx,
-                        "image_index": image_idx,
-                        "analysis": {},
-                        "needs_reconstruction": False,
-                        "reconstruction_reasons": [],
-                    }
-                    emitted += 1
-                    continue
-
                 needs_reconstruction = False
                 reasons: list[str] = []
-                if should_reconstruct is not None and slot_idx < len(flat_crops):
+                if should_reconstruct is not None:
                     try:
-                        det = flat_crops[slot_idx][1]
                         needs, raw_reasons = should_reconstruct(analysis, det.get("bbox"))
                         if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
                             needs_reconstruction = True
                             reasons = list(raw_reasons)
                     except Exception as exc:
                         logger.warning(
-                            "reconstruction gate failed (streamed) slot=%d: %s",
+                            "reconstruction gate failed (fast path) slot=%d: %s",
                             slot_idx, repr(exc)[:160],
                         )
 
                 yield {
                     "type": "item",
                     "index": slot_idx,
-                    "image_index": image_idx,
+                    "image_index": idx,
                     "analysis": analysis,
                     "needs_reconstruction": needs_reconstruction,
                     "reconstruction_reasons": reasons,
                 }
                 emitted += 1
+            else:
+                async for slot_idx, analysis in self.analyze_batch_stream(
+                    crops_bytes, language=language, kind_hints=kind_hints,
+                ):
+                    image_idx = flat_crops[slot_idx][0] if slot_idx < len(flat_crops) else -1
+                    
+                    if not isinstance(analysis, dict) or not analysis:
+                        yield {
+                            "type": "item",
+                            "index": slot_idx,
+                            "image_index": image_idx,
+                            "analysis": {},
+                            "needs_reconstruction": False,
+                            "reconstruction_reasons": [],
+                        }
+                        emitted += 1
+                        continue
+    
+                    needs_reconstruction = False
+                    reasons: list[str] = []
+                    if should_reconstruct is not None and slot_idx < len(flat_crops):
+                        try:
+                            det = flat_crops[slot_idx][1]
+                            needs, raw_reasons = should_reconstruct(analysis, det.get("bbox"))
+                            if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
+                                needs_reconstruction = True
+                                reasons = list(raw_reasons)
+                        except Exception as exc:
+                            logger.warning(
+                                "reconstruction gate failed (streamed) slot=%d: %s",
+                                slot_idx, repr(exc)[:160],
+                            )
+    
+                    yield {
+                        "type": "item",
+                        "index": slot_idx,
+                        "image_index": image_idx,
+                        "analysis": analysis,
+                        "needs_reconstruction": needs_reconstruction,
+                        "reconstruction_reasons": reasons,
+                    }
+                    emitted += 1
         except Exception as exc:
             err_text = repr(exc)
             logger.error(
