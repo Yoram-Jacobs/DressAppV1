@@ -147,7 +147,9 @@ if (chrome.runtime.onMessageExternal) {
       sendResponse({ ok: false, error: 'unsupported external message' });
       return false;
     }
-    handleHandoff(msg).then(sendResponse);
+    handleHandoff(msg)
+      .then(sendResponse)
+      .catch((e) => sendResponse({ ok: false, error: e?.message || 'handoff threw' }));
     return true;
   });
 }

@@ -1666,6 +1666,24 @@ def _build_batch_prompts(
                 "Honour these hints; choose `sub_category` from "
                 "within the hinted top-level category."
             )
+    user_text = (
+        f"Analyse the {n} cropped garment image(s) below in order. "
+        f"Return a JSON array of {n} GarmentAnalysis entries."
+    )
+    code = (language or "en").lower()
+    if code != "en":
+        lang_name = _LANG_NAMES.get(code, code)
+        user_text = (
+            f"**OUTPUT LANGUAGE = {lang_name} ({code}).** Every free-text "
+            f"field (`name`, `title`, `caption`, `tags`, `repair_advice`, "
+            f"`sub_category`, `item_type`, `colors[*].name`, "
+            f"`fabric_materials[*].name`) MUST be written in fluent, "
+            f"idiomatic {lang_name}. JSON keys and enum tokens "
+            f"(`category`, `gender`, `dress_code`, `season`, `pattern`, "
+            f"`state`, `condition`, `quality`) stay in English.\n\n"
+            + user_text
+        )
+
     system_prompt = (
         _build_system_prompt(one_pass=False)
         + _language_directive(language)
@@ -2766,53 +2784,8 @@ class GarmentVisionService:
             )
 
         # streaming paths emit equivalent prompts.
-        hint_block = ""
-        if n > 1 and kind_hints and len(kind_hints) == n:
-            bullets: list[str] = []
-            for i, k in enumerate(kind_hints, 1):
-                if not k:
-                    continue
-                human = _SEGFORMER_KIND_HUMAN_LABEL.get(k.strip().lower())
-                if not human:
-                    continue
-                bullets.append(f"  - Image {i}: pre-classified as {human}.")
-            if bullets:
-                hint_block = (
-                    "\n\nCROP CATEGORY HINTS — Each image below has been "
-                    "pre-classified by a per-pixel garment segmentation "
-                    "model that is highly reliable on the dominant pixels "
-                    "of each crop. Use these hints to anchor your "
-                    "`category` assignment when adjacent garments leak "
-                    "into the crop frame:\n"
-                    + "\n".join(bullets)
-                    + "\n\nIf a hint says 'Bottom', the dominant garment "
-                    "IS a bottom (pants / skirt / shorts), even if a "
-                    "sleeve, hem, or coat tail from an adjacent garment "
-                    "is partially visible. Same logic applies to "
-                    "Footwear, Full Body, Headwear, and Accessory hints. "
-                    "Honour these hints; choose `sub_category` from "
-                    "within the hinted top-level category."
-                )
-
-        system_prompt = (
-            _build_system_prompt(one_pass=False)
-            + _language_directive(language)
-            + (
-                "\n\nBATCH MODE — You will be given multiple cropped "
-                "garment photographs in a single message. They appear "
-                "in numbered order (image 1, image 2, ...). You MUST "
-                f"return a JSON ARRAY of EXACTLY {n} objects, one "
-                "per crop, in the same order, each following the "
-                "GarmentAnalysis schema described above. Do NOT "
-                "merge crops, do NOT skip crops, do NOT add explanatory "
-                "text outside the array. The response MUST start with "
-                "`[` and end with `]`."
-            )
-            + hint_block
-        )
-        user_text = (
-            f"Analyse the {n} cropped garment image(s) below in order. "
-            f"Return a JSON array of {n} GarmentAnalysis entries."
+        system_prompt, user_text = _build_batch_prompts(
+            n=n, language=language, kind_hints=kind_hints,
         )
 
         # Build native google-genai user parts: text first, then each
