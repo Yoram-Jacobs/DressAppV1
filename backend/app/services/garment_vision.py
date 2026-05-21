@@ -3460,7 +3460,7 @@ class GarmentVisionService:
                 "or does it contain a person wearing MULTIPLE GARMENTS (a full outfit, e.g. a shirt AND pants)? "
                 "Reply with exactly one word: 'SINGLE' or 'MULTIPLE'."
             )
-            model = getattr(self, "flash_model", "gemini-1.5-flash-latest")
+            model = getattr(self, "flash_model", "gemini-2.5-flash")
             resp = await client.vision(
                 user_parts=[prompt, image_bytes],
                 model=model,
