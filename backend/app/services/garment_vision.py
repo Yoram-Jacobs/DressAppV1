@@ -3514,7 +3514,6 @@ class GarmentVisionService:
                     user_parts=[prompt, small_bytes],
                     model=model,
                     temperature=0.0,
-                    max_tokens=10,
                 )
                 
             resp = await asyncio.wait_for(_call_vision(), timeout=6.0)
@@ -3531,7 +3530,8 @@ class GarmentVisionService:
             logger.warning("_gatekeep_image timed out after 6s, falling back to SegFormer")
             return 2
         except Exception as exc:
-            logger.warning("_gatekeep_image check failed: %s", repr(exc)[:160])
+            import traceback
+            logger.warning("_gatekeep_image check failed: %s\n%s", repr(exc)[:160], traceback.format_exc())
             return 2
 
     async def analyze_outfits_stream(
@@ -3656,8 +3656,8 @@ class GarmentVisionService:
             except Exception:
                 should_reconstruct = None  # type: ignore[assignment]
 
-            if len(flat_crops) == 1 and flat_crops[0][1].get("bbox") == [0, 0, 1000, 1000]:
-                logger.info("analyze_outfits_stream: using FAST single-item path for already-cropped image")
+            if len(flat_crops) == 1:
+                logger.info("analyze_outfits_stream: using FAST single-item path for 1 crop")
                 slot_idx = 0
                 idx, det, crop_b, crop_m = flat_crops[0]
                 analysis = await self.analyze(
