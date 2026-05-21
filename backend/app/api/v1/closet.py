@@ -1410,14 +1410,9 @@ async def analyze_item_image(
                     saw_detect = False
                     items_meta: list[dict[str, Any]] = []
                     
-                    if payload.images_base64:
-                        streamer = garment_vision_service.analyze_outfits_stream(
-                            raw_list, language=user_lang,
-                        )
-                    else:
-                        streamer = garment_vision_service.analyze_outfit_stream(
-                            raw_list[0], language=user_lang,
-                        )
+                    streamer = garment_vision_service.analyze_outfits_stream(
+                        raw_list, language=user_lang,
+                    )
                         
                     async for frame in streamer:
                         ftype = frame.get("type")
@@ -1545,14 +1540,12 @@ async def analyze_item_image(
         # ``EYES_ONE_PASS`` flag was removed.
         try:
             async with _ANALYZE_LOCK:
-                if payload.images_base64:
-                    detections = await garment_vision_service.analyze_outfits(
-                        raw_list, language=user_lang,
+                detections = []
+                for img_bytes in raw_list:
+                    dets = await garment_vision_service.analyze_outfit(
+                        img_bytes, language=user_lang,
                     )
-                else:
-                    detections = await garment_vision_service.analyze_outfit(
-                        raw_list[0], language=user_lang,
-                    )
+                    detections.extend(dets)
         except Exception as exc:  # noqa: BLE001
             logger.warning("Outfit analysis failed: %r", exc)
             raise HTTPException(
