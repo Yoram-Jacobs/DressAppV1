@@ -60,14 +60,17 @@ export function WeightedList({
         {safe.map((it, i) => (
           <div key={i} className="flex items-center gap-2">
             <Input
+              id={`${testid}-name-${i}`}
               value={it.name || ''}
               onChange={(e) => update(i, { name: e.target.value })}
               placeholder={placeholder}
               disabled={disabled}
               className="flex-1 rounded-xl h-9"
               data-testid={`${testid}-name-${i}`}
+              aria-label={`${heading} item name ${i + 1}`}
             />
             <Input
+              id={`${testid}-pct-${i}`}
               type="number"
               min="0"
               max="100"
@@ -83,6 +86,7 @@ export function WeightedList({
               className="w-16 rounded-xl h-9 text-right"
               disabled={disabled}
               data-testid={`${testid}-pct-${i}`}
+              aria-label={`${heading} item percentage ${i + 1}`}
             />
             <span className="text-xs text-muted-foreground">%</span>
             <button

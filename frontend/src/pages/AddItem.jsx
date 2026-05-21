@@ -1838,8 +1838,8 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
 
           {/* Fields */}
           <div className="p-5 space-y-4">
-            <NameCaption fields={fields} onChange={onChange} disabled={saved} />
-            <IntentSelector fields={fields} onChange={onChange} disabled={saved} />
+            <NameCaption idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
+            <IntentSelector idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
             {fields.repair_advice && (
               <div
                 className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 text-amber-900 text-xs"
@@ -1852,8 +1852,9 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
                 </div>
               </div>
             )}
-            <TaxonomyGrid fields={fields} onChange={onChange} disabled={saved} />
+            <TaxonomyGrid idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
             <WeightedList
+              idPrefix={card.id}
               labelKey="addItem.color"
               items={fields.colors}
               onChange={(v) => onChange({ colors: v })}
@@ -1862,6 +1863,7 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
               testid="add-item-colors"
             />
             <WeightedList
+              idPrefix={card.id}
               labelKey="addItem.material"
               items={fields.fabric_materials}
               onChange={(v) => onChange({ fabric_materials: v })}
@@ -1869,9 +1871,10 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
               disabled={saved}
               testid="add-item-fabrics"
             />
-            <QualityRow fields={fields} onChange={onChange} disabled={saved} />
-            <SeasonPicker fields={fields} onChange={onChange} disabled={saved} />
+            <QualityRow idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
+            <SeasonPicker idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
             <TagsEditor
+              idPrefix={card.id}
               items={fields.tags}
               onChange={(v) => onChange({ tags: v })}
               disabled={saved}
@@ -1884,13 +1887,14 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
 }
 
 /* -------------------- sub-sections -------------------- */
-function NameCaption({ fields, onChange, disabled }) {
+function NameCaption({ idPrefix, fields, onChange, disabled }) {
   const { t } = useTranslation();
   return (
     <div className="space-y-3">
       <div>
-        <Label className="caps-label text-muted-foreground">{t('addItem.itemName')}</Label>
+        <Label htmlFor={`${idPrefix}-name`} className="caps-label text-muted-foreground">{t('addItem.itemName')}</Label>
         <Input
+          id={`${idPrefix}-name`}
           value={fields.name || ''}
           onChange={(e) => onChange({ name: e.target.value })}
           placeholder={t('addItem.namePlaceholder')}
@@ -1900,8 +1904,9 @@ function NameCaption({ fields, onChange, disabled }) {
         />
       </div>
       <div>
-        <Label className="caps-label text-muted-foreground">{t('addItem.caption')}</Label>
+        <Label htmlFor={`${idPrefix}-caption`} className="caps-label text-muted-foreground">{t('addItem.caption')}</Label>
         <Textarea
+          id={`${idPrefix}-caption`}
           value={fields.caption || ''}
           onChange={(e) => onChange({ caption: e.target.value })}
           rows={2}
@@ -1915,7 +1920,7 @@ function NameCaption({ fields, onChange, disabled }) {
   );
 }
 
-function IntentSelector({ fields, onChange, disabled }) {
+function IntentSelector({ idPrefix, fields, onChange, disabled }) {
   const { t } = useTranslation();
   const intent = fields.marketplace_intent || 'own';
   // Only compute preview for 'for_sale'
@@ -1964,10 +1969,11 @@ function IntentSelector({ fields, onChange, disabled }) {
       {intent === 'for_sale' && (
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="add-item-fee-preview">
           <div>
-            <Label className="caps-label text-muted-foreground">
+            <Label htmlFor={`${idPrefix}-price`} className="caps-label text-muted-foreground">
               {t('addItem.price')} ({fields.currency || 'USD'})
             </Label>
             <Input
+              id={`${idPrefix}-price`}
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
@@ -2013,14 +2019,16 @@ function IntentSelector({ fields, onChange, disabled }) {
   );
 }
 
-function TaxonomyGrid({ fields, onChange, disabled }) {
+function TaxonomyGrid({ idPrefix, fields, onChange, disabled }) {
   const { t } = useTranslation();
-  const row = (label, value, setter, options, testid, placeholder, formatter) => (
+  const row = (label, value, setter, options, testid, placeholder, formatter) => {
+    const fieldId = `${idPrefix}-${testid}`;
+    return (
     <div>
-      <Label className="caps-label text-muted-foreground">{label}</Label>
+      <Label htmlFor={fieldId} className="caps-label text-muted-foreground">{label}</Label>
       {options ? (
         <Select value={value || ''} onValueChange={(v) => setter(v === '__clear' ? '' : v)} disabled={disabled}>
-          <SelectTrigger className="mt-1 rounded-xl" data-testid={testid}>
+          <SelectTrigger id={fieldId} className="mt-1 rounded-xl" data-testid={testid}>
             <SelectValue placeholder={placeholder || t('addItem.selectPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
@@ -2033,6 +2041,7 @@ function TaxonomyGrid({ fields, onChange, disabled }) {
         </Select>
       ) : (
         <Input
+          id={fieldId}
           value={value || ''}
           onChange={(e) => setter(e.target.value)}
           placeholder={placeholder || ''}
@@ -2042,7 +2051,7 @@ function TaxonomyGrid({ fields, onChange, disabled }) {
         />
       )}
     </div>
-  );
+  )};
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -2059,13 +2068,15 @@ function TaxonomyGrid({ fields, onChange, disabled }) {
   );
 }
 
-function QualityRow({ fields, onChange, disabled }) {
+function QualityRow({ idPrefix, fields, onChange, disabled }) {
   const { t } = useTranslation();
-  const cell = (label, value, setter, options, testid, formatter) => (
+  const cell = (label, value, setter, options, testid, formatter) => {
+    const fieldId = `${idPrefix}-${testid}`;
+    return (
     <div>
-      <Label className="caps-label text-muted-foreground">{label}</Label>
+      <Label htmlFor={fieldId} className="caps-label text-muted-foreground">{label}</Label>
       <Select value={value || ''} onValueChange={(v) => setter(v === '__clear' ? '' : v)} disabled={disabled}>
-        <SelectTrigger className="mt-1 rounded-xl" data-testid={testid}>
+        <SelectTrigger id={fieldId} className="mt-1 rounded-xl" data-testid={testid}>
           <SelectValue placeholder={t('addItem.selectPlaceholder')} />
         </SelectTrigger>
         <SelectContent>
@@ -2077,7 +2088,7 @@ function QualityRow({ fields, onChange, disabled }) {
         </SelectContent>
       </Select>
     </div>
-  );
+  )};
   return (
     <div className="grid grid-cols-3 gap-3">
       {cell(t('addItem.state'), fields.state, (v) => onChange({ state: v }), STATE_OPTIONS, 'add-item-state', labelForState)}
@@ -2087,7 +2098,7 @@ function QualityRow({ fields, onChange, disabled }) {
   );
 }
 
-function SeasonPicker({ fields, onChange, disabled }) {
+function SeasonPicker({ idPrefix, fields, onChange, disabled }) {
   const { t } = useTranslation();
   const active = new Set(fields.season || []);
   const toggle = (s) => {
@@ -2099,10 +2110,11 @@ function SeasonPicker({ fields, onChange, disabled }) {
     }
     onChange({ season: Array.from(next) });
   };
+  const labelId = `${idPrefix}-season`;
   return (
     <div>
-      <Label className="caps-label text-muted-foreground">{t('addItem.season')}</Label>
-      <div className="mt-1 flex flex-wrap gap-1.5" data-testid="add-item-season">
+      <Label id={labelId} className="caps-label text-muted-foreground">{t('addItem.season')}</Label>
+      <div className="mt-1 flex flex-wrap gap-1.5" role="group" aria-labelledby={labelId} data-testid="add-item-season">
         {SEASON_OPTIONS.map((s) => {
           const on = active.has(s);
           return (
@@ -2129,7 +2141,7 @@ function SeasonPicker({ fields, onChange, disabled }) {
 // `WeightedList` (colour & fabric percentage editor) now lives in
 // `components/WeightedList.jsx` so the Item Detail edit page can
 // reuse the exact same control. See top-of-file imports.
-function TagsEditor({ items, onChange, disabled }) {
+function TagsEditor({ idPrefix, items, onChange, disabled }) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState('');
   const add = () => {
@@ -2138,9 +2150,10 @@ function TagsEditor({ items, onChange, disabled }) {
     if (!items.includes(v)) onChange([...items, v]);
     setDraft('');
   };
+  const fieldId = `${idPrefix}-tag-input`;
   return (
     <div>
-      <Label className="caps-label text-muted-foreground">{t('addItem.tags')}</Label>
+      <Label htmlFor={fieldId} className="caps-label text-muted-foreground">{t('addItem.tags')}</Label>
       <div className="mt-1 flex flex-wrap gap-1.5" data-testid="add-item-tags">
         {items.map((tag) => (
           <Badge key={tag} variant="outline" className="text-[11px] pl-2 pr-1 flex items-center gap-1">
@@ -2158,6 +2171,7 @@ function TagsEditor({ items, onChange, disabled }) {
         ))}
         <div className="flex items-center gap-1">
           <Input
+            id={fieldId}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
