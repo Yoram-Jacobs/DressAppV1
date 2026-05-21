@@ -3552,88 +3552,59 @@ class GarmentVisionService:
 
         emitted = 0
         try:
-            if len(flat_crops) == 1:
-                # Fast path for single crop (e.g. single item upload): bypass the
-                # batched array endpoint and use the structured JSON schema analyzer.
-                # Avoids ~15s of batch instruction latency for a single item.
-                idx, det, crop_b, crop_m = flat_crops[0]
-                result = await self._analyse_one_crop(
-                    det, crop_b, crop_m, language, sem=asyncio.Semaphore(1)
-                )
-                if not result:
-                    yield {
-                        "type": "item",
-                        "index": 0,
-                        "image_index": idx,
-                        "analysis": {},
-                        "needs_reconstruction": False,
-                        "reconstruction_reasons": [],
-                    }
-                else:
-                    yield {
-                        "type": "item",
-                        "index": 0,
-                        "image_index": idx,
-                        "analysis": result.get("analysis") or {},
-                        "needs_reconstruction": result.get("needs_reconstruction", False),
-                        "reconstruction_reasons": result.get("reconstruction_reasons", []),
-                        "reconstruction": result.get("reconstruction"),
-                    }
-                emitted += 1
-            else:
-                # Stream-analyse the crops via batched Gemini stream
-                crops_bytes = [b for _, _, b, _ in flat_crops]
-                kind_hints = [
-                    (d.get("kind") if isinstance(d, dict) else None)
-                    for _, d, _b, _m in flat_crops
-                ]
+            # Stream-analyse all crops via batched Gemini stream
+            crops_bytes = [b for _, _, b, _ in flat_crops]
+            kind_hints = [
+                (d.get("kind") if isinstance(d, dict) else None)
+                for _, d, _b, _m in flat_crops
+            ]
+            
+            try:
+                from app.services.reconstruction import should_reconstruct
+            except Exception:
+                should_reconstruct = None  # type: ignore[assignment]
+
+            async for slot_idx, analysis in self.analyze_batch_stream(
+                crops_bytes, language=language, kind_hints=kind_hints,
+            ):
+                image_idx = flat_crops[slot_idx][0] if slot_idx < len(flat_crops) else -1
                 
-                try:
-                    from app.services.reconstruction import should_reconstruct
-                except Exception:
-                    should_reconstruct = None  # type: ignore[assignment]
-
-                async for slot_idx, analysis in self.analyze_batch_stream(
-                    crops_bytes, language=language, kind_hints=kind_hints,
-                ):
-                    image_idx = flat_crops[slot_idx][0] if slot_idx < len(flat_crops) else -1
-                    
-                    if not isinstance(analysis, dict) or not analysis:
-                        yield {
-                            "type": "item",
-                            "index": slot_idx,
-                            "image_index": image_idx,
-                            "analysis": {},
-                            "needs_reconstruction": False,
-                            "reconstruction_reasons": [],
-                        }
-                        emitted += 1
-                        continue
-
-                    needs_reconstruction = False
-                    reasons: list[str] = []
-                    if should_reconstruct is not None and slot_idx < len(flat_crops):
-                        try:
-                            det = flat_crops[slot_idx][1]
-                            needs, raw_reasons = should_reconstruct(analysis, det.get("bbox"))
-                            if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
-                                needs_reconstruction = True
-                                reasons = list(raw_reasons)
-                        except Exception as exc:
-                            logger.warning(
-                                "reconstruction gate failed (streamed) slot=%d: %s",
-                                slot_idx, repr(exc)[:160],
-                            )
-
+                if not isinstance(analysis, dict) or not analysis:
                     yield {
                         "type": "item",
                         "index": slot_idx,
                         "image_index": image_idx,
-                        "analysis": analysis,
-                        "needs_reconstruction": needs_reconstruction,
-                        "reconstruction_reasons": reasons,
+                        "analysis": {},
+                        "needs_reconstruction": False,
+                        "reconstruction_reasons": [],
                     }
                     emitted += 1
+                    continue
+
+                needs_reconstruction = False
+                reasons: list[str] = []
+                if should_reconstruct is not None and slot_idx < len(flat_crops):
+                    try:
+                        det = flat_crops[slot_idx][1]
+                        needs, raw_reasons = should_reconstruct(analysis, det.get("bbox"))
+                        if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
+                            needs_reconstruction = True
+                            reasons = list(raw_reasons)
+                    except Exception as exc:
+                        logger.warning(
+                            "reconstruction gate failed (streamed) slot=%d: %s",
+                            slot_idx, repr(exc)[:160],
+                        )
+
+                yield {
+                    "type": "item",
+                    "index": slot_idx,
+                    "image_index": image_idx,
+                    "analysis": analysis,
+                    "needs_reconstruction": needs_reconstruction,
+                    "reconstruction_reasons": reasons,
+                }
+                emitted += 1
         except Exception as exc:
             err_text = repr(exc)
             logger.error(
