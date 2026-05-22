@@ -35,17 +35,15 @@ import base64
 import io
 import json
 import logging
-import os
 import re
 import time
-import uuid
 from typing import Any, AsyncIterator
 
 from PIL import Image
 
 from app.config import settings
 from app.services import provider_activity
-from app.services.gemini_client import GeminiClient, GeminiUnavailable
+from app.services.gemini_client import GeminiClient
 
 logger = logging.getLogger(__name__)
 
@@ -2293,7 +2291,13 @@ class GarmentVisionService:
             "(detections=%d); skipping crop pipeline",
             len(detections),
         )
-        matted = await self._whole_image_matte(image_bytes)
+        
+        defer_matte = settings.DEFER_REMBG_ON_ANALYZE and settings.AUTO_MATTE_CROPS
+        
+        matted = None
+        if settings.AUTO_MATTE_CROPS and not defer_matte:
+            matted = await self._whole_image_matte(image_bytes)
+
         single = await self.analyze(
             image_bytes, language=language, think=think,
         )
@@ -2304,6 +2308,10 @@ class GarmentVisionService:
         else:
             crop_bytes = image_bytes
             crop_mime = "image/jpeg"
+            if defer_matte:
+                logger.info(
+                    "already-cropped matte: deferring rembg to post-save BackgroundTask"
+                )
 
         # Pick the LLM's classification first (most reliable on novelty
         # patterns / unusual fabrics). Fall back to the dominant
@@ -2324,12 +2332,14 @@ class GarmentVisionService:
             or "garment"
         )
         kind = (best_det.get("kind") if best_det else None) or "garment"
-        return [
-            self._build_fullframe_item(
-                single, crop_bytes,
-                label_hint=label, kind_hint=kind, crop_mime=crop_mime,
-            )
-        ]
+        item = self._build_fullframe_item(
+            single, crop_bytes,
+            label_hint=label, kind_hint=kind, crop_mime=crop_mime,
+        )
+        if defer_matte:
+            item["defer_matte"] = True
+            
+        return [item]
 
     @staticmethod
     def _filter_useful_detections(

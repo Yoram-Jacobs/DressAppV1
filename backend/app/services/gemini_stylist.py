@@ -82,7 +82,7 @@ constraints below; it adds context to them.
 # Human-readable names for each supported UI language code — sourced from
 # app.services.i18n so the frontend, backend prompts, system emails, and
 # anything else stay in lock-step with a single dictionary.
-from app.services import i18n as _i18n
+from app.services import i18n as _i18n  # noqa: E402
 
 _LANG_NAMES = _i18n.LANG_NAMES
 

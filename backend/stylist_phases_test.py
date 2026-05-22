@@ -8,8 +8,6 @@ Tests the following Phase S features:
 import os
 import sys
 import requests
-import base64
-from datetime import datetime
 from io import BytesIO
 from PIL import Image
 
@@ -74,7 +72,7 @@ class StylistPhasesTester:
                 self.log(f"Passed - Status: {response.status_code}", 'pass')
                 try:
                     result['response'] = response.json()
-                except:
+                except Exception:
                     result['response'] = response.text
             else:
                 self.log(f"Failed - Expected {expected_status}, got {response.status_code}", 'fail')
@@ -82,7 +80,7 @@ class StylistPhasesTester:
                     error_detail = response.json()
                     self.log(f"  Error: {error_detail}", 'warn')
                     result['error'] = error_detail
-                except:
+                except Exception:
                     result['error'] = response.text
             
             self.test_results.append(result)
@@ -109,7 +107,7 @@ class StylistPhasesTester:
         )
         if success and 'access_token' in response:
             self.token = response['access_token']
-            self.log(f"Auth token obtained", 'pass')
+            self.log("Auth token obtained", 'pass')
             return True
         self.log("Failed to obtain auth token", 'fail')
         return False
