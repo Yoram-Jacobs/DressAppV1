@@ -1,3 +1,7 @@
+---
+name: Core Coder
+description: Core Full-Stack Coder
+---
 # Agent Skill: Backend & ML Testing Expert
 
 ## 🎯 Role Identity

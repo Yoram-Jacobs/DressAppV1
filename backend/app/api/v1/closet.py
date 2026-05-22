@@ -329,11 +329,14 @@ def _pick_segformer_mask_for_category(
 
 
 def _bytes_from_data_url(url: str | None) -> bytes | None:
-    """Decode a ``data:<mime>;base64,...`` URL to raw bytes (soft-fail)."""
-    if not isinstance(url, str) or not url.startswith("data:"):
+    """Decode a ``data:<mime>;base64,...`` URL or raw base64 to raw bytes (soft-fail)."""
+    if not isinstance(url, str) or not url.strip():
         return None
     try:
-        _header, b64 = url.split(",", 1)
+        if url.startswith("data:") and "," in url:
+            _header, b64 = url.split(",", 1)
+        else:
+            b64 = url
         return base64.b64decode(b64, validate=True)
     except Exception:  # noqa: BLE001
         return None
