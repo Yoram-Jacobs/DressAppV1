@@ -3505,9 +3505,25 @@ class GarmentVisionService:
             system_prompt = (
                 "You are a visual gatekeeper. Your job is to count the number of distinct clothing garments, "
                 "shoes, or accessories clearly visible in this image. "
-                "Return ONLY a raw integer (e.g. 0, 1, 2, 3). Do not add any text or markdown."
+                "Ignore tags, hangers, or background objects."
             )
             model = getattr(self, "flash_model", "gemini-2.5-flash")
+            
+            schema = {
+                "type": "OBJECT",
+                "properties": {
+                    "items_seen": {
+                        "type": "ARRAY",
+                        "items": {"type": "STRING"},
+                        "description": "Briefly list the clothing garments you see (e.g. ['yellow t-shirt'])"
+                    },
+                    "count": {
+                        "type": "INTEGER",
+                        "description": "The final count of clothing items (0, 1, or more)"
+                    }
+                },
+                "required": ["items_seen", "count"]
+            }
             
             # Put a strict 12-second timeout so it never hangs the pipeline indefinitely,
             # but gives the LLM enough time to respond under load.
@@ -3516,18 +3532,18 @@ class GarmentVisionService:
                     system=system_prompt,
                     user_parts=[small_bytes],
                     model=model,
+                    response_mime_type="application/json",
+                    response_schema=schema,
                 )
                 
             resp = await asyncio.wait_for(_call_vision(), timeout=12.0)
             
-            # Extract the integer from the response
-            resp_str = resp.strip()
-            # If there's any non-digit chars, try to find the first number
-            import re
-            match = re.search(r'\d+', resp_str)
-            if match:
-                return int(match.group())
-            return 2 # Fallback to SegFormer if unparseable
+            try:
+                import json
+                data = json.loads(resp)
+                return int(data.get("count", 2))
+            except Exception:
+                return 2 # Fallback to SegFormer if unparseable
         except asyncio.TimeoutError:
             logger.warning("_gatekeep_image timed out after 12s, falling back to SegFormer")
             return 2
