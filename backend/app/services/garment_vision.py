@@ -668,6 +668,23 @@ def _coerce_single_garment(
     return parsed if isinstance(parsed, dict) else {}
 
 
+def _transpose_image_bytes(image_bytes: bytes, method: int) -> bytes:
+    """Losslessly rotate image bytes using PIL.Image.Transpose."""
+    try:
+        from PIL import Image
+        with Image.open(io.BytesIO(image_bytes)) as img:
+            fmt = img.format or "JPEG"
+            if fmt == "JPEG" and img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+            rotated = img.transpose(method)
+            out = io.BytesIO()
+            rotated.save(out, format=fmt, quality=90)
+            return out.getvalue()
+    except Exception as exc:
+        logger.warning("_transpose_image_bytes failed: %s", exc)
+        return image_bytes
+
+
 def _shrink_for_vision(image_bytes: bytes, *, max_side: int = 1280, q: int = 82) -> bytes:
     """Keep the API payload light; Gemini vision is happy with ~1280px long side."""
     try:
@@ -3587,7 +3604,20 @@ class GarmentVisionService:
         cap = max_items if max_items is not None else self.max_items
 
         # 1. Detect on all photos concurrently
-        async def _detect_and_crop(idx: int, img_bytes: bytes) -> tuple[int, list[tuple[dict[str, Any], bytes, str]]]:
+        async def _detect_and_crop(idx: int, img_bytes: bytes) -> tuple[int, bool, list[tuple[dict[str, Any], bytes, str]]]:
+            needs_rotate = False
+            try:
+                from PIL import Image
+                import io
+                with Image.open(io.BytesIO(img_bytes)) as img:
+                    if img.width > img.height:
+                        needs_rotate = True
+            except Exception:
+                pass
+            
+            if needs_rotate:
+                img_bytes = _transpose_image_bytes(img_bytes, getattr(Image, "ROTATE_90", 2))
+                
             try:
                 count = await self._gatekeep_image(img_bytes)
                 if count == 0:
@@ -3598,7 +3628,7 @@ class GarmentVisionService:
                     detections = await self.detect_items(img_bytes)
             except Exception as exc:
                 logger.warning("analyze_outfits_stream: detect_items failed for idx %d: %s", idx, repr(exc)[:160])
-                return idx, []
+                return idx, needs_rotate, []
 
             if _looks_already_cropped(detections):
                 # Fallback to single-item analysis for already-cropped product photos
@@ -3608,16 +3638,16 @@ class GarmentVisionService:
                 if settings.AUTO_MATTE_CROPS and not defer_matte:
                     matted = await self._whole_image_matte(img_bytes)
                     if matted:
-                        return idx, [(det, matted, "image/png")]
+                        return idx, needs_rotate, [(det, matted, "image/png")]
                 
                 if defer_matte:
                     det["defer_matte"] = True
                 
-                return idx, [(det, img_bytes, "image/jpeg")]
+                return idx, needs_rotate, [(det, img_bytes, "image/jpeg")]
                 
             useful = self._filter_useful_detections(detections, cap)
             if not useful:
-                return idx, []
+                return idx, needs_rotate, []
 
             raw_crops = await asyncio.to_thread(self._bbox_crop_useful, img_bytes, useful)
             defer_matte = (settings.DEFER_REMBG_ON_ANALYZE and settings.AUTO_MATTE_CROPS and bool(raw_crops))
@@ -3629,7 +3659,7 @@ class GarmentVisionService:
                 if defer_matte:
                     for det, _, _ in crops:
                         det["defer_matte"] = True
-            return idx, crops
+            return idx, needs_rotate, crops
 
         # 1. Detect on all photos concurrently
         tasks = [
@@ -3639,10 +3669,10 @@ class GarmentVisionService:
         results = await asyncio.gather(*tasks)
 
         # Flatten crops and keep track of image indices
-        flat_crops: list[tuple[int, dict[str, Any], bytes, str]] = []
-        for idx, crops in results:
+        flat_crops: list[tuple[int, bool, dict[str, Any], bytes, str]] = []
+        for idx, needs_rotate, crops in results:
             for det, c_bytes, c_mime in crops:
-                flat_crops.append((idx, det, c_bytes, c_mime))
+                flat_crops.append((idx, needs_rotate, det, c_bytes, c_mime))
 
         if not flat_crops:
             yield {
@@ -3657,7 +3687,10 @@ class GarmentVisionService:
 
         # Emit the detect frame FIRST
         items_meta = []
-        for idx, d, crop_b, crop_m in flat_crops:
+        for idx, needs_rotate, d, crop_b, crop_m in flat_crops:
+            if needs_rotate:
+                from PIL import Image
+                crop_b = _transpose_image_bytes(crop_b, getattr(Image, "ROTATE_270", 4))
             fitted_b, fitted_m = _fit_crop_to_card(crop_b, crop_mime=crop_m)
             items_meta.append({
                 "image_index": idx,
@@ -3675,10 +3708,10 @@ class GarmentVisionService:
         emitted = 0
         try:
             # Stream-analyse all crops via batched Gemini stream
-            crops_bytes = [b for _, _, b, _ in flat_crops]
+            crops_bytes = [b for _, _, _, b, _ in flat_crops]
             kind_hints = [
                 (d.get("kind") if isinstance(d, dict) else None)
-                for _, d, _b, _m in flat_crops
+                for _, _, d, _b, _m in flat_crops
             ]
             
             try:
@@ -3689,7 +3722,7 @@ class GarmentVisionService:
             if len(flat_crops) == 1:
                 logger.info("analyze_outfits_stream: using FAST single-item path for 1 crop")
                 slot_idx = 0
-                idx, det, crop_b, crop_m = flat_crops[0]
+                idx, needs_rotate, det, crop_b, crop_m = flat_crops[0]
                 analysis = await self.analyze(
                     crop_b, language=language, think=False, one_pass=False
                 )
@@ -3739,7 +3772,7 @@ class GarmentVisionService:
                     reasons: list[str] = []
                     if should_reconstruct is not None and slot_idx < len(flat_crops):
                         try:
-                            det = flat_crops[slot_idx][1]
+                            det = flat_crops[slot_idx][2]
                             needs, raw_reasons = should_reconstruct(analysis, det.get("bbox"))
                             if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
                                 needs_reconstruction = True
