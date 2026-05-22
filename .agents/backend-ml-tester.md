@@ -1,6 +1,6 @@
 ---
-name: Core Coder
-description: Core Full-Stack Coder
+name: backend-ml-tester
+description: Backend & ML Testing Expert
 ---
 # Agent Skill: Backend & ML Testing Expert
 
