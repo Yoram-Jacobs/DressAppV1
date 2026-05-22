@@ -16,6 +16,7 @@ import {
   Users,
   Recycle,
   Newspaper,
+  Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -398,6 +399,17 @@ export default function Home() {
       </section>
 
       <div className="h-10" />
+
+      {/* Floating Add Item Button */}
+      <div className="fixed bottom-[104px] right-4 md:bottom-8 md:right-8 z-50 flex items-center gap-2 p-2 md:p-3 rounded-2xl bg-background/95 supports-[backdrop-filter]:bg-background/80 supports-[backdrop-filter]:backdrop-blur border border-border shadow-editorial">
+        <Button
+          asChild
+          className="rounded-xl shadow-sm"
+          data-testid="home-add-item-button"
+        >
+          <Link to="/closet/add"><Plus className="h-4 w-4 me-2 md:me-2" /> <span className="hidden md:inline">{t('closet.addItem')}</span></Link>
+        </Button>
+      </div>
 
       <AdTicker placement="home-footer" className="-mx-4 sm:-mx-6 lg:-mx-8" />
     </div>
