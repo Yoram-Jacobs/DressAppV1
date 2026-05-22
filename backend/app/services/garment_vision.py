@@ -671,9 +671,10 @@ def _coerce_single_garment(
 def _transpose_image_bytes(image_bytes: bytes, method: int) -> bytes:
     """Losslessly rotate image bytes using PIL.Image.Transpose."""
     try:
-        from PIL import Image
+        from PIL import Image, ImageOps
         with Image.open(io.BytesIO(image_bytes)) as img:
             fmt = img.format or "JPEG"
+            img = ImageOps.exif_transpose(img)
             if fmt == "JPEG" and img.mode in ("RGBA", "P"):
                 img = img.convert("RGB")
             rotated = img.transpose(method)
@@ -3507,10 +3508,11 @@ class GarmentVisionService:
         """Fast pre-check to count garments and route the pipeline."""
         import io
         import asyncio
-        from PIL import Image
+        from PIL import Image, ImageOps
         try:
             # Resize image to tiny thumbnail (512x512) to make the Gemini upload extremely fast
             with Image.open(io.BytesIO(image_bytes)) as img:
+                img = ImageOps.exif_transpose(img)
                 img.thumbnail((512, 512))
                 if img.mode != "RGB":
                     img = img.convert("RGB")
@@ -3527,15 +3529,15 @@ class GarmentVisionService:
             model = self.detect_model
             
             schema = {
-                "type": "OBJECT",
+                "type": "object",
                 "properties": {
                     "items_seen": {
-                        "type": "ARRAY",
-                        "items": {"type": "STRING"},
+                        "type": "array",
+                        "items": {"type": "string"},
                         "description": "Briefly list the clothing garments you see (e.g. ['yellow t-shirt'])"
                     },
                     "count": {
-                        "type": "INTEGER",
+                        "type": "integer",
                         "description": "The final count of clothing items (0, 1, or more)"
                     }
                 },
@@ -3607,9 +3609,10 @@ class GarmentVisionService:
         async def _detect_and_crop(idx: int, img_bytes: bytes) -> tuple[int, bool, list[tuple[dict[str, Any], bytes, str]]]:
             needs_rotate = False
             try:
-                from PIL import Image
+                from PIL import Image, ImageOps
                 import io
                 with Image.open(io.BytesIO(img_bytes)) as img:
+                    img = ImageOps.exif_transpose(img)
                     if img.width > img.height:
                         needs_rotate = True
             except Exception:
