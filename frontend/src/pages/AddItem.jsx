@@ -506,18 +506,20 @@ export default function AddItem() {
     const requestLang = (i18n.language || '').split('-')[0] || 'en';
     const b64List = await Promise.all(fingerprints.map(fp => fileToBase64(fp.file)));
     
-    let totalItemsExpected = 0;
+    let detectMetas = [];
     
     const handleDetect = (frame) => {
       // detect frame gives us total items across all images
       const metas = frame.items_meta || [];
+      detectMetas = metas;
       totalItemsExpected = metas.length;
       // We can bump processed to something to show it started
       setBgBatch(b => b ? { ...b, processed: 1 } : null);
     };
 
     const handleItem = async (frame) => {
-      const idx = frame.image_index;
+      const meta = detectMetas[frame.index] || {};
+      const idx = meta.image_index ?? frame.image_index;
       const fp = fingerprints[idx];
       const sourceMeta = {
         sourceSha256: fp.sha256 || null,
@@ -528,15 +530,17 @@ export default function AddItem() {
       };
       
       const analysis = frame.analysis || {};
-      const cropB64 = frame.crop_base64 || b64List[idx];
-      const mime = frame.crop_mime || fp.file?.type || 'image/jpeg';
+      const cropB64 = meta.crop_base64 || b64List[idx];
+      const mime = meta.crop_mime || fp.file?.type || 'image/jpeg';
       
       const cardLike = {
-        base64: cropB64,
+        base64: b64List[idx],
+        cropBase64: meta.crop_base64 || undefined,
         mime,
         file: null,
         fields: hydrate(analysis, user),
         useReconstructed: false,
+        deferMatte: !!meta.defer_matte,
         ...sourceMeta,
       };
 
@@ -981,7 +985,7 @@ export default function AddItem() {
                   potentialDuplicate: frame.potential_duplicate || null,
                   fromOnePass: !!frame.one_pass,
                   reconstructionAdvised: !!frame.reconstruction_advised,
-                  deferMatte: !!frame.defer_matte,
+                  deferMatte: frame.defer_matte !== undefined ? !!frame.defer_matte : c.deferMatte,
                   needsReconstruction: !!frame.needs_reconstruction,
                   reconstructionReasons: frame.reconstruction_reasons || [],
                   reconstructedUrl,
