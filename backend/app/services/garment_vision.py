@@ -3502,9 +3502,10 @@ class GarmentVisionService:
                 small_bytes = out.getvalue()
 
             client = self._get_gemini()
-            prompt = (
-                "How many distinct clothing garments, shoes, or accessories are clearly visible in this image? "
-                "Return ONLY a raw integer (e.g. 0, 1, 2, 3)."
+            system_prompt = (
+                "You are a visual gatekeeper. Your job is to count the number of distinct clothing garments, "
+                "shoes, or accessories clearly visible in this image. "
+                "Return ONLY a raw integer (e.g. 0, 1, 2, 3). Do not add any text or markdown."
             )
             model = getattr(self, "flash_model", "gemini-2.5-flash")
             
@@ -3512,9 +3513,9 @@ class GarmentVisionService:
             # but gives the LLM enough time to respond under load.
             async def _call_vision():
                 return await client.vision(
-                    user_parts=[prompt, small_bytes],
+                    system=system_prompt,
+                    user_parts=[small_bytes],
                     model=model,
-                    temperature=0.0,
                 )
                 
             resp = await asyncio.wait_for(_call_vision(), timeout=12.0)
