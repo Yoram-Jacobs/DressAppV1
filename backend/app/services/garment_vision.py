@@ -3497,12 +3497,11 @@ class GarmentVisionService:
                 det["defer_matte"] = True
             return idx, raw_crops
 
-        # 1. Detect on all photos concurrently
-        tasks = [
-            _detect_and_crop(i, b)
-            for i, b in enumerate(images_bytes_list)
-        ]
-        results = await asyncio.gather(*tasks)
+        # 1. Detect on all photos sequentially to avoid OOM on large batches
+        results = []
+        for i, b in enumerate(images_bytes_list):
+            res = await _detect_and_crop(i, b)
+            results.append(res)
 
         # Flatten crops and keep track of image indices
         flat_crops: list[tuple[int, dict[str, Any], bytes, str]] = []
