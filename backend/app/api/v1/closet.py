@@ -2240,6 +2240,106 @@ async def list_items(
     return {"items": items, "total": total, "limit": limit, "skip": skip}
 
 
+@router.get("/stream")
+async def stream_items(
+    user: dict = Depends(get_current_user),
+    source: Source | None = Query(default=None),
+    category: str | None = Query(default=None),
+    search: str | None = Query(default=None),
+    marketplace_intent: MarketplaceIntent | None = Query(default=None),
+    limit: int = Query(default=2000, le=2000),
+    skip: int = Query(default=0, ge=0),
+):
+    """NDJSON-streaming variant of GET /closet."""
+    db = get_db()
+    query: dict[str, Any] = {"user_id": user["id"]}
+    if source:
+        query["source"] = source
+    if marketplace_intent:
+        query["marketplace_intent"] = marketplace_intent
+    if category:
+        _CATEGORY_SYNONYMS: dict[str, list[str]] = {
+            "top":        ["top", "tops"],
+            "bottom":     ["bottom", "bottoms"],
+            "outerwear":  ["outerwear"],
+            "shoes":      ["shoes", "footwear"],
+            "accessory":  ["accessory", "accessories"],
+            "dress":      ["dress", "dresses", "full body"],
+        }
+        requested = (category or "").strip().lower()
+        synonyms = _CATEGORY_SYNONYMS.get(requested, [requested])
+        import re as _re
+        pattern = "^(" + "|".join(_re.escape(s) for s in synonyms) + ")$"
+        query["category"] = {"$regex": pattern, "$options": "i"}
+    if search:
+        query["$text"] = {"$search": search}
+
+    total = await repos.count(db.closet_items, query)
+
+    logger.info(
+        "GET /closet/stream user=%s total=%d limit=%d skip=%d filters={source=%s category=%s search=%s}",
+        user["id"], total, limit, skip, source or "-", category or "-", search or "-"
+    )
+
+    async def _gen():
+        yield json.dumps({"type": "start", "total": total, "limit": limit, "skip": skip}) + "\n"
+
+        cur = db.closet_items.find(query).sort("created_at", -1).limit(limit).skip(skip)
+
+        from app.services import thumbnails as _thumbs
+        _HEAVY_FIELDS = (
+            "clip_embedding",
+            "crop_base64",
+            "crop_mime",
+            "variants",
+            "reconstruction_metadata",
+            "retail_metadata",
+            "dpp_data",
+        )
+
+        chunk = []
+        chunk_size = 50
+
+        async def _flush_chunk():
+            if not chunk:
+                return
+            pairs = await _thumbs.backfill_thumbnails(chunk)
+            if pairs:
+                import asyncio as _asyncio
+                await _asyncio.gather(
+                    *[db.closet_items.update_one({"id": _id}, {"$set": {"thumbnail_data_url": _t}}) for (_id, _t) in pairs]
+                )
+            for it in chunk:
+                for k in _HEAVY_FIELDS:
+                    it.pop(k, None)
+                recon = it.get("reconstruction")
+                if isinstance(recon, dict):
+                    recon.pop("image_b64", None)
+                raw = it.get("raw")
+                if isinstance(raw, dict):
+                    raw.pop("preview", None)
+                if isinstance(it.get("thumbnail_data_url"), str):
+                    it.pop("original_image_url", None)
+                    it.pop("segmented_image_url", None)
+                    it.pop("reconstructed_image_url", None)
+                yield json.dumps({"type": "item", "item": it}) + "\n"
+
+        async for row in cur:
+            row.pop("_id", None)
+            chunk.append(row)
+            if len(chunk) >= chunk_size:
+                async for chunk_line in _flush_chunk():
+                    yield chunk_line
+                chunk = []
+        
+        if chunk:
+            async for chunk_line in _flush_chunk():
+                yield chunk_line
+
+        yield json.dumps({"type": "done", "total": total}) + "\n"
+
+    return StreamingResponse(_gen(), media_type="application/x-ndjson")
+
 # ─────────────────────────────────────────────────────────────────────
 # Phase Z2.3 — server → client streaming hash-repair
 # ─────────────────────────────────────────────────────────────────────

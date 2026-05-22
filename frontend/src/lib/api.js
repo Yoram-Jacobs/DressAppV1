@@ -199,6 +199,13 @@ export const api = {
   // closet
   listCloset: (params = {}) =>
     client.get('/closet', { params }).then((r) => r.data),
+  streamCloset: ({ params = {}, onEvent, signal } = {}) =>
+    streamNdjson('/closet/stream', {
+      method: 'GET',
+      params,
+      onLine: onEvent,
+      signal,
+    }),
   getItem: (id) => client.get(`/closet/${id}`).then((r) => r.data),
   createItem: (body) => client.post('/closet', body).then((r) => r.data),
   // Phase Z2 — pre-flight duplicate check.

@@ -146,14 +146,26 @@ export const closetStore = {
     if (!force && _state.lastFullSync && Date.now() - _state.lastFullSync < FRESH_MS) {
       return _state.items;
     }
-    _set({ loading: true, error: null });
+    _set({ loading: true, error: null, items: [] });
     try {
-      const res = await api.listCloset({ limit: 2000 });
-      const next = (res.items || []).slice().sort(_byCreatedDesc);
+      const liveItems = [];
+      let nextTotal = 0;
+      await api.streamCloset({
+        params: { limit: 2000 },
+        onEvent: (ev) => {
+          if (ev.type === 'start') {
+            nextTotal = ev.total;
+            _set({ total: nextTotal });
+          } else if (ev.type === 'item') {
+            liveItems.push(ev.item);
+            _set({ items: liveItems.slice().sort(_byCreatedDesc), total: nextTotal || liveItems.length });
+          }
+        }
+      });
       const now = Date.now();
       _set({
-        items: next,
-        total: res.total || next.length,
+        items: liveItems.sort(_byCreatedDesc),
+        total: nextTotal || liveItems.length,
         lastFullSync: now,
         lastIncSync: now,
       });
