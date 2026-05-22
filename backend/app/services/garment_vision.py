@@ -3479,35 +3479,23 @@ class GarmentVisionService:
                 return idx, []
 
             if _looks_already_cropped(detections):
-                # Fallback to single-item analysis for already-cropped product photos
-                det = {"label": "garment", "kind": "garment", "bbox": [0,0,1000,1000]}
-                defer_matte = settings.DEFER_REMBG_ON_ANALYZE and settings.AUTO_MATTE_CROPS
-                
-                if settings.AUTO_MATTE_CROPS and not defer_matte:
-                    matted = await self._whole_image_matte(img_bytes)
-                    if matted:
-                        return idx, [(det, matted, "image/png")]
-                
-                if defer_matte:
-                    det["defer_matte"] = True
-                
+                # Already-cropped product photo — skip matting, defer to save.
+                det = {"label": "garment", "kind": "garment", "bbox": [0,0,1000,1000], "defer_matte": True}
                 return idx, [(det, img_bytes, "image/jpeg")]
-                
+
             useful = self._filter_useful_detections(detections, cap)
             if not useful:
                 return idx, []
 
             raw_crops = await asyncio.to_thread(self._bbox_crop_useful, img_bytes, useful)
-            defer_matte = (settings.DEFER_REMBG_ON_ANALYZE and settings.AUTO_MATTE_CROPS and bool(raw_crops))
-            
-            if settings.AUTO_MATTE_CROPS and raw_crops and not defer_matte:
-                crops = await self._matte_crops(raw_crops)
-            else:
-                crops = raw_crops
-                if defer_matte:
-                    for det, _, _ in crops:
-                        det["defer_matte"] = True
-            return idx, crops
+            # Always defer rembg in the streaming path — matting runs
+            # as a BackgroundTask after save.  This ensures the detect
+            # frame reaches the browser within ~5-7 s instead of blocking
+            # 120+ s for all rembg calls to finish (which caused 502 on
+            # 6+ multi-garment uploads).
+            for det, _, _ in raw_crops:
+                det["defer_matte"] = True
+            return idx, raw_crops
 
         # 1. Detect on all photos concurrently
         tasks = [
