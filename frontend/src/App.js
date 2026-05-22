@@ -80,7 +80,7 @@ function App() {
             </Route>
             <Route path="*" element={<Navigate to="/home" replace />} />
           </Routes>
-          <Toaster position="top-center" richColors closeButton />
+          <Toaster position="bottom-center" richColors closeButton />
           <WorkProgressFloater />
           <WorkBatchDoneToast />
           </BrowserRouter>

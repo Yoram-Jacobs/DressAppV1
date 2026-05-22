@@ -3576,7 +3576,16 @@ class GarmentVisionService:
                     clean_resp = clean_resp[:-3]
                 clean_resp = clean_resp.strip()
                 
-                data = json.loads(clean_resp)
+                try:
+                    data = json.loads(clean_resp)
+                except json.JSONDecodeError as jde:
+                    # Gemini occasionally truncates the final closing brace for short JSON outputs
+                    if clean_resp.count("{") > clean_resp.count("}"):
+                        clean_resp += "}"
+                        data = json.loads(clean_resp)
+                    else:
+                        raise jde
+                
                 count = int(data.get("count", 2))
                 logger.info("_gatekeep_image parsed successfully. Model: %s. Count: %d, Items seen: %s, Total: %.0fms", model, count, data.get("items_seen"), (time.perf_counter() - t_start) * 1000)
                 return count
