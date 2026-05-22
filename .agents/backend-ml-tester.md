@@ -1,5 +1,3 @@
-
-```markdown
 # Agent Skill: Backend & ML Testing Expert
 
 ## 🎯 Role Identity

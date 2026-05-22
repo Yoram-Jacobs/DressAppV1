@@ -1,3 +1,7 @@
+---
+name: Frontend Expert
+description: Frontend UI/UX Expert
+---
 # Agent Skill: Frontend UI/UX Expert
 
 ## 🎯 Role Identity

@@ -1,3 +1,7 @@
+---
+name: Core Coder
+description: Core Full-Stack Coder
+---
 # Agent Skill: Core Full-Stack Coder
 
 ## 🎯 Role Identity

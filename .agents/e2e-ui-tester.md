@@ -1,3 +1,7 @@
+---
+name: E2E UI Tester
+description: E2E UI/UX Visual Testing Expert
+---
 # Agent Skill: E2E UI/UX Visual Testing Expert
 
 ## 🎯 Role Identity
