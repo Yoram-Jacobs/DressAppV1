@@ -474,7 +474,7 @@ export default function Closet() {
             <ThumbRepairChip progress={store.thumbProgress} />
           </div>
         </div>
-        <div className="fixed bottom-[104px] right-4 md:bottom-8 md:right-8 z-50 flex flex-col md:flex-row items-end md:items-center gap-2 p-2 md:p-3 rounded-2xl bg-background/95 supports-[backdrop-filter]:bg-background/80 supports-[backdrop-filter]:backdrop-blur border border-border shadow-editorial">
+        <div className="fixed top-24 right-4 md:top-24 md:right-8 z-50 flex flex-col md:flex-row items-end md:items-center gap-2 p-2 md:p-3 rounded-2xl bg-background/95 supports-[backdrop-filter]:bg-background/80 supports-[backdrop-filter]:backdrop-blur border border-border shadow-editorial">
           {!selectMode ? (
             <>
               <Button
