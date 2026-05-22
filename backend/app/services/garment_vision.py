@@ -3507,7 +3507,7 @@ class GarmentVisionService:
                 "shoes, or accessories clearly visible in this image. "
                 "Ignore tags, hangers, or background objects."
             )
-            model = getattr(self, "flash_model", "gemini-2.5-flash")
+            model = self.detect_model
             
             schema = {
                 "type": "OBJECT",
@@ -3541,8 +3541,11 @@ class GarmentVisionService:
             try:
                 import json
                 data = json.loads(resp)
-                return int(data.get("count", 2))
-            except Exception:
+                count = int(data.get("count", 2))
+                logger.info("_gatekeep_image parsed successfully. Model: %s. Count: %d, Items seen: %s", model, count, data.get("items_seen"))
+                return count
+            except Exception as e:
+                logger.warning("_gatekeep_image failed to parse JSON: %s. Raw response: %s", e, resp)
                 return 2 # Fallback to SegFormer if unparseable
         except asyncio.TimeoutError:
             logger.warning("_gatekeep_image timed out after 12s, falling back to SegFormer")
