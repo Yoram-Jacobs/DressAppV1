@@ -3530,7 +3530,7 @@ class GarmentVisionService:
             async def _call_vision():
                 return await client.vision(
                     system=system_prompt,
-                    user_parts=[small_bytes],
+                    user_parts=["Analyze the image and return the count of garments.", small_bytes],
                     model=model,
                     response_mime_type="application/json",
                     response_schema=schema,
@@ -3540,7 +3540,16 @@ class GarmentVisionService:
             
             try:
                 import json
-                data = json.loads(resp)
+                clean_resp = resp.strip()
+                if clean_resp.startswith("```json"):
+                    clean_resp = clean_resp[7:]
+                elif clean_resp.startswith("```"):
+                    clean_resp = clean_resp[3:]
+                if clean_resp.endswith("```"):
+                    clean_resp = clean_resp[:-3]
+                clean_resp = clean_resp.strip()
+                
+                data = json.loads(clean_resp)
                 count = int(data.get("count", 2))
                 logger.info("_gatekeep_image parsed successfully. Model: %s. Count: %d, Items seen: %s", model, count, data.get("items_seen"))
                 return count
