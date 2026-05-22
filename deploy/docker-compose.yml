@@ -37,7 +37,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 3g
+          memory: 6g
     volumes:
       - model-cache:/models/huggingface
       - rembg-cache:/models/u2net
