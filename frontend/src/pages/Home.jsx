@@ -16,6 +16,7 @@ import {
   Users,
   Recycle,
   Newspaper,
+  Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -193,6 +194,16 @@ export default function Home() {
 
   return (
     <div className="container-px max-w-6xl mx-auto pt-6 md:pt-10">
+      <div className="fixed top-20 right-4 md:top-24 md:right-8 z-50 flex flex-col md:flex-row items-end md:items-center gap-2 p-2 md:p-3 rounded-2xl bg-background/95 supports-[backdrop-filter]:bg-background/80 supports-[backdrop-filter]:backdrop-blur border border-border shadow-editorial">
+        <Button
+          asChild
+          className="rounded-xl shadow-sm"
+          data-testid="home-add-item-button"
+        >
+          <Link to="/closet/add"><Plus className="h-4 w-4 me-0 md:me-2" /> <span className="hidden md:inline">{t('closet.addItem')}</span></Link>
+        </Button>
+      </div>
+      
       <section className="relative overflow-hidden rounded-[calc(var(--radius)+6px)] hero-wash-light noise border border-border p-6 md:p-10">
         {/* Floating language picker — small "bulb" in the top-end corner
             of the hero. RTL-safe (end inset). Blends with the hero wash
