@@ -24,7 +24,7 @@ def _apply_fast_matte(crops: list[tuple[dict[str, Any], bytes, str]]) -> list[tu
                 im.putalpha(alpha)
                 
                 buf = io.BytesIO()
-                im.save(buf, format="PNG", optimize=True)
+                im.save(buf, format="PNG", optimize=False)
                 cbytes = buf.getvalue()
                 mime = "image/png"
             except Exception as exc:

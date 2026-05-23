@@ -67,19 +67,28 @@ const INTENT_OPTIONS = [
 ];
 
 const fileToBase64 = async (file, maxSide = 1024, quality = 0.8) => {
-  const img = await new Promise((resolve, reject) => {
-    const i = new Image();
-    const objectUrl = URL.createObjectURL(file);
-    i.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      resolve(i);
-    };
-    i.onerror = (e) => {
-      URL.revokeObjectURL(objectUrl);
-      reject(e);
-    };
-    i.src = objectUrl;
-  });
+  let img = null;
+  if (typeof createImageBitmap === 'function') {
+    try {
+      img = await createImageBitmap(file);
+    } catch (_) {}
+  }
+  
+  if (!img) {
+    img = await new Promise((resolve, reject) => {
+      const i = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      i.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(i);
+      };
+      i.onerror = (e) => {
+        URL.revokeObjectURL(objectUrl);
+        reject(e);
+      };
+      i.src = objectUrl;
+    });
+  }
 
   let { width, height } = img;
   if (width > maxSide || height > maxSide) {
@@ -104,7 +113,8 @@ const fileToBase64 = async (file, maxSide = 1024, quality = 0.8) => {
   ctx.drawImage(img, 0, 0, width, height);
   
   // Free memory
-  img.src = '';
+  if (img.close) img.close();
+  else img.src = '';
 
   // Use webp if supported by the browser, fallback to jpeg.
   // Actually, standardizing on jpeg is safer for the backend since webp support in some older backend libraries can be spotty.

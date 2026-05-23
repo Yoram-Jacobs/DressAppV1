@@ -58,19 +58,28 @@ export async function aHashFile(file) {
     // Use ImageBitmap when available — faster, off-main-thread,
     // doesn't trigger paint. Fall back to <img> for older Safari.
     let bmp = null;
-    bmp = await new Promise((resolve, reject) => {
-      const im = new Image();
-      const objectUrl = URL.createObjectURL(file);
-      im.onload = () => {
-        URL.revokeObjectURL(objectUrl);
-        resolve(im);
-      };
-      im.onerror = (e) => {
-        URL.revokeObjectURL(objectUrl);
-        reject(e);
-      };
-      im.src = objectUrl;
-    });
+    if (typeof createImageBitmap === "function") {
+      try {
+        bmp = await createImageBitmap(file);
+      } catch (_) {
+        bmp = null;
+      }
+    }
+    if (!bmp) {
+      bmp = await new Promise((resolve, reject) => {
+        const im = new Image();
+        const objectUrl = URL.createObjectURL(file);
+        im.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          resolve(im);
+        };
+        im.onerror = (e) => {
+          URL.revokeObjectURL(objectUrl);
+          reject(e);
+        };
+        im.src = objectUrl;
+      });
+    }
     const HASH_SIZE = 8;
     const canvas = document.createElement("canvas");
     canvas.width = HASH_SIZE;
@@ -130,19 +139,24 @@ export async function colorSignatureFile(file) {
   if (!file) return null;
   try {
     let bmp = null;
-    bmp = await new Promise((resolve, reject) => {
-      const im = new Image();
-      const objectUrl = URL.createObjectURL(file);
-      im.onload = () => {
-        URL.revokeObjectURL(objectUrl);
-        resolve(im);
-      };
-      im.onerror = (e) => {
-        URL.revokeObjectURL(objectUrl);
-        reject(e);
-      };
-      im.src = objectUrl;
-    });
+    if (typeof createImageBitmap === "function") {
+      try { bmp = await createImageBitmap(file); } catch (_) { bmp = null; }
+    }
+    if (!bmp) {
+      bmp = await new Promise((resolve, reject) => {
+        const im = new Image();
+        const objectUrl = URL.createObjectURL(file);
+        im.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          resolve(im);
+        };
+        im.onerror = (e) => {
+          URL.revokeObjectURL(objectUrl);
+          reject(e);
+        };
+        im.src = objectUrl;
+      });
+    }
     // Resize to 16x16 — large enough to be representative, small
     // enough that the readback is sub-millisecond on mobile.
     const SIZE = 16;
