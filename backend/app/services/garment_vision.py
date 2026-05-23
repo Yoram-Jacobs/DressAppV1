@@ -3488,14 +3488,40 @@ class GarmentVisionService:
                 return idx, []
 
             raw_crops = await asyncio.to_thread(self._bbox_crop_useful, img_bytes, useful)
-            # Always defer rembg in the streaming path — matting runs
-            # as a BackgroundTask after save.  This ensures the detect
-            # frame reaches the browser within ~5-7 s instead of blocking
-            # 120+ s for all rembg calls to finish (which caused 502 on
-            # 6+ multi-garment uploads).
-            for det, _, _ in raw_crops:
-                det["defer_matte"] = True
-            return idx, raw_crops
+            
+            # Apply fast, no-"Polishing" matting using the SegFormer mask directly.
+            # This bypasses the heavy rembg background task (Polishing) while
+            # still providing cutouts, which scales safely for 6+ batch uploads.
+            def _apply_fast_matte(crops: list[tuple[dict[str, Any], bytes, str]]) -> list[tuple[dict[str, Any], bytes, str]]:
+                import io
+                import numpy as np
+                from PIL import Image, ImageFilter
+                out = []
+                for det, cbytes, mime in crops:
+                    mask_bbox = det.pop("_mask_bbox", None)
+                    human_bbox = det.pop("_human_mask_bbox", None)
+                    if mask_bbox is not None and mime == "image/jpeg":
+                        try:
+                            im = Image.open(io.BytesIO(cbytes)).convert("RGBA")
+                            if human_bbox is not None:
+                                mask_bbox = np.where(human_bbox > 0, 0, mask_bbox)
+                            
+                            alpha = Image.fromarray((mask_bbox * 255).astype(np.uint8), mode="L")
+                            alpha = alpha.filter(ImageFilter.GaussianBlur(radius=1.2))
+                            im.putalpha(alpha)
+                            
+                            buf = io.BytesIO()
+                            im.save(buf, format="PNG", optimize=True)
+                            cbytes = buf.getvalue()
+                            mime = "image/png"
+                        except Exception as exc:
+                            logger.info("fast_matte failed: %s", exc)
+                    det["defer_matte"] = False
+                    out.append((det, cbytes, mime))
+                return out
+
+            fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
+            return idx, fast_crops
 
         # 1. Detect on all photos sequentially to avoid OOM on large batches
         results = []
