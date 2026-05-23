@@ -474,34 +474,34 @@ export default function Closet() {
             <ThumbRepairChip progress={store.thumbProgress} />
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="fixed top-20 right-4 md:top-24 md:right-8 z-50 flex flex-col md:flex-row items-end md:items-center gap-2 p-2 md:p-3 rounded-2xl bg-background/95 supports-[backdrop-filter]:bg-background/80 supports-[backdrop-filter]:backdrop-blur border border-border shadow-editorial">
           {!selectMode ? (
             <>
               <Button
                 variant="outline"
-                className="rounded-xl"
+                className="rounded-xl shadow-sm"
                 onClick={enterSelect}
                 disabled={items.length === 0}
                 data-testid="closet-select-mode-button"
               >
-                <ListChecks className="h-4 w-4 me-2" /> {t('closet.bulkSelect')}
+                <ListChecks className="h-4 w-4 me-0 md:me-2" /> <span className="hidden md:inline">{t('closet.bulkSelect')}</span>
               </Button>
               <Button
                 asChild
-                className="rounded-xl hidden md:inline-flex"
+                className="rounded-xl shadow-sm"
                 data-testid="closet-add-item-button"
               >
-                <Link to="/closet/add"><Plus className="h-4 w-4 me-2" /> {t('closet.addItem')}</Link>
+                <Link to="/closet/add"><Plus className="h-4 w-4 me-0 md:me-2" /> <span className="hidden md:inline">{t('closet.addItem')}</span></Link>
               </Button>
             </>
           ) : (
             <Button
               variant="ghost"
-              className="rounded-xl"
+              className="rounded-xl bg-background shadow-sm"
               onClick={cancelSelect}
               data-testid="closet-select-cancel-button"
             >
-              <X className="h-4 w-4 me-2" /> {t('common.cancel')}
+              <X className="h-4 w-4 me-0 md:me-2" /> <span className="hidden md:inline">{t('common.cancel')}</span>
             </Button>
           )}
         </div>
@@ -786,16 +786,6 @@ export default function Closet() {
           })}
         </div>
       )}
-
-      {/* Mobile FAB */}
-      <Link
-        to="/closet/add"
-        className="md:hidden fixed right-4 bottom-[104px] z-40 inline-flex items-center justify-center h-14 w-14 rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] shadow-editorial-md"
-        data-testid="closet-add-item-fab"
-        aria-label="Add item"
-      >
-        <Plus className="h-6 w-6" />
-      </Link>
 
       {/* Confirm delete dialog */}
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
