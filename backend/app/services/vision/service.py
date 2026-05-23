@@ -573,7 +573,13 @@ class GarmentVisionService:
                     * max(0, d["bbox"][3] - d["bbox"][1])
                 ),
             )
-            mock_crop = [(dict(best_det), image_bytes, "image/jpeg")]
+            best_det_dict = dict(best_det)
+            if "mask" in best_det_dict:
+                best_det_dict["_mask_bbox"] = best_det_dict.pop("mask")
+            if "_human_mask_full" in best_det_dict:
+                best_det_dict["_human_mask_bbox"] = best_det_dict.pop("_human_mask_full")
+            
+            mock_crop = [(best_det_dict, image_bytes, "image/jpeg")]
             out = await asyncio.to_thread(_apply_fast_matte, mock_crop)
             if out:
                 _, crop_bytes, crop_mime = out[0]
@@ -1816,9 +1822,29 @@ class GarmentVisionService:
 
             try:
                 if _looks_already_cropped(detections):
-                    # Already-cropped product photo — skip matting, defer to save.
-                    det = {"label": "garment", "kind": "garment", "bbox": [0,0,1000,1000], "defer_matte": False}
-                    return idx, [(det, img_bytes, "image/jpeg")]
+                    # Already-cropped product photo — apply fast matting directly on the full frame
+                    if detections:
+                        best_det = max(
+                            detections,
+                            key=lambda d: (
+                                max(0, d["bbox"][2] - d["bbox"][0])
+                                * max(0, d["bbox"][3] - d["bbox"][1])
+                            ),
+                        )
+                        det_dict = dict(best_det)
+                        if "mask" in det_dict:
+                            det_dict["_mask_bbox"] = det_dict.pop("mask")
+                        if "_human_mask_full" in det_dict:
+                            det_dict["_human_mask_bbox"] = det_dict.pop("_human_mask_full")
+                    else:
+                        det_dict = {"label": "garment", "kind": "garment"}
+                    
+                    det_dict["bbox"] = [0, 0, 1000, 1000]
+                    det_dict["defer_matte"] = False
+                    
+                    mock_crop = [(det_dict, img_bytes, "image/jpeg")]
+                    fast_crops = await asyncio.to_thread(_apply_fast_matte, mock_crop)
+                    return idx, fast_crops
 
                 useful = self._filter_useful_detections(detections, cap)
                 if not useful:
