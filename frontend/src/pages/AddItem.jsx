@@ -66,14 +66,35 @@ const INTENT_OPTIONS = [
   { value: 'swap', icon: Repeat, tone: 'bg-sky-100 text-sky-900 border-sky-200' },
 ];
 
-const fileToBase64 = (file) =>
+const fileToBase64 = (file, maxSide = 1280, quality = 0.85) =>
   new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onerror = reject;
-    r.onload = () => {
-      const s = String(r.result || '');
-      const comma = s.indexOf(',');
-      resolve(comma >= 0 ? s.slice(comma + 1) : s);
+    r.onload = (e) => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxSide || height > maxSide) {
+          if (width > height) {
+            height = Math.round((height * maxSide) / width);
+            width = maxSide;
+          } else {
+            width = Math.round((width * maxSide) / height);
+            height = maxSide;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        const comma = dataUrl.indexOf(',');
+        resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
+      };
+      img.src = e.target.result;
     };
     r.readAsDataURL(file);
   });
