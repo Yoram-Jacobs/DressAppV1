@@ -1,7 +1,7 @@
 from __future__ import annotations
 from __future__ import annotations
 from .llm import EYES_JSON_SCHEMA, _call_gemma_space, _build_system_prompt, _language_directive, _user_prompt, _extract_json, DETECT_SYSTEM_PROMPT, _scan_complete_json_objects, _build_batch_prompts
-from .image import _shrink_for_vision, _crop_to_bbox, _PHANTOM_DROP_PCT, _solid_alpha_coverage, _fit_crop_to_card
+from .image import _shrink_for_vision, _crop_to_bbox, _PHANTOM_DROP_PCT, _solid_alpha_coverage, _fit_crop_to_card, _apply_fast_matte
 from .geometry import _nms_detections, _is_unidentifiable, _looks_already_cropped
 from .validation import _coerce_single_garment, _coerce_enums, _enforce_segformer_category
 
@@ -562,17 +562,25 @@ class GarmentVisionService:
             "(detections=%d); skipping crop pipeline",
             len(detections),
         )
-        matted = await self._whole_image_matte(image_bytes)
+        crop_bytes = image_bytes
+        crop_mime = "image/jpeg"
+
+        if settings.AUTO_MATTE_CROPS and detections:
+            best_det = max(
+                detections,
+                key=lambda d: (
+                    max(0, d["bbox"][2] - d["bbox"][0])
+                    * max(0, d["bbox"][3] - d["bbox"][1])
+                ),
+            )
+            mock_crop = [(dict(best_det), image_bytes, "image/jpeg")]
+            out = await asyncio.to_thread(_apply_fast_matte, mock_crop)
+            if out:
+                _, crop_bytes, crop_mime = out[0]
+
         single = await self.analyze(
             image_bytes, language=language, think=think,
         )
-
-        if matted:
-            crop_bytes = matted
-            crop_mime = "image/png"
-        else:
-            crop_bytes = image_bytes
-            crop_mime = "image/jpeg"
 
         # Pick the LLM's classification first (most reliable on novelty
         # patterns / unusual fabrics). Fall back to the dominant
@@ -1440,21 +1448,12 @@ class GarmentVisionService:
         # matte as a BackgroundTask per item, identical to the
         # Phase-O.6 single-pass path. This is the dominant win for
         # the analyze latency budget (saves ~10-30s per crop, serial).
-        defer_matte = (
-            settings.DEFER_REMBG_ON_ANALYZE
-            and settings.AUTO_MATTE_CROPS
-            and bool(raw_crops)
-        )
-        if settings.AUTO_MATTE_CROPS and raw_crops and not defer_matte:
-            crops = await self._matte_crops(raw_crops)
+        if settings.AUTO_MATTE_CROPS and raw_crops:
+            crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
         else:
+            for det, _, _ in raw_crops:
+                det["defer_matte"] = False
             crops = raw_crops
-            if defer_matte:
-                logger.info(
-                    "analyze_outfit: deferring rembg for %d crop(s) to "
-                    "post-save BackgroundTask (DEFER_REMBG_ON_ANALYZE=true)",
-                    len(raw_crops),
-                )
 
         if not crops:
             # Every crop was rejected (tiny / invalid bbox).
@@ -1524,10 +1523,7 @@ class GarmentVisionService:
         ``items_meta`` would have come out empty.
         """
         try:
-            if await self._is_single_item(image_bytes):
-                detections = [{"label": "garment", "kind": "garment", "bbox": [0, 0, 1000, 1000], "defer_matte": True}]
-            else:
-                detections = await self.detect_items(image_bytes)
+            detections = await self.detect_items(image_bytes)
         except Exception as exc:  # noqa: BLE001
             logger.warning(
                 "analyze_outfit_stream: detect_items failed (%s)",
@@ -1588,14 +1584,11 @@ class GarmentVisionService:
             self._bbox_crop_useful, image_bytes, useful,
         )
 
-        defer_matte = (
-            settings.DEFER_REMBG_ON_ANALYZE
-            and settings.AUTO_MATTE_CROPS
-            and bool(raw_crops)
-        )
-        if settings.AUTO_MATTE_CROPS and raw_crops and not defer_matte:
-            crops = await self._matte_crops(raw_crops)
+        if settings.AUTO_MATTE_CROPS and raw_crops:
+            crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
         else:
+            for det, _, _ in raw_crops:
+                det["defer_matte"] = False
             crops = raw_crops
 
         if not crops:
@@ -1816,10 +1809,7 @@ class GarmentVisionService:
         # 1. Detect on all photos concurrently
         async def _detect_and_crop(idx: int, img_bytes: bytes) -> tuple[int, list[tuple[dict[str, Any], bytes, str]]]:
             try:
-                if await self._is_single_item(img_bytes):
-                    detections = [{"label": "garment", "kind": "garment", "bbox": [0, 0, 1000, 1000], "defer_matte": True}]
-                else:
-                    detections = await self.detect_items(img_bytes)
+                detections = await self.detect_items(img_bytes)
             except Exception as exc:
                 logger.warning("analyze_outfits_stream: detect_items failed for idx %d: %s", idx, repr(exc)[:160])
                 return idx, []
@@ -1827,7 +1817,7 @@ class GarmentVisionService:
             try:
                 if _looks_already_cropped(detections):
                     # Already-cropped product photo — skip matting, defer to save.
-                    det = {"label": "garment", "kind": "garment", "bbox": [0,0,1000,1000], "defer_matte": True}
+                    det = {"label": "garment", "kind": "garment", "bbox": [0,0,1000,1000], "defer_matte": False}
                     return idx, [(det, img_bytes, "image/jpeg")]
 
                 useful = self._filter_useful_detections(detections, cap)
@@ -1839,33 +1829,7 @@ class GarmentVisionService:
                 # Apply fast, no-"Polishing" matting using the SegFormer mask directly.
                 # This bypasses the heavy rembg background task (Polishing) while
                 # still providing cutouts, which scales safely for 6+ batch uploads.
-                def _apply_fast_matte(crops: list[tuple[dict[str, Any], bytes, str]]) -> list[tuple[dict[str, Any], bytes, str]]:
-                    import io
-                    import numpy as np
-                    from PIL import Image, ImageFilter
-                    out = []
-                    for det, cbytes, mime in crops:
-                        mask_bbox = det.pop("_mask_bbox", None)
-                        human_bbox = det.pop("_human_mask_bbox", None)
-                        if mask_bbox is not None and mime == "image/jpeg":
-                            try:
-                                im = Image.open(io.BytesIO(cbytes)).convert("RGBA")
-                                if human_bbox is not None:
-                                    mask_bbox = np.where(human_bbox > 0, 0, mask_bbox)
-                                
-                                alpha = Image.fromarray((mask_bbox * 255).astype(np.uint8), mode="L")
-                                alpha = alpha.filter(ImageFilter.GaussianBlur(radius=1.2))
-                                im.putalpha(alpha)
-                                
-                                buf = io.BytesIO()
-                                im.save(buf, format="PNG", optimize=True)
-                                cbytes = buf.getvalue()
-                                mime = "image/png"
-                            except Exception as exc:
-                                logger.info("fast_matte failed: %s", exc)
-                        det["defer_matte"] = False
-                        out.append((det, cbytes, mime))
-                    return out
+
 
                 fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
                 return idx, fast_crops

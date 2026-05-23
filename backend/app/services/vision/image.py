@@ -3,9 +3,35 @@ import logging
 logger = logging.getLogger(__name__)
 from .geometry import _resolve_bbox_pad_trbl_for_category, _MIN_CROP_AREA_PCT, _resolve_min_short_edge_pct_for_category
 
+from typing import Any
 import io
-from PIL import Image
+import numpy as np
+from PIL import Image, ImageFilter
 
+def _apply_fast_matte(crops: list[tuple[dict[str, Any], bytes, str]]) -> list[tuple[dict[str, Any], bytes, str]]:
+    out = []
+    for det, cbytes, mime in crops:
+        mask_bbox = det.pop("_mask_bbox", None)
+        human_bbox = det.pop("_human_mask_bbox", None)
+        if mask_bbox is not None and mime == "image/jpeg":
+            try:
+                im = Image.open(io.BytesIO(cbytes)).convert("RGBA")
+                if human_bbox is not None:
+                    mask_bbox = np.where(human_bbox > 0, 0, mask_bbox)
+                
+                alpha = Image.fromarray((mask_bbox * 255).astype(np.uint8), mode="L")
+                alpha = alpha.filter(ImageFilter.GaussianBlur(radius=1.2))
+                im.putalpha(alpha)
+                
+                buf = io.BytesIO()
+                im.save(buf, format="PNG", optimize=True)
+                cbytes = buf.getvalue()
+                mime = "image/png"
+            except Exception as exc:
+                logger.info("fast_matte failed: %s", exc)
+        det["defer_matte"] = False
+        out.append((det, cbytes, mime))
+    return out
 
 
 def _shrink_for_vision(image_bytes: bytes, *, max_side: int = 1280, q: int = 82) -> bytes:
