@@ -53,3 +53,15 @@ The primary goal was to restore the legacy `analyze_outfit` architecture (which 
 - **Issue:** The Chrome console threw accessibility warnings about missing `id` and `name` attributes, and third-party extensions threw generic "message channel closed" errors.
 - **Fix:** Refactored the `AddItem.jsx` and `WeightedList.jsx` React components to generate unique, per-card `idPrefix` keys. Applied `id` and `htmlFor` attributes to all `<Input>`, `<Select>`, and `<Label>` components, resolving all browser accessibility warnings and ensuring correct autofill behavior.
 - **Clarification:** Confirmed that the "A listener indicated an asynchronous response..." console error originates strictly from third-party Chrome extensions and has absolutely no impact on the frontend streaming pipeline or backend latency.
+
+### G. UI Cleanup and Toast Scrolling
+- **Issue:** The 'Cancel' button and 'Delete-Select' floater were disjointed in the UI. Notification toasts persisted even when scrolling through large closets.
+- **Fix:** Unified the floater and the 'Cancel' button into a seamless fixed position overlay in `Closet.jsx` using `AnimatePresence`. Added a global scroll listener to `App.js` that automatically dismisses active toast notifications as soon as the user starts scrolling the page.
+
+### H. Backend Concurrency on High-Res Bulk Uploads (OOM)
+- **Issue:** Processing a batch of 6 items (e.g. 6 SLR photos) caused the backend to crash with a 502 Error after ~11.7 seconds, exhausting the 6GB container memory limit.
+- **Fix:** Reduced the internal `_ANALYZE_CONCURRENCY` in `closet.py` from 3 to 1. This bounds the number of concurrent multi-modal requests made for large items within a single upload stream to strictly prevent the server from running out of memory.
+
+### I. EXIF Rotation and Client-Side Optimization (Preflight Pipeline)
+- **Issue:** High-resolution SLR photos failed duplicate detection due to incorrect orientation (EXIF rotation ignored), and loaded uncompressed into canvas which overwhelmed the browser memory and resulted in backend OOMs.
+- **Fix:** Rewired the frontend preflight pipeline in `AddItem.jsx`. The pipeline now shrinks and corrects the aspect ratio of the image FIRST by executing `fileToBase64` (which respects EXIF via `createImageBitmap({ imageOrientation: 'from-image' })`) before any client-side components. The duplicate detection tools (`aHashFile`, `colorSignatureFile`, `sha256File`) now run on the optimized (~150KB) version, entirely preventing browser memory spikes, fixing the rotation bugs, and guaranteeing the backend receives small, perfectly cropped images regardless of the original camera format.
