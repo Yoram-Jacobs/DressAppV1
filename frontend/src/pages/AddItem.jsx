@@ -507,6 +507,8 @@ export default function AddItem() {
     const b64List = await Promise.all(fingerprints.map(fp => fileToBase64(fp.file)));
     
     let detectMetas = [];
+    let totalItemsExpected = 0;
+    const savePromises = [];
     
     const handleDetect = (frame) => {
       // detect frame gives us total items across all images
@@ -517,7 +519,8 @@ export default function AddItem() {
       setBgBatch(b => b ? { ...b, processed: 1 } : null);
     };
 
-    const handleItem = async (frame) => {
+    const handleItem = (frame) => {
+      const p = (async () => {
       const meta = detectMetas[frame.index] || {};
       const idx = meta.image_index ?? frame.image_index;
       const fp = fingerprints[idx];
@@ -575,6 +578,9 @@ export default function AddItem() {
       } catch (_) {
         setBgBatch(b => b ? { ...b, failed: b.failed + 1, processed: b.processed + 1 } : null);
       }
+      })();
+      savePromises.push(p);
+      return p;
     };
 
     const handleItemSkip = (frame) => {
@@ -591,6 +597,8 @@ export default function AddItem() {
       // For now just error out gracefully
       setBgBatch(b => b ? { ...b, failed: b.failed + (b.total - b.processed) } : null);
     }
+
+    await Promise.all(savePromises);
 
     // Final checks and navigation
     setBgBatch((b) => {
