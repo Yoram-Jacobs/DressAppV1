@@ -573,16 +573,12 @@ class GarmentVisionService:
                     * max(0, d["bbox"][3] - d["bbox"][1])
                 ),
             )
-            best_det_dict = dict(best_det)
-            if "mask" in best_det_dict:
-                best_det_dict["_mask_bbox"] = best_det_dict.pop("mask")
-            if "_human_mask_full" in best_det_dict:
-                best_det_dict["_human_mask_bbox"] = best_det_dict.pop("_human_mask_full")
-            
-            mock_crop = [(best_det_dict, image_bytes, "image/jpeg")]
-            out = await asyncio.to_thread(_apply_fast_matte, mock_crop)
+            raw_crops = await asyncio.to_thread(self._bbox_crop_useful, image_bytes, [best_det])
+            out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
             if out:
                 _, crop_bytes, crop_mime = out[0]
+            elif raw_crops:
+                _, crop_bytes, crop_mime = raw_crops[0]
 
         single = await self.analyze(
             image_bytes, language=language, think=think,
@@ -1559,10 +1555,12 @@ class GarmentVisionService:
                         * max(0, d["bbox"][3] - d["bbox"][1])
                     ),
                 )
-                mock_crop = [(dict(best_det), image_bytes, "image/jpeg")]
-                out = await asyncio.to_thread(_apply_fast_matte, mock_crop)
+                raw_crops = await asyncio.to_thread(self._bbox_crop_useful, image_bytes, [best_det])
+                out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
                 if out:
                     _, crop_bytes, crop_mime = out[0]
+                elif raw_crops:
+                    _, crop_bytes, crop_mime = raw_crops[0]
 
             fitted_bytes, fitted_mime = _fit_crop_to_card(
                 crop_bytes, crop_mime=crop_mime,
@@ -1847,7 +1845,6 @@ class GarmentVisionService:
 
             try:
                 if _looks_already_cropped(detections):
-                    # Already-cropped product photo — apply fast matting directly on the full frame
                     if detections:
                         best_det = max(
                             detections,
@@ -1856,20 +1853,13 @@ class GarmentVisionService:
                                 * max(0, d["bbox"][3] - d["bbox"][1])
                             ),
                         )
-                        det_dict = dict(best_det)
-                        if "mask" in det_dict:
-                            det_dict["_mask_bbox"] = det_dict.pop("mask")
-                        if "_human_mask_full" in det_dict:
-                            det_dict["_human_mask_bbox"] = det_dict.pop("_human_mask_full")
+                        # Crop the image to the detected garment bounds so it isn't
+                        # floating in a huge frame, and so fast_matte works correctly.
+                        raw_crops = await asyncio.to_thread(self._bbox_crop_useful, img_bytes, [best_det])
+                        fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
+                        return idx, fast_crops
                     else:
-                        det_dict = {"label": "garment", "kind": "garment"}
-                    
-                    det_dict["bbox"] = [0, 0, 1000, 1000]
-                    det_dict["defer_matte"] = False
-                    
-                    mock_crop = [(det_dict, img_bytes, "image/jpeg")]
-                    fast_crops = await asyncio.to_thread(_apply_fast_matte, mock_crop)
-                    return idx, fast_crops
+                        return idx, []
 
                 useful = self._filter_useful_detections(detections, cap)
                 if not useful:
@@ -1938,8 +1928,9 @@ class GarmentVisionService:
             # Process all crops concurrently using individual analyze calls.
             # This avoids the 4-minute latency caused by forcing Gemini to
             # generate multiple GarmentAnalysis objects sequentially in a single
-            # batch stream. We cap concurrency to avoid hitting rate limits.
-            sem = asyncio.Semaphore(12)
+            # batch stream. We cap concurrency to 6 to avoid overwhelming the
+            # LLM proxy while maintaining very fast TTFB.
+            sem = asyncio.Semaphore(6)
 
             async def _process_crop(slot_idx: int, crop_tuple: tuple[int, dict[str, Any], bytes, str]) -> tuple[int, dict[str, Any]]:
                 image_idx, det, c_bytes, c_mime = crop_tuple

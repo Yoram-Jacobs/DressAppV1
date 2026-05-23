@@ -413,7 +413,11 @@ export default function Closet() {
     const results = await Promise.allSettled(ids.map((id) => api.deleteItem(id)));
     setDeleting(false);
 
-    const failedIds = ids.filter((_, idx) => results[idx].status === 'rejected');
+    const failedIds = ids.filter((_, idx) => {
+      const res = results[idx];
+      // 404 means it's already gone; treat as success so we don't revert it
+      return res.status === 'rejected' && res.reason?.response?.status !== 404;
+    });
     if (failedIds.length === 0) {
       toast.success(`${ids.length} item${ids.length === 1 ? '' : 's'} deleted`);
       return;

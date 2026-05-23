@@ -34,8 +34,8 @@ def _apply_fast_matte(crops: list[tuple[dict[str, Any], bytes, str]]) -> list[tu
     return out
 
 
-def _shrink_for_vision(image_bytes: bytes, *, max_side: int = 1280, q: int = 82) -> bytes:
-    """Keep the API payload light; Gemini vision is happy with ~1280px long side."""
+def _shrink_for_vision(image_bytes: bytes, *, max_side: int = 768, q: int = 82) -> bytes:
+    """Keep the API payload light; Gemini vision is happy with ~768px long side."""
     try:
         img = Image.open(io.BytesIO(image_bytes))
         has_alpha = (

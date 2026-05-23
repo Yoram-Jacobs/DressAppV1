@@ -149,7 +149,7 @@ export const closetStore = {
     _set({ loading: true, error: null });
     try {
       const res = await api.listCloset({ limit: 2000 });
-      const next = (res.items || []).slice().sort(_byCreatedDesc);
+      const next = (res.items || []).filter((it) => !_deletedIds.has(it.id)).sort(_byCreatedDesc);
       const now = Date.now();
       _set({
         items: next,
@@ -231,13 +231,27 @@ export const closetStore = {
       if (changedItems.length) {
         const byId = new Map(nextItems.map((it) => [it.id, it]));
         for (const it of changedItems) {
-          byId.set(it.id, { ...(byId.get(it.id) || {}), ...it });
+          const prev = byId.get(it.id) || {};
+          const merged = { ...prev, ...it };
+          
+          const flipsToReady = it.clean_image_status === 'ready' && prev.clean_image_status !== 'ready';
+          const gainedCleanImage = typeof it.clean_image_url === 'string' && it.clean_image_url && it.clean_image_url !== prev.clean_image_url;
+          const gainedReconstruction = typeof it.reconstructed_image_url === 'string' && it.reconstructed_image_url && it.reconstructed_image_url !== prev.reconstructed_image_url;
+          
+          if (
+            (flipsToReady || gainedCleanImage || gainedReconstruction || !('thumbnail_data_url' in it))
+            && merged.thumbnail_data_url
+            && !it.thumbnail_data_url
+          ) {
+            merged.thumbnail_data_url = null;
+          }
+          
+          byId.set(it.id, merged);
         }
         nextItems = Array.from(byId.values()).sort(_byCreatedDesc);
         mutations += changedItems.length;
       }
-      const beforeCount = nextItems.length;
-      nextItems = nextItems.filter((it) => liveIds.has(it.id));
+      nextItems = nextItems.filter((it) => liveIds.has(it.id) && !_deletedIds.has(it.id));
       const removed = beforeCount - nextItems.length;
       mutations += removed;
 
@@ -257,9 +271,12 @@ export const closetStore = {
     }
   },
 
+const _deletedIds = new Set();
+
   /** Optimistic upsert. Used after a successful create/update. */
   upsert(item) {
     if (!item || !item.id) return;
+    _deletedIds.delete(item.id);
     const items = _state.items;
     const idx = items.findIndex((it) => it.id === item.id);
     let nextItems;
@@ -267,31 +284,6 @@ export const closetStore = {
     if (idx >= 0) {
       // Patch M20 (May 2026) — Defensive thumbnail invalidation on
       // Phase O.6 background-matte completion.
-      //
-      // Problem: the closet poll in ``Closet.jsx`` calls
-      // ``api.getItem(id)`` to refresh a still-``pending`` item and
-      // upserts the fresh response. The backend's
-      // ``_run_background_matte`` writes ``clean_image_status=
-      // "ready"`` AND ``clean_image_url=<polished PNG>`` simultaneously,
-      // and also nulls ``thumbnail_data_url`` so the lazy backfill
-      // regenerates it from the polished cutout.
-      //
-      // Older builds used ``$unset thumbnail_data_url`` here, which
-      // MongoDB omits from query results entirely → the spread merge
-      // below KEPT the stale optimistic JPEG in ``thumbnail_data_url``
-      // → ``bestImageUrl`` returned the unprocessed photo → user saw
-      // both the "Polishing photo…" badge gone AND the original
-      // background still in the card. We patched the backend to
-      // ``$set thumbnail_data_url: null`` so the merge propagates,
-      // BUT we also defensively force-clear here so the fix works on
-      // older backends and on the polled CTA path.
-      //
-      // Trigger condition: incoming patch flips ``clean_image_status``
-      // from anything-not-ready to ``"ready"`` (or supplies a fresh
-      // ``clean_image_url`` / ``reconstructed_image_url``). When that
-      // happens, the local optimistic ``thumbnail_data_url`` is by
-      // definition stale (it predates the polished cutout) and the
-      // resolver should fall through to the new ``clean_image_url``.
       const prev = items[idx];
       const flipsToReady =
         item.clean_image_status === 'ready'
@@ -308,10 +300,6 @@ export const closetStore = {
       if (
         (flipsToReady || gainedCleanImage || gainedReconstruction)
         && merged.thumbnail_data_url
-        // Only nuke a stale OPTIMISTIC thumbnail; if the polled
-        // response carried an explicit non-empty value (rare today
-        // but possible if a future backend rev re-bakes the
-        // thumbnail eagerly) leave it alone.
         && !item.thumbnail_data_url
       ) {
         merged.thumbnail_data_url = null;
@@ -331,6 +319,7 @@ export const closetStore = {
   /** Optimistic delete. Used after a successful DELETE /closet/{id}. */
   remove(itemId) {
     if (!itemId) return;
+    _deletedIds.add(itemId);
     const before = _state.items.length;
     const nextItems = _state.items.filter((it) => it.id !== itemId);
     if (nextItems.length !== before) {

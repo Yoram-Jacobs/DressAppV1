@@ -14,6 +14,8 @@ import os
 from datetime import datetime, timezone
 from typing import Any
 
+from pymongo import ReturnDocument
+
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
@@ -3931,24 +3933,36 @@ async def set_item_photo(
     segmentation_model: str | None = None
 
     if payload.auto_segment and garment_vision_service is not None:
-        # Single-item pipeline: analyse with max_items=1 so we get a
-        # semantic cutout of the dominant garment. Never fatal \u2014 on any
-        # error we just keep the raw upload.
-        photo_lang = (
-            (payload.language or "").strip().lower()
-            or (user or {}).get("preferred_language")
-            or "en"
-        )
+        # Fast single-item pipeline: just run the detector and crop/matte it.
+        # We don't run the full `analyze_outfit` because we don't need the 
+        # 11-second Gemini LLM analysis (we are only replacing the photo, not 
+        # rewriting the item's metadata).
         try:
-            items = await garment_vision_service.analyze_outfit(
-                raw, max_items=1, language=photo_lang,
-            )
-            if items:
-                first = items[0]
-                b64 = first.get("crop_base64")
-                mime = first.get("crop_mime") or "image/png"
-                if b64:
-                    segmented_data_url = f"data:{mime};base64,{b64}"
+            detections = await garment_vision_service.detect_items(raw)
+            if detections:
+                best_det = max(
+                    detections,
+                    key=lambda d: (
+                        max(0, d["bbox"][2] - d["bbox"][0])
+                        * max(0, d["bbox"][3] - d["bbox"][1])
+                    ),
+                )
+                raw_crops = await asyncio.to_thread(
+                    garment_vision_service._bbox_crop_useful, raw, [best_det]
+                )
+                from app.services.vision.image import _apply_fast_matte
+                out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
+                
+                if out:
+                    _, b64_bytes, mime = out[0]
+                elif raw_crops:
+                    _, b64_bytes, mime = raw_crops[0]
+                else:
+                    b64_bytes = None
+                
+                if b64_bytes:
+                    b64 = base64.b64encode(b64_bytes).decode("ascii")
+                    segmented_data_url = f"data:{mime or 'image/png'};base64,{b64}"
                     segmentation_model = "the_eyes_single"
         except Exception as exc:  # noqa: BLE001
             logger.warning(
@@ -4275,9 +4289,24 @@ async def update_item(
         {"id": item_id, "user_id": user["id"]},
         {"_id": 0, "source": 1, "marketplace_intent": 1},
     )
-    updated = await repos.update(
-        db.closet_items, {"id": item_id, "user_id": user["id"]}, patch
-    )
+
+    # If the patch explicitly provides a new reconstructed_image_url (e.g. from
+    # "Clean background" save), we must invalidate the thumbnail so it doesn't mask it.
+    unset_doc = {}
+    if "reconstructed_image_url" in patch and patch["reconstructed_image_url"]:
+        unset_doc = {"thumbnail_data_url": ""}
+
+    if unset_doc:
+        updated = await db.closet_items.find_one_and_update(
+            {"id": item_id, "user_id": user["id"]},
+            {"$set": patch, "$unset": unset_doc},
+            return_document=ReturnDocument.AFTER,
+        )
+    else:
+        updated = await repos.update(
+            db.closet_items, {"id": item_id, "user_id": user["id"]}, patch
+        )
+        
     if not updated:
         raise HTTPException(404, "Item not found")
 

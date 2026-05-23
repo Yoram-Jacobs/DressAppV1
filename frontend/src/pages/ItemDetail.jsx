@@ -519,6 +519,12 @@ export default function ItemDetail() {
       // the new baseline correctly reflects only the user's
       // editable-field drafts.
       setItem(res.item);
+      try {
+        const { closetStore } = await import('@/lib/closetStore');
+        closetStore.upsert(res.item);
+      } catch (e) {
+        console.warn('ItemDetail: closetStore sync after photo upload failed', e);
+      }
       toast.dismiss(loadingId);
       toast.success(t('itemDetail.photo.success'));
     } catch (err) {
@@ -785,10 +791,16 @@ export default function ItemDetail() {
     nav('/closet');
     // Fire-and-forget — we're already off the page. Reconcile on failure.
     api.deleteItem(id).catch((err) => {
-      if (closetStoreRef && snapshot) {
-        closetStoreRef.upsert(snapshot);
+      // Revert if API call fails, UNLESS it's a 404 (already deleted).
+      // A 404 means the UI optimistic delete matched reality. Reverting it
+      // causes a phantom duplicate in the closetStore that triggers false
+      // duplicate warnings on subsequent uploads.
+      if (err?.response?.status !== 404) {
+        if (closetStoreRef && snapshot) {
+          closetStoreRef.upsert(snapshot);
+        }
+        toast.error(err?.response?.data?.detail || t('closet.deleteFailed'));
       }
-      toast.error(err?.response?.data?.detail || t('closet.deleteFailed'));
     });
   };
 

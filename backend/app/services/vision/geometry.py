@@ -65,36 +65,14 @@ _BBOX_PAD_TRBL_BY_CATEGORY: dict[str, tuple[float, float, float, float]] = {
     # of vertical breathing room below before the SegFormer
     # confidence drops). Skirt + footwear cards untouched —
     # they were already clean per the user screenshot.
-    "top":        (0.04, 0.02, -0.025, 0.02),
-    # Bottom: waistline AND hem are both adjacent to other body
-    # regions (top above, footwear/skin below). Both edges go
-    # negative; the hem edge is the more aggressive one because the
-    # skirt-vs-thigh / skirt-vs-boot boundary is where SegFormer is
-    # least confident on the May 2026 test photo (visible leak of
-    # legs + boot tops bottom of skirt card).
-    "bottom":     (-0.015, 0.02, -0.025, 0.02),
-    # Dress / Full Body: same logic — neckline tight, hem tight (no
-    # floor / shoes / mat).
-    "dress":      (0.02, 0.02, -0.020, 0.02),
-    "fullbody":   (0.02, 0.02, -0.020, 0.02),
-    "full body":  (0.02, 0.02, -0.020, 0.02),
-    # Outerwear: collar overlaps neckline of underlying top — tighten
-    # top edge. Hem of an open coat shows pants behind — tighten
-    # bottom too. Sides loose to keep the silhouette.
-    # Patch 12m: Outerwear bottom padding changed from -0.010 to 0.020.
-    # The negative padding was amputating the bottom hem of longline
-    # jackets and trench coats. Alpha intersection already handles the pants.
+    "top":        (0.04, 0.02, -0.01, 0.02),
+    "bottom":     (-0.01, 0.02, -0.015, 0.02),
+    "dress":      (0.02, 0.02, -0.01, 0.02),
+    "fullbody":   (0.02, 0.02, -0.01, 0.02),
+    "full body":  (0.02, 0.02, -0.01, 0.02),
     "outerwear":  (0.01, 0.03, 0.020, 0.03),
-    # Footwear: top edge tight (avoid trouser hem leaking) — now
-    # negative so we bite past the SegFormer bbox top. Bottom / sides
-    # loose so the heel + sole stay in frame.
-    "footwear":   (-0.015, 0.03, 0.03, 0.03),
-    # Headwear: free-edge garment — generous padding all around so
-    # the brim / pom-pom isn't clipped.
+    "footwear":   (-0.01, 0.03, 0.03, 0.03),
     "headwear":   (0.04, 0.04, 0.03, 0.04),
-    # Accessory: tight all-around. Most accessories (belts, scarves,
-    # sunglasses, bags) sit against another garment and benefit from
-    # a minimum-padding crop.
     "accessory":  (0.015, 0.015, 0.015, 0.015),
     "accessories": (0.015, 0.015, 0.015, 0.015),
     "underwear":  (0.015, 0.015, 0.015, 0.015),

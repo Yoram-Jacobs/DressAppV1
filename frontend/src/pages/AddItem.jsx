@@ -66,38 +66,50 @@ const INTENT_OPTIONS = [
   { value: 'swap', icon: Repeat, tone: 'bg-sky-100 text-sky-900 border-sky-200' },
 ];
 
-const fileToBase64 = (file, maxSide = 1280, quality = 0.85) =>
-  new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onerror = reject;
-    r.onload = (e) => {
-      const img = new Image();
-      img.onerror = reject;
-      img.onload = () => {
-        let { width, height } = img;
-        if (width > maxSide || height > maxSide) {
-          if (width > height) {
-            height = Math.round((height * maxSide) / width);
-            width = maxSide;
-          } else {
-            width = Math.round((width * maxSide) / height);
-            height = maxSide;
-          }
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        const dataUrl = canvas.toDataURL('image/jpeg', quality);
-        const comma = dataUrl.indexOf(',');
-        resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
-      };
-      img.src = e.target.result;
-    };
-    r.readAsDataURL(file);
-  });
+const fileToBase64 = async (file, maxSide = 1280, quality = 0.85) => {
+  let img = null;
+  if (typeof createImageBitmap === 'function') {
+    try {
+      img = await createImageBitmap(file);
+    } catch (_) {}
+  }
+  
+  if (!img) {
+    const dataUrl = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+    img = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = dataUrl;
+    });
+  }
+
+  let { width, height } = img;
+  if (width > maxSide || height > maxSide) {
+    if (width > height) {
+      height = Math.round((height * maxSide) / width);
+      width = maxSide;
+    } else {
+      width = Math.round((width * maxSide) / height);
+      height = maxSide;
+    }
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, width, height);
+
+  const outDataUrl = canvas.toDataURL('image/jpeg', quality);
+  const comma = outDataUrl.indexOf(',');
+  return comma >= 0 ? outDataUrl.slice(comma + 1) : outDataUrl;
+};
 
 const fmtCents = (cents, cur = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: cur || 'USD' }).format(

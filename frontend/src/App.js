@@ -31,6 +31,23 @@ import ExpertsDirectory from '@/pages/ExpertsDirectory';
 import AdsManager from '@/pages/AdsManager';
 import ExtensionConnect from '@/pages/ExtensionConnect';
 
+import { useEffect } from 'react';
+import { toast } from 'sonner';
+
+function GlobalScrollListener() {
+  useEffect(() => {
+    const handleScroll = () => {
+      toast.dismiss();
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+  return null;
+}
+
 function App() {
   return (
     <HelmetProvider>
@@ -80,7 +97,8 @@ function App() {
             </Route>
             <Route path="*" element={<Navigate to="/home" replace />} />
           </Routes>
-          <Toaster position="top-center" richColors closeButton />
+          <Toaster position="top-center" richColors closeButton className="mt-14 sm:mt-0" />
+          <GlobalScrollListener />
           <WorkProgressFloater />
           <WorkBatchDoneToast />
           </BrowserRouter>
