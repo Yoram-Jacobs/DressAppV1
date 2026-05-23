@@ -101,6 +101,8 @@ let _state = {
 };
 
 const _listeners = new Set();
+const _deletedIds = new Set();
+
 function _notify() {
   _listeners.forEach((fn) => {
     try { fn(); } catch { /* ignore */ }
@@ -270,9 +272,6 @@ export const closetStore = {
       return 0;
     }
   },
-
-const _deletedIds = new Set();
-
   /** Optimistic upsert. Used after a successful create/update. */
   upsert(item) {
     if (!item || !item.id) return;
