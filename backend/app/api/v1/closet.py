@@ -853,7 +853,18 @@ async def create_item(
         # Snapshot what the background task needs: the item id and the
         # raw bytes. Use crop_base64 if available, fallback to full image.
         item_id_for_bg = doc["id"]
-        raw_for_bg = _bytes_from_data_url(payload.crop_base64) if payload.crop_base64 else raw_bytes
+        
+        raw_for_bg = None
+        if payload.crop_base64:
+            if payload.crop_base64.startswith("data:"):
+                raw_for_bg = _bytes_from_data_url(payload.crop_base64)
+            else:
+                try:
+                    raw_for_bg = base64.b64decode(payload.crop_base64, validate=True)
+                except Exception:
+                    pass
+        if not raw_for_bg:
+            raw_for_bg = raw_bytes
         background_tasks.add_task(
             _run_background_matte,
             item_id_for_bg,
