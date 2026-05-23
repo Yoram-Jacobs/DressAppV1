@@ -1543,34 +1543,59 @@ class GarmentVisionService:
             return
 
         if _looks_already_cropped(detections):
-            # Already-cropped product photos take a different code
-            # path that does a single full-frame analyze; defer to
-            # the one-shot ``analyze_outfit`` here so the streaming
-            # variant only ever handles the multi-item case.
-            items = await self._handle_already_cropped(
-                image_bytes, detections, language, think=False,
+            # Already-cropped / single-item product photos skip per-crop
+            # analysis and do a single full-frame analyze.
+            # We must yield the detect frame IMMEDIATELY for fast TTFB,
+            # then run the blocking LLM analysis.
+            crop_bytes = image_bytes
+            crop_mime = "image/jpeg"
+
+            best_det: dict[str, Any] | None = None
+            if settings.AUTO_MATTE_CROPS and detections:
+                best_det = max(
+                    detections,
+                    key=lambda d: (
+                        max(0, d["bbox"][2] - d["bbox"][0])
+                        * max(0, d["bbox"][3] - d["bbox"][1])
+                    ),
+                )
+                mock_crop = [(dict(best_det), image_bytes, "image/jpeg")]
+                out = await asyncio.to_thread(_apply_fast_matte, mock_crop)
+                if out:
+                    _, crop_bytes, crop_mime = out[0]
+
+            fitted_bytes, fitted_mime = _fit_crop_to_card(
+                crop_bytes, crop_mime=crop_mime,
             )
-            meta = [
-                {
-                    "label": it.get("label"),
-                    "kind": it.get("kind"),
-                    "bbox": it.get("bbox"),
-                    "crop_base64": it.get("crop_base64"),
-                    "crop_mime": it.get("crop_mime", "image/jpeg"),
-                    "defer_matte": it.get("defer_matte", False),
-                }
-                for it in items
-            ]
-            yield {"type": "detect", "count": len(items), "items_meta": meta}
-            for i, it in enumerate(items):
-                yield {
-                    "type": "item",
-                    "index": i,
-                    "analysis": it.get("analysis", {}),
-                    "needs_reconstruction": it.get("needs_reconstruction", False),
-                    "reconstruction_reasons": it.get("reconstruction_reasons", []),
-                }
-            yield {"type": "done", "count": len(items)}
+
+            # 1. Yield the fast detect frame
+            yield {
+                "type": "detect",
+                "count": 1,
+                "items_meta": [{
+                    "label": best_det.get("label") if best_det else "garment",
+                    "kind": best_det.get("kind") if best_det else "garment",
+                    "bbox": best_det.get("bbox") if best_det else [0, 0, 1000, 1000],
+                    "crop_base64": base64.b64encode(fitted_bytes).decode("ascii"),
+                    "crop_mime": fitted_mime,
+                    "defer_matte": False,
+                }],
+            }
+
+            # 2. Block on the LLM analysis
+            single = await self.analyze(
+                image_bytes, language=language, think=False,
+            )
+
+            # 3. Yield the analysis
+            yield {
+                "type": "item",
+                "index": 0,
+                "analysis": single,
+                "needs_reconstruction": False,
+                "reconstruction_reasons": [],
+            }
+            yield {"type": "done", "count": 1}
             return
 
         cap = max_items if max_items is not None else self.max_items
@@ -1620,7 +1645,7 @@ class GarmentVisionService:
                 "bbox": d.get("bbox"),
                 "crop_base64": base64.b64encode(fitted_b).decode("ascii"),
                 "crop_mime": fitted_m,
-                "defer_matte": defer_matte,
+                "defer_matte": d.get("defer_matte", False),
             })
         yield {"type": "detect", "count": len(crops), "items_meta": items_meta}
 
