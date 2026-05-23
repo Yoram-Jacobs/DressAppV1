@@ -317,23 +317,26 @@ export default function AddItem() {
     // mounted as a fallback for older clients.
     // ----------------------------------------------------------------
     const fingerprints = [];
-    for (const f of files) {
-      // Compute all three fingerprints:
-      //   * sha256       → exact-byte re-upload (post-Z2 items)
-      //   * aHash        → shape similarity (survives JPEG re-compression)
-      //   * colour sig   → chroma signature so two same-shape garments
-      //                    of *different* colours (navy vs grey shorts)
-      //                    are correctly distinguished.
+    for (const rawF of files) {
+      const b64 = await fileToBase64(rawF);
+      
+      const res = await fetch(`data:image/jpeg;base64,${b64}`);
+      const blob = await res.blob();
+      const f = new File([blob], rawF.name || 'image.jpg', { type: 'image/jpeg' });
+
       const sha256 = await sha256File(f);
       const phash = await aHashFile(f);
       const color_sig = await colorSignatureFile(f);
+      
       fingerprints.push({
         file: f,
+        originalFile: rawF,
         sha256,
         phash,
         color_sig,
-        filename: f.name || null,
-        size_bytes: typeof f.size === 'number' ? f.size : null,
+        filename: rawF.name || null,
+        size_bytes: blob.size,
+        _b64: b64,
       });
     }
 
@@ -497,7 +500,7 @@ export default function AddItem() {
     const drafts = [];
     for (const fp of fingerprints) {
       const file = fp.file;
-      const b64 = await fileToBase64(file);
+      const b64 = fp._b64 || await fileToBase64(file);
       const isDup =
         (fp.sha256 && acks.sha.has(fp.sha256)) ||
         (fp.phash && acks.ph.has(fp.phash));
@@ -551,7 +554,7 @@ export default function AddItem() {
     const requestLang = (i18n.language || '').split('-')[0] || 'en';
     const b64List = [];
     for (const fp of fingerprints) {
-      b64List.push(await fileToBase64(fp.file));
+      b64List.push(fp._b64 || await fileToBase64(fp.file));
     }
     
     let detectMetas = [];
