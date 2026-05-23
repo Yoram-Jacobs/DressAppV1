@@ -1930,71 +1930,69 @@ class GarmentVisionService:
 
         emitted = 0
         try:
-            # Stream-analyse all crops via batched Gemini stream
-            # Chunk the requests to prevent single Gemini calls from exceeding 
-            # the 120s httpx timeout or Gemini's output token limits when
-            # processing many multi-garment photos (e.g. 24+ crops).
-            CHUNK_SIZE = 4
-            
             try:
                 from app.services.reconstruction import should_reconstruct
             except Exception:
                 should_reconstruct = None  # type: ignore[assignment]
 
-            for chunk_start in range(0, len(flat_crops), CHUNK_SIZE):
-                chunk = flat_crops[chunk_start:chunk_start + CHUNK_SIZE]
-                crops_bytes = [b for _, _, b, _ in chunk]
-                kind_hints = [
-                    (d.get("kind") if isinstance(d, dict) else None)
-                    for _, d, _b, _m in chunk
-                ]
+            # Process all crops concurrently using individual analyze calls.
+            # This avoids the 4-minute latency caused by forcing Gemini to
+            # generate multiple GarmentAnalysis objects sequentially in a single
+            # batch stream. We cap concurrency to avoid hitting rate limits.
+            sem = asyncio.Semaphore(12)
 
-                async for chunk_slot_idx, analysis in self.analyze_batch_stream(
-                    crops_bytes, language=language, kind_hints=kind_hints,
-                ):
-                    slot_idx = chunk_start + chunk_slot_idx
-                    image_idx = flat_crops[slot_idx][0] if slot_idx < len(flat_crops) else -1
-                    
-                    if not isinstance(analysis, dict) or not analysis:
-                        yield {
-                            "type": "item",
-                            "index": slot_idx,
-                            "image_index": image_idx,
-                            "analysis": {},
-                            "needs_reconstruction": False,
-                            "reconstruction_reasons": [],
-                        }
-                        emitted += 1
-                        continue
+            async def _process_crop(slot_idx: int, crop_tuple: tuple[int, dict[str, Any], bytes, str]) -> tuple[int, dict[str, Any]]:
+                image_idx, det, c_bytes, c_mime = crop_tuple
+                async with sem:
+                    try:
+                        # Use the single-garment analyze for fastest TTFB per item
+                        analysis = await self.analyze(
+                            c_bytes, language=language, think=False
+                        )
+                        return slot_idx, analysis
+                    except Exception as exc:
+                        logger.warning(
+                            "analyze_outfits_stream: concurrent analyze failed slot=%d: %s",
+                            slot_idx, repr(exc)[:160],
+                        )
+                        return slot_idx, {}
 
-                    needs_reconstruction = False
-                    reasons: list[str] = []
-                    if should_reconstruct is not None and slot_idx < len(flat_crops):
-                        try:
-                            det = flat_crops[slot_idx][1]
-                            needs, raw_reasons = should_reconstruct(analysis, det.get("bbox"))
-                            if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
-                                needs_reconstruction = True
-                                reasons = list(raw_reasons)
-                        except Exception as exc:
-                            logger.warning(
-                                "reconstruction gate failed (streamed) slot=%d: %s",
-                                slot_idx, repr(exc)[:160],
-                            )
+            tasks = [
+                asyncio.create_task(_process_crop(i, crop_tuple))
+                for i, crop_tuple in enumerate(flat_crops)
+            ]
 
-                    yield {
-                        "type": "item",
-                        "index": slot_idx,
-                        "image_index": image_idx,
-                        "analysis": analysis,
-                        "needs_reconstruction": needs_reconstruction,
-                        "reconstruction_reasons": reasons,
-                    }
-                    emitted += 1
+            for completed_task in asyncio.as_completed(tasks):
+                slot_idx, analysis = await completed_task
+                image_idx, det, c_bytes, c_mime = flat_crops[slot_idx]
+                
+                needs_reconstruction = False
+                reasons: list[str] = []
+                if should_reconstruct is not None:
+                    try:
+                        needs, raw_reasons = should_reconstruct(analysis, det.get("bbox"))
+                        if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
+                            needs_reconstruction = True
+                            reasons = list(raw_reasons)
+                    except Exception as exc:
+                        logger.warning(
+                            "reconstruction gate failed (concurrent) slot=%d: %s",
+                            slot_idx, repr(exc)[:160],
+                        )
+
+                yield {
+                    "type": "item",
+                    "index": slot_idx,
+                    "image_index": image_idx,
+                    "analysis": analysis,
+                    "needs_reconstruction": needs_reconstruction,
+                    "reconstruction_reasons": reasons,
+                }
+                emitted += 1
         except Exception as exc:
             err_text = repr(exc)
             logger.error(
-                "analyze_outfits_stream: batch stream FAILED after %d emit(s): %s",
+                "analyze_outfits_stream: concurrent stream FAILED after %d emit(s): %s",
                 emitted, err_text[:400],
             )
             low = err_text.lower()
