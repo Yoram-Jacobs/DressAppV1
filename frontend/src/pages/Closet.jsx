@@ -478,37 +478,26 @@ export default function Closet() {
             <ThumbRepairChip progress={store.thumbProgress} />
           </div>
         </div>
+      {!selectMode && (
         <div className="fixed top-20 right-4 md:top-24 md:right-8 z-50 flex flex-col md:flex-row items-end md:items-center gap-2 p-2 md:p-3 rounded-2xl bg-background/95 supports-[backdrop-filter]:bg-background/80 supports-[backdrop-filter]:backdrop-blur border border-border shadow-editorial max-w-[calc(100vw-2rem)]">
-          {!selectMode ? (
-            <>
-              <Button
-                variant="outline"
-                className="rounded-xl shadow-sm"
-                onClick={enterSelect}
-                disabled={items.length === 0}
-                data-testid="closet-select-mode-button"
-              >
-                <ListChecks className="h-4 w-4 me-0 md:me-2" /> <span className="hidden md:inline">{t('closet.bulkSelect')}</span>
-              </Button>
-              <Button
-                asChild
-                className="rounded-xl shadow-sm"
-                data-testid="closet-add-item-button"
-              >
-                <Link to="/closet/add"><Plus className="h-4 w-4 me-0 md:me-2" /> <span className="hidden md:inline">{t('closet.addItem')}</span></Link>
-              </Button>
-            </>
-          ) : (
-            <Button
-              variant="ghost"
-              className="rounded-xl bg-background shadow-sm"
-              onClick={cancelSelect}
-              data-testid="closet-select-cancel-button"
-            >
-              <X className="h-4 w-4 me-0 md:me-2" /> <span className="hidden md:inline">{t('common.cancel')}</span>
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            className="rounded-xl shadow-sm"
+            onClick={enterSelect}
+            disabled={items.length === 0}
+            data-testid="closet-select-mode-button"
+          >
+            <ListChecks className="h-4 w-4 me-0 md:me-2" /> <span className="hidden md:inline">{t('closet.bulkSelect')}</span>
+          </Button>
+          <Button
+            asChild
+            className="rounded-xl shadow-sm"
+            data-testid="closet-add-item-button"
+          >
+            <Link to="/closet/add"><Plus className="h-4 w-4 me-0 md:me-2" /> <span className="hidden md:inline">{t('closet.addItem')}</span></Link>
+          </Button>
         </div>
+      )}
       </header>
 
       <form
@@ -676,9 +665,9 @@ export default function Closet() {
               className="rounded-lg"
             >
               {allVisibleSelected ? (
-                <><Square className="h-4 w-4 mr-1.5" /> {t('common.clear')}</>
+                <><Square className="h-4 w-4 mr-1.5" /> <span className="hidden sm:inline">{t('common.clear')}</span></>
               ) : (
-                <><CheckSquare className="h-4 w-4 mr-1.5" /> {t('common.selectAll')}</>
+                <><CheckSquare className="h-4 w-4 mr-1.5" /> <span className="hidden sm:inline">{t('common.selectAll')}</span></>
               )}
             </Button>
             <Button
@@ -696,7 +685,7 @@ export default function Closet() {
               data-testid="closet-complete-outfit-button"
             >
               <Wand2 className="h-4 w-4 mr-1.5" />
-              {t('outfitCompletion.cta')}
+              <span className="hidden sm:inline">{t('outfitCompletion.cta')}</span>
               {selected.size > 0 ? ` (${selected.size})` : ''}
             </Button>
             <Button
@@ -713,7 +702,20 @@ export default function Closet() {
               ) : (
                 <Trash2 className="h-4 w-4 mr-1.5" />
               )}
-              Delete{selected.size > 0 ? ` (${selected.size})` : ''}
+              <span className="hidden sm:inline">Delete</span>
+              {selected.size > 0 ? ` (${selected.size})` : ''}
+            </Button>
+            <div className="w-px h-6 bg-border mx-1"></div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={cancelSelect}
+              data-testid="closet-select-cancel-button"
+              className="rounded-lg"
+            >
+              <X className="h-4 w-4 mr-1.5" />
+              <span className="hidden sm:inline">{t('common.cancel')}</span>
             </Button>
           </div>
         </div>
