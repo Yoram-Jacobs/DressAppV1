@@ -194,7 +194,7 @@ export default function Home() {
 
   return (
     <div className="container-px max-w-6xl mx-auto pt-6 md:pt-10">
-      <div className="fixed top-20 right-4 md:top-24 md:right-8 z-50 flex flex-col md:flex-row items-end md:items-center gap-2 p-2 md:p-3 rounded-2xl bg-background/95 supports-[backdrop-filter]:bg-background/80 supports-[backdrop-filter]:backdrop-blur border border-border shadow-editorial">
+      <div className="fixed top-20 right-4 md:top-24 md:right-8 z-50 flex flex-col md:flex-row items-end md:items-center gap-2 p-2 md:p-3 rounded-2xl bg-background/95 supports-[backdrop-filter]:bg-background/80 supports-[backdrop-filter]:backdrop-blur border border-border shadow-editorial max-w-[calc(100vw-2rem)]">
         <Button
           asChild
           className="rounded-xl shadow-sm"

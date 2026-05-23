@@ -93,7 +93,7 @@ export function WorkProgressFloater() {
       <div
         className={
           'pointer-events-auto rounded-2xl border border-border bg-card/95 ' +
-          'shadow-lg backdrop-blur-xl px-4 py-3 min-w-[220px] max-w-[320px] ' +
+          'shadow-lg backdrop-blur-xl px-4 py-3 min-w-[220px] max-w-[calc(100vw-2rem)] sm:max-w-[320px] ' +
           'transition-opacity duration-300 ' +
           (active ? 'opacity-100' : 'opacity-70')
         }
