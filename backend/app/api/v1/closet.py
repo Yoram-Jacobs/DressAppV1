@@ -71,7 +71,7 @@ router = APIRouter(prefix="/closet", tags=["closet"])
 # Default raised to 3 concurrent analyses. Tunable via
 # ``ANALYZE_CONCURRENCY`` env var so RAM-constrained deploys can dial
 # it back to 1 without a code change.
-_ANALYZE_CONCURRENCY = max(1, int(os.environ.get("ANALYZE_CONCURRENCY", "3")))
+_ANALYZE_CONCURRENCY = max(1, int(os.environ.get("ANALYZE_CONCURRENCY", "1")))
 _ANALYZE_LOCK = asyncio.Semaphore(_ANALYZE_CONCURRENCY)
 logger.info(
     "closet: analyze concurrency = %d (env ANALYZE_CONCURRENCY)",

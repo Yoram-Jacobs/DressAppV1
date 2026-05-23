@@ -70,7 +70,7 @@ const fileToBase64 = async (file, maxSide = 1024, quality = 0.8) => {
   let img = null;
   if (typeof createImageBitmap === 'function') {
     try {
-      img = await createImageBitmap(file);
+      img = await createImageBitmap(file, { imageOrientation: 'from-image' });
     } catch (_) {}
   }
   

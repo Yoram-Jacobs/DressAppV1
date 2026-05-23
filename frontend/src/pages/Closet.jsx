@@ -478,26 +478,97 @@ export default function Closet() {
             <ThumbRepairChip progress={store.thumbProgress} />
           </div>
         </div>
-      {!selectMode && (
-        <div className="fixed top-20 right-4 md:top-24 md:right-8 z-50 flex flex-col md:flex-row items-end md:items-center gap-2 p-2 md:p-3 rounded-2xl bg-background/95 supports-[backdrop-filter]:bg-background/80 supports-[backdrop-filter]:backdrop-blur border border-border shadow-editorial max-w-[calc(100vw-2rem)]">
-          <Button
-            variant="outline"
-            className="rounded-xl shadow-sm"
-            onClick={enterSelect}
-            disabled={items.length === 0}
-            data-testid="closet-select-mode-button"
-          >
-            <ListChecks className="h-4 w-4 me-0 md:me-2" /> <span className="hidden md:inline">{t('closet.bulkSelect')}</span>
-          </Button>
-          <Button
-            asChild
-            className="rounded-xl shadow-sm"
-            data-testid="closet-add-item-button"
-          >
-            <Link to="/closet/add"><Plus className="h-4 w-4 me-0 md:me-2" /> <span className="hidden md:inline">{t('closet.addItem')}</span></Link>
-          </Button>
-        </div>
-      )}
+      {/* Always render the floater, but change contents based on selectMode */}
+      <div className="fixed top-20 right-4 md:top-24 md:right-8 z-50 flex flex-col md:flex-row items-end md:items-center gap-2 p-2 md:p-3 rounded-2xl bg-background/95 supports-[backdrop-filter]:bg-background/80 supports-[backdrop-filter]:backdrop-blur border border-border shadow-editorial max-w-[calc(100vw-2rem)]">
+        {!selectMode ? (
+          <>
+            <Button
+              variant="outline"
+              className="rounded-xl shadow-sm"
+              onClick={enterSelect}
+              disabled={items.length === 0}
+              data-testid="closet-select-mode-button"
+            >
+              <ListChecks className="h-4 w-4 me-0 md:me-2" /> <span className="hidden md:inline">{t('closet.bulkSelect')}</span>
+            </Button>
+            <Button
+              asChild
+              className="rounded-xl shadow-sm"
+              data-testid="closet-add-item-button"
+            >
+              <Link to="/closet/add"><Plus className="h-4 w-4 me-0 md:me-2" /> <span className="hidden md:inline">{t('closet.addItem')}</span></Link>
+            </Button>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-2 px-2 text-sm font-medium">
+              <CheckCircle2 className="h-4 w-4 text-[hsl(var(--accent))]" />
+              <span data-testid="closet-selected-count">
+                {selected.size}
+              </span>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={allVisibleSelected ? clearSelection : selectAllVisible}
+              data-testid="closet-select-all-button"
+              className="rounded-lg"
+            >
+              {allVisibleSelected ? (
+                <><Square className="h-4 w-4 md:mr-1.5" /> <span className="hidden md:inline">{t('common.clear')}</span></>
+              ) : (
+                <><CheckSquare className="h-4 w-4 md:mr-1.5" /> <span className="hidden md:inline">{t('common.selectAll')}</span></>
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="rounded-lg"
+              disabled={selected.size === 0}
+              onClick={() => {
+                const ids = Array.from(selected);
+                const hints = items.filter((i) => selected.has(i.id));
+                setCompletionAnchors(hints);
+                setCompletionOpen(true);
+              }}
+              data-testid="closet-complete-outfit-button"
+            >
+              <Wand2 className="h-4 w-4 md:mr-1.5" />
+              <span className="hidden md:inline">{t('outfitCompletion.cta')}</span>
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              className="rounded-lg"
+              disabled={selected.size === 0 || deleting}
+              onClick={() => setConfirmOpen(true)}
+              data-testid="closet-delete-selected-button"
+            >
+              {deleting ? (
+                <Loader2 className="h-4 w-4 md:mr-1.5 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4 md:mr-1.5" />
+              )}
+              <span className="hidden md:inline">Delete</span>
+            </Button>
+            <div className="w-px h-6 bg-border mx-1 hidden md:block"></div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={cancelSelect}
+              data-testid="closet-select-cancel-button"
+              className="rounded-lg"
+            >
+              <X className="h-4 w-4 md:mr-1.5" />
+              <span className="hidden md:inline">{t('common.cancel')}</span>
+            </Button>
+          </>
+        )}
+      </div>
       </header>
 
       <form
@@ -634,92 +705,7 @@ export default function Closet() {
         </div>
       )}
 
-      {/* Selection action bar */}
-      {selectMode && (
-        <div
-          // Sticky toolbar — stays pinned just under TopNav (h-16 on
-          // md+) as the user scrolls through long closets, so the
-          // selection count + Delete/Complete-Outfit actions are
-          // always one tap away. Mobile pins to top-0 since there's
-          // no TopNav. Bumped opacity + backdrop-blur + shadow so it
-          // reads cleanly over the grid below.
-          className="sticky top-0 md:top-16 z-20 mt-4 flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-2xl border border-border bg-secondary/95 supports-[backdrop-filter]:bg-secondary/80 supports-[backdrop-filter]:backdrop-blur shadow-editorial"
-          data-testid="closet-selection-bar"
-          role="toolbar"
-          aria-label={t('pages.closet.selection_actions')}
-        >
-          <div className="flex items-center gap-3 text-sm">
-            <CheckCircle2 className="h-4 w-4 text-[hsl(var(--accent))]" />
-            <span data-testid="closet-selected-count">
-              <span className="font-medium">{selected.size}</span>{' '}
-              of {items.length} selected
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={allVisibleSelected ? clearSelection : selectAllVisible}
-              data-testid="closet-select-all-button"
-              className="rounded-lg"
-            >
-              {allVisibleSelected ? (
-                <><Square className="h-4 w-4 mr-1.5" /> <span className="hidden sm:inline">{t('common.clear')}</span></>
-              ) : (
-                <><CheckSquare className="h-4 w-4 mr-1.5" /> <span className="hidden sm:inline">{t('common.selectAll')}</span></>
-              )}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              className="rounded-lg"
-              disabled={selected.size === 0}
-              onClick={() => {
-                const ids = Array.from(selected);
-                const hints = items.filter((i) => selected.has(i.id));
-                setCompletionAnchors(hints);
-                setCompletionOpen(true);
-              }}
-              data-testid="closet-complete-outfit-button"
-            >
-              <Wand2 className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">{t('outfitCompletion.cta')}</span>
-              {selected.size > 0 ? ` (${selected.size})` : ''}
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              className="rounded-lg"
-              disabled={selected.size === 0 || deleting}
-              onClick={() => setConfirmOpen(true)}
-              data-testid="closet-delete-selected-button"
-            >
-              {deleting ? (
-                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-              ) : (
-                <Trash2 className="h-4 w-4 mr-1.5" />
-              )}
-              <span className="hidden sm:inline">Delete</span>
-              {selected.size > 0 ? ` (${selected.size})` : ''}
-            </Button>
-            <div className="w-px h-6 bg-border mx-1"></div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={cancelSelect}
-              data-testid="closet-select-cancel-button"
-              className="rounded-lg"
-            >
-              <X className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">{t('common.cancel')}</span>
-            </Button>
-          </div>
-        </div>
-      )}
+
 
       {loading && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-5">
