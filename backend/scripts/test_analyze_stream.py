@@ -20,7 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from app.services.garment_vision import GarmentVisionService  # noqa: E402
+from app.services.vision import GarmentVisionService  # noqa: E402
 
 
 TEST_IMAGES = [

@@ -134,7 +134,7 @@ async def test_nano_banana() -> bool:
 async def test_garment_vision() -> bool:
     print("\n[3/3] GarmentVision Eyes (must hit gemini-2.5-flash) ...")
     try:
-        from app.services.garment_vision import GarmentVisionService
+        from app.services.vision import GarmentVisionService
         svc = GarmentVisionService()
         img = Path("/app/inference-server/eyes/test_images/0001.jpg").read_bytes()
         t0 = time.perf_counter()

@@ -39,7 +39,7 @@ from app.models.schemas import (
 from app.services import repos
 from app.services.auth import get_current_user
 from app.services.fees import compute_fees
-from app.services.garment_vision import garment_vision_service
+from app.services.vision import garment_vision_service
 from app.services.fashion_clip import fashion_clip_service
 from app.services.gemini_image_service import gemini_image_service
 
@@ -1439,7 +1439,7 @@ async def analyze_item_image(
                                 else {}
                             )
                             analysis = _safe_analysis(frame.get("analysis") or {})
-                            from app.services.garment_vision import (
+                            from app.services.vision import (
                                 _is_unidentifiable,
                             )
                             if _is_unidentifiable(analysis):
@@ -1565,7 +1565,7 @@ async def analyze_item_image(
             ) from exc
         items_out: list[dict[str, Any]] = []
         dropped_unidentifiable = 0
-        from app.services.garment_vision import _is_unidentifiable
+        from app.services.vision import _is_unidentifiable
 
         # Phase Z2 — duplicate detection is now done up-front via
         # /closet/preflight (SHA-256 + perceptual hash, runs in the
@@ -1740,7 +1740,7 @@ async def analyze_version(probe: int = 0) -> dict[str, Any]:
     except Exception as exc:  # noqa: BLE001
         markers["clothing_parser_error"] = repr(exc)
     try:
-        from app.services.garment_vision import _looks_already_cropped as _lac
+        from app.services.vision import _looks_already_cropped as _lac
 
         synthetic = [
             {"label": "Upper-clothes", "kind": "top", "bbox": [134, 49, 410, 441]},
@@ -1967,7 +1967,7 @@ async def analyze_diag(
     # returns True the new heuristic is live; if False, the running
     # container has the old code that splits patterned t-shirts.
     try:
-        from app.services.garment_vision import _looks_already_cropped as _lac
+        from app.services.vision import _looks_already_cropped as _lac
 
         synthetic = [
             {"label": "Upper-clothes", "kind": "top", "bbox": [134, 49, 410, 441]},
@@ -4065,7 +4065,7 @@ async def reanalyze_item(
         ) from exc
 
     analysis = _safe_analysis(parsed)
-    from app.services.garment_vision import _is_unidentifiable
+    from app.services.vision import _is_unidentifiable
 
     if _is_unidentifiable(analysis):
         raise HTTPException(

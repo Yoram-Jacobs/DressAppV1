@@ -95,7 +95,7 @@ def _make_tiny_jpeg() -> bytes:
 async def check_eyes() -> None:
     print_header("3) The Eyes (Gemini vision smoke test)")
     try:
-        from app.services.garment_vision import garment_vision_service
+        from app.services.vision import garment_vision_service
     except Exception as e:  # noqa: BLE001
         print(f"  IMPORT FAIL: {type(e).__name__}: {e}")
         return

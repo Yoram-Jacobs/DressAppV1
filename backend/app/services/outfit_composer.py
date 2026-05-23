@@ -40,7 +40,7 @@ from app.services import (
     professional_matcher,
     repos,
 )
-from app.services.garment_vision import garment_vision_service
+from app.services.vision import garment_vision_service
 from app.services.gemini_stylist import gemini_stylist_service
 from app.services.thumbnails import make_thumb_from_data_url
 

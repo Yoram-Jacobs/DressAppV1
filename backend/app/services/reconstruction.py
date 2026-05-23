@@ -243,7 +243,7 @@ async def reconstruct(
     if validate:
         try:
             import base64 as _b64
-            from app.services.garment_vision import garment_vision_service
+            from app.services.vision import garment_vision_service
 
             if garment_vision_service is not None:
                 generated_bytes = _b64.b64decode(image_b64)
