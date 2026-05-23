@@ -66,28 +66,20 @@ const INTENT_OPTIONS = [
   { value: 'swap', icon: Repeat, tone: 'bg-sky-100 text-sky-900 border-sky-200' },
 ];
 
-const fileToBase64 = async (file, maxSide = 1280, quality = 0.85) => {
-  let img = null;
-  if (typeof createImageBitmap === 'function') {
-    try {
-      img = await createImageBitmap(file);
-    } catch (_) {}
-  }
-  
-  if (!img) {
-    const dataUrl = await new Promise((resolve, reject) => {
-      const r = new FileReader();
-      r.onload = () => resolve(r.result);
-      r.onerror = reject;
-      r.readAsDataURL(file);
-    });
-    img = await new Promise((resolve, reject) => {
-      const i = new Image();
-      i.onload = () => resolve(i);
-      i.onerror = reject;
-      i.src = dataUrl;
-    });
-  }
+const fileToBase64 = async (file, maxSide = 1024, quality = 0.8) => {
+  const img = await new Promise((resolve, reject) => {
+    const i = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    i.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(i);
+    };
+    i.onerror = (e) => {
+      URL.revokeObjectURL(objectUrl);
+      reject(e);
+    };
+    i.src = objectUrl;
+  });
 
   let { width, height } = img;
   if (width > maxSide || height > maxSide) {
@@ -104,9 +96,25 @@ const fileToBase64 = async (file, maxSide = 1280, quality = 0.85) => {
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
+  
+  // Fill white background in case it's a transparent image being saved as JPEG
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, width, height);
+  
   ctx.drawImage(img, 0, 0, width, height);
+  
+  // Free memory
+  img.src = '';
 
+  // Use webp if supported by the browser, fallback to jpeg.
+  // Actually, standardizing on jpeg is safer for the backend since webp support in some older backend libraries can be spotty.
+  // The request says "(e.g. jpeg/webp)", so jpeg is standard.
   const outDataUrl = canvas.toDataURL('image/jpeg', quality);
+  
+  // Clear canvas memory
+  canvas.width = 0;
+  canvas.height = 0;
+
   const comma = outDataUrl.indexOf(',');
   return comma >= 0 ? outDataUrl.slice(comma + 1) : outDataUrl;
 };
@@ -298,31 +306,26 @@ export default function AddItem() {
     // 300–1500 ms of pure overhead. Endpoint is now deprecated, kept
     // mounted as a fallback for older clients.
     // ----------------------------------------------------------------
-    const fingerprints = await Promise.all(
-      files.map(async (f) => {
-        // Compute all three fingerprints in parallel:
-        //   * sha256       → exact-byte re-upload (post-Z2 items)
-        //   * aHash        → shape similarity (survives JPEG re-compression)
-        //   * colour sig   → chroma signature so two same-shape garments
-        //                    of *different* colours (navy vs grey shorts)
-        //                    are correctly distinguished. Without this the
-        //                    aHash alone produced false-positive duplicate
-        //                    flags reported on dressapp.co.
-        const [sha256, phash, color_sig] = await Promise.all([
-          sha256File(f),
-          aHashFile(f),
-          colorSignatureFile(f),
-        ]);
-        return {
-          file: f,
-          sha256,
-          phash,
-          color_sig,
-          filename: f.name || null,
-          size_bytes: typeof f.size === 'number' ? f.size : null,
-        };
-      }),
-    );
+    const fingerprints = [];
+    for (const f of files) {
+      // Compute all three fingerprints:
+      //   * sha256       → exact-byte re-upload (post-Z2 items)
+      //   * aHash        → shape similarity (survives JPEG re-compression)
+      //   * colour sig   → chroma signature so two same-shape garments
+      //                    of *different* colours (navy vs grey shorts)
+      //                    are correctly distinguished.
+      const sha256 = await sha256File(f);
+      const phash = await aHashFile(f);
+      const color_sig = await colorSignatureFile(f);
+      fingerprints.push({
+        file: f,
+        sha256,
+        phash,
+        color_sig,
+        filename: f.name || null,
+        size_bytes: typeof f.size === 'number' ? f.size : null,
+      });
+    }
 
     let matches = [];
     try {
@@ -481,36 +484,35 @@ export default function AddItem() {
       duplicateAcks && (duplicateAcks.sha || duplicateAcks.ph)
         ? duplicateAcks
         : { sha: new Set(), ph: new Set() };
-    const drafts = await Promise.all(
-      fingerprints.map(async (fp) => {
-        const file = fp.file;
-        const b64 = await fileToBase64(file);
-        const isDup =
-          (fp.sha256 && acks.sha.has(fp.sha256)) ||
-          (fp.phash && acks.ph.has(fp.phash));
-        return {
-          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          file,
-          mime: file.type || 'image/jpeg',
-          previewUrl: URL.createObjectURL(file),
-          base64: b64,
-          status: 'scanning', // scanning | ready | error | saving | saved
-          progress: 4,
-          fields: blankFields(),
-          error: null,
-          label: null,
-          // Phase Z2 — fingerprint passthrough. Stored on the card so
-          // buildCreatePayload can hand them to /closet POST and the
-          // backend can persist them on the ClosetItem document.
-          sourceSha256: fp.sha256 || null,
-          sourcePhash: fp.phash || null,
-          sourceColorSig: fp.color_sig || null,
-          sourceFilename: fp.filename || null,
-          sourceSizeBytes: fp.size_bytes || null,
-          isDuplicate: !!isDup,
-        };
-      }),
-    );
+    const drafts = [];
+    for (const fp of fingerprints) {
+      const file = fp.file;
+      const b64 = await fileToBase64(file);
+      const isDup =
+        (fp.sha256 && acks.sha.has(fp.sha256)) ||
+        (fp.phash && acks.ph.has(fp.phash));
+      drafts.push({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        file,
+        mime: file.type || 'image/jpeg',
+        previewUrl: URL.createObjectURL(file),
+        base64: b64,
+        status: 'scanning', // scanning | ready | error | saving | saved
+        progress: 4,
+        fields: blankFields(),
+        error: null,
+        label: null,
+        // Phase Z2 — fingerprint passthrough. Stored on the card so
+        // buildCreatePayload can hand them to /closet POST and the
+        // backend can persist them on the ClosetItem document.
+        sourceSha256: fp.sha256 || null,
+        sourcePhash: fp.phash || null,
+        sourceColorSig: fp.color_sig || null,
+        sourceFilename: fp.filename || null,
+        sourceSizeBytes: fp.size_bytes || null,
+        isDuplicate: !!isDup,
+      });
+    }
     setCards((prev) => [...prev, ...drafts]);
     analyzeCards(drafts);
   };
@@ -537,7 +539,10 @@ export default function AddItem() {
     });
 
     const requestLang = (i18n.language || '').split('-')[0] || 'en';
-    const b64List = await Promise.all(fingerprints.map(fp => fileToBase64(fp.file)));
+    const b64List = [];
+    for (const fp of fingerprints) {
+      b64List.push(await fileToBase64(fp.file));
+    }
     
     let detectMetas = [];
     let totalItemsExpected = 0;
