@@ -28,6 +28,7 @@ import { useAuth } from '@/lib/auth';
 import { CountryCombobox } from '@/components/CountryCombobox';
 import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 import { resolveCountry } from '@/lib/countries';
+import AvatarViewer from './AvatarViewer';
 
 /**
  * Downscale a selected image in-browser before we ship it to Mongo. We cap
@@ -653,13 +654,13 @@ export function ProfileDetailsCard() {
             </AccordionContent>
           </AccordionItem>
 
-          {/* --- Photos --- */}
+          {/* --- Photos & Avatar --- */}
           <AccordionItem value="photos">
             <AccordionTrigger
               className="caps-label"
               data-testid="profile-accordion-photos"
             >
-              {t('profile.sections.photos')}
+              {t('profile.sections.photos')} & Avatar
             </AccordionTrigger>
             <AccordionContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -669,12 +670,15 @@ export function ProfileDetailsCard() {
                   onChange={(v) => setField('face_photo_url', v)}
                   testid="face"
                 />
-                <PhotoSlot
-                  label={t('profile.bodyPhoto')}
-                  value={form.body_photo_url}
-                  onChange={(v) => setField('body_photo_url', v)}
-                  testid="body"
-                />
+                <div className="rounded-2xl border border-border p-3 bg-secondary/40 flex flex-col">
+                  <div className="caps-label text-muted-foreground mb-2">3D Digital Avatar</div>
+                  <div className="flex-1 w-full rounded-xl overflow-hidden bg-background border border-border min-h-[200px]">
+                    <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={form.sex || 'female'} />
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-2">
+                    Generated from your body measurements below.
+                  </div>
+                </div>
               </div>
             </AccordionContent>
           </AccordionItem>

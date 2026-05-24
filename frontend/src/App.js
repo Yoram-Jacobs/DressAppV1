@@ -30,6 +30,7 @@ import Admin from '@/pages/Admin';
 import ExpertsDirectory from '@/pages/ExpertsDirectory';
 import AdsManager from '@/pages/AdsManager';
 import ExtensionConnect from '@/pages/ExtensionConnect';
+import AvatarPage from '@/pages/AvatarPage';
 
 import { useEffect } from 'react';
 import { toast } from 'sonner';
@@ -94,6 +95,7 @@ function App() {
               <Route path="/experts" element={<ExpertsDirectory />} />
               <Route path="/ads" element={<AdsManager />} />
               <Route path="/me" element={<Profile />} />
+              <Route path="/avatar" element={<AvatarPage />} />
               <Route path="/" element={<Navigate to="/home" replace />} />
             </Route>
             <Route path="*" element={<Navigate to="/home" replace />} />

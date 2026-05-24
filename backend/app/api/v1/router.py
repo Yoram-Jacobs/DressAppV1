@@ -7,6 +7,7 @@ from app.api.v1 import (
     admin,
     ads,
     auth,
+    avatar,
     closet,
     google_auth,
     listings,
@@ -23,6 +24,7 @@ from app.api.v1 import (
 api_v1_router = APIRouter(prefix="/v1")
 api_v1_router.include_router(auth.router)
 api_v1_router.include_router(users.router)
+api_v1_router.include_router(avatar.router)
 api_v1_router.include_router(closet.router)
 api_v1_router.include_router(listings.router)
 api_v1_router.include_router(transactions.router)

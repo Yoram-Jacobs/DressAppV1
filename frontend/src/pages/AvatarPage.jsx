@@ -1,0 +1,56 @@
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import AvatarViewer from '../components/AvatarViewer';
+import { toast } from 'sonner';
+
+export default function AvatarPage() {
+  const [shapeParams, setShapeParams] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchParams();
+  }, []);
+
+  const fetchParams = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      // In DressApp, there might be a global axios instance, but we'll use base axios with token
+      const res = await axios.get('/api/v1/avatar/params', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      setShapeParams(res.data.shape_params);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load avatar parameters. Ensure your profile measurements are set.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight">My Digital Avatar</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-2">
+          This 3D avatar is generated based on your body measurements. 
+          Update your measurements in your profile to see the shape adapt automatically.
+        </p>
+      </div>
+
+      {loading ? (
+        <div className="w-full h-[500px] flex items-center justify-center bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
+          <p className="text-slate-400 animate-pulse">Generating your 3D digital double...</p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <AvatarViewer shapeParams={shapeParams} />
+          
+          <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 p-4 rounded-lg text-sm border border-blue-100 dark:border-blue-800/30">
+            <strong>Tip:</strong> You can drag to rotate and scroll to zoom. The shape you see here drives our virtual try-on physics engine.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

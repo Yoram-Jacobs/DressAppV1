@@ -132,6 +132,9 @@ class User(BaseDoc):
     # Hair profile (length / type / color / style).
     hair: dict[str, Any] | None = None
 
+    # Calculated 3D Avatar parameters
+    avatar_shape_params: dict[str, Any] | None = None
+
     # --- Phase 4P: PayPal payouts ---
     # Email address used to receive seller payouts via PayPal Payouts API.
     paypal_receiver_email: str | None = None
