@@ -496,7 +496,7 @@ export default function Closet() {
               className="rounded-xl shadow-sm"
               data-testid="closet-add-item-button"
             >
-              <Link to="/closet/add"><Plus className="h-4 w-4 me-0 md:me-2" /> <span className="hidden md:inline">{t('closet.addItem')}</span></Link>
+              <Link to="/closet/add"><Plus className="h-4 w-4 me-0 md:me-2 text-yellow-400 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" /> <span className="hidden md:inline text-yellow-400 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]">{t('closet.addItem')}</span></Link>
             </Button>
           </>
         ) : (
@@ -733,7 +733,7 @@ export default function Closet() {
             {t('closet.emptySub')}
           </p>
           <Button asChild className="mt-5 rounded-xl" data-testid="closet-empty-add-button">
-            <Link to="/closet/add"><Plus className="h-4 w-4 me-2" /> {t('closet.addItem')}</Link>
+            <Link to="/closet/add"><Plus className="h-4 w-4 me-2 text-yellow-400 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" /> <span className="text-yellow-400 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]">{t('closet.addItem')}</span></Link>
           </Button>
         </div>
       )}
