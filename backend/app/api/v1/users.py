@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict
 from app.db.database import get_db
 from app.models.schemas import CulturalContext, StyleProfile
 from app.services.auth import get_current_user
+from app.services.avatar_service import calculate_shape_parameters
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -120,6 +121,14 @@ async def update_me(
             set_ops[k] = v
     set_ops["updated_at"] = datetime.now(timezone.utc).isoformat()
     if set_ops:
+        if any(k.startswith("body_measurements.") for k in set_ops):
+            current_measurements = dict(user.get("body_measurements", {}))
+            for k, v in set_ops.items():
+                if k.startswith("body_measurements."):
+                    sub_k = k.split(".", 1)[1]
+                    current_measurements[sub_k] = v
+            set_ops["avatar_shape_params"] = calculate_shape_parameters(current_measurements)
+            
         await db.users.update_one({"id": user["id"]}, {"$set": set_ops})
     updated = await db.users.find_one({"id": user["id"]}, {"_id": 0})
     if updated is not None:
