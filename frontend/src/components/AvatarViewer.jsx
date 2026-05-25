@@ -41,8 +41,8 @@ function AvatarFallbackMesh({ shapeParams }) {
 }
 
 function AvatarGLTFMesh({ shapeParams, sex }) {
-  // Attempt to load the real model based on the user's sex. If this file doesn't exist, it throws and ErrorBoundary catches it.
-  const { scene } = useGLTF(`/models/base_avatar_${sex === 'male' ? 'male' : 'female'}.glb?v=3`);
+  const modelFilename = sex === 'male' ? 'avatar_male_1.glb' : 'base_avatar_female.glb';
+  const { scene } = useGLTF(`/models/${modelFilename}?v=1`);
   
   useEffect(() => {
     if (!scene) return;
