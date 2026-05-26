@@ -216,8 +216,8 @@ def compute_signatures(image_data) -> tuple[str | None, str | None]:
 # Field-priority chain used by the repair pipeline + any future
 # backfill caller. Order matters: the first non-empty wins.
 AUTHORITATIVE_SOURCE_FIELDS: tuple[str, ...] = (
-    "original_image_url",
     "segmented_image_url",
+    "original_image_url",
 )
 
 
