@@ -1,3 +1,4 @@
+/* global FileReader, setTimeout, setInterval, clearTimeout, clearInterval */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -534,6 +535,98 @@ export default function ItemDetail() {
       setUploadingPhoto(false);
     }
   };
+  const memberPhotoInputRef = useRef(null);
+  const onAddMemberPhoto = () => memberPhotoInputRef.current?.click();
+  const onMemberPhotoFileChosen = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setUploadingPhoto(true);
+    const loadingId = toast.loading(t('itemDetail.photo.running') || 'Analyzing view...');
+    try {
+      const imageBase64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+      const res = await api.uploadGroupMember(id, {
+        image_base_64: imageBase64,
+        image_mime: file.type || 'image/jpeg',
+      });
+      if (res.status === 'success') {
+        if (res.host) {
+          setItem(res.host);
+          setForm(toFormState(res.host, user));
+          try {
+            const { closetStore } = await import('@/lib/closetStore');
+            closetStore.upsert(res.host);
+          } catch (errStore) {
+            console.warn(errStore);
+          }
+        }
+        if (res.member) {
+          try {
+            const { closetStore } = await import('@/lib/closetStore');
+            closetStore.upsert(res.member);
+          } catch (errStore) {
+            console.warn(errStore);
+          }
+        }
+        await load();
+        toast.dismiss(loadingId);
+        toast.success(t('itemDetail.group.addSuccess') || 'View added to garment group');
+      }
+    } catch (err) {
+      toast.dismiss(loadingId);
+      toast.error(err?.response?.data?.detail || 'Failed to upload view');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const onSetFront = async (memberId) => {
+    setSaving(true);
+    const loadingId = toast.loading(t('itemDetail.group.settingFront') || 'Setting main view...');
+    try {
+      const res = await api.setGroupHost(id, memberId);
+      if (res.status === 'success') {
+        toast.dismiss(loadingId);
+        toast.success(t('itemDetail.group.setFrontSuccess') || 'Main view updated');
+        nav(`/closet/${memberId}`, { replace: true });
+      }
+    } catch (err) {
+      toast.dismiss(loadingId);
+      toast.error(err?.response?.data?.detail || 'Failed to update main view');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const onDeleteMember = async (memberId) => {
+    const confirmDelete = window.confirm(t('itemDetail.group.confirmDeleteView') || 'Are you sure you want to delete this view?');
+    if (!confirmDelete) return;
+
+    setSaving(true);
+    const loadingId = toast.loading(t('itemDetail.group.deletingView') || 'Deleting view...');
+    try {
+      await api.deleteItem(memberId);
+      try {
+        const { closetStore } = await import('@/lib/closetStore');
+        closetStore.remove(memberId);
+      } catch (errStore) {
+        console.warn(errStore);
+      }
+      toast.dismiss(loadingId);
+      toast.success(t('itemDetail.group.deleteViewSuccess') || 'View deleted');
+      await load();
+    } catch (err) {
+      toast.dismiss(loadingId);
+      toast.error(err?.response?.data?.detail || 'Failed to delete view');
+    } finally {
+      setSaving(false);
+    }
+  };
   const recognitionRef = useRef(null);
   const sttSupported = useRef(isSTTSupported());
 
@@ -1054,6 +1147,106 @@ export default function ItemDetail() {
                 {labelForCategory(form.category, t)}
               </Badge>
             </div>
+          </Card>
+
+          {/* Garment Views (Item Group) picker */}
+          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial overflow-hidden" data-testid="item-group-views-card">
+            <CardContent className="p-5 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="caps-label text-muted-foreground">
+                  {t('itemDetail.group.title') || 'Garment Views (Item Group)'}
+                </div>
+                {item.group_id && (
+                  <Badge variant="secondary" className="rounded-full text-[10px]">
+                    {t('itemDetail.group.grouped') || 'Multi-view'}
+                  </Badge>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('itemDetail.group.subtitle') || 'Combine multiple photos (front, back, details) for 100% accurate styling.'}
+              </p>
+
+              <div className="flex items-center gap-3 overflow-x-auto pb-2 pt-1 scrollbar-thin">
+                {/* Main View Thumbnail */}
+                <div className="relative flex-shrink-0 group w-20 h-24 rounded-lg overflow-hidden border-2 border-[hsl(var(--accent))] shadow-sm">
+                  <img
+                    src={bestImageUrl(item)}
+                    alt="Front view"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 bg-background/80 backdrop-blur-[2px] py-0.5 text-center">
+                    <span className="text-[9px] font-semibold text-[hsl(var(--accent))]">
+                      {t('itemDetail.group.front') || 'Front (Main)'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Sibling Views (Members) */}
+                {item.group_members && item.group_members.map((member) => (
+                  <div
+                    key={member.id}
+                    className="relative flex-shrink-0 group w-20 h-24 rounded-lg overflow-hidden border border-border hover:border-muted-foreground transition-all shadow-sm"
+                  >
+                    <img
+                      src={bestImageUrl(member)}
+                      alt="Garment view"
+                      className="w-full h-full object-cover"
+                    />
+                    
+                    {/* Hover actions overlay */}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
+                      <button
+                        type="button"
+                        onClick={() => onSetFront(member.id)}
+                        disabled={saving}
+                        className="w-full text-[10px] py-1 bg-[hsl(var(--accent))] text-white rounded font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-1"
+                        title="Make Front View"
+                      >
+                        <BadgeCheck className="h-3 w-3" />
+                        Set Front
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onDeleteMember(member.id)}
+                        disabled={saving}
+                        className="w-full text-[10px] py-1 bg-destructive text-white rounded font-medium hover:bg-destructive/90 transition-colors flex items-center justify-center gap-1"
+                        title="Delete view"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Upload Member Button */}
+                <button
+                  type="button"
+                  onClick={onAddMemberPhoto}
+                  disabled={uploadingPhoto}
+                  className="relative flex-shrink-0 w-20 h-24 rounded-lg border-2 border-dashed border-border hover:border-muted-foreground flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground transition-colors bg-secondary/20 hover:bg-secondary/40"
+                  data-testid="add-member-view-btn"
+                >
+                  {uploadingPhoto ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <>
+                      <Plus className="h-5 w-5" />
+                      <span className="text-[10px] font-medium">Add View</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Hidden file input for members */}
+              <input
+                ref={memberPhotoInputRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={onMemberPhotoFileChosen}
+              />
+            </CardContent>
           </Card>
 
           {/* Variant carousel (existing) */}

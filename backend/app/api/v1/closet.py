@@ -12,7 +12,7 @@ import json
 import logging
 import os
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Literal
 
 from pymongo import ReturnDocument
 
@@ -185,6 +185,9 @@ class CreateItemIn(BaseModel):
 class UpdateItemIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     source: Source | None = None
+    # Grouping
+    group_id: str | None = None
+    group_role: Literal["host", "member"] | None = None
     # Descriptive
     name: str | None = None
     title: str | None = None
@@ -2119,7 +2122,7 @@ async def list_items(
     skip: int = Query(default=0, ge=0),
 ) -> dict[str, Any]:
     db = get_db()
-    query: dict[str, Any] = {"user_id": user["id"]}
+    query: dict[str, Any] = {"user_id": user["id"], "group_role": {"$ne": "member"}}
     if source:
         query["source"] = source
     if marketplace_intent:
@@ -3337,7 +3340,7 @@ async def search_closet(
     # Pull only items that have a stored embedding (others cannot be scored).
     candidates = await repos.find_many(
         db.closet_items,
-        {"user_id": user["id"], "clip_embedding": {"$exists": True, "$ne": None}},
+        {"user_id": user["id"], "clip_embedding": {"$exists": True, "$ne": None}, "group_role": {"$ne": "member"}},
         sort=[("created_at", -1)],
         limit=2000,
     )
@@ -3482,6 +3485,7 @@ async def complete_outfit(
                 "user_id": user["id"],
                 "id": {"$nin": payload.item_ids},
                 "clip_embedding": {"$exists": True, "$ne": None},
+                "group_role": {"$ne": "member"},
             },
             sort=[("created_at", -1)],
             limit=2000,
@@ -4249,18 +4253,355 @@ async def repair_item_image(
     return {"item": item, "reconstruction": out, "applied": True}
 
 
+# --- Card Grouping endpoints & helper ---
+class GroupItemsIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    host_id: str
+    member_id: str
+
+
+class UploadMemberIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    image_base64: str
+    image_mime: str = "image/jpeg"
+
+
+async def reanalyze_group_helper(group_id: str, user_id: str) -> None:
+    db = get_db()
+    group_items = await repos.find_many(
+        db.closet_items,
+        {"group_id": group_id, "user_id": user_id}
+    )
+    if not group_items:
+        return
+
+    # Sort host first, then members
+    group_items.sort(key=lambda x: 0 if x.get("group_role") == "host" else 1)
+
+    # Collect images
+    images_bytes: list[bytes] = []
+    for g_item in group_items:
+        img_url = g_item.get("segmented_image_url") or g_item.get("reconstructed_image_url") or g_item.get("original_image_url")
+        if img_url and img_url.startswith("data:"):
+            try:
+                b64_part = img_url.split(",", 1)[1]
+                raw = base64.b64decode(b64_part, validate=False)
+                if raw:
+                    images_bytes.append(raw)
+            except Exception:
+                pass
+
+    if not images_bytes:
+        return
+
+    user_lang = "en"
+    user_doc = await db.users.find_one({"id": user_id})
+    if user_doc:
+        user_lang = user_doc.get("preferred_language") or "en"
+
+    try:
+        parsed = await garment_vision_service.analyze(images_bytes, language=user_lang)
+    except Exception as exc:
+        logger.warning("Group re-analysis failed: %r", exc)
+        return
+
+    # Prepare update doc
+    analysis = _safe_analysis(parsed)
+
+    OVERWRITE_KEYS = (
+        "title",
+        "name",
+        "caption",
+        "category",
+        "sub_category",
+        "item_type",
+        "brand",
+        "gender",
+        "dress_code",
+        "season",
+        "tradition",
+        "colors",
+        "fabric_materials",
+        "pattern",
+        "state",
+        "condition",
+        "quality",
+        "repair_advice",
+        "tags",
+    )
+    update_doc: dict[str, Any] = {
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    for key in OVERWRITE_KEYS:
+        if key in analysis:
+            update_doc[key] = analysis[key]
+
+    # Set legacy single-string fields
+    colors_list = analysis.get("colors") or []
+    if colors_list and isinstance(colors_list, list):
+        first_colour = colors_list[0]
+        if isinstance(first_colour, dict) and first_colour.get("name"):
+            update_doc["color"] = first_colour["name"]
+    materials_list = analysis.get("fabric_materials") or []
+    if materials_list and isinstance(materials_list, list):
+        first_material = materials_list[0]
+        if isinstance(first_material, dict) and first_material.get("name"):
+            update_doc["material"] = first_material["name"]
+
+    # Update all group members in DB
+    item_ids = [it["id"] for it in group_items]
+    await db.closet_items.update_many(
+        {"id": {"$in": item_ids}, "user_id": user_id},
+        {"$set": update_doc}
+    )
+
+
+@router.post("/group")
+async def group_items(
+    payload: GroupItemsIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    db = get_db()
+    host_id = payload.host_id
+    member_id = payload.member_id
+
+    host = await db.closet_items.find_one({"id": host_id, "user_id": user["id"]})
+    member = await db.closet_items.find_one({"id": member_id, "user_id": user["id"]})
+    if not host or not member:
+        raise HTTPException(404, "Host or member item not found")
+
+    # If the member was already the host of another group, we will merge the groups!
+    group_id = host.get("group_id") or host_id
+    member_group_id = member.get("group_id")
+
+    if member_group_id:
+        # Move all members of the member's group to the new group
+        await db.closet_items.update_many(
+            {"group_id": member_group_id, "user_id": user["id"]},
+            {"$set": {"group_id": group_id, "group_role": "member", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+
+    # Set host role on B
+    await db.closet_items.update_one(
+        {"id": host_id},
+        {"$set": {"group_id": group_id, "group_role": "host", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+
+    # Set member role on A (and update group_id)
+    await db.closet_items.update_one(
+        {"id": member_id},
+        {"$set": {"group_id": group_id, "group_role": "member", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+
+    # Run group reanalysis
+    await reanalyze_group_helper(group_id, user["id"])
+
+    updated_host = await db.closet_items.find_one({"id": host_id})
+    updated_member = await db.closet_items.find_one({"id": member_id})
+
+    # Strip pymongo ObjectId
+    if updated_host and "_id" in updated_host:
+        updated_host.pop("_id")
+    if updated_member and "_id" in updated_member:
+        updated_member.pop("_id")
+
+    return {
+        "status": "success",
+        "host": updated_host,
+        "member": updated_member
+    }
+
+
+@router.post("/{host_id}/upload-member")
+async def upload_group_member(
+    host_id: str,
+    payload: UploadMemberIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    db = get_db()
+    host = await db.closet_items.find_one({"id": host_id, "user_id": user["id"]})
+    if not host:
+        raise HTTPException(404, "Host item not found")
+
+    group_id = host.get("group_id") or host_id
+    if not host.get("group_id") or host.get("group_role") != "host":
+        await db.closet_items.update_one(
+            {"id": host_id},
+            {"$set": {"group_id": group_id, "group_role": "host", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+
+    try:
+        raw = base64.b64decode(payload.image_base64, validate=True)
+    except Exception as exc:
+        raise HTTPException(400, f"Invalid image_base64: {exc}")
+
+    original_data_url = f"data:{payload.image_mime};base64,{payload.image_base64}"
+    
+    # Create the member closet item document
+    from app.models.schemas import ClosetItem
+    
+    member_item = ClosetItem(
+        user_id=user["id"],
+        title=f"{host.get('title', 'Garment')} (Back View)",
+        category=host.get("category", "Top"),
+        sub_category=host.get("sub_category"),
+        item_type=host.get("item_type"),
+        brand=host.get("brand"),
+        gender=host.get("gender"),
+        dress_code=host.get("dress_code"),
+        colors=host.get("colors") or [],
+        color=host.get("color"),
+        group_id=group_id,
+        group_role="member",
+        original_image_url=original_data_url,
+    ).model_dump()
+
+    # Fast single-item segmentation
+    segmented_data_url = None
+    segmentation_model = None
+    if garment_vision_service is not None:
+        try:
+            detections = await garment_vision_service.detect_items(raw)
+            if detections:
+                best_det = max(
+                    detections,
+                    key=lambda d: (
+                        max(0, d["bbox"][2] - d["bbox"][0])
+                        * max(0, d["bbox"][3] - d["bbox"][1])
+                    ),
+                )
+                raw_crops = await asyncio.to_thread(
+                    garment_vision_service._bbox_crop_useful, raw, [best_det]
+                )
+                from app.services.vision.image import _apply_fast_matte
+                out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
+                
+                if out:
+                    _, b64_bytes, mime = out[0]
+                elif raw_crops:
+                    _, b64_bytes, mime = raw_crops[0]
+                else:
+                    b64_bytes = None
+                
+                if b64_bytes:
+                    b64 = base64.b64encode(b64_bytes).decode("ascii")
+                    segmented_data_url = f"data:{mime or 'image/png'};base64,{b64}"
+                    segmentation_model = "the_eyes_single"
+        except Exception as exc:
+            logger.warning("upload_group_member segment failed: %r", exc)
+
+    if segmented_data_url:
+        member_item["segmented_image_url"] = segmented_data_url
+        member_item["segmentation_model"] = segmentation_model
+
+    # Get FashionCLIP embedding for member item
+    if fashion_clip_service is not None:
+        try:
+            embed_bytes = base64.b64decode(segmented_data_url.split(",", 1)[1]) if segmented_data_url else raw
+            vec = await fashion_clip_service.embed_image(embed_bytes)
+            if vec:
+                member_item["clip_embedding"] = vec
+                member_item["clip_model"] = fashion_clip_service.model_id
+        except Exception as exc:
+            logger.warning("upload_group_member CLIP embed failed: %r", exc)
+
+    # Save to DB
+    await repos.insert(db.closet_items, member_item)
+
+    # Re-run group analysis
+    await reanalyze_group_helper(group_id, user["id"])
+
+    updated_host = await db.closet_items.find_one({"id": host_id})
+    updated_member = await db.closet_items.find_one({"id": member_item["id"]})
+
+    # Strip ObjectId
+    if updated_host and "_id" in updated_host:
+        updated_host.pop("_id")
+    if updated_member and "_id" in updated_member:
+        updated_member.pop("_id")
+
+    return {
+        "status": "success",
+        "member": updated_member,
+        "host": updated_host
+    }
+
+
+@router.post("/{host_id}/set-host/{member_id}")
+async def set_group_host(
+    host_id: str,
+    member_id: str,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    db = get_db()
+    host = await db.closet_items.find_one({"id": host_id, "user_id": user["id"]})
+    member = await db.closet_items.find_one({"id": member_id, "user_id": user["id"]})
+    if not host or not member:
+        raise HTTPException(404, "Host or member item not found")
+
+    # Verify they belong to the same group
+    group_id = host.get("group_id")
+    if not group_id or member.get("group_id") != group_id:
+        raise HTTPException(400, "Items do not belong to the same group")
+
+    # Update all items in this group to have the new group_id (the new host's ID)
+    new_group_id = member_id
+    await db.closet_items.update_many(
+        {"group_id": group_id, "user_id": user["id"]},
+        {"$set": {"group_id": new_group_id}}
+    )
+
+    # Update old host to be a member
+    await db.closet_items.update_one(
+        {"id": host_id},
+        {"$set": {"group_role": "member", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+
+    # Update new host to be the host
+    await db.closet_items.update_one(
+        {"id": member_id},
+        {"$set": {"group_role": "host", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+
+    # Fetch updated new host
+    updated_new_host = await db.closet_items.find_one({"id": member_id})
+    if updated_new_host and "_id" in updated_new_host:
+        updated_new_host.pop("_id")
+
+    return {
+        "status": "success",
+        "host": updated_new_host
+    }
+
+
 @router.get("/{item_id}")
 async def get_item(
     item_id: str,
     background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
+    db = get_db()
     item = await repos.find_one(
-        get_db().closet_items, {"id": item_id, "user_id": user["id"]}
+        db.closet_items, {"id": item_id, "user_id": user["id"]}
     )
     if not item:
         raise HTTPException(404, "Item not found")
     await _maybe_retry_stale_matte(item, background_tasks)
+
+    # Hydrate group members
+    group_id = item.get("group_id")
+    members = []
+    if group_id:
+        cursor = db.closet_items.find({
+            "group_id": group_id,
+            "id": {"$ne": item_id},
+            "user_id": user["id"]
+        })
+        members = [doc async for doc in cursor]
+        for m in members:
+            if "_id" in m:
+                m.pop("_id")
+    item["group_members"] = members
     return item
 
 
@@ -4421,16 +4762,34 @@ async def update_item(
                     Listing,
                 )
                 images: list[str] = []
-                for fld in (
-                    "thumbnail_data_url",
-                    "segmented_image_url",
-                    "reconstructed_image_url",
-                    "original_image_url",
-                ):
-                    url = updated.get(fld)
-                    if isinstance(url, str) and url:
-                        images.append(url)
-                        break
+                group_id = updated.get("group_id")
+                if group_id:
+                    group_items = await repos.find_many(
+                        db.closet_items,
+                        {"group_id": group_id, "user_id": user["id"]}
+                    )
+                    group_items.sort(key=lambda x: 0 if x.get("group_role") == "host" else 1)
+                    for g_item in group_items:
+                        for fld in (
+                            "segmented_image_url",
+                            "reconstructed_image_url",
+                            "original_image_url",
+                        ):
+                            url = g_item.get(fld)
+                            if isinstance(url, str) and url:
+                                images.append(url)
+                                break
+                else:
+                    for fld in (
+                        "thumbnail_data_url",
+                        "segmented_image_url",
+                        "reconstructed_image_url",
+                        "original_image_url",
+                    ):
+                        url = updated.get(fld)
+                        if isinstance(url, str) and url:
+                            images.append(url)
+                            break
                 # Same condition vocab mapping as in create_item /
                 # backfill: GarmentCondition (excellent/good/fair/bad)
                 # → Listing condition (new/like_new/good/fair).
@@ -4636,7 +4995,7 @@ async def delete_item(
     # carrying a red ⭐ that would become orphaned by this delete.
     item = await db.closet_items.find_one(
         {"id": item_id, "user_id": user["id"]},
-        {"_id": 0, "id": 1, "source_sha256": 1, "source_phash": 1, "is_duplicate": 1},
+        {"_id": 0, "id": 1, "source_sha256": 1, "source_phash": 1, "is_duplicate": 1, "group_id": 1, "group_role": 1},
     )
     if not item:
         raise HTTPException(404, "Item not found")
@@ -4646,6 +5005,31 @@ async def delete_item(
     )
     if not deleted:
         raise HTTPException(404, "Item not found")
+
+    # Phase Grouping: Group cleanup and dissolution
+    group_id = item.get("group_id")
+    group_role = item.get("group_role")
+    if group_id:
+        if group_role == "host":
+            # Dissolve the group: ungroup all members since host is deleted
+            await db.closet_items.update_many(
+                {"group_id": group_id, "user_id": user["id"]},
+                {"$set": {"group_id": None, "group_role": None, "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+        elif group_role == "member":
+            # Check remaining items in the group
+            remaining = await db.closet_items.find(
+                {"group_id": group_id, "user_id": user["id"]}
+            ).to_list(None)
+            if len(remaining) <= 1:
+                # Only 1 item left -> dissolve group
+                await db.closet_items.update_many(
+                    {"group_id": group_id, "user_id": user["id"]},
+                    {"$set": {"group_id": None, "group_role": None, "updated_at": datetime.now(timezone.utc).isoformat()}}
+                )
+            else:
+                # Re-run group analysis on remaining members
+                await reanalyze_group_helper(group_id, user["id"])
 
     # Marketplace cleanup — when a user deletes a closet item that
     # is linked to one or more listings, silently retire the open

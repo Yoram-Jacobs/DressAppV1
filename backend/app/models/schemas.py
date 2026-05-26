@@ -172,6 +172,9 @@ class RetailMetadata(BaseModel):
 class ClosetItem(BaseDoc):
     user_id: str
     source: Source = "Private"
+    # Grouping
+    group_id: str | None = None
+    group_role: Literal["host", "member"] | None = None
     # Descriptive
     name: str | None = None  # short, friendly — may differ from title
     title: str

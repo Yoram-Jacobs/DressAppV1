@@ -1,3 +1,4 @@
+/* global setTimeout, clearTimeout */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -103,9 +104,10 @@ export default function Closet() {
   // memo so re-renders triggered by other state (selection, etc.)
   // don't re-walk a 300-item list unnecessarily.
   const filteredItems = useMemo(() => {
-    if (semanticActive) return semanticItems;
+    if (semanticActive) return semanticItems.filter((it) => it.group_role !== 'member');
     return (store.items || []).filter(
       (it) =>
+        it.group_role !== 'member' &&
         _matchesCategory(it, filters.category) &&
         _matchesSource(it, filters.source) &&
         _matchesSearch(it, filters.search),
@@ -133,6 +135,50 @@ export default function Closet() {
   // Outfit completion sheet (Phase P)
   const [completionOpen, setCompletionOpen] = useState(false);
   const [completionAnchors, setCompletionAnchors] = useState([]);
+
+  // Drag and drop grouping (Multi-view Garment Support)
+  const [draggedId, setDraggedId] = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
+
+  const handleDragStart = (e, id) => {
+    setDraggedId(id);
+    e.dataTransfer.setData('text/plain', id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e, id) => {
+    e.preventDefault();
+    if (draggedId && draggedId !== id) {
+      setDragOverId(id);
+    }
+  };
+
+  const handleDragLeave = (e, id) => {
+    if (dragOverId === id) {
+      setDragOverId(null);
+    }
+  };
+
+  const handleDrop = async (e, targetId) => {
+    e.preventDefault();
+    setDragOverId(null);
+    const sourceId = e.dataTransfer.getData('text/plain') || draggedId;
+    setDraggedId(null);
+
+    if (!sourceId || sourceId === targetId) return;
+
+    try {
+      const res = await api.groupItems({ host_id: targetId, member_id: sourceId });
+      if (res.status === 'success') {
+        if (res.host) store.upsert(res.host);
+        if (res.member) store.upsert(res.member);
+        toast.success(t('closet.groupSuccess') || 'Garments grouped successfully');
+      }
+    } catch (err) {
+      console.error('Failed to group items:', err);
+      toast.error(err?.response?.data?.detail || 'Failed to group items');
+    }
+  };
 
   // No-op compat shim. Some downstream code (e.g. the delete handler)
   // calls ``fetchItems`` after a mutation to refresh the grid; with
@@ -769,8 +815,15 @@ export default function Closet() {
               <Link
                 key={it.id}
                 to={`/closet/${it.id}`}
-                className="block group"
+                className={`block group transition-all duration-300 ${
+                  dragOverId === it.id ? 'scale-[1.05] ring-2 ring-[hsl(var(--accent))] ring-offset-2 rounded-[calc(var(--radius)+6px)]' : ''
+                }`}
                 data-testid="closet-item-card"
+                draggable
+                onDragStart={(e) => handleDragStart(e, it.id)}
+                onDragOver={(e) => handleDragOver(e, it.id)}
+                onDragLeave={(e) => handleDragLeave(e, it.id)}
+                onDrop={(e) => handleDrop(e, it.id)}
               >
                 <ItemCardInner item={it} score={it._score} />
               </Link>

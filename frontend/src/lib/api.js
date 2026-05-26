@@ -402,6 +402,11 @@ export const api = {
   patchItem: (id, body) => client.patch(`/closet/${id}`, body).then((r) => r.data),
   updateItem: (id, body) => client.patch(`/closet/${id}`, body).then((r) => r.data),
   deleteItem: (id) => client.delete(`/closet/${id}`).then((r) => r.data),
+  groupItems: (body) => client.post('/closet/group', body).then((r) => r.data),
+  uploadGroupMember: (hostId, body) =>
+    client.post(`/closet/${hostId}/upload-member`, body).then((r) => r.data),
+  setGroupHost: (hostId, memberId) =>
+    client.post(`/closet/${hostId}/set-host/${memberId}`).then((r) => r.data),
   editItemImage: (id, prompt) =>
     client
       .post(`/closet/${id}/edit-image`, null, { params: { prompt } })

@@ -265,7 +265,7 @@ class GarmentVisionService:
 
     async def analyze(
         self,
-        image_bytes: bytes,
+        image_bytes: bytes | list[bytes],
         *,
         model: str | None = None,
         provider: str | None = None,
@@ -273,7 +273,7 @@ class GarmentVisionService:
         think: bool = False,
         one_pass: bool = False,
     ) -> dict[str, Any]:
-        """Run the 17-field analyser on a single image.
+        """Run the 17-field analyser on a single image or a list of images.
 
         Phase O.4 routing — the **DB-backed Eyes toggle**
         (``eyes_override.get_active_provider()``) is the authoritative
@@ -307,13 +307,31 @@ class GarmentVisionService:
         """
         from app.services import eyes_override
 
-        shrunk = _shrink_for_vision(image_bytes)
-        b64 = base64.b64encode(shrunk).decode("ascii")
+        # Support multiple images by shrinking all of them
+        if isinstance(image_bytes, list):
+            shrunk_list = [_shrink_for_vision(img) for img in image_bytes]
+            # Since Gemma/Space expects one image, use the first one as fallback
+            first_shrunk = shrunk_list[0] if shrunk_list else b""
+            b64 = base64.b64encode(first_shrunk).decode("ascii")
+        else:
+            shrunk = _shrink_for_vision(image_bytes)
+            shrunk_list = [shrunk]
+            b64 = base64.b64encode(shrunk).decode("ascii")
+
         system_prompt = (
             _build_system_prompt(one_pass=one_pass)
             + _language_directive(language)
         )
         user_text = _user_prompt(language)
+
+        if isinstance(image_bytes, list) and len(image_bytes) > 1:
+            multi_view_instruction = (
+                "\n\nNOTE: The provided images show different views (e.g., front, back, details) "
+                "of the SAME single garment. Please analyze all views to extract a complete, unified "
+                "description of the garment (e.g. if the back view reveals it is sexy/exposed, incorporate "
+                "that into the tags, dress code, and caption, even if the front view looks modest)."
+            )
+            user_text += multi_view_instruction
 
         # 1) Resolve the routing target.
         if provider:
@@ -399,7 +417,7 @@ class GarmentVisionService:
             try:
                 raw = await gem.vision(
                     system=system_prompt,
-                    user_parts=[user_text, shrunk],
+                    user_parts=[user_text] + shrunk_list,
                     model=gemini_model,
                     temperature=0.1,
                     response_mime_type="application/json",

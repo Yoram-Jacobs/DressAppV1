@@ -104,15 +104,33 @@ async def create_listing(
     # frontend to make an extra full-detail GET before posting.
     images = list(payload.images or [])
     if not images and closet_item:
-        for fld in (
-            "segmented_image_url",
-            "reconstructed_image_url",
-            "original_image_url",
-        ):
-            url = closet_item.get(fld)
-            if isinstance(url, str) and url:
-                images.append(url)
-                break
+        group_id = closet_item.get("group_id")
+        if group_id:
+            group_items = await repos.find_many(
+                db.closet_items,
+                {"group_id": group_id, "user_id": user["id"]}
+            )
+            group_items.sort(key=lambda x: 0 if x.get("group_role") == "host" else 1)
+            for g_item in group_items:
+                for fld in (
+                    "segmented_image_url",
+                    "reconstructed_image_url",
+                    "original_image_url",
+                ):
+                    url = g_item.get(fld)
+                    if isinstance(url, str) and url:
+                        images.append(url)
+                        break
+        else:
+            for fld in (
+                "segmented_image_url",
+                "reconstructed_image_url",
+                "original_image_url",
+            ):
+                url = closet_item.get(fld)
+                if isinstance(url, str) and url:
+                    images.append(url)
+                    break
 
     listing = Listing(
         closet_item_id=payload.closet_item_id,

@@ -169,10 +169,12 @@ async def closet_summary_for(user_id: str, limit: int = 40) -> list[dict[str, An
         db.closet_items,
         {
             "user_id": user_id,
-            # Phase Z2 \u2014 user-approved duplicates are excluded from
+            # Phase Z2 — user-approved duplicates are excluded from
             # the grounding context the Stylist Brain receives, so it
             # cannot reason about an item it shouldn't surface.
             "is_duplicate": {"$ne": True},
+            # Phase Grouping — exclude group members
+            "group_role": {"$ne": "member"},
         },
         sort=[("updated_at", -1)],
         limit=limit,

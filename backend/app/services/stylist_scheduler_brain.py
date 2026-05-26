@@ -27,6 +27,7 @@ async def get_rotation_prioritized_closet(user_id: str, limit: int = 40) -> list
         {
             "user_id": user_id,
             "is_duplicate": {"$ne": True},
+            "group_role": {"$ne": "member"},
         }
     )
     items = [doc async for doc in cursor]
