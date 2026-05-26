@@ -7,7 +7,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Home, Shirt, Sparkles, Store, LogOut, Settings, Receipt, Shield, UserRound, Megaphone, QrCode } from 'lucide-react';
+import { Home, Shirt, Sparkles, Store, LogOut, Settings, Receipt, Shield, UserRound, Megaphone, QrCode, Calendar } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
@@ -62,6 +62,7 @@ export const TopNav = () => {
     { to: '/home', icon: Home, key: 'home', label: t('nav.home') },
     { to: '/closet', icon: Shirt, key: 'closet', label: t('nav.closet') },
     { to: '/stylist', icon: Sparkles, key: 'stylist', label: t('nav.stylist') },
+    { to: '/outfits', icon: Calendar, key: 'outfits', label: 'Outfits' },
     { to: '/market', icon: Store, key: 'market', label: t('nav.market') },
     { to: '/experts', icon: UserRound, key: 'experts', label: t('nav.experts') },
   ];

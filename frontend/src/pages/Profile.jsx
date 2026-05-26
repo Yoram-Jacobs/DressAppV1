@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { LogOut, Loader2, Languages } from 'lucide-react';
+import { LogOut, Loader2, Languages, Bell } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -22,6 +23,156 @@ const VOICES = [
   'aura-2-thalia-en', 'aura-2-hermes-en', 'aura-2-electra-en',
   'aura-2-apollo-en', 'aura-2-draco-en', 'aura-2-hyperion-en',
 ];
+
+function SchedulerSettingsCard() {
+  const { user, updateUserLocal } = useAuth();
+  const [enabled, setEnabled] = useState(user?.scheduler_settings?.enabled || false);
+  const [frequency, setFrequency] = useState(user?.scheduler_settings?.frequency || 'everyday');
+  const [weekday, setWeekday] = useState(user?.scheduler_settings?.weekday || 'monday');
+  const [time, setTime] = useState(user?.scheduler_settings?.time || '08:00');
+  const [styleOption, setStyleOption] = useState(() => {
+    const val = user?.scheduler_settings?.style_dress_for || 'casual';
+    if (['casual', 'smart-casual', 'formal', 'athletic'].includes(val)) {
+      return val;
+    }
+    return 'custom';
+  });
+  const [customStyle, setCustomStyle] = useState(() => {
+    const val = user?.scheduler_settings?.style_dress_for || 'casual';
+    if (['casual', 'smart-casual', 'formal', 'athletic'].includes(val)) {
+      return '';
+    }
+    return val;
+  });
+  const [busy, setBusy] = useState(false);
+
+  const save = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const style_dress_for = styleOption === 'custom' ? customStyle : styleOption;
+      const res = await api.patchMe({
+        scheduler_settings: {
+          enabled,
+          frequency,
+          weekday: frequency === 'on_weekday' ? weekday : null,
+          time,
+          style_dress_for,
+        }
+      });
+      updateUserLocal(res);
+      toast.success("AI Stylist Scheduler settings updated.");
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Failed to save scheduler settings.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial" data-testid="scheduler-settings-card">
+      <CardContent className="p-6 space-y-4">
+        <div className="flex items-center gap-3">
+          <Bell className="h-5 w-5 text-[hsl(var(--accent))]" />
+          <div>
+            <div className="caps-label text-muted-foreground">AI Stylist</div>
+            <h3 className="font-display text-xl font-semibold">Scheduler & Push Reminders</h3>
+          </div>
+        </div>
+        <Separator />
+        
+        <div className="flex items-center justify-between gap-3 p-3 bg-secondary/30 rounded-xl border border-border">
+          <div className="space-y-1">
+            <div className="font-semibold text-sm">Enable Scheduler Proposals</div>
+            <div className="text-xs text-muted-foreground text-left">Receive push notification reminders with customized outfit proposals.</div>
+          </div>
+          <Switch checked={enabled} onCheckedChange={setEnabled} data-testid="scheduler-enabled-switch" />
+        </div>
+
+        {enabled && (
+          <div className="space-y-4 pt-2 text-left">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="s-freq">Notification Frequency</Label>
+                <Select value={frequency} onValueChange={setFrequency}>
+                  <SelectTrigger id="s-freq" className="rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="everyday">Everyday</SelectItem>
+                    <SelectItem value="every_other_day">Every Other Day</SelectItem>
+                    <SelectItem value="twice_a_week">Twice a Week</SelectItem>
+                    <SelectItem value="on_weekday">On Weekday</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {frequency === 'on_weekday' && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="s-day">Choose Day</Label>
+                  <Select value={weekday} onValueChange={setWeekday}>
+                    <SelectTrigger id="s-day" className="rounded-xl"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="monday">Monday</SelectItem>
+                      <SelectItem value="tuesday">Tuesday</SelectItem>
+                      <SelectItem value="wednesday">Wednesday</SelectItem>
+                      <SelectItem value="thursday">Thursday</SelectItem>
+                      <SelectItem value="friday">Friday</SelectItem>
+                      <SelectItem value="saturday">Saturday</SelectItem>
+                      <SelectItem value="sunday">Sunday</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <Label htmlFor="s-time">Notification Time (UTC)</Label>
+                <Input id="s-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} className="rounded-xl" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="s-style">Style / Dress For</Label>
+                <Select value={styleOption} onValueChange={setStyleOption}>
+                  <SelectTrigger id="s-style" className="rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="casual">Casual</SelectItem>
+                    <SelectItem value="smart-casual">Smart Casual</SelectItem>
+                    <SelectItem value="formal">Formal</SelectItem>
+                    <SelectItem value="athletic">Athletic</SelectItem>
+                    <SelectItem value="custom">Custom (Free Text)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {styleOption === 'custom' && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="s-custom-style">Dress For Demands</Label>
+                  <Input 
+                    id="s-custom-style" 
+                    value={customStyle} 
+                    onChange={(e) => setCustomStyle(e.target.value)} 
+                    placeholder="e.g. Gym, Hiking, Church" 
+                    className="rounded-xl" 
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="text-xs text-muted-foreground p-3 bg-secondary/20 rounded-xl border border-dashed border-border/80 text-left">
+          * Ensure your phone number is configured under the <strong>Identity</strong> section to successfully route simulated push alerts.
+        </div>
+
+        <div className="flex">
+          <Button onClick={save} disabled={busy} className="rounded-xl">
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Scheduler Preferences"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Profile() {
   const { t, i18n } = useTranslation();
@@ -144,6 +295,10 @@ export default function Profile() {
 
       <div className="mb-6">
         <ProfileDetailsCard />
+      </div>
+
+      <div className="mb-6">
+        <SchedulerSettingsCard />
       </div>
 
       <div className="mb-6">

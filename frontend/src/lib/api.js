@@ -722,6 +722,16 @@ export const api = {
         params: { order_id: orderId },
       })
       .then((r) => r.data),
+
+  // --- AI Stylist Scheduler (Phase Scheduler) ---
+  listSavedOutfits: () => client.get('/outfits').then((r) => r.data),
+  saveOutfit: (body) => client.post('/outfits', body).then((r) => r.data),
+  deleteSavedOutfit: (id) => client.delete(`/outfits/${id}`).then((r) => r.data),
+  triggerScheduledProposal: () => client.post('/outfits/proposal/scheduled').then((r) => r.data),
+  triggerEventProposal: (body) => client.post('/outfits/proposal/event', body).then((r) => r.data),
+  rejectItemSuggestion: (itemId) => client.post('/outfits/reject-item', { item_id: itemId }).then((r) => r.data),
+  listSimulatedNotifications: () => client.get('/outfits/notifications').then((r) => r.data),
+  clearSimulatedNotifications: () => client.post('/outfits/notifications/clear').then((r) => r.data),
 };
 
 export default client;

@@ -154,6 +154,9 @@ class User(BaseDoc):
     # (unless approval_status='hidden' by admin moderation).
     professional: dict[str, Any] | None = None
 
+    # --- AI Stylist Scheduler Settings (Phase Scheduler) ---
+    scheduler_settings: dict[str, Any] | None = None
+
 
 # ------------------------- Closet items -------------------------
 class RetailMetadata(BaseModel):
@@ -267,6 +270,10 @@ class ClosetItem(BaseDoc):
     # red ⭐ on these cards, and the Stylist Brain filters them out of
     # the recommendation pool to prevent doubled-up outfit suggestions.
     is_duplicate: bool = False
+
+    # --- AI Stylist Scheduler & Rotation (Phase Scheduler) ---
+    rejection_count: int = 0
+    last_suggested_at: str | None = None
 
 
 # ----------------- The Eyes: analyzer response payload -----------------
@@ -664,3 +671,20 @@ class CreditTopup(BaseDoc):
     captured_at: str | None = None
     payer_email: str | None = None
     pack: str | None = None  # "10" | "25" | "50" | "custom"
+
+
+# --------------------- AI Stylist Scheduler (Phase Scheduler) ---------------------
+class SavedOutfit(BaseDoc):
+    user_id: str
+    name: str
+    source_workflow: Literal["scheduled", "event"]
+    prompt: str | None = None
+    garments: list[dict[str, Any]] = Field(default_factory=list)
+    usage: dict[str, Any] = Field(default_factory=dict) # {date, time, location, event_name}
+
+
+class SimulatedNotification(BaseDoc):
+    user_id: str
+    title: str
+    body: str
+    read: bool = False

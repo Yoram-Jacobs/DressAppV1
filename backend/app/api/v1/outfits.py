@@ -1,0 +1,210 @@
+"""REST API Routes for User Saved Outfits & Scheduler Triggers (Phase Scheduler)."""
+from __future__ import annotations
+
+import logging
+from datetime import datetime, timezone
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Body
+from pydantic import BaseModel
+
+from app.db.database import get_db
+from app.services.auth import get_current_user
+from app.services.stylist_scheduler_brain import (
+    generate_scheduled_proposals,
+    generate_event_proposals,
+    reject_garment,
+)
+
+logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/outfits", tags=["outfits"])
+
+
+class GarmentItemIn(BaseModel):
+    closet_item_id: str | None = None
+    role: str
+    title: str | None = None
+    image_url: str | None = None
+
+
+class OutfitUsageIn(BaseModel):
+    date: str
+    time: str
+    location: str | None = None
+    event_name: str | None = None
+
+
+class SaveOutfitIn(BaseModel):
+    name: str
+    source_workflow: str  # "scheduled" | "event"
+    prompt: str | None = None
+    garments: list[GarmentItemIn]
+    usage: OutfitUsageIn
+
+
+class EventProposalIn(BaseModel):
+    prompt: str
+    date: str | None = None
+    time: str | None = None
+    location: str | None = None
+    event_name: str | None = None
+
+
+def _safe_doc(doc: dict) -> dict:
+    return {k: v for k, v in doc.items() if k != "_id"}
+
+
+@router.get("")
+async def list_saved_outfits(
+    user: dict = Depends(get_current_user),
+    limit: int = 50,
+) -> dict[str, Any]:
+    """Get all saved outfits for the user."""
+    db = get_db()
+    cursor = db.outfits.find({"user_id": user["id"]}).sort([("created_at", -1)]).limit(limit)
+    rows = [doc async for doc in cursor]
+    return {"outfits": [_safe_doc(r) for r in rows]}
+
+
+@router.post("", status_code=201)
+async def save_outfit(
+    payload: SaveOutfitIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Save an outfit to the user's closet diary, updating worn stats for closet items."""
+    db = get_db()
+    import uuid
+
+    outfit_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+
+    # Automatically resolve closet item details if missing
+    garments = []
+    for g in payload.garments:
+        g_dict = g.model_dump()
+        if g.closet_item_id:
+            item = await db.closet_items.find_one({"id": g.closet_item_id})
+            if item:
+                g_dict["title"] = g_dict.get("title") or item.get("title") or item.get("name") or g.role
+                g_dict["image_url"] = g_dict.get("image_url") or item.get("thumbnail_data_url") or item.get("segmented_image_url") or item.get("original_image_url")
+        garments.append(g_dict)
+
+    doc = {
+        "id": outfit_id,
+        "user_id": user["id"],
+        "name": payload.name,
+        "source_workflow": payload.source_workflow,
+        "prompt": payload.prompt,
+        "garments": garments,
+        "usage": payload.usage.model_dump(),
+        "created_at": now,
+        "updated_at": now,
+    }
+
+    # Insert Saved Outfit
+    await db.outfits.insert_one(doc)
+
+    # Update Closet Items: increment wear count and set last_worn_at
+    closet_item_ids = [g.closet_item_id for g in payload.garments if g.closet_item_id]
+    if closet_item_ids:
+        # Update last_worn_at to usage date (or current date as fallback)
+        worn_date = payload.usage.date or now.split("T")[0]
+        await db.closet_items.update_many(
+            {"id": {"$in": closet_item_ids}, "user_id": user["id"]},
+            {
+                "$inc": {"wear_count": 1},
+                "$set": {
+                    "last_worn_at": worn_date,
+                    "updated_at": now,
+                },
+            },
+        )
+
+    logger.info("Saved outfit id=%s user_id=%s", outfit_id, user["id"])
+    return _safe_doc(doc)
+
+
+@router.delete("/{outfit_id}")
+async def delete_saved_outfit(
+    outfit_id: str,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Delete a saved outfit."""
+    db = get_db()
+    res = await db.outfits.delete_one({"id": outfit_id, "user_id": user["id"]})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Outfit not found")
+    return {"deleted": True, "id": outfit_id}
+
+
+@router.post("/proposal/scheduled")
+async def trigger_scheduled_proposal(
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Generate 3 scheduled outfit suggestions based on user settings."""
+    s_set = user.get("scheduler_settings") or {}
+    style_preference = s_set.get("style_dress_for") or "casual/daily dress"
+    
+    try:
+        advice = await generate_scheduled_proposals(user, style_preference)
+        return {"advice": advice}
+    except Exception as exc:
+        logger.exception("Scheduled proposal generation failed")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/proposal/event")
+async def trigger_event_proposal(
+    payload: EventProposalIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Generate 3 event outfit suggestions based on user prompt."""
+    try:
+        advice = await generate_event_proposals(
+            user=user,
+            event_prompt=payload.prompt,
+            location=payload.location,
+            event_name=payload.event_name,
+        )
+        return {"advice": advice}
+    except Exception as exc:
+        logger.exception("Event proposal generation failed")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/reject-item")
+async def reject_item_suggestion(
+    item_id: str = Body(..., embed=True),
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Record a suggestion rejection for a garment, returning if user should share it."""
+    try:
+        res = await reject_garment(user["id"], item_id)
+        return res
+    except ValueError as val_err:
+        raise HTTPException(status_code=404, detail=str(val_err))
+    except Exception as exc:
+        logger.exception("Item rejection tracking failed")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.get("/notifications")
+async def list_simulated_notifications(
+    user: dict = Depends(get_current_user),
+    limit: int = 50,
+) -> dict[str, Any]:
+    """List mock notifications sent to the user."""
+    db = get_db()
+    cursor = db.simulated_notifications.find({"user_id": user["id"]}).sort([("created_at", -1)]).limit(limit)
+    rows = [doc async for doc in cursor]
+    return {"notifications": [_safe_doc(r) for r in rows]}
+
+
+@router.post("/notifications/clear")
+async def clear_simulated_notifications(
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Clear all mock notifications for testing."""
+    db = get_db()
+    await db.simulated_notifications.delete_many({"user_id": user["id"]})
+    return {"cleared": True}

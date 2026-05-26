@@ -15,6 +15,8 @@ import {
   PanelRight,
   UserRound,
   TrendingUp,
+  ShoppingBag,
+  RefreshCw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -29,8 +31,16 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { WaveformAudioPlayer } from '@/components/WaveformAudioPlayer';
 import { ConversationSidebar } from '@/components/stylist/ConversationSidebar';
 import { OutfitCanvasMessage } from '@/components/OutfitCanvas';
@@ -72,6 +82,17 @@ export default function Stylist() {
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
+
+  // Event Proposal Dialog state
+  const [eventModalOpen, setEventModalOpen] = useState(false);
+  const todayStr = new Date().toISOString().split('T')[0];
+  const [eventForm, setEventForm] = useState({
+    event_name: '',
+    location: '',
+    prompt: '',
+    date: todayStr,
+    time: '19:00',
+  });
 
   // Composer state
   const [text, setText] = useState('');
@@ -229,6 +250,230 @@ export default function Stylist() {
       }
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('common.error'));
+    }
+  };
+
+  /* ---------- AI Stylist Scheduler Triggers & Handlers ---------- */
+  const handleTriggerScheduled = async () => {
+    if (busy) return;
+    setBusy(true);
+
+    const optimisticId = `tmp-sched-${Date.now()}`;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: optimisticId,
+        role: 'user',
+        transcript: t('stylist.triggerScheduledRequest', 'Get tomorrow\'s scheduled outfit proposals'),
+      },
+    ]);
+
+    try {
+      const res = await api.triggerScheduledProposal();
+      const newId = `sched-${Date.now()}`;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: newId,
+          role: 'assistant',
+          transcript: res.advice.reasoning_summary,
+          payload: {
+            ...res.advice,
+            source_workflow: 'scheduled',
+          },
+        },
+      ]);
+      toast.success(t('stylist.proposalGenerated', 'Daily proposals generated successfully!'));
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || t('stylist.proposalFailed', 'Failed to generate daily proposals.'));
+      setMessages((prev) => prev.filter((x) => x.id !== optimisticId));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleTriggerEvent = async (e) => {
+    if (e) e.preventDefault();
+    if (!eventForm.prompt.trim()) {
+      toast.error(t('stylist.promptRequired', 'Please describe the event dress code or demands.'));
+      return;
+    }
+
+    setEventModalOpen(false);
+    setBusy(true);
+
+    const eventName = eventForm.event_name || 'Special Event';
+    const locText = eventForm.location ? ` at ${eventForm.location}` : '';
+    const dateText = eventForm.date ? ` on ${eventForm.date}` : '';
+    const timeText = eventForm.time ? ` at ${eventForm.time}` : '';
+    const userText = `Suggest event outfits for "${eventName}"${locText}${dateText}${timeText}. Details: "${eventForm.prompt}".`;
+
+    const optimisticId = `tmp-event-${Date.now()}`;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: optimisticId,
+        role: 'user',
+        transcript: userText,
+      },
+    ]);
+
+    try {
+      const res = await api.triggerEventProposal({
+        prompt: eventForm.prompt,
+        date: eventForm.date || null,
+        time: eventForm.time || null,
+        location: eventForm.location || null,
+        event_name: eventForm.event_name || null,
+      });
+
+      const newId = `event-${Date.now()}`;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: newId,
+          role: 'assistant',
+          transcript: res.advice.reasoning_summary,
+          payload: {
+            ...res.advice,
+            source_workflow: 'event',
+            event_details: { ...eventForm },
+          },
+        },
+      ]);
+      toast.success(t('stylist.proposalGenerated', 'Event proposals generated successfully!'));
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || t('stylist.proposalFailed', 'Failed to generate event proposals.'));
+      setMessages((prev) => prev.filter((x) => x.id !== optimisticId));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleSaveOutfit = async (rec, message) => {
+    const isEvent = message.payload?.source_workflow === 'event';
+    const eventDetails = message.payload?.event_details || {};
+
+    const body = {
+      name: rec.name,
+      source_workflow: isEvent ? 'event' : 'scheduled',
+      prompt: isEvent ? eventDetails.prompt : (user?.scheduler_settings?.style_dress_for || 'casual'),
+      garments: (rec.items || []).map((it) => ({
+        closet_item_id: it.closet_item_id,
+        role: it.role,
+        title: it.description,
+      })),
+      usage: {
+        date: isEvent ? (eventDetails.date || new Date().toISOString().split('T')[0]) : new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        time: isEvent ? (eventDetails.time || '12:00') : (user?.scheduler_settings?.time || '08:00'),
+        location: isEvent ? eventDetails.location : null,
+        event_name: isEvent ? eventDetails.event_name : null,
+      },
+    };
+
+    try {
+      await api.saveOutfit(body);
+      toast.success(t('stylist.outfitSaved', 'Outfit saved to your diary!'));
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || t('stylist.saveFailed', 'Failed to save outfit.'));
+    }
+  };
+
+  const handleRetry = async (message) => {
+    if (busy) return;
+
+    const recs = message.payload?.outfit_recommendations || [];
+    const itemIds = [];
+    recs.forEach((rec) => {
+      (rec.items || []).forEach((it) => {
+        if (it.closet_item_id) {
+          itemIds.push(it.closet_item_id);
+        }
+      });
+    });
+
+    const uniqueIds = [...new Set(itemIds)];
+
+    setBusy(true);
+    try {
+      // Reject items
+      for (const itemId of uniqueIds) {
+        try {
+          const res = await api.rejectItemSuggestion(itemId);
+          if (res.offer_marketplace) {
+            toast.warning(
+              t('stylist.rejectionMarketplaceOffer', `You have rejected "${res.title}" 3 times. Share it in the Marketplace to free up space?`),
+              {
+                action: {
+                  label: t('common.share', 'Share'),
+                  onClick: () => navigate(`/market/create?item_id=${itemId}`),
+                },
+                duration: 8000,
+              }
+            );
+          }
+        } catch (rejErr) {
+          console.debug('Failed to reject item:', itemId, rejErr);
+        }
+      }
+
+      // Add user turn
+      const isEvent = message.payload.source_workflow === 'event';
+      const optimisticId = `tmp-retry-${Date.now()}`;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: optimisticId,
+          role: 'user',
+          transcript: t('stylist.retryRequest', 'Suggest 3 other options'),
+        },
+      ]);
+
+      if (isEvent) {
+        const eventDetails = message.payload.event_details || {};
+        const res = await api.triggerEventProposal({
+          prompt: eventDetails.prompt,
+          date: eventDetails.date || null,
+          time: eventDetails.time || null,
+          location: eventDetails.location || null,
+          event_name: eventDetails.event_name || null,
+        });
+
+        const newId = `event-${Date.now()}`;
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: newId,
+            role: 'assistant',
+            transcript: res.advice.reasoning_summary,
+            payload: {
+              ...res.advice,
+              source_workflow: 'event',
+              event_details: eventDetails,
+            },
+          },
+        ]);
+      } else {
+        const res = await api.triggerScheduledProposal();
+        const newId = `sched-${Date.now()}`;
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: newId,
+            role: 'assistant',
+            transcript: res.advice.reasoning_summary,
+            payload: {
+              ...res.advice,
+              source_workflow: 'scheduled',
+            },
+          },
+        ]);
+      }
+      toast.success(t('stylist.proposalGenerated', 'New proposals generated successfully!'));
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || t('stylist.proposalFailed', 'Failed to generate new proposals.'));
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -597,8 +842,37 @@ export default function Stylist() {
                           index={i}
                           sessionId={activeSessionId}
                           onItemClick={setFloaterItemId}
+                          onSave={(r) => handleSaveOutfit(r, m)}
                         />
                       ))}
+                      {m.payload.shopping_suggestions?.length > 0 && (
+                        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-xl p-3 text-xs text-amber-800 dark:text-amber-300 space-y-1">
+                          <div className="font-semibold flex items-center gap-1.5">
+                            <Sparkles className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                            {t('stylist.shoppingSuggestions', 'AI Stylist Shopping Suggestions')}
+                          </div>
+                          <ul className="list-disc ps-4 space-y-1">
+                            {m.payload.shopping_suggestions.map((s, k) => (
+                              <li key={`shop-sug-${k}`}>{s}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {(m.payload.source_workflow === 'scheduled' || m.payload.source_workflow === 'event') && (
+                        <div className="flex items-center gap-2 mt-3 pt-2 border-t border-border/60">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRetry(m)}
+                            disabled={busy}
+                            className="rounded-full text-xs gap-1.5"
+                            data-testid={`retry-proposals-${m.id}`}
+                          >
+                            <RefreshCw className={cn("h-3 w-3", busy && "animate-spin")} />
+                            {t('stylist.suggestOthers', 'Suggest 3 Others')}
+                          </Button>
+                        </div>
+                      )}
                       {m.payload.do_dont?.length > 0 && (
                         <div className="text-xs text-muted-foreground">
                           <div className="caps-label mb-1">
@@ -642,35 +916,39 @@ export default function Stylist() {
                           </div>
                         </div>
                       )}
-                      {m.payload.marketplace_suggestions?.length > 0 && (
-                        <div className="space-y-1" data-testid="stylist-marketplace-strip">
-                          <div className="caps-label text-muted-foreground flex items-center gap-1">
-                            <ShoppingBag className="h-3 w-3" />
-                            {t('stylist.marketplaceLabel')}
-                          </div>
-                          <div className="flex gap-2 overflow-x-auto pb-1">
-                            {m.payload.marketplace_suggestions.map((s) => (
-                              <Link
-                                key={`mkt-${m.id}-${s.listing_id}`}
-                                to={`/marketplace/${s.listing_id}`}
-                                className="block min-w-[120px] w-[120px] rounded-lg border border-border bg-card hover:border-[hsl(var(--accent))]/60"
-                              >
-                                {s.image_url && (
-                                  <img src={s.image_url} alt="" className="w-full aspect-square rounded-t-lg object-cover" />
-                                )}
-                                <div className="p-1.5">
-                                  <div className="text-[11px] line-clamp-2 leading-tight">{s.title}</div>
-                                  {s.price_cents != null && (
-                                    <div className="text-[10px] text-muted-foreground mt-0.5">
-                                      {s.currency === 'USD' ? '$' : s.currency === 'ILS' ? '₪' : ''}{(s.price_cents/100).toFixed(0)}
-                                    </div>
+                      {(() => {
+                        const mktList = m.payload.marketplace_suggestions || m.payload.marketplace_matches;
+                        if (!mktList || mktList.length === 0) return null;
+                        return (
+                          <div className="space-y-1" data-testid="stylist-marketplace-strip">
+                            <div className="caps-label text-muted-foreground flex items-center gap-1">
+                              <ShoppingBag className="h-3 w-3" />
+                              {t('stylist.marketplaceLabel')}
+                            </div>
+                            <div className="flex gap-2 overflow-x-auto pb-1">
+                              {mktList.map((s) => (
+                                <Link
+                                  key={`mkt-${m.id}-${s.listing_id}`}
+                                  to={`/marketplace/${s.listing_id}`}
+                                  className="block min-w-[120px] w-[120px] rounded-lg border border-border bg-card hover:border-[hsl(var(--accent))]/60"
+                                >
+                                  {s.image_url && (
+                                    <img src={s.image_url} alt="" className="w-full aspect-square rounded-t-lg object-cover" />
                                   )}
-                                </div>
-                              </Link>
-                            ))}
+                                  <div className="p-1.5">
+                                    <div className="text-[11px] line-clamp-2 leading-tight">{s.title}</div>
+                                    {s.price_cents != null && (
+                                      <div className="text-[10px] text-muted-foreground mt-0.5">
+                                        {s.currency === 'USD' ? '$' : s.currency === 'ILS' ? '₪' : ''}{(s.price_cents/100).toFixed(0)}
+                                      </div>
+                                    )}
+                                  </div>
+                                </Link>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
                       {m.payload.fashion_scout_picks?.length > 0 && (
                         <div className="space-y-1" data-testid="stylist-scout-strip">
                           <div className="caps-label text-muted-foreground flex items-center gap-1">
@@ -779,6 +1057,32 @@ export default function Stylist() {
       </ScrollArea>
 
       <div className="border-t border-border p-3 md:p-4 space-y-3 bg-background">
+        {/* Quick Scheduler Actions */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1.5 border-b border-border/40" data-testid="stylist-scheduler-actions">
+          <Button
+            size="xs"
+            variant="outline"
+            onClick={handleTriggerScheduled}
+            disabled={busy}
+            className="rounded-full bg-card hover:bg-secondary text-xs h-7 gap-1"
+            data-testid="stylist-daily-suggestion-btn"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-[hsl(var(--accent))]" />
+            {t('stylist.dailySuggestion', 'Daily Suggestion')}
+          </Button>
+          <Button
+            size="xs"
+            variant="outline"
+            onClick={() => setEventModalOpen(true)}
+            disabled={busy}
+            className="rounded-full bg-card hover:bg-secondary text-xs h-7 gap-1"
+            data-testid="stylist-plan-event-btn"
+          >
+            <CalIcon className="h-3.5 w-3.5" />
+            {t('stylist.planEventOutfit', 'Plan Event Outfit')}
+          </Button>
+        </div>
+
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <Switch
@@ -1040,6 +1344,79 @@ export default function Stylist() {
         itemId={floaterItemId}
         onClose={() => setFloaterItemId(null)}
       />
+
+      {/* Plan Event Outfit Modal */}
+      <Dialog open={eventModalOpen} onOpenChange={setEventModalOpen}>
+        <DialogContent className="sm:max-w-[425px]" data-testid="stylist-event-dialog">
+          <DialogHeader>
+            <DialogTitle>{t('stylist.planEventOutfitTitle', 'Plan Event Outfit')}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleTriggerEvent} className="space-y-4 py-2" data-testid="stylist-event-form">
+            <div className="space-y-1">
+              <Label htmlFor="event-name">{t('stylist.eventName', 'Event Name')}</Label>
+              <Input
+                id="event-name"
+                value={eventForm.event_name}
+                onChange={(e) => setEventForm(prev => ({ ...prev, event_name: e.target.value }))}
+                placeholder={t('stylist.eventNamePlaceholder', 'e.g. Birthday Party, Dinner')}
+                data-testid="event-name-input"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="location">{t('stylist.location', 'Location')}</Label>
+              <Input
+                id="location"
+                value={eventForm.location}
+                onChange={(e) => setEventForm(prev => ({ ...prev, location: e.target.value }))}
+                placeholder={t('stylist.locationPlaceholder', 'e.g. Rooftop Restaurant')}
+                data-testid="event-location-input"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="date">{t('common.date', 'Date')}</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={eventForm.date}
+                  onChange={(e) => setEventForm(prev => ({ ...prev, date: e.target.value }))}
+                  data-testid="event-date-input"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="time">{t('common.time', 'Time')}</Label>
+                <Input
+                  id="time"
+                  type="time"
+                  value={eventForm.time}
+                  onChange={(e) => setEventForm(prev => ({ ...prev, time: e.target.value }))}
+                  data-testid="event-time-input"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="prompt">{t('stylist.dressCodeDemands', 'Dress Code / Demands')}</Label>
+              <Textarea
+                id="prompt"
+                value={eventForm.prompt}
+                onChange={(e) => setEventForm(prev => ({ ...prev, prompt: e.target.value }))}
+                placeholder={t('stylist.promptPlaceholder', 'Describe what you need e.g. informal outdoor setting, casual chic')}
+                rows={3}
+                required
+                data-testid="event-prompt-input"
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => setEventModalOpen(false)}>
+                {t('common.cancel', 'Cancel')}
+              </Button>
+              <Button type="submit" disabled={busy} data-testid="event-submit-btn">
+                {t('stylist.getSuggestions', 'Get Suggestions')}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -15,7 +15,7 @@ import { ShareOutfitButton } from '@/components/stylist/ShareOutfitButton';
  * Image fetching is lazy and memoized per card instance to avoid hammering
  * the API when the chat thread re-renders.
  */
-export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick }) {
+export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, onSave }) {
   const { t } = useTranslation();
   const items = rec.items || [];
   const ids = items
@@ -114,7 +114,7 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick })
           ) : null}
         </div>
       ) : null}
-      <div className="p-3">
+      <div className="p-3 text-left">
         <div className="caps-label text-[hsl(var(--accent))]">
           {t('stylist.outfitN', { n: index + 1 })}
         </div>
@@ -184,7 +184,16 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick })
           })}
         </ul>
         {rec.why ? <p className="text-xs mt-2 italic break-words">{rec.why}</p> : null}
-        <div className="mt-3 flex items-center justify-end">
+        <div className="mt-3 flex items-center justify-between gap-2">
+          {onSave ? (
+            <button
+              onClick={() => onSave(rec)}
+              className="text-xs font-semibold text-[hsl(var(--accent))] hover:underline"
+              data-testid={`outfit-recommendation-${index}-save-btn`}
+            >
+              Pick Outfit
+            </button>
+          ) : <div />}
           <ShareOutfitButton rec={rec} sessionId={sessionId} />
         </div>
       </div>

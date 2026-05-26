@@ -11,6 +11,7 @@ from app.api.v1 import (
     closet,
     google_auth,
     listings,
+    outfits,
     payments,
     professionals,
     share,
@@ -26,6 +27,7 @@ api_v1_router.include_router(auth.router)
 api_v1_router.include_router(users.router)
 api_v1_router.include_router(avatar.router)
 api_v1_router.include_router(closet.router)
+api_v1_router.include_router(outfits.router)
 api_v1_router.include_router(listings.router)
 api_v1_router.include_router(transactions.router)
 api_v1_router.include_router(stylist.router)

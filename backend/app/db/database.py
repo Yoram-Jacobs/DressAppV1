@@ -145,6 +145,11 @@ async def ensure_indexes() -> None:
         [("paypal.payout_item_id", 1)], sparse=True
     )
     await db.paypal_events.create_index([("id", 1)], unique=True)
+
+    # --- AI Stylist Scheduler (Phase Scheduler) ---
+    await db.outfits.create_index([("user_id", 1), ("created_at", -1)])
+    await db.simulated_notifications.create_index([("user_id", 1), ("created_at", -1)])
+
     logger.info("MongoDB indexes ensured")
 
 

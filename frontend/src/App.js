@@ -20,6 +20,7 @@ import Closet from '@/pages/Closet';
 import AddItem from '@/pages/AddItem';
 import ItemDetail from '@/pages/ItemDetail';
 import Stylist from '@/pages/Stylist';
+import Outfits from '@/pages/Outfits';
 import Marketplace from '@/pages/Marketplace';
 import CreateListing from '@/pages/CreateListing';
 import ListingDetail from '@/pages/ListingDetail';
@@ -86,6 +87,7 @@ function App() {
               <Route path="/closet/add" element={<AddItem />} />
               <Route path="/closet/:id" element={<ItemDetail />} />
               <Route path="/stylist" element={<Stylist />} />
+              <Route path="/outfits" element={<Outfits />} />
               <Route path="/market" element={<Marketplace />} />
               <Route path="/market/create" element={<CreateListing />} />
               <Route path="/market/:id" element={<ListingDetail />} />

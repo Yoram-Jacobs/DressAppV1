@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Home, Shirt, Sparkles, Store, User } from 'lucide-react';
+import { Home, Shirt, Sparkles, Store, User, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const BottomTabs = () => {
@@ -10,6 +10,7 @@ export const BottomTabs = () => {
     { to: '/home', icon: Home, label: t('nav.home'), testid: 'bottom-tab-home' },
     { to: '/closet', icon: Shirt, label: t('nav.closet'), testid: 'bottom-tab-closet' },
     { to: '/stylist', icon: Sparkles, label: t('nav.stylist'), testid: 'bottom-tab-stylist' },
+    { to: '/outfits', icon: Calendar, label: 'Outfits', testid: 'bottom-tab-outfits' },
     { to: '/market', icon: Store, label: t('nav.market'), testid: 'bottom-tab-market' },
     { to: '/me', icon: User, label: t('nav.me'), testid: 'bottom-tab-me' },
   ];
@@ -20,7 +21,7 @@ export const BottomTabs = () => {
       className="md:hidden fixed bottom-0 inset-x-0 bg-background/95 backdrop-blur border-t border-border z-40"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <ul className="grid grid-cols-5 gap-1 px-2 py-2">
+      <ul className="grid grid-cols-6 gap-1 px-2 py-2">
         {TABS.map(({ to, icon: Icon, label, testid }) => (
           <li key={to} className="flex">
             <NavLink

@@ -50,6 +50,9 @@ class UpdateUserIn(BaseModel):
     # --- Phase TS-2 (Trend-Scout personalization) ---
     occupation: str | None = None
 
+    # --- AI Stylist Scheduler Settings (Phase Scheduler) ---
+    scheduler_settings: dict[str, Any] | None = None
+
 
 @router.get("/me")
 async def get_me(user: dict = Depends(get_current_user)) -> dict[str, Any]:
@@ -100,6 +103,7 @@ async def update_me(
         "professional",
         "style_profile",
         "cultural_context",
+        "scheduler_settings",
     )
 
     db = get_db()
