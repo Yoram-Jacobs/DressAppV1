@@ -78,7 +78,7 @@ services:
       # Optional: set in .env once you push the vision projector to
       # enable the LLaVA chat handler. Until then, Phase 1 is text-only.
       EYES_MMPROJ_FILE: ${EYES_MMPROJ_FILE:-}
-      LLAMA_THREADS: ${EYES_LLAMA_THREADS:-2}
+      LLAMA_THREADS: ${EYES_LLAMA_THREADS:-3}
       LLAMA_CTX_SIZE: ${EYES_LLAMA_CTX_SIZE:-4096}
       LLAMA_N_BATCH: ${EYES_LLAMA_N_BATCH:-256}
     expose:
