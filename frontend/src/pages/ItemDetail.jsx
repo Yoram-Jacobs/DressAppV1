@@ -551,7 +551,7 @@ export default function ItemDetail() {
         reader.readAsDataURL(file);
       });
       const res = await api.uploadGroupMember(id, {
-        image_base_64: imageBase64,
+        image_base64: imageBase64,
         image_mime: file.type || 'image/jpeg',
       });
       if (res.status === 'success') {
@@ -658,6 +658,27 @@ export default function ItemDetail() {
     [item, form, user],
   );
   const isDirty = Object.keys(patch).length > 0;
+
+  const allGroupItems = useMemo(() => {
+    if (!item) return [];
+    const list = [item, ...(item.group_members || [])];
+    const unique = [];
+    const seen = new Set();
+    for (const x of list) {
+      if (x && !seen.has(x.id)) {
+        seen.add(x.id);
+        unique.push(x);
+      }
+    }
+    unique.sort((a, b) => {
+      const aHost = a.group_role === 'host' || (!a.group_role && a.id === a.group_id);
+      const bHost = b.group_role === 'host' || (!b.group_role && b.id === b.group_id);
+      if (aHost && !bHost) return -1;
+      if (!aHost && bHost) return 1;
+      return 0;
+    });
+    return unique;
+  }, [item]);
 
   const setField = (key, val) => setForm((f) => ({ ...f, [key]: val }));
 
@@ -1153,11 +1174,17 @@ export default function ItemDetail() {
           <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial overflow-hidden" data-testid="item-group-views-card">
             <CardContent className="p-5 space-y-3">
               <div className="flex items-center justify-between gap-2">
-                <div className="caps-label text-muted-foreground">
-                  {t('itemDetail.group.title') || 'Garment Views (Item Group)'}
+                <div className="caps-label text-muted-foreground truncate max-w-[200px]" title={(() => {
+                  const hostItem = allGroupItems.find(x => x.group_role === 'host' || x.id === x.group_id) || allGroupItems[0] || item;
+                  return hostItem ? (hostItem.title || hostItem.name || 'Garment Views') : 'Garment Views';
+                })()}>
+                  {(() => {
+                    const hostItem = allGroupItems.find(x => x.group_role === 'host' || x.id === x.group_id) || allGroupItems[0] || item;
+                    return hostItem ? (hostItem.title || hostItem.name || 'Garment Views') : 'Garment Views';
+                  })()}
                 </div>
                 {item.group_id && (
-                  <Badge variant="secondary" className="rounded-full text-[10px]">
+                  <Badge variant="secondary" className="rounded-full text-[10px] flex-shrink-0">
                     {t('itemDetail.group.grouped') || 'Multi-view'}
                   </Badge>
                 )}
@@ -1167,57 +1194,71 @@ export default function ItemDetail() {
               </p>
 
               <div className="flex items-center gap-3 overflow-x-auto pb-2 pt-1 scrollbar-thin">
-                {/* Main View Thumbnail */}
-                <div className="relative flex-shrink-0 group w-20 h-24 rounded-lg overflow-hidden border-2 border-[hsl(var(--accent))] shadow-sm">
-                  <img
-                    src={bestImageUrl(item)}
-                    alt="Front view"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 bg-background/80 backdrop-blur-[2px] py-0.5 text-center">
-                    <span className="text-[9px] font-semibold text-[hsl(var(--accent))]">
-                      {t('itemDetail.group.front') || 'Front (Main)'}
-                    </span>
-                  </div>
-                </div>
+                {allGroupItems.map((gItem) => {
+                  const isActive = gItem.id === id;
+                  const isHost = gItem.group_role === 'host' || gItem.id === gItem.group_id;
 
-                {/* Sibling Views (Members) */}
-                {item.group_members && item.group_members.map((member) => (
-                  <div
-                    key={member.id}
-                    className="relative flex-shrink-0 group w-20 h-24 rounded-lg overflow-hidden border border-border hover:border-muted-foreground transition-all shadow-sm"
-                  >
-                    <img
-                      src={bestImageUrl(member)}
-                      alt="Garment view"
-                      className="w-full h-full object-cover"
-                    />
-                    
-                    {/* Hover actions overlay */}
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
-                      <button
-                        type="button"
-                        onClick={() => onSetFront(member.id)}
-                        disabled={saving}
-                        className="w-full text-[10px] py-1 bg-[hsl(var(--accent))] text-white rounded font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-1"
-                        title="Make Front View"
-                      >
-                        <BadgeCheck className="h-3 w-3" />
-                        Set Front
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onDeleteMember(member.id)}
-                        disabled={saving}
-                        className="w-full text-[10px] py-1 bg-destructive text-white rounded font-medium hover:bg-destructive/90 transition-colors flex items-center justify-center gap-1"
-                        title="Delete view"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                        Delete
-                      </button>
+                  return (
+                    <div
+                      key={gItem.id}
+                      onClick={() => {
+                        if (gItem.id !== id) {
+                          nav(`/closet/${gItem.id}`);
+                        }
+                      }}
+                      className={`relative flex-shrink-0 group w-20 h-24 rounded-lg overflow-hidden border-2 cursor-pointer transition-all shadow-sm ${
+                        isActive
+                          ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+                          : 'border-border hover:border-muted-foreground'
+                      }`}
+                    >
+                      <img
+                        src={bestImageUrl(gItem)}
+                        alt={gItem.title || 'Garment view'}
+                        className="w-full h-full object-cover"
+                      />
+
+                      {isHost && (
+                        <div className="absolute inset-x-0 bottom-0 bg-background/80 backdrop-blur-[2px] py-0.5 text-center">
+                          <span className="text-[9px] font-semibold text-[hsl(var(--accent))]">
+                            {t('itemDetail.group.front') || 'Front (Main)'}
+                          </span>
+                        </div>
+                      )}
+
+                      {!isHost && (
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSetFront(gItem.id);
+                            }}
+                            disabled={saving}
+                            className="w-full text-[10px] py-1 bg-[hsl(var(--accent))] text-white rounded font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-1"
+                            title="Make Front View"
+                          >
+                            <BadgeCheck className="h-3 w-3" />
+                            Set Front
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteMember(gItem.id);
+                            }}
+                            disabled={saving}
+                            className="w-full text-[10px] py-1 bg-destructive text-white rounded font-medium hover:bg-destructive/90 transition-colors flex items-center justify-center gap-1"
+                            title="Delete view"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            Delete
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 {/* Upload Member Button */}
                 <button
