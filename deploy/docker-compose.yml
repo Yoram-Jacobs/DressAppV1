@@ -66,7 +66,6 @@ services:
   # profile when you want to enable the LLaVA handler.
   # ---------------------------------------------------------------
   eyes:
-    profiles: [disabled]
     build:
       context: ../inference-server/eyes
       dockerfile: Dockerfile
@@ -74,6 +73,7 @@ services:
     container_name: dressapp-eyes
     restart: unless-stopped
     environment:
+      EYES_MODEL_FILE: ${EYES_MODEL_FILE:-gemma-4-E2B-it-Q8_0.gguf}
       EYES_API_TOKEN: ${EYES_API_TOKEN:-}
       # Optional: set in .env once you push the vision projector to
       # enable the LLaVA chat handler. Until then, Phase 1 is text-only.
@@ -90,7 +90,7 @@ services:
     # because OOM-killing under transient pressure would be worse
     # than letting the kernel page out cold weights from the mmap.
     volumes:
-      - eyes-cache:/models
+      - /srv/AI-Stylist/eyes_gguf:/models
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7860/healthz"]
       interval: 30s
