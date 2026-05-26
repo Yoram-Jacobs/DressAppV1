@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,19 @@ const VOICES = [
   'aura-2-apollo-en', 'aura-2-draco-en', 'aura-2-hyperion-en',
 ];
 
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
 function SchedulerSettingsCard() {
   const { user, updateUserLocal } = useAuth();
   const [enabled, setEnabled] = useState(user?.scheduler_settings?.enabled || false);
@@ -45,6 +58,61 @@ function SchedulerSettingsCard() {
     return val;
   });
   const [busy, setBusy] = useState(false);
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      setPushSupported(true);
+      navigator.serviceWorker.ready.then((reg) => {
+        reg.pushManager.getSubscription().then((sub) => {
+          setPushEnabled(!!sub);
+        });
+      });
+    }
+  }, []);
+
+  const handlePushToggle = async (checked) => {
+    if (!pushSupported) return;
+    setBusy(true);
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      if (checked) {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          toast.error("Notification permission denied.");
+          setBusy(false);
+          return;
+        }
+        const keyData = await api.getVapidKey();
+        if (!keyData.public_key) {
+          toast.error("VAPID key not configured on server.");
+          setBusy(false);
+          return;
+        }
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(keyData.public_key)
+        });
+        await api.subscribeWebPush(sub.toJSON());
+        setPushEnabled(true);
+        toast.success("Browser push notifications successfully enabled.");
+      } else {
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          await api.unsubscribeWebPush(sub.endpoint);
+          await sub.unsubscribe();
+        }
+        setPushEnabled(false);
+        toast.success("Browser push notifications disabled.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update browser push subscription.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const save = async (e) => {
     e.preventDefault();
@@ -157,6 +225,16 @@ function SchedulerSettingsCard() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {pushSupported && (
+          <div className="flex items-center justify-between gap-3 p-3 bg-secondary/30 rounded-xl border border-border">
+            <div className="space-y-1">
+              <div className="font-semibold text-sm">Browser Push Alerts (Native Web Push)</div>
+              <div className="text-xs text-muted-foreground text-left">Receive direct browser notification alerts on this device.</div>
+            </div>
+            <Switch checked={pushEnabled} onCheckedChange={handlePushToggle} disabled={busy} />
           </div>
         )}
 

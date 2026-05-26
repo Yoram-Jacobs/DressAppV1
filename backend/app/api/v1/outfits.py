@@ -208,3 +208,59 @@ async def clear_simulated_notifications(
     db = get_db()
     await db.simulated_notifications.delete_many({"user_id": user["id"]})
     return {"cleared": True}
+
+
+class WebPushSubscriptionIn(BaseModel):
+    endpoint: str
+    expirationTime: int | None = None
+    keys: dict[str, str]
+
+
+@router.post("/webpush/subscribe")
+async def webpush_subscribe(
+    payload: WebPushSubscriptionIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Register a Web Push subscription for the current user."""
+    db = get_db()
+    sub_dict = payload.model_dump()
+    
+    # Check if subscription already exists to avoid duplicates
+    existing = await db.users.find_one({
+        "id": user["id"],
+        "web_push_subscriptions.endpoint": payload.endpoint
+    })
+    
+    if not existing:
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$push": {"web_push_subscriptions": sub_dict}}
+        )
+        logger.info("Registered web push subscription for user_id=%s", user["id"])
+    return {"subscribed": True}
+
+
+@router.post("/webpush/unsubscribe")
+async def webpush_unsubscribe(
+    endpoint: str = Body(..., embed=True),
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Remove a Web Push subscription for the current user."""
+    db = get_db()
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$pull": {"web_push_subscriptions": {"endpoint": endpoint}}}
+    )
+    logger.info("Unsubscribed web push endpoint for user_id=%s", user["id"])
+    return {"unsubscribed": True}
+
+
+@router.get("/webpush/vapid-key")
+async def get_vapid_key(
+    user: dict = Depends(get_current_user),
+) -> dict[str, str]:
+    """Get the VAPID public key for frontend push registration."""
+    from app.config import settings
+    return {"public_key": settings.VAPID_PUBLIC_KEY}
+
+

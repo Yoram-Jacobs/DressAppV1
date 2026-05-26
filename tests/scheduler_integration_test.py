@@ -332,6 +332,47 @@ class SchedulerIntegrationTester:
         assert len(check_data["notifications"]) == 0, f"Expected 0 notifications, got {len(check_data['notifications'])}"
         self.log("Simulated notifications center correctly retrieves and clears mock log entries")
 
+    def step_webpush_subscription(self):
+        """10. Verify VAPID key fetch and Web Push subscription CRUD"""
+        # Fetch VAPID Key
+        resp = requests.get(
+            f"{BASE_URL}/outfits/webpush/vapid-key",
+            headers=self.headers(),
+            timeout=10
+        )
+        self.assert_status(resp, 200, "VAPID key fetch failed")
+        data = resp.json()
+        self.assert_field(data, "public_key", "VAPID key response")
+        
+        # Subscribe
+        sub_payload = {
+            "endpoint": "https://fcm.googleapis.com/fcm/send/test-endpoint-token-12345",
+            "expirationTime": None,
+            "keys": {
+                "p256dh": "BLm5X85dF...",
+                "auth": "auth-key-token-999"
+            }
+        }
+        sub_resp = requests.post(
+            f"{BASE_URL}/outfits/webpush/subscribe",
+            json=sub_payload,
+            headers=self.headers(),
+            timeout=10
+        )
+        self.assert_status(sub_resp, 200, "Web Push subscribe failed")
+        assert sub_resp.json().get("subscribed") is True, "Subscribed key should be True"
+
+        # Unsubscribe
+        unsub_resp = requests.post(
+            f"{BASE_URL}/outfits/webpush/unsubscribe",
+            json={"endpoint": "https://fcm.googleapis.com/fcm/send/test-endpoint-token-12345"},
+            headers=self.headers(),
+            timeout=10
+        )
+        self.assert_status(unsub_resp, 200, "Web Push unsubscribe failed")
+        assert unsub_resp.json().get("unsubscribed") is True, "Unsubscribed key should be True"
+        self.log("VAPID key fetching and Web Push subscriptions successfully verified")
+
     def cleanup(self):
         """10. Cleanup database created items and outfits"""
         self.log("Running cleanup...")
@@ -384,6 +425,7 @@ class SchedulerIntegrationTester:
             self.test("Verify saved outfits diary CRUD & statistics", self.step_save_outfit_and_crud)
             self.test("Verify occasion/location similarities warning safeguard", self.step_similarity_safeguard)
             self.test("Verify simulated notifications center logs", self.step_simulated_notifications)
+            self.test("Verify VAPID fetch and Web Push subscriptions", self.step_webpush_subscription)
 
         finally:
             self.cleanup()

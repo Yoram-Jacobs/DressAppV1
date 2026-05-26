@@ -732,6 +732,9 @@ export const api = {
   rejectItemSuggestion: (itemId) => client.post('/outfits/reject-item', { item_id: itemId }).then((r) => r.data),
   listSimulatedNotifications: () => client.get('/outfits/notifications').then((r) => r.data),
   clearSimulatedNotifications: () => client.post('/outfits/notifications/clear').then((r) => r.data),
+  subscribeWebPush: (sub) => client.post('/outfits/webpush/subscribe', sub).then((r) => r.data),
+  unsubscribeWebPush: (endpoint) => client.post('/outfits/webpush/unsubscribe', { endpoint }).then((r) => r.data),
+  getVapidKey: () => client.get('/outfits/webpush/vapid-key').then((r) => r.data),
 };
 
 export default client;

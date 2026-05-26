@@ -156,6 +156,7 @@ class User(BaseDoc):
 
     # --- AI Stylist Scheduler Settings (Phase Scheduler) ---
     scheduler_settings: dict[str, Any] | None = None
+    web_push_subscriptions: list[dict] = Field(default_factory=list)
 
 
 # ------------------------- Closet items -------------------------
