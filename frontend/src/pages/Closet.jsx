@@ -181,6 +181,48 @@ export default function Closet() {
     }
   };
 
+  const handleTouchStart = (e, id) => {
+    setDraggedId(id);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!draggedId) return;
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!element) return;
+    const cardEl = element.closest('[data-testid="closet-item-card"]');
+    if (cardEl) {
+      const targetId = cardEl.getAttribute('data-item-id');
+      if (targetId && targetId !== draggedId) {
+        setDragOverId(targetId);
+        return;
+      }
+    }
+    setDragOverId(null);
+  };
+
+  const handleTouchEnd = async (e) => {
+    if (!draggedId) return;
+    const targetId = dragOverId;
+    const sourceId = draggedId;
+    setDraggedId(null);
+    setDragOverId(null);
+    if (targetId && sourceId && sourceId !== targetId) {
+      try {
+        const res = await api.groupItems({ host_id: targetId, member_id: sourceId });
+        if (res.status === 'success') {
+          if (res.host) store.upsert(res.host);
+          if (res.member) store.upsert(res.member);
+          await store.incrementalSync();
+          toast.success(t('closet.groupSuccess') || 'Garments grouped successfully');
+        }
+      } catch (err) {
+        console.error('Failed to group items:', err);
+        toast.error(err?.response?.data?.detail || 'Failed to group items');
+      }
+    }
+  };
+
   // No-op compat shim. Some downstream code (e.g. the delete handler)
   // calls ``fetchItems`` after a mutation to refresh the grid; with
   // the store-based design we instead call ``store.remove`` /
@@ -821,13 +863,17 @@ export default function Closet() {
                 className={`block group transition-all duration-300 select-none ${
                   dragOverId === it.id ? 'scale-[1.05] ring-2 ring-[hsl(var(--accent))] ring-offset-2 rounded-[calc(var(--radius)+6px)]' : ''
                 }`}
-                style={{ WebkitTouchCallout: 'none', touchAction: 'pan-y' }}
+                style={{ WebkitTouchCallout: 'none', touchAction: 'none' }}
                 data-testid="closet-item-card"
+                data-item-id={it.id}
                 draggable
                 onDragStart={(e) => handleDragStart(e, it.id)}
                 onDragOver={(e) => handleDragOver(e, it.id)}
                 onDragLeave={(e) => handleDragLeave(e, it.id)}
                 onDrop={(e) => handleDrop(e, it.id)}
+                onTouchStart={(e) => handleTouchStart(e, it.id)}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
                 onContextMenu={(e) => e.preventDefault()}
               >
                 <ItemCardInner item={it} score={it._score} />

@@ -1400,23 +1400,25 @@ export default function ItemDetail() {
                         No matching candidates found
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {filteredCandidates.map((cItem) => (
                           <div
                             key={cItem.id}
                             onClick={() => handleSelectClosetItem(cItem.id)}
-                            className="group relative rounded-xl border border-border overflow-hidden cursor-pointer hover:border-emerald-500 hover:ring-2 hover:ring-emerald-500/20 transition-all aspect-[3/4]"
+                            className="group flex flex-col rounded-xl border border-border overflow-hidden cursor-pointer hover:border-emerald-500 hover:ring-2 hover:ring-emerald-500/20 transition-all bg-card shadow-sm"
                           >
-                            <img
-                              src={bestImageUrl(cItem)}
-                              alt={cItem.title || 'Closet item'}
-                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                            />
-                            <div className="absolute inset-x-0 bottom-0 bg-black/60 backdrop-blur-[2px] p-2 text-left opacity-0 group-hover:opacity-100 transition-opacity">
-                              <p className="text-[10px] font-semibold text-white truncate">
+                            <div className="aspect-[3/4] bg-secondary relative overflow-hidden flex items-center justify-center">
+                              <img
+                                src={bestImageUrl(cItem)}
+                                alt={cItem.title || 'Closet item'}
+                                className="w-full h-full object-contain transition-transform group-hover:scale-105"
+                              />
+                            </div>
+                            <div className="p-2 text-left border-t border-border/50 bg-background/50">
+                              <p className="text-[10px] font-semibold text-foreground truncate">
                                 {cItem.title || cItem.name}
                               </p>
-                              <p className="text-[9px] text-gray-300 truncate">
+                              <p className="text-[8px] text-muted-foreground truncate mt-0.5">
                                 {labelForCategory(cItem.category, t)}
                               </p>
                             </div>
