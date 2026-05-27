@@ -728,7 +728,7 @@ export default function ItemDetail() {
   };
 
   const onDeleteMember = (memberId) => {
-    const confirmDelete = window.confirm(t('itemDetail.group.confirmDeleteView') || 'Are you sure you want to remove this view and restore it to the closet?');
+    const confirmDelete = window.confirm(t('itemDetail.group.confirmDeleteView') || 'Are you sure you want to ungroup this view and restore it to the closet?');
     if (!confirmDelete) return;
 
     setDeletedGroupMemberIds((prev) => {
@@ -1376,9 +1376,33 @@ export default function ItemDetail() {
                   </Badge>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground mb-4">
                 {t('itemDetail.group.subtitle') || 'Combine multiple photos (front, back, details) for 100% accurate styling.'}
               </p>
+
+              {activeViewIdState && activeViewIdState !== hostIdState && currentGroupItems.some(x => x.id === activeViewIdState) && (
+                <div className="flex items-center gap-3 mb-4">
+                  <Button
+                    type="button"
+                    onClick={() => onSetFront(activeViewIdState)}
+                    disabled={saving}
+                    className="flex-1 bg-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/90 text-white h-10"
+                  >
+                    <BadgeCheck className="h-4 w-4 mr-2" />
+                    Set Front
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => onDeleteMember(activeViewIdState)}
+                    disabled={saving}
+                    className="flex-1 h-10"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Ungroup
+                  </Button>
+                </div>
+              )}
 
               <div className="flex items-center gap-3 overflow-x-auto pb-2 pt-1 scrollbar-thin">
                 {currentGroupItems.map((gItem) => {
@@ -1408,37 +1432,6 @@ export default function ItemDetail() {
                           <span className="text-[9px] font-semibold text-[hsl(var(--accent))]">
                             {t('itemDetail.group.front') || 'Front (Main)'}
                           </span>
-                        </div>
-                      )}
-
-                      {!isHost && (
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onSetFront(gItem.id);
-                            }}
-                            disabled={saving}
-                            className="w-full text-[10px] py-1 bg-[hsl(var(--accent))] text-white rounded font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-1"
-                            title="Make Front View"
-                          >
-                            <BadgeCheck className="h-3 w-3" />
-                            Set Front
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onDeleteMember(gItem.id);
-                            }}
-                            disabled={saving}
-                            className="w-full text-[10px] py-1 bg-destructive text-white rounded font-medium hover:bg-destructive/90 transition-colors flex items-center justify-center gap-1"
-                            title="Delete view"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                            Delete
-                          </button>
                         </div>
                       )}
                     </div>

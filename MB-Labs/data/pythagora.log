@@ -1,0 +1,63 @@
+2026-05-24T18:21:54.729Z INFO Is remote: false
+2026-05-24T18:21:54.732Z INFO Starting Local. Installation path: undefined
+2026-05-24T18:21:54.733Z INFO [MainProvider] Creating new MainProvider instance...
+2026-05-24T18:21:54.736Z INFO [TabsManager] Code view listener set up at initialization
+2026-05-24T18:21:54.738Z INFO Installation path exists: c:\DressApp_AG\MB-Labs\MB-Lab
+2026-05-24T18:21:54.740Z INFO Initializing database with URL: file:C:\Users\User\AppData\Local\Temp\pythagora-temp\pythagora.db
+2026-05-24T18:21:54.745Z INFO New database detected, running full prisma setup...
+2026-05-24T18:21:54.747Z INFO [c:\Users\User\.vscode\extensions\pythagoratechnologies.pythagora-vs-code-2.6.19] Project root:
+2026-05-24T18:21:54.748Z INFO [c:\Users\User\.vscode\extensions\pythagoratechnologies.pythagora-vs-code-2.6.19\prisma\schema.prisma] Schema path:
+2026-05-24T18:21:54.750Z INFO [file:C:\Users\User\AppData\Local\Temp\pythagora-temp\pythagora.db] Database URL:
+2026-05-24T18:21:54.751Z INFO [true] Schema exists:
+2026-05-24T18:21:54.753Z INFO Running prisma generate first...
+2026-05-24T18:21:58.443Z INFO [Prisma schema loaded from prisma\schema.prisma
+
+✔ Generated Prisma Client (6.19.1) to .\src\generated\prisma in 384ms
+
+] Prisma generate result:
+2026-05-24T18:21:58.445Z INFO Running prisma db push to sync schema...
+2026-05-24T18:22:02.285Z INFO [Prisma schema loaded from prisma\schema.prisma
+Datasource "db": SQLite database "pythagora.db" at "file:C:\Users\User\AppData\Local\Temp\pythagora-temp\pythagora.db"
+
+SQLite database pythagora.db created at file:C:\Users\User\AppData\Local\Temp\pythagora-temp\pythagora.db
+
+Your database is now in sync with your Prisma schema. Done in 190ms
+
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (6.19.1) to .\src\generated\prisma in 448ms
+
+] Prisma db push result:
+2026-05-24T18:22:02.289Z INFO Database initialized successfully
+2026-05-24T18:22:02.291Z INFO [Migration] Checking for database migration...
+2026-05-24T18:22:03.990Z INFO [Migration] No migration needed
+2026-05-24T19:58:34.130Z INFO Closing entire Pythagora extension...
+2026-05-24T19:58:34.136Z ERROR Error closing extension
+Error: Canceled
+Stack: Canceled: Canceled
+	at new YI (file:///c:/Users/User/AppData/Local/Programs/Microsoft%20VS%20Code/f6cfa2ea24/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:407:151655)
+	at i._remoteCall (file:///c:/Users/User/AppData/Local/Programs/Microsoft%20VS%20Code/f6cfa2ea24/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:407:157707)
+	at r.<computed>.s.charCodeAt.r.<computed> (file:///c:/Users/User/AppData/Local/Programs/Microsoft%20VS%20Code/f6cfa2ea24/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:407:154502)
+	at Sg._doExecuteCommand (file:///c:/Users/User/AppData/Local/Programs/Microsoft%20VS%20Code/f6cfa2ea24/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:502:48252)
+	at Sg.executeCommand (file:///c:/Users/User/AppData/Local/Programs/Microsoft%20VS%20Code/f6cfa2ea24/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:502:47699)
+	at Object.executeCommand (file:///c:/Users/User/AppData/Local/Programs/Microsoft%20VS%20Code/f6cfa2ea24/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:641:136543)
+	at closeEntirePythagoraExtension (c:\Users\User\.vscode\extensions\pythagoratechnologies.pythagora-vs-code-2.6.19\out\extension.js:542:31)
+	at Object.deactivate (c:\Users\User\.vscode\extensions\pythagoratechnologies.pythagora-vs-code-2.6.19\out\extension.js:409:15)
+	at hP._deactivate (file:///c:/Users/User/AppData/Local/Programs/Microsoft%20VS%20Code/f6cfa2ea24/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:506:14483)
+	at file:///c:/Users/User/AppData/Local/Programs/Microsoft%20VS%20Code/f6cfa2ea24/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:506:12010
+	at Array.map (<anonymous>)
+	at hP._deactivateAll (file:///c:/Users/User/AppData/Local/Programs/Microsoft%20VS%20Code/f6cfa2ea24/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:506:11998)
+	at hP.terminate (file:///c:/Users/User/AppData/Local/Programs/Microsoft%20VS%20Code/f6cfa2ea24/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:506:12349)
+	at i.terminate (file:///c:/Users/User/AppData/Local/Programs/Microsoft%20VS%20Code/f6cfa2ea24/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:508:1072)
+	at Gs (file:///c:/Users/User/AppData/Local/Programs/Microsoft%20VS%20Code/f6cfa2ea24/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:805:11700)
+	at cp.value (file:///c:/Users/User/AppData/Local/Programs/Microsoft%20VS%20Code/f6cfa2ea24/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:805:9847)
+	at E._deliver (file:///c:/Users/User/AppData/Local/Programs/Microsoft%20VS%20Code/f6cfa2ea24/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:403:3244)
+	at E.fire (file:///c:/Users/User/AppData/Local/Programs/Microsoft%20VS%20Code/f6cfa2ea24/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:403:3562)
+	at ss.fire (file:///c:/Users/User/AppData/Local/Programs/Microsoft%20VS%20Code/f6cfa2ea24/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:405:8437)
+	at MessagePortMain.<anonymous> (file:///c:/Users/User/AppData/Local/Programs/Microsoft%20VS%20Code/f6cfa2ea24/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:805:8082)
+	at MessagePortMain.emit (node:events:519:28)
+	at MessagePortMain.emit (node:domain:489:12)
+	at MessagePortMain._internalPort.emit (node:electron/js2c/utility_init:2:2959)
+Extra context: {
+  "message": "Canceled"
+}

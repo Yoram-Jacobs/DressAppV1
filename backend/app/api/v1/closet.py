@@ -2122,7 +2122,10 @@ async def list_items(
     skip: int = Query(default=0, ge=0),
 ) -> dict[str, Any]:
     db = get_db()
-    query: dict[str, Any] = {"user_id": user["id"], "group_role": {"$ne": "member"}}
+    query: dict[str, Any] = {"user_id": user["id"]}
+    if not ids_only:
+        query["group_role"] = {"$ne": "member"}
+        
     if source:
         query["source"] = source
     if marketplace_intent:
