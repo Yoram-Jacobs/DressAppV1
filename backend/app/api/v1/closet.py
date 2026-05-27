@@ -4266,6 +4266,14 @@ class UploadMemberIn(BaseModel):
     image_mime: str = "image/jpeg"
 
 
+class GroupEditIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    new_host_id: str | None = None
+    ungroup_member_ids: list[str] = []
+    add_member_ids: list[str] = []
+    new_uploads: list[UploadMemberIn] = []
+
+
 async def reanalyze_group_helper(group_id: str, user_id: str) -> None:
     db = get_db()
     group_items = await repos.find_many(
@@ -4626,6 +4634,182 @@ async def ungroup_item(
             background_tasks.add_task(reanalyze_group_helper, group_id, user["id"])
 
     return {"status": "success"}
+
+
+@router.post("/{host_id}/group-edit")
+async def group_edit(
+    host_id: str,
+    payload: GroupEditIn,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    db = get_db()
+    # 1. Fetch current host item
+    host = await db.closet_items.find_one({"id": host_id, "user_id": user["id"]})
+    if not host:
+        raise HTTPException(404, "Host item not found")
+
+    group_id = host.get("group_id") or host_id
+
+    # Make sure host is marked as host (if not already set)
+    if not host.get("group_id") or host.get("group_role") != "host":
+        await db.closet_items.update_one(
+            {"id": host_id},
+            {"$set": {"group_id": group_id, "group_role": "host", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+
+    # 2. Process new uploads
+    for upload in payload.new_uploads:
+        try:
+            raw = base64.b64decode(upload.image_base64, validate=True)
+        except Exception as exc:
+            raise HTTPException(400, f"Invalid image_base64: {exc}")
+
+        original_data_url = f"data:{upload.image_mime};base64,{upload.image_base64}"
+        
+        from app.models.schemas import ClosetItem
+        member_item = ClosetItem(
+            user_id=user["id"],
+            title=f"{host.get('title', 'Garment')} (View)",
+            category=host.get("category", "Top"),
+            sub_category=host.get("sub_category"),
+            item_type=host.get("item_type"),
+            brand=host.get("brand"),
+            gender=host.get("gender"),
+            dress_code=host.get("dress_code"),
+            colors=host.get("colors") or [],
+            color=host.get("color"),
+            group_id=group_id,
+            group_role="member",
+            original_image_url=original_data_url,
+        ).model_dump()
+
+        # Fast single-item segmentation
+        segmented_data_url = None
+        segmentation_model = None
+        if garment_vision_service is not None:
+            try:
+                detections = await garment_vision_service.detect_items(raw)
+                if detections:
+                    best_det = max(
+                        detections,
+                        key=lambda d: (
+                            max(0, d["bbox"][2] - d["bbox"][0])
+                            * max(0, d["bbox"][3] - d["bbox"][1])
+                        ),
+                    )
+                    raw_crops = await asyncio.to_thread(
+                        garment_vision_service._bbox_crop_useful, raw, [best_det]
+                    )
+                    from app.services.vision.image import _apply_fast_matte
+                    out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
+                    
+                    if out:
+                        _, b64_bytes, mime = out[0]
+                    elif raw_crops:
+                        _, b64_bytes, mime = raw_crops[0]
+                    else:
+                        b64_bytes = None
+                    
+                    if b64_bytes:
+                        b64 = base64.b64encode(b64_bytes).decode("ascii")
+                        segmented_data_url = f"data:{mime or 'image/png'};base64,{b64}"
+                        segmentation_model = "the_eyes_single"
+            except Exception as exc:
+                logger.warning("group_edit segment failed: %r", exc)
+
+        if segmented_data_url:
+            member_item["segmented_image_url"] = segmented_data_url
+            member_item["segmentation_model"] = segmentation_model
+
+        # Get FashionCLIP embedding
+        if fashion_clip_service is not None:
+            try:
+                embed_bytes = base64.b64decode(segmented_data_url.split(",", 1)[1]) if segmented_data_url else raw
+                vec = await fashion_clip_service.embed_image(embed_bytes)
+                if vec:
+                    member_item["clip_embedding"] = vec
+                    member_item["clip_model"] = fashion_clip_service.model_id
+            except Exception as exc:
+                logger.warning("group_edit CLIP embed failed: %r", exc)
+
+        # Save to DB
+        await repos.insert(db.closet_items, member_item)
+
+    # 3. Process adding existing closet items
+    for add_id in payload.add_member_ids:
+        member = await db.closet_items.find_one({"id": add_id, "user_id": user["id"]})
+        if not member:
+            continue
+        member_group_id = member.get("group_id")
+        if member_group_id:
+            # Move all members of the member's group to the current group
+            await db.closet_items.update_many(
+                {"group_id": member_group_id, "user_id": user["id"]},
+                {"$set": {"group_id": group_id, "group_role": "member", "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+        else:
+            await db.closet_items.update_one(
+                {"id": add_id},
+                {"$set": {"group_id": group_id, "group_role": "member", "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+
+    # 4. Process ungrouping members
+    for remove_id in payload.ungroup_member_ids:
+        await db.closet_items.update_one(
+            {"id": remove_id, "user_id": user["id"]},
+            {"$set": {"group_id": None, "group_role": None, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+
+    # 5. Process swapping host role
+    active_host_id = host_id
+    if payload.new_host_id and payload.new_host_id != host_id:
+        new_host = await db.closet_items.find_one({"id": payload.new_host_id, "user_id": user["id"]})
+        if new_host:
+            active_host_id = payload.new_host_id
+            # Update all items in this group to have the new group_id (the new host's ID)
+            await db.closet_items.update_many(
+                {"group_id": group_id, "user_id": user["id"]},
+                {"$set": {"group_id": active_host_id}}
+            )
+            # Update old host to be a member
+            await db.closet_items.update_one(
+                {"id": host_id},
+                {"$set": {"group_role": "member", "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+            # Update new host to be the host
+            await db.closet_items.update_one(
+                {"id": active_host_id},
+                {"$set": {"group_role": "host", "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+            # Also update group_id to active_host_id for the rest of processing
+            group_id = active_host_id
+
+    # 6. Dissolution check
+    remaining = await db.closet_items.find(
+        {"group_id": group_id, "user_id": user["id"]}
+    ).to_list(None)
+
+    if len(remaining) <= 1:
+        # Only 1 item left -> dissolve group entirely
+        await db.closet_items.update_many(
+            {"group_id": group_id, "user_id": user["id"]},
+            {"$set": {"group_id": None, "group_role": None, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    else:
+        # Re-run group analysis in the background
+        background_tasks.add_task(reanalyze_group_helper, group_id, user["id"])
+
+    # Fetch and return the updated host
+    updated_host = await db.closet_items.find_one({"id": active_host_id})
+    if updated_host and "_id" in updated_host:
+        updated_host.pop("_id")
+
+    return {
+        "status": "success",
+        "host": updated_host
+    }
+
 
 
 @router.get("/{item_id}")

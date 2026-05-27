@@ -163,7 +163,7 @@ export default function Closet() {
     }
   };
 
-  const handleDrop = async (e, targetId) => {
+  const handleDrop = (e, targetId) => {
     e.preventDefault();
     setDragOverId(null);
     const sourceId = e.dataTransfer.getData('text/plain') || draggedId;
@@ -171,18 +171,39 @@ export default function Closet() {
 
     if (!sourceId || sourceId === targetId) return;
 
-    try {
-      const res = await api.groupItems({ host_id: targetId, member_id: sourceId });
-      if (res.status === 'success') {
-        if (res.host) store.upsert(res.host);
-        if (res.member) store.upsert(res.member);
-        await store.incrementalSync();
-        toast.success(t('closet.groupSuccess') || 'Garments grouped successfully');
-      }
-    } catch (err) {
-      console.error('Failed to group items:', err);
-      toast.error(err?.response?.data?.detail || 'Failed to group items');
+    // Optimistic update
+    const sourceItem = (store.items || []).find(it => it.id === sourceId);
+    const targetItem = (store.items || []).find(it => it.id === targetId);
+
+    const backupSource = sourceItem ? { ...sourceItem } : null;
+    const backupTarget = targetItem ? { ...targetItem } : null;
+
+    if (sourceItem && targetItem) {
+      const groupId = targetItem.group_id || targetId;
+      store.upsert({ ...targetItem, group_id: groupId, group_role: 'host' });
+      store.upsert({ ...sourceItem, group_id: groupId, group_role: 'member' });
     }
+
+    // Update the database in the background
+    api.groupItems({ host_id: targetId, member_id: sourceId })
+      .then(async (res) => {
+        if (res.status === 'success') {
+          if (res.host) store.upsert(res.host);
+          if (res.member) store.upsert(res.member);
+          await store.incrementalSync();
+          toast.success(t('closet.groupSuccess') || 'Garments grouped successfully');
+        } else {
+          if (backupSource) store.upsert(backupSource);
+          if (backupTarget) store.upsert(backupTarget);
+          toast.error('Failed to group items');
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to group items:', err);
+        if (backupSource) store.upsert(backupSource);
+        if (backupTarget) store.upsert(backupTarget);
+        toast.error(err?.response?.data?.detail || 'Failed to group items');
+      });
   };
 
   const handleTouchStart = (e, id) => {
@@ -233,7 +254,7 @@ export default function Closet() {
     setDragOverId(null);
   };
 
-  const handleTouchEnd = async (e) => {
+  const handleTouchEnd = (e) => {
     if (touchTimeoutRef.current) {
       clearTimeout(touchTimeoutRef.current);
       touchTimeoutRef.current = null;
@@ -253,18 +274,38 @@ export default function Closet() {
     setIsTouchDragging(false);
 
     if (targetId && sourceId && sourceId !== targetId) {
-      try {
-        const res = await api.groupItems({ host_id: targetId, member_id: sourceId });
-        if (res.status === 'success') {
-          if (res.host) store.upsert(res.host);
-          if (res.member) store.upsert(res.member);
-          await store.incrementalSync();
-          toast.success(t('closet.groupSuccess') || 'Garments grouped successfully');
-        }
-      } catch (err) {
-        console.error('Failed to group items:', err);
-        toast.error(err?.response?.data?.detail || 'Failed to group items');
+      // Optimistic update
+      const sourceItem = (store.items || []).find(it => it.id === sourceId);
+      const targetItem = (store.items || []).find(it => it.id === targetId);
+
+      const backupSource = sourceItem ? { ...sourceItem } : null;
+      const backupTarget = targetItem ? { ...targetItem } : null;
+
+      if (sourceItem && targetItem) {
+        const groupId = targetItem.group_id || targetId;
+        store.upsert({ ...targetItem, group_id: groupId, group_role: 'host' });
+        store.upsert({ ...sourceItem, group_id: groupId, group_role: 'member' });
       }
+
+      api.groupItems({ host_id: targetId, member_id: sourceId })
+        .then(async (res) => {
+          if (res.status === 'success') {
+            if (res.host) store.upsert(res.host);
+            if (res.member) store.upsert(res.member);
+            await store.incrementalSync();
+            toast.success(t('closet.groupSuccess') || 'Garments grouped successfully');
+          } else {
+            if (backupSource) store.upsert(backupSource);
+            if (backupTarget) store.upsert(backupTarget);
+            toast.error('Failed to group items');
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to group items:', err);
+          if (backupSource) store.upsert(backupSource);
+          if (backupTarget) store.upsert(backupTarget);
+          toast.error(err?.response?.data?.detail || 'Failed to group items');
+        });
     }
   };
 

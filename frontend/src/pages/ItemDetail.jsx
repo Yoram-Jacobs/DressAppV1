@@ -434,6 +434,13 @@ export default function ItemDetail() {
   const [addOpen, setAddOpen] = useState(false);
   const [closetSearch, setClosetSearch] = useState('');
 
+  const [groupItemsState, setGroupItemsState] = useState([]);
+  const [deletedGroupMemberIds, setDeletedGroupMemberIds] = useState(new Set());
+  const [addedGroupMembers, setAddedGroupMembers] = useState([]);
+  const [newUploadedMembers, setNewUploadedMembers] = useState([]);
+  const [hostIdState, setHostIdState] = useState(null);
+
+
   // ────────────────────────────────────────────────────────────────
   // Legacy "Clean background" (rembg matte) state.
   //
@@ -545,96 +552,6 @@ export default function ItemDetail() {
   };
   const memberPhotoInputRef = useRef(null);
   const onAddMemberPhoto = () => memberPhotoInputRef.current?.click();
-  const onMemberPhotoFileChosen = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    setUploadingPhoto(true);
-    const loadingId = toast.loading(t('itemDetail.photo.running') || 'Analyzing view...');
-    try {
-      const imageBase64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(file);
-      });
-      const res = await api.uploadGroupMember(id, {
-        image_base64: imageBase64,
-        image_mime: file.type || 'image/jpeg',
-      });
-      if (res.status === 'success') {
-        if (res.host) {
-          setItem(res.host);
-          setForm(toFormState(res.host, user));
-          try {
-            const { closetStore } = await import('@/lib/closetStore');
-            closetStore.upsert(res.host);
-          } catch (errStore) {
-            console.warn(errStore);
-          }
-        }
-        if (res.member) {
-          try {
-            const { closetStore } = await import('@/lib/closetStore');
-            closetStore.upsert(res.member);
-          } catch (errStore) {
-            console.warn(errStore);
-          }
-        }
-        await load();
-        toast.dismiss(loadingId);
-        toast.success(t('itemDetail.group.addSuccess') || 'View added to garment group');
-      }
-    } catch (err) {
-      toast.dismiss(loadingId);
-      toast.error(err?.response?.data?.detail || 'Failed to upload view');
-    } finally {
-      setUploadingPhoto(false);
-    }
-  };
-
-  const onSetFront = async (memberId) => {
-    setSaving(true);
-    const loadingId = toast.loading(t('itemDetail.group.settingFront') || 'Setting main view...');
-    try {
-      const res = await api.setGroupHost(id, memberId);
-      if (res.status === 'success') {
-        toast.dismiss(loadingId);
-        toast.success(t('itemDetail.group.setFrontSuccess') || 'Main view updated');
-        nav(`/closet/${memberId}`, { replace: true });
-      }
-    } catch (err) {
-      toast.dismiss(loadingId);
-      toast.error(err?.response?.data?.detail || 'Failed to update main view');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const onDeleteMember = async (memberId) => {
-    const confirmDelete = window.confirm(t('itemDetail.group.confirmDeleteView') || 'Are you sure you want to remove this view and restore it to the closet?');
-    if (!confirmDelete) return;
-
-    setSaving(true);
-    const loadingId = toast.loading(t('itemDetail.group.deletingView') || 'Removing view...');
-    try {
-      await api.ungroupItem(memberId);
-      try {
-        const { closetStore } = await import('@/lib/closetStore');
-        await closetStore.incrementalSync();
-      } catch (errStore) {
-        console.warn(errStore);
-      }
-      toast.dismiss(loadingId);
-      toast.success(t('itemDetail.group.deleteViewSuccess') || 'View restored to closet');
-      await load();
-    } catch (err) {
-      toast.dismiss(loadingId);
-      toast.error(err?.response?.data?.detail || 'Failed to remove view');
-    } finally {
-      setSaving(false);
-    }
-  };
   const recognitionRef = useRef(null);
   const sttSupported = useRef(isSTTSupported());
 
@@ -665,38 +582,83 @@ export default function ItemDetail() {
     () => (item && form ? diffPatch(item, form, user) : {}),
     [item, form, user],
   );
-  const isDirty = Object.keys(patch).length > 0;
 
-  const allGroupItems = useMemo(() => {
-    if (!item) return [];
-    const list = [item, ...(item.group_members || [])];
-    const unique = [];
-    const seen = new Set();
-    for (const x of list) {
-      if (x && !seen.has(x.id)) {
-        seen.add(x.id);
-        unique.push(x);
-      }
-    }
-    unique.sort((a, b) => {
-      const aHost = a.group_role === 'host' || (!a.group_role && a.id === a.group_id);
-      const bHost = b.group_role === 'host' || (!b.group_role && b.id === b.group_id);
-      if (aHost && !bHost) return -1;
-      if (!aHost && bHost) return 1;
-      return 0;
-    });
-    return unique;
+  const initialHostId = useMemo(() => {
+    if (!item) return null;
+    const dbList = [item, ...(item.group_members || [])];
+    const hostItem = dbList.find(x => x.group_role === 'host' || x.id === x.group_id) || dbList[0] || item;
+    return hostItem ? hostItem.id : item.id;
   }, [item]);
 
+  const groupIsDirty = useMemo(() => {
+    return (
+      deletedGroupMemberIds.size > 0 ||
+      addedGroupMembers.length > 0 ||
+      newUploadedMembers.length > 0 ||
+      (initialHostId !== null && hostIdState !== initialHostId)
+    );
+  }, [deletedGroupMemberIds, addedGroupMembers, newUploadedMembers, hostIdState, initialHostId]);
+
+  const isDirty = Object.keys(patch).length > 0 || groupIsDirty;
+
+  useEffect(() => {
+    if (item) {
+      const dbList = [item, ...(item.group_members || [])];
+      const unique = [];
+      const seen = new Set();
+      for (const x of dbList) {
+        if (x && !seen.has(x.id)) {
+          seen.add(x.id);
+          unique.push(x);
+        }
+      }
+      setGroupItemsState(unique);
+      
+      const hostItem = unique.find(x => x.group_role === 'host' || x.id === x.group_id) || unique[0] || item;
+      setHostIdState(hostItem ? hostItem.id : item.id);
+      
+      setDeletedGroupMemberIds(new Set());
+      setAddedGroupMembers([]);
+      setNewUploadedMembers([]);
+    }
+  }, [item]);
+
+  const currentGroupItems = useMemo(() => {
+    if (!item) return [];
+    const dbList = [item, ...(item.group_members || [])];
+    const filteredDbList = dbList.filter(x => !deletedGroupMemberIds.has(x.id));
+    const list = [...filteredDbList, ...addedGroupMembers];
+    const uploadsMapped = newUploadedMembers.map(up => ({
+      id: up.id,
+      title: `${item.title || 'Garment'} (View)`,
+      original_image_url: up.original_image_url,
+      group_role: up.id === hostIdState ? 'host' : 'member',
+      group_id: hostIdState
+    }));
+    const allItems = [...list, ...uploadsMapped];
+    return allItems.map(x => ({
+      ...x,
+      group_role: x.id === hostIdState ? 'host' : 'member',
+      group_id: hostIdState
+    })).sort((a, b) => {
+      if (a.id === hostIdState) return -1;
+      if (b.id === hostIdState) return 1;
+      return 0;
+    });
+  }, [item, deletedGroupMemberIds, addedGroupMembers, newUploadedMembers, hostIdState]);
+
   const candidateItems = useMemo(() => {
-    const memberIds = new Set((item?.group_members || []).map((m) => m.id));
+    const dbMemberIds = new Set((item?.group_members || []).map((m) => m.id));
+    const addedMemberIds = new Set(addedGroupMembers.map(m => m.id));
     return (closetStore.items || []).filter(
       (it) =>
         it.id !== id &&
-        !memberIds.has(it.id) &&
+        !dbMemberIds.has(it.id) &&
+        !addedMemberIds.has(it.id) &&
+        it.id !== hostIdState &&
         it.group_role !== 'member'
     );
-  }, [closetStore.items, id, item]);
+  }, [closetStore.items, id, item, addedGroupMembers, hostIdState]);
 
   const filteredCandidates = useMemo(() => {
     const q = closetSearch.toLowerCase().trim();
@@ -708,27 +670,78 @@ export default function ItemDetail() {
     });
   }, [candidateItems, closetSearch]);
 
-  const handleSelectClosetItem = async (targetMemberId) => {
-    setSaving(true);
-    const loadingId = toast.loading('Adding garment view...');
+  const handleSelectClosetItem = (targetMemberId) => {
+    const targetItem = (closetStore.items || []).find(x => x.id === targetMemberId);
+    if (!targetItem) return;
+    setAddedGroupMembers(prev => [...prev, targetItem]);
+    setDeletedGroupMemberIds(prev => {
+      const next = new Set(prev);
+      next.delete(targetMemberId);
+      return next;
+    });
+    setAddOpen(false);
+    toast.success('Garment view added. Click Save to apply.');
+  };
+
+  const onMemberPhotoFileChosen = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setUploadingPhoto(true);
     try {
-      const res = await api.groupItems({ host_id: id, member_id: targetMemberId });
-      if (res.status === 'success') {
-        if (res.host) {
-          setItem(res.host);
-          setForm(toFormState(res.host, user));
-        }
-        await load();
-        setAddOpen(false);
-        toast.dismiss(loadingId);
-        toast.success('Garment view added successfully');
-      }
+      const imageBase64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+      const original_image_url = `data:${file.type || 'image/jpeg'};base64,${imageBase64}`;
+      const tempId = `temp-upload-${Date.now()}`;
+      setNewUploadedMembers((prev) => [
+        ...prev,
+        {
+          id: tempId,
+          image_base64: imageBase64,
+          image_mime: file.type || 'image/jpeg',
+          original_image_url: original_image_url,
+        },
+      ]);
+      setAddOpen(false);
+      toast.success('Photo view added. Click Save to apply.');
     } catch (err) {
-      toast.dismiss(loadingId);
-      toast.error(err?.response?.data?.detail || 'Failed to add garment view');
+      console.error(err);
+      toast.error('Failed to read photo');
     } finally {
-      setSaving(false);
+      setUploadingPhoto(false);
     }
+  };
+
+  const onSetFront = (memberId) => {
+    setHostIdState(memberId);
+    toast.success('Front (Main) view updated. Click Save to apply.');
+  };
+
+  const onDeleteMember = (memberId) => {
+    const confirmDelete = window.confirm(t('itemDetail.group.confirmDeleteView') || 'Are you sure you want to remove this view and restore it to the closet?');
+    if (!confirmDelete) return;
+
+    setDeletedGroupMemberIds((prev) => {
+      const next = new Set(prev);
+      next.add(memberId);
+      return next;
+    });
+    setAddedGroupMembers((prev) => prev.filter((x) => x.id !== memberId));
+    setNewUploadedMembers((prev) => prev.filter((x) => x.id !== memberId));
+
+    if (hostIdState === memberId) {
+      const remaining = currentGroupItems.filter((x) => x.id !== memberId);
+      if (remaining.length > 0) {
+        setHostIdState(remaining[0].id);
+      } else {
+        setHostIdState(item.id);
+      }
+    }
+    toast.success('View marked for removal. Click Save to apply.');
   };
 
   const setField = (key, val) => setForm((f) => ({ ...f, [key]: val }));
@@ -737,27 +750,56 @@ export default function ItemDetail() {
   const onSave = async () => {
     if (!isDirty || saving) return;
     setSaving(true);
+    const loadingId = toast.loading(t('itemDetail.group.saving') || 'Saving changes...');
     try {
-      const updated = await api.updateItem(id, patch);
-      setItem(updated);
-      setForm(toFormState(updated, user));
-      // Sync to the global store so navigating back to /closet shows
-      // the edited fields without a refetch.
-      try {
-        const { closetStore } = await import('@/lib/closetStore');
-        closetStore.upsert(updated);
-      } catch (storeErr) {
-        // Non-blocking: server save already succeeded; this is just
-        // the optimistic local cache failing to sync. Logged so a
-        // bundler/dynamic-import regression doesn't pass silently.
-        console.warn('ItemDetail: closetStore sync after save failed', storeErr);
+      let currentHostId = id;
+      
+      // 1. If group was modified, update group details on backend
+      if (groupIsDirty) {
+        const payload = {
+          new_host_id: (hostIdState !== null && hostIdState !== initialHostId) ? hostIdState : null,
+          ungroup_member_ids: Array.from(deletedGroupMemberIds),
+          add_member_ids: addedGroupMembers.map(m => m.id),
+          new_uploads: newUploadedMembers.map(up => ({
+            image_base64: up.image_base64,
+            image_mime: up.image_mime
+          }))
+        };
+        const groupRes = await api.groupEdit(id, payload);
+        if (groupRes.status === 'success') {
+          if (groupRes.host) {
+            currentHostId = groupRes.host.id;
+          }
+        }
       }
+
+      // 2. Save other item details if there is a patch
+      let updated = null;
+      if (Object.keys(patch).length > 0) {
+        updated = await api.updateItem(currentHostId, patch);
+      } else if (groupIsDirty) {
+        // If only group was dirty, fetch the updated host item
+        updated = await api.getItem(currentHostId);
+      }
+
+      if (updated) {
+        setItem(updated);
+        setForm(toFormState(updated, user));
+        try {
+          const { closetStore } = await import('@/lib/closetStore');
+          closetStore.upsert(updated);
+          await closetStore.incrementalSync();
+        } catch (storeErr) {
+          console.warn('ItemDetail: closetStore sync after save failed', storeErr);
+        }
+      }
+
+      toast.dismiss(loadingId);
       toast.success(t('itemDetail.detailsSaved'));
-      // Per UX spec: after a successful edit, take the user back
-      // to the closet so they immediately see the updated item in
-      // its grid context (rather than staying on the detail page).
+      
       nav('/closet');
     } catch (err) {
+      toast.dismiss(loadingId);
       toast.error(err?.response?.data?.detail || t('itemDetail.saveFailed'));
     } finally {
       setSaving(false);
@@ -766,6 +808,13 @@ export default function ItemDetail() {
   const onDiscard = () => {
     if (!item) return;
     setForm(toFormState(item, user));
+    
+    // Reset group edits
+    setDeletedGroupMemberIds(new Set());
+    setAddedGroupMembers([]);
+    setNewUploadedMembers([]);
+    setHostIdState(initialHostId);
+    
     toast.message(t('itemDetail.changesDiscarded'));
   };
 
@@ -1226,11 +1275,11 @@ export default function ItemDetail() {
             <CardContent className="p-5 space-y-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="caps-label text-muted-foreground truncate max-w-[200px]" title={(() => {
-                  const hostItem = allGroupItems.find(x => x.group_role === 'host' || x.id === x.group_id) || allGroupItems[0] || item;
+                  const hostItem = currentGroupItems.find(x => x.group_role === 'host' || x.id === hostIdState) || currentGroupItems[0] || item;
                   return hostItem ? (hostItem.title || hostItem.name || 'Garment Views') : 'Garment Views';
                 })()}>
                   {(() => {
-                    const hostItem = allGroupItems.find(x => x.group_role === 'host' || x.id === x.group_id) || allGroupItems[0] || item;
+                    const hostItem = currentGroupItems.find(x => x.group_role === 'host' || x.id === hostIdState) || currentGroupItems[0] || item;
                     return hostItem ? (hostItem.title || hostItem.name || 'Garment Views') : 'Garment Views';
                   })()}
                 </div>
@@ -1245,15 +1294,15 @@ export default function ItemDetail() {
               </p>
 
               <div className="flex items-center gap-3 overflow-x-auto pb-2 pt-1 scrollbar-thin">
-                {allGroupItems.map((gItem) => {
+                {currentGroupItems.map((gItem) => {
                   const isActive = gItem.id === id;
-                  const isHost = gItem.group_role === 'host' || gItem.id === gItem.group_id;
+                  const isHost = gItem.id === hostIdState;
 
                   return (
                     <div
                       key={gItem.id}
                       onClick={() => {
-                        if (gItem.id !== id) {
+                        if (gItem.id !== id && !gItem.id.startsWith('temp-upload-') && !addedGroupMembers.some(x => x.id === gItem.id)) {
                           nav(`/closet/${gItem.id}`);
                         }
                       }}
