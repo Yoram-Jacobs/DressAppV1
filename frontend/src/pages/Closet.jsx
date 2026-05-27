@@ -141,8 +141,10 @@ export default function Closet() {
   const [dragOverId, setDragOverId] = useState(null);
   const touchTimeoutRef = useRef(null);
   const touchStartPosRef = useRef({ x: 0, y: 0 });
+  const touchLastPosRef = useRef({ x: 0, y: 0 });
   const [isTouchDragging, setIsTouchDragging] = useState(false);
   const [touchPos, setTouchPos] = useState({ x: 0, y: 0 });
+
 
   const handleDragStart = (e, id) => {
     setDraggedId(id);
@@ -209,6 +211,7 @@ export default function Closet() {
   const handleTouchStart = (e, id) => {
     const touch = e.touches[0];
     touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+    touchLastPosRef.current = { x: touch.clientX, y: touch.clientY };
     setTouchPos({ x: touch.clientX, y: touch.clientY });
     setIsTouchDragging(false);
 
@@ -225,6 +228,8 @@ export default function Closet() {
     const touch = e.touches[0];
     const dx = touch.clientX - touchStartPosRef.current.x;
     const dy = touch.clientY - touchStartPosRef.current.y;
+    const deltaY = touch.clientY - touchLastPosRef.current.y;
+    touchLastPosRef.current = { x: touch.clientX, y: touch.clientY };
     setTouchPos({ x: touch.clientX, y: touch.clientY });
 
     if (!isTouchDragging) {
@@ -239,6 +244,13 @@ export default function Closet() {
 
     if (e.cancelable) {
       e.preventDefault();
+    }
+
+    // Programmatically scroll the page in the direction of the drag (reversed relative to normal swipe)
+    // Moving finger up (deltaY < 0) scrolls page up (content down).
+    // Moving finger down (deltaY > 0) scrolls page down (content up).
+    if (Math.abs(deltaY) > 0.5) {
+      window.scrollBy(0, deltaY);
     }
 
     const element = document.elementFromPoint(touch.clientX, touch.clientY);

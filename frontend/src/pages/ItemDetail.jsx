@@ -439,6 +439,7 @@ export default function ItemDetail() {
   const [addedGroupMembers, setAddedGroupMembers] = useState([]);
   const [newUploadedMembers, setNewUploadedMembers] = useState([]);
   const [hostIdState, setHostIdState] = useState(null);
+  const [activeViewIdState, setActiveViewIdState] = useState(id);
 
 
   // ────────────────────────────────────────────────────────────────
@@ -616,12 +617,18 @@ export default function ItemDetail() {
       
       const hostItem = unique.find(x => x.group_role === 'host' || x.id === x.group_id) || unique[0] || item;
       setHostIdState(hostItem ? hostItem.id : item.id);
+      setActiveViewIdState(hostItem ? hostItem.id : item.id);
       
       setDeletedGroupMemberIds(new Set());
       setAddedGroupMembers([]);
       setNewUploadedMembers([]);
     }
   }, [item]);
+
+  useEffect(() => {
+    setActiveViewIdState(id);
+  }, [id]);
+
 
   const currentGroupItems = useMemo(() => {
     if (!item) return [];
@@ -747,14 +754,98 @@ export default function ItemDetail() {
   const setField = (key, val) => setForm((f) => ({ ...f, [key]: val }));
 
   /* ------------------- save / discard ------------------- */
-  const onSave = async () => {
+  const onSave = () => {
     if (!isDirty || saving) return;
     setSaving(true);
-    const loadingId = toast.loading(t('itemDetail.group.saving') || 'Saving changes...');
-    try {
+    
+    // 1. Optimistic update of frontend's closet state immediately
+    const storeItems = closetStore.getSnapshot().items || [];
+    const activeHostId = hostIdState || id;
+    
+    // Find host in the store
+    const hostItem = storeItems.find(it => it.id === activeHostId) || item;
+    
+    // Update host fields with current form values
+    const updatedHost = {
+      ...hostItem,
+      ...form,
+      group_id: activeHostId,
+      group_role: 'host',
+      updated_at: new Date().toISOString()
+    };
+    
+    // Compile members list
+    const remainingMembers = [];
+    const dbMembers = [item, ...(item.group_members || [])];
+    for (const member of dbMembers) {
+      if (member.id !== activeHostId && !deletedGroupMemberIds.has(member.id)) {
+        remainingMembers.push({
+          ...member,
+          group_id: activeHostId,
+          group_role: 'member'
+        });
+      }
+    }
+    
+    for (const added of addedGroupMembers) {
+      remainingMembers.push({
+        ...added,
+        group_id: activeHostId,
+        group_role: 'member'
+      });
+    }
+    
+    for (const upload of newUploadedMembers) {
+      remainingMembers.push({
+        id: upload.id,
+        user_id: user?.id,
+        title: `${updatedHost.title || 'Garment'} (View)`,
+        category: updatedHost.category,
+        sub_category: updatedHost.sub_category,
+        item_type: updatedHost.item_type,
+        brand: updatedHost.brand,
+        gender: updatedHost.gender,
+        dress_code: updatedHost.dress_code,
+        colors: updatedHost.colors || [],
+        color: updatedHost.color,
+        group_id: activeHostId,
+        group_role: 'member',
+        original_image_url: upload.original_image_url,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+    }
+    
+    updatedHost.group_members = remainingMembers;
+    
+    // Apply changes locally to the store immediately!
+    closetStore.upsert(updatedHost);
+    for (const m of remainingMembers) {
+      closetStore.upsert(m);
+    }
+    
+    // Restore deleted group members to the closet grid
+    for (const removeId of deletedGroupMemberIds) {
+      const removedItem = storeItems.find(it => it.id === removeId);
+      if (removedItem) {
+        closetStore.upsert({
+          ...removedItem,
+          group_id: null,
+          group_role: null,
+          updated_at: new Date().toISOString()
+        });
+      }
+    }
+
+    toast.success(t('itemDetail.group.savingInBackground') || 'Saving changes in background...');
+    
+    // Redirect user to Closet page immediately so they see the refreshed modifications
+    nav('/closet');
+
+    // 2. Perform database updates in the background
+    const savePromise = (async () => {
       let currentHostId = id;
       
-      // 1. If group was modified, update group details on backend
       if (groupIsDirty) {
         const payload = {
           new_host_id: (hostIdState !== null && hostIdState !== initialHostId) ? hostIdState : null,
@@ -766,44 +857,42 @@ export default function ItemDetail() {
           }))
         };
         const groupRes = await api.groupEdit(id, payload);
-        if (groupRes.status === 'success') {
-          if (groupRes.host) {
-            currentHostId = groupRes.host.id;
+        if (groupRes.status === 'success' && groupRes.host) {
+          currentHostId = groupRes.host.id;
+        }
+      }
+
+      if (Object.keys(patch).length > 0) {
+        await api.updateItem(currentHostId, patch);
+      }
+      
+      const finalHost = await api.getItem(currentHostId);
+      return finalHost;
+    })();
+
+    savePromise
+      .then(async (finalHost) => {
+        // Sync real DB records to the store (replaces temp IDs/images with final data)
+        if (finalHost) {
+          closetStore.upsert(finalHost);
+          if (finalHost.group_members) {
+            for (const m of finalHost.group_members) {
+              closetStore.upsert(m);
+            }
           }
         }
-      }
-
-      // 2. Save other item details if there is a patch
-      let updated = null;
-      if (Object.keys(patch).length > 0) {
-        updated = await api.updateItem(currentHostId, patch);
-      } else if (groupIsDirty) {
-        // If only group was dirty, fetch the updated host item
-        updated = await api.getItem(currentHostId);
-      }
-
-      if (updated) {
-        setItem(updated);
-        setForm(toFormState(updated, user));
-        try {
-          const { closetStore } = await import('@/lib/closetStore');
-          closetStore.upsert(updated);
-          await closetStore.incrementalSync();
-        } catch (storeErr) {
-          console.warn('ItemDetail: closetStore sync after save failed', storeErr);
-        }
-      }
-
-      toast.dismiss(loadingId);
-      toast.success(t('itemDetail.detailsSaved'));
-      
-      nav('/closet');
-    } catch (err) {
-      toast.dismiss(loadingId);
-      toast.error(err?.response?.data?.detail || t('itemDetail.saveFailed'));
-    } finally {
-      setSaving(false);
-    }
+        await closetStore.incrementalSync();
+        toast.success(t('itemDetail.detailsSaved') || 'Garment changes saved');
+      })
+      .catch((err) => {
+        console.error('Background save failed:', err);
+        toast.error(err?.response?.data?.detail || 'Failed to save changes in the background');
+        // Revert store state on failure
+        closetStore.prewarm({ force: true });
+      })
+      .finally(() => {
+        setSaving(false);
+      });
   };
   const onDiscard = () => {
     if (!item) return;
@@ -1026,7 +1115,16 @@ export default function ItemDetail() {
     );
   }
 
-  const mergedItem = { ...item, ...form };
+  const activeViewItem = currentGroupItems.find(x => x.id === activeViewIdState) || item;
+  const mergedItem = {
+    ...item,
+    ...form,
+    original_image_url: activeViewItem?.original_image_url,
+    segmented_image_url: activeViewItem?.segmented_image_url,
+    reconstructed_image_url: activeViewItem?.reconstructed_image_url,
+    clean_image_url: activeViewItem?.clean_image_url,
+    clean_image_status: activeViewItem?.clean_image_status,
+  };
   const hasReconstruction = !!mergedItem.reconstructed_image_url;
   // Phase O.6 — image priority centralised via ``lib/itemImage``. When
   // the user has toggled "Show original" we deliberately skip the
@@ -1295,16 +1393,14 @@ export default function ItemDetail() {
 
               <div className="flex items-center gap-3 overflow-x-auto pb-2 pt-1 scrollbar-thin">
                 {currentGroupItems.map((gItem) => {
-                  const isActive = gItem.id === id;
+                  const isActive = gItem.id === activeViewIdState;
                   const isHost = gItem.id === hostIdState;
 
                   return (
                     <div
                       key={gItem.id}
                       onClick={() => {
-                        if (gItem.id !== id && !gItem.id.startsWith('temp-upload-') && !addedGroupMembers.some(x => x.id === gItem.id)) {
-                          nav(`/closet/${gItem.id}`);
-                        }
+                        setActiveViewIdState(gItem.id);
                       }}
                       className={`relative flex-shrink-0 group w-20 h-24 rounded-lg overflow-hidden border-2 cursor-pointer transition-all shadow-sm ${
                         isActive
