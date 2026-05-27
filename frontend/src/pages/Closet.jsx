@@ -172,6 +172,7 @@ export default function Closet() {
       if (res.status === 'success') {
         if (res.host) store.upsert(res.host);
         if (res.member) store.upsert(res.member);
+        await store.incrementalSync();
         toast.success(t('closet.groupSuccess') || 'Garments grouped successfully');
       }
     } catch (err) {

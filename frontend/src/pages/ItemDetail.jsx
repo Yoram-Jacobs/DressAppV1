@@ -25,6 +25,7 @@ import {
   Wrench,
   BadgeCheck,
   ExternalLink,
+  Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -42,6 +43,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
@@ -56,6 +58,8 @@ import {
 import { SourceTagBadge } from '@/components/SourceTagBadge';
 import { DppPanel } from '@/components/DppPanel';
 import { api } from '@/lib/api';
+import { useClosetStore } from '@/lib/useClosetStore';
+import { closetStore } from '@/lib/closetStore';
 import { bestImageUrl } from '@/lib/itemImage';
 import {
   labelForCategory,
@@ -426,6 +430,10 @@ export default function ItemDetail() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const closetStore = useClosetStore();
+  const [addOpen, setAddOpen] = useState(false);
+  const [closetSearch, setClosetSearch] = useState('');
+
   // ────────────────────────────────────────────────────────────────
   // Legacy "Clean background" (rembg matte) state.
   //
@@ -679,6 +687,49 @@ export default function ItemDetail() {
     });
     return unique;
   }, [item]);
+
+  const candidateItems = useMemo(() => {
+    const memberIds = new Set((item?.group_members || []).map((m) => m.id));
+    return (closetStore.items || []).filter(
+      (it) =>
+        it.id !== id &&
+        !memberIds.has(it.id) &&
+        it.group_role !== 'member'
+    );
+  }, [closetStore.items, id, item]);
+
+  const filteredCandidates = useMemo(() => {
+    const q = closetSearch.toLowerCase().trim();
+    if (!q) return candidateItems;
+    return candidateItems.filter((it) => {
+      const title = (it.title || it.name || '').toLowerCase();
+      const category = (it.category || '').toLowerCase();
+      return title.includes(q) || category.includes(q);
+    });
+  }, [candidateItems, closetSearch]);
+
+  const handleSelectClosetItem = async (targetMemberId) => {
+    setSaving(true);
+    const loadingId = toast.loading('Adding garment view...');
+    try {
+      const res = await api.groupItems({ host_id: id, member_id: targetMemberId });
+      if (res.status === 'success') {
+        if (res.host) {
+          setItem(res.host);
+          setForm(toFormState(res.host, user));
+        }
+        await load();
+        setAddOpen(false);
+        toast.dismiss(loadingId);
+        toast.success('Garment view added successfully');
+      }
+    } catch (err) {
+      toast.dismiss(loadingId);
+      toast.error(err?.response?.data?.detail || 'Failed to add garment view');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const setField = (key, val) => setForm((f) => ({ ...f, [key]: val }));
 
@@ -1263,7 +1314,7 @@ export default function ItemDetail() {
                 {/* Upload Member Button */}
                 <button
                   type="button"
-                  onClick={onAddMemberPhoto}
+                  onClick={() => setAddOpen(true)}
                   disabled={uploadingPhoto}
                   className="relative flex-shrink-0 w-20 h-24 rounded-lg border-2 border-dashed border-border hover:border-muted-foreground flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground transition-colors bg-secondary/20 hover:bg-secondary/40"
                   data-testid="add-member-view-btn"
@@ -1289,6 +1340,95 @@ export default function ItemDetail() {
               />
             </CardContent>
           </Card>
+
+          {/* Dialog for adding/picking closet items */}
+          <Dialog open={addOpen} onOpenChange={setAddOpen}>
+            <DialogContent className="max-w-lg rounded-2xl p-6 glassmorphic border border-white/20">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                  <Images className="h-5 w-5 text-primary" />
+                  Add Garment View
+                </DialogTitle>
+                <DialogDescription className="sr-only">
+                  Upload a new photo or select an existing garment from your closet to group as a view of the current item.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-6 mt-4">
+                {/* Option 1: Upload New View */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-foreground">Upload from Device</h3>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setAddOpen(false);
+                      onAddMemberPhoto();
+                    }}
+                    disabled={uploadingPhoto}
+                    className="w-full justify-start rounded-xl py-6 border-dashed"
+                    variant="outline"
+                  >
+                    <Camera className="h-5 w-5 me-2 text-muted-foreground" />
+                    <span>Upload a new view photo (e.g. Back view, Tag, or Detail)</span>
+                  </Button>
+                </div>
+
+                {/* Option 2: Select from Closet */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-foreground">Select from Closet</h3>
+                    <span className="text-xs text-muted-foreground">
+                      {filteredCandidates.length} items
+                    </span>
+                  </div>
+
+                  {/* Search bar inside picker */}
+                  <div className="relative">
+                    <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search closet items by title or category..."
+                      value={closetSearch}
+                      onChange={(e) => setClosetSearch(e.target.value)}
+                      className="ps-9 rounded-xl bg-secondary/50 focus-visible:ring-1 focus-visible:ring-emerald-500"
+                    />
+                  </div>
+
+                  {/* Candidates Grid */}
+                  <div className="max-h-[300px] overflow-y-auto pr-1 space-y-2 scrollbar-thin">
+                    {filteredCandidates.length === 0 ? (
+                      <div className="text-center py-8 text-sm text-muted-foreground">
+                        No matching candidates found
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-3">
+                        {filteredCandidates.map((cItem) => (
+                          <div
+                            key={cItem.id}
+                            onClick={() => handleSelectClosetItem(cItem.id)}
+                            className="group relative rounded-xl border border-border overflow-hidden cursor-pointer hover:border-emerald-500 hover:ring-2 hover:ring-emerald-500/20 transition-all aspect-[3/4]"
+                          >
+                            <img
+                              src={bestImageUrl(cItem)}
+                              alt={cItem.title || 'Closet item'}
+                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            />
+                            <div className="absolute inset-x-0 bottom-0 bg-black/60 backdrop-blur-[2px] p-2 text-left opacity-0 group-hover:opacity-100 transition-opacity">
+                              <p className="text-[10px] font-semibold text-white truncate">
+                                {cItem.title || cItem.name}
+                              </p>
+                              <p className="text-[9px] text-gray-300 truncate">
+                                {labelForCategory(cItem.category, t)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* Variant carousel (existing) */}
           {item.variants && item.variants.length > 0 && (
