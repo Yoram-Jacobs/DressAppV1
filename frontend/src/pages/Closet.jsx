@@ -145,6 +145,21 @@ export default function Closet() {
   const [isTouchDragging, setIsTouchDragging] = useState(false);
   const [touchPos, setTouchPos] = useState({ x: 0, y: 0 });
 
+  // Disable native touchscreen vertical scrolling when dragging is active
+  // by using a non-passive event listener on window.
+  useEffect(() => {
+    if (!isTouchDragging) return;
+    const preventDefault = (e) => {
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('touchmove', preventDefault, { passive: false });
+    return () => {
+      window.removeEventListener('touchmove', preventDefault);
+    };
+  }, [isTouchDragging]);
+
 
   const handleDragStart = (e, id) => {
     setDraggedId(id);
@@ -948,7 +963,7 @@ export default function Closet() {
                   className={`relative block text-left group rounded-[calc(var(--radius)+6px)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] ring-offset-2 ring-offset-background ${
                     isSelected ? 'ring-2 ring-[hsl(var(--accent))]' : ''
                   }`}
-                  style={{ WebkitTouchCallout: 'none', touchAction: 'pan-y' }}
+                  style={{ WebkitTouchCallout: 'none', touchAction: isTouchDragging ? 'none' : 'pan-y' }}
                 >
                   <ItemCardInner item={it} isSelected={isSelected} showCheckbox score={it._score} />
                 </button>
@@ -967,7 +982,7 @@ export default function Closet() {
                     ? 'scale-[1.05] ring-2 ring-emerald-500 ring-offset-2 rounded-[calc(var(--radius)+6px)]'
                     : ''
                 }`}
-                style={{ WebkitTouchCallout: 'none', touchAction: 'pan-y' }}
+                style={{ WebkitTouchCallout: 'none', touchAction: isTouchDragging ? 'none' : 'pan-y' }}
                 data-testid="closet-item-card"
                 data-item-id={it.id}
                 draggable

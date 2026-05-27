@@ -825,7 +825,7 @@ export default function ItemDetail() {
     
     // Restore deleted group members to the closet grid
     for (const removeId of deletedGroupMemberIds) {
-      const removedItem = storeItems.find(it => it.id === removeId);
+      const removedItem = groupItemsState.find(it => it.id === removeId) || storeItems.find(it => it.id === removeId);
       if (removedItem) {
         closetStore.upsert({
           ...removedItem,
