@@ -282,7 +282,7 @@ One per user — holds persistent agent memory.
 }
 ```
 
-Fallback (if Atlas Vector Search not available on the Emergent-managed Mongo): cosine similarity computed in-process with a small FAISS index hydrated on startup.
+Fallback (if Atlas Vector Search not available on the MongoDB instance): cosine similarity computed in-process with a small FAISS index hydrated on startup.
 
 ---
 

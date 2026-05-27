@@ -91,7 +91,7 @@ If GarmentVision drops an item, the user has to add it manually. If it leaks the
        │             _analyse_crops() — batched Gemini VLM                 │
        │                                                                   │
        │  • One multi-modal Gemini-2.5-Flash call carrying ALL N crops    │
-       │       (Patch M18 — bypasses Emergent LLM-key concurrency-1)      │
+       │       (Patch M18 — bypasses Gemini API concurrency-1 limit)      │
        │  • SegFormer kind hints embedded in the system prompt            │
        │       (Patch M21 — Gemini steered toward the anchored category)  │
        │  • _enforce_segformer_category() post-validates each result      │
@@ -163,8 +163,8 @@ If GarmentVision drops an item, the user has to add it manually. If it leaks the
 
 ### 3.5 VLM analysis — Gemini 2.5 Flash, batched + streamed
 
-* **Why Gemini:** Best vision-language reasoner in the Emergent LLM key. Native multi-modal, no image-encoding boilerplate, structured-output via `response_format=json`.
-* **Why batched** (Patch M18): Emergent LLM-key tier serialises concurrent calls to ~1 in flight. 4 sequential 16 s calls = 64 s wall → ingress 502. One batched call with 4 images = ~17 s, same vision work, paid network/prompt overhead once. **3-4× speed-up** on multi-item outfits.
+* **Why Gemini:** Best vision-language reasoner. Native multi-modal, no image-encoding boilerplate, structured-output via `response_format=json`.
+* **Why batched** (Patch M18): Serializes concurrent calls to ~1 in flight to stay under concurrency limits. 4 sequential 16 s calls = 64 s wall → ingress 502. One batched call with 4 images = ~17 s, same vision work, paid network/prompt overhead once. **3-4× speed-up** on multi-item outfits.
 * **Why streamed** (Patch M19): even after batching, the user stares at a blank screen for 17 s. The streaming variant uses `litellm.acompletion(stream=True)`, accumulates text deltas, runs a brace-counting JSON-array scanner after every chunk, and yields each complete `{...}` object as soon as Gemini emits it. The frontend renders N placeholder cards within ~7.5 s and fills them in as they arrive.
 * **Category enforcement** (Patch M21): two layers prevent the "coat tail leaks into pants crop → Gemini calls it an Overcoat" failure mode:
   1. **Prompt hint** — every batched call embeds a `CROP CATEGORY HINTS` block ("Image 1: pre-classified as Bottom. Image 2: pre-classified as Top or Outerwear. …").
@@ -235,7 +235,7 @@ All knobs live in `backend/app/config.py` (env-overrideable):
 | 6+ items detected, cap drops legitimate accessories | Category-aware ordering before cap | None — the cap is a soft limit, easily raised |
 | Tiny shoe matte renders as a dot in the card | `_fit_crop_to_card` scale-to-fit on 900×1200 canvas | Frontend `object-cover` is a no-op (crop already matches card aspect) |
 | Gemini hallucinates a sub_category for a SegFormer-anchored item | Override clears `sub_category` along with `category` | None — stamped `_category_overridden_by="segformer"` for triage |
-| Emergent LLM key throttles concurrent calls | Batched single Gemini call (M18) | Per-crop fallback loop on any batch-level failure |
+| Gemini API rate limit / concurrency throttle | Batched single Gemini call (M18) | Per-crop fallback loop on any batch-level failure |
 | Kubernetes ingress 60 s idle ceiling | Streaming NDJSON every ~1 s (M19) | Whitespace keepalive every 8 s on non-streaming path (M17) |
 | Cold-start latency on first user upload | `warmup_models()` fires on FastAPI startup (M13) | rembg + reconstruction deferred to BackgroundTask (M14) |
 

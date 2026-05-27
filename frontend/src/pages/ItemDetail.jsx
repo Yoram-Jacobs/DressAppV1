@@ -686,7 +686,7 @@ export default function ItemDetail() {
       return next;
     });
     setAddOpen(false);
-    toast.success('Garment view added. Click Save to apply.');
+    toast.success(t('common.success'));
   };
 
   const onMemberPhotoFileChosen = async (e) => {
@@ -713,10 +713,10 @@ export default function ItemDetail() {
         },
       ]);
       setAddOpen(false);
-      toast.success('Photo view added. Click Save to apply.');
+      toast.success(t('common.success'));
     } catch (err) {
       console.error(err);
-      toast.error('Failed to read photo');
+      toast.error(t('common.error'));
     } finally {
       setUploadingPhoto(false);
     }
@@ -724,11 +724,11 @@ export default function ItemDetail() {
 
   const onSetFront = (memberId) => {
     setHostIdState(memberId);
-    toast.success('Front (Main) view updated. Click Save to apply.');
+    toast.success(t('common.success'));
   };
 
   const onDeleteMember = (memberId) => {
-    const confirmDelete = window.confirm(t('itemDetail.group.confirmDeleteView') || 'Are you sure you want to ungroup this view and restore it to the closet?');
+    const confirmDelete = window.confirm(t('closet.confirmDeleteTitle'));
     if (!confirmDelete) return;
 
     setDeletedGroupMemberIds((prev) => {
@@ -747,7 +747,7 @@ export default function ItemDetail() {
         setHostIdState(item.id);
       }
     }
-    toast.success('View marked for removal. Click Save to apply.');
+    toast.success(t('common.success'));
   };
 
   const setField = (key, val) => setForm((f) => ({ ...f, [key]: val }));
@@ -881,11 +881,11 @@ export default function ItemDetail() {
           }
         }
         await closetStore.incrementalSync();
-        toast.success(t('itemDetail.detailsSaved') || 'Garment changes saved');
+        toast.success(t('common.success'));
       })
       .catch((err) => {
         console.error('Background save failed:', err);
-        toast.error(err?.response?.data?.detail || 'Failed to save changes in the background');
+        toast.error(err?.response?.data?.detail || t('common.error'));
         // Revert store state on failure
         closetStore.prewarm({ force: true });
       })
@@ -1367,17 +1367,17 @@ export default function ItemDetail() {
                 })()}>
                   {(() => {
                     const hostItem = currentGroupItems.find(x => x.group_role === 'host' || x.id === hostIdState) || currentGroupItems[0] || item;
-                    return hostItem ? (hostItem.title || hostItem.name || 'Garment Views') : 'Garment Views';
+                    return hostItem ? (hostItem.title || hostItem.name || t('profile.sections.photos')) : t('profile.sections.photos');
                   })()}
                 </div>
                 {item.group_id && (
                   <Badge variant="secondary" className="rounded-full text-[10px] flex-shrink-0">
-                    {t('itemDetail.group.grouped') || 'Multi-view'}
+                    {t('profile.sections.photos')}
                   </Badge>
                 )}
               </div>
               <p className="text-xs text-muted-foreground mb-4">
-                {t('itemDetail.group.subtitle') || 'Combine multiple photos (front, back, details) for 100% accurate styling.'}
+                {t('closet.subtitle')}
               </p>
 
               {/* Member Action Bar */}
@@ -1391,7 +1391,7 @@ export default function ItemDetail() {
                       className="flex-1 bg-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/90 text-white h-10"
                     >
                       <BadgeCheck className="h-4 w-4 mr-2" />
-                      Set Front
+                      {t('common.apply')}
                     </Button>
                     <Button
                       type="button"
@@ -1401,12 +1401,12 @@ export default function ItemDetail() {
                       className="flex-1 h-10"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Ungroup
+                      {t('addItem.remove')}
                     </Button>
                   </>
                 ) : (
                   <div className="flex-1 text-center text-xs text-muted-foreground italic flex items-center justify-center h-full">
-                    Tap a member view below to edit
+                    {t('common.edit')}
                   </div>
                 )}
               </div>
@@ -1458,7 +1458,7 @@ export default function ItemDetail() {
                   ) : (
                     <>
                       <Plus className="h-5 w-5" />
-                      <span className="text-[10px] font-medium">Add View</span>
+                      <span className="text-[10px] font-medium">{t('addItem.addPhotos')}</span>
                     </>
                   )}
                 </button>
@@ -1481,17 +1481,17 @@ export default function ItemDetail() {
               <DialogHeader>
                 <DialogTitle className="text-xl font-bold flex items-center gap-2">
                   <Images className="h-5 w-5 text-primary" />
-                  Add Garment View
+                  {t('addItem.addPhotos')}
                 </DialogTitle>
                 <DialogDescription className="sr-only">
-                  Upload a new photo or select an existing garment from your closet to group as a view of the current item.
+                  {t('closet.subtitle')}
                 </DialogDescription>
               </DialogHeader>
 
               <div className="flex-1 flex flex-col min-h-0 space-y-6 mt-4">
                 {/* Option 1: Upload New View */}
                 <div className="space-y-2 shrink-0">
-                  <h3 className="text-sm font-semibold text-foreground">Upload from Device</h3>
+                  <h3 className="text-sm font-semibold text-foreground">{t('scanner.tabFile')}</h3>
                   <Button
                     type="button"
                     onClick={() => {
@@ -1503,16 +1503,16 @@ export default function ItemDetail() {
                     variant="outline"
                   >
                     <Camera className="h-5 w-5 me-3 shrink-0 text-muted-foreground" />
-                    <span className="text-left text-xs sm:text-sm whitespace-normal">Upload a new view photo (e.g. Back view, Tag, or Detail)</span>
+                    <span className="text-left text-xs sm:text-sm whitespace-normal">{t('addItem.uploadPhotos')}</span>
                   </Button>
                 </div>
 
                 {/* Option 2: Select from Closet */}
                 <div className="flex-1 flex flex-col min-h-0 space-y-3">
                   <div className="flex items-center justify-between shrink-0">
-                    <h3 className="text-sm font-semibold text-foreground">Select from Closet</h3>
+                    <h3 className="text-sm font-semibold text-foreground">{t('home.openCloset')}</h3>
                     <span className="text-xs text-muted-foreground">
-                      {filteredCandidates.length} items
+                      {t('closet.selectedCount', { count: filteredCandidates.length })}
                     </span>
                   </div>
 
@@ -1520,7 +1520,7 @@ export default function ItemDetail() {
                   <div className="relative shrink-0">
                     <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search closet items by title or category..."
+                      placeholder={t('closet.searchPlaceholder')}
                       value={closetSearch}
                       onChange={(e) => setClosetSearch(e.target.value)}
                       className="ps-9 rounded-xl bg-secondary/50 focus-visible:ring-1 focus-visible:ring-emerald-500"
@@ -1531,7 +1531,7 @@ export default function ItemDetail() {
                   <div className="flex-1 overflow-y-auto pr-1 space-y-2 scrollbar-thin min-h-0">
                     {filteredCandidates.length === 0 ? (
                       <div className="text-center py-8 text-sm text-muted-foreground">
-                        No matching candidates found
+                        {t('common.noResults')}
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

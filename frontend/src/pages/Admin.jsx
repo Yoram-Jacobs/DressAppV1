@@ -86,6 +86,7 @@ export default function Admin() {
 
 // -------------------- Overview --------------------
 function OverviewSection() {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const refresh = async () => {
@@ -150,6 +151,7 @@ function OverviewSection() {
 }
 
 function ProvidersInline({ summary }) {
+  const { t } = useTranslation();
   if (!summary?.length) {
     return (
       <Card className="rounded-[calc(var(--radius)+6px)]">
@@ -170,6 +172,7 @@ function ProvidersInline({ summary }) {
 }
 
 function ProviderTable({ rows }) {
+  const { t } = useTranslation();
   return (
     <div className="overflow-x-auto">
       <Table data-testid="admin-providers-table">
@@ -219,6 +222,7 @@ function ProviderTable({ rows }) {
 
 // -------------------- Providers --------------------
 function ProvidersSection() {
+  const { t } = useTranslation();
   const [summary, setSummary] = useState(null);
   const [usage, setUsage] = useState(null);
   const refresh = async () => {
@@ -288,6 +292,7 @@ function ProvidersSection() {
 
 // -------------------- Trend-Scout --------------------
 function TrendScoutSection() {
+  const { t } = useTranslation();
   const [items, setItems] = useState(null);
   const [busy, setBusy] = useState(false);
   const refresh = async () => {
@@ -351,6 +356,7 @@ function TrendScoutSection() {
 
 // -------------------- Users --------------------
 function UsersSection() {
+  const { t } = useTranslation();
   const [items, setItems] = useState(null);
   const [q, setQ] = useState('');
   const [total, setTotal] = useState(0);
@@ -466,6 +472,7 @@ function UsersSection() {
 
 // -------------------- Listings --------------------
 function ListingsSection() {
+  const { t } = useTranslation();
   const [items, setItems] = useState(null);
   const [status, setStatus] = useState('');
   const refresh = async () => {
@@ -564,6 +571,7 @@ function ListingsSection() {
 
 // -------------------- Transactions --------------------
 function TransactionsSection() {
+  const { t } = useTranslation();
   const [items, setItems] = useState(null);
   const [status, setStatus] = useState('');
   const refresh = async () => {
@@ -666,6 +674,7 @@ function TransactionsSection() {
 
 // -------------------- System --------------------
 function SystemSection() {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   useEffect(() => {
     api.adminSystem().then(setData).catch(() => toast.error(t('pages.admin.failed_to_load_system_info')));

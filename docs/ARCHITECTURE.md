@@ -1,7 +1,7 @@
 # DressApp — Technical Architecture Document (Phase 1)
 
 > **Version:** 0.1 (Phase 1 deliverable)  
-> **Runtime:** Emergent FARM stack (FastAPI + React + MongoDB)  
+> **Runtime:** FARM stack (FastAPI + React + MongoDB)  
 > **Reference Runtime:** Cloudflare Workers + Durable Objects + Vectorize (see `wrangler.toml`)  
 > **Status:** Documentation + backend scaffolding delivered; POC pipeline validates the core multimodal stylist flow.
 
@@ -15,7 +15,7 @@ DressApp is a fashion ecosystem that combines three sub-systems into one cohesiv
 2. **Community Marketplace** — a sell / swap / donate layer that spans three item sources: **Private**, **Shared**, **Retail**. Real payments flow through Stripe Connect Express with a **7% platform commission taken after Stripe's own fees**.
 3. **Generative AI Stylist Agent** — a multimodal, context-aware agent that consumes image + text/voice, weather, calendar, and cultural preferences, then produces outfit recommendations with spoken response (streaming TTS).
 
-The original specification called for a Cloudflare Workers backend with the 2026 Agents SDK, Durable Objects and Vectorize. Per the user's direction in the Phase 1 clarification call, we are adapting that design to Emergent's FARM stack while preserving every architectural concept 1-to-1. The Cloudflare design remains canonical and is shipped as `wrangler.toml` for parity and future migration.
+The original specification called for a Cloudflare Workers backend with the 2026 Agents SDK, Durable Objects and Vectorize. Per the user's direction in the Phase 1 clarification call, we are adapting that design to the FastAPI + React + MongoDB (FARM) stack while preserving every architectural concept 1-to-1. The Cloudflare design remains canonical and is shipped as `wrangler.toml` for parity and future migration.
 
 ---
 
@@ -65,7 +65,7 @@ The original specification called for a Cloudflare Workers backend with the 2026
 | Workers AI / AI Gateway (TTS routing) | Multilingual TTS + model routing            | Direct Deepgram Aura-2 client + centralized `app/services/deepgram_service.py`               |
 | Workers KV                            | Fast config / feature flags                 | MongoDB `config` collection with in-memory LRU cache                                         |
 | Cron Triggers                         | Trend-Scout daily job                       | `APScheduler` with `CronTrigger`                                                             |
-| R2 object storage                     | Image + audio artifacts                     | Phase-2 upgrade: S3-compatible (boto3) via Emergent; Phase-1 stores base64 in Mongo/disk     |
+| R2 object storage                     | Image + audio artifacts                     | Phase-2 upgrade: S3-compatible (boto3) object storage; Phase-1 stores base64 in Mongo/disk     |
 | Queues                                | Async job fan-out                           | MongoDB `jobs` collection polled by APScheduler workers                                       |
 
 The `wrangler.toml` reference artifact in `/app/docs/wrangler.toml` describes exactly how this same app would be wired on Cloudflare — keeping a migration path open.
@@ -161,31 +161,19 @@ seller_net     = net_after_stripe - platform_fee
 
 ## 6. Deployment
 
-DressApp ships **a single backend codebase** that serves two production targets with different ML capabilities:
-
-### 6.1 Hetzner VPS — `dressapp.co` (full-fat)
+DressApp is deployed on a VPS production target (Hetzner VPS, `dressapp.co`):
 
 - 4-core / 8 GB VPS · Docker Compose · Caddy 2 (auto Let's Encrypt) · MongoDB Atlas.
 - `deploy/Dockerfile.backend` installs **both** `requirements.txt` (lightweight) **and** `requirements-ml.txt` (torch / transformers / rembg / scipy / accelerate).
 - CPU-only torch is pre-pulled from `https://download.pytorch.org/whl/cpu` so we don't drag in CUDA wheels.
 - `app/config.py` auto-detects torch + rembg via `importlib.util.find_spec` and turns `USE_LOCAL_CLOTHING_PARSER=true`, `AUTO_MATTE_CROPS=true`. Local SegFormer-b2-clothes + rembg run inside the pod.
+- Live deploy-mode probe: `GET /api/v1/closet/analyze/version` is **fast by default** (returns code-presence flags only, no live rembg cycle). Pass `?probe=1` for the heavy live matting probe. Exposes `torch_installed`, `rembg_installed`, `use_local_clothing_parser`, and `auto_matte_crops` so you can confirm at-a-glance which mode is live.
 
-### 6.2 Emergent host — `ai-stylist-api.emergent.host` (cloud-only ML)
-
-- Auto-managed Kubernetes pod, 250 m CPU / 1 Gi RAM. Cannot host the local ML stack (torch alone exceeds the disk/RAM budget).
-- Only `requirements.txt` is installed by the Emergent build pipeline (no torch / transformers / rembg / cuda-*).
-- Auto-detection in `app/config.py` flips `USE_LOCAL_CLOTHING_PARSER=false`, `AUTO_MATTE_CROPS=false`. The analyse pipeline transparently falls through to:
-  - **Multi-item detection** → Gemini Nano Banana (`garment_vision._gemini_detect`).
-  - **Single-item analysis** → Gemini 2.5 Pro multimodal.
-  - **Background matting** → returns `None`; caller keeps the original crop.
-- **Hard override**: set `LIGHTWEIGHT_DEPLOY=true` in Emergent's env dashboard if Emergent's build cache happens to still ship `torch` / `rembg` (in which case the auto-detect would otherwise leave the heavy paths enabled, and the pod would hang on every analyse call because rembg's 170 MB model download + 2K-image inference exceeds the 60 s gateway timeout).
-- Live deploy-mode probe: `GET /api/v1/closet/analyze/version` is **fast by default** (returns code-presence flags only, no live rembg cycle). Pass `?probe=1` for the heavy live matting probe. Exposes `torch_installed`, `rembg_installed`, `use_local_clothing_parser`, `auto_matte_crops`, `lightweight_deploy` so you can confirm at-a-glance which mode is live.
-
-### 6.3 Backend concurrency guard (both deploys)
+### 6.1 Backend concurrency guard
 
 The heavy `analyze_outfit` / `analyze` / `reanalyze` paths share a single process-wide `asyncio.Semaphore(1)` (`_ANALYZE_LOCK` in `api/v1/closet.py`). This serialises any inbound parallel request — multiple browser tabs, future client-side concurrency creep, retries — so a memory-constrained VPS never gets blown up by simultaneous heavy ML runs. Sub-crops within a *single* call still run concurrently via the inner Semaphore in `analyze_outfit`.
 
-### 6.4 Re-analyse endpoint
+### 6.2 Re-analyse endpoint
 
 `POST /api/v1/closet/{item_id}/reanalyze` re-runs The Eyes against an item's stored image (segmented → reconstructed → original fallback chain) and patches **only** the analyser-owned fields (title, taxonomy, weighted `colors[]`, weighted `fabric_materials[]`, condition, tags, …). User-managed fields (size, price, currency, marketplace_intent, notes, purchase history) are preserved. Used by the Item Detail "Analyze" button after a Replace Photo (which intentionally skips auto-segmentation).
 
@@ -207,15 +195,14 @@ For a future Cloudflare migration, see `wrangler.toml` — all bindings (DO, Vec
 | 4     | PayPal Live checkout + webhooks; Google Calendar OAuth; Trend-Scout                             |
 | 5     | Admin dashboard (revenue, users, trends) + E2E hardening + observability                        |
 | 6+    | Local SegFormer + rembg cutout pipeline, Phase R Stylist multi-image + OutfitCanvas, Phase S widened search, Phase T-Auth Google OAuth, duplicate detection, edit-page weighted taxonomy, batch-OOM serial guard |
-| Now   | **Dual-deploy split** — `requirements-ml.txt` for Hetzner, lightweight `requirements.txt` for the Emergent host. Auto-detection in `app/config.py` chooses local SegFormer vs Gemini fallback per environment. |
 
 ---
 
-## 9. Notes on stale section content
+## 8. Notes on stale section content
 
 Sections 4.1 and 4.2 above reference the original Phase 1 design — `fal.ai/SAM-2`, Stripe, etc. The shipped product replaced these with:
 
-- **Garment segmentation**: local SegFormer-b2-clothes + rembg (Hetzner) / Gemini multi-item detector (Emergent), not fal.ai.
+- **Garment segmentation**: local SegFormer-b2-clothes + rembg, not fal.ai.
 - **Payments**: PayPal Live, not Stripe.
 - **Stylist memory**: persisted `stylist_sessions` collection per Phase 2; the `StylistAgent` orchestrator lives in `app/services/stylist/`.
 

@@ -4,7 +4,7 @@
 # This file is NOT deployed from /app. It is shipped as a
 # canonical description of how DressApp's Cloudflare Workers
 # deployment would be configured if/when we migrate back off
-# the Emergent FARM runtime.
+# the FARM runtime.
 #
 # Every binding here has a 1-to-1 equivalent in the FARM
 # implementation (see /app/docs/ARCHITECTURE.md §3).
@@ -49,7 +49,7 @@ WHISPER_MODEL = "whisper-large-v3"
 # wrangler secret put GROQ_API_KEY
 # wrangler secret put DEEPGRAM_API_KEY
 # wrangler secret put OPENWEATHER_API_KEY
-# wrangler secret put EMERGENT_LLM_KEY
+# wrangler secret put GEMINI_API_KEY
 # wrangler secret put JWT_SECRET
 # wrangler secret put STRIPE_SECRET_KEY
 # wrangler secret put STRIPE_WEBHOOK_SECRET

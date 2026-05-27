@@ -1,35 +1,850 @@
 {
-  "_purpose": "These English strings are currently hard-coded in the React frontend and are NOT yet wired through react-i18next. Translate each `english` value into ALL 11 non-English target languages listed below. The keys / occurrences are reference only — do not invent or rename them. Return ONE JSON object whose top level has each ISO language code as a key, and whose values are dictionaries keyed by `suggested_key` -> translated string.",
-  "_source_language": "English (en)",
-  "_target_languages": [
-    "ar",
-    "de",
-    "es",
-    "fr",
-    "he",
-    "hi",
-    "it",
-    "ja",
-    "pt",
-    "ru",
-    "zh"
-  ],
-  "_instructions": "RULES (read every one):\n1. Output ONE valid JSON object. Top-level keys are the 11 ISO language codes listed in _target_languages.\n2. For each language, return a dict mapping every suggested_key to the translated string.\n3. Translate every entry from `findings[*].english`. Do not skip, merge, or rename keys.\n4. Preserve emoji, punctuation, capitalisation conventions of the target language, and any text in {curly} or {{double-curly}} braces — those are placeholders, leave them verbatim.\n5. Keep these proper nouns / brand terms untranslated: DressApp, Trend-Scout, Fashion Scout, FashionCLIP, Google Calendar, Levi's, Stripe, GitHub, Business of Fashion.\n6. 'AI' should be translated to 'IA' in fr/es/pt/it (and the natural local equivalent elsewhere — e.g. 'KI' in de, 'AI' in ja/zh, 'ИИ' in ru).\n7. Use straight ASCII quotes (\") as JSON delimiters. Escape any literal double quote inside a value with a backslash: \\\".\n8. Use the target-language's typographic conventions (e.g. espace insécable before « : ; ! ? » in French).\n9. Do NOT wrap the JSON in markdown code fences.\n",
-  "_examples": [
+  "_purpose": "Audit findings",
+  "findings": [
     {
-      "suggested_key": "components.profileDetailsCard.eg_marketing_manager_student_barista",
-      "english": "e.g. Marketing manager, Student, Barista",
-      "fr": "ex. responsable marketing, étudiant·e, barista",
-      "de": "z. B. Marketing-Manager, Student, Barista",
-      "zh": "例如：市场经理、学生、咖啡师",
-      "note": "Placeholder for an Occupation input field."
+      "suggested_key": "pages.profile.ensure_your_phone_number_is",
+      "english": "* Ensure your phone number is configured under the",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 241,
+          "kind": "jsx-text"
+        }
+      ]
     },
     {
-      "suggested_key": "pages.listingDetail.local_pickup_preferred_no_shipping_fee",
-      "english": "🌱 Local pickup preferred — no shipping fee",
-      "fr": "🌱 Retrait en personne privilégié — pas de frais d'expédition",
-      "note": "Keep the emoji and the em-dash."
+      "suggested_key": "pages.profile.ai_stylist",
+      "english": "AI Stylist",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 146,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.ai_stylist_scheduler_settings_updated",
+      "english": "AI Stylist Scheduler settings updated.",
+      "kinds": [
+        "toast"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 132,
+          "kind": "toast"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.itemDetail.add_garment_view",
+      "english": "Add Garment View",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\ItemDetail.jsx",
+          "line": 1483,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.itemDetail.add_view",
+      "english": "Add View",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\ItemDetail.jsx",
+          "line": 1461,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.browser_push_notifications_disabled",
+      "english": "Browser push notifications disabled.",
+      "kinds": [
+        "toast"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 107,
+          "kind": "toast"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.browser_push_notifications_successfully_enabled",
+      "english": "Browser push notifications successfully enabled.",
+      "kinds": [
+        "toast"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 99,
+          "kind": "toast"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.choose_day",
+      "english": "Choose Day",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 178,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.outfits.clear_logs",
+      "english": "Clear logs",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Outfits.jsx",
+          "line": 96,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.outfits.delete_outfit",
+      "english": "Delete outfit",
+      "kinds": [
+        "aria-label"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Outfits.jsx",
+          "line": 169,
+          "kind": "aria-label"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.closet.dragging_preview",
+      "english": "Dragging preview",
+      "kinds": [
+        "alt"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Closet.jsx",
+          "line": 1069,
+          "kind": "alt"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.dress_for_demands",
+      "english": "Dress For Demands",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 217,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.enable_scheduler_proposals",
+      "english": "Enable Scheduler Proposals",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 154,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.every_other_day",
+      "english": "Every Other Day",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 169,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.everyday",
+      "english": "Everyday",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 168,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.outfits.failed_to_clear_logs",
+      "english": "Failed to clear logs.",
+      "kinds": [
+        "toast"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Outfits.jsx",
+          "line": 67,
+          "kind": "toast"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.outfits.failed_to_delete_outfit",
+      "english": "Failed to delete outfit.",
+      "kinds": [
+        "toast"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Outfits.jsx",
+          "line": 57,
+          "kind": "toast"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.closet.failed_to_group_items",
+      "english": "Failed to group items",
+      "kinds": [
+        "toast"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Closet.jsx",
+          "line": 215,
+          "kind": "toast"
+        },
+        {
+          "file": "src\\pages\\Closet.jsx",
+          "line": 327,
+          "kind": "toast"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.outfits.failed_to_load_saved_outfits",
+      "english": "Failed to load saved outfits.",
+      "kinds": [
+        "toast"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Outfits.jsx",
+          "line": 33,
+          "kind": "toast"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.itemDetail.failed_to_read_photo",
+      "english": "Failed to read photo",
+      "kinds": [
+        "toast"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\ItemDetail.jsx",
+          "line": 719,
+          "kind": "toast"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.failed_to_update_browser_push",
+      "english": "Failed to update browser push subscription.",
+      "kinds": [
+        "toast"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 111,
+          "kind": "toast"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.friday",
+      "english": "Friday",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 186,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.itemDetail.garment_view_added_click_save",
+      "english": "Garment view added. Click Save to apply.",
+      "kinds": [
+        "toast"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\ItemDetail.jsx",
+          "line": 689,
+          "kind": "toast"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.outfits.get_outfit_proposals_in_the",
+      "english": "Get outfit proposals in the AI Stylist tab, pick your favorite, and save it to start logging your outfits.",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Outfits.jsx",
+          "line": 142,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.outfits.loading_mock_push_notifications",
+      "english": "Loading mock push notifications...",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Outfits.jsx",
+          "line": 103,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.monday",
+      "english": "Monday",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 182,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.outfits.my_wardrobe_diary",
+      "english": "My Wardrobe Diary",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Outfits.jsx",
+          "line": 76,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.itemDetail.no_matching_candidates_found",
+      "english": "No matching candidates found",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\ItemDetail.jsx",
+          "line": 1533,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.outfits.no_notifications_triggered_yet_set",
+      "english": "No notifications triggered yet. Set your daily reminder in settings or schedule an event to test.",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Outfits.jsx",
+          "line": 107,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.outfits.no_outfits_saved_yet",
+      "english": "No outfits saved yet",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Outfits.jsx",
+          "line": 141,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.notification_frequency",
+      "english": "Notification Frequency",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 164,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.outfits.notification_logs_cleared",
+      "english": "Notification logs cleared.",
+      "kinds": [
+        "toast"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Outfits.jsx",
+          "line": 65,
+          "kind": "toast"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.notification_permission_denied",
+      "english": "Notification permission denied.",
+      "kinds": [
+        "toast"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 83,
+          "kind": "toast"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.on_weekday",
+      "english": "On Weekday",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 171,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.outfits.outfit_pieces",
+      "english": "Outfit Pieces",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Outfits.jsx",
+          "line": 207,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.outfits.outfit_removed_from_your_diary",
+      "english": "Outfit removed from your diary.",
+      "kinds": [
+        "toast"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Outfits.jsx",
+          "line": 55,
+          "kind": "toast"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.itemDetail.photo_view_added_click_save",
+      "english": "Photo view added. Click Save to apply.",
+      "kinds": [
+        "toast"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\ItemDetail.jsx",
+          "line": 716,
+          "kind": "toast"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.receive_direct_browser_notification_alerts",
+      "english": "Receive direct browser notification alerts on this device.",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 235,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.receive_push_notification_reminders_with",
+      "english": "Receive push notification reminders with customized outfit proposals.",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 155,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.saturday",
+      "english": "Saturday",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 187,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.outfits.saved_outfits",
+      "english": "Saved Outfits",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Outfits.jsx",
+          "line": 77,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.scheduler_push_reminders",
+      "english": "Scheduler & Push Reminders",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 147,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.itemDetail.search_closet_items_by_title",
+      "english": "Search closet items by title or category...",
+      "kinds": [
+        "placeholder"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\ItemDetail.jsx",
+          "line": 1523,
+          "kind": "placeholder"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.itemDetail.select_from_closet",
+      "english": "Select from Closet",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\ItemDetail.jsx",
+          "line": 1513,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.itemDetail.set_front",
+      "english": "Set Front",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\ItemDetail.jsx",
+          "line": 1393,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.smart_casual",
+      "english": "Smart Casual",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 207,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.style_dress_for",
+      "english": "Style / Dress For",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 202,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.sunday",
+      "english": "Sunday",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 188,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.itemDetail.tap_a_member_view_below",
+      "english": "Tap a member view below to edit",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\ItemDetail.jsx",
+          "line": 1408,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.thursday",
+      "english": "Thursday",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 185,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.tuesday",
+      "english": "Tuesday",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 183,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.twice_a_week",
+      "english": "Twice a Week",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 170,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.itemDetail.ungroup",
+      "english": "Ungroup",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\ItemDetail.jsx",
+          "line": 1403,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.itemDetail.upload_a_new_photo_or",
+      "english": "Upload a new photo or select an existing garment from your closet to group as a view of the current item.",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\ItemDetail.jsx",
+          "line": 1486,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.itemDetail.upload_from_device",
+      "english": "Upload from Device",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\ItemDetail.jsx",
+          "line": 1494,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.vapid_key_not_configured_on",
+      "english": "VAPID key not configured on server.",
+      "kinds": [
+        "toast"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 89,
+          "kind": "toast"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.itemDetail.view_marked_for_removal_click",
+      "english": "View marked for removal. Click Save to apply.",
+      "kinds": [
+        "toast"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\ItemDetail.jsx",
+          "line": 750,
+          "kind": "toast"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.outfits.view_outfits_you_have_composed",
+      "english": "View outfits you have composed and scheduled. Your AI Stylist ensures you utilize all closet assets and warns you of previous occasion repetitions.",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Outfits.jsx",
+          "line": 78,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.wednesday",
+      "english": "Wednesday",
+      "kinds": [
+        "jsx-text"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 184,
+          "kind": "jsx-text"
+        }
+      ]
+    },
+    {
+      "suggested_key": "pages.profile.eg_gym_hiking_church",
+      "english": "e.g. Gym, Hiking, Church",
+      "kinds": [
+        "placeholder"
+      ],
+      "occurrences": [
+        {
+          "file": "src\\pages\\Profile.jsx",
+          "line": 222,
+          "kind": "placeholder"
+        }
+      ]
     }
-  ],
-  "findings": []
+  ]
 }

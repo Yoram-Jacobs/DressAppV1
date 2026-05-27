@@ -305,6 +305,7 @@ function EmptyState({ kind, hasFilter }) {
 }
 
 function TransactionRow({ tx, userId, onConfirmed }) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const cur = tx.currency || 'USD';
   const f = tx.financial || {};
@@ -350,7 +351,7 @@ function TransactionRow({ tx, userId, onConfirmed }) {
             </Badge>
             {kind === 'buy' && (
               <span className="text-xs text-muted-foreground">
-                · {isBuyerSide ? 'You bought' : 'You sold'}
+                · {isBuyerSide ? t('transactions.buyer') : t('transactions.seller')}
               </span>
             )}
           </div>
@@ -363,12 +364,12 @@ function TransactionRow({ tx, userId, onConfirmed }) {
           {kind === 'buy' ? (
             <>
               <div>
-                <div className="caps-label text-muted-foreground">Gross</div>
+                <div className="caps-label text-muted-foreground">{t('transactions.gross')}</div>
                 <div className="font-display text-base">{fmt(f.gross_cents, cur)}</div>
               </div>
               <div>
                 <div className="caps-label text-muted-foreground">
-                  {isBuyerSide ? 'You paid' : 'You net'}
+                  {isBuyerSide ? t('transactions.youPaid') : t('transactions.yourNet')}
                 </div>
                 <div className="font-display text-base">
                   {isBuyerSide ? fmt(f.gross_cents, cur) : fmt(f.seller_net_cents, cur)}
@@ -378,15 +379,15 @@ function TransactionRow({ tx, userId, onConfirmed }) {
           ) : kind === 'donate' ? (
             <div>
               <div className="caps-label text-muted-foreground">
-                {(f.gross_cents || 0) > 0 ? 'Shipping' : 'Fee'}
+                {(f.gross_cents || 0) > 0 ? t('transactions.gross') : t('transactions.fees')}
               </div>
               <div className="font-display text-base">
-                {(f.gross_cents || 0) > 0 ? fmt(f.gross_cents, cur) : 'Free'}
+                {(f.gross_cents || 0) > 0 ? fmt(f.gross_cents, cur) : fmt(0, cur)}
               </div>
             </div>
           ) : (
             <div>
-              <div className="caps-label text-muted-foreground">Swap</div>
+              <div className="caps-label text-muted-foreground">{t('taxonomy.intent.swap')}</div>
               <div className="font-display text-base">{t('pages.transactions.item_item')}</div>
             </div>
           )}

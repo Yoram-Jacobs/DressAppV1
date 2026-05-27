@@ -2,10 +2,9 @@
 
 Your AI fashion editor: photograph any garment, get weather + calendar-aware outfits, scan EU DPP QR tags, and resell from a polished marketplace — all in your pocket.
 
-**Live demos**
+**Live demo**
 
 - 🟢 Production · <https://dressapp.co> (Hetzner VPS, custom domain)
-- 🚀 Contest deployment · <https://ai-stylist-api.emergent.host> (Emergent native)
 
 ---
 
@@ -33,14 +32,12 @@ DressApp turns a closet of physical clothes into a structured, queryable wardrob
 
 **Frontend** — React 19 · React Router · Tailwind · Shadcn/UI · `react-i18next` (12 locales) · Sonner toasts · Lucide icons
 
-**Vision pipeline** — environment-aware:
-* **Hetzner / dev** (full stack): `rembg` (U2-Net) for matting · HuggingFace SegFormer-b2-clothes for clothing parsing · Fashion-CLIP for embeddings — all CPU-local.
-* **Emergent host** (lightweight pod, 250 m CPU / 1 Gi RAM): Gemini Nano Banana for multi-item detection · HuggingFace Inference API for SegFormer · Cleanly skips matting when `rembg` is absent.
-* The same image runs on both — see `requirements-ml.txt` and the auto-detection in `app/config.py`.
+**Vision pipeline** — full stack:
+* **Hetzner / dev**: `rembg` (U2-Net) for matting · HuggingFace SegFormer-b2-clothes for clothing parsing · Fashion-CLIP for embeddings — all CPU-local. See `requirements-ml.txt` and the auto-detection in `app/config.py`.
 
 **Voice** — Deepgram (STT + TTS, multi-voice)
 
-**LLM** — Direct `GEMINI_API_KEY` in production · Emergent universal key in dev. Default stylist model: Gemini Flash 2.x. Image generation: Gemini 2.5 Flash Image (Nano Banana).
+**LLM** — Direct `GEMINI_API_KEY`. Default stylist model: Gemini Flash 2.x. Image generation: Gemini 2.5 Flash Image.
 
 **External APIs** — OpenWeather · PayPal Live · Google OAuth + Google Calendar · HuggingFace Inference API
 
@@ -65,13 +62,10 @@ DressApp turns a closet of physical clothes into a structured, queryable wardrob
    └────┬─────┘    └────────────────────┘
         │
         ├─ MongoDB Atlas (users, closet, listings, trends, …)
-        ├─ Vision pipeline · auto-selected per deploy:
-        │    · Hetzner   → local SegFormer + rembg + Fashion-CLIP
-        │    · Emergent  → Gemini Nano Banana detector + skip-matting
+        ├─ Vision pipeline: local SegFormer + rembg + Fashion-CLIP
         ├─ Deepgram (STT/TTS over HTTPS)
         ├─ OpenWeather, PayPal Live, Google OAuth/Calendar
-        └─ Direct GEMINI_API_KEY (prod) or Emergent LLM key (dev)
-             → text + Nano Banana image generation
+        └─ Direct GEMINI_API_KEY → text + image generation
 ```
 
 A more detailed write-up lives in [`/app/docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and the database shape in [`/app/docs/MONGODB_SCHEMA.md`](docs/MONGODB_SCHEMA.md).
@@ -82,6 +76,10 @@ A more detailed write-up lives in [`/app/docs/ARCHITECTURE.md`](docs/ARCHITECTUR
 
 ```
 .
+├── .agents/                # AI Agent workflows
+│   └── workflows/
+│       ├── deploy.md       # Target A / SSH deployment runbook
+│       └── labrrerian.md   # Documentation maintenance and linting guide
 ├── backend/                # FastAPI service
 │   ├── server.py           # App entry, ASGI bindings, CORS
 │   ├── app/
@@ -120,8 +118,6 @@ A more detailed write-up lives in [`/app/docs/ARCHITECTURE.md`](docs/ARCHITECTUR
 
 ## Getting started — local dev
 
-The whole project ships ready to run inside the Emergent platform. Backend, frontend and MongoDB are already wired up by `supervisord`.
-
 ### Backend
 
 ```bash
@@ -129,7 +125,7 @@ cd backend
 # Hot-reload is on in supervisor; you only need to restart on dep changes:
 sudo supervisorctl restart backend
 # Required env (already populated in /app/backend/.env):
-#   MONGO_URL, DB_NAME, JWT_SECRET, EMERGENT_LLM_KEY
+#   MONGO_URL, DB_NAME, JWT_SECRET, GEMINI_API_KEY
 #   GOOGLE_OAUTH_CLIENT_ID/SECRET, DEEPGRAM_API_KEY, OPENWEATHER_API_KEY,
 #   GROQ_API_KEY, HF_TOKEN, PAYPAL_LIVE_CLIENT_ID/SECRET, PAYPAL_ENV
 ```
@@ -156,11 +152,7 @@ python -m scripts.seed_demo   # idempotent — re-running upserts
 
 ## Production deployment
 
-DressApp ships **one codebase, two production targets** that share the same backend image. The vision pipeline auto-detects which dependencies are present and chooses a code path accordingly — no per-deploy env overrides needed.
-
-### Target A — Hetzner VPS (`dressapp.co`) · full local ML
-
-3-container Docker Compose stack on any 4 GB+ VPS:
+3-container Docker Compose stack on any 4 GB+ VPS (e.g. Hetzner, running on `dressapp.co`):
 
 - `backend` — FastAPI + local SegFormer + rembg + Fashion-CLIP (~1.5 GB RAM at idle)
 - `frontend` — Nginx serving the built SPA
@@ -183,29 +175,6 @@ Routine update:
 git pull origin main
 docker compose up -d --build
 ```
-
-### Target B — Emergent host (`ai-stylist-api.emergent.host`) · cloud-only ML
-
-Emergent's auto-deploy pod is sized at 250 m CPU / 1 Gi RAM, which cannot host the local ML stack. The deploy pipeline only installs `backend/requirements.txt` (no torch / transformers / rembg / cuda-*), so:
-
-- `app/config._HAS_TORCH` / `_HAS_REMBG` resolve to `False`.
-- `USE_LOCAL_CLOTHING_PARSER` and `AUTO_MATTE_CROPS` default to `false`.
-- The analyse pipeline falls through to the **Gemini multi-item detector** (already implemented in `garment_vision._gemini_detect`), and matting cleanly returns `None` so the original crop is kept.
-
-> **If Emergent's build cache still ships `rembg` after `requirements.txt` removed it**, the auto-detect will keep the heavy paths enabled and the pod will start hanging on every analyse call (180 s rembg model download + 2 K image inference exceeds the gateway timeout). To force-disable both heavy paths regardless of installed wheels, set `LIGHTWEIGHT_DEPLOY=true` in Emergent's env dashboard. This single override pins `AUTO_MATTE_CROPS=false` and `USE_LOCAL_CLOTHING_PARSER=false` at boot.
-
-A health probe at `GET /api/v1/closet/analyze/version` exposes the active mode:
-
-```jsonc
-// dressapp.co
-{ "torch_installed": true,  "use_local_clothing_parser": true,  "auto_matte_crops": true,  "lightweight_deploy": false, ... }
-// ai-stylist-api.emergent.host  (with LIGHTWEIGHT_DEPLOY=true)
-{ "torch_installed": false, "use_local_clothing_parser": false, "auto_matte_crops": false, "lightweight_deploy": true,  ... }
-```
-
-The probe is **fast by default** (skips the live rembg matting cycle so it never times out behind a 60 s gateway). Pass `?probe=1` when you want the heavier health check.
-
-Both targets serve identical user-facing functionality — Add Item, Reanalyse, Clean Background, Stylist, Marketplace — the only difference is *where* the ML runs.
 
 ---
 

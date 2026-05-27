@@ -295,14 +295,14 @@ export default function Stylist() {
   const handleTriggerEvent = async (e) => {
     if (e) e.preventDefault();
     if (!eventForm.prompt.trim()) {
-      toast.error(t('stylist.promptRequired', 'Please describe the event dress code or demands.'));
+      toast.error(t('common.error'));
       return;
     }
 
     setEventModalOpen(false);
     setBusy(true);
 
-    const eventName = eventForm.event_name || 'Special Event';
+    const eventName = eventForm.event_name || t('stylist.occasion');
     const locText = eventForm.location ? ` at ${eventForm.location}` : '';
     const dateText = eventForm.date ? ` on ${eventForm.date}` : '';
     const timeText = eventForm.time ? ` at ${eventForm.time}` : '';

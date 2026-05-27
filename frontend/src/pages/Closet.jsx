@@ -208,18 +208,18 @@ export default function Closet() {
           if (res.host) store.upsert(res.host);
           if (res.member) store.upsert(res.member);
           await store.incrementalSync();
-          toast.success(t('closet.groupSuccess') || 'Garments grouped successfully');
+          toast.success(t('common.success'));
         } else {
           if (backupSource) store.upsert(backupSource);
           if (backupTarget) store.upsert(backupTarget);
-          toast.error('Failed to group items');
+          toast.error(t('common.error'));
         }
       })
       .catch((err) => {
         console.error('Failed to group items:', err);
         if (backupSource) store.upsert(backupSource);
         if (backupTarget) store.upsert(backupTarget);
-        toast.error(err?.response?.data?.detail || 'Failed to group items');
+        toast.error(err?.response?.data?.detail || t('common.error'));
       });
   };
 
@@ -320,18 +320,18 @@ export default function Closet() {
             if (res.host) store.upsert(res.host);
             if (res.member) store.upsert(res.member);
             await store.incrementalSync();
-            toast.success(t('closet.groupSuccess') || 'Garments grouped successfully');
+            toast.success(t('common.success'));
           } else {
             if (backupSource) store.upsert(backupSource);
             if (backupTarget) store.upsert(backupTarget);
-            toast.error('Failed to group items');
+            toast.error(t('common.error'));
           }
         })
         .catch((err) => {
           console.error('Failed to group items:', err);
           if (backupSource) store.upsert(backupSource);
           if (backupTarget) store.upsert(backupTarget);
-          toast.error(err?.response?.data?.detail || 'Failed to group items');
+          toast.error(err?.response?.data?.detail || t('common.error'));
         });
     }
   };
@@ -754,7 +754,7 @@ export default function Closet() {
               ) : (
                 <Trash2 className="h-4 w-4 md:mr-1.5" />
               )}
-              <span className="hidden md:inline">Delete</span>
+              <span className="hidden md:inline">{t('common.delete')}</span>
             </Button>
             <div className="w-px h-6 bg-border mx-1 hidden md:block"></div>
             <Button
@@ -1066,7 +1066,7 @@ export default function Closet() {
             return draggedItem ? (
               <img
                 src={bestImageUrl(draggedItem)}
-                alt="Dragging preview"
+                alt={t('addItem.preflight.noThumb')}
                 className="w-full h-full object-cover"
               />
             ) : null;

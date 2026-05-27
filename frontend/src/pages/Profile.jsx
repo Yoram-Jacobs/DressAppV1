@@ -18,6 +18,7 @@ import { InviteFriendsButton } from '@/components/InviteFriendsButton';
 import { ProfileDetailsCard } from '@/components/ProfileDetailsCard';
 import { DeveloperPanel } from '@/components/DeveloperPanel';
 import { SUPPORTED_LANGUAGES } from '@/lib/i18n';
+import { labelForDressCode } from '@/lib/taxonomy';
 
 const VOICES = [
   'aura-2-thalia-en', 'aura-2-hermes-en', 'aura-2-electra-en',
@@ -37,29 +38,28 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
+const getWeekdayName = (day, locale) => {
+  const days = {
+    monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0
+  };
+  const date = new Date(2026, 4, 24 + days[day.toLowerCase()]); // May 24, 2026 is a Sunday (0).
+  return new Intl.DateTimeFormat(locale || 'en', { weekday: 'long' }).format(date);
+};
+
+const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
 function SchedulerSettingsCard() {
+  const { t, i18n } = useTranslation();
   const { user, updateUserLocal } = useAuth();
   const [enabled, setEnabled] = useState(user?.scheduler_settings?.enabled || false);
   const [frequency, setFrequency] = useState(user?.scheduler_settings?.frequency || 'everyday');
   const [weekday, setWeekday] = useState(user?.scheduler_settings?.weekday || 'monday');
-  const [time, setTime] = useState(user?.scheduler_settings?.time || '08:00');
-  const [styleOption, setStyleOption] = useState(() => {
-    const val = user?.scheduler_settings?.style_dress_for || 'casual';
-    if (['casual', 'smart-casual', 'formal', 'athletic'].includes(val)) {
-      return val;
-    }
-    return 'custom';
-  });
-  const [customStyle, setCustomStyle] = useState(() => {
-    const val = user?.scheduler_settings?.style_dress_for || 'casual';
-    if (['casual', 'smart-casual', 'formal', 'athletic'].includes(val)) {
-      return '';
-    }
-    return val;
-  });
-  const [busy, setBusy] = useState(false);
+  const [time, setTime] = useState(user?.scheduler_settings?.time || '07:00');
+  const [styleOption, setStyleOption] = useState(user?.scheduler_settings?.style_option || 'casual');
+  const [customStyle, setCustomStyle] = useState(user?.scheduler_settings?.custom_style || '');
   const [pushSupported, setPushSupported] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if ('serviceWorker' in navigator && 'PushManager' in window) {
@@ -73,65 +73,57 @@ function SchedulerSettingsCard() {
   }, []);
 
   const handlePushToggle = async (checked) => {
-    if (!pushSupported) return;
+    if (busy) return;
     setBusy(true);
     try {
       const reg = await navigator.serviceWorker.ready;
       if (checked) {
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') {
-          toast.error("Notification permission denied.");
-          setBusy(false);
-          return;
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+          const res = await api.getWebPushVapidKey();
+          const pubKey = urlBase64ToUint8Array(res.public_key);
+          sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: pubKey,
+          });
         }
-        const keyData = await api.getVapidKey();
-        if (!keyData.public_key) {
-          toast.error("VAPID key not configured on server.");
-          setBusy(false);
-          return;
-        }
-        const sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(keyData.public_key)
-        });
-        await api.subscribeWebPush(sub.toJSON());
+        await api.webpushSubscribe(sub.toJSON());
         setPushEnabled(true);
-        toast.success("Browser push notifications successfully enabled.");
+        toast.success(t('profile.browserPushNotificationsSuccessfullyEnabled', { defaultValue: 'Browser push notifications successfully enabled.' }));
       } else {
         const sub = await reg.pushManager.getSubscription();
         if (sub) {
-          await api.unsubscribeWebPush(sub.endpoint);
           await sub.unsubscribe();
+          await api.webpushUnsubscribe(sub.endpoint);
         }
         setPushEnabled(false);
-        toast.success("Browser push notifications disabled.");
+        toast.success(t('profile.browserPushNotificationsDisabled', { defaultValue: 'Browser push notifications disabled.' }));
       }
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update browser push subscription.");
+      toast.error(t('profile.failedToTogglePushNotifications', { defaultValue: 'Failed to toggle push notifications.' }));
     } finally {
       setBusy(false);
     }
   };
 
-  const save = async (e) => {
-    e.preventDefault();
+  const save = async () => {
     setBusy(true);
     try {
-      const style_dress_for = styleOption === 'custom' ? customStyle : styleOption;
-      const res = await api.patchMe({
+      const updated = await api.patchMe({
         scheduler_settings: {
           enabled,
           frequency,
-          weekday: frequency === 'on_weekday' ? weekday : null,
+          weekday,
           time,
-          style_dress_for,
-        }
+          style_option: styleOption,
+          custom_style: customStyle,
+        },
       });
-      updateUserLocal(res);
-      toast.success("AI Stylist Scheduler settings updated.");
+      updateUserLocal(updated);
+      toast.success(t('profile.aiStylistSchedulerSettingsUpdated', { defaultValue: 'AI Stylist Scheduler settings updated.' }));
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Failed to save scheduler settings.");
+      toast.error(err?.response?.data?.detail || t('common.error', 'Failed to save changes.'));
     } finally {
       setBusy(false);
     }
@@ -143,16 +135,16 @@ function SchedulerSettingsCard() {
         <div className="flex items-center gap-3">
           <Bell className="h-5 w-5 text-[hsl(var(--accent))]" />
           <div>
-            <div className="caps-label text-muted-foreground">AI Stylist</div>
-            <h3 className="font-display text-xl font-semibold">Scheduler & Push Reminders</h3>
+            <div className="caps-label text-muted-foreground">{t('profile.aiStylist', 'AI Stylist')}</div>
+            <h3 className="font-display text-xl font-semibold">{t('profile.schedulerPushReminders', { defaultValue: 'Scheduler & Push Reminders' })}</h3>
           </div>
         </div>
         <Separator />
         
         <div className="flex items-center justify-between gap-3 p-3 bg-secondary/30 rounded-xl border border-border">
           <div className="space-y-1">
-            <div className="font-semibold text-sm">Enable Scheduler Proposals</div>
-            <div className="text-xs text-muted-foreground text-left">Receive push notification reminders with customized outfit proposals.</div>
+            <div className="font-semibold text-sm">{t('profile.enableSchedulerProposals', { defaultValue: 'Enable Scheduler Proposals' })}</div>
+            <div className="text-xs text-muted-foreground text-left">{t('profile.receivePushReminders', { defaultValue: 'Receive push notification reminders with customized outfit proposals.' })}</div>
           </div>
           <Switch checked={enabled} onCheckedChange={setEnabled} data-testid="scheduler-enabled-switch" />
         </div>
@@ -161,65 +153,63 @@ function SchedulerSettingsCard() {
           <div className="space-y-4 pt-2 text-left">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="s-freq">Notification Frequency</Label>
+                <Label htmlFor="s-freq">{t('profile.notificationFrequency', { defaultValue: 'Notification Frequency' })}</Label>
                 <Select value={frequency} onValueChange={setFrequency}>
                   <SelectTrigger id="s-freq" className="rounded-xl"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="everyday">Everyday</SelectItem>
-                    <SelectItem value="every_other_day">Every Other Day</SelectItem>
-                    <SelectItem value="twice_a_week">Twice a Week</SelectItem>
-                    <SelectItem value="on_weekday">On Weekday</SelectItem>
+                    <SelectItem value="everyday">{t('pages.admin.daily_utc', 'Everyday').split(' ')[0].replace(':', '')}</SelectItem>
+                    <SelectItem value="every_other_day">{t('profile.everyOtherDay', { defaultValue: 'Every Other Day' })}</SelectItem>
+                    <SelectItem value="twice_a_week">{t('profile.twiceAWeek', { defaultValue: 'Twice a Week' })}</SelectItem>
+                    <SelectItem value="on_weekday">{t('profile.onWeekday', { defaultValue: 'On Weekday' })}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {frequency === 'on_weekday' && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="s-day">Choose Day</Label>
+                  <Label htmlFor="s-day">{t('profile.chooseDay', { defaultValue: 'Choose Day' })}</Label>
                   <Select value={weekday} onValueChange={setWeekday}>
                     <SelectTrigger id="s-day" className="rounded-xl"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="monday">Monday</SelectItem>
-                      <SelectItem value="tuesday">Tuesday</SelectItem>
-                      <SelectItem value="wednesday">Wednesday</SelectItem>
-                      <SelectItem value="thursday">Thursday</SelectItem>
-                      <SelectItem value="friday">Friday</SelectItem>
-                      <SelectItem value="saturday">Saturday</SelectItem>
-                      <SelectItem value="sunday">Sunday</SelectItem>
+                      {WEEKDAYS.map((day) => (
+                        <SelectItem key={day} value={day}>
+                          {getWeekdayName(day, i18n.language)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
               )}
 
               <div className="space-y-1.5">
-                <Label htmlFor="s-time">Notification Time (UTC)</Label>
+                <Label htmlFor="s-time">{t('profile.notificationTime', { defaultValue: 'Notification Time (UTC)' })}</Label>
                 <Input id="s-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} className="rounded-xl" />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="s-style">Style / Dress For</Label>
+                <Label htmlFor="s-style">{t('profile.styleDressFor', { defaultValue: 'Style / Dress For' })}</Label>
                 <Select value={styleOption} onValueChange={setStyleOption}>
                   <SelectTrigger id="s-style" className="rounded-xl"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="casual">Casual</SelectItem>
-                    <SelectItem value="smart-casual">Smart Casual</SelectItem>
-                    <SelectItem value="formal">Formal</SelectItem>
-                    <SelectItem value="athletic">Athletic</SelectItem>
-                    <SelectItem value="custom">Custom (Free Text)</SelectItem>
+                    <SelectItem value="casual">{labelForDressCode('casual', t)}</SelectItem>
+                    <SelectItem value="smart-casual">{labelForDressCode('smart-casual', t)}</SelectItem>
+                    <SelectItem value="formal">{labelForDressCode('formal', t)}</SelectItem>
+                    <SelectItem value="athletic">{labelForDressCode('athletic', t)}</SelectItem>
+                    <SelectItem value="custom">{t('credits.custom', 'Custom')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {styleOption === 'custom' && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="s-custom-style">Dress For Demands</Label>
+                  <Label htmlFor="s-custom-style">{t('profile.dressForDemands', { defaultValue: 'Dress For Demands' })}</Label>
                   <Input 
                     id="s-custom-style" 
                     value={customStyle} 
                     onChange={(e) => setCustomStyle(e.target.value)} 
-                    placeholder="e.g. Gym, Hiking, Church" 
+                    placeholder={t('profile.customStylePlaceholder', { defaultValue: 'e.g. Gym, Hiking, Church' })} 
                     className="rounded-xl" 
                   />
                 </div>
@@ -231,20 +221,22 @@ function SchedulerSettingsCard() {
         {pushSupported && (
           <div className="flex items-center justify-between gap-3 p-3 bg-secondary/30 rounded-xl border border-border">
             <div className="space-y-1">
-              <div className="font-semibold text-sm">Browser Push Alerts (Native Web Push)</div>
-              <div className="text-xs text-muted-foreground text-left">Receive direct browser notification alerts on this device.</div>
+              <div className="font-semibold text-sm">{t('profile.browserPushAlerts', { defaultValue: 'Browser Push Alerts (Native Web Push)' })}</div>
+              <div className="text-xs text-muted-foreground text-left">{t('profile.receiveDirectBrowserAlerts', { defaultValue: 'Receive direct browser notification alerts on this device.' })}</div>
             </div>
             <Switch checked={pushEnabled} onCheckedChange={handlePushToggle} disabled={busy} />
           </div>
         )}
 
         <div className="text-xs text-muted-foreground p-3 bg-secondary/20 rounded-xl border border-dashed border-border/80 text-left">
-          * Ensure your phone number is configured under the <strong>Identity</strong> section to successfully route simulated push alerts.
+          {t('profile.phoneWarningStart', { defaultValue: '* Ensure your phone number is configured under the ' })}
+          <strong>{t('profile.identity', 'Identity')}</strong>
+          {t('profile.phoneWarningEnd', { defaultValue: ' section to successfully route simulated push alerts.' })}
         </div>
 
         <div className="flex">
           <Button onClick={save} disabled={busy} className="rounded-xl">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Scheduler Preferences"}
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t('common.save', 'Save')}
           </Button>
         </div>
       </CardContent>

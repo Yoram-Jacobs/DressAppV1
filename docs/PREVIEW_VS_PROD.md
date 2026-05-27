@@ -1,15 +1,15 @@
-# Preview pod vs. Hetzner production — what's different, and why
+# Local dev vs. Hetzner production — what's different, and why
 
 > **Read this BEFORE filing any "the Eyes aren't working" or "everything is
-> falling back to Gemini" bug.** Most such bugs in the preview environment
+> falling back to Gemini" bug.** Most such bugs in the local development environment
 > are *expected behaviour*, not regressions.
 
-The DressApp codebase deploys to two materially different environments:
+The DressApp codebase runs in two environments:
 
-| | Emergent preview pod (this container) | Hetzner production (`dressapp.co`) |
+| | Local Dev / Preview | Hetzner production (`dressapp.co`) |
 |---|---|---|
-| **Topology** | Single Kubernetes pod, no sidecars | Docker Compose stack with named services |
-| **Backend reaches Eyes via** | nothing — there is no `eyes` service on this network | `http://eyes:7860` (internal Docker DNS) |
+| **Topology** | Local supervisor / process setup | Docker Compose stack with named services |
+| **Backend reaches Eyes via** | nothing — there is no local `eyes` service running | `http://eyes:7860` (internal Docker DNS) |
 | **`EYES_PROVIDER`** | `gemini` | `gemma` |
 | **`EYES_GEMMA_SPACE_URL`** | blank | `http://eyes:7860` |
 | **AddItem analysis served by** | **Gemini 2.5 Flash directly** | **Self-hosted Gemma 4 E2B GGUF**, Gemini only as safety fallback |
@@ -18,37 +18,28 @@ The DressApp codebase deploys to two materially different environments:
 | **Nano Banana (reconstruction)** | Direct Gemini via `GEMINI_API_KEY` | Direct Gemini via `GEMINI_API_KEY` |
 | **Mongo** | `test_database` on the local mongod | `dressapp_prod` on Atlas |
 
-## Why preview can never use Gemma
+## Why local preview does not use Gemma by default
 
-There is no `dressapp-eyes` container on the preview pod's network. The
-`docker-compose.yml` and the Gemma 4 E2B GGUF (~4.8 GB) only exist on
-the Hetzner box. Trying to dial `http://eyes:7860` from preview returns
-DNS-NXDOMAIN immediately; trying to dial the *old* Hugging Face Space
-(`https://yoram-jacobs-dressapp-eyes-gguf.hf.space`) returns 503
-("Space is paused") since the May-2026 migration.
+There is no local `dressapp-eyes` container running in standard dev mode. The GGUF model and Compose service block are configured only for the production Hetzner box. Trying to dial `http://eyes:7860` from a local instance without the container running will fail. The dev environment is therefore **pinned to `EYES_PROVIDER=gemini`** in `backend/.env`. The DB-backed `eyes_override` is also cleared so no stale toggle redirects to a dead path.
 
-The preview env is therefore **pinned to `EYES_PROVIDER=gemini`** in
-`/app/backend/.env`. The DB-backed `eyes_override` is also cleared so
-no stale toggle can redirect into a dead path.
-
-## Symptoms you can safely ignore in preview
+## Symptoms you can safely ignore in local preview
 
 | Symptom | Meaning | Action |
 |---|---|---|
 | `provider=gemini fallback=False routing=toggle` in logs | Expected. Direct Gemini path, no Gemma attempt. | None |
-| Eyes call returns in 5-10s instead of 15-25s | Expected — preview skips the Hetzner round-trip | None |
-| `eyes_override doc = null` in `config` collection | Expected — preview has no override, falls through to env-default | None |
-| `dressapp-eyes` container missing from `docker ps` | Expected — preview is not a Compose stack | None |
+| Eyes call returns in 5-10s instead of 15-25s | Expected — local skips the Hetzner round-trip | None |
+| `eyes_override doc = null` in `config` collection | Expected — dev has no override, falls through to env-default | None |
+| `dressapp-eyes` container missing from `docker ps` | Expected — local is not running a full compose stack | None |
 | `curl https://yoram-jacobs-dressapp-eyes-gguf.hf.space/healthz` → 503 | Expected — the HF Space has been paused since the Hetzner migration. Do **not** restart it. | None |
 
-## Symptoms that ARE bugs in preview
+## Symptoms that ARE bugs in local preview
 
 | Symptom | Possible cause | First debug step |
 |---|---|---|
 | `provider=gemma` in logs | Something resurrected the Gemma toggle | `db.config.find_one({_id:"eyes_provider"})` — should be `None`; if not, delete it |
 | `fallback=True` in logs | Backend tried Gemma anyway. The env wasn't reloaded after `.env` change | `supervisorctl restart backend` |
 | Eyes call hangs 60s before responding | Same — Gemma timeout wait. Check `EYES_PROVIDER` resolves to `gemini` via `eyes_override.get_active_provider()` | As above |
-| HTTP 503 from `/api/v1/closet/analyze` | `garment_vision_service is None` — likely missing `GEMINI_API_KEY` or `EMERGENT_LLM_KEY` | Check `settings.gemini_chat_key` is set |
+| HTTP 503 from `/api/v1/closet/analyze` | `garment_vision_service is None` — likely missing `GEMINI_API_KEY` | Check `settings.gemini_chat_key` is set |
 
 ## Symptoms that ARE bugs in production
 
@@ -90,7 +81,7 @@ config.eyes_provider │ eyes_override.get_active(...) │ ◄── 5s TTL cach
                    │     → _call_gemma_space()     │ ── http://eyes:7860 (prod only)
                    │     on error → cascade ↓      │
                    │   else (gemini / any other)   │
-                   │     → emergentintegrations    │ ── Gemini 2.5 Flash
+                   │     → Gemini API client       │ ── Gemini 2.5 Flash
                    │       LlmChat (.with_model)   │
                    └───────────────────────────────┘
 ```
