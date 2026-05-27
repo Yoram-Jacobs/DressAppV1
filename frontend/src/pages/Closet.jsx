@@ -139,6 +139,9 @@ export default function Closet() {
   // Drag and drop grouping (Multi-view Garment Support)
   const [draggedId, setDraggedId] = useState(null);
   const [dragOverId, setDragOverId] = useState(null);
+  const touchTimeoutRef = useRef(null);
+  const touchStartPosRef = useRef({ x: 0, y: 0 });
+  const [isTouchDragging, setIsTouchDragging] = useState(false);
 
   const handleDragStart = (e, id) => {
     setDraggedId(id);
@@ -182,12 +185,38 @@ export default function Closet() {
   };
 
   const handleTouchStart = (e, id) => {
-    setDraggedId(id);
+    const touch = e.touches[0];
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+    setIsTouchDragging(false);
+
+    touchTimeoutRef.current = setTimeout(() => {
+      setIsTouchDragging(true);
+      setDraggedId(id);
+      if (navigator.vibrate) {
+        navigator.vibrate(45);
+      }
+    }, 350);
   };
 
   const handleTouchMove = (e) => {
-    if (!draggedId) return;
     const touch = e.touches[0];
+    const dx = touch.clientX - touchStartPosRef.current.x;
+    const dy = touch.clientY - touchStartPosRef.current.y;
+
+    if (!isTouchDragging) {
+      if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+        if (touchTimeoutRef.current) {
+          clearTimeout(touchTimeoutRef.current);
+          touchTimeoutRef.current = null;
+        }
+      }
+      return;
+    }
+
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
     if (!element) return;
     const cardEl = element.closest('[data-testid="closet-item-card"]');
@@ -202,11 +231,24 @@ export default function Closet() {
   };
 
   const handleTouchEnd = async (e) => {
-    if (!draggedId) return;
+    if (touchTimeoutRef.current) {
+      clearTimeout(touchTimeoutRef.current);
+      touchTimeoutRef.current = null;
+    }
+
+    if (!isTouchDragging) {
+      setDraggedId(null);
+      setDragOverId(null);
+      return;
+    }
+
+    e.preventDefault();
     const targetId = dragOverId;
     const sourceId = draggedId;
     setDraggedId(null);
     setDragOverId(null);
+    setIsTouchDragging(false);
+
     if (targetId && sourceId && sourceId !== targetId) {
       try {
         const res = await api.groupItems({ host_id: targetId, member_id: sourceId });
@@ -863,7 +905,7 @@ export default function Closet() {
                 className={`block group transition-all duration-300 select-none ${
                   dragOverId === it.id ? 'scale-[1.05] ring-2 ring-[hsl(var(--accent))] ring-offset-2 rounded-[calc(var(--radius)+6px)]' : ''
                 }`}
-                style={{ WebkitTouchCallout: 'none', touchAction: 'none' }}
+                style={{ WebkitTouchCallout: 'none', touchAction: 'pan-y' }}
                 data-testid="closet-item-card"
                 data-item-id={it.id}
                 draggable
