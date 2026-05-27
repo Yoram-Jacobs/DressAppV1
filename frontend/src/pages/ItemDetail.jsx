@@ -1499,11 +1499,11 @@ export default function ItemDetail() {
                       onAddMemberPhoto();
                     }}
                     disabled={uploadingPhoto}
-                    className="w-full justify-start rounded-xl py-6 border-dashed"
+                    className="w-full justify-start rounded-xl py-4 border-dashed h-auto"
                     variant="outline"
                   >
-                    <Camera className="h-5 w-5 me-2 text-muted-foreground" />
-                    <span>Upload a new view photo (e.g. Back view, Tag, or Detail)</span>
+                    <Camera className="h-5 w-5 me-3 shrink-0 text-muted-foreground" />
+                    <span className="text-left text-xs sm:text-sm whitespace-normal">Upload a new view photo (e.g. Back view, Tag, or Detail)</span>
                   </Button>
                 </div>
 
