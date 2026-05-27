@@ -612,25 +612,25 @@ export default function ItemDetail() {
   };
 
   const onDeleteMember = async (memberId) => {
-    const confirmDelete = window.confirm(t('itemDetail.group.confirmDeleteView') || 'Are you sure you want to delete this view?');
+    const confirmDelete = window.confirm(t('itemDetail.group.confirmDeleteView') || 'Are you sure you want to remove this view and restore it to the closet?');
     if (!confirmDelete) return;
 
     setSaving(true);
-    const loadingId = toast.loading(t('itemDetail.group.deletingView') || 'Deleting view...');
+    const loadingId = toast.loading(t('itemDetail.group.deletingView') || 'Removing view...');
     try {
-      await api.deleteItem(memberId);
+      await api.ungroupItem(memberId);
       try {
         const { closetStore } = await import('@/lib/closetStore');
-        closetStore.remove(memberId);
+        await closetStore.incrementalSync();
       } catch (errStore) {
         console.warn(errStore);
       }
       toast.dismiss(loadingId);
-      toast.success(t('itemDetail.group.deleteViewSuccess') || 'View deleted');
+      toast.success(t('itemDetail.group.deleteViewSuccess') || 'View restored to closet');
       await load();
     } catch (err) {
       toast.dismiss(loadingId);
-      toast.error(err?.response?.data?.detail || 'Failed to delete view');
+      toast.error(err?.response?.data?.detail || 'Failed to remove view');
     } finally {
       setSaving(false);
     }

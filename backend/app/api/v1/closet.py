@@ -4359,6 +4359,7 @@ async def reanalyze_group_helper(group_id: str, user_id: str) -> None:
 @router.post("/group")
 async def group_items(
     payload: GroupItemsIn,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     db = get_db()
@@ -4393,8 +4394,8 @@ async def group_items(
         {"$set": {"group_id": group_id, "group_role": "member", "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
 
-    # Run group reanalysis
-    await reanalyze_group_helper(group_id, user["id"])
+    # Run group reanalysis in the background
+    background_tasks.add_task(reanalyze_group_helper, group_id, user["id"])
 
     updated_host = await db.closet_items.find_one({"id": host_id})
     updated_member = await db.closet_items.find_one({"id": member_id})
@@ -4416,6 +4417,7 @@ async def group_items(
 async def upload_group_member(
     host_id: str,
     payload: UploadMemberIn,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     db = get_db()
@@ -4508,8 +4510,8 @@ async def upload_group_member(
     # Save to DB
     await repos.insert(db.closet_items, member_item)
 
-    # Re-run group analysis
-    await reanalyze_group_helper(group_id, user["id"])
+    # Re-run group analysis in the background
+    background_tasks.add_task(reanalyze_group_helper, group_id, user["id"])
 
     updated_host = await db.closet_items.find_one({"id": host_id})
     updated_member = await db.closet_items.find_one({"id": member_item["id"]})
@@ -4572,6 +4574,58 @@ async def set_group_host(
         "status": "success",
         "host": updated_new_host
     }
+
+
+@router.post("/{item_id}/ungroup")
+async def ungroup_item(
+    item_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    db = get_db()
+    item = await db.closet_items.find_one({"id": item_id, "user_id": user["id"]})
+    if not item:
+        raise HTTPException(404, "Item not found")
+
+    group_id = item.get("group_id")
+    if not group_id:
+        return {"status": "success"}
+
+    # Ungroup this item (set group fields to None)
+    await db.closet_items.update_one(
+        {"id": item_id, "user_id": user["id"]},
+        {"$set": {"group_id": None, "group_role": None, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+
+    # Check remaining items in the group
+    remaining = await db.closet_items.find(
+        {"group_id": group_id, "user_id": user["id"]}
+    ).to_list(None)
+
+    if len(remaining) <= 1:
+        # Only 1 item left -> dissolve group entirely
+        await db.closet_items.update_many(
+            {"group_id": group_id, "user_id": user["id"]},
+            {"$set": {"group_id": None, "group_role": None, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    else:
+        # If multiple remain, and the ungrouped item was the host, pick a new host
+        if item.get("group_role") == "host":
+            new_host = remaining[0]
+            await db.closet_items.update_many(
+                {"group_id": group_id, "user_id": user["id"]},
+                {"$set": {"group_id": new_host["id"]}}
+            )
+            await db.closet_items.update_one(
+                {"id": new_host["id"]},
+                {"$set": {"group_role": "host", "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+            background_tasks.add_task(reanalyze_group_helper, new_host["id"], user["id"])
+        else:
+            # Host is still there. Run background re-analysis on remaining group
+            background_tasks.add_task(reanalyze_group_helper, group_id, user["id"])
+
+    return {"status": "success"}
 
 
 @router.get("/{item_id}")
@@ -4987,7 +5041,9 @@ async def update_item(
 
 @router.delete("/{item_id}")
 async def delete_item(
-    item_id: str, user: dict = Depends(get_current_user)
+    item_id: str,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(get_current_user)
 ) -> Response:
     db = get_db()
     # Fetch first so we have the item's fingerprint (sha256 / phash)
@@ -5028,8 +5084,8 @@ async def delete_item(
                     {"$set": {"group_id": None, "group_role": None, "updated_at": datetime.now(timezone.utc).isoformat()}}
                 )
             else:
-                # Re-run group analysis on remaining members
-                await reanalyze_group_helper(group_id, user["id"])
+                # Re-run group analysis on remaining members in background
+                background_tasks.add_task(reanalyze_group_helper, group_id, user["id"])
 
     # Marketplace cleanup — when a user deletes a closet item that
     # is linked to one or more listings, silently retire the open

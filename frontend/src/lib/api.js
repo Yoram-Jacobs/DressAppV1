@@ -407,6 +407,7 @@ export const api = {
     client.post(`/closet/${hostId}/upload-member`, body).then((r) => r.data),
   setGroupHost: (hostId, memberId) =>
     client.post(`/closet/${hostId}/set-host/${memberId}`).then((r) => r.data),
+  ungroupItem: (id) => client.post(`/closet/${id}/ungroup`).then((r) => r.data),
   editItemImage: (id, prompt) =>
     client
       .post(`/closet/${id}/edit-image`, null, { params: { prompt } })

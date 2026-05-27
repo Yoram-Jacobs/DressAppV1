@@ -142,6 +142,7 @@ export default function Closet() {
   const touchTimeoutRef = useRef(null);
   const touchStartPosRef = useRef({ x: 0, y: 0 });
   const [isTouchDragging, setIsTouchDragging] = useState(false);
+  const [touchPos, setTouchPos] = useState({ x: 0, y: 0 });
 
   const handleDragStart = (e, id) => {
     setDraggedId(id);
@@ -187,6 +188,7 @@ export default function Closet() {
   const handleTouchStart = (e, id) => {
     const touch = e.touches[0];
     touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+    setTouchPos({ x: touch.clientX, y: touch.clientY });
     setIsTouchDragging(false);
 
     touchTimeoutRef.current = setTimeout(() => {
@@ -202,6 +204,7 @@ export default function Closet() {
     const touch = e.touches[0];
     const dx = touch.clientX - touchStartPosRef.current.x;
     const dy = touch.clientY - touchStartPosRef.current.y;
+    setTouchPos({ x: touch.clientX, y: touch.clientY });
 
     if (!isTouchDragging) {
       if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
@@ -903,7 +906,13 @@ export default function Closet() {
                 key={it.id}
                 to={`/closet/${it.id}`}
                 className={`block group transition-all duration-300 select-none ${
-                  dragOverId === it.id ? 'scale-[1.05] ring-2 ring-[hsl(var(--accent))] ring-offset-2 rounded-[calc(var(--radius)+6px)]' : ''
+                  draggedId === it.id
+                    ? 'opacity-40 scale-95 border-2 border-dashed border-emerald-500 rounded-[calc(var(--radius)+6px)]'
+                    : ''
+                } ${
+                  dragOverId === it.id
+                    ? 'scale-[1.05] ring-2 ring-emerald-500 ring-offset-2 rounded-[calc(var(--radius)+6px)]'
+                    : ''
                 }`}
                 style={{ WebkitTouchCallout: 'none', touchAction: 'pan-y' }}
                 data-testid="closet-item-card"
@@ -973,6 +982,29 @@ export default function Closet() {
         anchorIds={Array.from(selected)}
         anchorsHint={completionAnchors}
       />
+      {/* Touch drag preview overlay */}
+      {isTouchDragging && draggedId && (
+        <div
+          className="fixed pointer-events-none z-50 w-16 h-20 rounded-lg overflow-hidden border-2 border-emerald-500 shadow-lg opacity-90"
+          style={{
+            left: touchPos.x - 32,
+            top: touchPos.y - 40,
+            transform: 'scale(1.15)',
+            boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
+          }}
+        >
+          {(() => {
+            const draggedItem = (store.items || []).find(x => x.id === draggedId);
+            return draggedItem ? (
+              <img
+                src={bestImageUrl(draggedItem)}
+                alt="Dragging preview"
+                className="w-full h-full object-cover"
+              />
+            ) : null;
+          })()}
+        </div>
+      )}
     </div>
   );
 }
