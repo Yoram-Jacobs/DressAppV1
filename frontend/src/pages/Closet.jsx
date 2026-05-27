@@ -804,9 +804,11 @@ export default function Closet() {
                   aria-label={`${isSelected ? 'Deselect' : 'Select'} ${it.title || 'item'}`}
                   data-testid="closet-item-card"
                   data-selected={isSelected}
+                  onContextMenu={(e) => e.preventDefault()}
                   className={`relative block text-left group rounded-[calc(var(--radius)+6px)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] ring-offset-2 ring-offset-background ${
                     isSelected ? 'ring-2 ring-[hsl(var(--accent))]' : ''
                   }`}
+                  style={{ WebkitTouchCallout: 'none', touchAction: 'pan-y' }}
                 >
                   <ItemCardInner item={it} isSelected={isSelected} showCheckbox score={it._score} />
                 </button>
@@ -816,15 +818,17 @@ export default function Closet() {
               <Link
                 key={it.id}
                 to={`/closet/${it.id}`}
-                className={`block group transition-all duration-300 ${
+                className={`block group transition-all duration-300 select-none ${
                   dragOverId === it.id ? 'scale-[1.05] ring-2 ring-[hsl(var(--accent))] ring-offset-2 rounded-[calc(var(--radius)+6px)]' : ''
                 }`}
+                style={{ WebkitTouchCallout: 'none', touchAction: 'pan-y' }}
                 data-testid="closet-item-card"
                 draggable
                 onDragStart={(e) => handleDragStart(e, it.id)}
                 onDragOver={(e) => handleDragOver(e, it.id)}
                 onDragLeave={(e) => handleDragLeave(e, it.id)}
                 onDrop={(e) => handleDrop(e, it.id)}
+                onContextMenu={(e) => e.preventDefault()}
               >
                 <ItemCardInner item={it} score={it._score} />
               </Link>
@@ -906,6 +910,8 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
                   alt={item.title}
                   loading="lazy"
                   decoding="async"
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
                   // Patch 12 (May 2026) — ``object-contain`` (was
                   // ``object-cover``). Cover scales the source up to
                   // fill the 3:4 card, which on small crops produces
@@ -915,7 +921,8 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
                   // for tiny crops, indistinguishable from cover on
                   // garment-shaped portrait images that already match
                   // ~3:4.
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain select-none"
+                  style={{ WebkitTouchCallout: 'none' }}
                   data-testid="closet-item-thumb"
                 />
                 {polishing && (
