@@ -430,7 +430,7 @@ export default function ItemDetail() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const closetStore = useClosetStore();
+  const closetState = useClosetStore();
   const [addOpen, setAddOpen] = useState(false);
   const [closetSearch, setClosetSearch] = useState('');
 
@@ -537,7 +537,6 @@ export default function ItemDetail() {
       // editable-field drafts.
       setItem(res.item);
       try {
-        const { closetStore } = await import('@/lib/closetStore');
         closetStore.upsert(res.item);
       } catch (e) {
         console.warn('ItemDetail: closetStore sync after photo upload failed', e);
@@ -657,7 +656,7 @@ export default function ItemDetail() {
   const candidateItems = useMemo(() => {
     const dbMemberIds = new Set((item?.group_members || []).map((m) => m.id));
     const addedMemberIds = new Set(addedGroupMembers.map(m => m.id));
-    return (closetStore.items || []).filter(
+    return (closetState.items || []).filter(
       (it) =>
         it.id !== id &&
         !dbMemberIds.has(it.id) &&
@@ -665,7 +664,7 @@ export default function ItemDetail() {
         it.id !== hostIdState &&
         it.group_role !== 'member'
     );
-  }, [closetStore.items, id, item, addedGroupMembers, hostIdState]);
+  }, [closetState.items, id, item, addedGroupMembers, hostIdState]);
 
   const filteredCandidates = useMemo(() => {
     const q = closetSearch.toLowerCase().trim();
@@ -678,7 +677,7 @@ export default function ItemDetail() {
   }, [candidateItems, closetSearch]);
 
   const handleSelectClosetItem = (targetMemberId) => {
-    const targetItem = (closetStore.items || []).find(x => x.id === targetMemberId);
+    const targetItem = (closetState.items || []).find(x => x.id === targetMemberId);
     if (!targetItem) return;
     setAddedGroupMembers(prev => [...prev, targetItem]);
     setDeletedGroupMemberIds(prev => {
@@ -1078,18 +1077,8 @@ export default function ItemDetail() {
     // reverse the optimistic change if the server actually rejected
     // the delete. This restores the supercharged UX that turned
     // closet ops from "tap-and-wait-2s" into "tap-and-done".
-    let closetStoreRef = null;
-    try {
-      const mod = await import('@/lib/closetStore');
-      closetStoreRef = mod.closetStore;
-    } catch (importErr) {
-      // If we can't import the store for some weird reason, fall
-      // back to the old serialised path so we don't lose the delete.
-      // Logged so a bundler / chunk-loading regression is visible.
-      console.warn('ItemDetail: closetStore import failed during delete', importErr);
-    }
     const snapshot = item;
-    if (closetStoreRef) closetStoreRef.remove(id);
+    closetStore.remove(id);
     toast.success(t('itemDetail.deleted'));
     nav('/closet');
     // Fire-and-forget — we're already off the page. Reconcile on failure.
@@ -1099,8 +1088,8 @@ export default function ItemDetail() {
       // causes a phantom duplicate in the closetStore that triggers false
       // duplicate warnings on subsequent uploads.
       if (err?.response?.status !== 404) {
-        if (closetStoreRef && snapshot) {
-          closetStoreRef.upsert(snapshot);
+        if (snapshot) {
+          closetStore.upsert(snapshot);
         }
         toast.error(err?.response?.data?.detail || t('closet.deleteFailed'));
       }
