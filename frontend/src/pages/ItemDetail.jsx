@@ -1477,7 +1477,7 @@ export default function ItemDetail() {
 
           {/* Dialog for adding/picking closet items */}
           <Dialog open={addOpen} onOpenChange={setAddOpen}>
-            <DialogContent className="max-w-lg rounded-2xl p-6 glassmorphic border border-white/20">
+            <DialogContent className="max-w-lg rounded-2xl p-6 glassmorphic border border-white/20 max-h-[90dvh] flex flex-col">
               <DialogHeader>
                 <DialogTitle className="text-xl font-bold flex items-center gap-2">
                   <Images className="h-5 w-5 text-primary" />
@@ -1488,9 +1488,9 @@ export default function ItemDetail() {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="space-y-6 mt-4">
+              <div className="flex-1 flex flex-col min-h-0 space-y-6 mt-4">
                 {/* Option 1: Upload New View */}
-                <div className="space-y-2">
+                <div className="space-y-2 shrink-0">
                   <h3 className="text-sm font-semibold text-foreground">Upload from Device</h3>
                   <Button
                     type="button"
@@ -1508,8 +1508,8 @@ export default function ItemDetail() {
                 </div>
 
                 {/* Option 2: Select from Closet */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
+                <div className="flex-1 flex flex-col min-h-0 space-y-3">
+                  <div className="flex items-center justify-between shrink-0">
                     <h3 className="text-sm font-semibold text-foreground">Select from Closet</h3>
                     <span className="text-xs text-muted-foreground">
                       {filteredCandidates.length} items
@@ -1517,7 +1517,7 @@ export default function ItemDetail() {
                   </div>
 
                   {/* Search bar inside picker */}
-                  <div className="relative">
+                  <div className="relative shrink-0">
                     <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Search closet items by title or category..."
@@ -1528,7 +1528,7 @@ export default function ItemDetail() {
                   </div>
 
                   {/* Candidates Grid */}
-                  <div className="max-h-[300px] overflow-y-auto pr-1 space-y-2 scrollbar-thin">
+                  <div className="flex-1 overflow-y-auto pr-1 space-y-2 scrollbar-thin min-h-0">
                     {filteredCandidates.length === 0 ? (
                       <div className="text-center py-8 text-sm text-muted-foreground">
                         No matching candidates found
