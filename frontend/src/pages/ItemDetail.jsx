@@ -1380,29 +1380,36 @@ export default function ItemDetail() {
                 {t('itemDetail.group.subtitle') || 'Combine multiple photos (front, back, details) for 100% accurate styling.'}
               </p>
 
-              {activeViewIdState && activeViewIdState !== hostIdState && currentGroupItems.some(x => x.id === activeViewIdState) && (
-                <div className="flex items-center gap-3 mb-4">
-                  <Button
-                    type="button"
-                    onClick={() => onSetFront(activeViewIdState)}
-                    disabled={saving}
-                    className="flex-1 bg-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/90 text-white h-10"
-                  >
-                    <BadgeCheck className="h-4 w-4 mr-2" />
-                    Set Front
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={() => onDeleteMember(activeViewIdState)}
-                    disabled={saving}
-                    className="flex-1 h-10"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Ungroup
-                  </Button>
-                </div>
-              )}
+              {/* Member Action Bar */}
+              <div className="h-10 mb-4 flex items-center gap-3">
+                {activeViewIdState && activeViewIdState !== hostIdState && currentGroupItems.some(x => x.id === activeViewIdState) ? (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={() => onSetFront(activeViewIdState)}
+                      disabled={saving}
+                      className="flex-1 bg-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/90 text-white h-10"
+                    >
+                      <BadgeCheck className="h-4 w-4 mr-2" />
+                      Set Front
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => onDeleteMember(activeViewIdState)}
+                      disabled={saving}
+                      className="flex-1 h-10"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Ungroup
+                    </Button>
+                  </>
+                ) : (
+                  <div className="flex-1 text-center text-xs text-muted-foreground italic flex items-center justify-center h-full">
+                    Tap a member view below to edit
+                  </div>
+                )}
+              </div>
 
               <div className="flex items-center gap-3 overflow-x-auto pb-2 pt-1 scrollbar-thin">
                 {currentGroupItems.map((gItem) => {
