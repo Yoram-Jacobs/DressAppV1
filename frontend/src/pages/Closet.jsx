@@ -150,6 +150,75 @@ export default function Closet() {
   const [isTouchDragging, setIsTouchDragging] = useState(false);
   const [touchPos, setTouchPos] = useState({ x: 0, y: 0 });
 
+  const touchCurrentPosRef = useRef({ x: 0, y: 0 });
+  const scrollIntervalRef = useRef(null);
+  const draggedIdRef = useRef(null);
+  const isTouchDraggingRef = useRef(false);
+
+  // Sync state values to refs for the interval loop
+  useEffect(() => {
+    draggedIdRef.current = draggedId;
+  }, [draggedId]);
+
+  const evaluateDragOver = () => {
+    const x = touchCurrentPosRef.current.x;
+    const y = touchCurrentPosRef.current.y;
+    const element = document.elementFromPoint(x, y);
+    if (!element) return;
+    const cardEl = element.closest('[data-testid="closet-item-card"]');
+    if (cardEl) {
+      const targetId = cardEl.getAttribute('data-item-id');
+      if (targetId && targetId !== draggedIdRef.current) {
+        setDragOverId(targetId);
+        return;
+      }
+    }
+    setDragOverId(null);
+  };
+
+  const startAutoScroll = () => {
+    if (scrollIntervalRef.current) return;
+    scrollIntervalRef.current = setInterval(() => {
+      if (!isTouchDraggingRef.current) {
+        stopAutoScroll();
+        return;
+      }
+      const touchY = touchCurrentPosRef.current.y;
+      const threshold = 120; // 120px threshold from top/bottom
+      const speed = 12;      // scroll speed
+      
+      if (touchY < threshold) {
+        window.scrollBy(0, -speed);
+        evaluateDragOver();
+      } else if (touchY > window.innerHeight - threshold) {
+        window.scrollBy(0, speed);
+        evaluateDragOver();
+      }
+    }, 30);
+  };
+
+  const stopAutoScroll = () => {
+    if (scrollIntervalRef.current) {
+      clearInterval(scrollIntervalRef.current);
+      scrollIntervalRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    isTouchDraggingRef.current = isTouchDragging;
+    if (isTouchDragging) {
+      startAutoScroll();
+    } else {
+      stopAutoScroll();
+    }
+  }, [isTouchDragging]);
+
+  useEffect(() => {
+    return () => {
+      stopAutoScroll();
+    };
+  }, []);
+
   // Disable native touchscreen vertical scrolling when dragging is active
   // by using a non-passive event listener on window.
   useEffect(() => {
@@ -232,6 +301,7 @@ export default function Closet() {
     const touch = e.touches[0];
     touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
     touchLastPosRef.current = { x: touch.clientX, y: touch.clientY };
+    touchCurrentPosRef.current = { x: touch.clientX, y: touch.clientY };
     setTouchPos({ x: touch.clientX, y: touch.clientY });
     setIsTouchDragging(false);
 
@@ -250,6 +320,7 @@ export default function Closet() {
     const dy = touch.clientY - touchStartPosRef.current.y;
     const deltaY = touch.clientY - touchLastPosRef.current.y;
     touchLastPosRef.current = { x: touch.clientX, y: touch.clientY };
+    touchCurrentPosRef.current = { x: touch.clientX, y: touch.clientY };
     setTouchPos({ x: touch.clientX, y: touch.clientY });
 
     if (!isTouchDragging) {
@@ -273,17 +344,7 @@ export default function Closet() {
       window.scrollBy(0, deltaY);
     }
 
-    const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (!element) return;
-    const cardEl = element.closest('[data-testid="closet-item-card"]');
-    if (cardEl) {
-      const targetId = cardEl.getAttribute('data-item-id');
-      if (targetId && targetId !== draggedId) {
-        setDragOverId(targetId);
-        return;
-      }
-    }
-    setDragOverId(null);
+    evaluateDragOver();
   };
 
   const handleTouchEnd = (e) => {
@@ -291,6 +352,8 @@ export default function Closet() {
       clearTimeout(touchTimeoutRef.current);
       touchTimeoutRef.current = null;
     }
+
+    stopAutoScroll();
 
     if (!isTouchDragging) {
       setDraggedId(null);
