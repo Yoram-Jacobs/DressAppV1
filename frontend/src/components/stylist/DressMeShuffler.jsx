@@ -83,7 +83,7 @@ export default function DressMeShuffler() {
 
     setSaving(true);
     const body = {
-      name: t('outfitCanvas.the_look'),
+      name: t('components.outfitCanvas.the_look'),
       source_workflow: 'scheduled',
       prompt: 'shuffled',
       garments: outfitItems.map(it => ({

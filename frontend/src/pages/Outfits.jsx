@@ -74,8 +74,8 @@ export default function Outfits() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
         <div>
-          <div className="caps-label text-muted-foreground">{t('outfitCanvas.outfit_canvas', 'My Wardrobe Diary')}</div>
-          <h1 className="font-display text-3xl sm:text-4xl mt-1">{t('outfitCanvas.outfit_canvas', 'Saved Outfits')}</h1>
+          <div className="caps-label text-muted-foreground">{t('components.outfitCanvas.outfit_canvas', 'My Wardrobe Diary')}</div>
+          <h1 className="font-display text-3xl sm:text-4xl mt-1">{t('components.outfitCanvas.outfit_canvas', 'Saved Outfits')}</h1>
           <p className="text-sm text-muted-foreground mt-2 max-w-xl">
             {t('outfits.viewDescription', { defaultValue: 'View outfits you have composed and scheduled. Your AI Stylist ensures you utilize all closet assets and warns you of previous occasion repetitions.' })}
           </p>

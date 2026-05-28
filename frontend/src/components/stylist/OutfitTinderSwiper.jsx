@@ -62,7 +62,7 @@ export default function OutfitTinderSwiper() {
       const outfitItems = [currentOutfit.top, currentOutfit.bottom, currentOutfit.shoe].filter(Boolean);
       if (outfitItems.length > 0) {
         const body = {
-          name: t('outfitCanvas.the_look'),
+          name: t('components.outfitCanvas.the_look'),
           source_workflow: 'scheduled',
           prompt: 'tinder_match',
           garments: outfitItems.map(it => ({
