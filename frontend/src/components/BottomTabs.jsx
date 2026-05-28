@@ -10,7 +10,7 @@ export const BottomTabs = () => {
     { to: '/home', icon: Home, label: t('nav.home'), testid: 'bottom-tab-home' },
     { to: '/closet', icon: Shirt, label: t('nav.closet'), testid: 'bottom-tab-closet' },
     { to: '/stylist', icon: Sparkles, label: t('nav.stylist'), testid: 'bottom-tab-stylist' },
-    { to: '/outfits', icon: Calendar, label: 'Outfits', testid: 'bottom-tab-outfits' },
+    { to: '/outfits', icon: Calendar, label: t('nav.outfits'), testid: 'bottom-tab-outfits' },
     { to: '/market', icon: Store, label: t('nav.market'), testid: 'bottom-tab-market' },
     { to: '/me', icon: User, label: t('nav.me'), testid: 'bottom-tab-me' },
   ];

@@ -135,6 +135,11 @@ export default function Closet() {
   // Outfit completion sheet (Phase P)
   const [completionOpen, setCompletionOpen] = useState(false);
   const [completionAnchors, setCompletionAnchors] = useState([]);
+  
+  // Grouping state
+  const [groupOpen, setGroupOpen] = useState(false);
+  const [groupHostId, setGroupHostId] = useState('');
+  const [grouping, setGrouping] = useState(false);
 
   // Drag and drop grouping (Multi-view Garment Support)
   const [draggedId, setDraggedId] = useState(null);
@@ -695,10 +700,10 @@ export default function Closet() {
             </Button>
             <Button
               asChild
-              className="rounded-xl shadow-sm"
+              className="rounded-xl shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group"
               data-testid="closet-add-item-button"
             >
-              <Link to="/closet/add"><Plus className="h-4 w-4 me-0 md:me-2 text-yellow-400 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" /> <span className="hidden md:inline text-yellow-400 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]">{t('closet.addItem')}</span></Link>
+              <Link to="/closet/add"><Plus className="h-4 w-4 me-0 md:me-2 text-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] transition-all duration-200" /> <span className="hidden md:inline text-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] transition-all duration-200">{t('closet.addItem')}</span></Link>
             </Button>
           </>
         ) : (
@@ -730,7 +735,6 @@ export default function Closet() {
               className="rounded-lg"
               disabled={selected.size === 0}
               onClick={() => {
-                const ids = Array.from(selected);
                 const hints = items.filter((i) => selected.has(i.id));
                 setCompletionAnchors(hints);
                 setCompletionOpen(true);
@@ -739,6 +743,21 @@ export default function Closet() {
             >
               <Wand2 className="h-4 w-4 md:mr-1.5" />
               <span className="hidden md:inline">{t('outfitCompletion.cta')}</span>
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="rounded-lg"
+              disabled={selected.size < 2 || deleting}
+              onClick={() => {
+                setGroupOpen(true);
+                setGroupHostId(Array.from(selected)[0] || '');
+              }}
+              data-testid="closet-group-selected-button"
+            >
+              <ListChecks className="h-4 w-4 md:mr-1.5" />
+              <span className="hidden md:inline">{t('closet.groupSelected', 'Group')}</span>
             </Button>
             <Button
               type="button"
@@ -934,8 +953,8 @@ export default function Closet() {
           <p className="text-sm text-muted-foreground mt-2">
             {t('closet.emptySub')}
           </p>
-          <Button asChild className="mt-5 rounded-xl" data-testid="closet-empty-add-button">
-            <Link to="/closet/add"><Plus className="h-4 w-4 me-2 text-yellow-400 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" /> <span className="text-yellow-400 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]">{t('closet.addItem')}</span></Link>
+          <Button asChild className="mt-5 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group" data-testid="closet-empty-add-button">
+            <Link to="/closet/add"><Plus className="h-4 w-4 me-2 text-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] transition-all duration-200" /> <span className="text-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] transition-all duration-200">{t('closet.addItem')}</span></Link>
           </Button>
         </div>
       )}
@@ -1027,6 +1046,120 @@ export default function Closet() {
                 <Trash2 className="h-4 w-4 me-1.5" />
               )}
               {t('common.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Grouping confirmation dialog */}
+      <AlertDialog open={groupOpen} onOpenChange={setGroupOpen}>
+        <AlertDialogContent data-testid="closet-group-confirm-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t('closet.groupConfirmTitle', 'Group Selected Items')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('closet.groupConfirmBody', 'Choose which item will be the primary (host) item. All other selected items will be grouped under it.')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="py-4">
+            <label className="caps-label text-xs text-muted-foreground block mb-2">
+              {t('closet.primaryItemLabel', 'Primary Item')}
+            </label>
+            <Select value={groupHostId} onValueChange={setGroupHostId}>
+              <SelectTrigger className="w-full rounded-xl">
+                <SelectValue placeholder={t('closet.selectPrimaryPlaceholder', 'Select primary item...')} />
+              </SelectTrigger>
+              <SelectContent className="max-h-[300px]">
+                {Array.from(selected).map((id) => {
+                  const item = (store.items || []).find((it) => it.id === id);
+                  return (
+                    <SelectItem key={id} value={id}>
+                      <div className="flex items-center gap-2">
+                        <span className="truncate">{item?.name || item?.title || id}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="closet-group-cancel" onClick={() => setGroupOpen(false)}>
+              {t('common.cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!groupHostId) return;
+                setGrouping(true);
+                const hostId = groupHostId;
+                const memberIds = Array.from(selected).filter(id => id !== hostId);
+                
+                // Optimistic update
+                const hostItem = (store.items || []).find(it => it.id === hostId);
+                const memberItems = memberIds.map(mid => (store.items || []).find(it => it.id === mid)).filter(Boolean);
+
+                const backups = [
+                  { id: hostId, data: hostItem ? { ...hostItem } : null },
+                  ...memberIds.map(mid => {
+                    const it = (store.items || []).find(x => x.id === mid);
+                    return { id: mid, data: it ? { ...it } : null };
+                  })
+                ];
+
+                const groupId = hostItem?.group_id || hostId;
+                if (hostItem) {
+                  store.upsert({ ...hostItem, group_id: groupId, group_role: 'host' });
+                }
+                memberItems.forEach(it => {
+                  store.upsert({ ...it, group_id: groupId, group_role: 'member' });
+                });
+
+                setSelected(new Set());
+                setGroupOpen(false);
+                setSelectMode(false);
+
+                try {
+                  const responses = await Promise.all(
+                    memberIds.map(mid => api.groupItems({ host_id: hostId, member_id: mid }))
+                  );
+                  const allSuccess = responses.every(res => res.status === 'success');
+                  if (allSuccess) {
+                    responses.forEach(res => {
+                      if (res.host) store.upsert(res.host);
+                      if (res.member) store.upsert(res.member);
+                    });
+                    await store.incrementalSync();
+                    toast.success(t('common.success'));
+                  } else {
+                    backups.forEach(b => {
+                      if (b.data) store.upsert(b.data);
+                    });
+                    toast.error(t('common.error'));
+                  }
+                } catch (err) {
+                  console.error('Failed to group items:', err);
+                  backups.forEach(b => {
+                    if (b.data) store.upsert(b.data);
+                  });
+                  toast.error(err?.response?.data?.detail || t('common.error'));
+                } finally {
+                  setGrouping(false);
+                }
+              }}
+              disabled={grouping || !groupHostId}
+              data-testid="closet-group-confirm"
+              className="bg-primary text-primary-foreground hover:opacity-90"
+            >
+              {grouping ? (
+                <Loader2 className="h-4 w-4 me-1.5 animate-spin" />
+              ) : (
+                <ListChecks className="h-4 w-4 me-1.5" />
+              )}
+              {t('closet.confirmGroup', 'Group')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

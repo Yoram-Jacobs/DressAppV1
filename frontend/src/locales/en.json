@@ -16,7 +16,8 @@
     "openUserMenu": "Open user menu",
     "primary": "Primary navigation",
     "mobilePrimary": "Mobile primary navigation",
-    "guest": "Guest"
+    "guest": "Guest",
+    "outfits": "Outfits"
   },
   "common": {
     "save": "Save",
@@ -166,7 +167,13 @@
       "running": "Refreshing thumbnails… {{n}}/{{total}}",
       "regenerated": "{{n}} refreshed",
       "failed": "Couldn’t refresh thumbnails"
-    }
+    },
+    "groupSelected": "Group",
+    "groupConfirmTitle": "Group Selected Items",
+    "groupConfirmBody": "Choose which item will be the primary (host) item. All other selected items will be grouped under it.",
+    "primaryItemLabel": "Primary Item",
+    "selectPrimaryPlaceholder": "Select primary item...",
+    "confirmGroup": "Group"
   },
   "addItem": {
     "title": "Upload & auto-fill",
@@ -486,7 +493,10 @@
     "shareOutfit": "Share outfit",
     "shareCopied": "Link copied",
     "shareOutfitSubject": "Check out this outfit I'm considering",
-    "shareOutfitBody": "My DressApp stylist suggested this. What do you think?"
+    "shareOutfitBody": "My DressApp stylist suggested this. What do you think?",
+    "planEventOutfit": "Plan Event Outfit",
+    "planEventOutfitTitle": "Plan Event Outfit",
+    "dailySuggestion": "Daily Suggestion"
   },
   "outfitCompletion": {
     "cta": "Complete the outfit",
@@ -777,7 +787,29 @@
       "paypalEmail": "PayPal email for payouts",
       "linked": "Linked"
     },
-    "occupation": "Occupation"
+    "occupation": "Occupation",
+    "aiStylist": "AI Stylist",
+    "schedulerPushReminders": "Scheduler & Push Reminders",
+    "enableSchedulerProposals": "Enable Scheduler Proposals",
+    "receivePushReminders": "Receive push notification reminders with customized outfit proposals.",
+    "notificationFrequency": "Notification Frequency",
+    "everyOtherDay": "Every Other Day",
+    "twiceAWeek": "Twice a Week",
+    "onWeekday": "On Weekday",
+    "chooseDay": "Choose Day",
+    "notificationTime": "Notification Time (UTC)",
+    "styleDressFor": "Style / Dress For",
+    "dressForDemands": "Dress For Demands",
+    "customStylePlaceholder": "e.g. Gym, Hiking, Church",
+    "browserPushAlerts": "Browser Push Alerts (Native Web Push)",
+    "receiveDirectBrowserAlerts": "Receive direct browser notification alerts on this device.",
+    "phoneWarningStart": "* Ensure your phone number is configured under the ",
+    "phoneWarningEnd": " section to successfully route simulated push alerts.",
+    "identity": "Identity",
+    "browserPushNotificationsSuccessfullyEnabled": "Browser push notifications successfully enabled.",
+    "browserPushNotificationsDisabled": "Browser push notifications disabled.",
+    "failedToTogglePushNotifications": "Failed to toggle push notifications.",
+    "aiStylistSchedulerSettingsUpdated": "AI Stylist Scheduler settings updated."
   },
   "admin": {
     "title": "Admin",
@@ -1431,5 +1463,17 @@
     "reshootSuccess": "Photo restored.",
     "reshootRejected": "Restored photo was rejected — keeping the original.",
     "reshootError": "Could not restore photo. Please try again."
+  },
+  "outfits": {
+    "viewDescription": "View outfits you have composed and scheduled. Your AI Stylist ensures you utilize all closet assets and warns you of previous occasion repetitions.",
+    "notificationCenter": "Notification Center (Simulated)",
+    "noNotifs": "No notifications triggered yet. Set your daily reminder in settings or schedule an event to test.",
+    "noSavedOutfitsDesc": "Get outfit proposals in the AI Stylist tab, pick your favorite, and save it to start logging your outfits.",
+    "outfitPieces": "Outfit Pieces",
+    "failedLoadOutfits": "Failed to load saved outfits.",
+    "removedSuccess": "Outfit removed from your diary.",
+    "failedDelete": "Failed to delete outfit.",
+    "logsCleared": "Notification logs cleared.",
+    "failedClearLogs": "Failed to clear logs."
   }
 }

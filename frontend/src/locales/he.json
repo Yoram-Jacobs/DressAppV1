@@ -16,7 +16,8 @@
     "openUserMenu": "פתח תפריט משתמש",
     "primary": "ניווט ראשי",
     "mobilePrimary": "ניווט נייד ראשי",
-    "guest": "אורח"
+    "guest": "אורח",
+    "outfits": "מערכות לבוש"
   },
   "common": {
     "save": "שמור",
@@ -166,7 +167,13 @@
       "running": "מרענן תמונות ממוזערות… {{n}}/{{total}}",
       "regenerated": "{{n}} עודכנו",
       "failed": "לא ניתן לרענן את התמונות הממוזערות"
-    }
+    },
+    "groupSelected": "קבץ",
+    "groupConfirmTitle": "קיבוץ פריטים שנבחרו",
+    "groupConfirmBody": "בחר איזה פריט יהיה הפריט הראשי (המארח). כל שאר הפריטים שנבחרו יקובצו תחתיו.",
+    "primaryItemLabel": "פריט ראשי",
+    "selectPrimaryPlaceholder": "בחר פריט ראשי...",
+    "confirmGroup": "קבץ"
   },
   "addItem": {
     "title": "העלאה ומילוי אוטומטי",
@@ -486,7 +493,10 @@
     "shareOutfit": "שתף תלבושת",
     "shareCopied": "הקישור הועתק",
     "shareOutfitSubject": "תלבושת שאני שוקלת — דעה?",
-    "shareOutfitBody": "הסטייליסט של DressApp הציע את זה. מה דעתך?"
+    "shareOutfitBody": "הסטייליסט של DressApp הציע את זה. מה דעתך?",
+    "planEventOutfit": "תכנון לבוש לאירוע",
+    "planEventOutfitTitle": "תכנון לבוש לאירוע",
+    "dailySuggestion": "הצעה יומית"
   },
   "outfitCompletion": {
     "cta": "השלם את הלוק",
@@ -777,7 +787,29 @@
       "paypalEmail": "אימייל PayPal לקבלת תשלומים",
       "linked": "מקושר"
     },
-    "occupation": "עיסוק"
+    "occupation": "עיסוק",
+    "aiStylist": "סטייליסט AI",
+    "schedulerPushReminders": "מתזמן ותזכורות push",
+    "enableSchedulerProposals": "הפעל הצעות מתזמן",
+    "receivePushReminders": "קבל תזכורות בהתראות push עם הצעות לבוש מותאמות אישית.",
+    "notificationFrequency": "תדירות התראות",
+    "everyOtherDay": "כל יומיים",
+    "twiceAWeek": "פעמיים בשבוע",
+    "onWeekday": "ביום בשבוע",
+    "chooseDay": "בחר יום",
+    "notificationTime": "שעת התראה (UTC)",
+    "styleDressFor": "סגנון / לבוש עבור",
+    "dressForDemands": "סגנון לבוש נדרש",
+    "customStylePlaceholder": "למשל: ספורט, טיולים, אירוע חגיגי",
+    "browserPushAlerts": "התראות push בדפדפן (Web Push מקורי)",
+    "receiveDirectBrowserAlerts": "קבל התראות ישירות בדפדפן במכשיר זה.",
+    "phoneWarningStart": "* ודא שמספר הטלפון שלך מוגדר תחת סעיף ",
+    "phoneWarningEnd": " כדי לנתב בהצלחה התראות push מדומות.",
+    "identity": "פרטי זיהוי",
+    "browserPushNotificationsSuccessfullyEnabled": "התראות push בדפדפן הופעלו בהצלחה.",
+    "browserPushNotificationsDisabled": "התראות push בדפדפן הושבתו.",
+    "failedToTogglePushNotifications": "הפעלה/השבתה של התראות push נכשלה.",
+    "aiStylistSchedulerSettingsUpdated": "הגדרות מתזמן הסטייליסט עודכנו בהצלחה."
   },
   "admin": {
     "title": "ניהול",
@@ -1431,5 +1463,17 @@
     "reshootSuccess": "התמונה שוחזרה.",
     "reshootRejected": "התמונה המשוחזרת נדחתה — נשמרת התמונה המקורית.",
     "reshootError": "לא הצליח לשחזר את התמונה. נסה שוב."
+  },
+  "outfits": {
+    "viewDescription": "צפה במערכות הלבוש שהרכבת ותזמנת. הסטייליסט שלך מוודא שאתה מנצל את כל פריטי הארון ומזהיר אותך מחזרתיות של לבוש באירועים קודמים.",
+    "notificationCenter": "מרכז התראות (מדומה)",
+    "noNotifs": "לא הופעלו התראות עדיין. הגדר תזמון יומית בהגדרות או תזמן אירוע כדי לבדוק זאת.",
+    "noSavedOutfitsDesc": "קבל הצעות לבוש בלשונית הסטייליסט, בחר את המועדפת עליך, ושמור אותה כדי להתחיל לתעד את התלבושות שלך.",
+    "outfitPieces": "פריטי לבוש",
+    "failedLoadOutfits": "טעינת מערכות הלבוש השמורות נכשלה.",
+    "removedSuccess": "מערכת הלבוש הוסרה מהיומן שלך.",
+    "failedDelete": "מחיקת מערכת הלבוש נכשלה.",
+    "logsCleared": "יומן ההתראות נוקה.",
+    "failedClearLogs": "ניקוי יומן ההתראות נכשל."
   }
 }
