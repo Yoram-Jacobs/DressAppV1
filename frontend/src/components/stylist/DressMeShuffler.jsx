@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { bestImageUrl } from '@/lib/itemImage';
+import { labelForRole } from '@/lib/taxonomy';
 
 export default function DressMeShuffler() {
   const { t } = useTranslation();
@@ -46,7 +47,7 @@ export default function DressMeShuffler() {
   const handleShuffle = () => {
     if (isSpinning) return;
     if (tops.length === 0 && bottoms.length === 0 && shoes.length === 0) {
-      toast.error(t('stylist.emptyClosetShuffle', 'Add items to your wardrobe before shuffling!'));
+      toast.error(t('closet.emptySub'));
       return;
     }
     
@@ -64,7 +65,7 @@ export default function DressMeShuffler() {
       if (count >= totalTicks) {
         clearInterval(timer);
         setIsSpinning(false);
-        toast.success(t('stylist.shuffleComplete', 'New combination found!'), { duration: 1500 });
+        toast.success(t('common.success'), { duration: 1500 });
       }
     }, intervalTime);
   };
@@ -76,26 +77,33 @@ export default function DressMeShuffler() {
 
     const outfitItems = [selectedTop, selectedBottom, selectedShoe].filter(Boolean);
     if (outfitItems.length === 0) {
-      toast.error(t('stylist.noItemsSelected', 'Select at least one item to save an outfit!'));
+      toast.error(t('common.error'));
       return;
     }
 
     setSaving(true);
     const body = {
-      name: t('stylist.randomOutfitName', 'Shuffled Look'),
-      items: outfitItems.map(it => ({
+      name: t('outfitCanvas.the_look'),
+      source_workflow: 'scheduled',
+      prompt: 'shuffled',
+      garments: outfitItems.map(it => ({
         closet_item_id: it.id,
         role: it.category === 'Top' || it.category === 'Outerwear' ? 'top' : it.category === 'Bottom' ? 'bottom' : it.category === 'Footwear' ? 'shoes' : 'accessory',
-        description: it.name || it.title || ''
+        title: it.name || it.title || ''
       })),
-      why_statement: t('stylist.shuffleWhy', 'A creative outfit combination generated via Dress Me Shuffler.')
+      usage: {
+        date: new Date().toISOString().split('T')[0],
+        time: '12:00',
+        location: null,
+        event_name: 'Shuffled Look'
+      }
     };
 
     try {
       await api.saveOutfit(body);
-      toast.success(t('stylist.outfitSaved', 'Outfit saved to your diary!'));
+      toast.success(t('addItem.saved'));
     } catch (err) {
-      toast.error(err?.response?.data?.detail || t('stylist.saveFailed', 'Failed to save outfit.'));
+      toast.error(err?.response?.data?.detail || t('addItem.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -149,7 +157,7 @@ export default function DressMeShuffler() {
               ) : (
                 <div className="text-center p-2 text-muted-foreground/60">
                   <ImageOff className="h-6 w-6 mx-auto mb-1 opacity-40" />
-                  <span className="text-[10px] block font-medium">{t('stylist.noItems', 'Empty')}</span>
+                  <span className="text-[10px] block font-medium">{t('common.noResults')}</span>
                 </div>
               )}
             </AnimatePresence>
@@ -172,9 +180,9 @@ export default function DressMeShuffler() {
   return (
     <div className="flex flex-col items-center gap-6 py-4 w-full">
       <div className="flex flex-col gap-4 w-full items-center">
-        {renderRow(t('taxonomy.role.top', 'Top'), tops, topIdx, setTopIdx)}
-        {renderRow(t('taxonomy.role.bottom', 'Bottom'), bottoms, bottomIdx, setBottomIdx)}
-        {renderRow(t('taxonomy.role.shoes', 'Shoes'), shoes, shoeIdx, setShoeIdx)}
+        {renderRow(labelForRole('top', t), tops, topIdx, setTopIdx)}
+        {renderRow(labelForRole('bottom', t), bottoms, bottomIdx, setBottomIdx)}
+        {renderRow(labelForRole('shoes', t), shoes, shoeIdx, setShoeIdx)}
       </div>
 
       <div className="flex items-center gap-4 mt-2">
@@ -184,7 +192,7 @@ export default function DressMeShuffler() {
           className="rounded-2xl bg-brand text-brand-foreground hover:bg-brand/90 px-6 py-6 shadow-md hover:scale-[1.03] active:scale-[0.97] transition-all flex items-center gap-2 text-sm font-semibold"
         >
           <Sparkles className={`h-4 w-4 ${isSpinning ? 'animate-spin' : ''}`} />
-          {t('stylist.shuffle', 'Shuffle Look')}
+          {t('stylist.refreshScout')}
         </Button>
 
         <Button
@@ -194,7 +202,7 @@ export default function DressMeShuffler() {
           className="rounded-2xl px-6 py-6 border-brand/20 hover:bg-accent-lilac/30 text-brand font-semibold flex items-center gap-2 text-sm"
         >
           <Save className="h-4 w-4" />
-          {t('stylist.saveOutfitBtn', 'Save Look')}
+          {t('common.save')}
         </Button>
       </div>
     </div>

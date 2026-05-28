@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { bestImageUrl } from '@/lib/itemImage';
+import { labelForRole } from '@/lib/taxonomy';
 
 export default function OutfitTinderSwiper() {
   const { t } = useTranslation();
@@ -43,7 +44,7 @@ export default function OutfitTinderSwiper() {
       top,
       bottom,
       shoe,
-      name: t('stylist.dailyLookName', 'Daily Look')
+      name: t('stylist.dailySuggestion')
     });
     setSwipeDirection(null);
   };
@@ -61,25 +62,32 @@ export default function OutfitTinderSwiper() {
       const outfitItems = [currentOutfit.top, currentOutfit.bottom, currentOutfit.shoe].filter(Boolean);
       if (outfitItems.length > 0) {
         const body = {
-          name: t('stylist.swipedOutfitName', 'Swiped Match'),
-          items: outfitItems.map(it => ({
+          name: t('outfitCanvas.the_look'),
+          source_workflow: 'scheduled',
+          prompt: 'tinder_match',
+          garments: outfitItems.map(it => ({
             closet_item_id: it.id,
             role: it.category === 'Top' || it.category === 'Outerwear' ? 'top' : it.category === 'Bottom' ? 'bottom' : it.category === 'Footwear' ? 'shoes' : 'accessory',
-            description: it.name || it.title || ''
+            title: it.name || it.title || ''
           })),
-          why_statement: t('stylist.swipedWhy', 'Saved via Outfit Tinder Swiper.')
+          usage: {
+            date: new Date().toISOString().split('T')[0],
+            time: '12:00',
+            location: null,
+            event_name: 'Swiped Match'
+          }
         };
         try {
           await api.saveOutfit(body);
-          toast.success(t('stylist.outfitSaved', 'Saved to your diary!'));
+          toast.success(t('addItem.saved'));
         } catch (err) {
-          toast.error(t('stylist.saveFailed', 'Failed to save outfit.'));
+          toast.error(t('addItem.saveFailed'));
         } finally {
           setSaving(false);
         }
       }
     } else {
-      toast.message(t('stylist.outfitDiscarded', 'Skipped!'), { duration: 1000 });
+      toast.message(t('addItem.preflight.rowSkip'), { duration: 1000 });
     }
 
     generateOutfit();
@@ -107,7 +115,7 @@ export default function OutfitTinderSwiper() {
       return (
         <div className="flex items-center gap-3 p-3 bg-secondary/20 rounded-xl border border-dashed border-border w-full justify-center text-muted-foreground/60 h-16">
           <ImageOff className="h-4 w-4 opacity-50" />
-          <span className="text-[11px] font-medium">{t('stylist.missingItem', 'No {{role}}', { role: roleName })}</span>
+          <span className="text-[11px] font-medium">{roleName}: {t('itemDetail.noImage')}</span>
         </div>
       );
     }
@@ -140,9 +148,9 @@ export default function OutfitTinderSwiper() {
     return (
       <div className="text-center p-8 bg-card border border-border rounded-3xl max-w-sm mx-auto shadow-sm">
         <ImageOff className="h-8 w-8 text-muted-foreground/60 mx-auto mb-3" />
-        <h3 className="text-base font-semibold">{t('stylist.emptyClosetTinder', 'No items in closet')}</h3>
+        <h3 className="text-base font-semibold">{t('closet.emptyTitle')}</h3>
         <p className="text-xs text-muted-foreground mt-2">
-          {t('stylist.emptyClosetTinderDesc', 'Digitize your tops, bottoms, and footwear to play Daily Match.')}
+          {t('closet.emptySub')}
         </p>
       </div>
     );
@@ -164,26 +172,26 @@ export default function OutfitTinderSwiper() {
           {/* Overlay tags based on swipe distance */}
           {swipeDirection === 'right' && (
             <div className="absolute top-6 left-6 rotate-[-12deg] border-4 border-accent-green text-accent-green font-bold text-lg px-3 py-1 rounded-lg uppercase tracking-wider z-20 pointer-events-none">
-              {t('stylist.yay', 'Yayy')}
+              {t('common.save')}
             </div>
           )}
           {swipeDirection === 'left' && (
             <div className="absolute top-6 right-6 rotate-[12deg] border-4 border-destructive text-destructive font-bold text-lg px-3 py-1 rounded-lg uppercase tracking-wider z-20 pointer-events-none">
-              {t('stylist.nay', 'Nayy')}
+              {t('addItem.preflight.rowSkip')}
             </div>
           )}
 
           <div className="w-full flex items-center justify-between border-b border-border/55 pb-2 mb-2">
             <span className="font-display text-base text-foreground font-semibold">{currentOutfit.name}</span>
             <span className="text-[10px] caps-label bg-accent-lilac/30 text-brand px-2 py-0.5 rounded-full font-bold">
-              {t('stylist.tinderMatch', 'Match')}
+              {t('stylist.label')}
             </span>
           </div>
 
           <div className="flex flex-col gap-3 flex-1 justify-center py-2">
-            {renderItemThumb(currentOutfit.top, t('taxonomy.role.top', 'Top'))}
-            {renderItemThumb(currentOutfit.bottom, t('taxonomy.role.bottom', 'Bottom'))}
-            {renderItemThumb(currentOutfit.shoe, t('taxonomy.role.shoes', 'Shoes'))}
+            {renderItemThumb(currentOutfit.top, labelForRole('top', t))}
+            {renderItemThumb(currentOutfit.bottom, labelForRole('bottom', t))}
+            {renderItemThumb(currentOutfit.shoe, labelForRole('shoes', t))}
           </div>
         </motion.div>
 
