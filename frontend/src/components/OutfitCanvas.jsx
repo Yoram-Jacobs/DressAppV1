@@ -259,7 +259,7 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false }) {
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-[hsl(var(--accent))]">
             <Sparkles className="h-4 w-4" />
-            <span className="text-xs font-semibold uppercase tracking-wide">{t('components.outfitCanvas.outfit_canvas')}</span>
+            <span className="text-xs font-semibold uppercase tracking-wide">{t('nav.outfits')}</span>
           </div>
           <h2 className="text-lg font-semibold mt-1 leading-snug">{canvas.summary || 'Your outfit'}</h2>
           {canvas.brief && (
