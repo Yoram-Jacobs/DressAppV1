@@ -6,12 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { LogOut, Loader2, Languages, Bell } from 'lucide-react';
+import { LogOut, Loader2, Languages, Bell, Newspaper, Calendar, Users } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { CalendarConnect } from '@/components/CalendarConnect';
 import { LocationCard } from '@/components/LocationCard';
 import { InviteFriendsButton } from '@/components/InviteFriendsButton';
@@ -322,6 +322,27 @@ export default function Profile() {
           <h1 className="font-display text-3xl sm:text-4xl mt-1">{t('profile.title')}</h1>
         </div>
       </div>
+
+      {/* Explore Section (Secondary Nav) */}
+      <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial mb-6 overflow-hidden" data-testid="explore-card">
+        <CardContent className="p-6">
+          <h3 className="font-display text-xl mb-4">{t('profile.exploreTitle', { defaultValue: 'Explore DressApp' })}</h3>
+          <div className="grid grid-cols-3 gap-3">
+            <Link to="/home" className="flex flex-col items-center p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors text-center" data-testid="explore-trend-scout">
+              <Newspaper className="h-6 w-6 text-orange-500 mb-2" />
+              <span className="text-xs font-semibold text-foreground/80">{t('home.trendScout', { defaultValue: 'Trend Scout' })}</span>
+            </Link>
+            <Link to="/outfits" className="flex flex-col items-center p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors text-center" data-testid="explore-outfits">
+              <Calendar className="h-6 w-6 text-purple-500 mb-2" />
+              <span className="text-xs font-semibold text-foreground/80">{t('nav.outfits', { defaultValue: 'Outfits' })}</span>
+            </Link>
+            <Link to="/experts" className="flex flex-col items-center p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors text-center" data-testid="explore-experts">
+              <Users className="h-6 w-6 text-teal-600 mb-2" />
+              <span className="text-xs font-semibold text-foreground/80">{t('nav.experts', { defaultValue: 'Experts' })}</span>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Language selector surfaced up-front so users find it instantly */}
       <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial mb-6" data-testid="language-card">

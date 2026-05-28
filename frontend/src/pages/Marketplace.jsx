@@ -213,41 +213,48 @@ export default function Marketplace() {
                         ? <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover" />
                         : <div className="w-full h-full flex items-center justify-center text-muted-foreground caps-label">{t('market.noImage')}</div>}
                     </AspectRatio>
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="font-medium text-sm truncate">{l.title}</div>
-                        <SourceTagBadge source={l.source} mode={l.mode} />
+                    <CardContent className="p-3 space-y-2.5">
+                      {/* Brand & Title */}
+                      <div className="min-w-0">
+                        {l.brand && <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{l.brand}</div>}
+                        <div className="font-medium text-sm truncate text-foreground">{l.title}</div>
                       </div>
-                      <div className="mt-1 flex items-center justify-between">
-                        <div className="font-display text-lg">
-                          {/* Honour the listing's own currency rather
-                              than silently defaulting to USD — items
-                              are now created with whatever currency
-                              the user picked on the closet card. */}
-                          {fmt(
-                            l.financial_metadata?.list_price_cents,
-                            l.financial_metadata?.currency || l.currency,
-                          )}
+
+                      {/* Common Region: Price, Size, Condition, Intent badge */}
+                      <div className="p-2 rounded-xl bg-secondary/35 border border-border/50 space-y-1.5 shadow-sm">
+                        <div className="flex items-center justify-between gap-1.5">
+                          <span className="font-display text-base text-foreground font-bold">
+                            {fmt(
+                              l.financial_metadata?.list_price_cents,
+                              l.financial_metadata?.currency || l.currency,
+                            )}
+                          </span>
+                          <SourceTagBadge source={l.source} mode={l.mode} />
                         </div>
-                        <div className="text-[11px] text-muted-foreground">
+                        
+                        <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                          <span className="truncate">{l.size ? `${t('addItem.size')}: ${l.size}` : ''}</span>
+                          <span className="capitalize">{l.condition ? t(`taxonomy.condition.${l.condition}`, { defaultValue: l.condition }) : ''}</span>
+                        </div>
+                      </div>
+
+                      {/* Proximity & Seller Net */}
+                      <div className="flex items-center justify-between pt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
+                        {typeof l.distance_km === 'number' ? (
+                          <span className="inline-flex items-center gap-0.5 truncate max-w-[50%]">
+                            <MapPin className="h-2.5 w-2.5 text-[hsl(var(--accent))]" />
+                            {t('market.distanceKmAway', { km: l.distance_km })}
+                          </span>
+                        ) : <span />}
+                        <span className="truncate">
                           {t('market.netShort', {
                             amount: fmt(
                               l.financial_metadata?.estimated_seller_net_cents,
                               l.financial_metadata?.currency || l.currency,
                             ),
                           })}
-                        </div>
+                        </span>
                       </div>
-                      {typeof l.distance_km === 'number' ? (
-                        <Badge
-                          variant="outline"
-                          className="mt-2 text-[10px] rounded-full bg-card gap-1"
-                          data-testid="marketplace-item-distance"
-                        >
-                          <MapPin className="h-2.5 w-2.5" />
-                          {t('market.distanceKmAway', { km: l.distance_km })}
-                        </Badge>
-                      ) : null}
                     </CardContent>
                   </Card>
                 </Link>

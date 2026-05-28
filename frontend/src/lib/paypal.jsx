@@ -152,7 +152,7 @@ export function PayPalCheckoutButton({
         type="button"
         onClick={onClick}
         disabled={disabled || busy}
-        className={`rounded-xl ${className}`}
+        className={`rounded-xl bg-brand text-brand-foreground hover:bg-brand/90 font-semibold shadow-sm ${className}`}
         data-testid={`${testId}-mock`}
       >
         {busy ? (

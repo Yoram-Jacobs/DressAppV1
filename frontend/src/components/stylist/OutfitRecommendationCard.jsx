@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ImageOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { labelForRole } from '@/lib/taxonomy';
 import { cn } from '@/lib/utils';
@@ -58,11 +59,11 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
 
   return (
     <div
-      className="rounded-xl bg-secondary/60 border border-border overflow-hidden"
+      className="rounded-xl bg-[hsl(var(--accent))]/5 border border-[hsl(var(--accent))]/15 overflow-hidden shadow-sm"
       data-testid={`outfit-recommendation-${index}`}
     >
       {heroImage ? (
-        <div className="relative aspect-[16/9] bg-background">
+        <div className="relative aspect-[16/9] bg-background border-b border-[hsl(var(--accent))]/10">
           {/* Phase S3: hero is a button when the parent supplies
               onItemClick — opens the side-sheet floater instead of
               hard-navigating, so the chat thread stays in view. */}
@@ -115,11 +116,13 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
         </div>
       ) : null}
       <div className="p-3 text-left">
-        <div className="caps-label text-[hsl(var(--accent))]">
+        <div className="caps-label text-[hsl(var(--accent))] font-semibold">
           {t('stylist.outfitN', { n: index + 1 })}
         </div>
-        <div className="font-display text-base mt-1">{rec.name}</div>
-        <ul className="text-xs text-muted-foreground mt-2 space-y-1">
+        <div className="font-display text-base mt-1 text-foreground">{rec.name}</div>
+        
+        {/* Connected clothes list (Uniform Connectedness indicator) */}
+        <ul className="text-xs text-muted-foreground mt-3 space-y-2.5 relative pl-4 border-l-2 border-[hsl(var(--accent))]/20 ml-2">
           {items.map((it, j) => {
             // Phase S3: each row's thumb is a button when the parent
             // supplies onItemClick AND we have a closet_item_id —
@@ -132,7 +135,7 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
                 src={images[cid]}
                 alt={it.description || it.role}
                 loading="lazy"
-                className="h-8 w-8 rounded-md object-cover bg-background border border-border shrink-0"
+                className="h-8 w-8 rounded-md object-cover bg-background border border-[hsl(var(--accent))]/15 shrink-0"
               />
             ) : (
               <span
@@ -168,12 +171,12 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
                 ) : (
                   thumb
                 )}
-                <span className="flex-1 min-w-0 break-words">
+                <span className="flex-1 min-w-0 break-words text-foreground/80">
                   {it.description || labelForRole(it.role, t) || it.role}
                   {it.role ? (
                     <Badge
                       variant="outline"
-                      className="ms-2 text-[9px] py-0 px-1 h-4 rounded-sm"
+                      className="ms-2 text-[9px] py-0 px-1 h-4 rounded-sm border-[hsl(var(--accent))]/20 bg-background/50"
                     >
                       {labelForRole(it.role, t)}
                     </Badge>
@@ -183,16 +186,17 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
             );
           })}
         </ul>
-        {rec.why ? <p className="text-xs mt-2 italic break-words">{rec.why}</p> : null}
-        <div className="mt-3 flex items-center justify-between gap-2">
+        {rec.why ? <p className="text-xs mt-2.5 italic break-words text-muted-foreground/95">{rec.why}</p> : null}
+        <div className="mt-4 flex items-center justify-between gap-2 pt-2 border-t border-[hsl(var(--accent))]/10">
           {onSave ? (
-            <button
+            <Button
+              size="sm"
               onClick={() => onSave(rec)}
-              className="text-xs font-semibold text-[hsl(var(--accent))] hover:underline"
+              className="rounded-xl text-xs font-semibold bg-brand text-brand-foreground hover:bg-brand/90 shadow-sm"
               data-testid={`outfit-recommendation-${index}-save-btn`}
             >
-              Pick Outfit
-            </button>
+              {t('stylist.saveOutfit', { defaultValue: 'Save Outfit' })}
+            </Button>
           ) : <div />}
           <ShareOutfitButton rec={rec} sessionId={sessionId} />
         </div>

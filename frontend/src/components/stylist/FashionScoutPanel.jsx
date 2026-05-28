@@ -5,6 +5,7 @@ import { Sparkles, RefreshCw, ExternalLink, Play, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -225,11 +226,21 @@ export function FashionScoutPanel() {
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-3">
           {loading ? (
-            <div className="py-8 flex items-center justify-center">
-              <Loader2
-                className="h-5 w-5 animate-spin text-muted-foreground"
-                data-testid="fashion-scout-loading"
-              />
+            <div className="space-y-4" data-testid="fashion-scout-loading">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="rounded-2xl border border-border bg-card p-3 space-y-3 shadow-editorial">
+                  <Skeleton className="aspect-[16/9] w-full rounded-lg" />
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-16 rounded-full" />
+                    <Skeleton className="h-3.5 w-12" />
+                  </div>
+                  <Skeleton className="h-5 w-3/4 rounded" />
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-3.5 w-full rounded" />
+                    <Skeleton className="h-3.5 w-5/6 rounded" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : cards.length === 0 ? (
             <div

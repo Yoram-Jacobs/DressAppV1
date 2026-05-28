@@ -314,7 +314,7 @@ export default function ListingDetail() {
               {listing.mode === 'swap' ? (
                 <>
                   <Button
-                    className="w-full rounded-xl"
+                    className="w-full rounded-xl bg-brand text-brand-foreground hover:bg-brand/90 font-semibold shadow-sm"
                     onClick={() => setSwapOpen(true)}
                     data-testid="listing-swap-button"
                   >
@@ -371,7 +371,7 @@ export default function ListingDetail() {
                     // Zero-fee path — keep the original direct-claim UX.
                     <>
                       <Button
-                        className="w-full rounded-xl"
+                        className="w-full rounded-xl bg-brand text-brand-foreground hover:bg-brand/90 font-semibold shadow-sm"
                         disabled={donateSubmitting}
                         onClick={async () => {
                           setDonateSubmitting(true);

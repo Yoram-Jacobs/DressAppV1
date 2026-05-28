@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft, Upload, Plus, Loader2, Eye, Wand2, Shirt, Store,
   HandCoins, Gift, Repeat, Trash2, Save, Tag, AlertTriangle,
-  X, Sparkles, Camera, RefreshCw, QrCode,
+  X, Sparkles, Camera, RefreshCw, QrCode, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -173,6 +173,85 @@ const hydrate = (a, user) => {
   }
   return out;
 };
+
+/* -------------------- Stepper Component -------------------- */
+function Stepper({ cards, saving, bgBatch }) {
+  const { t } = useTranslation();
+  
+  // Calculate states
+  const total = cards.length || (bgBatch ? bgBatch.total : 0);
+  const scanned = cards.filter(c => c.status !== 'scanning' && c.status !== 'error').length;
+  
+  let currentStep = 1;
+  if (saving || (bgBatch && bgBatch.processed === bgBatch.total)) {
+    currentStep = 3;
+  } else if (total > 0) {
+    currentStep = 2;
+  }
+  
+  return (
+    <div className="w-full max-w-2xl mx-auto mb-8 px-4" data-testid="capture-stepper">
+      <div className="relative flex items-center justify-between">
+        {/* Progress Line */}
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 right-0 h-0.5 bg-border -z-10">
+          <motion.div 
+            className="h-full bg-[hsl(var(--accent))]"
+            initial={false}
+            animate={{ 
+              width: currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%' 
+            }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
+        
+        {/* Step 1: Capture */}
+        <div className="flex flex-col items-center">
+          <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-colors duration-300 ${
+            currentStep >= 1 
+              ? 'bg-[hsl(var(--accent))] text-white border-[hsl(var(--accent))] shadow-[0_0_10px_rgba(31,111,107,0.3)]' 
+              : 'bg-background text-muted-foreground border-border'
+          }`}>
+            {currentStep > 1 ? '✓' : '1'}
+          </div>
+          <span className={`text-[10px] caps-label mt-2 font-medium text-center ${currentStep >= 1 ? 'text-foreground' : 'text-muted-foreground'}`}>
+            {t('addItem.step.capture', 'Capture')}
+          </span>
+        </div>
+
+        {/* Step 2: Refine Details */}
+        <div className="flex flex-col items-center">
+          <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-colors duration-300 ${
+            currentStep >= 2
+              ? currentStep > 2 
+                ? 'bg-[hsl(var(--accent))] text-white border-[hsl(var(--accent))] shadow-[0_0_10px_rgba(31,111,107,0.3)]'
+                : 'bg-background text-[hsl(var(--accent))] border-[hsl(var(--accent))] font-bold shadow-[0_0_10px_rgba(31,111,107,0.15)]'
+              : 'bg-background text-muted-foreground border-border'
+          }`}>
+            {currentStep > 2 ? '✓' : '2'}
+          </div>
+          <span className={`text-[10px] caps-label mt-2 font-medium text-center ${currentStep >= 2 ? 'text-foreground' : 'text-muted-foreground'}`}>
+            {t('addItem.step.refinement', 'Refine')}
+            {currentStep === 2 && total > 0 && ` (${scanned}/${total})`}
+          </span>
+        </div>
+
+        {/* Step 3: Save */}
+        <div className="flex flex-col items-center">
+          <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-colors duration-300 ${
+            currentStep === 3 
+              ? 'bg-brand text-brand-foreground border-brand shadow-[0_0_12px_rgba(232,96,60,0.4)] animate-pulse' 
+              : 'bg-background text-muted-foreground border-border'
+          }`}>
+            3
+          </div>
+          <span className={`text-[10px] caps-label mt-2 font-medium text-center ${currentStep === 3 ? 'text-foreground' : 'text-muted-foreground'}`}>
+            {t('addItem.step.save', 'Integrate')}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /* -------------------- page -------------------- */
 export default function AddItem() {
@@ -1491,6 +1570,8 @@ export default function AddItem() {
         </div>
       </div>
 
+      <Stepper cards={cards} saving={saving} bgBatch={bgBatch} />
+
       <div className="mb-6">
         <div className="caps-label text-muted-foreground">{t('addItem.label')}</div>
         <h1 className="font-display text-3xl sm:text-4xl mt-1">{t('addItem.title')}</h1>
@@ -1794,6 +1875,16 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
   const hasReconstruction = !!(card.reconstructedUrl && card.reconstructionMeta);
   const showingReconstructed = hasReconstruction && card.useReconstructed;
 
+  const [sections, setSections] = useState({
+    basic: true,
+    styling: false,
+    care: false,
+  });
+
+  const toggleSection = (sec) => {
+    setSections((prev) => ({ ...prev, [sec]: !prev[sec] }));
+  };
+
   return (
     <Card
       className={`rounded-[calc(var(--radius)+10px)] shadow-editorial overflow-hidden ${saved ? 'opacity-75' : ''}`}
@@ -1901,47 +1992,153 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
 
           {/* Fields */}
           <div className="p-5 space-y-4">
-            <NameCaption idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
-            <IntentSelector idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
-            {fields.repair_advice && (
-              <div
-                className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 text-amber-900 text-xs"
-                data-testid="add-item-repair-advice"
+            {/* 1. Basic Info Section */}
+            <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
+              <button
+                type="button"
+                onClick={() => toggleSection('basic')}
+                className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-left focus:outline-none"
               >
-                <Wand2 className="h-4 w-4 mt-0.5 shrink-0" />
-                <div>
-                  <div className="font-medium">{t('addItem.repairTip')}</div>
-                  <div className="mt-0.5">{fields.repair_advice}</div>
+                <div className="flex-1 min-w-0 pr-2">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                    {t('addItem.section.basic', { defaultValue: 'Basic Info' })}
+                  </span>
+                  {!sections.basic && (
+                    <div className="text-[11px] text-muted-foreground truncate mt-0.5">
+                      {[fields.category, fields.brand, fields.size].filter(Boolean).join(' · ') || '—'}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
-            <TaxonomyGrid idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
-            <WeightedList
-              idPrefix={card.id}
-              labelKey="addItem.color"
-              items={fields.colors}
-              onChange={(v) => onChange({ colors: v })}
-              placeholder={t('addItem.colorSlotPlaceholder')}
-              disabled={saved}
-              testid="add-item-colors"
-            />
-            <WeightedList
-              idPrefix={card.id}
-              labelKey="addItem.material"
-              items={fields.fabric_materials}
-              onChange={(v) => onChange({ fabric_materials: v })}
-              placeholder={t('addItem.fabricSlotPlaceholder')}
-              disabled={saved}
-              testid="add-item-fabrics"
-            />
-            <QualityRow idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
-            <SeasonPicker idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
-            <TagsEditor
-              idPrefix={card.id}
-              items={fields.tags}
-              onChange={(v) => onChange({ tags: v })}
-              disabled={saved}
-            />
+                {sections.basic ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              </button>
+              
+              <AnimatePresence initial={false}>
+                {sections.basic && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="border-t border-border p-4 space-y-4 overflow-hidden"
+                  >
+                    <NameCaption idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
+                    <BasicTaxonomyGrid idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* 2. Styling Details Section */}
+            <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
+              <button
+                type="button"
+                onClick={() => toggleSection('styling')}
+                className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-left focus:outline-none"
+              >
+                <div className="flex-1 min-w-0 pr-2">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                    {t('addItem.section.styling', { defaultValue: 'Styling Details' })}
+                  </span>
+                  {!sections.styling && (
+                    <div className="text-[11px] text-muted-foreground truncate mt-0.5">
+                      {[
+                        fields.gender, 
+                        fields.dress_code, 
+                        fields.season && fields.season.length ? fields.season.join('/') : null
+                      ].filter(Boolean).join(' · ') || '—'}
+                    </div>
+                  )}
+                </div>
+                {sections.styling ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              </button>
+              
+              <AnimatePresence initial={false}>
+                {sections.styling && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="border-t border-border p-4 space-y-4 overflow-hidden"
+                  >
+                    <StylingTaxonomyGrid idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
+                    <SeasonPicker idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
+                    <WeightedList
+                      idPrefix={card.id}
+                      labelKey="addItem.color"
+                      items={fields.colors}
+                      onChange={(v) => onChange({ colors: v })}
+                      placeholder={t('addItem.colorSlotPlaceholder')}
+                      disabled={saved}
+                      testid="add-item-colors"
+                    />
+                    <TagsEditor
+                      idPrefix={card.id}
+                      items={fields.tags}
+                      onChange={(v) => onChange({ tags: v })}
+                      disabled={saved}
+                    />
+                    <IntentSelector idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* 3. Care & Repair Section */}
+            <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
+              <button
+                type="button"
+                onClick={() => toggleSection('care')}
+                className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-left focus:outline-none"
+              >
+                <div className="flex-1 min-w-0 pr-2">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                    {t('addItem.section.care', { defaultValue: 'Care & Repair' })}
+                  </span>
+                  {!sections.care && (
+                    <div className="text-[11px] text-muted-foreground truncate mt-0.5">
+                      {[fields.state, fields.condition, fields.quality].filter(Boolean).join(' · ') || '—'}
+                    </div>
+                  )}
+                </div>
+                {sections.care ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              </button>
+              
+              <AnimatePresence initial={false}>
+                {sections.care && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="border-t border-border p-4 space-y-4 overflow-hidden"
+                  >
+                    {fields.repair_advice && (
+                      <div
+                        className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 text-amber-900 text-xs"
+                        data-testid="add-item-repair-advice"
+                      >
+                        <Wand2 className="h-4 w-4 mt-0.5 shrink-0" />
+                        <div>
+                          <div className="font-medium">{t('addItem.repairTip')}</div>
+                          <div className="mt-0.5">{fields.repair_advice}</div>
+                        </div>
+                      </div>
+                    )}
+                    <QualityRow idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
+                    <WeightedList
+                      idPrefix={card.id}
+                      labelKey="addItem.material"
+                      items={fields.fabric_materials}
+                      onChange={(v) => onChange({ fabric_materials: v })}
+                      placeholder={t('addItem.fabricSlotPlaceholder')}
+                      disabled={saved}
+                      testid="add-item-fabrics"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </CardContent>
@@ -2082,7 +2279,7 @@ function IntentSelector({ idPrefix, fields, onChange, disabled }) {
   );
 }
 
-function TaxonomyGrid({ idPrefix, fields, onChange, disabled }) {
+function BasicTaxonomyGrid({ idPrefix, fields, onChange, disabled }) {
   const { t } = useTranslation();
   const row = (label, value, setter, options, testid, placeholder, formatter) => {
     const fieldId = `${idPrefix}-${testid}`;
@@ -2122,11 +2319,51 @@ function TaxonomyGrid({ idPrefix, fields, onChange, disabled }) {
       {row(t('addItem.subCategory'), fields.sub_category, (v) => onChange({ sub_category: v }), null, 'add-item-subcategory', t('addItem.subCategoryPlaceholder'))}
       {row(t('addItem.itemType'), fields.item_type, (v) => onChange({ item_type: v }), null, 'add-item-itemtype', t('addItem.itemTypePlaceholder'))}
       {row(t('addItem.brand'), fields.brand, (v) => onChange({ brand: v }), null, 'add-item-brand', t('addItem.brandPlaceholder'))}
+      {row(t('addItem.size'), fields.size, (v) => onChange({ size: v }), null, 'add-item-size', t('addItem.sizePlaceholder'))}
+    </div>
+  );
+}
+
+function StylingTaxonomyGrid({ idPrefix, fields, onChange, disabled }) {
+  const { t } = useTranslation();
+  const row = (label, value, setter, options, testid, placeholder, formatter) => {
+    const fieldId = `${idPrefix}-${testid}`;
+    return (
+    <div>
+      <Label htmlFor={fieldId} className="caps-label text-muted-foreground">{label}</Label>
+      {options ? (
+        <Select value={value || ''} onValueChange={(v) => setter(v === '__clear' ? '' : v)} disabled={disabled}>
+          <SelectTrigger id={fieldId} className="mt-1 rounded-xl" data-testid={testid}>
+            <SelectValue placeholder={placeholder || t('addItem.selectPlaceholder')} />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((o) => (
+              <SelectItem key={o} value={o}>
+                {formatter ? formatter(o, t) : o}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <Input
+          id={fieldId}
+          value={value || ''}
+          onChange={(e) => setter(e.target.value)}
+          placeholder={placeholder || ''}
+          disabled={disabled}
+          data-testid={testid}
+          className="mt-1 rounded-xl"
+        />
+      )}
+    </div>
+  )};
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
       {row(t('itemDetail.edit.gender'), fields.gender, (v) => onChange({ gender: v }), GENDER_OPTIONS, 'add-item-gender', t('addItem.genderPlaceholder'), labelForGender)}
       {row(t('addItem.dressCode'), fields.dress_code, (v) => onChange({ dress_code: v }), DRESS_CODE_OPTIONS, 'add-item-dresscode', t('addItem.dressCodePlaceholder'), labelForDressCode)}
       {row(t('addItem.pattern'), fields.pattern, (v) => onChange({ pattern: v }), PATTERN_OPTIONS, 'add-item-pattern', t('addItem.patternPlaceholder'), labelForPattern)}
       {row(t('addItem.tradition'), fields.tradition, (v) => onChange({ tradition: v }), null, 'add-item-tradition', t('addItem.traditionPlaceholder'))}
-      {row(t('addItem.size'), fields.size, (v) => onChange({ size: v }), null, 'add-item-size', t('addItem.sizePlaceholder'))}
     </div>
   );
 }

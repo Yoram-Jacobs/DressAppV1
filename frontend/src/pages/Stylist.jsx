@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -1025,16 +1026,17 @@ export default function Stylist() {
           </AnimatePresence>
           {busy && (
             <div className="flex min-w-0 justify-start" data-testid="stylist-thinking">
-              <div className="max-w-[85%] min-w-0 rounded-2xl border border-border bg-card p-4 break-words">
-                <div className="caps-label text-muted-foreground mb-2">
-                  {t('stylist.thinking')}
+              <div className="max-w-[85%] min-w-[280px] rounded-2xl border border-border bg-card p-4 break-words space-y-3">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-5 rounded-full animate-pulse" />
+                  <span className="caps-label text-muted-foreground">{t('stylist.thinking')}</span>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-3 rounded shimmer w-3/4" />
-                  <div className="h-3 rounded shimmer w-1/2" />
-                  <div className="h-3 rounded shimmer w-5/6" />
+                  <Skeleton className="h-3.5 w-3/4 rounded" />
+                  <Skeleton className="h-3.5 w-1/2 rounded" />
+                  <Skeleton className="h-3.5 w-5/6 rounded" />
                 </div>
-                <p className="text-xs text-muted-foreground mt-3">
+                <p className="text-xs text-muted-foreground pt-1">
                   {t('stylist.thinkingSub')}
                 </p>
               </div>
