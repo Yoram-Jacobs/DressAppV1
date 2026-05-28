@@ -25,6 +25,7 @@ ENV CI=false
 
 # Copy the manifest first so Docker caches the yarn-install layer.
 COPY frontend/package.json frontend/yarn.lock ./
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN yarn install --frozen-lockfile --network-timeout 600000
 
 COPY frontend/ ./
