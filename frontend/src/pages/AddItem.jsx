@@ -398,26 +398,43 @@ export default function AddItem() {
     // ----------------------------------------------------------------
     const fingerprints = [];
     for (const rawF of files) {
-      const b64 = await fileToBase64(rawF);
-      
-      const res = await fetch(`data:image/jpeg;base64,${b64}`);
-      const blob = await res.blob();
-      const f = new File([blob], rawF.name || 'image.jpg', { type: 'image/jpeg' });
+      try {
+        const b64 = await fileToBase64(rawF);
+        if (!b64) continue;
+        
+        // Convert base64 to Blob synchronously to bypass CSP connection blocks on data URLs
+        const byteCharacters = atob(b64);
+        const byteArrays = [];
+        const sliceSize = 512;
+        for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+          const slice = byteCharacters.slice(offset, offset + sliceSize);
+          const byteNumbers = new Array(slice.length);
+          for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          byteArrays.push(byteArray);
+        }
+        const blob = new Blob(byteArrays, { type: 'image/jpeg' });
+        const f = new File([blob], rawF.name || 'image.jpg', { type: 'image/jpeg' });
 
-      const sha256 = await sha256File(f);
-      const phash = await aHashFile(f);
-      const color_sig = await colorSignatureFile(f);
-      
-      fingerprints.push({
-        file: f,
-        originalFile: rawF,
-        sha256,
-        phash,
-        color_sig,
-        filename: rawF.name || null,
-        size_bytes: blob.size,
-        _b64: b64,
-      });
+        const sha256 = await sha256File(f);
+        const phash = await aHashFile(f);
+        const color_sig = await colorSignatureFile(f);
+        
+        fingerprints.push({
+          file: f,
+          originalFile: rawF,
+          sha256,
+          phash,
+          color_sig,
+          filename: rawF.name || null,
+          size_bytes: blob.size,
+          _b64: b64,
+        });
+      } catch (err) {
+        console.error('[handleFiles] Error processing image file:', rawF.name, err);
+      }
     }
 
     let matches = [];
