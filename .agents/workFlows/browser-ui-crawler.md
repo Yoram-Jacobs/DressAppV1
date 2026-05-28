@@ -15,14 +15,40 @@ This workflow automates deep-crawling of the DressApp frontend UI, profiling per
 *   **Authentication Bypass**: Find the 'Continue as dev user' developer bypass button to access authenticated views.
 *   **Viewport Configuration**: Ensure viewports are configured for desktop (1440x900) or mobile web (375x812) responsiveness to test layouts.
 
-### 2. Deep UI Crawling & Action Actuation
-*   **Element Discovery**: Walk the DOM tree recursively to identify all interactive components (buttons, links, select inputs, dropdown tabs, and modal triggers).
-*   **Sequential Interaction**: Systematically click through navigation views:
-    *   **Closet Page**: Trigger filters, category views, and the search bar.
-    *   **Stylist Page**: Cycle through AI Chat, Dress Me (vertical shuffler), and Daily Match tabs.
-    *   **Marketplace Page**: Open listings, inspect items, and click "Style with my Wardrobe" to open the styling sandbox.
-    *   **Profile Page**: Open settings, view wardrobe stats, and check unit/preference options.
-*   **Locale Iteration**: Change languages to verify that standard dictionary strings load successfully and that layout elements do not break or overflow.
+### 2. Deep UI Crawling & Action Actuation (Task List)
+Execute a systemic interaction pass across all primary views and their nested components. Capture a screenshot after each major state change.
+
+*   **Home Dashboard (`/home`)**:
+    *   Verify "Ask the stylist" and "Open closet" buttons.
+    *   Verify dynamic pills (e.g., WEATHER-AWARE, CALENDAR-SMART).
+    *   Click "Open" for "PIECES IN YOUR CLOSET" accordion/card.
+    *   Click "Open" for "ACTIVE MARKETPLACE LISTINGS" accordion/card.
+    *   Test floating action button (`+`).
+*   **Closet Page (`/closet`)**:
+    *   Trigger category filter drop-boxes (e.g., Tops, Bottoms, Shoes).
+    *   Interact with the search bar.
+    *   Click into a single item detail view (`/closet/:id`).
+*   **Add Item / Camera Flow (`/closet/add`)**:
+    *   Test file picker and camera actuation.
+    *   Verify the single, 2-5 batch, and 6+ silent batch upload UI components.
+*   **Stylist Page (`/stylist`)**:
+    *   Cycle through top tabs: **Chat**, **Outfits**, **Daily Suggestion**.
+    *   *Chat Tab*: Toggle "Include calendar" switch. Click "Ask a professional" button. Interact with text input box, image upload gallery button, and microphone icon.
+    *   *Outfits Tab*: Trigger outfit shuffler or horizontal carousels.
+    *   *Daily Suggestion Tab*: Verify weather/calendar-based suggestions.
+*   **Marketplace Page (`/market`)**:
+    *   Open and scroll through listing feeds.
+    *   Click "Style with my Wardrobe" to open the styling sandbox modal.
+    *   Navigate to Create Listing flow (`/market/create`).
+*   **Profile / Settings (`/me`)**:
+    *   Open unit/preference settings drop-boxes.
+    *   Navigate to Wardrobe Stats (`/me/stats`) to verify chart renders.
+    *   Navigate to Transactions (`/transactions`) and Avatar Page (`/avatar`).
+*   **Global Elements**:
+    *   Interact with bottom navigation bar (Closet, Stylist, Center Camera, Market, Me).
+    *   Verify the global language switch overlay (top right globe icon).
+    *   Monitor for toast notifications.
+*   **Locale Iteration**: Change languages via the globe icon to verify that standard dictionary strings load successfully and that layout elements do not break or overflow.
 
 ### 3. Metric Recording & Error Logging
 *   **Performance Monitoring**: Trace network interactions and load metrics:
