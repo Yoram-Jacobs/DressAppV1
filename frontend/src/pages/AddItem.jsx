@@ -686,7 +686,7 @@ export default function AddItem() {
     const handleItem = (frame) => {
       const p = (async () => {
       const meta = detectMetas[frame.index] || {};
-      const idx = meta.image_index ?? frame.image_index;
+      const idx = meta.image_index ?? frame.image_index ?? 0;
       const fp = fingerprints[idx];
       const sourceMeta = {
         sourceSha256: fp.sha256 || null,
@@ -857,11 +857,15 @@ export default function AddItem() {
         if (metas.length === 0) return;
 
         const counts = {};
-        metas.forEach(m => { counts[m.image_index] = (counts[m.image_index] || 0) + 1; });
+        metas.forEach(m => {
+          const imgIdx = m.image_index ?? 0;
+          counts[imgIdx] = (counts[imgIdx] || 0) + 1;
+        });
 
         const newCards = [];
         metas.forEach((m) => {
-           const origCard = cardsToProcess[m.image_index];
+           const imgIdx = m.image_index ?? 0;
+           const origCard = cardsToProcess[imgIdx];
            if (!origCard) {
                flatSlotIds.push(null);
                return;
