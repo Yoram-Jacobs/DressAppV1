@@ -202,8 +202,6 @@ def language_directive(code: str | None) -> str:
     """
     code = (code or "en").lower()
     name = LANG_NAMES.get(code, "English")
-    if code == "en":
-        return ""
     return (
         f"\n\nLANGUAGE DIRECTIVE: The user's preferred UI language is "
         f"{name} (code: {code}). Write every human-readable string you "

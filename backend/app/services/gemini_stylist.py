@@ -155,17 +155,14 @@ class GeminiStylistService:
         # Inject the directive directly into the user message as well — Gemini
         # respects inline imperative clauses far more reliably than the system
         # prompt alone when it has to return JSON.
-        if lang_code == "en":
-            lang_preamble = ""
-        else:
-            lang_preamble = (
-                f"**OUTPUT LANGUAGE = {lang_name} ({lang_code}).** Every "
-                f"free-text field (`reasoning_summary`, each recommendation's "
-                f"`name`/`why`, every item `description`, every `do_dont` "
-                f"entry, every `shopping_suggestions` entry, and the final "
-                f"`spoken_reply`) MUST be written in fluent, idiomatic "
-                f"{lang_name}. JSON keys and enum tokens stay in English.\n\n"
-            )
+        lang_preamble = (
+            f"**OUTPUT LANGUAGE = {lang_name} ({lang_code}).** Every "
+            f"free-text field (`reasoning_summary`, each recommendation's "
+            f"`name`/`why`, every item `description`, every `do_dont` "
+            f"entry, every `shopping_suggestions` entry, and the final "
+            f"`spoken_reply`) MUST be written in fluent, idiomatic "
+            f"{lang_name}. JSON keys and enum tokens stay in English.\n\n"
+        )
         prompt_text = (
             f"{lang_preamble}"
             f"USER_REQUEST:\n{user_text}\n\n"
