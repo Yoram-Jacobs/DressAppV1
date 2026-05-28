@@ -30,6 +30,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { isTTSSupported, speak, cancelSpeak } from '@/lib/speech';
 import { ItemFloater } from '@/components/stylist/ItemFloater';
+import { bestImageUrl } from '@/lib/itemImage';
 
 /**
  * Outfit Completion bottom sheet.
@@ -40,11 +41,7 @@ import { ItemFloater } from '@/components/stylist/ItemFloater';
  * extends the search to active marketplace listings.
  */
 function ItemThumb({ item, showScore = false, scoreLabel = null, linkTo = null, onClick = null }) {
-  const src =
-    item?.reconstructed_image_url ||
-    item?.original_image_url ||
-    item?.segmented_image_url ||
-    null;
+  const src = bestImageUrl(item);
   const title = item?.title || item?.name || item?.category || 'Item';
   const cat = item?.category;
   const inner = (
