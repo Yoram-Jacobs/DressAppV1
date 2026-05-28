@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 import {
   ArrowLeft, Upload, Plus, Loader2, Eye, Wand2, Shirt, Store,
   HandCoins, Gift, Repeat, Trash2, Save, Tag, AlertTriangle,

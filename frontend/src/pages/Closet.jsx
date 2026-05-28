@@ -698,13 +698,6 @@ export default function Closet() {
             >
               <ListChecks className="h-4 w-4 me-0 md:me-2" /> <span className="hidden md:inline">{t('closet.bulkSelect')}</span>
             </Button>
-            <Button
-              asChild
-              className="rounded-xl shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group"
-              data-testid="closet-add-item-button"
-            >
-              <Link to="/closet/add"><Plus className="h-4 w-4 me-0 md:me-2 text-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] transition-all duration-200" /> <span className="hidden md:inline text-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] transition-all duration-200">{t('closet.addItem')}</span></Link>
-            </Button>
           </>
         ) : (
           <>
