@@ -25,6 +25,7 @@ import Marketplace from '@/pages/Marketplace';
 import CreateListing from '@/pages/CreateListing';
 import ListingDetail from '@/pages/ListingDetail';
 import Profile from '@/pages/Profile';
+import WardrobeStats from '@/pages/WardrobeStats';
 import Transactions from '@/pages/Transactions';
 import TransactionLanding from '@/pages/TransactionLanding';
 import Admin from '@/pages/Admin';
@@ -97,6 +98,7 @@ function App() {
               <Route path="/experts" element={<ExpertsDirectory />} />
               <Route path="/ads" element={<AdsManager />} />
               <Route path="/me" element={<Profile />} />
+              <Route path="/me/stats" element={<WardrobeStats />} />
               <Route path="/avatar" element={<AvatarPage />} />
               <Route path="/" element={<Navigate to="/home" replace />} />
             </Route>

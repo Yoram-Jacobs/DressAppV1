@@ -8,6 +8,7 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Badge } from '@/components/ui/badge';
 import { SourceTagBadge } from '@/components/SourceTagBadge';
 import { SwapPickerModal } from '@/components/SwapPickerModal';
+import StyleSandbox from '@/components/market/StyleSandbox';
 import {
   ArrowLeft,
   Eye,
@@ -40,6 +41,7 @@ export default function ListingDetail() {
   const [swapOpen, setSwapOpen] = useState(false);
   const [donateSubmitting, setDonateSubmitting] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [sandboxOpen, setSandboxOpen] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -434,6 +436,19 @@ export default function ListingDetail() {
               {t('market.statusNotice', { status: listing.status })}
             </div>
           )}
+
+          {listing.status === 'active' && (
+            <div className="mt-4 pt-2">
+              <Button
+                onClick={() => setSandboxOpen(true)}
+                className="w-full rounded-2xl border border-brand/20 bg-accent-lilac/10 hover:bg-accent-lilac/30 text-brand py-5 flex items-center justify-center gap-1.5 font-semibold text-xs shadow-sm"
+                data-testid="listing-style-sandbox-btn"
+              >
+                <Sparkles className="h-4 w-4" />
+                {t('market.styleSandboxBtn', 'Style with my Wardrobe')}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -511,6 +526,12 @@ export default function ListingDetail() {
             nav('/transactions');
           }
         }}
+      />
+
+      <StyleSandbox
+        isOpen={sandboxOpen}
+        onClose={() => setSandboxOpen(false)}
+        listingItem={listing}
       />
     </div>
   );

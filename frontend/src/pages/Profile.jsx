@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { LogOut, Loader2, Languages, Bell, Newspaper, Calendar, Users } from 'lucide-react';
+import { LogOut, Loader2, Languages, Bell, Newspaper, Calendar, Users, TrendingUp } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -327,7 +327,7 @@ export default function Profile() {
       <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial mb-6 overflow-hidden" data-testid="explore-card">
         <CardContent className="p-6">
           <h3 className="font-display text-xl mb-4">{t('profile.exploreTitle', { defaultValue: 'Explore DressApp' })}</h3>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Link to="/home" className="flex flex-col items-center p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors text-center" data-testid="explore-trend-scout">
               <Newspaper className="h-6 w-6 text-orange-500 mb-2" />
               <span className="text-xs font-semibold text-foreground/80">{t('home.trendScout', { defaultValue: 'Trend Scout' })}</span>
@@ -339,6 +339,10 @@ export default function Profile() {
             <Link to="/experts" className="flex flex-col items-center p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors text-center" data-testid="explore-experts">
               <Users className="h-6 w-6 text-teal-600 mb-2" />
               <span className="text-xs font-semibold text-foreground/80">{t('nav.experts', { defaultValue: 'Experts' })}</span>
+            </Link>
+            <Link to="/me/stats" className="flex flex-col items-center p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors text-center" data-testid="explore-stats">
+              <TrendingUp className="h-6 w-6 text-accent-green mb-2" />
+              <span className="text-xs font-semibold text-foreground/80">{t('profile.statsTitle', { defaultValue: 'Unpacked' })}</span>
             </Link>
           </div>
         </CardContent>

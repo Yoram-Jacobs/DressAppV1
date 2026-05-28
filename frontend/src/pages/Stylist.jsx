@@ -48,6 +48,9 @@ import { OutfitCanvasMessage } from '@/components/OutfitCanvas';
 import { FashionScoutPanel } from '@/components/stylist/FashionScoutPanel';
 import { OutfitRecommendationCard } from '@/components/stylist/OutfitRecommendationCard';
 import { ItemFloater } from '@/components/stylist/ItemFloater';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import DressMeShuffler from '@/components/stylist/DressMeShuffler';
+import OutfitTinderSwiper from '@/components/stylist/OutfitTinderSwiper';
 import { AttachmentPicker } from '@/components/stylist/AttachmentPicker';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -1301,7 +1304,29 @@ export default function Stylist() {
         </aside>
 
         {/* Center — chat */}
-        <main className="min-w-0 flex flex-col">{chatColumn}</main>
+        <main className="min-w-0 flex flex-col">
+          <Tabs defaultValue="chat" className="w-full h-full flex flex-col">
+            <div className="flex justify-center mb-3 bg-muted/60 p-1 rounded-2xl max-w-sm mx-auto w-full border border-border/40">
+              <TabsList className="grid grid-cols-3 w-full bg-transparent p-0 h-8">
+                <TabsTrigger value="chat" className="rounded-xl text-xs font-semibold data-[state=active]:bg-brand data-[state=active]:text-brand-foreground shadow-sm">{t('stylist.chatTab', 'AI Chat')}</TabsTrigger>
+                <TabsTrigger value="shuffle" className="rounded-xl text-xs font-semibold data-[state=active]:bg-brand data-[state=active]:text-brand-foreground shadow-sm">{t('stylist.shuffleTab', 'Dress Me')}</TabsTrigger>
+                <TabsTrigger value="match" className="rounded-xl text-xs font-semibold data-[state=active]:bg-brand data-[state=active]:text-brand-foreground shadow-sm">{t('stylist.matchTab', 'Daily Match')}</TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="chat" className="flex-1 min-h-0 flex flex-col mt-0 focus-visible:outline-none">
+              {chatColumn}
+            </TabsContent>
+
+            <TabsContent value="shuffle" className="flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none bg-card border border-border rounded-[calc(var(--radius)+6px)] shadow-editorial p-4 flex items-center justify-center">
+              <DressMeShuffler />
+            </TabsContent>
+
+            <TabsContent value="match" className="flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none bg-card border border-border rounded-[calc(var(--radius)+6px)] shadow-editorial p-4 flex items-center justify-center">
+              <OutfitTinderSwiper />
+            </TabsContent>
+          </Tabs>
+        </main>
 
         {/* Right rail — desktop only */}
         <aside

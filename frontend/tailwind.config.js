@@ -10,7 +10,10 @@ module.exports = {
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			sm: 'calc(var(--radius) - 4px)',
+  			xl: 'calc(var(--radius) + 4px)',
+  			'2xl': 'calc(var(--radius) + 8px)',
+  			'3xl': 'calc(var(--radius) + 12px)'
   		},
   		colors: {
   			background: 'hsl(var(--background))',
@@ -43,6 +46,8 @@ module.exports = {
   				DEFAULT: 'hsl(var(--brand))',
   				foreground: 'hsl(var(--brand-foreground))'
   			},
+  			"accent-green": "hsl(var(--accent-green))",
+  			"accent-lilac": "hsl(var(--accent-lilac))",
   			destructive: {
   				DEFAULT: 'hsl(var(--destructive))',
   				foreground: 'hsl(var(--destructive-foreground))'
