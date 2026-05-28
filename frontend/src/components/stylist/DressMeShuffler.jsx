@@ -6,6 +6,7 @@ import { useClosetStore } from '@/lib/useClosetStore';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { bestImageUrl } from '@/lib/itemImage';
 
 export default function DressMeShuffler() {
   const { t } = useTranslation();
@@ -103,7 +104,7 @@ export default function DressMeShuffler() {
   const renderRow = (label, list, index, setIdx) => {
     const item = list[index];
     const hasItems = list.length > 0;
-    const imageUrl = item ? (item.segmented_image_url || item.image_url) : null;
+    const imageUrl = item ? bestImageUrl(item) : null;
 
     return (
       <div className="flex flex-col items-center bg-card p-4 rounded-2xl border border-border shadow-sm w-full max-w-sm">

@@ -6,6 +6,7 @@ import { useClosetStore } from '@/lib/useClosetStore';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { bestImageUrl } from '@/lib/itemImage';
 
 export default function OutfitTinderSwiper() {
   const { t } = useTranslation();
@@ -110,7 +111,7 @@ export default function OutfitTinderSwiper() {
         </div>
       );
     }
-    const imageUrl = item.segmented_image_url || item.image_url;
+    const imageUrl = bestImageUrl(item);
     return (
       <div className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border/60 w-full shadow-sm h-16">
         <div className="h-10 w-10 bg-secondary/30 rounded-lg overflow-hidden shrink-0 border border-border flex items-center justify-center">

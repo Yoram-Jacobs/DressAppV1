@@ -1314,15 +1314,15 @@ export default function Stylist() {
               </TabsList>
             </div>
 
-            <TabsContent value="chat" className="flex-1 min-h-0 flex flex-col mt-0 focus-visible:outline-none">
+            <TabsContent value="chat" className="flex-1 min-h-0 data-[state=active]:flex flex-col mt-0 focus-visible:outline-none">
               {chatColumn}
             </TabsContent>
 
-            <TabsContent value="shuffle" className="flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none bg-card border border-border rounded-[calc(var(--radius)+6px)] shadow-editorial p-4 flex items-center justify-center">
+            <TabsContent value="shuffle" className="flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none p-4 data-[state=active]:flex flex-col items-center justify-start">
               <DressMeShuffler />
             </TabsContent>
 
-            <TabsContent value="match" className="flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none bg-card border border-border rounded-[calc(var(--radius)+6px)] shadow-editorial p-4 flex items-center justify-center">
+            <TabsContent value="match" className="flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none p-4 data-[state=active]:flex flex-col items-center justify-start">
               <OutfitTinderSwiper />
             </TabsContent>
           </Tabs>
