@@ -416,7 +416,23 @@ export default function AddItem() {
           byteArrays.push(byteArray);
         }
         const blob = new Blob(byteArrays, { type: 'image/jpeg' });
-        const f = new File([blob], rawF.name || 'image.jpg', { type: 'image/jpeg' });
+        
+        // Use a safe File constructor wrapper that falls back to Blob to avoid TypeError: File constructor is not supported on certain WebView/mobile browsers
+        let f;
+        try {
+          f = new File([blob], rawF.name || 'image.jpg', { type: 'image/jpeg' });
+        } catch (_) {
+          f = blob;
+          try {
+            Object.defineProperty(f, 'name', {
+              value: rawF.name || 'image.jpg',
+              writable: false,
+              configurable: true
+            });
+          } catch (_) {
+            f.name = rawF.name || 'image.jpg';
+          }
+        }
 
         const sha256 = await sha256File(f);
         const phash = await aHashFile(f);
@@ -525,7 +541,7 @@ export default function AddItem() {
           (m.phash && x.phash === m.phash),
       );
       const file = fp?.file;
-      const previewUrl = file ? URL.createObjectURL(file) : null;
+      const previewUrl = fp?._b64 ? `data:${file?.type || 'image/jpeg'};base64,${fp._b64}` : null;
       const matchKey = m.sha256 || m.phash || `${m.filename}-${m.size_bytes}`;
       return { ...m, previewUrl, matchKey };
     });
@@ -605,7 +621,7 @@ export default function AddItem() {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         file,
         mime: file.type || 'image/jpeg',
-        previewUrl: URL.createObjectURL(file),
+        previewUrl: b64 ? `data:${file.type || 'image/jpeg'};base64,${b64}` : null,
         base64: b64,
         status: 'scanning', // scanning | ready | error | saving | saved
         progress: 4,
@@ -1245,7 +1261,7 @@ export default function AddItem() {
   const removeCard = (cardId) => {
     setCards((prev) => {
       const target = prev.find((c) => c.id === cardId);
-      if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl);
+      if (target?.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(target.previewUrl);
       return prev.filter((c) => c.id !== cardId);
     });
   };
