@@ -335,7 +335,7 @@ export default function Profile() {
         <CardContent className="p-6">
           <h3 className="font-display text-xl mb-4">{t('profile.exploreTitle', { defaultValue: 'Explore DressApp' })}</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <Link to="/home" className="flex flex-col items-center p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors text-center" data-testid="explore-trend-scout">
+            <Link to="/trends" className="flex flex-col items-center p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors text-center" data-testid="explore-trend-scout">
               <Newspaper className="h-6 w-6 text-orange-500 mb-2" />
               <span className="text-xs font-semibold text-foreground/80">{t('home.trendScout', { defaultValue: 'Trend Scout' })}</span>
             </Link>

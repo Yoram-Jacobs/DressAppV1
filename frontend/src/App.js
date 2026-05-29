@@ -33,6 +33,7 @@ import ExpertsDirectory from '@/pages/ExpertsDirectory';
 import AdsManager from '@/pages/AdsManager';
 import ExtensionConnect from '@/pages/ExtensionConnect';
 import AvatarPage from '@/pages/AvatarPage';
+import TrendScout from '@/pages/TrendScout';
 
 import { useEffect } from 'react';
 import { toast } from 'sonner';
@@ -99,6 +100,7 @@ function App() {
               <Route path="/ads" element={<AdsManager />} />
               <Route path="/me" element={<Profile />} />
               <Route path="/me/stats" element={<WardrobeStats />} />
+              <Route path="/trends" element={<TrendScout />} />
               <Route path="/avatar" element={<AvatarPage />} />
               <Route path="/" element={<Navigate to="/home" replace />} />
             </Route>

@@ -20,6 +20,7 @@ const ROUTE_KEYS = {
   '/transactions':    'transactions',
   '/admin':           'admin',
   '/me':              'me',
+  '/trends':          'trends',
 };
 
 function routeKeyFor(pathname) {

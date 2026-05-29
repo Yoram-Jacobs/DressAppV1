@@ -899,6 +899,10 @@
         "title": "Profile & settings",
         "description": "Manage your DressApp profile, voice, and Google Calendar connection."
       },
+      "trends": {
+        "title": "Trend Scout",
+        "description": "Your personalized DressApp fashion trends and styling recommendations since you signed in."
+      },
       "closet_item": {
         "title": "Closet item",
         "description": "A piece in your DressApp closet."

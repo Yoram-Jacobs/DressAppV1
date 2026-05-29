@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ExploreBackButton } from '@/components/ExploreBackButton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
@@ -227,6 +228,7 @@ export default function WardrobeStats() {
           </Card>
         </div>
       )}
+      <ExploreBackButton />
     </div>
   );
 }

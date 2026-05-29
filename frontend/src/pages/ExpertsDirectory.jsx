@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { ExploreBackButton } from '@/components/ExploreBackButton';
 import {
   Search as SearchIcon,
   Globe,
@@ -261,6 +262,7 @@ export default function ExpertsDirectory() {
 
       {/* --- Regional ad ticker at the bottom of the directory --- */}
       <AdTicker placement="experts" className="mt-6" />
+      <ExploreBackButton />
     </div>
   );
 }
