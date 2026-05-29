@@ -19,6 +19,8 @@
 > topology. Anything in this document is locked unless the user explicitly
 > says otherwise. **Read this FIRST in any continuation session** before
 > exploring the codebase.
+>
+> **Local active workspace:** The active local repository is `C:\DressApp_AG`. The directory `d:\ai\Emergent\DressAppV1-1` was a backup repo for staging on Antigravity on Day 1 and is **not** to be treated as an active repository.
 
 
 ---
