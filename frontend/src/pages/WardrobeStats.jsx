@@ -27,7 +27,12 @@ export default function WardrobeStats() {
   // Calculate Color Distribution
   const colorMap = {};
   items.forEach(it => {
-    const col = it.color || it.colors?.[0] || t('common.unknownColor', 'Other');
+    let col = it.color || it.colors?.[0] || t('common.unknownColor', 'Other');
+    // Normalize casing for display/aggregation to prevent duplicates like "black" vs "Black"
+    col = col.trim();
+    if (col) {
+      col = col.charAt(0).toUpperCase() + col.slice(1).toLowerCase();
+    }
     colorMap[col] = (colorMap[col] || 0) + 1;
   });
   const colorData = Object.entries(colorMap).map(([name, value]) => ({ name, value }));
@@ -164,7 +169,7 @@ export default function WardrobeStats() {
                       })}
                     </Pie>
                     <Tooltip />
-                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                    <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ maxHeight: '60px', overflowY: 'auto' }} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
