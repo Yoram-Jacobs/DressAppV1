@@ -23,6 +23,22 @@ export default function DressMeShuffler() {
   const bottoms = items.filter(it => it.category === 'Bottom');
   const shoes = items.filter(it => it.category === 'Footwear');
 
+  // List duplication helper to enable Embla infinite loop / scrolling for small datasets
+  const getDuplicatedList = (list) => {
+    if (!list || list.length === 0) return [];
+    if (list.length >= 12) return list;
+    const repeatCount = Math.ceil(12 / list.length);
+    const duplicated = [];
+    for (let i = 0; i < repeatCount; i++) {
+      duplicated.push(...list);
+    }
+    return duplicated;
+  };
+
+  const duplicatedTops = getDuplicatedList(tops);
+  const duplicatedBottoms = getDuplicatedList(bottoms);
+  const duplicatedShoes = getDuplicatedList(shoes);
+
   const [topIdx, setTopIdx] = useState(0);
   const [bottomIdx, setBottomIdx] = useState(0);
   const [shoeIdx, setShoeIdx] = useState(0);
@@ -36,10 +52,10 @@ export default function DressMeShuffler() {
 
   // Sync initial indices when items load
   useEffect(() => {
-    if (tops.length > 0 && topIdx >= tops.length) setTopIdx(0);
-    if (bottoms.length > 0 && bottomIdx >= bottoms.length) setBottomIdx(0);
-    if (shoes.length > 0 && shoeIdx >= shoes.length) setShoeIdx(0);
-  }, [tops.length, bottoms.length, shoes.length, topIdx, bottomIdx, shoeIdx]);
+    if (duplicatedTops.length > 0 && topIdx >= duplicatedTops.length) setTopIdx(0);
+    if (duplicatedBottoms.length > 0 && bottomIdx >= duplicatedBottoms.length) setBottomIdx(0);
+    if (duplicatedShoes.length > 0 && shoeIdx >= duplicatedShoes.length) setShoeIdx(0);
+  }, [duplicatedTops.length, duplicatedBottoms.length, duplicatedShoes.length, topIdx, bottomIdx, shoeIdx]);
 
   // Sync Carousel API -> State (when user scrolls/swipes)
   useEffect(() => {
@@ -86,28 +102,28 @@ export default function DressMeShuffler() {
 
   // Sync State -> Carousel API (when state changes from shuffling or initial load)
   useEffect(() => {
-    if (topApi && tops.length > 0) {
+    if (topApi && duplicatedTops.length > 0) {
       if (topApi.selectedScrollSnap() !== topIdx) {
         topApi.scrollTo(topIdx, isSpinning);
       }
     }
-  }, [topIdx, topApi, tops.length, isSpinning]);
+  }, [topIdx, topApi, duplicatedTops.length, isSpinning]);
 
   useEffect(() => {
-    if (bottomApi && bottoms.length > 0) {
+    if (bottomApi && duplicatedBottoms.length > 0) {
       if (bottomApi.selectedScrollSnap() !== bottomIdx) {
         bottomApi.scrollTo(bottomIdx, isSpinning);
       }
     }
-  }, [bottomIdx, bottomApi, bottoms.length, isSpinning]);
+  }, [bottomIdx, bottomApi, duplicatedBottoms.length, isSpinning]);
 
   useEffect(() => {
-    if (shoeApi && shoes.length > 0) {
+    if (shoeApi && duplicatedShoes.length > 0) {
       if (shoeApi.selectedScrollSnap() !== shoeIdx) {
         shoeApi.scrollTo(shoeIdx, isSpinning);
       }
     }
-  }, [shoeIdx, shoeApi, shoes.length, isSpinning]);
+  }, [shoeIdx, shoeApi, duplicatedShoes.length, isSpinning]);
 
   // Slot machine spin animation
   const handleShuffle = () => {
@@ -123,9 +139,9 @@ export default function DressMeShuffler() {
     const intervalTime = 80; // Total spin duration: 640ms (responsive feedback)
 
     const timer = setInterval(() => {
-      if (tops.length > 1) setTopIdx(Math.floor(Math.random() * tops.length));
-      if (bottoms.length > 1) setBottomIdx(Math.floor(Math.random() * bottoms.length));
-      if (shoes.length > 1) setShoeIdx(Math.floor(Math.random() * shoes.length));
+      if (duplicatedTops.length > 1) setTopIdx(Math.floor(Math.random() * duplicatedTops.length));
+      if (duplicatedBottoms.length > 1) setBottomIdx(Math.floor(Math.random() * duplicatedBottoms.length));
+      if (duplicatedShoes.length > 1) setShoeIdx(Math.floor(Math.random() * duplicatedShoes.length));
 
       count++;
       if (count >= totalTicks) {
@@ -137,9 +153,9 @@ export default function DressMeShuffler() {
   };
 
   const handleSave = async () => {
-    const selectedTop = tops[topIdx];
-    const selectedBottom = bottoms[bottomIdx];
-    const selectedShoe = shoes[shoeIdx];
+    const selectedTop = tops.length > 0 ? tops[topIdx % tops.length] : null;
+    const selectedBottom = bottoms.length > 0 ? bottoms[bottomIdx % bottoms.length] : null;
+    const selectedShoe = shoes.length > 0 ? shoes[shoeIdx % shoes.length] : null;
 
     const outfitItems = [selectedTop, selectedBottom, selectedShoe].filter(Boolean);
     if (outfitItems.length === 0) {
@@ -177,6 +193,7 @@ export default function DressMeShuffler() {
 
   const renderRow = (label, list, index, setIdx, setApi) => {
     const hasItems = list.length > 0;
+    const duplicatedList = getDuplicatedList(list);
 
     return (
       <div className="flex flex-col items-center bg-card p-4 rounded-2xl border border-border shadow-sm w-full max-w-sm">
@@ -184,17 +201,17 @@ export default function DressMeShuffler() {
         <div className="w-full relative px-10">
           <Carousel
             setApi={setApi}
-            opts={{ align: 'center', loop: true, watchDrag: !isSpinning }}
+            opts={{ align: 'center', loop: true, watchDrag: !isSpinning, dragFree: true }}
             className="w-full"
           >
             <CarouselContent className="-ml-2">
               {hasItems ? (
-                list.map((item, itemIdx) => {
+                duplicatedList.map((item, itemIdx) => {
                   const imageUrl = bestImageUrl(item);
                   const isActive = itemIdx === index;
                   return (
                     <CarouselItem 
-                      key={item.id} 
+                      key={`${item.id}-${itemIdx}`} 
                       className="pl-2 basis-1/3 flex items-center justify-center cursor-pointer"
                       onClick={() => !isSpinning && setIdx(itemIdx)}
                     >
@@ -240,7 +257,7 @@ export default function DressMeShuffler() {
                   size="icon"
                   className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground z-10" 
                   disabled={isSpinning}
-                  onClick={() => setIdx((index - 1 + list.length) % list.length)}
+                  onClick={() => setIdx((index - 1 + duplicatedList.length) % duplicatedList.length)}
                 >
                   <ChevronLeft className="h-4 w-4" />
                   <span className="sr-only">Previous slide</span>
@@ -250,7 +267,7 @@ export default function DressMeShuffler() {
                   size="icon"
                   className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground z-10" 
                   disabled={isSpinning}
-                  onClick={() => setIdx((index + 1) % list.length)}
+                  onClick={() => setIdx((index + 1) % duplicatedList.length)}
                 >
                   <ChevronRight className="h-4 w-4" />
                   <span className="sr-only">Next slide</span>
@@ -283,7 +300,7 @@ export default function DressMeShuffler() {
 
         <Button
           onClick={handleSave}
-          disabled={saving || isSpinning || (!tops[topIdx] && !bottoms[bottomIdx] && !shoes[shoeIdx])}
+          disabled={saving || isSpinning || (tops.length === 0 && bottoms.length === 0 && shoes.length === 0)}
           variant="outline"
           className="rounded-2xl px-6 py-6 border-brand/20 hover:bg-accent-lilac/30 text-brand font-semibold flex items-center gap-2 text-sm"
         >
