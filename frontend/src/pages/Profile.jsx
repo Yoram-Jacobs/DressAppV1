@@ -124,7 +124,7 @@ function SchedulerSettingsCard() {
       updateUserLocal(updated);
       toast.success(t('profile.aiStylistSchedulerSettingsUpdated', { defaultValue: 'AI Stylist Scheduler settings updated.' }));
     } catch (err) {
-      toast.error(err?.response?.data?.detail || t('common.error', 'Failed to save changes.'));
+      toast.error(err?.response?.data?.detail || t('common.error', { defaultValue: 'Failed to save changes.' }));
     } finally {
       setBusy(false);
     }
@@ -138,7 +138,7 @@ function SchedulerSettingsCard() {
             <div className="flex items-center gap-3 text-left">
               <Bell className="h-5 w-5 text-[hsl(var(--accent))]" />
               <div>
-                <div className="caps-label text-muted-foreground">{t('profile.aiStylist', 'AI Stylist')}</div>
+                <div className="caps-label text-muted-foreground">{t('profile.aiStylist', { defaultValue: 'AI Stylist' })}</div>
                 <h3 className="font-display text-xl font-semibold m-0">{t('profile.schedulerPushReminders', { defaultValue: 'Scheduler & Push Reminders' })}</h3>
               </div>
             </div>
@@ -162,7 +162,7 @@ function SchedulerSettingsCard() {
                 <Select value={frequency} onValueChange={setFrequency}>
                   <SelectTrigger id="s-freq" className="rounded-xl"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="everyday">{t('pages.admin.daily_utc', 'Everyday').split(' ')[0].replace(':', '')}</SelectItem>
+                    <SelectItem value="everyday">{t('pages.admin.daily_utc', { defaultValue: 'Everyday' }).split(' ')[0].replace(':', '')}</SelectItem>
                     <SelectItem value="every_other_day">{t('profile.everyOtherDay', { defaultValue: 'Every Other Day' })}</SelectItem>
                     <SelectItem value="twice_a_week">{t('profile.twiceAWeek', { defaultValue: 'Twice a Week' })}</SelectItem>
                     <SelectItem value="on_weekday">{t('profile.onWeekday', { defaultValue: 'On Weekday' })}</SelectItem>
@@ -202,7 +202,7 @@ function SchedulerSettingsCard() {
                     <SelectItem value="smart-casual">{labelForDressCode('smart-casual', t)}</SelectItem>
                     <SelectItem value="formal">{labelForDressCode('formal', t)}</SelectItem>
                     <SelectItem value="athletic">{labelForDressCode('athletic', t)}</SelectItem>
-                    <SelectItem value="custom">{t('credits.custom', 'Custom')}</SelectItem>
+                    <SelectItem value="custom">{t('credits.custom', { defaultValue: 'Custom' })}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -235,13 +235,13 @@ function SchedulerSettingsCard() {
 
         <div className="text-xs text-muted-foreground p-3 bg-secondary/20 rounded-xl border border-dashed border-border/80 text-left">
           {t('profile.phoneWarningStart', { defaultValue: '* Ensure your phone number is configured under the ' })}
-          <strong>{t('profile.identity', 'Identity')}</strong>
+          <strong>{t('profile.identity', { defaultValue: 'Identity' })}</strong>
           {t('profile.phoneWarningEnd', { defaultValue: ' section to successfully route simulated push alerts.' })}
         </div>
 
         <div className="flex">
           <Button onClick={save} disabled={busy} className="rounded-xl">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t('common.save', 'Save')}
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t('common.save', { defaultValue: 'Save' })}
           </Button>
         </div>
           </AccordionContent>

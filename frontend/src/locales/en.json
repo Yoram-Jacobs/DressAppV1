@@ -20,6 +20,7 @@
     "outfits": "Outfits"
   },
   "common": {
+    "garment": "Garment",
     "save": "Save",
     "saveAll": "Save",
     "saveChanges": "Save changes",
@@ -425,6 +426,7 @@
     }
   },
   "stylist": {
+    "shuffledLook": "Shuffled Look",
     "title": "Your stylist",
     "subtitle": "Grounded in your closet, the weather and your calendar.",
     "hero": "Ask anything fashion",

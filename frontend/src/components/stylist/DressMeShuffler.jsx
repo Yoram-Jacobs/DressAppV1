@@ -154,7 +154,7 @@ export default function DressMeShuffler() {
         date: new Date().toISOString().split('T')[0],
         time: '12:00',
         location: null,
-        event_name: 'Shuffled Look'
+        event_name: t('stylist.shuffledLook', { defaultValue: 'Shuffled Look' })
       }
     };
 
@@ -197,7 +197,7 @@ export default function DressMeShuffler() {
                           <div className="text-center text-muted-foreground p-2">
                             <ImageOff className="h-6 w-6 mx-auto mb-1 opacity-55" />
                             <span className="text-[10px] block truncate px-1 max-w-[100px]">
-                              {item.name || item.title || 'Garment'}
+                              {item.name || item.title || t('common.garment', { defaultValue: 'Garment' })}
                             </span>
                           </div>
                         )}
