@@ -49,9 +49,17 @@ export default function DressMeShuffler() {
     const onSelect = () => {
       setTopIdx(topApi.selectedScrollSnap());
     };
+    const onPointerUp = () => {
+      const engine = topApi.internalEngine?.();
+      if (engine?.scrollBody) {
+        engine.scrollBody.useFriction(0.65).useDuration(20);
+      }
+    };
     topApi.on('select', onSelect);
+    topApi.on('pointerUp', onPointerUp);
     return () => {
       topApi.off('select', onSelect);
+      topApi.off('pointerUp', onPointerUp);
     };
   }, [topApi]);
 
@@ -60,9 +68,17 @@ export default function DressMeShuffler() {
     const onSelect = () => {
       setBottomIdx(bottomApi.selectedScrollSnap());
     };
+    const onPointerUp = () => {
+      const engine = bottomApi.internalEngine?.();
+      if (engine?.scrollBody) {
+        engine.scrollBody.useFriction(0.65).useDuration(20);
+      }
+    };
     bottomApi.on('select', onSelect);
+    bottomApi.on('pointerUp', onPointerUp);
     return () => {
       bottomApi.off('select', onSelect);
+      bottomApi.off('pointerUp', onPointerUp);
     };
   }, [bottomApi]);
 
@@ -71,9 +87,17 @@ export default function DressMeShuffler() {
     const onSelect = () => {
       setShoeIdx(shoeApi.selectedScrollSnap());
     };
+    const onPointerUp = () => {
+      const engine = shoeApi.internalEngine?.();
+      if (engine?.scrollBody) {
+        engine.scrollBody.useFriction(0.65).useDuration(20);
+      }
+    };
     shoeApi.on('select', onSelect);
+    shoeApi.on('pointerUp', onPointerUp);
     return () => {
       shoeApi.off('select', onSelect);
+      shoeApi.off('pointerUp', onPointerUp);
     };
   }, [shoeApi]);
 
