@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Sparkles, Save, ImageOff } from 'lucide-react';
+import { Sparkles, Save, ImageOff, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
@@ -11,8 +11,6 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from '@/components/ui/carousel';
 
 export default function DressMeShuffler() {
@@ -46,57 +44,42 @@ export default function DressMeShuffler() {
   // Sync Carousel API -> State (when user scrolls/swipes)
   useEffect(() => {
     if (!topApi) return;
-    const onSelect = () => {
-      setTopIdx(topApi.selectedScrollSnap());
-    };
     const onPointerUp = () => {
       const engine = topApi.internalEngine?.();
       if (engine?.scrollBody) {
         engine.scrollBody.useFriction(0.65).useDuration(20);
       }
     };
-    topApi.on('select', onSelect);
     topApi.on('pointerUp', onPointerUp);
     return () => {
-      topApi.off('select', onSelect);
       topApi.off('pointerUp', onPointerUp);
     };
   }, [topApi]);
 
   useEffect(() => {
     if (!bottomApi) return;
-    const onSelect = () => {
-      setBottomIdx(bottomApi.selectedScrollSnap());
-    };
     const onPointerUp = () => {
       const engine = bottomApi.internalEngine?.();
       if (engine?.scrollBody) {
         engine.scrollBody.useFriction(0.65).useDuration(20);
       }
     };
-    bottomApi.on('select', onSelect);
     bottomApi.on('pointerUp', onPointerUp);
     return () => {
-      bottomApi.off('select', onSelect);
       bottomApi.off('pointerUp', onPointerUp);
     };
   }, [bottomApi]);
 
   useEffect(() => {
     if (!shoeApi) return;
-    const onSelect = () => {
-      setShoeIdx(shoeApi.selectedScrollSnap());
-    };
     const onPointerUp = () => {
       const engine = shoeApi.internalEngine?.();
       if (engine?.scrollBody) {
         engine.scrollBody.useFriction(0.65).useDuration(20);
       }
     };
-    shoeApi.on('select', onSelect);
     shoeApi.on('pointerUp', onPointerUp);
     return () => {
-      shoeApi.off('select', onSelect);
       shoeApi.off('pointerUp', onPointerUp);
     };
   }, [shoeApi]);
@@ -252,14 +235,26 @@ export default function DressMeShuffler() {
 
             {hasItems && list.length > 1 && (
               <>
-                <CarouselPrevious 
-                  className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground" 
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground z-10" 
                   disabled={isSpinning}
-                />
-                <CarouselNext 
-                  className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground" 
+                  onClick={() => setIdx((index - 1 + list.length) % list.length)}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="sr-only">Previous slide</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground z-10" 
                   disabled={isSpinning}
-                />
+                  onClick={() => setIdx((index + 1) % list.length)}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                  <span className="sr-only">Next slide</span>
+                </Button>
               </>
             )}
           </Carousel>
