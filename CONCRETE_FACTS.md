@@ -176,6 +176,12 @@ docker compose up -d --force-recreate eyes
 
 ---
 
+## Frontend & Localization Guidelines
+
+- **i18next Localization Rule:** Never use positional fallback string arguments in translation calls, i.e., avoid `t('key', 'default')`. Always use standard options-based syntax with `{ defaultValue: 'default' }` (e.g., `t('key', { defaultValue: 'default' })`) to align with translation parsers and taxonomy helper methods like `taxonomy.js`. Avoid hardcoded user-facing display strings in frontend components.
+
+---
+
 ## What is deliberately NOT a "concrete fact"
 
 The following are session-scoped and **must be re-checked at the start
