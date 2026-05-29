@@ -177,26 +177,35 @@ export default function DressMeShuffler() {
         <div className="w-full relative px-10">
           <Carousel
             setApi={setApi}
-            opts={{ loop: true, watchDrag: !isSpinning }}
+            opts={{ align: 'center', loop: true, watchDrag: !isSpinning }}
             className="w-full"
           >
             <CarouselContent className="-ml-2">
               {hasItems ? (
-                list.map((item) => {
+                list.map((item, itemIdx) => {
                   const imageUrl = bestImageUrl(item);
+                  const isActive = itemIdx === index;
                   return (
-                    <CarouselItem key={item.id} className="pl-2 basis-full flex items-center justify-center">
-                      <div className="relative h-32 w-32 bg-secondary/30 rounded-xl overflow-hidden flex items-center justify-center border border-border/50 select-none">
+                    <CarouselItem 
+                      key={item.id} 
+                      className="pl-2 basis-1/3 flex items-center justify-center cursor-pointer"
+                      onClick={() => !isSpinning && setIdx(itemIdx)}
+                    >
+                      <div className={`relative h-20 w-20 rounded-xl overflow-hidden flex items-center justify-center border transition-all duration-300 select-none ${
+                        isActive 
+                          ? "scale-110 border-brand bg-secondary/30 opacity-100 shadow-md z-10"
+                          : "scale-90 border-border/40 bg-secondary/10 opacity-40 hover:opacity-75 z-0"
+                      }`}>
                         {imageUrl ? (
                           <img
                             src={imageUrl}
                             alt={item.name || label}
-                            className="max-h-full max-w-full object-contain pointer-events-none p-2"
+                            className="max-h-full max-w-full object-contain pointer-events-none p-1.5"
                           />
                         ) : (
-                          <div className="text-center text-muted-foreground p-2">
-                            <ImageOff className="h-6 w-6 mx-auto mb-1 opacity-55" />
-                            <span className="text-[10px] block truncate px-1 max-w-[100px]">
+                          <div className="text-center text-muted-foreground p-1">
+                            <ImageOff className="h-5 w-5 mx-auto mb-0.5 opacity-55" />
+                            <span className="text-[8px] block truncate px-0.5 max-w-[60px]">
                               {item.name || item.title || t('common.garment', { defaultValue: 'Garment' })}
                             </span>
                           </div>
@@ -207,10 +216,10 @@ export default function DressMeShuffler() {
                 })
               ) : (
                 <CarouselItem className="pl-2 basis-full flex items-center justify-center">
-                  <div className="relative h-32 w-32 bg-secondary/30 rounded-xl overflow-hidden flex items-center justify-center border border-border/50 select-none">
+                  <div className="relative h-20 w-20 bg-secondary/30 rounded-xl overflow-hidden flex items-center justify-center border border-border/50 select-none">
                     <div className="text-center p-2 text-muted-foreground/60">
-                      <ImageOff className="h-6 w-6 mx-auto mb-1 opacity-40" />
-                      <span className="text-[10px] block font-medium">{t('common.noResults')}</span>
+                      <ImageOff className="h-5 w-5 mx-auto mb-0.5 opacity-40" />
+                      <span className="text-[9px] block font-medium">{t('common.noResults')}</span>
                     </div>
                   </div>
                 </CarouselItem>
