@@ -1,6 +1,6 @@
 /* global FileReader, setTimeout, setInterval, clearTimeout, clearInterval */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
@@ -424,6 +424,7 @@ export default function ItemDetail() {
   const { user } = useAuth();
   const { id } = useParams();
   const nav = useNavigate();
+  const location = useLocation();
 
   const [item, setItem] = useState(null);
   const [form, setForm] = useState(null);
@@ -1141,7 +1142,9 @@ export default function ItemDetail() {
       <div className="flex items-center justify-between gap-3 mb-4">
         <button
           onClick={() => {
-            if (window.history.state && window.history.state.idx > 0) {
+            if (location.state?.fromOutfits) {
+              nav('/stylist', { replace: true, state: { tab: 'shuffle' } });
+            } else if (window.history.state && window.history.state.idx > 0) {
               nav(-1);
             } else {
               nav('/closet', { replace: true });

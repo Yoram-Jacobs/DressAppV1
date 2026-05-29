@@ -34,7 +34,7 @@ import { cn } from '@/lib/utils';
  *     the app (reconstructed → segmented → original) so the floater
  *     is visually consistent with the closet grid.
  */
-export function ItemFloater({ itemId, onClose }) {
+export function ItemFloater({ itemId, onClose, fromOutfits }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const panelRef = useRef(null);
@@ -119,7 +119,7 @@ export function ItemFloater({ itemId, onClose }) {
 
   const onViewDetails = () => {
     onClose?.();
-    navigate(`/closet/${itemId}`);
+    navigate(`/closet/${itemId}`, { state: { fromOutfits } });
   };
 
   // Render via portal so the floater escapes any scroll/overflow
@@ -131,11 +131,12 @@ export function ItemFloater({ itemId, onClose }) {
       aria-label={item?.name || t('stylist.floater.titleLoading', 'Item details')}
       data-testid="item-floater-panel"
       className={cn(
-        'fixed right-0 top-0 z-50 h-full w-full sm:w-[360px]',
-        'bg-card border-l border-border shadow-2xl',
-        'flex flex-col',
-        'transition-transform duration-200 ease-out',
-        entering ? 'translate-x-full' : 'translate-x-0',
+        'fixed z-50 flex flex-col bg-card border border-border shadow-2xl transition-transform duration-300 ease-out',
+        'bottom-4 left-4 right-4 top-auto max-h-[75vh] rounded-2xl',
+        'sm:bottom-0 sm:left-auto sm:right-0 sm:top-0 sm:h-full sm:w-[360px] sm:max-h-none sm:rounded-none sm:border-l sm:border-t-0 sm:border-r-0 sm:border-b-0',
+        entering 
+          ? 'translate-y-[calc(100%+1rem)] sm:translate-y-0 sm:translate-x-full' 
+          : 'translate-y-0 sm:translate-x-0',
       )}
     >
       {/* Header */}

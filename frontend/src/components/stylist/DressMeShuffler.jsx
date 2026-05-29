@@ -388,7 +388,7 @@ export default function DressMeShuffler() {
         </Button>
       </div>
 
-      <ItemFloater itemId={activeFloaterItemId} onClose={handleCloseFloater} />
+      <ItemFloater itemId={activeFloaterItemId} onClose={handleCloseFloater} fromOutfits={true} />
     </div>
   );
 }

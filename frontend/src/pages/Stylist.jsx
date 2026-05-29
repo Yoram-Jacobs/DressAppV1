@@ -41,7 +41,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { WaveformAudioPlayer } from '@/components/WaveformAudioPlayer';
 import { ConversationSidebar } from '@/components/stylist/ConversationSidebar';
 import { OutfitCanvasMessage } from '@/components/OutfitCanvas';
@@ -79,6 +79,20 @@ export default function Stylist() {
   const { user } = useAuth();
   const loc = useAppLocation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState('chat');
+
+  useEffect(() => {
+    if (location.state?.tab) {
+      setActiveTab(location.state.tab);
+    } else {
+      const params = new URLSearchParams(location.search);
+      const tabParam = params.get('tab');
+      if (tabParam) {
+        setActiveTab(tabParam);
+      }
+    }
+  }, [location]);
 
   // Conversation state
   const [sessions, setSessions] = useState([]);
@@ -1305,7 +1319,7 @@ export default function Stylist() {
 
         {/* Center — chat */}
         <main className="min-w-0 flex flex-col">
-          <Tabs defaultValue="chat" className="w-full h-full flex flex-col">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             <div className="flex justify-center mb-3 bg-muted/60 p-1 rounded-2xl max-w-sm mx-auto w-full border border-border/40">
               <TabsList className="grid grid-cols-3 w-full bg-transparent p-0 h-8">
                 <TabsTrigger value="chat" className="rounded-xl text-xs font-semibold data-[state=active]:bg-brand data-[state=active]:text-brand-foreground shadow-sm">{t('stylist.chatPanel')}</TabsTrigger>
