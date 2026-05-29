@@ -12,6 +12,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from '@/components/ui/carousel';
+import { ItemFloater } from '@/components/stylist/ItemFloater';
 
 export default function DressMeShuffler() {
   const { t } = useTranslation();
@@ -39,9 +40,18 @@ export default function DressMeShuffler() {
   const duplicatedBottoms = getDuplicatedList(bottoms);
   const duplicatedShoes = getDuplicatedList(shoes);
 
-  const [topIdx, setTopIdx] = useState(0);
-  const [bottomIdx, setBottomIdx] = useState(0);
-  const [shoeIdx, setShoeIdx] = useState(0);
+  // Focus tracking (which item is currently centered in each row)
+  const [topFocusIdx, setTopFocusIdx] = useState(0);
+  const [bottomFocusIdx, setBottomFocusIdx] = useState(0);
+  const [shoeFocusIdx, setShoeFocusIdx] = useState(0);
+
+  // Selection tracking (which item has been picked/selected)
+  const [topSelectedIdx, setTopSelectedIdx] = useState(null);
+  const [bottomSelectedIdx, setBottomSelectedIdx] = useState(null);
+  const [shoeSelectedIdx, setShoeSelectedIdx] = useState(null);
+
+  // Active item detail floater
+  const [activeFloaterItemId, setActiveFloaterItemId] = useState(null);
   
   const [topApi, setTopApi] = useState(null);
   const [bottomApi, setBottomApi] = useState(null);
@@ -52,78 +62,108 @@ export default function DressMeShuffler() {
 
   // Sync initial indices when items load
   useEffect(() => {
-    if (duplicatedTops.length > 0 && topIdx >= duplicatedTops.length) setTopIdx(0);
-    if (duplicatedBottoms.length > 0 && bottomIdx >= duplicatedBottoms.length) setBottomIdx(0);
-    if (duplicatedShoes.length > 0 && shoeIdx >= duplicatedShoes.length) setShoeIdx(0);
-  }, [duplicatedTops.length, duplicatedBottoms.length, duplicatedShoes.length, topIdx, bottomIdx, shoeIdx]);
+    if (duplicatedTops.length > 0 && topFocusIdx >= duplicatedTops.length) setTopFocusIdx(0);
+    if (duplicatedBottoms.length > 0 && bottomFocusIdx >= duplicatedBottoms.length) setBottomFocusIdx(0);
+    if (duplicatedShoes.length > 0 && shoeFocusIdx >= duplicatedShoes.length) setShoeFocusIdx(0);
+  }, [duplicatedTops.length, duplicatedBottoms.length, duplicatedShoes.length, topFocusIdx, bottomFocusIdx, shoeFocusIdx]);
+
+  // Global handler to clear selections and close floater when user starts scrolling any carousel
+  const handleStartScroll = () => {
+    setTopSelectedIdx(null);
+    setBottomSelectedIdx(null);
+    setShoeSelectedIdx(null);
+    setActiveFloaterItemId(null);
+  };
 
   // Sync Carousel API -> State (when user scrolls/swipes)
   useEffect(() => {
     if (!topApi) return;
+    const onSelect = () => {
+      setTopFocusIdx(topApi.selectedScrollSnap());
+    };
     const onPointerUp = () => {
       const engine = topApi.internalEngine?.();
       if (engine?.scrollBody) {
         engine.scrollBody.useFriction(0.65).useDuration(20);
       }
     };
+    topApi.on('select', onSelect);
+    topApi.on('scroll', handleStartScroll);
     topApi.on('pointerUp', onPointerUp);
     return () => {
+      topApi.off('select', onSelect);
+      topApi.off('scroll', handleStartScroll);
       topApi.off('pointerUp', onPointerUp);
     };
   }, [topApi]);
 
   useEffect(() => {
     if (!bottomApi) return;
+    const onSelect = () => {
+      setBottomFocusIdx(bottomApi.selectedScrollSnap());
+    };
     const onPointerUp = () => {
       const engine = bottomApi.internalEngine?.();
       if (engine?.scrollBody) {
         engine.scrollBody.useFriction(0.65).useDuration(20);
       }
     };
+    bottomApi.on('select', onSelect);
+    bottomApi.on('scroll', handleStartScroll);
     bottomApi.on('pointerUp', onPointerUp);
     return () => {
+      bottomApi.off('select', onSelect);
+      bottomApi.off('scroll', handleStartScroll);
       bottomApi.off('pointerUp', onPointerUp);
     };
   }, [bottomApi]);
 
   useEffect(() => {
     if (!shoeApi) return;
+    const onSelect = () => {
+      setShoeFocusIdx(shoeApi.selectedScrollSnap());
+    };
     const onPointerUp = () => {
       const engine = shoeApi.internalEngine?.();
       if (engine?.scrollBody) {
         engine.scrollBody.useFriction(0.65).useDuration(20);
       }
     };
+    shoeApi.on('select', onSelect);
+    shoeApi.on('scroll', handleStartScroll);
     shoeApi.on('pointerUp', onPointerUp);
     return () => {
+      shoeApi.off('select', onSelect);
+      shoeApi.off('scroll', handleStartScroll);
       shoeApi.off('pointerUp', onPointerUp);
     };
   }, [shoeApi]);
 
-  // Sync State -> Carousel API (when state changes from shuffling or initial load)
+  // Sync State -> Carousel API (when user triggers selection click or shuffle)
+  // We only run scrollTo when a selection index changes to center it.
   useEffect(() => {
-    if (topApi && duplicatedTops.length > 0) {
-      if (topApi.selectedScrollSnap() !== topIdx) {
-        topApi.scrollTo(topIdx, isSpinning);
+    if (topApi && duplicatedTops.length > 0 && topSelectedIdx !== null) {
+      if (topApi.selectedScrollSnap() !== topSelectedIdx) {
+        topApi.scrollTo(topSelectedIdx, isSpinning);
       }
     }
-  }, [topIdx, topApi, duplicatedTops.length, isSpinning]);
+  }, [topSelectedIdx, topApi, duplicatedTops.length, isSpinning]);
 
   useEffect(() => {
-    if (bottomApi && duplicatedBottoms.length > 0) {
-      if (bottomApi.selectedScrollSnap() !== bottomIdx) {
-        bottomApi.scrollTo(bottomIdx, isSpinning);
+    if (bottomApi && duplicatedBottoms.length > 0 && bottomSelectedIdx !== null) {
+      if (bottomApi.selectedScrollSnap() !== bottomSelectedIdx) {
+        bottomApi.scrollTo(bottomSelectedIdx, isSpinning);
       }
     }
-  }, [bottomIdx, bottomApi, duplicatedBottoms.length, isSpinning]);
+  }, [bottomSelectedIdx, bottomApi, duplicatedBottoms.length, isSpinning]);
 
   useEffect(() => {
-    if (shoeApi && duplicatedShoes.length > 0) {
-      if (shoeApi.selectedScrollSnap() !== shoeIdx) {
-        shoeApi.scrollTo(shoeIdx, isSpinning);
+    if (shoeApi && duplicatedShoes.length > 0 && shoeSelectedIdx !== null) {
+      if (shoeApi.selectedScrollSnap() !== shoeSelectedIdx) {
+        shoeApi.scrollTo(shoeSelectedIdx, isSpinning);
       }
     }
-  }, [shoeIdx, shoeApi, duplicatedShoes.length, isSpinning]);
+  }, [shoeSelectedIdx, shoeApi, duplicatedShoes.length, isSpinning]);
 
   // Slot machine spin animation
   const handleShuffle = () => {
@@ -133,15 +173,30 @@ export default function DressMeShuffler() {
       return;
     }
     
+    // Clear selection and close floater when starting shuffle
+    handleStartScroll();
+
     setIsSpinning(true);
     let count = 0;
     const totalTicks = 8;
     const intervalTime = 80; // Total spin duration: 640ms (responsive feedback)
 
     const timer = setInterval(() => {
-      if (duplicatedTops.length > 1) setTopIdx(Math.floor(Math.random() * duplicatedTops.length));
-      if (duplicatedBottoms.length > 1) setBottomIdx(Math.floor(Math.random() * duplicatedBottoms.length));
-      if (duplicatedShoes.length > 1) setShoeIdx(Math.floor(Math.random() * duplicatedShoes.length));
+      if (duplicatedTops.length > 1) {
+        const rand = Math.floor(Math.random() * duplicatedTops.length);
+        setTopFocusIdx(rand);
+        topApi?.scrollTo(rand, true);
+      }
+      if (duplicatedBottoms.length > 1) {
+        const rand = Math.floor(Math.random() * duplicatedBottoms.length);
+        setBottomFocusIdx(rand);
+        bottomApi?.scrollTo(rand, true);
+      }
+      if (duplicatedShoes.length > 1) {
+        const rand = Math.floor(Math.random() * duplicatedShoes.length);
+        setShoeFocusIdx(rand);
+        shoeApi?.scrollTo(rand, true);
+      }
 
       count++;
       if (count >= totalTicks) {
@@ -153,9 +208,10 @@ export default function DressMeShuffler() {
   };
 
   const handleSave = async () => {
-    const selectedTop = tops.length > 0 ? tops[topIdx % tops.length] : null;
-    const selectedBottom = bottoms.length > 0 ? bottoms[bottomIdx % bottoms.length] : null;
-    const selectedShoe = shoes.length > 0 ? shoes[shoeIdx % shoes.length] : null;
+    // Resolve to focused item in center of the carousels
+    const selectedTop = tops.length > 0 ? tops[topFocusIdx % tops.length] : null;
+    const selectedBottom = bottoms.length > 0 ? bottoms[bottomFocusIdx % bottoms.length] : null;
+    const selectedShoe = shoes.length > 0 ? shoes[shoeFocusIdx % shoes.length] : null;
 
     const outfitItems = [selectedTop, selectedBottom, selectedShoe].filter(Boolean);
     if (outfitItems.length === 0) {
@@ -191,9 +247,27 @@ export default function DressMeShuffler() {
     }
   };
 
-  const renderRow = (label, list, index, setIdx, setApi) => {
+  const handleCloseFloater = () => {
+    setActiveFloaterItemId(null);
+    setTopSelectedIdx(null);
+    setBottomSelectedIdx(null);
+    setShoeSelectedIdx(null);
+  };
+
+  const renderRow = (label, list, focusIdx, selectedIdx, setIdx, setApi, api) => {
     const hasItems = list.length > 0;
     const duplicatedList = getDuplicatedList(list);
+
+    const handleItemClick = (itemIdx, item) => {
+      if (itemIdx === focusIdx) {
+        // Center item is clicked -> select it and open details floater
+        setIdx(itemIdx);
+        setActiveFloaterItemId(item.id);
+      } else {
+        // Side item is clicked -> center it (focused), but do not select it
+        api?.scrollTo(itemIdx);
+      }
+    };
 
     return (
       <div className="flex flex-col items-center bg-card p-4 rounded-2xl border border-border shadow-sm w-full max-w-sm">
@@ -208,17 +282,22 @@ export default function DressMeShuffler() {
               {hasItems ? (
                 duplicatedList.map((item, itemIdx) => {
                   const imageUrl = bestImageUrl(item);
-                  const isActive = itemIdx === index;
+                  const isFocused = itemIdx === focusIdx;
+                  const isSelected = itemIdx === selectedIdx;
                   return (
                     <CarouselItem 
                       key={`${item.id}-${itemIdx}`} 
                       className="pl-2 basis-1/3 flex items-center justify-center cursor-pointer"
-                      onClick={() => !isSpinning && setIdx(itemIdx)}
+                      onClick={() => !isSpinning && handleItemClick(itemIdx, item)}
                     >
                       <div className={`relative h-20 w-20 rounded-xl overflow-hidden flex items-center justify-center border transition-all duration-300 select-none ${
-                        isActive 
-                          ? "scale-110 border-brand bg-secondary/30 opacity-100 shadow-md z-10"
-                          : "scale-90 border-border/40 bg-secondary/10 opacity-40 hover:opacity-75 z-0"
+                        isFocused 
+                          ? "scale-110 opacity-100 shadow-md z-10"
+                          : "scale-90 opacity-40 hover:opacity-75 z-0"
+                      } ${
+                        isSelected
+                          ? "border-brand bg-secondary/30"
+                          : "border-border/40 bg-secondary/10"
                       }`}>
                         {imageUrl ? (
                           <img
@@ -257,7 +336,7 @@ export default function DressMeShuffler() {
                   size="icon"
                   className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground z-10" 
                   disabled={isSpinning}
-                  onClick={() => setIdx((index - 1 + duplicatedList.length) % duplicatedList.length)}
+                  onClick={() => api?.scrollPrev()}
                 >
                   <ChevronLeft className="h-4 w-4" />
                   <span className="sr-only">Previous slide</span>
@@ -267,7 +346,7 @@ export default function DressMeShuffler() {
                   size="icon"
                   className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground z-10" 
                   disabled={isSpinning}
-                  onClick={() => setIdx((index + 1) % duplicatedList.length)}
+                  onClick={() => api?.scrollNext()}
                 >
                   <ChevronRight className="h-4 w-4" />
                   <span className="sr-only">Next slide</span>
@@ -283,9 +362,9 @@ export default function DressMeShuffler() {
   return (
     <div className="flex flex-col items-center gap-6 py-4 w-full">
       <div className="flex flex-col gap-4 w-full items-center">
-        {renderRow(labelForRole('top', t), tops, topIdx, setTopIdx, setTopApi)}
-        {renderRow(labelForRole('bottom', t), bottoms, bottomIdx, setBottomIdx, setBottomApi)}
-        {renderRow(labelForRole('shoes', t), shoes, shoeIdx, setShoeIdx, setShoeApi)}
+        {renderRow(labelForRole('top', t), tops, topFocusIdx, topSelectedIdx, setTopSelectedIdx, setTopApi, topApi)}
+        {renderRow(labelForRole('bottom', t), bottoms, bottomFocusIdx, bottomSelectedIdx, setBottomSelectedIdx, setBottomApi, bottomApi)}
+        {renderRow(labelForRole('shoes', t), shoes, shoeFocusIdx, shoeSelectedIdx, setShoeSelectedIdx, setShoeApi, shoeApi)}
       </div>
 
       <div className="flex items-center gap-4 mt-2">
@@ -308,6 +387,8 @@ export default function DressMeShuffler() {
           {t('common.save')}
         </Button>
       </div>
+
+      <ItemFloater itemId={activeFloaterItemId} onClose={handleCloseFloater} />
     </div>
   );
 }
