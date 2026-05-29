@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { MapPin, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -56,42 +57,53 @@ export const LocationCard = () => {
       className="rounded-[calc(var(--radius)+6px)] shadow-editorial"
       data-testid="location-card"
     >
-      <CardContent className="p-6">
-        <div className="flex flex-col sm:flex-row items-start gap-4">
-          <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
-            <MapPin className="h-5 w-5" />
-          </div>
-          <div className="flex-1 min-w-0 w-full">
-            <div className="flex items-center gap-2">
-              <div className="caps-label text-muted-foreground">
-                {t('location.sectionTitle')}
+      <Accordion type="single" collapsible>
+        <AccordionItem value="location" className="border-none">
+          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 text-left w-full pe-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
+                  <MapPin className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <div className="caps-label text-muted-foreground">
+                      {t('location.sectionTitle')}
+                    </div>
+                    {connected ? (
+                      <Badge
+                        variant="outline"
+                        className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[11px]"
+                        data-testid="location-connected-badge"
+                      >
+                        <CheckCircle2 className="h-3 w-3 me-1" />
+                        {t('location.granted')}
+                      </Badge>
+                    ) : denied ? (
+                      <Badge
+                        variant="outline"
+                        className="bg-rose-50 text-rose-800 border-rose-200 text-[11px]"
+                      >
+                        {t('location.denied')}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[11px]">
+                        {t('location.notNow')}
+                      </Badge>
+                    )}
+                  </div>
+                  <h3 className="font-display text-xl mt-1 m-0">{t('location.title')}</h3>
+                </div>
               </div>
-              {connected ? (
-                <Badge
-                  variant="outline"
-                  className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[11px]"
-                  data-testid="location-connected-badge"
-                >
-                  <CheckCircle2 className="h-3 w-3 me-1" />
-                  {t('location.granted')}
-                </Badge>
-              ) : denied ? (
-                <Badge
-                  variant="outline"
-                  className="bg-rose-50 text-rose-800 border-rose-200 text-[11px]"
-                >
-                  {t('location.denied')}
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-[11px]">
-                  {t('location.notNow')}
-                </Badge>
-              )}
             </div>
-            <h3 className="font-display text-xl mt-1">{t('location.title')}</h3>
-            <p className="text-sm text-muted-foreground mt-1 max-w-xl">
-              {t('location.rationale')}
-            </p>
+          </AccordionTrigger>
+          <AccordionContent className="px-6 pb-6 pt-0">
+            <div className="flex flex-col sm:flex-row items-start gap-4">
+              <div className="h-10 w-10 shrink-0 hidden sm:block opacity-0" />
+              <div className="flex-1 min-w-0 w-full">
+                <p className="text-sm text-muted-foreground max-w-xl">
+                  {t('location.rationale')}
+                </p>
 
             {connected ? (
               <dl
@@ -180,7 +192,9 @@ export const LocationCard = () => {
             )}
           </div>
         </div>
-      </CardContent>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </Card>
   );
 };

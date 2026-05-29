@@ -55,6 +55,15 @@ let webpackConfig = {
       if (config.enableHealthCheck && healthPluginInstance) {
         webpackConfig.plugins.push(healthPluginInstance);
       }
+
+      // Fix for Webpack 5 / Babel ESM resolution issues (e.g. Can't resolve helpers/esm/objectSpread2.js)
+      webpackConfig.module.rules.push({
+        test: /\.m?js/,
+        resolve: {
+          fullySpecified: false,
+        },
+      });
+
       return webpackConfig;
     },
   },

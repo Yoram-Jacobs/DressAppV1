@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -131,15 +132,19 @@ function SchedulerSettingsCard() {
 
   return (
     <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial" data-testid="scheduler-settings-card">
-      <CardContent className="p-6 space-y-4">
-        <div className="flex items-center gap-3">
-          <Bell className="h-5 w-5 text-[hsl(var(--accent))]" />
-          <div>
-            <div className="caps-label text-muted-foreground">{t('profile.aiStylist', 'AI Stylist')}</div>
-            <h3 className="font-display text-xl font-semibold">{t('profile.schedulerPushReminders', { defaultValue: 'Scheduler & Push Reminders' })}</h3>
-          </div>
-        </div>
-        <Separator />
+      <Accordion type="single" collapsible>
+        <AccordionItem value="scheduler" className="border-none">
+          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+            <div className="flex items-center gap-3 text-left">
+              <Bell className="h-5 w-5 text-[hsl(var(--accent))]" />
+              <div>
+                <div className="caps-label text-muted-foreground">{t('profile.aiStylist', 'AI Stylist')}</div>
+                <h3 className="font-display text-xl font-semibold m-0">{t('profile.schedulerPushReminders', { defaultValue: 'Scheduler & Push Reminders' })}</h3>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-6 pb-6 space-y-4 pt-0">
+            <Separator />
         
         <div className="flex items-center justify-between gap-3 p-3 bg-secondary/30 rounded-xl border border-border">
           <div className="space-y-1">
@@ -239,7 +244,9 @@ function SchedulerSettingsCard() {
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t('common.save', 'Save')}
           </Button>
         </div>
-      </CardContent>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </Card>
   );
 }
@@ -411,18 +418,24 @@ export default function Profile() {
       <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
         <CardContent className="p-6">
           <form onSubmit={save} className="space-y-6" data-testid="settings-form">
-            <section className="space-y-3">
-              <div className="caps-label text-muted-foreground">{t('profile.identity')}</div>
-              <div>
-                <Label>{t('profile.displayName')}</Label>
-                <Input value={form.display_name}
-                  onChange={(e) => setForm({ ...form, display_name: e.target.value })}
-                  className="rounded-xl" data-testid="settings-display-name" />
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {t('profile.emailReadonly')}: <span className="font-medium">{user?.email}</span>
-              </div>
-            </section>
+            <Accordion type="single" collapsible>
+              <AccordionItem value="identity" className="border-none">
+                <AccordionTrigger className="py-2 hover:no-underline">
+                  <div className="caps-label text-muted-foreground text-left m-0">{t('profile.identity')}</div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-2 space-y-3 pb-2">
+                  <div>
+                    <Label>{t('profile.displayName')}</Label>
+                    <Input value={form.display_name}
+                      onChange={(e) => setForm({ ...form, display_name: e.target.value })}
+                      className="rounded-xl" data-testid="settings-display-name" />
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {t('profile.emailReadonly')}: <span className="font-medium">{user?.email}</span>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
 
             <Separator />
 
@@ -449,9 +462,13 @@ export default function Profile() {
 
             <Separator />
 
-            <section className="space-y-3">
-              <div className="caps-label text-muted-foreground">{t('profile.context')}</div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Accordion type="single" collapsible>
+              <AccordionItem value="context" className="border-none">
+                <AccordionTrigger className="py-2 hover:no-underline">
+                  <div className="caps-label text-muted-foreground text-left m-0">{t('profile.context')}</div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-2 space-y-3 pb-2">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <Label>{t('profile.homeCity')}</Label>
                   <Input value={form.home_city} onChange={(e) => setForm({ ...form, home_city: e.target.value })}
@@ -486,7 +503,9 @@ export default function Profile() {
                   </Select>
                 </div>
               </div>
-            </section>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
 
             <Separator />
 

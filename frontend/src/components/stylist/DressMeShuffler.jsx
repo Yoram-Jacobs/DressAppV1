@@ -1,13 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Sparkles, Save, ImageOff } from 'lucide-react';
+import { Sparkles, Save, ImageOff } from 'lucide-react';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { bestImageUrl } from '@/lib/itemImage';
 import { labelForRole } from '@/lib/taxonomy';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
 
 export default function DressMeShuffler() {
   const { t } = useTranslation();
@@ -23,6 +29,10 @@ export default function DressMeShuffler() {
   const [bottomIdx, setBottomIdx] = useState(0);
   const [shoeIdx, setShoeIdx] = useState(0);
   
+  const [topApi, setTopApi] = useState(null);
+  const [bottomApi, setBottomApi] = useState(null);
+  const [shoeApi, setShoeApi] = useState(null);
+
   const [isSpinning, setIsSpinning] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -33,15 +43,64 @@ export default function DressMeShuffler() {
     if (shoes.length > 0 && shoeIdx >= shoes.length) setShoeIdx(0);
   }, [tops.length, bottoms.length, shoes.length, topIdx, bottomIdx, shoeIdx]);
 
-  const handleNext = (category, setIdx, currentIdx, maxLen) => {
-    if (maxLen <= 1) return;
-    setIdx((currentIdx + 1) % maxLen);
-  };
+  // Sync Carousel API -> State (when user scrolls/swipes)
+  useEffect(() => {
+    if (!topApi) return;
+    const onSelect = () => {
+      setTopIdx(topApi.selectedScrollSnap());
+    };
+    topApi.on('select', onSelect);
+    return () => {
+      topApi.off('select', onSelect);
+    };
+  }, [topApi]);
 
-  const handlePrev = (category, setIdx, currentIdx, maxLen) => {
-    if (maxLen <= 1) return;
-    setIdx((currentIdx - 1 + maxLen) % maxLen);
-  };
+  useEffect(() => {
+    if (!bottomApi) return;
+    const onSelect = () => {
+      setBottomIdx(bottomApi.selectedScrollSnap());
+    };
+    bottomApi.on('select', onSelect);
+    return () => {
+      bottomApi.off('select', onSelect);
+    };
+  }, [bottomApi]);
+
+  useEffect(() => {
+    if (!shoeApi) return;
+    const onSelect = () => {
+      setShoeIdx(shoeApi.selectedScrollSnap());
+    };
+    shoeApi.on('select', onSelect);
+    return () => {
+      shoeApi.off('select', onSelect);
+    };
+  }, [shoeApi]);
+
+  // Sync State -> Carousel API (when state changes from shuffling or initial load)
+  useEffect(() => {
+    if (topApi && tops.length > 0) {
+      if (topApi.selectedScrollSnap() !== topIdx) {
+        topApi.scrollTo(topIdx, isSpinning);
+      }
+    }
+  }, [topIdx, topApi, tops.length, isSpinning]);
+
+  useEffect(() => {
+    if (bottomApi && bottoms.length > 0) {
+      if (bottomApi.selectedScrollSnap() !== bottomIdx) {
+        bottomApi.scrollTo(bottomIdx, isSpinning);
+      }
+    }
+  }, [bottomIdx, bottomApi, bottoms.length, isSpinning]);
+
+  useEffect(() => {
+    if (shoeApi && shoes.length > 0) {
+      if (shoeApi.selectedScrollSnap() !== shoeIdx) {
+        shoeApi.scrollTo(shoeIdx, isSpinning);
+      }
+    }
+  }, [shoeIdx, shoeApi, shoes.length, isSpinning]);
 
   // Slot machine spin animation
   const handleShuffle = () => {
@@ -109,69 +168,68 @@ export default function DressMeShuffler() {
     }
   };
 
-  const renderRow = (label, list, index, setIdx) => {
-    const item = list[index];
+  const renderRow = (label, list, index, setIdx, setApi) => {
     const hasItems = list.length > 0;
-    const imageUrl = item ? bestImageUrl(item) : null;
 
     return (
       <div className="flex flex-col items-center bg-card p-4 rounded-2xl border border-border shadow-sm w-full max-w-sm">
         <span className="caps-label text-xs text-muted-foreground font-medium mb-2">{label}</span>
-        <div className="flex items-center justify-between w-full gap-4">
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => handlePrev(label, setIdx, index, list.length)}
-            disabled={list.length <= 1 || isSpinning}
-            className="rounded-full shrink-0"
+        <div className="w-full relative px-10">
+          <Carousel
+            setApi={setApi}
+            opts={{ loop: true, watchDrag: !isSpinning }}
+            className="w-full"
           >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-
-          <div className="relative h-32 w-32 bg-secondary/30 rounded-xl overflow-hidden flex items-center justify-center border border-border/50 select-none">
-            <AnimatePresence mode="wait">
-              {hasItems && item ? (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute inset-0 flex items-center justify-center p-2"
-                >
-                  {imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt={item.name || label}
-                      className="max-h-full max-w-full object-contain pointer-events-none"
-                    />
-                  ) : (
-                    <div className="text-center text-muted-foreground">
-                      <ImageOff className="h-6 w-6 mx-auto mb-1 opacity-55" />
-                      <span className="text-[10px] block truncate px-1 max-w-[100px]">
-                        {item.name || item.title || 'Garment'}
-                      </span>
-                    </div>
-                  )}
-                </motion.div>
+            <CarouselContent className="-ml-2">
+              {hasItems ? (
+                list.map((item) => {
+                  const imageUrl = bestImageUrl(item);
+                  return (
+                    <CarouselItem key={item.id} className="pl-2 basis-full flex items-center justify-center">
+                      <div className="relative h-32 w-32 bg-secondary/30 rounded-xl overflow-hidden flex items-center justify-center border border-border/50 select-none">
+                        {imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt={item.name || label}
+                            className="max-h-full max-w-full object-contain pointer-events-none p-2"
+                          />
+                        ) : (
+                          <div className="text-center text-muted-foreground p-2">
+                            <ImageOff className="h-6 w-6 mx-auto mb-1 opacity-55" />
+                            <span className="text-[10px] block truncate px-1 max-w-[100px]">
+                              {item.name || item.title || 'Garment'}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </CarouselItem>
+                  );
+                })
               ) : (
-                <div className="text-center p-2 text-muted-foreground/60">
-                  <ImageOff className="h-6 w-6 mx-auto mb-1 opacity-40" />
-                  <span className="text-[10px] block font-medium">{t('common.noResults')}</span>
-                </div>
+                <CarouselItem className="pl-2 basis-full flex items-center justify-center">
+                  <div className="relative h-32 w-32 bg-secondary/30 rounded-xl overflow-hidden flex items-center justify-center border border-border/50 select-none">
+                    <div className="text-center p-2 text-muted-foreground/60">
+                      <ImageOff className="h-6 w-6 mx-auto mb-1 opacity-40" />
+                      <span className="text-[10px] block font-medium">{t('common.noResults')}</span>
+                    </div>
+                  </div>
+                </CarouselItem>
               )}
-            </AnimatePresence>
-          </div>
+            </CarouselContent>
 
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => handleNext(label, setIdx, index, list.length)}
-            disabled={list.length <= 1 || isSpinning}
-            className="rounded-full shrink-0"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </Button>
+            {hasItems && list.length > 1 && (
+              <>
+                <CarouselPrevious 
+                  className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground" 
+                  disabled={isSpinning}
+                />
+                <CarouselNext 
+                  className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground" 
+                  disabled={isSpinning}
+                />
+              </>
+            )}
+          </Carousel>
         </div>
       </div>
     );
@@ -180,9 +238,9 @@ export default function DressMeShuffler() {
   return (
     <div className="flex flex-col items-center gap-6 py-4 w-full">
       <div className="flex flex-col gap-4 w-full items-center">
-        {renderRow(labelForRole('top', t), tops, topIdx, setTopIdx)}
-        {renderRow(labelForRole('bottom', t), bottoms, bottomIdx, setBottomIdx)}
-        {renderRow(labelForRole('shoes', t), shoes, shoeIdx, setShoeIdx)}
+        {renderRow(labelForRole('top', t), tops, topIdx, setTopIdx, setTopApi)}
+        {renderRow(labelForRole('bottom', t), bottoms, bottomIdx, setBottomIdx, setBottomApi)}
+        {renderRow(labelForRole('shoes', t), shoes, shoeIdx, setShoeIdx, setShoeApi)}
       </div>
 
       <div className="flex items-center gap-4 mt-2">
