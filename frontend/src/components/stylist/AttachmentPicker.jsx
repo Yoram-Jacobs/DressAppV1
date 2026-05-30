@@ -108,7 +108,7 @@ export function AttachmentPicker({
       (f) => f && f.type?.startsWith('image/'),
     );
     if (!accepted.length) {
-      toast.error(t('attachmentPicker.imageOnly', 'Only image files are supported.'));
+      toast.error(t('attachmentPicker.imageOnly', { defaultValue: 'Only image files are supported.' }));
       return;
     }
     setUploadFiles((prev) => [...prev, ...accepted]);
@@ -186,11 +186,7 @@ export function AttachmentPicker({
     if (pickedCount === 0) return;
     if (overLimit) {
       toast.error(
-        t(
-          'attachmentPicker.overLimit',
-          'Too many attachments — max {{max}} per turn.',
-          { max: maxItems },
-        ),
+        t('attachmentPicker.overLimit', { defaultValue: 'Too many attachments — max {{max}} per turn.', max: maxItems }),
       );
       return;
     }
@@ -215,10 +211,7 @@ export function AttachmentPicker({
     } catch (exc) {
       console.error('AttachmentPicker.handleConfirm failed', exc);
       toast.error(
-        t(
-          'attachmentPicker.fetchFailed',
-          'Could not load one of the closet images. Try again.',
-        ),
+        t('attachmentPicker.fetchFailed', { defaultValue: 'Could not load one of the closet images. Try again.' }),
       );
     } finally {
       setConfirming(false);
@@ -241,7 +234,7 @@ export function AttachmentPicker({
       }}
       className="inline-flex"
       data-testid="attachment-picker-trigger"
-      aria-label={t('attachmentPicker.openLabel', 'Add attachments')}
+      aria-label={t('attachmentPicker.openLabel', { defaultValue: 'Add attachments' })}
       aria-disabled={disabled || undefined}
     >
       {trigger}
@@ -255,7 +248,7 @@ export function AttachmentPicker({
       onClick={() => !disabled && setOpen(true)}
       disabled={disabled}
       data-testid="attachment-picker-trigger"
-      aria-label={t('attachmentPicker.openLabel', 'Add attachments')}
+      aria-label={t('attachmentPicker.openLabel', { defaultValue: 'Add attachments' })}
     >
       <ImgIcon className="h-5 w-5" />
     </Button>
@@ -272,13 +265,10 @@ export function AttachmentPicker({
         >
           <SheetHeader className="px-5 py-4 border-b border-border shrink-0">
             <SheetTitle className="font-display text-lg">
-              {t('attachmentPicker.title', 'Add attachments')}
+              {t('attachmentPicker.title', { defaultValue: 'Add attachments' })}
             </SheetTitle>
             <SheetDescription className="text-xs">
-              {t(
-                'attachmentPicker.subtitle',
-                'Upload new photos or pick from your closet.',
-              )}
+              {t('attachmentPicker.subtitle', { defaultValue: 'Upload new photos or pick from your closet.' })}
             </SheetDescription>
           </SheetHeader>
 
@@ -293,14 +283,14 @@ export function AttachmentPicker({
                 data-testid="attachment-picker-tab-upload"
               >
                 <UploadCloud className="h-4 w-4 me-1.5" />
-                {t('attachmentPicker.uploadTab', 'Upload')}
+                {t('attachmentPicker.uploadTab', { defaultValue: 'Upload' })}
               </TabsTrigger>
               <TabsTrigger
                 value="closet"
                 data-testid="attachment-picker-tab-closet"
               >
                 <ImgIcon className="h-4 w-4 me-1.5" />
-                {t('attachmentPicker.closetTab', 'From Closet')}
+                {t('attachmentPicker.closetTab', { defaultValue: 'From Closet' })}
               </TabsTrigger>
             </TabsList>
 
@@ -330,12 +320,10 @@ export function AttachmentPicker({
               >
                 <UploadCloud className="h-7 w-7 opacity-70" />
                 <span>
-                  {t('attachmentPicker.dropHere', 'Drop images here or click to browse')}
+                  {t('attachmentPicker.dropHere', { defaultValue: 'Drop images here or click to browse' })}
                 </span>
                 <span className="text-[10px] opacity-70">
-                  {t('attachmentPicker.upTo', 'Up to {{n}} per turn', {
-                    n: maxItems,
-                  })}
+                  {t('attachmentPicker.upTo', { defaultValue: 'Up to {{n}} per turn', n: maxItems, })}
                 </span>
               </button>
               <input
@@ -366,7 +354,7 @@ export function AttachmentPicker({
                         type="button"
                         onClick={() => removeUploadAt(i)}
                         className="absolute top-1 end-1 h-6 w-6 rounded-full bg-background/90 backdrop-blur flex items-center justify-center text-xs border border-border hover:bg-background"
-                        aria-label={t('common.remove', 'Remove')}
+                        aria-label={t('common.remove', { defaultValue: 'Remove' })}
                         data-testid={`attachment-picker-upload-remove-${i}`}
                       >
                         ×
@@ -388,10 +376,7 @@ export function AttachmentPicker({
                   <Input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder={t(
-                      'attachmentPicker.searchPlaceholder',
-                      'Search closet…',
-                    )}
+                    placeholder={t('attachmentPicker.searchPlaceholder', { defaultValue: 'Search closet…' })}
                     className="ps-8"
                     data-testid="attachment-picker-search"
                   />
@@ -413,8 +398,8 @@ export function AttachmentPicker({
                     data-testid="attachment-picker-closet-empty"
                   >
                     {query
-                      ? t('attachmentPicker.noMatches', 'No closet items match.')
-                      : t('attachmentPicker.emptyCloset', 'Your closet is empty.')}
+                      ? t('attachmentPicker.noMatches', { defaultValue: 'No closet items match.' })
+                      : t('attachmentPicker.emptyCloset', { defaultValue: 'Your closet is empty.' })}
                   </div>
                 ) : (
                   <div
@@ -484,18 +469,12 @@ export function AttachmentPicker({
                 <>
                   <AlertCircle className="h-3.5 w-3.5 text-destructive" />
                   <span className="text-destructive">
-                    {t(
-                      'attachmentPicker.tooMany',
-                      '{{n}} over limit ({{max}})',
-                      { n: pickedCount - remaining, max: maxItems },
-                    )}
+                    {t('attachmentPicker.tooMany', { defaultValue: '{{n}} over limit ({{max}})', n: pickedCount - remaining, max: maxItems })}
                   </span>
                 </>
               ) : (
                 <span data-testid="attachment-picker-count">
-                  {t('attachmentPicker.selected', '{{n}} selected', {
-                    n: pickedCount,
-                  })}
+                  {t('attachmentPicker.selected', { defaultValue: '{{n}} selected', n: pickedCount, })}
                 </span>
               )}
             </div>
@@ -507,7 +486,7 @@ export function AttachmentPicker({
                 onClick={() => setOpen(false)}
                 data-testid="attachment-picker-cancel"
               >
-                {t('common.cancel', 'Cancel')}
+                {t('common.cancel', { defaultValue: 'Cancel' })}
               </Button>
               <Button
                 type="button"
@@ -519,9 +498,7 @@ export function AttachmentPicker({
                 {confirming ? (
                   <Loader2 className="h-4 w-4 me-1.5 animate-spin" />
                 ) : null}
-                {t('attachmentPicker.attachN', 'Attach {{n}}', {
-                  n: pickedCount,
-                })}
+                {t('attachmentPicker.attachN', { defaultValue: 'Attach {{n}}', n: pickedCount, })}
               </Button>
             </div>
           </div>

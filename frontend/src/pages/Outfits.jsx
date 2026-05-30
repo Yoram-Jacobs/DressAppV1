@@ -76,14 +76,14 @@ export default function Outfits() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
         <div>
-          <div className="caps-label text-muted-foreground">{t('components.outfitCanvas.outfit_canvas', 'My Wardrobe Diary')}</div>
-          <h1 className="font-display text-3xl sm:text-4xl mt-1">{t('components.outfitCanvas.outfit_canvas', 'Saved Outfits')}</h1>
+          <div className="caps-label text-muted-foreground">{t('components.outfitCanvas.outfit_canvas', { defaultValue: 'My Wardrobe Diary' })}</div>
+          <h1 className="font-display text-3xl sm:text-4xl mt-1">{t('components.outfitCanvas.outfit_canvas', { defaultValue: 'Saved Outfits' })}</h1>
           <p className="text-sm text-muted-foreground mt-2 max-w-xl">
             {t('outfits.viewDescription', { defaultValue: 'View outfits you have composed and scheduled. Your AI Stylist ensures you utilize all closet assets and warns you of previous occasion repetitions.' })}
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={loadData} className="rounded-xl flex items-center gap-1.5 self-start sm:self-auto">
-          <RefreshCw className="h-4 w-4" /> {t('stylist.refreshScout', 'Refresh')}
+          <RefreshCw className="h-4 w-4" /> {t('stylist.refreshScout', { defaultValue: 'Refresh' })}
         </Button>
       </div>
 
@@ -97,13 +97,13 @@ export default function Outfits() {
             </div>
             {notifications.length > 0 && (
               <Button size="xs" variant="ghost" className="text-rose-700 text-xs h-7 px-2" onClick={clearNotifications}>
-                {t('common.clear', 'Clear logs')}
+                {t('common.clear', { defaultValue: 'Clear logs' })}
               </Button>
             )}
           </div>
           
           {notifLoading ? (
-            <p className="text-xs text-muted-foreground animate-pulse">{t('common.loading', 'Loading mock push notifications...')}</p>
+            <p className="text-xs text-muted-foreground animate-pulse">{t('common.loading', { defaultValue: 'Loading mock push notifications...' })}</p>
           ) : notifications.length === 0 ? (
             <div className="text-xs text-muted-foreground flex items-center gap-2 p-3 bg-card/40 rounded-xl border border-dashed border-border/60">
               <AlertCircle className="h-4 w-4 opacity-75" />
@@ -141,7 +141,7 @@ export default function Outfits() {
         <Card className="rounded-2xl border border-dashed border-border py-16 text-center">
           <CardContent className="space-y-4">
             <Sparkles className="h-12 w-12 text-muted-foreground/60 mx-auto" />
-            <h2 className="font-display text-xl">{t('common.noResults', 'No outfits saved yet')}</h2>
+            <h2 className="font-display text-xl">{t('common.noResults', { defaultValue: 'No outfits saved yet' })}</h2>
             <p className="text-sm text-muted-foreground max-w-sm mx-auto">
               {t('outfits.noSavedOutfitsDesc', { defaultValue: 'Get outfit proposals in the AI Stylist tab, pick your favorite, and save it to start logging your outfits.' })}
             </p>
@@ -160,14 +160,14 @@ export default function Outfits() {
                 <div className="relative w-full aspect-[4/5] bg-secondary/10 shrink-0">
                   <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={outfitItemsMap} />
                   <Badge className="absolute top-3 left-3 rounded-full caps-label bg-background/90 text-foreground border border-border backdrop-blur">
-                    {o.source_workflow === 'scheduled' ? t('ads.schedule.title', 'Scheduled Preset') : t('stylist.occasion', 'Special Event')}
+                    {o.source_workflow === 'scheduled' ? t('ads.schedule.title', { defaultValue: 'Scheduled Preset' }) : t('stylist.occasion', { defaultValue: 'Special Event' })}
                   </Badge>
                   <Button
                     size="icon"
                     variant="destructive"
                     onClick={() => deleteOutfit(o.id)}
                     className="absolute top-3 right-3 rounded-xl h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                    aria-label={t('common.delete', 'Delete')}
+                    aria-label={t('common.delete', { defaultValue: 'Delete' })}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -211,7 +211,7 @@ export default function Outfits() {
                           className="inline-flex items-center gap-1 px-2 py-1 bg-secondary/50 border border-border/80 rounded-lg text-[10px] text-foreground/80 font-medium"
                         >
                           <span className="text-muted-foreground uppercase text-[8px] tracking-wider mr-1">{labelForRole(g.role, t)}</span>
-                          <span>{g.title || t('addItem.preflight.untitled', 'Garment')}</span>
+                          <span>{g.title || t('addItem.preflight.untitled', { defaultValue: 'Garment' })}</span>
                         </div>
                       ))}
                     </div>

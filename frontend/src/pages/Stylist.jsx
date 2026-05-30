@@ -282,7 +282,7 @@ export default function Stylist() {
       {
         id: optimisticId,
         role: 'user',
-        transcript: t('stylist.triggerScheduledRequest', 'Get tomorrow\'s scheduled outfit proposals'),
+        transcript: t('stylist.triggerScheduledRequest', { defaultValue: 'Get tomorrow\'s scheduled outfit proposals' }),
       },
     ]);
 
@@ -301,9 +301,9 @@ export default function Stylist() {
           },
         },
       ]);
-      toast.success(t('stylist.proposalGenerated', 'Daily proposals generated successfully!'));
+      toast.success(t('stylist.proposalGenerated', { defaultValue: 'Daily proposals generated successfully!' }));
     } catch (err) {
-      toast.error(err?.response?.data?.detail || t('stylist.proposalFailed', 'Failed to generate daily proposals.'));
+      toast.error(err?.response?.data?.detail || t('stylist.proposalFailed', { defaultValue: 'Failed to generate daily proposals.' }));
       setMessages((prev) => prev.filter((x) => x.id !== optimisticId));
     } finally {
       setBusy(false);
@@ -359,9 +359,9 @@ export default function Stylist() {
           },
         },
       ]);
-      toast.success(t('stylist.proposalGenerated', 'Event proposals generated successfully!'));
+      toast.success(t('stylist.proposalGenerated', { defaultValue: 'Event proposals generated successfully!' }));
     } catch (err) {
-      toast.error(err?.response?.data?.detail || t('stylist.proposalFailed', 'Failed to generate event proposals.'));
+      toast.error(err?.response?.data?.detail || t('stylist.proposalFailed', { defaultValue: 'Failed to generate event proposals.' }));
       setMessages((prev) => prev.filter((x) => x.id !== optimisticId));
     } finally {
       setBusy(false);
@@ -391,9 +391,9 @@ export default function Stylist() {
 
     try {
       await api.saveOutfit(body);
-      toast.success(t('stylist.outfitSaved', 'Outfit saved to your diary!'));
+      toast.success(t('stylist.outfitSaved', { defaultValue: 'Outfit saved to your diary!' }));
     } catch (err) {
-      toast.error(err?.response?.data?.detail || t('stylist.saveFailed', 'Failed to save outfit.'));
+      toast.error(err?.response?.data?.detail || t('stylist.saveFailed', { defaultValue: 'Failed to save outfit.' }));
     }
   };
 
@@ -423,7 +423,7 @@ export default function Stylist() {
               t('stylist.rejectionMarketplaceOffer', `You have rejected "${res.title}" 3 times. Share it in the Marketplace to free up space?`),
               {
                 action: {
-                  label: t('common.share', 'Share'),
+                  label: t('common.share', { defaultValue: 'Share' }),
                   onClick: () => navigate(`/market/create?item_id=${itemId}`),
                 },
                 duration: 8000,
@@ -443,7 +443,7 @@ export default function Stylist() {
         {
           id: optimisticId,
           role: 'user',
-          transcript: t('stylist.retryRequest', 'Suggest 3 other options'),
+          transcript: t('stylist.retryRequest', { defaultValue: 'Suggest 3 other options' }),
         },
       ]);
 
@@ -487,9 +487,9 @@ export default function Stylist() {
           },
         ]);
       }
-      toast.success(t('stylist.proposalGenerated', 'New proposals generated successfully!'));
+      toast.success(t('stylist.proposalGenerated', { defaultValue: 'New proposals generated successfully!' }));
     } catch (err) {
-      toast.error(err?.response?.data?.detail || t('stylist.proposalFailed', 'Failed to generate new proposals.'));
+      toast.error(err?.response?.data?.detail || t('stylist.proposalFailed', { defaultValue: 'Failed to generate new proposals.' }));
     } finally {
       setBusy(false);
     }
@@ -867,7 +867,7 @@ export default function Stylist() {
                         <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-xl p-3 text-xs text-amber-800 dark:text-amber-300 space-y-1">
                           <div className="font-semibold flex items-center gap-1.5">
                             <Sparkles className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                            {t('stylist.shoppingSuggestions', 'AI Stylist Shopping Suggestions')}
+                            {t('stylist.shoppingSuggestions', { defaultValue: 'AI Stylist Shopping Suggestions' })}
                           </div>
                           <ul className="list-disc ps-4 space-y-1">
                             {m.payload.shopping_suggestions.map((s, k) => (
@@ -887,7 +887,7 @@ export default function Stylist() {
                             data-testid={`retry-proposals-${m.id}`}
                           >
                             <RefreshCw className={cn("h-3 w-3", busy && "animate-spin")} />
-                            {t('stylist.suggestOthers', 'Suggest 3 Others')}
+                            {t('stylist.suggestOthers', { defaultValue: 'Suggest 3 Others' })}
                           </Button>
                         </div>
                       )}
@@ -1087,7 +1087,7 @@ export default function Stylist() {
             data-testid="stylist-daily-suggestion-btn"
           >
             <Sparkles className="h-3.5 w-3.5 text-[hsl(var(--accent))]" />
-            {t('stylist.dailySuggestion', 'Daily Suggestion')}
+            {t('stylist.dailySuggestion', { defaultValue: 'Daily Suggestion' })}
           </Button>
           <Button
             size="xs"
@@ -1098,7 +1098,7 @@ export default function Stylist() {
             data-testid="stylist-plan-event-btn"
           >
             <CalIcon className="h-3.5 w-3.5" />
-            {t('stylist.planEventOutfit', 'Plan Event Outfit')}
+            {t('stylist.planEventOutfit', { defaultValue: 'Plan Event Outfit' })}
           </Button>
         </div>
 
@@ -1390,32 +1390,32 @@ export default function Stylist() {
       <Dialog open={eventModalOpen} onOpenChange={setEventModalOpen}>
         <DialogContent className="sm:max-w-[425px]" data-testid="stylist-event-dialog">
           <DialogHeader>
-            <DialogTitle>{t('stylist.planEventOutfitTitle', 'Plan Event Outfit')}</DialogTitle>
+            <DialogTitle>{t('stylist.planEventOutfitTitle', { defaultValue: 'Plan Event Outfit' })}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleTriggerEvent} className="space-y-4 py-2" data-testid="stylist-event-form">
             <div className="space-y-1">
-              <Label htmlFor="event-name">{t('stylist.eventName', 'Event Name')}</Label>
+              <Label htmlFor="event-name">{t('stylist.eventName', { defaultValue: 'Event Name' })}</Label>
               <Input
                 id="event-name"
                 value={eventForm.event_name}
                 onChange={(e) => setEventForm(prev => ({ ...prev, event_name: e.target.value }))}
-                placeholder={t('stylist.eventNamePlaceholder', 'e.g. Birthday Party, Dinner')}
+                placeholder={t('stylist.eventNamePlaceholder', { defaultValue: 'e.g. Birthday Party, Dinner' })}
                 data-testid="event-name-input"
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="location">{t('stylist.location', 'Location')}</Label>
+              <Label htmlFor="location">{t('stylist.location', { defaultValue: 'Location' })}</Label>
               <Input
                 id="location"
                 value={eventForm.location}
                 onChange={(e) => setEventForm(prev => ({ ...prev, location: e.target.value }))}
-                placeholder={t('stylist.locationPlaceholder', 'e.g. Rooftop Restaurant')}
+                placeholder={t('stylist.locationPlaceholder', { defaultValue: 'e.g. Rooftop Restaurant' })}
                 data-testid="event-location-input"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label htmlFor="date">{t('common.date', 'Date')}</Label>
+                <Label htmlFor="date">{t('common.date', { defaultValue: 'Date' })}</Label>
                 <Input
                   id="date"
                   type="date"
@@ -1425,7 +1425,7 @@ export default function Stylist() {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="time">{t('common.time', 'Time')}</Label>
+                <Label htmlFor="time">{t('common.time', { defaultValue: 'Time' })}</Label>
                 <Input
                   id="time"
                   type="time"
@@ -1436,12 +1436,12 @@ export default function Stylist() {
               </div>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="prompt">{t('stylist.dressCodeDemands', 'Dress Code / Demands')}</Label>
+              <Label htmlFor="prompt">{t('stylist.dressCodeDemands', { defaultValue: 'Dress Code / Demands' })}</Label>
               <Textarea
                 id="prompt"
                 value={eventForm.prompt}
                 onChange={(e) => setEventForm(prev => ({ ...prev, prompt: e.target.value }))}
-                placeholder={t('stylist.promptPlaceholder', 'Describe what you need e.g. informal outdoor setting, casual chic')}
+                placeholder={t('stylist.promptPlaceholder', { defaultValue: 'Describe what you need e.g. informal outdoor setting, casual chic' })}
                 rows={3}
                 required
                 data-testid="event-prompt-input"
@@ -1449,10 +1449,10 @@ export default function Stylist() {
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => setEventModalOpen(false)}>
-                {t('common.cancel', 'Cancel')}
+                {t('common.cancel', { defaultValue: 'Cancel' })}
               </Button>
               <Button type="submit" disabled={busy} data-testid="event-submit-btn">
-                {t('stylist.getSuggestions', 'Get Suggestions')}
+                {t('stylist.getSuggestions', { defaultValue: 'Get Suggestions' })}
               </Button>
             </div>
           </form>

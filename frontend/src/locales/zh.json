@@ -4,6 +4,7 @@
     "home": "首页",
     "closet": "衣橱",
     "stylist": "造型师",
+    "outfits": "穿搭",
     "market": "市场",
     "me": "我",
     "settings": "设置",
@@ -638,6 +639,8 @@
     "listingShort": "商品 {{id}}…"
   },
   "profile": {
+    "exploreTitle": "探索 DressApp",
+    "statsTitle": "解构衣橱",
     "accountLabel": "账户",
     "title": "个人资料与设置",
     "identity": "身份",
@@ -677,6 +680,9 @@
       "contact": "联系方式",
       "demographics": "人口统计",
       "photos": "照片",
+      "photosAvatar": "照片与头像",
+      "digitalAvatar": "3D 数字头像",
+      "avatarGenerationDesc": "根据下方您的身体尺寸生成。",
       "measurements": "身体尺寸",
       "hair": "发型",
       "preferences": "偏好设置"
@@ -1431,5 +1437,33 @@
     "reshootSuccess": "照片已修复。",
     "reshootRejected": "修复后的照片未通过验证 — 保留原图。",
     "reshootError": "无法修复照片，请重试。"
+  },
+  "outfits": {
+    "viewDescription": "查看您设计和安排的穿搭。您的 AI 造型师会确保您充分利用衣橱里的所有单品，并就以往重复穿着的场合提出警告。",
+    "notificationCenter": "通知中心 (模拟)",
+    "noNotifs": "尚未触发任何通知。在设置中设置每日提醒或安排活动来进行测试。",
+    "noSavedOutfitsDesc": "在 AI 造型师标签页中获取穿搭建议，选择您最喜欢的并保存，即可开始记录您的穿搭。",
+    "outfitPieces": "穿搭单品",
+    "failedLoadOutfits": "加载保存的穿搭失败。",
+    "removedSuccess": "已从您的日记中移除该穿搭。",
+    "failedDelete": "删除穿搭失败。",
+    "logsCleared": "通知日志已清空。",
+    "failedClearLogs": "清空日志失败。"
+  },
+  "stats": {
+    "category": "DressApp 解构衣橱",
+    "title": "衣橱洞察",
+    "description": "分析您的衣橱价值、穿着指标和主导风格色调，以培养理性的穿着习惯。",
+    "totalValue": "衣橱价值",
+    "utilization": "衣橱利用率",
+    "wornRatio": "已穿单品数",
+    "emptyStateTitle": "暂无服装可供分析",
+    "emptyStateDesc": "添加单品到您的衣橱，并使用造型师或日历记录穿着情况，即可查看洞察分析。",
+    "colorPalette": "色彩搭配比例",
+    "noColorData": "未指定颜色标签。",
+    "costPerWear": "单次穿着成本排行",
+    "mostEfficient": "最高效穿着",
+    "leastEfficient": "最低效穿着",
+    "noCPWData": "需要输入购买价格以计算单次穿着成本统计。"
   }
 }

@@ -215,7 +215,7 @@ function Stepper({ cards, saving, bgBatch }) {
             {currentStep > 1 ? '✓' : '1'}
           </div>
           <span className={`text-[10px] caps-label mt-2 font-medium text-center ${currentStep >= 1 ? 'text-foreground' : 'text-muted-foreground'}`}>
-            {t('addItem.step.capture', 'Capture')}
+            {t('addItem.step.capture', { defaultValue: 'Capture' })}
           </span>
         </div>
 
@@ -231,7 +231,7 @@ function Stepper({ cards, saving, bgBatch }) {
             {currentStep > 2 ? '✓' : '2'}
           </div>
           <span className={`text-[10px] caps-label mt-2 font-medium text-center ${currentStep >= 2 ? 'text-foreground' : 'text-muted-foreground'}`}>
-            {t('addItem.step.refinement', 'Refine')}
+            {t('addItem.step.refinement', { defaultValue: 'Refine' })}
             {currentStep === 2 && total > 0 && ` (${scanned}/${total})`}
           </span>
         </div>
@@ -246,7 +246,7 @@ function Stepper({ cards, saving, bgBatch }) {
             3
           </div>
           <span className={`text-[10px] caps-label mt-2 font-medium text-center ${currentStep === 3 ? 'text-foreground' : 'text-muted-foreground'}`}>
-            {t('addItem.step.save', 'Integrate')}
+            {t('addItem.step.save', { defaultValue: 'Integrate' })}
           </span>
         </div>
       </div>

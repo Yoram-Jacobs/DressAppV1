@@ -650,6 +650,8 @@
     "listingShort": "Listing {{id}}…"
   },
   "profile": {
+    "exploreTitle": "Explore DressApp",
+    "statsTitle": "Unpacked",
     "accountLabel": "Account",
     "title": "Profile & settings",
     "identity": "Identity",
@@ -689,6 +691,9 @@
       "contact": "Contact",
       "demographics": "Demographics",
       "photos": "Photos",
+      "photosAvatar": "Photos & Avatar",
+      "digitalAvatar": "3D Digital Avatar",
+      "avatarGenerationDesc": "Generated from your body measurements below.",
       "measurements": "Body measurements",
       "hair": "Hair",
       "preferences": "Preferences"
@@ -1481,5 +1486,21 @@
     "failedDelete": "Failed to delete outfit.",
     "logsCleared": "Notification logs cleared.",
     "failedClearLogs": "Failed to clear logs."
+  },
+  "stats": {
+    "category": "DressApp Unpacked",
+    "title": "Wardrobe Insights",
+    "description": "Analyze your wardrobe value, wear metrics, and dominant style palettes to cultivate conscious wear habits.",
+    "totalValue": "Closet Worth",
+    "utilization": "Closet Utilization",
+    "wornRatio": "Items Worn",
+    "emptyStateTitle": "No Garments to Analyze",
+    "emptyStateDesc": "Add items to your wardrobe and record wears with your stylist or calendar to see insights.",
+    "colorPalette": "Color Palette Breakdown",
+    "noColorData": "No color tags specified.",
+    "costPerWear": "Cost-per-Wear Leaderboard",
+    "mostEfficient": "Most Wear-Efficient",
+    "leastEfficient": "Least Wear-Efficient",
+    "noCPWData": "Purchase price is required to calculate cost-per-wear stats."
   }
 }

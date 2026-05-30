@@ -28,7 +28,7 @@ export default function WardrobeStats() {
   // Calculate Color Distribution
   const colorMap = {};
   items.forEach(it => {
-    let col = it.color || it.colors?.[0] || t('common.unknownColor', 'Other');
+    let col = it.color || it.colors?.[0] || t('common.unknownColor', { defaultValue: 'Other' });
     // Normalize casing for display/aggregation to prevent duplicates like "black" vs "Black"
     col = col.trim();
     if (col) {
@@ -66,10 +66,10 @@ export default function WardrobeStats() {
     <div className="container-px max-w-4xl mx-auto pt-6 pb-16 space-y-8" data-testid="wardrobe-stats-page">
       {/* Header */}
       <div className="flex flex-col">
-        <span className="caps-label text-brand font-bold tracking-wider text-xs">{t('stats.category', 'DressApp Unpacked')}</span>
-        <h1 className="font-display text-3xl md:text-4xl font-bold mt-1 text-foreground">{t('stats.title', 'Wardrobe Insights')}</h1>
+        <span className="caps-label text-brand font-bold tracking-wider text-xs">{t('stats.category', { defaultValue: 'DressApp Unpacked' })}</span>
+        <h1 className="font-display text-3xl md:text-4xl font-bold mt-1 text-foreground">{t('stats.title', { defaultValue: 'Wardrobe Insights' })}</h1>
         <p className="text-sm text-muted-foreground mt-2 max-w-xl">
-          {t('stats.description', 'Analyze your wardrobe value, wear metrics, and dominant style palettes to cultivate conscious wear habits.')}
+          {t('stats.description', { defaultValue: 'Analyze your wardrobe value, wear metrics, and dominant style palettes to cultivate conscious wear habits.' })}
         </p>
       </div>
 
@@ -82,7 +82,7 @@ export default function WardrobeStats() {
               <DollarSign className="h-6 w-6" />
             </div>
             <div>
-              <span className="text-xs text-muted-foreground block font-medium">{t('stats.totalValue', 'Closet Worth')}</span>
+              <span className="text-xs text-muted-foreground block font-medium">{t('stats.totalValue', { defaultValue: 'Closet Worth' })}</span>
               <span className="text-2xl font-bold font-display text-foreground" data-testid="stats-total-value">
                 ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
@@ -97,7 +97,7 @@ export default function WardrobeStats() {
               <Percent className="h-6 w-6" />
             </div>
             <div>
-              <span className="text-xs text-muted-foreground block font-medium">{t('stats.utilization', 'Closet Utilization')}</span>
+              <span className="text-xs text-muted-foreground block font-medium">{t('stats.utilization', { defaultValue: 'Closet Utilization' })}</span>
               <span className="text-2xl font-bold font-display text-foreground" data-testid="stats-utilization">
                 {utilization}%
               </span>
@@ -112,7 +112,7 @@ export default function WardrobeStats() {
               <TrendingUp className="h-6 w-6" />
             </div>
             <div>
-              <span className="text-xs text-muted-foreground block font-medium">{t('stats.wornRatio', 'Items Worn')}</span>
+              <span className="text-xs text-muted-foreground block font-medium">{t('stats.wornRatio', { defaultValue: 'Items Worn' })}</span>
               <span className="text-2xl font-bold font-display text-foreground" data-testid="stats-items-ratio">
                 {wornItems} / {items.length}
               </span>
@@ -126,14 +126,14 @@ export default function WardrobeStats() {
         <Card className="rounded-3xl border border-dashed border-border py-16 text-center">
           <CardContent className="space-y-4">
             <Shirt className="h-12 w-12 text-muted-foreground/60 mx-auto" />
-            <h2 className="font-display text-xl font-bold">{t('stats.emptyStateTitle', 'No Garments to Analyze')}</h2>
+            <h2 className="font-display text-xl font-bold">{t('stats.emptyStateTitle', { defaultValue: 'No Garments to Analyze' })}</h2>
             <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-              {t('stats.emptyStateDesc', 'Add items to your wardrobe and record wears with your stylist or calendar to see insights.')}
+              {t('stats.emptyStateDesc', { defaultValue: 'Add items to your wardrobe and record wears with your stylist or calendar to see insights.' })}
             </p>
             <div className="pt-2">
               <Link to="/closet/add">
                 <Button className="rounded-2xl bg-brand text-brand-foreground hover:bg-brand/90 px-6 font-semibold shadow-sm">
-                  {t('closet.addNewItem', 'Add First Item')}
+                  {t('closet.addNewItem', { defaultValue: 'Add First Item' })}
                 </Button>
               </Link>
             </div>
@@ -144,7 +144,7 @@ export default function WardrobeStats() {
           {/* Color Breakdown Card */}
           <Card className="rounded-3xl border border-border bg-card shadow-sm p-6 flex flex-col justify-between">
             <CardHeader className="p-0 mb-4">
-              <CardTitle className="text-base font-semibold font-display text-foreground">{t('stats.colorPalette', 'Color Palette Breakdown')}</CardTitle>
+              <CardTitle className="text-base font-semibold font-display text-foreground">{t('stats.colorPalette', { defaultValue: 'Color Palette Breakdown' })}</CardTitle>
             </CardHeader>
             <div className="h-64 w-full flex items-center justify-center">
               {colorData.length > 0 ? (
@@ -174,7 +174,7 @@ export default function WardrobeStats() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <span className="text-xs text-muted-foreground">{t('stats.noColorData', 'No color tags specified.')}</span>
+                <span className="text-xs text-muted-foreground">{t('stats.noColorData', { defaultValue: 'No color tags specified.' })}</span>
               )}
             </div>
           </Card>
@@ -182,14 +182,14 @@ export default function WardrobeStats() {
           {/* Cost-per-Wear Card */}
           <Card className="rounded-3xl border border-border bg-card shadow-sm p-6 flex flex-col justify-between space-y-4">
             <CardHeader className="p-0">
-              <CardTitle className="text-base font-semibold font-display text-foreground">{t('stats.costPerWear', 'Cost-per-Wear Leaderboard')}</CardTitle>
+              <CardTitle className="text-base font-semibold font-display text-foreground">{t('stats.costPerWear', { defaultValue: 'Cost-per-Wear Leaderboard' })}</CardTitle>
             </CardHeader>
 
             <div className="space-y-6 flex-1 justify-center flex flex-col">
               {sortedByEfficiency.length > 0 ? (
                 <>
                   <div className="space-y-2">
-                    <span className="text-xs font-bold text-accent-green caps-label block tracking-wider">{t('stats.mostEfficient', 'Most Wear-Efficient')}:</span>
+                    <span className="text-xs font-bold text-accent-green caps-label block tracking-wider">{t('stats.mostEfficient', { defaultValue: 'Most Wear-Efficient' })}:</span>
                     {topEfficient.map(it => (
                       <div key={it.id} className="flex justify-between items-center text-xs py-2 border-b border-border/40 hover:bg-muted/30 px-1 rounded-lg transition-colors">
                         <div className="flex items-center gap-2 min-w-0">
@@ -204,7 +204,7 @@ export default function WardrobeStats() {
                   </div>
 
                   <div className="space-y-2">
-                    <span className="text-xs font-bold text-destructive caps-label block tracking-wider">{t('stats.leastEfficient', 'Least Wear-Efficient')}:</span>
+                    <span className="text-xs font-bold text-destructive caps-label block tracking-wider">{t('stats.leastEfficient', { defaultValue: 'Least Wear-Efficient' })}:</span>
                     {bottomEfficient.map(it => (
                       <div key={it.id} className="flex justify-between items-center text-xs py-2 border-b border-border/40 hover:bg-muted/30 px-1 rounded-lg transition-colors">
                         <div className="flex items-center gap-2 min-w-0">
@@ -221,7 +221,7 @@ export default function WardrobeStats() {
               ) : (
                 <div className="text-center p-6 text-muted-foreground text-xs bg-secondary/30 rounded-2xl border border-dashed border-border/50">
                   <Award className="h-6 w-6 mx-auto mb-2 opacity-50" />
-                  <span>{t('stats.noCPWData', 'Purchase price is required to calculate cost-per-wear stats.')}</span>
+                  <span>{t('stats.noCPWData', { defaultValue: 'Purchase price is required to calculate cost-per-wear stats.' })}</span>
                 </div>
               )}
             </div>

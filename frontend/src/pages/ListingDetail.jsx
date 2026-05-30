@@ -445,7 +445,7 @@ export default function ListingDetail() {
                 data-testid="listing-style-sandbox-btn"
               >
                 <Sparkles className="h-4 w-4" />
-                {t('market.styleSandboxBtn', 'Style with my Wardrobe')}
+                {t('market.styleSandboxBtn', { defaultValue: 'Style with my Wardrobe' })}
               </Button>
             </div>
           )}

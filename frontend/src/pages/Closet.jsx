@@ -813,7 +813,7 @@ export default function Closet() {
               data-testid="closet-group-selected-button"
             >
               <ListChecks className="h-4 w-4 md:mr-1.5" />
-              <span className="hidden md:inline">{t('closet.groupSelected', 'Group')}</span>
+              <span className="hidden md:inline">{t('closet.groupSelected', { defaultValue: 'Group' })}</span>
             </Button>
             <Button
               type="button"
@@ -1112,20 +1112,20 @@ export default function Closet() {
         <AlertDialogContent data-testid="closet-group-confirm-dialog">
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t('closet.groupConfirmTitle', 'Group Selected Items')}
+              {t('closet.groupConfirmTitle', { defaultValue: 'Group Selected Items' })}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t('closet.groupConfirmBody', 'Choose which item will be the primary (host) item. All other selected items will be grouped under it.')}
+              {t('closet.groupConfirmBody', { defaultValue: 'Choose which item will be the primary (host) item. All other selected items will be grouped under it.' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           
           <div className="py-4">
             <label className="caps-label text-xs text-muted-foreground block mb-2">
-              {t('closet.primaryItemLabel', 'Primary Item')}
+              {t('closet.primaryItemLabel', { defaultValue: 'Primary Item' })}
             </label>
             <Select value={groupHostId} onValueChange={setGroupHostId}>
               <SelectTrigger className="w-full rounded-xl">
-                <SelectValue placeholder={t('closet.selectPrimaryPlaceholder', 'Select primary item...')} />
+                <SelectValue placeholder={t('closet.selectPrimaryPlaceholder', { defaultValue: 'Select primary item...' })} />
               </SelectTrigger>
               <SelectContent className="max-h-[300px]">
                 {Array.from(selected).map((id) => {
@@ -1215,7 +1215,7 @@ export default function Closet() {
               ) : (
                 <ListChecks className="h-4 w-4 me-1.5" />
               )}
-              {t('closet.confirmGroup', 'Group')}
+              {t('closet.confirmGroup', { defaultValue: 'Group' })}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

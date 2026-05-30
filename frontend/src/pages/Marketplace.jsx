@@ -395,25 +395,21 @@ function MyListings() {
               seconds after completion. */}
           <StreamingProgressChip
             progress={backfillProgress}
-            runningLabel={t(
-              'market.backfill.running',
-              'Listing closet items… {{n}}/{{total}}',
-              { n: backfillProgress.scanned || 0, total: backfillProgress.total || '?' },
-            )}
+            runningLabel={t('market.backfill.running', { defaultValue: 'Listing closet items… {{n}}/{{total}}', n: backfillProgress.scanned || 0, total: backfillProgress.total || '?' })}
             successLabel={(() => {
               const parts = [];
               if (backfillProgress.created > 0) {
-                parts.push(t('market.backfill.created', '{{n}} listed', { n: backfillProgress.created }));
+                parts.push(t('market.backfill.created', { defaultValue: '{{n}} listed', n: backfillProgress.created }));
               }
               if (backfillProgress.skipped > 0) {
-                parts.push(t('market.backfill.skipped', '{{n}} already up', { n: backfillProgress.skipped }));
+                parts.push(t('market.backfill.skipped', { defaultValue: '{{n}} already up', n: backfillProgress.skipped }));
               }
               if (backfillProgress.source_synced > 0) {
-                parts.push(t('market.backfill.synced', '{{n}} reflagged', { n: backfillProgress.source_synced }));
+                parts.push(t('market.backfill.synced', { defaultValue: '{{n}} reflagged', n: backfillProgress.source_synced }));
               }
               return parts.join(' · ');
             })()}
-            failureLabel={t('market.backfill.failed', 'Couldn’t sync marketplace')}
+            failureLabel={t('market.backfill.failed', { defaultValue: 'Couldn’t sync marketplace' })}
             hasSuccessChanges={(p) =>
               (p?.created || 0) + (p?.source_synced || 0) > 0 ||
               ((p?.scanned || 0) > 0 && (p?.skipped || 0) > 0)

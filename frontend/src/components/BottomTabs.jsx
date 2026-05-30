@@ -86,7 +86,7 @@ export const BottomTabs = () => {
           <NavLink
             to="/closet/add"
             data-testid="bottom-tab-capture"
-            aria-label={t('closet.addItem', 'Capture')}
+            aria-label={t('closet.addItem', { defaultValue: 'Capture' })}
             className="absolute -top-7 h-14 w-14 rounded-full bg-brand text-brand-foreground flex items-center justify-center shadow-lg border-4 border-background hover:scale-105 active:scale-95 transition-transform z-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <motion.div

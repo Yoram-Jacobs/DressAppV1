@@ -23,23 +23,14 @@ export function ThumbRepairChip({ progress }) {
   const total = progress?.total || 0;
   const regenerated = progress?.regenerated || 0;
 
-  const runningLabel = t(
-    'closet.thumbRepair.running',
-    'Refreshing thumbnails… {{n}}/{{total}}',
-    { n: scanned, total: total || '?' },
-  );
+  const runningLabel = t('closet.thumbRepair.running', { defaultValue: 'Refreshing thumbnails… {{n}}/{{total}}', n: scanned, total: total || '?' });
 
   const successLabel =
     regenerated > 0
-      ? t('closet.thumbRepair.regenerated', '{{n}} refreshed', {
-          n: regenerated,
-        })
+      ? t('closet.thumbRepair.regenerated', { defaultValue: '{{n}} refreshed', n: regenerated, })
       : '';
 
-  const failureLabel = t(
-    'closet.thumbRepair.failed',
-    'Couldn’t refresh thumbnails',
-  );
+  const failureLabel = t('closet.thumbRepair.failed', { defaultValue: 'Couldn’t refresh thumbnails' });
 
   return (
     <StreamingProgressChip

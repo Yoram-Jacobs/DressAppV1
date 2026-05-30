@@ -22,29 +22,22 @@ export function HashRepairChip({ progress }) {
   const repaired = progress?.repaired || 0;
   const cleared = progress?.cleared || 0;
 
-  const runningLabel = t(
-    'closet.repair.running',
-    'Tuning duplicate detector… {{n}}/{{total}}',
-    { n: scanned, total: total || '?' },
-  );
+  const runningLabel = t('closet.repair.running', { defaultValue: 'Tuning duplicate detector… {{n}}/{{total}}', n: scanned, total: total || '?' });
 
   const successParts = [];
   if (repaired > 0) {
     successParts.push(
-      t('closet.repair.repaired', '{{n}} refreshed', { n: repaired }),
+      t('closet.repair.repaired', { defaultValue: '{{n}} refreshed', n: repaired }),
     );
   }
   if (cleared > 0) {
     successParts.push(
-      t('closet.repair.cleared', '{{n}} cleared', { n: cleared }),
+      t('closet.repair.cleared', { defaultValue: '{{n}} cleared', n: cleared }),
     );
   }
   const successLabel = successParts.join(' · ');
 
-  const failureLabel = t(
-    'closet.repair.failed',
-    'Couldn’t refresh fingerprints',
-  );
+  const failureLabel = t('closet.repair.failed', { defaultValue: 'Couldn’t refresh fingerprints' });
 
   return (
     <StreamingProgressChip

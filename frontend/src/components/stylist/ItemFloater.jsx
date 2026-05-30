@@ -128,7 +128,7 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
     <aside
       ref={panelRef}
       role="complementary"
-      aria-label={item?.name || t('stylist.floater.titleLoading', 'Item details')}
+      aria-label={item?.name || t('stylist.floater.titleLoading', { defaultValue: 'Item details' })}
       data-testid="item-floater-panel"
       className={cn(
         'fixed z-50 flex flex-col bg-card border border-border shadow-2xl transition-transform duration-300 ease-out',
@@ -156,7 +156,7 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
           className="h-8 w-8 shrink-0"
           onClick={onClose}
           data-testid="item-floater-close"
-          aria-label={t('common.close', 'Close')}
+          aria-label={t('common.close', { defaultValue: 'Close' })}
         >
           <X className="h-4 w-4" />
         </Button>
@@ -242,7 +242,7 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
             {item.brand ? (
               <div className="text-xs text-muted-foreground">
                 <span className="caps-label">
-                  {t('addItem.brand', 'Brand')}:
+                  {t('addItem.brand', { defaultValue: 'Brand' })}:
                 </span>{' '}
                 <span className="text-foreground">{item.brand}</span>
               </div>
@@ -254,7 +254,7 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
                 {item.material ? (
                   <div>
                     <span className="caps-label">
-                      {t('addItem.material', 'Material')}:
+                      {t('addItem.material', { defaultValue: 'Material' })}:
                     </span>{' '}
                     <span className="text-foreground">{item.material}</span>
                   </div>
@@ -262,7 +262,7 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
                 {item.pattern ? (
                   <div>
                     <span className="caps-label">
-                      {t('addItem.pattern', 'Pattern')}:
+                      {t('addItem.pattern', { defaultValue: 'Pattern' })}:
                     </span>{' '}
                     <span className="text-foreground">{item.pattern}</span>
                   </div>
@@ -298,7 +298,7 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
           data-testid="item-floater-view-details"
         >
           <ExternalLink className="h-4 w-4 me-2" />
-          {t('stylist.floater.viewDetails', 'View full details')}
+          {t('stylist.floater.viewDetails', { defaultValue: 'View full details' })}
         </Button>
       </footer>
     </aside>,

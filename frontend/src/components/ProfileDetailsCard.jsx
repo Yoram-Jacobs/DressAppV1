@@ -660,7 +660,7 @@ export function ProfileDetailsCard() {
               className="caps-label"
               data-testid="profile-accordion-photos"
             >
-              {t('profile.sections.photos')} & Avatar
+              {t('profile.sections.photosAvatar', { defaultValue: 'Photos & Avatar' })}
             </AccordionTrigger>
             <AccordionContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -671,12 +671,14 @@ export function ProfileDetailsCard() {
                   testid="face"
                 />
                 <div className="rounded-2xl border border-border p-3 bg-secondary/40 flex flex-col">
-                  <div className="caps-label text-muted-foreground mb-2">3D Digital Avatar</div>
+                  <div className="caps-label text-muted-foreground mb-2">
+                    {t('profile.sections.digitalAvatar', { defaultValue: '3D Digital Avatar' })}
+                  </div>
                   <div className="flex-1 w-full rounded-xl overflow-hidden bg-background border border-border min-h-[200px]">
                     <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={form.sex || 'female'} />
                   </div>
                   <div className="text-xs text-muted-foreground mt-2">
-                    Generated from your body measurements below.
+                    {t('profile.sections.avatarGenerationDesc', { defaultValue: 'Generated from your body measurements below.' })}
                   </div>
                 </div>
               </div>
