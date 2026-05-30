@@ -143,6 +143,24 @@ const CANONICAL_COLORS = {
   'champagne_gold': 'champagne_gold',
   'champagne': 'champagne_gold',
   'gold': 'champagne_gold',
+  'red': 'red',
+  'dark_grey': 'charcoal_grey',
+  'dark_gray': 'charcoal_grey',
+  'turquoise': 'light_blue',
+  'silver': 'light_grey',
+  'bronze': 'brown',
+  'mustard': 'yellow',
+  'peach': 'orange',
+  'lilac': 'purple',
+  'lavender': 'purple',
+  'khaki': 'beige',
+  'coral': 'orange',
+  'fuchsia': 'pink',
+  'magenta': 'pink',
+  'plum': 'purple',
+  'teal': 'blue',
+  'indigo': 'navy',
+  'maroon': 'burgundy',
   
   // Hebrew
   'לבן': 'white',
@@ -151,6 +169,7 @@ const CANONICAL_COLORS = {
   'אפור_בהיר': 'light_grey',
   'בורדו': 'burgundy',
   'חום': 'brown',
+  'כחول': 'blue',
   'כחול': 'blue',
   'תכלת': 'light_blue',
   'כחול_כהה': 'navy',
@@ -160,7 +179,7 @@ const CANONICAL_COLORS = {
   'צהוב': 'yellow',
   'כתום': 'orange',
   'ורוד': 'pink',
-  'סגול': 'purple',
+  'סגول': 'purple',
   'חום_חמרה': 'terracotta_brown',
   'טראקוטה': 'terracotta_brown',
   'בז\'': 'beige',
@@ -168,6 +187,26 @@ const CANONICAL_COLORS = {
   'קרם': 'cream',
   'זהב': 'champagne_gold',
   'שמפניה': 'champagne_gold',
+  'אדום': 'red',
+  'אפור_כהה': 'charcoal_grey',
+  'אפור_עכבר': 'charcoal_grey',
+  'טורקיז': 'light_blue',
+  'כסף': 'light_grey',
+  'ברונزه': 'brown',
+  'חרדל': 'yellow',
+  'אפרסק': 'orange',
+  'לילך': 'purple',
+  'לבנדر': 'purple',
+  'קאكي': 'beige',
+  'קורل': 'orange',
+  'פוקסיה': 'pink',
+  'מגنتة': 'pink',
+  'מגנטה': 'pink',
+  'שזיף': 'purple',
+  'כחول_ירקרק': 'blue',
+  'כחול_ירקרק': 'blue',
+  'אינדיגו': 'navy',
+  'חום_ערמוני': 'burgundy',
 
   // Russian
   'белый': 'white',
@@ -193,7 +232,37 @@ const CANONICAL_COLORS = {
   'бежевый': 'beige',
   'кремовый': 'cream',
   'золотой': 'champagne_gold',
-  'шампань': 'champagne_gold'
+  'шампань': 'champagne_gold',
+  'красный': 'red',
+
+  // Arabic
+  'احمر': 'red',
+  'أحمر': 'red',
+
+  // French
+  'rouge': 'red',
+
+  // Spanish
+  'rojo': 'red',
+
+  // German
+  'rot': 'red',
+
+  // Italian
+  'rosso': 'red',
+
+  // Portuguese
+  'vermelho': 'red',
+
+  // Hindi
+  'लाल': 'red',
+
+  // Japanese
+  '赤': 'red',
+
+  // Chinese
+  '红': 'red',
+  '红色': 'red'
 };
 
 export const canonicalColorKey = (code) => {

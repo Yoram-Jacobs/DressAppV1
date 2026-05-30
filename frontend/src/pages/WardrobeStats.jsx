@@ -30,6 +30,7 @@ const COLOR_HEX_MAP = {
   beige: '#f5f5dc',
   cream: '#fef08a',
   champagne_gold: '#d97706',
+  red: '#dc2626',
 };
 
 export default function WardrobeStats() {
