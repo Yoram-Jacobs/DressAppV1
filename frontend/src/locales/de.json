@@ -605,7 +605,8 @@
     "sourceShared": "Geteilt (Community)",
     "sourceRetail": "Einzelhandel",
     "mode": "Modus",
-    "modeSell": "Verkaufen"
+    "modeSell": "Verkaufen",
+    "shippingFee": "Versandgebühr (optional)"
   },
   "transactions": {
     "title": "Transaktionen",
@@ -635,7 +636,13 @@
     "yourNet": "Dein Nettobetrag",
     "view": "Ansehen",
     "loadFailed": "Transaktionen konnten nicht geladen werden",
-    "listingShort": "Anzeige {{id}}…"
+    "listingShort": "Anzeige {{id}}…",
+    "emptySub": "Kaufen, tauschen oder spenden Sie auf dem Marktplatz, um Ihren Verlauf aufzubauen.",
+    "emptySwaps": "Noch keine Tauschgeschäfte",
+    "emptySwapsSub": "Wenn jemand einen Tausch vorschlägt – oder Sie einen vorschlagen – wird er hier angezeigt.",
+    "emptyDonations": "Noch keine Spenden",
+    "emptyDonationsSub": "Teilen Sie etwas, aus dem Sie herausgewachsen sind, oder holen Sie sich ein Gratisgeschenk aus Ihrer Community.",
+    "emptyFilter": "Keine Übereinstimmung mit dem aktiven Statusfilter. Versuchen Sie, ihn zu löschen."
   },
   "profile": {
     "accountLabel": "Konto",
@@ -679,7 +686,10 @@
       "photos": "Fotos",
       "measurements": "Körpermaße",
       "hair": "Haare",
-      "preferences": "Präferenzen"
+      "preferences": "Präferenzen",
+      "photosAvatar": "Fotos & Avatar",
+      "digitalAvatar": "3D-Digital-Avatar",
+      "avatarGenerationDesc": "Generiert aus deinen Körpermaßen unten."
     },
     "firstName": "Vorname",
     "lastName": "Nachname",
@@ -777,7 +787,9 @@
       "paypalEmail": "PayPal-E-Mail für Auszahlungen",
       "linked": "Verknüpft"
     },
-    "occupation": "Beruf"
+    "occupation": "Beruf",
+    "exploreTitle": "DressApp entdecken",
+    "statsTitle": "Ausgepackt"
   },
   "admin": {
     "title": "Admin",
@@ -1062,6 +1074,30 @@
       "tote_bag": "Shopper",
       "crossbody_bag": "Umhängetasche",
       "clutch": "Clutch / Abendtasche"
+    },
+    "color": {
+      "cream": "Creme",
+      "grey": "Grau",
+      "gray": "Grau",
+      "light_blue": "Hellblau",
+      "light_grey": "Hellgrau",
+      "red": "Rot",
+      "terracotta_brown": "Terrakotta",
+      "white": "Weiß",
+      "black": "Schwarz",
+      "blue": "Blau",
+      "green": "Grün",
+      "yellow": "Gelb",
+      "orange": "Orange",
+      "pink": "Rosa",
+      "purple": "Lila",
+      "brown": "Braun",
+      "navy": "Marineblau",
+      "olive": "Olivgrün",
+      "beige": "Beige",
+      "אפור_בהיר": "Hellgrau",
+      "בורدو": "Bordeaux",
+      "حום": "Braun"
     }
   },
   "location": {
@@ -1373,7 +1409,20 @@
       "purchase": "Kauf",
       "receipt_confirmed_thanks_for_closing": "Empfang bestätigt. Danke für den Abschluss!",
       "selling": "Verkauf",
-      "swaps": "Tausche"
+      "swaps": "Tausche",
+      "swap": "Tausch",
+      "status": {
+        "pending": "Ausstehend",
+        "accepted": "Akzeptiert",
+        "denied": "Abgelehnt",
+        "shipped": "Versandt",
+        "completed": "Abgeschlossen",
+        "paid": "Bezahlt",
+        "refunded": "Erstattet",
+        "cancelled": "Storniert",
+        "failed": "Fehlgeschlagen",
+        "disputed": "Umstritten"
+      }
     },
     "listingDetail": {
       "claim_this_donation": "Diese Spende beanspruchen",
@@ -1422,7 +1471,11 @@
       "second_hand": "Second-Hand",
       "recycling": "Recycling",
       "news_flash": "Eilmeldung"
-    }
+    },
+    "title": "Modetrends & Einblicke",
+    "subtitle": "Durchstöbere kuratierte Stil-Ästhetiken, Nachhaltigkeits-News und Runway-Reviews, maßgeschneidert für dein Profil.",
+    "noTrendsTitle": "Keine Trends gefunden",
+    "noTrendsDesc": "Wir konnten keine aktiven Trendkarten finden. Schau später wieder vorbei."
   },
   "item": {
     "polishingPhoto": "Foto wird poliert…",
@@ -1431,5 +1484,39 @@
     "reshootSuccess": "Foto wiederhergestellt.",
     "reshootRejected": "Das wiederhergestellte Foto wurde abgelehnt — Original bleibt erhalten.",
     "reshootError": "Foto konnte nicht wiederhergestellt werden. Bitte erneut versuchen."
+  },
+  "outfits": {
+    "viewDescription": "Sieh dir die Outfits an, die du zusammengestellt und geplant hast. Dein AI-Stylist stellt sicher, dass du alle Kleidungsstücke nutzt und warnt dich vor wiederholtem Tragen bei gleichen Anlässen.",
+    "notificationCenter": "Benachrichtigungszentrum (simuliert)",
+    "noNotifs": "Noch keine Benachrichtigungen ausgelöst. Stelle deine tägliche Erinnerung in den Einstellungen ein oder plane ein Event zum Tragen.",
+    "noSavedOutfitsDesc": "Hol dir Outfit-Vorschläge im AI-Stylist-Tab, wähle deinen Favoriten und speichere ihn, um dein Outfit-Tagebuch zu starten.",
+    "outfitPieces": "Outfit-Teile",
+    "failedLoadOutfits": "Fehler beim Laden der gespeicherten Outfits.",
+    "removedSuccess": "Outfit aus deinem Tagebuch entfernt.",
+    "failedDelete": "Fehler beim Löschen des Outfits.",
+    "logsCleared": "Benachrichtigungsprotokoll gelöscht.",
+    "failedClearLogs": "Fehler beim Löschen des Protokolls.",
+    "notification": {
+      "eventTitle": "Zeit, dich für {{name}} fertig zu machen! 🌟",
+      "eventBody": "Dein gewähltes Outfit ist bereit. Hab eine wunderbare Zeit!",
+      "dailyTitle": "Der Outfit-Vorschlag für morgen ist da! {{emoji}}",
+      "dailyBody": "Dein AI-Stylist hat 3 Outfit-Optionen für deinen {{style}}-Tag vorbereitet."
+    }
+  },
+  "stats": {
+    "category": "DressApp Ausgepackt",
+    "title": "Kleiderschrank-Einblicke",
+    "description": "Analysiere den Wert deines Kleiderschranks, Trage-Statistiken und dominierende Farbpaletten, um bewusste Tragegewohnheiten zu entwickeln.",
+    "totalValue": "Wert des Kleiderschranks",
+    "utilization": "Nutzungsrate",
+    "wornRatio": "Getragene Kleidungsstücke",
+    "emptyStateTitle": "Keine Kleidungsstücke zu analysieren",
+    "emptyStateDesc": "Füge Artikel zu deinem Kleiderschrank hinzu und zeichne das Tragen mit deinem Stylisten oder Kalender auf, um Statistiken zu sehen.",
+    "colorPalette": "Farbpaletten-Verteilung",
+    "noColorData": "Keine Farbtags angegeben.",
+    "costPerWear": "Cost-per-Wear-Bestenliste",
+    "mostEfficient": "Am effizientesten getragen",
+    "leastEfficient": "Am wenigsten effizient getragen",
+    "noCPWData": "Der Kaufpreis ist erforderlich, um Cost-per-Wear-Statistiken zu berechnen."
   }
 }

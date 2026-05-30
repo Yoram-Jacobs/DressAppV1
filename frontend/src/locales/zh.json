@@ -606,7 +606,8 @@
     "modeSell": "出售",
     "modeSwap": "交换",
     "modeDonate": "捐赠",
-    "titleField": "标题"
+    "titleField": "标题",
+    "shippingFee": "邮寄费用 (可选)"
   },
   "transactions": {
     "title": "交易",
@@ -636,7 +637,13 @@
     "yourNet": "您的净收益",
     "view": "查看",
     "loadFailed": "加载交易记录失败",
-    "listingShort": "商品 {{id}}…"
+    "listingShort": "商品 {{id}}…",
+    "emptySub": "从市集购买、交换或捐赠，开始建立您的交易历史。",
+    "emptySwaps": "暂无交换",
+    "emptySwapsSub": "当有人提议交换或您提议交换时，它将显示在这里。",
+    "emptyDonations": "暂无捐赠",
+    "emptyDonationsSub": "分享您穿不下的衣物，或者向社区索取免费赠品。",
+    "emptyFilter": "没有匹配当前状态筛选器的结果。请尝试清除筛选器。"
   },
   "profile": {
     "exploreTitle": "探索 DressApp",
@@ -1068,6 +1075,30 @@
       "tote_bag": "托特包",
       "crossbody_bag": "斜挎包",
       "clutch": "手拿包"
+    },
+    "color": {
+      "cream": "奶油色",
+      "grey": "灰色",
+      "gray": "灰色",
+      "light_blue": "浅蓝色",
+      "light_grey": "浅灰色",
+      "red": "红色",
+      "terracotta_brown": "陶瓦棕",
+      "white": "白色",
+      "black": "黑色",
+      "blue": "蓝色",
+      "green": "绿色",
+      "yellow": "黄色",
+      "orange": "橙色",
+      "pink": "粉色",
+      "purple": "紫色",
+      "brown": "棕色",
+      "navy": "海军蓝",
+      "olive": "橄榄绿",
+      "beige": "米色",
+      "אפור_בהיר": "浅灰色",
+      "בורدو": "酒红色",
+      "حום": "棕色"
     }
   },
   "location": {
@@ -1379,7 +1410,20 @@
       "purchase": "购买",
       "receipt_confirmed_thanks_for_closing": "已确认收货。感谢完成闭环交易！",
       "selling": "卖出",
-      "swaps": "交换"
+      "swap": "交换",
+      "swaps": "交换",
+      "status": {
+        "pending": "待处理",
+        "accepted": "已接受",
+        "denied": "已拒绝",
+        "shipped": "已发货",
+        "completed": "已完成",
+        "paid": "已付款",
+        "refunded": "已退款",
+        "cancelled": "已取消",
+        "failed": "已失败",
+        "disputed": "有争议"
+      }
     },
     "listingDetail": {
       "claim_this_donation": "领取此捐赠",
@@ -1428,7 +1472,11 @@
       "second_hand": "二手",
       "recycling": "回收",
       "news_flash": "新闻速递"
-    }
+    },
+    "title": "时尚趋势与洞察",
+    "subtitle": "浏览为您定制的风格美学、可持续时尚新闻和秀场评论。",
+    "noTrendsTitle": "未找到趋势",
+    "noTrendsDesc": "我们无法找到任何活跃的趋势卡片。请稍后再来查看精选洞察。"
   },
   "item": {
     "polishingPhoto": "正在优化照片…",
@@ -1448,7 +1496,13 @@
     "removedSuccess": "已从您的日记中移除该穿搭。",
     "failedDelete": "删除穿搭失败。",
     "logsCleared": "通知日志已清空。",
-    "failedClearLogs": "清空日志失败。"
+    "failedClearLogs": "清空日志失败。",
+    "notification": {
+      "eventTitle": "是时候准备您的{{name}}穿搭了！🌟",
+      "eventBody": "您选定的穿搭已准备就绪。祝您度过美好时光！",
+      "dailyTitle": "明天的穿搭建议已准备就绪！{{emoji}}",
+      "dailyBody": "您的 AI 造型师已为您的{{style}}活动准备了 3 套穿搭选择。"
+    }
   },
   "stats": {
     "category": "DressApp 解构衣橱",

@@ -12,6 +12,44 @@ import { useAuth } from '@/lib/auth';
 import AvatarViewer from '@/components/AvatarViewer';
 import { labelForRole } from '@/lib/taxonomy';
 
+const getLocalizedNotification = (n, t) => {
+  if (!n) return { title: '', body: '' };
+  let title = n.title || '';
+  let body = n.body || '';
+
+  // 1. Check if Daily Proposal Title: "Tomorrow's Outfit Proposal is Ready! 👕"
+  const dailyTitleRegex = /^Tomorrow's Outfit Proposal is Ready!\s*(.+)?$/i;
+  const matchDailyTitle = title.match(dailyTitleRegex);
+  if (matchDailyTitle) {
+    const emoji = matchDailyTitle[1] || '👕';
+    title = t('outfits.notification.dailyTitle', { emoji, defaultValue: title });
+  }
+
+  // 2. Check if Daily Proposal Body: "Your AI Stylist prepared 3 outfit options for your: <style>."
+  const dailyBodyRegex = /^Your AI Stylist prepared 3 outfit options for your:\s*(.+?)\.?$/i;
+  const matchDailyBody = body.match(dailyBodyRegex);
+  if (matchDailyBody) {
+    const style = matchDailyBody[1] || 'day';
+    body = t('outfits.notification.dailyBody', { style, defaultValue: body });
+  }
+
+  // 3. Check if Event Title: "Time to get ready for <name>! 🌟"
+  const eventTitleRegex = /^Time to get ready for\s*(.+?)\s*!\s*🌟\s*$/i;
+  const matchEventTitle = title.match(eventTitleRegex);
+  if (matchEventTitle) {
+    const name = matchEventTitle[1] || '';
+    title = t('outfits.notification.eventTitle', { name, defaultValue: title });
+  }
+
+  // 4. Check if Event Body: "Your chosen outfit is prepared. Have a wonderful time!"
+  const eventBodyRegex = /^Your chosen outfit is prepared\.\s*Have a wonderful time!/i;
+  if (eventBodyRegex.test(body)) {
+    body = t('outfits.notification.eventBody', { defaultValue: body });
+  }
+
+  return { title, body };
+};
+
 export default function Outfits() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -111,20 +149,23 @@ export default function Outfits() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[180px] overflow-y-auto pr-1">
-              {notifications.map((n) => (
-                <div key={n.id} className="p-3 bg-card rounded-xl border border-border flex items-start gap-2.5 shadow-sm text-xs">
-                  <div className="p-1 bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] rounded-lg shrink-0">
-                    <Bell className="h-3.5 w-3.5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-semibold text-foreground truncate">{n.title}</div>
-                    <div className="text-muted-foreground mt-0.5 leading-relaxed">{n.body}</div>
-                    <div className="text-[10px] text-muted-foreground/60 mt-1.5">
-                      {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {notifications.map((n) => {
+                const { title, body } = getLocalizedNotification(n, t);
+                return (
+                  <div key={n.id} className="p-3 bg-card rounded-xl border border-border flex items-start gap-2.5 shadow-sm text-xs">
+                    <div className="p-1 bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] rounded-lg shrink-0">
+                      <Bell className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-foreground truncate">{title}</div>
+                      <div className="text-muted-foreground mt-0.5 leading-relaxed">{body}</div>
+                      <div className="text-[10px] text-muted-foreground/60 mt-1.5">
+                        {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -175,7 +216,9 @@ export default function Outfits() {
 
                 <CardContent className="p-5 flex-1 flex flex-col justify-between space-y-4">
                   <div className="space-y-2">
-                    <h3 className="font-display text-lg font-semibold truncate text-foreground">{o.name}</h3>
+                    <h3 className="font-display text-lg font-semibold truncate text-foreground">
+                      {(o.name || '').toLowerCase() === 'the look' ? t('components.outfitCanvas.the_look', { defaultValue: o.name }) : o.name}
+                    </h3>
                     {o.prompt && (
                       <p className="text-xs text-muted-foreground line-clamp-2 italic">
                         "{o.prompt}"

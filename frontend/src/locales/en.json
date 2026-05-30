@@ -617,7 +617,8 @@
     "createFailed": "Could not create listing",
     "feePreview": "Fee preview",
     "youReceive": "You receive",
-    "feeFootnote": "7% is calculated after payment processing fees (2.9% + $0.30)."
+    "feeFootnote": "7% is calculated after payment processing fees (2.9% + $0.30).",
+    "shippingFee": "Shipping fee (optional)"
   },
   "transactions": {
     "title": "Your transactions",
@@ -647,7 +648,13 @@
     "yourNet": "Your net",
     "view": "View",
     "loadFailed": "Failed to load transactions",
-    "listingShort": "Listing {{id}}…"
+    "listingShort": "Listing {{id}}…",
+    "emptySub": "Buy, swap, or donate from the marketplace to start building your history.",
+    "emptySwaps": "No swaps yet",
+    "emptySwapsSub": "When someone proposes a swap — or you propose one — it'll appear here.",
+    "emptyDonations": "No donations yet",
+    "emptyDonationsSub": "Share something you've outgrown or claim a freebie from your community.",
+    "emptyFilter": "Nothing matches the active status filter. Try clearing it."
   },
   "profile": {
     "exploreTitle": "Explore DressApp",
@@ -812,7 +819,6 @@
     "receiveDirectBrowserAlerts": "Receive direct browser notification alerts on this device.",
     "phoneWarningStart": "* Ensure your phone number is configured under the ",
     "phoneWarningEnd": " section to successfully route simulated push alerts.",
-    "identity": "Identity",
     "browserPushNotificationsSuccessfullyEnabled": "Browser push notifications successfully enabled.",
     "browserPushNotificationsDisabled": "Browser push notifications disabled.",
     "failedToTogglePushNotifications": "Failed to toggle push notifications.",
@@ -1105,6 +1111,30 @@
       "tote_bag": "Tote bag",
       "crossbody_bag": "Crossbody bag",
       "clutch": "Clutch"
+    },
+    "color": {
+      "cream": "Cream",
+      "grey": "Grey",
+      "gray": "Gray",
+      "light_blue": "Light blue",
+      "light_grey": "Light grey",
+      "red": "Red",
+      "terracotta_brown": "Terracotta brown",
+      "white": "White",
+      "black": "Black",
+      "blue": "Blue",
+      "green": "Green",
+      "yellow": "Yellow",
+      "orange": "Orange",
+      "pink": "Pink",
+      "purple": "Purple",
+      "brown": "Brown",
+      "navy": "Navy",
+      "olive": "Olive",
+      "beige": "Beige",
+      "אפור_בהיר": "Light grey",
+      "בורدو": "Bordeaux",
+      "حום": "Brown"
     }
   },
   "location": {
@@ -1416,7 +1446,20 @@
       "purchase": "Purchase",
       "receipt_confirmed_thanks_for_closing": "Receipt confirmed. Thanks for closing the loop!",
       "selling": "Selling",
-      "swaps": "Swaps"
+      "swap": "Swap",
+      "swaps": "Swaps",
+      "status": {
+        "pending": "Pending",
+        "accepted": "Accepted",
+        "denied": "Denied",
+        "shipped": "Shipped",
+        "completed": "Completed",
+        "paid": "Paid",
+        "refunded": "Refunded",
+        "cancelled": "Cancelled",
+        "failed": "Failed",
+        "disputed": "Disputed"
+      }
     },
     "listingDetail": {
       "claim_this_donation": "Claim this donation",
@@ -1465,7 +1508,11 @@
       "second_hand": "Second-hand",
       "recycling": "Recycling",
       "news_flash": "News Flash"
-    }
+    },
+    "title": "Fashion Trends & Insights",
+    "subtitle": "Browse curated style aesthetics, sustainability news, and runway reviews tailored to your profile.",
+    "noTrendsTitle": "No Trends Found",
+    "noTrendsDesc": "We couldn't find any active trend cards. Check back later for curated insights."
   },
   "item": {
     "polishingPhoto": "Polishing photo…",
@@ -1485,7 +1532,13 @@
     "removedSuccess": "Outfit removed from your diary.",
     "failedDelete": "Failed to delete outfit.",
     "logsCleared": "Notification logs cleared.",
-    "failedClearLogs": "Failed to clear logs."
+    "failedClearLogs": "Failed to clear logs.",
+    "notification": {
+      "eventTitle": "Time to get ready for {{name}}! 🌟",
+      "eventBody": "Your chosen outfit is prepared. Have a wonderful time!",
+      "dailyTitle": "Tomorrow's Outfit Proposal is Ready! {{emoji}}",
+      "dailyBody": "Your AI Stylist prepared 3 outfit options for your: {{style}}."
+    }
   },
   "stats": {
     "category": "DressApp Unpacked",

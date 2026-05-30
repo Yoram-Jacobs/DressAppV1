@@ -605,7 +605,8 @@
     "publish": "Publier l'annonce",
     "feePreview": "Aperçu des frais",
     "youReceive": "Vous recevez",
-    "feeFootnote": "Les 7 % sont calculés après les frais de traitement des paiements (2,9 % + 0,30 $)."
+    "feeFootnote": "Les 7 % sont calculés après les frais de traitement des paiements (2,9 % + 0,30 $).",
+    "shippingFee": "Frais de port (optionnel)"
   },
   "transactions": {
     "title": "Transactions",
@@ -635,7 +636,13 @@
     "yourNet": "Votre net",
     "view": "Voir",
     "loadFailed": "Échec du chargement des transactions",
-    "listingShort": "Annonce {{id}}…"
+    "listingShort": "Annonce {{id}}…",
+    "emptySub": "Achetez, échangez ou donnez sur le marché pour commencer à construire votre historique.",
+    "emptySwaps": "Aucun échange pour l'instant",
+    "emptySwapsSub": "Quand quelqu'un propose un échange – ou que vous en proposez un – il apparaîtra ici.",
+    "emptyDonations": "Aucun don pour l'instant",
+    "emptyDonationsSub": "Partagez quelque chose qui est devenu trop petit ou demandez un cadeau gratuit à votre communauté.",
+    "emptyFilter": "Rien ne correspond au filtre de statut actif. Essayez de l'effacer."
   },
   "profile": {
     "accountLabel": "Compte",
@@ -679,7 +686,10 @@
       "photos": "Photos",
       "measurements": "Body measurements",
       "hair": "Hair",
-      "preferences": "Preferences"
+      "preferences": "Preferences",
+      "photosAvatar": "Photos & Avatar",
+      "digitalAvatar": "Avatar numérique 3D",
+      "avatarGenerationDesc": "Généré à partir de vos mesures corporelles ci-dessous."
     },
     "firstName": "First name",
     "lastName": "Last name",
@@ -777,7 +787,9 @@
       "paypalEmail": "E-mail PayPal pour les paiements",
       "linked": "Associé"
     },
-    "occupation": "Profession"
+    "occupation": "Profession",
+    "exploreTitle": "Explorer DressApp",
+    "statsTitle": "Décryptage"
   },
   "admin": {
     "title": "Admin",
@@ -1062,6 +1074,30 @@
       "tote_bag": "Tote bag",
       "crossbody_bag": "Crossbody bag",
       "clutch": "Clutch"
+    },
+    "color": {
+      "cream": "Crème",
+      "grey": "Gris",
+      "gray": "Gris",
+      "light_blue": "Bleu clair",
+      "light_grey": "Gris clair",
+      "red": "Rouge",
+      "terracotta_brown": "Terracotta",
+      "white": "Blanc",
+      "black": "Noir",
+      "blue": "Bleu",
+      "green": "Vert",
+      "yellow": "Jaune",
+      "orange": "Orange",
+      "pink": "Rose",
+      "purple": "Violet",
+      "brown": "Marron",
+      "navy": "Bleu marine",
+      "olive": "Olive",
+      "beige": "Beige",
+      "אפור_בהיר": "Gris clair",
+      "בורدو": "Bordeaux",
+      "حوم": "Marron"
     }
   },
   "location": {
@@ -1373,7 +1409,20 @@
       "purchase": "Achat",
       "receipt_confirmed_thanks_for_closing": "Réception confirmée. Merci d'avoir finalisé l'opération !",
       "selling": "Ventes",
-      "swaps": "Échanges"
+      "swaps": "Échanges",
+      "swap": "Échange",
+      "status": {
+        "pending": "En attente",
+        "accepted": "Accepté",
+        "denied": "Refusé",
+        "shipped": "Expédié",
+        "completed": "Terminé",
+        "paid": "Payé",
+        "refunded": "Remboursé",
+        "cancelled": "Annulé",
+        "failed": "Échoué",
+        "disputed": "Contesté"
+      }
     },
     "listingDetail": {
       "claim_this_donation": "Réclamer ce don",
@@ -1422,7 +1471,11 @@
       "second_hand": "Seconde main",
       "recycling": "Recyclage",
       "news_flash": "Flash info"
-    }
+    },
+    "title": "Tendances & Décryptages",
+    "subtitle": "Découvrez des esthétiques sélectionnées, des actualités sur la durabilité et des analyses de défilés adaptées à votre profil.",
+    "noTrendsTitle": "Aucune tendance trouvée",
+    "noTrendsDesc": "Nous n'avons trouvé aucune carte de tendance active. Revenez plus tard."
   },
   "item": {
     "polishingPhoto": "Retouche en cours…",
@@ -1431,5 +1484,39 @@
     "reshootSuccess": "Photo restaurée.",
     "reshootRejected": "La photo restaurée a été refusée — nous gardons l'originale.",
     "reshootError": "Impossible de restaurer la photo. Réessayez."
+  },
+  "outfits": {
+    "viewDescription": "Consultez les tenues que vous avez composées et programmées. Votre Styliste IA s'assure que vous utilisez toutes les pièces de votre garde-robe et vous avertit en cas de répétition pour des occasions similaires.",
+    "notificationCenter": "Centre de notifications (simulé)",
+    "noNotifs": "Aucune notification déclenchée pour l'instant. Configurez votre rappel quotidien dans les réglages ou planifiez un événement pour tester.",
+    "noSavedOutfitsDesc": "Obtenez des suggestions de tenues dans l'onglet Styliste IA, choisissez vos préférées et sauvegardez-les pour commencer votre journal de tenues.",
+    "outfitPieces": "Pièces de la tenue",
+    "failedLoadOutfits": "Impossible de charger les tenues sauvegardées.",
+    "removedSuccess": "Tenue retirée de votre journal.",
+    "failedDelete": "Impossible de supprimer la tenue.",
+    "logsCleared": "Historique des notifications effacé.",
+    "failedClearLogs": "Impossible d'effacer l'historique.",
+    "notification": {
+      "eventTitle": "Il est temps de vous préparer pour {{name}} ! 🌟",
+      "eventBody": "La tenue choisie est prête. Passez un excellent moment !",
+      "dailyTitle": "La suggestion de tenue pour demain est prête ! {{emoji}}",
+      "dailyBody": "Votre Styliste IA a préparé 3 suggestions de tenues pour votre journée : {{style}}."
+    }
+  },
+  "stats": {
+    "category": "DressApp Décryptage",
+    "title": "Analyses de la garde-robe",
+    "description": "Analysez la valeur de votre garde-robe, les statistiques d'utilisation et les palettes de couleurs dominantes pour consommer la mode de manière consciente.",
+    "totalValue": "Valeur de la garde-robe",
+    "utilization": "Taux d'utilisation",
+    "wornRatio": "Articles portés",
+    "emptyStateTitle": "Aucun vêtement à analyser",
+    "emptyStateDesc": "Ajoutez des articles à votre garde-robe et enregistrez vos tenues avec votre styliste ou votre calendrier pour voir les analyses.",
+    "colorPalette": "Répartition de la palette de couleurs",
+    "noColorData": "Aucune étiquette de couleur spécifiée.",
+    "costPerWear": "Classement du coût par port",
+    "mostEfficient": "Porté le plus efficacement",
+    "leastEfficient": "Porté le moins efficacement",
+    "noCPWData": "Le prix d'achat est requis pour calculer le coût par port."
   }
 }

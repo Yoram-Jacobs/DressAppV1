@@ -108,6 +108,12 @@ export const labelForRole = (code, t) => {
   return fallback(t, key, code);
 };
 
+export const labelForColor = (code, t) => {
+  if (!code) return '';
+  const key = `taxonomy.color.${slug(code)}`;
+  return fallback(t, key, code);
+};
+
 /**
  * Sub-category / item-type labels.
  *

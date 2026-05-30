@@ -615,7 +615,8 @@
     "createFailed": "לא ניתן ליצור",
     "feePreview": "תצוגת עמלה",
     "youReceive": "תקבל",
-    "feeFootnote": "7% מחושב לאחר עמלות סליקה (2.9% + $0.30)."
+    "feeFootnote": "7% מחושב לאחר עמלות סליקה (2.9% + $0.30).",
+    "shippingFee": "דמי משלוח (אופציונלי)"
   },
   "transactions": {
     "title": "העסקאות שלך",
@@ -645,12 +646,18 @@
     "yourNet": "הנטו שלך",
     "view": "צפה",
     "loadFailed": "טעינת העסקאות נכשלה",
-    "listingShort": "מודעה {{id}}…"
+    "listingShort": "מודעה {{id}}…",
+    "emptySub": "קנה, החלף או תרום מהשוק כדי להתחיל לבנות את ההיסטוריה שלך.",
+    "emptySwaps": "אין החלפות עדיין",
+    "emptySwapsSub": "כשמישהו מציע החלפה - או שאתה מציע אחת - היא תופיע כאן.",
+    "emptyDonations": "אין תרומות עדיין",
+    "emptyDonationsSub": "שתף משהו שקטן עליך או בקש פריט חינם מהקהילה שלך.",
+    "emptyFilter": "שום דבר לא מתאים לסינון המצב הפעיל. נסה לנקות אותו."
   },
   "profile": {
     "accountLabel": "חשבון",
     "title": "פרופיל והגדרות",
-    "identity": "זהות",
+    "identity": "פרטי זיהוי",
     "displayName": "שם תצוגה",
     "emailReadonly": "אימייל",
     "styleProfile": "פרופיל סגנון",
@@ -689,7 +696,10 @@
       "photos": "תמונות",
       "measurements": "מידות גוף",
       "hair": "שיער",
-      "preferences": "העדפות"
+      "preferences": "העדפות",
+      "photosAvatar": "תמונות ואוואטר",
+      "digitalAvatar": "אוואטר דיגיטלי תלת-ממדי",
+      "avatarGenerationDesc": "נוצר ממידות הגוף שלך למטה."
     },
     "firstName": "שם פרטי",
     "lastName": "שם משפחה",
@@ -805,11 +815,12 @@
     "receiveDirectBrowserAlerts": "קבל התראות ישירות בדפדפן במכשיר זה.",
     "phoneWarningStart": "* ודא שמספר הטלפון שלך מוגדר תחת סעיף ",
     "phoneWarningEnd": " כדי לנתב בהצלחה התראות push מדומות.",
-    "identity": "פרטי זיהוי",
     "browserPushNotificationsSuccessfullyEnabled": "התראות push בדפדפן הופעלו בהצלחה.",
     "browserPushNotificationsDisabled": "התראות push בדפדפן הושבתו.",
     "failedToTogglePushNotifications": "הפעלה/השבתה של התראות push נכשלה.",
-    "aiStylistSchedulerSettingsUpdated": "הגדרות מתזמן הסטייליסט עודכנו בהצלחה."
+    "aiStylistSchedulerSettingsUpdated": "הגדרות מתזמן הסטייליסט עודכנו בהצלחה.",
+    "exploreTitle": "גלה את DressApp",
+    "statsTitle": "נתונים"
   },
   "admin": {
     "title": "ניהול",
@@ -1094,6 +1105,30 @@
       "tote_bag": "תיק טוט",
       "crossbody_bag": "תיק צד",
       "clutch": "קלאץ׳"
+    },
+    "color": {
+      "cream": "קרם",
+      "grey": "אפור",
+      "gray": "אפור",
+      "light_blue": "תכלת",
+      "light_grey": "אפור בהיר",
+      "red": "אדום",
+      "terracotta_brown": "חום חמרה",
+      "white": "לבן",
+      "black": "שחור",
+      "blue": "כחול",
+      "green": "ירוक",
+      "yellow": "צהוב",
+      "orange": "כתום",
+      "pink": "ורוד",
+      "purple": "סגול",
+      "brown": "חום",
+      "navy": "כחול כהה",
+      "olive": "ירוק זית",
+      "beige": "בז'",
+      "אפור_בהיר": "אפור בהיר",
+      "בורדו": "בורדו",
+      "חום": "חום"
     }
   },
   "location": {
@@ -1405,7 +1440,20 @@
       "purchase": "רכישה",
       "receipt_confirmed_thanks_for_closing": "הקבלה אושרה. תודה על סגירת המעגל!",
       "selling": "מכירה",
-      "swaps": "החלפות"
+      "swaps": "החלפות",
+      "swap": "החלפה",
+      "status": {
+        "pending": "ממתין",
+        "accepted": "אושר",
+        "denied": "נדחה",
+        "shipped": "נשלח",
+        "completed": "הושלם",
+        "paid": "שולם",
+        "refunded": "זוכה",
+        "cancelled": "בוטל",
+        "failed": "נכשל",
+        "disputed": "במחלוקת"
+      }
     },
     "listingDetail": {
       "claim_this_donation": "בקש את התרומה הזו",
@@ -1454,7 +1502,11 @@
       "second_hand": "יד שנייה",
       "recycling": "מיחזור",
       "news_flash": "מבזק חדשות"
-    }
+    },
+    "title": "טרנדים ותובנות אופנה",
+    "subtitle": "דפדф באסתטיקה אוצרת, חדשות קיימות וביקורות מסלול המותאמות לפרופיל שלך.",
+    "noTrendsTitle": "לא נמצאו טרנדים",
+    "noTrendsDesc": "לא מצאנו כרטיסי טרנדים פעילים. בדוק שוב מאוחר יותר."
   },
   "item": {
     "polishingPhoto": "מלטשים את התמונה…",
@@ -1465,15 +1517,37 @@
     "reshootError": "לא הצליח לשחזר את התמונה. נסה שוב."
   },
   "outfits": {
-    "viewDescription": "צפה במערכות הלבוש שהרכבת ותזמנת. הסטייליסט שלך מוודא שאתה מנצל את כל פריטי הארון ומזהיר אותך מחזרתיות של לבוש באירועים קודמים.",
-    "notificationCenter": "מרכז התראות (מדומה)",
-    "noNotifs": "לא הופעלו התראות עדיין. הגדר תזמון יומית בהגדרות או תזמן אירוע כדי לבדוק זאת.",
-    "noSavedOutfitsDesc": "קבל הצעות לבוש בלשונית הסטייליסט, בחר את המועדפת עליך, ושמור אותה כדי להתחיל לתעד את התלבושות שלך.",
-    "outfitPieces": "פריטי לבוש",
-    "failedLoadOutfits": "טעינת מערכות הלבוש השמורות נכשלה.",
-    "removedSuccess": "מערכת הלבוש הוסרה מהיומן שלך.",
-    "failedDelete": "מחיקת מערכת הלבוש נכשלה.",
+    "viewDescription": "צפה בלוקים שהרכבת ותזמנת. הסטייליסט הדיגיטלי שלך דואג שתנצל את כל פריטי הארון ומזהיר מפני חזרה על אותו לוק באותם אירועים.",
+    "notificationCenter": "מרכז התראות (סימולציה)",
+    "noNotifs": "לא הופעלו התראות עדיין. הגדר תזכורת יומית בהגדרות או תזמן אירוע לבדיקה.",
+    "noSavedOutfitsDesc": "קבל הצעות לבוש בלשונית הסטייליסט, בחר את המועדף עליך ושמור אותו כדי להתחיל לתעד את הלוקים שלך.",
+    "outfitPieces": "פריטי הלוק",
+    "failedLoadOutfits": "טעינת הלוקים השמורים נכשלה.",
+    "removedSuccess": "הלוק הוסר מהיומן שלך.",
+    "failedDelete": "מחיקת הלוק נכשלה.",
     "logsCleared": "יומן ההתראות נוקה.",
-    "failedClearLogs": "ניקוי יומן ההתראות נכשל."
+    "failedClearLogs": "ניקוי היומן נכשל.",
+    "notification": {
+      "eventTitle": "הגיע הזמן להתארגן לקראת {{name}}! 🌟",
+      "eventBody": "הלוק הנבחר שלך מוכן. תהנה!",
+      "dailyTitle": "הצעת הלבוש למחר מוכנה! {{emoji}}",
+      "dailyBody": "הסטייליסט הדיגיטלי שלך הכין 3 הצעות לבוש ליום ה-{{style}} שלך."
+    }
+  },
+  "stats": {
+    "category": "DressApp נתונים",
+    "title": "תובנות ארון",
+    "description": "נתח את שווי הארון שלך, מדדי לבישה ופלטות צבעים מובילות כדי לטפח הרגלי לבישה מודעים.",
+    "totalValue": "שווי הארון",
+    "utilization": "ניצול הארון",
+    "wornRatio": "פריטים שנלבשו",
+    "emptyStateTitle": "אין פריטים לניתוח",
+    "emptyStateDesc": "הוסף פריטים לארון שלך ותעד לבישות עם הסטייליסט או לוח השנה שלך כדי לראות תובנות.",
+    "colorPalette": "פילוח פלטת צבעים",
+    "noColorData": "לא צוינו תגי צבע.",
+    "costPerWear": "דירוג עלות לפי לבישה",
+    "mostEfficient": "הלבישה היעילה ביותר",
+    "leastEfficient": "הלבישה הפחות יעילה",
+    "noCPWData": "נדרש מחיר רכישה כדי לחשב עלות לפי לבישה."
   }
 }

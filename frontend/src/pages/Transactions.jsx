@@ -113,7 +113,7 @@ export default function Transactions() {
       const res = await api.listTransactions({ role: 'all', limit: 200 });
       setItems(res.items || []);
     } catch (err) {
-      toast.error(err?.response?.data?.detail || t('transactions.loadFailed'));
+      toast.error(err?.response?.data?.detail || t('transactions.loadFailed', { defaultValue: 'Failed to load transactions' }));
     }
   };
 
@@ -123,7 +123,7 @@ export default function Transactions() {
     api
       .listTransactions({ role: 'all', limit: 200 })
       .then((res) => { if (active) setItems(res.items || []); })
-      .catch((err) => toast.error(err?.response?.data?.detail || t('transactions.loadFailed')))
+      .catch((err) => toast.error(err?.response?.data?.detail || t('transactions.loadFailed', { defaultValue: 'Failed to load transactions' })))
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [t]);
@@ -150,23 +150,23 @@ export default function Transactions() {
     );
 
   const TAB_DEFS = [
-    { value: 'all', label: 'All', count: partitioned.all.length },
-    { value: 'buying', label: t('pages.transactions.buying'), count: partitioned.buying.length },
-    { value: 'selling', label: t('pages.transactions.selling'), count: partitioned.selling.length },
-    { value: 'swaps', label: t('pages.transactions.swaps'), count: partitioned.swaps.length },
-    { value: 'donations', label: t('pages.transactions.donations'), count: partitioned.donations.length },
+    { value: 'all', label: t('common.all', { defaultValue: 'All' }), count: partitioned.all.length },
+    { value: 'buying', label: t('pages.transactions.buying', { defaultValue: 'Buying' }), count: partitioned.buying.length },
+    { value: 'selling', label: t('pages.transactions.selling', { defaultValue: 'Selling' }), count: partitioned.selling.length },
+    { value: 'swaps', label: t('pages.transactions.swaps', { defaultValue: 'Swaps' }), count: partitioned.swaps.length },
+    { value: 'donations', label: t('pages.transactions.donations', { defaultValue: 'Donations' }), count: partitioned.donations.length },
   ];
 
   return (
     <div className="container-px max-w-5xl mx-auto pt-6 md:pt-10 pb-20" data-testid="transactions-page">
       <div className="flex items-end justify-between mb-6 gap-3 flex-wrap">
         <div>
-          <div className="caps-label text-muted-foreground">{t('transactions.label')}</div>
-          <h1 className="font-display text-3xl sm:text-4xl mt-1">{t('transactions.title')}</h1>
-          <p className="text-sm text-muted-foreground mt-2 max-w-xl">{t('transactions.subtitle')}</p>
+          <div className="caps-label text-muted-foreground">{t('transactions.label', { defaultValue: 'Ledger' })}</div>
+          <h1 className="font-display text-3xl sm:text-4xl mt-1">{t('transactions.title', { defaultValue: 'Your transactions' })}</h1>
+          <p className="text-sm text-muted-foreground mt-2 max-w-xl">{t('transactions.subtitle', { defaultValue: 'Every purchase or sale you make through DressApp. 7% platform fee is applied after payment processing.' })}</p>
         </div>
         <Button variant="outline" asChild className="rounded-xl" data-testid="transactions-goto-market">
-          <Link to="/market"><ArrowUpRight className="h-4 w-4 me-2" /> {t('transactions.goMarket')}</Link>
+          <Link to="/market"><ArrowUpRight className="h-4 w-4 me-2" /> {t('transactions.goMarket', { defaultValue: 'Marketplace' })}</Link>
         </Button>
       </div>
 
@@ -216,7 +216,7 @@ export default function Transactions() {
                 data-testid={`transactions-status-chip-${s}`}
               >
                 {Icon && <Icon className="h-3 w-3" />}
-                {s}
+                {t(`pages.transactions.status.${s}`, { defaultValue: s })}
               </Toggle>
             );
           })}
@@ -264,24 +264,24 @@ function EmptyState({ kind, hasFilter }) {
   const { t } = useTranslation();
   const copy = {
     all: {
-      title: 'No transactions yet',
-      sub: 'Buy, swap, or donate from the marketplace to start building your history.',
+      title: t('transactions.empty', { defaultValue: 'No transactions yet' }),
+      sub: t('transactions.emptySub', { defaultValue: 'Buy, swap, or donate from the marketplace to start building your history.' }),
     },
     buying: {
-      title: t('transactions.emptyPurchases'),
-      sub: t('transactions.emptyPurchasesSub'),
+      title: t('transactions.emptyPurchases', { defaultValue: 'No purchases yet' }),
+      sub: t('transactions.emptyPurchasesSub', { defaultValue: 'Browse the marketplace to discover curated pieces with full fee transparency.' }),
     },
     selling: {
-      title: t('transactions.emptySales'),
-      sub: t('transactions.emptySalesSub'),
+      title: t('transactions.emptySales', { defaultValue: 'No sales yet' }),
+      sub: t('transactions.emptySalesSub', { defaultValue: 'List pieces from your closet and track the net payout you can expect here.' }),
     },
     swaps: {
-      title: 'No swaps yet',
-      sub: "When someone proposes a swap — or you propose one — it'll appear here.",
+      title: t('transactions.emptySwaps', { defaultValue: 'No swaps yet' }),
+      sub: t('transactions.emptySwapsSub', { defaultValue: "When someone proposes a swap — or you propose one — it'll appear here." }),
     },
     donations: {
-      title: 'No donations yet',
-      sub: "Share something you've outgrown or claim a freebie from your community.",
+      title: t('transactions.emptyDonations', { defaultValue: 'No donations yet' }),
+      sub: t('transactions.emptyDonationsSub', { defaultValue: "Share something you've outgrown or claim a freebie from your community." }),
     },
   }[kind] || copy?.all;
 
@@ -294,11 +294,11 @@ function EmptyState({ kind, hasFilter }) {
       <h2 className="font-display text-xl mt-3">{copy.title}</h2>
       <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
         {hasFilter
-          ? 'Nothing matches the active status filter. Try clearing it.'
+          ? t('transactions.emptyFilter', { defaultValue: 'Nothing matches the active status filter. Try clearing it.' })
           : copy.sub}
       </p>
       <Button asChild className="mt-4 rounded-xl" data-testid="transactions-empty-cta">
-        <Link to="/market">{t('pages.transactions.explore_the_marketplace')}</Link>
+        <Link to="/market">{t('pages.transactions.explore_the_marketplace', { defaultValue: 'Explore the marketplace' })}</Link>
       </Button>
     </div>
   );
@@ -320,10 +320,10 @@ function TransactionRow({ tx, userId, onConfirmed }) {
     setBusy(true);
     try {
       await api.confirmReceipt(tx.id);
-      toast.success(t('pages.transactions.receipt_confirmed_thanks_for_closing'));
+      toast.success(t('pages.transactions.receipt_confirmed_thanks_for_closing', { defaultValue: 'Receipt confirmed. Thanks for closing the loop!' }));
       onConfirmed?.();
     } catch (err) {
-      toast.error(err?.response?.data?.detail || 'Could not confirm receipt.');
+      toast.error(err?.response?.data?.detail || t('pages.transactions.could_not_confirm_receipt', { defaultValue: 'Could not confirm receipt.' }));
     } finally {
       setBusy(false);
     }
@@ -340,14 +340,16 @@ function TransactionRow({ tx, userId, onConfirmed }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <KIcon className="h-4 w-4 text-[hsl(var(--accent))] shrink-0" />
-            <span className="font-medium text-sm truncate">{kindMeta.label}</span>
+            <span className="font-medium text-sm truncate">
+              {t(`pages.transactions.${kind === 'buy' ? 'purchase' : kind}`, { defaultValue: kindMeta.label })}
+            </span>
             <Badge
               variant="outline"
-              className={`capitalize text-[11px] gap-1 ${STATUS_TONE[tx.status] || ''}`}
+              className={`text-[11px] gap-1 ${STATUS_TONE[tx.status] || ''}`}
               data-testid="transactions-status-badge"
             >
               {SIcon && <SIcon className="h-3 w-3" />}
-              {tx.status}
+              {t(`pages.transactions.status.${tx.status}`, { defaultValue: tx.status })}
             </Badge>
             {kind === 'buy' && (
               <span className="text-xs text-muted-foreground">
@@ -417,7 +419,7 @@ function TransactionRow({ tx, userId, onConfirmed }) {
               className="rounded-full"
               data-testid="transactions-open-listing"
             >
-              <Link to={`/market/${tx.listing_id}`}>View</Link>
+              <Link to={`/market/${tx.listing_id}`}>{t('transactions.view', { defaultValue: 'View' })}</Link>
             </Button>
           </div>
         </div>

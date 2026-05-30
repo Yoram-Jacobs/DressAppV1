@@ -605,7 +605,8 @@
     "publish": "出品する",
     "feePreview": "手数料プレビュー",
     "youReceive": "受取金額",
-    "feeFootnote": "7%は決済処理手数料（2.9% + $0.30）を差し引いた後に計算されます。"
+    "feeFootnote": "7%は決済処理手数料（2.9% + $0.30）を差し引いた後に計算されます。",
+    "shippingFee": "配送料 (任意)"
   },
   "transactions": {
     "title": "取引",
@@ -635,7 +636,13 @@
     "yourNet": "純受取額",
     "view": "表示",
     "loadFailed": "取引履歴の読み込みに失敗しました",
-    "listingShort": "出品 {{id}}…"
+    "listingShort": "出品 {{id}}…",
+    "emptySub": "マーケットプレイスで購入、交換、または寄付をして、取引履歴の構築を開始しましょう。",
+    "emptySwaps": "交換履歴はまだありません",
+    "emptySwapsSub": "誰かが交換を提案するか、あなたが提案すると、ここに表示されます。",
+    "emptyDonations": "寄付履歴はまだありません",
+    "emptyDonationsSub": "サイズが合わなくなったものをシェアするか、コミュニティから無料のアイテムをもらいましょう。",
+    "emptyFilter": "アクティブなステータスフィルターに一致するものがありません。クリアしてみてください。"
   },
   "profile": {
     "accountLabel": "アカウント",
@@ -679,7 +686,10 @@
       "photos": "写真",
       "measurements": "身体寸法",
       "hair": "髪",
-      "preferences": "設定"
+      "preferences": "設定",
+      "photosAvatar": "写真とアバター",
+      "digitalAvatar": "3D デジタルアバター",
+      "avatarGenerationDesc": "以下の身体測定値から生成されます。"
     },
     "firstName": "名",
     "lastName": "姓",
@@ -777,7 +787,9 @@
       "paypalEmail": "支払い用PayPalメールアドレス",
       "linked": "連携済み"
     },
-    "occupation": "職業"
+    "occupation": "職業",
+    "exploreTitle": "DressApp を探索",
+    "statsTitle": "Unpacked"
   },
   "admin": {
     "title": "管理",
@@ -1062,6 +1074,30 @@
       "tote_bag": "トートバッグ",
       "crossbody_bag": "クロスボディバッグ",
       "clutch": "クラッチバッグ"
+    },
+    "color": {
+      "cream": "クリーム",
+      "grey": "グレー",
+      "gray": "グレー",
+      "light_blue": "ライトブルー",
+      "light_grey": "ライトグレー",
+      "red": "レッド",
+      "terracotta_brown": "テラコッタ",
+      "white": "ホワイト",
+      "black": "ブラック",
+      "blue": "ブルー",
+      "green": "グリーン",
+      "yellow": "イエロー",
+      "orange": "オレンジ",
+      "pink": "ピンク",
+      "purple": "パープル",
+      "brown": "ブラウン",
+      "navy": "ネイビー",
+      "olive": "オリーブ",
+      "beige": "ベージュ",
+      "אפור_בהיר": "ライトグレー",
+      "בורدو": "ボルドー",
+      "حום": "ブラウン"
     }
   },
   "location": {
@@ -1373,7 +1409,20 @@
       "purchase": "購入",
       "receipt_confirmed_thanks_for_closing": "受取が確認されました。取引を完了していただきありがとうございます！",
       "selling": "販売中",
-      "swaps": "交換"
+      "swaps": "交換",
+      "swap": "交換",
+      "status": {
+        "pending": "保留中",
+        "accepted": "承認済み",
+        "denied": "拒否されました",
+        "shipped": "発送済み",
+        "completed": "完了",
+        "paid": "支払い済み",
+        "refunded": "返金済み",
+        "cancelled": "キャンセル済み",
+        "failed": "失敗",
+        "disputed": "紛争中"
+      }
     },
     "listingDetail": {
       "claim_this_donation": "この寄付を受け取る",
@@ -1422,7 +1471,11 @@
       "second_hand": "セカンドハンド",
       "recycling": "リサイクル",
       "news_flash": "ニュース速報"
-    }
+    },
+    "title": "ファッショントレンド＆インサイト",
+    "subtitle": "プロフィールに合わせてカスタマイズされたスタイル、サステナビリティニュース、ランウェイレビューを閲覧できます。",
+    "noTrendsTitle": "トレンドが見つかりません",
+    "noTrendsDesc": "アクティブなトレンドカードが見つかりませんでした。後ほどもう一度ご確認ください。"
   },
   "item": {
     "polishingPhoto": "写真を仕上げ中…",
@@ -1431,5 +1484,39 @@
     "reshootSuccess": "写真を修復しました。",
     "reshootRejected": "修復された写真は不採用となり、オリジナルを維持します。",
     "reshootError": "写真を修復できませんでした。もう一度お試しください。"
+  },
+  "outfits": {
+    "viewDescription": "作成およびスケジュールされたコーディネートを表示します。AIスタイリストはすべてのワードローブ資産の活用をサポートし、同じ機会に同じ服装をすることを防ぎます。",
+    "notificationCenter": "通知センター (シミュレーション)",
+    "noNotifs": "まだ通知はトリガーされていません。設定で毎日のリマインダーを設定するか、イベントをスケジュールしてテストしてください。",
+    "noSavedOutfitsDesc": "AIスタイリストタブでコーディネートの提案を受け取り、お気に入りを保存して日記への記録を開始します。",
+    "outfitPieces": "コーディネートアイテム",
+    "failedLoadOutfits": "保存されたコーディネートの読み込みに失敗しました。",
+    "removedSuccess": "コーディネートが日記から削除されました。",
+    "failedDelete": "コーディネートの削除に失敗しました。",
+    "logsCleared": "通知ログがクリアされました。",
+    "failedClearLogs": "ログのクリアに失敗しました。",
+    "notification": {
+      "eventTitle": "{{name}} の準備の時間です！ 🌟",
+      "eventBody": "選択したコーディネートが準備できました。素晴らしい時間をお過ごしください！",
+      "dailyTitle": "明日のコーディネート提案が準備できました！ {{emoji}}",
+      "dailyBody": "AIスタイリストがあなたの {{style}} スタイルのために3つのコーディネートオプションを用意しました。"
+    }
+  },
+  "stats": {
+    "category": "DressApp Unpacked",
+    "title": "ワードローブインサイト",
+    "description": "ワードローブの価値、着用頻度、主要なカラーパレットを分析して、意識的な着用習慣を身につけましょう。",
+    "totalValue": "ワードローブの価値",
+    "utilization": "ワードローブ利用率",
+    "wornRatio": "着用アイテム数",
+    "emptyStateTitle": "分析する衣類がありません",
+    "emptyStateDesc": "ワードローブにアイテムを追加し、スタイリストまたはカレンダーで着用を記録してインサイトを表示します。",
+    "colorPalette": "カラーパレット内訳",
+    "noColorData": "カラータグが指定されていません。",
+    "costPerWear": "着用コスト(CPW)ランキング",
+    "mostEfficient": "最も着用効率が良い",
+    "leastEfficient": "最も着用効率が悪い",
+    "noCPWData": "着用コスト(CPW)を計算するには、購入価格が必要です。"
   }
 }

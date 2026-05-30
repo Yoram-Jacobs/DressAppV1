@@ -605,7 +605,8 @@
     "publish": "Publicar artículo",
     "feePreview": "Vista previa de comisiones",
     "youReceive": "Tú recibes",
-    "feeFootnote": "El 7% se calcula tras las comisiones de procesamiento de pago (2.9% + $0.30)."
+    "feeFootnote": "El 7% se calcula tras las comisiones de procesamiento de pago (2.9% + $0.30).",
+    "shippingFee": "Costo de envío (opcional)"
   },
   "transactions": {
     "title": "Transacciones",
@@ -635,7 +636,13 @@
     "youPaid": "Pagaste",
     "yourNet": "Tu neto",
     "view": "Ver",
-    "loadFailed": "Error al cargar las transacciones"
+    "loadFailed": "Error al cargar las transacciones",
+    "emptySub": "Compre, intercambie o done desde el mercado para comenzar a crear su historial.",
+    "emptySwaps": "Sin intercambios aún",
+    "emptySwapsSub": "Cuando alguien proponga un intercambio, o usted proponga uno, aparecerá aquí.",
+    "emptyDonations": "Sin donaciones aún",
+    "emptyDonationsSub": "Comparta algo que ya no le quede o solicite un regalo de su comunidad.",
+    "emptyFilter": "Nada coincide con el filtro de estado activo. Intente borrarlo."
   },
   "profile": {
     "accountLabel": "Cuenta",
@@ -679,7 +686,10 @@
       "photos": "Fotos",
       "measurements": "Medidas corporales",
       "hair": "Cabello",
-      "preferences": "Preferencias"
+      "preferences": "Preferencias",
+      "photosAvatar": "Fotos y Avatar",
+      "digitalAvatar": "Avatar digital 3D",
+      "avatarGenerationDesc": "Generado a partir de tus medidas corporales a continuación."
     },
     "firstName": "Nombre",
     "lastName": "Apellido",
@@ -777,7 +787,9 @@
       "paypalEmail": "Email de PayPal para pagos",
       "linked": "Vinculado"
     },
-    "occupation": "Profesión"
+    "occupation": "Profesión",
+    "exploreTitle": "Explorar DressApp",
+    "statsTitle": "Desempaquetado"
   },
   "admin": {
     "title": "Administrador",
@@ -1062,6 +1074,30 @@
       "tote_bag": "Bolso tote",
       "crossbody_bag": "Bolso bandolera",
       "clutch": "Cartera de mano"
+    },
+    "color": {
+      "cream": "Crema",
+      "grey": "Gris",
+      "gray": "Gris",
+      "light_blue": "Azul claro",
+      "light_grey": "Gris claro",
+      "red": "Rojo",
+      "terracotta_brown": "Terracota",
+      "white": "Blanco",
+      "black": "Negro",
+      "blue": "Azul",
+      "green": "Verde",
+      "yellow": "Amarillo",
+      "orange": "Naranja",
+      "pink": "Rosa",
+      "purple": "Morado",
+      "brown": "Marrón",
+      "navy": "Azul marino",
+      "olive": "Verde oliva",
+      "beige": "Beige",
+      "אפור_בהיר": "Gris claro",
+      "בורدو": "Burdeos",
+      "حום": "Marrón"
     }
   },
   "location": {
@@ -1373,7 +1409,20 @@
       "purchase": "Compra",
       "receipt_confirmed_thanks_for_closing": "Recepción confirmada. ¡Gracias por cerrar el ciclo!",
       "selling": "Vendiendo",
-      "swaps": "Intercambios"
+      "swaps": "Intercambios",
+      "swap": "Intercambio",
+      "status": {
+        "pending": "Pendiente",
+        "accepted": "Aceptado",
+        "denied": "Denegado",
+        "shipped": "Enviado",
+        "completed": "Completado",
+        "paid": "Pagado",
+        "refunded": "Reembolsado",
+        "cancelled": "Cancelado",
+        "failed": "Fallido",
+        "disputed": "Disputado"
+      }
     },
     "listingDetail": {
       "claim_this_donation": "Reclamar esta donación",
@@ -1422,7 +1471,11 @@
       "second_hand": "Segunda mano",
       "recycling": "Reciclaje",
       "news_flash": "Última hora"
-    }
+    },
+    "title": "Tendencias de moda y análisis",
+    "subtitle": "Explora estéticas de estilo curadas, noticias de sostenibilidad y reseñas de pasarela adaptadas a tu perfil.",
+    "noTrendsTitle": "No se encontraron tendencias",
+    "noTrendsDesc": "No pudimos encontrar ninguna tarjeta de tendencias activa. Vuelve más tarde."
   },
   "item": {
     "polishingPhoto": "Puliendo la foto…",
@@ -1431,5 +1484,39 @@
     "reshootSuccess": "Foto restaurada.",
     "reshootRejected": "Se rechazó la foto restaurada — se conserva la original.",
     "reshootError": "No se pudo restaurar la foto. Inténtalo de nuevo."
+  },
+  "outfits": {
+    "viewDescription": "Ver los outfits que has creado y programado. Tu Estilista de IA se asegura de que utilices todas las prendas de tu armario y te advierte si repites en las mismas ocasiones.",
+    "notificationCenter": "Centro de notificaciones (simulado)",
+    "noNotifs": "Aún no se han activado notificaciones. Configura tu recordatorio diario en los ajustes o programa un evento para probar.",
+    "noSavedOutfitsDesc": "Obtén propuestas de outfits en la pestaña Estilista de IA, elige tus favoritas y guárdalas para empezar a registrar tus outfits.",
+    "outfitPieces": "Prendas del outfit",
+    "failedLoadOutfits": "Error al cargar los outfits guardados.",
+    "removedSuccess": "Outfit eliminado de tu diario.",
+    "failedDelete": "Error al eliminar el outfit.",
+    "logsCleared": "Historial de notificaciones borrado.",
+    "failedClearLogs": "Error al borrar el historial.",
+    "notification": {
+      "eventTitle": "¡Es hora de prepararse para {{name}}! 🌟",
+      "eventBody": "Tu outfit elegido está listo. ¡Que lo disfrutes!",
+      "dailyTitle": "¡La propuesta de outfit para mañana está lista! {{emoji}}",
+      "dailyBody": "Tu Estilista de IA ha preparado 3 opciones de outfits para tu día: {{style}}."
+    }
+  },
+  "stats": {
+    "category": "DressApp Desempaquetado",
+    "title": "Análisis del armario",
+    "description": "Analiza el valor de tu armario, métricas de uso y paletas de colores dominantes para cultivar hábitos de consumo conscientes.",
+    "totalValue": "Valor del armario",
+    "utilization": "Uso del armario",
+    "wornRatio": "Prendas usadas",
+    "emptyStateTitle": "No hay prendas para analizar",
+    "emptyStateDesc": "Añade prendas a tu armario y registra su uso con tu estilista o calendario para ver análisis.",
+    "colorPalette": "Distribución de paleta de colores",
+    "noColorData": "No se han especificado etiquetas de color.",
+    "costPerWear": "Clasificación de Costo por Uso",
+    "mostEfficient": "Uso más eficiente",
+    "leastEfficient": "Uso menos eficiente",
+    "noCPWData": "Se requiere el precio de compra para calcular las estadísticas de costo por uso."
   }
 }

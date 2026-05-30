@@ -7,6 +7,7 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recha
 import { useClosetStore } from '@/lib/useClosetStore';
 import { DollarSign, Percent, TrendingUp, Shirt, Award } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { labelForColor } from '@/lib/taxonomy';
 
 export default function WardrobeStats() {
   const { t } = useTranslation();
@@ -28,15 +29,21 @@ export default function WardrobeStats() {
   // Calculate Color Distribution
   const colorMap = {};
   items.forEach(it => {
-    let col = it.color || it.colors?.[0] || t('common.unknownColor', { defaultValue: 'Other' });
-    // Normalize casing for display/aggregation to prevent duplicates like "black" vs "Black"
-    col = col.trim();
-    if (col) {
-      col = col.charAt(0).toUpperCase() + col.slice(1).toLowerCase();
+    const rawColor = it.color || it.colors?.[0] || 'Other';
+    const raw = rawColor.trim();
+    // Translate the color using our labelForColor helper
+    const localized = rawColor === 'Other' ? t('common.unknownColor', { defaultValue: 'Other' }) : labelForColor(raw, t);
+    
+    if (!colorMap[localized]) {
+      colorMap[localized] = {
+        name: localized,
+        rawName: raw,
+        value: 0
+      };
     }
-    colorMap[col] = (colorMap[col] || 0) + 1;
+    colorMap[localized].value += 1;
   });
-  const colorData = Object.entries(colorMap).map(([name, value]) => ({ name, value }));
+  const colorData = Object.values(colorMap);
 
   // Cost-per-Wear calculations
   const sortedByEfficiency = [...items]
@@ -162,7 +169,7 @@ export default function WardrobeStats() {
                     >
                       {colorData.map((entry, index) => {
                         let fillHex = CHART_COLORS[index % CHART_COLORS.length];
-                        const lowerName = entry.name.toLowerCase();
+                        const lowerName = (entry.rawName || '').toLowerCase();
                         if (lowerName === 'black') fillHex = '#18181b';
                         else if (lowerName === 'white') fillHex = '#f4f4f5';
                         else if (lowerName === 'gray' || lowerName === 'grey') fillHex = '#71717a';
