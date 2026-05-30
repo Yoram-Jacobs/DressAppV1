@@ -16,7 +16,8 @@
     "mobilePrimary": "Мобильная навигация",
     "guest": "Гость",
     "experts": "Эксперты",
-    "ads": "Мои объявления"
+    "ads": "Мои объявления",
+    "outfits": "Образы"
   },
   "common": {
     "save": "Сохранить",
@@ -51,7 +52,13 @@
     "noResults": "Нет результатов",
     "comingSoon": "Скоро",
     "gotIt": "Понятно",
-    "selectAll": "Выбрать все"
+    "selectAll": "Выбрать все",
+    "date": "Дата",
+    "garment": "Вещь",
+    "remove": "Удалить",
+    "share": "Поделиться",
+    "time": "Время",
+    "unknownColor": "Другое"
   },
   "auth": {
     "welcomeBack": "С возвращением",
@@ -166,7 +173,14 @@
       "running": "Обновление миниатюр… {{n}}/{{total}}",
       "regenerated": "{{n}} обновлено",
       "failed": "Не удалось обновить миниатюры"
-    }
+    },
+    "addNewItem": "Добавить первую вещь",
+    "confirmGroup": "Группировать",
+    "groupConfirmBody": "Выберите, какая вещь будет основной. Все остальные выбранные вещи будут сгруппированы под ней.",
+    "groupConfirmTitle": "Группировка выбранных вещей",
+    "groupSelected": "Группировать",
+    "primaryItemLabel": "Основная вещь",
+    "selectPrimaryPlaceholder": "Выберите основную вещь..."
   },
   "addItem": {
     "title": "Добавить вещи",
@@ -288,6 +302,17 @@
       "duplicatesInline": "{{count}} вещь(ей) требуют вашего подтверждения — они выглядят как дубликаты вещей, уже находящихся в гардеробе.",
       "skippedDupSuffix": "(пропущено {{count}} уже в гардеробе)",
       "failed": "Не удалось сохранить ничего. Попробуйте ещё раз."
+    },
+    "saveAllPending": "Сохранение — ожидание анализа…",
+    "section": {
+      "basic": "Основная информация",
+      "care": "Уход и ремонт",
+      "styling": "Детали стиля"
+    },
+    "step": {
+      "capture": "Фотосъемка",
+      "refinement": "Уточнение",
+      "save": "Интеграция"
     }
   },
   "itemDetail": {
@@ -486,7 +511,30 @@
     "speechUnsupported": "Голосовой ввод не поддерживается в этом браузере",
     "nativeSpeech": "Системный голос",
     "stopSpeaking": "Остановить воспроизведение",
-    "playReply": "Воспроизвести ответ"
+    "playReply": "Воспроизвести ответ",
+    "dailySuggestion": "Дневное предложение",
+    "dressCodeDemands": "Дресс-код / Требования",
+    "eventName": "Название события",
+    "eventNamePlaceholder": "например: день рождения, ужин",
+    "floater": {
+      "titleLoading": "Детали вещи",
+      "viewDetails": "Посмотреть полные детали"
+    },
+    "getSuggestions": "Получить рекомендации",
+    "location": "Местоположение",
+    "locationPlaceholder": "например: ресторан на крыше",
+    "outfitSaved": "Образ сохранен в ваш дневник!",
+    "planEventOutfit": "Запланировать образ на событие",
+    "planEventOutfitTitle": "Запланировать образ на событие",
+    "promptPlaceholder": "Опишите, что вам нужно, например: неформальная встреча на свежем воздухе, кэжуал шик",
+    "proposalFailed": "Не удалось создать новые рекомендации.",
+    "proposalGenerated": "Новые рекомендации успешно созданы!",
+    "retryRequest": "Предложить 3 других варианта",
+    "saveFailed": "Не удалось сохранить образ.",
+    "saveOutfit": "Сохранить образ",
+    "shoppingSuggestions": "Покупки с ИИ-стилистом",
+    "shuffledLook": "Случайный образ",
+    "suggestOthers": "Предложить 3 других"
   },
   "outfitCompletion": {
     "cta": "Завершить образ",
@@ -573,7 +621,9 @@
       "skipped": "{{n}} уже опубликовано",
       "synced": "{{n}} переотмечены",
       "failed": "Не удалось синхронизировать маркет"
-    }
+    },
+    "styleSandboxBtn": "Примерить с моим гардером",
+    "syncMarketplace": "Синхронизировать из гардероба"
   },
   "createListing": {
     "title": "Создать объявление",
@@ -789,7 +839,28 @@
     },
     "occupation": "Род деятельности",
     "exploreTitle": "Исследовать DressApp",
-    "statsTitle": "Разбор гардероба"
+    "statsTitle": "Разбор гардероба",
+    "aiStylist": "ИИ-стилист",
+    "aiStylistSchedulerSettingsUpdated": "Настройки планировщика ИИ-стилиста обновлены.",
+    "browserPushAlerts": "Push-уведомления в браузере",
+    "browserPushNotificationsDisabled": "Push-уведомления браузера выключены.",
+    "browserPushNotificationsSuccessfullyEnabled": "Push-уведомления браузера успешно включены.",
+    "chooseDay": "Выберите день",
+    "customStylePlaceholder": "например: спортзал, поход, офис",
+    "dressForDemands": "Пожелания к стилю",
+    "enableSchedulerProposals": "Включить предложения планировщика",
+    "everyOtherDay": "Через день",
+    "failedToTogglePushNotifications": "Не удалось переключить push-уведомления.",
+    "notificationFrequency": "Частота уведомлений",
+    "notificationTime": "Время уведомления (UTC)",
+    "onWeekday": "В выбранный день",
+    "phoneWarningEnd": " для правильной работы симуляции push-уведомлений.",
+    "phoneWarningStart": "* Убедитесь, что ваш телефон настроен в разделе ",
+    "receiveDirectBrowserAlerts": "Получать уведомления прямо на этом устройстве.",
+    "receivePushReminders": "Получать push-уведомления с персональными подборками образов.",
+    "schedulerPushReminders": "Планировщик и Push-напоминания",
+    "styleDressFor": "Стиль одежды",
+    "twiceAWeek": "Дважды в неделю"
   },
   "admin": {
     "title": "Админ",
@@ -1324,6 +1395,20 @@
       "eg_marketing_manager_student_barista": "напр. Маркетолог, Студент, Бариста",
       "https": "https://",
       "nameexamplecom": "name@example.com"
+    },
+    "avatarViewer2D": {
+      "headwear": "Головной убор",
+      "virtual_tryon_active": "Виртуальная примерка активна"
+    },
+    "dressMeShuffler": {
+      "next_slide": "Следующий слайд",
+      "previous_slide": "Предыдущий слайд"
+    },
+    "pagination": {
+      "go_to_next_page": "Перейти на следующую страницу",
+      "go_to_previous_page": "Перейти на предыдущую страницу",
+      "more_pages": "Еще страницы",
+      "previous": "Назад"
     }
   },
   "pages": {
@@ -1334,7 +1419,13 @@
       "link_expired_or_already_used": "Ссылка истекла или уже использована",
       "my_transactions": "Мои транзакции",
       "pending": "В ожидании",
-      "transaction_status": "Статус транзакции"
+      "transaction_status": "Статус транзакции",
+      "status_accepted_title": "Принято",
+      "status_denied_body": "Не беспокойтесь — мы сообщили второй стороне. Вещь все еще продается; на рынке есть еще много интересного.",
+      "status_denied_title": "Отклонено",
+      "status_invalid_body": "Эта ссылка больше не активна. Вернитесь на рынок, чтобы изучить другие предложения, или проверьте свои транзакции.",
+      "status_invalid_title": "Срок действия ссылки истек или она уже использована",
+      "status_pending_title": "В ожидании"
     },
     "admin": {
       "all_providers": "Все провайдеры",
@@ -1422,7 +1513,8 @@
         "cancelled": "Отменено",
         "failed": "Ошибка",
         "disputed": "Оспорено"
-      }
+      },
+      "could_not_confirm_receipt": "Не удалось подтвердить получение."
     },
     "listingDetail": {
       "claim_this_donation": "Забрать этот дар",
@@ -1460,6 +1552,14 @@
       "nothing_to_sync_no_closet": "Нечего синхронизировать — ни для одной вещи не задано намерение продажи.",
       "remove_listing": "Удалить объявление",
       "sync_from_closet": "Синхронизировать из гардероба"
+    },
+    "avatarPage": {
+      "failed_to_load_avatar_parameters": "Не удалось загрузить параметры аватара. Убедитесь, что параметры вашего тела настроены.",
+      "generating_your_3d_digital_double": "Создание вашего 3D цифрового двойника...",
+      "my_digital_avatar": "Мой цифровой аватар",
+      "this_3d_avatar_is_generated": "Этот 3D аватар создан на основе параметров вашего тела. Обновите параметры в профиле для автоматической адаптации фигуры.",
+      "tip": "Совет:",
+      "you_can_drag_to_rotate": "Вы можете вращать аватар перетаскиванием и приближать/удалять прокруткой. Фигура, которую вы видите здесь, управляет физическим движком виртуальной примерки."
     }
   },
   "trends": {
@@ -1518,5 +1618,32 @@
     "mostEfficient": "Наиболее эффективная носка",
     "leastEfficient": "Наименее эффективная носка",
     "noCPWData": "Для расчета стоимости носки требуется цена покупки."
+  },
+  "attachmentPicker": {
+    "closetTab": "Из гардероба",
+    "dropHere": "Перетащите изображения сюда или нажмите для выбора",
+    "emptyCloset": "Ваш гардероб пуст.",
+    "fetchFailed": "Не удалось загрузить одно из изображений гардероба. Попробуйте еще раз.",
+    "imageOnly": "Поддерживаются только графические файлы.",
+    "noMatches": "Нет подходящих вещей в гардеробе.",
+    "openLabel": "Добавить вложения",
+    "searchPlaceholder": "Искать в гардеробе…",
+    "subtitle": "Загрузите новые фото или выберите их из гардероба.",
+    "title": "Добавить вложения",
+    "uploadTab": "Загрузить"
+  },
+  "floater": {
+    "done": "Всё готово"
+  },
+  "sandbox": {
+    "canvas": "Холст образа",
+    "description": "Сочетайте эту вещь с элементами вашего гардероба, чтобы проверить совместимость стилей перед покупкой.",
+    "listing": "Купить",
+    "looksGood": "Выглядит отлично!",
+    "noBottom": "Выберите низ",
+    "noItemsInCategory": "В этой категории нет вещей.",
+    "noShoes": "Выберите обувь",
+    "noTop": "Выберите верх",
+    "title": "Песочница стилей"
   }
 }

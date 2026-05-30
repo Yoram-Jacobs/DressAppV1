@@ -53,7 +53,12 @@
     "error": "Error",
     "success": "Success",
     "noResults": "No results",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "date": "Date",
+    "remove": "Remove",
+    "share": "Share",
+    "time": "Time",
+    "unknownColor": "Other"
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -174,7 +179,8 @@
     "groupConfirmBody": "Choose which item will be the primary (host) item. All other selected items will be grouped under it.",
     "primaryItemLabel": "Primary Item",
     "selectPrimaryPlaceholder": "Select primary item...",
-    "confirmGroup": "Group"
+    "confirmGroup": "Group",
+    "addNewItem": "Add First Item"
   },
   "addItem": {
     "title": "Upload & auto-fill",
@@ -296,6 +302,17 @@
       "duplicatesInline": "{{count}} item(s) need your confirmation — they look like duplicates of items already in your closet.",
       "skippedDupSuffix": "(skipped {{count}} already in closet)",
       "failed": "Could not save any items. Please try again."
+    },
+    "saveAllPending": "Saving — waiting for analysis…",
+    "section": {
+      "basic": "Basic Info",
+      "care": "Care & Repair",
+      "styling": "Styling Details"
+    },
+    "step": {
+      "capture": "Capture",
+      "refinement": "Refine",
+      "save": "Integrate"
     }
   },
   "itemDetail": {
@@ -498,7 +515,26 @@
     "shareOutfitBody": "My DressApp stylist suggested this. What do you think?",
     "planEventOutfit": "Plan Event Outfit",
     "planEventOutfitTitle": "Plan Event Outfit",
-    "dailySuggestion": "Daily Suggestion"
+    "dailySuggestion": "Daily Suggestion",
+    "dressCodeDemands": "Dress Code / Demands",
+    "eventName": "Event Name",
+    "eventNamePlaceholder": "e.g. Birthday Party, Dinner",
+    "floater": {
+      "titleLoading": "Item details",
+      "viewDetails": "View full details"
+    },
+    "getSuggestions": "Get Suggestions",
+    "location": "Location",
+    "locationPlaceholder": "e.g. Rooftop Restaurant",
+    "outfitSaved": "Outfit saved to your diary!",
+    "promptPlaceholder": "Describe what you need e.g. informal outdoor setting, casual chic",
+    "proposalFailed": "Failed to generate new proposals.",
+    "proposalGenerated": "New proposals generated successfully!",
+    "retryRequest": "Suggest 3 other options",
+    "saveFailed": "Failed to save outfit.",
+    "saveOutfit": "Save Outfit",
+    "shoppingSuggestions": "AI Stylist Shopping Suggestions",
+    "suggestOthers": "Suggest 3 Others"
   },
   "outfitCompletion": {
     "cta": "Complete the outfit",
@@ -585,7 +621,9 @@
       "skipped": "{{n}} already up",
       "synced": "{{n}} reflagged",
       "failed": "Couldn’t sync marketplace"
-    }
+    },
+    "styleSandboxBtn": "Style with my Wardrobe",
+    "syncMarketplace": "Sync from closet"
   },
   "createListing": {
     "title": "Create a listing",
@@ -1361,6 +1399,20 @@
       "eg_marketing_manager_student_barista": "e.g. Marketing manager, Student, Barista",
       "https": "https://",
       "nameexamplecom": "name@example.com"
+    },
+    "avatarViewer2D": {
+      "headwear": "Headwear",
+      "virtual_tryon_active": "Virtual Try-On Active"
+    },
+    "dressMeShuffler": {
+      "next_slide": "Next slide",
+      "previous_slide": "Previous slide"
+    },
+    "pagination": {
+      "go_to_next_page": "Go to next page",
+      "go_to_previous_page": "Go to previous page",
+      "more_pages": "More pages",
+      "previous": "Previous"
     }
   },
   "pages": {
@@ -1371,7 +1423,13 @@
       "link_expired_or_already_used": "Link expired or already used",
       "my_transactions": "My transactions",
       "pending": "Pending",
-      "transaction_status": "Transaction status"
+      "transaction_status": "Transaction status",
+      "status_accepted_title": "Accepted",
+      "status_denied_body": "No worries — we let the other party know. The item is still out there; plenty more to explore in the marketplace.",
+      "status_denied_title": "Declined",
+      "status_invalid_body": "This link is no longer active. Head back to the marketplace to explore more listings or check your transactions.",
+      "status_invalid_title": "Link expired or already used",
+      "status_pending_title": "Pending"
     },
     "admin": {
       "all_providers": "All providers",
@@ -1459,7 +1517,8 @@
         "cancelled": "Cancelled",
         "failed": "Failed",
         "disputed": "Disputed"
-      }
+      },
+      "could_not_confirm_receipt": "Could not confirm receipt."
     },
     "listingDetail": {
       "claim_this_donation": "Claim this donation",
@@ -1497,6 +1556,14 @@
       "nothing_to_sync_no_closet": "Nothing to sync — no closet items have a marketplace intent set.",
       "remove_listing": "Remove listing",
       "sync_from_closet": "Sync from closet"
+    },
+    "avatarPage": {
+      "failed_to_load_avatar_parameters": "Failed to load avatar parameters. Ensure your profile measurements are set.",
+      "generating_your_3d_digital_double": "Generating your 3D digital double...",
+      "my_digital_avatar": "My Digital Avatar",
+      "this_3d_avatar_is_generated": "This 3D avatar is generated based on your body measurements. Update your measurements in your profile to see the shape adapt automatically.",
+      "tip": "Tip:",
+      "you_can_drag_to_rotate": "You can drag to rotate and scroll to zoom. The shape you see here drives our virtual try-on physics engine."
     }
   },
   "trends": {
@@ -1555,5 +1622,32 @@
     "mostEfficient": "Most Wear-Efficient",
     "leastEfficient": "Least Wear-Efficient",
     "noCPWData": "Purchase price is required to calculate cost-per-wear stats."
+  },
+  "attachmentPicker": {
+    "closetTab": "From Closet",
+    "dropHere": "Drop images here or click to browse",
+    "emptyCloset": "Your closet is empty.",
+    "fetchFailed": "Could not load one of the closet images. Try again.",
+    "imageOnly": "Only image files are supported.",
+    "noMatches": "No closet items match.",
+    "openLabel": "Add attachments",
+    "searchPlaceholder": "Search closet…",
+    "subtitle": "Upload new photos or pick from your closet.",
+    "title": "Add attachments",
+    "uploadTab": "Upload"
+  },
+  "floater": {
+    "done": "All done"
+  },
+  "sandbox": {
+    "canvas": "Outfit Canvas",
+    "description": "Mix & match this listing with your closet items to verify style compatibility before buying.",
+    "listing": "Buy",
+    "looksGood": "Looks Great!",
+    "noBottom": "Select Bottom",
+    "noItemsInCategory": "No items in this category.",
+    "noShoes": "Select Shoes",
+    "noTop": "Select Top",
+    "title": "Style Sandbox"
   }
 }

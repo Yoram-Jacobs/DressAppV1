@@ -16,7 +16,8 @@
     "mobilePrimary": "Navigation mobile principale",
     "guest": "Invité",
     "experts": "Experts",
-    "ads": "Mes annonces"
+    "ads": "Mes annonces",
+    "outfits": "Tenues"
   },
   "common": {
     "save": "Enregistrer",
@@ -51,7 +52,13 @@
     "noResults": "Aucun résultat",
     "comingSoon": "Bientôt disponible",
     "gotIt": "Compris",
-    "selectAll": "Tout sélectionner"
+    "selectAll": "Tout sélectionner",
+    "date": "Date",
+    "garment": "Vêtement",
+    "remove": "Supprimer",
+    "share": "Partager",
+    "time": "Heure",
+    "unknownColor": "Autre"
   },
   "auth": {
     "welcomeBack": "Bon retour",
@@ -166,7 +173,14 @@
       "running": "Mise à jour des miniatures… {{n}}/{{total}}",
       "regenerated": "{{n}} actualisées",
       "failed": "Impossible de rafraîchir les miniatures"
-    }
+    },
+    "addNewItem": "Ajouter un premier article",
+    "confirmGroup": "Grouper",
+    "groupConfirmBody": "Choisissez quel article sera le principal (hôte). Tous les autres articles sélectionnés seront groupés sous celui-ci.",
+    "groupConfirmTitle": "Grouper les articles sélectionnés",
+    "groupSelected": "Grouper",
+    "primaryItemLabel": "Article principal",
+    "selectPrimaryPlaceholder": "Sélectionner l'article principal..."
   },
   "addItem": {
     "title": "Ajouter des pièces",
@@ -288,6 +302,17 @@
       "duplicatesInline": "{{count}} article(s) nécessitent votre confirmation — ils semblent être des doublons d'articles déjà dans votre garde-robe.",
       "skippedDupSuffix": "({{count}} déjà dans le dressing ignorés)",
       "failed": "Impossible d'enregistrer les articles. Veuillez réessayer."
+    },
+    "saveAllPending": "Enregistrement — en attente d'analyse…",
+    "section": {
+      "basic": "Infos de base",
+      "care": "Entretien & Réparation",
+      "styling": "Détails de style"
+    },
+    "step": {
+      "capture": "Capturer",
+      "refinement": "Ajuster",
+      "save": "Intégrer"
     }
   },
   "itemDetail": {
@@ -486,7 +511,30 @@
     "speechUnsupported": "La reconnaissance vocale n'est pas prise en charge par ce navigateur",
     "nativeSpeech": "Synthèse vocale native",
     "stopSpeaking": "Arrêter la lecture",
-    "playReply": "Lire la réponse"
+    "playReply": "Lire la réponse",
+    "dailySuggestion": "Suggestion quotidienne",
+    "dressCodeDemands": "Code vestimentaire / Exigences",
+    "eventName": "Nom de l'événement",
+    "eventNamePlaceholder": "ex. Anniversaire, Dîner",
+    "floater": {
+      "titleLoading": "Détails de l'article",
+      "viewDetails": "Voir les détails complets"
+    },
+    "getSuggestions": "Obtenir des suggestions",
+    "location": "Lieu",
+    "locationPlaceholder": "ex. Restaurant en terrasse",
+    "outfitSaved": "Tenue enregistrée dans votre journal !",
+    "planEventOutfit": "Planifier une tenue d'événement",
+    "planEventOutfitTitle": "Planifier une tenue d'événement",
+    "promptPlaceholder": "Décrivez ce dont vous avez besoin, ex. cadre extérieur informel, chic décontracté",
+    "proposalFailed": "Échec de la génération des suggestions.",
+    "proposalGenerated": "Nouvelles suggestions générées avec succès !",
+    "retryRequest": "Suggérer 3 autres options",
+    "saveFailed": "Impossible d'enregistrer la tenue.",
+    "saveOutfit": "Enregistrer la tenue",
+    "shoppingSuggestions": "Suggestions d'achat du Styliste IA",
+    "shuffledLook": "Tenue mélangée",
+    "suggestOthers": "En suggérer 3 autres"
   },
   "outfitCompletion": {
     "cta": "Compléter la tenue",
@@ -573,7 +621,9 @@
       "skipped": "{{n}} déjà en ligne",
       "synced": "{{n}} re-marquées",
       "failed": "Synchronisation impossible"
-    }
+    },
+    "styleSandboxBtn": "Associer avec mon dressing",
+    "syncMarketplace": "Synchroniser depuis le dressing"
   },
   "createListing": {
     "title": "Créer une annonce",
@@ -789,7 +839,28 @@
     },
     "occupation": "Profession",
     "exploreTitle": "Explorer DressApp",
-    "statsTitle": "Décryptage"
+    "statsTitle": "Décryptage",
+    "aiStylist": "Styliste IA",
+    "aiStylistSchedulerSettingsUpdated": "Paramètres du planificateur de styliste IA mis à jour.",
+    "browserPushAlerts": "Alertes push du navigateur (Web Push natif)",
+    "browserPushNotificationsDisabled": "Notifications push du navigateur désactivées.",
+    "browserPushNotificationsSuccessfullyEnabled": "Notifications push du navigateur activées avec succès.",
+    "chooseDay": "Choisir le jour",
+    "customStylePlaceholder": "ex. Gym, Randonnée, Cérémonie",
+    "dressForDemands": "Exigences vestimentaires",
+    "enableSchedulerProposals": "Activer les suggestions du planificateur",
+    "everyOtherDay": "Un jour sur deux",
+    "failedToTogglePushNotifications": "Impossible de modifier les notifications push.",
+    "notificationFrequency": "Fréquence des notifications",
+    "notificationTime": "Heure de notification (UTC)",
+    "onWeekday": "Certains jours de la semaine",
+    "phoneWarningEnd": " pour recevoir les alertes push simulées.",
+    "phoneWarningStart": "* Assurez-vous que votre numéro de téléphone est configuré dans la section ",
+    "receiveDirectBrowserAlerts": "Recevoir des alertes de notification directement sur ce navigateur.",
+    "receivePushReminders": "Recevoir des rappels par notification push avec des suggestions de tenues personnalisées.",
+    "schedulerPushReminders": "Planificateur et rappels push",
+    "styleDressFor": "Style / S'habiller pour",
+    "twiceAWeek": "Deux fois par semaine"
   },
   "admin": {
     "title": "Admin",
@@ -1324,6 +1395,20 @@
       "eg_marketing_manager_student_barista": "ex. responsable marketing, étudiant·e, barista",
       "https": "https://",
       "nameexamplecom": "nom@exemple.com"
+    },
+    "avatarViewer2D": {
+      "headwear": "Couvre-chef",
+      "virtual_tryon_active": "Mise à l'essai virtuelle active"
+    },
+    "dressMeShuffler": {
+      "next_slide": "Diapositive suivante",
+      "previous_slide": "Diapositive précédente"
+    },
+    "pagination": {
+      "go_to_next_page": "Aller à la page suivante",
+      "go_to_previous_page": "Aller à la page précédente",
+      "more_pages": "Plus de pages",
+      "previous": "Précédent"
     }
   },
   "pages": {
@@ -1334,7 +1419,13 @@
       "link_expired_or_already_used": "Lien expiré ou déjà utilisé",
       "my_transactions": "Mes transactions",
       "pending": "En attente",
-      "transaction_status": "Statut de la transaction"
+      "transaction_status": "Statut de la transaction",
+      "status_accepted_title": "Accepté",
+      "status_denied_body": "Pas de soucis — nous avons informé l'autre partie. L'article est toujours disponible ; il y a encore beaucoup à explorer sur le marché.",
+      "status_denied_title": "Décliné",
+      "status_invalid_body": "Ce lien n'est plus actif. Retournez sur le marché pour explorer d'autres annonces ou vérifiez vos transactions.",
+      "status_invalid_title": "Lien expiré ou déjà utilisé",
+      "status_pending_title": "En attente"
     },
     "admin": {
       "all_providers": "Tous les fournisseurs",
@@ -1422,7 +1513,8 @@
         "cancelled": "Annulé",
         "failed": "Échoué",
         "disputed": "Contesté"
-      }
+      },
+      "could_not_confirm_receipt": "Impossible de confirmer la réception."
     },
     "listingDetail": {
       "claim_this_donation": "Réclamer ce don",
@@ -1460,6 +1552,14 @@
       "nothing_to_sync_no_closet": "Rien à synchroniser — aucun article n'a d'intention de mise en vente.",
       "remove_listing": "Retirer l'annonce",
       "sync_from_closet": "Synchroniser depuis le dressing"
+    },
+    "avatarPage": {
+      "failed_to_load_avatar_parameters": "Impossible de charger les paramètres de l'avatar. Assurez-vous que vos mesures de profil sont définies.",
+      "generating_your_3d_digital_double": "Génération de votre double numérique 3D...",
+      "my_digital_avatar": "Mon avatar numérique",
+      "this_3d_avatar_is_generated": "Cet avatar 3D est généré sur la base de vos mesures corporelles. Mettez à jour vos mesures dans votre profil pour voir la forme s'adapter automatiquement.",
+      "tip": "Conseil :",
+      "you_can_drag_to_rotate": "Vous pouvez glisser pour faire pivoter et faire défiler pour zoomer. La forme que vous voyez ici alimente notre moteur physique de mise à l'essai virtuelle."
     }
   },
   "trends": {
@@ -1518,5 +1618,32 @@
     "mostEfficient": "Porté le plus efficacement",
     "leastEfficient": "Porté le moins efficacement",
     "noCPWData": "Le prix d'achat est requis pour calculer le coût par port."
+  },
+  "attachmentPicker": {
+    "closetTab": "Du dressing",
+    "dropHere": "Déposez les images ici ou cliquez pour parcourir",
+    "emptyCloset": "Votre dressing est vide.",
+    "fetchFailed": "Impossible de charger l'une des images du dressing. Réessayez.",
+    "imageOnly": "Seuls les fichiers d'image sont pris en charge.",
+    "noMatches": "Aucun article du dressing ne correspond.",
+    "openLabel": "Ajouter des pièces jointes",
+    "searchPlaceholder": "Rechercher dans le dressing…",
+    "subtitle": "Téléchargez de nouvelles photos ou choisissez dans votre dressing.",
+    "title": "Ajouter des pièces jointes",
+    "uploadTab": "Télécharger"
+  },
+  "floater": {
+    "done": "Tout est fait"
+  },
+  "sandbox": {
+    "canvas": "Espace de création",
+    "description": "Associez cette annonce avec vos articles du dressing pour vérifier la compatibilité de style avant d'acheter.",
+    "listing": "Acheter",
+    "looksGood": "C'est parfait !",
+    "noBottom": "Sélectionner un bas",
+    "noItemsInCategory": "Aucun article dans cette catégorie.",
+    "noShoes": "Sélectionner des chaussures",
+    "noTop": "Sélectionner un haut",
+    "title": "Studio de style"
   }
 }

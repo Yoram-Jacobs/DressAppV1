@@ -16,7 +16,8 @@
     "mobilePrimary": "मोबाइल नेविगेशन",
     "guest": "अतिथि",
     "experts": "विशेषज्ञ",
-    "ads": "मेरे विज्ञापन"
+    "ads": "मेरे विज्ञापन",
+    "outfits": "आउटफिट"
   },
   "common": {
     "save": "सहेजें",
@@ -51,7 +52,13 @@
     "noResults": "कोई परिणाम नहीं",
     "comingSoon": "जल्द आ रहा है",
     "gotIt": "समझ गया",
-    "selectAll": "सभी चुनें"
+    "selectAll": "सभी चुनें",
+    "date": "दिनांक",
+    "garment": "कपड़ा",
+    "remove": "हटाएं",
+    "share": "साझा करें",
+    "time": "समय",
+    "unknownColor": "अन्य"
   },
   "auth": {
     "welcomeBack": "वापसी पर स्वागत है",
@@ -166,7 +173,14 @@
       "running": "थंबनेल रिफ्रेश हो रहे हैं… {{n}}/{{total}}",
       "regenerated": "{{n}} रिफ्रेश हुए",
       "failed": "थंबनेल रिफ्रेश नहीं हो सके"
-    }
+    },
+    "addNewItem": "पहला सामान जोड़ें",
+    "confirmGroup": "समूह बनाएं",
+    "groupConfirmBody": "चुनें कि कौन सा सामान मुख्य होगा। अन्य सभी चयनित सामान इसके अंतर्गत समूहीकृत किए जाएंगे।",
+    "groupConfirmTitle": "चयनित सामान समूहीकृत करें",
+    "groupSelected": "समूह",
+    "primaryItemLabel": "मुख्य सामान",
+    "selectPrimaryPlaceholder": "मुख्य सामान चुनें..."
   },
   "addItem": {
     "title": "आइटम जोड़ें",
@@ -288,6 +302,17 @@
       "duplicatesInline": "{{count}} आइटम(आइटम्स) की पुष्टि चाहिए — वे आपकी अलमारी में पहले से मौजूद आइटम के डुप्लिकेट लग रहे हैं।",
       "skippedDupSuffix": "({{count}} पहले से अलमारी में होने के कारण छोड़े गए)",
       "failed": "कोई भी आइटम सेव नहीं हो सका। कृपया फिर से कोशिश करें।"
+    },
+    "saveAllPending": "सहेज रहा है — विश्लेषण की प्रतीक्षा है…",
+    "section": {
+      "basic": "बुनियादी जानकारी",
+      "care": "देखभाल और मरम्मत",
+      "styling": "स्टाइलिंग विवरण"
+    },
+    "step": {
+      "capture": "कैप्चर करें",
+      "refinement": "सुधारें",
+      "save": "एकीकृत करें"
     }
   },
   "itemDetail": {
@@ -486,7 +511,30 @@
     "speechUnsupported": "इस ब्राउज़र पर स्पीच समर्थित नहीं है",
     "nativeSpeech": "नेटिव स्पीच",
     "stopSpeaking": "बोलना बंद करें",
-    "playReply": "जवाब सुनें"
+    "playReply": "जवाब सुनें",
+    "dailySuggestion": "दैनिक सुझाव",
+    "dressCodeDemands": "ड्रेस कोड / मांगें",
+    "eventName": "कार्यक्रम का नाम",
+    "eventNamePlaceholder": "जैसे: जन्मदिन की पार्टी, रात का भोजन",
+    "floater": {
+      "titleLoading": "सामान का विवरण",
+      "viewDetails": "पूरा विवरण देखें"
+    },
+    "getSuggestions": "सुझाव प्राप्त करें",
+    "location": "स्थान",
+    "locationPlaceholder": "जैसे: रूफटॉप रेस्तरां",
+    "outfitSaved": "आउटफिट आपकी डायरी में सहेजा गया!",
+    "planEventOutfit": "इवेंट आउटफिट प्लान करें",
+    "planEventOutfitTitle": "इवेंट आउटफिट प्लान करें",
+    "promptPlaceholder": "वर्णन करें कि आपको क्या चाहिए, जैसे: अनौपचारिक बाहरी स्थान, आकस्मिक ठाट",
+    "proposalFailed": "नए प्रस्ताव उत्पन्न करने में विफल।",
+    "proposalGenerated": "नए प्रस्ताव सफलतापूर्वक उत्पन्न हुए!",
+    "retryRequest": "3 अन्य विकल्पों का सुझाव दें",
+    "saveFailed": "आउटफिट सहेजने में विफल।",
+    "saveOutfit": "आउटफिट सहेजें",
+    "shoppingSuggestions": "AI स्टाइलिस्ट खरीदारी सुझाव",
+    "shuffledLook": "यादृच्छिक आउटफिट",
+    "suggestOthers": "3 अन्य के सुझाव दें"
   },
   "outfitCompletion": {
     "cta": "आउटफ़िट पूरा करें",
@@ -573,7 +621,9 @@
       "skipped": "{{n}} पहले से सक्रिय",
       "synced": "{{n}} पुनः टैग",
       "failed": "मार्केटप्लेस सिंक नहीं हुआ"
-    }
+    },
+    "styleSandboxBtn": "मेरी अलमारी के साथ स्टाइल करें",
+    "syncMarketplace": "अलमारी से सिंक करें"
   },
   "createListing": {
     "title": "लिस्टिंग बनाएं",
@@ -789,7 +839,28 @@
     },
     "occupation": "व्यवसाय",
     "exploreTitle": "DressApp एक्सप्लोर करें",
-    "statsTitle": "अनपैक किया गया"
+    "statsTitle": "अनपैक किया गया",
+    "aiStylist": "AI स्टाइलिस्ट",
+    "aiStylistSchedulerSettingsUpdated": "AI स्टाइलिस्ट शेड्यूलर सेटिंग्स अपडेट की गईं।",
+    "browserPushAlerts": "ब्राउज़र पुश अलर्ट (मूल वेब पुश)",
+    "browserPushNotificationsDisabled": "ब्राउज़र पुश नोटिफिकेशन अक्षम कर दिए गए।",
+    "browserPushNotificationsSuccessfullyEnabled": "ब्राउज़र पुश नोटिफिकेशन सफलतापूर्वक सक्षम हो गए।",
+    "chooseDay": "दिन चुनें",
+    "customStylePlaceholder": "जैसे: जिम, हाइकिंग, ऑफिस",
+    "dressForDemands": "कपड़े पहनने की मांग",
+    "enableSchedulerProposals": "शेड्यूलर प्रस्ताव सक्षम करें",
+    "everyOtherDay": "हर दूसरे दिन",
+    "failedToTogglePushNotifications": "पुश नोटिफिकेशन चालू या बंद करने में विफल।",
+    "notificationFrequency": "अधिसूचना आवृत्ति",
+    "notificationTime": "अधिसूचना समय (UTC)",
+    "onWeekday": "सप्ताह के दिन पर",
+    "phoneWarningEnd": " सेक्शन के तहत कॉन्फ़िगर किया गया है ताकि सिम्युलेटेड पुश अलर्ट सफलतापूर्वक प्राप्त हो सकें।",
+    "phoneWarningStart": "* सुनिश्चित करें कि आपका फ़ोन नंबर ",
+    "receiveDirectBrowserAlerts": "इस डिवाइस पर सीधे ब्राउज़र अधिसूचना अलर्ट प्राप्त करें।",
+    "receivePushReminders": "कस्टमाइज्ड आउटफिट प्रस्तावों के साथ पुश नोटिफिकेशन रिमाइंडर्स प्राप्त करें।",
+    "schedulerPushReminders": "शेड्यूलर और पुश रिमाइंडर्स",
+    "styleDressFor": "शैली / किस लिए तैयार होना है",
+    "twiceAWeek": "सप्ताह में दो बार"
   },
   "admin": {
     "title": "व्यवस्थापक",
@@ -1324,6 +1395,20 @@
       "eg_marketing_manager_student_barista": "उदा. मार्केटिंग मैनेजर, छात्र, बरिस्ता",
       "https": "https://",
       "nameexamplecom": "name@example.com"
+    },
+    "avatarViewer2D": {
+      "headwear": "टोपी / हेडवियर",
+      "virtual_tryon_active": "आभासी परीक्षण सक्रिय"
+    },
+    "dressMeShuffler": {
+      "next_slide": "अगली स्लाइड",
+      "previous_slide": "पिछली स्लाइड"
+    },
+    "pagination": {
+      "go_to_next_page": "अगले पृष्ठ पर जाएँ",
+      "go_to_previous_page": "पिछले पृष्ठ पर जाएँ",
+      "more_pages": "अधिक पृष्ठ",
+      "previous": "पिछला"
     }
   },
   "pages": {
@@ -1334,7 +1419,13 @@
       "link_expired_or_already_used": "लिंक समाप्त हो गया या पहले ही उपयोग किया जा चुका है",
       "my_transactions": "मेरे लेन-देन",
       "pending": "लंबित",
-      "transaction_status": "लेन-देन की स्थिति"
+      "transaction_status": "लेन-देन की स्थिति",
+      "status_accepted_title": "स्वीकृत",
+      "status_denied_body": "चिंता न करें — हमने दूसरे पक्ष को सूचित कर दिया है। आइटम अभी भी उपलब्ध है; मार्केटप्लेस में तलाश करने के लिए और भी बहुत कुछ है।",
+      "status_denied_title": "अस्वीकृत",
+      "status_invalid_body": "यह लिंक अब सक्रिय नहीं है। अधिक लिस्टिंग देखने के लिए मार्केटप्लेस पर वापस जाएं या अपने लेनदेन की जांच करें।",
+      "status_invalid_title": "लिंक समाप्त हो गया या पहले से उपयोग किया गया है",
+      "status_pending_title": "लंबित"
     },
     "admin": {
       "all_providers": "सभी प्रदाता",
@@ -1422,7 +1513,8 @@
         "cancelled": "रद्द किया गया",
         "failed": "विफल",
         "disputed": "विवादित"
-      }
+      },
+      "could_not_confirm_receipt": "रसीद की पुष्टि नहीं हो सकी।"
     },
     "listingDetail": {
       "claim_this_donation": "इस दान का दावा करें",
@@ -1460,6 +1552,14 @@
       "nothing_to_sync_no_closet": "सिंक करने के लिए कुछ भी नहीं है — किसी भी क्लोसेट आइटम के लिए मार्केटप्लेस उद्देश्य सेट नहीं है।",
       "remove_listing": "लिस्टिंग हटाएँ",
       "sync_from_closet": "क्लोसेट से सिंक करें"
+    },
+    "avatarPage": {
+      "failed_to_load_avatar_parameters": "अवतार पैरामीटर लोड करने में विफल। सुनिश्चित करें कि आपके प्रोफाइल माप सेट हैं।",
+      "generating_your_3d_digital_double": "आपका 3D डिजिटल डबल जनरेट किया जा रहा है...",
+      "my_digital_avatar": "मेरा डिजिटल अवतार",
+      "this_3d_avatar_is_generated": "यह 3D अवतार आपके शरीर के मापों के आधार पर जनरेट किया गया है। अनुकूलन देखने के लिए प्रोफाइल में अपने माप अपडेट करें।",
+      "tip": "सुझाव:",
+      "you_can_drag_to_rotate": "आप घुमाने के लिए ड्रैग और ज़ूम करने के लिए स्क्रॉल कर सकते हैं। यहाँ दिखने वाला आकार वर्चुअल ट्राई-ऑन फिजिक्स इंजन को नियंत्रित करता है।"
     }
   },
   "trends": {
@@ -1518,5 +1618,32 @@
     "mostEfficient": "सबसे कुशल उपयोग",
     "leastEfficient": "सबसे कम कुशल उपयोग",
     "noCPWData": "प्रति पोशाक लागत की गणना करने के लिए खरीद मूल्य आवश्यक है।"
+  },
+  "attachmentPicker": {
+    "closetTab": "अलमारी से",
+    "dropHere": "छवियों को यहाँ खींचें या ब्राउज़ करने के लिए क्लिक करें",
+    "emptyCloset": "आपकी अलमारी खाली है।",
+    "fetchFailed": "अलमारी की एक छवि लोड नहीं की जा सकी। पुनः प्रयास करें।",
+    "imageOnly": "केवल छवि फ़ाइलें ही समर्थित हैं।",
+    "noMatches": "अलमारी का कोई भी सामान मेल नहीं खाता।",
+    "openLabel": "अनुलग्नक जोड़ें",
+    "searchPlaceholder": "अलमारी में खोजें…",
+    "subtitle": "नए फ़ोटो अपलोड करें या अपनी अलमारी से चुनें।",
+    "title": "अनुलग्नक जोड़ें",
+    "uploadTab": "अपलोड"
+  },
+  "floater": {
+    "done": "सब हो गया"
+  },
+  "sandbox": {
+    "canvas": "आउटफिट कैनवास",
+    "description": "खरीदने से पहले स्टाइल अनुकूलता की जांच करने के लिए अपनी अलमारी के सामान के साथ इस लिस्टिंग को मिलाएं और मैच करें।",
+    "listing": "खरीदें",
+    "looksGood": "बहुत बढ़िया लग रहा है!",
+    "noBottom": "नीचे का कपड़ा चुनें",
+    "noItemsInCategory": "इस श्रेणी में कोई सामान नहीं है।",
+    "noShoes": "जूते चुनें",
+    "noTop": "ऊपर का कपड़ा चुनें",
+    "title": "स्टाइल सैंडबॉक्स"
   }
 }

@@ -4,7 +4,7 @@
     "home": "首页",
     "closet": "衣橱",
     "stylist": "造型师",
-    "outfits": "穿搭",
+    "outfits": "搭配",
     "market": "市场",
     "me": "我",
     "settings": "设置",
@@ -52,7 +52,13 @@
     "noResults": "无结果",
     "comingSoon": "即将上线",
     "gotIt": "知道了",
-    "selectAll": "全选"
+    "selectAll": "全选",
+    "date": "日期",
+    "garment": "单品",
+    "remove": "移除",
+    "share": "分享",
+    "time": "时间",
+    "unknownColor": "其他"
   },
   "auth": {
     "welcomeBack": "欢迎回来",
@@ -167,7 +173,14 @@
       "running": "正在刷新缩略图… {{n}}/{{total}}",
       "regenerated": "{{n}} 已刷新",
       "failed": "无法刷新缩略图"
-    }
+    },
+    "addNewItem": "添加第一件单品",
+    "confirmGroup": "组合",
+    "groupConfirmBody": "选择哪件单品为主单品。所有其他选中的单品都将归类于它旗下。",
+    "groupConfirmTitle": "组合选中单品",
+    "groupSelected": "组合",
+    "primaryItemLabel": "主单品",
+    "selectPrimaryPlaceholder": "选择主单品..."
   },
   "addItem": {
     "title": "添加单品",
@@ -289,7 +302,18 @@
     "removePhoto": "移除这张照片",
     "saved": "已保存",
     "repairTip": "修补小贴士",
-    "selectPlaceholder": "选择…"
+    "selectPlaceholder": "选择…",
+    "saveAllPending": "正在保存 — 等待分析…",
+    "section": {
+      "basic": "基本信息",
+      "care": "洗涤与保养",
+      "styling": "搭配详情"
+    },
+    "step": {
+      "capture": "拍摄",
+      "refinement": "优化",
+      "save": "整合"
+    }
   },
   "itemDetail": {
     "back": "返回衣橱",
@@ -487,7 +511,30 @@
     "speechUnsupported": "此浏览器不支持语音功能",
     "nativeSpeech": "原生语音",
     "stopSpeaking": "停止播放",
-    "playReply": "播放回复"
+    "playReply": "播放回复",
+    "dailySuggestion": "每日搭配",
+    "dressCodeDemands": "着装要求 / 风格",
+    "eventName": "活动名称",
+    "eventNamePlaceholder": "例如：生日派对、晚餐",
+    "floater": {
+      "titleLoading": "单品详情",
+      "viewDetails": "查看完整详情"
+    },
+    "getSuggestions": "获取方案",
+    "location": "地点",
+    "locationPlaceholder": "例如：屋顶餐厅",
+    "outfitSaved": "搭配已保存至您的日记！",
+    "planEventOutfit": "规划活动着装",
+    "planEventOutfitTitle": "规划活动着装",
+    "promptPlaceholder": "描述您的需求，例如：非正式户外聚会，休闲时尚",
+    "proposalFailed": "生成新推荐方案失败。",
+    "proposalGenerated": "新搭配推荐方案已成功生成！",
+    "retryRequest": "推荐其他 3 种选择",
+    "saveFailed": "保存搭配失败。",
+    "saveOutfit": "保存搭配",
+    "shoppingSuggestions": "AI造型师选购建议",
+    "shuffledLook": "随机搭配",
+    "suggestOthers": "换一批 (3种)"
   },
   "outfitCompletion": {
     "cta": "完成搭配",
@@ -574,7 +621,9 @@
       "skipped": "{{n}} 已在售",
       "synced": "{{n}} 重新标记",
       "failed": "无法同步市场"
-    }
+    },
+    "styleSandboxBtn": "用我的衣橱搭配",
+    "syncMarketplace": "从衣橱同步"
   },
   "createListing": {
     "title": "创建商品",
@@ -790,7 +839,28 @@
       "paypalEmail": "用于收款的 PayPal 邮箱",
       "linked": "已链接"
     },
-    "occupation": "职业"
+    "occupation": "职业",
+    "aiStylist": "AI造型师",
+    "aiStylistSchedulerSettingsUpdated": "AI造型师计划设置已更新。",
+    "browserPushAlerts": "浏览器推送警告 (原生 Web Push)",
+    "browserPushNotificationsDisabled": "浏览器推送通知已禁用。",
+    "browserPushNotificationsSuccessfullyEnabled": "成功启用浏览器推送通知。",
+    "chooseDay": "选择日期",
+    "customStylePlaceholder": "例如：健身房、远足、办公室",
+    "dressForDemands": "风格要求说明",
+    "enableSchedulerProposals": "启用日程搭配推荐",
+    "everyOtherDay": "每隔一天",
+    "failedToTogglePushNotifications": "切换推送通知状态失败。",
+    "notificationFrequency": "通知频率",
+    "notificationTime": "通知时间 (UTC)",
+    "onWeekday": "在特定工作日",
+    "phoneWarningEnd": " 栏目下配置了您的电话号码，以便正常接收模拟推送通知。",
+    "phoneWarningStart": "* 请确保在 ",
+    "receiveDirectBrowserAlerts": "在此设备上直接接收浏览器通知警告。",
+    "receivePushReminders": "通过推送通知接收定制的每日搭配方案。",
+    "schedulerPushReminders": "日程规划与推送提醒",
+    "styleDressFor": "搭配风格",
+    "twiceAWeek": "每周两次"
   },
   "admin": {
     "title": "管理",
@@ -1325,6 +1395,20 @@
       "eg_marketing_manager_student_barista": "例如：市场经理、学生、咖啡师",
       "https": "https://",
       "nameexamplecom": "name@example.com"
+    },
+    "avatarViewer2D": {
+      "headwear": "配饰 / 帽子",
+      "virtual_tryon_active": "虚拟试衣激活"
+    },
+    "dressMeShuffler": {
+      "next_slide": "下一页",
+      "previous_slide": "上一页"
+    },
+    "pagination": {
+      "go_to_next_page": "前往下一页",
+      "go_to_previous_page": "前往上一页",
+      "more_pages": "更多页面",
+      "previous": "上一页"
     }
   },
   "pages": {
@@ -1335,7 +1419,13 @@
       "link_expired_or_already_used": "链接已过期或已被使用",
       "my_transactions": "我的交易",
       "pending": "待处理",
-      "transaction_status": "交易状态"
+      "transaction_status": "交易状态",
+      "status_accepted_title": "已接受",
+      "status_denied_body": "没关系，我们已经告知了对方。该单品仍在架上，市集中还有很多其他选择可以探索。",
+      "status_denied_title": "已拒绝",
+      "status_invalid_body": "此链接已失效。请返回市集浏览更多商品，或检查您的交易记录。",
+      "status_invalid_title": "链接已过期或已被使用",
+      "status_pending_title": "待处理"
     },
     "admin": {
       "all_providers": "所有供应商",
@@ -1423,7 +1513,8 @@
         "cancelled": "已取消",
         "failed": "已失败",
         "disputed": "有争议"
-      }
+      },
+      "could_not_confirm_receipt": "无法确认收货。"
     },
     "listingDetail": {
       "claim_this_donation": "领取此捐赠",
@@ -1461,6 +1552,14 @@
       "nothing_to_sync_no_closet": "无可同步内容——衣橱商品均未设置市场发布意向。",
       "remove_listing": "移除发布",
       "sync_from_closet": "从衣橱同步"
+    },
+    "avatarPage": {
+      "failed_to_load_avatar_parameters": "加载化身参数失败。请确保您已设置个人身型尺寸。",
+      "generating_your_3d_digital_double": "正在生成您的3D数字分身...",
+      "my_digital_avatar": "我的数字分身",
+      "this_3d_avatar_is_generated": "此3D分身是基于您的身体测量数据生成的。您可在个人资料中更新尺寸，分身形状会自动适应。",
+      "tip": "提示：",
+      "you_can_drag_to_rotate": "您可以拖拽旋转并滑动缩放。此处显示的形状将驱动我们的虚拟试衣物理引擎。"
     }
   },
   "trends": {
@@ -1519,5 +1618,32 @@
     "mostEfficient": "最高效穿着",
     "leastEfficient": "最低效穿着",
     "noCPWData": "需要输入购买价格以计算单次穿着成本统计。"
+  },
+  "attachmentPicker": {
+    "closetTab": "我的衣橱",
+    "dropHere": "拖拽图片至此或点击浏览",
+    "emptyCloset": "您的衣橱是空的。",
+    "fetchFailed": "无法加载衣橱图片。请重试。",
+    "imageOnly": "仅支持图片文件。",
+    "noMatches": "衣橱中没有匹配的单品。",
+    "openLabel": "添加附件",
+    "searchPlaceholder": "搜索衣橱…",
+    "subtitle": "上传新照片或从衣橱中选择。",
+    "title": "添加附件",
+    "uploadTab": "上传"
+  },
+  "floater": {
+    "done": "全部完成"
+  },
+  "sandbox": {
+    "canvas": "搭配画布",
+    "description": "将该商品与您的衣橱单品混搭，在购买前验证款式兼容性。",
+    "listing": "购买",
+    "looksGood": "非常棒！",
+    "noBottom": "选择下装",
+    "noItemsInCategory": "此分类下没有单品。",
+    "noShoes": "选择鞋履",
+    "noTop": "选择上装",
+    "title": "搭配沙盒"
   }
 }

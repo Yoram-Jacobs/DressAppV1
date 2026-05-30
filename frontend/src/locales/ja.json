@@ -16,7 +16,8 @@
     "mobilePrimary": "モバイルナビゲーション",
     "guest": "ゲスト",
     "experts": "エキスパート",
-    "ads": "マイ広告"
+    "ads": "マイ広告",
+    "outfits": "コーディネート"
   },
   "common": {
     "save": "保存",
@@ -51,7 +52,13 @@
     "noResults": "結果なし",
     "comingSoon": "近日公開",
     "gotIt": "了解",
-    "selectAll": "すべて選択"
+    "selectAll": "すべて選択",
+    "date": "日付",
+    "garment": "洋服",
+    "remove": "削除",
+    "share": "共有",
+    "time": "時間",
+    "unknownColor": "その他"
   },
   "auth": {
     "welcomeBack": "おかえりなさい",
@@ -166,7 +173,14 @@
       "running": "サムネイルを更新中… {{n}}/{{total}}",
       "regenerated": "{{n}} 件更新",
       "failed": "サムネイルを更新できませんでした"
-    }
+    },
+    "addNewItem": "最初のアイテムを追加",
+    "confirmGroup": "グループ化",
+    "groupConfirmBody": "メイン（親）にするアイテムを選択します。他のすべての選択されたアイテムは、その下にグループ化されます。",
+    "groupConfirmTitle": "選択したアイテムのグループ化",
+    "groupSelected": "グループ化",
+    "primaryItemLabel": "メインアイテム",
+    "selectPrimaryPlaceholder": "メインアイテムを選択..."
   },
   "addItem": {
     "title": "アイテムを追加",
@@ -288,6 +302,17 @@
       "duplicatesInline": "{{count}}件のアイテムが確認待ちです — クローゼット内の既存アイテムとの重複の可能性があります。",
       "skippedDupSuffix": "(クローゼット内の既存{{count}}件をスキップ)",
       "failed": "アイテムを保存できませんでした。もう一度お試しください。"
+    },
+    "saveAllPending": "保存中 — 解析中…",
+    "section": {
+      "basic": "基本情報",
+      "care": "お手入れ＆リペア",
+      "styling": "スタイリング詳細"
+    },
+    "step": {
+      "capture": "撮影",
+      "refinement": "調整",
+      "save": "登録"
     }
   },
   "itemDetail": {
@@ -486,7 +511,30 @@
     "speechUnsupported": "このブラウザでは音声がサポートされていません",
     "nativeSpeech": "音声再生",
     "stopSpeaking": "再生停止",
-    "playReply": "返信を再生"
+    "playReply": "返信を再生",
+    "dailySuggestion": "今日の提案",
+    "dressCodeDemands": "ドレスコード / 要望",
+    "eventName": "イベント名",
+    "eventNamePlaceholder": "例: 誕生日パーティー、ディナー",
+    "floater": {
+      "titleLoading": "アイテム詳細",
+      "viewDetails": "詳細を見る"
+    },
+    "getSuggestions": "提案を取得",
+    "location": "場所",
+    "locationPlaceholder": "例: ルーフトップレストラン",
+    "outfitSaved": "コーディネートが日記に保存されました！",
+    "planEventOutfit": "イベントコーディネートの計画",
+    "planEventOutfitTitle": "イベントコーディネート의計画",
+    "promptPlaceholder": "例: カジュアルシック、アウトドアな服装など要望を入力",
+    "proposalFailed": "提案の生成に失敗しました。",
+    "proposalGenerated": "新しい提案が正常に生成されました！",
+    "retryRequest": "他の3つの案を提案する",
+    "saveFailed": "コーディネートの保存に失敗しました。",
+    "saveOutfit": "コーディネートを保存",
+    "shoppingSuggestions": "AIスタイリスト購入提案",
+    "shuffledLook": "シャッフルコーディネート",
+    "suggestOthers": "他の3つを提案"
   },
   "outfitCompletion": {
     "cta": "コーデを完成",
@@ -573,7 +621,9 @@
       "skipped": "{{n}} 件は既に出品中",
       "synced": "{{n}} 件再タグ付け",
       "failed": "マーケットの同期に失敗しました"
-    }
+    },
+    "styleSandboxBtn": "クローゼットと合わせる",
+    "syncMarketplace": "クローゼットから同期"
   },
   "createListing": {
     "title": "出品を作成",
@@ -789,7 +839,28 @@
     },
     "occupation": "職業",
     "exploreTitle": "DressApp を探索",
-    "statsTitle": "Unpacked"
+    "statsTitle": "Unpacked",
+    "aiStylist": "AIスタイリスト",
+    "aiStylistSchedulerSettingsUpdated": "AIスタイリストスケジューラ設定が更新されました。",
+    "browserPushAlerts": "ブラウザプッシュ警告 (ネイティブWebプッシュ)",
+    "browserPushNotificationsDisabled": "ブラウザプッシュ通知が無効化されました。",
+    "browserPushNotificationsSuccessfullyEnabled": "ブラウザプッシュ通知が正常に有効化されました。",
+    "chooseDay": "曜日を選択",
+    "customStylePlaceholder": "例: ジム、ハイキング、オフィス",
+    "dressForDemands": "スタイルの要望",
+    "enableSchedulerProposals": "スケジューラ提案を有効にする",
+    "everyOtherDay": "一日おき",
+    "failedToTogglePushNotifications": "プッシュ通知の切り替えに失敗しました。",
+    "notificationFrequency": "通知頻度",
+    "notificationTime": "通知時間 (UTC)",
+    "onWeekday": "平日",
+    "phoneWarningEnd": " セクションで電話番号を設定してください。",
+    "phoneWarningStart": "* シミュレートされたプッシュ警告を受け取るには、必ず ",
+    "receiveDirectBrowserAlerts": "このデバイスでブラウザ通知を直接受信します。",
+    "receivePushReminders": "カスタマイズされたコーディネート提案のプッシュ通知を受け取ります。",
+    "schedulerPushReminders": "スケジューラ＆プッシュ通知リマインダー",
+    "styleDressFor": "スタイル / 着こなし目的",
+    "twiceAWeek": "週に2回"
   },
   "admin": {
     "title": "管理",
@@ -1324,6 +1395,20 @@
       "eg_marketing_manager_student_barista": "例：マーケティングマネージャー、学生、バリスタ",
       "https": "https://",
       "nameexamplecom": "name@example.com"
+    },
+    "avatarViewer2D": {
+      "headwear": "ヘッドウェア",
+      "virtual_tryon_active": "バーチャル試着アクティブ"
+    },
+    "dressMeShuffler": {
+      "next_slide": "次のスライド",
+      "previous_slide": "前のスライド"
+    },
+    "pagination": {
+      "go_to_next_page": "次のページへ",
+      "go_to_previous_page": "前のページへ",
+      "more_pages": "他のページ",
+      "previous": "前へ"
     }
   },
   "pages": {
@@ -1334,7 +1419,13 @@
       "link_expired_or_already_used": "リンクの期限が切れているか、既に使用されています",
       "my_transactions": "取引履歴",
       "pending": "保留中",
-      "transaction_status": "取引ステータス"
+      "transaction_status": "取引ステータス",
+      "status_accepted_title": "承認済み",
+      "status_denied_body": "ご心配なく — 相手に通知しました。このアイテムはまだ利用可能です。マーケットプレイスで他の出品を探索しましょう。",
+      "status_denied_title": "辞退",
+      "status_invalid_body": "このリンクは無効です。マーケットプレイスに戻って探索するか、取引履歴を確認してください。",
+      "status_invalid_title": "有効期限切れまたは使用済み",
+      "status_pending_title": "保留中"
     },
     "admin": {
       "all_providers": "すべてのプロバイダー",
@@ -1422,7 +1513,8 @@
         "cancelled": "キャンセル済み",
         "failed": "失敗",
         "disputed": "紛争中"
-      }
+      },
+      "could_not_confirm_receipt": "受領を確認できませんでした。"
     },
     "listingDetail": {
       "claim_this_donation": "この寄付を受け取る",
@@ -1460,6 +1552,14 @@
       "nothing_to_sync_no_closet": "同期するものがありません。マーケットプレイス出品設定がされているアイテムがありません。",
       "remove_listing": "出品を削除",
       "sync_from_closet": "クローゼットから同期"
+    },
+    "avatarPage": {
+      "failed_to_load_avatar_parameters": "アバターパラメータの読み込みに失敗しました。プロフィールでサイズが設定されているか確認してください。",
+      "generating_your_3d_digital_double": "3Dデジタルツインを生成中...",
+      "my_digital_avatar": "マイデジタルアバター",
+      "this_3d_avatar_is_generated": "この3Dアバターはあなたの体型測定値に基づいて生成されています。サイズが変わった場合はプロフィールで更新すると自動的に形が反映されます。",
+      "tip": "ヒント:",
+      "you_can_drag_to_rotate": "ドラッグして回転、スクロールでズームできます。ここで表示される形状がバーチャル試着の物理エンジンを駆動します。"
     }
   },
   "trends": {
@@ -1518,5 +1618,32 @@
     "mostEfficient": "最も着用効率が良い",
     "leastEfficient": "最も着用効率が悪い",
     "noCPWData": "着用コスト(CPW)を計算するには、購入価格が必要です。"
+  },
+  "attachmentPicker": {
+    "closetTab": "クローゼットから",
+    "dropHere": "ここに画像をドロップするか、クリックしてブラウズ",
+    "emptyCloset": "クローゼットは空です。",
+    "fetchFailed": "クローゼット画像の一部を読み込めませんでした。再試行してください。",
+    "imageOnly": "画像ファイルのみサポートされています。",
+    "noMatches": "一致するクローゼットアイテムがありません。",
+    "openLabel": "添付ファイルを追加",
+    "searchPlaceholder": "クローゼット内を検索…",
+    "subtitle": "新しい写真をアップロードするか、クローゼットから選択します。",
+    "title": "添付ファイルを追加",
+    "uploadTab": "アップロード"
+  },
+  "floater": {
+    "done": "完了"
+  },
+  "sandbox": {
+    "canvas": "コーディネートキャンバス",
+    "description": "この出品アイテムと手持ちのアイテムをクローゼット内で組み合わせ、購入前にスタイルの相性を確認できます。",
+    "listing": "購入する",
+    "looksGood": "バッチリ！",
+    "noBottom": "ボトムスを選択",
+    "noItemsInCategory": "このカテゴリにはアイテムがありません。",
+    "noShoes": "シューズを選択",
+    "noTop": "トップスを選択",
+    "title": "スタイルサンドボックス"
   }
 }

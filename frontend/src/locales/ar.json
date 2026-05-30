@@ -16,7 +16,8 @@
     "openUserMenu": "افتح قائمة المستخدم",
     "primary": "التنقل الرئيسي",
     "mobilePrimary": "التنقل الرئيسي للهاتف",
-    "guest": "ضيف"
+    "guest": "ضيف",
+    "outfits": "التنسيقات"
   },
   "common": {
     "save": "حفظ",
@@ -51,7 +52,13 @@
     "noResults": "لا نتائج",
     "comingSoon": "قريبًا",
     "gotIt": "فهمت",
-    "selectAll": "تحديد الكل"
+    "selectAll": "تحديد الكل",
+    "date": "التاريخ",
+    "garment": "ملابس",
+    "remove": "إزالة",
+    "share": "مشاركة",
+    "time": "الوقت",
+    "unknownColor": "آخر"
   },
   "auth": {
     "welcomeBack": "مرحبًا بعودتك",
@@ -166,7 +173,14 @@
       "running": "تحديث الصور المصغّرة… {{n}}/{{total}}",
       "regenerated": "{{n}} تم تحديثها",
       "failed": "تعذّر تحديث الصور المصغّرة"
-    }
+    },
+    "addNewItem": "إضافة أول قطعة",
+    "confirmGroup": "تجميع",
+    "groupConfirmBody": "اختر القطعة التي ستكون القطعة الرئيسية. سيتم تجميع كافة القطع الأخرى المحددة تحتها.",
+    "groupConfirmTitle": "تجميع القطع المحددة",
+    "groupSelected": "تجميع",
+    "primaryItemLabel": "القطعة الرئيسية",
+    "selectPrimaryPlaceholder": "اختر القطعة الرئيسية..."
   },
   "addItem": {
     "title": "إضافة عناصر",
@@ -288,6 +302,17 @@
       "duplicatesInline": "{{count}} قطعة تحتاج إلى تأكيدك — تبدو مكررة لقطع موجودة بالفعل في خزانتك.",
       "skippedDupSuffix": "(تم تجاوز {{count}} موجودة في الخزانة)",
       "failed": "تعذر حفظ أي قطع. يُرجى المحاولة مرة أخرى."
+    },
+    "saveAllPending": "جاري الحفظ — بانتظار التحليل…",
+    "section": {
+      "basic": "معلومات أساسية",
+      "care": "العناية والإصلاح",
+      "styling": "تفاصيل التنسيق"
+    },
+    "step": {
+      "capture": "تصوير",
+      "refinement": "تعديل",
+      "save": "دمج"
     }
   },
   "itemDetail": {
@@ -486,7 +511,30 @@
     "speechUnsupported": "الكلام غير مدعوم في هذا المتصفح",
     "nativeSpeech": "الكلام الأصلي",
     "stopSpeaking": "إيقاف التحدث",
-    "playReply": "تشغيل الرد"
+    "playReply": "تشغيل الرد",
+    "dailySuggestion": "الاقتراح اليومي",
+    "dressCodeDemands": "كود اللباس / المتطلبات",
+    "eventName": "اسم الحدث",
+    "eventNamePlaceholder": "مثال: حفلة عيد ميلاد، عشاء",
+    "floater": {
+      "titleLoading": "تفاصيل القطعة",
+      "viewDetails": "عرض التفاصيل الكاملة"
+    },
+    "getSuggestions": "الحصول على اقتراحات",
+    "location": "الموقع",
+    "locationPlaceholder": "مثال: مطعم على السطح",
+    "outfitSaved": "تم حفظ التنسيق في دفتر يومياتك!",
+    "planEventOutfit": "التخطيط لتنسيق مناسبة",
+    "planEventOutfitTitle": "التخطيط لتنسيق مناسبة",
+    "promptPlaceholder": "صف ما تحتاجه، مثل: مناسبة خارجية غير رسمية، كاجوال أنيق",
+    "proposalFailed": "فشل إنشاء مقترحات جديدة.",
+    "proposalGenerated": "تم إنشاء مقترحات جديدة بنجاح!",
+    "retryRequest": "اقتراح 3 خيارات أخرى",
+    "saveFailed": "فشل حفظ التنسيق.",
+    "saveOutfit": "حفظ التنسيق",
+    "shoppingSuggestions": "اقتراحات التسوق من منسق الملابس الذكي",
+    "shuffledLook": "مظهر عشوائي",
+    "suggestOthers": "اقتراح 3 بدائل"
   },
   "outfitCompletion": {
     "cta": "أكمل الإطلالة",
@@ -573,7 +621,9 @@
       "skipped": "{{n}} موجود مسبقًا",
       "synced": "{{n}} أعيد وسمه",
       "failed": "تعذّر مزامنة السوق"
-    }
+    },
+    "styleSandboxBtn": "تنسيق مع خزانتي",
+    "syncMarketplace": "مزامنة من الخزانة"
   },
   "createListing": {
     "title": "إنشاء إعلان",
@@ -789,7 +839,28 @@
     "addressNoResults": "لا توجد نتائج.",
     "occupation": "المهنة",
     "exploreTitle": "استكشف DressApp",
-    "statsTitle": "تحليل الخزانة"
+    "statsTitle": "تحليل الخزانة",
+    "aiStylist": "منسق ملابس ذكي",
+    "aiStylistSchedulerSettingsUpdated": "تم تحديث إعدادات جدولة منسق الملابس الذكي.",
+    "browserPushAlerts": "إشعارات دفع المتصفح (Web Push الأصلي)",
+    "browserPushNotificationsDisabled": "تم تعطيل إشعارات الدفع في المتصفح.",
+    "browserPushNotificationsSuccessfullyEnabled": "تم تفعيل إشعارات الدفع في المتصفح بنجاح.",
+    "chooseDay": "اختر اليوم",
+    "customStylePlaceholder": "مثال: النادي الرياضي، المشي، العمل",
+    "dressForDemands": "متطلبات نمط الملابس",
+    "enableSchedulerProposals": "تمكين مقترحات الجدولة",
+    "everyOtherDay": "يوماً بعد يوم",
+    "failedToTogglePushNotifications": "فشل تغيير وضع إشعارات الدفع.",
+    "notificationFrequency": "تكرار الإشعارات",
+    "notificationTime": "وقت الإشعار (UTC)",
+    "onWeekday": "في يوم محدد",
+    "phoneWarningEnd": " لتوجيه تنبيهات الدفع المحاكاة بشكل صحيح.",
+    "phoneWarningStart": "* تأكد من تهيئة رقم هاتفك في قسم ",
+    "receiveDirectBrowserAlerts": "تلقي تنبيهات الإشعارات مباشرة على هذا الجهاز.",
+    "receivePushReminders": "تلقي تذكيرات عبر إشعارات الدفع مع مقترحات ملابس مخصصة.",
+    "schedulerPushReminders": "الجدولة وتذكيرات الإشعارات",
+    "styleDressFor": "نمط اللباس لـ",
+    "twiceAWeek": "مرتين في الأسبوع"
   },
   "admin": {
     "title": "الإدارة",
@@ -1324,6 +1395,20 @@
       "eg_marketing_manager_student_barista": "مثال: مدير تسويق، طالب، باريستا",
       "https": "https://",
       "nameexamplecom": "name@example.com"
+    },
+    "avatarViewer2D": {
+      "headwear": "غطاء الرأس",
+      "virtual_tryon_active": "المعاينة الافتراضية نشطة"
+    },
+    "dressMeShuffler": {
+      "next_slide": "الشريحة التالية",
+      "previous_slide": "الشريحة السابقة"
+    },
+    "pagination": {
+      "go_to_next_page": "الانتقال إلى الصفحة التالية",
+      "go_to_previous_page": "الانتقال إلى الصفحة السابقة",
+      "more_pages": "صفحات إضافية",
+      "previous": "السابق"
     }
   },
   "pages": {
@@ -1334,7 +1419,13 @@
       "link_expired_or_already_used": "الرابط منتهي الصلاحية أو تم استخدامه بالفعل",
       "my_transactions": "معاملاتي",
       "pending": "قيد الانتظار",
-      "transaction_status": "حالة المعاملة"
+      "transaction_status": "حالة المعاملة",
+      "status_accepted_title": "تم القبول",
+      "status_denied_body": "لا تقلق — لقد قمنا بإعلام الطرف الآخر. القطعة لا تزال معروضة؛ هناك الكثير لتستكشفه في السوق.",
+      "status_denied_title": "تم الرفض",
+      "status_invalid_body": "هذا الرابط لم يعد نشطاً. يرجى العودة إلى السوق لاستكشاف المزيد من المعروضات أو التحقق من معاملاتك.",
+      "status_invalid_title": "انتهت صلاحية الرابط أو تم استخدامه بالفعل",
+      "status_pending_title": "قيد الانتظار"
     },
     "admin": {
       "all_providers": "جميع المزودين",
@@ -1422,7 +1513,8 @@
         "cancelled": "ملغي",
         "failed": "فاشل",
         "disputed": "متنازع عليه"
-      }
+      },
+      "could_not_confirm_receipt": "تعذر تأكيد الاستلام."
     },
     "listingDetail": {
       "claim_this_donation": "طلب هذا التبرع",
@@ -1460,6 +1552,14 @@
       "nothing_to_sync_no_closet": "لا يوجد شيء للمزامنة — لم يتم تحديد غرض السوق لأي من عناصر الخزانة.",
       "remove_listing": "إزالة القائمة",
       "sync_from_closet": "مزامنة من الخزانة"
+    },
+    "avatarPage": {
+      "failed_to_load_avatar_parameters": "فشل تحميل معايير الصورة الرمزية. يرجى إعداد قياسات جسمك أولاً.",
+      "generating_your_3d_digital_double": "جاري إنشاء مجسمك الرقمي ثلاثي الأبعاد...",
+      "my_digital_avatar": "صورتي الرمزية الرقمية",
+      "this_3d_avatar_is_generated": "تم إنشاء هذا المجسم ثلاثي الأبعاد بناءً على قياسات جسمك. قم بتحديث قياساتك في ملفك الشخصي لتراها تتكيف تلقائياً.",
+      "tip": "نصيحة:",
+      "you_can_drag_to_rotate": "يمكنك السحب للتدوير والتمرير للتكبير والتصغير. الشكل الذي تراه هنا يشغل محرك فيزياء التجربة الافتراضية الخاص بنا."
     }
   },
   "trends": {
@@ -1518,5 +1618,32 @@
     "mostEfficient": "الأكثر كفاءة في الارتداء",
     "leastEfficient": "الأقل كفاءة في الارتداء",
     "noCPWData": "سعر الشراء مطلوب لحساب إحصاءات تكلفة الارتداء الواحد."
+  },
+  "attachmentPicker": {
+    "closetTab": "من الخزانة",
+    "dropHere": "اسحب الصور هنا أو انقر للتصفح",
+    "emptyCloset": "خزانتك فارغة.",
+    "fetchFailed": "تعذر تحميل إحدى صور الخزانة. حاول مرة أخرى.",
+    "imageOnly": "يتم دعم ملفات الصور فقط.",
+    "noMatches": "لا توجد قطع ملائمة في الخزانة.",
+    "openLabel": "إضافة مرفقات",
+    "searchPlaceholder": "البحث في الخزانة…",
+    "subtitle": "قم بتحميل صور جديدة أو اختر من خزانتك.",
+    "title": "إضافة مرفقات",
+    "uploadTab": "تحميل"
+  },
+  "floater": {
+    "done": "اكتمل العمل"
+  },
+  "sandbox": {
+    "canvas": "لوحة التنسيق",
+    "description": "قم بمطابقة ودمج هذا المعروض مع قطع خزانك للتحقق من توافق الأسلوب قبل الشراء.",
+    "listing": "شراء",
+    "looksGood": "تبدو رائعة!",
+    "noBottom": "اختر قطعة سفلية",
+    "noItemsInCategory": "لا توجد قطع في هذه الفئة.",
+    "noShoes": "اختر حذاء",
+    "noTop": "اختر قطعة علوية",
+    "title": "مختبر التنسيق"
   }
 }

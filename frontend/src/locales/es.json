@@ -16,7 +16,8 @@
     "mobilePrimary": "Navegación móvil principal",
     "guest": "Invitado",
     "experts": "Expertos",
-    "ads": "Mis anuncios"
+    "ads": "Mis anuncios",
+    "outfits": "Conjuntos"
   },
   "common": {
     "save": "Guardar",
@@ -51,7 +52,13 @@
     "noResults": "Sin resultados",
     "comingSoon": "Muy pronto",
     "gotIt": "Entendido",
-    "selectAll": "Seleccionar todo"
+    "selectAll": "Seleccionar todo",
+    "date": "Fecha",
+    "garment": "Prenda",
+    "remove": "Eliminar",
+    "share": "Compartir",
+    "time": "Hora",
+    "unknownColor": "Otro"
   },
   "auth": {
     "welcomeBack": "Bienvenido de nuevo",
@@ -166,7 +173,14 @@
       "running": "Actualizando miniaturas… {{n}}/{{total}}",
       "regenerated": "{{n}} actualizadas",
       "failed": "No se pudieron actualizar las miniaturas"
-    }
+    },
+    "addNewItem": "Añadir primer artículo",
+    "confirmGroup": "Agrupar",
+    "groupConfirmBody": "Elige qué artículo será el principal (anfitrión). Todos los demás artículos seleccionados se agruparán bajo él.",
+    "groupConfirmTitle": "Agrupar artículos seleccionados",
+    "groupSelected": "Agrupar",
+    "primaryItemLabel": "Artículo principal",
+    "selectPrimaryPlaceholder": "Seleccionar artículo principal..."
   },
   "addItem": {
     "title": "Añadir prendas",
@@ -288,6 +302,17 @@
       "duplicatesInline": "{{count}} prenda(s) necesitan tu confirmación — parecen duplicadas de prendas que ya están en tu armario.",
       "skippedDupSuffix": "(omitidas {{count}} ya en el armario)",
       "failed": "No se pudieron guardar prendas. Por favor, inténtalo de nuevo."
+    },
+    "saveAllPending": "Guardando — esperando análisis…",
+    "section": {
+      "basic": "Información básica",
+      "care": "Cuidado y reparación",
+      "styling": "Detalles de estilo"
+    },
+    "step": {
+      "capture": "Capturar",
+      "refinement": "Refinar",
+      "save": "Integrar"
     }
   },
   "itemDetail": {
@@ -486,7 +511,30 @@
     "speechUnsupported": "Voz no compatible con este navegador",
     "nativeSpeech": "Voz nativa",
     "stopSpeaking": "Dejar de hablar",
-    "playReply": "Reproducir respuesta"
+    "playReply": "Reproducir respuesta",
+    "dailySuggestion": "Sugerencia diaria",
+    "dressCodeDemands": "Código de vestimenta / Exigencias",
+    "eventName": "Nombre del evento",
+    "eventNamePlaceholder": "ej. Fiesta de cumpleaños, Cena",
+    "floater": {
+      "titleLoading": "Detalles del artículo",
+      "viewDetails": "Ver detalles completos"
+    },
+    "getSuggestions": "Obtener sugerencias",
+    "location": "Ubicación",
+    "locationPlaceholder": "ej. Restaurante en terraza",
+    "outfitSaved": "¡Conjunto guardado en tu diario!",
+    "planEventOutfit": "Planificar conjunto para evento",
+    "planEventOutfitTitle": "Planificar conjunto para evento",
+    "promptPlaceholder": "Describe lo que necesitas, ej. evento informal al aire libre, chic casual",
+    "proposalFailed": "Error al generar nuevas propuestas.",
+    "proposalGenerated": "¡Nuevas propuestas generadas con éxito!",
+    "retryRequest": "Sugerir otras 3 opciones",
+    "saveFailed": "Error al guardar el conjunto.",
+    "saveOutfit": "Guardar conjunto",
+    "shoppingSuggestions": "Sugerencias de compra de Estilista IA",
+    "shuffledLook": "Estilo aleatorio",
+    "suggestOthers": "Sugerir otros 3"
   },
   "outfitCompletion": {
     "cta": "Completar el look",
@@ -573,7 +621,9 @@
       "skipped": "{{n}} ya activas",
       "synced": "{{n}} re-etiquetadas",
       "failed": "No se pudo sincronizar el mercado"
-    }
+    },
+    "styleSandboxBtn": "Probar con mi armario",
+    "syncMarketplace": "Sincronizar desde armario"
   },
   "createListing": {
     "title": "Crear anuncio",
@@ -789,7 +839,28 @@
     },
     "occupation": "Profesión",
     "exploreTitle": "Explorar DressApp",
-    "statsTitle": "Desempaquetado"
+    "statsTitle": "Desempaquetado",
+    "aiStylist": "Estilista IA",
+    "aiStylistSchedulerSettingsUpdated": "Ajustes del planificador del Estilista IA actualizados.",
+    "browserPushAlerts": "Alertas push del navegador (Push web nativo)",
+    "browserPushNotificationsDisabled": "Notificaciones push del navegador desactivadas.",
+    "browserPushNotificationsSuccessfullyEnabled": "Notificaciones push del navegador activadas con éxito.",
+    "chooseDay": "Elegir día",
+    "customStylePlaceholder": "ej. Gimnasio, Senderismo, Oficina",
+    "dressForDemands": "Exigencias de estilo",
+    "enableSchedulerProposals": "Activar propuestas del planificador",
+    "everyOtherDay": "Un día sí y otro no",
+    "failedToTogglePushNotifications": "Error al cambiar el estado de las notificaciones push.",
+    "notificationFrequency": "Frecuencia de notificación",
+    "notificationTime": "Hora de notificación (UTC)",
+    "onWeekday": "En días de semana",
+    "phoneWarningEnd": " para recibir las alertas push simuladas.",
+    "phoneWarningStart": "* Asegúrate de configurar tu teléfono en la sección ",
+    "receiveDirectBrowserAlerts": "Recibir alertas de notificación directamente en este dispositivo.",
+    "receivePushReminders": "Recibe recordatorios con propuestas de conjuntos personalizadas.",
+    "schedulerPushReminders": "Planificador y recordatorios push",
+    "styleDressFor": "Estilo / Vestir para",
+    "twiceAWeek": "Dos veces por semana"
   },
   "admin": {
     "title": "Administrador",
@@ -1324,6 +1395,20 @@
       "eg_marketing_manager_student_barista": "ej. Responsable de marketing, Estudiante, Barista",
       "https": "https://",
       "nameexamplecom": "nombre@ejemplo.com"
+    },
+    "avatarViewer2D": {
+      "headwear": "Sombrerería",
+      "virtual_tryon_active": "Probador virtual activo"
+    },
+    "dressMeShuffler": {
+      "next_slide": "Siguiente diapositiva",
+      "previous_slide": "Diapositiva anterior"
+    },
+    "pagination": {
+      "go_to_next_page": "Ir a la página siguiente",
+      "go_to_previous_page": "Ir a la página anterior",
+      "more_pages": "Más páginas",
+      "previous": "Anterior"
     }
   },
   "pages": {
@@ -1334,7 +1419,13 @@
       "link_expired_or_already_used": "Enlace caducado o ya utilizado",
       "my_transactions": "Mis transacciones",
       "pending": "Pendiente",
-      "transaction_status": "Estado de la transacción"
+      "transaction_status": "Estado de la transacción",
+      "status_accepted_title": "Aceptado",
+      "status_denied_body": "No te preocupes, se lo hemos hecho saber a la otra parte. El artículo sigue disponible; hay mucho más por descubrir en el mercado.",
+      "status_denied_title": "Rechazado",
+      "status_invalid_body": "Este enlace ya no está activo. Regresa al mercado para explorar más artículos o revisa tus transacciones.",
+      "status_invalid_title": "Enlace caducado o ya utilizado",
+      "status_pending_title": "Pendiente"
     },
     "admin": {
       "all_providers": "Todos los proveedores",
@@ -1422,7 +1513,8 @@
         "cancelled": "Cancelado",
         "failed": "Fallido",
         "disputed": "Disputado"
-      }
+      },
+      "could_not_confirm_receipt": "No se pudo confirmar la recepción."
     },
     "listingDetail": {
       "claim_this_donation": "Reclamar esta donación",
@@ -1460,6 +1552,14 @@
       "nothing_to_sync_no_closet": "Nada que sincronizar: ninguna prenda tiene intención de venta.",
       "remove_listing": "Eliminar anuncio",
       "sync_from_closet": "Sincronizar desde el armario"
+    },
+    "avatarPage": {
+      "failed_to_load_avatar_parameters": "Error al cargar los parámetros del avatar. Asegúrate de configurar tus medidas en el perfil.",
+      "generating_your_3d_digital_double": "Generando tu doble digital 3D...",
+      "my_digital_avatar": "Mi avatar digital",
+      "this_3d_avatar_is_generated": "Este avatar 3D se genera según tus medidas corporales. Actualiza tus medidas en tu perfil para ver cómo se adapta la forma automáticamente.",
+      "tip": "Consejo:",
+      "you_can_drag_to_rotate": "Puedes arrastrar para rotar y deslizar para hacer zoom. La forma que ves aquí impulsa nuestro motor de física de probador virtual."
     }
   },
   "trends": {
@@ -1518,5 +1618,32 @@
     "mostEfficient": "Uso más eficiente",
     "leastEfficient": "Uso menos eficiente",
     "noCPWData": "Se requiere el precio de compra para calcular las estadísticas de costo por uso."
+  },
+  "attachmentPicker": {
+    "closetTab": "Del armario",
+    "dropHere": "Arrastra imágenes aquí o haz clic para buscar",
+    "emptyCloset": "Tu armario está vacío.",
+    "fetchFailed": "No se pudo cargar una de las imágenes del armario. Inténtalo de nuevo.",
+    "imageOnly": "Solo se admiten archivos de imagen.",
+    "noMatches": "Ningún artículo del armario coincide.",
+    "openLabel": "Añadir archivos adjuntos",
+    "searchPlaceholder": "Buscar en el armario…",
+    "subtitle": "Sube fotos nuevas o elígelas de tu armario.",
+    "title": "Añadir archivos adjuntos",
+    "uploadTab": "Subir"
+  },
+  "floater": {
+    "done": "¡Todo listo!"
+  },
+  "sandbox": {
+    "canvas": "Lienzo de conjuntos",
+    "description": "Combina este artículo con las prendas de tu armario para verificar la compatibilidad de estilo antes de comprar.",
+    "listing": "Comprar",
+    "looksGood": "¡Se ve genial!",
+    "noBottom": "Seleccionar prenda inferior",
+    "noItemsInCategory": "No hay artículos en esta categoría.",
+    "noShoes": "Seleccionar calzado",
+    "noTop": "Seleccionar prenda superior",
+    "title": "Sandbox de estilo"
   }
 }

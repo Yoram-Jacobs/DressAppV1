@@ -17,7 +17,7 @@
     "primary": "ניווט ראשי",
     "mobilePrimary": "ניווט נייד ראשי",
     "guest": "אורח",
-    "outfits": "מערכות לבוש"
+    "outfits": "לוקים"
   },
   "common": {
     "save": "שמור",
@@ -52,7 +52,13 @@
     "success": "הצלחה",
     "noResults": "אין תוצאות",
     "comingSoon": "בקרוב",
-    "gotIt": "הבנתי"
+    "gotIt": "הבנתי",
+    "date": "תאריך",
+    "garment": "פריט לבוש",
+    "remove": "הסר",
+    "share": "שתף",
+    "time": "שעה",
+    "unknownColor": "אחר"
   },
   "auth": {
     "welcomeBack": "ברוך שובך",
@@ -169,11 +175,12 @@
       "failed": "לא ניתן לרענן את התמונות הממוזערות"
     },
     "groupSelected": "קבץ",
-    "groupConfirmTitle": "קיבוץ פריטים שנבחרו",
+    "groupConfirmTitle": "קבוצת פריטים שנבחרו",
     "groupConfirmBody": "בחר איזה פריט יהיה הפריט הראשי (המארח). כל שאר הפריטים שנבחרו יקובצו תחתיו.",
     "primaryItemLabel": "פריט ראשי",
     "selectPrimaryPlaceholder": "בחר פריט ראשי...",
-    "confirmGroup": "קבץ"
+    "confirmGroup": "קבוצה",
+    "addNewItem": "הוסף פריט ראשון"
   },
   "addItem": {
     "title": "העלאה ומילוי אוטומטי",
@@ -295,6 +302,17 @@
       "duplicatesInline": "{{count}} פריט/ים דורשים את אישורך — הם נראים כפולים של פריטים שכבר נמצאים בארון שלך.",
       "skippedDupSuffix": "(דולגו {{count}} שכבר נמצאים בארון)",
       "failed": "לא ניתן לשמור שום פריט. נסי שוב."
+    },
+    "saveAllPending": "שומר — ממתין לניתוח…",
+    "section": {
+      "basic": "מידע בסיסי",
+      "care": "טיפול ותיקון",
+      "styling": "פרטי סטייל"
+    },
+    "step": {
+      "capture": "צילום",
+      "refinement": "דיוק",
+      "save": "שילוב"
     }
   },
   "itemDetail": {
@@ -494,9 +512,29 @@
     "shareCopied": "הקישור הועתק",
     "shareOutfitSubject": "תלבושת שאני שוקלת — דעה?",
     "shareOutfitBody": "הסטייליסט של DressApp הציע את זה. מה דעתך?",
-    "planEventOutfit": "תכנון לבוש לאירוע",
-    "planEventOutfitTitle": "תכנון לבוש לאירוע",
-    "dailySuggestion": "הצעה יומית"
+    "planEventOutfit": "תכנן לוק לאירוע",
+    "planEventOutfitTitle": "תכנן לוק לאירוע",
+    "dailySuggestion": "הצעה יומית",
+    "dressCodeDemands": "קוד לבוש / דרישות",
+    "eventName": "שם האירוע",
+    "eventNamePlaceholder": "למשל: מסיבת יום הולדת, ארוחת ערב",
+    "floater": {
+      "titleLoading": "פרטי פריט",
+      "viewDetails": "צפה בפרטים מלאים"
+    },
+    "getSuggestions": "קבל הצעות",
+    "location": "מיקום",
+    "locationPlaceholder": "למשל: מסעדת גג",
+    "outfitSaved": "הלוק נשמר ביומן שלך!",
+    "promptPlaceholder": "תאר את מה שאתה צריך, למשל: אירוע חיצוני לא רשמי, קז'ואל שיק",
+    "proposalFailed": "יצירת הצעות חדשות נכשלה.",
+    "proposalGenerated": "הצעות חדשות נוצרו בהצלחה!",
+    "retryRequest": "הצע 3 אפשרויות אחרות",
+    "saveFailed": "שמירת הלוק נכשלה.",
+    "saveOutfit": "שמור לוק",
+    "shoppingSuggestions": "הצעות קניות של סטייליסט AI",
+    "shuffledLook": "לוק מעורבב",
+    "suggestOthers": "הצע 3 אחרים"
   },
   "outfitCompletion": {
     "cta": "השלם את הלוק",
@@ -583,7 +621,9 @@
       "skipped": "{{n}} כבר באוויר",
       "synced": "{{n}} סומנו מחדש",
       "failed": "סנכרון השוק נכשל"
-    }
+    },
+    "styleSandboxBtn": "סטייל עם המלתחה שלי",
+    "syncMarketplace": "סנכרן מהארון"
   },
   "createListing": {
     "title": "צור מודעה",
@@ -799,26 +839,26 @@
     },
     "occupation": "עיסוק",
     "aiStylist": "סטייליסט AI",
-    "schedulerPushReminders": "מתזמן ותזכורות push",
-    "enableSchedulerProposals": "הפעל הצעות מתזמן",
-    "receivePushReminders": "קבל תזכורות בהתראות push עם הצעות לבוש מותאמות אישית.",
+    "schedulerPushReminders": "יומן תזמון ותזכורות פוש",
+    "enableSchedulerProposals": "הפעל הצעות תזמון",
+    "receivePushReminders": "קבלת תזכורות פוש עם הצעות לוקים מותאמות אישית.",
     "notificationFrequency": "תדירות התראות",
     "everyOtherDay": "כל יומיים",
     "twiceAWeek": "פעמיים בשבוע",
-    "onWeekday": "ביום בשבוע",
-    "chooseDay": "בחר יום",
+    "onWeekday": "ביום חול",
+    "chooseDay": "בחירת יום",
     "notificationTime": "שעת התראה (UTC)",
-    "styleDressFor": "סגנון / לבוש עבור",
-    "dressForDemands": "סגנון לבוש נדרש",
-    "customStylePlaceholder": "למשל: ספורט, טיולים, אירוע חגיגי",
-    "browserPushAlerts": "התראות push בדפדפן (Web Push מקורי)",
-    "receiveDirectBrowserAlerts": "קבל התראות ישירות בדפדפן במכשיר זה.",
+    "styleDressFor": "סגנון לבוש עבור",
+    "dressForDemands": "דרישות סגנון לבוש",
+    "customStylePlaceholder": "למשל: חדר כושר, טיול, משרד",
+    "browserPushAlerts": "התראות פוש בדפדפן (Web Push)",
+    "receiveDirectBrowserAlerts": "קבלת התראות ישירות על מכשיר זה.",
     "phoneWarningStart": "* ודא שמספר הטלפון שלך מוגדר תחת סעיף ",
-    "phoneWarningEnd": " כדי לנתב בהצלחה התראות push מדומות.",
-    "browserPushNotificationsSuccessfullyEnabled": "התראות push בדפדפן הופעלו בהצלחה.",
-    "browserPushNotificationsDisabled": "התראות push בדפדפן הושבתו.",
-    "failedToTogglePushNotifications": "הפעלה/השבתה של התראות push נכשלה.",
-    "aiStylistSchedulerSettingsUpdated": "הגדרות מתזמן הסטייליסט עודכנו בהצלחה.",
+    "phoneWarningEnd": " כדי לקבל התראות פוש מדומות כהלכה.",
+    "browserPushNotificationsSuccessfullyEnabled": "התראות פוש בדפדפן הופעלו בהצלחה.",
+    "browserPushNotificationsDisabled": "התראות פוש בדפדפן הושבתו.",
+    "failedToTogglePushNotifications": "שינוי מצב התראות פוש נכשל.",
+    "aiStylistSchedulerSettingsUpdated": "הגדרות תזמון הסטייליסט עודכנו.",
     "exploreTitle": "גלה את DressApp",
     "statsTitle": "נתונים"
   },
@@ -1355,6 +1395,20 @@
       "eg_marketing_manager_student_barista": "למשל: מנהל שיווק, סטודנט, בריסטה",
       "https": "https://",
       "nameexamplecom": "name@example.com"
+    },
+    "avatarViewer2D": {
+      "headwear": "כיסוי ראש",
+      "virtual_tryon_active": "מדידה וירטואלית פעילה"
+    },
+    "dressMeShuffler": {
+      "next_slide": "שקופית הבאה",
+      "previous_slide": "שקופית קודמת"
+    },
+    "pagination": {
+      "go_to_next_page": "עבור לעמוד הבא",
+      "go_to_previous_page": "עבור לעמוד הקודם",
+      "more_pages": "עמודים נוספים",
+      "previous": "הקודם"
     }
   },
   "pages": {
@@ -1365,7 +1419,13 @@
       "link_expired_or_already_used": "הקישור פג תוקף או שכבר נעשה בו שימוש",
       "my_transactions": "העסקאות שלי",
       "pending": "ממתין",
-      "transaction_status": "סטטוס עסקה"
+      "transaction_status": "סטטוס עסקה",
+      "status_accepted_title": "התקבל",
+      "status_denied_body": "אל דאגה — הודענו לצד השני. הפריט עדיין זמין; יש עוד הרבה מה לגלות במרקטפלייס.",
+      "status_denied_title": "נדחה",
+      "status_invalid_body": "קישור זה אינו פעיל יותר. חזור למרקטפלייס כדי לראות פריטים נוספים או בדוק את העסקאות שלך.",
+      "status_invalid_title": "הקישור פג תוקף או שכבר נעשה בו שימוש",
+      "status_pending_title": "ממתין"
     },
     "admin": {
       "all_providers": "כל הספקים",
@@ -1453,7 +1513,8 @@
         "cancelled": "בוטל",
         "failed": "נכשל",
         "disputed": "במחלוקת"
-      }
+      },
+      "could_not_confirm_receipt": "לא ניתן לאשר את קבלת הפריט."
     },
     "listingDetail": {
       "claim_this_donation": "בקש את התרומה הזו",
@@ -1491,6 +1552,14 @@
       "nothing_to_sync_no_closet": "אין מה לסנכרן — לא הוגדרה כוונת מרקטפלייס לאף פריט בארון.",
       "remove_listing": "הסרת פרסום",
       "sync_from_closet": "סנכרון מהארון"
+    },
+    "avatarPage": {
+      "failed_to_load_avatar_parameters": "טעינת פרמטרי האוואטר נכשלה. ודא שמידות הגוף שלך מוגדרות.",
+      "generating_your_3d_digital_double": "מייצר את הכפיל הדיגיטלי התלת-ממדי שלך...",
+      "my_digital_avatar": "האוואטר הדיגיטלי שלי",
+      "this_3d_avatar_is_generated": "אוואטר תלת-ממדי זה מיוצר על בסיס מידות הגוף שלך. עדכן את המידות בפרופיל שלך כדי לראות את האוואטר משתנה באופן אוטומטי.",
+      "tip": "טיפ:",
+      "you_can_drag_to_rotate": "ניתן לגרור כדי לסובב ולגלול כדי להתקרב. הצורה שאתה רואה כאן מפעילה את מנוע הפיזיקה של המדידה הוירטואלית."
     }
   },
   "trends": {
@@ -1549,5 +1618,32 @@
     "mostEfficient": "הלבישה היעילה ביותר",
     "leastEfficient": "הלבישה הפחות יעילה",
     "noCPWData": "נדרש מחיר רכישה כדי לחשב עלות לפי לבישה."
+  },
+  "attachmentPicker": {
+    "closetTab": "מהארון",
+    "dropHere": "גרור תמונות לכאן או לחץ לעיון",
+    "emptyCloset": "הארון שלך ריק.",
+    "fetchFailed": "לא ניתן לטעון את אחת מתמונות הארון. נסה שנית.",
+    "imageOnly": "נתמכים קובצי תמונה בלבד.",
+    "noMatches": "אין פריטים תואמים בארון.",
+    "openLabel": "הוסף קבצים מצורפים",
+    "searchPlaceholder": "חיפוש בארון…",
+    "subtitle": "העלה תמונות חדשות או בחר מהארון שלך.",
+    "title": "הוסף קבצים מצורפים",
+    "uploadTab": "העלאה"
+  },
+  "floater": {
+    "done": "הכל מוכן"
+  },
+  "sandbox": {
+    "canvas": "קנבס הלוק",
+    "description": "שלב את הפריט הזה עם פריטי הארון שלך כדי לבדוק התאמת סטייל לפני הקנייה.",
+    "listing": "קנה",
+    "looksGood": "נראה מעולה!",
+    "noBottom": "בחר חלק תחתון",
+    "noItemsInCategory": "אין פריטים בקטגוריה זו.",
+    "noShoes": "בחר נעליים",
+    "noTop": "בחר חלק עליון",
+    "title": "ארגז חול לסטייל"
   }
 }
