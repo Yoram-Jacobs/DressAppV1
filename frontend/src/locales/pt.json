@@ -839,7 +839,7 @@
     },
     "occupation": "Profissão",
     "exploreTitle": "Explorar DressApp",
-    "statsTitle": "Unpacked",
+    "statsTitle": "Descompactado",
     "aiStylist": "Estilista IA",
     "aiStylistSchedulerSettingsUpdated": "Definições do programador do Estilista IA atualizadas.",
     "browserPushAlerts": "Alertas push do navegador (Push web nativo)",
@@ -1604,7 +1604,7 @@
     }
   },
   "stats": {
-    "category": "DressApp Unpacked",
+    "category": "DressApp Descompactado",
     "title": "Análise do guarda-roupa",
     "description": "Analise o valor do seu guarda-roupa, métricas de uso e paletas de cores dominantes para cultivar hábitos de consumo conscientes.",
     "totalValue": "Valor do guarda-roupa",

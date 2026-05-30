@@ -839,7 +839,7 @@
     },
     "occupation": "Occupazione",
     "exploreTitle": "Esplora DressApp",
-    "statsTitle": "Unpacked",
+    "statsTitle": "Disimballato",
     "aiStylist": "Stylist IA",
     "aiStylistSchedulerSettingsUpdated": "Impostazioni pianificatore Stylist IA aggiornate.",
     "browserPushAlerts": "Avvisi push del browser (Web Push nativo)",
@@ -1604,7 +1604,7 @@
     }
   },
   "stats": {
-    "category": "DressApp Unpacked",
+    "category": "DressApp Disimballato",
     "title": "Analisi del guardaroba",
     "description": "Analizza il valore del tuo guardaroba, le statistiche di utilizzo e le palette di colori dominanti per coltivare abitudini di consumo consapevoli.",
     "totalValue": "Valore del guardaroba",

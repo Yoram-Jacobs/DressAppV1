@@ -839,7 +839,7 @@
     },
     "occupation": "職業",
     "exploreTitle": "DressApp を探索",
-    "statsTitle": "Unpacked",
+    "statsTitle": "アンパック",
     "aiStylist": "AIスタイリスト",
     "aiStylistSchedulerSettingsUpdated": "AIスタイリストスケジューラ設定が更新されました。",
     "browserPushAlerts": "ブラウザプッシュ警告 (ネイティブWebプッシュ)",
@@ -1604,7 +1604,7 @@
     }
   },
   "stats": {
-    "category": "DressApp Unpacked",
+    "category": "DressApp アンパック",
     "title": "ワードローブインサイト",
     "description": "ワードローブの価値、着用頻度、主要なカラーパレットを分析して、意識的な着用習慣を身につけましょう。",
     "totalValue": "ワードローブの価値",
