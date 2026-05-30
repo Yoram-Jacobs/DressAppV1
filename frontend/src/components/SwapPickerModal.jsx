@@ -153,7 +153,7 @@ export function SwapPickerModal({
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground caps-label">
-                          No image
+                          {t('itemDetail.noImage', { defaultValue: 'No image' })}
                         </div>
                       )}
                       {isSelected && (
@@ -174,7 +174,7 @@ export function SwapPickerModal({
                         )}
                         {it.source === 'Shared' && (
                           <Badge variant="outline" className="text-[10px] py-0">
-                            Shared
+                            {t('taxonomy.source.Shared', { defaultValue: 'Shared' })}
                           </Badge>
                         )}
                       </div>
@@ -193,7 +193,7 @@ export function SwapPickerModal({
             disabled={submitting}
             data-testid="swap-picker-cancel"
           >
-            Cancel
+            {t('common.cancel', { defaultValue: 'Cancel' })}
           </Button>
           <Button
             onClick={handleSubmit}

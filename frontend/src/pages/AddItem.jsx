@@ -781,7 +781,7 @@ export default function AddItem() {
       } else if (saved && failed) {
         toast.message(`Saved ${saved} · ${failed} failed` + dupTrailer);
       } else if (!saved && !pendingDuplicates && !skippedDups) {
-        toast.error('Could not save any items. Please try again.');
+        toast.error(t('addItem.bgUpload.failed', { defaultValue: 'Could not save any items. Please try again.' }));
       }
       
       setTimeout(() => {

@@ -3,7 +3,10 @@ import axios from 'axios';
 import AvatarViewer from '../components/AvatarViewer';
 import { toast } from 'sonner';
 
+import { useTranslation } from 'react-i18next';
 export default function AvatarPage() {
+  const { t } = useTranslation();
+
   const [shapeParams, setShapeParams] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -22,7 +25,7 @@ export default function AvatarPage() {
       setShapeParams(res.data.shape_params);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load avatar parameters. Ensure your profile measurements are set.");
+      toast.error(t('pages.avatarPage.failed_to_load_avatar_parameters', { defaultValue: 'Failed to load avatar parameters. Ensure your profile measurements are set.' }));
     } finally {
       setLoading(false);
     }
@@ -31,23 +34,22 @@ export default function AvatarPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">My Digital Avatar</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('pages.avatarPage.my_digital_avatar', { defaultValue: 'My Digital Avatar' })}</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-2">
-          This 3D avatar is generated based on your body measurements. 
-          Update your measurements in your profile to see the shape adapt automatically.
+          {t('pages.avatarPage.this_3d_avatar_is_generated', { defaultValue: 'This 3D avatar is generated based on your body measurements. Update your measurements in your profile to see the shape adapt automatically.' })}
         </p>
       </div>
 
       {loading ? (
         <div className="w-full h-[500px] flex items-center justify-center bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
-          <p className="text-slate-400 animate-pulse">Generating your 3D digital double...</p>
+          <p className="text-slate-400 animate-pulse">{t('pages.avatarPage.generating_your_3d_digital_double', { defaultValue: 'Generating your 3D digital double...' })}</p>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
           <AvatarViewer shapeParams={shapeParams} />
           
           <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 p-4 rounded-lg text-sm border border-blue-100 dark:border-blue-800/30">
-            <strong>Tip:</strong> You can drag to rotate and scroll to zoom. The shape you see here drives our virtual try-on physics engine.
+            <strong>{t('pages.avatarPage.tip', { defaultValue: 'Tip:' })}</strong> {t('pages.avatarPage.you_can_drag_to_rotate', { defaultValue: 'You can drag to rotate and scroll to zoom. The shape you see here drives our virtual try-on physics engine.' })}
           </div>
         </div>
       )}

@@ -7,7 +7,30 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recha
 import { useClosetStore } from '@/lib/useClosetStore';
 import { DollarSign, Percent, TrendingUp, Shirt, Award } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { labelForColor } from '@/lib/taxonomy';
+import { labelForColor, canonicalColorKey } from '@/lib/taxonomy';
+
+const COLOR_HEX_MAP = {
+  white: '#f4f4f5',
+  black: '#18181b',
+  grey: '#71717a',
+  light_grey: '#d4d4d8',
+  burgundy: '#7f1d1d',
+  brown: '#78350f',
+  blue: '#3b82f6',
+  light_blue: '#60a5fa',
+  navy: '#1e3a8a',
+  charcoal_grey: '#3f3f46',
+  green: '#22c55e',
+  olive: '#65a30d',
+  yellow: '#eab308',
+  orange: '#f97316',
+  pink: '#ec4899',
+  purple: '#a855f7',
+  terracotta_brown: '#c2410c',
+  beige: '#f5f5dc',
+  cream: '#fef08a',
+  champagne_gold: '#d97706',
+};
 
 export default function WardrobeStats() {
   const { t } = useTranslation();
@@ -29,16 +52,25 @@ export default function WardrobeStats() {
   // Calculate Color Distribution
   const colorMap = {};
   items.forEach(it => {
-    const rawColor = it.color || it.colors?.[0] || 'Other';
+    let rawColor = it.color || '';
+    if (!rawColor && it.colors && it.colors.length > 0) {
+      const first = it.colors[0];
+      rawColor = typeof first === 'string' ? first : (first?.name || '');
+    }
+    rawColor = rawColor || 'Other';
     const raw = rawColor.trim();
+
     // Translate the color using our labelForColor helper
     const localized = rawColor === 'Other' ? t('common.unknownColor', { defaultValue: 'Other' }) : labelForColor(raw, t);
     
     if (!colorMap[localized]) {
+      const canonicalKey = rawColor === 'Other' ? 'other' : canonicalColorKey(raw);
+      const fill = COLOR_HEX_MAP[canonicalKey] || '#a1a1aa'; // default fallback for unknown
+
       colorMap[localized] = {
         name: localized,
-        rawName: raw,
-        value: 0
+        value: 0,
+        fill: fill
       };
     }
     colorMap[localized].value += 1;
@@ -56,18 +88,6 @@ export default function WardrobeStats() {
 
   const topEfficient = sortedByEfficiency.slice(0, 3);
   const bottomEfficient = [...sortedByEfficiency].reverse().slice(0, 3);
-
-  // Curated Tailwind HSL colors for Pie chart
-  const CHART_COLORS = [
-    'hsl(var(--brand))',
-    'hsl(var(--accent-green))',
-    '#f97316', // orange
-    '#0ea5e9', // sky blue
-    '#eab308', // yellow
-    '#ec4899', // pink
-    '#10b981', // emerald
-    '#8b5cf6'  // violet
-  ];
 
   return (
     <div className="container-px max-w-4xl mx-auto pt-6 pb-16 space-y-8" data-testid="wardrobe-stats-page">
@@ -167,14 +187,9 @@ export default function WardrobeStats() {
                       outerRadius={80}
                       paddingAngle={2}
                     >
-                      {colorData.map((entry, index) => {
-                        let fillHex = CHART_COLORS[index % CHART_COLORS.length];
-                        const lowerName = (entry.rawName || '').toLowerCase();
-                        if (lowerName === 'black') fillHex = '#18181b';
-                        else if (lowerName === 'white') fillHex = '#f4f4f5';
-                        else if (lowerName === 'gray' || lowerName === 'grey') fillHex = '#71717a';
-                        return <Cell key={`cell-${index}`} fill={fillHex} className="stroke-background stroke-2" />;
-                      })}
+                      {colorData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} className="stroke-background stroke-2" />
+                      ))}
                     </Pie>
                     <Tooltip />
                     <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ maxHeight: '60px', overflowY: 'auto' }} />

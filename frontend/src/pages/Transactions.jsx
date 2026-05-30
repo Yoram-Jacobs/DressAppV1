@@ -74,9 +74,9 @@ const STATUS_ICON = {
 };
 
 const KIND_META = {
-  buy: { icon: ShoppingBag, label: 'Purchase' },
-  swap: { icon: Repeat, label: 'Swap' },
-  donate: { icon: HeartHandshake, label: 'Donation' },
+  buy: { icon: ShoppingBag },
+  swap: { icon: Repeat },
+  donate: { icon: HeartHandshake },
 };
 
 const STATUS_FILTER_OPTIONS = [
@@ -341,7 +341,9 @@ function TransactionRow({ tx, userId, onConfirmed }) {
           <div className="flex items-center gap-2 flex-wrap">
             <KIcon className="h-4 w-4 text-[hsl(var(--accent))] shrink-0" />
             <span className="font-medium text-sm truncate">
-              {t(`pages.transactions.${kind === 'buy' ? 'purchase' : kind}`, { defaultValue: kindMeta.label })}
+              {kind === 'buy' && t('pages.transactions.purchase', { defaultValue: 'Purchase' })}
+              {kind === 'swap' && t('pages.transactions.swap', { defaultValue: 'Swap' })}
+              {kind === 'donate' && t('pages.transactions.donation', { defaultValue: 'Donation' })}
             </span>
             <Badge
               variant="outline"

@@ -37,6 +37,7 @@ import { Loader2, RefreshCw, Eye, AlertTriangle, CheckCircle2 } from 'lucide-rea
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 
+import { useTranslation } from 'react-i18next';
 /**
  * Format a UTC ISO timestamp as a short relative-time string for the
  * "last call: 12 s ago" badge. Falls back to the raw string on parse
@@ -56,6 +57,8 @@ function relativeAge(iso) {
 }
 
 export function DeveloperPanel({ user }) {
+  const { t } = useTranslation();
+
   const isAdmin = (user?.roles || []).includes('admin');
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -135,7 +138,7 @@ export function DeveloperPanel({ user }) {
         >
           <span className="flex items-center gap-2 text-sm font-medium">
             <Eye className="h-4 w-4" />
-            Developer / Internal
+            {t('components.developerPanel.developer_internal', { defaultValue: 'Developer / Internal' })}
             <Badge variant="secondary" className="ms-2 text-[10px] uppercase tracking-wide">
               admin
             </Badge>
@@ -146,13 +149,9 @@ export function DeveloperPanel({ user }) {
             <CardContent className="space-y-4 p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <div className="text-sm font-medium">Eyes vision provider</div>
+                  <div className="text-sm font-medium">{t('components.developerPanel.eyes_vision_provider', { defaultValue: 'Eyes vision provider' })}</div>
                   <div className="text-xs text-muted-foreground">
-                    Routes the closet analyzer between Google's Gemini
-                    2.5 Flash and the self-hosted Gemma-4 E2B endpoint.
-                    Override is persisted in this pod's Mongo and
-                    survives container restarts. If Gemma is unreachable,
-                    the request automatically falls back to Gemini.
+                    {t('components.developerPanel.routes_the_closet_analyzer_between', { defaultValue: 'Routes the closet analyzer between Google\'s Gemini 2.5 Flash and the self-hosted Gemma-4 E2B endpoint. Override is persisted in this pod\'s Mongo and survives container restarts. If Gemma is unreachable, the request automatically falls back to Gemini.' })}
                   </div>
                 </div>
                 <Button
@@ -163,7 +162,7 @@ export function DeveloperPanel({ user }) {
                   onClick={() => refresh()}
                   disabled={loading || saving}
                   data-testid="developer-eyes-refresh"
-                  aria-label="Refresh status"
+                  aria-label={t('components.developerPanel.refresh_status', { defaultValue: 'Refresh status' })}
                 >
                   {loading
                     ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -185,7 +184,7 @@ export function DeveloperPanel({ user }) {
               {/* Toggle row */}
               <div className="flex items-center justify-between gap-3 rounded-lg border bg-background px-3 py-2">
                 <div className="text-sm">
-                  <span className="text-muted-foreground">Active:</span>{' '}
+                  <span className="text-muted-foreground">{t('components.developerPanel.active', { defaultValue: 'Active:' })}</span>{' '}
                   <span className="font-semibold" data-testid="developer-eyes-active">
                     {visualProvider === 'gemma' ? 'Gemma-4 E2B (self-hosted)' : 'Gemini 2.5 Flash (Google)'}
                   </span>
@@ -196,17 +195,17 @@ export function DeveloperPanel({ user }) {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className={`text-[11px] uppercase tracking-wide ${isGemma ? 'text-muted-foreground' : 'text-foreground'}`}>
-                    Gemini
+                    {t('components.developerPanel.gemini', { defaultValue: 'Gemini' })}
                   </span>
                   <Switch
                     checked={isGemma}
                     onCheckedChange={(v) => setProvider(v ? 'gemma' : 'gemini')}
                     disabled={saving || loading || !status}
-                    aria-label="Toggle Eyes provider"
+                    aria-label={t('components.developerPanel.toggle_eyes_provider', { defaultValue: 'Toggle Eyes provider' })}
                     data-testid="developer-eyes-toggle"
                   />
                   <span className={`text-[11px] uppercase tracking-wide ${isGemma ? 'text-foreground' : 'text-muted-foreground'}`}>
-                    Gemma
+                    {t('components.developerPanel.gemma', { defaultValue: 'Gemma' })}
                   </span>
                 </div>
               </div>
@@ -240,7 +239,7 @@ export function DeveloperPanel({ user }) {
               {/* Last-call summary */}
               <div className="rounded-lg border px-3 py-2 text-xs" data-testid="developer-eyes-last-call">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-medium">Last analyze call</span>
+                  <span className="font-medium">{t('components.developerPanel.last_analyze_call', { defaultValue: 'Last analyze call' })}</span>
                   <Badge
                     variant={lastCall ? (lastCallOk ? 'default' : 'destructive') : 'outline'}
                     className="text-[10px] uppercase"
@@ -270,7 +269,7 @@ export function DeveloperPanel({ user }) {
               <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                 <div className="text-[11px] text-muted-foreground">
                   {status?.override
-                    ? <>Override set by <span className="font-medium">{status.updated_by || 'unknown'}</span> · {relativeAge(status.updated_at)}</>
+                    ? <>{t('components.developerPanel.override_set_by', { defaultValue: 'Override set by' })} <span className="font-medium">{status.updated_by || 'unknown'}</span> · {relativeAge(status.updated_at)}</>
                     : 'No DB override — using env default.'}
                 </div>
                 <Button
@@ -282,7 +281,7 @@ export function DeveloperPanel({ user }) {
                   disabled={saving || loading || !status?.override}
                   data-testid="developer-eyes-clear"
                 >
-                  Clear override
+                  {t('components.developerPanel.clear_override', { defaultValue: 'Clear override' })}
                 </Button>
               </div>
             </CardContent>

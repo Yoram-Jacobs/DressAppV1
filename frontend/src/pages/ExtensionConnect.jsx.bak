@@ -170,7 +170,26 @@ export default function ExtensionConnect() {
         const ev = new MessageEvent('message', { data: payload, origin: window.location.origin });
         window.dispatchEvent(ev);
         if (window.opener && !window.opener.closed) {
-          window.opener.postMessage(payload, '*');
+          // SECURITY: never postMessage an auth token with targetOrigin='*'
+          // — any other tab listening could read it. We derive the
+          // opener's origin from document.referrer (set by the browser
+          // when the opener navigated us here) and only post if we have
+          // a concrete https origin to target. If we can't determine it
+          // (referrer policy stripped it, etc.) we skip the opener path
+          // entirely — the in-page MessageEvent above is the canonical
+          // delivery channel; the opener notification is just a UX
+          // courtesy so the merchant page can self-close.
+          let openerOrigin = '';
+          try {
+            if (document.referrer) {
+              openerOrigin = new URL(document.referrer).origin;
+            }
+          } catch (_originErr) {
+            openerOrigin = '';
+          }
+          if (openerOrigin && openerOrigin.startsWith('https://')) {
+            window.opener.postMessage(payload, openerOrigin);
+          }
         }
         delivered = true;
       } catch (e) {
@@ -191,7 +210,7 @@ export default function ExtensionConnect() {
   // ---- Render variants -----------------------------------------------
   if (!token || !user) {
     return (
-      <Shell title="Redirecting to sign in…">
+      <Shell title={t('pages.extensionConnect.redirecting_to_sign_in')}>
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </Shell>
     );
@@ -199,14 +218,14 @@ export default function ExtensionConnect() {
 
   if (!extId) {
     return (
-      <Shell title="DressApp Chrome Extension">
+      <Shell title={t('pages.extensionConnect.dressapp_chrome_extension')}>
         <p className="text-sm text-muted-foreground">
           This page is the auth bridge for the DressApp shopping
           assistant extension. Open it from the extension's popup
           (the &quot;Connect to DressApp&quot; button).
         </p>
         <Button onClick={() => nav('/home')} className="mt-4 rounded-xl">
-          Go to home
+          {t('pages.extensionConnect.go_to_home')}
         </Button>
       </Shell>
     );
@@ -214,9 +233,9 @@ export default function ExtensionConnect() {
 
   if (!trusted) {
     return (
-      <Shell title="Untrusted extension" tone="warn">
+      <Shell title={t('pages.extensionConnect.untrusted_extension')} tone="warn">
         <p className="text-sm text-muted-foreground">
-          The extension ID <code className="rounded bg-muted px-1">{extId}</code>{' '}
+          {t('pages.extensionConnect.the_extension_id')} <code className="rounded bg-muted px-1">{extId}</code>{' '}
           is not on the allow-list for this deployment. If you installed
           the extension yourself, ask the DressApp admin to add it.
         </p>
@@ -226,11 +245,10 @@ export default function ExtensionConnect() {
 
   if (phase === 'sending' || phase === 'init') {
     return (
-      <Shell title="Connecting to DressApp Extension…">
+      <Shell title={t('pages.extensionConnect.connecting_to_dressapp_extension')}>
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
         <p className="mt-3 text-xs text-muted-foreground">
-          Sharing your sign-in with the extension. This window will
-          close automatically.
+          {t('pages.extensionConnect.sharing_your_signin_with_the')}
         </p>
       </Shell>
     );
@@ -241,10 +259,10 @@ export default function ExtensionConnect() {
       <Shell title="Connected" tone="ok">
         <div className="flex items-center gap-2 text-sm">
           <Check className="h-5 w-5 text-emerald-600" />
-          <span>The extension is signed in as <strong>{user.email}</strong>.</span>
+          <span>{t('pages.extensionConnect.the_extension_is_signed_in')} <strong>{user.email}</strong>.</span>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          You can close this tab and head back to the shopping site.
+          {t('pages.extensionConnect.you_can_close_this_tab')}
         </p>
         <Button
           onClick={() => { try { window.close(); } catch (_) { /* */ } }}
@@ -258,7 +276,7 @@ export default function ExtensionConnect() {
   }
 
   return (
-    <Shell title="Connection failed" tone="warn">
+    <Shell title={t('pages.extensionConnect.connection_failed')} tone="warn">
       <p className="text-sm text-muted-foreground">{error || 'Unknown error.'}</p>
       <Button
         onClick={sendToExtension}

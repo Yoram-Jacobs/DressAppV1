@@ -114,10 +114,10 @@ function OverviewSection() {
 
   const r = data.revenue_cents || {};
   const cards = [
-    { label: 'Users', value: fmtNum(data.users.total), sub: `+${fmtNum(data.users.new_24h)} new in 24h`, icon: UsersIcon, testid: 'admin-stat-users' },
+    { label: t('admin.users', { defaultValue: 'Users' }), value: fmtNum(data.users.total), sub: `+${fmtNum(data.users.new_24h)} new in 24h`, icon: UsersIcon, testid: 'admin-stat-users' },
     { label: t('pages.admin.closet_items'), value: fmtNum(data.closet_items.total), sub: 'across all users', icon: Sparkles, testid: 'admin-stat-closet' },
-    { label: 'Active listings', value: fmtNum(data.listings.active), sub: `${fmtNum(data.listings.total)} total`, icon: ShoppingBag, testid: 'admin-stat-listings' },
-    { label: 'Transactions', value: fmtNum(data.transactions.total), sub: `${fmtNum(data.transactions.paid)} paid`, icon: Receipt, testid: 'admin-stat-transactions' },
+    { label: t('admin.activeListings', { defaultValue: 'Active listings' }), value: fmtNum(data.listings.active), sub: `${fmtNum(data.listings.total)} total`, icon: ShoppingBag, testid: 'admin-stat-listings' },
+    { label: t('nav.transactions', { defaultValue: 'Transactions' }), value: fmtNum(data.transactions.total), sub: `${fmtNum(data.transactions.paid)} paid`, icon: Receipt, testid: 'admin-stat-transactions' },
     { label: t('pages.admin.gross_volume'), value: fmtCents(r.gross), sub: 'lifetime, paid only', icon: Receipt, testid: 'admin-stat-gross' },
     { label: t('pages.admin.platform_fees'), value: fmtCents(r.platform_fee), sub: '7% revenue', icon: Receipt, testid: 'admin-stat-platform-fee' },
     { label: t('pages.admin.stylist_24h'), value: fmtNum(data.stylist.messages_24h), sub: `${fmtNum(data.stylist.messages_7d)} this week`, icon: Activity, testid: 'admin-stat-stylist' },
@@ -128,7 +128,7 @@ function OverviewSection() {
     <div className="space-y-6">
       <div className="flex justify-end">
         <Button variant="outline" onClick={refresh} className="rounded-xl" data-testid="admin-overview-refresh">
-          <RefreshCcw className="h-4 w-4 mr-2" /> Refresh
+          <RefreshCcw className="h-4 w-4 mr-2" /> {t('stylist.refreshScout', { defaultValue: 'Refresh' })}
         </Button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="admin-overview-grid">
@@ -241,7 +241,7 @@ function ProvidersSection() {
     <div className="space-y-6">
       <div className="flex justify-end">
         <Button variant="outline" onClick={refresh} className="rounded-xl" data-testid="admin-providers-refresh">
-          <RefreshCcw className="h-4 w-4 mr-2" /> Refresh
+          <RefreshCcw className="h-4 w-4 mr-2" /> {t('stylist.refreshScout', { defaultValue: 'Refresh' })}
         </Button>
       </div>
       <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
@@ -319,7 +319,7 @@ function TrendScoutSection() {
     <div className="space-y-6">
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={refresh} className="rounded-xl" data-testid="admin-trends-refresh">
-          <RefreshCcw className="h-4 w-4 mr-2" /> Refresh
+          <RefreshCcw className="h-4 w-4 mr-2" /> {t('stylist.refreshScout', { defaultValue: 'Refresh' })}
         </Button>
         <Button onClick={run} disabled={busy} className="rounded-xl" data-testid="admin-trends-run">
           <Play className="h-4 w-4 mr-2" /> {busy ? 'Running...' : 'Force run now'}
@@ -408,11 +408,11 @@ function UsersSection() {
             <Table data-testid="admin-users-table">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Display name</TableHead>
+                  <TableHead>{t('auth.email', { defaultValue: 'Email' })}</TableHead>
+                  <TableHead>{t('auth.displayName', { defaultValue: 'Display name' })}</TableHead>
                   <TableHead>{t('pages.admin.roles')}</TableHead>
-                  <TableHead className="text-right">Closet</TableHead>
-                  <TableHead className="text-right">Listings</TableHead>
+                  <TableHead className="text-right">{t('nav.closet', { defaultValue: 'Closet' })}</TableHead>
+                  <TableHead className="text-right">{t('admin.listings', { defaultValue: 'Listings' })}</TableHead>
                   <TableHead>{t('pages.admin.calendar')}</TableHead>
                   <TableHead>{t('pages.admin.created')}</TableHead>
                   <TableHead></TableHead>
@@ -516,9 +516,9 @@ function ListingsSection() {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('pages.admin.listing')}</TableHead>
-                  <TableHead>Seller</TableHead>
-                  <TableHead className="text-right">Price</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t('transactions.seller', { defaultValue: 'Seller' })}</TableHead>
+                  <TableHead className="text-right">{t('addItem.price', { defaultValue: 'Price' })}</TableHead>
+                  <TableHead>{t('market.status', { defaultValue: 'Status' })}</TableHead>
                   <TableHead>{t('pages.admin.source_tag')}</TableHead>
                   <TableHead>{t('pages.admin.created')}</TableHead>
                   <TableHead></TableHead>
@@ -578,7 +578,7 @@ function TransactionsSection() {
     try {
       const res = await api.adminTransactions({ status: status || undefined, limit: 100 });
       setItems(res.items || []);
-    } catch { toast.error('Failed to load transactions'); }
+    } catch { toast.error(t('transactions.loadFailed', { defaultValue: 'Failed to load transactions' })); }
   };
   useEffect(() => { refresh(); }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -615,7 +615,7 @@ function TransactionsSection() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: 'Gross (paid)', value: fmtCents(aggregate.gross), id: 'agg-gross' },
-          { label: 'Platform 7%', value: fmtCents(aggregate.platform), id: 'agg-platform' },
+          { label: t('transactions.platform7', { defaultValue: 'Platform 7%' }), value: fmtCents(aggregate.platform), id: 'agg-platform' },
           { label: t('pages.admin.stripe_fees'), value: fmtCents(aggregate.stripe), id: 'agg-stripe' },
           { label: t('pages.admin.seller_net'), value: fmtCents(aggregate.net), id: 'agg-net' },
         ].map((c) => (
@@ -634,8 +634,8 @@ function TransactionsSection() {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('pages.admin.tx')}</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Gross</TableHead>
+                  <TableHead>{t('market.status', { defaultValue: 'Status' })}</TableHead>
+                  <TableHead className="text-right">{t('transactions.gross', { defaultValue: 'Gross' })}</TableHead>
                   <TableHead className="text-right">{t('pages.admin.platform')}</TableHead>
                   <TableHead className="text-right">{t('pages.admin.stripe')}</TableHead>
                   <TableHead className="text-right">{t('pages.admin.seller_net')}</TableHead>
@@ -721,7 +721,7 @@ function SystemSection() {
       <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial md:col-span-2">
         <CardContent className="p-5">
           <h3 className="font-display text-xl mb-3 flex items-center gap-2">
-            <Activity className="h-4 w-4" /> Trend-Scout
+            <Activity className="h-4 w-4" /> {t('home.trendScout', { defaultValue: 'Trend-Scout' })}
           </h3>
           <div className="text-sm flex flex-wrap gap-x-8 gap-y-2">
             <div>{t('pages.admin.enabled')} <Badge variant="outline" className="ml-1 text-[11px]">{String(data.trend_scout?.enabled)}</Badge></div>

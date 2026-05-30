@@ -46,7 +46,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-REPO_ROOT = Path("/app/frontend")
+REPO_ROOT = Path("c:/DressApp_AG/frontend")
 SRC_ROOT = REPO_ROOT / "src"
 
 
@@ -103,8 +103,9 @@ def _escape_for_regex(s: str) -> str:
     return re.escape(s)
 
 
-def _t_call(key: str) -> str:
-    return f"t('{key}')"
+def _t_call(key: str, english: str) -> str:
+    escaped = english.replace("'", "\\'")
+    return f"t('{key}', {{ defaultValue: '{escaped}' }})"
 
 
 def patch_attribute(line: str, attr: str, english: str, key: str) -> str | None:
@@ -112,7 +113,7 @@ def patch_attribute(line: str, attr: str, english: str, key: str) -> str | None:
     for quote in ('"', "'"):
         needle = f'{attr}={quote}{english}{quote}'
         if needle in line:
-            return line.replace(needle, f"{attr}={{{_t_call(key)}}}", 1)
+            return line.replace(needle, f"{attr}={{{_t_call(key, english)}}}", 1)
     return None
 
 
@@ -127,7 +128,7 @@ def patch_jsx_text(text: str, english: str, key: str) -> str | None:
     pattern = r"(>)(\s*)" + inner + r"(\s*)(<)"
     new = re.sub(
         pattern,
-        lambda m: f"{m.group(1)}{m.group(2)}{{{_t_call(key)}}}{m.group(3)}{m.group(4)}",
+        lambda m: f"{m.group(1)}{m.group(2)}{{{_t_call(key, english)}}}{m.group(3)}{m.group(4)}",
         text,
         count=1,
         flags=re.DOTALL,
@@ -141,7 +142,7 @@ def patch_toast(line: str, english: str, key: str) -> str | None:
         pattern = re.compile(
             r"(toast(?:\.\w+)?\(\s*)" + quote + re.escape(english) + quote
         )
-        new = pattern.sub(lambda m: f"{m.group(1)}{_t_call(key)}", line, count=1)
+        new = pattern.sub(lambda m: f"{m.group(1)}{_t_call(key, english)}", line, count=1)
         if new != line:
             return new
     return None
@@ -150,7 +151,7 @@ def patch_toast(line: str, english: str, key: str) -> str | None:
 def patch_alert(line: str, english: str, key: str) -> str | None:
     for quote in ('"', "'"):
         pattern = re.compile(r"(\balert\(\s*)" + quote + re.escape(english) + quote)
-        new = pattern.sub(lambda m: f"{m.group(1)}{_t_call(key)}", line, count=1)
+        new = pattern.sub(lambda m: f"{m.group(1)}{_t_call(key, english)}", line, count=1)
         if new != line:
             return new
     return None
@@ -166,7 +167,7 @@ def patch_object_literal(line: str, english: str, key: str) -> str | None:
             r"\b(" + _OL_PROPS + r")(\s*:\s*)" + quote + re.escape(english) + quote
         )
         new = pattern.sub(
-            lambda m: f"{m.group(1)}{m.group(2)}{_t_call(key)}", line, count=1
+            lambda m: f"{m.group(1)}{m.group(2)}{_t_call(key, english)}", line, count=1
         )
         if new != line:
             return new

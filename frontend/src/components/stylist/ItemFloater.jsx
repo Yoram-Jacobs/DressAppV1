@@ -9,6 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import {
+  labelForCategory,
+  labelForSubCategory,
+  labelForCondition,
+  labelForColor,
+  labelForPattern,
+} from '@/lib/taxonomy';
 
 /**
  * ItemFloater — a right-edge side panel that previews a single closet
@@ -208,7 +215,7 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
                   data-testid="item-floater-category"
                 >
                   <Tag className="h-3 w-3 me-1" />
-                  {item.category}
+                  {labelForCategory(item.category, t)}
                 </Badge>
               ) : null}
               {item.sub_category ? (
@@ -216,7 +223,7 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
                   variant="outline"
                   className="text-[10px]"
                 >
-                  {item.sub_category}
+                  {labelForSubCategory(item.sub_category, t)}
                 </Badge>
               ) : null}
               {item.condition ? (
@@ -225,7 +232,7 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
                   className="text-[10px]"
                   data-testid="item-floater-condition"
                 >
-                  {item.condition}
+                  {labelForCondition(item.condition, t)}
                 </Badge>
               ) : null}
             </div>
@@ -234,7 +241,7 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
             {item.color ? (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Palette className="h-3.5 w-3.5" />
-                <span data-testid="item-floater-color">{item.color}</span>
+                <span data-testid="item-floater-color">{labelForColor(item.color, t)}</span>
               </div>
             ) : null}
 
@@ -264,7 +271,7 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
                     <span className="caps-label">
                       {t('addItem.pattern', { defaultValue: 'Pattern' })}:
                     </span>{' '}
-                    <span className="text-foreground">{item.pattern}</span>
+                    <span className="text-foreground">{labelForPattern(item.pattern, t)}</span>
                   </div>
                 ) : null}
               </div>

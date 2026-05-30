@@ -42,8 +42,8 @@ import re
 from collections import defaultdict
 from pathlib import Path
 
-ROOT = Path("/app/frontend/src")
-LOCALES_EN = Path("/app/frontend/src/locales/en.json")
+ROOT = Path("c:/DressApp_AG/frontend/src")
+LOCALES_EN = Path("c:/DressApp_AG/frontend/src/locales/en.json")
 
 # ---------------------------------------------------------------------------
 # Existing i18n key set — we don't want to suggest a string we already cover.
@@ -139,8 +139,6 @@ PATTERNS = [
     ("alt", re.compile(r'\balt\s*=\s*"([^"]{3,})"')),
     ("alt", re.compile(r"\balt\s*=\s*'([^']{3,})'")),
 
-    # defaultValue: 'English fallback' inside i18n t() options
-    ("defaultValue", re.compile(r"\bdefaultValue\s*:\s*['\"]([^'\"]{3,})['\"]")),
 
     # toast.success / toast.error / toast() / sonner toast()
     ("toast", re.compile(r"\btoast(?:\.(?:success|error|info|warning|message))?\(\s*['\"]([^'\"]{3,})['\"]")),
@@ -180,6 +178,9 @@ def slugify(s: str) -> str:
 
 def suggested_key(rel_path: Path, english: str) -> str:
     """Derive a dotted i18n key from the file location and a slug."""
+    for k, v in EN_FLAT.items():
+        if v == english:
+            return k
     # src/pages/ListingDetail.jsx -> listingDetail
     stem = rel_path.stem
     stem_l = stem[0].lower() + stem[1:] if stem else "page"
@@ -253,9 +254,7 @@ def main() -> int:
                     continue
                 if context_excludes_string(line_ctx, text):
                     continue
-                if text in KNOWN_VALUES:
-                    skipped_known += 1
-                    continue
+
                 entry = findings[text]
                 entry["english"] = text
                 entry["occurrences"].append({
@@ -279,9 +278,7 @@ def main() -> int:
                             continue
                         if context_excludes_string(line, text):
                             continue
-                        if text in KNOWN_VALUES:
-                            skipped_known += 1
-                            continue
+
                         entry = findings[text]
                         entry["english"] = text
                         entry["occurrences"].append({
@@ -369,7 +366,7 @@ def main() -> int:
         "findings": findings_list,
     }
 
-    out_path = Path("/app/docs/locale_backfill_untranslated.json")
+    out_path = Path("c:/DressApp_AG/docs/locale_backfill_untranslated.json")
     out_path.write_text(
         json.dumps(out, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",

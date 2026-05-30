@@ -27,7 +27,7 @@ import { HashRepairChip } from '@/components/closet/HashRepairChip';
 import { ThumbRepairChip } from '@/components/closet/ThumbRepairChip';
 import { api } from '@/lib/api';
 import { bestImageUrl, isCleanImagePending } from '@/lib/itemImage';
-import { labelForCategory, labelForSource, labelForIntent } from '@/lib/taxonomy';
+import { labelForCategory, labelForSource, labelForIntent, labelForColor } from '@/lib/taxonomy';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { closetStore } from '@/lib/closetStore';
 import { workStore } from '@/lib/workStore';
@@ -1426,7 +1426,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
           <SourceTagBadge source={item.source} intent={item.marketplace_intent} />
         </div>
         <div className="text-xs text-muted-foreground mt-1">
-          {[labelForCategory(item.category, t), item.color].filter(Boolean).join(' · ')}
+          {[labelForCategory(item.category, t), labelForColor(item.color, t)].filter(Boolean).join(' · ')}
         </div>
         {/* Auto-list "Complete listing" CTA — appears when an item
             has been auto-listed (Private→Shared toggle) and the user

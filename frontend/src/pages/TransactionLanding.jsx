@@ -35,33 +35,21 @@ const STATUS_COPY = {
     icon: CheckCircle2,
     tone: 'text-emerald-700 dark:text-emerald-400',
     tint: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900',
-    title: 'Accepted',
-    body:
-      'Thanks — the other party has been notified. Check your email for shipping details and tap "Confirm receipt" once the item arrives.',
   },
   denied: {
     icon: XCircle,
     tone: 'text-rose-700 dark:text-rose-400',
     tint: 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900',
-    title: 'Declined',
-    body:
-      'No worries — we let the other party know. The item is still out there; plenty more to explore in the marketplace.',
   },
   pending: {
     icon: Clock,
     tone: 'text-amber-700 dark:text-amber-400',
     tint: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900',
-    title: 'Pending',
-    body:
-      "We're waiting on the other party to accept or decline. We'll email you as soon as they do.",
   },
   invalid: {
     icon: AlertTriangle,
     tone: 'text-muted-foreground',
     tint: 'bg-muted border-border',
-    title: 'Link expired or already used',
-    body:
-      'This link is no longer active. Head back to the marketplace to explore more listings or check your transactions.',
   },
 };
 
@@ -99,6 +87,21 @@ export default function TransactionLanding() {
 
   const copy = STATUS_COPY[resolvedStatus] || STATUS_COPY.invalid;
   const Icon = copy.icon;
+  let title = '';
+  let body = '';
+  if (resolvedStatus === 'accepted') {
+    title = t('pages.transactionLanding.status_accepted_title', { defaultValue: 'Accepted' });
+    body = t('pages.transactionLanding.status_accepted_body', { defaultValue: 'Thanks — the other party has been notified. Check your email for shipping details and tap "Confirm receipt" once the item arrives.' });
+  } else if (resolvedStatus === 'denied') {
+    title = t('pages.transactionLanding.status_denied_title', { defaultValue: 'Declined' });
+    body = t('pages.transactionLanding.status_denied_body', { defaultValue: 'No worries — we let the other party know. The item is still out there; plenty more to explore in the marketplace.' });
+  } else if (resolvedStatus === 'pending') {
+    title = t('pages.transactionLanding.status_pending_title', { defaultValue: 'Pending' });
+    body = t('pages.transactionLanding.status_pending_body', { defaultValue: "We're waiting on the other party to accept or decline. We'll email you as soon as they do." });
+  } else {
+    title = t('pages.transactionLanding.status_invalid_title', { defaultValue: 'Link expired or already used' });
+    body = t('pages.transactionLanding.status_invalid_body', { defaultValue: 'This link is no longer active. Head back to the marketplace to explore more listings or check your transactions.' });
+  }
 
   const listing = data?.listing;
   const fm = listing?.financial_metadata || {};
@@ -121,10 +124,10 @@ export default function TransactionLanding() {
               className="font-display text-3xl leading-tight mt-1"
               data-testid="transaction-landing-title"
             >
-              {copy.title}
+              {title}
             </h1>
             <p className="text-sm mt-2 leading-relaxed" data-testid="transaction-landing-body">
-              {copy.body}
+              {body}
             </p>
           </div>
         </CardContent>
@@ -151,7 +154,7 @@ export default function TransactionLanding() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground caps-label">
-                    No image
+                    {t('itemDetail.noImage', { defaultValue: 'No image' })}
                   </div>
                 )}
               </AspectRatio>

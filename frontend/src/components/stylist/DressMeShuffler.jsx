@@ -339,7 +339,7 @@ export default function DressMeShuffler() {
                   onClick={() => api?.scrollPrev()}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  <span className="sr-only">Previous slide</span>
+                  <span className="sr-only">{t('components.dressMeShuffler.previous_slide', { defaultValue: 'Previous slide' })}</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -349,7 +349,7 @@ export default function DressMeShuffler() {
                   onClick={() => api?.scrollNext()}
                 >
                   <ChevronRight className="h-4 w-4" />
-                  <span className="sr-only">Next slide</span>
+                  <span className="sr-only">{t('components.dressMeShuffler.next_slide', { defaultValue: 'Next slide' })}</span>
                 </Button>
               </>
             )}

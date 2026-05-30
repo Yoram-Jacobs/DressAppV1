@@ -108,9 +108,107 @@ export const labelForRole = (code, t) => {
   return fallback(t, key, code);
 };
 
+const CANONICAL_COLORS = {
+  // English
+  'white': 'white',
+  'black': 'black',
+  'grey': 'grey',
+  'gray': 'grey',
+  'light_grey': 'light_grey',
+  'light_gray': 'light_grey',
+  'burgundy': 'burgundy',
+  'bordeaux': 'burgundy',
+  'brown': 'brown',
+  'blue': 'blue',
+  'light_blue': 'light_blue',
+  'navy': 'navy',
+  'navy_blue': 'navy',
+  'dark_blue': 'navy',
+  'dark_blue_gray': 'charcoal_grey',
+  'blue_gray': 'charcoal_grey',
+  'charcoal': 'charcoal_grey',
+  'charcoal_grey': 'charcoal_grey',
+  'charcoal_gray': 'charcoal_grey',
+  'green': 'green',
+  'olive': 'olive',
+  'olive_green': 'olive',
+  'yellow': 'yellow',
+  'orange': 'orange',
+  'pink': 'pink',
+  'purple': 'purple',
+  'terracotta': 'terracotta_brown',
+  'terracotta_brown': 'terracotta_brown',
+  'beige': 'beige',
+  'cream': 'cream',
+  'champagne_gold': 'champagne_gold',
+  'champagne': 'champagne_gold',
+  'gold': 'champagne_gold',
+  
+  // Hebrew
+  'לבן': 'white',
+  'שחור': 'black',
+  'אפור': 'grey',
+  'אפור_בהיר': 'light_grey',
+  'בורדו': 'burgundy',
+  'חום': 'brown',
+  'כחול': 'blue',
+  'תכלת': 'light_blue',
+  'כחול_כהה': 'navy',
+  'כחול_אפור_כהה': 'charcoal_grey',
+  'ירוק': 'green',
+  'ירוק_זית': 'olive',
+  'צהוב': 'yellow',
+  'כתום': 'orange',
+  'ורוד': 'pink',
+  'סגול': 'purple',
+  'חום_חמרה': 'terracotta_brown',
+  'טראקוטה': 'terracotta_brown',
+  'בז\'': 'beige',
+  'בז': 'beige',
+  'קרם': 'cream',
+  'זהב': 'champagne_gold',
+  'שמפניה': 'champagne_gold',
+
+  // Russian
+  'белый': 'white',
+  'черный': 'black',
+  'чёрный': 'black',
+  'серый': 'grey',
+  'светло_серый': 'light_grey',
+  'бордовый': 'burgundy',
+  'бордо': 'burgundy',
+  'коричневый': 'brown',
+  'синий': 'blue',
+  'голубой': 'light_blue',
+  'темно_синий': 'navy',
+  'зеленый': 'green',
+  'зелёный': 'green',
+  'оливковый': 'olive',
+  'желтый': 'yellow',
+  'жёлтый': 'yellow',
+  'оранжевый': 'orange',
+  'розовый': 'pink',
+  'фиолетовый': 'purple',
+  'терракотовый': 'terracotta_brown',
+  'бежевый': 'beige',
+  'кремовый': 'cream',
+  'золотой': 'champagne_gold',
+  'шампань': 'champagne_gold'
+};
+
+export const canonicalColorKey = (code) => {
+  if (!code) return '';
+  const normalized = String(code)
+    .trim()
+    .toLowerCase()
+    .replace(/[\s\-]+/g, '_')
+    .replace(/[^a-z0-9_א-תа-яё]/g, '');
+  return CANONICAL_COLORS[normalized] || slug(code);
+};
+
 export const labelForColor = (code, t) => {
   if (!code) return '';
-  const key = `taxonomy.color.${slug(code)}`;
+  const key = `taxonomy.color.${canonicalColorKey(code)}`;
   return fallback(t, key, code);
 };
 

@@ -2,7 +2,10 @@ import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ImageOff, Sparkles } from 'lucide-react';
 
+import { useTranslation } from 'react-i18next';
 export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfitItems = {} }) {
+  const { t } = useTranslation();
+
   // Normalize params between 0 and 1
   const params = useMemo(() => {
     const defaultParams = {
@@ -82,7 +85,7 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             src={garments.headwear}
-            alt="Headwear"
+            alt={t('components.avatarViewer2D.headwear', { defaultValue: 'Headwear' })}
             className="absolute top-[2%] left-1/2 -translate-x-1/2 w-[22%] aspect-square object-contain z-30 drop-shadow-md"
           />
         )}
@@ -93,7 +96,7 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             src={garments.accessory}
-            alt="Accessory"
+            alt={t('taxonomy.categories.accessory', { defaultValue: 'Accessory' })}
             className="absolute top-[16%] left-1/2 -translate-x-1/2 w-[16%] object-contain z-25"
           />
         )}
@@ -104,7 +107,7 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             src={garments.dress}
-            alt="Dress"
+            alt={t('taxonomy.categories.dress', { defaultValue: 'Dress' })}
             className="absolute top-[18%] left-1/2 -translate-x-1/2 w-[42%] h-[56%] object-contain z-20 drop-shadow-lg"
           />
         ) : (
@@ -115,7 +118,7 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 src={garments.top}
-                alt="Top"
+                alt={t('addItem.categoryPlaceholder', { defaultValue: 'Top' })}
                 className="absolute top-[19%] left-1/2 -translate-x-1/2 w-[44%] h-[32%] object-contain z-20 drop-shadow-md"
                 style={{
                   transform: `translateX(-50%) scale(${scales.chest / scales.width}, 1)`
@@ -129,7 +132,7 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 src={garments.bottom}
-                alt="Bottom"
+                alt={t('taxonomy.categories.bottom', { defaultValue: 'Bottom' })}
                 className="absolute top-[44%] left-1/2 -translate-x-1/2 w-[40%] h-[40%] object-contain z-10 drop-shadow-md"
                 style={{
                   transform: `translateX(-50%) scale(${scales.hips / scales.width}, 1)`
@@ -145,7 +148,7 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             src={garments.outerwear}
-            alt="Outerwear"
+            alt={t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' })}
             className="absolute top-[18%] left-1/2 -translate-x-1/2 w-[48%] h-[35%] object-contain z-22 drop-shadow-lg"
           />
         )}
@@ -156,7 +159,7 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             src={garments.shoes}
-            alt="Shoes"
+            alt={t('taxonomy.categories.shoes', { defaultValue: 'Shoes' })}
             className="absolute bottom-[2%] left-1/2 -translate-x-1/2 w-[34%] h-[12%] object-contain z-15 drop-shadow-md"
           />
         )}
@@ -167,7 +170,7 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             src={garments.bag}
-            alt="Bag"
+            alt={t('taxonomy.sub_category.bag', { defaultValue: 'Bag' })}
             className="absolute top-[45%] right-[2%] w-[24%] h-[24%] object-contain z-25 drop-shadow-md"
           />
         )}
@@ -176,7 +179,7 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
       {/* Try-on affordance overlay */}
       <div className="absolute bottom-3 right-3 bg-background/80 dark:bg-slate-900/80 backdrop-blur px-2 py-1 rounded-lg border border-border text-[10px] text-muted-foreground flex items-center gap-1 select-none opacity-0 group-hover:opacity-100 transition-opacity">
         <Sparkles className="h-3 w-3 text-[hsl(var(--accent))]" />
-        <span>Virtual Try-On Active</span>
+        <span>{t('components.avatarViewer2D.virtual_tryon_active', { defaultValue: 'Virtual Try-On Active' })}</span>
       </div>
     </div>
   );

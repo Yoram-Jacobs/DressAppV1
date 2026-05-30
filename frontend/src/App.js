@@ -38,6 +38,7 @@ import TrendScout from '@/pages/TrendScout';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
+import { useTranslation } from 'react-i18next';
 function GlobalScrollListener() {
   useEffect(() => {
     const handleScroll = () => {
@@ -53,6 +54,8 @@ function GlobalScrollListener() {
 }
 
 function App() {
+  const { t } = useTranslation();
+
   return (
     <HelmetProvider>
       <AuthProvider>
@@ -67,7 +70,7 @@ function App() {
             className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[1000] focus:bg-primary focus:text-primary-foreground focus:px-4 focus:py-2 focus:rounded-lg"
             data-testid="skip-to-content-link"
           >
-            Skip to main content
+            {t('nav.skipToContent', { defaultValue: 'Skip to main content' })}
           </a>
           <Routes>
             <Route element={<PublicOnly />}>

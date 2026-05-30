@@ -256,7 +256,7 @@ export default function ExtensionConnect() {
 
   if (phase === 'sent') {
     return (
-      <Shell title="Connected" tone="ok">
+      <Shell title={t('calendar.connectedBadge', { defaultValue: 'Connected' })} tone="ok">
         <div className="flex items-center gap-2 text-sm">
           <Check className="h-5 w-5 text-emerald-600" />
           <span>{t('pages.extensionConnect.the_extension_is_signed_in')} <strong>{user.email}</strong>.</span>
@@ -269,7 +269,7 @@ export default function ExtensionConnect() {
           className="mt-4 rounded-xl"
           data-testid="extension-connect-close"
         >
-          Close
+          {t('common.close', { defaultValue: 'Close' })}
         </Button>
       </Shell>
     );
@@ -283,7 +283,7 @@ export default function ExtensionConnect() {
         className="mt-4 rounded-xl"
         data-testid="extension-connect-retry"
       >
-        Retry
+        {t('common.retry', { defaultValue: 'Retry' })}
       </Button>
     </Shell>
   );

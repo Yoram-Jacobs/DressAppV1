@@ -74,6 +74,7 @@ import {
   labelForFormality,
   labelForSubCategory,
   labelForItemType,
+  labelForColor,
 } from '@/lib/taxonomy';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
@@ -1849,6 +1850,7 @@ export default function ItemDetail() {
                     className="rounded-xl"
                     data-testid="item-edit-field-color"
                   />
+                  <LocalizedHint raw={form.color} translated={labelForColor(form.color, t)} />
                 </Field>
                 <Field label={t('itemDetail.edit.material')} htmlFor="f-material">
                   <Input

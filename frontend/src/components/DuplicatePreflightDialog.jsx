@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-import { labelForItemType } from "@/lib/taxonomy";
+import { labelForItemType, labelForColor } from "@/lib/taxonomy";
 
 /**
  * Phase Z2 — pre-flight duplicate confirmation dialog.
@@ -180,7 +180,7 @@ export default function DuplicatePreflightDialog({
                         })}
                     </div>
                     <div className="truncate text-xs text-muted-foreground">
-                      {[labelForItemType(m.existing?.item_type, t), m.existing?.color]
+                      {[labelForItemType(m.existing?.item_type, t), labelForColor(m.existing?.color, t)]
                         .filter(Boolean)
                         .join(" · ")}
                     </div>
