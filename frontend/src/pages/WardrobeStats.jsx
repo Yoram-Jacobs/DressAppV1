@@ -67,25 +67,7 @@ const getFillColor = (canonicalKey) => {
 };
 
 const MATERIAL_COLOR_MAP = {
-  // Fallbacks & broad categories
-  cotton: '#e2e8f0',
-  wool: '#78350f',
-  silk: '#fbcfe8',
-  linen: '#f5f5dc',
-  leather: '#18181b',
-  denim: '#1d4ed8',
-  polyester: '#a855f7',
-  nylon: '#3b82f6',
-  cashmere: '#fda4af',
-  viscose: '#10b981',
-  elastane: '#64748b',
-  spandex: '#64748b',
-  velvet: '#4c1d95',
-  satin: '#fef08a',
-  twill: '#451a03',
-  fleece: '#06b6d4',
-
-  // Natural fibers
+  // Natural Fibers
   raw_cotton: '#F9F6EE',
   flax_linen: '#FAF0E6',
   mulberry_silk: '#FFF8F0',
@@ -94,16 +76,17 @@ const MATERIAL_COLOR_MAP = {
   ramie_white: '#FDFBF7',
   jute_burlap: '#A8977E',
 
-  // Luxury wools & hairs
+  // Luxury Wools & Hairs
   cashmere_cream: '#EAE3D2',
   merino_off_white: '#F5F2EB',
   camel_hair: '#C19A6B',
   alpaca_fawn: '#8E7661',
   mohair_silver: '#D1D5DB',
   angora_cloud: '#FAF9F6',
+  vicuña: '#B87A3A',
   vicuna: '#B87A3A',
 
-  // Leather & skins
+  // Leather & Skins
   vachetta_leather: '#E3C39D',
   saddle_tan: '#A0522D',
   cordovan: '#4A1525',
@@ -112,7 +95,7 @@ const MATERIAL_COLOR_MAP = {
   nubuck_olive: '#556B2F',
   patent_gloss_black: '#0B0B0C',
 
-  // Utility & synthetic fabrics
+  // Utility & Synthetics
   raw_denim_blue: '#1A2E40',
   chambray_light: '#A3C1AD',
   ballistic_nylon: '#242526',
@@ -121,7 +104,7 @@ const MATERIAL_COLOR_MAP = {
   tyvek_white: '#FFFFFF',
   tarp_vinyl: '#0D5C3A',
 
-  // Specialty & eveningwear textiles
+  // Specialty & Eveningwear
   velvet_maroon: '#500614',
   satin_champagne: '#ECCBB4',
   tulle_illusion: '#F3EBE3',
@@ -130,6 +113,21 @@ const MATERIAL_COLOR_MAP = {
   lame_silver: '#E6E8EA',
   sequined_onyx: '#0F0F10',
 
+  // Base Fallbacks & Simple Material Names
+  cotton: '#F9F6EE',
+  linen: '#FAF0E6',
+  silk: '#FFF8F0',
+  wool: '#F5F2EB',
+  cashmere: '#EAE3D2',
+  leather: '#E3C39D',
+  denim: '#1A2E40',
+  nylon: '#242526',
+  velvet: '#500614',
+  satin: '#ECCBB4',
+  polyester: '#0D5C3A',
+  spandex: '#111215',
+  elastane: '#111215',
+  viscose: '#A3C1AD',
   other: '#a1a1aa',
 };
 
@@ -167,13 +165,9 @@ const getSubCategoryColor = (parentCategory, subCategory) => {
 
 const slug = (value) =>
   String(value || '')
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toLowerCase()
-    .replace(/['’`]/g, '')
-    .replace(/[\s\/\-]+/g, '_')
-    .replace(/[^a-z0-9_]/g, '');
+    .replace(/\s+/g, '_');
 
 
 export default function WardrobeStats() {
