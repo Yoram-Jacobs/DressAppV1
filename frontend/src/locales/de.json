@@ -1234,7 +1234,8 @@
       "denim_indigo": "Indigo-Denim",
       "ballistic_nylon_black": "Ballistisches Nylon Schwarz",
       "tyvek_mesh": "Tyvek-Gewebe",
-      "olive_drab_ripstop": "Olive-Drab-Ripstop"
+      "olive_drab_ripstop": "Olive-Drab-Ripstop",
+      "other": "Andere"
     }
   },
   "location": {

@@ -1234,7 +1234,8 @@
       "denim_indigo": "Деним индиго",
       "ballistic_nylon_black": "Черный баллистический нейлон",
       "tyvek_mesh": "Сетка Тайвек",
-      "olive_drab_ripstop": "Оливковый рипстоп"
+      "olive_drab_ripstop": "Оливковый рипстоп",
+      "other": "Другое"
     }
   },
   "location": {

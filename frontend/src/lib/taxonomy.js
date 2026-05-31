@@ -385,6 +385,9 @@ export const canonicalMaterialKey = (raw) => {
 export const labelForMaterial = (raw, t) => {
   if (!raw) return '';
   const canonical = canonicalMaterialKey(raw);
+  if (canonical === 'other') {
+    return t('stats.unknownMaterial', { defaultValue: 'Other' });
+  }
   const key = `taxonomy.material.${canonical}`;
   return fallback(t, key, raw);
 };

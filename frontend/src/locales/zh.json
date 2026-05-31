@@ -1234,7 +1234,8 @@
       "denim_indigo": "靛蓝牛仔布",
       "ballistic_nylon_black": "黑色弹道尼龙",
       "tyvek_mesh": "特卫强网布",
-      "olive_drab_ripstop": "橄榄绿防撕裂布"
+      "olive_drab_ripstop": "橄榄绿防撕裂布",
+      "other": "其他"
     }
   },
   "location": {
