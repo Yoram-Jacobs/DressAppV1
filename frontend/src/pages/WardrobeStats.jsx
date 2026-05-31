@@ -7,7 +7,7 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { DollarSign, Percent, TrendingUp, Shirt, Award, ChevronDown, ChevronUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { labelForColor, canonicalColorKey, labelForMaterial, labelForSubCategory } from '@/lib/taxonomy';
+import { labelForColor, canonicalColorKey, labelForMaterial, labelForSubCategory, canonicalMaterialKey } from '@/lib/taxonomy';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const COLOR_HEX_MAP = {
@@ -225,7 +225,7 @@ export default function WardrobeStats() {
           
           const localized = labelForMaterial(raw, t);
           if (!materialMap[localized]) {
-            const canonicalKey = slug(raw);
+            const canonicalKey = canonicalMaterialKey(raw);
             const fill = getMaterialColor(canonicalKey);
             materialMap[localized] = {
               name: localized,
@@ -241,7 +241,7 @@ export default function WardrobeStats() {
         const localized = raw ? labelForMaterial(raw, t) : t('stats.unknownMaterial', { defaultValue: 'Other' });
         
         if (!materialMap[localized]) {
-          const canonicalKey = raw ? slug(raw) : 'other';
+          const canonicalKey = raw ? canonicalMaterialKey(raw) : 'other';
           const fill = getMaterialColor(canonicalKey);
           materialMap[localized] = {
             name: localized,
