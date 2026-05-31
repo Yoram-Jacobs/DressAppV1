@@ -348,7 +348,7 @@ export const canonicalSubCategoryKey = (raw) => {
 
   if (normalized.includes('combat_boot') || normalized.includes('boot') || normalized.includes('מגפ') || normalized.includes('ботин') || normalized.includes('сапог')) return 'boots';
   if (normalized.includes('sandal') || normalized.includes('סנדל') || normalized.includes('сандал') || normalized.includes('босоножк')) return 'sandals';
-  if (normalized.includes('sneaker') || normalized.includes('runner') || normalized.includes('trainer') || normalized.includes('high_top') || normalized.includes('low_top') || normalized.includes('סниקרס') || normalized.includes('ספורט') || normalized.includes('кроссов') || normalized.includes('кеды')) return 'sneakers';
+  if (normalized.includes('sneaker') || normalized.includes('runner') || normalized.includes('trainer') || normalized.includes('high_top') || normalized.includes('low_top') || normalized.includes('סניקרס') || normalized.includes('סниקרס') || normalized.includes('ספורט') || normalized.includes('кроссов') || normalized.includes('кеды')) return 'sneakers';
   if (normalized.includes('heel') || normalized.includes('עקב') || normalized.includes('каблук')) return 'heels';
   if (normalized.includes('flat') || normalized.includes('שטוחות') || normalized.includes('балетк')) return 'flats';
   if (normalized.includes('slipper') || normalized.includes('בית') || normalized.includes('тапоч')) return 'slippers';
@@ -362,7 +362,7 @@ export const canonicalSubCategoryKey = (raw) => {
   if (normalized.includes('cape') || normalized.includes('poncho') || normalized.includes('שכמי') || normalized.includes('פונצו') || normalized.includes('пончо')) return 'capes_and_ponchos';
   if (normalized.includes('shrug') || normalized.includes('bolero') || normalized.includes('עליונית_קצרה') || normalized.includes('болеро')) return 'shrugs';
 
-  if (normalized.includes('tailored_shirt') || normalized.includes('button_down') || normalized.includes('oxford_shirt') || normalized.includes('dress_shirt') || normalized.includes('מכופתרת') || normalized.includes('חולצה') || normalized.includes('рубашк')) return 'tailored_shirts';
+  if (normalized.includes('tailored_shirt') || normalized.includes('button_down') || normalized.includes('oxford_shirt') || normalized.includes('dress_shirt') || normalized.includes('מכופתרת') || normalized.includes('חולצה') || normalized.includes('рубашк') || normalized === 'shirt' || normalized === 'shirts') return 'tailored_shirts';
   if (normalized.includes('knitwear') || normalized.includes('sweater') || normalized.includes('cardigan') || normalized.includes('pullover') || normalized.includes('סריג') || normalized.includes('סוודר') || normalized.includes('трикотаж') || normalized.includes('свитер')) return 'knitwear';
   if (normalized.includes('t_shirt') || normalized.includes('tshirt') || normalized.includes('t-shirt') || normalized.includes('tee') || normalized.includes('חולצת_טי') || normalized.includes('טישירט') || normalized.includes('футболк')) return 't_shirts';
   if (normalized.includes('blouse') || normalized.includes('בלוזה') || normalized.includes('блузк')) return 'blouses';
