@@ -109,7 +109,7 @@ export default function WardrobeStats() {
     }
     colorMap[localized].value += 1;
   });
-  const colorData = Object.values(colorMap);
+  const colorData = Object.values(colorMap).sort((a, b) => b.value - a.value);
 
   // Cost-per-Wear calculations
   const sortedByEfficiency = [...items]
