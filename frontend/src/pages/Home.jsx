@@ -292,7 +292,16 @@ export default function Home() {
 
       <section className="mt-10">
         <div className="flex items-end justify-between mb-4 gap-3">
-          <h2 className="font-display text-2xl sm:text-3xl">{t('home.trendScout')}</h2>
+          <Link
+            to="/trends"
+            className="group flex items-center gap-1.5 text-foreground hover:text-[hsl(var(--accent))] transition-colors"
+            data-testid="home-trend-scout-title-link"
+          >
+            <h2 className="font-display text-2xl sm:text-3xl font-semibold flex items-center gap-2 hover:underline">
+              {t('home.trendScout', { defaultValue: 'Trend-Scout' })}
+              <ArrowRight className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1 duration-200" />
+            </h2>
+          </Link>
           <div className="flex items-center gap-2">
             <div className="caps-label text-muted-foreground">
               {trendDate ? t('home.dailyEditOn', { date: trendDate }) : t('home.dailyEdit')}
