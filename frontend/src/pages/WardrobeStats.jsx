@@ -7,7 +7,7 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { DollarSign, Percent, TrendingUp, Shirt, Award, ChevronDown, ChevronUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { labelForColor, canonicalColorKey, labelForMaterial, labelForSubCategory, canonicalMaterialKey } from '@/lib/taxonomy';
+import { labelForColor, canonicalColorKey, labelForMaterial, labelForSubCategory, canonicalMaterialKey, canonicalSubCategoryKey } from '@/lib/taxonomy';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const COLOR_HEX_MAP = {
@@ -99,6 +99,79 @@ const getMaterialColor = (key) => {
   return MATERIAL_COLOR_MAP[key] || '#a1a1aa';
 };
 
+const SUBCATEGORY_COLOR_MAP = {
+  boots: '#4A1505',
+  dress_shoes: '#E65C00',
+  sandals: '#FAD6BD',
+  sneakers: '#FF3300',
+  heels: '#800000',
+  flats: '#FF9966',
+  slippers: '#FFCCB3',
+  soles_and_outsoles: '#121214',
+  heels_and_lifts: '#3A3A3C',
+  midsoles_and_cushioning: '#E5E5EA',
+  insoles_and_footbeds: '#AEAEB2',
+  laces_and_fasteners: '#8E8E93',
+  eyelets_and_grommets: '#F2F2F7',
+  vamps_and_uppers: '#636366',
+  coats: '#0F1E36',
+  jackets: '#2B7FFF',
+  performance_gear: '#BCE3FF',
+  blazers: '#1D4ED8',
+  vests: '#60A5FA',
+  capes_and_ponchos: '#1E3A8A',
+  shrugs: '#EFF6FF',
+  tailored_shirts: '#E0F7FA',
+  knitwear: '#2E7D32',
+  t_shirts: '#AEEA00',
+  blouses: '#4ADE80',
+  tank_tops: '#14532D',
+  sweatshirts: '#84CC16',
+  tunics: '#DCFCE7',
+  trousers: '#FBE9E7',
+  jeans: '#7B1FA2',
+  shorts: '#310A31',
+  leggings: '#4A044E',
+  sweatpants: '#D946EF',
+  jumpsuits_and_rompers: '#A21CAF',
+  overalls: '#F5D0FE',
+  skirts: '#9D174D',
+  mini_dresses: '#F43F5E',
+  maxi_dresses: '#FFE4E6',
+  evening_dresses: '#4C0519',
+  midi_dresses: '#FB7185',
+  sundresses: '#FFF1F2',
+  wrap_dresses: '#BE185D',
+  sports_bras: '#0D9488',
+  tracksuits: '#06B6D4',
+  active_jackets: '#CCFBF1',
+  performance_tops: '#115E59',
+  running_shorts: '#22D3EE',
+  compression_gear: '#042F2E',
+  athleisure_dresses: '#E0F2FE',
+  one_piece_swimsuits: '#CA8A04',
+  bikinis: '#FACC15',
+  swim_trunks: '#FEF08A',
+  cover_ups: '#FEFCE8',
+  rash_guards: '#854D0E',
+  wetsuits: '#451A03',
+  resort_rompers: '#EAB308',
+  necklaces: '#D4AF37',
+  earrings: '#C0C0C0',
+  bracelets_and_bangles: '#B76E79',
+  rings: '#E5E4E2',
+  brooches_and_pins: '#8A9A86',
+  watches: '#4B5563',
+  body_jewelry: '#1F2937',
+  bags: '#78350F',
+  small_goods: '#D97706',
+  headwear: '#FEF3C7',
+  belts: '#451A03',
+  gloves: '#F59E0B',
+  scarves_and_wraps: '#B45309',
+  hosiery_and_socks: '#FFFBEB',
+};
+
 const CATEGORY_HUES = {
   tops: 140,
   bottoms: 210,
@@ -119,9 +192,12 @@ const hashString = (str) => {
   return Math.abs(hash);
 };
 
-const getSubCategoryColor = (parentCategory, subCategory) => {
+const getSubCategoryColor = (canonicalKey, parentCategory) => {
+  if (SUBCATEGORY_COLOR_MAP[canonicalKey]) {
+    return SUBCATEGORY_COLOR_MAP[canonicalKey];
+  }
   const baseHue = CATEGORY_HUES[parentCategory] || 200;
-  const hash = hashString(subCategory || '');
+  const hash = hashString(canonicalKey || '');
   const saturation = 65 + (hash % 20); // 65% - 85%
   const lightness = 45 + (hash % 25);  // 45% - 70%
   return `hsl(${baseHue}, ${saturation}%, ${lightness}%)`;
@@ -240,7 +316,8 @@ export default function WardrobeStats() {
       
       if (!categoryMap[localized]) {
         const parentCategory = it.category || 'other';
-        const fill = getSubCategoryColor(parentCategory, raw);
+        const canonicalKey = raw ? canonicalSubCategoryKey(raw) : 'other';
+        const fill = getSubCategoryColor(canonicalKey, parentCategory);
         categoryMap[localized] = {
           name: localized,
           value: 0,

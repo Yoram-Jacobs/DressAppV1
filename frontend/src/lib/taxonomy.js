@@ -297,11 +297,106 @@ const itemSlug = (value) =>
     .replace(/[\s\/\-]+/g, '_')
     .replace(/[^a-z0-9_]/g, '');
 
+export const canonicalSubCategoryKey = (raw) => {
+  if (!raw) return '';
+  const normalized = String(raw)
+    .trim()
+    .toLowerCase()
+    .replace(/['’`]/g, '')
+    .replace(/[\s\/\-]+/g, '_')
+    .replace(/[^a-z0-9_א-תа-яё]/g, '');
+
+  if (normalized.includes('sports_bra')) return 'sports_bras';
+  if (normalized.includes('tracksuit')) return 'tracksuits';
+  if (normalized.includes('active_jacket')) return 'active_jackets';
+  if (normalized.includes('performance_top')) return 'performance_tops';
+  if (normalized.includes('running_short')) return 'running_shorts';
+  if (normalized.includes('compression_gear')) return 'compression_gear';
+  if (normalized.includes('athleisure_dress')) return 'athleisure_dresses';
+
+  if (normalized.includes('one_piece_swimsuit')) return 'one_piece_swimsuits';
+  if (normalized.includes('bikini')) return 'bikinis';
+  if (normalized.includes('swim_trunk')) return 'swim_trunks';
+  if (normalized.includes('cover_up')) return 'cover_ups';
+  if (normalized.includes('rash_guard')) return 'rash_guards';
+  if (normalized.includes('wetsuit')) return 'wetsuits';
+  if (normalized.includes('resort_romper')) return 'resort_rompers';
+
+  if (normalized.includes('necklace')) return 'necklaces';
+  if (normalized.includes('earring')) return 'earrings';
+  if (normalized.includes('bracelet') || normalized.includes('bangle')) return 'bracelets_and_bangles';
+  if (normalized.includes('ring')) return 'rings';
+  if (normalized.includes('brooch') || normalized.includes('pin')) return 'brooches_and_pins';
+  if (normalized.includes('watch')) return 'watches';
+  if (normalized.includes('body_jewelry')) return 'body_jewelry';
+
+  if (normalized.includes('bag') || normalized.includes('handbag') || normalized.includes('backpack') || normalized.includes('clutch')) return 'bags';
+  if (normalized.includes('small_good')) return 'small_goods';
+  if (normalized.includes('headwear') || normalized.includes('hat') || normalized.includes('cap') || normalized.includes('beanie')) return 'headwear';
+  if (normalized.includes('belt')) return 'belts';
+  if (normalized.includes('glove')) return 'gloves';
+  if (normalized.includes('scarf') || normalized.includes('wrap') || normalized.includes('poncho') || normalized.includes('cape')) return 'scarves_and_wraps';
+  if (normalized.includes('sock') || normalized.includes('hosiery') || normalized.includes('tight')) return 'hosiery_and_socks';
+
+  if (normalized.includes('soles') || normalized.includes('outsole')) return 'soles_and_outsoles';
+  if (normalized.includes('lifts') || normalized.includes('heel_stack')) return 'heels_and_lifts';
+  if (normalized.includes('midsole') || normalized.includes('cushioning')) return 'midsoles_and_cushioning';
+  if (normalized.includes('insole') || normalized.includes('footbed')) return 'insoles_and_footbeds';
+  if (normalized.includes('lace') || normalized.includes('fastener')) return 'laces_and_fasteners';
+  if (normalized.includes('eyelet') || normalized.includes('grommet')) return 'eyelets_and_grommets';
+  if (normalized.includes('vamp') || normalized.includes('upper')) return 'vamps_and_uppers';
+
+  if (normalized.includes('combat_boot') || normalized.includes('boot')) return 'boots';
+  if (normalized.includes('oxford') || normalized.includes('dress_shoe') || normalized.includes('loafer')) return 'dress_shoes';
+  if (normalized.includes('sandal')) return 'sandals';
+  if (normalized.includes('sneaker') || normalized.includes('runner') || normalized.includes('trainer') || normalized.includes('high_top') || normalized.includes('low_top')) return 'sneakers';
+  if (normalized.includes('heel')) return 'heels';
+  if (normalized.includes('flat')) return 'flats';
+  if (normalized.includes('slipper')) return 'slippers';
+
+  if (normalized.includes('overcoat') || normalized.includes('coat') || normalized.includes('parka')) return 'coats';
+  if (normalized.includes('jacket') || normalized.includes('bomber') || normalized.includes('moto')) return 'jackets';
+  if (normalized.includes('performance_gear') || normalized.includes('windbreaker')) return 'performance_gear';
+  if (normalized.includes('blazer')) return 'blazers';
+  if (normalized.includes('vest') || normalized.includes('gilet')) return 'vests';
+  if (normalized.includes('cape') || normalized.includes('poncho')) return 'capes_and_ponchos';
+  if (normalized.includes('shrug') || normalized.includes('bolero')) return 'shrugs';
+
+  if (normalized.includes('tailored_shirt') || normalized.includes('button_down') || normalized.includes('oxford_shirt') || normalized.includes('dress_shirt')) return 'tailored_shirts';
+  if (normalized.includes('knitwear') || normalized.includes('sweater') || normalized.includes('cardigan') || normalized.includes('pullover')) return 'knitwear';
+  if (normalized.includes('t_shirt') || normalized.includes('tshirt') || normalized.includes('t-shirt') || normalized.includes('tee')) return 't_shirts';
+  if (normalized.includes('blouse')) return 'blouses';
+  if (normalized.includes('tank_top') || normalized.includes('tank') || normalized.includes('camisole')) return 'tank_tops';
+  if (normalized.includes('sweatshirt') || normalized.includes('hoodie') || normalized.includes('fleece')) return 'sweatshirts';
+  if (normalized.includes('tunic')) return 'tunics';
+
+  if (normalized.includes('trouser') || normalized.includes('chino') || normalized.includes('pants')) return 'trousers';
+  if (normalized.includes('jeans') || normalized.includes('jean') || normalized.includes('denim')) return 'jeans';
+  if (normalized.includes('shorts') || normalized.includes('short')) return 'shorts';
+  if (normalized.includes('legging')) return 'leggings';
+  if (normalized.includes('sweatpants') || normalized.includes('jogger')) return 'sweatpants';
+  if (normalized.includes('jumpsuit') || normalized.includes('romper')) return 'jumpsuits_and_rompers';
+  if (normalized.includes('overall') || normalized.includes('dungaree')) return 'overalls';
+
+  if (normalized.includes('skirt')) return 'skirts';
+  if (normalized.includes('mini_dress')) return 'mini_dresses';
+  if (normalized.includes('maxi_dress')) return 'maxi_dresses';
+  if (normalized.includes('evening_dress') || normalized.includes('gown')) return 'evening_dresses';
+  if (normalized.includes('midi_dress') || normalized.includes('cocktail_dress')) return 'midi_dresses';
+  if (normalized.includes('sundress')) return 'sundresses';
+  if (normalized.includes('wrap_dress')) return 'wrap_dresses';
+  if (normalized.includes('dress')) return 'midi_dresses';
+
+  return normalized;
+};
+
 export const labelForSubCategory = (raw, t) => {
   if (!raw) return '';
-  const slug = itemSlug(raw);
-  if (!slug) return raw;
-  const key = `taxonomy.sub_category.${slug}`;
+  const canonical = canonicalSubCategoryKey(raw);
+  if (canonical === 'other') {
+    return t('stats.unknownSubcategory', { defaultValue: 'Other' });
+  }
+  const key = `taxonomy.sub_category.${canonical}`;
   return fallback(t, key, raw);
 };
 
