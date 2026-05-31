@@ -206,7 +206,7 @@ const getSubCategoryColor = (canonicalKey, parentCategory) => {
 
 
 export default function WardrobeStats() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const store = useClosetStore();
   const items = store.items || [];
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
@@ -458,7 +458,11 @@ export default function WardrobeStats() {
                     <BarChart data={colorData} margin={{ top: 15, right: 10, left: -25, bottom: 5 }}>
                       <XAxis 
                         dataKey="name" 
-                        tick={{ angle: -90, textAnchor: 'end', fontSize: 9 }} 
+                        tick={{ 
+                          angle: i18n.dir() === 'rtl' ? 90 : -90, 
+                          textAnchor: i18n.dir() === 'rtl' ? 'start' : 'end', 
+                          fontSize: 9 
+                        }} 
                         height={75} 
                         interval={0} 
                         stroke="#888888" 
