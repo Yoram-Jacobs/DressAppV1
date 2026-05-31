@@ -322,61 +322,68 @@ export const canonicalMaterialKey = (raw) => {
     .replace(/[\s\/\-]+/g, '_')
     .replace(/[^a-z0-9_א-תа-яё]/g, '');
 
-  if (normalized.includes('bleached_cotton') || normalized.includes('bleachedcotton')) return 'bleached_cotton';
-  if (normalized.includes('ecru_linen') || normalized.includes('ecrulinen')) return 'ecru_linen';
-  if (normalized.includes('jute_burlap') || normalized.includes('juteburlap')) return 'jute_burlap';
-  if (normalized.includes('champagne_satin') || normalized.includes('champagnesatin')) return 'champagne_satin';
-  if (normalized.includes('brocade_gold') || normalized.includes('brocadegold')) return 'brocade_gold';
-  if (normalized.includes('liquid_copper') || normalized.includes('liquidcopper')) return 'liquid_copper';
-  if (normalized.includes('cashmere_down') || normalized.includes('cashmeredown')) return 'cashmere_down';
-  if (normalized.includes('amethyst_chiffon') || normalized.includes('amethystchiffon')) return 'amethyst_chiffon';
-  if (normalized.includes('velvet_maroon') || normalized.includes('velvetmaroon')) return 'velvet_maroon';
-  if (normalized.includes('vachetta_cowhide') || normalized.includes('vachettacowhide')) return 'vachetta_cowhide';
-  if (normalized.includes('saddle_tan') || normalized.includes('saddletan')) return 'saddle_tan';
-  if (normalized.includes('cordovan_oxblood') || normalized.includes('cordovanoxblood')) return 'cordovan_oxblood';
-  if (normalized.includes('chambray_light') || normalized.includes('chambraylight')) return 'chambray_light';
-  if (normalized.includes('denim_indigo') || normalized.includes('denimindigo')) return 'denim_indigo';
-  if (normalized.includes('ballistic_nylon_black') || normalized.includes('ballisticnylonblack')) return 'ballistic_nylon_black';
-  if (normalized.includes('tyvek_mesh') || normalized.includes('tyvekmesh')) return 'tyvek_mesh';
-  if (normalized.includes('tarp_vinyl') || normalized.includes('tarpvinyl')) return 'tarp_vinyl';
-  if (normalized.includes('olive_drab_ripstop') || normalized.includes('olivedrabripstop')) return 'olive_drab_ripstop';
+  if (normalized === 'acrylic') return 'acrylic';
+  if (normalized === 'brocade') return 'brocade';
+  if (normalized === 'burlap') return 'burlap';
+  if (normalized === 'canvas') return 'canvas';
+  if (normalized === 'cashmere') return 'cashmere';
+  if (normalized === 'chambray') return 'chambray';
+  if (normalized === 'chiffon') return 'chiffon';
+  if (normalized === 'copper') return 'copper';
+  if (normalized === 'cotton') return 'cotton';
+  if (normalized === 'denim') return 'denim';
+  if (normalized === 'leather') return 'leather';
+  if (normalized === 'linen') return 'linen';
+  if (normalized === 'mesh') return 'mesh';
+  if (normalized === 'nylon') return 'nylon';
+  if (normalized === 'oxblood') return 'oxblood';
+  if (normalized === 'polyester') return 'polyester';
+  if (normalized === 'rayon') return 'rayon';
+  if (normalized === 'ripstop') return 'ripstop';
+  if (normalized === 'satin') return 'satin';
+  if (normalized === 'silk') return 'silk';
+  if (normalized === 'spandex') return 'spandex';
+  if (normalized === 'suede') return 'suede';
+  if (normalized === 'velvet') return 'velvet';
+  if (normalized === 'vinyl') return 'vinyl';
+  if (normalized === 'wool') return 'wool';
 
-  // Substring matches for Hebrew
-  if (normalized.includes('כותנה') || normalized.includes('cotton')) return 'bleached_cotton';
-  if (normalized.includes('פשתן') || normalized.includes('linen')) return 'ecru_linen';
-  if (normalized.includes('יוטה') || normalized.includes('jute') || normalized.includes('burlap') || normalized.includes('קנבס') || normalized.includes('canvas')) return 'jute_burlap';
-  if (normalized.includes('סאטן') || normalized.includes('satin')) return 'champagne_satin';
-  if (normalized.includes('משי') || normalized.includes('silk') || normalized.includes('brocade') || normalized.includes('זהב') || normalized.includes('gold') || normalized.includes('פייטים') || normalized.includes('sequins')) return 'brocade_gold';
-  if (normalized.includes('נחושת') || normalized.includes('copper') || normalized.includes('מתכת') || normalized.includes('metal') || normalized.includes('סיבים_מתכתיים')) return 'liquid_copper';
-  if (normalized.includes('קשמיר') || normalized.includes('cashmere')) return 'cashmere_down';
-  if (normalized.includes('צמר') || normalized.includes('wool') || normalized.includes('שיפון') || normalized.includes('chiffon') || normalized.includes('טול') || normalized.includes('tulle') || normalized.includes('אקריליק') || normalized.includes('acrylic')) return 'amethyst_chiffon';
-  if (normalized.includes('קטיפה') || normalized.includes('velvet') || normalized.includes('maroon')) return 'velvet_maroon';
-  if (normalized.includes('עור') || normalized.includes('leather') || normalized.includes('cowhide')) {
-    if (normalized.includes('tan') || normalized.includes('saddle')) return 'saddle_tan';
-    if (normalized.includes('cordovan') || normalized.includes('oxblood')) return 'cordovan_oxblood';
-    return 'vachetta_cowhide';
+  if (normalized.includes('cotton') || normalized.includes('כותנה') || normalized.includes('хлопок')) return 'cotton';
+  if (normalized.includes('linen') || normalized.includes('פשתן') || normalized.includes('лен') || normalized.includes('лён')) return 'linen';
+  
+  if (normalized.includes('burlap') || normalized.includes('jute') || normalized.includes('יוטה') || normalized.includes('джут') || normalized.includes('мешковина')) return 'burlap';
+  if (normalized.includes('canvas') || normalized.includes('קנבס') || normalized.includes('холст') || normalized.includes('канвас')) return 'canvas';
+  
+  if (normalized.includes('satin') || normalized.includes('סאטן') || normalized.includes('атлас')) return 'satin';
+  if (normalized.includes('brocade') || normalized.includes('זהב') || normalized.includes('gold') || normalized.includes('פייטים') || normalized.includes('sequins') || normalized.includes('парча') || normalized.includes('блестки')) return 'brocade';
+  if (normalized.includes('copper') || normalized.includes('metal') || normalized.includes('נחושת') || normalized.includes('מתכת') || normalized.includes('סיבים_מתכתיים') || normalized.includes('медь') || normalized.includes('металл')) return 'copper';
+  
+  if (normalized.includes('cashmere') || normalized.includes('קשמיר') || normalized.includes('кашемир')) return 'cashmere';
+  if (normalized.includes('chiffon') || normalized.includes('שיפון') || normalized.includes('טול') || normalized.includes('tulle') || normalized.includes('шифон') || normalized.includes('тюль')) return 'chiffon';
+  if (normalized.includes('velvet') || normalized.includes('קטיפה') || normalized.includes('barhat') || normalized.includes('бархат')) return 'velvet';
+  
+  if (normalized.includes('suede') || normalized.includes('זמש') || normalized.includes('замша')) return 'suede';
+  if (normalized.includes('leather') || normalized.includes('עור') || normalized.includes('cowhide') || normalized.includes('кожа')) {
+    if (normalized.includes('oxblood') || normalized.includes('cordovan') || normalized.includes('בורדו')) return 'oxblood';
+    return 'leather';
   }
-  if (normalized.includes('שמברה') || normalized.includes('chambray')) return 'chambray_light';
-  if (normalized.includes('דנים') || normalized.includes('denim') || normalized.includes('ג\'ינס') || normalized.includes('גינס') || normalized.includes('jeans')) return 'denim_indigo';
-  if (normalized.includes('ניילון') || normalized.includes('nylon')) return 'ballistic_nylon_black';
-  if (normalized.includes('פוליאסטר') || normalized.includes('polyester') || normalized.includes('אלסטן') || normalized.includes('elastane') || normalized.includes('ספנדקס') || normalized.includes('spandex') || normalized.includes('לייקרה') || normalized.includes('lycra') || normalized.includes('ויסקוזה') || normalized.includes('viscose') || normalized.includes('ראיون') || normalized.includes('rayon') || normalized.includes('סינתטי') || normalized.includes('סינטטי') || normalized.includes('synthetic')) return 'tyvek_mesh';
-  if (normalized.includes('ויניל') || normalized.includes('vinyl') || normalized.includes('ברזנט') || normalized.includes('tarp') || normalized.includes('גומי') || normalized.includes('rubber')) return 'tarp_vinyl';
-  if (normalized.includes('ריפסטופ') || normalized.includes('ripstop') || normalized.includes('פליז') || normalized.includes('fleece') || normalized.includes('טוויל') || normalized.includes('twill') || normalized.includes('קצף') || normalized.includes('foam')) return 'olive_drab_ripstop';
+  
+  if (normalized.includes('chambray') || normalized.includes('שמברה')) return 'chambray';
+  if (normalized.includes('denim') || normalized.includes('דנים') || normalized.includes('ג\'ינס') || normalized.includes('גינס') || normalized.includes('jeans')) return 'denim';
+  if (normalized.includes('nylon') || normalized.includes('ניילון') || normalized.includes('нейлон')) return 'nylon';
+  
+  if (normalized.includes('mesh') || normalized.includes('רשת') || normalized.includes('сетка')) return 'mesh';
+  if (normalized.includes('polyester') || normalized.includes('פוליאסטר') || normalized.includes('полиэстер')) return 'polyester';
+  if (normalized.includes('rayon') || normalized.includes('viscose') || normalized.includes('ויסקוזה') || normalized.includes('ראיון') || normalized.includes('вискоза') || normalized.includes('район')) return 'rayon';
+  if (normalized.includes('spandex') || normalized.includes('elastane') || normalized.includes('lycra') || normalized.includes('אלסטן') || normalized.includes('ספנדקס') || normalized.includes('לייקרה') || normalized.includes('эластан') || normalized.includes('лайкра')) return 'spandex';
+  if (normalized.includes('acrylic') || normalized.includes('אקריליק') || normalized.includes('акрил')) return 'acrylic';
+  
+  if (normalized.includes('vinyl') || normalized.includes('tarp') || normalized.includes('rubber') || normalized.includes('ויניל') || normalized.includes('ברזנט') || normalized.includes('גומי') || normalized.includes('резина')) return 'vinyl';
+  if (normalized.includes('ripstop') || normalized.includes('ריפסטופ')) return 'ripstop';
+  
+  if (normalized.includes('wool') || normalized.includes('צמר') || normalized.includes('флис') || normalized.includes('твил') || normalized.includes('шерсть') || normalized.includes('פליז') || normalized.includes('טוויל') || normalized.includes('קצף') || normalized.includes('foam')) return 'wool';
+  if (normalized.includes('silk') || normalized.includes('משי') || normalized.includes('шелк') || normalized.includes('шёлк')) return 'silk';
 
-  // Substring matches for Russian
-  if (normalized.includes('хлопок')) return 'bleached_cotton';
-  if (normalized.includes('лен') || normalized.includes('лён')) return 'ecru_linen';
-  if (normalized.includes('джут') || normalized.includes('мешковина') || normalized.includes('холст') || normalized.includes('канвас')) return 'jute_burlap';
-  if (normalized.includes('атлас')) return 'champagne_satin';
-  if (normalized.includes('шелк') || normalized.includes('шёлк') || normalized.includes('парча') || normalized.includes('блестки')) return 'brocade_gold';
-  if (normalized.includes('медь') || normalized.includes('металл')) return 'liquid_copper';
-  if (normalized.includes('кашемир')) return 'cashmere_down';
-  if (normalized.includes('шерсть') || normalized.includes('шифон') || normalized.includes('тюль') || normalized.includes('акрил')) return 'amethyst_chiffon';
-  if (normalized.includes('бархат')) return 'velvet_maroon';
-  if (normalized.includes('резина')) return 'tarp_vinyl';
-  if (normalized.includes('флис') || normalized.includes('твил')) return 'olive_drab_ripstop';
-
-  // Default fallbacks for common general material names
   if (normalized.includes('בד') || normalized.includes('ткань') || normalized.includes('fabric')) return 'other';
 
   return normalized;
