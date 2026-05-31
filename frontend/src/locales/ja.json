@@ -1208,7 +1208,7 @@
       "nubuck_olive": "ヌバックオリーブ",
       "patent_gloss_black": "エナメルブラック",
       "raw_denim_blue": "生デニムブルー",
-      "chambray_light": "シャンブレーライト",
+      "chambray_light": "ライトシャンブレー",
       "ballistic_nylon": "バリスティックナイロン",
       "neoprene_scuba": "ネオプレンスキューバ",
       "ripstop_khaki": "リップストップカーキ",
@@ -1221,7 +1221,20 @@
       "brocade_antique_gold": "アンティークゴールド金襴",
       "lame_silver": "ラメシルバー",
       "sequined_onyx": "オニキススパンコール",
-      "vicuña": "ビクーニャ"
+      "vicuña": "ビクーニャ",
+      "bleached_cotton": "晒し綿",
+      "ecru_linen": "生成りリネン",
+      "champagne_satin": "シャンパンサテン",
+      "brocade_gold": "金襴ゴールド",
+      "liquid_copper": "リキッドコッパー",
+      "cashmere_down": "カシミヤダウン",
+      "amethyst_chiffon": "アメジストシフォン",
+      "vachetta_cowhide": "ヌメ革（ヴァケッタ）",
+      "cordovan_oxblood": "コードバン",
+      "denim_indigo": "インディゴデニム",
+      "ballistic_nylon_black": "バリスティックナイロンブラック",
+      "tyvek_mesh": "タイベックメッシュ",
+      "olive_drab_ripstop": "オリーブドラブ小格子"
     }
   },
   "location": {

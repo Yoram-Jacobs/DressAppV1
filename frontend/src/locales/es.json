@@ -1201,7 +1201,7 @@
       "angora_cloud": "Angora nube",
       "vicuna": "Vicuña",
       "vachetta_leather": "Cuero vachetta",
-      "saddle_tan": "Cuero de silla natural",
+      "saddle_tan": "Marrón montura",
       "cordovan": "Cordobán",
       "nappa_black": "Napa negra",
       "suede_taupe": "Gamuza taupe",
@@ -1221,7 +1221,20 @@
       "brocade_antique_gold": "Brocado oro antiguo",
       "lame_silver": "Lamé plateado",
       "sequined_onyx": "Lentejuelas ónice",
-      "vicuña": "Vicuña"
+      "vicuña": "Vicuña",
+      "bleached_cotton": "Algodón blanqueado",
+      "ecru_linen": "Lino crudo",
+      "champagne_satin": "Satén champán",
+      "brocade_gold": "Oro brocado",
+      "liquid_copper": "Cobre líquido",
+      "cashmere_down": "Plumón de cachemira",
+      "amethyst_chiffon": "Gasa amatista",
+      "vachetta_cowhide": "Cuero vachetta",
+      "cordovan_oxblood": "Cuero cordobán",
+      "denim_indigo": "Denim índigo",
+      "ballistic_nylon_black": "Nailon balístico negro",
+      "tyvek_mesh": "Malla de Tyvek",
+      "olive_drab_ripstop": "Ripstop verde oliva"
     }
   },
   "location": {

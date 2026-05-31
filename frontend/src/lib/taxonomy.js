@@ -291,8 +291,6 @@ export const labelForColor = (code, t) => {
  */
 const itemSlug = (value) =>
   String(value || '')
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toLowerCase()
     .replace(/['’`]/g, '')
