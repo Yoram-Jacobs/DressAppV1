@@ -1168,6 +1168,24 @@
       "cream": "क्रीम",
       "champagne_gold": "शैम्पेन गोल्ड",
       "red": "लाल"
+    },
+    "material": {
+      "cotton": "सूती",
+      "wool": "ऊनी",
+      "silk": "रेशम",
+      "linen": "सन का कपड़ा",
+      "leather": "चमड़ा",
+      "denim": "डेनिम",
+      "polyester": "पॉलिएस्टर",
+      "nylon": "नायलॉन",
+      "cashmere": "कैशमीरी",
+      "viscose": "विस्कोस",
+      "elastane": "एलेस्टेन",
+      "spandex": "स्पैन्डेक्स",
+      "velvet": "मखमल",
+      "satin": "साटन",
+      "twill": "टवील",
+      "fleece": "फ्लीस"
     }
   },
   "location": {
@@ -1616,7 +1634,17 @@
     "costPerWear": "प्रति पोशाक लागत (CPW) रैंकिंग",
     "mostEfficient": "सबसे कुशल उपयोग",
     "leastEfficient": "सबसे कम कुशल उपयोग",
-    "noCPWData": "प्रति पोशाक लागत की गणना करने के लिए खरीद मूल्य आवश्यक है।"
+    "noCPWData": "प्रति पोशाक लागत की गणना करने के लिए खरीद मूल्य आवश्यक है।",
+    "materialsPalette": "सामग्री विश्लेषण",
+    "categoriesPalette": "उपकैटगरी विश्लेषण",
+    "breakdownType": "विश्लेषण प्रकार",
+    "typeColors": "रंग",
+    "typeMaterials": "सामग्री",
+    "typeCategories": "श्रेणियाँ",
+    "unknownMaterial": "अन्य",
+    "unknownSubcategory": "अन्य",
+    "showLess": "कम दिखाएं",
+    "showAllColors": "सभी रंग दिखाएं"
   },
   "attachmentPicker": {
     "closetTab": "अलमारी से",

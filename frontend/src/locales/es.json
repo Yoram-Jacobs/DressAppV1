@@ -1168,6 +1168,24 @@
       "cream": "Crema",
       "champagne_gold": "Oro champán",
       "red": "Rojo"
+    },
+    "material": {
+      "cotton": "Algodón",
+      "wool": "Lana",
+      "silk": "Seda",
+      "linen": "Lino",
+      "leather": "Cuero",
+      "denim": "Mezclilla",
+      "polyester": "Poliéster",
+      "nylon": "Nailon",
+      "cashmere": "Cachemira",
+      "viscose": "Viscosa",
+      "elastane": "Elastano",
+      "spandex": "Spandex",
+      "velvet": "Terciopelo",
+      "satin": "Satén",
+      "twill": "Sarga",
+      "fleece": "Forro polar"
     }
   },
   "location": {
@@ -1616,7 +1634,17 @@
     "costPerWear": "Clasificación de Costo por Uso",
     "mostEfficient": "Uso más eficiente",
     "leastEfficient": "Uso menos eficiente",
-    "noCPWData": "Se requiere el precio de compra para calcular las estadísticas de costo por uso."
+    "noCPWData": "Se requiere el precio de compra para calcular las estadísticas de costo por uso.",
+    "materialsPalette": "Desglose de materiales",
+    "categoriesPalette": "Desglose de subcategorías",
+    "breakdownType": "Tipo de desglose",
+    "typeColors": "Colores",
+    "typeMaterials": "Materiales",
+    "typeCategories": "Categorías",
+    "unknownMaterial": "Otro",
+    "unknownSubcategory": "Otro",
+    "showLess": "Mostrar menos",
+    "showAllColors": "Mostrar todos los colores"
   },
   "attachmentPicker": {
     "closetTab": "Del armario",

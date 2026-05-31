@@ -1168,6 +1168,24 @@
       "cream": "クリーム",
       "champagne_gold": "シャンパンゴールド",
       "red": "レッド"
+    },
+    "material": {
+      "cotton": "綿",
+      "wool": "ウール",
+      "silk": "シルク",
+      "linen": "リネン",
+      "leather": "レザー",
+      "denim": "デニム",
+      "polyester": "ポリエステル",
+      "nylon": "ナイロン",
+      "cashmere": "カシミヤ",
+      "viscose": "レーヨン",
+      "elastane": "ポリウレタン",
+      "spandex": "スパンデックス",
+      "velvet": "ベルベット",
+      "satin": "サテン",
+      "twill": "ツイル",
+      "fleece": "フリース"
     }
   },
   "location": {
@@ -1616,7 +1634,17 @@
     "costPerWear": "着用コスト(CPW)ランキング",
     "mostEfficient": "最も着用効率が良い",
     "leastEfficient": "最も着用効率が悪い",
-    "noCPWData": "着用コスト(CPW)を計算するには、購入価格が必要です。"
+    "noCPWData": "着用コスト(CPW)を計算するには、購入価格が必要です。",
+    "materialsPalette": "素材の内訳",
+    "categoriesPalette": "サブカテゴリの内訳",
+    "breakdownType": "内訳の種類",
+    "typeColors": "カラー",
+    "typeMaterials": "素材",
+    "typeCategories": "カテゴリ",
+    "unknownMaterial": "その他",
+    "unknownSubcategory": "その他",
+    "showLess": "表示を減らす",
+    "showAllColors": "すべてのカラーを表示"
   },
   "attachmentPicker": {
     "closetTab": "クローゼットから",

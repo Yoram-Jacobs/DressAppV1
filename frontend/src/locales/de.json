@@ -1168,6 +1168,24 @@
       "cream": "Creme",
       "champagne_gold": "Champagnergold",
       "red": "Rot"
+    },
+    "material": {
+      "cotton": "Baumwolle",
+      "wool": "Wolle",
+      "silk": "Seide",
+      "linen": "Leinen",
+      "leather": "Leder",
+      "denim": "Denim",
+      "polyester": "Polyester",
+      "nylon": "Nylon",
+      "cashmere": "Kaschmir",
+      "viscose": "Viskose",
+      "elastane": "Elasthan",
+      "spandex": "Spandex",
+      "velvet": "Samt",
+      "satin": "Satin",
+      "twill": "Köper",
+      "fleece": "Fleece"
     }
   },
   "location": {
@@ -1616,7 +1634,17 @@
     "costPerWear": "Cost-per-Wear-Bestenliste",
     "mostEfficient": "Am effizientesten getragen",
     "leastEfficient": "Am wenigsten effizient getragen",
-    "noCPWData": "Der Kaufpreis ist erforderlich, um Cost-per-Wear-Statistiken zu berechnen."
+    "noCPWData": "Der Kaufpreis ist erforderlich, um Cost-per-Wear-Statistiken zu berechnen.",
+    "materialsPalette": "Materialübersicht",
+    "categoriesPalette": "Unterkategorienübersicht",
+    "breakdownType": "Analysetyp",
+    "typeColors": "Farben",
+    "typeMaterials": "Materialien",
+    "typeCategories": "Kategorien",
+    "unknownMaterial": "Andere",
+    "unknownSubcategory": "Andere",
+    "showLess": "Weniger anzeigen",
+    "showAllColors": "Alle Farben anzeigen"
   },
   "attachmentPicker": {
     "closetTab": "Aus der Garderobe",

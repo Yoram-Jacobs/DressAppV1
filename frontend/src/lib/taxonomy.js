@@ -313,6 +313,14 @@ export const labelForItemType = (raw, t) => {
   return fallback(t, key, raw);
 };
 
+export const labelForMaterial = (raw, t) => {
+  if (!raw) return '';
+  const slug = itemSlug(raw);
+  if (!slug) return raw;
+  const key = `taxonomy.material.${slug}`;
+  return fallback(t, key, raw);
+};
+
 /** Generic helper to map an array of codes into translated Select-ready objects. */
 export const makeLabeledOptions = (codes, labelFn, t) =>
   (codes || []).map((code) => ({ value: code, label: labelFn(code, t) }));

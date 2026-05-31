@@ -1172,6 +1172,24 @@
       "cream": "Cream",
       "champagne_gold": "Champagne gold",
       "red": "Red"
+    },
+    "material": {
+      "cotton": "Cotton",
+      "wool": "Wool",
+      "silk": "Silk",
+      "linen": "Linen",
+      "leather": "Leather",
+      "denim": "Denim",
+      "polyester": "Polyester",
+      "nylon": "Nylon",
+      "cashmere": "Cashmere",
+      "viscose": "Viscose",
+      "elastane": "Elastane",
+      "spandex": "Spandex",
+      "velvet": "Velvet",
+      "satin": "Satin",
+      "twill": "Twill",
+      "fleece": "Fleece"
     }
   },
   "location": {
@@ -1620,7 +1638,17 @@
     "costPerWear": "Cost-per-Wear Leaderboard",
     "mostEfficient": "Most Wear-Efficient",
     "leastEfficient": "Least Wear-Efficient",
-    "noCPWData": "Purchase price is required to calculate cost-per-wear stats."
+    "noCPWData": "Purchase price is required to calculate cost-per-wear stats.",
+    "materialsPalette": "Materials Breakdown",
+    "categoriesPalette": "Subcategories Breakdown",
+    "breakdownType": "Breakdown Type",
+    "typeColors": "Colors",
+    "typeMaterials": "Materials",
+    "typeCategories": "Categories",
+    "unknownMaterial": "Other",
+    "unknownSubcategory": "Other",
+    "showLess": "Show Less",
+    "showAllColors": "Show All Colors"
   },
   "attachmentPicker": {
     "closetTab": "From Closet",

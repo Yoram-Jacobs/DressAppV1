@@ -1168,6 +1168,24 @@
       "cream": "Кремовый",
       "champagne_gold": "Шампань",
       "red": "Красный"
+    },
+    "material": {
+      "cotton": "Хлопок",
+      "wool": "Шерсть",
+      "silk": "Шелк",
+      "linen": "Лен",
+      "leather": "Кожа",
+      "denim": "Деним",
+      "polyester": "Полиэстер",
+      "nylon": "Нейлон",
+      "cashmere": "Кашемир",
+      "viscose": "Вискоза",
+      "elastane": "Эластан",
+      "spandex": "Спандекс",
+      "velvet": "Бархат",
+      "satin": "Сатин",
+      "twill": "Твил",
+      "fleece": "Флис"
     }
   },
   "location": {
@@ -1616,7 +1634,17 @@
     "costPerWear": "Рейтинг стоимости одной носки",
     "mostEfficient": "Наиболее эффективная носка",
     "leastEfficient": "Наименее эффективная носка",
-    "noCPWData": "Для расчета стоимости носки требуется цена покупки."
+    "noCPWData": "Для расчета стоимости носки требуется цена покупки.",
+    "materialsPalette": "Анализ материалов",
+    "categoriesPalette": "Анализ подкатегорий",
+    "breakdownType": "Тип анализа",
+    "typeColors": "Цвета",
+    "typeMaterials": "Материалы",
+    "typeCategories": "Категории",
+    "unknownMaterial": "Другое",
+    "unknownSubcategory": "Другое",
+    "showLess": "Показать меньше",
+    "showAllColors": "Показать все цвета"
   },
   "attachmentPicker": {
     "closetTab": "Из гардероба",

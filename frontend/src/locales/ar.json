@@ -1168,6 +1168,24 @@
       "cream": "كريمي",
       "champagne_gold": "ذهبي شامبانيا",
       "red": "أحمر"
+    },
+    "material": {
+      "cotton": "قطن",
+      "wool": "صوف",
+      "silk": "حرير",
+      "linen": "كتان",
+      "leather": "جلد",
+      "denim": "دنيم",
+      "polyester": "بوليستر",
+      "nylon": "نايلون",
+      "cashmere": "كشمير",
+      "viscose": "فيسكوز",
+      "elastane": "إيلاستين",
+      "spandex": "سباندكس",
+      "velvet": "مخمل",
+      "satin": "ساتان",
+      "twill": "نسيج مبرد",
+      "fleece": "صوف ناعم"
     }
   },
   "location": {
@@ -1616,7 +1634,17 @@
     "costPerWear": "قائمة متصدرين تكلفة الارتداء الواحد",
     "mostEfficient": "الأكثر كفاءة في الارتداء",
     "leastEfficient": "الأقل كفاءة في الارتداء",
-    "noCPWData": "سعر الشراء مطلوب لحساب إحصاءات تكلفة الارتداء الواحد."
+    "noCPWData": "سعر الشراء مطلوب لحساب إحصاءات تكلفة الارتداء الواحد.",
+    "materialsPalette": "تقسيم المواد",
+    "categoriesPalette": "تقسيم الفئات الفرعية",
+    "breakdownType": "نوع التقسيم",
+    "typeColors": "الألوان",
+    "typeMaterials": "المواد",
+    "typeCategories": "الفئات",
+    "unknownMaterial": "آخر",
+    "unknownSubcategory": "آخر",
+    "showLess": "عرض أقل",
+    "showAllColors": "عرض كل الألوان"
   },
   "attachmentPicker": {
     "closetTab": "من الخزانة",

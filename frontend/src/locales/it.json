@@ -1168,6 +1168,24 @@
       "cream": "Crema",
       "champagne_gold": "Oro champagne",
       "red": "Rosso"
+    },
+    "material": {
+      "cotton": "Cotone",
+      "wool": "Lana",
+      "silk": "Seta",
+      "linen": "Lino",
+      "leather": "Pelle",
+      "denim": "Denim",
+      "polyester": "Poliestere",
+      "nylon": "Nylon",
+      "cashmere": "Cashmere",
+      "viscose": "Viscosa",
+      "elastane": "Elastane",
+      "spandex": "Spandex",
+      "velvet": "Velluto",
+      "satin": "Raso",
+      "twill": "Spigato",
+      "fleece": "Pile"
     }
   },
   "location": {
@@ -1616,7 +1634,17 @@
     "costPerWear": "Classifica del costo per utilizzo",
     "mostEfficient": "Indossato più efficientemente",
     "leastEfficient": "Indossato meno efficientemente",
-    "noCPWData": "Il prezzo d'acquisto è richiesto per calcolare il costo per utilizzo."
+    "noCPWData": "Il prezzo d'acquisto è richiesto per calcolare il costo per utilizzo.",
+    "materialsPalette": "Ripartizione materiali",
+    "categoriesPalette": "Ripartizione sottocategorie",
+    "breakdownType": "Tipo di ripartizione",
+    "typeColors": "Colori",
+    "typeMaterials": "Materiali",
+    "typeCategories": "Categorie",
+    "unknownMaterial": "Altro",
+    "unknownSubcategory": "Altro",
+    "showLess": "Mostra meno",
+    "showAllColors": "Mostra tutti i colori"
   },
   "attachmentPicker": {
     "closetTab": "Dall'armadio",

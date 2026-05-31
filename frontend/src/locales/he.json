@@ -1168,6 +1168,24 @@
       "cream": "קרם",
       "champagne_gold": "זהב שמפניה",
       "red": "אדום"
+    },
+    "material": {
+      "cotton": "כותנה",
+      "wool": "צמר",
+      "silk": "משי",
+      "linen": "פשתן",
+      "leather": "עור",
+      "denim": "דנים",
+      "polyester": "פוליאסטר",
+      "nylon": "ניילון",
+      "cashmere": "קשמיר",
+      "viscose": "ויסקוזה",
+      "elastane": "אלסטן",
+      "spandex": "ספנדקס",
+      "velvet": "קטיפה",
+      "satin": "סאטן",
+      "twill": "טוויל",
+      "fleece": "פליז"
     }
   },
   "location": {
@@ -1616,7 +1634,17 @@
     "costPerWear": "דירוג עלות לפי לבישה",
     "mostEfficient": "הלבישה היעילה ביותר",
     "leastEfficient": "הלבישה הפחות יעילה",
-    "noCPWData": "נדרש מחיר רכישה כדי לחשב עלות לפי לבישה."
+    "noCPWData": "נדרש מחיר רכישה כדי לחשב עלות לפי לבישה.",
+    "materialsPalette": "ניתוח חומרים",
+    "categoriesPalette": "ניתוח תת-קטגוריות",
+    "breakdownType": "סוג ניתוח",
+    "typeColors": "צבעים",
+    "typeMaterials": "חומרים",
+    "typeCategories": "קטגוריות",
+    "unknownMaterial": "אחר",
+    "unknownSubcategory": "אחר",
+    "showLess": "הצג פחות",
+    "showAllColors": "הצג את כל הצבעים"
   },
   "attachmentPicker": {
     "closetTab": "מהארון",

@@ -1168,6 +1168,24 @@
       "cream": "奶油色",
       "champagne_gold": "香槟金",
       "red": "红色"
+    },
+    "material": {
+      "cotton": "棉",
+      "wool": "羊毛",
+      "silk": "真丝",
+      "linen": "亚麻",
+      "leather": "真皮",
+      "denim": "牛仔布",
+      "polyester": "涤纶",
+      "nylon": "尼龙",
+      "cashmere": "羊绒",
+      "viscose": "粘胶纤维",
+      "elastane": "氨纶",
+      "spandex": "斯潘德克斯",
+      "velvet": "天鹅绒",
+      "satin": "缎面",
+      "twill": "斜纹布",
+      "fleece": "抓绒"
     }
   },
   "location": {
@@ -1616,7 +1634,17 @@
     "costPerWear": "单次穿着成本排行",
     "mostEfficient": "最高效穿着",
     "leastEfficient": "最低效穿着",
-    "noCPWData": "需要输入购买价格以计算单次穿着成本统计。"
+    "noCPWData": "需要输入购买价格以计算单次穿着成本统计。",
+    "materialsPalette": "面料材质分析",
+    "categoriesPalette": "细分子类分析",
+    "breakdownType": "分析维度",
+    "typeColors": "颜色",
+    "typeMaterials": "材质",
+    "typeCategories": "类别",
+    "unknownMaterial": "其他",
+    "unknownSubcategory": "其他",
+    "showLess": "收起",
+    "showAllColors": "展开全部颜色"
   },
   "attachmentPicker": {
     "closetTab": "我的衣橱",

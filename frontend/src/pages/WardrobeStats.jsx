@@ -7,7 +7,8 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { DollarSign, Percent, TrendingUp, Shirt, Award, ChevronDown, ChevronUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { labelForColor, canonicalColorKey } from '@/lib/taxonomy';
+import { labelForColor, canonicalColorKey, labelForMaterial, labelForSubCategory } from '@/lib/taxonomy';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const COLOR_HEX_MAP = {
   white: '#f8fafc',
@@ -65,11 +66,71 @@ const getFillColor = (canonicalKey) => {
   return '#a1a1aa'; // default fallback for unknown colors
 };
 
+const MATERIAL_COLOR_MAP = {
+  cotton: '#e2e8f0',       // slate-200 / white-ish
+  wool: '#78350f',         // warm amber / brown
+  silk: '#fbcfe8',         // pink-200 / soft pink
+  linen: '#f5f5dc',        // beige
+  leather: '#18181b',      // black
+  denim: '#1d4ed8',        // royal blue
+  polyester: '#a855f7',    // purple
+  nylon: '#3b82f6',        // blue
+  cashmere: '#fda4af',     // rose-300 / soft pink
+  viscose: '#10b981',      // emerald
+  elastane: '#64748b',     // slate
+  spandex: '#64748b',      // slate
+  velvet: '#4c1d95',       // violet-900 / deep purple
+  satin: '#fef08a',        // yellow-200
+  twill: '#451a03',        // amber-950 / dark brown
+  fleece: '#06b6d4',       // cyan
+  other: '#a1a1aa',        // grey
+};
+
+const getMaterialColor = (key) => {
+  return MATERIAL_COLOR_MAP[key] || '#a1a1aa';
+};
+
+const CATEGORY_HUES = {
+  tops: 140,
+  bottoms: 210,
+  outerwear: 35,
+  shoes: 340,
+  footwear: 340,
+  dresses: 280,
+  full_body: 280,
+  accessories: 80,
+  underwear: 180,
+};
+
+const hashString = (str) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash);
+};
+
+const getSubCategoryColor = (parentCategory, subCategory) => {
+  const baseHue = CATEGORY_HUES[parentCategory] || 200;
+  const hash = hashString(subCategory || '');
+  const saturation = 65 + (hash % 20); // 65% - 85%
+  const lightness = 45 + (hash % 25);  // 45% - 70%
+  return `hsl(${baseHue}, ${saturation}%, ${lightness}%)`;
+};
+
+const slug = (value) =>
+  String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_');
+
+
 export default function WardrobeStats() {
   const { t } = useTranslation();
   const store = useClosetStore();
   const items = store.items || [];
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
+  const [breakdownType, setBreakdownType] = useState('colors');
 
   // Sync closet items if store is empty or needs refresh
   useEffect(() => {
@@ -83,33 +144,104 @@ export default function WardrobeStats() {
   const wornItems = items.filter(it => (it.wear_count || 0) > 0).length;
   const utilization = items.length > 0 ? Math.round((wornItems / items.length) * 100) : 0;
 
-  // Calculate Color Distribution
-  const colorMap = {};
-  items.forEach(it => {
-    let rawColor = it.color || '';
-    if (!rawColor && it.colors && it.colors.length > 0) {
-      const first = it.colors[0];
-      rawColor = typeof first === 'string' ? first : (first?.name || '');
-    }
-    rawColor = rawColor || 'Other';
-    const raw = rawColor.trim();
+  // Calculate Selected Breakdown Distribution (Colors, Materials, or Categories)
+  let colorData = [];
+  
+  if (breakdownType === 'colors') {
+    const colorMap = {};
+    items.forEach(it => {
+      let rawColor = it.color || '';
+      if (!rawColor && it.colors && it.colors.length > 0) {
+        const first = it.colors[0];
+        rawColor = typeof first === 'string' ? first : (first?.name || '');
+      }
+      rawColor = rawColor || 'Other';
+      const raw = rawColor.trim();
 
-    // Translate the color using our labelForColor helper
-    const localized = rawColor === 'Other' ? t('common.unknownColor', { defaultValue: 'Other' }) : labelForColor(raw, t);
+      // Translate the color using our labelForColor helper
+      const localized = rawColor === 'Other' ? t('common.unknownColor', { defaultValue: 'Other' }) : labelForColor(raw, t);
+      
+      if (!colorMap[localized]) {
+        const canonicalKey = rawColor === 'Other' ? 'other' : canonicalColorKey(raw);
+        const fill = getFillColor(canonicalKey);
+
+        colorMap[localized] = {
+          name: localized,
+          value: 0,
+          fill: fill
+        };
+      }
+      colorMap[localized].value += 1;
+    });
+    colorData = Object.values(colorMap).sort((a, b) => b.value - a.value);
+  } else if (breakdownType === 'materials') {
+    const materialMap = {};
+    items.forEach(it => {
+      const fabric_materials = it.fabric_materials || [];
+      if (Array.isArray(fabric_materials) && fabric_materials.length > 0) {
+        fabric_materials.forEach(mat => {
+          if (!mat || !mat.name) return;
+          const raw = mat.name.trim();
+          const pct = Number(mat.pct) || 0;
+          const weight = pct / 100;
+          
+          const localized = labelForMaterial(raw, t);
+          if (!materialMap[localized]) {
+            const canonicalKey = slug(raw);
+            const fill = getMaterialColor(canonicalKey);
+            materialMap[localized] = {
+              name: localized,
+              value: 0,
+              fill: fill
+            };
+          }
+          materialMap[localized].value += weight;
+        });
+      } else {
+        const rawMat = it.material || '';
+        const raw = rawMat.trim();
+        const localized = raw ? labelForMaterial(raw, t) : t('stats.unknownMaterial', { defaultValue: 'Other' });
+        
+        if (!materialMap[localized]) {
+          const canonicalKey = raw ? slug(raw) : 'other';
+          const fill = getMaterialColor(canonicalKey);
+          materialMap[localized] = {
+            name: localized,
+            value: 0,
+            fill: fill
+          };
+        }
+        materialMap[localized].value += 1;
+      }
+    });
     
-    if (!colorMap[localized]) {
-      const canonicalKey = rawColor === 'Other' ? 'other' : canonicalColorKey(raw);
-      const fill = getFillColor(canonicalKey);
-
-      colorMap[localized] = {
-        name: localized,
-        value: 0,
-        fill: fill
-      };
-    }
-    colorMap[localized].value += 1;
-  });
-  const colorData = Object.values(colorMap).sort((a, b) => b.value - a.value);
+    colorData = Object.values(materialMap)
+      .map(entry => ({
+        ...entry,
+        value: Number(entry.value.toFixed(1))
+      }))
+      .filter(entry => entry.value > 0)
+      .sort((a, b) => b.value - a.value);
+  } else if (breakdownType === 'categories') {
+    const categoryMap = {};
+    items.forEach(it => {
+      const rawSub = it.sub_category || '';
+      const raw = rawSub.trim();
+      const localized = raw ? labelForSubCategory(raw, t) : t('stats.unknownSubcategory', { defaultValue: 'Other' });
+      
+      if (!categoryMap[localized]) {
+        const parentCategory = it.category || 'other';
+        const fill = getSubCategoryColor(parentCategory, raw);
+        categoryMap[localized] = {
+          name: localized,
+          value: 0,
+          fill: fill
+        };
+      }
+      categoryMap[localized].value += 1;
+    });
+    colorData = Object.values(categoryMap).sort((a, b) => b.value - a.value);
+  }
 
   // Cost-per-Wear calculations
   const sortedByEfficiency = [...items]
@@ -204,9 +336,26 @@ export default function WardrobeStats() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Color Breakdown Card */}
           <Card className="rounded-3xl border border-border bg-card shadow-sm p-6 flex flex-col">
-            <CardHeader className="p-0 mb-4">
-              <CardTitle className="text-base font-semibold font-display text-foreground">{t('stats.colorPalette', { defaultValue: 'Color Palette Breakdown' })}</CardTitle>
-            </CardHeader>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+              <CardTitle className="text-base font-semibold font-display text-foreground">
+                {breakdownType === 'colors' 
+                  ? t('stats.colorPalette', { defaultValue: 'Color Palette Breakdown' })
+                  : breakdownType === 'materials'
+                  ? t('stats.materialsPalette', { defaultValue: 'Materials Breakdown' })
+                  : t('stats.categoriesPalette', { defaultValue: 'Subcategories Breakdown' })}
+              </CardTitle>
+              
+              <Select value={breakdownType} onValueChange={(val) => { setBreakdownType(val); setIsLegendExpanded(false); }}>
+                <SelectTrigger className="w-[140px] h-8 rounded-xl text-xs font-semibold bg-secondary/50 border-border/50">
+                  <SelectValue placeholder={t('stats.breakdownType', { defaultValue: 'Breakdown Type' })} />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-border/50">
+                  <SelectItem value="colors" className="text-xs rounded-lg font-medium">{t('stats.typeColors', { defaultValue: 'Colors' })}</SelectItem>
+                  <SelectItem value="materials" className="text-xs rounded-lg font-medium">{t('stats.typeMaterials', { defaultValue: 'Materials' })}</SelectItem>
+                  <SelectItem value="categories" className="text-xs rounded-lg font-medium">{t('stats.typeCategories', { defaultValue: 'Categories' })}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="h-56 w-full flex items-center justify-center min-h-0">
               {colorData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">

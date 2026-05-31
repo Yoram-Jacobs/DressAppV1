@@ -1168,6 +1168,24 @@
       "cream": "Creme",
       "champagne_gold": "Ouro champanhe",
       "red": "Vermelho"
+    },
+    "material": {
+      "cotton": "Algodão",
+      "wool": "Lã",
+      "silk": "Seda",
+      "linen": "Linho",
+      "leather": "Couro",
+      "denim": "Denim",
+      "polyester": "Poliéster",
+      "nylon": "Nylon",
+      "cashmere": "Caxemira",
+      "viscose": "Viscose",
+      "elastane": "Elastano",
+      "spandex": "Spandex",
+      "velvet": "Veludo",
+      "satin": "Cetin",
+      "twill": "Sarja",
+      "fleece": "Fleece"
     }
   },
   "location": {
@@ -1616,7 +1634,17 @@
     "costPerWear": "Classificação do custo por uso",
     "mostEfficient": "Uso mais eficiente",
     "leastEfficient": "Uso menos eficiente",
-    "noCPWData": "O preço de compra é necessário para calcular as estatísticas de custo por uso."
+    "noCPWData": "O preço de compra é necessário para calcular as estatísticas de custo por uso.",
+    "materialsPalette": "Divisão de materiais",
+    "categoriesPalette": "Divisão de subcategorias",
+    "breakdownType": "Tipo de divisão",
+    "typeColors": "Cores",
+    "typeMaterials": "Materiais",
+    "typeCategories": "Categorias",
+    "unknownMaterial": "Outro",
+    "unknownSubcategory": "Outro",
+    "showLess": "Mostrar menos",
+    "showAllColors": "Mostrar todas as cores"
   },
   "attachmentPicker": {
     "closetTab": "Do closet",

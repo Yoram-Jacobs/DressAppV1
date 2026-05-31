@@ -1168,6 +1168,24 @@
       "cream": "Crème",
       "champagne_gold": "Or champagne",
       "red": "Rouge"
+    },
+    "material": {
+      "cotton": "Coton",
+      "wool": "Laine",
+      "silk": "Soie",
+      "linen": "Lin",
+      "leather": "Cuir",
+      "denim": "Denim",
+      "polyester": "Polyester",
+      "nylon": "Nylon",
+      "cashmere": "Cachemire",
+      "viscose": "Viscose",
+      "elastane": "Élasthanne",
+      "spandex": "Spandex",
+      "velvet": "Velours",
+      "satin": "Satin",
+      "twill": "Sergé",
+      "fleece": "Polaire"
     }
   },
   "location": {
@@ -1616,7 +1634,17 @@
     "costPerWear": "Classement du coût par port",
     "mostEfficient": "Porté le plus efficacement",
     "leastEfficient": "Porté le moins efficacement",
-    "noCPWData": "Le prix d'achat est requis pour calculer le coût par port."
+    "noCPWData": "Le prix d'achat est requis pour calculer le coût par port.",
+    "materialsPalette": "Répartition des matières",
+    "categoriesPalette": "Répartition des sous-catégories",
+    "breakdownType": "Type de répartition",
+    "typeColors": "Couleurs",
+    "typeMaterials": "Matières",
+    "typeCategories": "Catégories",
+    "unknownMaterial": "Autre",
+    "unknownSubcategory": "Autre",
+    "showLess": "Afficher moins",
+    "showAllColors": "Afficher toutes les couleurs"
   },
   "attachmentPicker": {
     "closetTab": "Du dressing",
