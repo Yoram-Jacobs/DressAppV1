@@ -459,7 +459,7 @@ export default function WardrobeStats() {
                       <XAxis 
                         dataKey="name" 
                         tick={{ 
-                          angle: i18n.dir() === 'rtl' ? 90 : -90, 
+                          angle: -90, 
                           textAnchor: i18n.dir() === 'rtl' ? 'start' : 'end', 
                           fontSize: 9 
                         }} 
