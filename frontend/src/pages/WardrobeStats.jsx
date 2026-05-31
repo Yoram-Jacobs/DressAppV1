@@ -1,42 +1,75 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ExploreBackButton } from '@/components/ExploreBackButton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { useClosetStore } from '@/lib/useClosetStore';
-import { DollarSign, Percent, TrendingUp, Shirt, Award } from 'lucide-react';
+import { DollarSign, Percent, TrendingUp, Shirt, Award, ChevronDown, ChevronUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { labelForColor, canonicalColorKey } from '@/lib/taxonomy';
 
 const COLOR_HEX_MAP = {
-  white: '#f4f4f5',
+  white: '#f8fafc',
   black: '#18181b',
   grey: '#71717a',
-  light_grey: '#d4d4d8',
-  burgundy: '#7f1d1d',
-  brown: '#78350f',
-  blue: '#3b82f6',
-  light_blue: '#60a5fa',
-  navy: '#1e3a8a',
-  charcoal_grey: '#3f3f46',
-  green: '#22c55e',
-  olive: '#65a30d',
+  light_grey: '#d3d3d3',
+  burgundy: '#800020',
+  brown: '#a52a2a',
+  blue: '#2563eb',
+  light_blue: '#add8e6',
+  navy: '#000080',
+  charcoal_grey: '#36454f',
+  green: '#16a34a',
+  olive: '#808000',
   yellow: '#eab308',
   orange: '#f97316',
-  pink: '#ec4899',
-  purple: '#a855f7',
-  terracotta_brown: '#c2410c',
+  pink: '#ffc0cb',
+  purple: '#800080',
+  terracotta_brown: '#e2725b',
   beige: '#f5f5dc',
-  cream: '#fef08a',
-  champagne_gold: '#d97706',
-  red: '#dc2626',
+  cream: '#fffdd0',
+  champagne_gold: '#f7e7ce',
+  red: '#ef4444',
+};
+
+const W3C_COLORS = new Set([
+  'aliceblue', 'antiquewhite', 'aqua', 'aquamarine', 'azure', 'beige', 'bisque', 'black', 'blanchedalmond',
+  'blue', 'blueviolet', 'brown', 'burlywood', 'cadetblue', 'chartreuse', 'chocolate', 'coral', 'cornflowerblue',
+  'cornsilk', 'crimson', 'cyan', 'darkblue', 'darkcyan', 'darkgoldenrod', 'darkgray', 'darkgrey', 'darkgreen',
+  'darkkhaki', 'darkmagenta', 'darkolivegreen', 'darkorange', 'darkorchid', 'darkred', 'darksalmon', 'darkseagreen',
+  'darkslateblue', 'darkslategray', 'darkslategrey', 'darkturquoise', 'darkviolet', 'deeppink', 'deepskyblue',
+  'dimgray', 'dimgrey', 'dodgerblue', 'firebrick', 'floralwhite', 'forestgreen', 'fuchsia', 'gainsboro', 'ghostwhite',
+  'gold', 'goldenrod', 'gray', 'grey', 'green', 'greenyellow', 'honeydew', 'hotpink', 'indianred', 'indigo', 'ivory',
+  'khaki', 'lavender', 'lavenderblush', 'lawngreen', 'lemonchiffon', 'lightblue', 'lightcoral', 'lightcyan',
+  'lightgoldenrodyellow', 'lightgray', 'lightgrey', 'lightgreen', 'lightpink', 'lightsalmon', 'lightseagreen',
+  'lightskyblue', 'lightslategray', 'lightslategrey', 'lightsteelblue', 'lightyellow', 'lime', 'limegreen', 'linen',
+  'magenta', 'maroon', 'mediumaquamarine', 'mediumblue', 'mediumorchid', 'mediumpurple', 'mediumseagreen',
+  'mediumslateblue', 'mediumspringgreen', 'mediumturquoise', 'mediumvioletred', 'midnightblue', 'mintcream',
+  'mistyrose', 'moccasin', 'navajowhite', 'navy', 'oldlace', 'olive', 'olivedrab', 'orange', 'orangered', 'orchid',
+  'palegoldenrod', 'palegreen', 'paleturquoise', 'palevioletred', 'papayawhip', 'peachpuff', 'peru', 'pink', 'plum',
+  'powderblue', 'purple', 'rebeccapurple', 'red', 'rosybrown', 'royalblue', 'saddlebrown', 'salmon', 'sandybrown',
+  'seagreen', 'seashell', 'sienna', 'silver', 'skyblue', 'slateblue', 'slategray', 'slategrey', 'snow', 'springgreen',
+  'steelblue', 'tan', 'teal', 'thistle', 'tomato', 'turquoise', 'violet', 'wheat', 'white', 'whitesmoke',
+  'yellow', 'yellowgreen'
+]);
+
+const getFillColor = (canonicalKey) => {
+  if (COLOR_HEX_MAP[canonicalKey]) {
+    return COLOR_HEX_MAP[canonicalKey];
+  }
+  const clean = canonicalKey.replace(/_/g, '');
+  if (W3C_COLORS.has(clean)) {
+    return clean;
+  }
+  return '#a1a1aa'; // default fallback for unknown colors
 };
 
 export default function WardrobeStats() {
   const { t } = useTranslation();
   const store = useClosetStore();
   const items = store.items || [];
+  const [isLegendExpanded, setIsLegendExpanded] = useState(false);
 
   // Sync closet items if store is empty or needs refresh
   useEffect(() => {
@@ -66,7 +99,7 @@ export default function WardrobeStats() {
     
     if (!colorMap[localized]) {
       const canonicalKey = rawColor === 'Other' ? 'other' : canonicalColorKey(raw);
-      const fill = COLOR_HEX_MAP[canonicalKey] || '#a1a1aa'; // default fallback for unknown
+      const fill = getFillColor(canonicalKey);
 
       colorMap[localized] = {
         name: localized,
@@ -170,11 +203,11 @@ export default function WardrobeStats() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Color Breakdown Card */}
-          <Card className="rounded-3xl border border-border bg-card shadow-sm p-6 flex flex-col justify-between">
+          <Card className="rounded-3xl border border-border bg-card shadow-sm p-6 flex flex-col">
             <CardHeader className="p-0 mb-4">
               <CardTitle className="text-base font-semibold font-display text-foreground">{t('stats.colorPalette', { defaultValue: 'Color Palette Breakdown' })}</CardTitle>
             </CardHeader>
-            <div className="h-64 w-full flex items-center justify-center">
+            <div className="h-56 w-full flex items-center justify-center min-h-0">
               {colorData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -184,8 +217,8 @@ export default function WardrobeStats() {
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      innerRadius={55}
-                      outerRadius={80}
+                      innerRadius={45}
+                      outerRadius={70}
                       paddingAngle={2}
                     >
                       {colorData.map((entry, index) => (
@@ -193,13 +226,50 @@ export default function WardrobeStats() {
                       ))}
                     </Pie>
                     <Tooltip />
-                    <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ maxHeight: '60px', overflowY: 'auto' }} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
                 <span className="text-xs text-muted-foreground">{t('stats.noColorData', { defaultValue: 'No color tags specified.' })}</span>
               )}
             </div>
+            {colorData.length > 0 && (
+              <div className="mt-4 border-t border-border/40 pt-4 flex flex-col items-center">
+                <div 
+                  className={`w-full flex flex-wrap gap-2 justify-center transition-all duration-300 ease-in-out ${
+                    isLegendExpanded ? 'max-h-[1000px] overflow-visible' : 'max-h-16 overflow-hidden'
+                  }`}
+                  data-testid="color-palette-legend"
+                >
+                  {colorData.map((entry, index) => (
+                    <div key={index} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary/35 text-[10px] font-semibold text-foreground/80 border border-border/50 shadow-sm transition-transform hover:scale-[1.03]">
+                      <span className="h-2.5 w-2.5 rounded-full border border-border/40 shrink-0" style={{ backgroundColor: entry.fill }} />
+                      <span>{entry.name}: {entry.value}</span>
+                    </div>
+                  ))}
+                </div>
+                
+                {colorData.length > 6 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-3 h-7 text-xs text-brand hover:text-brand/80 font-semibold flex items-center gap-1 rounded-xl transition-all"
+                    onClick={() => setIsLegendExpanded(!isLegendExpanded)}
+                  >
+                    {isLegendExpanded ? (
+                      <>
+                        {t('stats.showLess', { defaultValue: 'Show Less' })}
+                        <ChevronUp className="h-3.5 w-3.5" />
+                      </>
+                    ) : (
+                      <>
+                        {t('stats.showAllColors', { defaultValue: 'Show All Colors' })}
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            )}
           </Card>
 
           {/* Cost-per-Wear Card */}
