@@ -67,23 +67,70 @@ const getFillColor = (canonicalKey) => {
 };
 
 const MATERIAL_COLOR_MAP = {
-  cotton: '#e2e8f0',       // slate-200 / white-ish
-  wool: '#78350f',         // warm amber / brown
-  silk: '#fbcfe8',         // pink-200 / soft pink
-  linen: '#f5f5dc',        // beige
-  leather: '#18181b',      // black
-  denim: '#1d4ed8',        // royal blue
-  polyester: '#a855f7',    // purple
-  nylon: '#3b82f6',        // blue
-  cashmere: '#fda4af',     // rose-300 / soft pink
-  viscose: '#10b981',      // emerald
-  elastane: '#64748b',     // slate
-  spandex: '#64748b',      // slate
-  velvet: '#4c1d95',       // violet-900 / deep purple
-  satin: '#fef08a',        // yellow-200
-  twill: '#451a03',        // amber-950 / dark brown
-  fleece: '#06b6d4',       // cyan
-  other: '#a1a1aa',        // grey
+  // Fallbacks & broad categories
+  cotton: '#e2e8f0',
+  wool: '#78350f',
+  silk: '#fbcfe8',
+  linen: '#f5f5dc',
+  leather: '#18181b',
+  denim: '#1d4ed8',
+  polyester: '#a855f7',
+  nylon: '#3b82f6',
+  cashmere: '#fda4af',
+  viscose: '#10b981',
+  elastane: '#64748b',
+  spandex: '#64748b',
+  velvet: '#4c1d95',
+  satin: '#fef08a',
+  twill: '#451a03',
+  fleece: '#06b6d4',
+
+  // Natural fibers
+  raw_cotton: '#F9F6EE',
+  flax_linen: '#FAF0E6',
+  mulberry_silk: '#FFF8F0',
+  tussah_silk: '#E6D7C3',
+  hemp_canvas: '#E0D8C8',
+  ramie_white: '#FDFBF7',
+  jute_burlap: '#A8977E',
+
+  // Luxury wools & hairs
+  cashmere_cream: '#EAE3D2',
+  merino_off_white: '#F5F2EB',
+  camel_hair: '#C19A6B',
+  alpaca_fawn: '#8E7661',
+  mohair_silver: '#D1D5DB',
+  angora_cloud: '#FAF9F6',
+  vicuna: '#B87A3A',
+
+  // Leather & skins
+  vachetta_leather: '#E3C39D',
+  saddle_tan: '#A0522D',
+  cordovan: '#4A1525',
+  nappa_black: '#1A1A1A',
+  suede_taupe: '#B3A79A',
+  nubuck_olive: '#556B2F',
+  patent_gloss_black: '#0B0B0C',
+
+  // Utility & synthetic fabrics
+  raw_denim_blue: '#1A2E40',
+  chambray_light: '#A3C1AD',
+  ballistic_nylon: '#242526',
+  neoprene_scuba: '#111215',
+  ripstop_khaki: '#C3B091',
+  tyvek_white: '#FFFFFF',
+  tarp_vinyl: '#0D5C3A',
+
+  // Specialty & eveningwear textiles
+  velvet_maroon: '#500614',
+  satin_champagne: '#ECCBB4',
+  tulle_illusion: '#F3EBE3',
+  organza_blush: '#FFECE6',
+  brocade_antique_gold: '#CCA43B',
+  lame_silver: '#E6E8EA',
+  sequined_onyx: '#0F0F10',
+
+  other: '#a1a1aa',
 };
 
 const getMaterialColor = (key) => {
@@ -120,9 +167,13 @@ const getSubCategoryColor = (parentCategory, subCategory) => {
 
 const slug = (value) =>
   String(value || '')
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toLowerCase()
-    .replace(/\s+/g, '_');
+    .replace(/['’`]/g, '')
+    .replace(/[\s\/\-]+/g, '_')
+    .replace(/[^a-z0-9_]/g, '');
 
 
 export default function WardrobeStats() {
