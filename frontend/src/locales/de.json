@@ -1674,7 +1674,11 @@
     "unknownMaterial": "Andere",
     "unknownSubcategory": "Andere",
     "showLess": "Weniger anzeigen",
-    "showAllColors": "Alle Farben anzeigen"
+    "showAllColors": "Alle Farben anzeigen",
+    "chartView": "Diagrammtyp",
+    "viewRing": "Ring",
+    "viewPie": "Kuchen",
+    "viewBars": "Balken"
   },
   "attachmentPicker": {
     "closetTab": "Aus der Garderobe",

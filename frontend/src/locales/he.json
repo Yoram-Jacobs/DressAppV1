@@ -1674,7 +1674,11 @@
     "unknownMaterial": "אחר",
     "unknownSubcategory": "אחר",
     "showLess": "הצג פחות",
-    "showAllColors": "הצג את כל הצבעים"
+    "showAllColors": "הצג את כל הצבעים",
+    "chartView": "סוג תרשים",
+    "viewRing": "טבעת",
+    "viewPie": "עוגה",
+    "viewBars": "עמודות"
   },
   "attachmentPicker": {
     "closetTab": "מהארון",

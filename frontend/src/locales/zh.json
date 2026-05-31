@@ -1674,7 +1674,11 @@
     "unknownMaterial": "其他",
     "unknownSubcategory": "其他",
     "showLess": "收起",
-    "showAllColors": "展开全部颜色"
+    "showAllColors": "展开全部颜色",
+    "chartView": "图表类型",
+    "viewRing": "圆环",
+    "viewPie": "饼图",
+    "viewBars": "条形图"
   },
   "attachmentPicker": {
     "closetTab": "我的衣橱",

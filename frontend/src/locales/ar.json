@@ -1674,7 +1674,11 @@
     "unknownMaterial": "آخر",
     "unknownSubcategory": "آخر",
     "showLess": "عرض أقل",
-    "showAllColors": "عرض كل الألوان"
+    "showAllColors": "عرض كل الألوان",
+    "chartView": "نوع الرسم",
+    "viewRing": "حلقة",
+    "viewPie": "دائري",
+    "viewBars": "أعمدة"
   },
   "attachmentPicker": {
     "closetTab": "من الخزانة",

@@ -1674,7 +1674,11 @@
     "unknownMaterial": "Otro",
     "unknownSubcategory": "Otro",
     "showLess": "Mostrar menos",
-    "showAllColors": "Mostrar todos los colores"
+    "showAllColors": "Mostrar todos los colores",
+    "chartView": "Tipo de gráfico",
+    "viewRing": "Anillo",
+    "viewPie": "Tarta",
+    "viewBars": "Barras"
   },
   "attachmentPicker": {
     "closetTab": "Del armario",

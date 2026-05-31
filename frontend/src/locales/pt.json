@@ -1674,7 +1674,11 @@
     "unknownMaterial": "Outro",
     "unknownSubcategory": "Outro",
     "showLess": "Mostrar menos",
-    "showAllColors": "Mostrar todas as cores"
+    "showAllColors": "Mostrar todas as cores",
+    "chartView": "Tipo de gráfico",
+    "viewRing": "Anel",
+    "viewPie": "Pizza",
+    "viewBars": "Barras"
   },
   "attachmentPicker": {
     "closetTab": "Do closet",

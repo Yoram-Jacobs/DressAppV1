@@ -1674,7 +1674,11 @@
     "unknownMaterial": "अन्य",
     "unknownSubcategory": "अन्य",
     "showLess": "कम दिखाएं",
-    "showAllColors": "सभी रंग दिखाएं"
+    "showAllColors": "सभी रंग दिखाएं",
+    "chartView": "चार्ट प्रकार",
+    "viewRing": "रिंग",
+    "viewPie": "पाई",
+    "viewBars": "बार"
   },
   "attachmentPicker": {
     "closetTab": "अलमारी से",

@@ -1674,7 +1674,11 @@
     "unknownMaterial": "Autre",
     "unknownSubcategory": "Autre",
     "showLess": "Afficher moins",
-    "showAllColors": "Afficher toutes les couleurs"
+    "showAllColors": "Afficher toutes les couleurs",
+    "chartView": "Type de graphique",
+    "viewRing": "Anneau",
+    "viewPie": "Camembert",
+    "viewBars": "Barres"
   },
   "attachmentPicker": {
     "closetTab": "Du dressing",

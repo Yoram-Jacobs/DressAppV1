@@ -31,7 +31,9 @@ export default [
       "no-unused-vars": "warn",
       "no-undef": "error",
       "react-hooks/exhaustive-deps": "warn",
-      "react/prop-types": "off"
+      "react/prop-types": "off",
+      "react/jsx-uses-react": "error",
+      "react/jsx-uses-vars": "error"
     }
   }
 ];

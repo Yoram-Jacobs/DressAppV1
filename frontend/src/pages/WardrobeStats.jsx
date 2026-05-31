@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ExploreBackButton } from '@/components/ExploreBackButton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { DollarSign, Percent, TrendingUp, Shirt, Award, ChevronDown, ChevronUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -203,11 +203,6 @@ const getSubCategoryColor = (canonicalKey, parentCategory) => {
   return `hsl(${baseHue}, ${saturation}%, ${lightness}%)`;
 };
 
-const slug = (value) =>
-  String(value || '')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '_');
 
 
 export default function WardrobeStats() {
@@ -216,6 +211,7 @@ export default function WardrobeStats() {
   const items = store.items || [];
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
   const [breakdownType, setBreakdownType] = useState('colors');
+  const [chartView, setChartView] = useState('ring');
 
   // Sync closet items if store is empty or needs refresh
   useEffect(() => {
@@ -431,43 +427,79 @@ export default function WardrobeStats() {
                   : t('stats.categoriesPalette', { defaultValue: 'Subcategories Breakdown' })}
               </CardTitle>
               
-              <Select value={breakdownType} onValueChange={(val) => { setBreakdownType(val); setIsLegendExpanded(false); }}>
-                <SelectTrigger className="w-[140px] h-8 rounded-xl text-xs font-semibold bg-secondary/50 border-border/50">
-                  <SelectValue placeholder={t('stats.breakdownType', { defaultValue: 'Breakdown Type' })} />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl border-border/50">
-                  <SelectItem value="colors" className="text-xs rounded-lg font-medium">{t('stats.typeColors', { defaultValue: 'Colors' })}</SelectItem>
-                  <SelectItem value="materials" className="text-xs rounded-lg font-medium">{t('stats.typeMaterials', { defaultValue: 'Materials' })}</SelectItem>
-                  <SelectItem value="categories" className="text-xs rounded-lg font-medium">{t('stats.typeCategories', { defaultValue: 'Categories' })}</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <Select value={breakdownType} onValueChange={(val) => { setBreakdownType(val); setIsLegendExpanded(false); }}>
+                  <SelectTrigger className="w-[110px] h-8 rounded-xl text-xs font-semibold bg-secondary/50 border-border/50">
+                    <SelectValue placeholder={t('stats.breakdownType', { defaultValue: 'Breakdown Type' })} />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-border/50">
+                    <SelectItem value="colors" className="text-xs rounded-lg font-medium">{t('stats.typeColors', { defaultValue: 'Colors' })}</SelectItem>
+                    <SelectItem value="materials" className="text-xs rounded-lg font-medium">{t('stats.typeMaterials', { defaultValue: 'Materials' })}</SelectItem>
+                    <SelectItem value="categories" className="text-xs rounded-lg font-medium">{t('stats.typeCategories', { defaultValue: 'Categories' })}</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={chartView} onValueChange={(val) => setChartView(val)}>
+                  <SelectTrigger className="w-[90px] h-8 rounded-xl text-xs font-semibold bg-secondary/50 border-border/50">
+                    <SelectValue placeholder={t('stats.chartView', { defaultValue: 'Chart Type' })} />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-border/50">
+                    <SelectItem value="ring" className="text-xs rounded-lg font-medium">{t('stats.viewRing', { defaultValue: 'Ring' })}</SelectItem>
+                    <SelectItem value="pie" className="text-xs rounded-lg font-medium">{t('stats.viewPie', { defaultValue: 'Pie' })}</SelectItem>
+                    <SelectItem value="bars" className="text-xs rounded-lg font-medium">{t('stats.viewBars', { defaultValue: 'Bars' })}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="h-56 w-full flex items-center justify-center min-h-0">
               {colorData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={colorData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={45}
-                      outerRadius={70}
-                      paddingAngle={2}
-                    >
-                      {colorData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} className="stroke-background stroke-2" />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
+                  {chartView === 'bars' ? (
+                    <BarChart data={colorData} margin={{ top: 15, right: 10, left: -25, bottom: 5 }}>
+                      <XAxis 
+                        dataKey="name" 
+                        tick={{ angle: -90, textAnchor: 'end', fontSize: 9 }} 
+                        height={75} 
+                        interval={0} 
+                        stroke="#888888" 
+                      />
+                      <YAxis 
+                        fontSize={9} 
+                        stroke="#888888"
+                        allowDecimals={false}
+                      />
+                      <Tooltip />
+                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                        {colorData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  ) : (
+                    <PieChart>
+                      <Pie
+                        data={colorData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={chartView === 'ring' ? 45 : 0}
+                        outerRadius={70}
+                        paddingAngle={chartView === 'ring' ? 2 : 0}
+                      >
+                        {colorData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} className="stroke-background stroke-2" />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  )}
                 </ResponsiveContainer>
               ) : (
                 <span className="text-xs text-muted-foreground">{t('stats.noColorData', { defaultValue: 'No color tags specified.' })}</span>
               )}
             </div>
-            {colorData.length > 0 && (
+            {colorData.length > 0 && chartView !== 'bars' && (
               <div className="mt-4 border-t border-border/40 pt-4 flex flex-col items-center">
                 <div 
                   className={`w-full flex flex-wrap gap-2 justify-center transition-all duration-300 ease-in-out ${

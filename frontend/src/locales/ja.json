@@ -1674,7 +1674,11 @@
     "unknownMaterial": "その他",
     "unknownSubcategory": "その他",
     "showLess": "表示を減らす",
-    "showAllColors": "すべてのカラーを表示"
+    "showAllColors": "すべてのカラーを表示",
+    "chartView": "グラフ種類",
+    "viewRing": "リング",
+    "viewPie": "パイ",
+    "viewBars": "棒グラフ"
   },
   "attachmentPicker": {
     "closetTab": "クローゼットから",

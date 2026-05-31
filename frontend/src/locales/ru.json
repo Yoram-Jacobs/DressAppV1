@@ -1674,7 +1674,11 @@
     "unknownMaterial": "Другое",
     "unknownSubcategory": "Другое",
     "showLess": "Показать меньше",
-    "showAllColors": "Показать все цвета"
+    "showAllColors": "Показать все цвета",
+    "chartView": "Вид графика",
+    "viewRing": "Кольцо",
+    "viewPie": "Круговая",
+    "viewBars": "Столбцы"
   },
   "attachmentPicker": {
     "closetTab": "Из гардероба",
