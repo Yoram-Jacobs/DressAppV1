@@ -12,6 +12,9 @@
     email {$CADDY_ACME_EMAIL}
     # Uncomment to use staging Let's Encrypt while testing:
     # acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+    servers {
+        protocols h1 h2
+    }
 }
 
 {$DOMAIN} {
