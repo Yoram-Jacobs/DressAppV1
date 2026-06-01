@@ -67,7 +67,7 @@ const INTENT_OPTIONS = [
   { value: 'swap', icon: Repeat, tone: 'bg-sky-100 text-sky-900 border-sky-200' },
 ];
 
-const fileToBase64 = async (file, maxSide = 1024, quality = 0.8) => {
+const fileToBase64AndBlob = async (file, maxSide = 1024, quality = 0.8) => {
   let img = null;
   if (typeof createImageBitmap === 'function') {
     try {
@@ -121,13 +121,20 @@ const fileToBase64 = async (file, maxSide = 1024, quality = 0.8) => {
   // Actually, standardizing on jpeg is safer for the backend since webp support in some older backend libraries can be spotty.
   // The request says "(e.g. jpeg/webp)", so jpeg is standard.
   const outDataUrl = canvas.toDataURL('image/jpeg', quality);
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
   
   // Clear canvas memory
   canvas.width = 0;
   canvas.height = 0;
 
   const comma = outDataUrl.indexOf(',');
-  return comma >= 0 ? outDataUrl.slice(comma + 1) : outDataUrl;
+  const base64 = comma >= 0 ? outDataUrl.slice(comma + 1) : outDataUrl;
+  return { base64, blob };
+};
+
+const fileToBase64 = async (file, maxSide = 1024, quality = 0.8) => {
+  const res = await fileToBase64AndBlob(file, maxSide, quality);
+  return res.base64;
 };
 
 const fmtCents = (cents, cur = 'USD') =>
@@ -399,23 +406,8 @@ export default function AddItem() {
     const fingerprints = [];
     for (const rawF of files) {
       try {
-        const b64 = await fileToBase64(rawF);
-        if (!b64) continue;
-        
-        // Convert base64 to Blob synchronously to bypass CSP connection blocks on data URLs
-        const byteCharacters = atob(b64);
-        const byteArrays = [];
-        const sliceSize = 512;
-        for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-          const slice = byteCharacters.slice(offset, offset + sliceSize);
-          const byteNumbers = new Array(slice.length);
-          for (let i = 0; i < slice.length; i++) {
-            byteNumbers[i] = slice.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          byteArrays.push(byteArray);
-        }
-        const blob = new Blob(byteArrays, { type: 'image/jpeg' });
+        const { base64: b64, blob } = await fileToBase64AndBlob(rawF);
+        if (!b64 || !blob) continue;
         
         // Use a safe File constructor wrapper that falls back to Blob to avoid TypeError: File constructor is not supported on certain WebView/mobile browsers
         let f;
