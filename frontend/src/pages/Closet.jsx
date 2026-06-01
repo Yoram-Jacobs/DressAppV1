@@ -302,12 +302,12 @@ export default function Closet() {
     touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
     touchLastPosRef.current = { x: touch.clientX, y: touch.clientY };
     touchCurrentPosRef.current = { x: touch.clientX, y: touch.clientY };
-    setTouchPos({ x: touch.clientX, y: touch.clientY });
     setIsTouchDragging(false);
 
     touchTimeoutRef.current = setTimeout(() => {
       setIsTouchDragging(true);
       setDraggedId(id);
+      setTouchPos({ x: touchCurrentPosRef.current.x, y: touchCurrentPosRef.current.y });
       if (navigator.vibrate) {
         navigator.vibrate(45);
       }
@@ -321,7 +321,6 @@ export default function Closet() {
     const deltaY = touch.clientY - touchLastPosRef.current.y;
     touchLastPosRef.current = { x: touch.clientX, y: touch.clientY };
     touchCurrentPosRef.current = { x: touch.clientX, y: touch.clientY };
-    setTouchPos({ x: touch.clientX, y: touch.clientY });
 
     if (!isTouchDragging) {
       if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
@@ -332,6 +331,8 @@ export default function Closet() {
       }
       return;
     }
+
+    setTouchPos({ x: touch.clientX, y: touch.clientY });
 
     if (e.cancelable) {
       e.preventDefault();

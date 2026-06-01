@@ -141,6 +141,10 @@ async def warmup_models() -> None:
         )
         return
 
+    # Delay startup warmup to avoid event loop blocking/GIL contention
+    # during initial client requests (such as eager /closet loading).
+    await asyncio.sleep(10)
+
     t_wall_start = time.perf_counter()
     logger.info(
         "warmup_models: starting parallel warmup of SegFormer + rembg "
