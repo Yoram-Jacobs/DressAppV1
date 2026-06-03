@@ -196,7 +196,7 @@ export default function ExpertsDirectory() {
                 className="rounded-xl"
                 data-testid="experts-apply-filters"
               >
-                {t('common.search') || 'Search'}
+                {t('common.search', { defaultValue: 'Search' })}
               </Button>
               <Button
                 variant="secondary"

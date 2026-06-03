@@ -854,7 +854,7 @@ export default function ItemDetail() {
       }
     }
 
-    toast.success(t('itemDetail.group.savingInBackground') || 'Saving changes in background...');
+    toast.success(t('itemDetail.group.savingInBackground', { defaultValue: 'Saving changes in background...' }));
     
     // Redirect user to Closet page immediately so they see the refreshed modifications
     nav('/closet');
@@ -1496,7 +1496,7 @@ export default function ItemDetail() {
                         {isHost && (
                           <div className="absolute inset-x-0 bottom-0 bg-background/80 backdrop-blur-[2px] py-0.5 text-center">
                             <span className="text-[9px] font-semibold text-[hsl(var(--accent))]">
-                              {t('itemDetail.group.front') || 'Front (Main)'}
+                              {t('itemDetail.group.front', { defaultValue: 'Front (Main)' })}
                             </span>
                           </div>
                         )}

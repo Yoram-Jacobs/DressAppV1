@@ -104,7 +104,7 @@ export default function AdsManager() {
 
   const save = async () => {
     if (!editing?.name || !editing?.creative?.headline) {
-      toast.error(t('common.error') || 'Missing required fields');
+      toast.error(t('ads.errorMissingFields', { defaultValue: 'Missing required fields' }));
       return;
     }
     setBusy(true);

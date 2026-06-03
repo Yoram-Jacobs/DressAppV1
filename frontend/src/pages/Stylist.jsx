@@ -420,7 +420,10 @@ export default function Stylist() {
           const res = await api.rejectItemSuggestion(itemId);
           if (res.offer_marketplace) {
             toast.warning(
-              t('stylist.rejectionMarketplaceOffer', `You have rejected "${res.title}" 3 times. Share it in the Marketplace to free up space?`),
+              t('stylist.rejectionMarketplaceOffer', {
+                defaultValue: 'You have rejected "{{title}}" 3 times. Share it in the Marketplace to free up space?',
+                title: res.title
+              }),
               {
                 action: {
                   label: t('common.share', { defaultValue: 'Share' }),
