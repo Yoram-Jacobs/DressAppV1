@@ -213,7 +213,7 @@ export default function Closet() {
         return;
       }
       
-      const threshold = 120; // 120px threshold from top/bottom
+      const threshold = window.innerHeight / 6; // 1/6 of screen height
       const speed = 12;      // scroll speed
 
       if (isTouchDraggingRef.current) {
