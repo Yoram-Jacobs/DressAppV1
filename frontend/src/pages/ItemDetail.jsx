@@ -60,6 +60,7 @@ import { DppPanel } from '@/components/DppPanel';
 import { api } from '@/lib/api';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { closetStore } from '@/lib/closetStore';
+import { workStore } from '@/lib/workStore';
 import { bestImageUrl } from '@/lib/itemImage';
 import {
   labelForCategory,
@@ -75,6 +76,7 @@ import {
   labelForSubCategory,
   labelForItemType,
   labelForColor,
+  getTaxonomyMismatches,
 } from '@/lib/taxonomy';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
@@ -442,6 +444,21 @@ export default function ItemDetail() {
   const [newUploadedMembers, setNewUploadedMembers] = useState([]);
   const [hostIdState, setHostIdState] = useState(null);
   const [activeViewIdState, setActiveViewIdState] = useState(id);
+  const [gatekeeperOpen, setGatekeeperOpen] = useState(false);
+  const [gatekeeperMismatches, setGatekeeperMismatches] = useState([]);
+
+  const getTaxonomyFieldLabel = (field) => {
+    switch (field) {
+      case 'category': return t('itemDetail.edit.category', { defaultValue: 'Category' });
+      case 'sub_category': return t('itemDetail.edit.subCategory', { defaultValue: 'Sub-category' });
+      case 'brand': return t('itemDetail.edit.brand', { defaultValue: 'Brand' });
+      case 'gender': return t('itemDetail.edit.gender', { defaultValue: 'Gender' });
+      case 'dress_code': return t('itemDetail.edit.dressCode', { defaultValue: 'Dress Code' });
+      case 'season': return t('itemDetail.edit.season', { defaultValue: 'Season' });
+      case 'tradition': return t('itemDetail.edit.tradition', { defaultValue: 'Tradition' });
+      default: return field;
+    }
+  };
 
 
   // ────────────────────────────────────────────────────────────────
@@ -755,8 +772,7 @@ export default function ItemDetail() {
   const setField = (key, val) => setForm((f) => ({ ...f, [key]: val }));
 
   /* ------------------- save / discard ------------------- */
-  const onSave = () => {
-    if (!isDirty || saving) return;
+  const executeSavePipeline = () => {
     setSaving(true);
     
     // 1. Optimistic update of frontend's closet state immediately
@@ -843,6 +859,10 @@ export default function ItemDetail() {
     // Redirect user to Closet page immediately so they see the refreshed modifications
     nav('/closet');
 
+    // Register all saved IDs with the poller
+    const allSavedIds = [activeHostId, ...remainingMembers.map(m => m.id)];
+    workStore.registerPolishItems(allSavedIds);
+
     // 2. Perform database updates in the background
     const savePromise = (async () => {
       let currentHostId = id;
@@ -894,6 +914,38 @@ export default function ItemDetail() {
       .finally(() => {
         setSaving(false);
       });
+  };
+
+  const onSave = () => {
+    if (!isDirty || saving) return;
+
+    // Check for taxonomy mismatches between host and members
+    const hostObj = {
+      category: form.category,
+      sub_category: form.sub_category,
+      brand: form.brand,
+      gender: form.gender,
+      dress_code: form.dress_code,
+      season: form.season,
+      tradition: form.tradition
+    };
+
+    const mismatchesSet = new Set();
+    const members = currentGroupItems.filter(m => m.id !== hostIdState);
+    for (const m of members) {
+      const diffs = getTaxonomyMismatches(hostObj, m);
+      for (const d of diffs) {
+        mismatchesSet.add(d);
+      }
+    }
+
+    const mismatches = Array.from(mismatchesSet);
+    if (mismatches.length > 0) {
+      setGatekeeperMismatches(mismatches);
+      setGatekeeperOpen(true);
+    } else {
+      executeSavePipeline();
+    }
   };
   const onDiscard = () => {
     if (!item) return;
@@ -1415,7 +1467,7 @@ export default function ItemDetail() {
                 )}
               </div>
 
-              <div className="flex items-center gap-3 overflow-x-auto pb-2 pt-1 scrollbar-thin">
+              <div className="flex items-start gap-3 overflow-x-auto pb-2 pt-1 scrollbar-thin">
                 {currentGroupItems.map((gItem) => {
                   const isActive = gItem.id === activeViewIdState;
                   const isHost = gItem.id === hostIdState;
@@ -1423,28 +1475,62 @@ export default function ItemDetail() {
                   return (
                     <div
                       key={gItem.id}
-                      onClick={() => {
-                        setActiveViewIdState(gItem.id);
-                      }}
-                      className={`relative flex-shrink-0 group w-20 h-24 rounded-lg overflow-hidden border-2 cursor-pointer transition-all shadow-sm ${
-                        isActive
-                          ? 'border-emerald-500 ring-2 ring-emerald-500/20'
-                          : 'border-border hover:border-muted-foreground'
-                      }`}
+                      className="flex flex-col items-center gap-1.5"
                     >
-                      <img
-                        src={bestImageUrl(gItem)}
-                        alt={gItem.title || 'Garment view'}
-                        className="w-full h-full object-cover"
-                      />
+                      <div
+                        onClick={() => {
+                          setActiveViewIdState(gItem.id);
+                        }}
+                        className={`relative flex-shrink-0 group w-20 h-24 rounded-lg overflow-hidden border-2 cursor-pointer transition-all shadow-sm ${
+                          isActive
+                            ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+                            : 'border-border hover:border-muted-foreground'
+                        }`}
+                      >
+                        <img
+                          src={bestImageUrl(gItem)}
+                          alt={gItem.title || 'Garment view'}
+                          className="w-full h-full object-cover"
+                        />
 
-                      {isHost && (
-                        <div className="absolute inset-x-0 bottom-0 bg-background/80 backdrop-blur-[2px] py-0.5 text-center">
-                          <span className="text-[9px] font-semibold text-[hsl(var(--accent))]">
-                            {t('itemDetail.group.front') || 'Front (Main)'}
+                        {isHost && (
+                          <div className="absolute inset-x-0 bottom-0 bg-background/80 backdrop-blur-[2px] py-0.5 text-center">
+                            <span className="text-[9px] font-semibold text-[hsl(var(--accent))]">
+                              {t('itemDetail.group.front') || 'Front (Main)'}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {(() => {
+                        const tags = Array.isArray(gItem.tags) ? gItem.tags : [];
+                        const isFront = tags.some(t => String(t).toLowerCase() === 'front');
+                        const isBack = tags.some(t => String(t).toLowerCase() === 'back');
+                        const isProfile = tags.some(t => String(t).toLowerCase() === 'profile');
+                        
+                        let tagText = '';
+                        let tagKey = '';
+                        if (isFront) {
+                          tagText = 'Front';
+                          tagKey = 'itemDetail.group.front';
+                        } else if (isBack) {
+                          tagText = 'Back';
+                          tagKey = 'itemDetail.group.back';
+                        } else if (isProfile) {
+                          tagText = 'Profile';
+                          tagKey = 'itemDetail.group.profile';
+                        }
+                        
+                        if (!tagText) return <div className="h-4" />;
+                        return (
+                          <span 
+                            className="text-[10px] font-medium text-muted-foreground"
+                            data-testid={`view-tag-${tagText.toLowerCase()}`}
+                          >
+                            {t(tagKey, { defaultValue: tagText })}
                           </span>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </div>
                   );
                 })}
@@ -2111,6 +2197,38 @@ export default function ItemDetail() {
           </Button>
         </div>
       )}
+
+      {/* Taxonomy gatekeeper warning dialog */}
+      <AlertDialog open={gatekeeperOpen} onOpenChange={setGatekeeperOpen}>
+        <AlertDialogContent data-testid="item-edit-gatekeeper-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t('itemDetail.gatekeeper.title', { defaultValue: 'Mismatched Properties Warning' })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('itemDetail.gatekeeper.body', { 
+                defaultValue: 'This host item and its group members have mismatched properties: {{mismatches}}. Are you sure you want to save these changes?',
+                mismatches: gatekeeperMismatches.map(field => getTaxonomyFieldLabel(field)).join(', ')
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="item-edit-gatekeeper-cancel" onClick={() => setGatekeeperOpen(false)}>
+              {t('itemDetail.gatekeeper.cancel', { defaultValue: 'Cancel' })}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setGatekeeperOpen(false);
+                executeSavePipeline();
+              }}
+              data-testid="item-edit-gatekeeper-confirm"
+              className="bg-primary text-primary-foreground hover:opacity-90"
+            >
+              {t('itemDetail.gatekeeper.confirm', { defaultValue: 'Save anyway' })}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

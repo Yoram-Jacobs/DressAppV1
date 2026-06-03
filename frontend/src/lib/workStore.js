@@ -72,8 +72,12 @@ let _pollerHandle = null;
 function _syncClosetPolishTerminal(id, status) {
   try {
     const live = (closetStore.getSnapshot().items || []).find((it) => it.id === id);
-    if (!live || live.clean_image_status !== 'pending') return;
-    closetStore.upsert({ ...live, clean_image_status: status });
+    if (!live || (live.clean_image_status !== 'pending' && live.group_analysis_status !== 'pending')) return;
+    closetStore.upsert({ 
+      ...live, 
+      clean_image_status: live.clean_image_status === 'pending' ? status : live.clean_image_status,
+      group_analysis_status: live.group_analysis_status === 'pending' ? status : live.group_analysis_status
+    });
   } catch { /* swallow */ }
 }
 
@@ -150,7 +154,7 @@ async function _pollOnce() {
       closetStore.upsert(item);
     } catch { /* swallow */ }
     // "ready" / "failed" / null all mean "no longer in flight".
-    if (item.clean_image_status !== 'pending') {
+    if (item.clean_image_status !== 'pending' && item.group_analysis_status !== 'pending') {
       nextSet.delete(item.id);
       delete nextStartedAt[item.id];
       newlyCompleted += 1;

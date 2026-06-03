@@ -175,6 +175,7 @@ class ClosetItem(BaseDoc):
     # Grouping
     group_id: str | None = None
     group_role: Literal["host", "member"] | None = None
+    group_analysis_status: str | None = None  # "pending" | "ready" | "failed"
     # Descriptive
     name: str | None = None  # short, friendly — may differ from title
     title: str

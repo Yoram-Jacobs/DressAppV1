@@ -180,7 +180,13 @@
     "primaryItemLabel": "Primary Item",
     "selectPrimaryPlaceholder": "Select primary item...",
     "confirmGroup": "Group",
-    "addNewItem": "Add First Item"
+    "addNewItem": "Add First Item",
+    "gatekeeper": {
+      "title": "Mismatched Properties Warning",
+      "body": "The items you are grouping have mismatched properties: {{mismatches}}. Are you sure you want to group them?",
+      "confirm": "Group anyway",
+      "cancel": "Cancel"
+    }
   },
   "addItem": {
     "title": "Upload & auto-fill",
@@ -440,6 +446,18 @@
       "culturalTags": "Cultural tags",
       "culturalTagPlaceholder": "add cultural tag",
       "notes": "Notes"
+    },
+    "group": {
+      "front": "Front",
+      "back": "Back",
+      "profile": "Profile",
+      "savingInBackground": "Saving changes in background..."
+    },
+    "gatekeeper": {
+      "title": "Mismatched Properties Warning",
+      "body": "This host item and its group members have mismatched properties: {{mismatches}}. Are you sure you want to save these changes?",
+      "confirm": "Save anyway",
+      "cancel": "Cancel"
     }
   },
   "stylist": {
@@ -1698,7 +1716,11 @@
     "uploadTab": "Upload"
   },
   "floater": {
-    "done": "All done"
+    "done": "All done",
+    "analysingGroup": "Analysing group…",
+    "polishing": "Polishing {{n}}/{{m}} photos",
+    "polishingMore_one": "Polishing {{count}} photo",
+    "polishingMore_other": "Polishing {{count}} photos"
   },
   "sandbox": {
     "canvas": "Outfit Canvas",

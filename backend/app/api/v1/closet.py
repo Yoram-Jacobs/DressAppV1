@@ -4291,6 +4291,7 @@ async def reanalyze_group_helper(group_id: str, user_id: str) -> None:
 
     # Collect images
     images_bytes: list[bytes] = []
+    aligned_items: list[dict[str, Any]] = []
     for g_item in group_items:
         img_url = g_item.get("segmented_image_url") or g_item.get("reconstructed_image_url") or g_item.get("original_image_url")
         if img_url and img_url.startswith("data:"):
@@ -4299,10 +4300,16 @@ async def reanalyze_group_helper(group_id: str, user_id: str) -> None:
                 raw = base64.b64decode(b64_part, validate=False)
                 if raw:
                     images_bytes.append(raw)
+                    aligned_items.append(g_item)
             except Exception:
                 pass
 
     if not images_bytes:
+        item_ids = [it["id"] for it in group_items]
+        await db.closet_items.update_many(
+            {"id": {"$in": item_ids}, "user_id": user_id},
+            {"$set": {"group_analysis_status": "failed", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
         return
 
     user_lang = "en"
@@ -4311,14 +4318,21 @@ async def reanalyze_group_helper(group_id: str, user_id: str) -> None:
         user_lang = user_doc.get("preferred_language") or "en"
 
     try:
-        parsed = await garment_vision_service.analyze(images_bytes, language=user_lang)
+        result = await garment_vision_service.analyze_group(
+            images_bytes, aligned_items, language=user_lang
+        )
     except Exception as exc:
         logger.warning("Group re-analysis failed: %r", exc)
+        item_ids = [it["id"] for it in group_items]
+        await db.closet_items.update_many(
+            {"id": {"$in": item_ids}, "user_id": user_id},
+            {"$set": {"group_analysis_status": "failed", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
         return
 
-    # Prepare update doc
-    analysis = _safe_analysis(parsed)
-
+    items_updates = result.get("items") or []
+    updated_ids = set()
+    
     OVERWRITE_KEYS = (
         "title",
         "name",
@@ -4340,31 +4354,89 @@ async def reanalyze_group_helper(group_id: str, user_id: str) -> None:
         "repair_advice",
         "tags",
     )
-    update_doc: dict[str, Any] = {
-        "updated_at": datetime.now(timezone.utc).isoformat(),
-    }
-    for key in OVERWRITE_KEYS:
-        if key in analysis:
-            update_doc[key] = analysis[key]
 
-    # Set legacy single-string fields
-    colors_list = analysis.get("colors") or []
-    if colors_list and isinstance(colors_list, list):
-        first_colour = colors_list[0]
-        if isinstance(first_colour, dict) and first_colour.get("name"):
-            update_doc["color"] = first_colour["name"]
-    materials_list = analysis.get("fabric_materials") or []
-    if materials_list and isinstance(materials_list, list):
-        first_material = materials_list[0]
-        if isinstance(first_material, dict) and first_material.get("name"):
-            update_doc["material"] = first_material["name"]
+    for item_up in items_updates:
+        item_id = item_up.get("id")
+        updates = item_up.get("updates") or {}
+        if not item_id:
+            continue
+            
+        orig_item = next((it for it in group_items if it["id"] == item_id), None)
+        if not orig_item:
+            continue
+            
+        update_doc: dict[str, Any] = {
+            "group_analysis_status": "ready",
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        
+        for key in OVERWRITE_KEYS:
+            if key in updates:
+                update_doc[key] = updates[key]
+                
+        view_tag = item_up.get("view_tag")
+        if not view_tag:
+            if orig_item.get("group_role") == "host":
+                view_tag = "Front"
+            else:
+                view_tag = "Back"
+                
+        tags_list = update_doc.get("tags") or orig_item.get("tags") or []
+        if not isinstance(tags_list, list):
+            tags_list = [tags_list]
+        tags_list = list(tags_list)
+        
+        for t in ["Front", "Back", "Profile"]:
+            if t in tags_list:
+                tags_list.remove(t)
+        if view_tag not in tags_list:
+            tags_list.append(view_tag)
+            
+        update_doc["tags"] = tags_list
 
-    # Update all group members in DB
-    item_ids = [it["id"] for it in group_items]
-    await db.closet_items.update_many(
-        {"id": {"$in": item_ids}, "user_id": user_id},
-        {"$set": update_doc}
-    )
+        colors_list = update_doc.get("colors") or orig_item.get("colors") or []
+        if colors_list and isinstance(colors_list, list):
+            first_colour = colors_list[0]
+            if isinstance(first_colour, dict) and first_colour.get("name"):
+                update_doc["color"] = first_colour["name"]
+        materials_list = update_doc.get("fabric_materials") or orig_item.get("fabric_materials") or []
+        if materials_list and isinstance(materials_list, list):
+            first_material = materials_list[0]
+            if isinstance(first_material, dict) and first_material.get("name"):
+                update_doc["material"] = first_material["name"]
+
+        await db.closet_items.update_one(
+            {"id": item_id, "user_id": user_id},
+            {"$set": update_doc}
+        )
+        updated_ids.add(item_id)
+
+    for item in group_items:
+        if item["id"] not in updated_ids:
+            role = item.get("group_role")
+            view_tag = "Front" if role == "host" else "Back"
+            
+            tags_list = item.get("tags") or []
+            if not isinstance(tags_list, list):
+                tags_list = [tags_list]
+            tags_list = list(tags_list)
+            
+            for t in ["Front", "Back", "Profile"]:
+                if t in tags_list:
+                    tags_list.remove(t)
+            if view_tag not in tags_list:
+                tags_list.append(view_tag)
+                
+            await db.closet_items.update_one(
+                {"id": item["id"], "user_id": user_id},
+                {
+                    "$set": {
+                        "group_analysis_status": "ready",
+                        "tags": tags_list,
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    }
+                }
+            )
 
 
 @router.post("/group")
@@ -4390,19 +4462,19 @@ async def group_items(
         # Move all members of the member's group to the new group
         await db.closet_items.update_many(
             {"group_id": member_group_id, "user_id": user["id"]},
-            {"$set": {"group_id": group_id, "group_role": "member", "updated_at": datetime.now(timezone.utc).isoformat()}}
+            {"$set": {"group_id": group_id, "group_role": "member", "group_analysis_status": "pending", "updated_at": datetime.now(timezone.utc).isoformat()}}
         )
 
     # Set host role on B
     await db.closet_items.update_one(
         {"id": host_id},
-        {"$set": {"group_id": group_id, "group_role": "host", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"group_id": group_id, "group_role": "host", "group_analysis_status": "pending", "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
 
     # Set member role on A (and update group_id)
     await db.closet_items.update_one(
         {"id": member_id},
-        {"$set": {"group_id": group_id, "group_role": "member", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"group_id": group_id, "group_role": "member", "group_analysis_status": "pending", "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
 
     # Run group reanalysis in the background
@@ -4440,7 +4512,12 @@ async def upload_group_member(
     if not host.get("group_id") or host.get("group_role") != "host":
         await db.closet_items.update_one(
             {"id": host_id},
-            {"$set": {"group_id": group_id, "group_role": "host", "updated_at": datetime.now(timezone.utc).isoformat()}}
+            {"$set": {"group_id": group_id, "group_role": "host", "group_analysis_status": "pending", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    else:
+        await db.closet_items.update_one(
+            {"id": host_id},
+            {"$set": {"group_analysis_status": "pending", "updated_at": datetime.now(timezone.utc).isoformat()}}
         )
 
     try:
@@ -4466,6 +4543,7 @@ async def upload_group_member(
         color=host.get("color"),
         group_id=group_id,
         group_role="member",
+        group_analysis_status="pending",
         original_image_url=original_data_url,
     ).model_dump()
 
@@ -4617,7 +4695,7 @@ async def ungroup_item(
         # Only 1 item left -> dissolve group entirely
         await db.closet_items.update_many(
             {"group_id": group_id, "user_id": user["id"]},
-            {"$set": {"group_id": None, "group_role": None, "updated_at": datetime.now(timezone.utc).isoformat()}}
+            {"$set": {"group_id": None, "group_role": None, "group_analysis_status": None, "updated_at": datetime.now(timezone.utc).isoformat()}}
         )
     else:
         # If multiple remain, and the ungrouped item was the host, pick a new host
@@ -4625,15 +4703,20 @@ async def ungroup_item(
             new_host = remaining[0]
             await db.closet_items.update_many(
                 {"group_id": group_id, "user_id": user["id"]},
-                {"$set": {"group_id": new_host["id"]}}
+                {"$set": {"group_id": new_host["id"], "group_analysis_status": "pending"}}
             )
             await db.closet_items.update_one(
                 {"id": new_host["id"]},
-                {"$set": {"group_role": "host", "updated_at": datetime.now(timezone.utc).isoformat()}}
+                {"$set": {"group_role": "host", "group_analysis_status": "pending", "updated_at": datetime.now(timezone.utc).isoformat()}}
             )
             background_tasks.add_task(reanalyze_group_helper, new_host["id"], user["id"])
         else:
             # Host is still there. Run background re-analysis on remaining group
+            remaining_ids = [r["id"] for r in remaining]
+            await db.closet_items.update_many(
+                {"id": {"$in": remaining_ids}},
+                {"$set": {"group_analysis_status": "pending", "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
             background_tasks.add_task(reanalyze_group_helper, group_id, user["id"])
 
     return {"status": "success"}
@@ -4684,6 +4767,7 @@ async def group_edit(
             color=host.get("color"),
             group_id=group_id,
             group_role="member",
+            group_analysis_status="pending",
             original_image_url=original_data_url,
         ).model_dump()
 
@@ -4797,9 +4881,15 @@ async def group_edit(
         # Only 1 item left -> dissolve group entirely
         await db.closet_items.update_many(
             {"group_id": group_id, "user_id": user["id"]},
-            {"$set": {"group_id": None, "group_role": None, "updated_at": datetime.now(timezone.utc).isoformat()}}
+            {"$set": {"group_id": None, "group_role": None, "group_analysis_status": None, "updated_at": datetime.now(timezone.utc).isoformat()}}
         )
     else:
+        # Mark all remaining items in the group as pending!
+        remaining_ids = [r["id"] for r in remaining]
+        await db.closet_items.update_many(
+            {"id": {"$in": remaining_ids}},
+            {"$set": {"group_analysis_status": "pending", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
         # Re-run group analysis in the background
         background_tasks.add_task(reanalyze_group_helper, group_id, user["id"])
 

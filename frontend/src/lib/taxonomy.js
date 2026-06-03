@@ -497,3 +497,45 @@ export const labelForMaterial = (raw, t) => {
 /** Generic helper to map an array of codes into translated Select-ready objects. */
 export const makeLabeledOptions = (codes, labelFn, t) =>
   (codes || []).map((code) => ({ value: code, label: labelFn(code, t) }));
+
+export const getTaxonomyMismatches = (itemA, itemB) => {
+  if (!itemA || !itemB) return [];
+  const mismatches = [];
+
+  // Category
+  const catA = String(itemA.category || '').trim().toLowerCase();
+  const catB = String(itemB.category || '').trim().toLowerCase();
+  if (catA !== catB) mismatches.push('category');
+
+  // Sub-category
+  const subCatA = String(itemA.sub_category || '').trim().toLowerCase();
+  const subCatB = String(itemB.sub_category || '').trim().toLowerCase();
+  if (subCatA !== subCatB) mismatches.push('sub_category');
+
+  // Brand
+  const brandA = String(itemA.brand || '').trim().toLowerCase();
+  const brandB = String(itemB.brand || '').trim().toLowerCase();
+  if (brandA !== brandB) mismatches.push('brand');
+
+  // Gender
+  const genderA = String(itemA.gender || '').trim().toLowerCase();
+  const genderB = String(itemB.gender || '').trim().toLowerCase();
+  if (genderA !== genderB) mismatches.push('gender');
+
+  // Dress Code
+  const dcA = String(itemA.dress_code || '').trim().toLowerCase();
+  const dcB = String(itemB.dress_code || '').trim().toLowerCase();
+  if (dcA !== dcB) mismatches.push('dress_code');
+
+  // Tradition
+  const tradA = String(itemA.tradition || '').trim().toLowerCase();
+  const tradB = String(itemB.tradition || '').trim().toLowerCase();
+  if (tradA !== tradB) mismatches.push('tradition');
+
+  // Season (list of strings)
+  const seasonA = [...(itemA.season || [])].map((s) => String(s || '').trim().toLowerCase()).sort();
+  const seasonB = [...(itemB.season || [])].map((s) => String(s || '').trim().toLowerCase()).sort();
+  if (seasonA.join(',') !== seasonB.join(',')) mismatches.push('season');
+
+  return mismatches;
+};

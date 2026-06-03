@@ -27,7 +27,7 @@ import { HashRepairChip } from '@/components/closet/HashRepairChip';
 import { ThumbRepairChip } from '@/components/closet/ThumbRepairChip';
 import { api } from '@/lib/api';
 import { bestImageUrl, isCleanImagePending } from '@/lib/itemImage';
-import { labelForCategory, labelForSource, labelForIntent, labelForColor } from '@/lib/taxonomy';
+import { labelForCategory, labelForSource, labelForIntent, labelForColor, getTaxonomyMismatches } from '@/lib/taxonomy';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { closetStore } from '@/lib/closetStore';
 import { workStore } from '@/lib/workStore';
@@ -140,6 +140,22 @@ export default function Closet() {
   const [groupOpen, setGroupOpen] = useState(false);
   const [groupHostId, setGroupHostId] = useState('');
   const [grouping, setGrouping] = useState(false);
+  const [gatekeeperOpen, setGatekeeperOpen] = useState(false);
+  const [gatekeeperMismatches, setGatekeeperMismatches] = useState([]);
+  const [gatekeeperPendingAction, setGatekeeperPendingAction] = useState(null);
+
+  const getTaxonomyFieldLabel = (field) => {
+    switch (field) {
+      case 'category': return t('itemDetail.edit.category', { defaultValue: 'Category' });
+      case 'sub_category': return t('itemDetail.edit.subCategory', { defaultValue: 'Sub-category' });
+      case 'brand': return t('itemDetail.edit.brand', { defaultValue: 'Brand' });
+      case 'gender': return t('itemDetail.edit.gender', { defaultValue: 'Gender' });
+      case 'dress_code': return t('itemDetail.edit.dressCode', { defaultValue: 'Dress Code' });
+      case 'season': return t('itemDetail.edit.season', { defaultValue: 'Season' });
+      case 'tradition': return t('itemDetail.edit.tradition', { defaultValue: 'Tradition' });
+      default: return field;
+    }
+  };
 
   // Drag and drop grouping (Multi-view Garment Support)
   const [draggedId, setDraggedId] = useState(null);
@@ -262,39 +278,51 @@ export default function Closet() {
 
     if (!sourceId || sourceId === targetId) return;
 
-    // Optimistic update
     const sourceItem = (store.items || []).find(it => it.id === sourceId);
     const targetItem = (store.items || []).find(it => it.id === targetId);
 
     const backupSource = sourceItem ? { ...sourceItem } : null;
     const backupTarget = targetItem ? { ...targetItem } : null;
 
-    if (sourceItem && targetItem) {
-      const groupId = targetItem.group_id || targetId;
-      store.upsert({ ...targetItem, group_id: groupId, group_role: 'host' });
-      store.upsert({ ...sourceItem, group_id: groupId, group_role: 'member' });
-    }
+    const runGrouping = () => {
+      if (sourceItem && targetItem) {
+        const groupId = targetItem.group_id || targetId;
+        store.upsert({ ...targetItem, group_id: groupId, group_role: 'host' });
+        store.upsert({ ...sourceItem, group_id: groupId, group_role: 'member' });
+      }
 
-    // Update the database in the background
-    api.groupItems({ host_id: targetId, member_id: sourceId })
-      .then(async (res) => {
-        if (res.status === 'success') {
-          if (res.host) store.upsert(res.host);
-          if (res.member) store.upsert(res.member);
-          await store.incrementalSync();
-          toast.success(t('common.success'));
-        } else {
+      api.groupItems({ host_id: targetId, member_id: sourceId })
+        .then(async (res) => {
+          if (res.status === 'success') {
+            if (res.host) store.upsert(res.host);
+            if (res.member) store.upsert(res.member);
+            await store.incrementalSync();
+            workStore.registerPolishItems([targetId, sourceId]);
+            toast.success(t('common.success'));
+          } else {
+            if (backupSource) store.upsert(backupSource);
+            if (backupTarget) store.upsert(backupTarget);
+            toast.error(t('common.error'));
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to group items:', err);
           if (backupSource) store.upsert(backupSource);
           if (backupTarget) store.upsert(backupTarget);
-          toast.error(t('common.error'));
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to group items:', err);
-        if (backupSource) store.upsert(backupSource);
-        if (backupTarget) store.upsert(backupTarget);
-        toast.error(err?.response?.data?.detail || t('common.error'));
+          toast.error(err?.response?.data?.detail || t('common.error'));
+        });
+    };
+
+    const mismatches = getTaxonomyMismatches(sourceItem, targetItem);
+    if (mismatches.length > 0) {
+      setGatekeeperMismatches(mismatches);
+      setGatekeeperPendingAction({
+        onApprove: runGrouping
       });
+      setGatekeeperOpen(true);
+    } else {
+      runGrouping();
+    }
   };
 
   const handleTouchStart = (e, id) => {
@@ -370,38 +398,51 @@ export default function Closet() {
     setIsTouchDragging(false);
 
     if (targetId && sourceId && sourceId !== targetId) {
-      // Optimistic update
       const sourceItem = (store.items || []).find(it => it.id === sourceId);
       const targetItem = (store.items || []).find(it => it.id === targetId);
 
       const backupSource = sourceItem ? { ...sourceItem } : null;
       const backupTarget = targetItem ? { ...targetItem } : null;
 
-      if (sourceItem && targetItem) {
-        const groupId = targetItem.group_id || targetId;
-        store.upsert({ ...targetItem, group_id: groupId, group_role: 'host' });
-        store.upsert({ ...sourceItem, group_id: groupId, group_role: 'member' });
-      }
+      const runGrouping = () => {
+        if (sourceItem && targetItem) {
+          const groupId = targetItem.group_id || targetId;
+          store.upsert({ ...targetItem, group_id: groupId, group_role: 'host' });
+          store.upsert({ ...sourceItem, group_id: groupId, group_role: 'member' });
+        }
 
-      api.groupItems({ host_id: targetId, member_id: sourceId })
-        .then(async (res) => {
-          if (res.status === 'success') {
-            if (res.host) store.upsert(res.host);
-            if (res.member) store.upsert(res.member);
-            await store.incrementalSync();
-            toast.success(t('common.success'));
-          } else {
+        api.groupItems({ host_id: targetId, member_id: sourceId })
+          .then(async (res) => {
+            if (res.status === 'success') {
+              if (res.host) store.upsert(res.host);
+              if (res.member) store.upsert(res.member);
+              await store.incrementalSync();
+              workStore.registerPolishItems([targetId, sourceId]);
+              toast.success(t('common.success'));
+            } else {
+              if (backupSource) store.upsert(backupSource);
+              if (backupTarget) store.upsert(backupTarget);
+              toast.error(t('common.error'));
+            }
+          })
+          .catch((err) => {
+            console.error('Failed to group items:', err);
             if (backupSource) store.upsert(backupSource);
             if (backupTarget) store.upsert(backupTarget);
-            toast.error(t('common.error'));
-          }
-        })
-        .catch((err) => {
-          console.error('Failed to group items:', err);
-          if (backupSource) store.upsert(backupSource);
-          if (backupTarget) store.upsert(backupTarget);
-          toast.error(err?.response?.data?.detail || t('common.error'));
+            toast.error(err?.response?.data?.detail || t('common.error'));
+          });
+      };
+
+      const mismatches = getTaxonomyMismatches(sourceItem, targetItem);
+      if (mismatches.length > 0) {
+        setGatekeeperMismatches(mismatches);
+        setGatekeeperPendingAction({
+          onApprove: runGrouping
         });
+        setGatekeeperOpen(true);
+      } else {
+        runGrouping();
+      }
     }
   };
 
@@ -1151,60 +1192,81 @@ export default function Closet() {
               onClick={async (e) => {
                 e.preventDefault();
                 if (!groupHostId) return;
-                setGrouping(true);
                 const hostId = groupHostId;
                 const memberIds = Array.from(selected).filter(id => id !== hostId);
                 
-                // Optimistic update
                 const hostItem = (store.items || []).find(it => it.id === hostId);
                 const memberItems = memberIds.map(mid => (store.items || []).find(it => it.id === mid)).filter(Boolean);
 
-                const backups = [
-                  { id: hostId, data: hostItem ? { ...hostItem } : null },
-                  ...memberIds.map(mid => {
-                    const it = (store.items || []).find(x => x.id === mid);
-                    return { id: mid, data: it ? { ...it } : null };
-                  })
-                ];
-
-                const groupId = hostItem?.group_id || hostId;
-                if (hostItem) {
-                  store.upsert({ ...hostItem, group_id: groupId, group_role: 'host' });
+                const mismatchesSet = new Set();
+                for (const m of memberItems) {
+                  const diffs = getTaxonomyMismatches(hostItem, m);
+                  for (const d of diffs) {
+                    mismatchesSet.add(d);
+                  }
                 }
-                memberItems.forEach(it => {
-                  store.upsert({ ...it, group_id: groupId, group_role: 'member' });
-                });
+                const mismatches = Array.from(mismatchesSet);
 
-                setSelected(new Set());
-                setGroupOpen(false);
-                setSelectMode(false);
+                const runBulkGrouping = async () => {
+                  setGrouping(true);
+                  const backups = [
+                    { id: hostId, data: hostItem ? { ...hostItem } : null },
+                    ...memberIds.map(mid => {
+                      const it = (store.items || []).find(x => x.id === mid);
+                      return { id: mid, data: it ? { ...it } : null };
+                    })
+                  ];
 
-                try {
-                  const responses = await Promise.all(
-                    memberIds.map(mid => api.groupItems({ host_id: hostId, member_id: mid }))
-                  );
-                  const allSuccess = responses.every(res => res.status === 'success');
-                  if (allSuccess) {
-                    responses.forEach(res => {
-                      if (res.host) store.upsert(res.host);
-                      if (res.member) store.upsert(res.member);
-                    });
-                    await store.incrementalSync();
-                    toast.success(t('common.success'));
-                  } else {
+                  const groupId = hostItem?.group_id || hostId;
+                  if (hostItem) {
+                    store.upsert({ ...hostItem, group_id: groupId, group_role: 'host' });
+                  }
+                  memberItems.forEach(it => {
+                    store.upsert({ ...it, group_id: groupId, group_role: 'member' });
+                  });
+
+                  setSelected(new Set());
+                  setSelectMode(false);
+
+                  try {
+                    const responses = await Promise.all(
+                      memberIds.map(mid => api.groupItems({ host_id: hostId, member_id: mid }))
+                    );
+                    const allSuccess = responses.every(res => res.status === 'success');
+                    if (allSuccess) {
+                      responses.forEach(res => {
+                        if (res.host) store.upsert(res.host);
+                        if (res.member) store.upsert(res.member);
+                      });
+                      await store.incrementalSync();
+                      workStore.registerPolishItems([hostId, ...memberIds]);
+                      toast.success(t('common.success'));
+                    } else {
+                      backups.forEach(b => {
+                        if (b.data) store.upsert(b.data);
+                      });
+                      toast.error(t('common.error'));
+                    }
+                  } catch (err) {
+                    console.error('Failed to group items:', err);
                     backups.forEach(b => {
                       if (b.data) store.upsert(b.data);
                     });
-                    toast.error(t('common.error'));
+                    toast.error(err?.response?.data?.detail || t('common.error'));
+                  } finally {
+                    setGrouping(false);
                   }
-                } catch (err) {
-                  console.error('Failed to group items:', err);
-                  backups.forEach(b => {
-                    if (b.data) store.upsert(b.data);
+                };
+
+                if (mismatches.length > 0) {
+                  setGroupOpen(false);
+                  setGatekeeperMismatches(mismatches);
+                  setGatekeeperPendingAction({
+                    onApprove: runBulkGrouping
                   });
-                  toast.error(err?.response?.data?.detail || t('common.error'));
-                } finally {
-                  setGrouping(false);
+                  setGatekeeperOpen(true);
+                } else {
+                  await runBulkGrouping();
                 }
               }}
               disabled={grouping || !groupHostId}
@@ -1217,6 +1279,44 @@ export default function Closet() {
                 <ListChecks className="h-4 w-4 me-1.5" />
               )}
               {t('closet.confirmGroup', { defaultValue: 'Group' })}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Taxonomy gatekeeper warning dialog */}
+      <AlertDialog open={gatekeeperOpen} onOpenChange={setGatekeeperOpen}>
+        <AlertDialogContent data-testid="closet-gatekeeper-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t('closet.gatekeeper.title', { defaultValue: 'Mismatched Properties Warning' })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('closet.gatekeeper.body', { 
+                defaultValue: 'The items you are grouping have mismatched properties: {{mismatches}}. Are you sure you want to group them?',
+                mismatches: gatekeeperMismatches.map(field => getTaxonomyFieldLabel(field)).join(', ')
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="closet-gatekeeper-cancel" onClick={() => {
+              setGatekeeperOpen(false);
+              setGatekeeperPendingAction(null);
+            }}>
+              {t('closet.gatekeeper.cancel', { defaultValue: 'Cancel' })}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setGatekeeperOpen(false);
+                if (gatekeeperPendingAction?.onApprove) {
+                  gatekeeperPendingAction.onApprove();
+                }
+                setGatekeeperPendingAction(null);
+              }}
+              data-testid="closet-gatekeeper-confirm"
+              className="bg-primary text-primary-foreground hover:opacity-90"
+            >
+              {t('closet.gatekeeper.confirm', { defaultValue: 'Group anyway' })}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

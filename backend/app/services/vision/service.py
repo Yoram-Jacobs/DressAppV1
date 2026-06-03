@@ -1,6 +1,6 @@
 from __future__ import annotations
 from __future__ import annotations
-from .llm import EYES_JSON_SCHEMA, _call_gemma_space, _build_system_prompt, _language_directive, _user_prompt, _extract_json, DETECT_SYSTEM_PROMPT, _scan_complete_json_objects, _build_batch_prompts
+from .llm import EYES_JSON_SCHEMA, _call_gemma_space, _build_system_prompt, _language_directive, _user_prompt, _extract_json, DETECT_SYSTEM_PROMPT, _scan_complete_json_objects, _build_batch_prompts, GROUP_ANALYZE_SYSTEM_PROMPT, _LANG_NAMES
 from .image import _shrink_for_vision, _crop_to_bbox, _PHANTOM_DROP_PCT, _solid_alpha_coverage, _fit_crop_to_card, _apply_fast_matte
 from .geometry import _nms_detections, _is_unidentifiable, _looks_already_cropped
 from .validation import _coerce_single_garment, _coerce_enums, _enforce_segformer_category
@@ -473,6 +473,106 @@ class GarmentVisionService:
             parsed.get("sub_category"),
             parsed.get("item_type"),
         )
+        return parsed
+
+    async def analyze_group(
+        self,
+        images_bytes: list[bytes],
+        group_items: list[dict[str, Any]],
+        *,
+        language: str | None = None,
+    ) -> dict[str, Any]:
+        """Compare and enhance metadata across items in a group.
+        
+        This method uses Gemini 2.5 Flash to analyze multiple images and their current
+        metadata. It identifies the Front, Back, and Profile views, refines taxonomy
+        properties, and adds appropriate view tags ('Front' / 'Back' / 'Profile') to
+        each item's tags.
+        """
+        if not self.api_key:
+            raise RuntimeError(
+                "Gemini path requires GEMINI_API_KEY to be set."
+            )
+            
+        shrunk_list = [_shrink_for_vision(img) for img in images_bytes]
+        
+        from PIL import Image
+        import io
+        
+        user_text = (
+            f"We have a group of {len(group_items)} items representing different views of the SAME single garment.\n\n"
+            f"Please analyze all views and their current metadata. One item is the primary/frontal view (the host/master), "
+            f"and the others are secondary views (members, providing details like back or profile views).\n\n"
+        )
+        
+        for i, item in enumerate(group_items):
+            aspect_str = "unknown aspect ratio"
+            if i < len(images_bytes):
+                try:
+                    img = Image.open(io.BytesIO(images_bytes[i]))
+                    w, h = img.size
+                    if h > 0:
+                        aspect_str = f"aspect ratio {w/h:.2f} ({w}x{h})"
+                except Exception:
+                    pass
+            
+            user_text += (
+                f"Image {i+1} (ID: {item['id']}):\n"
+                f"  Role: {item.get('group_role')}\n"
+                f"  Aspect ratio: {aspect_str}\n"
+                f"  Current Title: {item.get('title')}\n"
+                f"  Current Category: {item.get('category')}\n"
+                f"  Current Sub-Category: {item.get('sub_category')}\n"
+                f"  Current Item Type: {item.get('item_type')}\n"
+                f"  Current Colors: {item.get('color')} / {item.get('colors')}\n"
+                f"  Current Tags: {item.get('tags')}\n\n"
+            )
+            
+        code = (language or "en").lower()
+        lang_name = _LANG_NAMES.get(code, code)
+        language_prefix = ""
+        if code != "en":
+            language_prefix = (
+                f"**OUTPUT LANGUAGE = {lang_name} ({code}).** Every free-text "
+                f"field (`name`, `title`, `caption`, `tags`, `repair_advice`, "
+                f"`sub_category`, `item_type`, `colors[*].name`, "
+                f"`fabric_materials[*].name`) MUST be written in fluent, "
+                f"idiomatic {lang_name}. JSON keys and enum tokens stay in English.\n\n"
+            )
+
+        system_prompt = (
+            GROUP_ANALYZE_SYSTEM_PROMPT
+            if code == "en"
+            else language_prefix + GROUP_ANALYZE_SYSTEM_PROMPT
+        )
+        
+        gem = self._get_gemini()
+        t0 = time.perf_counter()
+        ok = False
+        last_err: str | None = None
+        
+        try:
+            raw = await gem.vision(
+                system=system_prompt,
+                user_parts=[user_text] + shrunk_list,
+                model="gemini-2.5-flash",
+                temperature=0.1,
+                response_mime_type="application/json",
+            )
+            ok = True
+        except Exception as exc:
+            last_err = repr(exc)
+            raise
+        finally:
+            provider_activity.record(
+                "garment-vision-group",
+                ok=ok,
+                latency_ms=int((time.perf_counter() - t0) * 1000),
+                error=last_err,
+                extra={"provider": "gemini", "model": "gemini-2.5-flash"},
+            )
+            
+        parsed = _extract_json(raw or "")
         return parsed
 
     # -------------------- multi-item outfit pipeline --------------------

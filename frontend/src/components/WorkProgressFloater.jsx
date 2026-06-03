@@ -13,6 +13,7 @@ import { Sparkles, Shirt } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { workStore } from '@/lib/workStore';
+import { closetStore } from '@/lib/closetStore';
 
 export function WorkProgressFloater() {
   const { t } = useTranslation();
@@ -66,8 +67,13 @@ export function WorkProgressFloater() {
           count: analyzeCount,
         });
 
-  const polishLabel =
-    polishTotal > 0
+  const liveItems = closetStore.getSnapshot().items || [];
+  const pendingPolishItems = Array.from(state.polishPendingIds).map(id => liveItems.find(it => it.id === id)).filter(Boolean);
+  const isGroupAnalysing = pendingPolishItems.some(it => it.group_analysis_status === 'pending');
+
+  const polishLabel = isGroupAnalysing
+    ? t('floater.analysingGroup', { defaultValue: 'Analysing group…' })
+    : (polishTotal > 0
       ? t('floater.polishing', {
           defaultValue: 'Polishing {{n}}/{{m}} photos',
           n: polishDone,
@@ -76,7 +82,7 @@ export function WorkProgressFloater() {
       : t('floater.polishingMore', {
           defaultValue: 'Polishing {{count}} photo',
           count: polishPending,
-        });
+        }));
 
   const polishPct =
     polishTotal > 0 ? Math.min(100, Math.round((polishDone / polishTotal) * 100)) : 0;
