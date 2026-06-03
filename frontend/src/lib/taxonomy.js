@@ -533,8 +533,15 @@ export const getTaxonomyMismatches = (itemA, itemB) => {
   if (tradA !== tradB) mismatches.push('tradition');
 
   // Season (list of strings)
-  const seasonA = [...(itemA.season || [])].map((s) => String(s || '').trim().toLowerCase()).sort();
-  const seasonB = [...(itemB.season || [])].map((s) => String(s || '').trim().toLowerCase()).sort();
+  const normSeason = (list) => {
+    const sList = [...(list || [])].map((s) => String(s || '').trim().toLowerCase());
+    const hasAll = sList.includes('all') || (
+      sList.includes('spring') && sList.includes('summer') && sList.includes('fall') && sList.includes('winter')
+    );
+    return hasAll ? ['all'] : sList.filter((s) => s && s !== 'all').sort();
+  };
+  const seasonA = normSeason(itemA.season);
+  const seasonB = normSeason(itemB.season);
   if (seasonA.join(',') !== seasonB.join(',')) mismatches.push('season');
 
   return mismatches;

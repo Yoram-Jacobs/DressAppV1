@@ -180,7 +180,13 @@
     "groupConfirmTitle": "Ausgewählte Artikel gruppieren",
     "groupSelected": "Gruppieren",
     "primaryItemLabel": "Hauptartikel",
-    "selectPrimaryPlaceholder": "Hauptartikel auswählen..."
+    "selectPrimaryPlaceholder": "Hauptartikel auswählen...",
+    "gatekeeper": {
+      "title": "Warnung: Unstimmige Eigenschaften",
+      "body": "Die zu gruppierenden Artikel weisen abweichende Eigenschaften auf: {{mismatches}}. Möchten Sie sie trotzdem gruppieren?",
+      "confirm": "Trotzdem gruppieren",
+      "cancel": "Abbrechen"
+    }
   },
   "addItem": {
     "title": "Teile hinzufügen",
@@ -440,6 +446,18 @@
       "culturalTags": "Kulturelle Tags",
       "culturalTagPlaceholder": "Kulturelles Tag hinzufügen",
       "notes": "Notizen"
+    },
+    "group": {
+      "front": "Vorderseite",
+      "back": "Rückseite",
+      "profile": "Profil",
+      "savingInBackground": "Änderungen werden im Hintergrund gespeichert..."
+    },
+    "gatekeeper": {
+      "title": "Warnung: Unstimmige Eigenschaften",
+      "body": "Dieser Hauptartikel und seine Gruppenmitglieder weisen abweichende Eigenschaften auf: {{mismatches}}. Möchten Sie diese Änderungen wirklich speichern?",
+      "confirm": "Trotzdem speichern",
+      "cancel": "Abbrechen"
     }
   },
   "stylist": {
@@ -1694,7 +1712,11 @@
     "uploadTab": "Hochladen"
   },
   "floater": {
-    "done": "Alles erledigt"
+    "done": "Alles erledigt",
+    "analysingGroup": "Gruppe wird analysiert...",
+    "polishing": "Optimieren von {{n}}/{{m}} Fotos",
+    "polishingMore_one": "Optimieren von {{count}} Foto",
+    "polishingMore_other": "Optimieren von {{count}} Fotos"
   },
   "sandbox": {
     "canvas": "Outfit-Leinwand",

@@ -180,7 +180,13 @@
     "groupConfirmTitle": "選択したアイテムのグループ化",
     "groupSelected": "グループ化",
     "primaryItemLabel": "メインアイテム",
-    "selectPrimaryPlaceholder": "メインアイテムを選択..."
+    "selectPrimaryPlaceholder": "メインアイテムを選択...",
+    "gatekeeper": {
+      "title": "属性不一致の警告",
+      "body": "グループ化しようとしているアイテムには、一致しない属性があります：{{mismatches}}。本当にグループ化しますか？",
+      "confirm": "グループ化する",
+      "cancel": "キャンセル"
+    }
   },
   "addItem": {
     "title": "アイテムを追加",
@@ -440,6 +446,18 @@
       "culturalTags": "文化タグ",
       "culturalTagPlaceholder": "文化タグを追加",
       "notes": "メモ"
+    },
+    "group": {
+      "front": "前面",
+      "back": "背面",
+      "profile": "側面",
+      "savingInBackground": "バックグラウンドで変更を保存しています..."
+    },
+    "gatekeeper": {
+      "title": "属性不一致の警告",
+      "body": "このホストアイテムとグループメンバーには、一致しない属性があります：{{mismatches}}。本当にこれらの変更を保存しますか？",
+      "confirm": "保存する",
+      "cancel": "キャンセル"
     }
   },
   "stylist": {
@@ -1694,7 +1712,11 @@
     "uploadTab": "アップロード"
   },
   "floater": {
-    "done": "完了"
+    "done": "完了",
+    "analysingGroup": "グループを分析中...",
+    "polishing": "{{n}}/{{m}}枚の写真を最適化中",
+    "polishingMore_one": "{{count}}枚の写真を最適化中",
+    "polishingMore_other": "{{count}}枚の写真を最適化中"
   },
   "sandbox": {
     "canvas": "コーディネートキャンバス",

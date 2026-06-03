@@ -180,7 +180,13 @@
     "groupConfirmTitle": "Agrupar artículos seleccionados",
     "groupSelected": "Agrupar",
     "primaryItemLabel": "Artículo principal",
-    "selectPrimaryPlaceholder": "Seleccionar artículo principal..."
+    "selectPrimaryPlaceholder": "Seleccionar artículo principal...",
+    "gatekeeper": {
+      "title": "Advertencia de propiedades no coincidentes",
+      "body": "Los elementos que estás agrupando tienen propiedades no coincidentes: {{mismatches}}. ¿Estás seguro de que quieres agruparlos?",
+      "confirm": "Agrupar de todos modos",
+      "cancel": "Cancelar"
+    }
   },
   "addItem": {
     "title": "Añadir prendas",
@@ -440,6 +446,18 @@
       "culturalTags": "Etiquetas culturales",
       "culturalTagPlaceholder": "añadir etiqueta cultural",
       "notes": "Notas"
+    },
+    "group": {
+      "front": "Frente",
+      "back": "Espalda",
+      "profile": "Perfil",
+      "savingInBackground": "Guardando cambios en segundo plano..."
+    },
+    "gatekeeper": {
+      "title": "Advertencia de propiedades no coincidentes",
+      "body": "Este elemento principal y los miembros de su grupo tienen propiedades no coincidentes: {{mismatches}}. ¿Estás seguro de que quieres guardar estos cambios?",
+      "confirm": "Guardar de todos modos",
+      "cancel": "Cancelar"
     }
   },
   "stylist": {
@@ -1694,7 +1712,11 @@
     "uploadTab": "Subir"
   },
   "floater": {
-    "done": "¡Todo listo!"
+    "done": "¡Todo listo!",
+    "analysingGroup": "Analizando grupo...",
+    "polishing": "Perfeccionando {{n}}/{{m}} fotos",
+    "polishingMore_one": "Perfeccionando {{count}} foto",
+    "polishingMore_other": "Perfeccionando {{count}} fotos"
   },
   "sandbox": {
     "canvas": "Lienzo de conjuntos",

@@ -180,7 +180,13 @@
     "groupConfirmTitle": "Grouper les articles sélectionnés",
     "groupSelected": "Grouper",
     "primaryItemLabel": "Article principal",
-    "selectPrimaryPlaceholder": "Sélectionner l'article principal..."
+    "selectPrimaryPlaceholder": "Sélectionner l'article principal...",
+    "gatekeeper": {
+      "title": "Avertissement de propriétés incompatibles",
+      "body": "Les articles que vous regroupez ont des propriétés incompatibles : {{mismatches}}. Êtes-vous sûr de vouloir les regrouper ?",
+      "confirm": "Regrouper quand même",
+      "cancel": "Annuler"
+    }
   },
   "addItem": {
     "title": "Ajouter des pièces",
@@ -440,6 +446,18 @@
       "culturalTags": "Étiquettes culturelles",
       "culturalTagPlaceholder": "ajouter une étiquette culturelle",
       "notes": "Notes"
+    },
+    "group": {
+      "front": "Devant",
+      "back": "Dos",
+      "profile": "Profil",
+      "savingInBackground": "Enregistrement des modifications en arrière-plan..."
+    },
+    "gatekeeper": {
+      "title": "Avertissement de propriétés incompatibles",
+      "body": "Cet article principal et les membres de son groupe ont des propriétés incompatibles : {{mismatches}}. Êtes-vous sûr de vouloir enregistrer ces modifications ?",
+      "confirm": "Enregistrer quand même",
+      "cancel": "Annuler"
     }
   },
   "stylist": {
@@ -1694,7 +1712,11 @@
     "uploadTab": "Télécharger"
   },
   "floater": {
-    "done": "Tout est fait"
+    "done": "Tout est fait",
+    "analysingGroup": "Analyse du groupe...",
+    "polishing": "Optimisation de {{n}}/{{m}} photos",
+    "polishingMore_one": "Optimisation de {{count}} photo",
+    "polishingMore_other": "Optimisation de {{count}} photos"
   },
   "sandbox": {
     "canvas": "Espace de création",

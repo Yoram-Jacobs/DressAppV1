@@ -180,7 +180,13 @@
     "groupConfirmTitle": "组合选中单品",
     "groupSelected": "组合",
     "primaryItemLabel": "主单品",
-    "selectPrimaryPlaceholder": "选择主单品..."
+    "selectPrimaryPlaceholder": "选择主单品...",
+    "gatekeeper": {
+      "title": "属性不匹配警告",
+      "body": "您要分组的项目具有不匹配的属性：{{mismatches}}。您确定要将它们分组吗？",
+      "confirm": "仍然分组",
+      "cancel": "取消"
+    }
   },
   "addItem": {
     "title": "添加单品",
@@ -440,6 +446,18 @@
       "culturalTags": "文化标签",
       "culturalTagPlaceholder": "添加文化标签",
       "notes": "备注"
+    },
+    "group": {
+      "front": "正面",
+      "back": "背面",
+      "profile": "侧面",
+      "savingInBackground": "正在后台保存更改..."
+    },
+    "gatekeeper": {
+      "title": "属性不匹配警告",
+      "body": "此主项目及其组成员具有不匹配的属性：{{mismatches}}。您确定要保存这些更改吗？",
+      "confirm": "仍然保存",
+      "cancel": "取消"
     }
   },
   "stylist": {
@@ -1694,7 +1712,11 @@
     "uploadTab": "上传"
   },
   "floater": {
-    "done": "全部完成"
+    "done": "全部完成",
+    "analysingGroup": "正在分析分组...",
+    "polishing": "正在优化 {{n}}/{{m}} 张照片",
+    "polishingMore_one": "正在优化 {{count}} 张照片",
+    "polishingMore_other": "正在优化 {{count}} 张照片"
   },
   "sandbox": {
     "canvas": "搭配画布",

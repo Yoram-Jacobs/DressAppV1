@@ -180,7 +180,13 @@
     "groupConfirmTitle": "تجميع القطع المحددة",
     "groupSelected": "تجميع",
     "primaryItemLabel": "القطعة الرئيسية",
-    "selectPrimaryPlaceholder": "اختر القطعة الرئيسية..."
+    "selectPrimaryPlaceholder": "اختر القطعة الرئيسية...",
+    "gatekeeper": {
+      "title": "تحذير بشأن خصائص غير متطابقة",
+      "body": "العناصر التي تقوم بتجميعها تحتوي على خصائص غير متطابقة: {{mismatches}}. هل أنت متأكد من رغبتك في تجميعها؟",
+      "confirm": "التجميع على أي حال",
+      "cancel": "إلغاء"
+    }
   },
   "addItem": {
     "title": "إضافة عناصر",
@@ -440,6 +446,18 @@
       "culturalTags": "الوسوم الثقافية",
       "culturalTagPlaceholder": "أضف وسماً ثقافياً",
       "notes": "ملاحظات"
+    },
+    "group": {
+      "front": "أمام",
+      "back": "خلف",
+      "profile": "جانبي",
+      "savingInBackground": "جاري حفظ التغييرات في الخلفية..."
+    },
+    "gatekeeper": {
+      "title": "تحذير بشأن خصائص غير متطابقة",
+      "body": "هذا العنصر الرئيسي وأعضاء مجموعته لديهم خصائص غير متطابقة: {{mismatches}}. هل أنت متأكد من رغبتك في حفظ هذه التغييرات؟",
+      "confirm": "الحفظ على أي حال",
+      "cancel": "إلغاء"
     }
   },
   "stylist": {
@@ -1694,7 +1712,11 @@
     "uploadTab": "تحميل"
   },
   "floater": {
-    "done": "اكتمل العمل"
+    "done": "اكتمل العمل",
+    "analysingGroup": "جاري تحليل المجموعة...",
+    "polishing": "جاري تحسين {{n}} من أصل {{m}} صور",
+    "polishingMore_one": "جاري تحسين صورة واحدة",
+    "polishingMore_other": "جاري تحسين {{count}} صور"
   },
   "sandbox": {
     "canvas": "لوحة التنسيق",

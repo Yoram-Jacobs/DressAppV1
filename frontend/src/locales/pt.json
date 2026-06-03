@@ -180,7 +180,13 @@
     "groupConfirmTitle": "Agrupar itens selecionados",
     "groupSelected": "Agrupar",
     "primaryItemLabel": "Item principal",
-    "selectPrimaryPlaceholder": "Selecionar item principal..."
+    "selectPrimaryPlaceholder": "Selecionar item principal...",
+    "gatekeeper": {
+      "title": "Aviso de propriedades divergentes",
+      "body": "Os itens que você está agrupando têm propriedades divergentes: {{mismatches}}. Tem certeza de que deseja agrupá-los?",
+      "confirm": "Agrupar mesmo assim",
+      "cancel": "Cancelar"
+    }
   },
   "addItem": {
     "title": "Adicionar peças",
@@ -440,6 +446,18 @@
       "culturalTags": "Etiquetas culturais",
       "culturalTagPlaceholder": "adicionar etiqueta cultural",
       "notes": "Notas"
+    },
+    "group": {
+      "front": "Frente",
+      "back": "Costas",
+      "profile": "Perfil",
+      "savingInBackground": "Salvando alterações em segundo plano..."
+    },
+    "gatekeeper": {
+      "title": "Aviso de propriedades divergentes",
+      "body": "Este item principal e os membros do seu grupo têm propriedades divergentes: {{mismatches}}. Tem certeza de que deseja salvar estas alterações?",
+      "confirm": "Salvar mesmo assim",
+      "cancel": "Cancelar"
     }
   },
   "stylist": {
@@ -1694,7 +1712,11 @@
     "uploadTab": "Carregar"
   },
   "floater": {
-    "done": "Tudo pronto"
+    "done": "Tudo pronto",
+    "analysingGroup": "Analisando grupo...",
+    "polishing": "Otimizando {{n}}/{{m}} fotos",
+    "polishingMore_one": "Otimizando {{count}} foto",
+    "polishingMore_other": "Otimizando {{count}} fotos"
   },
   "sandbox": {
     "canvas": "Ecrã de conjunto",

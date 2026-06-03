@@ -180,7 +180,13 @@
     "primaryItemLabel": "פריט ראשי",
     "selectPrimaryPlaceholder": "בחר פריט ראשי...",
     "confirmGroup": "קבוצה",
-    "addNewItem": "הוסף פריט ראשון"
+    "addNewItem": "הוסף פריט ראשון",
+    "gatekeeper": {
+      "title": "אזהרת התאמת מאפיינים",
+      "body": "הפריטים שברצונך לקבץ כוללים מאפיינים שאינם תואמים: {{mismatches}}. האם את/ה בטוח/ה שברצונך לקבץ אותם?",
+      "confirm": "קבץ בכל זאת",
+      "cancel": "ביטول"
+    }
   },
   "addItem": {
     "title": "העלאה ומילוי אוטומטי",
@@ -440,6 +446,18 @@
       "success": "התמונה עודכנה",
       "error": "לא ניתן לעדכן את התמונה. נסי שוב.",
       "placeholderHint": "פריט DPP בלבד — אין תמונה מצורפת"
+    },
+    "group": {
+      "front": "חזית",
+      "back": "גב",
+      "profile": "פרופيل",
+      "savingInBackground": "שומר שינויים ברקע…"
+    },
+    "gatekeeper": {
+      "title": "אזהרת התאמת מאפיינים",
+      "body": "פריต מארח זה וחברי הקבוצה שלו כוללים מאפיינים שאינם תואמים: {{mismatches}}. האם את/ה בטוח/ה שברצונך לשמור שינויים אלו?",
+      "confirm": "שמור בכל זאת",
+      "cancel": "ביטول"
     }
   },
   "stylist": {
@@ -1694,7 +1712,11 @@
     "uploadTab": "העלאה"
   },
   "floater": {
-    "done": "הכל מוכן"
+    "done": "הכל מוכן",
+    "analysingGroup": "מנתח קبوצה…",
+    "polishing": "משפר {{n}} מתוך {{m}} תמונות",
+    "polishingMore_one": "משפר תמונה {{count}}",
+    "polishingMore_other": "משפר {{count}} תמונות"
   },
   "sandbox": {
     "canvas": "קנבס הלוק",

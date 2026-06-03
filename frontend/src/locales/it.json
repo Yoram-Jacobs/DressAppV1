@@ -180,7 +180,13 @@
     "groupConfirmTitle": "Raggruppa elementi selezionati",
     "groupSelected": "Raggruppa",
     "primaryItemLabel": "Elemento principale",
-    "selectPrimaryPlaceholder": "Seleziona l'elemento principale..."
+    "selectPrimaryPlaceholder": "Seleziona l'elemento principale...",
+    "gatekeeper": {
+      "title": "Avviso proprietà non corrispondenti",
+      "body": "Gli articoli que stai raggruppando hanno proprietà non corrispondenti: {{mismatches}}. Vuoi raggrupparli comunque?",
+      "confirm": "Raggruppa comunque",
+      "cancel": "Annulla"
+    }
   },
   "addItem": {
     "title": "Aggiungi capi",
@@ -440,6 +446,18 @@
       "culturalTags": "Tag culturali",
       "culturalTagPlaceholder": "aggiungi tag culturale",
       "notes": "Note"
+    },
+    "group": {
+      "front": "Fronte",
+      "back": "Retro",
+      "profile": "Profilo",
+      "savingInBackground": "Salvataggio delle modifiche in background..."
+    },
+    "gatekeeper": {
+      "title": "Avviso proprietà non corrispondenti",
+      "body": "Questo articolo principale e i membri del suo gruppo hanno proprietà non corrispondenti: {{mismatches}}. Vuoi salvare queste modifiche comunque?",
+      "confirm": "Salva comunque",
+      "cancel": "Annulla"
     }
   },
   "stylist": {
@@ -1694,7 +1712,11 @@
     "uploadTab": "Carica"
   },
   "floater": {
-    "done": "Tutto pronto"
+    "done": "Tutto pronto",
+    "analysingGroup": "Analisi del gruppo in corso...",
+    "polishing": "Perfezionamento di {{n}}/{{m}} foto",
+    "polishingMore_one": "Perfezionamento di {{count}} foto",
+    "polishingMore_other": "Perfezionamento di {{count}} foto"
   },
   "sandbox": {
     "canvas": "Area di creazione outfit",

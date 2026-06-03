@@ -180,7 +180,13 @@
     "groupConfirmTitle": "चयनित सामान समूहीकृत करें",
     "groupSelected": "समूह",
     "primaryItemLabel": "मुख्य सामान",
-    "selectPrimaryPlaceholder": "मुख्य सामान चुनें..."
+    "selectPrimaryPlaceholder": "मुख्य सामान चुनें...",
+    "gatekeeper": {
+      "title": "मेल न खाने वाले गुणों की चेतावनी",
+      "body": "जिन वस्तुओं को आप समूहित कर रहे हैं उनके गुण मेल नहीं खाते: {{mismatches}}। क्या आप वाकई उन्हें समूहित करना चाहते हैं?",
+      "confirm": "फिर भी समूहित करें",
+      "cancel": "रद्द करें"
+    }
   },
   "addItem": {
     "title": "आइटम जोड़ें",
@@ -440,6 +446,18 @@
       "culturalTags": "सांस्कृतिक टैग",
       "culturalTagPlaceholder": "सांस्कृतिक टैग जोड़ें",
       "notes": "नोट्स"
+    },
+    "group": {
+      "front": "सामने",
+      "back": "पीछे",
+      "profile": "प्रोफ़ाइल",
+      "savingInBackground": "पृष्ठभूमि में परिवर्तन सहेज रहे हैं..."
+    },
+    "gatekeeper": {
+      "title": "मेल न खाने वाले गुणों की चेतावनी",
+      "body": "इस मुख्य वस्तु और इसके समूह के सदस्यों के गुण मेल नहीं खाते: {{mismatches}}। क्या आप वाकई इन परिवर्तनों को सहेजना चाहते हैं?",
+      "confirm": "फिर भी सहेजें",
+      "cancel": "रद्द करें"
     }
   },
   "stylist": {
@@ -1694,7 +1712,11 @@
     "uploadTab": "अपलोड"
   },
   "floater": {
-    "done": "सब हो गया"
+    "done": "सब हो गया",
+    "analysingGroup": "समूह का विश्लेषण किया जा रहा है...",
+    "polishing": "{{n}}/{{m}} फ़ोटो को बेहतर बनाया जा रहा है",
+    "polishingMore_one": "{{count}} फ़ोटो को बेहतर बनाया जा रहा है",
+    "polishingMore_other": "{{count}} फ़ोटो को बेहतर बनाया जा रहा है"
   },
   "sandbox": {
     "canvas": "आउटफिट कैनवास",
