@@ -29,7 +29,7 @@
 
 | Environment | URL / Host | Purpose |
 | --- | --- | --- |
- **Production pod** | https://dressapp.co/ | Live customer-facing deployment |
+| **Production pod** | https://dressapp.co/ | Live customer-facing deployment |
 | **Hetzner VPS** | `ssh root@178.105.144.142` | Production host (see hardware below) |
 
 ## Hetzner VPS hardware (production host)
@@ -81,7 +81,7 @@ on the VPS — never in the repo.
 
 | Env var | Value | Purpose |
 | --- | --- | --- |
-| `EYES_GEMMA_SPACE_URL` | `http://eyes:7860` | Internal docker DNS target for `backend/app/services/garment_vision._call_gemma_space` |
+| `EYES_GEMMA_SPACE_URL` | `http://eyes:7860` | Internal docker DNS target for `backend/app/services/vision/service.py` calls |
 | `EYES_PROVIDER` | `gemma` \| `gemini` | Env-default provider. **Use the runtime override below to switch in production** — do not edit this on the fly. |
 | `EYES_API_TOKEN` | (secret) | Bearer token required by `dressapp-eyes` `/predict` and `/transcribe` |
 | `GEMINI_API_KEY` | (secret) | Google AI Studio key for the native `google-genai` SDK. Drives **every** Gemini call (Eyes fallback, batched garment analysis + streaming, stylist, vision verifier, session titles, trend scout, size-chart OCR). Required whenever the production provider is `gemini` OR when Gemma falls back to Gemini. |
@@ -164,7 +164,7 @@ docker compose up -d --force-recreate eyes
 | Path | Role |
 | --- | --- |
 | `/app/backend/` | FastAPI backend (the `dressapp-backend` container) |
-| `/app/backend/app/services/garment_vision.py` | HTTP client to the eyes container |
+| `/app/backend/app/services/vision/service.py` | HTTP client to the eyes container / Gemini |
 | `/app/backend/app/services/eyes_override.py` | DB-backed runtime provider switch |
 | `/app/backend/app/services/clothing_parser.py` | Local SegFormer garment splitter |
 | `/app/frontend/` | React SPA (the `dressapp-frontend` container) |

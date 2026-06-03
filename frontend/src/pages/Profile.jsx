@@ -271,6 +271,15 @@ export default function Profile() {
   const [busy, setBusy] = useState(false);
   const [langBusy, setLangBusy] = useState(false);
 
+  useEffect(() => {
+    if (user?.preferred_language) {
+      setForm((f) => {
+        if (f.preferred_language === user.preferred_language) return f;
+        return { ...f, preferred_language: user.preferred_language };
+      });
+    }
+  }, [user?.preferred_language]);
+
   // Apply language immediately on selection + persist via API.
   const onLanguageChange = async (code) => {
     setForm((f) => ({ ...f, preferred_language: code }));

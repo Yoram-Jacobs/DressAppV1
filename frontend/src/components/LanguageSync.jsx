@@ -19,7 +19,8 @@ export const LanguageSync = () => {
   // If the logged-in user has a preferred_language saved in the DB, adopt it.
   useEffect(() => {
     const lang = user?.preferred_language;
-    if (lang && SUPPORTED_CODES.has(lang) && i18n.language !== lang) {
+    const current = (i18n.language || 'en').split('-')[0];
+    if (lang && SUPPORTED_CODES.has(lang) && current !== lang) {
       i18n.changeLanguage(lang);
       try { localStorage.setItem('dressapp.lang', lang); } catch { /* ignore */ }
     }

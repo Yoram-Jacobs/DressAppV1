@@ -192,23 +192,46 @@ export default function Closet() {
     setDragOverId(null);
   };
 
+  const dragCurrentYRef = useRef(0);
+
+  // Track the mouse Y position globally during desktop dragover events
+  useEffect(() => {
+    const handleDragOverGlobal = (e) => {
+      dragCurrentYRef.current = e.clientY;
+    };
+    window.addEventListener('dragover', handleDragOverGlobal);
+    return () => {
+      window.removeEventListener('dragover', handleDragOverGlobal);
+    };
+  }, []);
+
   const startAutoScroll = () => {
     if (scrollIntervalRef.current) return;
     scrollIntervalRef.current = setInterval(() => {
-      if (!isTouchDraggingRef.current) {
+      if (!isTouchDraggingRef.current && !draggedIdRef.current) {
         stopAutoScroll();
         return;
       }
-      const touchY = touchCurrentPosRef.current.y;
+      
       const threshold = 120; // 120px threshold from top/bottom
       const speed = 12;      // scroll speed
-      
-      if (touchY < threshold) {
-        window.scrollBy(0, -speed);
-        evaluateDragOver();
-      } else if (touchY > window.innerHeight - threshold) {
-        window.scrollBy(0, speed);
-        evaluateDragOver();
+
+      if (isTouchDraggingRef.current) {
+        const touchY = touchCurrentPosRef.current.y;
+        if (touchY < threshold) {
+          window.scrollBy(0, -speed);
+          evaluateDragOver();
+        } else if (touchY > window.innerHeight - threshold) {
+          window.scrollBy(0, speed);
+          evaluateDragOver();
+        }
+      } else if (draggedIdRef.current) {
+        const dragY = dragCurrentYRef.current;
+        if (dragY < threshold) {
+          window.scrollBy(0, -speed);
+        } else if (dragY > window.innerHeight - threshold) {
+          window.scrollBy(0, speed);
+        }
       }
     }, 30);
   };
@@ -222,12 +245,12 @@ export default function Closet() {
 
   useEffect(() => {
     isTouchDraggingRef.current = isTouchDragging;
-    if (isTouchDragging) {
+    if (isTouchDragging || draggedId) {
       startAutoScroll();
     } else {
       stopAutoScroll();
     }
-  }, [isTouchDragging]);
+  }, [isTouchDragging, draggedId]);
 
   useEffect(() => {
     return () => {
@@ -268,6 +291,11 @@ export default function Closet() {
     if (dragOverId === id) {
       setDragOverId(null);
     }
+  };
+
+  const handleDragEnd = (e) => {
+    setDraggedId(null);
+    setDragOverId(null);
   };
 
   const handleDrop = (e, targetId) => {
@@ -1104,6 +1132,7 @@ export default function Closet() {
                 data-item-id={it.id}
                 draggable
                 onDragStart={(e) => handleDragStart(e, it.id)}
+                onDragEnd={handleDragEnd}
                 onDragOver={(e) => handleDragOver(e, it.id)}
                 onDragLeave={(e) => handleDragLeave(e, it.id)}
                 onDrop={(e) => handleDrop(e, it.id)}
