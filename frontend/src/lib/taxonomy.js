@@ -502,14 +502,22 @@ export const getTaxonomyMismatches = (itemA, itemB) => {
   if (!itemA || !itemB) return [];
   const mismatches = [];
 
-  // Category
-  const catA = String(itemA.category || '').trim().toLowerCase();
-  const catB = String(itemB.category || '').trim().toLowerCase();
+  // Category (normalize common plural/singular or alternative variations)
+  const normCategory = (cat) => {
+    const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');
+    if (s === 'top' || s === 'tops') return 'top';
+    if (s === 'bottom' || s === 'bottoms') return 'bottom';
+    if (s === 'footwear' || s === 'shoes') return 'footwear';
+    if (s === 'accessory' || s === 'accessories') return 'accessories';
+    return s;
+  };
+  const catA = normCategory(itemA.category);
+  const catB = normCategory(itemB.category);
   if (catA !== catB) mismatches.push('category');
 
-  // Sub-category
-  const subCatA = String(itemA.sub_category || '').trim().toLowerCase();
-  const subCatB = String(itemB.sub_category || '').trim().toLowerCase();
+  // Sub-category (compare canonical keys to honor translation equivalent keys like 'shirt' vs 'חולצה')
+  const subCatA = canonicalSubCategoryKey(itemA.sub_category);
+  const subCatB = canonicalSubCategoryKey(itemB.sub_category);
   if (subCatA !== subCatB) mismatches.push('sub_category');
 
   // Brand
@@ -532,9 +540,17 @@ export const getTaxonomyMismatches = (itemA, itemB) => {
   const tradB = String(itemB.tradition || '').trim().toLowerCase();
   if (tradA !== tradB) mismatches.push('tradition');
 
-  // Season (list of strings)
+  // Season (list of strings - handle array, CSV, single string or falsy inputs)
   const normSeason = (list) => {
-    const sList = [...(list || [])].map((s) => String(s || '').trim().toLowerCase());
+    let arr = [];
+    if (Array.isArray(list)) {
+      arr = list;
+    } else if (typeof list === 'string') {
+      arr = list.split(',').map((s) => s.trim());
+    } else if (list) {
+      arr = [list];
+    }
+    const sList = arr.map((s) => String(s || '').trim().toLowerCase());
     const hasAll = sList.includes('all') || (
       sList.includes('spring') && sList.includes('summer') && sList.includes('fall') && sList.includes('winter')
     );
