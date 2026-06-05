@@ -235,7 +235,7 @@ export const DppScanner = ({ open, onOpenChange, onDecoded }) => {
             onClick={() => onOpenChange(false)}
             data-testid="dpp-scanner-cancel"
           >
-            {t('common.cancel')}
+            {t('common.cancel', { defaultValue: 'Cancel' })}
           </Button>
         </DialogFooter>
       </DialogContent>

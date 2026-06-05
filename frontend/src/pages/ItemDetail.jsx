@@ -1083,7 +1083,7 @@ export default function ItemDetail() {
   const startDictation = () => {
     if (!sttSupported.current) return;
     const rec = createRecognition({
-      lang: user?.preferred_language || 'en',
+      lang: (user?.preferred_language || 'en').toLowerCase(),
       onInterim: (txt) => setDictationInterim(txt || ''),
       onFinal: (finalText) => {
         if (finalText) {
@@ -2167,7 +2167,7 @@ export default function ItemDetail() {
                   <AlertDialogDescription>{t('itemDetail.removeBody')}</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                  <AlertDialogCancel>{t('common.cancel', { defaultValue: 'Cancel' })}</AlertDialogCancel>
                   <AlertDialogAction onClick={onDelete} data-testid="item-delete-confirm">
                     {t('common.delete')}
                   </AlertDialogAction>

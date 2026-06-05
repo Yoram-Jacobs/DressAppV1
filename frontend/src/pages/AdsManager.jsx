@@ -250,7 +250,7 @@ export default function AdsManager() {
               onClick={() => { setOpen(false); setEditing(null); }}
               className="rounded-xl"
             >
-              <X className="h-4 w-4 me-1" /> {t('common.cancel')}
+              <X className="h-4 w-4 me-1" /> {t('common.cancel', { defaultValue: 'Cancel' })}
             </Button>
             <Button onClick={save} disabled={busy} className="rounded-xl" data-testid="ads-save-btn">
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : (<><Save className="h-4 w-4 me-1" /> {t('ads.saveCampaign')}</>)}

@@ -59,7 +59,10 @@ const resources = {
 function pickInitialLanguage() {
   try {
     const stored = localStorage.getItem('dressapp.lang');
-    if (stored && resources[stored]) return stored;
+    if (stored && typeof stored === 'string') {
+      const storedLower = stored.toLowerCase();
+      if (resources[storedLower]) return storedLower;
+    }
     const nav = (navigator?.language || '').toLowerCase();
     const base = nav.split('-')[0];
     if (resources[base]) return base;

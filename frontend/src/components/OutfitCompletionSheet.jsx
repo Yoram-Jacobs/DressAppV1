@@ -112,7 +112,7 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
   const [orderedAnchors, setOrderedAnchors] = useState([]);
 
   const ttsSupported = isTTSSupported();
-  const userLang = user?.preferred_language || 'en';
+  const userLang = (user?.preferred_language || 'en').toLowerCase();
 
   // Re-seed the order every time the caller passes a new anchor set.
   // We key off the joined ids so drifting React re-renders don't wipe

@@ -257,7 +257,7 @@ export default function Profile() {
   const nav = useNavigate();
   const [form, setForm] = useState({
     display_name: user?.display_name || '',
-    preferred_language: user?.preferred_language || i18n.language || 'en',
+    preferred_language: (user?.preferred_language || i18n.language || 'en').toLowerCase(),
     preferred_voice_id: user?.preferred_voice_id || 'aura-2-thalia-en',
     home_city: user?.home_location?.city || '',
     home_lat: user?.home_location?.lat ?? '',
@@ -273,9 +273,10 @@ export default function Profile() {
 
   useEffect(() => {
     if (user?.preferred_language) {
+      const code = user.preferred_language.toLowerCase();
       setForm((f) => {
-        if (f.preferred_language === user.preferred_language) return f;
-        return { ...f, preferred_language: user.preferred_language };
+        if (f.preferred_language === code) return f;
+        return { ...f, preferred_language: code };
       });
     }
   }, [user?.preferred_language]);

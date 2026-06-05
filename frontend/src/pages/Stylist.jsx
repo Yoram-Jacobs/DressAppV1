@@ -145,7 +145,7 @@ export default function Stylist() {
   const recognitionRef = useRef(null);
   const threadRef = useRef(null);
 
-  const userLang = user?.preferred_language || 'en';
+  const userLang = (user?.preferred_language || 'en').toLowerCase();
 
   /* ---------- Load sessions + pick active ---------- */
   const loadSessions = useCallback(async () => {

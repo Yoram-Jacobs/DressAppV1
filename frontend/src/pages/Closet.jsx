@@ -911,7 +911,7 @@ export default function Closet() {
               className="rounded-lg"
             >
               <X className="h-4 w-4 md:mr-1.5" />
-              <span className="hidden md:inline">{t('common.cancel')}</span>
+              <span className="hidden md:inline">{t('common.cancel', { defaultValue: 'Cancel' })}</span>
             </Button>
           </>
         )}
@@ -1160,7 +1160,7 @@ export default function Closet() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="closet-delete-cancel">{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogCancel data-testid="closet-delete-cancel">{t('common.cancel', { defaultValue: 'Cancel' })}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleting}
@@ -1215,7 +1215,7 @@ export default function Closet() {
 
           <AlertDialogFooter>
             <AlertDialogCancel data-testid="closet-group-cancel" onClick={() => setGroupOpen(false)}>
-              {t('common.cancel')}
+              {t('common.cancel', { defaultValue: 'Cancel' })}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={async (e) => {
