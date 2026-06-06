@@ -129,11 +129,23 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   };
   const handler = handlers[msg?.type];
   if (!handler) {
-    sendResponse({ ok: false, error: `unknown message type ${msg?.type}` });
+    try {
+      sendResponse({ ok: false, error: `unknown message type ${msg?.type}` });
+    } catch (_) {}
     return false;
   }
   // Returning true keeps the message channel open for async work.
-  handler().then(sendResponse).catch((e) => sendResponse({ ok: false, error: e?.message || 'handler threw' }));
+  handler()
+    .then((res) => {
+      try {
+        sendResponse(res);
+      } catch (_) {}
+    })
+    .catch((e) => {
+      try {
+        sendResponse({ ok: false, error: e?.message || 'handler threw' });
+      } catch (_) {}
+    });
   return true;
 });
 
@@ -144,12 +156,22 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 if (chrome.runtime.onMessageExternal) {
   chrome.runtime.onMessageExternal.addListener((msg, sender, sendResponse) => {
     if (msg?.type !== 'DRESSAPP_EXT_TOKEN') {
-      sendResponse({ ok: false, error: 'unsupported external message' });
+      try {
+        sendResponse({ ok: false, error: 'unsupported external message' });
+      } catch (_) {}
       return false;
     }
     handleHandoff(msg)
-      .then(sendResponse)
-      .catch((e) => sendResponse({ ok: false, error: e?.message || 'handoff threw' }));
+      .then((res) => {
+        try {
+          sendResponse(res);
+        } catch (_) {}
+      })
+      .catch((e) => {
+        try {
+          sendResponse({ ok: false, error: e?.message || 'handoff threw' });
+        } catch (_) {}
+      });
     return true;
   });
 }
