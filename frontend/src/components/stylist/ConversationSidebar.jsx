@@ -106,8 +106,8 @@ function SessionRow({
       <div
         className={cn(
           'absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 backdrop-blur pl-1 rounded-full py-0.5 shadow-sm border border-border/40',
-          'opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150',
-          isActive ? 'opacity-100 bg-[hsl(var(--background))]/95' : 'bg-card/90',
+          'group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150',
+          isActive ? 'opacity-100 bg-[hsl(var(--background))]/95' : 'opacity-0 bg-card/90',
         )}
         onClick={(e) => e.stopPropagation()}
       >
