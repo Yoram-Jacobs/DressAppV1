@@ -1352,7 +1352,7 @@ export default function Stylist() {
         </aside>
 
         {/* Center — chat */}
-        <main className="min-w-0 flex flex-col">
+        <main className="min-w-0 flex flex-col h-full min-h-0">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             <div className="flex justify-center mb-3 bg-muted/60 p-1 rounded-2xl max-w-sm mx-auto w-full border border-border/40">
               <TabsList className="grid grid-cols-3 w-full bg-transparent p-0 h-8">
