@@ -501,35 +501,31 @@ export default function Stylist() {
   /* ---------- Native STT path (preferred) ---------- */
   const startNativeRecognition = () => {
     try {
+      let finalText = '';
       const rec = createRecognition({
         lang: userLang,
-        interimResults: true,
-        continuous: false,
+        onInterim: (txt) => {
+          setInterim(txt || '');
+        },
+        onFinal: (txt) => {
+          finalText = txt || '';
+        },
+        onError: () => {
+          setRecording(false);
+          toast.error(t('stylist.voiceError'));
+        },
+        onEnd: () => {
+          setRecording(false);
+          setInterim('');
+          if (finalText.trim()) {
+            sendTurn({ overrideText: finalText.trim() });
+          }
+        },
       });
+      if (!rec) return false;
       recognitionRef.current = rec;
       setInterim('');
       setRecording(true);
-      let finalText = '';
-      rec.onresult = (event) => {
-        let interimText = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) finalText += transcript;
-          else interimText += transcript;
-        }
-        setInterim(interimText);
-      };
-      rec.onerror = () => {
-        setRecording(false);
-        toast.error(t('stylist.voiceError'));
-      };
-      rec.onend = () => {
-        setRecording(false);
-        setInterim('');
-        if (finalText.trim()) {
-          sendTurn({ overrideText: finalText.trim() });
-        }
-      };
       rec.start();
       return true;
     } catch (err) {
