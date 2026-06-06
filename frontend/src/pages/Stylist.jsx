@@ -13,6 +13,8 @@ import {
   VolumeX,
   MessageSquare,
   PanelRight,
+  PanelLeft,
+  Plus,
   UserRound,
   TrendingUp,
   ShoppingBag,
@@ -100,6 +102,16 @@ export default function Stylist() {
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, busy, interim]);
 
   // Event Proposal Dialog state
   const [eventModalOpen, setEventModalOpen] = useState(false);
@@ -719,17 +731,23 @@ export default function Stylist() {
     <Card className="h-full flex flex-col rounded-[calc(var(--radius)+6px)] shadow-editorial overflow-hidden">
       {/* Sticky top bar */}
       <div className="flex items-center justify-between gap-2 border-b border-border px-3 md:px-4 py-2.5 bg-background">
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0">
           <button
             type="button"
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden h-9 w-9 rounded-lg border border-border bg-card flex items-center justify-center"
+            onClick={() => {
+              if (window.innerWidth < 1024) {
+                setSidebarOpen(true);
+              } else {
+                setSidebarCollapsed(!sidebarCollapsed);
+              }
+            }}
+            className="h-9 w-9 rounded-lg border border-border bg-card flex items-center justify-center hover:bg-secondary transition-colors"
             aria-label={t('stylist.openConversations')}
             data-testid="stylist-open-sidebar-btn"
           >
-            <MessageSquare className="h-4 w-4" />
+            <PanelLeft className="h-4 w-4" />
           </button>
-          <div className="min-w-0">
+          <div className="min-w-0 flex flex-col justify-center">
             <div className="caps-label text-muted-foreground truncate">
               {t('stylist.label')}
             </div>
@@ -738,6 +756,15 @@ export default function Stylist() {
                 t('stylist.hero')}
             </h1>
           </div>
+          <button
+            type="button"
+            onClick={handleNewConversation}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-border bg-card text-[11px] font-medium hover:bg-secondary transition-colors ms-2"
+            data-testid="stylist-header-new-chat-btn"
+          >
+            <Plus className="h-3 w-3" />
+            <span>{t('stylist.newConversation', { defaultValue: 'New Chat' })}</span>
+          </button>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Badge
@@ -1071,6 +1098,7 @@ export default function Stylist() {
               </div>
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
 
@@ -1101,7 +1129,7 @@ export default function Stylist() {
           </Button>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="max-w-3xl mx-auto w-full flex items-center gap-3 flex-wrap text-xs text-muted-foreground border-b border-border/40 pb-2">
           <div className="flex items-center gap-2">
             <Switch
               checked={includeCalendar}
@@ -1111,7 +1139,7 @@ export default function Stylist() {
             />
             <label
               htmlFor="inc-cal"
-              className="text-xs text-muted-foreground inline-flex items-center gap-1"
+              className="text-[11px] text-muted-foreground inline-flex items-center gap-1 cursor-pointer"
             >
               <CalIcon className="h-3.5 w-3.5" /> {t('stylist.includeCalendar')}
             </label>
@@ -1130,60 +1158,59 @@ export default function Stylist() {
               value={occasion}
               onChange={(e) => setOccasion(e.target.value)}
               placeholder={t('stylist.occasionPlaceholder')}
-              className="text-xs bg-secondary border border-border rounded-lg px-2 py-1"
+              className="text-[11px] bg-secondary border border-border rounded-lg px-2 py-0.5"
               data-testid="stylist-occasion-input"
             />
           )}
           {imageFile && (
             <div
-              className="flex items-center gap-2 rounded-full border border-border bg-card px-2 py-1 text-xs"
+              className="flex items-center gap-1.5 rounded-full border border-border bg-card px-2 py-0.5 text-[11px]"
               data-testid="stylist-attached-image"
             >
               <img
                 src={URL.createObjectURL(imageFile)}
                 alt=""
-                className="h-6 w-6 rounded object-cover"
+                className="h-5 w-5 rounded object-cover"
               />
-              <span className="truncate max-w-[140px]">{imageFile.name}</span>
+              <span className="truncate max-w-[120px]">{imageFile.name}</span>
               <button
                 onClick={() => setImageFile(null)}
                 aria-label={t('stylist.removeImage')}
                 data-testid="stylist-remove-image"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-3 w-3" />
               </button>
             </div>
           )}
-          {/* Phase R: extra image chips for multi-image outfit composer */}
           {extraImages.map((f, idx) => (
             <div
               key={`extra-${idx}-${f.name}`}
-              className="flex items-center gap-2 rounded-full border border-[hsl(var(--accent))]/40 bg-[hsl(var(--accent))]/5 px-2 py-1 text-xs"
+              className="flex items-center gap-1.5 rounded-full border border-[hsl(var(--accent))]/40 bg-[hsl(var(--accent))]/5 px-2 py-0.5 text-[11px]"
               data-testid={`stylist-extra-image-${idx}`}
             >
               <img
                 src={URL.createObjectURL(f)}
                 alt=""
-                className="h-6 w-6 rounded object-cover"
+                className="h-5 w-5 rounded object-cover"
               />
-              <span className="truncate max-w-[120px]">{f.name}</span>
+              <span className="truncate max-w-[100px]">{f.name}</span>
               <button
                 onClick={() =>
                   setExtraImages((prev) => prev.filter((_, i) => i !== idx))
                 }
                 aria-label={t('stylist.removeImage')}
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-3 w-3" />
               </button>
             </div>
           ))}
           {(imageFile || extraImages.length > 0) && (imageFile ? 1 : 0) + extraImages.length >= 2 && (
             <Badge
               variant="outline"
-              className="border-[hsl(var(--accent))]/60 text-[hsl(var(--accent))]"
+              className="border-[hsl(var(--accent))]/60 text-[hsl(var(--accent))] text-[10px] py-0 h-5"
               data-testid="stylist-compose-mode-badge"
             >
-              <Sparkles className="h-3 w-3 me-1" />
+              <Sparkles className="h-2.5 w-2.5 me-1" />
               {t('stylist.composeOutfitMode')}
             </Badge>
           )}
@@ -1205,34 +1232,19 @@ export default function Stylist() {
                   : t('stylist.askProfessionalSoon')
               }
               className={cn(
-                'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs',
+                'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px]',
                 'border border-[hsl(var(--accent))]/60 text-[hsl(var(--accent))]',
                 'hover:bg-[hsl(var(--accent))]/10 transition-colors',
               )}
               data-testid="stylist-ask-professional-btn"
             >
-              <UserRound className="h-3.5 w-3.5" />
+              <UserRound className="h-3 w-3" />
               {t('stylist.askProfessional')}
             </button>
           </div>
         </div>
-        <div className="flex items-end gap-2">
-          <Textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            rows={2}
-            placeholder={t('stylist.composerPlaceholder')}
-            className="rounded-xl resize-none"
-            data-testid="stylist-composer-textarea"
-          />
-          {/* Phase S2: unified attachment picker — replaces the bare
-              <input type="file">. The trigger keeps the original 11x11
-              icon-button silhouette so the composer layout doesn't
-              shift. The picker returns a File[] which is merged into
-              the existing imageFile / extraImages pipeline below; the
-              backend contract is unchanged (single-image /stylist for
-              one attachment, multi-image /stylist/compose-outfit for
-              two or more). */}
+
+        <div className="max-w-3xl mx-auto w-full relative flex items-end gap-2 border border-border bg-card rounded-2xl p-1.5 focus-within:ring-2 focus-within:ring-[hsl(var(--accent))]/50 focus-within:border-[hsl(var(--accent))] transition-all">
           <AttachmentPicker
             maxItems={7}
             currentCount={(imageFile ? 1 : 0) + extraImages.length}
@@ -1253,57 +1265,79 @@ export default function Stylist() {
             }}
             trigger={
               <span
-                className="inline-flex items-center justify-center h-11 w-11 rounded-xl border border-border bg-card hover:bg-secondary cursor-pointer"
+                className="inline-flex items-center justify-center h-9 w-9 rounded-xl border border-border bg-card hover:bg-secondary cursor-pointer shrink-0"
                 aria-label={t('stylist.attachPhoto')}
                 data-testid="stylist-composer-attach-button"
               >
-                <ImgIcon className="h-5 w-5" />
+                <ImgIcon className="h-4.5 w-4.5" />
               </span>
             }
           />
-          {recording ? (
+
+          <Textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={1}
+            placeholder={t('stylist.composerPlaceholder')}
+            className="flex-1 min-h-[36px] max-h-[160px] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent resize-none py-1.5 px-1 text-sm shadow-none"
+            data-testid="stylist-composer-textarea"
+          />
+
+          <div className="flex items-center gap-1 shrink-0">
+            {recording ? (
+              <Button
+                size="icon"
+                variant="destructive"
+                onClick={stopRecording}
+                className="h-9 w-9 rounded-xl"
+                aria-label={t('stylist.tapToStop')}
+                data-testid="stylist-composer-mic-button"
+              >
+                <Square className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={startRecording}
+                className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground"
+                data-testid="stylist-composer-mic-button"
+                aria-label={t('stylist.recordVoice')}
+              >
+                <Mic className="h-4.5 w-4.5" />
+              </Button>
+            )}
             <Button
               size="icon"
-              variant="destructive"
-              onClick={stopRecording}
-              className="h-11 w-11 rounded-xl"
-              aria-label={t('stylist.tapToStop')}
-              data-testid="stylist-composer-mic-button"
+              variant="default"
+              onClick={() => sendTurn({})}
+              disabled={busy || (!text.trim() && !imageFile && extraImages.length === 0)}
+              className="h-9 w-9 rounded-xl bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90"
+              data-testid="stylist-composer-send-button"
             >
-              <Square className="h-5 w-5" />
+              <Send className="h-4.5 w-4.5" />
             </Button>
-          ) : (
-            <Button
-              size="icon"
-              variant="secondary"
-              onClick={startRecording}
-              className="h-11 w-11 rounded-xl"
-              data-testid="stylist-composer-mic-button"
-              aria-label={t('stylist.recordVoice')}
-            >
-              <Mic className="h-5 w-5" />
-            </Button>
-          )}
-          <Button
-            onClick={() => sendTurn({})}
-            disabled={busy || (!text.trim() && !imageFile && extraImages.length === 0)}
-            className="h-11 rounded-xl"
-            data-testid="stylist-composer-send-button"
-          >
-            <Send className="h-5 w-5 mr-0 md:me-2" />
-            <span className="hidden md:inline">{t('stylist.send')}</span>
-          </Button>
+          </div>
         </div>
+      </div>
       </div>
     </Card>
   );
 
   return (
     <div className="container-px max-w-[1600px] mx-auto pt-4 md:pt-6">
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_340px] gap-4 h-[calc(100dvh-180px)] md:h-[calc(100dvh-140px)]">
+      <div className={cn(
+        "grid grid-cols-1 gap-4 h-[calc(100dvh-180px)] md:h-[calc(100dvh-140px)] transition-all duration-300",
+        sidebarCollapsed
+          ? "lg:grid-cols-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_340px]"
+          : "lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_340px]"
+      )}>
         {/* Left rail — desktop only */}
         <aside
-          className="hidden lg:flex rounded-[calc(var(--radius)+6px)] bg-card border border-border overflow-hidden"
+          className={cn(
+            "hidden lg:flex rounded-[calc(var(--radius)+6px)] bg-card border border-border overflow-hidden transition-all duration-300",
+            sidebarCollapsed ? "w-0 border-0 opacity-0 pointer-events-none" : "w-[280px]"
+          )}
           data-testid="stylist-conversation-sidebar"
         >
           <ConversationSidebar
