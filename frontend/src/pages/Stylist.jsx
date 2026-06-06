@@ -12,7 +12,6 @@ import {
   Volume2,
   VolumeX,
   MessageSquare,
-  PanelRight,
   PanelLeft,
   Plus,
   UserRound,
@@ -47,7 +46,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { WaveformAudioPlayer } from '@/components/WaveformAudioPlayer';
 import { ConversationSidebar } from '@/components/stylist/ConversationSidebar';
 import { OutfitCanvasMessage } from '@/components/OutfitCanvas';
-import { FashionScoutPanel } from '@/components/stylist/FashionScoutPanel';
+
 import { OutfitRecommendationCard } from '@/components/stylist/OutfitRecommendationCard';
 import { ItemFloater } from '@/components/stylist/ItemFloater';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -134,7 +133,6 @@ export default function Stylist() {
 
   // Mobile drawers
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [scoutOpen, setScoutOpen] = useState(false);
 
   // Phase S3: ItemFloater (side-sheet preview for closet items in
   // outfit recommendations). Single instance per page — any thumbnail
@@ -784,15 +782,7 @@ export default function Stylist() {
               <Mic className="h-3 w-3 me-1" /> {t('stylist.nativeSpeech')}
             </Badge>
           )}
-          <button
-            type="button"
-            onClick={() => setScoutOpen(true)}
-            className="xl:hidden h-9 w-9 rounded-lg border border-border bg-card flex items-center justify-center"
-            aria-label={t('stylist.openScout')}
-            data-testid="stylist-open-scout-btn"
-          >
-            <PanelRight className="h-4 w-4" />
-          </button>
+
         </div>
       </div>
 
@@ -1330,8 +1320,8 @@ export default function Stylist() {
       <div className={cn(
         "grid grid-cols-1 gap-4 h-[calc(100dvh-180px)] md:h-[calc(100dvh-140px)] transition-all duration-300",
         sidebarCollapsed
-          ? "lg:grid-cols-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_340px]"
-          : "lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_340px]"
+          ? "lg:grid-cols-[minmax(0,1fr)]"
+          : "lg:grid-cols-[280px_minmax(0,1fr)]"
       )}>
         {/* Left rail — desktop only */}
         <aside
@@ -1376,13 +1366,7 @@ export default function Stylist() {
           </Tabs>
         </main>
 
-        {/* Right rail — desktop only */}
-        <aside
-          className="hidden xl:flex rounded-[calc(var(--radius)+6px)] bg-card border border-border overflow-hidden"
-          data-testid="stylist-fashion-scout"
-        >
-          <FashionScoutPanel />
-        </aside>
+
       </div>
 
       {/* Mobile drawer — conversations */}
@@ -1402,15 +1386,7 @@ export default function Stylist() {
         </SheetContent>
       </Sheet>
 
-      {/* Mobile/tablet drawer — fashion scout */}
-      <Sheet open={scoutOpen} onOpenChange={setScoutOpen}>
-        <SheetContent side="right" className="p-0 w-[340px] sm:w-[380px]">
-          <SheetHeader className="sr-only">
-            <SheetTitle>{t('stylist.fashionScout')}</SheetTitle>
-          </SheetHeader>
-          <FashionScoutPanel />
-        </SheetContent>
-      </Sheet>
+
 
       {/* Phase S3: item preview floater — opens on thumbnail click in
           any outfit recommendation. Renders via portal so it overlays
