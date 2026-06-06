@@ -70,7 +70,7 @@ function SessionRow({
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        'group relative rounded-xl border px-3 py-2 cursor-pointer transition-colors',
+        'group relative rounded-xl border px-3 py-2 cursor-pointer transition-colors w-[296px] lg:w-[256px]',
         isActive
           ? 'bg-[hsl(var(--accent))]/10 border-[hsl(var(--accent))]/40'
           : 'bg-card border-border hover:bg-secondary',
