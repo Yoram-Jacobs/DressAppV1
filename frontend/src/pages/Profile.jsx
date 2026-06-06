@@ -81,21 +81,21 @@ function SchedulerSettingsCard() {
       if (checked) {
         let sub = await reg.pushManager.getSubscription();
         if (!sub) {
-          const res = await api.getWebPushVapidKey();
+          const res = await api.getVapidKey();
           const pubKey = urlBase64ToUint8Array(res.public_key);
           sub = await reg.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: pubKey,
           });
         }
-        await api.webpushSubscribe(sub.toJSON());
+        await api.subscribeWebPush(sub.toJSON());
         setPushEnabled(true);
         toast.success(t('profile.browserPushNotificationsSuccessfullyEnabled', { defaultValue: 'Browser push notifications successfully enabled.' }));
       } else {
         const sub = await reg.pushManager.getSubscription();
         if (sub) {
           await sub.unsubscribe();
-          await api.webpushUnsubscribe(sub.endpoint);
+          await api.unsubscribeWebPush(sub.endpoint);
         }
         setPushEnabled(false);
         toast.success(t('profile.browserPushNotificationsDisabled', { defaultValue: 'Browser push notifications disabled.' }));
@@ -257,6 +257,7 @@ export default function Profile() {
   const nav = useNavigate();
   const [form, setForm] = useState({
     display_name: user?.display_name || '',
+    phone: user?.phone || '',
     preferred_language: (user?.preferred_language || i18n.language || 'en').toLowerCase(),
     preferred_voice_id: user?.preferred_voice_id || 'aura-2-thalia-en',
     home_city: user?.home_location?.city || '',
@@ -304,6 +305,7 @@ export default function Profile() {
     try {
       const body = {
         display_name: form.display_name || null,
+        phone: form.phone || null,
         preferred_language: form.preferred_language,
         preferred_voice_id: form.preferred_voice_id,
         style_profile: {
@@ -439,6 +441,13 @@ export default function Profile() {
                     <Input value={form.display_name}
                       onChange={(e) => setForm({ ...form, display_name: e.target.value })}
                       className="rounded-xl" data-testid="settings-display-name" />
+                  </div>
+                  <div>
+                    <Label>{t('profile.phoneNumber', { defaultValue: 'Phone Number' })}</Label>
+                    <Input value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      placeholder={t('profile.phonePlaceholder', { defaultValue: 'e.g. +1234567890' })}
+                      className="rounded-xl" data-testid="settings-phone" />
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {t('profile.emailReadonly')}: <span className="font-medium">{user?.email}</span>
