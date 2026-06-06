@@ -105,13 +105,7 @@ export default function Stylist() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, busy, interim]);
 
   // Event Proposal Dialog state
   const [eventModalOpen, setEventModalOpen] = useState(false);
@@ -158,6 +152,14 @@ export default function Stylist() {
   const threadRef = useRef(null);
 
   const userLang = (user?.preferred_language || 'en').toLowerCase();
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, busy, interim]);
 
   /* ---------- Load sessions + pick active ---------- */
   const loadSessions = useCallback(async () => {
