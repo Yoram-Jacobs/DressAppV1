@@ -1320,7 +1320,6 @@ export default function Stylist() {
           </div>
         </div>
       </div>
-      </div>
     </Card>
   );
 
