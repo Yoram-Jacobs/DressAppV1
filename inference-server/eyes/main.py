@@ -46,7 +46,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel, Field
 
 logging.basicConfig(
@@ -540,3 +540,74 @@ async def predict(req: PredictIn) -> PredictOut:
         vision_used=bool(app.state.vision_enabled and req.image_b64),
         vision_disabled=bool(req.image_b64 and not app.state.vision_enabled),
     )
+
+
+@app.post(
+    "/transcribe",
+    dependencies=[Depends(_require_token)],
+)
+async def transcribe(
+    file: UploadFile = File(...),
+    language: str | None = Form(None),
+) -> dict[str, Any]:
+    key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    if not key:
+        raise HTTPException(
+            status_code=501,
+            detail="Speech-to-Text is not supported directly by llama-server GGUF. "
+                   "Provide GEMINI_API_KEY in the environment of dressapp-eyes to enable Gemini fallback transcription.",
+        )
+    
+    audio_data = await file.read()
+    import base64
+    b64_audio = base64.b64encode(audio_data).decode("utf-8")
+    
+    prompt = "Transcribe this audio precisely. Output ONLY the raw transcription text in the language it was spoken. Do not add any introductory or concluding text, formatting, or commentary."
+    if language:
+        prompt += f" The audio is expected to be in {language}."
+
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": prompt},
+                    {
+                        "inlineData": {
+                            "mimeType": file.content_type or "audio/webm",
+                            "data": b64_audio
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+    
+    t0 = time.time()
+    async with httpx.AsyncClient() as client:
+        r = await client.post(
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={key}",
+            json=payload,
+            headers={"Content-Type": "application/json"},
+            timeout=30.0
+        )
+        if r.status_code != 200:
+            raise HTTPException(
+                status_code=502,
+                detail=f"Gemini API fallback transcription failed: {r.status_code} {r.text}"
+            )
+        res = r.json()
+        text = ""
+        try:
+            parts = res["candidates"][0]["content"]["parts"]
+            text = parts[0]["text"].strip()
+        except (KeyError, IndexError) as e:
+            raise HTTPException(502, f"Failed to parse Gemini response: {e}")
+            
+        elapsed_ms = int((time.time() - t0) * 1000)
+        return {
+            "text": text,
+            "language": language or "en",
+            "duration_s": 0.0,
+            "elapsed_ms": elapsed_ms
+        }
+

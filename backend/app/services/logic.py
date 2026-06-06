@@ -13,10 +13,10 @@ from typing import Any
 
 import httpx
 
-from app.services.deepgram_service import deepgram_service
+from app.services.tts_service import tts_service
 from app.services.gemini_stylist import image_bytes_to_base64
 from app.services.stylist_brain import stylist_brain_service
-from app.services.groq_service import groq_whisper_service
+from app.services.stt_service import stt_service
 from app.services.weather_service import weather_service
 
 logger = logging.getLogger(__name__)
@@ -86,10 +86,8 @@ async def get_styling_advice(
 
     # --- 1. Transcribe if voice provided
     if voice_audio:
-        if groq_whisper_service is None:
-            raise RuntimeError("Groq service not configured (GROQ_API_KEY missing)")
         t0 = time.perf_counter()
-        tx = groq_whisper_service.transcribe(
+        tx = await stt_service.transcribe(
             voice_audio,
             filename=voice_filename,
             content_type=voice_mime,
@@ -179,11 +177,11 @@ async def get_styling_advice(
         "reasoning_summary", ""
     )
 
-    # --- 5. Deepgram Aura-2 TTS
-    if synthesize_tts and result["spoken_reply"] and deepgram_service is not None:
+    # --- 5. Gemini Native TTS
+    if synthesize_tts and result["spoken_reply"]:
         t0 = time.perf_counter()
         try:
-            audio = await deepgram_service.speak_to_bytes(
+            audio = await tts_service.speak_to_bytes(
                 result["spoken_reply"], voice=voice_id, encoding="mp3"
             )
             result["tts_audio_base64"] = base64.b64encode(audio).decode("ascii")
