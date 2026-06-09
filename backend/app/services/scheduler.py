@@ -53,7 +53,7 @@ async def check_scheduler_triggers() -> None:
         current_time_str = now.strftime("%H:%M")
         current_day_str = now.strftime("%A").lower()
 
-        cursor = db.users.find({"scheduler_settings.enabled": True})
+        cursor = db.users.find({"scheduler_settings.enabled": True}, {"_id": 0})
         async for user in cursor:
             s_set = user.get("scheduler_settings") or {}
             time_str = s_set.get("time") or "08:00"
