@@ -9,6 +9,18 @@ from typing import Any
 
 from app.db.database import get_db
 from app.config import settings
+
+# Monkeypatch cryptography to fix pywebpush SECP256R1 class vs instance compatibility issue
+import cryptography.hazmat.primitives.asymmetric.ec as ec
+_orig_generate_private_key = ec.generate_private_key
+
+def _patched_generate_private_key(curve, backend=None):
+    if curve == ec.SECP256R1:
+        curve = ec.SECP256R1()
+    return _orig_generate_private_key(curve, backend)
+
+ec.generate_private_key = _patched_generate_private_key
+
 from pywebpush import webpush, WebPushException
 
 logger = logging.getLogger(__name__)
