@@ -122,6 +122,7 @@ function SchedulerSettingsCard() {
           style_option: styleOption,
           custom_style: customStyle,
           style_dress_for: styleOption === 'custom' ? customStyle : styleOption,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
       });
       updateUserLocal(updated);

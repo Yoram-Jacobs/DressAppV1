@@ -53,29 +53,41 @@ async def check_scheduler_triggers() -> None:
         current_time_str = now.strftime("%H:%M")
         current_day_str = now.strftime("%A").lower()
 
-        # 1. User Daily/Weekly Scheduler
         cursor = db.users.find({"scheduler_settings.enabled": True})
         async for user in cursor:
             s_set = user.get("scheduler_settings") or {}
             time_str = s_set.get("time") or "08:00"
             freq = s_set.get("frequency") or "everyday"
             weekday = s_set.get("weekday")
+            tz_str = s_set.get("timezone")
+            user_tz = timezone.utc
+            if tz_str:
+                try:
+                    from zoneinfo import ZoneInfo
+                    user_tz = ZoneInfo(tz_str)
+                except Exception:
+                    logger.warning("Invalid user timezone: %s; falling back to UTC", tz_str)
+
+            local_now = now.astimezone(user_tz)
+            local_hour = local_now.hour
+            local_minute = local_now.minute
+            local_day_str = local_now.strftime("%A").lower()
 
             try:
                 uh, um = map(int, time_str.split(":", 1))
             except Exception:
                 uh, um = 8, 0
 
-            # Match hour and minute (UTC for MVP simplicity)
-            if now.hour == uh and now.minute == um:
+            # Match hour and minute in local timezone if provided, else UTC
+            if local_hour == uh and local_minute == um:
                 should_notify = False
                 if freq == "everyday":
                     should_notify = True
-                elif freq == "on_weekday" and weekday and weekday.lower() == current_day_str:
+                elif freq == "on_weekday" and weekday and weekday.lower() == local_day_str:
                     should_notify = True
-                elif freq == "every_other_day" and now.timetuple().tm_yday % 2 == 0:
+                elif freq == "every_other_day" and local_now.timetuple().tm_yday % 2 == 0:
                     should_notify = True
-                elif freq == "twice_a_week" and current_day_str in ["monday", "thursday"]:
+                elif freq == "twice_a_week" and local_day_str in ["monday", "thursday"]:
                     should_notify = True
 
                 if should_notify:
