@@ -42,38 +42,6 @@ async def send_push_notification(user_id: str, title: str, body: str) -> dict[st
         logger.warning("User not found for push: user_id=%s", user_id)
         return {k: v for k, v in doc.items() if k != "_id"}
 
-    # Send via Aimtell if API key and Site ID are configured
-    if settings.AIMTELL_API_KEY and settings.AIMTELL_SITE_ID:
-        try:
-            import httpx
-            headers = {
-                "X-Authorization-Api-Key": settings.AIMTELL_API_KEY,
-                "Content-Type": "application/json"
-            }
-            aimtell_payload = {
-                "idSite": int(settings.AIMTELL_SITE_ID),
-                "title": title,
-                "body": body,
-                "link": "https://dressapp.co/",
-                "alias": user_id
-            }
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(
-                    "https://api.aimtell.com/v1/notifications",
-                    headers=headers,
-                    json=aimtell_payload
-                )
-                if response.status_code == 200:
-                    logger.info("Sent push notification via Aimtell successfully to user_id=%s", user_id)
-                else:
-                    logger.error(
-                        "Failed to send push notification via Aimtell: HTTP %d, Response: %s",
-                        response.status_code,
-                        response.text
-                    )
-        except Exception as e:
-            logger.error("Error sending push notification via Aimtell: %s", e)
-
     subscriptions = user.get("web_push_subscriptions") or []
     if not subscriptions:
         logger.info("No active web push subscriptions registered for user_id=%s", user_id)
