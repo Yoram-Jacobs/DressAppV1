@@ -61,6 +61,7 @@ function SchedulerSettingsCard() {
   const [pushSupported, setPushSupported] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if ('serviceWorker' in navigator && 'PushManager' in window) {
@@ -110,6 +111,7 @@ function SchedulerSettingsCard() {
 
   const save = async () => {
     setBusy(true);
+    setSaved(false);
     try {
       const updated = await api.patchMe({
         scheduler_settings: {
@@ -119,9 +121,12 @@ function SchedulerSettingsCard() {
           time,
           style_option: styleOption,
           custom_style: customStyle,
+          style_dress_for: styleOption === 'custom' ? customStyle : styleOption,
         },
       });
       updateUserLocal(updated);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
       toast.success(t('profile.aiStylistSchedulerSettingsUpdated', { defaultValue: 'AI Stylist Scheduler settings updated.' }));
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('common.error', { defaultValue: 'Failed to save changes.' }));
@@ -240,8 +245,19 @@ function SchedulerSettingsCard() {
         </div>
 
         <div className="flex">
-          <Button onClick={save} disabled={busy} className="rounded-xl">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t('common.save', { defaultValue: 'Save' })}
+          <Button 
+            onClick={save} 
+            disabled={busy} 
+            className={`rounded-xl transition-all duration-300 ${saved ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}`}
+            data-testid="scheduler-save-button"
+          >
+            {busy ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : saved ? (
+              t('common.saved', { defaultValue: 'Saved!' })
+            ) : (
+              t('common.save', { defaultValue: 'Save' })
+            )}
           </Button>
         </div>
           </AccordionContent>

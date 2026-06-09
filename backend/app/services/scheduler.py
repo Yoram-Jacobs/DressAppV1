@@ -13,6 +13,7 @@ from app.config import settings
 from app.db.database import get_db
 from app.services.trend_scout import run_trend_scout
 from app.services.push_service import send_push_notification
+from app.services.stylist_scheduler_brain import generate_scheduled_proposals
 
 logger = logging.getLogger(__name__)
 
@@ -78,10 +79,25 @@ async def check_scheduler_triggers() -> None:
                     should_notify = True
 
                 if should_notify:
+                    style_dress_for = s_set.get("style_dress_for") or "casual/daily dress"
+                    try:
+                        advice = await generate_scheduled_proposals(user, style_dress_for)
+                        recs = advice.get("outfit_recommendations") or []
+                        
+                        rec_lines = []
+                        for r in recs:
+                            items_str = ", ".join(it.get("description") or it.get("title") or "item" for it in r.get("items") or [])
+                            rec_lines.append(f"• {r.get('name') or 'Outfit'}: {items_str}")
+                        
+                        body_text = f"Proposals for {style_dress_for}:\n" + "\n".join(rec_lines)
+                    except Exception as exc:
+                        logger.warning("Failed to generate scheduled proposals in cron: %s", exc)
+                        body_text = f"Your AI Stylist prepared outfit options for your: {style_dress_for}."
+
                     await send_push_notification(
                         user_id=user["id"],
                         title="Tomorrow's Outfit Proposal is Ready! 👕",
-                        body=f"Your AI Stylist prepared 3 outfit options for your: {s_set.get('style_dress_for') or 'day'}."
+                        body=body_text
                     )
 
         # 2. Event Notifications
