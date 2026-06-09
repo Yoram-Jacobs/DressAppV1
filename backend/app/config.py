@@ -55,6 +55,8 @@ class Settings:
     VAPID_PUBLIC_KEY: str = os.environ.get("VAPID_PUBLIC_KEY", "")
     VAPID_PRIVATE_KEY: str = os.environ.get("VAPID_PRIVATE_KEY", "")
     VAPID_CLAIM_EMAIL: str = os.environ.get("VAPID_CLAIM_EMAIL", "info@dressapp.co")
+    AIMTELL_API_KEY: str = os.environ.get("AIMTELL_API_KEY", "")
+    AIMTELL_SITE_ID: str = os.environ.get("AIMTELL_SITE_ID", "")
     # CORS default covers BOTH production targets:
     #   * dressapp.co (Hetzner — full-fat ML stack)
     #   * ai-stylist-api.emergent.host (Emergent — lightweight pod, falls
