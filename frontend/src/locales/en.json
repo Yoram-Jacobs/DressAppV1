@@ -1656,6 +1656,7 @@
   },
   "outfits": {
     "viewDescription": "View outfits you have composed and scheduled. Your AI Stylist ensures you utilize all closet assets and warns you of previous occasion repetitions.",
+    "outfit": "Outfit",
     "notificationCenter": "Notification Center (Simulated)",
     "noNotifs": "No notifications triggered yet. Set your daily reminder in settings or schedule an event to test.",
     "noSavedOutfitsDesc": "Get outfit proposals in the AI Stylist tab, pick your favorite, and save it to start logging your outfits.",
@@ -1669,7 +1670,8 @@
       "eventTitle": "Time to get ready for {{name}}! 🌟",
       "eventBody": "Your chosen outfit is prepared. Have a wonderful time!",
       "dailyTitle": "Tomorrow's Outfit Proposal is Ready! {{emoji}}",
-      "dailyBody": "Your AI Stylist prepared 3 outfit options for your: {{style}}."
+      "dailyBody": "Your AI Stylist prepared 3 outfit options for your: {{style}}.",
+      "proposalsTitle": "Proposals for {{style}}:"
     }
   },
   "stats": {

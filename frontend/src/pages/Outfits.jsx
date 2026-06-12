@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import AvatarViewer from '@/components/AvatarViewer';
-import { labelForRole } from '@/lib/taxonomy';
+import { labelForRole, labelForDressCode } from '@/lib/taxonomy';
 
 const getLocalizedNotification = (n, t) => {
   if (!n) return { title: '', body: '' };
@@ -26,14 +26,48 @@ const getLocalizedNotification = (n, t) => {
   }
 
   // 2. Check if Daily Proposal Body: "Your AI Stylist prepared 3 outfit options for your: <style>."
-  const dailyBodyRegex = /^Your AI Stylist prepared 3 outfit options for your:\s*(.+?)\.?$/i;
+  const dailyBodyRegex = /^Your AI Stylist prepared(?:\s+\d+)?\s+outfit options for your:\s*(.+?)\.?$/i;
   const matchDailyBody = body.match(dailyBodyRegex);
   if (matchDailyBody) {
     const style = matchDailyBody[1] || 'day';
-    body = t('outfits.notification.dailyBody', { style, defaultValue: body });
+    const translatedStyle = labelForDressCode(style.toLowerCase().trim(), t);
+    body = t('outfits.notification.dailyBody', { style: translatedStyle, defaultValue: body });
   }
 
-  // 3. Check if Event Title: "Time to get ready for <name>! 🌟"
+  // 3. Check if multi-line proposals list format: "Proposals for <style>:\n• Outfit: ..."
+  if (body.includes('\n')) {
+    const lines = body.split('\n');
+    const proposalsTitleRegex = /^Proposals for\s+(.+?)\s*:\s*$/i;
+    const matchProposalsTitle = lines[0].match(proposalsTitleRegex);
+    if (matchProposalsTitle) {
+      const style = matchProposalsTitle[1] || '';
+      const translatedStyle = labelForDressCode(style.toLowerCase().trim(), t);
+      const headerText = t('outfits.notification.proposalsTitle', { style: translatedStyle, defaultValue: `Proposals for ${translatedStyle}:` });
+      
+      const translatedLines = lines.slice(1).map(line => {
+        const outfitLineRegex = /^(\s*•\s*)(Outfit(?:\s+\d+)?)(\s*:\s*)(.+)$/i;
+        const matchLine = line.match(outfitLineRegex);
+        if (matchLine) {
+          const bullet = matchLine[1];
+          const outfitWord = matchLine[2]; // e.g. "Outfit" or "Outfit 1"
+          const colon = matchLine[3];
+          const details = matchLine[4];
+          
+          let translatedOutfitWord = outfitWord;
+          if (outfitWord.toLowerCase().startsWith('outfit')) {
+            const numPart = outfitWord.substring(6); // e.g. " 1" or ""
+            const baseTranslated = t('outfits.outfit', { defaultValue: 'Outfit' });
+            translatedOutfitWord = `${baseTranslated}${numPart}`;
+          }
+          return `${bullet}${translatedOutfitWord}${colon}${details}`;
+        }
+        return line;
+      });
+      body = [headerText, ...translatedLines].join('\n');
+    }
+  }
+
+  // 4. Check if Event Title: "Time to get ready for <name>! 🌟"
   const eventTitleRegex = /^Time to get ready for\s*(.+?)\s*!\s*🌟\s*$/i;
   const matchEventTitle = title.match(eventTitleRegex);
   if (matchEventTitle) {
@@ -41,7 +75,7 @@ const getLocalizedNotification = (n, t) => {
     title = t('outfits.notification.eventTitle', { name, defaultValue: title });
   }
 
-  // 4. Check if Event Body: "Your chosen outfit is prepared. Have a wonderful time!"
+  // 5. Check if Event Body: "Your chosen outfit is prepared. Have a wonderful time!"
   const eventBodyRegex = /^Your chosen outfit is prepared\.\s*Have a wonderful time!/i;
   if (eventBodyRegex.test(body)) {
     body = t('outfits.notification.eventBody', { defaultValue: body });
