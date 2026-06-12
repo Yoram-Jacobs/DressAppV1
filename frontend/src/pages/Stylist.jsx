@@ -76,7 +76,7 @@ const base64ToUrl = (b64, mime = 'audio/mpeg') => {
 };
 
 export default function Stylist() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const loc = useAppLocation();
   const navigate = useNavigate();
@@ -149,7 +149,7 @@ export default function Stylist() {
   const recognitionRef = useRef(null);
   const threadRef = useRef(null);
 
-  const userLang = (user?.preferred_language || 'en').toLowerCase();
+  const userLang = (user?.preferred_language || i18n.language || 'en').split('-')[0].toLowerCase();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -989,7 +989,7 @@ export default function Stylist() {
                         <div className="space-y-1" data-testid="stylist-scout-strip">
                           <div className="caps-label text-muted-foreground flex items-center gap-1">
                             <TrendingUp className="h-3 w-3" />
-                            {t('stylist.trendsLabel')}
+                            {t('stylist.trendsLabel', { defaultValue: 'Trends' })}
                           </div>
                           <div className="flex gap-2 overflow-x-auto pb-1">
                             {m.payload.fashion_scout_picks.map((tp) => (
@@ -1004,7 +1004,9 @@ export default function Stylist() {
                                   <img src={tp.image_url} alt="" className="w-full aspect-square rounded-t-lg object-cover" />
                                 )}
                                 <div className="p-1.5">
-                                  <div className="text-[11px] line-clamp-2 leading-tight font-medium">{tp.title}</div>
+                                  <div className="text-[11px] line-clamp-2 leading-tight font-medium">
+                                    {tp.title === 'Trend' ? t('stylist.trend', { defaultValue: 'Trend' }) : tp.title}
+                                  </div>
                                   {tp.source_name && (
                                     <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{tp.source_name}</div>
                                   )}

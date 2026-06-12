@@ -106,7 +106,9 @@ function ScoutCard({ card, t }) {
             variant="outline"
             className="caps-label rounded-full text-[10px] bg-background"
           >
-            {card.tag || card.bucket_label || card.bucket}
+            {(card.tag === 'Trend' || card.bucket_label === 'Trend' || card.bucket === 'Trend')
+              ? t('stylist.trend', { defaultValue: 'Trend' })
+              : (card.tag || card.bucket_label || card.bucket)}
           </Badge>
           {card.date ? (
             <span className="text-[10px] text-muted-foreground">{card.date}</span>
