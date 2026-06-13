@@ -149,8 +149,16 @@ async def trigger_scheduled_proposal(
         advice = await generate_scheduled_proposals(user, style_preference)
         return {"advice": advice}
     except Exception as exc:
-        logger.exception("Scheduled proposal generation failed")
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.warning("Scheduled proposal generation failed, falling back: %s", exc)
+        try:
+            from app.services.scheduler import _generate_fallback_advice
+            from app.services.stylist_scheduler_brain import get_rotation_prioritized_closet
+            closet_items = await get_rotation_prioritized_closet(user["id"], limit=20)
+            advice = _generate_fallback_advice(closet_items, style_preference)
+            return {"advice": advice}
+        except Exception as inner_exc:
+            logger.error("Failed to generate fallback proposals: %s", inner_exc)
+            raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.post("/proposal/event")
