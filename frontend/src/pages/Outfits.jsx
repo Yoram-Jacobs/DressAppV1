@@ -88,6 +88,54 @@ const getLocalizedNotification = (n, t) => {
   return { title, body };
 };
 
+const parseNotificationBodyToPayload = (body) => {
+  if (!body || !body.includes('\n')) return null;
+  const lines = body.split('\n');
+  const outfitLines = lines.filter(line => line.trim().startsWith('•'));
+  if (outfitLines.length === 0) return null;
+
+  const outfit_recommendations = outfitLines.map((line, index) => {
+    const parts = line.replace(/^\s*•\s*/, '').split(':');
+    const name = parts[0]?.trim() || `Outfit ${index + 1}`;
+    const itemsText = parts.slice(1).join(':').trim();
+    const items = itemsText.split(',').map(item => {
+      const desc = item.trim();
+      let role = 'top';
+      const dLower = desc.toLowerCase();
+      if (dLower.includes('shoe') || dLower.includes('sneaker') || dLower.includes('boot') || dLower.includes('heel') || dLower.includes('loafer') || dLower.includes('sandal')) {
+        role = 'shoes';
+      } else if (dLower.includes('pant') || dLower.includes('trouser') || dLower.includes('jean') || dLower.includes('short') || dLower.includes('skirt')) {
+        role = 'bottom';
+      } else if (dLower.includes('dress') || dLower.includes('gown')) {
+        role = 'dress';
+      } else if (dLower.includes('jacket') || dLower.includes('coat') || dLower.includes('blazer') || dLower.includes('sweater') || dLower.includes('hoodie')) {
+        role = 'outerwear';
+      } else if (dLower.includes('bag') || dLower.includes('backpack') || dLower.includes('purse')) {
+        role = 'bag';
+      } else if (dLower.includes('hat') || dLower.includes('cap') || dLower.includes('beanie')) {
+        role = 'headwear';
+      }
+      return {
+        role,
+        description: desc,
+        closet_item_id: null
+      };
+    });
+
+    return {
+      name,
+      items,
+      why: 'Scheduled recommendation from your AI Stylist.',
+      confidence: 0.8
+    };
+  });
+
+  return {
+    reasoning_summary: lines[0] || 'Your scheduled proposals.',
+    outfit_recommendations
+  };
+};
+
 export default function Outfits() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -98,6 +146,7 @@ export default function Outfits() {
   const [notifLoading, setNotifLoading] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [floaterItemId, setFloaterItemId] = useState(null);
+  const [notifModalLoading, setNotifModalLoading] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -179,6 +228,34 @@ export default function Outfits() {
     }
   };
 
+  const handleNotificationClick = async (n) => {
+    let payload = n.payload || parseNotificationBodyToPayload(n.body);
+    
+    // Check if we need to generate proposals dynamically on-demand
+    if (!payload && (n.title || '').toLowerCase().includes('proposal is ready')) {
+      setSelectedNotification({ ...n, payload: { outfit_recommendations: [] } }); // Open with temporary empty payload
+      setNotifModalLoading(true);
+      try {
+        const res = await api.triggerScheduledProposal();
+        const updatedPayload = res.advice;
+        setNotifications((prev) => prev.map((item) => (item.id === n.id ? { ...item, payload: updatedPayload } : item)));
+        setSelectedNotification((current) => current && current.id === n.id ? { ...current, payload: updatedPayload } : current);
+      } catch (err) {
+        toast.error(t('outfits.failedGenerateProposals', { defaultValue: 'Failed to generate recommendations.' }));
+        setSelectedNotification(null);
+      } finally {
+        setNotifModalLoading(false);
+      }
+      return;
+    }
+    
+    if (payload) {
+      setSelectedNotification({ ...n, payload });
+    } else {
+      toast.error(t('outfits.noProposalsAvailable', { defaultValue: 'No outfit recommendations available for this notification.' }));
+    }
+  };
+
   return (
     <div className="container-px max-w-6xl mx-auto pt-6 md:pt-10 pb-16">
       {/* Header */}
@@ -224,11 +301,8 @@ export default function Outfits() {
                 return (
                   <div
                     key={n.id}
-                    className={cn(
-                      "p-3 bg-card rounded-xl border border-border flex items-start gap-2.5 shadow-sm text-xs transition-colors",
-                      n.payload && "cursor-pointer hover:bg-muted/30"
-                    )}
-                    onClick={() => n.payload && setSelectedNotification(n)}
+                    className="p-3 bg-card rounded-xl border border-border flex items-start gap-2.5 shadow-sm text-xs transition-colors cursor-pointer hover:bg-muted/30"
+                    onClick={() => handleNotificationClick(n)}
                   >
                     <div className="p-1 bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] rounded-lg shrink-0">
                       <Bell className="h-3.5 w-3.5" />
@@ -356,7 +430,14 @@ export default function Outfits() {
             <p className="text-sm text-muted-foreground">
               {selectedNotification && getLocalizedNotification(selectedNotification, t).body.split('\n')[0]}
             </p>
-            {selectedNotification?.payload?.outfit_recommendations?.length > 0 ? (
+            {notifModalLoading ? (
+              <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                <RefreshCw className="h-8 w-8 animate-spin text-[hsl(var(--accent))]" />
+                <p className="text-xs text-muted-foreground animate-pulse">
+                  {t('outfits.generatingProposals', { defaultValue: 'Generating outfit recommendations from your closet...' })}
+                </p>
+              </div>
+            ) : selectedNotification?.payload?.outfit_recommendations?.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {selectedNotification.payload.outfit_recommendations.map((rec, i) => (
                   <OutfitRecommendationCard

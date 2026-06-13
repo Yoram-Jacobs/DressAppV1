@@ -45,6 +45,116 @@ async def _safe_run() -> None:
         logger.warning("Trend-Scout daily run failed: %s", exc)
 
 
+def _generate_fallback_advice(closet_items: list[dict[str, Any]], style_dress_for: str) -> dict[str, Any]:
+    by_cat: dict[str, list[dict[str, Any]]] = {}
+    for it in closet_items:
+        cat = (it.get("category") or "top").lower()
+        if cat in {"shoe", "footwear", "sneaker", "boot", "heel", "shoes"}:
+            c_key = "shoes"
+        elif cat in {"shirt", "tshirt", "top", "blouse", "sweater", "knit", "polo"}:
+            c_key = "top"
+        elif cat in {"pants", "trousers", "jeans", "shorts", "skirt", "bottom"}:
+            c_key = "bottom"
+        elif cat == "dress":
+            c_key = "dress"
+        elif cat in {"jacket", "coat", "blazer", "outerwear"}:
+            c_key = "outerwear"
+        else:
+            c_key = "accessory"
+        by_cat.setdefault(c_key, []).append(it)
+
+    recs = []
+
+    # Outfit 1: top + bottom + shoes
+    o1_items = []
+    t_item = by_cat.get("top", [None])[0]
+    b_item = by_cat.get("bottom", [None])[0]
+    s_item = by_cat.get("shoes", [None])[0]
+    if t_item:
+        o1_items.append({"role": "top", "description": t_item.get("title", "Top"), "closet_item_id": t_item.get("id")})
+    if b_item:
+        o1_items.append({"role": "bottom", "description": b_item.get("title", "Bottom"), "closet_item_id": b_item.get("id")})
+    if s_item:
+        o1_items.append({"role": "shoes", "description": s_item.get("title", "Shoes"), "closet_item_id": s_item.get("id")})
+    if o1_items:
+        recs.append({
+            "name": "Outfit 1",
+            "items": o1_items,
+            "why": f"A balanced daily outfit matching your preferred {style_dress_for} style.",
+            "confidence": 0.85
+        })
+
+    # Outfit 2: dress + shoes / top + bottom + outerwear
+    o2_items = []
+    d_item = by_cat.get("dress", [None])[0]
+    if d_item:
+        o2_items.append({"role": "dress", "description": d_item.get("title", "Dress"), "closet_item_id": d_item.get("id")})
+        s_item_2 = by_cat.get("shoes", [None])[-1] if len(by_cat.get("shoes", [])) > 1 else s_item
+        if s_item_2:
+            o2_items.append({"role": "shoes", "description": s_item_2.get("title", "Shoes"), "closet_item_id": s_item_2.get("id")})
+    else:
+        t_item_2 = by_cat.get("top", [None])[-1] if len(by_cat.get("top", [])) > 1 else t_item
+        b_item_2 = by_cat.get("bottom", [None])[-1] if len(by_cat.get("bottom", [])) > 1 else b_item
+        o_item = by_cat.get("outerwear", [None])[0]
+        if t_item_2:
+            o2_items.append({"role": "top", "description": t_item_2.get("title", "Top"), "closet_item_id": t_item_2.get("id")})
+        if b_item_2:
+            o2_items.append({"role": "bottom", "description": b_item_2.get("title", "Bottom"), "closet_item_id": b_item_2.get("id")})
+        if o_item:
+            o2_items.append({"role": "outerwear", "description": o_item.get("title", "Jacket"), "closet_item_id": o_item.get("id")})
+        if s_item:
+            o2_items.append({"role": "shoes", "description": s_item.get("title", "Shoes"), "closet_item_id": s_item.get("id")})
+    if o2_items:
+        recs.append({
+            "name": "Outfit 2",
+            "items": o2_items,
+            "why": f"An alternative casual look selected to maximize your wardrobe rotation.",
+            "confidence": 0.88
+        })
+
+    # Outfit 3: default fallback or another combo
+    o3_items = []
+    t_item_3 = by_cat.get("top", [None])[len(by_cat.get("top", [])) // 2] if len(by_cat.get("top", [])) > 2 else None
+    b_item_3 = by_cat.get("bottom", [None])[len(by_cat.get("bottom", [])) // 2] if len(by_cat.get("bottom", [])) > 2 else None
+    s_item_3 = by_cat.get("shoes", [None])[len(by_cat.get("shoes", [])) // 2] if len(by_cat.get("shoes", [])) > 2 else None
+    if t_item_3:
+        o3_items.append({"role": "top", "description": t_item_3.get("title", "Top"), "closet_item_id": t_item_3.get("id")})
+    if b_item_3:
+        o3_items.append({"role": "bottom", "description": b_item_3.get("title", "Bottom"), "closet_item_id": b_item_3.get("id")})
+    if s_item_3:
+        o3_items.append({"role": "shoes", "description": s_item_3.get("title", "Shoes"), "closet_item_id": s_item_3.get("id")})
+
+    if not o3_items and closet_items:
+        for it in closet_items[1:4]:
+            o3_items.append({"role": "accessory", "description": it.get("title", "Item"), "closet_item_id": it.get("id")})
+
+    if o3_items:
+        recs.append({
+            "name": "Outfit 3",
+            "items": o3_items,
+            "why": f"A coordinates-driven selection based on your preferred {style_dress_for}.",
+            "confidence": 0.82
+        })
+
+    # If all recommendations are empty, use fallback static text items
+    if not recs:
+        recs = [{
+            "name": "Outfit 1",
+            "items": [
+                {"role": "top", "description": "Classic Tee", "closet_item_id": None},
+                {"role": "bottom", "description": "Comfort Jeans", "closet_item_id": None},
+                {"role": "shoes", "description": "Casual Sneakers", "closet_item_id": None}
+            ],
+            "why": "Standard fallback option.",
+            "confidence": 0.8
+        }]
+
+    return {
+        "reasoning_summary": f"Here are outfit recommendations curated from your closet for: {style_dress_for}.",
+        "outfit_recommendations": recs
+    }
+
+
 async def check_scheduler_triggers() -> None:
     """Scan user scheduler preferences and active outfits to trigger mock push notifications."""
     try:
@@ -105,7 +215,22 @@ async def check_scheduler_triggers() -> None:
                         body_text = f"Proposals for {style_dress_for}:\n" + "\n".join(rec_lines)
                     except Exception as exc:
                         logger.warning("Failed to generate scheduled proposals in cron: %s", exc)
-                        body_text = f"Your AI Stylist prepared outfit options for your: {style_dress_for}."
+                        try:
+                            from app.services.stylist_scheduler_brain import get_rotation_prioritized_closet
+                            closet_items = await get_rotation_prioritized_closet(user["id"], limit=20)
+                            advice = _generate_fallback_advice(closet_items, style_dress_for)
+                            recs = advice.get("outfit_recommendations") or []
+                            
+                            rec_lines = []
+                            for r in recs:
+                                items_str = ", ".join(it.get("description") or it.get("title") or "item" for it in r.get("items") or [])
+                                rec_lines.append(f"• {r.get('name') or 'Outfit'}: {items_str}")
+                            
+                            body_text = f"Proposals for {style_dress_for}:\n" + "\n".join(rec_lines)
+                        except Exception as inner_exc:
+                            logger.error("Failed to generate fallback scheduled proposals: %s", inner_exc)
+                            body_text = f"Your AI Stylist prepared outfit options for your: {style_dress_for}."
+                            advice = None
 
                     await send_push_notification(
                         user_id=user["id"],
