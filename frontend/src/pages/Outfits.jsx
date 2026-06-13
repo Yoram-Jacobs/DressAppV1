@@ -11,6 +11,10 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import AvatarViewer from '@/components/AvatarViewer';
 import { labelForRole, labelForDressCode } from '@/lib/taxonomy';
+import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { OutfitRecommendationCard } from '@/components/stylist/OutfitRecommendationCard';
+import { ItemFloater } from '@/components/stylist/ItemFloater';
 
 const getLocalizedNotification = (n, t) => {
   if (!n) return { title: '', body: '' };
@@ -92,6 +96,8 @@ export default function Outfits() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notifLoading, setNotifLoading] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [floaterItemId, setFloaterItemId] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -143,6 +149,36 @@ export default function Outfits() {
     }
   };
 
+  const handleSaveOutfit = async (rec, notification) => {
+    const isEvent = (notification?.title || '').toLowerCase().includes('get ready');
+    
+    const body = {
+      name: rec.name,
+      source_workflow: isEvent ? 'event' : 'scheduled',
+      prompt: isEvent ? 'Event' : (user?.scheduler_settings?.style_dress_for || 'casual'),
+      garments: (rec.items || []).map((it) => ({
+        closet_item_id: it.closet_item_id,
+        role: it.role,
+        title: it.description,
+      })),
+      usage: {
+        date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        time: user?.scheduler_settings?.time || '08:00',
+        location: null,
+        event_name: null,
+      },
+    };
+
+    try {
+      await api.saveOutfit(body);
+      toast.success(t('stylist.outfitSaved', { defaultValue: 'Outfit saved to your diary!' }));
+      const res = await api.listSavedOutfits();
+      setOutfits(res.outfits || []);
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || t('stylist.saveFailed', { defaultValue: 'Failed to save outfit.' }));
+    }
+  };
+
   return (
     <div className="container-px max-w-6xl mx-auto pt-6 md:pt-10 pb-16">
       {/* Header */}
@@ -186,7 +222,14 @@ export default function Outfits() {
               {notifications.map((n) => {
                 const { title, body } = getLocalizedNotification(n, t);
                 return (
-                  <div key={n.id} className="p-3 bg-card rounded-xl border border-border flex items-start gap-2.5 shadow-sm text-xs">
+                  <div
+                    key={n.id}
+                    className={cn(
+                      "p-3 bg-card rounded-xl border border-border flex items-start gap-2.5 shadow-sm text-xs transition-colors",
+                      n.payload && "cursor-pointer hover:bg-muted/30"
+                    )}
+                    onClick={() => n.payload && setSelectedNotification(n)}
+                  >
                     <div className="p-1 bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] rounded-lg shrink-0">
                       <Bell className="h-3.5 w-3.5" />
                     </div>
@@ -300,6 +343,47 @@ export default function Outfits() {
         </div>
       )}
       <ExploreBackButton />
+
+      {/* Outfit Recommendations Modal */}
+      <Dialog open={!!selectedNotification} onOpenChange={(open) => !open && setSelectedNotification(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-display text-lg">
+              {selectedNotification && getLocalizedNotification(selectedNotification, t).title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              {selectedNotification && getLocalizedNotification(selectedNotification, t).body.split('\n')[0]}
+            </p>
+            {selectedNotification?.payload?.outfit_recommendations?.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {selectedNotification.payload.outfit_recommendations.map((rec, i) => (
+                  <OutfitRecommendationCard
+                    key={i}
+                    rec={rec}
+                    index={i}
+                    sessionId={null}
+                    onItemClick={(itemId) => setFloaterItemId(itemId)}
+                    onSave={(r) => handleSaveOutfit(r, selectedNotification)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground italic">
+                {t('outfits.noRecommendationsPayload', { defaultValue: 'No structured recommendations available for this notification.' })}
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Closet Item Detail Side Sheet */}
+      <ItemFloater
+        itemId={floaterItemId}
+        onClose={() => setFloaterItemId(null)}
+        fromOutfits
+      />
     </div>
   );
 }

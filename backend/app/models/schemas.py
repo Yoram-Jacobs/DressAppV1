@@ -693,3 +693,4 @@ class SimulatedNotification(BaseDoc):
     title: str
     body: str
     read: bool = False
+    payload: dict[str, Any] | None = None

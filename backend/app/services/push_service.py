@@ -26,7 +26,7 @@ from pywebpush import webpush, WebPushException
 logger = logging.getLogger(__name__)
 
 
-async def send_push_notification(user_id: str, title: str, body: str) -> dict[str, Any]:
+async def send_push_notification(user_id: str, title: str, body: str, payload: dict[str, Any] | None = None) -> dict[str, Any]:
     """Simulate push alert and send real Native Web Push notifications via VAPID.
 
     1. Inserts mock notification log into the `simulated_notifications` collection.
@@ -46,6 +46,8 @@ async def send_push_notification(user_id: str, title: str, body: str) -> dict[st
         "created_at": now,
         "updated_at": now,
     }
+    if payload:
+        doc["payload"] = payload
     await db.simulated_notifications.insert_one(doc)
 
     # 2. Query user to find active web push subscriptions

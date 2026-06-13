@@ -92,6 +92,7 @@ async def check_scheduler_triggers() -> None:
 
                 if should_notify:
                     style_dress_for = s_set.get("style_dress_for") or "casual/daily dress"
+                    advice = None
                     try:
                         advice = await generate_scheduled_proposals(user, style_dress_for)
                         recs = advice.get("outfit_recommendations") or []
@@ -109,7 +110,8 @@ async def check_scheduler_triggers() -> None:
                     await send_push_notification(
                         user_id=user["id"],
                         title="Tomorrow's Outfit Proposal is Ready! 👕",
-                        body=body_text
+                        body=body_text,
+                        payload=advice
                     )
 
         # 2. Event Notifications
