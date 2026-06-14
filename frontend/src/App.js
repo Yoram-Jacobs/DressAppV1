@@ -34,6 +34,7 @@ import AdsManager from '@/pages/AdsManager';
 import ExtensionConnect from '@/pages/ExtensionConnect';
 import AvatarPage from '@/pages/AvatarPage';
 import TrendScout from '@/pages/TrendScout';
+import Suitcase from '@/pages/Suitcase';
 
 import { useEffect } from 'react';
 import { toast } from 'sonner';
@@ -89,6 +90,7 @@ function App() {
             <Route element={<AppLayout />}>
               <Route path="/home" element={<Home />} />
               <Route path="/closet" element={<Closet />} />
+              <Route path="/suitcase" element={<Suitcase />} />
               <Route path="/closet/add" element={<AddItem />} />
               <Route path="/closet/:id" element={<ItemDetail />} />
               <Route path="/stylist" element={<Stylist />} />

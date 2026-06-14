@@ -2123,6 +2123,7 @@ async def list_items(
 ) -> dict[str, Any]:
     db = get_db()
     query: dict[str, Any] = {"user_id": user["id"]}
+    query["in_suitcase"] = {"$ne": True}
     if not ids_only:
         query["group_role"] = {"$ne": "member"}
         

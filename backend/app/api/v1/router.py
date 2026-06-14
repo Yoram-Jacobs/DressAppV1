@@ -17,6 +17,7 @@ from app.api.v1 import (
     share,
     sizes,
     stylist,
+    suitcase,
     transactions,
     trends,
     users,
@@ -31,6 +32,7 @@ api_v1_router.include_router(outfits.router)
 api_v1_router.include_router(listings.router)
 api_v1_router.include_router(transactions.router)
 api_v1_router.include_router(stylist.router)
+api_v1_router.include_router(suitcase.router)
 api_v1_router.include_router(google_auth.auth_router)
 api_v1_router.include_router(google_auth.calendar_router)
 api_v1_router.include_router(trends.router)

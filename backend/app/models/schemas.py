@@ -172,6 +172,7 @@ class RetailMetadata(BaseModel):
 class ClosetItem(BaseDoc):
     user_id: str
     source: Source = "Private"
+    in_suitcase: bool = False
     # Grouping
     group_id: str | None = None
     group_role: Literal["host", "member"] | None = None
@@ -694,3 +695,30 @@ class SimulatedNotification(BaseDoc):
     body: str
     read: bool = False
     payload: dict[str, Any] | None = None
+
+
+# --------------------- DressApp Suitcase ---------------------
+class Suitcase(BaseDoc):
+    user_id: str
+    destinations: str
+    purpose: str
+    preferred_style: str
+    departure_time: str
+    return_time: str
+    notes: str | None = None
+    status: str = "gathering"  # "gathering" | "reviewing" | "active" | "completed"
+    outfits: list[dict[str, Any]] = Field(default_factory=list)
+    packing_list: list[dict[str, Any]] = Field(default_factory=list)
+    missing_notes: str | None = None
+
+
+class SuitcaseArchive(BaseDoc):
+    user_id: str
+    destination: str
+    departure_time: str
+    return_time: str
+    purpose: str
+    preferred_style: str
+    notes: str | None = None
+    packing_list: list[dict[str, Any]] = Field(default_factory=list)
+    outfits: list[dict[str, Any]] = Field(default_factory=list)

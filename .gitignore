@@ -1709,3 +1709,7 @@ credentials.json
 E y e s _ V 4 _ S H _ l o c a l /  
  E y e s _ V 4 _ l o c a l /  
  
+# Eyes model weights
+Eyes_V4_SH_local/
+Eyes_V4_local/
+

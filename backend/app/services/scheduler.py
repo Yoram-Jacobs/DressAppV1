@@ -163,12 +163,37 @@ async def check_scheduler_triggers() -> None:
         current_time_str = now.strftime("%H:%M")
         current_day_str = now.strftime("%A").lower()
 
-        cursor = db.users.find({"scheduler_settings.enabled": True}, {"_id": 0})
+        cursor = db.users.find({}, {"_id": 0})
         async for user in cursor:
+            # Check traveling suitcase status
+            active_s = await db.suitcases.find_one({"user_id": user["id"], "status": {"$ne": "completed"}})
+            is_traveling = False
+            if active_s:
+                try:
+                    dep_dt = datetime.fromisoformat(active_s["departure_time"].replace("Z", "+00:00"))
+                    ret_dt = datetime.fromisoformat(active_s["return_time"].replace("Z", "+00:00"))
+                    if dep_dt <= now <= ret_dt:
+                        is_traveling = True
+                    elif now > ret_dt and active_s["status"] == "active":
+                        # Auto-unpacking sequence
+                        logger.info("Scheduler: Auto-unpacking suitcase for user=%s", user["id"])
+                        await db.suitcases.update_one(
+                            {"id": active_s["id"]},
+                            {"$set": {"status": "completed", "updated_at": now.isoformat()}}
+                        )
+                        await db.closet_items.update_many(
+                            {"user_id": user["id"], "in_suitcase": True},
+                            {"$set": {"in_suitcase": False, "updated_at": now.isoformat()}}
+                        )
+                        await send_push_notification(
+                            user_id=user["id"],
+                            title="Welcome Back! ✈️",
+                            body="Don't forget to launder the garments from your suitcase soon to keep them fresh!"
+                        )
+                except Exception as ex:
+                    logger.warning("Scheduler date check failed for suitcase: %s", ex)
+
             s_set = user.get("scheduler_settings") or {}
-            time_str = s_set.get("time") or "08:00"
-            freq = s_set.get("frequency") or "everyday"
-            weekday = s_set.get("weekday")
             tz_str = s_set.get("timezone")
             user_tz = timezone.utc
             if tz_str:
@@ -176,12 +201,39 @@ async def check_scheduler_triggers() -> None:
                     from zoneinfo import ZoneInfo
                     user_tz = ZoneInfo(tz_str)
                 except Exception:
-                    logger.warning("Invalid user timezone: %s; falling back to UTC", tz_str)
+                    pass
 
             local_now = now.astimezone(user_tz)
             local_hour = local_now.hour
             local_minute = local_now.minute
             local_day_str = local_now.strftime("%A").lower()
+
+            if is_traveling:
+                # 20:00 local time: send next day's outfit recommendations from suitcase
+                if local_hour == 20 and local_minute == 0:
+                    tomorrow_str = (local_now + timedelta(days=1)).strftime("%Y-%m-%d")
+                    tomorrow_outfits = [o for o in active_s.get("outfits", []) if o.get("date") == tomorrow_str]
+                    if tomorrow_outfits:
+                        rec_lines = []
+                        for o in tomorrow_outfits:
+                            items_str = ", ".join(it.get("description") or it.get("title") or "item" for it in o.get("items", []) if it.get("status") != "missing")
+                            rec_lines.append(f"• {o.get('outfit_name') or 'Outfit'}: {items_str}")
+                        
+                        body_text = f"Your outfit recommendation for tomorrow ({tomorrow_str}) is ready:\n" + "\n".join(rec_lines)
+                        await send_push_notification(
+                            user_id=user["id"],
+                            title="Tomorrow's Travel Outfit 👕",
+                            body=body_text
+                        )
+                # Ignore regular scheduler notifications while traveling
+                continue
+
+            if not s_set.get("enabled"):
+                continue
+
+            time_str = s_set.get("time") or "08:00"
+            freq = s_set.get("frequency") or "everyday"
+            weekday = s_set.get("weekday")
 
             try:
                 uh, um = map(int, time_str.split(":", 1))
@@ -242,6 +294,22 @@ async def check_scheduler_triggers() -> None:
         # 2. Event Notifications
         outfit_cursor = db.outfits.find({})
         async for outfit in outfit_cursor:
+            # Check if this user is currently traveling
+            user_id = outfit.get("user_id")
+            active_s = await db.suitcases.find_one({"user_id": user_id, "status": {"$ne": "completed"}})
+            is_traveling_now = False
+            if active_s:
+                try:
+                    dep_dt = datetime.fromisoformat(active_s["departure_time"].replace("Z", "+00:00"))
+                    ret_dt = datetime.fromisoformat(active_s["return_time"].replace("Z", "+00:00"))
+                    if dep_dt <= now <= ret_dt:
+                        is_traveling_now = True
+                except Exception:
+                    pass
+            
+            if is_traveling_now:
+                continue  # Skip event notification while traveling
+
             usage = outfit.get("usage") or {}
             date_str = usage.get("date")
             time_str = usage.get("time")

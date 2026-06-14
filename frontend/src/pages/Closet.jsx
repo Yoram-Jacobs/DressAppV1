@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Plus, Search, Trash2, CheckCircle2, Circle, X, CheckSquare,
   Square, Loader2, ListChecks, Sparkles, Wand2, QrCode, Star,
-  AlertTriangle, Tag,
+  AlertTriangle, Tag, Briefcase,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -809,6 +809,16 @@ export default function Closet() {
               ({total})
             </span>
           </h1>
+          <div className="mt-2 flex items-center gap-2">
+            <Link
+              to="/suitcase"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card text-card-foreground text-sm font-medium hover:bg-muted/50 transition-colors shadow-sm"
+              data-testid="closet-suitcase-link"
+            >
+              <Briefcase className="h-4 w-4 text-[hsl(var(--accent))]" />
+              <span>{t('suitcase.title', { defaultValue: "Suitcase" })}</span>
+            </Link>
+          </div>
           {/* Phase Z2.3 + Z2.6 — two ambient progress chips, side-by-side.
               ``HashRepairChip`` ticks during the duplicate-detector
               tune-up (fires first after prewarm). ``ThumbRepairChip``

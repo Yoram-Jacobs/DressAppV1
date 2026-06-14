@@ -1743,5 +1743,19 @@
     "noShoes": "Select Shoes",
     "noTop": "Select Top",
     "title": "Style Sandbox"
+  },
+  "suitcase": {
+    "title": "Suitcase",
+    "headerTitle": "DressApp's Suitcase",
+    "subtitleText": "Traveling AI modular planner and safety advisor.",
+    "fillRequired": "Please fill in Destinations, Departure, and Return dates.",
+    "approved": "Suitcase approved and packed!",
+    "refined": "Packing list refined with your updates!",
+    "purchaseAdded": "Travel purchase saved!",
+    "itemDeleted": "Item removed from suitcase.",
+    "unpackedSuccess": "Welcome back! Suitcase contents moved to Closet.",
+    "tabTrip": "Active Trip",
+    "tabArchive": "Traveling Archive",
+    "button": "Suitcase"
   }
 }

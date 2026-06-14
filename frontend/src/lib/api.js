@@ -743,6 +743,19 @@ export const api = {
   subscribeWebPush: (sub) => client.post('/outfits/webpush/subscribe', sub).then((r) => r.data),
   unsubscribeWebPush: (endpoint) => client.post('/outfits/webpush/unsubscribe', { endpoint }).then((r) => r.data),
   getVapidKey: () => client.get('/outfits/webpush/vapid-key').then((r) => r.data),
+
+  // --- DressApp Suitcase ---
+  getSuitcaseActive: () => client.get('/suitcase/active').then((r) => r.data),
+  saveSuitcaseActive: (body) => client.post('/suitcase/active', body).then((r) => r.data),
+  deleteSuitcaseActive: () => client.delete('/suitcase/active').then((r) => r.data),
+  packSuitcase: (body) => client.post('/suitcase/pack', body).then((r) => r.data),
+  approveSuitcase: (body) => client.post('/suitcase/approve', body).then((r) => r.data),
+  updateSuitcaseItemPackStatus: (body) => client.post('/suitcase/items/pack-status', body).then((r) => r.data),
+  addSuitcaseItem: (body) => client.post('/suitcase/items', body).then((r) => r.data),
+  deleteSuitcaseItem: (itemId) => client.delete(`/suitcase/items/${itemId}`).then((r) => r.data),
+  enterSuitcaseLocation: (body) => client.post('/suitcase/enter-location', body).then((r) => r.data),
+  getSuitcaseArchive: () => client.get('/suitcase/archive').then((r) => r.data),
+  suitcaseChat: (body) => client.post('/suitcase/chat', body).then((r) => r.data),
 };
 
 export default client;
