@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Plus, Search, Trash2, CheckCircle2, Circle, X, CheckSquare,
   Square, Loader2, ListChecks, Sparkles, Wand2, QrCode, Star,
-  AlertTriangle,
+  AlertTriangle, Tag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -143,6 +143,11 @@ export default function Closet() {
   const [gatekeeperOpen, setGatekeeperOpen] = useState(false);
   const [gatekeeperMismatches, setGatekeeperMismatches] = useState([]);
   const [gatekeeperPendingAction, setGatekeeperPendingAction] = useState(null);
+
+  // Group tagging state
+  const [tagOpen, setTagOpen] = useState(false);
+  const [tagInput, setTagInput] = useState('');
+  const [tagging, setTagging] = useState(false);
 
   const getTaxonomyFieldLabel = (field) => {
     switch (field) {
@@ -887,6 +892,21 @@ export default function Closet() {
             </Button>
             <Button
               type="button"
+              variant="secondary"
+              size="sm"
+              className="rounded-lg"
+              disabled={selected.size === 0 || deleting}
+              onClick={() => {
+                setTagInput('');
+                setTagOpen(true);
+              }}
+              data-testid="closet-tag-selected-button"
+            >
+              <Tag className="h-4 w-4 md:mr-1.5" />
+              <span className="hidden md:inline">{t('closet.tagSelected', { defaultValue: 'Tag' })}</span>
+            </Button>
+            <Button
+              type="button"
               variant="destructive"
               size="sm"
               className="rounded-lg"
@@ -1346,6 +1366,92 @@ export default function Closet() {
               className="bg-primary text-primary-foreground hover:opacity-90"
             >
               {t('closet.gatekeeper.confirm', { defaultValue: 'Group anyway' })}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Group tagging dialog */}
+      <AlertDialog open={tagOpen} onOpenChange={setTagOpen}>
+        <AlertDialogContent data-testid="closet-tag-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t('closet.tagConfirmTitle', { defaultValue: 'Tag Selected Items' })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('closet.tagConfirmBody', { defaultValue: 'Enter tags separated by commas to add them to all selected garments.' })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Input
+              type="text"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              placeholder="e.g. Work, GYM, Swimwear"
+              className="rounded-xl"
+              data-testid="closet-tag-input"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="closet-tag-cancel" onClick={() => setTagOpen(false)}>
+              {t('common.cancel', { defaultValue: 'Cancel' })}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async (e) => {
+                e.preventDefault();
+                const newTags = tagInput.split(',').map(t => t.trim()).filter(Boolean);
+                if (newTags.length === 0) {
+                  setTagOpen(false);
+                  return;
+                }
+                setTagging(true);
+
+                // 1. First, add the new tags to the selected frontend Closet items
+                const selectedIds = Array.from(selected);
+                selectedIds.forEach((id) => {
+                  const item = (store.items || []).find((it) => it.id === id);
+                  if (item) {
+                    const existingTags = Array.isArray(item.tags) ? item.tags : [];
+                    const mergedTags = Array.from(new Set([...existingTags, ...newTags]));
+                    closetStore.upsert({ ...item, tags: mergedTags });
+                  }
+                });
+
+                // Clear selection and close/exit select mode
+                setSelected(new Set());
+                setSelectMode(false);
+                setTagOpen(false);
+
+                // 2. Update the DB in the background
+                try {
+                  const tagPromises = selectedIds.map(async (id) => {
+                    const item = (store.items || []).find((it) => it.id === id);
+                    if (!item) return;
+                    const existingTags = Array.isArray(item.tags) ? item.tags : [];
+                    const mergedTags = Array.from(new Set([...existingTags, ...newTags]));
+                    await api.patchItem(id, { tags: mergedTags });
+                  });
+                  await Promise.all(tagPromises);
+                  toast.success(t('closet.tagsAppliedSuccess', { defaultValue: 'Tags applied successfully' }));
+                  // Background sync to sync everything with the backend state
+                  await store.incrementalSync();
+                } catch (err) {
+                  console.error('Failed to update tags in background:', err);
+                  toast.error(t('closet.tagsAppliedError', { defaultValue: 'Some tags failed to sync to the server' }));
+                } finally {
+                  setTagging(false);
+                }
+              }}
+              disabled={tagging}
+              data-testid="closet-tag-confirm"
+              className="bg-primary text-primary-foreground hover:opacity-90"
+            >
+              {tagging ? (
+                <Loader2 className="h-4 w-4 me-1.5 animate-spin" />
+              ) : (
+                <Tag className="h-4 w-4 me-1.5" />
+              )}
+              {t('closet.tagSelected', { defaultValue: 'Tag' })}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

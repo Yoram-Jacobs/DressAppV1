@@ -180,6 +180,11 @@
     "primaryItemLabel": "Primary Item",
     "selectPrimaryPlaceholder": "Select primary item...",
     "confirmGroup": "Group",
+    "tagSelected": "Tag",
+    "tagConfirmTitle": "Tag Selected Items",
+    "tagConfirmBody": "Enter tags separated by commas to add them to all selected garments.",
+    "tagsAppliedSuccess": "Tags applied successfully",
+    "tagsAppliedError": "Some tags failed to sync to the server",
     "addNewItem": "Add First Item",
     "gatekeeper": {
       "title": "Mismatched Properties Warning",
