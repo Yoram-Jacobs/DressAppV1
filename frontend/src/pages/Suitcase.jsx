@@ -19,6 +19,7 @@ import { api } from '@/lib/api';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { bestImageUrl } from '@/lib/itemImage';
 import { toast } from 'sonner';
+import { labelForCategory, labelForRole } from '@/lib/taxonomy';
 
 export default function Suitcase() {
   const { t } = useTranslation();
@@ -38,8 +39,8 @@ export default function Suitcase() {
   const [notes, setNotes] = useState('');
 
   // Chat window state
-  const [messages, setMessages] = useState([
-    { role: 'assistant', text: 'Hello! I am your Suitcase Assistant. Where are we traveling, and what is the plan? You can use the inputs above or simply chat with me.' }
+  const [messages, setMessages] = useState(() => [
+    { role: 'assistant', text: t('suitcase.welcomeChat', { defaultValue: 'Hello! I am your Suitcase Assistant. Where are we traveling, and what is the plan? You can use the inputs above or simply chat with me.' }) }
   ]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
@@ -141,7 +142,7 @@ export default function Suitcase() {
 
       setMessages(prev => [...prev, { role: 'assistant', text: res.reply }]);
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'assistant', text: 'Sorry, I had trouble parsing that. Please try typing again!' }]);
+      setMessages(prev => [...prev, { role: 'assistant', text: t('suitcase.chatError', { defaultValue: 'Sorry, I had trouble parsing that. Please try typing again!' }) }]);
     } finally {
       setChatLoading(false);
     }
@@ -167,7 +168,7 @@ export default function Suitcase() {
       setPackingData(res);
       setViewState('reviewing');
     } catch (e) {
-      toast.error('Stylist packing generator failed. Check your API configuration.');
+      toast.error(t('suitcase.packError', { defaultValue: 'Stylist packing generator failed. Check your API configuration.' }));
     } finally {
       setPackingLoading(false);
     }
@@ -197,7 +198,7 @@ export default function Suitcase() {
         closet.incrementalSync(); // sync changes in main closet
       }
     } catch (e) {
-      toast.error('Approve failed');
+      toast.error(t('suitcase.approveError', { defaultValue: 'Approve failed' }));
     }
   };
 
@@ -220,7 +221,7 @@ export default function Suitcase() {
       setDisapproveGuidance('');
       toast.success(t('suitcase.refined', { defaultValue: 'Packing list refined with your updates!' }));
     } catch (e) {
-      toast.error('Refinement failed.');
+      toast.error(t('suitcase.refineError', { defaultValue: 'Refinement failed.' }));
     } finally {
       setRefining(false);
     }
@@ -296,7 +297,7 @@ export default function Suitcase() {
         closet.incrementalSync();
       }
     } catch (e) {
-      toast.error('Add purchase failed.');
+      toast.error(t('suitcase.addPurchaseError', { defaultValue: 'Add purchase failed.' }));
     } finally {
       setAddingItem(false);
     }
@@ -310,7 +311,7 @@ export default function Suitcase() {
       fetchActiveSuitcase();
       closet.incrementalSync();
     } catch (e) {
-      toast.error('Delete item failed.');
+      toast.error(t('suitcase.deleteItemError', { defaultValue: 'Delete item failed.' }));
     }
   };
 
@@ -325,7 +326,7 @@ export default function Suitcase() {
         closet.incrementalSync();
       }
     } catch (e) {
-      toast.error('Unpack failed.');
+      toast.error(t('suitcase.unpackError', { defaultValue: 'Unpack failed.' }));
     }
   };
 
@@ -337,13 +338,18 @@ export default function Suitcase() {
       const res = await api.enterSuitcaseLocation({ location: simLocation });
       if (res.status === 'success') {
         toast.info(
-          `Location entered: ${simLocation}. Danger Zone: ${res.analysis.is_danger_zone ? 'YES' : 'NO'}, Holy Place: ${res.analysis.is_holy_place ? 'YES' : 'NO'}`
+          t('suitcase.locationEnteredMsg', {
+            location: simLocation,
+            isDanger: res.analysis.is_danger_zone ? t('common.yes', { defaultValue: 'Yes' }) : t('common.no', { defaultValue: 'No' }),
+            isHoly: res.analysis.is_holy_place ? t('common.yes', { defaultValue: 'Yes' }) : t('common.no', { defaultValue: 'No' }),
+            defaultValue: 'Location entered: {{location}}. Danger Zone: {{isDanger}}, Holy Place: {{isHoly}}'
+          })
         );
         setShowSimModal(false);
         setSimLocation('');
       }
     } catch (e) {
-      toast.error('Simulation failed.');
+      toast.error(t('suitcase.simulationError', { defaultValue: 'Simulation failed.' }));
     } finally {
       setSimulating(false);
     }
@@ -359,17 +365,17 @@ export default function Suitcase() {
 
       if (now < dep) {
         const diff = Math.ceil((dep - now) / (1000 * 3600 * 24));
-        return `Departs in ${diff} day${diff === 1 ? '' : 's'}`;
+        return t('suitcase.departsIn', { count: diff, defaultValue: 'Departs in {{count}} days' });
       } else if (now >= dep && now <= ret) {
         const diff = Math.ceil((ret - now) / (1000 * 3600 * 24));
-        return `Traveling: ${diff} day${diff === 1 ? '' : 's'} remaining`;
+        return t('suitcase.travelingDays', { count: diff, defaultValue: 'Traveling: {{count}} days remaining' });
       } else {
-        return 'Trip completed. Unpacking ready.';
+        return t('suitcase.tripCompleted', { defaultValue: 'Trip completed. Unpacking ready.' });
       }
     } catch (e) {
       return '';
     }
-  }, [activeSuitcase]);
+  }, [activeSuitcase, t]);
 
   return (
     <div className="container max-w-6xl mx-auto pt-6 pb-20 px-4 md:pt-10">
@@ -392,7 +398,7 @@ export default function Suitcase() {
                 onClick={() => setShowSimModal(true)}
               >
                 <ShieldAlert className="h-4 w-4 text-amber-500" />
-                <span>Simulate GPS Location</span>
+                <span>{t('suitcase.gpsSimulatorTrigger', { defaultValue: 'Simulate GPS Location' })}</span>
               </Button>
               <Button
                 variant="destructive"
@@ -400,7 +406,7 @@ export default function Suitcase() {
                 onClick={handleUnpack}
               >
                 <RefreshCw className="h-4 w-4" />
-                <span>Unpack Suitcase</span>
+                <span>{t('suitcase.unpackSuitcase', { defaultValue: 'Unpack Suitcase' })}</span>
               </Button>
             </>
           )}
@@ -423,40 +429,40 @@ export default function Suitcase() {
                   <CardHeader className="bg-muted/30">
                     <CardTitle className="flex items-center gap-2 text-xl">
                       <Compass className="h-5 w-5 text-primary" />
-                      Plan a New Trip
+                      {t('suitcase.planNewTrip', { defaultValue: 'Plan a New Trip' })}
                     </CardTitle>
-                    <CardDescription>Enter details to curate your custom travel outfit checklist.</CardDescription>
+                    <CardDescription>{t('suitcase.planNewTripDesc', { defaultValue: 'Enter details to curate your custom travel outfit checklist.' })}</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-6 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-muted-foreground">Destinations *</label>
+                        <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.destinationsLabel', { defaultValue: 'Destinations *' })}</label>
                         <Input
-                          placeholder="e.g. Rome, Vatican City, Tehran"
+                          placeholder={t('suitcase.destinationsPlaceholder', { defaultValue: 'e.g. Rome, Vatican City, Tehran' })}
                           value={destinations}
                           onChange={(e) => setDestinations(e.target.value)}
                           className="rounded-xl"
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-muted-foreground">Purpose *</label>
+                        <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.purposeLabel', { defaultValue: 'Purpose *' })}</label>
                         <select
                           className="w-full flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                           value={purpose}
                           onChange={(e) => setPurpose(e.target.value)}
                         >
-                          <option value="business">Business trip</option>
-                          <option value="pleasure">Hotel vacation / Pleasure</option>
-                          <option value="safari">Safari trip</option>
-                          <option value="camping">Outdoor camping</option>
-                          <option value="tracking">Tracking / Outdoors</option>
+                          <option value="business">{t('suitcase.purpose_business', { defaultValue: 'Business trip' })}</option>
+                          <option value="pleasure">{t('suitcase.purpose_pleasure', { defaultValue: 'Hotel vacation / Pleasure' })}</option>
+                          <option value="safari">{t('suitcase.purpose_safari', { defaultValue: 'Safari trip' })}</option>
+                          <option value="camping">{t('suitcase.purpose_camping', { defaultValue: 'Outdoor camping' })}</option>
+                          <option value="tracking">{t('suitcase.purpose_tracking', { defaultValue: 'Tracking / Outdoors' })}</option>
                         </select>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-muted-foreground">Departure Time *</label>
+                        <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.departureTimeLabel', { defaultValue: 'Departure Time *' })}</label>
                         <Input
                           type="datetime-local"
                           value={departureTime}
@@ -465,7 +471,7 @@ export default function Suitcase() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-muted-foreground">Return Time *</label>
+                        <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.returnTimeLabel', { defaultValue: 'Return Time *' })}</label>
                         <Input
                           type="datetime-local"
                           value={returnTime}
@@ -477,9 +483,9 @@ export default function Suitcase() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-muted-foreground">Preferred Style</label>
+                        <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.preferredStyleLabel', { defaultValue: 'Preferred Style' })}</label>
                         <Input
-                          placeholder="e.g. casual modesty, smart-casual, chic"
+                          placeholder={t('suitcase.stylePlaceholder', { defaultValue: 'e.g. casual modesty, smart-casual, chic' })}
                           value={preferredStyle}
                           onChange={(e) => setPreferredStyle(e.target.value)}
                           className="rounded-xl"
@@ -488,9 +494,9 @@ export default function Suitcase() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-muted-foreground">Trip Notes & Activity Guidelines</label>
+                      <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.tripNotesLabel', { defaultValue: 'Trip Notes & Activity Guidelines' })}</label>
                       <Textarea
-                        placeholder="e.g. attending gala on day 2, beach activities, mosque visit planned"
+                        placeholder={t('suitcase.notesPlaceholder', { defaultValue: 'e.g. attending gala on day 2, beach activities, mosque visit planned' })}
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         className="rounded-xl min-h-[80px]"
@@ -507,12 +513,12 @@ export default function Suitcase() {
                   {packingLoading ? (
                     <>
                       <Loader2 className="h-5 w-5 animate-spin" />
-                      Generative packing model curating wardrobe...
+                      {t('suitcase.packButtonLoading', { defaultValue: 'Generative packing model curating wardrobe...' })}
                     </>
                   ) : (
                     <>
                       <Sparkles className="h-5 w-5 text-yellow-300" />
-                      Pack Suitcase
+                      {t('suitcase.packButton', { defaultValue: 'Pack Suitcase' })}
                     </>
                   )}
                 </Button>
@@ -524,9 +530,9 @@ export default function Suitcase() {
                   <CardHeader className="bg-muted/30 pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Sparkles className="h-4 w-4 text-[hsl(var(--accent))]" />
-                      Suitcase Assistant Chat
+                      {t('suitcase.chatHeader', { defaultValue: 'Suitcase Assistant Chat' })}
                     </CardTitle>
-                    <CardDescription>Tell me updates about your trip and I'll adjust the fields.</CardDescription>
+                    <CardDescription>{t('suitcase.chatDesc', { defaultValue: "Tell me updates about your trip and I'll adjust the fields." })}</CardDescription>
                   </CardHeader>
                   <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
                     {messages.map((msg, index) => (
@@ -549,14 +555,14 @@ export default function Suitcase() {
                       <div className="flex justify-start">
                         <div className="bg-secondary text-secondary-foreground rounded-2xl rounded-tl-none p-3 text-sm flex items-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin text-[hsl(var(--accent))]" />
-                          Parsing travel requirements...
+                          {t('suitcase.chatLoading', { defaultValue: 'Parsing travel requirements...' })}
                         </div>
                       </div>
                     )}
                   </CardContent>
                   <form onSubmit={handleSendMessage} className="p-3 border-t border-border bg-muted/20 flex gap-2">
                     <Input
-                      placeholder="e.g. Change dates to June 20-25"
+                      placeholder={t('suitcase.chatInputPlaceholder', { defaultValue: 'e.g. Change dates to June 20-25' })}
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                       className="rounded-xl flex-1 focus-visible:ring-1"
@@ -580,7 +586,7 @@ export default function Suitcase() {
                   <AlertTriangle className="h-6 w-6 text-red-500 shrink-0 mt-0.5" />
                   <div className="space-y-1">
                     <h3 className="font-semibold text-red-900 dark:text-red-300 text-base">
-                      Modesty & Safety Constraints Detected
+                      {t('suitcase.alertTitle', { defaultValue: 'Modesty & Safety Constraints Detected' })}
                     </h3>
                     <p className="text-sm text-red-800 dark:text-red-400 leading-relaxed font-medium">
                       {packingData.danger_zones_info || packingData.cultural_guidelines}
@@ -593,7 +599,7 @@ export default function Suitcase() {
               <div>
                 <h2 className="text-xl font-display font-semibold mb-4 flex items-center gap-2">
                   <Wand2 className="h-5 w-5 text-[hsl(var(--accent))]" />
-                  Proposed Daily Outfits
+                  {t('suitcase.proposedOutfits', { defaultValue: 'Proposed Daily Outfits' })}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {packingData.outfits.map((outfit, idx) => (
@@ -628,7 +634,7 @@ export default function Suitcase() {
                                     </div>
                                   )}
                                   <div>
-                                    <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{item.role}</p>
+                                    <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{labelForRole(item.role, t)}</p>
                                     <p className="text-sm font-medium">{item.description}</p>
                                   </div>
                                 </div>
@@ -639,7 +645,7 @@ export default function Suitcase() {
                                       : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
                                   }
                                 >
-                                  {item.status}
+                                  {item.status === 'closet' ? t('suitcase.inClosetBadge', { defaultValue: 'In Closet' }) : t('suitcase.missingBadge', { defaultValue: 'Missing' })}
                                 </Badge>
                               </div>
                             );
@@ -657,19 +663,19 @@ export default function Suitcase() {
                 {/* Packing Checklist */}
                 <div className="lg:col-span-7 space-y-4">
                   <h2 className="text-xl font-display font-semibold flex items-center justify-between">
-                    <span>Packing List Checklist</span>
-                    <Badge variant="outline" className="text-xs">{packingData.packing_list.length} Items</Badge>
+                    <span>{t('suitcase.packingListChecklist', { defaultValue: 'Packing List Checklist' })}</span>
+                    <Badge variant="outline" className="text-xs">{t('suitcase.itemsCount', { count: packingData.packing_list.length, defaultValue: '{{count}} Items' })}</Badge>
                   </h2>
                   <Card className="rounded-2xl border border-border shadow-sm">
                     <CardContent className="p-4 divide-y divide-border">
                       {packingData.packing_list.map((item) => (
                         <div key={item.id} className="flex items-center justify-between py-3">
                           <div className="flex items-center gap-3">
-                            <Badge variant="outline" className="text-[10px] uppercase">{item.category}</Badge>
+                            <Badge variant="outline" className="text-[10px] uppercase">{labelForCategory(item.category, t)}</Badge>
                             <div>
                               <p className="text-sm font-medium">{item.title}</p>
                               {item.recommendation_source && (
-                                <p className="text-xs text-amber-600 font-medium">Recomended: {item.recommendation_source}</p>
+                                <p className="text-xs text-amber-600 font-medium">{t('suitcase.recommendedLabel', { source: item.recommendation_source, defaultValue: 'Recommended: {{source}}' })}</p>
                               )}
                             </div>
                           </div>
@@ -695,9 +701,9 @@ export default function Suitcase() {
                       <CardHeader className="bg-amber-100/30">
                         <CardTitle className="text-base flex items-center gap-2">
                           <Store className="h-4 w-4 text-amber-600" />
-                          Local Shopping Advisor (Top 3)
+                          {t('suitcase.localAdvisorHeader', { defaultValue: 'Local Shopping Advisor (Top 3)' })}
                         </CardTitle>
-                        <CardDescription>Missing items? Buy them locally in the destination area.</CardDescription>
+                        <CardDescription>{t('suitcase.localAdvisorDesc', { defaultValue: 'Missing items? Buy them locally in the destination area.' })}</CardDescription>
                       </CardHeader>
                       <CardContent className="pt-4 space-y-3">
                         {packingData.local_fashion_stores.slice(0, 3).map((store, idx) => (
@@ -717,13 +723,13 @@ export default function Suitcase() {
                       <CardHeader className="pb-3 border-b border-border">
                         <CardTitle className="text-base flex items-center gap-2">
                           <ShoppingBag className="h-4 w-4 text-red-500" />
-                          Gaps: Missing Clothing Items
+                          {t('suitcase.gapsHeader', { defaultValue: 'Gaps: Missing Clothing Items' })}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4 space-y-3">
                         {packingData.missing_items.map((m, idx) => (
                           <div key={idx} className="flex items-start gap-3 p-2 rounded-xl bg-red-50/20 border border-red-100">
-                            <Badge variant="destructive" className="uppercase text-[9px] mt-0.5">{m.role}</Badge>
+                            <Badge variant="destructive" className="uppercase text-[9px] mt-0.5">{labelForRole(m.role, t)}</Badge>
                             <div>
                               <p className="text-sm font-medium text-red-900 dark:text-red-300">{m.description}</p>
                               <p className="text-xs text-muted-foreground">{m.reason_needed}</p>
@@ -743,7 +749,7 @@ export default function Suitcase() {
                   className="flex-1 py-6 rounded-2xl bg-emerald-600 text-white font-semibold text-base shadow hover:bg-emerald-700 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2"
                 >
                   <Check className="h-5 w-5" />
-                  Approve and Save Packing List
+                  {t('suitcase.approveButton', { defaultValue: 'Approve and Save Packing List' })}
                 </Button>
                 <Button
                   variant="outline"
@@ -751,7 +757,7 @@ export default function Suitcase() {
                   className="flex-1 py-6 rounded-2xl border-red-300 text-red-600 font-semibold text-base hover:bg-red-50 dark:hover:bg-red-950/20 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2"
                 >
                   <X className="h-5 w-5" />
-                  Disapprove / Refine List
+                  {t('suitcase.disapproveButton', { defaultValue: 'Disapprove / Refine List' })}
                 </Button>
               </div>
             </div>
@@ -767,7 +773,7 @@ export default function Suitcase() {
                       <MapPin className="h-6 w-6 text-[hsl(var(--accent))]" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-muted-foreground uppercase">Destinations</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase">{t('suitcase.destinationsCard', { defaultValue: 'Destinations' })}</p>
                       <p className="text-base font-semibold truncate max-w-[220px]">{activeSuitcase.destinations}</p>
                     </div>
                   </CardContent>
@@ -778,7 +784,7 @@ export default function Suitcase() {
                       <Calendar className="h-6 w-6 text-amber-500" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-muted-foreground uppercase">Status</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase">{t('suitcase.statusCard', { defaultValue: 'Status' })}</p>
                       <p className="text-base font-semibold">{countdownText}</p>
                     </div>
                   </CardContent>
@@ -789,8 +795,8 @@ export default function Suitcase() {
                       <Briefcase className="h-6 w-6 text-emerald-500" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-muted-foreground uppercase">Style & Purpose</p>
-                      <p className="text-base font-semibold capitalize">{activeSuitcase.purpose} · {activeSuitcase.preferred_style}</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase">{t('suitcase.stylePurposeCard', { defaultValue: 'Style & Purpose' })}</p>
+                      <p className="text-base font-semibold capitalize">{t(`suitcase.purpose_${activeSuitcase.purpose}`, { defaultValue: activeSuitcase.purpose })} · {activeSuitcase.preferred_style}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -801,7 +807,7 @@ export default function Suitcase() {
                 <div className="rounded-2xl border border-amber-200 dark:border-amber-950/50 bg-amber-50/55 dark:bg-amber-950/10 p-4 flex gap-3 items-start">
                   <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                   <div className="space-y-0.5">
-                    <h4 className="font-semibold text-amber-900 dark:text-amber-300 text-sm">Travel Modesty / Safety Advisor Notes</h4>
+                    <h4 className="font-semibold text-amber-900 dark:text-amber-300 text-sm">{t('suitcase.safetyNotesHeader', { defaultValue: 'Travel Modesty / Safety Advisor Notes' })}</h4>
                     <p className="text-xs text-amber-800 dark:text-amber-400 font-medium leading-relaxed">{activeSuitcase.missing_notes}</p>
                   </div>
                 </div>
@@ -812,7 +818,7 @@ export default function Suitcase() {
                 <div className="lg:col-span-7 space-y-6">
                   <h2 className="text-xl font-display font-semibold flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-[hsl(var(--accent))]" />
-                    My Travel Outfits
+                    {t('suitcase.myTravelOutfits', { defaultValue: 'My Travel Outfits' })}
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {activeSuitcase.outfits.map((outfit, idx) => (
@@ -845,7 +851,7 @@ export default function Suitcase() {
                                   </div>
                                 )}
                                 <div className="min-w-0 flex-1">
-                                  <p className="text-[9px] uppercase font-semibold text-muted-foreground tracking-wider leading-none">{item.role}</p>
+                                  <p className="text-[9px] uppercase font-semibold text-muted-foreground tracking-wider leading-none">{labelForRole(item.role, t)}</p>
                                   <p className="text-xs font-medium truncate">{item.description}</p>
                                 </div>
                               </div>
@@ -862,7 +868,7 @@ export default function Suitcase() {
                   <div className="flex justify-between items-center">
                     <h2 className="text-xl font-display font-semibold flex items-center gap-2">
                       <Luggage className="h-5 w-5 text-[hsl(var(--accent))]" />
-                      Suitcase Packing Checklist
+                      {t('suitcase.packingListChecklist', { defaultValue: 'Packing List Checklist' })}
                     </h2>
                     <Button
                       size="sm"
@@ -870,7 +876,7 @@ export default function Suitcase() {
                       className="rounded-xl flex items-center gap-1 bg-[hsl(var(--accent))] text-white"
                     >
                       <Plus className="h-3 w-3" />
-                      Add Purchase
+                      {t('suitcase.addPurchase', { defaultValue: 'Add Purchase' })}
                     </Button>
                   </div>
 
@@ -892,14 +898,14 @@ export default function Suitcase() {
                             <div className="min-w-0">
                               <p className={`text-sm font-medium ${item.checked ? 'line-through text-muted-foreground' : ''}`}>{item.title}</p>
                               {item.recommendation_source && (
-                                <p className="text-[10px] text-amber-600 font-medium">Recomended: {item.recommendation_source}</p>
+                                <p className="text-[10px] text-amber-600 font-medium">{t('suitcase.recommendedLabel', { source: item.recommendation_source, defaultValue: 'Recommended: {{source}}' })}</p>
                               )}
                             </div>
                           </div>
                           {item.checked ? (
-                            <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 rounded-md">Packed</Badge>
+                            <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 rounded-md">{t('suitcase.packedBadge', { defaultValue: 'Packed' })}</Badge>
                           ) : (
-                            <Badge variant="outline" className="text-muted-foreground rounded-md">In Closet</Badge>
+                            <Badge variant="outline" className="text-muted-foreground rounded-md">{t('suitcase.inClosetBadge', { defaultValue: 'In Closet' })}</Badge>
                           )}
                           <Button
                             variant="ghost"
@@ -922,7 +928,7 @@ export default function Suitcase() {
         <TabsContent value="archive" className="space-y-6">
           <h2 className="text-xl font-display font-semibold flex items-center gap-2">
             <Archive className="h-5 w-5 text-primary" />
-            Trip Packing Archives
+            {t('suitcase.tripPackingArchives', { defaultValue: 'Trip Packing Archives' })}
           </h2>
 
           {archiveLoading ? (
@@ -931,7 +937,7 @@ export default function Suitcase() {
             </div>
           ) : archives.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground text-sm">
-              No archived travel packing lists found. Start a trip to archive it!
+              {t('suitcase.noArchives', { defaultValue: 'No archived travel packing lists found. Start a trip to archive it!' })}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -947,15 +953,15 @@ export default function Suitcase() {
                       {arch.destination}
                     </CardTitle>
                     <CardDescription className="text-xs">
-                      {arch.departure_time.split('T')[0]} to {arch.return_time.split('T')[0]}
+                      {t('suitcase.tripDates', { dep: arch.departure_time.split('T')[0], ret: arch.return_time.split('T')[0], defaultValue: 'Trip dates: {{dep}} to {{ret}}' })}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pt-3">
                     <p className="text-xs text-muted-foreground font-medium capitalize">
-                      Purpose: {arch.purpose} · Style: {arch.preferred_style}
+                      {t('suitcase.purposeLabel', { defaultValue: 'Purpose' })}: {t(`suitcase.purpose_${arch.purpose}`, { defaultValue: arch.purpose })} · {t('suitcase.preferredStyleLabel', { defaultValue: 'Style' })}: {arch.preferred_style}
                     </p>
                     <p className="text-xs text-muted-foreground mt-2 truncate">
-                      {arch.notes || 'No notes.'}
+                      {arch.notes || t('suitcase.archiveNoNotes', { defaultValue: 'No notes.' })}
                     </p>
                   </CardContent>
                 </Card>
@@ -969,21 +975,21 @@ export default function Suitcase() {
       <Dialog open={showDisapproveModal} onOpenChange={setShowDisapproveModal}>
         <DialogContent className="rounded-2xl max-w-md">
           <DialogHeader>
-            <DialogTitle>Refine Packing Plan</DialogTitle>
+            <DialogTitle>{t('suitcase.refinePlanHeader', { defaultValue: 'Refine Packing Plan' })}</DialogTitle>
             <DialogDescription>
-              Explain what you would like to change (e.g. "it is colder than expected, replace short sleeves with long sleeves").
+              {t('suitcase.refinePlanDesc', { defaultValue: 'Explain what you would like to change (e.g. "it is colder than expected, replace short sleeves with long sleeves").' })}
             </DialogDescription>
           </DialogHeader>
           <div className="py-2">
             <Textarea
-              placeholder="Type your guidance here..."
+              placeholder={t('suitcase.refineInputPlaceholder', { defaultValue: 'Type your guidance here...' })}
               value={disapproveGuidance}
               onChange={(e) => setDisapproveGuidance(e.target.value)}
               className="rounded-xl min-h-[100px]"
             />
           </div>
           <DialogFooter className="flex gap-2">
-            <Button variant="ghost" onClick={() => setShowDisapproveModal(false)}>Cancel</Button>
+            <Button variant="ghost" onClick={() => setShowDisapproveModal(false)}>{t('common.cancel', { defaultValue: 'Cancel' })}</Button>
             <Button
               onClick={handleRefine}
               disabled={refining}
@@ -992,10 +998,10 @@ export default function Suitcase() {
               {refining ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                  Refining...
+                  {t('suitcase.refining', { defaultValue: 'Refining...' })}
                 </>
               ) : (
-                'Submit Guidance'
+                t('suitcase.submitGuidance', { defaultValue: 'Submit Guidance' })
               )}
             </Button>
           </DialogFooter>
@@ -1006,14 +1012,14 @@ export default function Suitcase() {
       <Dialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
         <DialogContent className="rounded-2xl max-w-md">
           <DialogHeader>
-            <DialogTitle>Add New Travel Purchase</DialogTitle>
-            <DialogDescription>Add fashion details bought while traveling directly to your suitcase.</DialogDescription>
+            <DialogTitle>{t('suitcase.addPurchaseHeader', { defaultValue: 'Add New Travel Purchase' })}</DialogTitle>
+            <DialogDescription>{t('suitcase.addPurchaseDesc', { defaultValue: 'Add fashion details bought while traveling directly to your suitcase.' })}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-muted-foreground">Title *</label>
+              <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.titleLabel', { defaultValue: 'Title *' })}</label>
               <Input
-                placeholder="e.g. Leather Jacket, Cotton Tee"
+                placeholder={t('suitcase.titlePlaceholder', { defaultValue: 'e.g. Leather Jacket, Cotton Tee' })}
                 value={newItemTitle}
                 onChange={(e) => setNewItemTitle(e.target.value)}
                 className="rounded-xl"
@@ -1021,24 +1027,24 @@ export default function Suitcase() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-muted-foreground">Category *</label>
+                <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.categoryLabel', { defaultValue: 'Category *' })}</label>
                 <select
                   value={newItemCategory}
                   onChange={(e) => setNewItemCategory(e.target.value)}
                   className="w-full flex h-10 rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <option value="top">Top</option>
-                  <option value="bottom">Bottom</option>
-                  <option value="outerwear">Outerwear</option>
-                  <option value="shoes">Shoes</option>
-                  <option value="accessory">Accessory</option>
-                  <option value="dress">Dress</option>
+                  <option value="top">{labelForCategory('top', t)}</option>
+                  <option value="bottom">{labelForCategory('bottom', t)}</option>
+                  <option value="outerwear">{labelForCategory('outerwear', t)}</option>
+                  <option value="shoes">{labelForCategory('shoes', t)}</option>
+                  <option value="accessory">{labelForCategory('accessory', t)}</option>
+                  <option value="dress">{labelForCategory('dress', t)}</option>
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-muted-foreground">Size</label>
+                <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.sizeLabel', { defaultValue: 'Size' })}</label>
                 <Input
-                  placeholder="e.g. M, 38, L"
+                  placeholder={t('suitcase.sizePlaceholder', { defaultValue: 'e.g. M, 38, L' })}
                   value={newItemSize}
                   onChange={(e) => setNewItemSize(e.target.value)}
                   className="rounded-xl"
@@ -1047,18 +1053,18 @@ export default function Suitcase() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-muted-foreground">Color</label>
+                <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.colorLabel', { defaultValue: 'Color' })}</label>
                 <Input
-                  placeholder="e.g. Black, Navy"
+                  placeholder={t('suitcase.colorPlaceholder', { defaultValue: 'e.g. Black, Navy' })}
                   value={newItemColor}
                   onChange={(e) => setNewItemColor(e.target.value)}
                   className="rounded-xl"
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-muted-foreground">Brand</label>
+                <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.brandLabel', { defaultValue: 'Brand' })}</label>
                 <Input
-                  placeholder="e.g. Zara, Nike"
+                  placeholder={t('suitcase.brandPlaceholder', { defaultValue: 'e.g. Zara, Nike' })}
                   value={newItemBrand}
                   onChange={(e) => setNewItemBrand(e.target.value)}
                   className="rounded-xl"
@@ -1066,7 +1072,7 @@ export default function Suitcase() {
               </div>
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-muted-foreground">Price (USD)</label>
+              <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.priceLabel', { defaultValue: 'Price (USD)' })}</label>
               <Input
                 type="number"
                 placeholder="0"
@@ -1077,7 +1083,7 @@ export default function Suitcase() {
             </div>
           </div>
           <DialogFooter className="flex gap-2">
-            <Button variant="ghost" onClick={() => setShowAddItemDialog(false)}>Cancel</Button>
+            <Button variant="ghost" onClick={() => setShowAddItemDialog(false)}>{t('common.cancel', { defaultValue: 'Cancel' })}</Button>
             <Button
               onClick={handleAddTravelPurchase}
               disabled={addingItem}
@@ -1086,10 +1092,10 @@ export default function Suitcase() {
               {addingItem ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                  Saving...
+                  {t('suitcase.saving', { defaultValue: 'Saving...' })}
                 </>
               ) : (
-                'Save to Suitcase'
+                t('suitcase.saveToSuitcase', { defaultValue: 'Save to Suitcase' })
               )}
             </Button>
           </DialogFooter>
@@ -1100,21 +1106,21 @@ export default function Suitcase() {
       <Dialog open={showSimModal} onOpenChange={setShowSimModal}>
         <DialogContent className="rounded-2xl max-w-md">
           <DialogHeader>
-            <DialogTitle>Simulate entering danger zone or holy place</DialogTitle>
+            <DialogTitle>{t('suitcase.gpsSimulatorHeader', { defaultValue: 'Simulate entering danger zone or holy place' })}</DialogTitle>
             <DialogDescription>
-              Simulate your GPS coordinates entering a specific location to test instant safety push alerts (e.g. "Islamic Republic of Iran" or "Vatican City").
+              {t('suitcase.gpsSimulatorDesc', { defaultValue: 'Simulate your GPS coordinates entering a specific location to test instant safety push alerts (e.g. "Islamic Republic of Iran" or "Vatican City").' })}
             </DialogDescription>
           </DialogHeader>
           <div className="py-2">
             <Input
-              placeholder="e.g. Islamic Republic of Iran, St. Peter's Basilica"
+              placeholder={t('suitcase.gpsPlaceholder', { defaultValue: "e.g. Islamic Republic of Iran, St. Peter's Basilica" })}
               value={simLocation}
               onChange={(e) => setSimLocation(e.target.value)}
               className="rounded-xl"
             />
           </div>
           <DialogFooter className="flex gap-2">
-            <Button variant="ghost" onClick={() => setShowSimModal(false)}>Cancel</Button>
+            <Button variant="ghost" onClick={() => setShowSimModal(false)}>{t('common.cancel', { defaultValue: 'Cancel' })}</Button>
             <Button
               onClick={handleSimulateLocation}
               disabled={simulating}
@@ -1123,10 +1129,10 @@ export default function Suitcase() {
               {simulating ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                  Simulating...
+                  {t('suitcase.simulating', { defaultValue: 'Simulating...' })}
                 </>
               ) : (
-                'Simulate Location Entry'
+                t('suitcase.simulateLocation', { defaultValue: 'Simulate Location Entry' })
               )}
             </Button>
           </DialogFooter>
@@ -1138,20 +1144,22 @@ export default function Suitcase() {
         {selectedArchive && (
           <DialogContent className="rounded-2xl max-w-2xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Archive details: {selectedArchive.destination}</DialogTitle>
+              <DialogTitle>{t('suitcase.archiveDetailsHeader', { destination: selectedArchive.destination, defaultValue: 'Archive details: {{destination}}' })}</DialogTitle>
               <DialogDescription>
-                Trip dates: {selectedArchive.departure_time.split('T')[0]} to {selectedArchive.return_time.split('T')[0]}
+                {t('suitcase.tripDates', { dep: selectedArchive.departure_time.split('T')[0], ret: selectedArchive.return_time.split('T')[0], defaultValue: 'Trip dates: {{dep}} to {{ret}}' })}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-3">
               <div>
-                <h4 className="text-sm font-semibold uppercase text-muted-foreground mb-1">Trip Details</h4>
-                <p className="text-sm">Purpose: <span className="font-semibold capitalize">{selectedArchive.purpose}</span> · Preferred Style: <span className="font-semibold capitalize">{selectedArchive.preferred_style}</span></p>
-                {selectedArchive.notes && <p className="text-xs text-muted-foreground mt-1 italic">Notes: {selectedArchive.notes}</p>}
+                <h4 className="text-sm font-semibold uppercase text-muted-foreground mb-1">{t('suitcase.tripDetailsHeader', { defaultValue: 'Trip Details' })}</h4>
+                <p className="text-sm">
+                  {t('suitcase.purposeLabel', { defaultValue: 'Purpose' })}: <span className="font-semibold capitalize">{t(`suitcase.purpose_${selectedArchive.purpose}`, { defaultValue: selectedArchive.purpose })}</span> · {t('suitcase.preferredStyleLabel', { defaultValue: 'Preferred Style' })}: <span className="font-semibold capitalize">{selectedArchive.preferred_style}</span>
+                </p>
+                {selectedArchive.notes && <p className="text-xs text-muted-foreground mt-1 italic">{t('suitcase.archiveNotesLabel', { notes: selectedArchive.notes, defaultValue: 'Notes: {{notes}}' })}</p>}
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Saved Outfits</h4>
+                <h4 className="text-sm font-semibold uppercase text-muted-foreground mb-2">{t('suitcase.savedOutfitsHeader', { defaultValue: 'Saved Outfits' })}</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {selectedArchive.outfits.map((outfit, idx) => (
                     <div key={idx} className="p-3 bg-secondary/35 rounded-xl border border-border space-y-1">
@@ -1162,7 +1170,7 @@ export default function Suitcase() {
                       <h5 className="text-sm font-semibold">{outfit.outfit_name}</h5>
                       <ul className="text-xs space-y-0.5 text-muted-foreground mt-1.5 list-disc list-inside">
                         {outfit.items.map((it, itIdx) => (
-                          <li key={itIdx}>{it.role}: {it.description}</li>
+                          <li key={itIdx}>{labelForRole(it.role, t)}: {it.description}</li>
                         ))}
                       </ul>
                     </div>
@@ -1171,20 +1179,20 @@ export default function Suitcase() {
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Archived Packing Checklist</h4>
+                <h4 className="text-sm font-semibold uppercase text-muted-foreground mb-2">{t('suitcase.archivedChecklistHeader', { defaultValue: 'Archived Packing Checklist' })}</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {selectedArchive.packing_list.map((it, idx) => (
                     <div key={idx} className="flex items-center gap-2 text-xs p-1.5 bg-card border border-border rounded-lg">
                       <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
                       <span className="truncate">{it.title}</span>
-                      <Badge variant="outline" className="text-[8px] uppercase ms-auto shrink-0">{it.category}</Badge>
+                      <Badge variant="outline" className="text-[8px] uppercase ms-auto shrink-0">{labelForCategory(it.category, t)}</Badge>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={() => setSelectedArchive(null)} className="rounded-xl">Close</Button>
+              <Button onClick={() => setSelectedArchive(null)} className="rounded-xl">{t('common.close', { defaultValue: 'Close' })}</Button>
             </DialogFooter>
           </DialogContent>
         )}
