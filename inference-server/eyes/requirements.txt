@@ -16,3 +16,4 @@ huggingface_hub==0.27.0
 # httpx talks to the local llama-server on the loopback. Sync would
 # work too, but we want to stream-cancel on FastAPI client-disconnect.
 httpx==0.28.1
+python-multipart==0.0.12
