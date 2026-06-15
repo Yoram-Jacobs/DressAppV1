@@ -159,7 +159,9 @@ async def save_active_suitcase(
             {"$set": body},
             upsert=True
         )
-    return {"status": "success", "suitcase": body}
+    # Clean Mongo _id for JSON output
+    clean_suitcase = {k: v for k, v in body.items() if k != "_id"}
+    return {"status": "success", "suitcase": clean_suitcase}
 
 
 @router.delete("/active")
@@ -531,7 +533,9 @@ async def add_suitcase_item(
             {"$set": {"packing_list": p_list, "updated_at": now_iso}}
         )
 
-    return {"status": "success", "item": doc}
+    # Clean Mongo _id for JSON output
+    clean_item = {k: v for k, v in doc.items() if k != "_id"}
+    return {"status": "success", "item": clean_item}
 
 
 @router.delete("/items/{item_id}")
