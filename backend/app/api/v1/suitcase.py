@@ -439,7 +439,9 @@ async def approve_suitcase(
     await db.suitcases.delete_many({"user_id": user["id"], "status": {"$ne": "completed"}})
     await db.suitcases.insert_one(suitcase_doc)
 
-    return {"status": "success", "suitcase": suitcase_doc}
+    # Clean Mongo _id for JSON output
+    suitcase_clean = {k: v for k, v in suitcase_doc.items() if k != "_id"}
+    return {"status": "success", "suitcase": suitcase_clean}
 
 
 @router.post("/items/pack-status")
