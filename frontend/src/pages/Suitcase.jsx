@@ -1231,7 +1231,7 @@ export default function Suitcase() {
                     </h2>
                     <Button
                       size="sm"
-                      onClick={() => setShowAddItemDialog(true)}
+                      onClick={() => navigate('/closet/add?from=suitcase')}
                       className="rounded-xl flex items-center gap-1 bg-[hsl(var(--accent))] text-white"
                     >
                       <Plus className="h-3 w-3" />

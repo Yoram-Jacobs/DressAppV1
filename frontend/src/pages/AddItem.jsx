@@ -260,6 +260,7 @@ export default function AddItem() {
   const nav = useNavigate();
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  const isSuitcase = searchParams.get('from') === 'suitcase';
   const [cards, setCards] = useState([]); // [{id,file,previewUrl,base64,status,progress,fields,error,dppData?}]
   const [saving, setSaving] = useState(false);
   // Patch M20.2 (May 2026) — auto-save queue.
@@ -731,7 +732,7 @@ export default function AddItem() {
       }
 
       try {
-        const created = await api.createItem(buildCreatePayload(cardLike));
+        const created = await api.createItem(buildCreatePayload(cardLike, isSuitcase));
         if (created && created.id) {
           try {
             const { closetStore } = await import('@/lib/closetStore');
@@ -785,7 +786,7 @@ export default function AddItem() {
       }
       
       setTimeout(() => {
-        if (saved && !pendingDuplicates) nav('/closet');
+        if (saved && !pendingDuplicates) nav(isSuitcase ? '/suitcase' : '/closet');
       }, 1200);
       return null;
     });
@@ -1357,7 +1358,7 @@ export default function AddItem() {
         continue;
       }
       try {
-        const body = buildCreatePayload(card);
+        const body = buildCreatePayload(card, isSuitcase);
         if (!body.title) throw new Error('Title is required');
         validCards.push({ card, body });
       } catch (err) {
@@ -1484,7 +1485,7 @@ export default function AddItem() {
       );
       setSaving(false);
       setPendingAutoSave(false);
-      nav('/closet');
+      nav(isSuitcase ? '/suitcase' : '/closet');
     }
     
     // Step 4+5 — parallel persistence + reconciliation. Runs after
@@ -1578,7 +1579,7 @@ export default function AddItem() {
         data-testid="add-item-action-bar"
       >
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => nav(-1)} className="rounded-full" data-testid="add-item-back">
+          <Button variant="ghost" size="sm" onClick={() => nav(isSuitcase ? '/suitcase' : -1)} className="rounded-full" data-testid="add-item-back">
             <ArrowLeft className="h-4 w-4 me-2 rtl:rotate-180" /> {t('common.back')}
           </Button>
           <div className="flex-1" />
@@ -1709,7 +1710,7 @@ export default function AddItem() {
           // background" UX while still requiring an explicit user
           // confirmation for each duplicate.
           try {
-            await api.createItem(buildCreatePayload(card));
+            await api.createItem(buildCreatePayload(card, isSuitcase));
             setCards((prev) => prev.filter((c) => c.id !== cardId));
             setBgBatch((b) =>
               b
@@ -2528,7 +2529,7 @@ function TagsEditor({ idPrefix, items, onChange, disabled }) {
 }
 
 /* -------------------- payload builder -------------------- */
-function buildCreatePayload(card) {
+function buildCreatePayload(card, inSuitcase = false) {
   const f = card.fields || {};
   const asBase64 = card.base64;
   // Drop empty/falsy optional keys to satisfy enum validators on the backend.
@@ -2581,6 +2582,7 @@ function buildCreatePayload(card) {
     source_size_bytes:
       typeof card.sourceSizeBytes === 'number' ? card.sourceSizeBytes : undefined,
     is_duplicate: card.isDuplicate ? true : undefined,
+    in_suitcase: inSuitcase ? true : undefined,
     // Phase O.6 — flag the backend so it skips the synchronous
     // SegFormer cutout (the photo is already bbox-cropped to a single
     // garment) and queues rembg as a BackgroundTask that populates

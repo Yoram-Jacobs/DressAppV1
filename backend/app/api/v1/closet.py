@@ -129,6 +129,7 @@ class CreateItemIn(BaseModel):
     purchase_date: str | None = None
     notes: str | None = None
     retail_metadata: RetailMetadata | None = None
+    in_suitcase: bool | None = None
     # Phase V6 — DPP data imported via QR scan (optional)
     dpp_data: dict[str, Any] | None = None
     # ---- Phase Z2 — photo-fingerprint pre-flight (optional) ----
@@ -788,6 +789,7 @@ async def create_item(
         source_phash=payload.source_phash,
         source_color_sig=payload.source_color_sig,
         is_duplicate=payload.is_duplicate,
+        in_suitcase=payload.in_suitcase or False,
     )
     doc = item.model_dump()
 
@@ -979,6 +981,25 @@ async def create_item(
         doc["source"] = "Shared"
 
     await repos.insert(db.closet_items, doc)
+
+    if payload.in_suitcase:
+        active_s = await db.suitcases.find_one({"user_id": user["id"], "status": {"$ne": "completed"}})
+        if active_s:
+            p_list = active_s.get("packing_list") or []
+            p_list.append({
+                "id": doc["id"],
+                "title": doc.get("title") or doc.get("name") or payload.title,
+                "category": payload.category.lower(),
+                "checked": True,
+                "is_missing": False,
+                "recommendation_source": None,
+                "recommendation_url": None
+            })
+            await db.suitcases.update_one(
+                {"id": active_s["id"]},
+                {"$set": {"packing_list": p_list, "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+
     return doc
 
 
