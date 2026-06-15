@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ImageOff, Sparkles } from 'lucide-react';
-
 import { useTranslation } from 'react-i18next';
+import { bestImageUrl } from '@/lib/itemImage';
 export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfitItems = {} }) {
   const { t } = useTranslation();
 
@@ -39,7 +39,7 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
     Object.entries(outfitItems || {}).forEach(([role, item]) => {
       if (item) {
         // Can be a full ClosetItem or simple `{image_url}` / `{image_data_url}`
-        res[role] = item.image_data_url || item.segmented_image_url || item.image_url || item.original_image_url;
+        res[role] = bestImageUrl(item) || item.image_data_url || item.segmented_image_url || item.image_url || item.original_image_url;
       }
     });
     return res;
