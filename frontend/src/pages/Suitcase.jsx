@@ -278,14 +278,17 @@ export default function Suitcase() {
     if (state.viewState === 'active') return;
     if (!state.destinations.trim() && !state.departureTime && !state.returnTime) return;
 
+    const formattedDeparture = state.departureTime ? (state.departureTime.includes('T') ? state.departureTime : `${state.departureTime}T00:00:00`) : '';
+    const formattedReturn = state.returnTime ? (state.returnTime.includes('T') ? state.returnTime : `${state.returnTime}T00:00:00`) : '';
+
     try {
       await api.saveSuitcaseActive({
         id: state.activeSuitcase?.id || null,
         destinations: state.destinations,
         purpose: state.purpose,
         preferred_style: state.preferredStyle,
-        departure_time: state.departureTime,
-        return_time: state.returnTime,
+        departure_time: formattedDeparture,
+        return_time: formattedReturn,
         notes: state.notes,
         status: state.viewState,
         messages: state.messages,
@@ -379,14 +382,17 @@ export default function Suitcase() {
       return;
     }
 
+    const formattedDeparture = departureTime ? (departureTime.includes('T') ? departureTime : `${departureTime}T00:00:00`) : '';
+    const formattedReturn = returnTime ? (returnTime.includes('T') ? returnTime : `${returnTime}T00:00:00`) : '';
+
     setPackingLoading(true);
     try {
       const res = await api.packSuitcase({
         destinations,
         purpose,
         preferred_style: preferredStyle,
-        departure_time: departureTime,
-        return_time: returnTime,
+        departure_time: formattedDeparture,
+        return_time: formattedReturn,
         notes
       });
       setPackingData(res);
@@ -401,13 +407,15 @@ export default function Suitcase() {
   // Approve packing checklist
   const handleApprove = async () => {
     if (!packingData) return;
+    const formattedDeparture = departureTime ? (departureTime.includes('T') ? departureTime : `${departureTime}T00:00:00`) : '';
+    const formattedReturn = returnTime ? (returnTime.includes('T') ? returnTime : `${returnTime}T00:00:00`) : '';
     try {
       const res = await api.approveSuitcase({
         destinations,
         purpose,
         preferred_style: preferredStyle,
-        departure_time: departureTime,
-        return_time: returnTime,
+        departure_time: formattedDeparture,
+        return_time: formattedReturn,
         notes,
         outfits: packingData.outfits,
         packing_list: packingData.packing_list,
@@ -430,14 +438,16 @@ export default function Suitcase() {
   const handleRefine = async () => {
     if (!disapproveGuidance.trim()) return;
     setRefining(true);
+    const formattedDeparture = departureTime ? (departureTime.includes('T') ? departureTime : `${departureTime}T00:00:00`) : '';
+    const formattedReturn = returnTime ? (returnTime.includes('T') ? returnTime : `${returnTime}T00:00:00`) : '';
     try {
       // Re-run packing logic with additional user feedback
       const res = await api.packSuitcase({
         destinations,
         purpose,
         preferred_style: preferredStyle,
-        departure_time: departureTime,
-        return_time: returnTime,
+        departure_time: formattedDeparture,
+        return_time: formattedReturn,
         notes: `${notes || ''}\nFeedback modification: ${disapproveGuidance}`
       });
       setPackingData(res);
@@ -699,19 +709,19 @@ export default function Suitcase() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.departureTimeLabel', { defaultValue: 'Departure Time *' })}</label>
+                        <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.departureTimeLabel', { defaultValue: 'Departure Date *' })}</label>
                         <Input
-                          type="datetime-local"
-                          value={departureTime}
+                          type="date"
+                          value={departureTime ? departureTime.split('T')[0] : ''}
                           onChange={(e) => setDepartureTime(e.target.value)}
                           className="rounded-xl"
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.returnTimeLabel', { defaultValue: 'Return Time *' })}</label>
+                        <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.returnTimeLabel', { defaultValue: 'Return Date *' })}</label>
                         <Input
-                          type="datetime-local"
-                          value={returnTime}
+                          type="date"
+                          value={returnTime ? returnTime.split('T')[0] : ''}
                           onChange={(e) => setReturnTime(e.target.value)}
                           className="rounded-xl"
                         />
