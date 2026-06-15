@@ -1838,6 +1838,10 @@
     "unpackError": "アンパッキングに失敗しました。",
     "simulationError": "シミュレーションに失敗しました。",
     "locationEnteredMsg": "侵入位置: {{location}}。危険地帯: {{isDanger}}、聖地: {{isHoly}}",
-    "missingBadge": "不足"
+    "missingBadge": "不足",
+    "fillDestination": "目的地を入力してください。",
+    "fillDeparture": "出発日を選択してください。",
+    "fillReturn": "帰着日を選択してください。",
+    "fillDates": "出発日と帰着日を選択してください。"
   }
 }

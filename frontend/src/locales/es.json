@@ -1838,6 +1838,10 @@
     "unpackError": "Error al desempacar.",
     "simulationError": "Error de simulación.",
     "locationEnteredMsg": "Ubicación ingresada: {{location}}. Zona de Peligro: {{isDanger}}, Lugar Sagrado: {{isHoly}}",
-    "missingBadge": "Faltante"
+    "missingBadge": "Faltante",
+    "fillDestination": "Por favor, ingrese el destino.",
+    "fillDeparture": "Por favor, seleccione una fecha de salida.",
+    "fillReturn": "Por favor, seleccione una fecha de regreso.",
+    "fillDates": "Por favor, seleccione las fechas de salida y regreso."
   }
 }

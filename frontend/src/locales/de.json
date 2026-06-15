@@ -1838,6 +1838,10 @@
     "unpackError": "Auspacken fehlgeschlagen.",
     "simulationError": "Simulation fehlgeschlagen.",
     "locationEnteredMsg": "Ort betreten: {{location}}. Gefahrenzone: {{isDanger}}, Heiliger Ort: {{isHoly}}",
-    "missingBadge": "Fehlt"
+    "missingBadge": "Fehlt",
+    "fillDestination": "Bitte Reiseziele eingeben.",
+    "fillDeparture": "Bitte ein Abreisedatum auswählen.",
+    "fillReturn": "Bitte ein Rückreisedatum auswählen.",
+    "fillDates": "Bitte Abreise- und Rückreisedatum auswählen."
   }
 }

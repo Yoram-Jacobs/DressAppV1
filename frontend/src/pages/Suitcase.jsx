@@ -377,8 +377,20 @@ export default function Suitcase() {
 
   // Generate packing list
   const handlePack = async () => {
-    if (!destinations || !departureTime || !returnTime) {
-      toast.error(t('suitcase.fillRequired', { defaultValue: 'Please fill in Destinations, Departure, and Return dates.' }));
+    if (!destinations || !destinations.trim()) {
+      toast.error(t('suitcase.fillDestination', { defaultValue: 'Please fill in Destinations.' }));
+      return;
+    }
+    if (!departureTime && !returnTime) {
+      toast.error(t('suitcase.fillDates', { defaultValue: 'Please select both Departure and Return dates.' }));
+      return;
+    }
+    if (!departureTime) {
+      toast.error(t('suitcase.fillDeparture', { defaultValue: 'Please select a Departure date.' }));
+      return;
+    }
+    if (!returnTime) {
+      toast.error(t('suitcase.fillReturn', { defaultValue: 'Please select a Return date.' }));
       return;
     }
 

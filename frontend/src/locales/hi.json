@@ -1838,6 +1838,10 @@
     "unpackError": "अनपैक करना विफल रहा।",
     "simulationError": "अनुकरण विफल रहा।",
     "locationEnteredMsg": "प्रवेश स्थान: {{location}}। खतरे का क्षेत्र: {{isDanger}}, पवित्र स्थान: {{isHoly}}",
-    "missingBadge": "लापता"
+    "missingBadge": "लापता",
+    "fillDestination": "कृपया गंतव्य भरें।",
+    "fillDeparture": "कृपया प्रस्थान तिथि चुनें।",
+    "fillReturn": "कृपया वापसी तिथि चुनें।",
+    "fillDates": "कृपया प्रस्थान और वापसी दोनों तिथियां चुनें।"
   }
 }

@@ -1838,6 +1838,10 @@
     "unpackError": "Svuotamento valigia fallito.",
     "simulationError": "Simulazione fallita.",
     "locationEnteredMsg": "Luogo inserito: {{location}}. Zona di Pericolo: {{isDanger}}, Luogo Sacro: {{isHoly}}",
-    "missingBadge": "Mancante"
+    "missingBadge": "Mancante",
+    "fillDestination": "Inserisci le destinazioni.",
+    "fillDeparture": "Seleziona una data di partenza.",
+    "fillReturn": "Seleziona una data di ritorno.",
+    "fillDates": "Seleziona le date di partenza e di ritorno."
   }
 }

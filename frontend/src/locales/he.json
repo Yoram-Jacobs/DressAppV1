@@ -1844,6 +1844,10 @@
     "unpackError": "פריקה נכשלה.",
     "simulationError": "סימולציה נכשלה.",
     "locationEnteredMsg": "נכנסת למיקום: {{location}}. אזור סכנה: {{isDanger}}, מקום קדוש: {{isHoly}}",
-    "missingBadge": "חסר"
+    "missingBadge": "חסר",
+    "fillDestination": "אנא הזן יעד.",
+    "fillDeparture": "אנא בחר תאריך יציאה.",
+    "fillReturn": "אנא בחר תאריך חזרה.",
+    "fillDates": "אנא בחר תאריכי יציאה וחזרה."
   }
 }

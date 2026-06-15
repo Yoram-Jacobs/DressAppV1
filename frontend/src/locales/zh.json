@@ -1838,6 +1838,10 @@
     "unpackError": "取出衣物失败。",
     "simulationError": "模拟位置失败。",
     "locationEnteredMsg": "进入位置：{{location}}。危险区域：{{isDanger}}，圣地：{{isHoly}}",
-    "missingBadge": "缺失"
+    "missingBadge": "缺失",
+    "fillDestination": "请填写目的地。",
+    "fillDeparture": "请选择出发日期。",
+    "fillReturn": "请选择返回日期。",
+    "fillDates": "请选择出发和返回日期。"
   }
 }

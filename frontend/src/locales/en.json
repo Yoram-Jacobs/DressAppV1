@@ -1853,6 +1853,10 @@
     "unpackError": "Unpack failed.",
     "simulationError": "Simulation failed.",
     "locationEnteredMsg": "Location entered: {{location}}. Danger Zone: {{isDanger}}, Holy Place: {{isHoly}}",
-    "missingBadge": "Missing"
+    "missingBadge": "Missing",
+    "fillDestination": "Please fill in Destinations.",
+    "fillDeparture": "Please select a Departure date.",
+    "fillReturn": "Please select a Return date.",
+    "fillDates": "Please select both Departure and Return dates."
   }
 }

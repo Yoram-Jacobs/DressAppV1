@@ -1838,6 +1838,10 @@
     "unpackError": "Falha ao desarrumar.",
     "simulationError": "Falha na simulação.",
     "locationEnteredMsg": "Local introduzido: {{location}}. Zona de Perigo: {{isDanger}}, Local Sagrado: {{isHoly}}",
-    "missingBadge": "Em falta"
+    "missingBadge": "Em falta",
+    "fillDestination": "Por favor, preencha os destinos.",
+    "fillDeparture": "Por favor, selecione uma data de partida.",
+    "fillReturn": "Por favor, selecione uma data de retorno.",
+    "fillDates": "Por favor, selecione as datas de partida e de retorno."
   }
 }
