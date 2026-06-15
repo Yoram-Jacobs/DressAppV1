@@ -21,6 +21,35 @@ import { bestImageUrl } from '@/lib/itemImage';
 import { toast } from 'sonner';
 import { labelForCategory, labelForRole } from '@/lib/taxonomy';
 
+// Helper to find a closet item matching an outfit item (by ID or fallback title match)
+function findClosetMatch(item, closetItems) {
+  if (!item || !closetItems || closetItems.length === 0) return null;
+  
+  // 1. Try matching by ID first
+  if (item.closet_item_id) {
+    const match = closetItems.find(i => i.id === item.closet_item_id);
+    if (match) return match;
+  }
+  if (item.id) {
+    const match = closetItems.find(i => i.id === item.id);
+    if (match) return match;
+  }
+  
+  // 2. Fallback: Try matching by description/title
+  const desc = ((item.description || item.title || "")).toLowerCase().trim();
+  if (desc) {
+    const match = closetItems.find(i => {
+      const title = (i.title || "").toLowerCase().trim();
+      const name = (i.name || "").toLowerCase().trim();
+      return (title && (desc.includes(title) || title.includes(desc))) || 
+             (name && (desc.includes(name) || name.includes(desc)));
+    });
+    if (match) return match;
+  }
+  
+  return null;
+}
+
 // Outfit Canvas collage builder
 function OutfitCanvas({ outfit, className = "", onClick, t }) {
   const closet = useClosetStore({ prewarm: true });
@@ -29,7 +58,7 @@ function OutfitCanvas({ outfit, className = "", onClick, t }) {
     if (!outfit || !outfit.items) return [];
     return outfit.items
       .map(item => {
-        const match = closet.items.find(i => i.id === item.closet_item_id);
+        const match = findClosetMatch(item, closet.items);
         return match ? { ...item, closetMatch: match } : null;
       })
       .filter(item => item && item.closetMatch?.original_image_url);
@@ -878,7 +907,7 @@ export default function Suitcase() {
                       <CardContent className="pt-4 flex-1 space-y-4">
                         <div className="space-y-2">
                           {outfit.items.map((item, itemIdx) => {
-                            const closetMatch = closet.items.find(i => i.id === item.closet_item_id);
+                            const closetMatch = findClosetMatch(item, closet.items);
                             return (
                               <div key={itemIdx} className="flex items-center justify-between p-2 rounded-xl bg-secondary/30 border border-border/50">
                                 <div className="flex items-center gap-3">
@@ -929,7 +958,7 @@ export default function Suitcase() {
                   <Card className="rounded-2xl border border-border shadow-sm">
                     <CardContent className="p-4 divide-y divide-border">
                       {packingData.packing_list.map((item) => {
-                        const closetMatch = closet.items.find(i => i.id === item.id);
+                        const closetMatch = findClosetMatch(item, closet.items);
                         return (
                           <div key={item.id} className="flex items-center justify-between py-3">
                             <div className="flex items-center gap-3">
@@ -1127,7 +1156,7 @@ export default function Suitcase() {
                         <OutfitCanvas outfit={outfit} onClick={() => setFullscreenOutfit(outfit)} t={t} />
                         <CardContent className="pt-3 space-y-2 flex-1">
                           {outfit.items.map((item, itemIdx) => {
-                            const matchItem = closet.items.find(i => i.id === item.closet_item_id);
+                            const matchItem = findClosetMatch(item, closet.items);
                             return (
                               <div key={itemIdx} className="flex items-center gap-2 p-1.5 rounded-lg bg-secondary/20 border border-border/40">
                                 {matchItem?.original_image_url ? (
@@ -1174,7 +1203,7 @@ export default function Suitcase() {
                   <Card className="rounded-2xl border border-border shadow-sm overflow-hidden">
                     <CardContent className="p-4 divide-y divide-border space-y-3 pt-4">
                       {activeSuitcase.packing_list.map((item) => {
-                        const closetMatch = closet.items.find(i => i.id === item.id);
+                        const closetMatch = findClosetMatch(item, closet.items);
                         return (
                           <div key={item.id} className="flex items-center justify-between py-2 pt-2">
                             <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -1542,7 +1571,7 @@ export default function Suitcase() {
                     <h4 className="text-sm font-semibold uppercase text-muted-foreground tracking-wider">{t('suitcase.outfitPieces', { defaultValue: 'Outfit Pieces' })}</h4>
                     <div className="space-y-2.5">
                       {fullscreenOutfit.items.map((item, idx) => {
-                        const closetMatch = closet.items.find(i => i.id === item.closet_item_id);
+                        const closetMatch = findClosetMatch(item, closet.items);
                         return (
                           <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-secondary/35 border border-border/50">
                             <div className="flex items-center gap-3">
