@@ -21,6 +21,112 @@ import { bestImageUrl } from '@/lib/itemImage';
 import { toast } from 'sonner';
 import { labelForCategory, labelForRole } from '@/lib/taxonomy';
 
+// Outfit Canvas collage builder
+function OutfitCanvas({ outfit, className = "", onClick, t }) {
+  const closet = useClosetStore();
+  
+  const outfitItemsWithImages = useMemo(() => {
+    if (!outfit || !outfit.items) return [];
+    return outfit.items
+      .map(item => {
+        const match = closet.items.find(i => i.id === item.closet_item_id);
+        return match ? { ...item, closetMatch: match } : null;
+      })
+      .filter(item => item && item.closetMatch?.original_image_url);
+  }, [outfit, closet.items]);
+
+  if (outfitItemsWithImages.length === 0) {
+    return (
+      <div 
+        className={`relative aspect-[4/3] bg-muted/40 flex flex-col items-center justify-center border-b border-border text-muted-foreground ${className}`}
+        onClick={onClick}
+      >
+        <ShoppingBag className="h-8 w-8 mb-2 opacity-40" />
+        <span className="text-xs">{t('suitcase.noImages', { defaultValue: 'No images available' })}</span>
+      </div>
+    );
+  }
+
+  const handleClick = (e) => {
+    if (onClick) {
+      e.stopPropagation();
+      onClick();
+    }
+  };
+
+  const count = outfitItemsWithImages.length;
+
+  return (
+    <div 
+      className={`relative aspect-[4/3] w-full bg-muted/20 border-b border-border overflow-hidden cursor-pointer hover:opacity-95 transition-opacity ${className}`}
+      onClick={handleClick}
+    >
+      {count === 1 && (
+        <img 
+          src={bestImageUrl(outfitItemsWithImages[0].closetMatch)} 
+          alt={outfitItemsWithImages[0].description} 
+          className="w-full h-full object-cover"
+        />
+      )}
+      {count === 2 && (
+        <div className="grid grid-cols-2 h-full w-full gap-0.5">
+          <img 
+            src={bestImageUrl(outfitItemsWithImages[0].closetMatch)} 
+            alt={outfitItemsWithImages[0].description} 
+            className="w-full h-full object-cover"
+          />
+          <img 
+            src={bestImageUrl(outfitItemsWithImages[1].closetMatch)} 
+            alt={outfitItemsWithImages[1].description} 
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+      {count === 3 && (
+        <div className="grid grid-cols-2 h-full w-full gap-0.5">
+          <div className="h-full w-full">
+            <img 
+              src={bestImageUrl(outfitItemsWithImages[0].closetMatch)} 
+              alt={outfitItemsWithImages[0].description} 
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="grid grid-rows-2 h-full w-full gap-0.5">
+            <img 
+              src={bestImageUrl(outfitItemsWithImages[1].closetMatch)} 
+              alt={outfitItemsWithImages[1].description} 
+              className="w-full h-full object-cover"
+            />
+            <img 
+              src={bestImageUrl(outfitItemsWithImages[2].closetMatch)} 
+              alt={outfitItemsWithImages[2].description} 
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+      )}
+      {count >= 4 && (
+        <div className="grid grid-cols-2 grid-rows-2 h-full w-full gap-0.5">
+          {outfitItemsWithImages.slice(0, 4).map((item, idx) => (
+            <img 
+              key={idx}
+              src={bestImageUrl(item.closetMatch)} 
+              alt={item.description} 
+              className="w-full h-full object-cover"
+            />
+          ))}
+        </div>
+      )}
+      <div className="absolute inset-0 bg-black/0 hover:bg-black/15 transition-all flex items-center justify-center opacity-0 hover:opacity-100">
+        <div className="bg-white/95 text-xs text-foreground font-semibold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5">
+          <Sparkles className="h-3.5 w-3.5 text-primary" />
+          {t('suitcase.viewFullScreen', { defaultValue: 'View Full Screen' })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Suitcase() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -29,6 +135,11 @@ export default function Suitcase() {
   // Active view: 'gathering' | 'reviewing' | 'active'
   const [viewState, setViewState] = useState('gathering');
   const [activeSuitcase, setActiveSuitcase] = useState(null);
+
+  // Full screen view state
+  const [fullscreenOutfit, setFullscreenOutfit] = useState(null);
+  const [loadingInitial, setLoadingInitial] = useState(true);
+  const isInitialLoad = useRef(true);
   
   // Gathering form state
   const [destinations, setDestinations] = useState('');
@@ -83,19 +194,38 @@ export default function Suitcase() {
       const res = await api.getSuitcaseActive();
       if (res.active) {
         setActiveSuitcase(res.suitcase);
-        setViewState('active');
+        const savedStatus = res.suitcase.status || 'active';
+        setViewState(savedStatus);
+        
         // Pre-fill form if needed
-        setDestinations(res.suitcase.destinations);
-        setPurpose(res.suitcase.purpose);
-        setPreferredStyle(res.suitcase.preferred_style);
-        setDepartureTime(res.suitcase.departure_time);
-        setReturnTime(res.suitcase.return_time);
+        setDestinations(res.suitcase.destinations || '');
+        setPurpose(res.suitcase.purpose || 'pleasure');
+        setPreferredStyle(res.suitcase.preferred_style || 'casual');
+        setDepartureTime(res.suitcase.departure_time || '');
+        setReturnTime(res.suitcase.return_time || '');
         setNotes(res.suitcase.notes || '');
+
+        // Restore chat messages if any
+        if (res.suitcase.messages && res.suitcase.messages.length > 0) {
+          setMessages(res.suitcase.messages);
+        }
+
+        // Restore packingData if in reviewing state
+        if (savedStatus === 'reviewing') {
+          setPackingData({
+            packing_list: res.suitcase.packing_list || [],
+            outfits: res.suitcase.outfits || [],
+            danger_zones_info: res.suitcase.missing_notes || '',
+            local_fashion_stores: res.suitcase.local_fashion_stores || []
+          });
+        }
       } else {
         setViewState('gathering');
       }
     } catch (e) {
       console.error('Failed to load active suitcase', e);
+    } finally {
+      setLoadingInitial(false);
     }
   };
 
@@ -110,6 +240,100 @@ export default function Suitcase() {
       setArchiveLoading(false);
     }
   };
+
+  // Debounced auto-save planning state handler
+  const saveStateRef = useRef({
+    viewState,
+    destinations,
+    purpose,
+    preferredStyle,
+    departureTime,
+    returnTime,
+    notes,
+    messages,
+    packingData,
+    activeSuitcase
+  });
+
+  useEffect(() => {
+    saveStateRef.current = {
+      viewState,
+      destinations,
+      purpose,
+      preferredStyle,
+      departureTime,
+      returnTime,
+      notes,
+      messages,
+      packingData,
+      activeSuitcase
+    };
+  }, [
+    viewState, destinations, purpose, preferredStyle, 
+    departureTime, returnTime, notes, messages, packingData, activeSuitcase
+  ]);
+
+  const autoSavePlanningState = async () => {
+    const state = saveStateRef.current;
+    if (state.viewState === 'active') return;
+    if (!state.destinations.trim() && !state.departureTime && !state.returnTime) return;
+
+    try {
+      await api.saveSuitcaseActive({
+        id: state.activeSuitcase?.id || null,
+        destinations: state.destinations,
+        purpose: state.purpose,
+        preferred_style: state.preferredStyle,
+        departure_time: state.departureTime,
+        return_time: state.returnTime,
+        notes: state.notes,
+        status: state.viewState,
+        messages: state.messages,
+        packing_list: state.viewState === 'reviewing' ? (state.packingData?.packing_list || []) : [],
+        outfits: state.viewState === 'reviewing' ? (state.packingData?.outfits || []) : [],
+        missing_notes: state.viewState === 'reviewing' ? (state.packingData?.danger_zones_info || state.packingData?.cultural_guidelines || '') : '',
+        local_fashion_stores: state.viewState === 'reviewing' ? (state.packingData?.local_fashion_stores || []) : []
+      });
+    } catch (e) {
+      console.error('Planning state auto-save failed', e);
+    }
+  };
+
+  // Debounced effect trigger
+  useEffect(() => {
+    if (loadingInitial) return;
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      autoSavePlanningState();
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [
+    viewState, destinations, purpose, preferredStyle, 
+    departureTime, returnTime, notes, messages, packingData, loadingInitial
+  ]);
+
+  // Page hide / unmount / visibilitychange auto-save
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        autoSavePlanningState();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', autoSavePlanningState);
+    
+    return () => {
+      autoSavePlanningState(); // save on unmount
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', autoSavePlanningState);
+    };
+  }, []);
 
   // Submit chat message to assistant
   const handleSendMessage = async (e) => {
@@ -323,6 +547,19 @@ export default function Suitcase() {
         toast.success(t('suitcase.unpackedSuccess', { defaultValue: 'Welcome back! Suitcase contents moved to Closet.' }));
         setActiveSuitcase(null);
         setViewState('gathering');
+        
+        // Reset inputs
+        setDestinations('');
+        setPurpose('pleasure');
+        setPreferredStyle('casual');
+        setDepartureTime('');
+        setReturnTime('');
+        setNotes('');
+        setMessages([
+          { role: 'assistant', text: t('suitcase.welcomeChat', { defaultValue: 'Hello! I am your Suitcase Assistant. Where are we traveling, and what is the plan? You can use the inputs above or simply chat with me.' }) }
+        ]);
+        setPackingData(null);
+        
         closet.incrementalSync();
       }
     } catch (e) {
@@ -615,6 +852,7 @@ export default function Suitcase() {
                           {outfit.location}
                         </CardDescription>
                       </CardHeader>
+                      <OutfitCanvas outfit={outfit} onClick={() => setFullscreenOutfit(outfit)} t={t} />
                       <CardContent className="pt-4 flex-1 space-y-4">
                         <div className="space-y-2">
                           {outfit.items.map((item, itemIdx) => {
@@ -668,27 +906,57 @@ export default function Suitcase() {
                   </h2>
                   <Card className="rounded-2xl border border-border shadow-sm">
                     <CardContent className="p-4 divide-y divide-border">
-                      {packingData.packing_list.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between py-3">
-                          <div className="flex items-center gap-3">
-                            <Badge variant="outline" className="text-[10px] uppercase">{labelForCategory(item.category, t)}</Badge>
-                            <div>
-                              <p className="text-sm font-medium">{item.title}</p>
-                              {item.recommendation_source && (
-                                <p className="text-xs text-amber-600 font-medium">{t('suitcase.recommendedLabel', { source: item.recommendation_source, defaultValue: 'Recommended: {{source}}' })}</p>
+                      {packingData.packing_list.map((item) => {
+                        const closetMatch = closet.items.find(i => i.id === item.id);
+                        return (
+                          <div key={item.id} className="flex items-center justify-between py-3">
+                            <div className="flex items-center gap-3">
+                              {/* Thumbnail */}
+                              {closetMatch?.original_image_url ? (
+                                <img
+                                  src={bestImageUrl(closetMatch)}
+                                  alt={closetMatch.title}
+                                  className="h-9 w-9 rounded-lg object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                                  onClick={() => navigate(`/closet/${closetMatch.id}`)}
+                                />
+                              ) : (
+                                <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                  <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                                </div>
                               )}
+                              <div className="flex flex-col">
+                                <div className="flex items-center gap-1.5">
+                                  <Badge variant="outline" className="text-[10px] uppercase">{labelForCategory(item.category, t)}</Badge>
+                                  {closetMatch && (
+                                    <Badge className="bg-emerald-100 text-emerald-800 text-[10px] hover:bg-emerald-200">
+                                      {t('suitcase.inClosetBadge', { defaultValue: 'In Closet' })}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div 
+                                  className={`mt-1 ${closetMatch ? "cursor-pointer hover:underline text-primary" : ""}`}
+                                  onClick={() => closetMatch && navigate(`/closet/${closetMatch.id}`)}
+                                >
+                                  <p className="text-sm font-medium">{item.title}</p>
+                                </div>
+                                {item.recommendation_source && (
+                                  <p className="text-xs text-amber-600 font-medium mt-0.5">
+                                    {t('suitcase.recommendedLabel', { source: item.recommendation_source, defaultValue: 'Recommended: {{source}}' })}
+                                  </p>
+                                )}
+                              </div>
                             </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteReviewedItem(item.id)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteReviewedItem(item.id)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </CardContent>
                   </Card>
                 </div>
@@ -834,6 +1102,7 @@ export default function Suitcase() {
                             {outfit.location}
                           </CardDescription>
                         </CardHeader>
+                        <OutfitCanvas outfit={outfit} onClick={() => setFullscreenOutfit(outfit)} t={t} />
                         <CardContent className="pt-3 space-y-2 flex-1">
                           {outfit.items.map((item, itemIdx) => {
                             const matchItem = closet.items.find(i => i.id === item.closet_item_id);
@@ -882,41 +1151,64 @@ export default function Suitcase() {
 
                   <Card className="rounded-2xl border border-border shadow-sm overflow-hidden">
                     <CardContent className="p-4 divide-y divide-border space-y-3 pt-4">
-                      {activeSuitcase.packing_list.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between py-2 pt-2">
-                          <div className="flex items-center gap-3">
-                            <button
-                              onClick={() => handleTogglePackItem(item.id, item.checked)}
-                              className="text-[hsl(var(--accent))] focus:outline-none shrink-0"
-                            >
-                              {item.checked ? (
-                                <CheckSquare className="h-5 w-5 fill-[hsl(var(--accent))]/10" />
+                      {activeSuitcase.packing_list.map((item) => {
+                        const closetMatch = closet.items.find(i => i.id === item.id);
+                        return (
+                          <div key={item.id} className="flex items-center justify-between py-2 pt-2">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              <button
+                                onClick={() => handleTogglePackItem(item.id, item.checked)}
+                                className="text-[hsl(var(--accent))] focus:outline-none shrink-0"
+                              >
+                                {item.checked ? (
+                                  <CheckSquare className="h-5 w-5 fill-[hsl(var(--accent))]/10" />
+                                ) : (
+                                  <Square className="h-5 w-5 text-muted-foreground" />
+                                )}
+                              </button>
+                              
+                              {/* Thumbnail */}
+                              {closetMatch?.original_image_url ? (
+                                <img
+                                  src={bestImageUrl(closetMatch)}
+                                  alt={closetMatch.title}
+                                  className="h-9 w-9 rounded-lg object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                                  onClick={() => navigate(`/closet/${closetMatch.id}`)}
+                                />
                               ) : (
-                                <Square className="h-5 w-5 text-muted-foreground" />
+                                <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                  <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                                </div>
                               )}
-                            </button>
-                            <div className="min-w-0">
-                              <p className={`text-sm font-medium ${item.checked ? 'line-through text-muted-foreground' : ''}`}>{item.title}</p>
-                              {item.recommendation_source && (
-                                <p className="text-[10px] text-amber-600 font-medium">{t('suitcase.recommendedLabel', { source: item.recommendation_source, defaultValue: 'Recommended: {{source}}' })}</p>
-                              )}
+                              
+                              <div className="min-w-0 flex-1">
+                                <div 
+                                  className={`min-w-0 ${closetMatch ? "cursor-pointer hover:underline text-primary" : ""}`}
+                                  onClick={() => closetMatch && navigate(`/closet/${closetMatch.id}`)}
+                                >
+                                  <p className={`text-sm font-medium truncate ${item.checked ? 'line-through text-muted-foreground' : ''}`}>{item.title}</p>
+                                </div>
+                                {item.recommendation_source && (
+                                  <p className="text-[10px] text-amber-600 font-medium truncate">{t('suitcase.recommendedLabel', { source: item.recommendation_source, defaultValue: 'Recommended: {{source}}' })}</p>
+                                )}
+                              </div>
                             </div>
+                            {item.checked ? (
+                              <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 rounded-md">{t('suitcase.packedBadge', { defaultValue: 'Packed' })}</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-muted-foreground rounded-md">{t('suitcase.inClosetBadge', { defaultValue: 'In Closet' })}</Badge>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteActiveItem(item.id)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg h-8 w-8"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
                           </div>
-                          {item.checked ? (
-                            <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 rounded-md">{t('suitcase.packedBadge', { defaultValue: 'Packed' })}</Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-muted-foreground rounded-md">{t('suitcase.inClosetBadge', { defaultValue: 'In Closet' })}</Badge>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteActiveItem(item.id)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg h-8 w-8"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </CardContent>
                   </Card>
                 </div>
@@ -1196,6 +1488,94 @@ export default function Suitcase() {
             </DialogFooter>
           </DialogContent>
         )}
+      </Dialog>
+
+      {/* Full screen outfit view */}
+      <Dialog open={!!fullscreenOutfit} onOpenChange={() => setFullscreenOutfit(null)}>
+        <DialogContent className="max-w-3xl rounded-3xl p-6 border border-border shadow-lg">
+          {fullscreenOutfit && (
+            <>
+              <DialogHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <Badge className="bg-primary/10 text-primary hover:bg-primary/20 rounded-lg mb-1">{fullscreenOutfit.time_to_wear}</Badge>
+                    <DialogTitle className="text-2xl font-display font-bold text-foreground mt-1">{fullscreenOutfit.outfit_name}</DialogTitle>
+                    <DialogDescription className="text-sm flex items-center gap-1 mt-1">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      {fullscreenOutfit.location} • {fullscreenOutfit.date}
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                {/* Large Outfit Canvas */}
+                <div className="rounded-2xl border border-border overflow-hidden bg-muted/10 relative aspect-[4/3] md:aspect-square flex items-center justify-center">
+                  <OutfitCanvas outfit={fullscreenOutfit} className="border-none hover:opacity-100 cursor-default" t={t} />
+                </div>
+                
+                {/* Item List & Reasoning */}
+                <div className="flex flex-col justify-between h-full space-y-4">
+                  <div className="space-y-4 flex-1 overflow-y-auto max-h-[300px] pr-2">
+                    <h4 className="text-sm font-semibold uppercase text-muted-foreground tracking-wider">{t('suitcase.outfitPieces', { defaultValue: 'Outfit Pieces' })}</h4>
+                    <div className="space-y-2.5">
+                      {fullscreenOutfit.items.map((item, idx) => {
+                        const closetMatch = closet.items.find(i => i.id === item.closet_item_id);
+                        return (
+                          <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-secondary/35 border border-border/50">
+                            <div className="flex items-center gap-3">
+                              {closetMatch?.original_image_url ? (
+                                <img
+                                  src={bestImageUrl(closetMatch)}
+                                  alt={closetMatch.title}
+                                  className="h-10 w-10 rounded-lg object-cover shrink-0 cursor-pointer hover:opacity-85"
+                                  onClick={() => {
+                                    setFullscreenOutfit(null);
+                                    navigate(`/closet/${closetMatch.id}`);
+                                  }}
+                                />
+                              ) : (
+                                <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                  <ShoppingBag className="h-4.5 w-4.5 text-muted-foreground" />
+                                </div>
+                              )}
+                              <div>
+                                <p className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">{labelForRole(item.role, t)}</p>
+                                <p className="text-sm font-medium">{item.description}</p>
+                              </div>
+                            </div>
+                            <Badge
+                              className={
+                                item.status === 'closet'
+                                  ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                                  : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+                              }
+                            >
+                              {item.status === 'closet' ? t('suitcase.inClosetBadge', { defaultValue: 'In Closet' }) : t('suitcase.missingBadge', { defaultValue: 'Missing' })}
+                            </Badge>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  
+                  {fullscreenOutfit.reasoning && (
+                    <div className="border-t border-border pt-3">
+                      <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider mb-1">Stylist Notes</h4>
+                      <p className="text-xs leading-relaxed text-muted-foreground italic">{fullscreenOutfit.reasoning}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <DialogFooter className="mt-4">
+                <Button onClick={() => setFullscreenOutfit(null)} variant="outline" className="rounded-xl">
+                  {t('suitcase.close', { defaultValue: 'Close' })}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
       </Dialog>
     </div>
   );
