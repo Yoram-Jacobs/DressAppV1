@@ -1857,6 +1857,7 @@
     "fillDestination": "Please fill in Destinations.",
     "fillDeparture": "Please select a Departure date.",
     "fillReturn": "Please select a Return date.",
-    "fillDates": "Please select both Departure and Return dates."
+    "fillDates": "Please select both Departure and Return dates.",
+    "resetTrip": "Reset"
   }
 }

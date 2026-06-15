@@ -1842,6 +1842,7 @@
     "fillDestination": "Veuillez indiquer la destination.",
     "fillDeparture": "Veuillez sélectionner une date de départ.",
     "fillReturn": "Veuillez sélectionner une date de retour.",
-    "fillDates": "Veuillez sélectionner les dates de départ et de retour."
+    "fillDates": "Veuillez sélectionner les dates de départ et de retour.",
+    "resetTrip": "Réinitialiser"
   }
 }

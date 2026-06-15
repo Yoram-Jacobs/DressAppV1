@@ -1842,6 +1842,7 @@
     "fillDestination": "请填写目的地。",
     "fillDeparture": "请选择出发日期。",
     "fillReturn": "请选择返回日期。",
-    "fillDates": "请选择出发和返回日期。"
+    "fillDates": "请选择出发和返回日期。",
+    "resetTrip": "重置"
   }
 }

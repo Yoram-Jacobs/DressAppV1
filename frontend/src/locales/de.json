@@ -1842,6 +1842,7 @@
     "fillDestination": "Bitte Reiseziele eingeben.",
     "fillDeparture": "Bitte ein Abreisedatum auswählen.",
     "fillReturn": "Bitte ein Rückreisedatum auswählen.",
-    "fillDates": "Bitte Abreise- und Rückreisedatum auswählen."
+    "fillDates": "Bitte Abreise- und Rückreisedatum auswählen.",
+    "resetTrip": "Zurücksetzen"
   }
 }

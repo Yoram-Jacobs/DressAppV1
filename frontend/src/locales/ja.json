@@ -1842,6 +1842,7 @@
     "fillDestination": "目的地を入力してください。",
     "fillDeparture": "出発日を選択してください。",
     "fillReturn": "帰着日を選択してください。",
-    "fillDates": "出発日と帰着日を選択してください。"
+    "fillDates": "出発日と帰着日を選択してください。",
+    "resetTrip": "リセット"
   }
 }

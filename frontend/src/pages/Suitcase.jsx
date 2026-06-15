@@ -61,7 +61,7 @@ function OutfitCanvas({ outfit, className = "", onClick, t }) {
         const match = findClosetMatch(item, closet.items);
         return match ? { ...item, closetMatch: match } : null;
       })
-      .filter(item => item && item.closetMatch?.original_image_url);
+      .filter(item => item && bestImageUrl(item.closetMatch));
   }, [outfit, closet.items]);
 
   if (outfitItemsWithImages.length === 0) {
@@ -679,24 +679,24 @@ export default function Suitcase() {
         </div>
         <div className="flex gap-2">
           {viewState === 'active' && (
-            <>
-              <Button
-                variant="outline"
-                className="rounded-xl flex items-center gap-2 border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/20"
-                onClick={() => setShowSimModal(true)}
-              >
-                <ShieldAlert className="h-4 w-4 text-amber-500" />
-                <span>{t('suitcase.gpsSimulatorTrigger', { defaultValue: 'Simulate GPS Location' })}</span>
-              </Button>
-              <Button
-                variant="destructive"
-                className="rounded-xl flex items-center gap-2"
-                onClick={handleUnpack}
-              >
-                <RefreshCw className="h-4 w-4" />
-                <span>{t('suitcase.unpackSuitcase', { defaultValue: 'Unpack Suitcase' })}</span>
-              </Button>
-            </>
+            <Button
+              variant="outline"
+              className="rounded-xl flex items-center gap-2 border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/20"
+              onClick={() => setShowSimModal(true)}
+            >
+              <ShieldAlert className="h-4 w-4 text-amber-500" />
+              <span>{t('suitcase.gpsSimulatorTrigger', { defaultValue: 'Simulate GPS Location' })}</span>
+            </Button>
+          )}
+          {viewState !== 'gathering' && (
+            <Button
+              variant="destructive"
+              className="rounded-xl flex items-center gap-2"
+              onClick={handleUnpack}
+            >
+              <RefreshCw className="h-4 w-4" />
+              <span>{t('suitcase.resetTrip', { defaultValue: 'Reset' })}</span>
+            </Button>
           )}
         </div>
       </header>
@@ -911,7 +911,7 @@ export default function Suitcase() {
                             return (
                               <div key={itemIdx} className="flex items-center justify-between p-2 rounded-xl bg-secondary/30 border border-border/50">
                                 <div className="flex items-center gap-3">
-                                  {closetMatch?.original_image_url ? (
+                                  {bestImageUrl(closetMatch) ? (
                                     <img
                                       src={bestImageUrl(closetMatch)}
                                       alt={closetMatch.title}
@@ -963,7 +963,7 @@ export default function Suitcase() {
                           <div key={item.id} className="flex items-center justify-between py-3">
                             <div className="flex items-center gap-3">
                               {/* Thumbnail */}
-                              {closetMatch?.original_image_url ? (
+                              {bestImageUrl(closetMatch) ? (
                                 <img
                                   src={bestImageUrl(closetMatch)}
                                   alt={closetMatch.title}
@@ -1159,7 +1159,7 @@ export default function Suitcase() {
                             const matchItem = findClosetMatch(item, closet.items);
                             return (
                               <div key={itemIdx} className="flex items-center gap-2 p-1.5 rounded-lg bg-secondary/20 border border-border/40">
-                                {matchItem?.original_image_url ? (
+                                {bestImageUrl(matchItem) ? (
                                   <img
                                     src={bestImageUrl(matchItem)}
                                     alt={matchItem.title}
@@ -1219,7 +1219,7 @@ export default function Suitcase() {
                               </button>
                               
                               {/* Thumbnail */}
-                              {closetMatch?.original_image_url ? (
+                              {bestImageUrl(closetMatch) ? (
                                 <img
                                   src={bestImageUrl(closetMatch)}
                                   alt={closetMatch.title}
@@ -1575,7 +1575,7 @@ export default function Suitcase() {
                         return (
                           <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-secondary/35 border border-border/50">
                             <div className="flex items-center gap-3">
-                              {closetMatch?.original_image_url ? (
+                              {bestImageUrl(closetMatch) ? (
                                 <img
                                   src={bestImageUrl(closetMatch)}
                                   alt={closetMatch.title}
