@@ -23,7 +23,7 @@ import { labelForCategory, labelForRole } from '@/lib/taxonomy';
 
 // Outfit Canvas collage builder
 function OutfitCanvas({ outfit, className = "", onClick, t }) {
-  const closet = useClosetStore();
+  const closet = useClosetStore({ prewarm: true });
   
   const outfitItemsWithImages = useMemo(() => {
     if (!outfit || !outfit.items) return [];
@@ -130,7 +130,7 @@ function OutfitCanvas({ outfit, className = "", onClick, t }) {
 export default function Suitcase() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const closet = useClosetStore();
+  const closet = useClosetStore({ prewarm: true });
 
   // Active view: 'gathering' | 'reviewing' | 'active'
   const [viewState, setViewState] = useState('gathering');
