@@ -710,6 +710,8 @@ class Suitcase(BaseDoc):
     outfits: list[dict[str, Any]] = Field(default_factory=list)
     packing_list: list[dict[str, Any]] = Field(default_factory=list)
     missing_notes: str | None = None
+    local_fashion_stores: list[dict[str, Any]] = Field(default_factory=list)
+    missing_items: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class SuitcaseArchive(BaseDoc):
@@ -722,3 +724,5 @@ class SuitcaseArchive(BaseDoc):
     notes: str | None = None
     packing_list: list[dict[str, Any]] = Field(default_factory=list)
     outfits: list[dict[str, Any]] = Field(default_factory=list)
+    local_fashion_stores: list[dict[str, Any]] = Field(default_factory=list)
+    missing_items: list[dict[str, Any]] = Field(default_factory=list)

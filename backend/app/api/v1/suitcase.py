@@ -60,6 +60,8 @@ class SuitcaseApproveIn(BaseModel):
     outfits: list[dict[str, Any]]
     packing_list: list[dict[str, Any]]
     missing_notes: str | None = None
+    local_fashion_stores: list[dict[str, Any]] | None = None
+    missing_items: list[dict[str, Any]] | None = None
 
 
 class PackStatusIn(BaseModel):
@@ -414,6 +416,8 @@ async def approve_suitcase(
         "notes": body.notes,
         "packing_list": body.packing_list,
         "outfits": body.outfits,
+        "local_fashion_stores": body.local_fashion_stores or [],
+        "missing_items": body.missing_items or [],
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
@@ -433,6 +437,8 @@ async def approve_suitcase(
         "outfits": body.outfits,
         "packing_list": body.packing_list,
         "missing_notes": body.missing_notes,
+        "local_fashion_stores": body.local_fashion_stores or [],
+        "missing_items": body.missing_items or [],
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }

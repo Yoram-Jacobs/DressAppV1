@@ -455,7 +455,9 @@ export default function Suitcase() {
         notes,
         outfits: packingData.outfits,
         packing_list: packingData.packing_list,
-        missing_notes: packingData.danger_zones_info || packingData.cultural_guidelines
+        missing_notes: packingData.danger_zones_info || packingData.cultural_guidelines,
+        local_fashion_stores: packingData.local_fashion_stores || [],
+        missing_items: packingData.missing_items || []
       });
 
       if (res.status === 'success') {
@@ -1171,153 +1173,232 @@ export default function Suitcase() {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                {/* Outfits canvas */}
-                <div className="lg:col-span-7 space-y-6">
-                  <h2 className="text-xl font-display font-semibold flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-[hsl(var(--accent))]" />
-                    {t('suitcase.myTravelOutfits', { defaultValue: 'My Travel Outfits' })}
-                  </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {activeSuitcase.outfits.map((outfit, idx) => (
-                      <Card key={idx} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col">
-                        <CardHeader className="bg-muted/10 pb-2 border-b border-border">
-                          <div className="flex justify-between items-center">
-                            <Badge className="bg-primary/10 text-primary hover:bg-primary/20 rounded-md py-0.5 text-[10px]">{outfit.time_to_wear}</Badge>
-                            <span className="text-[10px] font-semibold text-muted-foreground">{outfit.date}</span>
-                          </div>
-                          <CardTitle className="text-sm mt-1.5 font-display">{outfit.outfit_name}</CardTitle>
-                          <CardDescription className="text-[10px] flex items-center gap-1">
-                            <MapPin className="h-2.5 w-2.5 text-muted-foreground" />
-                            {outfit.location}
-                          </CardDescription>
-                        </CardHeader>
-                        <OutfitCanvas outfit={outfit} onClick={() => setFullscreenOutfit(outfit)} t={t} />
-                        <CardContent className="pt-3 space-y-2 flex-1">
-                          {outfit.items.map((item, itemIdx) => {
-                            const matchItem = findClosetMatch(item, closet.items);
-                            return (
-                              <div key={itemIdx} className="flex items-center gap-2 p-1.5 rounded-lg bg-secondary/20 border border-border/40">
-                                {bestImageUrl(matchItem) ? (
-                                  <img
-                                    src={bestImageUrl(matchItem)}
-                                    alt={matchItem.title}
-                                    className="h-7 w-7 rounded-md object-cover shrink-0"
-                                  />
-                                ) : (
-                                  <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
-                                    <ShoppingBag className="h-3 w-3 text-muted-foreground" />
+              <Accordion type="multiple" className="w-full space-y-4">
+                {/* Proposed Daily Outfits / My Travel Outfits */}
+                <AccordionItem value="outfits" className="border border-border rounded-2xl bg-card shadow-sm px-6 py-2">
+                  <AccordionTrigger className="hover:no-underline py-4">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5 text-[hsl(var(--accent))]" />
+                      <span className="text-lg font-display font-semibold text-foreground">
+                        {t('suitcase.myTravelOutfits', { defaultValue: 'My Travel Outfits' })}
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-2 pb-6 text-foreground">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {activeSuitcase.outfits.map((outfit, idx) => (
+                        <Card key={idx} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col">
+                          <CardHeader className="bg-muted/10 pb-2 border-b border-border">
+                            <div className="flex justify-between items-center">
+                              <Badge className="bg-primary/10 text-primary hover:bg-primary/20 rounded-md py-0.5 text-[10px]">{outfit.time_to_wear}</Badge>
+                              <span className="text-[10px] font-semibold text-muted-foreground">{outfit.date}</span>
+                            </div>
+                            <CardTitle className="text-sm mt-1.5 font-display">{outfit.outfit_name}</CardTitle>
+                            <CardDescription className="text-[10px] flex items-center gap-1">
+                              <MapPin className="h-2.5 w-2.5 text-muted-foreground" />
+                              {outfit.location}
+                            </CardDescription>
+                          </CardHeader>
+                          <OutfitCanvas outfit={outfit} onClick={() => setFullscreenOutfit(outfit)} t={t} />
+                          <CardContent className="pt-3 space-y-2 flex-1">
+                            {outfit.items.map((item, itemIdx) => {
+                              const matchItem = findClosetMatch(item, closet.items);
+                              return (
+                                <div key={itemIdx} className="flex items-center gap-2 p-1.5 rounded-lg bg-secondary/20 border border-border/40">
+                                  {bestImageUrl(matchItem) ? (
+                                    <img
+                                      src={bestImageUrl(matchItem)}
+                                      alt={matchItem.title}
+                                      className="h-7 w-7 rounded-md object-cover shrink-0"
+                                    />
+                                  ) : (
+                                    <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
+                                      <ShoppingBag className="h-3 w-3 text-muted-foreground" />
+                                    </div>
+                                  )}
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-[9px] uppercase font-semibold text-muted-foreground tracking-wider leading-none">{labelForRole(item.role, t)}</p>
+                                    <p className="text-xs font-medium truncate">{item.description}</p>
                                   </div>
-                                )}
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-[9px] uppercase font-semibold text-muted-foreground tracking-wider leading-none">{labelForRole(item.role, t)}</p>
-                                  <p className="text-xs font-medium truncate">{item.description}</p>
                                 </div>
-                              </div>
-                            );
-                          })}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
+                              );
+                            })}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
 
-                {/* Packing Checklist */}
-                <div className="lg:col-span-5 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-display font-semibold flex items-center gap-2">
-                      <Luggage className="h-5 w-5 text-[hsl(var(--accent))]" />
-                      {t('suitcase.packingListChecklist', { defaultValue: 'Packing List Checklist' })}
-                    </h2>
-                    <Button
-                      size="sm"
-                      onClick={() => navigate('/closet/add?from=suitcase')}
-                      className="rounded-xl flex items-center gap-1 bg-[hsl(var(--accent))] text-white"
-                    >
-                      <Plus className="h-3 w-3" />
-                      {t('suitcase.addPurchase', { defaultValue: 'Add Purchase' })}
-                    </Button>
-                  </div>
-
-                  <Card className="rounded-2xl border border-border shadow-sm overflow-hidden">
-                    <CardContent className="p-4 space-y-6">
-                      {CATEGORY_ORDER.map((catCode) => {
-                        const items = groupedActiveList[catCode];
-                        if (!items || items.length === 0) return null;
-                        return (
-                          <div key={catCode} className="space-y-2">
-                            <h3 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider pb-1 border-b border-border/40">
-                              {labelForCategory(catCode, t)}
-                            </h3>
-                            <div className="divide-y divide-border/60">
-                              {items.map((item) => {
-                                const closetMatch = findClosetMatch(item, closet.items);
-                                return (
-                                  <div key={item.id} className="flex items-center justify-between py-2.5">
-                                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                                      <button
-                                        onClick={() => handleTogglePackItem(item.id, item.checked)}
-                                        className="text-[hsl(var(--accent))] focus:outline-none shrink-0"
-                                      >
-                                        {item.checked ? (
-                                          <CheckSquare className="h-5 w-5 fill-[hsl(var(--accent))]/10" />
-                                        ) : (
-                                          <Square className="h-5 w-5 text-muted-foreground" />
-                                        )}
-                                      </button>
-                                      
-                                      {/* Thumbnail */}
-                                      {bestImageUrl(closetMatch) ? (
-                                        <img
-                                          src={bestImageUrl(closetMatch)}
-                                          alt={closetMatch.title}
-                                          className="h-9 w-9 rounded-lg object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                                          onClick={() => navigate(`/closet/${closetMatch.id}`)}
-                                        />
-                                      ) : (
-                                        <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                                          <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-                                        </div>
-                                      )}
-                                      
-                                      <div className="min-w-0 flex-1">
-                                        <div 
-                                          className={`min-w-0 ${closetMatch ? "cursor-pointer hover:underline text-primary" : ""}`}
-                                          onClick={() => closetMatch && navigate(`/closet/${closetMatch.id}`)}
+                {/* Packing List Checklist */}
+                <AccordionItem value="checklist" className="border border-border rounded-2xl bg-card shadow-sm px-6 py-2">
+                  <AccordionTrigger className="hover:no-underline py-4">
+                    <div className="flex items-center justify-between w-full pr-4">
+                      <div className="flex items-center gap-2">
+                        <Luggage className="h-5 w-5 text-[hsl(var(--accent))]" />
+                        <span className="text-lg font-display font-semibold text-foreground">
+                          {t('suitcase.packingListChecklist', { defaultValue: 'Packing List Checklist' })}
+                        </span>
+                      </div>
+                      <Badge variant="outline" className="text-xs bg-muted/50 border-muted-foreground/30">
+                        {t('suitcase.itemsCount', { count: activeSuitcase.packing_list.length, defaultValue: '{{count}} Items' })}
+                      </Badge>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-2 pb-6 text-foreground">
+                    <div className="flex justify-end mb-4">
+                      <Button
+                        size="sm"
+                        onClick={() => navigate('/closet/add?from=suitcase')}
+                        className="rounded-xl flex items-center gap-1 bg-[hsl(var(--accent))] text-white"
+                      >
+                        <Plus className="h-3 w-3" />
+                        {t('suitcase.addPurchase', { defaultValue: 'Add Purchase' })}
+                      </Button>
+                    </div>
+                    <Card className="rounded-2xl border border-border shadow-sm overflow-hidden">
+                      <CardContent className="p-4 space-y-6">
+                        {CATEGORY_ORDER.map((catCode) => {
+                          const items = groupedActiveList[catCode];
+                          if (!items || items.length === 0) return null;
+                          return (
+                            <div key={catCode} className="space-y-2">
+                              <h3 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider pb-1 border-b border-border/40">
+                                {labelForCategory(catCode, t)}
+                              </h3>
+                              <div className="divide-y divide-border/60">
+                                {items.map((item) => {
+                                  const closetMatch = findClosetMatch(item, closet.items);
+                                  return (
+                                    <div key={item.id} className="flex items-center justify-between py-2.5">
+                                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                                        <button
+                                          onClick={() => handleTogglePackItem(item.id, item.checked)}
+                                          className="text-[hsl(var(--accent))] focus:outline-none shrink-0"
                                         >
-                                          <p className={`text-sm font-medium truncate ${item.checked ? 'line-through text-muted-foreground' : ''}`}>{item.title}</p>
-                                        </div>
-                                        {item.recommendation_source && (
-                                          <p className="text-[10px] text-amber-600 font-medium truncate">{t('suitcase.recommendedLabel', { source: item.recommendation_source, defaultValue: 'Recommended: {{source}}' })}</p>
+                                          {item.checked ? (
+                                            <CheckSquare className="h-5 w-5 fill-[hsl(var(--accent))]/10" />
+                                          ) : (
+                                            <Square className="h-5 w-5 text-muted-foreground" />
+                                          )}
+                                        </button>
+                                        
+                                        {bestImageUrl(closetMatch) ? (
+                                          <img
+                                            src={bestImageUrl(closetMatch)}
+                                            alt={closetMatch.title}
+                                            className="h-9 w-9 rounded-lg object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                                            onClick={() => navigate(`/closet/${closetMatch.id}`)}
+                                          />
+                                        ) : (
+                                          <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                                          </div>
                                         )}
+                                        
+                                        <div className="min-w-0 flex-1">
+                                          <div 
+                                            className={`min-w-0 ${closetMatch ? "cursor-pointer hover:underline text-primary" : ""}`}
+                                            onClick={() => closetMatch && navigate(`/closet/${closetMatch.id}`)}
+                                          >
+                                            <p className={`text-sm font-medium truncate ${item.checked ? 'line-through text-muted-foreground' : ''}`}>{item.title}</p>
+                                          </div>
+                                          {item.recommendation_source && (
+                                            <p className="text-[10px] text-amber-600 font-medium truncate">{t('suitcase.recommendedLabel', { source: item.recommendation_source, defaultValue: 'Recommended: {{source}}' })}</p>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        {item.checked ? (
+                                          <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 rounded-md shrink-0">{t('suitcase.packedBadge', { defaultValue: 'Packed' })}</Badge>
+                                        ) : (
+                                          <Badge variant="outline" className="text-muted-foreground rounded-md shrink-0">{t('suitcase.inClosetBadge', { defaultValue: 'In Closet' })}</Badge>
+                                        )}
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => handleDeleteActiveItem(item.id)}
+                                          className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg h-8 w-8 shrink-0"
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5" />
+                                        </Button>
                                       </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                      {item.checked ? (
-                                        <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 rounded-md shrink-0">{t('suitcase.packedBadge', { defaultValue: 'Packed' })}</Badge>
-                                      ) : (
-                                        <Badge variant="outline" className="text-muted-foreground rounded-md shrink-0">{t('suitcase.inClosetBadge', { defaultValue: 'In Closet' })}</Badge>
-                                      )}
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleDeleteActiveItem(item.id)}
-                                        className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg h-8 w-8 shrink-0"
-                                      >
-                                        <Trash2 className="h-3.5 w-3.5" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                );
-                              })}
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </CardContent>
+                    </Card>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Local Shopping Advisor */}
+                {activeSuitcase.local_fashion_stores && activeSuitcase.local_fashion_stores.length > 0 && (
+                  <AccordionItem value="advisor" className="border border-amber-200 dark:border-amber-950/50 rounded-2xl bg-amber-50/10 shadow-sm px-6 py-2">
+                    <AccordionTrigger className="hover:no-underline py-4">
+                      <div className="flex items-center gap-2">
+                        <Store className="h-5 w-5 text-amber-600" />
+                        <span className="text-lg font-display font-semibold text-amber-900 dark:text-amber-300">
+                          {t('suitcase.localAdvisorHeader', { defaultValue: 'Local Shopping Advisor (Top 3)' })}
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6 text-foreground">
+                      <div className="text-xs text-muted-foreground mb-4 font-medium">
+                        {t('suitcase.localAdvisorDesc', { defaultValue: 'Missing items? Buy them locally in the destination area.' })}
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {activeSuitcase.local_fashion_stores.slice(0, 3).map((store, idx) => (
+                          <a
+                            key={idx}
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.name + ' ' + store.address_or_area)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block p-4 bg-card border border-border rounded-xl space-y-1 hover:border-amber-400 hover:shadow-md transition-all"
+                          >
+                            <h4 className="text-sm font-semibold text-primary hover:underline flex items-center gap-1.5">
+                              {store.name}
+                              <MapPin className="h-3 w-3 text-amber-600" />
+                            </h4>
+                            <p className="text-xs text-muted-foreground">{store.address_or_area}</p>
+                            <p className="text-xs italic text-amber-700 mt-1">{store.why}</p>
+                          </a>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                )}
+
+                {/* Gaps: Missing Clothing Items */}
+                {activeSuitcase.missing_items && activeSuitcase.missing_items.length > 0 && (
+                  <AccordionItem value="gaps" className="border border-border rounded-2xl bg-card shadow-sm px-6 py-2">
+                    <AccordionTrigger className="hover:no-underline py-4">
+                      <div className="flex items-center gap-2">
+                        <ShoppingBag className="h-5 w-5 text-red-500" />
+                        <span className="text-lg font-display font-semibold text-foreground">
+                          {t('suitcase.gapsHeader', { defaultValue: 'Gaps: Missing Clothing Items' })}
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-6 text-foreground">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {activeSuitcase.missing_items.map((m, idx) => (
+                          <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-red-50/20 border border-red-100">
+                            <Badge variant="destructive" className="uppercase text-[9px] mt-0.5">{labelForRole(m.role, t)}</Badge>
+                            <div>
+                              <p className="text-sm font-medium text-red-900 dark:text-red-300">{m.description}</p>
+                              <p className="text-xs text-muted-foreground">{m.reason_needed}</p>
                             </div>
                           </div>
-                        );
-                      })}
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                )}
+              </Accordion>
             </div>
           )}
         </TabsContent>
