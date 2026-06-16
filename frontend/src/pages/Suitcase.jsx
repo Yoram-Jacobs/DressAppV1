@@ -878,7 +878,7 @@ export default function Suitcase() {
                 </div>
               )}
 
-              <Accordion type="multiple" defaultValue={["outfits", "checklist"]} className="w-full space-y-4">
+              <Accordion type="multiple" className="w-full space-y-4">
                 {/* Proposed Daily Outfits */}
                 <AccordionItem value="outfits" className="border border-border rounded-2xl bg-card shadow-sm px-6 py-2">
                   <AccordionTrigger className="hover:no-underline py-4">
