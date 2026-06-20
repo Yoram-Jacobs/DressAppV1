@@ -52,5 +52,6 @@ export function useClosetStore({ prewarm = false } = {}) {
     reset: closetStore.reset.bind(closetStore),
     repairHashes: closetStore.repairHashes.bind(closetStore),
     repairThumbnails: closetStore.repairThumbnails.bind(closetStore),
+    triggerRepair: closetStore.triggerRepair.bind(closetStore),
   };
 }

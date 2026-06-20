@@ -557,6 +557,7 @@ export default function ItemDetail() {
       setItem(res.item);
       try {
         closetStore.upsert(res.item);
+        closetStore.triggerRepair();
       } catch (e) {
         console.warn('ItemDetail: closetStore sync after photo upload failed', e);
       }
@@ -903,6 +904,7 @@ export default function ItemDetail() {
           }
         }
         await closetStore.incrementalSync();
+        closetStore.triggerRepair();
         toast.success(t('common.success'));
       })
       .catch((err) => {
@@ -1133,6 +1135,7 @@ export default function ItemDetail() {
     // closet ops from "tap-and-wait-2s" into "tap-and-done".
     const snapshot = item;
     closetStore.remove(id);
+    closetStore.triggerRepair();
     toast.success(t('itemDetail.deleted'));
     nav('/closet');
     // Fire-and-forget — we're already off the page. Reconcile on failure.

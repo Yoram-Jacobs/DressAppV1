@@ -312,7 +312,7 @@ suitcase.weather_service = MockWeatherService()
 
 # Define MockCalendarService
 class MockCalendarService:
-    async def get_events_for_user(self, user, hours_ahead):
+    async def get_events_for_user(self, user, hours_ahead, *args, **kwargs):
         return []
 suitcase.calendar_service = MockCalendarService()
 

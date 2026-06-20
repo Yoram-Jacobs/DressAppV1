@@ -18,9 +18,9 @@ import { ShareOutfitButton } from '@/components/stylist/ShareOutfitButton';
  */
 export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, onSave }) {
   const { t } = useTranslation();
-  const items = rec.items || [];
+  const items = (rec?.items || []).filter(Boolean);
   const ids = items
-    .map((it) => it.closet_item_id)
+    .map((it) => it?.closet_item_id)
     .filter(Boolean);
   const [images, setImages] = useState({});
 
@@ -56,6 +56,8 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
   const heroImage = withImages[0]
     ? images[withImages[0].closet_item_id]
     : null;
+
+  if (!rec) return null;
 
   return (
     <div

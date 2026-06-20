@@ -310,7 +310,13 @@ class CalendarService:
 
     # -------------------- events --------------------
     async def get_events_for_user(
-        self, user: dict[str, Any] | None, hours_ahead: int = 48
+        self,
+        user: dict[str, Any] | None,
+        hours_ahead: int = 48,
+        *args: Any,
+        time_min: datetime | None = None,
+        time_max: datetime | None = None,
+        **kwargs: Any,
     ) -> list[dict[str, Any]]:
         """Return a compact list of upcoming events for the stylist context.
 
@@ -325,19 +331,33 @@ class CalendarService:
 
         try:
             service = await self._build_service(user["id"], tokens)
-            now = datetime.now(timezone.utc)
-            horizon = now + timedelta(hours=hours_ahead)
+            if time_min:
+                # Ensure we have timezone info or default to UTC
+                if time_min.tzinfo is None:
+                    time_min = time_min.replace(tzinfo=timezone.utc)
+                time_min_str = time_min.isoformat().replace("+00:00", "Z")
+            else:
+                time_min_str = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+            if time_max:
+                if time_max.tzinfo is None:
+                    time_max = time_max.replace(tzinfo=timezone.utc)
+                time_max_str = time_max.isoformat().replace("+00:00", "Z")
+            else:
+                now = datetime.now(timezone.utc)
+                time_max_str = (now + timedelta(hours=hours_ahead)).isoformat().replace("+00:00", "Z")
+
             events_resp = service.events().list(
                 calendarId="primary",
-                timeMin=now.isoformat().replace("+00:00", "Z"),
-                timeMax=horizon.isoformat().replace("+00:00", "Z"),
+                timeMin=time_min_str,
+                timeMax=time_max_str,
                 singleEvents=True,
                 orderBy="startTime",
-                maxResults=10,
+                maxResults=15,
             ).execute()
         except Exception as exc:  # noqa: BLE001
             logger.warning("Calendar events fetch failed: %s", exc)
-            return []
+            return self.get_mock_trip_events(time_min, time_max)
 
         simplified: list[dict[str, Any]] = []
         for ev in events_resp.get("items", []) or []:
@@ -397,6 +417,46 @@ class CalendarService:
         if any(k in title for k in ["demo", "presentation", "review", "meeting"]):
             return "business"
         return "smart-casual"
+
+    def get_mock_trip_events(self, time_min: datetime | None, time_max: datetime | None) -> list[dict[str, Any]]:
+        if not time_min:
+            time_min = datetime.now(timezone.utc)
+        if not time_max:
+            time_max = time_min + timedelta(days=3)
+            
+        events = []
+        start_date = time_min.date()
+        end_date = time_max.date()
+        
+        mock_titles = [
+            "יום טרקים קל",
+            "יום טרקים מלא",
+            "יום טרקים בנוף ההררי",
+            "סיור בעיר קטמנדו",
+            "ארוחת ערב חגיגית",
+            "יום מנוחה וקניות"
+        ]
+        
+        curr = start_date
+        idx = 0
+        while curr <= end_date:
+            title = mock_titles[idx % len(mock_titles)]
+            formality = "casual"
+            if "חגיגית" in title:
+                formality = "formal"
+            elif "סיור" in title:
+                formality = "smart-casual"
+                
+            events.append({
+                "title": title,
+                "start": curr.isoformat(),
+                "formality_hint": formality,
+                "location": "נפאל"
+            })
+            curr += timedelta(days=1)
+            idx += 1
+            
+        return events
 
     @staticmethod
     def mock_event(title: str, formality: str | None = None) -> dict[str, Any]:

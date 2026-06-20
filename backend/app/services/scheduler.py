@@ -168,15 +168,41 @@ async def check_scheduler_triggers() -> None:
             # Check traveling suitcase status
             active_s = await db.suitcases.find_one({"user_id": user["id"], "status": {"$ne": "completed"}})
             is_traveling = False
-            if active_s:
+            if active_s and active_s.get("status") == "active":
                 try:
                     dep_dt = datetime.fromisoformat(active_s["departure_time"].replace("Z", "+00:00"))
                     ret_dt = datetime.fromisoformat(active_s["return_time"].replace("Z", "+00:00"))
+                    if dep_dt.tzinfo is None:
+                        dep_dt = dep_dt.replace(tzinfo=timezone.utc)
+                    if ret_dt.tzinfo is None:
+                        ret_dt = ret_dt.replace(tzinfo=timezone.utc)
                     if dep_dt <= now <= ret_dt:
                         is_traveling = True
                     elif now > ret_dt and active_s["status"] == "active":
                         # Auto-unpacking sequence
                         logger.info("Scheduler: Auto-unpacking suitcase for user=%s", user["id"])
+                        
+                        # Archive the completed trip
+                        import uuid
+                        archive_doc = {
+                            "id": str(uuid.uuid4()),
+                            "user_id": user["id"],
+                            "destination": active_s.get("destinations") or active_s.get("destination") or "",
+                            "departure_time": active_s.get("departure_time"),
+                            "return_time": active_s.get("return_time"),
+                            "purpose": active_s.get("purpose"),
+                            "preferred_style": active_s.get("preferred_style"),
+                            "notes": active_s.get("notes"),
+                            "packing_list": active_s.get("packing_list"),
+                            "outfits": active_s.get("outfits"),
+                            "local_fashion_stores": active_s.get("local_fashion_stores") or [],
+                            "missing_items": active_s.get("missing_items") or [],
+                            "push_notification_sent": False,
+                            "created_at": active_s.get("created_at") or now.isoformat(),
+                            "updated_at": now.isoformat()
+                        }
+                        await db.suitcase_archives.insert_one(archive_doc)
+
                         await db.suitcases.update_one(
                             {"id": active_s["id"]},
                             {"$set": {"status": "completed", "updated_at": now.isoformat()}}
@@ -184,11 +210,6 @@ async def check_scheduler_triggers() -> None:
                         await db.closet_items.update_many(
                             {"user_id": user["id"], "in_suitcase": True},
                             {"$set": {"in_suitcase": False, "updated_at": now.isoformat()}}
-                        )
-                        await send_push_notification(
-                            user_id=user["id"],
-                            title="Welcome Back! ✈️",
-                            body="Don't forget to launder the garments from your suitcase soon to keep them fresh!"
                         )
                 except Exception as ex:
                     logger.warning("Scheduler date check failed for suitcase: %s", ex)
@@ -239,6 +260,28 @@ async def check_scheduler_triggers() -> None:
                 uh, um = map(int, time_str.split(":", 1))
             except Exception:
                 uh, um = 8, 0
+
+            # Check for unpacked suitcases that need a laundry notification
+            if local_hour == uh and local_minute == um:
+                cursor_archives = db.suitcase_archives.find({"user_id": user["id"], "push_notification_sent": False})
+                async for arch in cursor_archives:
+                    ret_dt_str = arch.get("return_time")
+                    if ret_dt_str:
+                        try:
+                            from datetime import timedelta
+                            ret_dt = datetime.fromisoformat(ret_dt_str.replace("Z", "+00:00"))
+                            if ret_dt.tzinfo is None:
+                                ret_dt = ret_dt.replace(tzinfo=timezone.utc)
+                            target_date = (ret_dt.astimezone(user_tz) + timedelta(days=1)).date()
+                            if local_now.date() >= target_date:
+                                await send_push_notification(
+                                    user_id=user["id"],
+                                    title="Welcome Back! ✈️",
+                                    body="Don't forget to launder the garments from your suitcase soon to keep them fresh!"
+                                )
+                                await db.suitcase_archives.update_one({"id": arch["id"]}, {"$set": {"push_notification_sent": True}})
+                        except Exception as e:
+                            logger.warning("Error processing delayed notification for archive %s: %s", arch.get("id"), e)
 
             # Match hour and minute in local timezone if provided, else UTC
             if local_hour == uh and local_minute == um:
@@ -302,6 +345,10 @@ async def check_scheduler_triggers() -> None:
                 try:
                     dep_dt = datetime.fromisoformat(active_s["departure_time"].replace("Z", "+00:00"))
                     ret_dt = datetime.fromisoformat(active_s["return_time"].replace("Z", "+00:00"))
+                    if dep_dt.tzinfo is None:
+                        dep_dt = dep_dt.replace(tzinfo=timezone.utc)
+                    if ret_dt.tzinfo is None:
+                        ret_dt = ret_dt.replace(tzinfo=timezone.utc)
                     if dep_dt <= now <= ret_dt:
                         is_traveling_now = True
                 except Exception:

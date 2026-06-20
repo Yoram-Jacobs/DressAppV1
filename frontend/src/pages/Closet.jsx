@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Plus, Search, Trash2, CheckCircle2, Circle, X, CheckSquare,
   Square, Loader2, ListChecks, Sparkles, Wand2, QrCode, Star,
-  AlertTriangle, Tag, Briefcase,
+  AlertTriangle, Tag, Luggage,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -765,6 +765,7 @@ export default function Closet() {
     });
     if (failedIds.length === 0) {
       toast.success(`${ids.length} item${ids.length === 1 ? '' : 's'} deleted`);
+      store.triggerRepair();
       return;
     }
     // Roll back the failed ones so the UI matches reality again.
@@ -775,6 +776,7 @@ export default function Closet() {
     const okCount = ids.length - failedIds.length;
     if (okCount > 0) {
       toast.message(`Deleted ${okCount}, failed ${failedIds.length}`);
+      store.triggerRepair();
     } else {
       toast.error(t('pages.closet.could_not_delete_the_selected'));
     }
@@ -815,7 +817,7 @@ export default function Closet() {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card text-card-foreground text-sm font-medium hover:bg-muted/50 transition-colors shadow-sm"
               data-testid="closet-suitcase-link"
             >
-              <Briefcase className="h-4 w-4 text-[hsl(var(--accent))]" />
+              <Luggage className="h-4 w-4 text-[hsl(var(--accent))]" />
               <span>{t('suitcase.title', { defaultValue: "Suitcase" })}</span>
             </Link>
           </div>

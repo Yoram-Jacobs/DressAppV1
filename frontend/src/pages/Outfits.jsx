@@ -343,9 +343,13 @@ export default function Outfits() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {outfits.map((o) => {
             const outfitItemsMap = {};
-            o.garments.forEach((g) => {
-              outfitItemsMap[g.role] = { image_url: g.image_url };
-            });
+            if (Array.isArray(o?.garments)) {
+              o.garments.forEach((g) => {
+                if (g && g.role) {
+                  outfitItemsMap[g.role] = { image_url: g.image_url };
+                }
+              });
+            }
 
             return (
               <Card key={o.id} className="rounded-2xl border border-border bg-card shadow-editorial overflow-hidden flex flex-col group hover:shadow-lg transition-shadow">
@@ -383,10 +387,10 @@ export default function Outfits() {
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 shrink-0 text-muted-foreground/75" />
                       <span>
-                        {o.usage.date} · {o.usage.time}
+                        {o?.usage?.date || ''} · {o?.usage?.time || ''}
                       </span>
                     </div>
-                    {o.usage.location && (
+                    {o?.usage?.location && (
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 shrink-0 text-muted-foreground/75" />
                         <span className="truncate">{o.usage.location}</span>
@@ -399,13 +403,13 @@ export default function Outfits() {
                   <div className="space-y-1.5">
                     <div className="caps-label text-[10px] text-muted-foreground">{t('outfits.outfitPieces', { defaultValue: 'Outfit Pieces' })}</div>
                     <div className="flex flex-wrap gap-1.5">
-                      {o.garments.map((g, idx) => (
+                      {Array.isArray(o?.garments) && o.garments.map((g, idx) => (
                         <div
                           key={idx}
                           className="inline-flex items-center gap-1 px-2 py-1 bg-secondary/50 border border-border/80 rounded-lg text-[10px] text-foreground/80 font-medium"
                         >
                           <span className="text-muted-foreground uppercase text-[8px] tracking-wider mr-1">{labelForRole(g.role, t)}</span>
-                          <span>{g.title || t('addItem.preflight.untitled', { defaultValue: 'Garment' })}</span>
+                          <span>{g.title || g.description || t('addItem.preflight.untitled', { defaultValue: 'Garment' })}</span>
                         </div>
                       ))}
                     </div>
@@ -437,9 +441,9 @@ export default function Outfits() {
                   {t('outfits.generatingProposals', { defaultValue: 'Generating outfit recommendations from your closet...' })}
                 </p>
               </div>
-            ) : selectedNotification?.payload?.outfit_recommendations?.length > 0 ? (
+            ) : (selectedNotification?.payload?.outfit_recommendations && Array.isArray(selectedNotification.payload.outfit_recommendations) && selectedNotification.payload.outfit_recommendations.filter(Boolean).length > 0) ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {selectedNotification.payload.outfit_recommendations.map((rec, i) => (
+                {selectedNotification.payload.outfit_recommendations.filter(Boolean).map((rec, i) => (
                   <OutfitRecommendationCard
                     key={i}
                     rec={rec}

@@ -50,7 +50,9 @@ const MIN_REPAIR_INTERVAL_MS = 6 * 60 * 60 * 1000;
 // ``useSyncExternalStore`` consumers (which compare snapshots via
 // ``Object.is``) see the change and re-render. Mutators below all
 // go through ``_set`` for this reason.
-let _state = {
+const LOCAL_STORAGE_KEY = 'dressapp_closet_store_state';
+
+const _defaultState = {
   items: [],          // canonical list, sorted by created_at desc
   total: 0,
   lastFullSync: 0,    // epoch ms of the last full /closet fetch
@@ -100,6 +102,60 @@ let _state = {
   },
 };
 
+function loadState() {
+  if (typeof window === 'undefined') return { ..._defaultState };
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        ..._defaultState,
+        ...parsed,
+        loading: false,
+        error: null,
+        repairProgress: {
+          ..._defaultState.repairProgress,
+          ...(parsed.repairProgress || {}),
+          running: false,
+        },
+        thumbProgress: {
+          ..._defaultState.thumbProgress,
+          ...(parsed.thumbProgress || {}),
+          running: false,
+        }
+      };
+    }
+  } catch (e) {
+    console.error('Failed to load closet state from localStorage', e);
+  }
+  return { ..._defaultState };
+}
+
+function saveState(state) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
+      items: state.items,
+      total: state.total,
+      lastFullSync: state.lastFullSync,
+      lastIncSync: state.lastIncSync,
+      lastSaveFailures: state.lastSaveFailures,
+      repairProgress: {
+        ...state.repairProgress,
+        running: false
+      },
+      thumbProgress: {
+        ...state.thumbProgress,
+        running: false
+      }
+    }));
+  } catch (e) {
+    console.error('Failed to save closet state to localStorage', e);
+  }
+}
+
+let _state = loadState();
+
 const _listeners = new Set();
 const _deletedIds = new Set();
 
@@ -116,7 +172,41 @@ function _notify() {
  */
 function _set(patch) {
   _state = { ..._state, ...patch };
+  saveState(_state);
   _notify();
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key === LOCAL_STORAGE_KEY) {
+      try {
+        if (event.newValue === null) {
+          _state = { ..._defaultState };
+        } else {
+          const parsed = JSON.parse(event.newValue);
+          _state = {
+            ..._state,
+            ...parsed,
+            loading: _state.loading,
+            error: _state.error,
+            repairProgress: {
+              ..._state.repairProgress,
+              ...(parsed.repairProgress || {}),
+              running: _state.repairProgress.running,
+            },
+            thumbProgress: {
+              ..._state.thumbProgress,
+              ...(parsed.thumbProgress || {}),
+              running: _state.thumbProgress.running,
+            }
+          };
+        }
+        _notify();
+      } catch (e) {
+        // ignore
+      }
+    }
+  });
 }
 
 function _byCreatedDesc(a, b) {
@@ -159,34 +249,7 @@ export const closetStore = {
         lastFullSync: now,
         lastIncSync: now,
       });
-      // Phase Z2.3 — fire-and-forget hash repair. We don't await
-      // because (a) the closet UI must paint immediately from the
-      // freshly-loaded snapshot, and (b) the repair pass can take
-      // several seconds on a 300-item closet — the user shouldn't
-      // see a spinner for that. Throttled by MIN_REPAIR_INTERVAL_MS
-      // so a rapid prewarm → navigate → prewarm cycle doesn't spam
-      // the endpoint.
-      if (Date.now() - (_state.repairProgress?.lastRunAt || 0) >= MIN_REPAIR_INTERVAL_MS) {
-        this.repairHashes()
-          .catch((err) => {
-            // eslint-disable-next-line no-console
-            console.info('closet hash repair failed (will retry next session)', err?.message || err);
-          })
-          // Phase Z2.6 — chain the thumbnail repair AFTER the hash
-          // repair finishes (or fails). Running them sequentially
-          // avoids two streams hammering the backend at once and
-          // keeps the chip experience linear: the user sees one
-          // "Tuning duplicate detector…" pass, then one "Refreshing
-          // thumbnails…" pass, not both at once.
-          .finally(() => {
-            if (Date.now() - (_state.thumbProgress?.lastRunAt || 0) >= MIN_REPAIR_INTERVAL_MS) {
-              this.repairThumbnails().catch((err) => {
-                // eslint-disable-next-line no-console
-                console.info('closet thumbnail repair failed (will retry next session)', err?.message || err);
-              });
-            }
-          });
-      }
+
       return next;
     } catch (err) {
       _set({ error: err });
@@ -344,6 +407,10 @@ export const closetStore = {
 
   /** Hard reset — call on logout so the next user doesn't see stale data. */
   reset() {
+    if (this._repairTimeout) {
+      clearTimeout(this._repairTimeout);
+      this._repairTimeout = null;
+    }
     _set({
       items: [],
       total: 0,
@@ -651,5 +718,34 @@ export const closetStore = {
       return;
     }
     _set({ lastSaveFailures: [] });
+  },
+
+  _repairTimeout: null,
+
+  /**
+   * Debounced/throttled trigger for repair passes. Runs hashes repair,
+   * then thumbnails repair, only if not already running.
+   */
+  triggerRepair(delayMs = 5000) {
+    if (this._repairTimeout) {
+      clearTimeout(this._repairTimeout);
+    }
+    this._repairTimeout = setTimeout(() => {
+      this._repairTimeout = null;
+      if (_state.repairProgress?.running || _state.thumbProgress?.running) {
+        return;
+      }
+      this.repairHashes()
+        .catch((err) => {
+          // eslint-disable-next-line no-console
+          console.info('closet hash repair failed', err?.message || err);
+        })
+        .finally(() => {
+          this.repairThumbnails().catch((err) => {
+            // eslint-disable-next-line no-console
+            console.info('closet thumbnail repair failed', err?.message || err);
+          });
+        });
+    }, delayMs);
   },
 };

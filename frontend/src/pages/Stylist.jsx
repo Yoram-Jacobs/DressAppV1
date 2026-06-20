@@ -862,7 +862,9 @@ export default function Stylist() {
                     </div>
                   )}
                   {m.transcript && (
-                    <p className="text-sm whitespace-pre-wrap">{m.transcript}</p>
+                    <p className="text-sm whitespace-pre-wrap">
+                      {typeof m.transcript === 'string' ? m.transcript : JSON.stringify(m.transcript)}
+                    </p>
                   )}
                   {m.role === 'assistant' && m.outfit_canvas && (
                     <div className="mt-3">
@@ -871,7 +873,7 @@ export default function Stylist() {
                   )}
                   {m.role === 'assistant' && m.payload && (
                     <div className="mt-3 space-y-3">
-                      {(m.payload.outfit_recommendations || []).map((rec, i) => (
+                      {Array.isArray(m.payload.outfit_recommendations) && (m.payload.outfit_recommendations || []).filter(Boolean).map((rec, i) => (
                         <OutfitRecommendationCard
                           key={rec.id || `${m.id || 'msg'}-rec-${i}`}
                           rec={rec}
@@ -881,14 +883,14 @@ export default function Stylist() {
                           onSave={(r) => handleSaveOutfit(r, m)}
                         />
                       ))}
-                      {m.payload.shopping_suggestions?.length > 0 && (
+                      {Array.isArray(m.payload.shopping_suggestions) && m.payload.shopping_suggestions.filter(Boolean).length > 0 && (
                         <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-xl p-3 text-xs text-amber-800 dark:text-amber-300 space-y-1">
                           <div className="font-semibold flex items-center gap-1.5">
                             <Sparkles className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                             {t('stylist.shoppingSuggestions', { defaultValue: 'AI Stylist Shopping Suggestions' })}
                           </div>
                           <ul className="list-disc ps-4 space-y-1">
-                            {m.payload.shopping_suggestions.map((s, k) => (
+                            {m.payload.shopping_suggestions.filter(Boolean).map((s, k) => (
                               <li key={`shop-sug-${k}`}>{s}</li>
                             ))}
                           </ul>
@@ -909,13 +911,13 @@ export default function Stylist() {
                           </Button>
                         </div>
                       )}
-                      {m.payload.do_dont?.length > 0 && (
+                      {Array.isArray(m.payload.do_dont) && m.payload.do_dont.filter(Boolean).length > 0 && (
                         <div className="text-xs text-muted-foreground">
                           <div className="caps-label mb-1">
                             {t('stylist.doDont')}
                           </div>
                           <ul className="list-disc ps-5 space-y-0.5">
-                            {m.payload.do_dont.map((d, k) => (
+                            {m.payload.do_dont.filter(Boolean).map((d, k) => (
                               <li key={`${m.id || 'msg'}-dd-${k}-${String(d).slice(0, 24)}`}>{d}</li>
                             ))}
                           </ul>
@@ -930,13 +932,13 @@ export default function Stylist() {
                         </div>
                       )}
                       {/* Phase S — horizon expansion enrichment */}
-                      {m.payload.generated_examples?.length > 0 && (
+                      {Array.isArray(m.payload.generated_examples) && m.payload.generated_examples.filter(Boolean).length > 0 && (
                         <div className="space-y-1" data-testid="stylist-generated-examples">
                           <div className="caps-label text-muted-foreground">
                             {t('stylist.examplesLabel')}
                           </div>
                           <div className="flex gap-2 flex-wrap">
-                            {m.payload.generated_examples.map((ex, k) => (
+                            {m.payload.generated_examples.filter(Boolean).map((ex, k) => (
                               <figure key={`gen-${m.id}-${k}`} className="w-32">
                                 <img
                                   src={ex.image_data_url}
@@ -954,7 +956,7 @@ export default function Stylist() {
                       )}
                       {(() => {
                         const mktList = m.payload.marketplace_suggestions || m.payload.marketplace_matches;
-                        if (!mktList || mktList.length === 0) return null;
+                        if (!Array.isArray(mktList) || mktList.filter(Boolean).length === 0) return null;
                         return (
                           <div className="space-y-1" data-testid="stylist-marketplace-strip">
                             <div className="caps-label text-muted-foreground flex items-center gap-1">
@@ -962,7 +964,7 @@ export default function Stylist() {
                               {t('stylist.marketplaceLabel')}
                             </div>
                             <div className="flex gap-2 overflow-x-auto pb-1">
-                              {mktList.map((s) => (
+                              {mktList.filter(Boolean).map((s) => (
                                 <Link
                                   key={`mkt-${m.id}-${s.listing_id}`}
                                   to={`/marketplace/${s.listing_id}`}
@@ -985,14 +987,14 @@ export default function Stylist() {
                           </div>
                         );
                       })()}
-                      {m.payload.fashion_scout_picks?.length > 0 && (
+                      {Array.isArray(m.payload.fashion_scout_picks) && m.payload.fashion_scout_picks.filter(Boolean).length > 0 && (
                         <div className="space-y-1" data-testid="stylist-scout-strip">
                           <div className="caps-label text-muted-foreground flex items-center gap-1">
                             <TrendingUp className="h-3 w-3" />
                             {t('stylist.trendsLabel', { defaultValue: 'Trends' })}
                           </div>
                           <div className="flex gap-2 overflow-x-auto pb-1">
-                            {m.payload.fashion_scout_picks.map((tp) => (
+                            {m.payload.fashion_scout_picks.filter(Boolean).map((tp) => (
                               <a
                                 key={`tp-${m.id}-${tp.id}`}
                                 href={tp.source_url || '#'}
@@ -1016,13 +1018,13 @@ export default function Stylist() {
                           </div>
                         </div>
                       )}
-                      {m.payload.applied_preferences?.length > 0 && (
+                      {Array.isArray(m.payload.applied_preferences) && m.payload.applied_preferences.filter(Boolean).length > 0 && (
                         <details className="text-[11px] text-muted-foreground">
                           <summary className="cursor-pointer hover:text-foreground">
-                            {t('stylist.preferencesApplied', { count: m.payload.applied_preferences.length })}
+                            {t('stylist.preferencesApplied', { count: m.payload.applied_preferences.filter(Boolean).length })}
                           </summary>
                           <div className="ps-2 pt-1 leading-relaxed">
-                            {m.payload.applied_preferences.join(' · ')}
+                            {m.payload.applied_preferences.filter(Boolean).join(' · ')}
                           </div>
                         </details>
                       )}

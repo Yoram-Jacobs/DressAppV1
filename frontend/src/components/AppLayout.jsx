@@ -8,13 +8,14 @@ import { useAuth } from '@/lib/auth';
 import { closetStore } from '@/lib/closetStore';
 import { prewarmMarketplace, resetMarketplace } from '@/lib/marketplaceStore';
 import { prewarmExperts, resetExperts } from '@/lib/expertsStore';
+import { prewarmSuitcase, resetSuitcase } from '@/lib/suitcaseStore';
 import { Loader2 } from 'lucide-react';
 
 export const AppLayout = () => {
   const { user, loading } = useAuth();
 
-  // Eager warm-up for closet, marketplace browse + my-listings, and
-  // experts directory.
+  // Eager warm-up for closet, marketplace browse + my-listings,
+  // experts directory, and traveling suitcase.
   //
   // We fire these the moment auth resolves, **before** the user
   // navigates anywhere. By the time they tap any of those tabs the
@@ -30,10 +31,12 @@ export const AppLayout = () => {
       closetStore.prewarm().catch(() => {});
       prewarmMarketplace(user.id).catch(() => {});
       prewarmExperts().catch(() => {});
+      prewarmSuitcase().catch(() => {});
     } else {
       closetStore.reset();
       resetMarketplace();
       resetExperts();
+      resetSuitcase();
     }
   }, [user, loading]);
 

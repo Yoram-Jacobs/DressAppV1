@@ -747,7 +747,7 @@ export const api = {
   // --- DressApp Suitcase ---
   getSuitcaseActive: () => client.get('/suitcase/active').then((r) => r.data),
   saveSuitcaseActive: (body) => client.post('/suitcase/active', body).then((r) => r.data),
-  deleteSuitcaseActive: () => client.delete('/suitcase/active').then((r) => r.data),
+  deleteSuitcaseActive: (params) => client.delete('/suitcase/active', { params }).then((r) => r.data),
   packSuitcase: (body) => client.post('/suitcase/pack', body).then((r) => r.data),
   approveSuitcase: (body) => client.post('/suitcase/approve', body).then((r) => r.data),
   updateSuitcaseItemPackStatus: (body) => client.post('/suitcase/items/pack-status', body).then((r) => r.data),

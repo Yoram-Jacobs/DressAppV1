@@ -41,6 +41,26 @@ def get_safety_knowledge() -> str:
     return ""
 
 
+def find_closet_match(item: dict, closet_items: list[dict]) -> dict | None:
+    if not item or not closet_items:
+        return None
+    # 1. Try matching by ID first
+    cid = item.get("closet_item_id") or item.get("id")
+    if cid:
+        match = next((i for i in closet_items if i.get("id") == cid), None)
+        if match:
+            return match
+    # 2. Fallback: Try matching by description/title/name
+    desc = (item.get("description") or item.get("title") or "").lower().strip()
+    if desc:
+        for i in closet_items:
+            title = (i.get("title") or "").lower().strip()
+            name = (i.get("name") or "").lower().strip()
+            if (title and (title in desc or desc in title)) or (name and (name in desc or desc in name)):
+                return i
+    return None
+
+
 class SuitcasePackIn(BaseModel):
     destinations: str
     purpose: str
@@ -94,23 +114,96 @@ class SuitcaseChatIn(BaseModel):
     message: str
 
 
+def strip_base64_images(val: Any) -> Any:
+    if isinstance(val, dict):
+        keys_to_remove = {
+            "thumbnail_data_url",
+            "reconstructed_image_url",
+            "clean_image_url",
+            "segmented_image_url",
+            "original_image_url"
+        }
+        return {k: strip_base64_images(v) for k, v in val.items() if k not in keys_to_remove}
+    elif isinstance(val, list):
+        return [strip_base64_images(item) for item in val]
+    return val
+
+
+
+async def generate_text(
+    *,
+    user_text: str,
+    system: str | None = None,
+    response_mime_type: str | None = None,
+    response_schema: dict[str, Any] | None = None,
+    max_tokens: int | None = None,
+    temperature: float | None = None,
+) -> str:
+    from app.services import eyes_override
+    from app.services.vision.llm import _call_gemma_space
+    from app.config import settings
+
+    provider = (await eyes_override.get_active_provider()).lower()
+    if provider == "gemma" and settings.EYES_GEMMA_SPACE_URL:
+        try:
+            logger.info("Routing text request to Gemma Space")
+            return await _call_gemma_space(
+                system_prompt=system or "",
+                user_text=user_text,
+                image_b64_jpeg="",
+                max_tokens=max_tokens or 2048,
+                temperature=temperature or 0.1,
+                json_schema=response_schema,
+            )
+        except Exception as exc:
+            logger.warning("Gemma Space call failed; falling back to Gemini. Error: %s", exc)
+
+    logger.info("Routing text request to Gemini Client")
+    client = GeminiClient()
+    return await client.text(
+        user_text=user_text,
+        system=system,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        response_mime_type=response_mime_type,
+        response_schema=response_schema,
+    )
+
+
 # ─── endpoints ──────────────────────────────────────────────
 
 @router.post("/chat")
 async def suitcase_chat(
     body: SuitcaseChatIn, user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
-    client = GeminiClient()
+    events = []
+    if body.departure_time and body.return_time:
+        try:
+            dep_dt = datetime.fromisoformat(body.departure_time.replace("Z", "+00:00"))
+            ret_dt = datetime.fromisoformat(body.return_time.replace("Z", "+00:00"))
+            duration_hours = int((ret_dt - dep_dt).total_seconds() / 3600)
+            from app.services.calendar_service import calendar_service
+            events = await calendar_service.get_events_for_user(
+                user,
+                hours_ahead=max(24, duration_hours),
+                time_min=dep_dt,
+                time_max=ret_dt
+            )
+        except Exception as e:
+            logger.warning("Failed to retrieve calendar events in chat: %s", e)
+
     prompt = (
         "You are DressApp's Suitcase Chat Assistant. The user is planning a trip and gathering details.\n"
         "Your task is to analyze the user's message, extract updates to the travel fields, and output a friendly response.\n"
+        "You also have visibility into the user's scheduled calendar events/activities during their trip. Use this information to reply intelligently if the user asks about outfits, planning, activities, or the calendar.\n\n"
         "Current fields:\n"
         f"Destinations: {body.destinations or 'None'}\n"
         f"Purpose: {body.purpose or 'None'}\n"
         f"Preferred Style: {body.preferred_style or 'None'}\n"
         f"Departure: {body.departure_time or 'None'}\n"
         f"Return: {body.return_time or 'None'}\n"
-        f"Notes: {body.notes or 'None'}\n\n"
+        f"Notes: {body.notes or 'None'}\n"
+        f"Scheduled Calendar Events: {json.dumps(events) if events else 'None'}\n\n"
         "User message:\n"
         f"'{body.message}'\n\n"
         "Respond ONLY with a JSON object in this format (no markdown formatting, no prose outside JSON):\n"
@@ -121,11 +214,12 @@ async def suitcase_chat(
         '  "departure_time": string | null,\n'
         '  "return_time": string | null,\n'
         '  "notes": string | null,\n'
+        '  "should_regenerate": boolean, // set to true if user asks to generate, regenerate, pack, replan, update, adapt, or recreate outfits or the packing list, or suit them to calendar activities/weather. Otherwise false\n'
         '  "reply": string\n'
         "}"
     )
 
-    resp_str = await client.text(user_text=prompt, response_mime_type="application/json")
+    resp_str = await generate_text(user_text=prompt, response_mime_type="application/json")
     return json.loads(resp_str)
 
 
@@ -140,6 +234,61 @@ async def get_active_suitcase(user: dict = Depends(get_current_user)) -> dict[st
     
     # Clean Mongo _id for JSON output
     suitcase_dict = {k: v for k, v in suitcase.items() if k != "_id"}
+    
+    # Strictly enforce lists for array fields to prevent frontend React map/filter crashes
+    for list_field in ["packing_list", "outfits", "local_fashion_stores", "missing_items"]:
+        val = suitcase_dict.get(list_field)
+        if not isinstance(val, list):
+            suitcase_dict[list_field] = []
+            
+    # Strictly enforce string fields for outfits to prevent React 'Objects are not valid' errors
+    for outfit in suitcase_dict["outfits"]:
+        if not isinstance(outfit, dict):
+            continue
+        for str_field in ["date", "location", "time_to_wear", "outfit_name", "reasoning"]:
+            if str_field in outfit and not isinstance(outfit[str_field], str):
+                outfit[str_field] = str(outfit[str_field])
+        
+        items = outfit.get("items")
+        if not isinstance(items, list):
+            outfit["items"] = []
+        else:
+            for item in outfit["items"]:
+                if not isinstance(item, dict):
+                    continue
+                for str_field in ["role", "description"]:
+                    if str_field in item and not isinstance(item[str_field], str):
+                        item[str_field] = str(item[str_field])
+
+    for store in suitcase_dict["local_fashion_stores"]:
+        if not isinstance(store, dict): continue
+        for str_field in ["name", "address_or_area", "why"]:
+            if str_field in store and not isinstance(store[str_field], str):
+                store[str_field] = str(store[str_field])
+                
+    for m in suitcase_dict["missing_items"]:
+        if not isinstance(m, dict): continue
+        for str_field in ["role", "description", "reason_needed"]:
+            if str_field in m and not isinstance(m[str_field], str):
+                m[str_field] = str(m[str_field])
+
+    # Enforce string for notes to prevent React 'Objects are not valid' errors
+    if "missing_notes" in suitcase_dict and not isinstance(suitcase_dict["missing_notes"], str):
+        suitcase_dict["missing_notes"] = str(suitcase_dict["missing_notes"])
+        
+    if "cultural_guidelines" in suitcase_dict and not isinstance(suitcase_dict["cultural_guidelines"], str):
+        suitcase_dict["cultural_guidelines"] = str(suitcase_dict["cultural_guidelines"])
+        
+    if "danger_zones_info" in suitcase_dict and not isinstance(suitcase_dict["danger_zones_info"], str):
+        suitcase_dict["danger_zones_info"] = str(suitcase_dict["danger_zones_info"])
+
+    for top_level_str in ["destinations", "purpose", "preferred_style", "departure_time", "return_time", "notes"]:
+        if top_level_str in suitcase_dict and not isinstance(suitcase_dict[top_level_str], str):
+            if suitcase_dict[top_level_str] is None:
+                suitcase_dict[top_level_str] = ""
+            else:
+                suitcase_dict[top_level_str] = str(suitcase_dict[top_level_str])
+
     return {"active": True, "suitcase": suitcase_dict}
 
 
@@ -151,26 +300,29 @@ async def save_active_suitcase(
     body["user_id"] = user["id"]
     body["updated_at"] = datetime.now(timezone.utc).isoformat()
     
-    if "id" not in body or not body["id"]:
-        body["id"] = str(uuid.uuid4())
-        body["created_at"] = body["updated_at"]
-        await db.suitcases.insert_one(body)
+    cleaned_body = strip_base64_images(body)
+    
+    if "id" not in cleaned_body or not cleaned_body["id"]:
+        cleaned_body["id"] = str(uuid.uuid4())
+        cleaned_body["created_at"] = cleaned_body["updated_at"]
+        await db.suitcases.insert_one(cleaned_body)
     else:
         await db.suitcases.update_one(
-            {"id": body["id"], "user_id": user["id"]},
-            {"$set": body},
+            {"id": cleaned_body["id"], "user_id": user["id"]},
+            {"$set": cleaned_body},
             upsert=True
         )
+        
     # Clean Mongo _id for JSON output
-    clean_suitcase = {k: v for k, v in body.items() if k != "_id"}
+    clean_suitcase = {k: v for k, v in cleaned_body.items() if k != "_id"}
     return {"status": "success", "suitcase": clean_suitcase}
 
 
 @router.delete("/active")
 async def delete_active_suitcase(
-    background_tasks: BackgroundTasks, user: dict = Depends(get_current_user)
+    is_unpack: bool = Query(False), user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
-    """Unpacking the suitcase: moves all items back to closet, triggers laundry push alert."""
+    """Unpacking/Resetting the suitcase: moves all items back to closet, optionally schedules laundry push alert."""
     db = get_db()
     suitcase = await db.suitcases.find_one(
         {"user_id": user["id"], "status": {"$ne": "completed"}}
@@ -178,10 +330,31 @@ async def delete_active_suitcase(
     if not suitcase:
         return {"status": "error", "message": "No active suitcase found"}
 
+    # Archive the completed trip
+    now_iso = datetime.now(timezone.utc).isoformat()
+    archive_doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "destination": suitcase.get("destinations") or suitcase.get("destination") or "",
+        "departure_time": suitcase.get("departure_time"),
+        "return_time": suitcase.get("return_time"),
+        "purpose": suitcase.get("purpose"),
+        "preferred_style": suitcase.get("preferred_style"),
+        "notes": suitcase.get("notes"),
+        "packing_list": suitcase.get("packing_list"),
+        "outfits": suitcase.get("outfits"),
+        "local_fashion_stores": suitcase.get("local_fashion_stores") or [],
+        "missing_items": suitcase.get("missing_items") or [],
+        "push_notification_sent": not is_unpack, # True if resetting, False if unpacking
+        "created_at": suitcase.get("created_at") or now_iso,
+        "updated_at": now_iso
+    }
+    await db.suitcase_archives.insert_one(archive_doc)
+
     # Set status to completed
     await db.suitcases.update_one(
         {"id": suitcase["id"], "user_id": user["id"]},
-        {"$set": {"status": "completed", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"status": "completed", "updated_at": now_iso}}
     )
 
     # Move all items back to closet (in_suitcase = False)
@@ -190,15 +363,7 @@ async def delete_active_suitcase(
         {"$set": {"in_suitcase": False, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
 
-    # Queue push notification in background
-    background_tasks.add_task(
-        send_push_notification,
-        user_id=user["id"],
-        title="Welcome Back! ✈️",
-        body="Don't forget to launder the garments from your suitcase soon to keep them fresh!"
-    )
-
-    return {"status": "success", "message": "Suitcase unpacked and all items returned to Closet"}
+    return {"status": "success", "message": "Suitcase unpacked/reset and all items returned to Closet"}
 
 
 @router.post("/pack")
@@ -219,7 +384,12 @@ async def pack_suitcase(
     events = []
     try:
         from app.services.calendar_service import calendar_service
-        events = await calendar_service.get_events_for_user(user, hours_ahead=max(24, duration_hours))
+        events = await calendar_service.get_events_for_user(
+            user,
+            hours_ahead=max(24, duration_hours),
+            time_min=dep_dt if "dep_dt" in locals() else None,
+            time_max=ret_dt if "ret_dt" in locals() else None
+        )
     except Exception as e:
         logger.warning("Failed to retrieve user calendar events: %s", e)
 
@@ -227,14 +397,13 @@ async def pack_suitcase(
     weather_ctx = None
     weather_summary = "Weather information unavailable."
     try:
-        client = GeminiClient()
         geo_prompt = (
             f"Provide the approximate latitude, longitude, and Olson timezone name for "
             f"the travel destination: '{body.destinations}'. "
             f"Respond ONLY with a JSON object in this format: "
             f'{{"lat": float, "lng": float, "timezone": string}}'
         )
-        geo_str = await client.text(user_text=geo_prompt, response_mime_type="application/json")
+        geo_str = await generate_text(user_text=geo_prompt, response_mime_type="application/json")
         geo_data = json.loads(geo_str)
         lat = geo_data.get("lat")
         lng = geo_data.get("lng")
@@ -266,15 +435,22 @@ async def pack_suitcase(
     safety_context = get_safety_knowledge()
 
     # 6. Query Gemini to analyze and generate outfits & packing list
-    client = GeminiClient()
+    from app.services.user_preferences import render_user_preferences
+    prefs_block, _ = render_user_preferences(user)
+
     system_prompt = (
         "You are DressApp’s Traveling AI Stylist. You specialize in building smart packing plans.\n"
         "Your goals are:\n"
-        "1. Select appropriate clothing from the user's Closet honoring weather, duration, and cultural conventions.\n"
+        "1. Select appropriate clothing from the user's Closet honoring weather, duration, scheduled calendar events/activities during the trip. You MUST translate and understand calendar event titles if they are in another language (e.g. Hebrew like 'יום טרקים' = trekking day, 'ארוחת ערב חגיגית' = festive/gala dinner) and design outfits specifically for each day's scheduled activities (e.g., activewear/comfortable athletic shoes for active/trekking days, formalwear/dressy clothes for festive dinners/gala events, or comfortable travel outfits for flight days), while respecting cultural conventions, and strictly adhering to the user's personal style preferences, aesthetic, and outfit-generation rules.\n"
         "2. Minimize the load: select versatile garments that can be recombined into different outfits (e.g. reuse jeans, shirts, jackets across multiple days).\n"
         "3. Highlight cultural or religious dress restrictions of the destination using the provided Safety Context.\n"
         "4. Alert if crucial items are missing.\n"
         "5. Recommend shopping advisor local store recommendations (search/recommend top 3 fashion stores in the destination area where the user can buy missing items).\n\n"
+    )
+    if prefs_block:
+        system_prompt += f"User's Personal Style & Closet Preferences:\n{prefs_block}\n\n"
+
+    system_prompt += (
         "Output contract: You MUST respond ONLY with a JSON object matching this schema. Do not output markdown code blocks, just raw JSON:\n"
         "{\n"
         '  "cultural_guidelines": string, // weather-aware, calendar-aware, fashion guidelines on conventions, religion, proper dress codes\n'
@@ -301,7 +477,7 @@ async def pack_suitcase(
         '    "name": string,\n'
         '    "address_or_area": string,\n'
         '    "why": string\n'
-        "  }>\n"
+        '  }>\n'
         "}"
     )
 
@@ -319,7 +495,7 @@ async def pack_suitcase(
         f"{json.dumps([{ 'id': it.get('id'), 'title': it.get('title'), 'category': it.get('category'), 'sub_category': it.get('sub_category'), 'color': it.get('color'), 'brand': it.get('brand'), 'material': it.get('material') } for it in closet_items])}"
     )
 
-    analysis_str = await client.text(
+    analysis_str = await generate_text(
         user_text=user_brief,
         system=system_prompt,
         response_mime_type="application/json"
@@ -330,24 +506,42 @@ async def pack_suitcase(
     missing_items = analysis.get("missing_items") or []
     packing_list = []
     
-    # Map closet items into the initial packing checklist
+    # Map closet items into the initial packing checklist & populate outfits with images
     packed_closet_ids = set()
-    for outfit in analysis.get("outfits") or []:
+    outfits = analysis.get("outfits") or []
+    for outfit in outfits:
         for item in outfit.get("items") or []:
-            cid = item.get("closet_item_id")
-            if cid and cid not in packed_closet_ids:
-                packed_closet_ids.add(cid)
-                c_item = next((it for it in closet_items if it.get("id") == cid), None)
-                if c_item:
+            match = find_closet_match(item, closet_items)
+            if match:
+                item["closet_item_id"] = match["id"]
+                item["status"] = "closet"
+                
+                # Attach images directly to the outfit item
+                item["thumbnail_data_url"] = match.get("thumbnail_data_url")
+                item["reconstructed_image_url"] = match.get("reconstructed_image_url")
+                item["clean_image_url"] = match.get("clean_image_url")
+                item["segmented_image_url"] = match.get("segmented_image_url")
+                item["original_image_url"] = match.get("original_image_url")
+                
+                if match["id"] not in packed_closet_ids:
+                    packed_closet_ids.add(match["id"])
                     packing_list.append({
-                        "id": cid,
-                        "title": c_item.get("title") or "Closet item",
-                        "category": c_item.get("category"),
+                        "id": match["id"],
+                        "title": match.get("title") or "Closet item",
+                        "category": match.get("category"),
                         "checked": False,
                         "is_missing": False,
                         "recommendation_source": None,
-                        "recommendation_url": None
+                        "recommendation_url": None,
+                        "thumbnail_data_url": match.get("thumbnail_data_url"),
+                        "reconstructed_image_url": match.get("reconstructed_image_url"),
+                        "clean_image_url": match.get("clean_image_url"),
+                        "segmented_image_url": match.get("segmented_image_url"),
+                        "original_image_url": match.get("original_image_url")
                     })
+            else:
+                item["closet_item_id"] = None
+                item["status"] = "missing"
 
     # Fetch Marketplace recommendations for missing slots
     if missing_items:
@@ -391,7 +585,7 @@ async def pack_suitcase(
         "status": "success",
         "cultural_guidelines": analysis.get("cultural_guidelines"),
         "danger_zones_info": analysis.get("danger_zones_info"),
-        "outfits": analysis.get("outfits") or [],
+        "outfits": outfits,
         "packing_list": packing_list,
         "local_fashion_stores": analysis.get("local_fashion_stores") or [],
         "missing_items": missing_items,
@@ -403,25 +597,6 @@ async def approve_suitcase(
     body: SuitcaseApproveIn, user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
     db = get_db()
-    
-    # 1. Archive the trip record
-    archive_doc = {
-        "id": str(uuid.uuid4()),
-        "user_id": user["id"],
-        "destination": body.destinations,
-        "departure_time": body.departure_time,
-        "return_time": body.return_time,
-        "purpose": body.purpose,
-        "preferred_style": body.preferred_style,
-        "notes": body.notes,
-        "packing_list": body.packing_list,
-        "outfits": body.outfits,
-        "local_fashion_stores": body.local_fashion_stores or [],
-        "missing_items": body.missing_items or [],
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "updated_at": datetime.now(timezone.utc).isoformat()
-    }
-    await db.suitcase_archives.insert_one(archive_doc)
 
     # 2. Save/Update active suitcase state
     suitcase_doc = {
@@ -443,12 +618,14 @@ async def approve_suitcase(
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
+    cleaned_doc = strip_base64_images(suitcase_doc)
+    
     # Replace any existing active suitcase
     await db.suitcases.delete_many({"user_id": user["id"], "status": {"$ne": "completed"}})
-    await db.suitcases.insert_one(suitcase_doc)
+    await db.suitcases.insert_one(cleaned_doc)
 
     # Clean Mongo _id for JSON output
-    suitcase_clean = {k: v for k, v in suitcase_doc.items() if k != "_id"}
+    suitcase_clean = {k: v for k, v in cleaned_doc.items() if k != "_id"}
     return {"status": "success", "suitcase": suitcase_clean}
 
 
@@ -549,18 +726,22 @@ async def delete_suitcase_item(
     item_id: str, user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
     db = get_db()
+    now_iso = datetime.now(timezone.utc).isoformat()
     
-    # 1. Delete closet item
-    await db.closet_items.delete_one({"id": item_id, "user_id": user["id"]})
+    # 1. Return the "deleted" Suitcase item to the Closet (set in_suitcase = False)
+    await db.closet_items.update_one(
+        {"id": item_id, "user_id": user["id"]},
+        {"$set": {"in_suitcase": False, "updated_at": now_iso}}
+    )
 
     # 2. Remove from active suitcase packing list
     active_s = await db.suitcases.find_one({"user_id": user["id"], "status": {"$ne": "completed"}})
     if active_s:
         p_list = active_s.get("packing_list") or []
-        filtered_p_list = [p for p in p_list if p["id"] != item_id]
+        filtered_p_list = [p for p in p_list if p.get("id") != item_id]
         await db.suitcases.update_one(
             {"id": active_s["id"]},
-            {"$set": {"packing_list": filtered_p_list, "updated_at": datetime.now(timezone.utc).isoformat()}}
+            {"$set": {"packing_list": filtered_p_list, "updated_at": now_iso}}
         )
 
     return {"status": "success"}
@@ -573,7 +754,6 @@ async def enter_suitcase_location(
     """Triggered when user enters a location (danger zone/holy place). Sends appropriate outfit advice push alerts."""
     db = get_db()
     safety_context = get_safety_knowledge()
-    client = GeminiClient()
 
     prompt = (
         f"You are a travel modesty and safety advisor. Given the user's location '{body.location}', "
@@ -584,7 +764,7 @@ async def enter_suitcase_location(
         f'{{"is_danger_zone": boolean, "is_holy_place": boolean, "alert_title": string, "alert_body": string}}'
     )
 
-    resp_str = await client.text(user_text=prompt, response_mime_type="application/json")
+    resp_str = await generate_text(user_text=prompt, response_mime_type="application/json")
     res = json.loads(resp_str)
 
     if res.get("is_danger_zone") or res.get("is_holy_place"):
