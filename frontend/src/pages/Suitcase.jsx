@@ -846,16 +846,6 @@ function Suitcase() {
           </p>
         </div>
         <div className="flex gap-2">
-          {viewState === 'active' && (
-            <Button
-              variant="outline"
-              className="rounded-xl flex items-center gap-2 border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/20"
-              onClick={() => setShowSimModal(true)}
-            >
-              <ShieldAlert className="h-4 w-4 text-amber-500" />
-              <span>{t('suitcase.gpsSimulatorTrigger', { defaultValue: 'Simulate GPS Location' })}</span>
-            </Button>
-          )}
           {viewState !== 'gathering' && (
             <Button
               variant="destructive"
@@ -1590,24 +1580,6 @@ function Suitcase() {
                     )}
                   </Accordion>
 
-                  {/* Simulator & Reset Actions */}
-                  <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-border">
-                    <Button
-                      onClick={() => setShowSimModal(true)}
-                      className="flex-1 py-6 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-base shadow hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2"
-                    >
-                      <MapPin className="h-5 w-5 animate-pulse" />
-                      {t('suitcase.simLocationButton', { defaultValue: 'Simulate My Location' })}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={handleUnpack}
-                      className="flex-1 py-6 rounded-2xl border-red-300 text-red-600 font-semibold text-base hover:bg-red-50 dark:hover:bg-red-950/20 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2"
-                    >
-                      <RefreshCw className="h-5 w-5" />
-                      {t('suitcase.resetTripButton', { defaultValue: 'Reset and Plan New Trip' })}
-                    </Button>
-                  </div>
                 </div>
               )}
             </div>
