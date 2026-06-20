@@ -168,6 +168,7 @@ function Suitcase() {
   const [loadingInitial, setLoadingInitial] = useState(!suitcaseStoreState.lastFullSync);
   const isInitialLoad = useRef(true);
   const ignoreAutoSaveRef = useRef(false);
+  const chatInputRef = useRef(null);
   
   // Gathering form state
   const [destinations, setDestinations] = useState('');
@@ -194,8 +195,6 @@ function Suitcase() {
 
   // Reviewing/Packing generation state
   const [packingLoading, setPackingLoading] = useState(false);
-  const [disapproveGuidance, setDisapproveGuidance] = useState('');
-  const [showDisapproveModal, setShowDisapproveModal] = useState(false);
   const [refining, setRefining] = useState(false);
 
   // Closet item selectors for adding/replacing garments
@@ -569,10 +568,10 @@ function Suitcase() {
     }
   };
 
-  // Refine / Disapprove packing checklist
+  // Refine packing checklist
   const handleRefine = async (feedbackOverride = null, overrides = {}) => {
-    const guidance = feedbackOverride !== null ? feedbackOverride : disapproveGuidance;
-    if (!guidance.trim()) return;
+    const guidance = feedbackOverride;
+    if (!guidance || !guidance.trim()) return;
 
     const dest = overrides.destinations !== undefined ? overrides.destinations : destinations;
     const purp = overrides.purpose !== undefined ? overrides.purpose : purpose;
@@ -595,8 +594,6 @@ function Suitcase() {
         notes: `${n || ''}\nFeedback modification: ${guidance}`
       });
       setPackingData(res);
-      setShowDisapproveModal(false);
-      setDisapproveGuidance('');
       setViewState('reviewing');
       toast.success(t('suitcase.refined', { defaultValue: 'Packing list refined with your updates!' }));
     } catch (e) {
@@ -604,6 +601,18 @@ function Suitcase() {
     } finally {
       setRefining(false);
     }
+  };
+
+  const handleRefineClick = () => {
+    setMessages(prev => [...prev, {
+      role: 'assistant',
+      text: t('suitcase.askRefineGuidance', { defaultValue: 'What would you like to refine in your packing list?' })
+    }]);
+    setTimeout(() => {
+      if (chatInputRef.current) {
+        chatInputRef.current.focus();
+      }
+    }, 100);
   };
 
   // Edit / delete item from reviewed checklist
@@ -1275,15 +1284,15 @@ function Suitcase() {
                       className="flex-1 py-6 rounded-2xl bg-emerald-600 text-white font-semibold text-base shadow hover:bg-emerald-700 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2"
                     >
                       <Check className="h-5 w-5" />
-                      {t('suitcase.approveButton', { defaultValue: 'Approve and Save Packing List' })}
+                      {t('suitcase.approveButton', { defaultValue: 'Approve' })}
                     </Button>
                     <Button
                       variant="outline"
-                      onClick={() => setShowDisapproveModal(true)}
-                      className="flex-1 py-6 rounded-2xl border-red-300 text-red-600 font-semibold text-base hover:bg-red-50 dark:hover:bg-red-950/20 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2"
+                      onClick={handleRefineClick}
+                      className="flex-1 py-6 rounded-2xl border-primary/30 text-primary font-semibold text-base hover:bg-primary/5 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2"
                     >
-                      <X className="h-5 w-5" />
-                      {t('suitcase.disapproveButton', { defaultValue: 'Disapprove / Refine List' })}
+                      <Sparkles className="h-5 w-5 text-primary" />
+                      {t('suitcase.refineButton', { defaultValue: 'Refine' })}
                     </Button>
                   </div>
                 </div>
@@ -1622,6 +1631,7 @@ function Suitcase() {
                 </CardContent>
                 <form onSubmit={handleSendMessage} className="p-3 border-t border-border bg-muted/20 flex gap-2">
                   <Input
+                    ref={chatInputRef}
                     placeholder={t('suitcase.chatInputPlaceholder', { defaultValue: 'e.g. Change dates to June 20-25' })}
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
@@ -1687,42 +1697,7 @@ function Suitcase() {
         </TabsContent>
       </Tabs>
 
-      {/* DISAPPROVE / REFINE DIALOG */}
-      <Dialog open={showDisapproveModal} onOpenChange={setShowDisapproveModal}>
-        <DialogContent className="rounded-2xl max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('suitcase.refinePlanHeader', { defaultValue: 'Refine Packing Plan' })}</DialogTitle>
-            <DialogDescription>
-              {t('suitcase.refinePlanDesc', { defaultValue: 'Explain what you would like to change (e.g. "it is colder than expected, replace short sleeves with long sleeves").' })}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-2">
-            <Textarea
-              placeholder={t('suitcase.refineInputPlaceholder', { defaultValue: 'Type your guidance here...' })}
-              value={disapproveGuidance}
-              onChange={(e) => setDisapproveGuidance(e.target.value)}
-              className="rounded-xl min-h-[100px]"
-            />
-          </div>
-          <DialogFooter className="flex gap-2">
-            <Button variant="ghost" onClick={() => setShowDisapproveModal(false)}>{t('common.cancel', { defaultValue: 'Cancel' })}</Button>
-            <Button
-              onClick={handleRefine}
-              disabled={refining}
-              className="bg-[hsl(var(--accent))] text-white rounded-xl"
-            >
-              {refining ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                  {t('suitcase.refining', { defaultValue: 'Refining...' })}
-                </>
-              ) : (
-                t('suitcase.submitGuidance', { defaultValue: 'Submit Guidance' })
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
 
 
       {/* GPS SIMULATOR DIALOG */}
