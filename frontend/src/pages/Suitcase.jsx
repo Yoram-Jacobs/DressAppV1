@@ -198,16 +198,6 @@ function Suitcase() {
   const [showDisapproveModal, setShowDisapproveModal] = useState(false);
   const [refining, setRefining] = useState(false);
 
-  // Active suitcase additions/purchases
-  const [showAddItemDialog, setShowAddItemDialog] = useState(false);
-  const [newItemTitle, setNewItemTitle] = useState('');
-  const [newItemCategory, setNewItemCategory] = useState('Top');
-  const [newItemColor, setNewItemColor] = useState('');
-  const [newItemBrand, setNewItemBrand] = useState('');
-  const [newItemPrice, setNewItemPrice] = useState(0);
-  const [newItemSize, setNewItemSize] = useState('');
-  const [addingItem, setAddingItem] = useState(false);
-
   // Closet item selectors for adding/replacing garments
   const [closetDialogOpen, setClosetDialogOpen] = useState(false);
   const [dialogFilterCategory, setDialogFilterCategory] = useState(null);
@@ -736,40 +726,6 @@ function Suitcase() {
       });
     } catch (e) {
       console.error('Pack status sync failed', e);
-    }
-  };
-
-  // Add purchased item during travel
-  const handleAddTravelPurchase = async () => {
-    if (!newItemTitle) return;
-    setAddingItem(true);
-    try {
-      const res = await api.addSuitcaseItem({
-        title: newItemTitle,
-        category: newItemCategory,
-        color: newItemColor || undefined,
-        brand: newItemBrand || undefined,
-        price_cents: newItemPrice ? newItemPrice * 100 : undefined,
-        size: newItemSize || undefined
-      });
-
-      if (res.status === 'success') {
-        toast.success(t('suitcase.purchaseAdded', { defaultValue: 'Travel purchase saved!' }));
-        setShowAddItemDialog(false);
-        setNewItemTitle('');
-        setNewItemColor('');
-        setNewItemBrand('');
-        setNewItemPrice(0);
-        setNewItemSize('');
-        
-        // Refresh active suitcase to get updated checklist
-        fetchActiveSuitcase();
-        closet.incrementalSync();
-      }
-    } catch (e) {
-      toast.error(t('suitcase.addPurchaseError', { defaultValue: 'Add purchase failed.' }));
-    } finally {
-      setAddingItem(false);
     }
   };
 
@@ -1469,7 +1425,7 @@ function Suitcase() {
                          <div className="flex justify-end mb-4">
                            <Button
                              size="sm"
-                             onClick={() => setShowAddItemDialog(true)}
+                             onClick={() => navigate('/add-item?from=suitcase')}
                              className="rounded-xl flex items-center gap-1 bg-[hsl(var(--accent))] text-white"
                            >
                              <Plus className="h-3 w-3" />
@@ -1796,99 +1752,6 @@ function Suitcase() {
         </DialogContent>
       </Dialog>
 
-      {/* ADD ITEM DIALOG (TRAVEL PURCHASES) */}
-      <Dialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
-        <DialogContent className="rounded-2xl max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('suitcase.addPurchaseHeader', { defaultValue: 'Add New Travel Purchase' })}</DialogTitle>
-            <DialogDescription>{t('suitcase.addPurchaseDesc', { defaultValue: 'Add fashion details bought while traveling directly to your suitcase.' })}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.titleLabel', { defaultValue: 'Title *' })}</label>
-              <Input
-                placeholder={t('suitcase.titlePlaceholder', { defaultValue: 'e.g. Leather Jacket, Cotton Tee' })}
-                value={newItemTitle}
-                onChange={(e) => setNewItemTitle(e.target.value)}
-                className="rounded-xl"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.categoryLabel', { defaultValue: 'Category *' })}</label>
-                <select
-                  value={newItemCategory}
-                  onChange={(e) => setNewItemCategory(e.target.value)}
-                  className="w-full flex h-10 rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="top">{labelForCategory('top', t)}</option>
-                  <option value="bottom">{labelForCategory('bottom', t)}</option>
-                  <option value="outerwear">{labelForCategory('outerwear', t)}</option>
-                  <option value="shoes">{labelForCategory('shoes', t)}</option>
-                  <option value="accessory">{labelForCategory('accessory', t)}</option>
-                  <option value="dress">{labelForCategory('dress', t)}</option>
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.sizeLabel', { defaultValue: 'Size' })}</label>
-                <Input
-                  placeholder={t('suitcase.sizePlaceholder', { defaultValue: 'e.g. M, 38, L' })}
-                  value={newItemSize}
-                  onChange={(e) => setNewItemSize(e.target.value)}
-                  className="rounded-xl"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.colorLabel', { defaultValue: 'Color' })}</label>
-                <Input
-                  placeholder={t('suitcase.colorPlaceholder', { defaultValue: 'e.g. Black, Navy' })}
-                  value={newItemColor}
-                  onChange={(e) => setNewItemColor(e.target.value)}
-                  className="rounded-xl"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.brandLabel', { defaultValue: 'Brand' })}</label>
-                <Input
-                  placeholder={t('suitcase.brandPlaceholder', { defaultValue: 'e.g. Zara, Nike' })}
-                  value={newItemBrand}
-                  onChange={(e) => setNewItemBrand(e.target.value)}
-                  className="rounded-xl"
-                />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-muted-foreground">{t('suitcase.priceLabel', { defaultValue: 'Price (USD)' })}</label>
-              <Input
-                type="number"
-                placeholder="0"
-                value={newItemPrice}
-                onChange={(e) => setNewItemPrice(Number(e.target.value))}
-                className="rounded-xl"
-              />
-            </div>
-          </div>
-          <DialogFooter className="flex gap-2">
-            <Button variant="ghost" onClick={() => setShowAddItemDialog(false)}>{t('common.cancel', { defaultValue: 'Cancel' })}</Button>
-            <Button
-              onClick={handleAddTravelPurchase}
-              disabled={addingItem}
-              className="bg-[hsl(var(--accent))] text-white rounded-xl"
-            >
-              {addingItem ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                  {t('suitcase.saving', { defaultValue: 'Saving...' })}
-                </>
-              ) : (
-                t('suitcase.saveToSuitcase', { defaultValue: 'Save to Suitcase' })
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* GPS SIMULATOR DIALOG */}
       <Dialog open={showSimModal} onOpenChange={setShowSimModal}>
