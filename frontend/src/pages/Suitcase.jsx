@@ -1425,7 +1425,7 @@ function Suitcase() {
                          <div className="flex justify-end mb-4">
                            <Button
                              size="sm"
-                             onClick={() => navigate('/add-item?from=suitcase')}
+                             onClick={() => navigate('/closet/add?from=suitcase')}
                              className="rounded-xl flex items-center gap-1 bg-[hsl(var(--accent))] text-white"
                            >
                              <Plus className="h-3 w-3" />
