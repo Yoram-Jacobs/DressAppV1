@@ -68,6 +68,8 @@ class SuitcasePackIn(BaseModel):
     departure_time: str  # ISO8601
     return_time: str     # ISO8601
     notes: str | None = None
+    current_outfits: list[dict[str, Any]] | None = None
+    current_packing_list: list[dict[str, Any]] | None = None
 
 
 class SuitcaseApproveIn(BaseModel):
@@ -445,7 +447,8 @@ async def pack_suitcase(
         "2. Minimize the load: select versatile garments that can be recombined into different outfits (e.g. reuse jeans, shirts, jackets across multiple days).\n"
         "3. Highlight cultural or religious dress restrictions of the destination using the provided Safety Context.\n"
         "4. Alert if crucial items are missing.\n"
-        "5. Recommend shopping advisor local store recommendations (search/recommend top 3 fashion stores in the destination area where the user can buy missing items).\n\n"
+        "5. Recommend shopping advisor local store recommendations (search/recommend top 3 fashion stores in the destination area where the user can buy missing items).\n"
+        "6. If 'Current Outfits' and 'Current Packing List' are provided in the input, the user is requesting modifications or refinements to their existing suitcase plan (e.g., as specified in the 'Feedback modification:' section of User Notes). Your primary objective is to execute these requested changes (e.g. replacing a specific outfit, adding or removing specific garments, adjusting for weather changes) while keeping the rest of the outfits and packing checklist as stable and close to the current ones as possible. Do not regenerate everything from scratch if not necessary.\n\n"
     )
     if prefs_block:
         system_prompt += f"User's Personal Style & Closet Preferences:\n{prefs_block}\n\n"
@@ -481,19 +484,27 @@ async def pack_suitcase(
         "}"
     )
 
-    user_brief = (
-        f"Destinations: {body.destinations}\n"
-        f"Trip Purpose: {body.purpose}\n"
-        f"Preferred Style: {body.preferred_style}\n"
-        f"Departure: {body.departure_time}\n"
-        f"Return: {body.return_time}\n"
-        f"User Notes: {body.notes or 'None'}\n"
-        f"Weather Info: {weather_summary}\n"
-        f"Calendar Events during trip: {json.dumps(events)}\n"
-        f"Safety Context (RAG): {safety_context}\n\n"
+    user_brief_parts = [
+        f"Destinations: {body.destinations}",
+        f"Trip Purpose: {body.purpose}",
+        f"Preferred Style: {body.preferred_style}",
+        f"Departure: {body.departure_time}",
+        f"Return: {body.return_time}",
+        f"User Notes: {body.notes or 'None'}",
+        f"Weather Info: {weather_summary}",
+        f"Calendar Events during trip: {json.dumps(events)}",
+        f"Safety Context (RAG): {safety_context}"
+    ]
+    if body.current_outfits:
+        user_brief_parts.append(f"Current Outfits (to be refined/modified based on user feedback): {json.dumps(body.current_outfits)}")
+    if body.current_packing_list:
+        user_brief_parts.append(f"Current Packing List: {json.dumps(body.current_packing_list)}")
+
+    user_brief_parts.append(
         f"User's Closet Items:\n"
         f"{json.dumps([{ 'id': it.get('id'), 'title': it.get('title'), 'category': it.get('category'), 'sub_category': it.get('sub_category'), 'color': it.get('color'), 'brand': it.get('brand'), 'material': it.get('material') } for it in closet_items])}"
     )
+    user_brief = "\n".join(user_brief_parts)
 
     analysis_str = await generate_text(
         user_text=user_brief,

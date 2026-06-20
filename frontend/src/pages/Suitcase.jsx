@@ -312,7 +312,7 @@ function Suitcase() {
     const formattedReturn = state.returnTime ? (state.returnTime.includes('T') ? state.returnTime : `${state.returnTime}T23:59:59`) : '';
 
     try {
-      await api.saveSuitcaseActive({
+      const res = await api.saveSuitcaseActive({
         id: state.activeSuitcase?.id || null,
         destinations: state.destinations,
         purpose: state.purpose,
@@ -327,6 +327,11 @@ function Suitcase() {
         missing_notes: state.viewState === 'reviewing' ? (state.packingData?.danger_zones_info || state.packingData?.cultural_guidelines || '') : '',
         local_fashion_stores: state.viewState === 'reviewing' ? (state.packingData?.local_fashion_stores || []) : []
       });
+      if (res && res.status === 'success' && res.suitcase) {
+        if (!state.activeSuitcase || !state.activeSuitcase.id) {
+          setActiveSuitcase(res.suitcase);
+        }
+      }
     } catch (e) {
       console.error('Planning state auto-save failed', e);
     }
@@ -433,7 +438,9 @@ function Suitcase() {
               preferred_style: overrides.preferred_style,
               departure_time: formattedDeparture,
               return_time: formattedReturn,
-              notes: `${overrides.notes || ''}\nFeedback modification: ${userMsg}`
+              notes: `${overrides.notes || ''}\nFeedback modification: ${userMsg}`,
+              current_outfits: activeSuitcase?.outfits || [],
+              current_packing_list: activeSuitcase?.packing_list || []
             });
 
             const saveRes = await api.approveSuitcase({
@@ -570,7 +577,7 @@ function Suitcase() {
 
   // Refine packing checklist
   const handleRefine = async (feedbackOverride = null, overrides = {}) => {
-    const guidance = feedbackOverride;
+    const guidance = typeof feedbackOverride === 'string' ? feedbackOverride : '';
     if (!guidance || !guidance.trim()) return;
 
     const dest = overrides.destinations !== undefined ? overrides.destinations : destinations;
@@ -583,6 +590,7 @@ function Suitcase() {
     setRefining(true);
     const formattedDeparture = dep ? (dep.includes('T') ? dep : `${dep}T00:00:00`) : '';
     const formattedReturn = ret ? (ret.includes('T') ? ret : `${ret}T23:59:59`) : '';
+    const newNotes = `${n || ''}\nFeedback modification: ${guidance}`;
     try {
       // Re-run packing logic with additional user feedback
       const res = await api.packSuitcase({
@@ -591,8 +599,11 @@ function Suitcase() {
         preferred_style: pref,
         departure_time: formattedDeparture,
         return_time: formattedReturn,
-        notes: `${n || ''}\nFeedback modification: ${guidance}`
+        notes: newNotes,
+        current_outfits: packingData?.outfits || [],
+        current_packing_list: packingData?.packing_list || []
       });
+      setNotes(newNotes);
       setPackingData(res);
       setViewState('reviewing');
       toast.success(t('suitcase.refined', { defaultValue: 'Packing list refined with your updates!' }));
