@@ -27,16 +27,10 @@ export default function OutfitAvatarViewer({ shapeParams, sex, outfitItemsMap, c
               {badgeContent}
             </Badge>
           )}
-          <div className="absolute bottom-3 left-3 bg-background/80 backdrop-blur px-2.5 py-1 rounded-md text-[10px] font-medium text-foreground shadow-sm pointer-events-none border border-border/50">
-            {t('suitcase.withOuterwear', { defaultValue: 'With Outerwear' })}
-          </div>
           {children}
         </div>
         <div className="relative w-full aspect-[4/5] bg-secondary/10 shrink-0">
           <AvatarViewer shapeParams={shapeParams} sex={sex} outfitItems={withoutOuterwearMap} onItemClick={onItemClick} />
-          <div className="absolute bottom-3 left-3 bg-background/80 backdrop-blur px-2.5 py-1 rounded-md text-[10px] font-medium text-foreground shadow-sm pointer-events-none border border-border/50">
-            {t('suitcase.withoutOuterwear', { defaultValue: 'Without Outerwear' })}
-          </div>
         </div>
       </div>
     );
