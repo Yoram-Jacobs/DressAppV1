@@ -11,6 +11,7 @@ This document summarizes the architectural and UI/UX improvements made to the ou
 - **Solution**: Implemented a dynamic dual-canvas rendering logic. If an outfit contains both a valid outerwear piece and a top (or dress), the UI automatically splits into two stacked vertical canvases:
   - **With Outerwear**: Shows the full outfit including the jacket.
   - **Without Outerwear**: Explicitly hides the outerwear layer, revealing the top/dress beneath.
+- **Rule**: If there is no outerwear in the outfit (or if the outerwear image is missing/invalid), there is no need for a 'With Outerwear' canvas. The layout will adaptively collapse back to a single canvas to maximize space.
 
 ## 3. Global Component Refactoring
 - **Issue**: The dual-canvas logic was initially isolated to the `Suitcase` modal, leaving other areas (like Scheduled Outfits) using the legacy, single-layered viewer.
