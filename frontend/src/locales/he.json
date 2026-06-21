@@ -1849,6 +1849,7 @@
     "fillDeparture": "אנא בחר תאריך יציאה.",
     "fillReturn": "אנא בחר תאריך חזרה.",
     "fillDates": "אנא בחר תאריכי יציאה וחזרה.",
-    "resetTrip": "איפוס"
+    "resetTrip": "איפוס",
+    "addFromClosetBtn": "הוסף מהארון"
   }
 }

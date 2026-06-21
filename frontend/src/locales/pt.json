@@ -1843,6 +1843,7 @@
     "fillDeparture": "Por favor, selecione uma data de partida.",
     "fillReturn": "Por favor, selecione uma data de retorno.",
     "fillDates": "Por favor, selecione as datas de partida e de retorno.",
-    "resetTrip": "Reiniciar"
+    "resetTrip": "Reiniciar",
+    "addFromClosetBtn": "Adicionar do armário"
   }
 }

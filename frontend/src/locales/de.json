@@ -1843,6 +1843,7 @@
     "fillDeparture": "Bitte ein Abreisedatum auswählen.",
     "fillReturn": "Bitte ein Rückreisedatum auswählen.",
     "fillDates": "Bitte Abreise- und Rückreisedatum auswählen.",
-    "resetTrip": "Zurücksetzen"
+    "resetTrip": "Zurücksetzen",
+    "addFromClosetBtn": "Aus dem Schrank hinzufügen"
   }
 }

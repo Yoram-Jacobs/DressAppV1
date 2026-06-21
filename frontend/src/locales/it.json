@@ -1843,6 +1843,7 @@
     "fillDeparture": "Seleziona una data di partenza.",
     "fillReturn": "Seleziona una data di ritorno.",
     "fillDates": "Seleziona le date di partenza e di ritorno.",
-    "resetTrip": "Resetta"
+    "resetTrip": "Resetta",
+    "addFromClosetBtn": "Aggiungi dall'armadio"
   }
 }
