@@ -40,6 +40,7 @@ import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 import { useTranslation } from 'react-i18next';
+import { isRtl } from '@/lib/i18n';
 function GlobalScrollListener() {
   useEffect(() => {
     const handleScroll = () => {
@@ -55,7 +56,11 @@ function GlobalScrollListener() {
 }
 
 function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  useEffect(() => {
+    document.documentElement.dir = isRtl(i18n.language) ? 'rtl' : 'ltr';
+  }, [i18n.language]);
 
   return (
     <HelmetProvider>

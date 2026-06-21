@@ -837,7 +837,7 @@ export default function Closet() {
           </div>
         </div>
       {/* Always render the floater, but change contents based on selectMode */}
-      <div className="fixed top-20 right-4 md:top-24 md:right-8 z-50 flex flex-col md:flex-row items-end md:items-center gap-2 p-2 md:p-3 rounded-2xl bg-background/95 supports-[backdrop-filter]:bg-background/80 supports-[backdrop-filter]:backdrop-blur border border-border shadow-editorial max-w-[calc(100vw-2rem)]">
+      <div className="fixed top-20 end-4 md:top-24 md:end-8 z-50 flex flex-col md:flex-row items-end md:items-center gap-2 p-2 md:p-3 rounded-2xl bg-background/95 supports-[backdrop-filter]:bg-background/80 supports-[backdrop-filter]:backdrop-blur border border-border shadow-editorial max-w-[calc(100vw-2rem)]">
         {!selectMode ? (
           <>
             <Button
@@ -867,9 +867,9 @@ export default function Closet() {
               className="rounded-lg"
             >
               {allVisibleSelected ? (
-                <><Square className="h-4 w-4 md:mr-1.5" /> <span className="hidden md:inline">{t('common.clear')}</span></>
+                <><Square className="h-4 w-4 md:me-1.5" /> <span className="hidden md:inline">{t('common.clear')}</span></>
               ) : (
-                <><CheckSquare className="h-4 w-4 md:mr-1.5" /> <span className="hidden md:inline">{t('common.selectAll')}</span></>
+                <><CheckSquare className="h-4 w-4 md:me-1.5" /> <span className="hidden md:inline">{t('common.selectAll')}</span></>
               )}
             </Button>
             <Button
@@ -885,7 +885,7 @@ export default function Closet() {
               }}
               data-testid="closet-complete-outfit-button"
             >
-              <Wand2 className="h-4 w-4 md:mr-1.5" />
+              <Wand2 className="h-4 w-4 md:me-1.5" />
               <span className="hidden md:inline">{t('outfitCompletion.cta')}</span>
             </Button>
             <Button
@@ -900,7 +900,7 @@ export default function Closet() {
               }}
               data-testid="closet-group-selected-button"
             >
-              <ListChecks className="h-4 w-4 md:mr-1.5" />
+              <ListChecks className="h-4 w-4 md:me-1.5" />
               <span className="hidden md:inline">{t('closet.groupSelected', { defaultValue: 'Group' })}</span>
             </Button>
             <Button
@@ -915,7 +915,7 @@ export default function Closet() {
               }}
               data-testid="closet-tag-selected-button"
             >
-              <Tag className="h-4 w-4 md:mr-1.5" />
+              <Tag className="h-4 w-4 md:me-1.5" />
               <span className="hidden md:inline">{t('closet.tagSelected', { defaultValue: 'Tag' })}</span>
             </Button>
             <Button
@@ -928,9 +928,9 @@ export default function Closet() {
               data-testid="closet-delete-selected-button"
             >
               {deleting ? (
-                <Loader2 className="h-4 w-4 md:mr-1.5 animate-spin" />
+                <Loader2 className="h-4 w-4 md:me-1.5 animate-spin" />
               ) : (
-                <Trash2 className="h-4 w-4 md:mr-1.5" />
+                <Trash2 className="h-4 w-4 md:me-1.5" />
               )}
               <span className="hidden md:inline">{t('common.delete')}</span>
             </Button>
@@ -943,7 +943,7 @@ export default function Closet() {
               data-testid="closet-select-cancel-button"
               className="rounded-lg"
             >
-              <X className="h-4 w-4 md:mr-1.5" />
+              <X className="h-4 w-4 md:me-1.5" />
               <span className="hidden md:inline">{t('common.cancel', { defaultValue: 'Cancel' })}</span>
             </Button>
           </>
@@ -959,9 +959,9 @@ export default function Closet() {
         <div className="flex flex-wrap gap-2 items-center">
           <div className="relative flex-1 min-w-[220px]">
             {searchMode === 'meaning' ? (
-              <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--accent))]" />
+              <Sparkles className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--accent))]" />
             ) : (
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             )}
             <Input
               value={filters.search}
@@ -971,7 +971,7 @@ export default function Closet() {
                   ? t('closet.semanticHint')
                   : t('closet.searchPlaceholder')
               }
-              className={`pl-9 ${filters.search ? 'pr-40' : 'pr-24'} rounded-xl`}
+              className={`ps-9 ${filters.search ? 'pe-40' : 'pe-24'} rounded-xl`}
               data-testid="closet-search-input"
             />
             {/* Clear (x) button — only appears when there's text, so
@@ -983,14 +983,14 @@ export default function Closet() {
                 onClick={clearSearch}
                 aria-label={t('closet.clearSearch', { defaultValue: 'Clear search' })}
                 data-testid="closet-search-clear"
-                className="absolute right-[9.25rem] top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-muted text-muted-foreground hover:bg-foreground/15 hover:text-foreground flex items-center justify-center transition-colors"
+                className="absolute end-[9.25rem] top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-muted text-muted-foreground hover:bg-foreground/15 hover:text-foreground flex items-center justify-center transition-colors"
               >
                 <X className="h-3 w-3" />
               </button>
             )}
             {/* In-input mode switch */}
             <div
-              className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center rounded-lg bg-secondary/70 p-0.5"
+              className="absolute end-1 top-1/2 -translate-y-1/2 flex items-center rounded-lg bg-secondary/70 p-0.5"
               role="radiogroup"
               aria-label={t('common.search')}
             >
@@ -1080,7 +1080,7 @@ export default function Closet() {
             className="rounded-lg"
             data-testid="closet-semantic-clear"
           >
-            <X className="h-4 w-4 mr-1.5" /> {t('pages.closet.back_to_full_closet')}
+            <X className="h-4 w-4 me-1.5" /> {t('pages.closet.back_to_full_closet')}
           </Button>
         </div>
       )}
@@ -1138,7 +1138,7 @@ export default function Closet() {
                   data-testid="closet-item-card"
                   data-selected={isSelected}
                   onContextMenu={(e) => e.preventDefault()}
-                  className={`relative block text-left group rounded-[calc(var(--radius)+6px)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] ring-offset-2 ring-offset-background ${
+                  className={`relative block text-start group rounded-[calc(var(--radius)+6px)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] ring-offset-2 ring-offset-background ${
                     isSelected ? 'ring-2 ring-[hsl(var(--accent))]' : ''
                   }`}
                   style={{ WebkitTouchCallout: 'none', touchAction: isTouchDragging ? 'none' : 'pan-y' }}
@@ -1601,7 +1601,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
         {typeof score === 'number' && (
           <Badge
             variant="outline"
-            className="absolute top-2 right-2 bg-background/85 backdrop-blur text-[10px] border-[hsl(var(--accent))]/50 flex items-center gap-1"
+            className="absolute top-2 end-2 bg-background/85 backdrop-blur text-[10px] border-[hsl(var(--accent))]/50 flex items-center gap-1"
             data-testid="closet-item-score"
           >
             <Sparkles className="h-2.5 w-2.5 text-[hsl(var(--accent))]" />
@@ -1610,7 +1610,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
         )}
         {showCheckbox && (
           <div
-            className={`absolute top-2 left-2 h-6 w-6 rounded-full flex items-center justify-center border-2 transition-colors ${
+            className={`absolute top-2 start-2 h-6 w-6 rounded-full flex items-center justify-center border-2 transition-colors ${
               isSelected
                 ? 'bg-[hsl(var(--accent))] border-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]'
                 : 'bg-background/80 border-border backdrop-blur'
@@ -1635,7 +1635,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
             outfit suggestions won't double-count it." */}
         {item.is_duplicate && (
           <div
-            className={`absolute ${typeof score === 'number' ? 'top-10' : 'top-2'} right-2 h-7 w-7 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-md ring-2 ring-background`}
+            className={`absolute ${typeof score === 'number' ? 'top-10' : 'top-2'} end-2 h-7 w-7 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-md ring-2 ring-background`}
             title={t('closet.duplicateBadge', {
               defaultValue:
                 'Marked as a duplicate — kept on purpose, hidden from outfit suggestions.',
