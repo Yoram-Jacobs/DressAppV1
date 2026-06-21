@@ -77,7 +77,7 @@ function getGroupedCategory(category) {
 }
 
 // Outfit Canvas try-on Try-on Canvas builder
-function OutfitCanvas({ outfit, className = "", onClick, t }) {
+function OutfitCanvas({ outfit, className = "", onClick, t, excludeRoles = [] }) {
   const closet = useClosetStore({ prewarm: true });
   const { user } = useAuth();
 
@@ -85,7 +85,7 @@ function OutfitCanvas({ outfit, className = "", onClick, t }) {
     if (!outfit || !Array.isArray(outfit.items)) return {};
     const res = {};
     outfit.items.filter(Boolean).forEach(item => {
-      if (item.role) {
+      if (item.role && !excludeRoles.includes(item.role)) {
         const match = findClosetMatch(item, closet.items);
         if (match) {
           res[item.role] = match;
@@ -93,7 +93,7 @@ function OutfitCanvas({ outfit, className = "", onClick, t }) {
       }
     });
     return res;
-  }, [outfit, closet.items]);
+  }, [outfit, closet.items, excludeRoles]);
 
   const hasImages = useMemo(() => {
     return Object.values(outfitItemsMap).some(item => bestImageUrl(item));
@@ -1911,9 +1911,29 @@ function Suitcase() {
               </DialogHeader>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                {/* Large Outfit Canvas */}
-                <div className="rounded-2xl border border-border overflow-hidden bg-muted/10 relative aspect-[4/3] md:aspect-square flex items-center justify-center">
-                  <OutfitCanvas outfit={fullscreenOutfit} className="border-none hover:opacity-100 cursor-default" t={t} />
+                {/* Outfit Canvas(es) */}
+                <div className="flex flex-col gap-4">
+                  {(Array.isArray(fullscreenOutfit?.items) ? fullscreenOutfit.items : []).some(i => i?.role === 'outerwear') && 
+                   (Array.isArray(fullscreenOutfit?.items) ? fullscreenOutfit.items : []).some(i => i?.role === 'top' || i?.role === 'dress') ? (
+                    <>
+                      <div className="rounded-2xl border border-border overflow-hidden bg-muted/10 relative aspect-[4/3] md:aspect-[4/3] flex items-center justify-center shadow-sm">
+                        <OutfitCanvas outfit={fullscreenOutfit} className="border-none hover:opacity-100 cursor-default" t={t} />
+                        <div className="absolute top-3 left-3 bg-background/80 backdrop-blur px-2.5 py-1 rounded-md text-[10px] font-medium text-foreground shadow-sm pointer-events-none border border-border/50">
+                          {t('suitcase.withOuterwear', { defaultValue: 'With Outerwear' })}
+                        </div>
+                      </div>
+                      <div className="rounded-2xl border border-border overflow-hidden bg-muted/10 relative aspect-[4/3] md:aspect-[4/3] flex items-center justify-center shadow-sm">
+                        <OutfitCanvas outfit={fullscreenOutfit} excludeRoles={['outerwear']} className="border-none hover:opacity-100 cursor-default" t={t} />
+                        <div className="absolute top-3 left-3 bg-background/80 backdrop-blur px-2.5 py-1 rounded-md text-[10px] font-medium text-foreground shadow-sm pointer-events-none border border-border/50">
+                          {t('suitcase.withoutOuterwear', { defaultValue: 'Without Outerwear' })}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="rounded-2xl border border-border overflow-hidden bg-muted/10 relative aspect-[4/3] md:aspect-square flex items-center justify-center shadow-sm">
+                      <OutfitCanvas outfit={fullscreenOutfit} className="border-none hover:opacity-100 cursor-default" t={t} />
+                    </div>
+                  )}
                 </div>
                 
                 {/* Item List & Reasoning */}
