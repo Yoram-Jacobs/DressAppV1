@@ -1795,6 +1795,45 @@ export default function ItemDetail() {
 
         {/* ---------- Edit form column ---------- */}
         <div className="md:col-span-2 space-y-4" data-testid="item-edit-form">
+          {/* Mobile Photo Management Fallback */}
+          {preferredImage && (
+            <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial md:hidden">
+              <CardContent className="p-5 space-y-3">
+                <div className="caps-label text-muted-foreground">{t('itemDetail.photo.sectionTitle', { defaultValue: 'Photo' })}</div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={openCameraCapture}
+                    disabled={uploadingPhoto}
+                    className="rounded-xl flex-1"
+                    data-testid="item-edit-pane-take-photo-btn"
+                  >
+                    {uploadingPhoto ? (
+                      <Loader2 className="h-4 w-4 animate-spin me-1.5" />
+                    ) : (
+                      <Camera className="h-4 w-4 me-1.5" />
+                    )}
+                    {t('itemDetail.photo.takeLabel', { defaultValue: 'Take photo' })}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={onPickPhoto}
+                    disabled={uploadingPhoto}
+                    className="rounded-xl flex-1"
+                    data-testid="item-edit-pane-replace-photo-btn"
+                  >
+                    <Images className="h-4 w-4 me-1.5" />
+                    {t('itemDetail.photo.replaceLabel')}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Identity */}
           <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
             <CardContent className="p-5 space-y-3">

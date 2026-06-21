@@ -23,6 +23,7 @@
  */
 
 import { api } from '@/lib/api';
+import { setItem, getItem } from './idb';
 
 // Treat the store as fresh for this many ms after the last full
 // fetch. Within that window /closet revisits don't trigger any
@@ -135,7 +136,6 @@ function saveState(state) {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
-      items: state.items,
       total: state.total,
       lastFullSync: state.lastFullSync,
       lastIncSync: state.lastIncSync,
@@ -152,9 +152,23 @@ function saveState(state) {
   } catch (e) {
     console.error('Failed to save closet state to localStorage', e);
   }
+  
+  if (state.items && state.items.length > 0) {
+    setItem('closet_items', state.items).catch(e => console.error('Failed to save items to IndexedDB', e));
+  } else if (state.items && state.items.length === 0 && state.lastFullSync) {
+    // If the closet is truly empty, clear the DB
+    setItem('closet_items', []).catch(e => console.error('Failed to clear items from IndexedDB', e));
+  }
 }
 
 let _state = loadState();
+
+let _idbPromise = typeof window !== 'undefined' ? getItem('closet_items').then(items => {
+  if (items && items.length > 0 && _state.items.length === 0) {
+    _state.items = items;
+    _notify();
+  }
+}).catch(e => console.error('Failed to load items from IndexedDB', e)) : Promise.resolve();
 
 const _listeners = new Set();
 const _deletedIds = new Set();
@@ -234,6 +248,7 @@ export const closetStore = {
    * number of times; it won't fetch again within the FRESH_MS window.
    */
   async prewarm({ force = false } = {}) {
+    await _idbPromise;
     if (!force && _state.loading) return _state.items;
     if (!force && _state.lastFullSync && Date.now() - _state.lastFullSync < FRESH_MS) {
       return _state.items;
