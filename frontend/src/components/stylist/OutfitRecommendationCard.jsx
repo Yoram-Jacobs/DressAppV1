@@ -7,7 +7,7 @@ import { api } from '@/lib/api';
 import { labelForRole } from '@/lib/taxonomy';
 import { cn } from '@/lib/utils';
 import { ShareOutfitButton } from '@/components/stylist/ShareOutfitButton';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 import OutfitAvatarViewer from '@/components/OutfitAvatarViewer';
 import { useMemo } from 'react';
 /**
