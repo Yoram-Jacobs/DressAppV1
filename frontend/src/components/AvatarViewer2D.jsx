@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ImageOff, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { bestImageUrl } from '@/lib/itemImage';
-export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfitItems = {} }) {
+export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfitItems = {}, onItemClick }) {
   const { t } = useTranslation();
 
   // Normalize params between 0 and 1
