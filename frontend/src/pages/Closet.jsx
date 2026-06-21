@@ -1,7 +1,7 @@
 /* global setTimeout, clearTimeout */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import {
   Plus, Search, Trash2, CheckCircle2, Circle, X, CheckSquare,
   Square, Loader2, ListChecks, Sparkles, Wand2, QrCode, Star,
@@ -1068,8 +1068,15 @@ export default function Closet() {
           <div className="flex items-center gap-2 text-sm">
             <Sparkles className="h-4 w-4 text-[hsl(var(--accent))]" />
             <span>
-              {t('pages.closet.showing')} <span className="font-medium">{items.length}</span> semantic match
-              {items.length === 1 ? '' : 'es'} across <span className="font-medium">{semanticIndexed}</span> {t('pages.closet.indexed_items')}
+              <Trans
+                i18nKey="pages.closet.semantic_matches"
+                defaultValue="Showing <0>{{count}}</0> semantic matches across <1>{{total}}</1> indexed items."
+                values={{ count: items.length, total: semanticIndexed }}
+                components={[
+                  <span key="count" className="font-medium" />,
+                  <span key="total" className="font-medium" />
+                ]}
+              />
             </span>
           </div>
           <Button
