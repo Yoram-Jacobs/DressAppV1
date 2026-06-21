@@ -755,6 +755,7 @@ export const api = {
   deleteSuitcaseItem: (itemId) => client.delete(`/suitcase/items/${itemId}`).then((r) => r.data),
   enterSuitcaseLocation: (body) => client.post('/suitcase/enter-location', body).then((r) => r.data),
   getSuitcaseArchive: () => client.get('/suitcase/archive').then((r) => r.data),
+  deleteSuitcaseArchives: (ids) => client.delete(`/suitcase/archive?ids=${ids.join(',')}`).then((r) => r.data),
   suitcaseChat: (body) => client.post('/suitcase/chat', body).then((r) => r.data),
 };
 

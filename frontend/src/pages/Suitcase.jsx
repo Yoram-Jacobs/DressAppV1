@@ -170,6 +170,28 @@ function Suitcase() {
   const ignoreAutoSaveRef = useRef(false);
   const chatInputRef = useRef(null);
   
+  // Archive selection state
+  const [activeTab, setActiveTab] = useState('suitcase');
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedArchives, setSelectedArchives] = useState([]);
+
+  const handleDeleteArchives = async () => {
+    if (selectedArchives.length === 0) return;
+    try {
+      setArchiveLoading(true);
+      await api.deleteSuitcaseArchives(selectedArchives);
+      const res = await api.getSuitcaseArchive();
+      setArchives(res || []);
+      setSelectedArchives([]);
+      setIsSelectionMode(false);
+      toast.success(t('suitcase.archivesDeleted', { defaultValue: 'Archives deleted successfully.' }));
+    } catch (e) {
+      toast.error(t('suitcase.archiveDeleteError', { defaultValue: 'Failed to delete archives.' }));
+    } finally {
+      setArchiveLoading(false);
+    }
+  };
+
   // Gathering form state
   const [destinations, setDestinations] = useState('');
   const [purpose, setPurpose] = useState('pleasure');
@@ -866,7 +888,7 @@ function Suitcase() {
           </p>
         </div>
         <div className="flex gap-2">
-          {viewState !== 'gathering' && (
+          {activeTab === 'suitcase' && viewState !== 'gathering' && (
             <Button
               variant="destructive"
               className="rounded-xl flex items-center gap-2"
@@ -876,10 +898,51 @@ function Suitcase() {
               <span>{t('suitcase.resetTrip', { defaultValue: 'Reset' })}</span>
             </Button>
           )}
+          {activeTab === 'archive' && archives && archives.length > 0 && (
+            isSelectionMode ? (
+              <>
+                <Button
+                  variant="ghost"
+                  className="rounded-xl flex items-center gap-2"
+                  onClick={() => {
+                    setIsSelectionMode(false);
+                    setSelectedArchives([]);
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                  <span>{t('common.cancel', { defaultValue: 'Cancel' })}</span>
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="rounded-xl flex items-center gap-2"
+                  onClick={handleDeleteArchives}
+                  disabled={selectedArchives.length === 0 || archiveLoading}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>{t('common.delete', { defaultValue: 'Delete' })} {selectedArchives.length > 0 && `(${selectedArchives.length})`}</span>
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                className="rounded-xl flex items-center gap-2"
+                onClick={() => setIsSelectionMode(true)}
+              >
+                <CheckSquare className="h-4 w-4" />
+                <span>{t('common.select', { defaultValue: 'Select' })}</span>
+              </Button>
+            )
+          )}
         </div>
       </header>
 
-      <Tabs defaultValue="suitcase" className="w-full">
+      <Tabs value={activeTab} onValueChange={(val) => {
+        setActiveTab(val);
+        if (val !== 'archive') {
+          setIsSelectionMode(false);
+          setSelectedArchives([]);
+        }
+      }} className="w-full">
         <TabsList className="grid w-full grid-cols-2 rounded-xl mb-6 bg-secondary/50 max-w-md">
           <TabsTrigger value="suitcase" className="rounded-lg">{t('suitcase.tabTrip', { defaultValue: 'Active Trip' })}</TabsTrigger>
           <TabsTrigger value="archive" className="rounded-lg">{t('suitcase.tabArchive', { defaultValue: 'Traveling Archive' })}</TabsTrigger>
@@ -1674,35 +1737,53 @@ function Suitcase() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {(Array.isArray(archives) ? archives : []).map((arch, idx) => (
-                <Card
-                  key={idx}
-                  onClick={() => setSelectedArchive(arch)}
-                  className="rounded-2xl border border-border bg-card shadow-sm hover:scale-[1.01] hover:border-primary/30 transition-all cursor-pointer overflow-hidden"
-                >
-                  <CardHeader className="bg-muted/10 pb-3 border-b border-border">
-                    <CardTitle className="text-base font-display flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-[hsl(var(--accent))]" />
-                      {arch.destination}
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      {t('suitcase.tripDates', {
-                        dep: (arch?.departure_time && typeof arch.departure_time === 'string') ? arch.departure_time.split('T')[0] : '',
-                        ret: (arch?.return_time && typeof arch.return_time === 'string') ? arch.return_time.split('T')[0] : '',
-                        defaultValue: 'Trip dates: {{dep}} to {{ret}}'
-                      })}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-3">
-                    <p className="text-xs text-muted-foreground font-medium capitalize">
-                      {t('suitcase.purposeLabel', { defaultValue: 'Purpose' })}: {t(`suitcase.purpose_${arch.purpose}`, { defaultValue: arch.purpose })} · {t('suitcase.preferredStyleLabel', { defaultValue: 'Style' })}: {arch.preferred_style}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2 truncate">
-                      {arch.notes || t('suitcase.archiveNoNotes', { defaultValue: 'No notes.' })}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
+              {(Array.isArray(archives) ? archives : []).map((arch, idx) => {
+                const isSelected = selectedArchives.includes(arch.id);
+                return (
+                  <Card
+                    key={idx}
+                    onClick={() => {
+                      if (isSelectionMode) {
+                        setSelectedArchives(prev =>
+                          prev.includes(arch.id) ? prev.filter(id => id !== arch.id) : [...prev, arch.id]
+                        );
+                      } else {
+                        setSelectedArchive(arch);
+                      }
+                    }}
+                    className={`relative rounded-2xl border bg-card shadow-sm transition-all cursor-pointer overflow-hidden ${
+                      isSelected ? 'border-[hsl(var(--accent))] ring-1 ring-[hsl(var(--accent))]' : 'border-border hover:scale-[1.01] hover:border-primary/30'
+                    }`}
+                  >
+                    {isSelectionMode && (
+                      <div className="absolute top-3 right-3 z-10 text-[hsl(var(--accent))]">
+                        {isSelected ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5 text-muted-foreground/50" />}
+                      </div>
+                    )}
+                    <CardHeader className="bg-muted/10 pb-3 border-b border-border">
+                      <CardTitle className="text-base font-display flex items-center gap-2 pr-6">
+                        <MapPin className="h-4 w-4 text-[hsl(var(--accent))]" />
+                        {arch.destination}
+                      </CardTitle>
+                      <CardDescription className="text-xs">
+                        {t('suitcase.tripDates', {
+                          dep: (arch?.departure_time && typeof arch.departure_time === 'string') ? arch.departure_time.split('T')[0] : '',
+                          ret: (arch?.return_time && typeof arch.return_time === 'string') ? arch.return_time.split('T')[0] : '',
+                          defaultValue: 'Trip dates: {{dep}} to {{ret}}'
+                        })}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-3">
+                      <p className="text-xs text-muted-foreground font-medium capitalize">
+                        {t('suitcase.purposeLabel', { defaultValue: 'Purpose' })}: {t(`suitcase.purpose_${arch.purpose}`, { defaultValue: arch.purpose })} · {t('suitcase.preferredStyleLabel', { defaultValue: 'Style' })}: {arch.preferred_style}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2 truncate">
+                        {arch.notes || t('suitcase.archiveNoNotes', { defaultValue: 'No notes.' })}
+                      </p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </TabsContent>

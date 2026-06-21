@@ -794,3 +794,18 @@ async def get_suitcase_archives(user: dict = Depends(get_current_user)) -> list[
     db = get_db()
     cursor = db.suitcase_archives.find({"user_id": user["id"]}).sort([("created_at", -1)])
     return [{k: v for k, v in doc.items() if k != "_id"} async for doc in cursor]
+
+@router.delete("/archive")
+async def delete_suitcase_archives(
+    ids: str = Query(..., description="Comma separated list of archive IDs to delete"),
+    user: dict = Depends(get_current_user)
+) -> dict[str, Any]:
+    db = get_db()
+    id_list = [i.strip() for i in ids.split(",") if i.strip()]
+    if not id_list:
+        return {"status": "error", "message": "No IDs provided"}
+    
+    result = await db.suitcase_archives.delete_many(
+        {"id": {"$in": id_list}, "user_id": user["id"]}
+    )
+    return {"status": "success", "deleted_count": result.deleted_count}
