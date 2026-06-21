@@ -46,7 +46,7 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
   }, [outfitItems]);
 
   return (
-    <div className="relative w-full h-full min-h-[300px] bg-gradient-to-b from-secondary/30 via-secondary/15 to-background overflow-hidden flex items-center justify-center p-0 shadow-inner group">
+    <div className="relative w-full h-full bg-gradient-to-b from-secondary/30 via-secondary/15 to-background overflow-hidden flex items-center justify-center p-0 shadow-inner group">
       {/* Dynamic Background Sparkle */}
       <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/30 via-transparent to-transparent" />
       
