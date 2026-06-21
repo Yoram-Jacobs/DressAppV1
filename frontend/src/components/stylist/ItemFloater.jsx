@@ -133,6 +133,7 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
   // containers higher up in the chat DOM tree.
   return createPortal(
     <aside
+      id="item-floater-panel"
       ref={panelRef}
       role="complementary"
       aria-label={item?.name || t('stylist.floater.titleLoading', { defaultValue: 'Item details' })}

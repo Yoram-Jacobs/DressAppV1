@@ -471,7 +471,19 @@ export default function Outfits() {
 
       {/* Outfit Recommendations Modal */}
       <Dialog open={!!selectedNotification} onOpenChange={(open) => !open && setSelectedNotification(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl">
+        <DialogContent 
+          className="max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl"
+          onPointerDownOutside={(e) => {
+            if (e.target.closest('#item-floater-panel')) {
+              e.preventDefault();
+            }
+          }}
+          onEscapeKeyDown={(e) => {
+            if (floaterItemId) {
+              e.preventDefault();
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle className="font-display text-lg">
               {selectedNotification && getLocalizedNotification(selectedNotification, t).title}
