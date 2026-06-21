@@ -7,7 +7,9 @@ import { api } from '@/lib/api';
 import { labelForRole } from '@/lib/taxonomy';
 import { cn } from '@/lib/utils';
 import { ShareOutfitButton } from '@/components/stylist/ShareOutfitButton';
-
+import { useAuth } from '@/hooks/useAuth';
+import OutfitAvatarViewer from '@/components/OutfitAvatarViewer';
+import { useMemo } from 'react';
 /**
  * Renders a single outfit recommendation. When recommendation items include
  * `closet_item_id`, we fetch and embed the item's image so the user sees
@@ -18,11 +20,25 @@ import { ShareOutfitButton } from '@/components/stylist/ShareOutfitButton';
  */
 export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, onSave }) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const items = (rec?.items || []).filter(Boolean);
   const ids = items
     .map((it) => it?.closet_item_id)
     .filter(Boolean);
   const [images, setImages] = useState({});
+
+  const outfitItemsMap = useMemo(() => {
+    const map = {};
+    items.forEach(it => {
+      if (it && it.role) {
+        map[it.role] = {
+           id: it.closet_item_id,
+           url: images[it.closet_item_id]
+        };
+      }
+    });
+    return map;
+  }, [items, images]);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,130 +80,19 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
       className="rounded-xl bg-[hsl(var(--accent))]/5 border border-[hsl(var(--accent))]/15 overflow-hidden shadow-sm"
       data-testid={`outfit-recommendation-${index}`}
     >
-      {heroImage ? (
-        <div className="relative aspect-[16/9] bg-background border-b border-[hsl(var(--accent))]/10">
-          {/* Phase S3: hero is a button when the parent supplies
-              onItemClick — opens the side-sheet floater instead of
-              hard-navigating, so the chat thread stays in view. */}
-          {onItemClick && withImages[0]?.closet_item_id ? (
-            <button
-              type="button"
-              onClick={() => onItemClick(withImages[0].closet_item_id)}
-              className="absolute inset-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] focus-visible:ring-offset-0"
-              data-testid={`outfit-recommendation-${index}-hero-button`}
-              aria-label={rec.name || `Outfit ${index + 1}`}
-            >
-              <img
-                src={heroImage}
-                alt={rec.name || `Outfit ${index + 1}`}
-                loading="lazy"
-                onError={(e) => {
-                  e.currentTarget.style.opacity = '0.25';
-                }}
-                className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-[1.02]"
-              />
-            </button>
-          ) : (
-            <img
-              src={heroImage}
-              alt={rec.name || `Outfit ${index + 1}`}
-              loading="lazy"
-              onError={(e) => {
-                e.currentTarget.style.opacity = '0.25';
-              }}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          )}
-          {withImages.length > 1 ? (
-            <div className="absolute bottom-2 right-2 flex -space-x-2 pointer-events-none">
-              {withImages.slice(1, 4).map((it, i) => (
-                <div
-                  key={`${it.closet_item_id}-${i}`}
-                  className="h-8 w-8 rounded-full border-2 border-background overflow-hidden bg-card"
-                >
-                  <img
-                    src={images[it.closet_item_id]}
-                    alt={it.description || it.role}
-                    loading="lazy"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+      <OutfitAvatarViewer
+         shapeParams={user?.avatar_shape_params || {}}
+         sex={user?.sex || 'female'}
+         outfitItemsMap={outfitItemsMap}
+         onItemClick={onItemClick}
+      />
       <div className="p-3 text-left">
         <div className="caps-label text-[hsl(var(--accent))] font-semibold">
           {t('stylist.outfitN', { n: index + 1 })}
         </div>
         <div className="font-display text-base mt-1 text-foreground">{rec.name}</div>
         
-        {/* Connected clothes list (Uniform Connectedness indicator) */}
-        <ul className="text-xs text-muted-foreground mt-3 space-y-2.5 relative pl-4 border-l-2 border-[hsl(var(--accent))]/20 ml-2">
-          {items.map((it, j) => {
-            // Phase S3: each row's thumb is a button when the parent
-            // supplies onItemClick AND we have a closet_item_id —
-            // otherwise fall back to the static rendering.
-            const cid = it.closet_item_id;
-            const hasImage = cid && images[cid];
-            const clickable = onItemClick && cid;
-            const thumb = hasImage ? (
-              <img
-                src={images[cid]}
-                alt={it.description || it.role}
-                loading="lazy"
-                className="h-8 w-8 rounded-md object-cover bg-background border border-[hsl(var(--accent))]/15 shrink-0"
-              />
-            ) : (
-              <span
-                className={cn(
-                  'h-8 w-8 rounded-md bg-background border border-dashed border-border shrink-0',
-                  'flex items-center justify-center',
-                )}
-                aria-hidden="true"
-              >
-                <ImageOff className="h-3 w-3 text-muted-foreground opacity-60" />
-              </span>
-            );
-            return (
-              <li
-                key={j}
-                // ``min-w-0`` lets the text span below shrink under
-                // the thumbnail's fixed width when the description
-                // contains a long unbreakable token — same fix as
-                // the outer chat bubble.
-                className="flex min-w-0 items-center gap-2"
-                data-testid={`outfit-recommendation-${index}-item-${j}`}
-              >
-                {clickable ? (
-                  <button
-                    type="button"
-                    onClick={() => onItemClick(cid)}
-                    className="shrink-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] hover:opacity-90 transition-opacity"
-                    data-testid={`outfit-recommendation-${index}-item-${j}-thumb`}
-                    aria-label={it.description || labelForRole(it.role, t) || it.role}
-                  >
-                    {thumb}
-                  </button>
-                ) : (
-                  thumb
-                )}
-                <span className="flex-1 min-w-0 break-words text-foreground/80">
-                  {it.description || labelForRole(it.role, t) || it.role}
-                  {it.role ? (
-                    <Badge
-                      variant="outline"
-                      className="ms-2 text-[9px] py-0 px-1 h-4 rounded-sm border-[hsl(var(--accent))]/20 bg-background/50"
-                    >
-                      {labelForRole(it.role, t)}
-                    </Badge>
-                  ) : null}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
+
         {rec.why ? <p className="text-xs mt-2.5 italic break-words text-muted-foreground/95">{rec.why}</p> : null}
         <div className="mt-4 flex items-center justify-between gap-2 pt-2 border-t border-[hsl(var(--accent))]/10">
           {onSave ? (

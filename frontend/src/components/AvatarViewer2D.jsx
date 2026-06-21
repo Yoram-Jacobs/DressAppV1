@@ -33,17 +33,36 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
     };
   }, [params]);
 
-  // Determine outfit garment URLs
+// AvatarViewer2D.jsx
+  // Determine outfit garment URLs and IDs
   const garments = useMemo(() => {
     const res = {};
     Object.entries(outfitItems || {}).forEach(([role, item]) => {
       if (item) {
-        // Can be a full ClosetItem or simple `{image_url}` / `{image_data_url}`
-        res[role] = bestImageUrl(item) || item.image_data_url || item.segmented_image_url || item.image_url || item.original_image_url;
+        res[role] = {
+           url: bestImageUrl(item) || item.image_data_url || item.segmented_image_url || item.image_url || item.original_image_url || item.url,
+           id: item.closet_item_id || item.id || null
+        };
       }
     });
     return res;
   }, [outfitItems]);
+
+  const renderGarment = (roleKey, fallbackAlt, extraClasses = '', initial = {}, animate = {}) => {
+    const garment = garments[roleKey];
+    if (!garment || !garment.url) return null;
+    const clickable = onItemClick && garment.id;
+    return (
+      <motion.img
+        initial={initial}
+        animate={animate}
+        src={garment.url}
+        alt={t(`taxonomy.categories.${roleKey}`, { defaultValue: fallbackAlt })}
+        className={`absolute object-contain drop-shadow-md ${extraClasses} ${clickable ? 'cursor-pointer hover:scale-[1.02] transition-transform z-50' : 'pointer-events-none'}`}
+        onClick={clickable ? (e) => { e.stopPropagation(); onItemClick(garment.id); } : undefined}
+      />
+    );
+  };
 
   return (
     <div className="relative w-full h-full bg-gradient-to-b from-secondary/30 via-secondary/15 to-background overflow-hidden flex items-center justify-center p-0 shadow-inner group">
@@ -80,83 +99,29 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
         {/* ─── Layered Clothes (Segmented transparent PNG overlays) ─── */}
 
         {/* 1. Headwear */}
-        {garments.headwear && (
-          <motion.img
-            initial={{ opacity: 0, y: -10, x: "-50%" }}
-            animate={{ opacity: 1, y: 0, x: "-50%" }}
-            src={garments.headwear}
-            alt={t('components.avatarViewer2D.headwear', { defaultValue: 'Headwear' })}
-            className="absolute top-0 left-1/2 w-[40%] aspect-square object-contain z-30 drop-shadow-md"
-          />
-        )}
+        {renderGarment('headwear', 'Headwear', 'top-0 left-1/2 w-[40%] aspect-square z-30', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
 
         {/* 2. Accessories / Neckwear */}
-        {garments.accessory && (
-          <motion.img
-            initial={{ opacity: 0, x: "-50%" }}
-            animate={{ opacity: 1, x: "-50%" }}
-            src={garments.accessory}
-            alt={t('taxonomy.categories.accessory', { defaultValue: 'Accessory' })}
-            className="absolute top-[14%] left-1/2 w-[35%] object-contain z-25"
-          />
-        )}
+        {renderGarment('accessory', 'Accessory', 'top-[14%] left-1/2 w-[35%] z-25', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
 
         {/* 3. Dress (Overrides top/bottom layout) */}
-        {garments.dress ? (
-          <motion.img
-            initial={{ opacity: 0, scale: 0.95, x: "-50%" }}
-            animate={{ opacity: 1, scale: 1, x: "-50%" }}
-            src={garments.dress}
-            alt={t('taxonomy.categories.dress', { defaultValue: 'Dress' })}
-            className="absolute top-[16%] left-1/2 w-[75%] h-[60%] object-contain z-20 drop-shadow-lg"
-          />
+        {garments.dress && garments.dress.url ? (
+          renderGarment('dress', 'Dress', 'top-[16%] left-1/2 w-[75%] h-[60%] z-20 drop-shadow-lg', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })
         ) : (
           <>
             {/* Top (Shirt, Sweater, etc.) */}
-            {garments.top && (
-              <motion.img
-                initial={{ opacity: 0, scale: 0.95, x: "-50%" }}
-                animate={{ opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width }}
-                src={garments.top}
-                alt={t('addItem.categoryPlaceholder', { defaultValue: 'Top' })}
-                className="absolute top-[17%] left-1/2 w-[78%] h-[38%] object-contain z-20 drop-shadow-md"
-              />
-            )}
+            {renderGarment('top', 'Top', 'top-[17%] left-1/2 w-[78%] h-[38%] z-20', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width })}
 
             {/* Bottom (Pants, Skirt, Jeans) */}
-            {garments.bottom && (
-              <motion.img
-                initial={{ opacity: 0, scale: 0.95, x: "-50%" }}
-                animate={{ opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width }}
-                src={garments.bottom}
-                alt={t('taxonomy.categories.bottom', { defaultValue: 'Bottom' })}
-                className="absolute top-[42%] left-1/2 w-[72%] h-[48%] object-contain z-10 drop-shadow-md"
-              />
-            )}
+            {renderGarment('bottom', 'Bottom', 'top-[42%] left-1/2 w-[72%] h-[48%] z-10', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width })}
           </>
         )}
 
         {/* 4. Outerwear (Jacket, Coat) - Layered on top of top/dress */}
-        {garments.outerwear && (
-          <motion.img
-            initial={{ opacity: 0, scale: 0.96, x: "-50%" }}
-            animate={{ opacity: 1, scale: 1, x: "-50%" }}
-            src={garments.outerwear}
-            alt={t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' })}
-            className="absolute top-[16%] left-1/2 w-[85%] h-[45%] object-contain z-22 drop-shadow-lg"
-          />
-        )}
+        {renderGarment('outerwear', 'Outerwear', 'top-[16%] left-1/2 w-[85%] h-[45%] z-22 drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })}
 
         {/* 5. Shoes */}
-        {garments.shoes && (
-          <motion.img
-            initial={{ opacity: 0, y: 10, x: "-50%" }}
-            animate={{ opacity: 1, y: 0, x: "-50%" }}
-            src={garments.shoes}
-            alt={t('taxonomy.categories.shoes', { defaultValue: 'Shoes' })}
-            className="absolute bottom-0 left-1/2 w-[50%] h-[15%] object-contain z-15 drop-shadow-md"
-          />
-        )}
+        {renderGarment('shoes', 'Shoes', 'bottom-0 left-1/2 w-[50%] h-[15%] z-15', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
 
         {/* 6. Bag */}
         {garments.bag && (
