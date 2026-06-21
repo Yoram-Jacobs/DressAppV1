@@ -46,15 +46,15 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
   }, [outfitItems]);
 
   return (
-    <div className="relative w-full h-[520px] bg-gradient-to-b from-secondary/30 via-secondary/15 to-background border border-border rounded-2xl overflow-hidden flex items-center justify-center p-4 shadow-inner group">
+    <div className="relative w-full h-full min-h-[300px] bg-gradient-to-b from-secondary/30 via-secondary/15 to-background overflow-hidden flex items-center justify-center p-2 shadow-inner group">
       {/* Dynamic Background Sparkle */}
       <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/30 via-transparent to-transparent" />
       
       {/* 2D Vector Avatar Container */}
       <div 
-        className="relative w-[280px] h-[480px] flex items-center justify-center transition-all duration-500"
+        className="relative h-[95%] aspect-[1/2] flex items-center justify-center transition-all duration-500"
         style={{
-          transform: `scale(${scales.width * 0.95}, ${scales.height * 0.95})`,
+          transform: `scale(${scales.width}, ${scales.height})`,
           transformOrigin: 'bottom center'
         }}
       >
@@ -82,61 +82,55 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
         {/* 1. Headwear */}
         {garments.headwear && (
           <motion.img
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: -10, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
             src={garments.headwear}
             alt={t('components.avatarViewer2D.headwear', { defaultValue: 'Headwear' })}
-            className="absolute top-[2%] left-1/2 -translate-x-1/2 w-[22%] aspect-square object-contain z-30 drop-shadow-md"
+            className="absolute top-[2%] left-1/2 w-[40%] aspect-square object-contain z-30 drop-shadow-md"
           />
         )}
 
         {/* 2. Accessories / Neckwear */}
         {garments.accessory && (
           <motion.img
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 0, x: "-50%" }}
+            animate={{ opacity: 1, x: "-50%" }}
             src={garments.accessory}
             alt={t('taxonomy.categories.accessory', { defaultValue: 'Accessory' })}
-            className="absolute top-[16%] left-1/2 -translate-x-1/2 w-[16%] object-contain z-25"
+            className="absolute top-[14%] left-1/2 w-[35%] object-contain z-25"
           />
         )}
 
         {/* 3. Dress (Overrides top/bottom layout) */}
         {garments.dress ? (
           <motion.img
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.95, x: "-50%" }}
+            animate={{ opacity: 1, scale: 1, x: "-50%" }}
             src={garments.dress}
             alt={t('taxonomy.categories.dress', { defaultValue: 'Dress' })}
-            className="absolute top-[18%] left-1/2 -translate-x-1/2 w-[42%] h-[56%] object-contain z-20 drop-shadow-lg"
+            className="absolute top-[16%] left-1/2 w-[75%] h-[60%] object-contain z-20 drop-shadow-lg"
           />
         ) : (
           <>
             {/* Top (Shirt, Sweater, etc.) */}
             {garments.top && (
               <motion.img
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, scale: 0.95, x: "-50%" }}
+                animate={{ opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width }}
                 src={garments.top}
                 alt={t('addItem.categoryPlaceholder', { defaultValue: 'Top' })}
-                className="absolute top-[19%] left-1/2 -translate-x-1/2 w-[44%] h-[32%] object-contain z-20 drop-shadow-md"
-                style={{
-                  transform: `translateX(-50%) scale(${scales.chest / scales.width}, 1)`
-                }}
+                className="absolute top-[17%] left-1/2 w-[78%] h-[38%] object-contain z-20 drop-shadow-md"
               />
             )}
 
             {/* Bottom (Pants, Skirt, Jeans) */}
             {garments.bottom && (
               <motion.img
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, scale: 0.95, x: "-50%" }}
+                animate={{ opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width }}
                 src={garments.bottom}
                 alt={t('taxonomy.categories.bottom', { defaultValue: 'Bottom' })}
-                className="absolute top-[44%] left-1/2 -translate-x-1/2 w-[40%] h-[40%] object-contain z-10 drop-shadow-md"
-                style={{
-                  transform: `translateX(-50%) scale(${scales.hips / scales.width}, 1)`
-                }}
+                className="absolute top-[42%] left-1/2 w-[72%] h-[48%] object-contain z-10 drop-shadow-md"
               />
             )}
           </>
@@ -145,22 +139,22 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
         {/* 4. Outerwear (Jacket, Coat) - Layered on top of top/dress */}
         {garments.outerwear && (
           <motion.img
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.96, x: "-50%" }}
+            animate={{ opacity: 1, scale: 1, x: "-50%" }}
             src={garments.outerwear}
             alt={t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' })}
-            className="absolute top-[18%] left-1/2 -translate-x-1/2 w-[48%] h-[35%] object-contain z-22 drop-shadow-lg"
+            className="absolute top-[16%] left-1/2 w-[85%] h-[45%] object-contain z-22 drop-shadow-lg"
           />
         )}
 
         {/* 5. Shoes */}
         {garments.shoes && (
           <motion.img
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 10, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
             src={garments.shoes}
             alt={t('taxonomy.categories.shoes', { defaultValue: 'Shoes' })}
-            className="absolute bottom-[2%] left-1/2 -translate-x-1/2 w-[34%] h-[12%] object-contain z-15 drop-shadow-md"
+            className="absolute bottom-[1%] left-1/2 w-[50%] h-[15%] object-contain z-15 drop-shadow-md"
           />
         )}
 
@@ -171,7 +165,7 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
             animate={{ opacity: 1, x: 0 }}
             src={garments.bag}
             alt={t('taxonomy.sub_category.bag', { defaultValue: 'Bag' })}
-            className="absolute top-[45%] right-[2%] w-[24%] h-[24%] object-contain z-25 drop-shadow-md"
+            className="absolute top-[40%] right-[-5%] w-[40%] h-[30%] object-contain z-25 drop-shadow-md"
           />
         )}
       </div>
