@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 export default function OutfitAvatarViewer({ shapeParams, sex, outfitItemsMap, className = '', onItemClick, badgeContent, children }) {
   const { t } = useTranslation();
   const outerwear = outfitItemsMap['outerwear'];
-  const hasOuterwear = outerwear && !!(outerwear.image_url || outerwear.url || (outerwear.id && outerwear.url !== null));
+  const hasOuterwear = outerwear && !!(outerwear.image_url || outerwear.url);
   const hasTopOrDress = outfitItemsMap['top'] || outfitItemsMap['dress'];
 
   if (hasOuterwear && hasTopOrDress) {

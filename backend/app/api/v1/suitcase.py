@@ -216,7 +216,7 @@ async def suitcase_chat(
         '  "departure_time": string | null,\n'
         '  "return_time": string | null,\n'
         '  "notes": string | null,\n'
-        '  "should_regenerate": boolean, // set to true if user asks to generate, regenerate, pack, replan, update, adapt, or recreate outfits or the packing list, or suit them to calendar activities/weather. Otherwise false\n'
+        '  "should_regenerate": boolean, // set to true if user asks to generate, coordinate, construct, conduit, regenerate, pack, replan, update, adapt, or recreate outfits or the packing list, or suit them to calendar activities/weather. Otherwise false\n'
         '  "reply": string\n'
         "}"
     )

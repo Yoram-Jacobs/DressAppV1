@@ -483,6 +483,7 @@ export default function Outfits() {
               e.preventDefault();
             }
           }}
+          onFocusOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>
             <DialogTitle className="font-display text-lg">
