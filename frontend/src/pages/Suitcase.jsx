@@ -22,6 +22,7 @@ import { bestImageUrl } from '@/lib/itemImage';
 import { toast } from 'sonner';
 import { labelForCategory, labelForRole } from '@/lib/taxonomy';
 import { useAuth } from '@/lib/auth';
+import { useModalBack } from '@/lib/useModalBack';
 import AvatarViewer from '@/components/AvatarViewer';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { SuitcaseErrorBoundary } from '@/components/SuitcaseErrorBoundary';
@@ -237,6 +238,11 @@ function Suitcase() {
 
   // Archives
   const [selectedArchive, setSelectedArchive] = useState(null);
+
+  useModalBack(!!fullscreenOutfit, () => setFullscreenOutfit(null));
+  useModalBack(showSimModal, () => setShowSimModal(false));
+  useModalBack(!!selectedArchive, () => setSelectedArchive(null));
+  useModalBack(closetDialogOpen, () => setClosetDialogOpen(false));
 
   const groupedReviewingList = useMemo(() => {
     if (!packingData || !Array.isArray(packingData.packing_list)) return {};
@@ -1894,7 +1900,7 @@ function Suitcase() {
 
       {/* Full screen outfit view */}
       <Dialog open={!!fullscreenOutfit} onOpenChange={() => setFullscreenOutfit(null)}>
-        <DialogContent className="max-w-3xl rounded-3xl p-6 border border-border shadow-lg">
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto rounded-3xl p-6 border border-border shadow-lg">
           {fullscreenOutfit && (
             <>
               <DialogHeader>
@@ -1930,15 +1936,9 @@ function Suitcase() {
                         <>
                           <div className="rounded-2xl border border-border overflow-hidden bg-muted/10 relative flex items-center justify-center shadow-sm w-full">
                             <OutfitCanvas outfit={fullscreenOutfit} excludeRoles={['top', 'dress']} className="border-none hover:opacity-100 cursor-default" t={t} />
-                            <div className="absolute top-3 left-3 bg-background/80 backdrop-blur px-2.5 py-1 rounded-md text-[10px] font-medium text-foreground shadow-sm pointer-events-none border border-border/50">
-                              {t('suitcase.withOuterwear', { defaultValue: 'With Outerwear' })}
-                            </div>
                           </div>
                           <div className="rounded-2xl border border-border overflow-hidden bg-muted/10 relative flex items-center justify-center shadow-sm w-full">
                             <OutfitCanvas outfit={fullscreenOutfit} excludeRoles={['outerwear']} className="border-none hover:opacity-100 cursor-default" t={t} />
-                            <div className="absolute top-3 left-3 bg-background/80 backdrop-blur px-2.5 py-1 rounded-md text-[10px] font-medium text-foreground shadow-sm pointer-events-none border border-border/50">
-                              {t('suitcase.withoutOuterwear', { defaultValue: 'Without Outerwear' })}
-                            </div>
                           </div>
                         </>
                       );
@@ -1954,7 +1954,7 @@ function Suitcase() {
                 
                 {/* Item List & Reasoning */}
                 <div className="flex flex-col justify-between h-full space-y-4">
-                  <div className="space-y-4 flex-1 overflow-y-auto max-h-[300px] pr-2">
+                  <div className="space-y-4 flex-1">
                     <h4 className="text-sm font-semibold uppercase text-muted-foreground tracking-wider">{t('suitcase.outfitPieces', { defaultValue: 'Outfit Pieces' })}</h4>
                     <div className="space-y-2.5">
                       {(Array.isArray(fullscreenOutfit?.items) ? fullscreenOutfit.items : []).map((item, idx) => {
