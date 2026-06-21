@@ -229,7 +229,7 @@ export default function Marketplace() {
                               l.financial_metadata?.currency || l.currency,
                             )}
                           </span>
-                          <SourceTagBadge source={l.source} mode={l.mode} />
+                          <SourceTagBadge source={l.source} mode={l.mode} className="hidden md:inline-flex" />
                         </div>
                         
                         <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
@@ -448,7 +448,7 @@ function MyListings() {
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between gap-2">
                     <div className="font-medium text-sm truncate">{l.title}</div>
-                    <SourceTagBadge source={l.source} mode={l.mode} />
+                    <SourceTagBadge source={l.source} mode={l.mode} className="hidden md:inline-flex" />
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
                     {l.status}

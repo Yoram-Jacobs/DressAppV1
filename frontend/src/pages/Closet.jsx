@@ -1671,7 +1671,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
       <CardContent className="p-3">
         <div className="flex items-center justify-between gap-2">
           <div className="font-medium text-sm truncate">{item.title}</div>
-          <SourceTagBadge source={item.source} intent={item.marketplace_intent} />
+          <SourceTagBadge source={item.source} intent={item.marketplace_intent} className="hidden md:inline-flex" />
         </div>
         <div className="text-xs text-muted-foreground mt-1">
           {[labelForCategory(item.category, t), labelForColor(item.color, t)].filter(Boolean).join(' · ')}
