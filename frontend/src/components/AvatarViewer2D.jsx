@@ -135,11 +135,6 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
         )}
       </div>
 
-      {/* Try-on affordance overlay */}
-      <div className="absolute bottom-3 right-3 bg-background/80 dark:bg-slate-900/80 backdrop-blur px-2 py-1 rounded-lg border border-border text-[10px] text-muted-foreground flex items-center gap-1 select-none opacity-0 group-hover:opacity-100 transition-opacity">
-        <Sparkles className="h-3 w-3 text-[hsl(var(--accent))]" />
-        <span>{t('components.avatarViewer2D.virtual_tryon_active', { defaultValue: 'Virtual Try-On Active' })}</span>
-      </div>
     </div>
   );
 }
