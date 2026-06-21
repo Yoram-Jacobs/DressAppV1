@@ -222,7 +222,14 @@ async def suitcase_chat(
     )
 
     resp_str = await generate_text(user_text=prompt, response_mime_type="application/json")
-    return json.loads(resp_str)
+    import re
+    try:
+        return json.loads(resp_str)
+    except json.JSONDecodeError:
+        match = re.search(r'\{.*\}', resp_str, re.DOTALL)
+        if match:
+            return json.loads(match.group(0))
+        raise ValueError(f"Could not parse response: {resp_str}")
 
 
 @router.get("/active")
