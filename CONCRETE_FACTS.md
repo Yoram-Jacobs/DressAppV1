@@ -68,7 +68,7 @@ quantization / memory / latency decisions assume this exact host.
 | Container | Source | Internal port | Role |
 | --- | --- | --- | --- |
 | `dressapp-backend` | `/app/backend/` (Dockerfile in repo) | (behind ingress) | FastAPI app — closet, marketplace, stylist, payments |
-| `dressapp-eyes` | `/app/inference-server/eyes/Dockerfile` | `7860` | Self-hosted vision + audio inference server (Gemma-4 E2B + Eyes LoRA) |
+| `dressapp-eyes` | `/app/inference-server/eyes/Dockerfile` | `7860` | Self-hosted vision + audio inference server (Gemma-4 E2B + Eyes LoRA). **NOTE: Placed behind `profiles: ["disabled"]` on the Hetzner CPU server to conserve resources since the GGUF model is designed for edge deployment.** |
 | `dressapp-frontend` | `/app/frontend/` (Dockerfile in repo) | `3000` | React SPA |
 
 **Database.** MongoDB is **NOT** in Docker on the VPS. Production uses
