@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { ImageOff, Sparkles, Check } from 'lucide-react';
+import { bestImageUrl } from '@/lib/itemImage';
 
 export default function StyleSandbox({ isOpen, onClose, listingItem }) {
   const { t } = useTranslation();
@@ -42,7 +43,7 @@ export default function StyleSandbox({ isOpen, onClose, listingItem }) {
       <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
         {list.map(it => {
           const isSelected = selected?.id === it.id;
-          const imgUrl = it.segmented_image_url || it.image_url;
+          const imgUrl = bestImageUrl(it);
           return (
             <div
               key={it.id}
@@ -89,12 +90,12 @@ export default function StyleSandbox({ isOpen, onClose, listingItem }) {
                 {isListingTop ? (
                   <div className="h-24 w-24 bg-card rounded-xl border-2 border-brand/50 p-1 flex flex-col items-center justify-center shadow-md relative">
                     <span className="absolute top-0.5 right-1.5 text-[8px] font-bold text-brand uppercase tracking-wider">{t('sandbox.listing', { defaultValue: 'Buy' })}</span>
-                    <img src={listingItem?.image_url} alt="" className="max-h-full max-w-full object-contain" />
+                    <img src={listingItem?.images?.[0] || listingItem?.image_url} alt="" className="max-h-full max-w-full object-contain" />
                   </div>
                 ) : (
                   <div className="h-24 w-24 bg-card rounded-xl border border-border/80 p-1 flex items-center justify-center shadow-sm relative">
                     {selectedTop ? (
-                      <img src={selectedTop.segmented_image_url || selectedTop.image_url} alt="" className="max-h-full max-w-full object-contain" />
+                      <img src={bestImageUrl(selectedTop)} alt="" className="max-h-full max-w-full object-contain" />
                     ) : (
                       <span className="text-[9px] text-muted-foreground/50 text-center">{t('sandbox.noTop', { defaultValue: 'Select Top' })}</span>
                     )}
@@ -107,12 +108,12 @@ export default function StyleSandbox({ isOpen, onClose, listingItem }) {
                 {isListingBottom ? (
                   <div className="h-24 w-24 bg-card rounded-xl border-2 border-brand/50 p-1 flex flex-col items-center justify-center shadow-md relative">
                     <span className="absolute top-0.5 right-1.5 text-[8px] font-bold text-brand uppercase tracking-wider">{t('sandbox.listing', { defaultValue: 'Buy' })}</span>
-                    <img src={listingItem?.image_url} alt="" className="max-h-full max-w-full object-contain" />
+                    <img src={listingItem?.images?.[0] || listingItem?.image_url} alt="" className="max-h-full max-w-full object-contain" />
                   </div>
                 ) : (
                   <div className="h-24 w-24 bg-card rounded-xl border border-border/80 p-1 flex items-center justify-center shadow-sm relative">
                     {selectedBottom ? (
-                      <img src={selectedBottom.segmented_image_url || selectedBottom.image_url} alt="" className="max-h-full max-w-full object-contain" />
+                      <img src={bestImageUrl(selectedBottom)} alt="" className="max-h-full max-w-full object-contain" />
                     ) : (
                       <span className="text-[9px] text-muted-foreground/50 text-center">{t('sandbox.noBottom', { defaultValue: 'Select Bottom' })}</span>
                     )}
@@ -125,12 +126,12 @@ export default function StyleSandbox({ isOpen, onClose, listingItem }) {
                 {isListingShoe ? (
                   <div className="h-20 w-20 bg-card rounded-xl border-2 border-brand/50 p-1 flex flex-col items-center justify-center shadow-md relative">
                     <span className="absolute top-0.5 right-1.5 text-[8px] font-bold text-brand uppercase tracking-wider">{t('sandbox.listing', { defaultValue: 'Buy' })}</span>
-                    <img src={listingItem?.image_url} alt="" className="max-h-full max-w-full object-contain" />
+                    <img src={listingItem?.images?.[0] || listingItem?.image_url} alt="" className="max-h-full max-w-full object-contain" />
                   </div>
                 ) : (
                   <div className="h-20 w-20 bg-card rounded-xl border border-border/80 p-1 flex items-center justify-center shadow-sm relative">
                     {selectedShoe ? (
-                      <img src={selectedShoe.segmented_image_url || selectedShoe.image_url} alt="" className="max-h-full max-w-full object-contain" />
+                      <img src={bestImageUrl(selectedShoe)} alt="" className="max-h-full max-w-full object-contain" />
                     ) : (
                       <span className="text-[9px] text-muted-foreground/50 text-center">{t('sandbox.noShoes', { defaultValue: 'Select Shoes' })}</span>
                     )}
