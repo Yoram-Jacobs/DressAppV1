@@ -29,6 +29,7 @@ import { api } from '@/lib/api';
 import { bestImageUrl, isCleanImagePending } from '@/lib/itemImage';
 import { labelForCategory, labelForSource, labelForIntent, labelForColor, getTaxonomyMismatches } from '@/lib/taxonomy';
 import { useClosetStore } from '@/lib/useClosetStore';
+import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
 import { closetStore } from '@/lib/closetStore';
 import { workStore } from '@/lib/workStore';
 import { toast } from 'sonner';
@@ -92,9 +93,9 @@ export default function Closet() {
   // the prewarm in AppLayout has already populated the snapshot.
   const store = useClosetStore();
   const initialFilters = { category: 'all', source: 'all', search: '' };
-  const [filters, setFilters] = useState(initialFilters);
+  const [filters, setFilters] = useLocalStorageSync('dressapp.closet.filters', initialFilters);
   // Search mode: 'keyword' uses Mongo text search, 'meaning' calls FashionCLIP.
-  const [searchMode, setSearchMode] = useState('keyword');
+  const [searchMode, setSearchMode] = useLocalStorageSync('dressapp.closet.searchMode', 'keyword');
   const [semanticActive, setSemanticActive] = useState(false);
   const [semanticItems, setSemanticItems] = useState([]);
   const [semanticIndexed, setSemanticIndexed] = useState(0);

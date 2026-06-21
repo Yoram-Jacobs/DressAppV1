@@ -1313,7 +1313,7 @@ export default function ItemDetail() {
                 when the one-pass /analyze response advised it (and the user hasn't
                 already accepted a reshoot for this item). */}
             {preferredImage && (
-              <div className="absolute bottom-3 end-3 inline-flex items-center gap-1.5 flex-wrap justify-end">
+              <div className="absolute bottom-3 end-3 hidden md:inline-flex items-center gap-1.5 flex-wrap justify-end">
                 {showRepairPhotoCta && (
                   <button
                     type="button"
@@ -1405,7 +1405,7 @@ export default function ItemDetail() {
                 </button>
               </>
             )}
-            <div className="absolute bottom-3 start-3 flex items-center gap-2">
+            <div className="absolute bottom-3 start-3 hidden md:flex items-center gap-2">
               <SourceTagBadge source={item.source} intent={item.marketplace_intent} />
               <Badge
                 variant="outline"
