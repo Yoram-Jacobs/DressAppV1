@@ -473,8 +473,8 @@ export default function Outfits() {
       <Dialog open={!!selectedNotification} onOpenChange={(open) => !open && setSelectedNotification(null)}>
         <DialogContent 
           className="max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl"
-          onPointerDownOutside={(e) => {
-            if (e.target.closest('#item-floater-panel')) {
+          onInteractOutside={(e) => {
+            if (floaterItemId || e.target.closest('#item-floater-panel')) {
               e.preventDefault();
             }
           }}
