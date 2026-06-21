@@ -1131,9 +1131,9 @@ function Suitcase() {
                                         </div>
                                         <Badge
                                           className={
-                                            item.status === 'closet'
+                                            "hidden md:inline-flex " + (item.status === 'closet'
                                               ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-                                              : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+                                              : 'bg-amber-100 text-amber-800 hover:bg-amber-200')
                                           }
                                         >
                                           {item.status === 'closet' ? t('suitcase.inClosetBadge', { defaultValue: 'In Closet' }) : t('suitcase.missingBadge', { defaultValue: 'Missing' })}
@@ -1579,9 +1579,9 @@ function Suitcase() {
                                           </div>
                                           <div className="flex items-center gap-2">
                                             {item.checked ? (
-                                              <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 rounded-md shrink-0">{t('suitcase.packedBadge', { defaultValue: 'Packed' })}</Badge>
+                                              <Badge className="hidden md:inline-flex bg-emerald-100 text-emerald-800 hover:bg-emerald-200 rounded-md shrink-0">{t('suitcase.packedBadge', { defaultValue: 'Packed' })}</Badge>
                                             ) : (
-                                              <Badge variant="outline" className="text-muted-foreground rounded-md shrink-0">{t('suitcase.inClosetBadge', { defaultValue: 'In Closet' })}</Badge>
+                                              <Badge variant="outline" className="hidden md:inline-flex text-muted-foreground rounded-md shrink-0">{t('suitcase.inClosetBadge', { defaultValue: 'In Closet' })}</Badge>
                                             )}
                                             <Button
                                               variant="ghost"
@@ -1984,9 +1984,9 @@ function Suitcase() {
                             </div>
                             <Badge
                               className={
-                                item.status === 'closet'
+                                "hidden md:inline-flex " + (item.status === 'closet'
                                   ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-                                  : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+                                  : 'bg-amber-100 text-amber-800 hover:bg-amber-200')
                               }
                             >
                               {item.status === 'closet' ? t('suitcase.inClosetBadge', { defaultValue: 'In Closet' }) : t('suitcase.missingBadge', { defaultValue: 'Missing' })}
