@@ -1153,7 +1153,7 @@ function Suitcase() {
                     {/* Packing List Checklist */}
                     <AccordionItem value="checklist" className="border border-border rounded-2xl bg-card shadow-sm px-6 py-2">
                       <AccordionTrigger className="hover:no-underline py-4">
-                        <div className="flex items-center justify-between w-full pr-4">
+                        <div className="flex items-center justify-between w-full pe-4">
                           <div className="flex items-center gap-2">
                             <Luggage className="h-5 w-5 text-[hsl(var(--accent))]" />
                             <span className="text-lg font-display font-semibold text-foreground">
@@ -1488,7 +1488,7 @@ function Suitcase() {
                     {/* Packing List Checklist */}
                     <AccordionItem value="checklist" className="border border-border rounded-2xl bg-card shadow-sm px-6 py-2">
                       <AccordionTrigger className="hover:no-underline py-4">
-                        <div className="flex items-center justify-between w-full pr-4">
+                        <div className="flex items-center justify-between w-full pe-4">
                           <div className="flex items-center gap-2">
                             <Luggage className="h-5 w-5 text-[hsl(var(--accent))]" />
                             <span className="text-lg font-display font-semibold text-foreground">
@@ -1719,7 +1719,7 @@ function Suitcase() {
                     disabled={chatLoading}
                   />
                   <Button type="submit" size="icon" className="rounded-xl" disabled={chatLoading}>
-                    <Send className="h-4 w-4" />
+                    <Send className="h-4 w-4 rtl:-scale-x-100" />
                   </Button>
                 </form>
               </Card>
@@ -1762,12 +1762,12 @@ function Suitcase() {
                     }`}
                   >
                     {isSelectionMode && (
-                      <div className="absolute top-3 right-3 z-10 text-[hsl(var(--accent))]">
+                      <div className="absolute top-3 end-3 z-10 text-[hsl(var(--accent))]">
                         {isSelected ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5 text-muted-foreground/50" />}
                       </div>
                     )}
                     <CardHeader className="bg-muted/10 pb-3 border-b border-border">
-                      <CardTitle className="text-base font-display flex items-center gap-2 pr-6">
+                      <CardTitle className="text-base font-display flex items-center gap-2 pe-6">
                         <MapPin className="h-4 w-4 text-[hsl(var(--accent))]" />
                         {arch.destination}
                       </CardTitle>
@@ -1824,7 +1824,7 @@ function Suitcase() {
             >
               {simulating ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                  <Loader2 className="h-4 w-4 animate-spin me-1" />
                   {t('suitcase.simulating', { defaultValue: 'Simulating...' })}
                 </>
               ) : (
@@ -2108,7 +2108,7 @@ function AddFromClosetDialog({ open, onOpenChange, initialCategory, onSelect, al
         </div>
 
         {/* Closet items grid */}
-        <div className="flex-1 overflow-y-auto min-h-[300px] pr-1">
+        <div className="flex-1 overflow-y-auto min-h-[300px] pe-1">
           {filteredItems.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground text-sm">
               {t('suitcase.noClosetItemsFound', { defaultValue: 'No items match your filters.' })}
@@ -2134,7 +2134,7 @@ function AddFromClosetDialog({ open, onOpenChange, initialCategory, onSelect, al
                       <ShoppingBag className="h-8 w-8 text-muted-foreground" />
                     )}
                     {alreadyPackedIds.has(item.id) && (
-                      <Badge className="absolute top-2 right-2 bg-primary/95 text-white">
+                      <Badge className="absolute top-2 end-2 bg-primary/95 text-white">
                         {t('suitcase.packedBadge', { defaultValue: 'Packed' })}
                       </Badge>
                     )}
