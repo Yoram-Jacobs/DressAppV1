@@ -334,7 +334,7 @@ export default function DressMeShuffler() {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground z-10" 
+                  className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground z-10" 
                   disabled={isSpinning}
                   onClick={() => api?.scrollPrev()}
                 >
@@ -344,7 +344,7 @@ export default function DressMeShuffler() {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground z-10" 
+                  className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground z-10" 
                   disabled={isSpinning}
                   onClick={() => api?.scrollNext()}
                 >

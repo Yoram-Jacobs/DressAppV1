@@ -313,7 +313,6 @@ export default function Stylist() {
           },
         },
       ]);
-      toast.success(t('stylist.proposalGenerated', { defaultValue: 'Daily proposals generated successfully!' }));
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('stylist.proposalFailed', { defaultValue: 'Failed to generate daily proposals.' }));
       setMessages((prev) => prev.filter((x) => x.id !== optimisticId));
@@ -371,7 +370,6 @@ export default function Stylist() {
           },
         },
       ]);
-      toast.success(t('stylist.proposalGenerated', { defaultValue: 'Event proposals generated successfully!' }));
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('stylist.proposalFailed', { defaultValue: 'Failed to generate event proposals.' }));
       setMessages((prev) => prev.filter((x) => x.id !== optimisticId));
@@ -502,7 +500,6 @@ export default function Stylist() {
           },
         ]);
       }
-      toast.success(t('stylist.proposalGenerated', { defaultValue: 'New proposals generated successfully!' }));
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('stylist.proposalFailed', { defaultValue: 'Failed to generate new proposals.' }));
     } finally {
