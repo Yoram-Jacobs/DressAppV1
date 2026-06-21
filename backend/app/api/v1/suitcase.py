@@ -654,16 +654,20 @@ async def update_items_pack_status(
     db = get_db()
     now_iso = datetime.now(timezone.utc).isoformat()
     
+    # Helper to build mixed ID queries
+    def get_mixed_ids(ids: list[str]) -> list[Any]:
+        return ids + [int(x) for x in ids if x.isdigit()]
+
     # Packed items move to suitcase (in_suitcase = True)
     if body.packed_ids:
         await db.closet_items.update_many(
-            {"id": {"$in": body.packed_ids}, "user_id": user["id"]},
+            {"id": {"$in": get_mixed_ids(body.packed_ids)}, "user_id": user["id"]},
             {"$set": {"in_suitcase": True, "updated_at": now_iso}}
         )
     # Unpacked items move back to closet (in_suitcase = False)
     if body.unpacked_ids:
         await db.closet_items.update_many(
-            {"id": {"$in": body.unpacked_ids}, "user_id": user["id"]},
+            {"id": {"$in": get_mixed_ids(body.unpacked_ids)}, "user_id": user["id"]},
             {"$set": {"in_suitcase": False, "updated_at": now_iso}}
         )
 
@@ -671,10 +675,13 @@ async def update_items_pack_status(
     active_s = await db.suitcases.find_one({"user_id": user["id"], "status": {"$ne": "completed"}})
     if active_s:
         updated_packing_list = []
+        packed_str = [str(x) for x in body.packed_ids]
+        unpacked_str = [str(x) for x in body.unpacked_ids]
         for p in active_s.get("packing_list") or []:
-            if p["id"] in body.packed_ids:
+            p_id = str(p.get("id") or p.get("closet_item_id") or "")
+            if p_id in packed_str:
                 p["checked"] = True
-            elif p["id"] in body.unpacked_ids:
+            elif p_id in unpacked_str:
                 p["checked"] = False
             updated_packing_list.append(p)
 
@@ -747,8 +754,9 @@ async def delete_suitcase_item(
     now_iso = datetime.now(timezone.utc).isoformat()
     
     # 1. Return the "deleted" Suitcase item to the Closet (set in_suitcase = False)
+    item_id_query = int(item_id) if item_id.isdigit() else item_id
     await db.closet_items.update_one(
-        {"id": item_id, "user_id": user["id"]},
+        {"id": {"$in": [item_id, item_id_query]}, "user_id": user["id"]},
         {"$set": {"in_suitcase": False, "updated_at": now_iso}}
     )
 
@@ -756,7 +764,7 @@ async def delete_suitcase_item(
     active_s = await db.suitcases.find_one({"user_id": user["id"], "status": {"$ne": "completed"}})
     if active_s:
         p_list = active_s.get("packing_list") or []
-        filtered_p_list = [p for p in p_list if p.get("id") != item_id]
+        filtered_p_list = [p for p in p_list if str(p.get("id") or "") != str(item_id)]
         await db.suitcases.update_one(
             {"id": active_s["id"]},
             {"$set": {"packing_list": filtered_p_list, "updated_at": now_iso}}
