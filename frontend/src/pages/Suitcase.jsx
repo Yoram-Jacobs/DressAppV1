@@ -1913,27 +1913,43 @@ function Suitcase() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                 {/* Outfit Canvas(es) */}
                 <div className="flex flex-col gap-4">
-                  {(Array.isArray(fullscreenOutfit?.items) ? fullscreenOutfit.items : []).some(i => i?.role === 'outerwear') && 
-                   (Array.isArray(fullscreenOutfit?.items) ? fullscreenOutfit.items : []).some(i => i?.role === 'top' || i?.role === 'dress') ? (
-                    <>
-                      <div className="rounded-2xl border border-border overflow-hidden bg-muted/10 relative aspect-[4/3] md:aspect-[4/3] flex items-center justify-center shadow-sm">
-                        <OutfitCanvas outfit={fullscreenOutfit} excludeRoles={['top', 'dress']} className="border-none hover:opacity-100 cursor-default" t={t} />
-                        <div className="absolute top-3 left-3 bg-background/80 backdrop-blur px-2.5 py-1 rounded-md text-[10px] font-medium text-foreground shadow-sm pointer-events-none border border-border/50">
-                          {t('suitcase.withOuterwear', { defaultValue: 'With Outerwear' })}
-                        </div>
+                  {(() => {
+                    const items = Array.isArray(fullscreenOutfit?.items) ? fullscreenOutfit.items : [];
+                    
+                    const outerwearItem = items.find(i => i?.role === 'outerwear');
+                    const hasTopOrDress = items.some(i => i?.role === 'top' || i?.role === 'dress');
+                    
+                    let hasValidOuterwearImage = false;
+                    if (outerwearItem) {
+                      const match = findClosetMatch(outerwearItem, closet.items);
+                      hasValidOuterwearImage = !!(match && bestImageUrl(match));
+                    }
+
+                    if (hasValidOuterwearImage && hasTopOrDress) {
+                      return (
+                        <>
+                          <div className="rounded-2xl border border-border overflow-hidden bg-muted/10 relative flex items-center justify-center shadow-sm w-full">
+                            <OutfitCanvas outfit={fullscreenOutfit} excludeRoles={['top', 'dress']} className="border-none hover:opacity-100 cursor-default" t={t} />
+                            <div className="absolute top-3 left-3 bg-background/80 backdrop-blur px-2.5 py-1 rounded-md text-[10px] font-medium text-foreground shadow-sm pointer-events-none border border-border/50">
+                              {t('suitcase.withOuterwear', { defaultValue: 'With Outerwear' })}
+                            </div>
+                          </div>
+                          <div className="rounded-2xl border border-border overflow-hidden bg-muted/10 relative flex items-center justify-center shadow-sm w-full">
+                            <OutfitCanvas outfit={fullscreenOutfit} excludeRoles={['outerwear']} className="border-none hover:opacity-100 cursor-default" t={t} />
+                            <div className="absolute top-3 left-3 bg-background/80 backdrop-blur px-2.5 py-1 rounded-md text-[10px] font-medium text-foreground shadow-sm pointer-events-none border border-border/50">
+                              {t('suitcase.withoutOuterwear', { defaultValue: 'Without Outerwear' })}
+                            </div>
+                          </div>
+                        </>
+                      );
+                    }
+                    
+                    return (
+                      <div className="rounded-2xl border border-border overflow-hidden bg-muted/10 relative flex items-center justify-center shadow-sm w-full">
+                        <OutfitCanvas outfit={fullscreenOutfit} className="border-none hover:opacity-100 cursor-default" t={t} />
                       </div>
-                      <div className="rounded-2xl border border-border overflow-hidden bg-muted/10 relative aspect-[4/3] md:aspect-[4/3] flex items-center justify-center shadow-sm">
-                        <OutfitCanvas outfit={fullscreenOutfit} excludeRoles={['outerwear']} className="border-none hover:opacity-100 cursor-default" t={t} />
-                        <div className="absolute top-3 left-3 bg-background/80 backdrop-blur px-2.5 py-1 rounded-md text-[10px] font-medium text-foreground shadow-sm pointer-events-none border border-border/50">
-                          {t('suitcase.withoutOuterwear', { defaultValue: 'Without Outerwear' })}
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="rounded-2xl border border-border overflow-hidden bg-muted/10 relative aspect-[4/3] md:aspect-square flex items-center justify-center shadow-sm">
-                      <OutfitCanvas outfit={fullscreenOutfit} className="border-none hover:opacity-100 cursor-default" t={t} />
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
                 
                 {/* Item List & Reasoning */}
