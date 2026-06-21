@@ -351,8 +351,49 @@ export default function Outfits() {
               });
             }
 
-            return (
-              <Card key={o.id} className="rounded-2xl border border-border bg-card shadow-editorial overflow-hidden flex flex-col group hover:shadow-lg transition-shadow">
+            const hasOuterwear = outfitItemsMap['outerwear'] && !!outfitItemsMap['outerwear'].image_url;
+            const hasTopOrDress = outfitItemsMap['top'] || outfitItemsMap['dress'];
+
+            let canvasContent;
+
+            if (hasOuterwear && hasTopOrDress) {
+              const withOuterwearMap = { ...outfitItemsMap };
+              delete withOuterwearMap['top'];
+              delete withOuterwearMap['dress'];
+
+              const withoutOuterwearMap = { ...outfitItemsMap };
+              delete withoutOuterwearMap['outerwear'];
+
+              canvasContent = (
+                <div className="flex flex-col w-full">
+                  <div className="relative w-full aspect-[4/5] bg-secondary/10 shrink-0 border-b border-border/50">
+                    <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={withOuterwearMap} />
+                    <Badge className="absolute top-3 left-3 rounded-full caps-label bg-background/90 text-foreground border border-border backdrop-blur">
+                      {o.source_workflow === 'scheduled' ? t('ads.schedule.title', { defaultValue: 'Scheduled Preset' }) : t('stylist.occasion', { defaultValue: 'Special Event' })}
+                    </Badge>
+                    <div className="absolute bottom-3 left-3 bg-background/80 backdrop-blur px-2.5 py-1 rounded-md text-[10px] font-medium text-foreground shadow-sm pointer-events-none border border-border/50">
+                      {t('suitcase.withOuterwear', { defaultValue: 'With Outerwear' })}
+                    </div>
+                    <Button
+                      size="icon"
+                      variant="destructive"
+                      onClick={() => deleteOutfit(o.id)}
+                      className="absolute top-3 right-3 rounded-xl h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label={t('common.delete', { defaultValue: 'Delete' })}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="relative w-full aspect-[4/5] bg-secondary/10 shrink-0">
+                    <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={withoutOuterwearMap} />
+                    <div className="absolute bottom-3 left-3 bg-background/80 backdrop-blur px-2.5 py-1 rounded-md text-[10px] font-medium text-foreground shadow-sm pointer-events-none border border-border/50">
+                      {t('suitcase.withoutOuterwear', { defaultValue: 'Without Outerwear' })}
+                    </div>
+                  </div>
+                </div>
+              );
+            } else {
+              canvasContent = (
                 <div className="relative w-full aspect-[4/5] bg-secondary/10 shrink-0">
                   <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={outfitItemsMap} />
                   <Badge className="absolute top-3 left-3 rounded-full caps-label bg-background/90 text-foreground border border-border backdrop-blur">
@@ -368,6 +409,12 @@ export default function Outfits() {
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
+              );
+            }
+
+            return (
+              <Card key={o.id} className="rounded-2xl border border-border bg-card shadow-editorial overflow-hidden flex flex-col group hover:shadow-lg transition-shadow">
+                {canvasContent}
 
                 <CardContent className="p-5 flex-1 flex flex-col justify-between space-y-4">
                   <div className="space-y-2">
