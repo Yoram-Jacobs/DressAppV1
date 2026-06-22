@@ -16,7 +16,7 @@ from typing import Any, Literal
 
 from pymongo import ReturnDocument
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, Response, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -5589,3 +5589,82 @@ async def edit_item_image(
         {"id": item_id, "user_id": user["id"]}, {"$set": {"variants": variants}}
     )
     return {"variant_url": variant_url, "variants": variants}
+
+
+@router.post("/parse-receipt")
+async def parse_receipt(
+    text: str | None = Form(None),
+    url: str | None = Form(None),
+    file: UploadFile | None = File(None),
+    user: dict = Depends(get_current_user),
+):
+    """Extract garment information from pasted text, a URL, or an uploaded receipt image/PDF."""
+    from app.services.gemini_client import get_default_client
+    import httpx
+    
+    parts = []
+    
+    if text:
+        parts.append(text)
+    elif file:
+        file_bytes = await file.read()
+        mime_type = file.content_type or "image/jpeg"
+        parts.append((file_bytes, mime_type))
+    elif url:
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+                resp = await client.get(url, headers=headers, follow_redirects=True)
+                if resp.status_code == 200:
+                    ct = resp.headers.get("content-type", "").lower()
+                    if "image" in ct or "pdf" in ct:
+                        parts.append((resp.content, ct))
+                    else:
+                        parts.append(resp.text)
+                else:
+                    raise HTTPException(400, f"Failed to fetch URL, status code: {resp.status_code}")
+        except Exception as e:
+            logger.error("Failed to fetch URL %s: %s", url, e)
+            raise HTTPException(400, f"Failed to fetch receipt from URL: {e}")
+    else:
+        raise HTTPException(400, "Either text, file, or url is required")
+
+    system_instructions = """
+    You are an expert wardrobe cataloging assistant. Your job is to analyze receipt text, receipt files (PDF/Images), or merchant invoice content, identify the garment/accessory purchased, and extract key details into a structured JSON object.
+
+    Extract the following fields:
+    1. brand: The brand of the clothing item (e.g., Zara, Nike, AliExpress). If not specified, infer a likely value or use "Generic".
+    2. item_type: The type of garment (e.g., shirt, t-shirt, pants, jeans, jacket, sneakers, dress, socks). Use a simple singular lowercase noun.
+    3. size: The size of the item (e.g., S, M, L, XL, XXL).
+    4. price_cents: The purchase price of the item converted to integer cents (e.g., if price is ₪79.66 or $79.66, price_cents is 7966. If discount is applied, use the final item price).
+    5. colors: A list of primary colors of the garment (e.g., ["black"], ["blue", "white"]). Use lowercase simple color names.
+    6. category: The wardrobe category. Must be exactly one of: "Top", "Bottom", "Outerwear", "Full Body", "Footwear", "Underwear", "Accessories".
+    7. name: A friendly descriptive name for the garment combining brand and description (e.g., "Wosawe Wind Jacket Lightweight").
+
+    If multiple items are found in the receipt, return details for the FIRST garment item found.
+    Return ONLY a valid JSON object matching this schema. Do not include markdown code fences or other text.
+    """
+
+    try:
+        gemini = await get_default_client()
+        response_text = await gemini.vision(
+            user_parts=parts,
+            system=system_instructions,
+            response_mime_type="application/json"
+        )
+        
+        # Clean any code fences
+        cleaned_text = response_text.strip()
+        if cleaned_text.startswith("```"):
+            lines = cleaned_text.splitlines()
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].startswith("```"):
+                lines = lines[:-1]
+            cleaned_text = "\n".join(lines).strip()
+            
+        data = json.loads(cleaned_text)
+        return data
+    except Exception as e:
+        logger.error("Failed parsing receipt: %s", e)
+        raise HTTPException(500, f"Error processing receipt: {e}")

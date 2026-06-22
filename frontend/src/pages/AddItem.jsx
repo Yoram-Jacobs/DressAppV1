@@ -386,100 +386,46 @@ export default function AddItem() {
   };
 
   const handleExtractReceipt = async () => {
-    let sourceText = '';
     let loadingMsg = t('addItem.import.extracting', { defaultValue: 'Extracting...' });
-    
+    const formData = new FormData();
+
     if (importMode === 'text') {
       if (!receiptText || !receiptText.trim()) {
         toast.error(t('addItem.import.error', { defaultValue: 'Please enter receipt or email text.' }));
         return;
       }
-      sourceText = receiptText;
+      formData.append('text', receiptText);
     } else if (importMode === 'file') {
       if (!importFile) {
         toast.error(t('addItem.import.error', { defaultValue: 'Please upload a receipt file.' }));
         return;
       }
-      sourceText = `File name: ${importFile.name}. Content: simulated invoice text for receipt containing brand: ${importFile.name.split('.')[0]} with total price $89.00`;
+      formData.append('file', importFile);
       loadingMsg = t('addItem.import.states.ocr', { defaultValue: 'Reading document bounds & performing OCR...' });
     } else if (importMode === 'url') {
       if (!importUrl || !importUrl.trim()) {
         toast.error(t('addItem.import.error', { defaultValue: 'Please enter a valid receipt URL.' }));
         return;
       }
-      sourceText = `Merchant URL: ${importUrl}. Contains: order invoice details for brand from link.`;
+      formData.append('url', importUrl);
       loadingMsg = t('addItem.import.states.fetch', { defaultValue: 'Connecting to secure merchant host & fetching page metadata...' });
     }
 
     setIsExtracting(true);
     const loadingId = toast.loading(loadingMsg);
     
-    const delay = importMode === 'text' ? 1500 : 2000;
-    await new Promise(resolve => setTimeout(resolve, delay));
-    
     try {
-      // Heuristic parsing
-      let brandMatch = sourceText.match(/(?:brand|merchant|seller|store|sold by):\s*([a-zA-Z0-9\s&]+)/i) || 
-                         sourceText.match(/(?:Zara|Nike|Adidas|Gucci|Levi's|H&M|Uniqlo|Patagonia|Prada|Chanel|Louis Vuitton|Reebok|Puma|Calvin Klein|Tommy Hilfiger)/i);
+      const res = await api.parseReceipt(formData);
       
-      if (importMode === 'url' && !brandMatch) {
-        brandMatch = importUrl.match(/(?:zara|nike|adidas|gucci|levis|hm|uniqlo|patagonia|prada|chanel|reebok|puma|calvinklein|tommy)/i);
-      }
-      if (importMode === 'file' && !brandMatch) {
-        brandMatch = importFile.name.match(/(?:zara|nike|adidas|gucci|levis|hm|uniqlo|patagonia|prada|chanel|reebok|puma|calvinklein|tommy)/i);
-      }
+      const brand = res.brand || 'Generic';
+      const item_type = res.item_type || 'Garment';
+      const size = res.size || 'M';
+      const priceCents = res.price_cents || 0;
+      const colors = res.colors && res.colors.length ? res.colors : ['grey'];
+      const category = res.category || 'Top';
+      const name = res.name || `${brand} ${item_type}`;
 
-      let itemMatch = sourceText.match(/(?:item|product|description):\s*([a-zA-Z0-9\s\-]+)/i) ||
-                        sourceText.match(/(?:shirt|t-shirt|pants|jeans|jacket|coat|dress|skirt|sneakers|shoes|boots|sweater|hoodie|socks|underwear|hat|cap)/i);
-      
-      if (importMode === 'file' && !itemMatch) {
-        itemMatch = importFile.name.match(/(?:shirt|t-shirt|pants|jeans|jacket|coat|dress|skirt|sneakers|shoes|boots|sweater|hoodie|socks|underwear|hat|cap)/i);
-      }
-      
-      const sizeMatch = sourceText.match(/(?:size):\s*([a-zA-Z0-9]+)/i) ||
-                        sourceText.match(/\b(XS|S|M|L|XL|XXL|XXXL)\b/i);
-                        
-      const priceMatch = sourceText.match(/(?:\$|usd|eur|gbp)\s*(\d+(?:\.\d{2})?)/i) || 
-                         sourceText.match(/(\d+(?:\.\d{2})?)\s*(?:\$|usd|eur|gbp)/i) ||
-                         sourceText.match(/(?:price|total):\s*(?:\$)?\s*(\d+(?:\.\d{2})?)/i);
-
-      const colorMatch = sourceText.match(/(?:color|colour):\s*([a-zA-Z0-9\s]+)/i) ||
-                         sourceText.match(/(?:black|white|grey|gray|red|blue|green|yellow|orange|pink|purple|brown|beige|navy)/i);
-      
-      const brand = brandMatch ? (brandMatch[1] ? brandMatch[1].trim() : brandMatch[0].trim()) : (importMode === 'file' ? 'Document' : 'Web');
-      const capitalizedBrand = brand.charAt(0).toUpperCase() + brand.slice(1).toLowerCase();
-      
-      const item_type = itemMatch ? (itemMatch[1] ? itemMatch[1].trim() : itemMatch[0].trim()) : 'Garment';
-      const size = sizeMatch ? (sizeMatch[1] ? sizeMatch[1].trim().toUpperCase() : sizeMatch[0].trim().toUpperCase()) : 'M';
-      
-      let priceCents = 0;
-      if (priceMatch) {
-        const val = parseFloat(priceMatch[1] || priceMatch[0]);
-        if (!isNaN(val)) {
-          priceCents = Math.round(val * 100);
-        }
-      } else if (importMode === 'file' || importMode === 'url') {
-        priceCents = 8900; 
-      }
-      
-      const colors = colorMatch ? [colorMatch[1] ? colorMatch[1].trim().toLowerCase() : colorMatch[0].trim().toLowerCase()] : ['grey'];
-
-      let category = 'Top';
-      const lowerItem = item_type.toLowerCase();
-      if (['pants', 'jeans', 'skirt', 'shorts'].some(w => lowerItem.includes(w))) {
-        category = 'Bottom';
-      } else if (['jacket', 'coat', 'outerwear', 'blazer', 'cardigan'].some(w => lowerItem.includes(w))) {
-        category = 'Outerwear';
-      } else if (['dress', 'jumpsuit', 'suit'].some(w => lowerItem.includes(w))) {
-        category = 'Full Body';
-      } else if (['shoes', 'sneakers', 'boots', 'sandals', 'footwear'].some(w => lowerItem.includes(w))) {
-        category = 'Footwear';
-      } else if (['underwear', 'socks', 'bra', 'boxers'].some(w => lowerItem.includes(w))) {
-        category = 'Underwear';
-      } else if (['bag', 'hat', 'cap', 'belt', 'scarf', 'sunglasses', 'accessory'].some(w => lowerItem.includes(w))) {
-        category = 'Accessories';
-      }
-
+      // Generate a premium SVG placeholder image representation of the garment
       const svgColor = colors[0] || 'hsl(var(--accent))';
       const svgIcon = `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
@@ -493,7 +439,7 @@ export default function AddItem() {
           <circle cx="50" cy="50" r="30" fill="none" stroke="${svgColor}" stroke-width="2" stroke-dasharray="4 2" opacity="0.3" />
           <path d="M35 30 L50 20 L65 30 L65 45 L50 40 L35 45 Z" fill="none" stroke="${svgColor}" stroke-width="3" stroke-linejoin="round" />
           <path d="M50 20 L50 40" fill="none" stroke="${svgColor}" stroke-width="2" opacity="0.5" />
-          <text x="50" y="75" font-family="system-ui, sans-serif" font-size="8" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="1">${capitalizedBrand.toUpperCase()}</text>
+          <text x="50" y="75" font-family="system-ui, sans-serif" font-size="8" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="1">${brand.toUpperCase()}</text>
           <text x="50" y="85" font-family="system-ui, sans-serif" font-size="6" fill="hsl(var(--muted-foreground))" text-anchor="middle">${item_type.toUpperCase()}</text>
         </svg>
       `;
@@ -501,11 +447,11 @@ export default function AddItem() {
       const previewUrl = `data:image/svg+xml;base64,${base64Svg}`;
 
       const analysis = {
-        name: `${capitalizedBrand} ${item_type}`,
-        title: `${capitalizedBrand} ${item_type}`,
+        name,
+        title: name,
         category,
         item_type: item_type.toLowerCase(),
-        brand: capitalizedBrand,
+        brand,
         size,
         price_cents: priceCents,
         colors,
@@ -533,7 +479,7 @@ export default function AddItem() {
       toast.success(t('addItem.import.success', { defaultValue: 'Successfully extracted garment details!' }));
     } catch (err) {
       toast.dismiss(loadingId);
-      toast.error(t('addItem.import.error', { defaultValue: 'Could not parse receipt text. Please check the formatting.' }));
+      toast.error(err?.response?.data?.detail || t('addItem.import.error', { defaultValue: 'Could not parse receipt. Please verify formatting and try again.' }));
     } finally {
       setIsExtracting(false);
     }
