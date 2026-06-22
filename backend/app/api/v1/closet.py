@@ -5602,8 +5602,12 @@ async def parse_receipt(
     from app.services.gemini_client import get_default_client
     import httpx
     import mimetypes
+    import base64
     
     parts = []
+    is_image = False
+    image_bytes = None
+    image_mime = None
     
     if text and text.strip():
         parts.append(text.strip())
@@ -5613,6 +5617,10 @@ async def parse_receipt(
         if not mime_type or mime_type == "application/octet-stream":
             mime_type = mimetypes.guess_type(file.filename)[0] or "image/jpeg"
         parts.append((file_bytes, mime_type))
+        if mime_type and "image" in mime_type.lower():
+            is_image = True
+            image_bytes = file_bytes
+            image_mime = mime_type
     elif url and url.strip():
         url_str = url.strip()
         try:
@@ -5626,6 +5634,10 @@ async def parse_receipt(
                     
                     if ct and ("image" in ct or "pdf" in ct):
                         parts.append((resp.content, ct))
+                        if "image" in ct:
+                            is_image = True
+                            image_bytes = resp.content
+                            image_mime = ct
                     else:
                         parts.append(resp.text)
                 else:
@@ -5652,7 +5664,7 @@ async def parse_receipt(
     Return ONLY a valid JSON object matching this schema. Do not include markdown code fences or other text.
     """
 
-    try:
+    async def run_ocr():
         gemini = await get_default_client()
         response_text = await gemini.vision(
             user_parts=parts,
@@ -5670,8 +5682,97 @@ async def parse_receipt(
                 lines = lines[:-1]
             cleaned_text = "\n".join(lines).strip()
             
-        data = json.loads(cleaned_text)
-        return data
+        return json.loads(cleaned_text)
+
+    async def run_visual():
+        if not is_image or garment_vision_service is None or not image_bytes:
+            return None
+        try:
+            detections = await garment_vision_service.detect_items(image_bytes)
+            if not detections:
+                return None
+            best_det = max(
+                detections,
+                key=lambda d: (
+                    max(0, d["bbox"][2] - d["bbox"][0])
+                    * max(0, d["bbox"][3] - d["bbox"][1])
+                ),
+            )
+            raw_crops = await asyncio.to_thread(
+                garment_vision_service._bbox_crop_useful, image_bytes, [best_det]
+            )
+            if not raw_crops:
+                return None
+            
+            _, crop_bytes, crop_mime = raw_crops[0]
+            user_lang = user.get("preferred_language") or "en"
+            analysis_raw = await garment_vision_service.analyze(
+                crop_bytes,
+                language=user_lang,
+            )
+            analysis_clean = _safe_analysis(analysis_raw)
+            crop_b64 = base64.b64encode(crop_bytes).decode("ascii")
+            
+            return {
+                "visual_analysis": analysis_clean,
+                "image_base64": crop_b64,
+                "image_mime": crop_mime or "image/jpeg",
+            }
+        except Exception as exc:
+            logger.warning("Receipt image item detection/analysis failed: %r", exc)
+            return None
+
+    try:
+        ocr_result, visual_result = await asyncio.gather(run_ocr(), run_visual())
+        
+        final_data = {}
+        if visual_result and "visual_analysis" in visual_result:
+            final_data.update(visual_result["visual_analysis"])
+            
+        # Override with authoritative OCR fields
+        for field in ["brand", "size", "price_cents", "category", "item_type"]:
+            if field in ocr_result and ocr_result[field] not in [None, "", "null"]:
+                final_data[field] = ocr_result[field]
+                
+        # Merge name / title
+        if "name" in ocr_result and ocr_result["name"] not in [None, "", "null"]:
+            final_data["name"] = ocr_result["name"]
+            final_data["title"] = ocr_result["name"]
+        elif "title" in final_data:
+            final_data["name"] = final_data["title"]
+            
+        # Merge colors
+        if "colors" in ocr_result and ocr_result["colors"]:
+            final_colors = []
+            for col in ocr_result["colors"]:
+                if isinstance(col, str):
+                    final_colors.append({"name": col, "pct": None})
+                elif isinstance(col, dict) and "name" in col:
+                    final_colors.append(col)
+            if final_colors:
+                final_data["colors"] = final_colors
+                
+        # Fill standard defaults if not present
+        if not final_data.get("brand"):
+            final_data["brand"] = "Generic"
+        if not final_data.get("item_type"):
+            final_data["item_type"] = "garment"
+        if not final_data.get("size"):
+            final_data["size"] = "M"
+        if not final_data.get("category"):
+            final_data["category"] = "Top"
+        if not final_data.get("name"):
+            brand_val = final_data.get("brand") or "Generic"
+            type_val = final_data.get("item_type") or "garment"
+            final_data["name"] = f"{brand_val} {type_val}"
+            final_data["title"] = final_data["name"]
+            
+        # Add image fields if cropped
+        if visual_result and "image_base64" in visual_result:
+            final_data["image_base64"] = visual_result["image_base64"]
+            final_data["image_mime"] = visual_result["image_mime"]
+            
+        return final_data
     except Exception as e:
         logger.error("Failed parsing receipt: %s", e)
         raise HTTPException(500, f"Error processing receipt: {e}")

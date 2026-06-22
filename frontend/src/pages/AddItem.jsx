@@ -421,12 +421,20 @@ export default function AddItem() {
       const item_type = res.item_type || 'Garment';
       const size = res.size || 'M';
       const priceCents = res.price_cents || 0;
-      const colors = res.colors && res.colors.length ? res.colors : ['grey'];
       const category = res.category || 'Top';
       const name = res.name || `${brand} ${item_type}`;
 
-      // Generate a premium SVG placeholder image representation of the garment
-      const svgColor = colors[0] || 'hsl(var(--accent))';
+      // Normalize colors to the required `{ name, pct }` object format expected by WeightedList
+      const colors = res.colors && res.colors.length
+        ? res.colors.map(c => {
+            if (typeof c === 'string') return { name: c, pct: null };
+            if (c && typeof c === 'object' && c.name) return { name: c.name, pct: c.pct ?? null };
+            return { name: 'grey', pct: null };
+          })
+        : [{ name: 'grey', pct: null }];
+
+      // Generate a premium SVG placeholder image representation of the garment if no cropped photo
+      const svgColor = (colors && colors[0] && colors[0].name) || 'hsl(var(--accent))';
       const svgIcon = `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
           <defs>
@@ -444,9 +452,14 @@ export default function AddItem() {
         </svg>
       `;
       const base64Svg = btoa(unescape(encodeURIComponent(svgIcon.trim())));
-      const previewUrl = `data:image/svg+xml;base64,${base64Svg}`;
+      
+      const hasImage = !!res.image_base64;
+      const previewUrl = hasImage 
+        ? `data:${res.image_mime || 'image/jpeg'};base64,${res.image_base64}` 
+        : `data:image/svg+xml;base64,${base64Svg}`;
 
       const analysis = {
+        ...res,
         name,
         title: name,
         category,
@@ -460,15 +473,16 @@ export default function AddItem() {
       const draft = {
         id: `receipt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         file: null,
-        mime: 'image/svg+xml',
+        mime: hasImage ? (res.image_mime || 'image/jpeg') : 'image/svg+xml',
         previewUrl,
-        base64: null,
+        base64: hasImage ? res.image_base64 : null,
         status: 'ready',
         progress: 100,
         fields: hydrate(analysis, user),
         error: null,
         label: item_type,
         source: 'receipt',
+        sourceFilename: hasImage ? 'cropped_receipt_item.jpg' : null,
       };
 
       setCards((prev) => [draft, ...prev]);
