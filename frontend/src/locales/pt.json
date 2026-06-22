@@ -319,6 +319,19 @@
       "capture": "Capturar",
       "refinement": "Refinar",
       "save": "Integrar"
+    },
+    "tabs": {
+      "upload": "Câmera e upload",
+      "import": "Importação digital"
+    },
+    "import": {
+      "title": "Importação digital de recibos/e-mails",
+      "body": "Cole o texto de um recibo digital, e-mail de confirmação de pedido ou fatura. Nosso extrator obterá instantaneamente a marca, preço, tipo de item e detalhes.",
+      "placeholder": "Cole o texto do e-mail de confirmação de pedido ou recibo aqui...",
+      "extractButton": "Extrair itens",
+      "extracting": "Extraindo...",
+      "error": "Nenhum item encontrado no texto colado.",
+      "success": "Detalhes da roupa extraídos com sucesso!"
     }
   },
   "itemDetail": {

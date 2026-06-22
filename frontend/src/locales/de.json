@@ -319,6 +319,19 @@
       "capture": "Aufnehmen",
       "refinement": "Verfeinern",
       "save": "Integrieren"
+    },
+    "tabs": {
+      "upload": "Kamera & Upload",
+      "import": "Digitaler Import"
+    },
+    "import": {
+      "title": "Digitaler Beleg-/E-Mail-Import",
+      "body": "Fügen Sie den Text eines digitalen Belegs, einer Bestellbestätigung oder einer Rechnung ein. Unser Parser extrahiert sofort Marke, Preis, Artikeltyp und Details.",
+      "placeholder": "Fügen Sie den Text der Bestellbestätigung oder des Belegs hier ein...",
+      "extractButton": "Artikel extrahieren",
+      "extracting": "Extrahiere...",
+      "error": "Keine Artikel im eingefügten Text gefunden.",
+      "success": "Garment-Details erfolgreich extrahiert!"
     }
   },
   "itemDetail": {

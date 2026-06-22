@@ -319,6 +319,19 @@
       "capture": "Capturar",
       "refinement": "Refinar",
       "save": "Integrar"
+    },
+    "tabs": {
+      "upload": "Cámara y subida",
+      "import": "Importación digital"
+    },
+    "import": {
+      "title": "Importación digital de recibos/correos",
+      "body": "Pega el texto de un recibo digital, correo de confirmación de pedido o factura de tienda. Nuestro extractor obtendrá instantáneamente la marca, precio, tipo de artículo y detalles.",
+      "placeholder": "Pega el texto del correo de confirmación de pedido o del recibo aquí...",
+      "extractButton": "Extraer artículos",
+      "extracting": "Extrayendo...",
+      "error": "No se pudieron encontrar artículos en el texto pegado.",
+      "success": "¡Detalles de la prenda extraídos con éxito!"
     }
   },
   "itemDetail": {

@@ -20,6 +20,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { api } from '@/lib/api';
 import { sha256File, aHashFile, colorSignatureFile } from '@/lib/utils';
 import { findDuplicatesInCloset } from '@/lib/duplicateDetection';
@@ -279,6 +280,8 @@ export default function AddItem() {
   // ``saveAll`` to flush them too and then navigates.
   const [pendingAutoSave, setPendingAutoSave] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
+  const [receiptText, setReceiptText] = useState('');
+  const [isExtracting, setIsExtracting] = useState(false);
   // Background batch state — shown instead of cards when user uploads
   // more than BG_THRESHOLD photos at once. Auto-analyzes + auto-saves
   // each item with sane defaults; user is told to fix any misfits in
@@ -375,6 +378,125 @@ export default function AddItem() {
     } catch (err) {
       toast.dismiss(loadingId);
       toast.error(err?.response?.data?.detail || t('dpp.scanner.importFailed'));
+    }
+  };
+
+  const handleExtractReceipt = async (text) => {
+    if (!text || !text.trim()) {
+      toast.error(t('addItem.import.error', { defaultValue: 'Please enter receipt or email text.' }));
+      return;
+    }
+    
+    setIsExtracting(true);
+    const loadingId = toast.loading(t('addItem.import.extracting', { defaultValue: 'Extracting...' }));
+    
+    // Simulate API processing delay (e.g. 1.5 seconds)
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    try {
+      // Heuristic parsing
+      const brandMatch = text.match(/(?:brand|merchant|seller|store|sold by):\s*([a-zA-Z0-9\s&]+)/i) || 
+                         text.match(/(?:Zara|Nike|Adidas|Gucci|Levi's|H&M|Uniqlo|Patagonia|Prada|Chanel|Louis Vuitton|Reebok|Puma|Calvin Klein|Tommy Hilfiger)/i);
+      
+      const itemMatch = text.match(/(?:item|product|description):\s*([a-zA-Z0-9\s\-]+)/i) ||
+                        text.match(/(?:shirt|t-shirt|pants|jeans|jacket|coat|dress|skirt|sneakers|shoes|boots|sweater|hoodie|socks|underwear|hat|cap)/i);
+      
+      const sizeMatch = text.match(/(?:size):\s*([a-zA-Z0-9]+)/i) ||
+                        text.match(/\b(XS|S|M|L|XL|XXL|XXXL)\b/i);
+                        
+      const priceMatch = text.match(/(?:\$|usd|eur|gbp)\s*(\d+(?:\.\d{2})?)/i) || 
+                         text.match(/(\d+(?:\.\d{2})?)\s*(?:\$|usd|eur|gbp)/i) ||
+                         text.match(/(?:price|total):\s*(?:\$)?\s*(\d+(?:\.\d{2})?)/i);
+
+      const colorMatch = text.match(/(?:color|colour):\s*([a-zA-Z0-9\s]+)/i) ||
+                         text.match(/(?:black|white|grey|gray|red|blue|green|yellow|orange|pink|purple|brown|beige|navy)/i);
+      
+      const brand = brandMatch ? (brandMatch[1] ? brandMatch[1].trim() : brandMatch[0].trim()) : 'Generic';
+      const item_type = itemMatch ? (itemMatch[1] ? itemMatch[1].trim() : itemMatch[0].trim()) : 'Garment';
+      const size = sizeMatch ? (sizeMatch[1] ? sizeMatch[1].trim().toUpperCase() : sizeMatch[0].trim().toUpperCase()) : 'M';
+      
+      let priceCents = 0;
+      if (priceMatch) {
+        const val = parseFloat(priceMatch[1] || priceMatch[0]);
+        if (!isNaN(val)) {
+          priceCents = Math.round(val * 100);
+        }
+      }
+      
+      const colors = colorMatch ? [colorMatch[1] ? colorMatch[1].trim().toLowerCase() : colorMatch[0].trim().toLowerCase()] : [];
+
+      // Determine category based on item type
+      let category = 'Top';
+      const lowerItem = item_type.toLowerCase();
+      if (['pants', 'jeans', 'skirt', 'shorts'].some(w => lowerItem.includes(w))) {
+        category = 'Bottom';
+      } else if (['jacket', 'coat', 'outerwear', 'blazer', 'cardigan'].some(w => lowerItem.includes(w))) {
+        category = 'Outerwear';
+      } else if (['dress', 'jumpsuit', 'suit'].some(w => lowerItem.includes(w))) {
+        category = 'Full Body';
+      } else if (['shoes', 'sneakers', 'boots', 'sandals', 'footwear'].some(w => lowerItem.includes(w))) {
+        category = 'Footwear';
+      } else if (['underwear', 'socks', 'bra', 'boxers'].some(w => lowerItem.includes(w))) {
+        category = 'Underwear';
+      } else if (['bag', 'hat', 'cap', 'belt', 'scarf', 'sunglasses', 'accessory'].some(w => lowerItem.includes(w))) {
+        category = 'Accessories';
+      }
+
+      // Generate a premium SVG placeholder image representation of the garment
+      const svgColor = colors[0] || 'hsl(var(--accent))';
+      const svgIcon = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+          <defs>
+            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:hsl(200, 30%, 20%);stop-opacity:1" />
+              <stop offset="100%" style="stop-color:hsl(200, 30%, 10%);stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <rect width="100" height="100" rx="10" fill="url(#grad)" />
+          <circle cx="50" cy="50" r="30" fill="none" stroke="${svgColor}" stroke-width="2" stroke-dasharray="4 2" opacity="0.3" />
+          <path d="M35 30 L50 20 L65 30 L65 45 L50 40 L35 45 Z" fill="none" stroke="${svgColor}" stroke-width="3" stroke-linejoin="round" />
+          <path d="M50 20 L50 40" fill="none" stroke="${svgColor}" stroke-width="2" opacity="0.5" />
+          <text x="50" y="75" font-family="system-ui, sans-serif" font-size="8" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="1">${brand.toUpperCase()}</text>
+          <text x="50" y="85" font-family="system-ui, sans-serif" font-size="6" fill="hsl(var(--muted-foreground))" text-anchor="middle">${item_type.toUpperCase()}</text>
+        </svg>
+      `;
+      const base64Svg = btoa(unescape(encodeURIComponent(svgIcon.trim())));
+      const previewUrl = `data:image/svg+xml;base64,${base64Svg}`;
+
+      const analysis = {
+        name: `${brand} ${item_type}`,
+        title: `${brand} ${item_type}`,
+        category,
+        item_type: item_type.toLowerCase(),
+        brand,
+        size,
+        price_cents: priceCents,
+        colors,
+      };
+
+      const draft = {
+        id: `receipt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        file: null,
+        mime: 'image/svg+xml',
+        previewUrl,
+        base64: null,
+        status: 'ready',
+        progress: 100,
+        fields: hydrate(analysis, user),
+        error: null,
+        label: item_type,
+        source: 'receipt',
+      };
+
+      setCards((prev) => [draft, ...prev]);
+      setReceiptText('');
+      toast.dismiss(loadingId);
+      toast.success(t('addItem.import.success', { defaultValue: 'Successfully extracted garment details!' }));
+    } catch (err) {
+      toast.dismiss(loadingId);
+      toast.error(t('addItem.import.error', { defaultValue: 'Could not parse receipt text. Please check the formatting.' }));
+    } finally {
+      setIsExtracting(false);
     }
   };
 
@@ -1797,54 +1919,123 @@ export default function AddItem() {
           </div>
         </div>
       ) : cards.length === 0 ? (
-        <div
-          className="w-full border-2 border-dashed border-border rounded-[calc(var(--radius)+10px)] p-10 sm:p-12 bg-card flex flex-col items-center text-center"
-          data-testid="add-item-dropzone"
-        >
-          <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center mb-3">
-            <Eye className="h-6 w-6" />
-          </div>
-          <div className="font-display text-xl">{t('addItem.dropzoneTitle')}</div>
-          <div className="text-sm text-muted-foreground mt-1 max-w-md">
-            {t('addItem.dropzoneBody')}
-          </div>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-            <Button
-              type="button"
-              className="rounded-xl"
-              onClick={openCamera}
-              data-testid="add-item-open-camera-button"
+        <Tabs defaultValue="upload" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6 max-w-md mx-auto p-1 bg-muted/60 rounded-xl">
+            <TabsTrigger value="upload" className="rounded-lg py-2 text-sm font-medium transition-all" data-testid="add-item-tab-upload">
+              <Camera className="h-4 w-4 me-2" /> {t('addItem.tabs.upload', { defaultValue: 'Camera & Upload' })}
+            </TabsTrigger>
+            <TabsTrigger value="import" className="rounded-lg py-2 text-sm font-medium transition-all" data-testid="add-item-tab-import">
+              <Sparkles className="h-4 w-4 me-2" /> {t('addItem.tabs.import', { defaultValue: 'Digital Import' })}
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="upload" className="mt-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+            <div
+              className="w-full border-2 border-dashed border-border rounded-[calc(var(--radius)+10px)] p-10 sm:p-12 bg-card flex flex-col items-center text-center"
+              data-testid="add-item-dropzone"
             >
-              <Camera className="h-4 w-4 me-2" /> {t('addItem.takePhoto')}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-xl"
-              onClick={pickFiles}
-              data-testid="add-item-pick-files-button"
-            >
-              <Upload className="h-4 w-4 me-2" /> {t('addItem.uploadPhotos')}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              className="rounded-xl"
-              onClick={openScanner}
-              data-testid="add-item-scan-dpp-button"
-            >
-              <QrCode className="h-4 w-4 me-2" /> {t('dpp.nav.scanLabel')}
-            </Button>
-          </div>
-          <div className="mt-4 flex items-center justify-center">
-            <div className="text-xs text-muted-foreground flex items-center gap-2 max-w-md">
-              <Badge variant="outline" className="border-[hsl(var(--accent))] text-[hsl(var(--accent))]">
-                {t('dpp.addItem.tileBadge')}
-              </Badge>
-              <span>{t('dpp.addItem.tileSubtitle')}</span>
+              <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center mb-3">
+                <Eye className="h-6 w-6" />
+              </div>
+              <div className="font-display text-xl">{t('addItem.dropzoneTitle')}</div>
+              <div className="text-sm text-muted-foreground mt-1 max-w-md">
+                {t('addItem.dropzoneBody')}
+              </div>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+                <Button
+                  type="button"
+                  className="rounded-xl"
+                  onClick={openCamera}
+                  data-testid="add-item-open-camera-button"
+                >
+                  <Camera className="h-4 w-4 me-2" /> {t('addItem.takePhoto')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={pickFiles}
+                  data-testid="add-item-pick-files-button"
+                >
+                  <Upload className="h-4 w-4 me-2" /> {t('addItem.uploadPhotos')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="rounded-xl"
+                  onClick={openScanner}
+                  data-testid="add-item-scan-dpp-button"
+                >
+                  <QrCode className="h-4 w-4 me-2" /> {t('dpp.nav.scanLabel')}
+                </Button>
+              </div>
+              <div className="mt-4 flex items-center justify-center">
+                <div className="text-xs text-muted-foreground flex items-center gap-2 max-w-md">
+                  <Badge variant="outline" className="border-[hsl(var(--accent))] text-[hsl(var(--accent))]">
+                    {t('dpp.addItem.tileBadge')}
+                  </Badge>
+                  <span>{t('dpp.addItem.tileSubtitle')}</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </TabsContent>
+          
+          <TabsContent value="import" className="mt-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+            <div 
+              className="w-full border border-border rounded-[calc(var(--radius)+10px)] p-8 sm:p-10 bg-card/60 backdrop-blur-md flex flex-col items-center text-center relative overflow-hidden"
+              data-testid="add-item-digital-import-pane"
+            >
+              {/* Subtle background glow */}
+              <div className="absolute top-0 right-0 w-48 h-48 bg-[hsl(var(--accent))]/5 rounded-full blur-3xl pointer-events-none -mr-12 -mt-12" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-[hsl(var(--accent))]/5 rounded-full blur-3xl pointer-events-none -ml-12 -mb-12" />
+
+              <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center mb-4 border border-border">
+                <Sparkles className="h-6 w-6 text-[hsl(var(--accent))]" />
+              </div>
+              
+              <h3 className="font-display text-xl font-semibold mb-2">
+                {t('addItem.import.title', { defaultValue: 'Digital Receipt & Email Import' })}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md mb-6">
+                {t('addItem.import.body', { defaultValue: 'Paste the text of a digital receipt, order confirmation email, or store invoice. Our parser will instantly extract brand, price, size, and category details.' })}
+              </p>
+              
+              <div className="w-full max-w-lg mb-6">
+                <Textarea
+                  value={receiptText}
+                  onChange={(e) => setReceiptText(e.target.value)}
+                  placeholder={t('addItem.import.placeholder', { 
+                    defaultValue: 'Paste order confirmation email or receipt text here...\n\nExample:\nOrder Date: June 15, 2026\nMerchant: Zara\n1x Cotton Poplin Shirt - Blue - Size M - $49.90' 
+                  })}
+                  className="min-h-[160px] bg-background/50 border-border rounded-xl placeholder:text-muted-foreground/50 focus-visible:ring-[hsl(var(--accent))] transition-all duration-300 resize-y p-4 text-sm"
+                  disabled={isExtracting}
+                />
+              </div>
+
+              <div className="flex justify-center w-full">
+                <Button
+                  type="button"
+                  onClick={() => handleExtractReceipt(receiptText)}
+                  disabled={isExtracting || !receiptText.trim()}
+                  className="rounded-xl px-6 py-2.5 bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--accent-hover,var(--accent)))] text-white font-medium shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 disabled:transform-none disabled:opacity-50"
+                  data-testid="extract-receipt-button"
+                >
+                  {isExtracting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                      {t('addItem.import.extracting', { defaultValue: 'Extracting...' })}
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 me-2" />
+                      {t('addItem.import.extractButton', { defaultValue: 'Extract Items' })}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       ) : (
         <>
           <div className="flex items-center justify-end gap-2 mb-3">

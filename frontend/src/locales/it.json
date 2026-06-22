@@ -319,6 +319,19 @@
       "capture": "Cattura",
       "refinement": "Affina",
       "save": "Integra"
+    },
+    "tabs": {
+      "upload": "Fotocamera e caricamento",
+      "import": "Importazione digitale"
+    },
+    "import": {
+      "title": "Importazione digitale di ricevute/e-mail",
+      "body": "Incolla il testo di una ricevuta digitale, dell'e-mail di conferma dell'ordine o di una fattura. Il nostro parser estrarrà istantaneamente marca, prezzo, tipo di articolo e dettagli.",
+      "placeholder": "Incolla qui il testo dell'e-mail di conferma dell'ordine o della ricevuta...",
+      "extractButton": "Estrai articoli",
+      "extracting": "Estrazione in corso...",
+      "error": "Nessun articolo trovato nel testo incollato.",
+      "success": "Dettagli del capo estratti con successo!"
     }
   },
   "itemDetail": {

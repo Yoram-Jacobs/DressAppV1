@@ -319,6 +319,19 @@
       "capture": "Capturer",
       "refinement": "Ajuster",
       "save": "Intégrer"
+    },
+    "tabs": {
+      "upload": "Appareil photo & import",
+      "import": "Importation numérique"
+    },
+    "import": {
+      "title": "Importation numérique de reçus/e-mails",
+      "body": "Collez le texte d'un reçu numérique, d'un e-mail de confirmation de commande ou d'une facture. Notre extracteur obtiendra instantanément la marque, le prix, le type d'article et les détails.",
+      "placeholder": "Collez le texte de l'e-mail de confirmation de commande ou du reçu ici...",
+      "extractButton": "Extraire les articles",
+      "extracting": "Extraction...",
+      "error": "Aucun article trouvé dans le texte collé.",
+      "success": "Détails du vêtement extraits avec succès !"
     }
   },
   "itemDetail": {

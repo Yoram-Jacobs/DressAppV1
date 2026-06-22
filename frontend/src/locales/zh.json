@@ -319,6 +319,19 @@
       "capture": "拍摄",
       "refinement": "优化",
       "save": "整合"
+    },
+    "tabs": {
+      "upload": "Camera & Upload",
+      "import": "Digital Import"
+    },
+    "import": {
+      "title": "Digital Receipt/Email Import",
+      "body": "Paste the text of a digital receipt, order confirmation email, or store invoice. Our parser will instantly extract brand, price, item type, and details to catalog it.",
+      "placeholder": "Paste order confirmation email or receipt text here...\n\nExample:\nOrder Date: June 15, 2026\nMerchant: Zara\n1x Cotton Poplin Shirt - Blue - Size M - $49.90",
+      "extractButton": "Extract Items",
+      "extracting": "Extracting...",
+      "error": "Could not find any items in the pasted text. Please verify formatting.",
+      "success": "Successfully extracted garment details!"
     }
   },
   "itemDetail": {
