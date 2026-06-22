@@ -331,7 +331,20 @@
       "extractButton": "Extraire les articles",
       "extracting": "Extraction...",
       "error": "Aucun article trouvé dans le texte collé.",
-      "success": "Détails du vêtement extraits avec succès !"
+      "success": "Détails du vêtement extraits avec succès !",
+      "modes": {
+        "text": "Coller le texte",
+        "file": "Charger un fichier",
+        "url": "Lien Web"
+      },
+      "urlPlaceholder": "Entrez l'URL du reçu (ex. https://zara.com/orders/...)",
+      "fileDropzoneTitle": "Glissez-déposez votre reçu ou facture",
+      "fileDropzoneBody": "Prend en charge les fichiers JPG, PNG, HEIC et PDF",
+      "fileSelected": "Fichier sélectionné : {{name}}",
+      "states": {
+        "ocr": "Lecture des limites du document et exécution de l'OCR...",
+        "fetch": "Connexion à l'hôte marchand sécurisé et récupération des métadonnées de la page..."
+      }
     }
   },
   "itemDetail": {

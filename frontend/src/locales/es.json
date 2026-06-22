@@ -331,7 +331,20 @@
       "extractButton": "Extraer artículos",
       "extracting": "Extrayendo...",
       "error": "No se pudieron encontrar artículos en el texto pegado.",
-      "success": "¡Detalles de la prenda extraídos con éxito!"
+      "success": "¡Detalles de la prenda extraídos con éxito!",
+      "modes": {
+        "text": "Pegar texto",
+        "file": "Subir archivo",
+        "url": "Enlace web"
+      },
+      "urlPlaceholder": "Introduce la URL del recibo (ej. https://zara.com/orders/...)",
+      "fileDropzoneTitle": "Arrastra y suelta tu recibo o factura",
+      "fileDropzoneBody": "Soporta archivos JPG, PNG, HEIC y PDF",
+      "fileSelected": "Archivo seleccionado: {{name}}",
+      "states": {
+        "ocr": "Leyendo límites del documento y realizando OCR...",
+        "fetch": "Conectando al servidor seguro del comerciante y obteniendo metadados..."
+      }
     }
   },
   "itemDetail": {

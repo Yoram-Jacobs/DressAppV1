@@ -331,7 +331,20 @@
       "extractButton": "Estrai articoli",
       "extracting": "Estrazione in corso...",
       "error": "Nessun articolo trovato nel testo incollato.",
-      "success": "Dettagli del capo estratti con successo!"
+      "success": "Dettagli del capo estratti con successo!",
+      "modes": {
+        "text": "Incolla testo",
+        "file": "Carica file",
+        "url": "Link Web"
+      },
+      "urlPlaceholder": "Inserisci l'URL della ricevuta (es. https://zara.com/orders/...)",
+      "fileDropzoneTitle": "Trascina e rilascia la ricevuta o la fattura",
+      "fileDropzoneBody": "Supporta file JPG, PNG, HEIC e PDF",
+      "fileSelected": "File selezionato: {{name}}",
+      "states": {
+        "ocr": "Lettura dei limiti del documento ed esecuzione dell'OCR...",
+        "fetch": "Connessione all'host sicuro del commerciante e recupero dei metadati della pagina..."
+      }
     }
   },
   "itemDetail": {

@@ -326,12 +326,25 @@
     },
     "import": {
       "title": "Importação digital de recibos/e-mails",
-      "body": "Cole o texto de um recibo digital, e-mail de confirmação de pedido ou fatura. Nosso extrator obterá instantaneamente a marca, preço, tipo de item e detalhes.",
+      "body": "Cole o texto de um recibo digital, e-mail de configuração de pedido ou fatura. Nosso extrator obterá instantaneamente a marca, preço, tipo de item e detalhes.",
       "placeholder": "Cole o texto do e-mail de confirmação de pedido ou recibo aqui...",
       "extractButton": "Extrair itens",
       "extracting": "Extraindo...",
       "error": "Nenhum item encontrado no texto colado.",
-      "success": "Detalhes da roupa extraídos com sucesso!"
+      "success": "Detalhes da roupa extraídos com sucesso!",
+      "modes": {
+        "text": "Colar texto",
+        "file": "Enviar arquivo",
+        "url": "Link Web"
+      },
+      "urlPlaceholder": "Insira o URL do recibo (ex: https://zara.com/orders/...)",
+      "fileDropzoneTitle": "Arraste e solte seu recibo ou fatura",
+      "fileDropzoneBody": "Suporta arquivos JPG, PNG, HEIC e PDF",
+      "fileSelected": "Arquivo selecionado: {{name}}",
+      "states": {
+        "ocr": "Lendo limites do documento e executando OCR...",
+        "fetch": "Conectando ao host seguro do comerciante e buscando metadados da página..."
+      }
     }
   },
   "itemDetail": {

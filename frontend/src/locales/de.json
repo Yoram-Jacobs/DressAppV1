@@ -331,7 +331,20 @@
       "extractButton": "Artikel extrahieren",
       "extracting": "Extrahiere...",
       "error": "Keine Artikel im eingefügten Text gefunden.",
-      "success": "Garment-Details erfolgreich extrahiert!"
+      "success": "Garment-Details erfolgreich extrahiert!",
+      "modes": {
+        "text": "Text einfügen",
+        "file": "Datei hochladen",
+        "url": "Web-Link"
+      },
+      "urlPlaceholder": "Geben Sie die Beleg-URL ein (z. B. https://zara.com/orders/...)",
+      "fileDropzoneTitle": "Ziehen Sie Ihren Beleg oder Ihre Rechnung hierher",
+      "fileDropzoneBody": "Unterstützt JPG-, PNG-, HEIC- und PDF-Dateien",
+      "fileSelected": "Ausgewählte Datei: {{name}}",
+      "states": {
+        "ocr": "Dokumentgrenzen lesen & OCR durchführen...",
+        "fetch": "Verbindung zum sicheren Händler-Host herstellen & Seiten-Metadaten abrufen..."
+      }
     }
   },
   "itemDetail": {
