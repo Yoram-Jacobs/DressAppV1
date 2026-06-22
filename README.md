@@ -23,6 +23,11 @@ DressApp turns a closet of physical clothes into a structured, queryable wardrob
 | **Marketplace** | Sell, swap or donate pieces. Region-matched feed, Live PayPal checkout, transparent platform fee (7% after processing). |
 | **Experts directory** | Find vetted stylists, tailors and designers. Self-serve promotion campaigns drive a region-aware ticker on the home screen. |
 | **Trend Scout** | Daily background scheduler curates four trend buckets — runway, street, sustainability, influencers. Translated into the user's language at read time. |
+| **Shopping Assistant** | Chrome extension that reads size charts on partner stores (Zara, Asos, etc.) and recommends sizes based on your stored measurements. |
+| **Suitcase** | Intelligent travel packing assistant that generates daily outfits and a packing list based on trip context, weather, and calendar events, with an interactive refinement chat. |
+| **Group Tagging** | Bulk categorize multiple closet garments instantly to speed up wardrobe organization and improve AI Stylist reasoning. |
+| **Outfit Canvas** | Adaptive dual-canvas interactive avatar that accurately layers outerwear over tops, allowing direct clicks on garments to view details. |
+| **Wardrobe Scheduler** | Automated daily push notifications with 3 styled outfit recommendations generated from your closet history, preventing wear repetition. |
 
 ---
 
@@ -34,6 +39,7 @@ DressApp turns a closet of physical clothes into a structured, queryable wardrob
 
 **Vision pipeline** — full stack:
 * **Hetzner / dev**: `rembg` (U2-Net) for matting · HuggingFace SegFormer-b2-clothes for clothing parsing · Fashion-CLIP for embeddings — all CPU-local. See `requirements-ml.txt` and the auto-detection in `app/config.py`.
+* **Inference Server**: Optional self-hosted GPU endpoint (Modal/RunPod) wrapping SegFormer-b3 and BiRefNet for fast background matting and parsing.
 
 **Voice** — Deepgram (STT + TTS, multi-voice)
 
@@ -42,6 +48,8 @@ DressApp turns a closet of physical clothes into a structured, queryable wardrob
 **External APIs** — OpenWeather · PayPal Live · Google OAuth + Google Calendar · HuggingFace Inference API
 
 **Hosting** — Docker Compose · Caddy 2 (auto Let's Encrypt) · MongoDB Atlas
+
+**Extension** — Manifest V3 Shopping Assistant (React popup + content scripts)
 
 ---
 
@@ -102,6 +110,20 @@ A more detailed write-up lives in [`/app/docs/ARCHITECTURE.md`](docs/ARCHITECTUR
 │   │   ├── lib/            # api client, i18n, helpers
 │   │   └── locales/        # 12 translation files
 │   └── package.json
+│
+├── chrome-extension/       # Manifest V3 Shopping Assistant extension
+│   ├── manifest.json       # Config for Chromium browsers
+│   └── src/                # React popup, background SW, and content scripts
+│
+├── inference-server/       # Self-hosted GPU endpoint for fast vision models
+│   ├── main.py             # FastAPI wrapper for SegFormer + BiRefNet
+│   └── Dockerfile          # RunPod/Lambda Labs GPU container setup
+│
+├── scripts/                # Development, i18n, and ML fine-tuning scripts
+│   ├── apply_all_translations.py # Batch locale processing
+│   └── build_eyes_*.py     # Notebook builders for model benchmarks
+│
+├── tests/                  # Integration and unit tests
 │
 ├── deploy/                 # Production deploy kit
 │   ├── docker-compose.yml
