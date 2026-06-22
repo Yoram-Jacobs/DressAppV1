@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { useClosetStore } from '@/lib/useClosetStore';
-import { DollarSign, Percent, TrendingUp, Shirt, Award, ChevronDown, ChevronUp } from 'lucide-react';
+import { DollarSign, Percent, TrendingUp, Shirt, Award, ChevronDown, ChevronUp, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { labelForColor, canonicalColorKey, labelForMaterial, labelForSubCategory, canonicalMaterialKey, canonicalSubCategoryKey } from '@/lib/taxonomy';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -334,8 +334,16 @@ export default function WardrobeStats() {
     }))
     .sort((a, b) => a.cpw - b.cpw);
 
-  const topEfficient = sortedByEfficiency.slice(0, 3);
-  const bottomEfficient = [...sortedByEfficiency].reverse().slice(0, 3);
+  const itemsWithPrice = sortedByEfficiency.length;
+  const avgCpw = itemsWithPrice > 0 
+    ? sortedByEfficiency.reduce((acc, it) => acc + it.cpw, 0) / itemsWithPrice 
+    : 0;
+
+  const topEfficient5 = sortedByEfficiency.slice(0, 5).map(it => ({
+    name: it.name || it.title || 'Untitled',
+    cpw: parseFloat(it.cpw.toFixed(2)),
+    wears: it.wear_count || 0
+  }));
 
   return (
     <div className="container-px max-w-4xl mx-auto pt-6 pb-16 space-y-8" data-testid="wardrobe-stats-page">
@@ -349,7 +357,7 @@ export default function WardrobeStats() {
       </div>
 
       {/* Primary KPI Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
         {/* Value Card */}
         <Card className="rounded-3xl border border-border shadow-sm bg-card hover:shadow-md transition-shadow">
           <CardContent className="p-6 flex items-center gap-4">
@@ -382,14 +390,29 @@ export default function WardrobeStats() {
 
         {/* Active Items Worn */}
         <Card className="rounded-3xl border border-border shadow-sm bg-card hover:shadow-md transition-shadow">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-orange-100 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center shrink-0">
-              <TrendingUp className="h-6 w-6" />
+          <CardContent className="p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
+            <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-2xl bg-orange-100 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center shrink-0">
+              <TrendingUp className="h-5 w-5 md:h-6 md:w-6" />
             </div>
             <div>
-              <span className="text-xs text-muted-foreground block font-medium">{t('stats.wornRatio', { defaultValue: 'Items Worn' })}</span>
-              <span className="text-2xl font-bold font-display text-foreground" data-testid="stats-items-ratio">
+              <span className="text-[10px] md:text-xs text-muted-foreground block font-medium">{t('stats.wornRatio', { defaultValue: 'Items Worn' })}</span>
+              <span className="text-xl md:text-2xl font-bold font-display text-foreground" data-testid="stats-items-ratio">
                 {wornItems} / {items.length}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Avg CPW */}
+        <Card className="rounded-3xl border border-border shadow-sm bg-card hover:shadow-md transition-shadow">
+          <CardContent className="p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
+            <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-2xl bg-accent-yellow/20 text-accent-yellow flex items-center justify-center shrink-0">
+              <Activity className="h-5 w-5 md:h-6 md:w-6" />
+            </div>
+            <div>
+              <span className="text-[10px] md:text-xs text-muted-foreground block font-medium">{t('stats.avgCpw', { defaultValue: 'Avg Cost/Wear' })}</span>
+              <span className="text-xl md:text-2xl font-bold font-display text-foreground" data-testid="stats-avg-cpw">
+                ${avgCpw.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
           </CardContent>
@@ -549,39 +572,36 @@ export default function WardrobeStats() {
               <CardTitle className="text-base font-semibold font-display text-foreground">{t('stats.costPerWear', { defaultValue: 'Cost-per-Wear Leaderboard' })}</CardTitle>
             </CardHeader>
 
-            <div className="space-y-6 flex-1 justify-center flex flex-col">
-              {sortedByEfficiency.length > 0 ? (
-                <>
-                  <div className="space-y-2">
-                    <span className="text-xs font-bold text-accent-green caps-label block tracking-wider">{t('stats.mostEfficient', { defaultValue: 'Most Wear-Efficient' })}:</span>
-                    {topEfficient.map(it => (
-                      <div key={it.id} className="flex justify-between items-center text-xs py-2 border-b border-border/40 hover:bg-muted/30 px-1 rounded-lg transition-colors">
-                        <div className="flex items-center gap-2 min-w-0">
-                          {it.image_url && (
-                            <img src={it.segmented_image_url || it.image_url} alt="" className="h-6 w-6 rounded object-contain shrink-0 bg-secondary/50" />
-                          )}
-                          <span className="truncate font-medium text-foreground">{it.name || it.title || 'Untitled'}</span>
-                        </div>
-                        <span className="text-muted-foreground shrink-0">${it.cpw.toFixed(2)}/wear</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="space-y-2">
-                    <span className="text-xs font-bold text-destructive caps-label block tracking-wider">{t('stats.leastEfficient', { defaultValue: 'Least Wear-Efficient' })}:</span>
-                    {bottomEfficient.map(it => (
-                      <div key={it.id} className="flex justify-between items-center text-xs py-2 border-b border-border/40 hover:bg-muted/30 px-1 rounded-lg transition-colors">
-                        <div className="flex items-center gap-2 min-w-0">
-                          {it.image_url && (
-                            <img src={it.segmented_image_url || it.image_url} alt="" className="h-6 w-6 rounded object-contain shrink-0 bg-secondary/50" />
-                          )}
-                          <span className="truncate font-medium text-foreground">{it.name || it.title || 'Untitled'}</span>
-                        </div>
-                        <span className="text-muted-foreground shrink-0">${it.cpw.toFixed(2)}/wear</span>
-                      </div>
-                    ))}
-                  </div>
-                </>
+            <div className="h-56 w-full flex items-center justify-center min-h-0 pt-4">
+              {topEfficient5.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={topEfficient5} margin={{ top: 15, right: 10, left: -25, bottom: 5 }}>
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ 
+                        angle: -45, 
+                        textAnchor: 'end', 
+                        fontSize: 9 
+                      }} 
+                      height={60} 
+                      interval={0} 
+                      stroke="#888888" 
+                    />
+                    <YAxis 
+                      fontSize={9} 
+                      stroke="#888888"
+                      tickFormatter={(val) => `$${val}`}
+                    />
+                    <Tooltip 
+                      formatter={(value, name) => [
+                        name === 'cpw' ? `$${value}` : value, 
+                        name === 'cpw' ? 'Cost-per-Wear' : name
+                      ]}
+                      contentStyle={{ borderRadius: '8px', fontSize: '12px' }}
+                    />
+                    <Bar dataKey="cpw" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
               ) : (
                 <div className="text-center p-6 text-muted-foreground text-xs bg-secondary/30 rounded-2xl border border-dashed border-border/50">
                   <Award className="h-6 w-6 mx-auto mb-2 opacity-50" />
