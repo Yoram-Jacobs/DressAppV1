@@ -35,7 +35,7 @@ export function ScanningPipeline({ variant = 'inline' }) {
              <CurrentIcon className="h-6 w-6 text-[hsl(var(--accent))] animate-pulse" />
           </div>
         </div>
-        <div className="h-12 relative w-full flex justify-center items-center overflow-hidden font-display text-xl mb-1">
+        <div className="h-12 relative w-full flex justify-center items-center font-display text-xl mb-1">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentIndex}
