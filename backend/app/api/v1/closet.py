@@ -5601,33 +5601,40 @@ async def parse_receipt(
     """Extract garment information from pasted text, a URL, or an uploaded receipt image/PDF."""
     from app.services.gemini_client import get_default_client
     import httpx
+    import mimetypes
     
     parts = []
     
-    if text:
-        parts.append(text)
-    elif file:
+    if text and text.strip():
+        parts.append(text.strip())
+    elif file and file.filename:
         file_bytes = await file.read()
-        mime_type = file.content_type or "image/jpeg"
+        mime_type = file.content_type
+        if not mime_type or mime_type == "application/octet-stream":
+            mime_type = mimetypes.guess_type(file.filename)[0] or "image/jpeg"
         parts.append((file_bytes, mime_type))
-    elif url:
+    elif url and url.strip():
+        url_str = url.strip()
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
                 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-                resp = await client.get(url, headers=headers, follow_redirects=True)
+                resp = await client.get(url_str, headers=headers, follow_redirects=True)
                 if resp.status_code == 200:
-                    ct = resp.headers.get("content-type", "").lower()
-                    if "image" in ct or "pdf" in ct:
+                    ct = resp.headers.get("content-type", "").split(";")[0].strip().lower()
+                    if not ct or ct == "application/octet-stream":
+                        ct = mimetypes.guess_type(url_str)[0] or ct
+                    
+                    if ct and ("image" in ct or "pdf" in ct):
                         parts.append((resp.content, ct))
                     else:
                         parts.append(resp.text)
                 else:
                     raise HTTPException(400, f"Failed to fetch URL, status code: {resp.status_code}")
         except Exception as e:
-            logger.error("Failed to fetch URL %s: %s", url, e)
+            logger.error("Failed to fetch URL %s: %s", url_str, e)
             raise HTTPException(400, f"Failed to fetch receipt from URL: {e}")
     else:
-        raise HTTPException(400, "Either text, file, or url is required")
+        raise HTTPException(400, "Either text, file, or url is required and must not be blank")
 
     system_instructions = """
     You are an expert wardrobe cataloging assistant. Your job is to analyze receipt text, receipt files (PDF/Images), or merchant invoice content, identify the garment/accessory purchased, and extract key details into a structured JSON object.
@@ -5668,3 +5675,4 @@ async def parse_receipt(
     except Exception as e:
         logger.error("Failed parsing receipt: %s", e)
         raise HTTPException(500, f"Error processing receipt: {e}")
+
