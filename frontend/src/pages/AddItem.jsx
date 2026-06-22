@@ -28,6 +28,7 @@ import { workStore } from '@/lib/workStore';
 import DuplicatePreflightDialog from '@/components/DuplicatePreflightDialog';
 import { DppScanner } from '@/components/DppScanner';
 import { WeightedList } from '@/components/WeightedList';
+import { ScanningPipeline } from '@/components/ScanningPipeline';
 import { useAuth } from '@/lib/auth';
 import { deriveSizeFromPreferences } from '@/lib/size_preferences';
 import {
@@ -1754,12 +1755,7 @@ export default function AddItem() {
           data-testid="add-item-bg-batch-card"
           aria-live="polite"
         >
-          <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center mb-3">
-            <Loader2 className="h-6 w-6 animate-spin" />
-          </div>
-          <div className="font-display text-xl">
-            {t('addItem.bgUpload.processingTitle', { defaultValue: 'Processing your photos…' })}
-          </div>
+          <ScanningPipeline variant="block" />
           <div className="text-sm text-muted-foreground mt-1 max-w-md">
             {t('addItem.bgUpload.processingBody', {
               defaultValue: 'You can leave this page — we’ll keep going in the background. Edit any misfits in your closet when we’re done.',
@@ -1982,10 +1978,7 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
                 className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm px-3 py-2"
                 data-testid="add-item-scanning-overlay"
               >
-                <div className="flex items-center gap-2 text-xs">
-                  <Eye className="h-3.5 w-3.5 text-[hsl(var(--accent))] animate-pulse" />
-                  <span className="font-medium">{t('addItem.scanning')}…</span>
-                </div>
+                <ScanningPipeline variant="inline" />
                 <Progress value={progress} className="h-1 mt-1.5" />
               </div>
             )}

@@ -1845,5 +1845,12 @@
     "fillDates": "请选择出发和返回日期。",
     "resetTrip": "重置",
     "addFromClosetBtn": "从衣橱添加"
+  },
+  "scanning": {
+    "bounds": "Detecting Garment Bounds...",
+    "colors": "Extracting Color Palette...",
+    "silhouette": "Analyzing Silhouette...",
+    "materials": "Inferring Fabric Materials...",
+    "tags": "Generating Stylist Tags..."
   }
 }

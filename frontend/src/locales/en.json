@@ -1860,5 +1860,12 @@
     "fillDates": "Please select both Departure and Return dates.",
     "resetTrip": "Reset",
     "addFromClosetBtn": "Add from Closet"
+  },
+  "scanning": {
+    "bounds": "Detecting Garment Bounds...",
+    "colors": "Extracting Color Palette...",
+    "silhouette": "Analyzing Silhouette...",
+    "materials": "Inferring Fabric Materials...",
+    "tags": "Generating Stylist Tags..."
   }
 }

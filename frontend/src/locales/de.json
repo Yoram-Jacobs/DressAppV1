@@ -1845,5 +1845,12 @@
     "fillDates": "Bitte Abreise- und Rückreisedatum auswählen.",
     "resetTrip": "Zurücksetzen",
     "addFromClosetBtn": "Aus dem Schrank hinzufügen"
+  },
+  "scanning": {
+    "bounds": "Detecting Garment Bounds...",
+    "colors": "Extracting Color Palette...",
+    "silhouette": "Analyzing Silhouette...",
+    "materials": "Inferring Fabric Materials...",
+    "tags": "Generating Stylist Tags..."
   }
 }

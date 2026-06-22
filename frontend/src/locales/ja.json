@@ -1845,5 +1845,12 @@
     "fillDates": "出発日と帰着日を選択してください。",
     "resetTrip": "リセット",
     "addFromClosetBtn": "クローゼットから追加"
+  },
+  "scanning": {
+    "bounds": "Detecting Garment Bounds...",
+    "colors": "Extracting Color Palette...",
+    "silhouette": "Analyzing Silhouette...",
+    "materials": "Inferring Fabric Materials...",
+    "tags": "Generating Stylist Tags..."
   }
 }

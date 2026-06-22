@@ -1845,5 +1845,12 @@
     "fillDates": "يرجى تحديد تاريخي المغادرة والعودة.",
     "resetTrip": "إعادة تعيين",
     "addFromClosetBtn": "إضافة من الخزانة"
+  },
+  "scanning": {
+    "bounds": "Detecting Garment Bounds...",
+    "colors": "Extracting Color Palette...",
+    "silhouette": "Analyzing Silhouette...",
+    "materials": "Inferring Fabric Materials...",
+    "tags": "Generating Stylist Tags..."
   }
 }

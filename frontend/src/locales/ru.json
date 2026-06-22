@@ -1845,5 +1845,12 @@
     "fillDates": "Пожалуйста, выберите даты вылета и возвращения.",
     "resetTrip": "Сбросить",
     "addFromClosetBtn": "Добавить из гардероба"
+  },
+  "scanning": {
+    "bounds": "Detecting Garment Bounds...",
+    "colors": "Extracting Color Palette...",
+    "silhouette": "Analyzing Silhouette...",
+    "materials": "Inferring Fabric Materials...",
+    "tags": "Generating Stylist Tags..."
   }
 }

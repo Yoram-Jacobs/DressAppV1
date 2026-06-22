@@ -1845,5 +1845,12 @@
     "fillDates": "कृपया प्रस्थान और वापसी दोनों तिथियां चुनें।",
     "resetTrip": "रीसेट",
     "addFromClosetBtn": "अलमारी से जोड़ें"
+  },
+  "scanning": {
+    "bounds": "Detecting Garment Bounds...",
+    "colors": "Extracting Color Palette...",
+    "silhouette": "Analyzing Silhouette...",
+    "materials": "Inferring Fabric Materials...",
+    "tags": "Generating Stylist Tags..."
   }
 }

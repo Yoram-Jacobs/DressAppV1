@@ -1845,5 +1845,12 @@
     "fillDates": "Seleziona le date di partenza e di ritorno.",
     "resetTrip": "Resetta",
     "addFromClosetBtn": "Aggiungi dall'armadio"
+  },
+  "scanning": {
+    "bounds": "Detecting Garment Bounds...",
+    "colors": "Extracting Color Palette...",
+    "silhouette": "Analyzing Silhouette...",
+    "materials": "Inferring Fabric Materials...",
+    "tags": "Generating Stylist Tags..."
   }
 }

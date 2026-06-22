@@ -1845,5 +1845,12 @@
     "fillDates": "Por favor, selecione as datas de partida e de retorno.",
     "resetTrip": "Reiniciar",
     "addFromClosetBtn": "Adicionar do armário"
+  },
+  "scanning": {
+    "bounds": "Detecting Garment Bounds...",
+    "colors": "Extracting Color Palette...",
+    "silhouette": "Analyzing Silhouette...",
+    "materials": "Inferring Fabric Materials...",
+    "tags": "Generating Stylist Tags..."
   }
 }
