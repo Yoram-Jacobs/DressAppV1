@@ -1678,7 +1678,7 @@
   },
   "outfits": {
     "viewDescription": "查看您设计和安排的穿搭。您的 AI 造型师会确保您充分利用衣橱里的所有单品，并就以往重复穿着的场合提出警告。",
-    "notificationCenter": "通知中心 (模拟)",
+    "notificationCenter": "通知中心",
     "noNotifs": "尚未触发任何通知。在设置中设置每日提醒或安排活动来进行测试。",
     "noSavedOutfitsDesc": "在 AI 造型师标签页中获取穿搭建议，选择您最喜欢的并保存，即可开始记录您的穿搭。",
     "outfitPieces": "穿搭单品",

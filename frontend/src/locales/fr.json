@@ -1678,7 +1678,7 @@
   },
   "outfits": {
     "viewDescription": "Consultez les tenues que vous avez composées et programmées. Votre Styliste IA s'assure que vous utilisez toutes les pièces de votre garde-robe et vous avertit en cas de répétition pour des occasions similaires.",
-    "notificationCenter": "Centre de notifications (simulé)",
+    "notificationCenter": "Centre de notifications",
     "noNotifs": "Aucune notification déclenchée pour l'instant. Configurez votre rappel quotidien dans les réglages ou planifiez un événement pour tester.",
     "noSavedOutfitsDesc": "Obtenez des suggestions de tenues dans l'onglet Styliste IA, choisissez vos préférées et sauvegardez-les pour commencer votre journal de tenues.",
     "outfitPieces": "Pièces de la tenue",

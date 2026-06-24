@@ -1678,7 +1678,7 @@
   },
   "outfits": {
     "viewDescription": "Visualizza gli outfit che hai composto e pianificato. Il tuo stilista AI si assicura che tu utilizzi tutti i capi del guardaroba e ti avvisa di eventuali ripetizioni per le stesse occasioni.",
-    "notificationCenter": "Centro notifiche (simulato)",
+    "notificationCenter": "Centro notifiche",
     "noNotifs": "Nessuna notifica attivata. Imposta il promemoria giornaliero nelle impostazioni o pianifica un evento per testare.",
     "noSavedOutfitsDesc": "Ricevi proposte di outfit nella scheda Stilista AI, scegli le tue preferite e salvaglie per iniziare a registrare i tuoi outfit.",
     "outfitPieces": "Pezzi dell'outfit",

@@ -1678,7 +1678,7 @@
   },
   "outfits": {
     "viewDescription": "Visualize os outfits que você compôs e programou. Seu AI Stylist garante que você utilize todas as peças do seu guarda-roupa e o avisa de repetições nas mesmas ocasiões.",
-    "notificationCenter": "Centro de notificações (simulado)",
+    "notificationCenter": "Centro de notificações",
     "noNotifs": "Nenhuma notificação acionada ainda. Defina seu lembrete diário nas configurações ou programe um evento para testar.",
     "noSavedOutfitsDesc": "Receba propostas de outfits na guia AI Stylist, escolha os seus favoritos e salve-os para começar a registrar seus outfits.",
     "outfitPieces": "Peças do outfit",

@@ -575,7 +575,7 @@ export default function Outfits() {
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2">
               <Bell className="h-5 w-5 text-[hsl(var(--accent))]" />
-              <h3 className="font-display text-lg font-medium">{t('outfits.notificationCenter', { defaultValue: 'Notification Center (Simulated)' })}</h3>
+              <h3 className="font-display text-lg font-medium">{t('outfits.notificationCenter', { defaultValue: 'Notification Center' })}</h3>
             </div>
             {notifications.length > 0 && (
               <Button size="xs" variant="ghost" className="text-rose-700 text-xs h-7 px-2" onClick={clearNotifications}>
@@ -652,66 +652,23 @@ export default function Outfits() {
               });
             }
 
-            const hasOuterwear = outfitItemsMap['outerwear'] && !!outfitItemsMap['outerwear'].image_url;
-            const hasTopOrDress = outfitItemsMap['top'] || outfitItemsMap['dress'];
-
-            let canvasContent;
-
-            if (hasOuterwear && hasTopOrDress) {
-              const withOuterwearMap = { ...outfitItemsMap };
-              delete withOuterwearMap['top'];
-              delete withOuterwearMap['dress'];
-
-              const withoutOuterwearMap = { ...outfitItemsMap };
-              delete withoutOuterwearMap['outerwear'];
-
-              canvasContent = (
-                <div className="flex flex-col w-full">
-                  <div className="relative w-full aspect-[4/5] bg-secondary/10 shrink-0 border-b border-border/50">
-                    <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={withOuterwearMap} />
-                    <Badge className="absolute top-3 left-3 rounded-full caps-label bg-background/90 text-foreground border border-border backdrop-blur">
-                      {o.source_workflow === 'scheduled' ? t('ads.schedule.title', { defaultValue: 'Scheduled Preset' }) : t('stylist.occasion', { defaultValue: 'Special Event' })}
-                    </Badge>
-                    <div className="absolute bottom-3 left-3 bg-background/80 backdrop-blur px-2.5 py-1 rounded-md text-[10px] font-medium text-foreground shadow-sm pointer-events-none border border-border/50">
-                      {t('suitcase.withOuterwear', { defaultValue: 'With Outerwear' })}
-                    </div>
-                    <Button
-                      size="icon"
-                      variant="destructive"
-                      onClick={() => deleteOutfit(o.id)}
-                      className="absolute top-3 right-3 rounded-xl h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                      aria-label={t('common.delete', { defaultValue: 'Delete' })}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="relative w-full aspect-[4/5] bg-secondary/10 shrink-0">
-                    <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={withoutOuterwearMap} />
-                    <div className="absolute bottom-3 left-3 bg-background/80 backdrop-blur px-2.5 py-1 rounded-md text-[10px] font-medium text-foreground shadow-sm pointer-events-none border border-border/50">
-                      {t('suitcase.withoutOuterwear', { defaultValue: 'Without Outerwear' })}
-                    </div>
-                  </div>
-                </div>
-              );
-            } else {
-              canvasContent = (
-                <div className="relative w-full aspect-[4/5] bg-secondary/10 shrink-0">
-                  <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={outfitItemsMap} />
-                  <Badge className="absolute top-3 left-3 rounded-full caps-label bg-background/90 text-foreground border border-border backdrop-blur">
-                    {o.source_workflow === 'scheduled' ? t('ads.schedule.title', { defaultValue: 'Scheduled Preset' }) : t('stylist.occasion', { defaultValue: 'Special Event' })}
-                  </Badge>
-                  <Button
-                    size="icon"
-                    variant="destructive"
-                    onClick={() => deleteOutfit(o.id)}
-                    className="absolute top-3 right-3 rounded-xl h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                    aria-label={t('common.delete', { defaultValue: 'Delete' })}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              );
-            }
+            const canvasContent = (
+              <div className="relative w-full aspect-[4/5] bg-secondary/10 shrink-0">
+                <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={outfitItemsMap} />
+                <Badge className="absolute top-3 left-3 rounded-full caps-label bg-background/90 text-foreground border border-border backdrop-blur">
+                  {o.source_workflow === 'scheduled' ? t('ads.schedule.title', { defaultValue: 'Scheduled Preset' }) : t('stylist.occasion', { defaultValue: 'Special Event' })}
+                </Badge>
+                <Button
+                  size="icon"
+                  variant="destructive"
+                  onClick={() => deleteOutfit(o.id)}
+                  className="absolute top-3 right-3 rounded-xl h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-label={t('common.delete', { defaultValue: 'Delete' })}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            );
 
             return (
               <Card 

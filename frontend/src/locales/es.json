@@ -1678,7 +1678,7 @@
   },
   "outfits": {
     "viewDescription": "Ver los outfits que has creado y programado. Tu Estilista de IA se asegura de que utilices todas las prendas de tu armario y te advierte si repites en las mismas ocasiones.",
-    "notificationCenter": "Centro de notificaciones (simulado)",
+    "notificationCenter": "Centro de notificaciones",
     "noNotifs": "Aún no se han activado notificaciones. Configura tu recordatorio diario en los ajustes o programa un evento para probar.",
     "noSavedOutfitsDesc": "Obtén propuestas de outfits en la pestaña Estilista de IA, elige tus favoritas y guárdalas para empezar a registrar tus outfits.",
     "outfitPieces": "Prendas del outfit",

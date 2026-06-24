@@ -1678,7 +1678,7 @@
   },
   "outfits": {
     "viewDescription": "Sieh dir die Outfits an, die du zusammengestellt und geplant hast. Dein AI-Stylist stellt sicher, dass du alle Kleidungsstücke nutzt und warnt dich vor wiederholtem Tragen bei gleichen Anlässen.",
-    "notificationCenter": "Benachrichtigungszentrum (simuliert)",
+    "notificationCenter": "Benachrichtigungszentrum",
     "noNotifs": "Noch keine Benachrichtigungen ausgelöst. Stelle deine tägliche Erinnerung in den Einstellungen ein oder plane ein Event zum Tragen.",
     "noSavedOutfitsDesc": "Hol dir Outfit-Vorschläge im AI-Stylist-Tab, wähle deinen Favoriten und speichere ihn, um dein Outfit-Tagebuch zu starten.",
     "outfitPieces": "Outfit-Teile",
