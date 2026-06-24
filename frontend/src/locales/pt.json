@@ -578,7 +578,8 @@
     "saveOutfit": "Guardar conjunto",
     "shoppingSuggestions": "Sugestões de compra do Estilista IA",
     "shuffledLook": "Conjunto misturado",
-    "suggestOthers": "Sugerir outros 3"
+    "suggestOthers": "Sugerir outros 3",
+    "outfitPlanner": "Planejador de looks"
   },
   "outfitCompletion": {
     "cta": "Completar o look",

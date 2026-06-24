@@ -1348,7 +1348,7 @@ export default function Stylist() {
             <div className="flex justify-center mb-3 bg-muted/60 p-1 rounded-2xl max-w-sm mx-auto w-full border border-border/40">
               <TabsList className="grid grid-cols-3 w-full bg-transparent p-0 h-8">
                 <TabsTrigger value="chat" className="rounded-xl text-xs font-semibold data-[state=active]:bg-brand data-[state=active]:text-brand-foreground shadow-sm">{t('stylist.chatPanel')}</TabsTrigger>
-                <TabsTrigger value="shuffle" className="rounded-xl text-xs font-semibold data-[state=active]:bg-brand data-[state=active]:text-brand-foreground shadow-sm">{t('nav.outfits')}</TabsTrigger>
+                <TabsTrigger value="shuffle" className="rounded-xl text-xs font-semibold data-[state=active]:bg-brand data-[state=active]:text-brand-foreground shadow-sm">{t('stylist.outfitPlanner', { defaultValue: 'Outfit Planner' })}</TabsTrigger>
                 <TabsTrigger value="match" className="rounded-xl text-xs font-semibold data-[state=active]:bg-brand data-[state=active]:text-brand-foreground shadow-sm">{t('stylist.dailySuggestion')}</TabsTrigger>
               </TabsList>
             </div>

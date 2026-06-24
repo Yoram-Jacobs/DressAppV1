@@ -578,7 +578,8 @@
     "saveOutfit": "Outfit speichern",
     "shoppingSuggestions": "KI-Stylist Shopping-Vorschläge",
     "shuffledLook": "Zufälliger Look",
-    "suggestOthers": "3 andere vorschlagen"
+    "suggestOthers": "3 andere vorschlagen",
+    "outfitPlanner": "Outfit-Planer"
   },
   "outfitCompletion": {
     "cta": "Outfit vervollständigen",

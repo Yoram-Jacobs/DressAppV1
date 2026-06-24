@@ -578,7 +578,8 @@
     "saveOutfit": "Salva outfit",
     "shoppingSuggestions": "Suggerimenti acquisti Stylist IA",
     "shuffledLook": "Stile casuale",
-    "suggestOthers": "Suggerisci altri 3"
+    "suggestOthers": "Suggerisci altri 3",
+    "outfitPlanner": "Pianificatore di outfit"
   },
   "outfitCompletion": {
     "cta": "Completa l'outfit",

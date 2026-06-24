@@ -578,7 +578,8 @@
     "saveOutfit": "Сохранить образ",
     "shoppingSuggestions": "Покупки с ИИ-стилистом",
     "shuffledLook": "Случайный образ",
-    "suggestOthers": "Предложить 3 других"
+    "suggestOthers": "Предложить 3 других",
+    "outfitPlanner": "Планировщик образов"
   },
   "outfitCompletion": {
     "cta": "Завершить образ",

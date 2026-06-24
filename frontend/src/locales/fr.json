@@ -578,7 +578,8 @@
     "saveOutfit": "Enregistrer la tenue",
     "shoppingSuggestions": "Suggestions d'achat du Styliste IA",
     "shuffledLook": "Tenue mélangée",
-    "suggestOthers": "En suggérer 3 autres"
+    "suggestOthers": "En suggérer 3 autres",
+    "outfitPlanner": "Planificateur de tenues"
   },
   "outfitCompletion": {
     "cta": "Compléter la tenue",

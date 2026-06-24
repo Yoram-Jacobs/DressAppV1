@@ -578,7 +578,8 @@
     "saveOutfit": "コーディネートを保存",
     "shoppingSuggestions": "AIスタイリスト購入提案",
     "shuffledLook": "シャッフルコーディネート",
-    "suggestOthers": "他の3つを提案"
+    "suggestOthers": "他の3つを提案",
+    "outfitPlanner": "アウトフィットプランナー"
   },
   "outfitCompletion": {
     "cta": "コーデを完成",

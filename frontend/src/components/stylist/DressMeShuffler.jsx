@@ -219,9 +219,22 @@ export default function DressMeShuffler() {
       return;
     }
 
+    // Generate a short, descriptive title
+    const nameParts = outfitItems.map(it => it.name || it.title || '').filter(Boolean);
+    let descriptiveTitle = 'New Outfit';
+    if (nameParts.length > 0) {
+      if (nameParts.length === 1) {
+        descriptiveTitle = nameParts[0];
+      } else if (nameParts.length === 2) {
+        descriptiveTitle = `${nameParts[0]} & ${nameParts[1]}`;
+      } else {
+        descriptiveTitle = `${nameParts.slice(0, -1).join(', ')} & ${nameParts[nameParts.length - 1]}`;
+      }
+    }
+
     setSaving(true);
     const body = {
-      name: t('components.outfitCanvas.the_look'),
+      name: descriptiveTitle,
       source_workflow: 'scheduled',
       prompt: 'shuffled',
       garments: outfitItems.map(it => ({
@@ -239,9 +252,9 @@ export default function DressMeShuffler() {
 
     try {
       await api.saveOutfit(body);
-      toast.success(t('addItem.saved'));
+      toast.success(t('stylist.outfitSaved', { defaultValue: 'Outfit saved to your diary!' }));
     } catch (err) {
-      toast.error(err?.response?.data?.detail || t('addItem.saveFailed'));
+      toast.error(err?.response?.data?.detail || t('stylist.saveFailed', { defaultValue: 'Failed to save outfit.' }));
     } finally {
       setSaving(false);
     }

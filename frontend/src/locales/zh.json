@@ -578,7 +578,8 @@
     "saveOutfit": "保存搭配",
     "shoppingSuggestions": "AI造型师选购建议",
     "shuffledLook": "随机搭配",
-    "suggestOthers": "换一批 (3种)"
+    "suggestOthers": "换一批 (3种)",
+    "outfitPlanner": "搭配计划"
   },
   "outfitCompletion": {
     "cta": "完成搭配",

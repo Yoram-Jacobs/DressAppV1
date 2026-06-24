@@ -587,7 +587,8 @@
     "saveFailed": "Failed to save outfit.",
     "saveOutfit": "Save Outfit",
     "shoppingSuggestions": "AI Stylist Shopping Suggestions",
-    "suggestOthers": "Suggest 3 Others"
+    "suggestOthers": "Suggest 3 Others",
+    "outfitPlanner": "Outfit Planner"
   },
   "outfitCompletion": {
     "cta": "Complete the outfit",
