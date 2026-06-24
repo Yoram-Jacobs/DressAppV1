@@ -272,3 +272,49 @@ async def get_vapid_key(
     return {"public_key": settings.VAPID_PUBLIC_KEY}
 
 
+class UpdateOutfitUsageIn(BaseModel):
+    date: str | None = None
+    time: str | None = None
+    location: str | None = None
+    event_name: str | None = None
+
+
+class UpdateOutfitIn(BaseModel):
+    name: str | None = None
+    usage: UpdateOutfitUsageIn | None = None
+
+
+@router.patch("/{outfit_id}")
+async def update_saved_outfit(
+    outfit_id: str,
+    payload: UpdateOutfitIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Update a saved outfit's metadata (e.g. usage date, name)."""
+    db = get_db()
+    existing = await db.outfits.find_one({"id": outfit_id, "user_id": user["id"]})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Outfit not found")
+        
+    update_doc = {}
+    if payload.name is not None:
+        update_doc["name"] = payload.name
+        
+    if payload.usage is not None:
+        usage = existing.get("usage") or {}
+        usage_payload = payload.usage.model_dump(exclude_unset=True)
+        usage.update(usage_payload)
+        update_doc["usage"] = usage
+        
+    if update_doc:
+        update_doc["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db.outfits.update_one(
+            {"id": outfit_id, "user_id": user["id"]},
+            {"$set": update_doc}
+        )
+        
+    res_doc = await db.outfits.find_one({"id": outfit_id, "user_id": user["id"]})
+    return _safe_doc(res_doc)
+
+
+

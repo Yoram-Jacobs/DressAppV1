@@ -744,6 +744,7 @@ export const api = {
   // --- AI Stylist Scheduler (Phase Scheduler) ---
   listSavedOutfits: () => client.get('/outfits').then((r) => r.data),
   saveOutfit: (body) => client.post('/outfits', body).then((r) => r.data),
+  updateSavedOutfit: (id, body) => client.patch(`/outfits/${id}`, body).then((r) => r.data),
   deleteSavedOutfit: (id) => client.delete(`/outfits/${id}`).then((r) => r.data),
   triggerScheduledProposal: () => client.post('/outfits/proposal/scheduled').then((r) => r.data),
   triggerEventProposal: (body) => client.post('/outfits/proposal/event', body).then((r) => r.data),

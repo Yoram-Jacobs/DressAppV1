@@ -18,7 +18,7 @@ import { useMemo } from 'react';
  * Image fetching is lazy and memoized per card instance to avoid hammering
  * the API when the chat thread re-renders.
  */
-export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, onSave }) {
+export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, onSave, draggable, onDragStart }) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const items = (rec?.items || []).filter(Boolean);
@@ -77,8 +77,13 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
 
   return (
     <div
-      className="rounded-xl bg-[hsl(var(--accent))]/5 border border-[hsl(var(--accent))]/15 overflow-hidden shadow-sm"
+      className={cn(
+        "rounded-xl bg-[hsl(var(--accent))]/5 border border-[hsl(var(--accent))]/15 overflow-hidden shadow-sm transition-all duration-200",
+        draggable ? "cursor-grab active:cursor-grabbing hover:shadow-md select-none" : ""
+      )}
       data-testid={`outfit-recommendation-${index}`}
+      draggable={draggable}
+      onDragStart={onDragStart}
     >
       <OutfitAvatarViewer
          shapeParams={user?.avatar_shape_params || {}}

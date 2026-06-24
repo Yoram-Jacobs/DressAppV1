@@ -5,14 +5,25 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Trash2, Calendar, MapPin, Sparkles, Bell, RefreshCw, AlertCircle } from 'lucide-react';
+import { 
+  Trash2, 
+  Calendar, 
+  MapPin, 
+  Sparkles, 
+  Bell, 
+  RefreshCw, 
+  AlertCircle, 
+  ChevronLeft, 
+  ChevronRight, 
+  X, 
+  GripVertical 
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import AvatarViewer from '@/components/AvatarViewer';
 import { labelForRole, labelForDressCode } from '@/lib/taxonomy';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { OutfitRecommendationCard } from '@/components/stylist/OutfitRecommendationCard';
 import { ItemFloater } from '@/components/stylist/ItemFloater';
 
@@ -44,7 +55,7 @@ const getLocalizedNotification = (n, t) => {
     const proposalsTitleRegex = /^Proposals for\s+(.+?)\s*:\s*$/i;
     const matchProposalsTitle = lines[0].match(proposalsTitleRegex);
     if (matchProposalsTitle) {
-      const style = matchProposalsTitle[1] || '';
+      const style = matchProposalsTitle[1] || 'day';
       const translatedStyle = labelForDressCode(style.toLowerCase().trim(), t);
       const headerText = t('outfits.notification.proposalsTitle', { style: translatedStyle, defaultValue: `Proposals for ${translatedStyle}:` });
       
@@ -71,11 +82,11 @@ const getLocalizedNotification = (n, t) => {
     }
   }
 
-  // 4. Check if Event Title: "Time to get ready for <name>! 🌟"
-  const eventTitleRegex = /^Time to get ready for\s*(.+?)\s*!\s*🌟\s*$/i;
+  // 4. Check if Event Title: "Get ready for: <event_name> 🌟"
+  const eventTitleRegex = /^Get ready for:\s*(.+?)\s*(🌟)?$/i;
   const matchEventTitle = title.match(eventTitleRegex);
   if (matchEventTitle) {
-    const name = matchEventTitle[1] || '';
+    const name = matchEventTitle[1] || 'Special Event';
     title = t('outfits.notification.eventTitle', { name, defaultValue: title });
   }
 
@@ -136,6 +147,33 @@ const parseNotificationBodyToPayload = (body) => {
   };
 };
 
+const formatWeekday = (date, t) => {
+  const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const key = `calendar.days.${days[date.getDay()]}`;
+  const defaults = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  return t(key, { defaultValue: defaults[date.getDay()] }).toUpperCase();
+};
+
+const formatMonthDay = (date, t) => {
+  const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+  const monthKey = `calendar.months.${months[date.getMonth()]}`;
+  const monthDefaults = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthStr = t(monthKey, { defaultValue: monthDefaults[date.getMonth()] });
+  return `${monthStr} ${date.getDate()}`;
+};
+
+const getOutfitPiecesMap = (o) => {
+  const map = {};
+  if (Array.isArray(o?.garments)) {
+    o.garments.forEach((g) => {
+      if (g && g.role) {
+        map[g.role] = { image_url: g.image_url };
+      }
+    });
+  }
+  return map;
+};
+
 export default function Outfits() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -144,9 +182,17 @@ export default function Outfits() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notifLoading, setNotifLoading] = useState(false);
-  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [activeNotifContext, setActiveNotifContext] = useState(null);
   const [floaterItemId, setFloaterItemId] = useState(null);
   const [notifModalLoading, setNotifModalLoading] = useState(false);
+
+  // Calendar view states
+  const [calendarStartDate, setCalendarStartDate] = useState(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+  const [dragOverDay, setDragOverDay] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -192,6 +238,7 @@ export default function Outfits() {
     try {
       await api.clearSimulatedNotifications();
       setNotifications([]);
+      setActiveNotifContext(null);
       toast.success(t('outfits.logsCleared', { defaultValue: 'Notification logs cleared.' }));
     } catch (err) {
       toast.error(t('outfits.failedClearLogs', { defaultValue: 'Failed to clear logs.' }));
@@ -233,16 +280,16 @@ export default function Outfits() {
     
     // Check if we need to generate proposals dynamically on-demand
     if (!payload && (n.title || '').toLowerCase().includes('proposal is ready')) {
-      setSelectedNotification({ ...n, payload: { outfit_recommendations: [] } }); // Open with temporary empty payload
+      setActiveNotifContext({ ...n, payload: { outfit_recommendations: [] } });
       setNotifModalLoading(true);
       try {
         const res = await api.triggerScheduledProposal();
         const updatedPayload = res.advice;
         setNotifications((prev) => prev.map((item) => (item.id === n.id ? { ...item, payload: updatedPayload } : item)));
-        setSelectedNotification((current) => current && current.id === n.id ? { ...current, payload: updatedPayload } : current);
+        setActiveNotifContext((current) => current && current.id === n.id ? { ...current, payload: updatedPayload } : current);
       } catch (err) {
         toast.error(t('outfits.failedGenerateProposals', { defaultValue: 'Failed to generate recommendations.' }));
-        setSelectedNotification(null);
+        setActiveNotifContext(null);
       } finally {
         setNotifModalLoading(false);
       }
@@ -250,10 +297,106 @@ export default function Outfits() {
     }
     
     if (payload) {
-      setSelectedNotification({ ...n, payload });
+      setActiveNotifContext({ ...n, payload });
     } else {
       toast.error(t('outfits.noProposalsAvailable', { defaultValue: 'No outfit recommendations available for this notification.' }));
     }
+  };
+
+  // Drag-and-drop & Rescheduling
+  const handleDropOnDay = async (e, dateStr) => {
+    e.preventDefault();
+    setDragOverDay(null);
+    const dataStr = e.dataTransfer.getData('text/plain');
+    if (!dataStr) return;
+    try {
+      const data = JSON.parse(dataStr);
+      if (data.type === 'saved') {
+        await handleMoveOutfit(data.id, dateStr);
+      } else if (data.type === 'recommended') {
+        await handleSaveOutfitToDate(data.notifId, data.recIndex, dateStr);
+      }
+    } catch (err) {
+      console.error("Failed to process drop:", err);
+    }
+  };
+
+  const handleMoveOutfit = async (id, targetDate) => {
+    try {
+      await api.updateSavedOutfit(id, { usage: { date: targetDate } });
+      toast.success(t('outfits.rescheduledSuccess', { defaultValue: 'Outfit rescheduled!' }));
+      const res = await api.listSavedOutfits();
+      setOutfits(res.outfits || []);
+    } catch (err) {
+      toast.error(t('outfits.failedReschedule', { defaultValue: 'Failed to reschedule outfit.' }));
+    }
+  };
+
+  const handleSaveOutfitToDate = async (notifId, recIndex, targetDate) => {
+    const notif = notifications.find(n => n.id === notifId);
+    const rec = notif?.payload?.outfit_recommendations?.[recIndex];
+    if (!rec) return;
+    
+    const isEvent = (notif?.title || '').toLowerCase().includes('get ready');
+    
+    const body = {
+      name: rec.name,
+      source_workflow: isEvent ? 'event' : 'scheduled',
+      prompt: isEvent ? 'Event' : (user?.scheduler_settings?.style_dress_for || 'casual'),
+      garments: (rec.items || []).map((it) => ({
+        closet_item_id: it.closet_item_id,
+        role: it.role,
+        title: it.description,
+      })),
+      usage: {
+        date: targetDate,
+        time: user?.scheduler_settings?.time || '08:00',
+        location: null,
+        event_name: null,
+      },
+    };
+
+    try {
+      await api.saveOutfit(body);
+      toast.success(t('stylist.outfitSaved', { defaultValue: 'Outfit saved and scheduled!' }));
+      const res = await api.listSavedOutfits();
+      setOutfits(res.outfits || []);
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || t('stylist.saveFailed', { defaultValue: 'Failed to save outfit.' }));
+    }
+  };
+
+  const handleUnscheduleOutfit = async (id) => {
+    try {
+      await api.updateSavedOutfit(id, { usage: { date: '' } });
+      toast.success(t('outfits.unscheduledSuccess', { defaultValue: 'Outfit removed from calendar.' }));
+      const res = await api.listSavedOutfits();
+      setOutfits(res.outfits || []);
+    } catch (err) {
+      toast.error(t('outfits.failedUnschedule', { defaultValue: 'Failed to unschedule outfit.' }));
+    }
+  };
+
+  const handlePrevDay = () => {
+    setCalendarStartDate((prev) => {
+      const next = new Date(prev);
+      next.setDate(next.getDate() - 1);
+      return next;
+    });
+  };
+
+  const handleNextDay = () => {
+    setCalendarStartDate((prev) => {
+      const next = new Date(prev);
+      next.setDate(next.getDate() + 1);
+      return next;
+    });
+  };
+
+  const handleJumpToToday = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    setCalendarStartDate(today);
   };
 
   return (
@@ -271,6 +414,160 @@ export default function Outfits() {
           <RefreshCw className="h-4 w-4" /> {t('stylist.refreshScout', { defaultValue: 'Refresh' })}
         </Button>
       </div>
+
+      {/* Visual 7-Day Outfit Calendar */}
+      <Card className="border border-border/80 rounded-2xl shadow-editorial mb-8 overflow-hidden bg-card">
+        <CardContent className="p-5 space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-[hsl(var(--accent))]" />
+              <h3 className="font-display text-lg font-medium">{t('calendar.title', { defaultValue: '7-Day Outfit Calendar' })}</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button size="xs" variant="outline" className="rounded-lg h-8 text-xs font-semibold px-3" onClick={handleJumpToToday}>
+                {t('calendar.todayBtn', { defaultValue: 'Today' })}
+              </Button>
+              <div className="flex items-center border border-border rounded-lg overflow-hidden h-8">
+                <Button size="icon" variant="ghost" className="h-full w-8 rounded-none border-r border-border" onClick={handlePrevDay} aria-label="Previous day">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-full w-8 rounded-none" onClick={handleNextDay} aria-label="Next day">
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+            {Array.from({ length: 7 }).map((_, idx) => {
+              const day = new Date(calendarStartDate);
+              day.setDate(day.getDate() + idx);
+              const dayStr = day.toISOString().split('T')[0];
+              
+              // Check if today
+              const today = new Date();
+              const isToday = today.toISOString().split('T')[0] === dayStr;
+              
+              // Find outfit scheduled for this day
+              const dayOutfit = outfits.find(o => o.usage?.date === dayStr);
+              
+              return (
+                <div
+                  key={dayStr}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragOverDay(dayStr);
+                  }}
+                  onDragLeave={() => setDragOverDay(null)}
+                  onDrop={(e) => handleDropOnDay(e, dayStr)}
+                  className={cn(
+                    "flex-1 min-w-[130px] max-w-[160px] rounded-2xl border p-3 flex flex-col items-center justify-between text-center transition-all duration-300 bg-card select-none",
+                    isToday ? "border-[hsl(var(--accent))] shadow-sm" : "border-border/60",
+                    dragOverDay === dayStr ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/15 scale-[1.03]" : ""
+                  )}
+                >
+                  <div className="space-y-0.5">
+                    <div className={cn("text-[9px] caps-label tracking-wider", isToday ? "text-[hsl(var(--accent))] font-bold" : "text-muted-foreground")}>
+                      {isToday ? t('calendar.todayLabel', { defaultValue: 'TODAY' }) : formatWeekday(day, t)}
+                    </div>
+                    <div className="text-xs font-semibold font-display">
+                      {formatMonthDay(day, t)}
+                    </div>
+                  </div>
+
+                  <div className="w-full aspect-[4/5] mt-3 rounded-xl overflow-hidden relative group/slot flex items-center justify-center bg-secondary/5 border border-dashed border-border/80">
+                    {dayOutfit ? (
+                      <>
+                        <div className="absolute inset-0 scale-[0.9]">
+                          <AvatarViewer
+                            shapeParams={user?.avatar_shape_params || {}}
+                            sex={user?.sex || 'female'}
+                            outfitItems={getOutfitPiecesMap(dayOutfit)}
+                          />
+                        </div>
+                        <div className="absolute inset-0 bg-background/90 opacity-0 group-hover/slot:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 gap-1.5 text-center">
+                          <div className="text-[10px] font-semibold truncate w-full px-1">{dayOutfit.name}</div>
+                          <Button
+                            size="xs"
+                            variant="destructive"
+                            onClick={() => handleUnscheduleOutfit(dayOutfit.id)}
+                            className="h-6 px-2 rounded-lg text-[9px] flex items-center gap-1 font-semibold"
+                          >
+                            <Trash2 className="h-3 w-3" /> {t('calendar.unschedule', { defaultValue: 'Remove' })}
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-[9px] text-muted-foreground/60 p-2 flex flex-col items-center justify-center gap-1.5">
+                        <Calendar className="h-4 w-4 opacity-50" />
+                        <span>{t('calendar.dragHere', { defaultValue: 'Drop Outfit' })}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Active Recommendations Shelf */}
+      {activeNotifContext && (
+        <Card className="border border-[hsl(var(--accent))]/20 rounded-2xl shadow-editorial mb-8 overflow-hidden bg-[hsl(var(--accent))]/5 animate-[slideDown_0.2s_ease-out]">
+          <CardContent className="p-5 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-[hsl(var(--accent))]" />
+                <h3 className="font-display text-lg font-medium">
+                  {t('calendar.recommendationsShelf', { defaultValue: 'Recommended Outfits' })}: {getLocalizedNotification(activeNotifContext, t).title}
+                </h3>
+              </div>
+              <Button size="icon" variant="ghost" className="h-8 w-8 rounded-xl animate-none" onClick={() => setActiveNotifContext(null)} aria-label="Close shelf">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {notifModalLoading ? (
+              <div className="flex flex-col items-center justify-center py-8 space-y-3">
+                <RefreshCw className="h-6 w-6 animate-spin text-[hsl(var(--accent))]" />
+                <p className="text-xs text-muted-foreground animate-pulse">
+                  {t('outfits.generatingProposals', { defaultValue: 'Generating outfit recommendations from your closet...' })}
+                </p>
+              </div>
+            ) : (activeNotifContext?.payload?.outfit_recommendations && Array.isArray(activeNotifContext.payload.outfit_recommendations) && activeNotifContext.payload.outfit_recommendations.filter(Boolean).length > 0) ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {activeNotifContext.payload.outfit_recommendations.filter(Boolean).map((rec, i) => (
+                  <div key={i} className="relative group">
+                    <div className="absolute top-2 left-2 z-10 bg-background/95 backdrop-blur rounded-lg p-1.5 flex items-center gap-1.5 shadow-sm border border-border/80 text-[8px] text-muted-foreground font-semibold pointer-events-none opacity-80 group-hover:opacity-100 transition-opacity">
+                      <GripVertical className="h-3 w-3" />
+                      <span>{t('calendar.dragToSchedule', { defaultValue: 'DRAG ME' })}</span>
+                    </div>
+                    <OutfitRecommendationCard
+                      rec={rec}
+                      index={i}
+                      sessionId={null}
+                      onItemClick={(itemId) => setFloaterItemId(itemId)}
+                      onSave={(r) => handleSaveOutfit(r, activeNotifContext)}
+                      draggable={true}
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('text/plain', JSON.stringify({
+                          type: 'recommended',
+                          notifId: activeNotifContext.id,
+                          recIndex: i
+                        }));
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground italic">
+                {t('outfits.noRecommendationsPayload', { defaultValue: 'No structured recommendations available for this notification.' })}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Simulated Notification Logs Box */}
       <Card className="border border-border/80 rounded-2xl shadow-editorial mb-8 overflow-hidden bg-[hsl(var(--accent))]/5">
@@ -298,10 +595,14 @@ export default function Outfits() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[180px] overflow-y-auto pr-1">
               {notifications.map((n) => {
                 const { title, body } = getLocalizedNotification(n, t);
+                const isActive = activeNotifContext?.id === n.id;
                 return (
                   <div
                     key={n.id}
-                    className="p-3 bg-card rounded-xl border border-border flex items-start gap-2.5 shadow-sm text-xs transition-colors cursor-pointer hover:bg-muted/30"
+                    className={cn(
+                      "p-3 rounded-xl border flex items-start gap-2.5 shadow-sm text-xs transition-colors cursor-pointer hover:bg-muted/30 bg-card",
+                      isActive ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/5" : "border-border"
+                    )}
                     onClick={() => handleNotificationClick(n)}
                   >
                     <div className="p-1 bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] rounded-lg shrink-0">
@@ -413,7 +714,14 @@ export default function Outfits() {
             }
 
             return (
-              <Card key={o.id} className="rounded-2xl border border-border bg-card shadow-editorial overflow-hidden flex flex-col group hover:shadow-lg transition-shadow">
+              <Card 
+                key={o.id} 
+                draggable="true"
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'saved', id: o.id }));
+                }}
+                className="rounded-2xl border border-border bg-card shadow-editorial overflow-hidden flex flex-col group hover:shadow-lg transition-shadow cursor-grab active:cursor-grabbing select-none"
+              >
                 {canvasContent}
 
                 <CardContent className="p-5 flex-1 flex flex-col justify-between space-y-4">
@@ -434,7 +742,7 @@ export default function Outfits() {
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 shrink-0 text-muted-foreground/75" />
                       <span>
-                        {o?.usage?.date || ''} · {o?.usage?.time || ''}
+                        {o?.usage?.date || t('calendar.unscheduled', { defaultValue: 'Not scheduled' })} {o?.usage?.date && o?.usage?.time ? `· ${o.usage.time}` : ''}
                       </span>
                     </div>
                     {o?.usage?.location && (
@@ -468,60 +776,6 @@ export default function Outfits() {
         </div>
       )}
       <ExploreBackButton />
-
-      {/* Outfit Recommendations Modal */}
-      <Dialog open={!!selectedNotification} onOpenChange={(open) => !open && setSelectedNotification(null)}>
-        <DialogContent 
-          className="max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl"
-          onInteractOutside={(e) => {
-            if (floaterItemId || e.target.closest('#item-floater-panel')) {
-              e.preventDefault();
-            }
-          }}
-          onEscapeKeyDown={(e) => {
-            if (floaterItemId) {
-              e.preventDefault();
-            }
-          }}
-          onFocusOutside={(e) => e.preventDefault()}
-        >
-          <DialogHeader>
-            <DialogTitle className="font-display text-lg">
-              {selectedNotification && getLocalizedNotification(selectedNotification, t).title}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <p className="text-sm text-muted-foreground">
-              {selectedNotification && getLocalizedNotification(selectedNotification, t).body.split('\n')[0]}
-            </p>
-            {notifModalLoading ? (
-              <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                <RefreshCw className="h-8 w-8 animate-spin text-[hsl(var(--accent))]" />
-                <p className="text-xs text-muted-foreground animate-pulse">
-                  {t('outfits.generatingProposals', { defaultValue: 'Generating outfit recommendations from your closet...' })}
-                </p>
-              </div>
-            ) : (selectedNotification?.payload?.outfit_recommendations && Array.isArray(selectedNotification.payload.outfit_recommendations) && selectedNotification.payload.outfit_recommendations.filter(Boolean).length > 0) ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {selectedNotification.payload.outfit_recommendations.filter(Boolean).map((rec, i) => (
-                  <OutfitRecommendationCard
-                    key={i}
-                    rec={rec}
-                    index={i}
-                    sessionId={null}
-                    onItemClick={(itemId) => setFloaterItemId(itemId)}
-                    onSave={(r) => handleSaveOutfit(r, selectedNotification)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground italic">
-                {t('outfits.noRecommendationsPayload', { defaultValue: 'No structured recommendations available for this notification.' })}
-              </p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Closet Item Detail Side Sheet */}
       <ItemFloater
