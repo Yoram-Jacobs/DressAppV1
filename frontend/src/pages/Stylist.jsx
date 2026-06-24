@@ -322,23 +322,27 @@ export default function Stylist() {
     }
   };
 
-  const handleSaveOutfit = async (rec, notification) => {
-    const isEvent = (notification?.title || '').toLowerCase().includes('get ready');
-    
+  const handleSaveOutfit = async (rec, messageOrNotif) => {
+    const isEvent = 
+      (messageOrNotif?.title || '').toLowerCase().includes('get ready') ||
+      messageOrNotif?.payload?.source_workflow === 'event';
+      
+    const eventDetails = messageOrNotif?.payload?.event_details || {};
+
     const body = {
       name: rec.name,
       source_workflow: isEvent ? 'event' : 'scheduled',
-      prompt: isEvent ? 'Event' : (user?.scheduler_settings?.style_dress_for || 'casual'),
+      prompt: isEvent ? (eventDetails.prompt || 'Event') : (user?.scheduler_settings?.style_dress_for || 'casual'),
       garments: (rec.items || []).map((it) => ({
         closet_item_id: it.closet_item_id,
         role: it.role,
         title: it.description,
       })),
       usage: {
-        date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        time: user?.scheduler_settings?.time || '08:00',
-        location: null,
-        event_name: null,
+        date: isEvent ? (eventDetails.date || new Date().toISOString().split('T')[0]) : new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        time: isEvent ? (eventDetails.time || '12:00') : (user?.scheduler_settings?.time || '08:00'),
+        location: isEvent ? eventDetails.location : null,
+        event_name: isEvent ? eventDetails.event_name : null,
       },
     };
 
@@ -748,34 +752,7 @@ export default function Stylist() {
     }
   };
 
-  const handleSaveOutfit = async (rec, message) => {
-    const isEvent = message.payload?.source_workflow === 'event';
-    const eventDetails = message.payload?.event_details || {};
 
-    const body = {
-      name: rec.name,
-      source_workflow: isEvent ? 'event' : 'scheduled',
-      prompt: isEvent ? eventDetails.prompt : (user?.scheduler_settings?.style_dress_for || 'casual'),
-      garments: (rec.items || []).map((it) => ({
-        closet_item_id: it.closet_item_id,
-        role: it.role,
-        title: it.description,
-      })),
-      usage: {
-        date: isEvent ? (eventDetails.date || new Date().toISOString().split('T')[0]) : new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        time: isEvent ? (eventDetails.time || '12:00') : (user?.scheduler_settings?.time || '08:00'),
-        location: isEvent ? eventDetails.location : null,
-        event_name: isEvent ? eventDetails.event_name : null,
-      },
-    };
-
-    try {
-      await api.saveOutfit(body);
-      toast.success(t('stylist.outfitSaved', { defaultValue: 'Outfit saved to your diary!' }));
-    } catch (err) {
-      toast.error(err?.response?.data?.detail || t('stylist.saveFailed', { defaultValue: 'Failed to save outfit.' }));
-    }
-  };
 
   const handleRetry = async (message) => {
     if (busy) return;
