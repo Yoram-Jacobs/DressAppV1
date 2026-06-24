@@ -62,7 +62,6 @@ export const TopNav = () => {
     { to: '/home', icon: Home, key: 'home', label: t('nav.home') },
     { to: '/closet', icon: Shirt, key: 'closet', label: t('nav.closet') },
     { to: '/stylist', icon: Sparkles, key: 'stylist', label: t('nav.stylist') },
-    { to: '/outfits', icon: Calendar, key: 'outfits', label: t('nav.outfits') },
     { to: '/market', icon: Store, key: 'market', label: t('nav.market') },
     { to: '/experts', icon: UserRound, key: 'experts', label: t('nav.experts') },
   ];
