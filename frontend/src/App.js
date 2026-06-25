@@ -98,6 +98,7 @@ function App() {
               <Route path="/closet/add" element={<AddItem />} />
               <Route path="/closet/:id" element={<ItemDetail />} />
               <Route path="/stylist" element={<Stylist />} />
+              <Route path="/outfits" element={<Navigate to="/stylist?tab=shuffle" replace />} />
               <Route path="/market" element={<Marketplace />} />
               <Route path="/market/create" element={<CreateListing />} />
               <Route path="/market/:id" element={<ListingDetail />} />

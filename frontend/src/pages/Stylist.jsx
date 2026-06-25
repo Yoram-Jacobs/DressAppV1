@@ -25,6 +25,7 @@ import {
   ChevronLeft,
   ChevronRight,
   GripVertical,
+  ArrowLeft,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -50,7 +51,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { WaveformAudioPlayer } from '@/components/WaveformAudioPlayer';
 import { ConversationSidebar } from '@/components/stylist/ConversationSidebar';
 import { OutfitCanvasMessage } from '@/components/OutfitCanvas';
@@ -274,6 +275,7 @@ export default function Stylist() {
     return d;
   });
   const [dragOverDay, setDragOverDay] = useState(null);
+  const [selectedOutfitForDetail, setSelectedOutfitForDetail] = useState(null);
 
   const loadOutfitsAndNotifications = useCallback(async () => {
     setOutfitsLoading(true);
@@ -1669,13 +1671,13 @@ export default function Stylist() {
         "grid grid-cols-1 gap-4 h-[calc(100dvh-180px)] md:h-[calc(100dvh-140px)] transition-all duration-300",
         sidebarCollapsed
           ? "lg:grid-cols-[minmax(0,1fr)]"
-          : "lg:grid-cols-[280px_minmax(0,1fr)]"
+          : "lg:grid-cols-[200px_minmax(0,1fr)]"
       )}>
         {/* Left rail — desktop only */}
         <aside
           className={cn(
             "hidden lg:flex rounded-[calc(var(--radius)+6px)] bg-card border border-border overflow-hidden transition-all duration-300",
-            sidebarCollapsed ? "w-0 border-0 opacity-0 pointer-events-none" : "w-[280px]"
+            sidebarCollapsed ? "w-0 border-0 opacity-0 pointer-events-none" : "w-[200px]"
           )}
           data-testid="stylist-conversation-sidebar"
         >
@@ -1804,123 +1806,157 @@ export default function Stylist() {
               {/* Shuffler */}
               <DressMeShuffler />
 
-              {/* Outfits Gallery Grid */}
+              {/* Outfits Gallery Grid / Detail view */}
               <div className="w-full space-y-4">
-                <h3 className="font-display text-xl">{t('components.outfitCanvas.outfit_canvas', { defaultValue: 'Saved Outfits' })}</h3>
-                {outfitsLoading ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 w-full">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="h-[300px] rounded-2xl shimmer border border-border" />
-                    ))}
-                  </div>
-                ) : outfits.length === 0 ? (
-                  <Card className="rounded-2xl border border-dashed border-border py-16 text-center w-full">
-                    <CardContent className="space-y-4">
-                      <Sparkles className="h-12 w-12 text-muted-foreground/60 mx-auto" />
-                      <h2 className="font-display text-xl">{t('common.noResults', { defaultValue: 'No outfits saved yet' })}</h2>
-                      <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                        {t('outfits.noSavedOutfitsDesc', { defaultValue: 'Get outfit proposals in the AI Stylist tab, pick your favorite, and save it to start logging your outfits.' })}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 w-full">
-                    {outfits.map((o) => {
-                      const outfitItemsMap = {};
-                      if (Array.isArray(o?.garments)) {
-                        o.garments.forEach((g) => {
-                          if (g && g.role) {
-                            outfitItemsMap[g.role] = { image_url: g.image_url };
-                          }
-                        });
-                      }
-
-                      const canvasContent = (
-                        <div className="relative w-full aspect-[4/5] bg-secondary/10 shrink-0">
-                          <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={outfitItemsMap} />
-                          <Badge className="absolute top-3 left-3 rounded-full caps-label bg-background/90 text-foreground border border-border backdrop-blur">
-                            {o.source_workflow === 'scheduled' ? t('ads.schedule.title', { defaultValue: 'Scheduled Preset' }) : t('stylist.occasion', { defaultValue: 'Special Event' })}
-                          </Badge>
-                          <Button
-                            size="icon"
-                            variant="destructive"
-                            onClick={() => deleteOutfit(o.id)}
-                            className="absolute top-3 right-3 rounded-xl h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                            aria-label={t('common.delete', { defaultValue: 'Delete' })}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      );
-
-                      return (
-                        <Card 
-                          key={o.id} 
-                          draggable="true"
-                          onDragStart={(e) => {
-                            e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'saved', id: o.id }));
-                          }}
-                          className="rounded-2xl border border-border bg-card shadow-editorial overflow-hidden flex flex-col group hover:shadow-lg transition-shadow cursor-grab active:cursor-grabbing select-none"
+                {selectedOutfitForDetail ? (
+                  /* Outfit Full View Pane */
+                  <Card className="border border-border/85 rounded-2xl shadow-editorial bg-card w-full overflow-hidden animate-[slideDown_0.2s_ease-out]">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between border-b border-border/50 pb-3 mb-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedOutfitForDetail(null)}
+                          className="rounded-xl h-8 text-xs font-semibold flex items-center gap-1.5"
                         >
-                          {canvasContent}
+                          <ArrowLeft className="h-4 w-4" /> {t('common.back', { defaultValue: 'Back' })}
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={async () => {
+                            await deleteOutfit(selectedOutfitForDetail.id);
+                            setSelectedOutfitForDetail(null);
+                          }}
+                          className="rounded-xl h-8 text-xs font-semibold flex items-center gap-1.5"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> {t('common.delete', { defaultValue: 'Delete' })}
+                        </Button>
+                      </div>
 
-                          <CardContent className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                            <div className="space-y-2">
-                              <h3 className="font-display text-lg font-semibold truncate text-foreground">
-                                {(o.name || '').toLowerCase() === 'the look' ? t('components.outfitCanvas.the_look', { defaultValue: o.name }) : o.name}
+                      <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6">
+                        {/* Large Avatar Viewer */}
+                        <div className="relative w-full aspect-[4/5] bg-secondary/10 rounded-2xl overflow-hidden border border-border/60">
+                          <AvatarViewer
+                            shapeParams={user?.avatar_shape_params || {}}
+                            sex={user?.sex || 'female'}
+                            outfitItems={getOutfitPiecesMap(selectedOutfitForDetail)}
+                          />
+                        </div>
+
+                        {/* Details and Items */}
+                        <div className="flex flex-col justify-between space-y-6">
+                          <div className="space-y-4">
+                            <div className="space-y-1.5">
+                              <Badge className="rounded-full bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] border border-[hsl(var(--accent))]/20">
+                                {selectedOutfitForDetail.source_workflow === 'scheduled' ? t('ads.schedule.title', { defaultValue: 'Scheduled Preset' }) : t('stylist.occasion', { defaultValue: 'Special Event' })}
+                              </Badge>
+                              <h3 className="font-display text-2xl font-semibold text-foreground">
+                                {selectedOutfitForDetail.name}
                               </h3>
-                              {o.prompt && (
-                                <p className="text-xs text-muted-foreground line-clamp-2 italic">
-                                  "{o.prompt}"
+                              {selectedOutfitForDetail.prompt && (
+                                <p className="text-sm text-muted-foreground italic">
+                                  "{selectedOutfitForDetail.prompt}"
                                 </p>
                               )}
                             </div>
 
                             <Separator />
 
-                            <div className="space-y-2.5 text-xs text-muted-foreground">
+                            <div className="space-y-2 text-xs text-muted-foreground">
                               <div className="flex items-center gap-2">
-                                <CalIcon className="h-4 w-4 shrink-0 text-muted-foreground/75" />
-                                <span>
-                                  {o?.usage?.date || t('calendar.unscheduled', { defaultValue: 'Not scheduled' })} {o?.usage?.date && o?.usage?.time ? `· ${o.usage.time}` : ''}
+                                <CalIcon className="h-4 w-4 text-muted-foreground/75" />
+                                <span className="font-medium text-foreground">
+                                  {selectedOutfitForDetail?.usage?.date || t('calendar.unscheduled', { defaultValue: 'Not scheduled' })} {selectedOutfitForDetail?.usage?.date && selectedOutfitForDetail?.usage?.time ? `· ${selectedOutfitForDetail.usage.time}` : ''}
                                 </span>
                               </div>
-                              {o?.usage?.location && (
+                              {selectedOutfitForDetail?.usage?.location && (
                                 <div className="flex items-center gap-2">
-                                  <MapPin className="h-4 w-4 shrink-0 text-muted-foreground/75" />
-                                  <span>{o.usage.location}</span>
-                                </div>
-                              )}
-                              {o?.usage?.event_name && (
-                                <div className="flex items-center gap-2">
-                                  <Sparkles className="h-4 w-4 shrink-0 text-muted-foreground/75" />
-                                  <span>{o.usage.event_name}</span>
+                                  <MapPin className="h-4 w-4 text-muted-foreground/75" />
+                                  <span className="truncate">{selectedOutfitForDetail.usage.location}</span>
                                 </div>
                               )}
                             </div>
 
-                            {o?.garments && o.garments.length > 0 && (
-                              <div className="space-y-2 pt-2 text-left">
-                                <div className="text-[10px] caps-label tracking-wider text-muted-foreground">{t('outfits.outfitPieces', { defaultValue: 'Outfit Pieces' })}</div>
-                                <div className="flex flex-wrap gap-1.5">
-                                  {o.garments.map((g, idx) => (
-                                    <Badge 
-                                      key={idx} 
-                                      variant="secondary" 
-                                      className="text-[9px] px-2 py-0.5 rounded-md font-medium bg-secondary/80 text-foreground border border-border/40 hover:bg-secondary cursor-pointer"
-                                      onClick={() => setActiveFloaterItemId(g.closet_item_id)}
-                                    >
-                                      {labelForRole(g.role, t)}: {g.title}
-                                    </Badge>
-                                  ))}
-                                </div>
+                            <Separator />
+
+                            <div className="space-y-3">
+                              <div className="caps-label text-[10px] text-muted-foreground font-semibold">
+                                {t('outfits.outfitPieces', { defaultValue: 'Outfit Pieces (Click to Edit)' })}
                               </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {Array.isArray(selectedOutfitForDetail?.garments) && selectedOutfitForDetail.garments.map((g, idx) => (
+                                  <div
+                                    key={idx}
+                                    onClick={() => navigate(`/closet/${g.closet_item_id}`, { state: { fromOutfits: true } })}
+                                    className="flex items-center justify-between gap-3 px-3 py-2 bg-secondary/30 border border-border/70 rounded-xl text-xs hover:bg-secondary/60 cursor-pointer transition-colors group/item"
+                                  >
+                                    <div className="min-w-0 flex-1">
+                                      <div className="text-[9px] caps-label text-muted-foreground tracking-wider font-semibold">
+                                        {labelForRole(g.role, t)}
+                                      </div>
+                                      <div className="font-medium text-foreground truncate group-hover/item:text-[hsl(var(--accent))] transition-colors">
+                                        {g.title || g.description || t('addItem.preflight.untitled', { defaultValue: 'Garment' })}
+                                      </div>
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0 group-hover/item:translate-x-0.5 transition-transform" />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  /* Outfit Thumbnail Grid View */
+                  <>
+                    <h3 className="font-display text-xl">{t('components.outfitCanvas.outfit_canvas', { defaultValue: 'Saved Outfits' })}</h3>
+                    {outfitsLoading ? (
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 w-full">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <div key={i} className="aspect-[4/5] rounded-xl shimmer border border-border" />
+                        ))}
+                      </div>
+                    ) : outfits.length === 0 ? (
+                      <Card className="rounded-2xl border border-dashed border-border py-16 text-center w-full">
+                        <CardContent className="space-y-4">
+                          <Sparkles className="h-12 w-12 text-muted-foreground/60 mx-auto" />
+                          <h2 className="font-display text-xl">{t('common.noResults', { defaultValue: 'No outfits saved yet' })}</h2>
+                          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                            {t('outfits.noSavedOutfitsDesc', { defaultValue: 'Get outfit proposals in the AI Stylist tab, pick your favorite, and save it to start logging your outfits.' })}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div className="flex flex-wrap gap-4 justify-start w-full">
+                        {outfits.map((o) => (
+                          <Card 
+                            key={o.id} 
+                            draggable="true"
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'saved', id: o.id }));
+                            }}
+                            onClick={() => setSelectedOutfitForDetail(o)}
+                            className="w-28 sm:w-32 rounded-xl border border-border/80 bg-card overflow-hidden flex flex-col group hover:shadow-md transition-shadow cursor-pointer select-none"
+                          >
+                            <div className="relative w-full aspect-[4/5] bg-secondary/5 overflow-hidden shrink-0">
+                              <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={getOutfitPiecesMap(o)} />
+                              <Badge className="absolute top-1 left-1 scale-75 origin-top-left rounded-full bg-background/90 text-foreground border border-border backdrop-blur">
+                                {o.source_workflow === 'scheduled' ? t('ads.schedule.title', { defaultValue: 'Scheduled' }) : t('stylist.occasion', { defaultValue: 'Event' })}
+                              </Badge>
+                            </div>
+                            <div className="p-2 flex-1 flex flex-col justify-center min-w-0">
+                              <div className="text-[11px] font-semibold truncate text-foreground text-center">
+                                {o.name}
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </TabsContent>
@@ -2011,7 +2047,7 @@ export default function Stylist() {
                               rec={rec}
                               index={i}
                               sessionId={null}
-                              onItemClick={(itemId) => setActiveFloaterItemId(itemId)}
+                              onItemClick={(itemId) => setFloaterItemId(itemId)}
                               onSave={(r) => handleSaveOutfit(r, activeNotifContext)}
                               draggable={false}
                             />
