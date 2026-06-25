@@ -943,7 +943,36 @@
     "connectAction": "Conectar Google Agenda",
     "disconnectAction": "Desconectar",
     "connectFailedGeneric": "Falha ao iniciar o login do Google",
-    "disconnectFailed": "Falha ao desconectar"
+    "disconnectFailed": "Falha ao desconectar",
+    "todayBtn": "Hoje",
+    "todayLabel": "HOJE",
+    "unschedule": "Remover",
+    "dragHere": "Soltar look",
+    "unscheduled": "Não agendado",
+    "recommendationsShelf": "Looks recomendados",
+    "days": {
+      "sun": "Dom",
+      "mon": "Seg",
+      "tue": "Ter",
+      "wed": "Qua",
+      "thu": "Qui",
+      "fri": "Sex",
+      "sat": "Sáb"
+    },
+    "months": {
+      "jan": "Jan",
+      "feb": "Fev",
+      "mar": "Mar",
+      "apr": "Abr",
+      "may": "Mai",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Ago",
+      "sep": "Set",
+      "oct": "Out",
+      "nov": "Nov",
+      "dec": "Dez"
+    }
   },
   "seo": {
     "defaultTitle": "DressApp — Seu closet, elevado",

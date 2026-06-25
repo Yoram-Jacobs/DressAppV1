@@ -943,7 +943,36 @@
     "connectAction": "Googleカレンダーと接続",
     "disconnectAction": "接続解除",
     "connectFailedGeneric": "Googleサインインの開始に失敗しました",
-    "disconnectFailed": "接続解除に失敗しました"
+    "disconnectFailed": "接続解除に失敗しました",
+    "todayBtn": "今日",
+    "todayLabel": "今日",
+    "unschedule": "削除",
+    "dragHere": "コーデをドロップ",
+    "unscheduled": "予定なし",
+    "recommendationsShelf": "おすすめのコーディネート",
+    "days": {
+      "sun": "日",
+      "mon": "月",
+      "tue": "火",
+      "wed": "水",
+      "thu": "木",
+      "fri": "金",
+      "sat": "土"
+    },
+    "months": {
+      "jan": "1月",
+      "feb": "2月",
+      "mar": "3月",
+      "apr": "4月",
+      "may": "5月",
+      "jun": "6月",
+      "jul": "7月",
+      "aug": "8月",
+      "sep": "9月",
+      "oct": "10月",
+      "nov": "11月",
+      "dec": "12月"
+    }
   },
   "seo": {
     "defaultTitle": "DressApp — あなたのクローゼット、グレードアップ",

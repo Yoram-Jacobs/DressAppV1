@@ -952,7 +952,36 @@
     "connectAction": "Connect Google Calendar",
     "disconnectAction": "Disconnect",
     "connectFailedGeneric": "Failed to start Google sign-in",
-    "disconnectFailed": "Disconnect failed"
+    "disconnectFailed": "Disconnect failed",
+    "todayBtn": "Today",
+    "todayLabel": "TODAY",
+    "unschedule": "Remove",
+    "dragHere": "Drop Outfit",
+    "unscheduled": "Not scheduled",
+    "recommendationsShelf": "Recommended Outfits",
+    "days": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    },
+    "months": {
+      "jan": "Jan",
+      "feb": "Feb",
+      "mar": "Mar",
+      "apr": "Apr",
+      "may": "May",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Aug",
+      "sep": "Sep",
+      "oct": "Oct",
+      "nov": "Nov",
+      "dec": "Dec"
+    }
   },
   "seo": {
     "defaultTitle": "DressApp — Your closet, elevated",

@@ -943,7 +943,36 @@
     "connectAction": "Connect Google Calendar",
     "disconnectAction": "Disconnect",
     "connectFailedGeneric": "Failed to start Google sign-in",
-    "disconnectFailed": "Disconnect failed"
+    "disconnectFailed": "Disconnect failed",
+    "todayBtn": "Aujourd'hui",
+    "todayLabel": "AUJOURD'HUI",
+    "unschedule": "Retirer",
+    "dragHere": "Déposer la tenue",
+    "unscheduled": "Non planifié",
+    "recommendationsShelf": "Tenues recommandées",
+    "days": {
+      "sun": "Dim",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Jeu",
+      "fri": "Ven",
+      "sat": "Sam"
+    },
+    "months": {
+      "jan": "Janv",
+      "feb": "Févr",
+      "mar": "Mars",
+      "apr": "Avr",
+      "may": "Mai",
+      "jun": "Juin",
+      "jul": "Juil",
+      "aug": "Août",
+      "sep": "Sept",
+      "oct": "Oct",
+      "nov": "Nov",
+      "dec": "Déc"
+    }
   },
   "seo": {
     "defaultTitle": "DressApp — Votre dressing sublimé",

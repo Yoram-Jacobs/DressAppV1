@@ -943,7 +943,36 @@
     "connectAction": "اربط تقويم Google",
     "disconnectAction": "اقطع الاتصال",
     "connectFailedGeneric": "فشل بدء تسجيل الدخول بـ Google",
-    "disconnectFailed": "فشل قطع الاتصال"
+    "disconnectFailed": "فشل قطع الاتصال",
+    "todayBtn": "اليوم",
+    "todayLabel": "اليوم",
+    "unschedule": "إزالة",
+    "dragHere": "أفلت التنسيق",
+    "unscheduled": "غير مجدول",
+    "recommendationsShelf": "التنسيقات الموصى بها",
+    "days": {
+      "sun": "الأحد",
+      "mon": "الاثنين",
+      "tue": "الثلاثاء",
+      "wed": "الأربعاء",
+      "thu": "الخميس",
+      "fri": "الجمعة",
+      "sat": "السبت"
+    },
+    "months": {
+      "jan": "يناير",
+      "feb": "فبراير",
+      "mar": "مارس",
+      "apr": "أبريل",
+      "may": "مايو",
+      "jun": "يونيو",
+      "jul": "يوليو",
+      "aug": "أغسطس",
+      "sep": "سبتمبر",
+      "oct": "أكتوبر",
+      "nov": "نوفمبر",
+      "dec": "ديسمبر"
+    }
   },
   "seo": {
     "defaultTitle": "DressApp — خزانتك، بأسلوب راقٍ",

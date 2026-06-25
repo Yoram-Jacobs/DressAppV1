@@ -943,7 +943,36 @@
     "connectAction": "Google Calendar कनेक्ट करें",
     "disconnectAction": "डिस्कनेक्ट करें",
     "connectFailedGeneric": "Google साइन-इन शुरू करने में विफल",
-    "disconnectFailed": "डिस्कनेक्ट विफल रहा"
+    "disconnectFailed": "डिस्कनेक्ट विफल रहा",
+    "todayBtn": "आज",
+    "todayLabel": "आज",
+    "unschedule": "हटाएं",
+    "dragHere": "आउटफिट यहाँ छोड़ें",
+    "unscheduled": "निर्धारित नहीं",
+    "recommendationsShelf": "अनुशंसित आउटफिट",
+    "days": {
+      "sun": "रवि",
+      "mon": "सोम",
+      "tue": "मंगल",
+      "wed": "बुध",
+      "thu": "गुरु",
+      "fri": "शुक्र",
+      "sat": "शनि"
+    },
+    "months": {
+      "jan": "जनवरी",
+      "feb": "फरवरी",
+      "mar": "मार्च",
+      "apr": "अप्रैल",
+      "may": "मई",
+      "jun": "जून",
+      "jul": "जुलाई",
+      "aug": "अगस्त",
+      "sep": "सितंबर",
+      "oct": "अक्टूबर",
+      "nov": "नवंबर",
+      "dec": "दिसंबर"
+    }
   },
   "seo": {
     "defaultTitle": "DressApp — आपकी अलमारी, उन्नत",

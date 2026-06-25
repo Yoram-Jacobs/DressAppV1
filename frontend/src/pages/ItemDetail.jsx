@@ -857,8 +857,18 @@ export default function ItemDetail() {
 
     toast.success(t('itemDetail.group.savingInBackground', { defaultValue: 'Saving changes in background...' }));
     
-    // Redirect user to Closet page immediately so they see the refreshed modifications
-    nav('/closet');
+    // Redirect user immediately so they see the refreshed modifications
+    if (location.state?.fromOutfits) {
+      nav('/stylist', { 
+        replace: true, 
+        state: { 
+          tab: 'shuffle', 
+          selectedOutfitId: location.state.returnToOutfitId 
+        } 
+      });
+    } else {
+      nav('/closet');
+    }
 
     // Register all saved IDs with the poller
     const allSavedIds = [activeHostId, ...remainingMembers.map(m => m.id)];
@@ -1137,7 +1147,11 @@ export default function ItemDetail() {
     closetStore.remove(id);
     closetStore.triggerRepair();
     toast.success(t('itemDetail.deleted'));
-    nav('/closet');
+    if (location.state?.fromOutfits) {
+      nav('/stylist', { replace: true, state: { tab: 'shuffle' } });
+    } else {
+      nav('/closet');
+    }
     // Fire-and-forget — we're already off the page. Reconcile on failure.
     api.deleteItem(id).catch((err) => {
       // Revert if API call fails, UNLESS it's a 404 (already deleted).
@@ -1199,7 +1213,13 @@ export default function ItemDetail() {
         <button
           onClick={() => {
             if (location.state?.fromOutfits) {
-              nav('/stylist', { replace: true, state: { tab: 'shuffle' } });
+              nav('/stylist', { 
+                replace: true, 
+                state: { 
+                  tab: 'shuffle', 
+                  selectedOutfitId: location.state.returnToOutfitId 
+                } 
+              });
             } else if (window.history.state && window.history.state.idx > 0) {
               nav(-1);
             } else {

@@ -943,7 +943,36 @@
     "connectAction": "Google Calendar verbinden",
     "disconnectAction": "Trennen",
     "connectFailedGeneric": "Google-Anmeldung konnte nicht gestartet werden",
-    "disconnectFailed": "Trennen fehlgeschlagen"
+    "disconnectFailed": "Trennen fehlgeschlagen",
+    "todayBtn": "Heute",
+    "todayLabel": "HEUTE",
+    "unschedule": "Entfernen",
+    "dragHere": "Outfit ablegen",
+    "unscheduled": "Nicht geplant",
+    "recommendationsShelf": "Empfohlene Outfits",
+    "days": {
+      "sun": "So",
+      "mon": "Mo",
+      "tue": "Di",
+      "wed": "Mi",
+      "thu": "Do",
+      "fri": "Fr",
+      "sat": "Sa"
+    },
+    "months": {
+      "jan": "Jan",
+      "feb": "Feb",
+      "mar": "Mär",
+      "apr": "Apr",
+      "may": "Mai",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Aug",
+      "sep": "Sep",
+      "oct": "Okt",
+      "nov": "Nov",
+      "dec": "Dez"
+    }
   },
   "seo": {
     "defaultTitle": "DressApp — Deine Garderobe, veredelt",

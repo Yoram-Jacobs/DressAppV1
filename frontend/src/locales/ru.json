@@ -943,7 +943,36 @@
     "connectAction": "Подключить Google Календарь",
     "disconnectAction": "Отключить",
     "connectFailedGeneric": "Не удалось начать вход через Google",
-    "disconnectFailed": "Не удалось отключить"
+    "disconnectFailed": "Не удалось отключить",
+    "todayBtn": "Сегодня",
+    "todayLabel": "СЕГОДНЯ",
+    "unschedule": "Удалить",
+    "dragHere": "Перетащите образ",
+    "unscheduled": "Не запланировано",
+    "recommendationsShelf": "Рекомендуемые образы",
+    "days": {
+      "sun": "Вс",
+      "mon": "Пн",
+      "tue": "Вт",
+      "wed": "Ср",
+      "thu": "Чт",
+      "fri": "Пт",
+      "sat": "Сб"
+    },
+    "months": {
+      "jan": "Янв",
+      "feb": "Фев",
+      "mar": "Мар",
+      "apr": "Апр",
+      "may": "Май",
+      "jun": "Июн",
+      "jul": "Июл",
+      "aug": "Авг",
+      "sep": "Сен",
+      "oct": "Окт",
+      "nov": "Ноя",
+      "dec": "Дек"
+    }
   },
   "seo": {
     "defaultTitle": "DressApp — ваш гардероб, на высшем уровне",

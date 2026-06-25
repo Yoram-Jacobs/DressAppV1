@@ -303,6 +303,15 @@ export default function Stylist() {
     loadOutfitsAndNotifications();
   }, [loadOutfitsAndNotifications]);
 
+  useEffect(() => {
+    if (location.state?.selectedOutfitId && outfits.length > 0) {
+      const found = outfits.find(o => o.id === location.state.selectedOutfitId);
+      if (found) {
+        setSelectedOutfitForDetail(found);
+      }
+    }
+  }, [location.state, outfits]);
+
   const deleteOutfit = async (id) => {
     try {
       await api.deleteSavedOutfit(id);
@@ -1669,7 +1678,7 @@ export default function Stylist() {
     <div className="container-px max-w-[1600px] mx-auto pt-4 md:pt-6">
       <div className={cn(
         "grid grid-cols-1 gap-4 h-[calc(100dvh-180px)] md:h-[calc(100dvh-140px)] transition-all duration-300",
-        sidebarCollapsed
+        (sidebarCollapsed || activeTab !== 'chat')
           ? "lg:grid-cols-[minmax(0,1fr)]"
           : "lg:grid-cols-[200px_minmax(0,1fr)]"
       )}>
@@ -1677,7 +1686,7 @@ export default function Stylist() {
         <aside
           className={cn(
             "hidden lg:flex rounded-[calc(var(--radius)+6px)] bg-card border border-border overflow-hidden transition-all duration-300",
-            sidebarCollapsed ? "w-0 border-0 opacity-0 pointer-events-none" : "w-[200px]"
+            (sidebarCollapsed || activeTab !== 'chat') ? "w-0 border-0 opacity-0 pointer-events-none" : "w-[200px]"
           )}
           data-testid="stylist-conversation-sidebar"
         >
@@ -1888,7 +1897,12 @@ export default function Stylist() {
                                 {Array.isArray(selectedOutfitForDetail?.garments) && selectedOutfitForDetail.garments.map((g, idx) => (
                                   <div
                                     key={idx}
-                                    onClick={() => navigate(`/closet/${g.closet_item_id}`, { state: { fromOutfits: true } })}
+                                    onClick={() => navigate(`/closet/${g.closet_item_id}`, { 
+                                      state: { 
+                                        fromOutfits: true, 
+                                        returnToOutfitId: selectedOutfitForDetail.id 
+                                      } 
+                                    })}
                                     className="flex items-center justify-between gap-3 px-3 py-2 bg-secondary/30 border border-border/70 rounded-xl text-xs hover:bg-secondary/60 cursor-pointer transition-colors group/item"
                                   >
                                     <div className="min-w-0 flex-1">

@@ -943,7 +943,36 @@
     "connectAction": "Connetti Google Calendar",
     "disconnectAction": "Disconnetti",
     "connectFailedGeneric": "Impossibile avviare l'accesso a Google",
-    "disconnectFailed": "Disconnessione fallita"
+    "disconnectFailed": "Disconnessione fallita",
+    "todayBtn": "Oggi",
+    "todayLabel": "OGGI",
+    "unschedule": "Rimuovi",
+    "dragHere": "Rilascia outfit",
+    "unscheduled": "Non pianificato",
+    "recommendationsShelf": "Outfit consigliati",
+    "days": {
+      "sun": "Dom",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Gio",
+      "fri": "Ven",
+      "sat": "Sab"
+    },
+    "months": {
+      "jan": "Gen",
+      "feb": "Feb",
+      "mar": "Mar",
+      "apr": "Apr",
+      "may": "Mag",
+      "jun": "Giu",
+      "jul": "Lug",
+      "aug": "Ago",
+      "sep": "Set",
+      "oct": "Ott",
+      "nov": "Nov",
+      "dec": "Dic"
+    }
   },
   "seo": {
     "defaultTitle": "DressApp — Il tuo armadio, elevato",

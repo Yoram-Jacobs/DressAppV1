@@ -947,7 +947,36 @@
     "connectAction": "חבר את יומן Google",
     "disconnectAction": "נתק",
     "connectFailedGeneric": "לא ניתן להתחיל בהתחברות ל-Google",
-    "disconnectFailed": "הניתוק נכשל"
+    "disconnectFailed": "הניתוק נכשל",
+    "todayBtn": "היום",
+    "todayLabel": "היום",
+    "unschedule": "הסר",
+    "dragHere": "גרור תלבושת",
+    "unscheduled": "לא מתוזמן",
+    "recommendationsShelf": "תלבושות מומלצות",
+    "days": {
+      "sun": "א'",
+      "mon": "ב'",
+      "tue": "ג'",
+      "wed": "ד'",
+      "thu": "ה'",
+      "fri": "ו'",
+      "sat": "ש'"
+    },
+    "months": {
+      "jan": "ינו׳",
+      "feb": "פבר׳",
+      "mar": "מרץ",
+      "apr": "אפר׳",
+      "may": "מאי",
+      "jun": "יוני",
+      "jul": "יולי",
+      "aug": "אוג׳",
+      "sep": "ספט׳",
+      "oct": "אוק׳",
+      "nov": "נוב׳",
+      "dec": "דצמ׳"
+    }
   },
   "seo": {
     "defaultTitle": "DressApp — הארון שלך, מוגבה",
