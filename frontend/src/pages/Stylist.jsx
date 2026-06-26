@@ -276,6 +276,8 @@ export default function Stylist() {
   });
   const [dragOverDay, setDragOverDay] = useState(null);
   const [selectedOutfitForDetail, setSelectedOutfitForDetail] = useState(null);
+  const [calendarModalOpen, setCalendarModalOpen] = useState(false);
+  const [schedulingDate, setSchedulingDate] = useState(null);
 
   const loadOutfitsAndNotifications = useCallback(async () => {
     setOutfitsLoading(true);
@@ -462,8 +464,25 @@ export default function Stylist() {
       toast.success(t('outfits.unscheduledSuccess', { defaultValue: 'Outfit removed from calendar.' }));
       const res = await api.listSavedOutfits();
       setOutfits(res.outfits || []);
+      setSchedulingDate(null);
     } catch (err) {
       toast.error(t('outfits.failedUnschedule', { defaultValue: 'Failed to unschedule outfit.' }));
+    }
+  };
+
+  const handleAssignOutfitToDate = async (outfitId, targetDate) => {
+    try {
+      const existing = outfits.find(o => o.usage?.date === targetDate);
+      if (existing && existing.id !== outfitId) {
+        await api.updateSavedOutfit(existing.id, { usage: { date: '' } });
+      }
+      await api.updateSavedOutfit(outfitId, { usage: { date: targetDate } });
+      toast.success(t('outfits.rescheduledSuccess', { defaultValue: 'Outfit scheduled!' }));
+      const res = await api.listSavedOutfits();
+      setOutfits(res.outfits || []);
+      setSchedulingDate(null);
+    } catch (err) {
+      toast.error(t('outfits.failedReschedule', { defaultValue: 'Failed to reschedule outfit.' }));
     }
   };
 
@@ -1716,101 +1735,22 @@ export default function Stylist() {
             </TabsContent>
 
             <TabsContent value="shuffle" className="flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none p-4 data-[state=active]:flex flex-col gap-8 w-full max-w-4xl mx-auto">
-              {/* Google Calendar (7-Day Strip) */}
-              <Card className="border border-border/80 rounded-2xl shadow-editorial overflow-hidden bg-card w-full">
-                <CardContent className="p-5 space-y-4">
-                  <div className="flex items-center justify-between flex-wrap gap-3">
-                    <div className="flex items-center gap-2">
-                      <CalIcon className="h-5 w-5 text-[hsl(var(--accent))]" />
-                      <h3 className="font-display text-lg font-medium">{t('calendar.title', { defaultValue: 'Google Calendar' })}</h3>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button size="xs" variant="outline" className="rounded-lg h-8 text-xs font-semibold px-3" onClick={handleJumpToToday}>
-                        {t('calendar.todayBtn', { defaultValue: 'Today' })}
-                      </Button>
-                      <div className="flex items-center border border-border rounded-lg overflow-hidden h-8">
-                        <Button size="icon" variant="ghost" className="h-full w-8 rounded-none border-r border-border" onClick={handlePrevDay} aria-label="Previous day">
-                          <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-full w-8 rounded-none" onClick={handleNextDay} aria-label="Next day">
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
-                    {Array.from({ length: 7 }).map((_, idx) => {
-                      const day = new Date(calendarStartDate);
-                      day.setDate(day.getDate() + idx);
-                      const dayStr = day.toISOString().split('T')[0];
-                      
-                      // Check if today
-                      const today = new Date();
-                      const isToday = today.toISOString().split('T')[0] === dayStr;
-                      
-                      // Find outfit scheduled for this day
-                      const dayOutfit = outfits.find(o => o.usage?.date === dayStr);
-                      
-                      return (
-                        <div
-                          key={dayStr}
-                          onDragOver={(e) => {
-                            e.preventDefault();
-                            setDragOverDay(dayStr);
-                          }}
-                          onDragLeave={() => setDragOverDay(null)}
-                          onDrop={(e) => handleDropOnDay(e, dayStr)}
-                          className={cn(
-                            "flex-1 min-w-[130px] max-w-[160px] rounded-2xl border p-3 flex flex-col items-center justify-between text-center transition-all duration-300 bg-card select-none",
-                            isToday ? "border-[hsl(var(--accent))] shadow-sm" : "border-border/60",
-                            dragOverDay === dayStr ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/15 scale-[1.03]" : ""
-                          )}
-                        >
-                          <div className="space-y-0.5">
-                            <div className={cn("text-[9px] caps-label tracking-wider", isToday ? "text-[hsl(var(--accent))] font-bold" : "text-muted-foreground")}>
-                              {isToday ? t('calendar.todayLabel', { defaultValue: 'TODAY' }) : formatWeekday(day, t)}
-                            </div>
-                            <div className="text-xs font-semibold font-display">
-                              {formatMonthDay(day, t)}
-                            </div>
-                          </div>
-
-                          <div className="w-full aspect-[4/5] mt-3 rounded-xl overflow-hidden relative group/slot flex items-center justify-center bg-secondary/5 border border-dashed border-border/80">
-                            {dayOutfit ? (
-                              <>
-                                <div className="absolute inset-0 scale-[0.9]">
-                                  <AvatarViewer
-                                    shapeParams={user?.avatar_shape_params || {}}
-                                    sex={user?.sex || 'female'}
-                                    outfitItems={getOutfitPiecesMap(dayOutfit)}
-                                  />
-                                </div>
-                                <div className="absolute inset-0 bg-background/90 opacity-0 group-hover/slot:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 gap-1.5 text-center">
-                                  <div className="text-[10px] font-semibold truncate w-full px-1">{dayOutfit.name}</div>
-                                  <Button
-                                    size="xs"
-                                    variant="destructive"
-                                    onClick={() => handleUnscheduleOutfit(dayOutfit.id)}
-                                    className="h-6 px-2 rounded-lg text-[9px] flex items-center gap-1 font-semibold"
-                                  >
-                                    <Trash2 className="h-3 w-3" /> {t('calendar.unschedule', { defaultValue: 'Remove' })}
-                                  </Button>
-                                </div>
-                              </>
-                            ) : (
-                              <div className="text-[9px] text-muted-foreground/60 p-2 flex flex-col items-center justify-center gap-1.5">
-                                <CalIcon className="h-4 w-4 opacity-50" />
-                                <span>{t('calendar.dragHere', { defaultValue: 'Drop Outfit' })}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex items-center justify-between gap-3 w-full border-b border-border/40 pb-3">
+                <div className="min-w-0">
+                  <h2 className="font-display text-xl font-medium truncate">{t('stylist.outfitPlanner', { defaultValue: 'Outfit Planner' })}</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{t('outfits.viewDescription', { defaultValue: 'View outfits you have composed and scheduled.' })}</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCalendarModalOpen(true)}
+                  className="rounded-xl flex items-center gap-2 shrink-0 shadow-sm border-border/80"
+                  data-testid="stylist-open-calendar-btn"
+                >
+                  <CalIcon className="h-4 w-4 text-[hsl(var(--accent))]" />
+                  <span>{t('calendar.viewCalendar', { defaultValue: 'View Calendar' })}</span>
+                </Button>
+              </div>
 
               {/* Shuffler */}
               <DressMeShuffler />
@@ -2183,6 +2123,183 @@ export default function Stylist() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Google Calendar Modal */}
+      <Dialog open={calendarModalOpen} onOpenChange={setCalendarModalOpen}>
+        <DialogContent className="sm:max-w-[900px] w-[95vw] rounded-2xl" data-testid="stylist-calendar-dialog">
+          <DialogHeader className="flex flex-row items-center justify-between gap-4 border-b border-border/50 pb-3">
+            <div className="flex items-center gap-2">
+              <CalIcon className="h-5 w-5 text-[hsl(var(--accent))]" />
+              <DialogTitle className="font-display text-lg font-medium">{t('calendar.title', { defaultValue: 'Google Calendar' })}</DialogTitle>
+            </div>
+            <div className="flex items-center gap-2 pr-6">
+              <Button size="xs" variant="outline" className="rounded-lg h-8 text-xs font-semibold px-3" onClick={handleJumpToToday}>
+                {t('calendar.todayBtn', { defaultValue: 'Today' })}
+              </Button>
+              <div className="flex items-center border border-border rounded-lg overflow-hidden h-8">
+                <Button size="icon" variant="ghost" className="h-full w-8 rounded-none border-r border-border" onClick={handlePrevDay} aria-label="Previous day">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-full w-8 rounded-none" onClick={handleNextDay} aria-label="Next day">
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </DialogHeader>
+
+          {/* Main 7-day row */}
+          <div className="flex sm:grid sm:grid-cols-7 gap-3 overflow-x-auto pb-4 pt-2 scrollbar-thin">
+            {Array.from({ length: 7 }).map((_, idx) => {
+              const day = new Date(calendarStartDate);
+              day.setDate(day.getDate() + idx);
+              const dayStr = day.toISOString().split('T')[0];
+              
+              const today = new Date();
+              const isToday = today.toISOString().split('T')[0] === dayStr;
+              const dayOutfit = outfits.find(o => o.usage?.date === dayStr);
+              
+              return (
+                <div
+                  key={dayStr}
+                  onClick={() => setSchedulingDate(dayStr)}
+                  className={cn(
+                    "flex-1 min-w-[130px] sm:min-w-0 rounded-2xl border p-3 flex flex-col items-center justify-between text-center transition-all duration-300 bg-card select-none cursor-pointer hover:border-[hsl(var(--accent))]/80 hover:shadow-sm",
+                    isToday ? "border-[hsl(var(--accent))] shadow-sm" : "border-border/60"
+                  )}
+                >
+                  <div className="space-y-0.5">
+                    <div className={cn("text-[9px] caps-label tracking-wider", isToday ? "text-[hsl(var(--accent))] font-bold" : "text-muted-foreground")}>
+                      {isToday ? t('calendar.todayLabel', { defaultValue: 'TODAY' }) : formatWeekday(day, t)}
+                    </div>
+                    <div className="text-xs font-semibold font-display">
+                      {formatMonthDay(day, t)}
+                    </div>
+                  </div>
+
+                  <div className="w-full aspect-[4/5] mt-3 rounded-xl overflow-hidden relative group/slot flex items-center justify-center bg-secondary/5 border border-dashed border-border/80">
+                    {dayOutfit ? (
+                      <>
+                        <div className="absolute inset-0 scale-[0.9]">
+                          <AvatarViewer
+                            shapeParams={user?.avatar_shape_params || {}}
+                            sex={user?.sex || 'female'}
+                            outfitItems={getOutfitPiecesMap(dayOutfit)}
+                          />
+                        </div>
+                        <div className="absolute inset-0 bg-background/90 opacity-0 hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center">
+                          <div className="text-[10px] font-semibold truncate w-full px-1 mb-1">{dayOutfit.name}</div>
+                          <div className="text-[9px] text-[hsl(var(--accent))] font-medium">{t('calendar.manage', { defaultValue: 'Manage' })}</div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-[9px] text-muted-foreground/60 p-2 flex flex-col items-center justify-center gap-1.5">
+                        <Plus className="h-4 w-4 opacity-50" />
+                        <span>{t('calendar.schedule', { defaultValue: 'Schedule' })}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Outfit Selector Dialog */}
+      <Dialog open={schedulingDate !== null} onOpenChange={(open) => { if (!open) setSchedulingDate(null); }}>
+        <DialogContent className="sm:max-w-[425px]" data-testid="stylist-schedule-dialog">
+          <DialogHeader>
+            <DialogTitle>
+              {t('calendar.scheduleTitle', { defaultValue: 'Schedule Outfit' })}
+            </DialogTitle>
+            <div className="text-xs text-muted-foreground">
+              {schedulingDate && formatMonthDay(new Date(schedulingDate), t)}
+            </div>
+          </DialogHeader>
+
+          {/* If there's an outfit scheduled for the active date, show a quick removal card */}
+          {schedulingDate && (() => {
+            const dayOutfit = outfits.find(o => o.usage?.date === schedulingDate);
+            if (!dayOutfit) return null;
+            return (
+              <div className="flex items-center justify-between p-3 bg-rose-500/5 border border-rose-500/10 rounded-xl mb-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-12 bg-secondary/10 rounded-lg overflow-hidden border border-border/40 shrink-0">
+                    <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={getOutfitPiecesMap(dayOutfit)} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[9px] caps-label text-rose-600 font-semibold">{t('calendar.scheduled', { defaultValue: 'Scheduled' })}</div>
+                    <div className="font-semibold text-xs text-foreground truncate">{dayOutfit.name}</div>
+                  </div>
+                </div>
+                <Button
+                  size="xs"
+                  variant="destructive"
+                  onClick={() => handleUnscheduleOutfit(dayOutfit.id)}
+                  className="rounded-lg text-[10px] font-semibold h-7 px-2.5 flex items-center gap-1 shrink-0"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  {t('calendar.unschedule', { defaultValue: 'Remove' })}
+                </Button>
+              </div>
+            );
+          })()}
+
+          {/* List of saved outfits */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold text-muted-foreground caps-label">
+              {t('calendar.selectSavedOutfit', { defaultValue: 'Select Saved Outfit' })}
+            </h4>
+            {outfitsLoading ? (
+              <div className="grid grid-cols-2 gap-3">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="aspect-[4/5] rounded-xl shimmer border border-border" />
+                ))}
+              </div>
+            ) : outfits.length === 0 ? (
+              <div className="text-center py-6 text-xs text-muted-foreground border border-dashed border-border/60 rounded-xl">
+                {t('outfits.noSavedOutfitsDesc', { defaultValue: 'No outfits saved yet' })}
+              </div>
+            ) : (
+              <ScrollArea className="max-h-[300px] pr-1">
+                <div className="grid grid-cols-2 gap-3">
+                  {outfits.map((o) => {
+                    const isAlreadyScheduled = o.usage?.date === schedulingDate;
+                    return (
+                      <div
+                        key={o.id}
+                        onClick={() => {
+                          if (!isAlreadyScheduled) {
+                            handleAssignOutfitToDate(o.id, schedulingDate);
+                          }
+                        }}
+                        className={cn(
+                          "flex flex-col items-center p-2 rounded-xl border bg-card hover:border-[hsl(var(--accent))] hover:bg-secondary/5 cursor-pointer text-center group transition-all relative overflow-hidden",
+                          isAlreadyScheduled ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/5 cursor-default hover:border-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/5" : "border-border/80"
+                        )}
+                      >
+                        <div className="w-full aspect-[4/5] bg-secondary/5 rounded-lg overflow-hidden relative shrink-0">
+                          <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={getOutfitPiecesMap(o)} />
+                          {isAlreadyScheduled && (
+                            <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                              <Badge className="rounded-full bg-[hsl(var(--accent))] text-white border-0 scale-90">
+                                {t('calendar.scheduled', { defaultValue: 'Selected' })}
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-[11px] font-semibold truncate text-foreground mt-2 w-full px-1">
+                          {o.name}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
