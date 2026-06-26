@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/carousel';
 import { ItemFloater } from '@/components/stylist/ItemFloater';
 
-export default function DressMeShuffler() {
+export default function DressMeShuffler({ onSaveSuccess }) {
   const { t } = useTranslation();
   const store = useClosetStore();
   const items = store.items || [];
@@ -253,6 +253,9 @@ export default function DressMeShuffler() {
     try {
       await api.saveOutfit(body);
       toast.success(t('stylist.outfitSaved', { defaultValue: 'Outfit saved to your diary!' }));
+      if (typeof onSaveSuccess === 'function') {
+        onSaveSuccess();
+      }
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('stylist.saveFailed', { defaultValue: 'Failed to save outfit.' }));
     } finally {

@@ -1753,7 +1753,7 @@ export default function Stylist() {
               </div>
 
               {/* Shuffler */}
-              <DressMeShuffler />
+              <DressMeShuffler onSaveSuccess={loadOutfitsAndNotifications} />
 
               {/* Outfits Gallery Grid / Detail view */}
               <div className="w-full space-y-4">
