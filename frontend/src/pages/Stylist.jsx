@@ -2209,7 +2209,7 @@ export default function Stylist() {
 
       {/* Outfit Selector Dialog */}
       <Dialog open={schedulingDate !== null} onOpenChange={(open) => { if (!open) setSchedulingDate(null); }}>
-        <DialogContent className="sm:max-w-[425px]" data-testid="stylist-schedule-dialog">
+        <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto" data-testid="stylist-schedule-dialog">
           <DialogHeader>
             <DialogTitle>
               {t('calendar.scheduleTitle', { defaultValue: 'Schedule Outfit' })}
@@ -2263,7 +2263,7 @@ export default function Stylist() {
                 {t('outfits.noSavedOutfitsDesc', { defaultValue: 'No outfits saved yet' })}
               </div>
             ) : (
-              <ScrollArea className="max-h-[300px] pr-1">
+              <div className="max-h-[50vh] overflow-y-auto pr-1 scrollbar-thin">
                 <div className="grid grid-cols-2 gap-3">
                   {outfits.map((o) => {
                     const isAlreadyScheduled = o.usage?.date === schedulingDate;
@@ -2297,7 +2297,7 @@ export default function Stylist() {
                     );
                   })}
                 </div>
-              </ScrollArea>
+              </div>
             )}
           </div>
         </DialogContent>
