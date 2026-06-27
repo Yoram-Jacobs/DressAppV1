@@ -602,6 +602,11 @@ export default function Stylist() {
     return 'bg-gradient-to-r from-rose-500 to-red-400';
   };
 
+  const detailMetrics = selectedOutfitForDetail ? calculateOutfitMetrics(selectedOutfitForDetail) : null;
+  const overallMatchingGrade = detailMetrics ? Math.round(
+    (detailMetrics.color + detailMetrics.pattern + detailMetrics.fit + detailMetrics.weather + detailMetrics.event + detailMetrics.location) / 6
+  ) : 0;
+
   const handleSaveOutfitToDate = async (notifId, recIndex, targetDate) => {
     const notif = notifications.find(n => n.id === notifId);
     const rec = notif?.payload?.outfit_recommendations?.[recIndex];
@@ -2079,7 +2084,7 @@ export default function Stylist() {
                                   {t('outfits.piecesTab', { defaultValue: 'Pieces' })}
                                 </TabsTrigger>
                                 <TabsTrigger value="metrics" className="text-xs">
-                                  {t('outfits.metricsTab', { defaultValue: 'Metrics' })}
+                                  {t('outfits.metricsTabWithPct', { defaultValue: `Metrics=${overallMatchingGrade}%`, pct: overallMatchingGrade })}
                                 </TabsTrigger>
                               </TabsList>
 
@@ -2145,12 +2150,12 @@ export default function Stylist() {
                                 {/* Progress Bars */}
                                 <div className="space-y-3 pt-1">
                                   {[
-                                    { label: t('outfits.metrics.color', { defaultValue: 'Color Matching' }), val: calculateOutfitMetrics(selectedOutfitForDetail).color },
-                                    { label: t('outfits.metrics.pattern', { defaultValue: 'Pattern Matching' }), val: calculateOutfitMetrics(selectedOutfitForDetail).pattern },
-                                    { label: t('outfits.metrics.fit', { defaultValue: 'Body Fitting' }), val: calculateOutfitMetrics(selectedOutfitForDetail).fit },
-                                    { label: t('outfits.metrics.weather', { defaultValue: 'Match to Weather' }), val: calculateOutfitMetrics(selectedOutfitForDetail).weather },
-                                    { label: t('outfits.metrics.event', { defaultValue: 'Match to Event' }), val: calculateOutfitMetrics(selectedOutfitForDetail).event },
-                                    { label: t('outfits.metrics.location', { defaultValue: 'Match to Location' }), val: calculateOutfitMetrics(selectedOutfitForDetail).location }
+                                    { label: t('outfits.metrics.color', { defaultValue: 'Color Matching' }), val: detailMetrics?.color || 0 },
+                                    { label: t('outfits.metrics.pattern', { defaultValue: 'Pattern Matching' }), val: detailMetrics?.pattern || 0 },
+                                    { label: t('outfits.metrics.fit', { defaultValue: 'Body Fitting' }), val: detailMetrics?.fit || 0 },
+                                    { label: t('outfits.metrics.weather', { defaultValue: 'Match to Weather' }), val: detailMetrics?.weather || 0 },
+                                    { label: t('outfits.metrics.event', { defaultValue: 'Match to Event' }), val: detailMetrics?.event || 0 },
+                                    { label: t('outfits.metrics.location', { defaultValue: 'Match to Location' }), val: detailMetrics?.location || 0 }
                                   ].map((m, idx) => (
                                     <div key={idx} className="space-y-1">
                                       <div className="flex justify-between text-xs font-medium">
