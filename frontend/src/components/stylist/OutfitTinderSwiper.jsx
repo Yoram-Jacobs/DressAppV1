@@ -61,8 +61,80 @@ export default function OutfitTinderSwiper() {
       setSaving(true);
       const outfitItems = [currentOutfit.top, currentOutfit.bottom, currentOutfit.shoe].filter(Boolean);
       if (outfitItems.length > 0) {
+        const generateDescriptiveOutfitTitle = (items, translator) => {
+          const colorList = items
+            .map(it => {
+              if (typeof it.color === 'string') return it.color;
+              if (Array.isArray(it.colors) && it.colors.length > 0) {
+                return typeof it.colors[0] === 'object' ? it.colors[0].name : it.colors[0];
+              }
+              return null;
+            })
+            .filter(Boolean)
+            .map(c => c.toLowerCase());
+            
+          const uniqueColors = Array.from(new Set(colorList)).map(c => {
+            const key = `color.${c}`;
+            const localized = translator(key, { defaultValue: c });
+            return localized.charAt(0).toUpperCase() + localized.slice(1);
+          });
+          
+          let colorStr = '';
+          if (uniqueColors.length === 1) {
+            colorStr = uniqueColors[0];
+          } else if (uniqueColors.length === 2) {
+            colorStr = `${uniqueColors[0]} & ${uniqueColors[1]}`;
+          } else if (uniqueColors.length > 2) {
+            colorStr = `${uniqueColors.slice(0, 2).join(' & ')}`;
+          }
+
+          const types = items.map(it => (it.item_type || it.title || '').toLowerCase());
+          
+          let vibe = translator('stylist.vibe.casual', { defaultValue: 'Casual' });
+          let season = translator('stylist.season.daily', { defaultValue: 'Daily' });
+          
+          if (types.some(t => t.includes('hoodie') || t.includes('sweatpants') || t.includes('sneaker') || t.includes('sport'))) {
+            vibe = translator('stylist.vibe.sporty', { defaultValue: 'Sporty' });
+          } else if (types.some(t => t.includes('suit') || t.includes('blazer') || t.includes('dress shirt') || t.includes('formal'))) {
+            vibe = translator('stylist.vibe.formal', { defaultValue: 'Formal' });
+          } else if (types.some(t => t.includes('jeans') || t.includes('denim') || t.includes('jacket'))) {
+            vibe = translator('stylist.vibe.classic', { defaultValue: 'Classic' });
+          }
+          
+          if (types.some(t => t.includes('shorts') || t.includes('t-shirt') || t.includes('sandal') || t.includes('swim'))) {
+            season = translator('stylist.season.summer', { defaultValue: 'Summer' });
+          } else if (types.some(t => t.includes('coat') || t.includes('sweater') || t.includes('wool') || t.includes('heavy'))) {
+            season = translator('stylist.season.winter', { defaultValue: 'Winter' });
+          }
+          
+          const suffix = vibe === 'Sporty' 
+            ? translator('stylist.suffix.workout', { defaultValue: 'Workout' }) 
+            : vibe === 'Formal' 
+              ? translator('stylist.suffix.attire', { defaultValue: 'Attire' }) 
+              : translator('stylist.suffix.hangout', { defaultValue: 'Hangout' });
+          
+          if (colorStr) {
+            return `${vibe} ${colorStr} ${season} ${suffix}`;
+          } else {
+            return `${vibe} ${season} ${suffix}`;
+          }
+        };
+
+        const generateDescriptiveOutfitDescription = (items, translator) => {
+          const titles = items.map(it => it.title || it.name || it.caption).filter(Boolean);
+          if (titles.length === 0) return '';
+          return translator('stylist.outfitDescriptionPattern', {
+            defaultValue: `A carefully styled combination featuring ${titles.join(', ')}. Perfect for a coordinated and comfortable look.`,
+            items: titles.join(', ')
+          });
+        };
+
+        const descriptiveTitle = generateDescriptiveOutfitTitle(outfitItems, t);
+        const descriptiveDesc = generateDescriptiveOutfitDescription(outfitItems, t);
+
         const body = {
-          name: t('components.outfitCanvas.the_look'),
+          name: descriptiveTitle,
+          description: descriptiveDesc,
           source_workflow: 'scheduled',
           prompt: 'tinder_match',
           garments: outfitItems.map(it => ({

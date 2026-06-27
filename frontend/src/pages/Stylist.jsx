@@ -51,6 +51,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { Pencil } from 'lucide-react';
+import { useClosetStore } from '@/lib/useClosetStore';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { WaveformAudioPlayer } from '@/components/WaveformAudioPlayer';
 import { ConversationSidebar } from '@/components/stylist/ConversationSidebar';
@@ -279,6 +281,11 @@ export default function Stylist() {
   const [calendarModalOpen, setCalendarModalOpen] = useState(false);
   const [schedulingDate, setSchedulingDate] = useState(null);
 
+  const { items: closetItems } = useClosetStore();
+  const [isEditingOutfit, setIsEditingOutfit] = useState(false);
+  const [editOutfitName, setEditOutfitName] = useState('');
+  const [editOutfitDescription, setEditOutfitDescription] = useState('');
+
   const loadOutfitsAndNotifications = useCallback(async () => {
     setOutfitsLoading(true);
     try {
@@ -344,6 +351,7 @@ export default function Stylist() {
 
     const body = {
       name: rec.name,
+      description: rec.why || '',
       source_workflow: isEvent ? 'event' : 'scheduled',
       prompt: isEvent ? (eventDetails.prompt || 'Event') : (user?.scheduler_settings?.style_dress_for || 'casual'),
       garments: (rec.items || []).map((it) => ({
@@ -422,6 +430,176 @@ export default function Stylist() {
     } catch (err) {
       toast.error(t('outfits.failedReschedule', { defaultValue: 'Failed to reschedule outfit.' }));
     }
+  };
+
+  const handleSaveOutfitEdits = async () => {
+    try {
+      const updated = await api.updateSavedOutfit(selectedOutfitForDetail.id, {
+        name: editOutfitName,
+        description: editOutfitDescription
+      });
+      setSelectedOutfitForDetail(updated);
+      setIsEditingOutfit(false);
+      const res = await api.listSavedOutfits();
+      setOutfits(res.outfits || []);
+      toast.success(t('outfits.editSuccess', { defaultValue: 'Outfit updated successfully!' }));
+    } catch (err) {
+      toast.error(t('outfits.editFailed', { defaultValue: 'Failed to update outfit.' }));
+    }
+  };
+
+  const calculateOutfitValue = (outfit) => {
+    if (!outfit || !Array.isArray(outfit.garments)) return 0;
+    let totalCents = 0;
+    outfit.garments.forEach((g) => {
+      if (g.closet_item_id) {
+        const item = closetItems.find(it => it.id === g.closet_item_id);
+        if (item) {
+          totalCents += (item.purchase_price_cents || item.price_cents || 0);
+        }
+      }
+    });
+    return totalCents / 100;
+  };
+
+  const determineOutfitStyle = (outfit) => {
+    if (!outfit || !Array.isArray(outfit.garments)) return 'Casual';
+    const styles = [];
+    outfit.garments.forEach((g) => {
+      if (g.closet_item_id) {
+        const item = closetItems.find(it => it.id === g.closet_item_id);
+        if (item && item.dress_code) {
+          styles.push(item.dress_code);
+        }
+      }
+    });
+    
+    if (styles.length === 0) return 'Casual';
+    
+    const counts = {};
+    styles.forEach(s => { counts[s] = (counts[s] || 0) + 1; });
+    const sorted = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+    
+    const style = sorted[0];
+    return style.charAt(0).toUpperCase() + style.slice(1);
+  };
+
+  const calculateOutfitMetrics = (outfit) => {
+    if (!outfit) return {};
+    
+    const colors = outfit.garments
+      .map(g => {
+        const item = closetItems.find(it => it.id === g.closet_item_id);
+        return item?.color || item?.colors?.[0]?.name;
+      })
+      .filter(Boolean)
+      .map(c => c.toLowerCase());
+      
+    let colorScore = 80;
+    if (colors.length <= 1) {
+      colorScore = 95;
+    } else {
+      const neutrals = ['black', 'white', 'grey', 'gray', 'beige', 'navy', 'cream', 'charcoal'];
+      const neutralCount = colors.filter(c => neutrals.some(n => c.includes(n))).length;
+      if (neutralCount === colors.length) {
+        colorScore = 98;
+      } else if (neutralCount > 0) {
+        colorScore = 90;
+      } else {
+        colorScore = 75;
+      }
+    }
+    
+    const patterns = outfit.garments
+      .map(g => {
+        const item = closetItems.find(it => it.id === g.closet_item_id);
+        return item?.pattern;
+      })
+      .filter(Boolean)
+      .map(p => p.toLowerCase());
+      
+    let patternScore = 95;
+    const patternedCount = patterns.filter(p => p !== 'solid' && p !== 'plain').length;
+    if (patternedCount > 1) {
+      patternScore = 65;
+    } else if (patternedCount === 1) {
+      patternScore = 88;
+    }
+    
+    const sizes = outfit.garments
+      .map(g => {
+        const item = closetItems.find(it => it.id === g.closet_item_id);
+        return item?.size;
+      })
+      .filter(Boolean)
+      .map(s => s.toUpperCase());
+      
+    let fitScore = 90;
+    if (sizes.length > 0) {
+      const distinctSizes = new Set(sizes);
+      if (distinctSizes.size === 1) {
+        fitScore = 98;
+      } else if (distinctSizes.size > 1) {
+        fitScore = 85;
+      }
+    }
+    
+    let weatherScore = 85;
+    const seasonTags = outfit.garments
+      .flatMap(g => {
+        const item = closetItems.find(it => it.id === g.closet_item_id);
+        return item?.season || [];
+      });
+    
+    if (seasonTags.length > 0) {
+      const hasWinter = seasonTags.some(s => s.toLowerCase().includes('winter'));
+      const hasSummer = seasonTags.some(s => s.toLowerCase().includes('summer'));
+      if (hasWinter && hasSummer) {
+        weatherScore = 60;
+      } else {
+        weatherScore = 92;
+      }
+    }
+    
+    let eventScore = 75;
+    const hasEvent = outfit.usage?.event_name || outfit.source_workflow === 'event';
+    if (hasEvent) {
+      eventScore = 95;
+    }
+    
+    let locationScore = 80;
+    const location = (outfit.usage?.location || '').toLowerCase();
+    if (location) {
+      if (location.includes('museum') || location.includes('church') || location.includes('temple') || location.includes('mosque') || location.includes('synagogue') || location.includes('warship') || location.includes('naval') || location.includes('base')) {
+        const isCasualOrSporty = outfit.garments.some(g => {
+          const item = closetItems.find(it => it.id === g.closet_item_id);
+          const dc = (item?.dress_code || '').toLowerCase();
+          return dc === 'sporty' || dc === 'beachwear' || dc === 'loungewear';
+        });
+        if (isCasualOrSporty) {
+          locationScore = 45;
+        } else {
+          locationScore = 90;
+        }
+      } else {
+        locationScore = 88;
+      }
+    }
+    
+    return {
+      color: colorScore,
+      pattern: patternScore,
+      fit: fitScore,
+      weather: weatherScore,
+      event: eventScore,
+      location: locationScore
+    };
+  };
+
+  const getMetricBarColor = (pct) => {
+    if (pct >= 80) return 'bg-gradient-to-r from-emerald-500 to-green-400';
+    if (pct >= 50) return 'bg-gradient-to-r from-amber-500 to-orange-400';
+    return 'bg-gradient-to-r from-rose-500 to-red-400';
   };
 
   const handleSaveOutfitToDate = async (notifId, recIndex, targetDate) => {
@@ -1765,7 +1943,10 @@ export default function Stylist() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => setSelectedOutfitForDetail(null)}
+                          onClick={() => {
+                            setSelectedOutfitForDetail(null);
+                            setIsEditingOutfit(false);
+                          }}
                           className="rounded-xl h-8 text-xs font-semibold flex items-center gap-1.5"
                         >
                           <ArrowLeft className="h-4 w-4" /> {t('common.back', { defaultValue: 'Back' })}
@@ -1776,6 +1957,7 @@ export default function Stylist() {
                           onClick={async () => {
                             await deleteOutfit(selectedOutfitForDetail.id);
                             setSelectedOutfitForDetail(null);
+                            setIsEditingOutfit(false);
                           }}
                           className="rounded-xl h-8 text-xs font-semibold flex items-center gap-1.5"
                         >
@@ -1800,13 +1982,75 @@ export default function Stylist() {
                               <Badge className="rounded-full bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] border border-[hsl(var(--accent))]/20">
                                 {selectedOutfitForDetail.source_workflow === 'scheduled' ? t('ads.schedule.title', { defaultValue: 'Scheduled Preset' }) : t('stylist.occasion', { defaultValue: 'Special Event' })}
                               </Badge>
-                              <h3 className="font-display text-2xl font-semibold text-foreground">
-                                {selectedOutfitForDetail.name}
-                              </h3>
-                              {selectedOutfitForDetail.prompt && (
-                                <p className="text-sm text-muted-foreground italic">
-                                  "{selectedOutfitForDetail.prompt}"
-                                </p>
+                              {isEditingOutfit ? (
+                                <div className="space-y-3 pt-2">
+                                  <div className="space-y-1">
+                                    <Label htmlFor="edit-outfit-name" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                                      {t('outfits.editName', { defaultValue: 'Outfit Name' })}
+                                    </Label>
+                                    <Input
+                                      id="edit-outfit-name"
+                                      value={editOutfitName}
+                                      onChange={(e) => setEditOutfitName(e.target.value)}
+                                      className="rounded-xl border-border/80 h-9"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label htmlFor="edit-outfit-desc" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                                      {t('outfits.editDescription', { defaultValue: 'Description' })}
+                                    </Label>
+                                    <Textarea
+                                      id="edit-outfit-desc"
+                                      value={editOutfitDescription}
+                                      onChange={(e) => setEditOutfitDescription(e.target.value)}
+                                      className="rounded-xl border-border/80 text-xs"
+                                      rows={3}
+                                    />
+                                  </div>
+                                  <div className="flex gap-2 justify-end pt-1">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => setIsEditingOutfit(false)}
+                                      className="rounded-xl h-8 text-xs font-semibold"
+                                    >
+                                      {t('common.cancel', { defaultValue: 'Cancel' })}
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={handleSaveOutfitEdits}
+                                      className="rounded-xl h-8 text-xs font-semibold bg-brand text-brand-foreground hover:bg-brand/90"
+                                    >
+                                      {t('common.save', { defaultValue: 'Save' })}
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="space-y-1.5">
+                                  <div className="flex items-start justify-between gap-4">
+                                    <h3 className="font-display text-2xl font-semibold text-foreground leading-tight">
+                                      {selectedOutfitForDetail.name}
+                                    </h3>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => {
+                                        setEditOutfitName(selectedOutfitForDetail.name);
+                                        setEditOutfitDescription(selectedOutfitForDetail.description || selectedOutfitForDetail.prompt || '');
+                                        setIsEditingOutfit(true);
+                                      }}
+                                      className="h-8 w-8 rounded-xl shrink-0"
+                                      title={t('common.edit', { defaultValue: 'Edit' })}
+                                    >
+                                      <Pencil className="h-4 w-4 text-muted-foreground/75" />
+                                    </Button>
+                                  </div>
+                                  {(selectedOutfitForDetail.description || selectedOutfitForDetail.prompt) && (
+                                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                                      {selectedOutfitForDetail.description || selectedOutfitForDetail.prompt}
+                                    </p>
+                                  )}
+                                </div>
                               )}
                             </div>
 
@@ -1829,35 +2073,104 @@ export default function Stylist() {
 
                             <Separator />
 
-                            <div className="space-y-3">
-                              <div className="caps-label text-[10px] text-muted-foreground font-semibold">
-                                {t('outfits.outfitPieces', { defaultValue: 'Outfit Pieces (Click to Edit)' })}
-                              </div>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {Array.isArray(selectedOutfitForDetail?.garments) && selectedOutfitForDetail.garments.map((g, idx) => (
-                                  <div
-                                    key={idx}
-                                    onClick={() => navigate(`/closet/${g.closet_item_id}`, { 
-                                      state: { 
-                                        fromOutfits: true, 
-                                        returnToOutfitId: selectedOutfitForDetail.id 
-                                      } 
-                                    })}
-                                    className="flex items-center justify-between gap-3 px-3 py-2 bg-secondary/30 border border-border/70 rounded-xl text-xs hover:bg-secondary/60 cursor-pointer transition-colors group/item"
-                                  >
-                                    <div className="min-w-0 flex-1">
-                                      <div className="text-[9px] caps-label text-muted-foreground tracking-wider font-semibold">
-                                        {labelForRole(g.role, t)}
+                            <Tabs defaultValue="pieces" className="w-full">
+                              <TabsList className="grid grid-cols-2 max-w-[240px] mb-4">
+                                <TabsTrigger value="pieces" className="text-xs">
+                                  {t('outfits.piecesTab', { defaultValue: 'Pieces' })}
+                                </TabsTrigger>
+                                <TabsTrigger value="metrics" className="text-xs">
+                                  {t('outfits.metricsTab', { defaultValue: 'Metrics' })}
+                                </TabsTrigger>
+                              </TabsList>
+
+                              <TabsContent value="pieces" className="space-y-3 focus-visible:outline-none">
+                                <div className="caps-label text-[10px] text-muted-foreground font-semibold">
+                                  {t('outfits.outfitPieces', { defaultValue: 'Outfit Pieces (Click to Edit)' })}
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {Array.isArray(selectedOutfitForDetail?.garments) && selectedOutfitForDetail.garments.map((g, idx) => (
+                                    <div
+                                      key={idx}
+                                      onClick={() => navigate(`/closet/${g.closet_item_id}`, { 
+                                        state: { 
+                                          fromOutfits: true, 
+                                          returnToOutfitId: selectedOutfitForDetail.id 
+                                        } 
+                                      })}
+                                      className="flex items-center justify-between gap-3 px-3 py-2 bg-secondary/30 border border-border/70 rounded-xl text-xs hover:bg-secondary/60 cursor-pointer transition-colors group/item"
+                                    >
+                                      <div className="min-w-0 flex-1">
+                                        <div className="text-[9px] caps-label text-muted-foreground tracking-wider font-semibold">
+                                          {labelForRole(g.role, t)}
+                                        </div>
+                                        <div className="font-medium text-foreground truncate group-hover/item:text-[hsl(var(--accent))] transition-colors">
+                                          {g.title || g.description || t('addItem.preflight.untitled', { defaultValue: 'Garment' })}
+                                        </div>
                                       </div>
-                                      <div className="font-medium text-foreground truncate group-hover/item:text-[hsl(var(--accent))] transition-colors">
-                                        {g.title || g.description || t('addItem.preflight.untitled', { defaultValue: 'Garment' })}
+                                      <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0 group-hover/item:translate-x-0.5 transition-transform" />
+                                    </div>
+                                  ))}
+                                </div>
+                              </TabsContent>
+
+                              <TabsContent value="metrics" className="space-y-4 focus-visible:outline-none">
+                                {/* Metadata Row */}
+                                <div className="grid grid-cols-3 gap-2 px-3 py-2.5 bg-secondary/20 rounded-xl border border-border/60 text-center text-xs">
+                                  <div>
+                                    <div className="text-[9px] caps-label text-muted-foreground tracking-wider font-semibold mb-0.5">
+                                      {t('outfits.styleLabel', { defaultValue: 'Style' })}
+                                    </div>
+                                    <div className="font-semibold text-foreground">
+                                      {determineOutfitStyle(selectedOutfitForDetail)}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-[9px] caps-label text-muted-foreground tracking-wider font-semibold mb-0.5">
+                                      {t('outfits.wornLabel', { defaultValue: 'Times Worn' })}
+                                    </div>
+                                    <div className="font-semibold text-foreground">
+                                      {selectedOutfitForDetail.use_count || 0}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-[9px] caps-label text-muted-foreground tracking-wider font-semibold mb-0.5">
+                                      {t('outfits.valueLabel', { defaultValue: 'Total Value' })}
+                                    </div>
+                                    <div className="font-semibold text-foreground">
+                                      ${calculateOutfitValue(selectedOutfitForDetail).toFixed(2)}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Progress Bars */}
+                                <div className="space-y-3 pt-1">
+                                  {[
+                                    { label: t('outfits.metrics.color', { defaultValue: 'Color Matching' }), val: calculateOutfitMetrics(selectedOutfitForDetail).color },
+                                    { label: t('outfits.metrics.pattern', { defaultValue: 'Pattern Matching' }), val: calculateOutfitMetrics(selectedOutfitForDetail).pattern },
+                                    { label: t('outfits.metrics.fit', { defaultValue: 'Body Fitting' }), val: calculateOutfitMetrics(selectedOutfitForDetail).fit },
+                                    { label: t('outfits.metrics.weather', { defaultValue: 'Match to Weather' }), val: calculateOutfitMetrics(selectedOutfitForDetail).weather },
+                                    { label: t('outfits.metrics.event', { defaultValue: 'Match to Event' }), val: calculateOutfitMetrics(selectedOutfitForDetail).event },
+                                    { label: t('outfits.metrics.location', { defaultValue: 'Match to Location' }), val: calculateOutfitMetrics(selectedOutfitForDetail).location }
+                                  ].map((m, idx) => (
+                                    <div key={idx} className="space-y-1">
+                                      <div className="flex justify-between text-xs font-medium">
+                                        <span className="text-muted-foreground">{m.label}</span>
+                                        <span className={cn(
+                                          "font-semibold",
+                                          m.val >= 80 ? "text-emerald-600 dark:text-emerald-400" : m.val >= 50 ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400"
+                                        )}>{m.val}%</span>
+                                      </div>
+                                      <div className="h-2 w-full bg-secondary/40 rounded-full overflow-hidden">
+                                        <div 
+                                          className={cn("h-full rounded-full transition-all duration-500", getMetricBarColor(m.val))} 
+                                          style={{ width: `${m.val}%` }}
+                                        />
                                       </div>
                                     </div>
-                                    <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0 group-hover/item:translate-x-0.5 transition-transform" />
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
+                                  ))}
+                                </div>
+                              </TabsContent>
+                            </Tabs>
                           </div>
                         </div>
                       </div>
@@ -1892,7 +2205,10 @@ export default function Stylist() {
                             onDragStart={(e) => {
                               e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'saved', id: o.id }));
                             }}
-                            onClick={() => setSelectedOutfitForDetail(o)}
+                            onClick={() => {
+                              setSelectedOutfitForDetail(o);
+                              setIsEditingOutfit(false);
+                            }}
                             className="w-28 sm:w-32 rounded-xl border border-border/80 bg-card overflow-hidden flex flex-col group hover:shadow-md transition-shadow cursor-pointer select-none"
                           >
                             <div className="relative w-full aspect-[4/5] bg-secondary/5 overflow-hidden shrink-0">

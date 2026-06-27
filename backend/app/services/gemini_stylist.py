@@ -28,11 +28,11 @@ markdown, no prose outside the JSON.
 {
   "reasoning_summary": string,                 // 1-2 sentence plain-language rationale
   "outfit_recommendations": Array<{
-    "name": string,
+    "name": string,                             // 3-6 words. Generates a highly descriptive, appealing, and creative style title (e.g., 'Casual Blue & White Summer Hangout', 'Classic Charcoal Streetwear', 'Sporty Emerald Workout') describing the vibe, season, and color combination. Avoid generic titles like 'The Look' or 'Outfit 1'.
     "items": Array<{ "role": "top"|"bottom"|"outerwear"|"shoes"|"accessory"|"dress",
                      "description": string,
                      "closet_item_id": string | null }>,
-    "why": string,
+    "why": string,                              // 2-4 sentences explaining the detailed styling choices, why they work, and how they match the target occasion.
     "confidence": number                        // 0-1
   }>,
   "shopping_suggestions": Array<string>,        // only if closet lacks a key piece

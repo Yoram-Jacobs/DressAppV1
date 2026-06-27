@@ -36,6 +36,7 @@ class OutfitUsageIn(BaseModel):
 
 class SaveOutfitIn(BaseModel):
     name: str
+    description: str | None = None
     source_workflow: str  # "scheduled" | "event"
     prompt: str | None = None
     garments: list[GarmentItemIn]
@@ -89,14 +90,17 @@ async def save_outfit(
                 g_dict["image_url"] = g_dict.get("image_url") or item.get("thumbnail_data_url") or item.get("segmented_image_url") or item.get("original_image_url")
         garments.append(g_dict)
 
+    use_count = 1 if (payload.usage and payload.usage.date) else 0
     doc = {
         "id": outfit_id,
         "user_id": user["id"],
         "name": payload.name,
+        "description": payload.description,
         "source_workflow": payload.source_workflow,
         "prompt": payload.prompt,
         "garments": garments,
         "usage": payload.usage.model_dump(),
+        "use_count": use_count,
         "created_at": now,
         "updated_at": now,
     }
@@ -281,6 +285,7 @@ class UpdateOutfitUsageIn(BaseModel):
 
 class UpdateOutfitIn(BaseModel):
     name: str | None = None
+    description: str | None = None
     usage: UpdateOutfitUsageIn | None = None
 
 
@@ -299,10 +304,20 @@ async def update_saved_outfit(
     update_doc = {}
     if payload.name is not None:
         update_doc["name"] = payload.name
+
+    if payload.description is not None:
+        update_doc["description"] = payload.description
         
     if payload.usage is not None:
         usage = existing.get("usage") or {}
+        old_date = usage.get("date")
         usage_payload = payload.usage.model_dump(exclude_unset=True)
+        new_date = usage_payload.get("date")
+        
+        # If rescheduled/scheduled to a new date, increment wear count
+        if new_date and new_date != old_date:
+            update_doc["use_count"] = existing.get("use_count", 0) + 1
+            
         usage.update(usage_payload)
         update_doc["usage"] = usage
         
