@@ -269,7 +269,7 @@ export function ConversationSidebar({
   const empty = !loading && (sessions || []).length === 0;
   return (
     <div className="flex flex-col h-full min-h-0 w-full">
-      <div className="p-3">
+      <div className="p-3 shrink-0">
         <Button
           onClick={onNew}
           className="w-full rounded-xl h-10"
@@ -278,6 +278,175 @@ export function ConversationSidebar({
           <Plus className="h-4 w-4 me-2" /> {t('stylist.newConversation')}
         </Button>
       </div>
+
+      {loading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : empty ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-4 text-center text-xs text-muted-foreground/60 border border-dashed border-border/40 rounded-2xl m-3">
+          <MessageSquare className="h-6 w-6 mb-2 opacity-40" />
+          <div>{t('stylist.noConversations', { defaultValue: 'No conversations yet' })}</div>
+        </div>
+      ) : (
+        <ScrollArea className="flex-1 px-3 pb-4">
+          <div className="space-y-4">
+            {/* Pinned Conversations */}
+            {pinnedSessions.length > 0 && (
+              <div>
+                <span className="caps-label text-[10px] text-muted-foreground tracking-wider mb-2 block px-1">
+                  {t('stylist.pinned', { defaultValue: 'Pinned' }).toUpperCase()}
+                </span>
+                <div className="space-y-1.5">
+                  {pinnedSessions.map((s) => (
+                    <SessionRow
+                      key={s.id}
+                      session={s}
+                      isActive={s.id === activeId}
+                      onSelect={onSelect}
+                      onDelete={onDelete}
+                      onTogglePin={togglePin}
+                      onToggleArchive={toggleArchive}
+                      onToggleUnread={toggleUnread}
+                      onRename={renameSession}
+                      isPinned={pinnedIds.includes(s.id)}
+                      isArchived={archivedIds.includes(s.id)}
+                      isUnread={unreadIds.includes(s.id)}
+                      title={customTitles[s.id] || s.title}
+                      t={t}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Today */}
+            {groups.today.length > 0 && (
+              <div>
+                <span className="caps-label text-[10px] text-muted-foreground tracking-wider mb-2 block px-1">
+                  {t('stylist.today', { defaultValue: 'Today' }).toUpperCase()}
+                </span>
+                <div className="space-y-1.5">
+                  {groups.today.map((s) => (
+                    <SessionRow
+                      key={s.id}
+                      session={s}
+                      isActive={s.id === activeId}
+                      onSelect={onSelect}
+                      onDelete={onDelete}
+                      onTogglePin={togglePin}
+                      onToggleArchive={toggleArchive}
+                      onToggleUnread={toggleUnread}
+                      onRename={renameSession}
+                      isPinned={pinnedIds.includes(s.id)}
+                      isArchived={archivedIds.includes(s.id)}
+                      isUnread={unreadIds.includes(s.id)}
+                      title={customTitles[s.id] || s.title}
+                      t={t}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Yesterday */}
+            {groups.yesterday.length > 0 && (
+              <div>
+                <span className="caps-label text-[10px] text-muted-foreground tracking-wider mb-2 block px-1">
+                  {t('stylist.yesterday', { defaultValue: 'Yesterday' }).toUpperCase()}
+                </span>
+                <div className="space-y-1.5">
+                  {groups.yesterday.map((s) => (
+                    <SessionRow
+                      key={s.id}
+                      session={s}
+                      isActive={s.id === activeId}
+                      onSelect={onSelect}
+                      onDelete={onDelete}
+                      onTogglePin={togglePin}
+                      onToggleArchive={toggleArchive}
+                      onToggleUnread={toggleUnread}
+                      onRename={renameSession}
+                      isPinned={pinnedIds.includes(s.id)}
+                      isArchived={archivedIds.includes(s.id)}
+                      isUnread={unreadIds.includes(s.id)}
+                      title={customTitles[s.id] || s.title}
+                      t={t}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Earlier */}
+            {groups.earlier.length > 0 && (
+              <div>
+                <span className="caps-label text-[10px] text-muted-foreground tracking-wider mb-2 block px-1">
+                  {t('stylist.earlier', { defaultValue: 'Earlier' }).toUpperCase()}
+                </span>
+                <div className="space-y-1.5">
+                  {groups.earlier.map((s) => (
+                    <SessionRow
+                      key={s.id}
+                      session={s}
+                      isActive={s.id === activeId}
+                      onSelect={onSelect}
+                      onDelete={onDelete}
+                      onTogglePin={togglePin}
+                      onToggleArchive={toggleArchive}
+                      onToggleUnread={toggleUnread}
+                      onRename={renameSession}
+                      isPinned={pinnedIds.includes(s.id)}
+                      isArchived={archivedIds.includes(s.id)}
+                      isUnread={unreadIds.includes(s.id)}
+                      title={customTitles[s.id] || s.title}
+                      t={t}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Archived Chats Toggle */}
+            {archivedSessions.length > 0 && (
+              <div className="pt-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowArchived(!showArchived)}
+                  className="w-full text-xs text-muted-foreground hover:text-foreground flex items-center justify-between px-2 rounded-lg"
+                >
+                  <span>{t('stylist.archivedChats', { defaultValue: 'Archived Chats' })} ({archivedSessions.length})</span>
+                  <span className="text-[10px]">{showArchived ? 'Hide' : 'Show'}</span>
+                </Button>
+                
+                {showArchived && (
+                  <div className="space-y-1.5 mt-2">
+                    {archivedSessions.map((s) => (
+                      <SessionRow
+                        key={s.id}
+                        session={s}
+                        isActive={s.id === activeId}
+                        onSelect={onSelect}
+                        onDelete={onDelete}
+                        onTogglePin={togglePin}
+                        onToggleArchive={toggleArchive}
+                        onToggleUnread={toggleUnread}
+                        onRename={renameSession}
+                        isPinned={pinnedIds.includes(s.id)}
+                        isArchived={archivedIds.includes(s.id)}
+                        isUnread={unreadIds.includes(s.id)}
+                        title={customTitles[s.id] || s.title}
+                        t={t}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      )}
     </div>
   );
 }
