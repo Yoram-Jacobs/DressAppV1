@@ -1,6 +1,6 @@
-# Outfit Canvas Enhancements Summary
+# Outfit Canvas & Planner Enhancements Summary
 
-This document summarizes the architectural and UI/UX improvements made to the outfit rendering system (Avatar Canvas) across the application.
+This document summarizes the architectural and UI/UX improvements made to the outfit rendering system (Avatar Canvas), the Outfit Planner, and outfit metadata tracking across the application.
 
 ## 1. Edge-to-Edge Layout Fixes (Clipping Resolution)
 - **Issue**: The headwear and shoes were being visibly clipped at the top and bottom borders of the canvas due to restrictive container heights and scaling mismatches.
@@ -30,3 +30,30 @@ This document summarizes the architectural and UI/UX improvements made to the ou
   - Replaced the hero image layout entirely with the new `OutfitAvatarViewer`, giving proposals the same edge-to-edge, dual-canvas treatment.
   - Completely removed the text-based item list from the bottom of the card.
   - The UI is now significantly cleaner, relying entirely on the new interactive avatar canvas to handle item discovery and detailed view navigation.
+
+## 6. Dynamic Descriptive Naming & Localization
+- **Issue**: Outfits were initially saved under the generic title "The Look" regardless of composition, which caused translation leaks (such as Hebrew titles on an English UI).
+- **Solution**: Implemented localized dynamic title and description generators in `DressMeShuffler.jsx` and `OutfitTinderSwiper.jsx`. Outfits are now automatically named based on selected garment colors, types, and categories (e.g. `Casual Blue & White Summer Hangout`), accompanied by a detailed description listing the pieces. System prompts in `gemini_stylist.py` and `stylist_scheduler_brain.py` have also been updated to enforce creative descriptive naming on all AI recommendations.
+
+## 7. Metadata Pane (Metrics Tab)
+- **Issue**: Reviewing the technical compatibility (weather, color harmony, fitting) of an outfit was not integrated.
+- **Solution**: Refactored the Outfit details panel in `Stylist.jsx` using a Tab component split into a **Pieces** tab and a **Metrics** tab:
+  - **Metrics trigger**: Displays the overall matching grade at a glance as `Metrics=x%` (calculated as the average of the six individual scores).
+  - **Metadata Summary**: Displays overall style classification, wear count (`use_count`), and total valuation (price sum calculated by matching items with the closet database).
+  - **Bar Graph**: Renders a vertical layout of six compatibility progress bars, dynamically color-coded by performance range:
+    * **Green (>= 80%)**: High compatibility.
+    * **Amber (50-79%)**: Medium compatibility.
+    * **Rose (< 50%)**: Low compatibility.
+    * **Metrics Evaluated**:
+      1. *Color Matching* (harmony of neutrals and accent colors)
+      2. *Pattern Matching* (solid vs. conflicting mixed patterns)
+      3. *Body Fitting* (consistency of garment sizes)
+      4. *Match to Weather* (season compatibility of items)
+      5. *Match to Event* (contextual event suitability)
+      6. *Match to Location* (appropriateness for restricted locations like warships and cultural/modest sites)
+
+## 8. Inline Metadata Editing & Badge Cleanup
+- **Issue**: Outfit names and descriptions could not be modified after creation, and cards carried redundant workflow badges.
+- **Solution**:
+  - Added a Pencil edit button to toggle inline editing inputs for the outfit name and description. Edits are persisted directly to the database via a PATCH request to the `/outfits/{id}` endpoint.
+  - Cleaned up grid visuals by removing the redundant category badges (`Scheduled` / `Event`) from outfit thumbnail cards and details headers.
