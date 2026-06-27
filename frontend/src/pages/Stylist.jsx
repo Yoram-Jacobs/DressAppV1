@@ -1316,11 +1316,11 @@ export default function Stylist() {
           <button
             type="button"
             onClick={handleNewConversation}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-border bg-card text-[11px] font-medium hover:bg-secondary transition-colors ms-2"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-border bg-card text-[11px] font-medium hover:bg-secondary transition-colors ms-2 shrink-0"
             data-testid="stylist-header-new-chat-btn"
           >
             <Plus className="h-3 w-3" />
-            <span>{t('stylist.newConversation', { defaultValue: 'New Chat' })}</span>
+            <span className="hidden sm:inline">{t('stylist.newConversation', { defaultValue: 'New Chat' })}</span>
           </button>
         </div>
         <div className="flex items-center gap-2 shrink-0">
