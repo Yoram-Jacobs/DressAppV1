@@ -1984,9 +1984,6 @@ export default function Stylist() {
                         <div className="flex flex-col justify-between space-y-6">
                           <div className="space-y-4">
                             <div className="space-y-1.5">
-                              <Badge className="rounded-full bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] border border-[hsl(var(--accent))]/20">
-                                {selectedOutfitForDetail.source_workflow === 'scheduled' ? t('ads.schedule.title', { defaultValue: 'Scheduled Preset' }) : t('stylist.occasion', { defaultValue: 'Special Event' })}
-                              </Badge>
                               {isEditingOutfit ? (
                                 <div className="space-y-3 pt-2">
                                   <div className="space-y-1">
@@ -2218,9 +2215,6 @@ export default function Stylist() {
                           >
                             <div className="relative w-full aspect-[4/5] bg-secondary/5 overflow-hidden shrink-0">
                               <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={getOutfitPiecesMap(o)} />
-                              <Badge className="absolute top-1 left-1 scale-75 origin-top-left rounded-full bg-background/90 text-foreground border border-border backdrop-blur">
-                                {o.source_workflow === 'scheduled' ? t('ads.schedule.title', { defaultValue: 'Scheduled' }) : t('stylist.occasion', { defaultValue: 'Event' })}
-                              </Badge>
                             </div>
                             <div className="p-2 flex-1 flex flex-col justify-center min-w-0">
                               <div className="text-[11px] font-semibold truncate text-foreground text-center">
