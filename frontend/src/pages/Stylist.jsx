@@ -1374,7 +1374,7 @@ export default function Stylist() {
                   // restores the expected "shrink to allowed width"
                   // behaviour and is what unblocks ``break-words``
                   // inside the bubble below.
-                  'flex min-w-0',
+                  'flex min-w-0 w-full',
                   m.role === 'user' ? 'justify-end' : 'justify-start',
                 )}
                 data-testid={`chat-message-${m.role}`}
