@@ -10,10 +10,9 @@ async def test():
         print("No user found")
         return
         
-    closet_items = await get_rotation_prioritized_closet(user["id"], limit=40)
+    closet_items = await get_rotation_prioritized_closet(user["id"], limit=100)
     weather_ctx = {"temp_c": 34.0, "condition": "Sunny", "description": "clear sky"}
     
-    # Run scoring inside fallback logic (but print results first)
     style_key = "casual"
     style_synonyms = {
         "casual": ["casual", "daily", "יומיומי", "קז'ואל", "קזואל", "פשוט", "יומי"],
@@ -80,12 +79,12 @@ async def test():
     scored_tops.sort(key=lambda x: (x["score"], -x["original_index"]), reverse=True)
     scored_bottoms.sort(key=lambda x: (x["score"], -x["original_index"]), reverse=True)
     
-    print("\n--- SCORED TOPS ---")
-    for t in scored_tops[:15]:
+    print("\n--- ALL TOPS ---")
+    for t in scored_tops:
         print(f"Title: {t['title']} | Score: {t['score']} (Style: {t['style_match']}, Temp: {t['temp_log']}) | Index: {t['original_index']}")
         
-    print("\n--- SCORED BOTTOMS ---")
-    for b in scored_bottoms[:15]:
+    print("\n--- ALL BOTTOMS ---")
+    for b in scored_bottoms:
         print(f"Title: {b['title']} | Score: {b['score']} (Style: {b['style_match']}, Temp: {b['temp_log']}) | Index: {b['original_index']}")
 
 if __name__ == "__main__":
