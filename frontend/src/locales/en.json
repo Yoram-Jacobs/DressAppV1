@@ -981,7 +981,8 @@
       "oct": "Oct",
       "nov": "Nov",
       "dec": "Dec"
-    }
+    },
+    "viewCalendar": "View Calendar"
   },
   "seo": {
     "defaultTitle": "DressApp — Your closet, elevated",

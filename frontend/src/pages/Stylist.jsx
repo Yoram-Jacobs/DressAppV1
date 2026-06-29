@@ -2079,7 +2079,7 @@ export default function Stylist() {
               <div className="flex items-center justify-between gap-3 w-full border-b border-border/40 pb-3">
                 <div className="min-w-0">
                   <h2 className="font-display text-xl font-medium truncate">{t('stylist.outfitPlanner', { defaultValue: 'Outfit Planner' })}</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{t('outfits.viewDescription', { defaultValue: 'View outfits you have composed and scheduled.' })}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('outfits.viewDescription', { defaultValue: 'View outfits you have composed and scheduled.' })}</p>
                 </div>
                 <Button 
                   variant="outline" 
