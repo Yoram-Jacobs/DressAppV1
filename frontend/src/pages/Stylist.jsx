@@ -1808,6 +1808,254 @@ export default function Stylist() {
     </Card>
   );
 
+  const renderOutfitDetailPane = () => {
+    if (!selectedOutfitForDetail) return null;
+    const detailMetrics = calculateOutfitMetrics(selectedOutfitForDetail);
+    const overallMatchingGrade = detailMetrics ? Math.round(
+      (detailMetrics.color + detailMetrics.pattern + detailMetrics.fit + detailMetrics.weather + detailMetrics.event + detailMetrics.location) / 6
+    ) : 0;
+
+    return (
+      <Card className="border border-border/85 rounded-2xl shadow-editorial bg-card w-full overflow-hidden animate-[slideDown_0.2s_ease-out]">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between border-b border-border/50 pb-3 mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSelectedOutfitForDetail(null);
+                setIsEditingOutfit(false);
+                setActiveTab('match');
+              }}
+              className="rounded-xl h-8 text-xs font-semibold flex items-center gap-1.5"
+            >
+              <ArrowLeft className="h-4 w-4" /> {t('common.back', { defaultValue: 'Back' })}
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={async () => {
+                await deleteOutfit(selectedOutfitForDetail.id);
+                setSelectedOutfitForDetail(null);
+                setIsEditingOutfit(false);
+              }}
+              className="rounded-xl h-8 text-xs font-semibold flex items-center gap-1.5"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> {t('common.delete', { defaultValue: 'Delete' })}
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6">
+            {/* Large Avatar Viewer */}
+            <div className="relative w-full aspect-[4/5] bg-secondary/10 rounded-2xl overflow-hidden border border-border/60">
+              <AvatarViewer
+                shapeParams={user?.avatar_shape_params || {}}
+                sex={user?.sex || 'female'}
+                outfitItems={getOutfitPiecesMap(selectedOutfitForDetail)}
+              />
+            </div>
+
+            {/* Details and Items */}
+            <div className="flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  {isEditingOutfit ? (
+                    <div className="space-y-3 pt-2">
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-outfit-name" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          {t('outfits.editName', { defaultValue: 'Outfit Name' })}
+                        </Label>
+                        <Input
+                          id="edit-outfit-name"
+                          value={editOutfitName}
+                          onChange={(e) => setEditOutfitName(e.target.value)}
+                          className="rounded-xl border-border/80 h-9"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-outfit-desc" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          {t('outfits.editDescription', { defaultValue: 'Description' })}
+                        </Label>
+                        <Textarea
+                          id="edit-outfit-desc"
+                          value={editOutfitDescription}
+                          onChange={(e) => setEditOutfitDescription(e.target.value)}
+                          className="rounded-xl border-border/80 text-xs"
+                          rows={3}
+                        />
+                      </div>
+                      <div className="flex gap-2 justify-end pt-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsEditingOutfit(false)}
+                          className="rounded-xl h-8 text-xs font-semibold"
+                        >
+                          {t('common.cancel', { defaultValue: 'Cancel' })}
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleSaveOutfitEdits}
+                          className="rounded-xl h-8 text-xs font-semibold bg-brand text-brand-foreground hover:bg-brand/90"
+                        >
+                          {t('common.save', { defaultValue: 'Save' })}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <div className="flex items-start justify-between gap-4">
+                        <h3 className="font-display text-2xl font-semibold text-foreground leading-tight">
+                          {selectedOutfitForDetail.name}
+                        </h3>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setEditOutfitName(selectedOutfitForDetail.name);
+                            setEditOutfitDescription(selectedOutfitForDetail.description || selectedOutfitForDetail.prompt || '');
+                            setIsEditingOutfit(true);
+                          }}
+                          className="h-8 w-8 rounded-xl shrink-0"
+                          title={t('common.edit', { defaultValue: 'Edit' })}
+                        >
+                          <Pencil className="h-4 w-4 text-muted-foreground/75" />
+                        </Button>
+                      </div>
+                      {(selectedOutfitForDetail.description || selectedOutfitForDetail.prompt) && (
+                        <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                          {selectedOutfitForDetail.description || selectedOutfitForDetail.prompt}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <CalIcon className="h-4 w-4 text-muted-foreground/75" />
+                    <span className="font-medium text-foreground">
+                      {selectedOutfitForDetail?.usage?.date || t('calendar.unscheduled', { defaultValue: 'Not scheduled' })} {selectedOutfitForDetail?.usage?.date && selectedOutfitForDetail?.usage?.time ? `· ${selectedOutfitForDetail.usage.time}` : ''}
+                    </span>
+                  </div>
+                  {selectedOutfitForDetail?.usage?.location && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground/75" />
+                      <span className="truncate">{selectedOutfitForDetail.usage.location}</span>
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
+
+                <Tabs defaultValue="pieces" className="w-full">
+                  <TabsList className="grid grid-cols-2 max-w-[240px] mb-4">
+                    <TabsTrigger value="pieces" className="text-xs">
+                      {t('outfits.piecesTab', { defaultValue: 'Pieces' })}
+                    </TabsTrigger>
+                    <TabsTrigger value="metrics" className="text-xs">
+                      {t('outfits.metricsTabWithPct', { defaultValue: `Metrics=${overallMatchingGrade}%`, pct: overallMatchingGrade })}
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="pieces" className="space-y-3 focus-visible:outline-none">
+                    <div className="caps-label text-[10px] text-muted-foreground font-semibold">
+                      {t('outfits.outfitPieces', { defaultValue: 'Outfit Pieces (Click to Edit)' })}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {Array.isArray(selectedOutfitForDetail?.garments) && selectedOutfitForDetail.garments.map((g, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => navigate(`/closet/${g.closet_item_id}`, { 
+                            state: { 
+                              fromOutfits: true, 
+                              returnToOutfitId: selectedOutfitForDetail.id 
+                            } 
+                          })}
+                          className="flex items-center justify-between gap-3 px-3 py-2 bg-secondary/30 border border-border/70 rounded-xl text-xs hover:bg-secondary/60 cursor-pointer transition-colors group/item"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[9px] caps-label text-muted-foreground tracking-wider font-semibold">
+                              {labelForRole(g.role, t)}
+                            </div>
+                            <div className="font-medium text-foreground truncate group-hover/item:text-[hsl(var(--accent))] transition-colors">
+                              {g.title || g.description || t('addItem.preflight.untitled', { defaultValue: 'Garment' })}
+                            </div>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0 group-hover/item:translate-x-0.5 transition-transform" />
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="metrics" className="space-y-4 focus-visible:outline-none">
+                    {/* Metadata Row */}
+                    <div className="grid grid-cols-3 gap-2 px-3 py-2.5 bg-secondary/20 rounded-xl border border-border/60 text-center text-xs">
+                      <div>
+                        <div className="text-[9px] caps-label text-muted-foreground tracking-wider font-semibold mb-0.5">
+                          {t('outfits.styleLabel', { defaultValue: 'Style' })}
+                        </div>
+                        <div className="font-semibold text-foreground">
+                          {determineOutfitStyle(selectedOutfitForDetail)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[9px] caps-label text-muted-foreground tracking-wider font-semibold mb-0.5">
+                          {t('outfits.wornLabel', { defaultValue: 'Times Worn' })}
+                        </div>
+                        <div className="font-semibold text-foreground">
+                          {selectedOutfitForDetail.use_count || 0}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[9px] caps-label text-muted-foreground tracking-wider font-semibold mb-0.5">
+                          {t('outfits.valueLabel', { defaultValue: 'Total Value' })}
+                        </div>
+                        <div className="font-semibold text-foreground">
+                          ${calculateOutfitValue(selectedOutfitForDetail).toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Progress Bars */}
+                    <div className="space-y-3 pt-1">
+                      {[
+                        { label: t('outfits.metrics.color', { defaultValue: 'Color Matching' }), val: detailMetrics?.color || 0 },
+                        { label: t('outfits.metrics.pattern', { defaultValue: 'Pattern Matching' }), val: detailMetrics?.pattern || 0 },
+                        { label: t('outfits.metrics.fit', { defaultValue: 'Body Fitting' }), val: detailMetrics?.fit || 0 },
+                        { label: t('outfits.metrics.weather', { defaultValue: 'Match to Weather' }), val: detailMetrics?.weather || 0 },
+                        { label: t('outfits.metrics.event', { defaultValue: 'Match to Event' }), val: detailMetrics?.event || 0 },
+                        { label: t('outfits.metrics.location', { defaultValue: 'Match to Location' }), val: detailMetrics?.location || 0 }
+                      ].map((m, idx) => (
+                        <div key={idx} className="space-y-1">
+                          <div className="flex justify-between text-xs font-medium">
+                            <span className="text-muted-foreground">{m.label}</span>
+                            <span className={cn(
+                              "font-semibold",
+                              m.val >= 80 ? "text-emerald-600 dark:text-emerald-400" : m.val >= 50 ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400"
+                            )}>{m.val}%</span>
+                          </div>
+                          <div className="h-2 w-full bg-secondary/40 rounded-full overflow-hidden">
+                            <div 
+                              className={cn("h-full rounded-full transition-all duration-500", getMetricBarColor(m.val))} 
+                              style={{ width: `${m.val}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="container-px w-full max-w-[1600px] mx-auto pt-4 md:pt-6">
       <div className={cn(
@@ -1873,243 +2121,7 @@ export default function Stylist() {
               {/* Outfits Gallery Grid / Detail view */}
               <div className="w-full space-y-4">
                 {selectedOutfitForDetail ? (
-                  /* Outfit Full View Pane */
-                  <Card className="border border-border/85 rounded-2xl shadow-editorial bg-card w-full overflow-hidden animate-[slideDown_0.2s_ease-out]">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between border-b border-border/50 pb-3 mb-4">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedOutfitForDetail(null);
-                            setIsEditingOutfit(false);
-                          }}
-                          className="rounded-xl h-8 text-xs font-semibold flex items-center gap-1.5"
-                        >
-                          <ArrowLeft className="h-4 w-4" /> {t('common.back', { defaultValue: 'Back' })}
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={async () => {
-                            await deleteOutfit(selectedOutfitForDetail.id);
-                            setSelectedOutfitForDetail(null);
-                            setIsEditingOutfit(false);
-                          }}
-                          className="rounded-xl h-8 text-xs font-semibold flex items-center gap-1.5"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" /> {t('common.delete', { defaultValue: 'Delete' })}
-                        </Button>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6">
-                        {/* Large Avatar Viewer */}
-                        <div className="relative w-full aspect-[4/5] bg-secondary/10 rounded-2xl overflow-hidden border border-border/60">
-                          <AvatarViewer
-                            shapeParams={user?.avatar_shape_params || {}}
-                            sex={user?.sex || 'female'}
-                            outfitItems={getOutfitPiecesMap(selectedOutfitForDetail)}
-                          />
-                        </div>
-
-                        {/* Details and Items */}
-                        <div className="flex flex-col justify-between space-y-6">
-                          <div className="space-y-4">
-                            <div className="space-y-1.5">
-                              {isEditingOutfit ? (
-                                <div className="space-y-3 pt-2">
-                                  <div className="space-y-1">
-                                    <Label htmlFor="edit-outfit-name" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                                      {t('outfits.editName', { defaultValue: 'Outfit Name' })}
-                                    </Label>
-                                    <Input
-                                      id="edit-outfit-name"
-                                      value={editOutfitName}
-                                      onChange={(e) => setEditOutfitName(e.target.value)}
-                                      className="rounded-xl border-border/80 h-9"
-                                    />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <Label htmlFor="edit-outfit-desc" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                                      {t('outfits.editDescription', { defaultValue: 'Description' })}
-                                    </Label>
-                                    <Textarea
-                                      id="edit-outfit-desc"
-                                      value={editOutfitDescription}
-                                      onChange={(e) => setEditOutfitDescription(e.target.value)}
-                                      className="rounded-xl border-border/80 text-xs"
-                                      rows={3}
-                                    />
-                                  </div>
-                                  <div className="flex gap-2 justify-end pt-1">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => setIsEditingOutfit(false)}
-                                      className="rounded-xl h-8 text-xs font-semibold"
-                                    >
-                                      {t('common.cancel', { defaultValue: 'Cancel' })}
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      onClick={handleSaveOutfitEdits}
-                                      className="rounded-xl h-8 text-xs font-semibold bg-brand text-brand-foreground hover:bg-brand/90"
-                                    >
-                                      {t('common.save', { defaultValue: 'Save' })}
-                                    </Button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="space-y-1.5">
-                                  <div className="flex items-start justify-between gap-4">
-                                    <h3 className="font-display text-2xl font-semibold text-foreground leading-tight">
-                                      {selectedOutfitForDetail.name}
-                                    </h3>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => {
-                                        setEditOutfitName(selectedOutfitForDetail.name);
-                                        setEditOutfitDescription(selectedOutfitForDetail.description || selectedOutfitForDetail.prompt || '');
-                                        setIsEditingOutfit(true);
-                                      }}
-                                      className="h-8 w-8 rounded-xl shrink-0"
-                                      title={t('common.edit', { defaultValue: 'Edit' })}
-                                    >
-                                      <Pencil className="h-4 w-4 text-muted-foreground/75" />
-                                    </Button>
-                                  </div>
-                                  {(selectedOutfitForDetail.description || selectedOutfitForDetail.prompt) && (
-                                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                                      {selectedOutfitForDetail.description || selectedOutfitForDetail.prompt}
-                                    </p>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-
-                            <Separator />
-
-                            <div className="space-y-2 text-xs text-muted-foreground">
-                              <div className="flex items-center gap-2">
-                                <CalIcon className="h-4 w-4 text-muted-foreground/75" />
-                                <span className="font-medium text-foreground">
-                                  {selectedOutfitForDetail?.usage?.date || t('calendar.unscheduled', { defaultValue: 'Not scheduled' })} {selectedOutfitForDetail?.usage?.date && selectedOutfitForDetail?.usage?.time ? `· ${selectedOutfitForDetail.usage.time}` : ''}
-                                </span>
-                              </div>
-                              {selectedOutfitForDetail?.usage?.location && (
-                                <div className="flex items-center gap-2">
-                                  <MapPin className="h-4 w-4 text-muted-foreground/75" />
-                                  <span className="truncate">{selectedOutfitForDetail.usage.location}</span>
-                                </div>
-                              )}
-                            </div>
-
-                            <Separator />
-
-                            <Tabs defaultValue="pieces" className="w-full">
-                              <TabsList className="grid grid-cols-2 max-w-[240px] mb-4">
-                                <TabsTrigger value="pieces" className="text-xs">
-                                  {t('outfits.piecesTab', { defaultValue: 'Pieces' })}
-                                </TabsTrigger>
-                                <TabsTrigger value="metrics" className="text-xs">
-                                  {t('outfits.metricsTabWithPct', { defaultValue: `Metrics=${overallMatchingGrade}%`, pct: overallMatchingGrade })}
-                                </TabsTrigger>
-                              </TabsList>
-
-                              <TabsContent value="pieces" className="space-y-3 focus-visible:outline-none">
-                                <div className="caps-label text-[10px] text-muted-foreground font-semibold">
-                                  {t('outfits.outfitPieces', { defaultValue: 'Outfit Pieces (Click to Edit)' })}
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                  {Array.isArray(selectedOutfitForDetail?.garments) && selectedOutfitForDetail.garments.map((g, idx) => (
-                                    <div
-                                      key={idx}
-                                      onClick={() => navigate(`/closet/${g.closet_item_id}`, { 
-                                        state: { 
-                                          fromOutfits: true, 
-                                          returnToOutfitId: selectedOutfitForDetail.id 
-                                        } 
-                                      })}
-                                      className="flex items-center justify-between gap-3 px-3 py-2 bg-secondary/30 border border-border/70 rounded-xl text-xs hover:bg-secondary/60 cursor-pointer transition-colors group/item"
-                                    >
-                                      <div className="min-w-0 flex-1">
-                                        <div className="text-[9px] caps-label text-muted-foreground tracking-wider font-semibold">
-                                          {labelForRole(g.role, t)}
-                                        </div>
-                                        <div className="font-medium text-foreground truncate group-hover/item:text-[hsl(var(--accent))] transition-colors">
-                                          {g.title || g.description || t('addItem.preflight.untitled', { defaultValue: 'Garment' })}
-                                        </div>
-                                      </div>
-                                      <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0 group-hover/item:translate-x-0.5 transition-transform" />
-                                    </div>
-                                  ))}
-                                </div>
-                              </TabsContent>
-
-                              <TabsContent value="metrics" className="space-y-4 focus-visible:outline-none">
-                                {/* Metadata Row */}
-                                <div className="grid grid-cols-3 gap-2 px-3 py-2.5 bg-secondary/20 rounded-xl border border-border/60 text-center text-xs">
-                                  <div>
-                                    <div className="text-[9px] caps-label text-muted-foreground tracking-wider font-semibold mb-0.5">
-                                      {t('outfits.styleLabel', { defaultValue: 'Style' })}
-                                    </div>
-                                    <div className="font-semibold text-foreground">
-                                      {determineOutfitStyle(selectedOutfitForDetail)}
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <div className="text-[9px] caps-label text-muted-foreground tracking-wider font-semibold mb-0.5">
-                                      {t('outfits.wornLabel', { defaultValue: 'Times Worn' })}
-                                    </div>
-                                    <div className="font-semibold text-foreground">
-                                      {selectedOutfitForDetail.use_count || 0}
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <div className="text-[9px] caps-label text-muted-foreground tracking-wider font-semibold mb-0.5">
-                                      {t('outfits.valueLabel', { defaultValue: 'Total Value' })}
-                                    </div>
-                                    <div className="font-semibold text-foreground">
-                                      ${calculateOutfitValue(selectedOutfitForDetail).toFixed(2)}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Progress Bars */}
-                                <div className="space-y-3 pt-1">
-                                  {[
-                                    { label: t('outfits.metrics.color', { defaultValue: 'Color Matching' }), val: detailMetrics?.color || 0 },
-                                    { label: t('outfits.metrics.pattern', { defaultValue: 'Pattern Matching' }), val: detailMetrics?.pattern || 0 },
-                                    { label: t('outfits.metrics.fit', { defaultValue: 'Body Fitting' }), val: detailMetrics?.fit || 0 },
-                                    { label: t('outfits.metrics.weather', { defaultValue: 'Match to Weather' }), val: detailMetrics?.weather || 0 },
-                                    { label: t('outfits.metrics.event', { defaultValue: 'Match to Event' }), val: detailMetrics?.event || 0 },
-                                    { label: t('outfits.metrics.location', { defaultValue: 'Match to Location' }), val: detailMetrics?.location || 0 }
-                                  ].map((m, idx) => (
-                                    <div key={idx} className="space-y-1">
-                                      <div className="flex justify-between text-xs font-medium">
-                                        <span className="text-muted-foreground">{m.label}</span>
-                                        <span className={cn(
-                                          "font-semibold",
-                                          m.val >= 80 ? "text-emerald-600 dark:text-emerald-400" : m.val >= 50 ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400"
-                                        )}>{m.val}%</span>
-                                      </div>
-                                      <div className="h-2 w-full bg-secondary/40 rounded-full overflow-hidden">
-                                        <div 
-                                          className={cn("h-full rounded-full transition-all duration-500", getMetricBarColor(m.val))} 
-                                          style={{ width: `${m.val}%` }}
-                                        />
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </TabsContent>
-                            </Tabs>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  renderOutfitDetailPane()
                 ) : (
                   /* Outfit Thumbnail Grid View */
                   <>
@@ -2163,171 +2175,176 @@ export default function Stylist() {
             </TabsContent>
 
             <TabsContent value="match" className="w-full min-w-0 flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none p-4 data-[state=active]:flex flex-col gap-4 max-w-4xl mx-auto pb-8">
-              {/* 1. Schedule & Push Notifications Settings Summary */}
-              <Card className="border border-border/80 rounded-2xl shadow-editorial overflow-hidden bg-card w-full">
-                <CardContent className="p-4 md:p-5 flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] rounded-xl shrink-0">
-                      <Bell className="h-5 w-5" />
-                    </div>
-                    <div className="text-left space-y-1">
-                      <h3 className="font-display text-base font-semibold text-foreground">
-                        {t('profile.schedulerPushReminders', { defaultValue: 'Schedule & Push Reminders' })}
-                      </h3>
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <span className={cn(
-                            "h-2 w-2 rounded-full",
-                            user?.scheduler_settings?.enabled ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/50"
-                          )} />
-                          {user?.scheduler_settings?.enabled 
-                            ? t('common.enabled', { defaultValue: 'Enabled' }) 
-                            : t('common.disabled', { defaultValue: 'Disabled' })}
-                        </span>
-                        {user?.scheduler_settings?.enabled && (
-                          <>
-                            <span>•</span>
-                            <span>
-                              {getFrequencyLabel(user?.scheduler_settings?.frequency, user?.scheduler_settings?.weekday, i18n.language, t)}
+              {selectedOutfitForDetail ? (
+                renderOutfitDetailPane()
+              ) : (
+                <>
+                  {/* 1. Schedule & Push Notifications Settings Summary */}
+                  <Card className="border border-border/80 rounded-2xl shadow-editorial overflow-hidden bg-card w-full">
+                    <CardContent className="p-4 md:p-5 flex items-center justify-between gap-4 flex-wrap">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] rounded-xl shrink-0">
+                          <Bell className="h-5 w-5" />
+                        </div>
+                        <div className="text-left space-y-1">
+                          <h3 className="font-display text-base font-semibold text-foreground">
+                            {t('profile.schedulerPushReminders', { defaultValue: 'Schedule & Push Reminders' })}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <span className={cn(
+                                "h-2 w-2 rounded-full",
+                                user?.scheduler_settings?.enabled ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/50"
+                              )} />
+                              {user?.scheduler_settings?.enabled 
+                                ? t('common.enabled', { defaultValue: 'Enabled' }) 
+                                : t('common.disabled', { defaultValue: 'Disabled' })}
                             </span>
-                            <span>•</span>
-                            <span>
-                              {user?.scheduler_settings?.time || '07:00'} UTC
-                            </span>
-                            <span>•</span>
-                            <span className="capitalize">
-                              {getStyleLabel(user?.scheduler_settings?.style_option, user?.scheduler_settings?.custom_style, t)}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => navigate('/me?open=scheduler')}
-                    className="rounded-xl flex items-center gap-1.5 shadow-sm border-border/80 text-xs font-semibold px-3 h-9"
-                    data-testid="edit-scheduler-btn"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                    <span>{t('common.edit', { defaultValue: 'Edit' })}</span>
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* 2. Scheduled Outfits Monthly Calendar Grid */}
-              <Card className="border border-border/80 rounded-2xl shadow-editorial overflow-hidden bg-card w-full flex flex-col flex-1 min-h-[480px]">
-                <CardContent className="p-4 md:p-5 flex flex-col h-full flex-1">
-                  {/* Calendar Month Header */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <CalIcon className="h-5 w-5 text-[hsl(var(--accent))]" />
-                      <h3 className="font-display text-base font-semibold text-foreground">
-                        {t('calendar.scheduledOutfits', { defaultValue: 'Scheduled Outfits' })}
-                      </h3>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        size="xs" 
-                        variant="outline" 
-                        className="rounded-lg h-7 text-xs font-semibold px-2.5" 
-                        onClick={() => setCurrentCalendarMonth(new Date())}
-                      >
-                        {t('calendar.todayBtn', { defaultValue: 'Today' })}
-                      </Button>
-                      <div className="flex items-center border border-border rounded-lg overflow-hidden h-7">
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="h-7 w-7 rounded-none border-r border-border" 
-                          onClick={() => setCurrentCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} 
-                          aria-label="Previous month"
-                        >
-                          <ChevronLeft className="h-3.5 w-3.5" />
-                        </Button>
-                        <span className="px-3 text-xs font-semibold font-display min-w-[110px] text-center select-none">
-                          {currentCalendarMonth.toLocaleString(i18n.language || 'en', { month: 'long', year: 'numeric' })}
-                        </span>
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="h-7 w-7 rounded-none border-l border-border" 
-                          onClick={() => setCurrentCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))} 
-                          aria-label="Next month"
-                        >
-                          <ChevronRight className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Calendar Weekday Headers */}
-                  <div className="grid grid-cols-7 gap-1.5 text-center mb-1">
-                    {Array.from({ length: 7 }).map((_, idx) => (
-                      <div key={idx} className="text-[10px] font-bold caps-label text-muted-foreground/75 py-1">
-                        {getWeekdayShortName(idx, i18n.language)}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Calendar Grid Cells */}
-                  <div className="grid grid-cols-7 gap-1.5 flex-1 min-h-0">
-                    {getDaysInMonth(currentCalendarMonth).map(({ date, isCurrentMonth }, idx) => {
-                      const dayStr = date.toISOString().split('T')[0];
-                      const todayStr = new Date().toISOString().split('T')[0];
-                      const isToday = dayStr === todayStr;
-                      const dayOutfit = outfits.find(o => o.usage?.date === dayStr);
-
-                      return (
-                        <div
-                          key={idx}
-                          onClick={() => {
-                            if (dayOutfit) {
-                              setSelectedOutfitForDetail(dayOutfit);
-                              setIsEditingOutfit(false);
-                              setActiveTab('shuffle');
-                            } else {
-                              setSchedulingDate(dayStr);
-                            }
-                          }}
-                          className={cn(
-                            "relative rounded-xl border p-1 flex flex-col justify-between transition-all duration-200 select-none cursor-pointer group bg-card min-h-[60px] sm:min-h-[90px] hover:border-[hsl(var(--accent))]/80 hover:shadow-sm",
-                            isCurrentMonth ? "border-border/60" : "border-border/20 opacity-40 bg-muted/5",
-                            isToday && "border-[hsl(var(--accent))] ring-1 ring-[hsl(var(--accent))]/20 bg-[hsl(var(--accent))]/5"
-                          )}
-                        >
-                          {/* Day Number */}
-                          <span className={cn(
-                            "text-[10px] sm:text-xs font-semibold self-start px-0.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center",
-                            isToday ? "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]" : "text-foreground"
-                          )}>
-                            {date.getDate()}
-                          </span>
-
-                          {/* Outfit Thumbnail */}
-                          <div className="w-full flex-grow aspect-[4/5] mt-0.5 rounded-lg overflow-hidden relative flex items-center justify-center bg-secondary/5 border border-dashed border-border/40">
-                            {dayOutfit ? (
-                              <div className="absolute inset-0 scale-[0.95]">
-                                <AvatarViewer
-                                  shapeParams={user?.avatar_shape_params || {}}
-                                  sex={user?.sex || 'female'}
-                                  outfitItems={getOutfitPiecesMap(dayOutfit)}
-                                />
-                              </div>
-                            ) : (
-                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Plus className="h-3.5 w-3.5 text-muted-foreground/60" />
-                              </div>
+                            {user?.scheduler_settings?.enabled && (
+                              <>
+                                <span>•</span>
+                                <span>
+                                  {getFrequencyLabel(user?.scheduler_settings?.frequency, user?.scheduler_settings?.weekday, i18n.language, t)}
+                                </span>
+                                <span>•</span>
+                                <span>
+                                  {user?.scheduler_settings?.time || '07:00'} UTC
+                                </span>
+                                <span>•</span>
+                                <span className="capitalize">
+                                  {getStyleLabel(user?.scheduler_settings?.style_option, user?.scheduler_settings?.custom_style, t)}
+                                </span>
+                              </>
                             )}
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate('/me?open=scheduler')}
+                        className="rounded-xl flex items-center gap-1.5 shadow-sm border-border/80 text-xs font-semibold px-3 h-9"
+                        data-testid="edit-scheduler-btn"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        <span>{t('common.edit', { defaultValue: 'Edit' })}</span>
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* 2. Scheduled Outfits Monthly Calendar Grid */}
+                  <Card className="border border-border/80 rounded-2xl shadow-editorial overflow-hidden bg-card w-full flex flex-col flex-1 min-h-[480px]">
+                    <CardContent className="p-4 md:p-5 flex flex-col h-full flex-1">
+                      {/* Calendar Month Header */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <CalIcon className="h-5 w-5 text-[hsl(var(--accent))]" />
+                          <h3 className="font-display text-base font-semibold text-foreground">
+                            {t('calendar.scheduledOutfits', { defaultValue: 'Scheduled Outfits' })}
+                          </h3>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            size="xs" 
+                            variant="outline" 
+                            className="rounded-lg h-7 text-xs font-semibold px-2.5" 
+                            onClick={() => setCurrentCalendarMonth(new Date())}
+                          >
+                            {t('calendar.todayBtn', { defaultValue: 'Today' })}
+                          </Button>
+                          <div className="flex items-center border border-border rounded-lg overflow-hidden h-7">
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              className="h-7 w-7 rounded-none border-r border-border" 
+                              onClick={() => setCurrentCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} 
+                              aria-label="Previous month"
+                            >
+                              <ChevronLeft className="h-3.5 w-3.5" />
+                            </Button>
+                            <span className="px-3 text-xs font-semibold font-display min-w-[110px] text-center select-none">
+                              {currentCalendarMonth.toLocaleString(i18n.language || 'en', { month: 'long', year: 'numeric' })}
+                            </span>
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              className="h-7 w-7 rounded-none border-l border-border" 
+                              onClick={() => setCurrentCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))} 
+                              aria-label="Next month"
+                            >
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Calendar Weekday Headers */}
+                      <div className="grid grid-cols-7 gap-1.5 text-center mb-1">
+                        {Array.from({ length: 7 }).map((_, idx) => (
+                          <div key={idx} className="text-[10px] font-bold caps-label text-muted-foreground/75 py-1">
+                            {getWeekdayShortName(idx, i18n.language)}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Calendar Grid Cells */}
+                      <div className="grid grid-cols-7 gap-1.5 flex-1 min-h-0">
+                        {getDaysInMonth(currentCalendarMonth).map(({ date, isCurrentMonth }, idx) => {
+                          const dayStr = date.toISOString().split('T')[0];
+                          const todayStr = new Date().toISOString().split('T')[0];
+                          const isToday = dayStr === todayStr;
+                          const dayOutfit = outfits.find(o => o.usage?.date === dayStr);
+
+                          return (
+                            <div
+                              key={idx}
+                              onClick={() => {
+                                if (dayOutfit) {
+                                  setSelectedOutfitForDetail(dayOutfit);
+                                  setIsEditingOutfit(false);
+                                } else {
+                                  setSchedulingDate(dayStr);
+                                }
+                              }}
+                              className={cn(
+                                "relative rounded-xl border p-1 flex flex-col justify-between transition-all duration-200 select-none cursor-pointer group bg-card min-h-[60px] sm:min-h-[90px] hover:border-[hsl(var(--accent))]/80 hover:shadow-sm",
+                                isCurrentMonth ? "border-border/60" : "border-border/20 opacity-40 bg-muted/5",
+                                isToday && "border-[hsl(var(--accent))] ring-1 ring-[hsl(var(--accent))]/20 bg-[hsl(var(--accent))]/5"
+                              )}
+                            >
+                              {/* Day Number */}
+                              <span className={cn(
+                                "text-[10px] sm:text-xs font-semibold self-start px-0.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center",
+                                isToday ? "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]" : "text-foreground"
+                              )}>
+                                {date.getDate()}
+                              </span>
+
+                              {/* Outfit Thumbnail */}
+                              <div className="w-full flex-grow aspect-[4/5] mt-0.5 rounded-lg overflow-hidden relative flex items-center justify-center bg-secondary/5 border border-dashed border-border/40">
+                                {dayOutfit ? (
+                                  <div className="absolute inset-0 scale-[0.95]">
+                                    <AvatarViewer
+                                      shapeParams={user?.avatar_shape_params || {}}
+                                      sex={user?.sex || 'female'}
+                                      outfitItems={getOutfitPiecesMap(dayOutfit)}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Plus className="h-3.5 w-3.5 text-muted-foreground/60" />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </TabsContent>
           </Tabs>
         </main>
