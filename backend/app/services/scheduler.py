@@ -184,7 +184,6 @@ async def check_scheduler_triggers() -> None:
                         logger.info("Scheduler: Auto-unpacking suitcase for user=%s", user["id"])
                         
                         # Archive the completed trip
-                        import uuid
                         archive_doc = {
                             "id": str(uuid.uuid4()),
                             "user_id": user["id"],
