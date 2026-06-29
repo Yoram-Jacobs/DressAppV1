@@ -1402,7 +1402,7 @@ export default function Stylist() {
                       {Array.isArray(m.payload.do_dont) && m.payload.do_dont.filter(Boolean).length > 0 && (
                         <div className="text-xs text-muted-foreground">
                           <div className="caps-label mb-1">
-                            {t('stylist.doDont')}
+                            {t('stylist.doDont', { defaultValue: 'Do & Don\'t' })}
                           </div>
                           <ul className="list-disc ps-5 space-y-0.5">
                             {m.payload.do_dont.filter(Boolean).map((d, k) => (
@@ -1413,7 +1413,7 @@ export default function Stylist() {
                       )}
                       {m.payload.weather_summary && (
                         <div className="caps-label text-muted-foreground">
-                          {t('stylist.contextLabel')}: {m.payload.weather_summary}
+                          {t('stylist.contextLabel', { defaultValue: 'Context' })}: {m.payload.weather_summary}
                           {m.payload.calendar_summary
                             ? ` · ${m.payload.calendar_summary}`
                             : ''}
@@ -1423,7 +1423,7 @@ export default function Stylist() {
                       {Array.isArray(m.payload.generated_examples) && m.payload.generated_examples.filter(Boolean).length > 0 && (
                         <div className="space-y-1" data-testid="stylist-generated-examples">
                           <div className="caps-label text-muted-foreground">
-                            {t('stylist.examplesLabel')}
+                            {t('stylist.examplesLabel', { defaultValue: 'Examples' })}
                           </div>
                           <div className="flex gap-2 flex-wrap">
                             {m.payload.generated_examples.filter(Boolean).map((ex, k) => (
@@ -1449,14 +1449,14 @@ export default function Stylist() {
                           <div className="space-y-1" data-testid="stylist-marketplace-strip">
                             <div className="caps-label text-muted-foreground flex items-center gap-1">
                               <ShoppingBag className="h-3 w-3" />
-                              {t('stylist.marketplaceLabel')}
+                              {t('stylist.marketplaceLabel', { defaultValue: 'Marketplace' })}
                             </div>
                             <div className="flex gap-2 overflow-x-auto pb-1">
                               {mktList.filter(Boolean).map((s) => (
                                 <Link
                                   key={`mkt-${m.id}-${s.listing_id}`}
                                   to={`/marketplace/${s.listing_id}`}
-                                  className="block min-w-[120px] w-[120px] rounded-lg border border-border bg-card hover:border-[hsl(var(--accent))]/60"
+                                  className="block min-w-[120px] max-w-[200px] w-max shrink-0 rounded-lg border border-border bg-card hover:border-[hsl(var(--accent))]/60"
                                 >
                                   {s.image_url && (
                                     <img src={s.image_url} alt="" className="w-full aspect-square rounded-t-lg object-cover" />
@@ -1488,7 +1488,7 @@ export default function Stylist() {
                                 href={tp.source_url || '#'}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="block min-w-[140px] w-[140px] rounded-lg border border-border bg-card hover:border-[hsl(var(--accent))]/60"
+                                className="block min-w-[140px] max-w-[220px] w-max shrink-0 rounded-lg border border-border bg-card hover:border-[hsl(var(--accent))]/60"
                               >
                                 {tp.image_url && (
                                   <img src={tp.image_url} alt="" className="w-full aspect-square rounded-t-lg object-cover" />
@@ -1529,7 +1529,7 @@ export default function Stylist() {
                               data-testid={`stylist-stop-speak-${m.id}`}
                             >
                               <VolumeX className="h-3.5 w-3.5 me-1" />
-                              {t('stylist.stopSpeaking')}
+                              {t('stylist.stopSpeaking', { defaultValue: 'Stop Speaking' })}
                             </Button>
                           ) : (
                             <Button
@@ -1540,7 +1540,7 @@ export default function Stylist() {
                               data-testid={`stylist-play-speak-${m.id}`}
                             >
                               <Volume2 className="h-3.5 w-3.5 me-1" />
-                              {t('stylist.playReply')}
+                              {t('stylist.playReply', { defaultValue: 'Play Reply' })}
                             </Button>
                           )}
                         </div>
@@ -1557,7 +1557,7 @@ export default function Stylist() {
               <div className="max-w-[85%] min-w-[280px] rounded-2xl border border-border bg-card p-4 break-words space-y-3">
                 <div className="flex items-center gap-2">
                   <Skeleton className="h-5 w-5 rounded-full animate-pulse" />
-                  <span className="caps-label text-muted-foreground">{t('stylist.thinking')}</span>
+                  <span className="caps-label text-muted-foreground">{t('stylist.thinking', { defaultValue: 'Thinking...' })}</span>
                 </div>
                 <div className="space-y-2">
                   <Skeleton className="h-3.5 w-3/4 rounded" />
@@ -1565,7 +1565,7 @@ export default function Stylist() {
                   <Skeleton className="h-3.5 w-5/6 rounded" />
                 </div>
                 <p className="text-xs text-muted-foreground pt-1">
-                  {t('stylist.thinkingSub')}
+                  {t('stylist.thinkingSub', { defaultValue: 'Your stylist is coming up with something...' })}
                 </p>
               </div>
             </div>
@@ -1577,7 +1577,7 @@ export default function Stylist() {
             >
               <div className="max-w-[85%] min-w-0 rounded-2xl border border-dashed border-[hsl(var(--accent))]/40 bg-[hsl(var(--accent))]/5 px-4 py-3 break-words">
                 <div className="caps-label text-[hsl(var(--accent))] mb-1">
-                  {t('stylist.listening')}
+                  {t('stylist.listening', { defaultValue: 'Listening...' })}
                 </div>
                 <p className="text-sm whitespace-pre-wrap italic">{interim}</p>
               </div>
@@ -1638,7 +1638,7 @@ export default function Stylist() {
               <span className="truncate max-w-[120px]">{imageFile.name}</span>
               <button
                 onClick={() => setImageFile(null)}
-                aria-label={t('stylist.removeImage')}
+                aria-label={t('stylist.removeImage', { defaultValue: 'Remove Image' })}
                 data-testid="stylist-remove-image"
               >
                 <X className="h-3 w-3" />
@@ -1661,7 +1661,7 @@ export default function Stylist() {
                 onClick={() =>
                   setExtraImages((prev) => prev.filter((_, i) => i !== idx))
                 }
-                aria-label={t('stylist.removeImage')}
+                aria-label={t('stylist.removeImage', { defaultValue: 'Remove Image' })}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -1674,7 +1674,7 @@ export default function Stylist() {
               data-testid="stylist-compose-mode-badge"
             >
               <Sparkles className="h-2.5 w-2.5 me-1" />
-              {t('stylist.composeOutfitMode')}
+              {t('stylist.composeOutfitMode', { defaultValue: 'Compose Outfit Mode' })}
             </Badge>
           )}
           <div className="ms-auto">
@@ -1691,8 +1691,8 @@ export default function Stylist() {
               }}
               title={
                 loc?.coords
-                  ? t('stylist.askProfessionalLocal')
-                  : t('stylist.askProfessionalSoon')
+                  ? t('stylist.askProfessionalLocal', { defaultValue: 'Ask a local professional' })
+                  : t('stylist.askProfessionalSoon', { defaultValue: 'Ask a professional (coming soon)' })
               }
               className={cn(
                 'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px]',
@@ -1702,7 +1702,7 @@ export default function Stylist() {
               data-testid="stylist-ask-professional-btn"
             >
               <UserRound className="h-3 w-3" />
-              {t('stylist.askProfessional')}
+              {t('stylist.askProfessional', { defaultValue: 'Ask a Professional' })}
             </button>
           </div>
         </div>
@@ -1729,7 +1729,7 @@ export default function Stylist() {
             trigger={
               <span
                 className="inline-flex items-center justify-center h-9 w-9 rounded-xl border border-border bg-card hover:bg-secondary cursor-pointer shrink-0"
-                aria-label={t('stylist.attachPhoto')}
+                aria-label={t('stylist.attachPhoto', { defaultValue: 'Attach Photo' })}
                 data-testid="stylist-composer-attach-button"
               >
                 <ImgIcon className="h-4.5 w-4.5" />
@@ -1741,7 +1741,7 @@ export default function Stylist() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={1}
-            placeholder={t('stylist.composerPlaceholder')}
+            placeholder={t('stylist.composerPlaceholder', { defaultValue: 'Type your message...' })}
             className="flex-1 min-h-[36px] max-h-[160px] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent resize-none py-1.5 px-1 text-sm shadow-none"
             data-testid="stylist-composer-textarea"
           />
@@ -1753,7 +1753,7 @@ export default function Stylist() {
                 variant="destructive"
                 onClick={stopRecording}
                 className="h-9 w-9 rounded-xl"
-                aria-label={t('stylist.tapToStop')}
+                aria-label={t('stylist.tapToStop', { defaultValue: 'Tap to Stop' })}
                 data-testid="stylist-composer-mic-button"
               >
                 <Square className="h-4 w-4" />
@@ -1765,7 +1765,7 @@ export default function Stylist() {
                 onClick={startRecording}
                 className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground"
                 data-testid="stylist-composer-mic-button"
-                aria-label={t('stylist.recordVoice')}
+                aria-label={t('stylist.recordVoice', { defaultValue: 'Record Voice' })}
               >
                 <Mic className="h-4.5 w-4.5" />
               </Button>
@@ -1807,7 +1807,7 @@ export default function Stylist() {
               }}
               className="rounded-xl h-8 text-xs font-semibold flex items-center gap-1.5"
             >
-              <ArrowLeft className="h-4 w-4" /> {t('common.back', { defaultValue: 'Back' })}
+              <ArrowLeft className="h-4 w-4 rtl:rotate-180" /> {t('common.back', { defaultValue: 'Back' })}
             </Button>
             <Button
               variant="destructive"
@@ -1962,7 +1962,7 @@ export default function Stylist() {
                               {g.title || g.description || t('addItem.preflight.untitled', { defaultValue: 'Garment' })}
                             </div>
                           </div>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0 group-hover/item:translate-x-0.5 transition-transform" />
+                          <ChevronRight className="h-4 w-4 rtl:rotate-180 text-muted-foreground/60 shrink-0 group-hover/item:translate-x-0.5 transition-transform" />
                         </div>
                       ))}
                     </div>
@@ -2242,7 +2242,7 @@ export default function Stylist() {
                               onClick={() => setCurrentCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} 
                               aria-label="Previous month"
                             >
-                              <ChevronLeft className="h-3.5 w-3.5" />
+                              <ChevronLeft className="h-3.5 w-3.5 rtl:rotate-180" />
                             </Button>
                             <span className="px-3 text-xs font-semibold font-display min-w-[110px] text-center select-none">
                               {currentCalendarMonth.toLocaleString(i18n.language || 'en', { month: 'long', year: 'numeric' })}
@@ -2254,7 +2254,7 @@ export default function Stylist() {
                               onClick={() => setCurrentCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))} 
                               aria-label="Next month"
                             >
-                              <ChevronRight className="h-3.5 w-3.5" />
+                              <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
                             </Button>
                           </div>
                         </div>
@@ -2447,10 +2447,10 @@ export default function Stylist() {
               </Button>
               <div className="flex items-center border border-border rounded-lg overflow-hidden h-8">
                 <Button size="icon" variant="ghost" className="h-full w-8 rounded-none border-r border-border" onClick={handlePrevDay} aria-label="Previous day">
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
                 </Button>
                 <Button size="icon" variant="ghost" className="h-full w-8 rounded-none" onClick={handleNextDay} aria-label="Next day">
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4 rtl:rotate-180" />
                 </Button>
               </div>
             </div>
