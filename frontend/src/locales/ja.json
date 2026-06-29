@@ -972,7 +972,8 @@
       "oct": "10月",
       "nov": "11月",
       "dec": "12月"
-    }
+    },
+    "viewCalendar": "カレンダーを表示"
   },
   "seo": {
     "defaultTitle": "DressApp — あなたのクローゼット、グレードアップ",

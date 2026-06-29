@@ -972,7 +972,8 @@
       "oct": "10月",
       "nov": "11月",
       "dec": "12月"
-    }
+    },
+    "viewCalendar": "查看日历"
   },
   "seo": {
     "defaultTitle": "DressApp — 您的衣橱，升级体验",

@@ -972,7 +972,8 @@
       "oct": "Okt",
       "nov": "Nov",
       "dec": "Dez"
-    }
+    },
+    "viewCalendar": "Kalender anzeigen"
   },
   "seo": {
     "defaultTitle": "DressApp — Deine Garderobe, veredelt",

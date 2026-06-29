@@ -972,7 +972,8 @@
       "oct": "Oct",
       "nov": "Nov",
       "dec": "Dic"
-    }
+    },
+    "viewCalendar": "Ver calendario"
   },
   "seo": {
     "defaultTitle": "DressApp — Tu armario, elevado",

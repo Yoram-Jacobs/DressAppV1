@@ -972,7 +972,8 @@
       "oct": "Oct",
       "nov": "Nov",
       "dec": "Déc"
-    }
+    },
+    "viewCalendar": "Voir le calendrier"
   },
   "seo": {
     "defaultTitle": "DressApp — Votre dressing sublimé",
