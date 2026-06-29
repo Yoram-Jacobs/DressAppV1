@@ -263,6 +263,7 @@ export default function Stylist() {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const messagesEndRef = useRef(null);
+  const lastAssistantRef = useRef(null);
 
   // Outfits, Notifications, and Calendar states
   const [outfits, setOutfits] = useState([]);
@@ -738,13 +739,18 @@ export default function Stylist() {
 
   const userLang = (user?.preferred_language || i18n.language || 'en').split('-')[0].toLowerCase();
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const scrollToBottom = useCallback(() => {
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg && lastMsg.role === 'assistant') {
+      lastAssistantRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, busy, interim]);
+  }, [scrollToBottom, busy, interim]);
 
   /* ---------- Load sessions + pick active ---------- */
   const loadSessions = useCallback(async () => {
@@ -1358,8 +1364,11 @@ export default function Stylist() {
             </div>
           )}
           <AnimatePresence initial={false}>
-            {messages.map((m) => (
-              <motion.div
+            {messages.map((m, idx) => {
+              const isLastAssistant = m.role === 'assistant' && idx === messages.length - 1;
+              return (
+                <motion.div
+                  ref={isLastAssistant ? lastAssistantRef : null}
                 key={m.id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1618,7 +1627,8 @@ export default function Stylist() {
                   )}
                 </div>
               </motion.div>
-            ))}
+            );
+            })}
           </AnimatePresence>
           {busy && (
             <div className="flex min-w-0 justify-start" data-testid="stylist-thinking">
