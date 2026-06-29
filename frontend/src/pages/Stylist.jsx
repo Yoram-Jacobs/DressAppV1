@@ -2196,26 +2196,31 @@ export default function Stylist() {
                                 "h-2 w-2 rounded-full",
                                 user?.scheduler_settings?.enabled ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/50"
                               )} />
-                              {user?.scheduler_settings?.enabled 
-                                ? t('common.enabled', { defaultValue: 'Enabled' }) 
-                                : t('common.disabled', { defaultValue: 'Disabled' })}
+                              <span>
+                                {user?.scheduler_settings?.enabled 
+                                  ? t('common.enabled', { defaultValue: 'Enabled' }) 
+                                  : t('common.unenabled', { defaultValue: 'Unenabled' })}
+                                {user?.scheduler_settings?.enabled && (
+                                  <>
+                                    {', '}
+                                    {getFrequencyLabel(user?.scheduler_settings?.frequency, user?.scheduler_settings?.weekday, i18n.language, t)}
+                                    {', '}
+                                    {(() => {
+                                      const tVal = user?.scheduler_settings?.time || '07:00';
+                                      const [h, m] = tVal.split(':');
+                                      const hInt = parseInt(h, 10);
+                                      const ampm = hInt >= 12 ? 'PM' : 'AM';
+                                      const h12 = hInt % 12 || 12;
+                                      return `${h12.toString().padStart(2, '0')}:${m} ${ampm}`;
+                                    })()}
+                                    {', '}
+                                    <span className="capitalize">
+                                      {getStyleLabel(user?.scheduler_settings?.style_option, user?.scheduler_settings?.custom_style, t)}
+                                    </span>
+                                  </>
+                                )}
+                              </span>
                             </span>
-                            {user?.scheduler_settings?.enabled && (
-                              <>
-                                <span>•</span>
-                                <span>
-                                  {getFrequencyLabel(user?.scheduler_settings?.frequency, user?.scheduler_settings?.weekday, i18n.language, t)}
-                                </span>
-                                <span>•</span>
-                                <span>
-                                  {user?.scheduler_settings?.time || '07:00'} UTC
-                                </span>
-                                <span>•</span>
-                                <span className="capitalize">
-                                  {getStyleLabel(user?.scheduler_settings?.style_option, user?.scheduler_settings?.custom_style, t)}
-                                </span>
-                              </>
-                            )}
                           </div>
                         </div>
                       </div>
@@ -2236,14 +2241,7 @@ export default function Stylist() {
                   <Card className="border border-border/80 rounded-2xl shadow-editorial overflow-hidden bg-card w-full flex flex-col flex-1 min-h-[480px]">
                     <CardContent className="p-4 md:p-5 flex flex-col h-full flex-1">
                       {/* Calendar Month Header */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <CalIcon className="h-5 w-5 text-[hsl(var(--accent))]" />
-                          <h3 className="font-display text-base font-semibold text-foreground">
-                            {t('calendar.scheduledOutfits', { defaultValue: 'Scheduled Outfits' })}
-                          </h3>
-                        </div>
-                        
+                      <div className="flex items-center justify-center mb-4">
                         <div className="flex items-center gap-2">
                           <Button 
                             size="xs" 
