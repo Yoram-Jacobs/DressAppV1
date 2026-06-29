@@ -1879,7 +1879,7 @@ export default function Stylist() {
   return (
     <div className="container-px w-full max-w-[1600px] mx-auto pt-4 md:pt-6">
       <div className={cn(
-        "grid grid-cols-1 gap-4 h-[calc(100dvh-180px)] md:h-[calc(100dvh-140px)] w-full max-w-full min-w-0 transition-all duration-300",
+        "grid grid-cols-1 gap-4 h-[calc(100dvh-112px)] md:h-[calc(100dvh-140px)] w-full max-w-full min-w-0 transition-all duration-300",
         (sidebarCollapsed || activeTab !== 'chat')
           ? "lg:grid-cols-[minmax(0,1fr)]"
           : "lg:grid-cols-[200px_minmax(0,1fr)]"
