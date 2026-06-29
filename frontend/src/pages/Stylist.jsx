@@ -306,6 +306,7 @@ export default function Stylist() {
     const eventDetails = messageOrNotif?.payload?.event_details || {};
     const targetDate = isEvent ? (eventDetails.date || formatLocalDate(new Date())) : formatLocalDate(new Date(Date.now() + 86400000));
 
+    const isFallback = messageOrNotif?.payload?.is_fallback || false;
     let displayName = rec.name;
     if (!isEvent) {
       try {
@@ -314,6 +315,9 @@ export default function Stylist() {
       } catch (e) {
         displayName = rec.name;
       }
+    }
+    if (isFallback && !displayName.includes('Fallback')) {
+      displayName = `${displayName} (Fallback)`;
     }
 
     const body = {
@@ -557,6 +561,7 @@ export default function Stylist() {
     
     const isEvent = (notif?.title || '').toLowerCase().includes('get ready');
     
+    const isFallback = notif?.payload?.is_fallback || false;
     let displayName = rec.name;
     if (!isEvent) {
       try {
@@ -565,6 +570,9 @@ export default function Stylist() {
       } catch (e) {
         displayName = rec.name;
       }
+    }
+    if (isFallback && !displayName.includes('Fallback')) {
+      displayName = `${displayName} (Fallback)`;
     }
 
     const body = {
