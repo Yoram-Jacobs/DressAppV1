@@ -445,7 +445,7 @@ async def check_scheduler_triggers() -> None:
                         is_quota_issue = True
                         try:
                             from app.services.stylist_scheduler_brain import get_rotation_prioritized_closet
-                            closet_items = await get_rotation_prioritized_closet(user["id"], limit=20)
+                            closet_items = await get_rotation_prioritized_closet(user["id"], limit=200)
                             advice = _generate_fallback_advice(closet_items, style_dress_for, weather_ctx)
                         except Exception as inner_exc:
                             logger.error("Failed to generate fallback scheduled proposals: %s", inner_exc)

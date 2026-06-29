@@ -10,7 +10,7 @@ async def test():
         print("No user found")
         return
         
-    closet_items = await get_rotation_prioritized_closet(user["id"], limit=40)
+    closet_items = await get_rotation_prioritized_closet(user["id"], limit=200)
     print(f"Loaded {len(closet_items)} closet items.")
     
     # Summer heatwave in Israel (e.g. 34°C, Sunny)
