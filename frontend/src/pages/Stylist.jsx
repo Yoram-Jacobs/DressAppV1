@@ -1285,7 +1285,7 @@ export default function Stylist() {
 
   /* ---------- Render helpers ---------- */
   const chatColumn = (
-    <Card className="w-full min-w-0 h-full flex flex-col rounded-[calc(var(--radius)+6px)] shadow-editorial overflow-hidden">
+    <Card className="w-full min-w-0 flex-1 flex flex-col rounded-[calc(var(--radius)+6px)] shadow-editorial overflow-hidden">
       {/* Sticky top bar */}
       <div className="flex items-center justify-between gap-2 border-b border-border px-3 md:px-4 py-2.5 bg-background">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
