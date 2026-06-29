@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { CalendarConnect } from '@/components/CalendarConnect';
 import { LocationCard } from '@/components/LocationCard';
 import { InviteFriendsButton } from '@/components/InviteFriendsButton';
@@ -52,6 +52,20 @@ const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'satur
 function SchedulerSettingsCard() {
   const { t, i18n } = useTranslation();
   const { user, updateUserLocal } = useAuth();
+  const [searchParams] = useSearchParams();
+  const [openVal, setOpenVal] = useState(
+    searchParams.get('open') === 'scheduler' ? 'scheduler' : undefined
+  );
+
+  useEffect(() => {
+    if (searchParams.get('open') === 'scheduler') {
+      setOpenVal('scheduler');
+      setTimeout(() => {
+        document.getElementById('scheduler-settings-section')?.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+    }
+  }, [searchParams]);
+
   const [enabled, setEnabled] = useState(user?.scheduler_settings?.enabled || false);
   const [frequency, setFrequency] = useState(user?.scheduler_settings?.frequency || 'everyday');
   const [weekday, setWeekday] = useState(user?.scheduler_settings?.weekday || 'monday');
@@ -137,8 +151,8 @@ function SchedulerSettingsCard() {
   };
 
   return (
-    <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial" data-testid="scheduler-settings-card">
-      <Accordion type="single" collapsible>
+    <Card id="scheduler-settings-section" className="rounded-[calc(var(--radius)+6px)] shadow-editorial" data-testid="scheduler-settings-card">
+      <Accordion type="single" collapsible value={openVal} onValueChange={setOpenVal}>
         <AccordionItem value="scheduler" className="border-none">
           <AccordionTrigger className="px-6 py-4 hover:no-underline">
             <div className="flex items-center gap-3 text-left">

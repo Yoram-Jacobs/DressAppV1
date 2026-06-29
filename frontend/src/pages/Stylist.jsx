@@ -21,7 +21,6 @@ import {
   Trash2,
   MapPin,
   Bell,
-  AlertCircle,
   ChevronLeft,
   ChevronRight,
   GripVertical,
@@ -53,7 +52,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Pencil } from 'lucide-react';
 import { useClosetStore } from '@/lib/useClosetStore';
-import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { WaveformAudioPlayer } from '@/components/WaveformAudioPlayer';
 import { ConversationSidebar } from '@/components/stylist/ConversationSidebar';
 import { OutfitCanvasMessage } from '@/components/OutfitCanvas';
@@ -64,7 +63,6 @@ import { OutfitRecommendationCard } from '@/components/stylist/OutfitRecommendat
 import { ItemFloater } from '@/components/stylist/ItemFloater';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import DressMeShuffler from '@/components/stylist/DressMeShuffler';
-import OutfitTinderSwiper from '@/components/stylist/OutfitTinderSwiper';
 import { AttachmentPicker } from '@/components/stylist/AttachmentPicker';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -88,125 +86,7 @@ const base64ToUrl = (b64, mime = 'audio/mpeg') => {
   return URL.createObjectURL(blob);
 };
 
-const getLocalizedNotification = (n, t) => {
-  if (!n) return { title: '', body: '' };
-  let title = n.title || '';
-  let body = n.body || '';
 
-  // 1. Check if Daily Proposal Title: "Tomorrow's Outfit Proposal is Ready! 👕"
-  const dailyTitleRegex = /^Tomorrow's Outfit Proposal is Ready!\s*(.+)?$/i;
-  const matchDailyTitle = title.match(dailyTitleRegex);
-  if (matchDailyTitle) {
-    const emoji = matchDailyTitle[1] || '👕';
-    title = t('outfits.notification.dailyTitle', { emoji, defaultValue: title });
-  }
-
-  // 2. Check if Daily Proposal Body: "Your AI Stylist prepared 3 outfit options for your: <style>."
-  const dailyBodyRegex = /^Your AI Stylist prepared(?:\s+\d+)?\s+outfit options for your:\s*(.+?)\.?$/i;
-  const matchDailyBody = body.match(dailyBodyRegex);
-  if (matchDailyBody) {
-    const style = matchDailyBody[1] || 'day';
-    const translatedStyle = labelForDressCode(style.toLowerCase().trim(), t);
-    body = t('outfits.notification.dailyBody', { style: translatedStyle, defaultValue: body });
-  }
-
-  // 3. Check if multi-line proposals list format: "Proposals for <style>:\n• Outfit: ..."
-  if (body.includes('\n')) {
-    const lines = body.split('\n');
-    const proposalsTitleRegex = /^Proposals for\s+(.+?)\s*:\s*$/i;
-    const matchProposalsTitle = lines[0].match(proposalsTitleRegex);
-    if (matchProposalsTitle) {
-      const style = matchProposalsTitle[1] || 'day';
-      const translatedStyle = labelForDressCode(style.toLowerCase().trim(), t);
-      const headerText = t('outfits.notification.proposalsTitle', { style: translatedStyle, defaultValue: `Proposals for ${translatedStyle}:` });
-      
-      const translatedLines = lines.slice(1).map(line => {
-        const outfitLineRegex = /^(\s*•\s*)(Outfit(?:\s+\d+)?)(\s*:\s*)(.+)$/i;
-        const matchLine = line.match(outfitLineRegex);
-        if (matchLine) {
-          const bullet = matchLine[1];
-          const outfitWord = matchLine[2]; // e.g. "Outfit" or "Outfit 1"
-          const colon = matchLine[3];
-          const details = matchLine[4];
-          
-          let translatedOutfitWord = outfitWord;
-          if (outfitWord.toLowerCase().startsWith('outfit')) {
-            const numPart = outfitWord.substring(6); // e.g. " 1" or ""
-            const baseTranslated = t('outfits.outfit', { defaultValue: 'Outfit' });
-            translatedOutfitWord = `${baseTranslated}${numPart}`;
-          }
-          return `${bullet}${translatedOutfitWord}${colon}${details}`;
-        }
-        return line;
-      });
-      body = [headerText, ...translatedLines].join('\n');
-    }
-  }
-
-  // 4. Check if Event Title: "Get ready for: <event_name> 🌟"
-  const eventTitleRegex = /^Get ready for:\s*(.+?)\s*(🌟)?$/i;
-  const matchEventTitle = title.match(eventTitleRegex);
-  if (matchEventTitle) {
-    const name = matchEventTitle[1] || 'Special Event';
-    title = t('outfits.notification.eventTitle', { name, defaultValue: title });
-  }
-
-  // 5. Check if Event Body: "Your chosen outfit is prepared. Have a wonderful time!"
-  const eventBodyRegex = /^Your chosen outfit is prepared\.\s*Have a wonderful time!/i;
-  if (eventBodyRegex.test(body)) {
-    body = t('outfits.notification.eventBody', { defaultValue: body });
-  }
-
-  return { title, body };
-};
-
-const parseNotificationBodyToPayload = (body) => {
-  if (!body || !body.includes('\n')) return null;
-  const lines = body.split('\n');
-  const outfitLines = lines.filter(line => line.trim().startsWith('•'));
-  if (outfitLines.length === 0) return null;
-
-  const outfit_recommendations = outfitLines.map((line, index) => {
-    const parts = line.replace(/^\s*•\s*/, '').split(':');
-    const name = parts[0]?.trim() || `Outfit ${index + 1}`;
-    const itemsText = parts.slice(1).join(':').trim();
-    const items = itemsText.split(',').map(item => {
-      const desc = item.trim();
-      let role = 'top';
-      const dLower = desc.toLowerCase();
-      if (dLower.includes('shoe') || dLower.includes('sneaker') || dLower.includes('boot') || dLower.includes('heel') || dLower.includes('loafer') || dLower.includes('sandal')) {
-        role = 'shoes';
-      } else if (dLower.includes('pant') || dLower.includes('trouser') || dLower.includes('jean') || dLower.includes('short') || dLower.includes('skirt')) {
-        role = 'bottom';
-      } else if (dLower.includes('dress') || dLower.includes('gown')) {
-        role = 'dress';
-      } else if (dLower.includes('jacket') || dLower.includes('coat') || dLower.includes('blazer') || dLower.includes('sweater') || dLower.includes('hoodie')) {
-        role = 'outerwear';
-      } else if (dLower.includes('bag') || dLower.includes('backpack') || dLower.includes('purse')) {
-        role = 'bag';
-      } else if (dLower.includes('hat') || dLower.includes('cap') || dLower.includes('beanie')) {
-        role = 'headwear';
-      }
-      return {
-        role,
-        description: desc,
-        closet_item_id: null
-      };
-    });
-
-    return {
-      name,
-      items,
-      why: 'Scheduled recommendation from your AI Stylist.',
-      confidence: 0.8
-    };
-  });
-
-  return {
-    reasoning_summary: lines[0] || 'Your scheduled proposals.',
-    outfit_recommendations
-  };
-};
 
 const formatWeekday = (date, t) => {
   const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
@@ -233,6 +113,87 @@ const getOutfitPiecesMap = (o) => {
     });
   }
   return map;
+};
+
+const getWeekdayName = (day, locale) => {
+  const days = {
+    monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0
+  };
+  const date = new Date(2026, 4, 24 + days[day.toLowerCase()]); // May 24, 2026 is a Sunday (0).
+  return new Intl.DateTimeFormat(locale || 'en', { weekday: 'long' }).format(date);
+};
+
+const getFrequencyLabel = (freq, weekday, lang, t) => {
+  if (!freq) return '';
+  switch (freq) {
+    case 'everyday': 
+      return t('pages.admin.daily_utc', { defaultValue: 'Everyday' }).split(' ')[0].replace(':', '');
+    case 'every_other_day': 
+      return t('profile.everyOtherDay', { defaultValue: 'Every Other Day' });
+    case 'twice_a_week': 
+      return t('profile.twiceAWeek', { defaultValue: 'Twice a Week' });
+    case 'on_weekday': {
+      const dayName = getWeekdayName(weekday || 'monday', lang);
+      return `${t('profile.onWeekday', { defaultValue: 'On' })} ${dayName}`;
+    }
+    default: 
+      return freq;
+  }
+};
+
+const getStyleLabel = (styleOpt, customStyle, t) => {
+  if (!styleOpt) return '';
+  if (styleOpt === 'custom') {
+    return customStyle || t('credits.custom', { defaultValue: 'Custom' });
+  }
+  switch (styleOpt) {
+    case 'casual': return t('outfits.dressCode.casual', { defaultValue: 'Casual' });
+    case 'smart-casual': return t('outfits.dressCode.smart-casual', { defaultValue: 'Smart Casual' });
+    case 'formal': return t('outfits.dressCode.formal', { defaultValue: 'Formal' });
+    case 'athletic': return t('outfits.dressCode.athletic', { defaultValue: 'Athletic' });
+    default: return styleOpt;
+  }
+};
+
+const getWeekdayShortName = (dayIndex, locale) => {
+  const date = new Date(2026, 4, 24 + dayIndex); // May 24, 2026 is Sunday
+  return new Intl.DateTimeFormat(locale || 'en', { weekday: 'short' }).format(date);
+};
+
+const getDaysInMonth = (date) => {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  
+  // First day of the month
+  const firstDay = new Date(year, month, 1);
+  // Last day of the month
+  const lastDay = new Date(year, month + 1, 0);
+  
+  const days = [];
+  
+  // Day of week of the first day (0 = Sunday, 1 = Monday, etc.)
+  const startDayOfWeek = firstDay.getDay();
+  
+  // Padding days from the previous month
+  for (let i = startDayOfWeek - 1; i >= 0; i--) {
+    const d = new Date(year, month, -i);
+    days.push({ date: d, isCurrentMonth: false });
+  }
+  
+  // Days of the current month
+  for (let i = 1; i <= lastDay.getDate(); i++) {
+    const d = new Date(year, month, i);
+    days.push({ date: d, isCurrentMonth: true });
+  }
+  
+  // Padding days from the next month to make a complete 42-day grid
+  const remaining = 42 - days.length;
+  for (let i = 1; i <= remaining; i++) {
+    const d = new Date(year, month + 1, i);
+    days.push({ date: d, isCurrentMonth: false });
+  }
+  
+  return days;
 };
 
 export default function Stylist() {
@@ -269,9 +230,6 @@ export default function Stylist() {
   const [outfits, setOutfits] = useState([]);
   const [outfitsLoading, setOutfitsLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
-  const [notifLoading, setNotifLoading] = useState(false);
-  const [activeNotifContext, setActiveNotifContext] = useState(null);
-  const [notifModalLoading, setNotifModalLoading] = useState(false);
   const [calendarStartDate, setCalendarStartDate] = useState(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -281,6 +239,7 @@ export default function Stylist() {
   const [selectedOutfitForDetail, setSelectedOutfitForDetail] = useState(null);
   const [calendarModalOpen, setCalendarModalOpen] = useState(false);
   const [schedulingDate, setSchedulingDate] = useState(null);
+  const [currentCalendarMonth, setCurrentCalendarMonth] = useState(() => new Date());
 
   const { items: closetItems } = useClosetStore();
   const [isEditingOutfit, setIsEditingOutfit] = useState(false);
@@ -298,14 +257,11 @@ export default function Stylist() {
       setOutfitsLoading(false);
     }
 
-    setNotifLoading(true);
     try {
       const res = await api.listSimulatedNotifications();
       setNotifications(res.notifications || []);
     } catch (err) {
       console.error("Failed to load notifications:", err);
-    } finally {
-      setNotifLoading(false);
     }
   }, []);
 
@@ -332,16 +288,7 @@ export default function Stylist() {
     }
   };
 
-  const clearNotifications = async () => {
-    try {
-      await api.clearSimulatedNotifications();
-      setNotifications([]);
-      setActiveNotifContext(null);
-      toast.success(t('outfits.logsCleared', { defaultValue: 'Notification logs cleared.' }));
-    } catch (err) {
-      toast.error(t('outfits.failedClearLogs', { defaultValue: 'Failed to clear logs.' }));
-    }
-  };
+
 
   const handleSaveOutfit = async (rec, messageOrNotif) => {
     const isEvent = 
@@ -378,32 +325,7 @@ export default function Stylist() {
     }
   };
 
-  const handleNotificationClick = async (n) => {
-    let payload = n.payload || parseNotificationBodyToPayload(n.body);
-    
-    if (!payload && (n.title || '').toLowerCase().includes('proposal is ready')) {
-      setActiveNotifContext({ ...n, payload: { outfit_recommendations: [] } });
-      setNotifModalLoading(true);
-      try {
-        const res = await api.triggerScheduledProposal();
-        const updatedPayload = res.advice;
-        setNotifications((prev) => prev.map((item) => (item.id === n.id ? { ...item, payload: updatedPayload } : item)));
-        setActiveNotifContext((current) => current && current.id === n.id ? { ...current, payload: updatedPayload } : current);
-      } catch (err) {
-        toast.error(t('outfits.failedGenerateProposals', { defaultValue: 'Failed to generate recommendations.' }));
-        setActiveNotifContext(null);
-      } finally {
-        setNotifModalLoading(false);
-      }
-      return;
-    }
-    
-    if (payload) {
-      setActiveNotifContext({ ...n, payload });
-    } else {
-      toast.error(t('outfits.noProposalsAvailable', { defaultValue: 'No outfit recommendations available for this notification.' }));
-    }
-  };
+
 
   const handleDropOnDay = async (e, dateStr) => {
     e.preventDefault();
@@ -2240,110 +2162,172 @@ export default function Stylist() {
               </div>
             </TabsContent>
 
-            <TabsContent value="match" className="w-full min-w-0 flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none p-4 data-[state=active]:flex flex-col gap-6 max-w-4xl mx-auto">
-              {/* Notification Center */}
-              <Card className="border border-border/80 rounded-2xl shadow-editorial overflow-hidden bg-[hsl(var(--accent))]/5 w-full">
-                <CardContent className="p-5 space-y-4">
-                  <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <Bell className="h-5 w-5 text-[hsl(var(--accent))]" />
-                      <h3 className="font-display text-lg font-medium">{t('outfits.notificationCenter', { defaultValue: 'Notification Center' })}</h3>
+            <TabsContent value="match" className="w-full min-w-0 flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none p-4 data-[state=active]:flex flex-col gap-4 max-w-4xl mx-auto pb-8">
+              {/* 1. Schedule & Push Notifications Settings Summary */}
+              <Card className="border border-border/80 rounded-2xl shadow-editorial overflow-hidden bg-card w-full">
+                <CardContent className="p-4 md:p-5 flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] rounded-xl shrink-0">
+                      <Bell className="h-5 w-5" />
                     </div>
-                    {notifications.length > 0 && (
-                      <Button size="xs" variant="ghost" className="text-rose-700 text-xs h-7 px-2" onClick={clearNotifications}>
-                        {t('common.clear', { defaultValue: 'Clear logs' })}
-                      </Button>
-                    )}
+                    <div className="text-left space-y-1">
+                      <h3 className="font-display text-base font-semibold text-foreground">
+                        {t('profile.schedulerPushReminders', { defaultValue: 'Schedule & Push Reminders' })}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <span className={cn(
+                            "h-2 w-2 rounded-full",
+                            user?.scheduler_settings?.enabled ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/50"
+                          )} />
+                          {user?.scheduler_settings?.enabled 
+                            ? t('common.enabled', { defaultValue: 'Enabled' }) 
+                            : t('common.disabled', { defaultValue: 'Disabled' })}
+                        </span>
+                        {user?.scheduler_settings?.enabled && (
+                          <>
+                            <span>•</span>
+                            <span>
+                              {getFrequencyLabel(user?.scheduler_settings?.frequency, user?.scheduler_settings?.weekday, i18n.language, t)}
+                            </span>
+                            <span>•</span>
+                            <span>
+                              {user?.scheduler_settings?.time || '07:00'} UTC
+                            </span>
+                            <span>•</span>
+                            <span className="capitalize">
+                              {getStyleLabel(user?.scheduler_settings?.style_option, user?.scheduler_settings?.custom_style, t)}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  
-                  {notifLoading ? (
-                    <p className="text-xs text-muted-foreground animate-pulse">{t('common.loading', { defaultValue: 'Loading mock push notifications...' })}</p>
-                  ) : notifications.length === 0 ? (
-                    <div className="text-xs text-muted-foreground flex items-center gap-2 p-3 bg-card/40 rounded-xl border border-dashed border-border/60">
-                      <AlertCircle className="h-4 w-4 opacity-75" />
-                      <span>{t('outfits.noNotifs', { defaultValue: 'No notifications triggered yet. Set your daily reminder in settings or schedule an event to test.' })}</span>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[180px] overflow-y-auto pr-1">
-                      {notifications.map((n) => {
-                        const { title, body } = getLocalizedNotification(n, t);
-                        const isActive = activeNotifContext?.id === n.id;
-                        return (
-                          <div
-                            key={n.id}
-                            className={cn(
-                              "p-3 rounded-xl border flex items-start gap-2.5 shadow-sm text-xs transition-colors cursor-pointer hover:bg-muted/30 bg-card",
-                              isActive ? "border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/5" : "border-border"
-                            )}
-                            onClick={() => handleNotificationClick(n)}
-                          >
-                            <div className="p-1 bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] rounded-lg shrink-0">
-                              <Bell className="h-3.5 w-3.5" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="font-semibold text-foreground truncate">{title}</div>
-                              <div className="text-muted-foreground mt-0.5 leading-relaxed">{body}</div>
-                              <div className="text-[10px] text-muted-foreground/60 mt-1.5">
-                                {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => navigate('/me?open=scheduler')}
+                    className="rounded-xl flex items-center gap-1.5 shadow-sm border-border/80 text-xs font-semibold px-3 h-9"
+                    data-testid="edit-scheduler-btn"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    <span>{t('common.edit', { defaultValue: 'Edit' })}</span>
+                  </Button>
                 </CardContent>
               </Card>
 
-              {/* Active Recommendations Shelf */}
-              {activeNotifContext && (
-                <Card className="border border-[hsl(var(--accent))]/20 rounded-2xl shadow-editorial overflow-hidden bg-[hsl(var(--accent))]/5 animate-[slideDown_0.2s_ease-out] w-full">
-                  <CardContent className="p-5 space-y-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="h-5 w-5 text-[hsl(var(--accent))]" />
-                        <h3 className="font-display text-lg font-medium">
-                          {t('calendar.recommendationsShelf', { defaultValue: 'Recommended Outfits' })}: {getLocalizedNotification(activeNotifContext, t).title}
-                        </h3>
-                      </div>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 rounded-xl animate-none" onClick={() => setActiveNotifContext(null)} aria-label="Close shelf">
-                        <X className="h-4 w-4" />
-                      </Button>
+              {/* 2. Scheduled Outfits Monthly Calendar Grid */}
+              <Card className="border border-border/80 rounded-2xl shadow-editorial overflow-hidden bg-card w-full flex flex-col flex-1 min-h-[480px]">
+                <CardContent className="p-4 md:p-5 flex flex-col h-full flex-1">
+                  {/* Calendar Month Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <CalIcon className="h-5 w-5 text-[hsl(var(--accent))]" />
+                      <h3 className="font-display text-base font-semibold text-foreground">
+                        {t('calendar.scheduledOutfits', { defaultValue: 'Scheduled Outfits' })}
+                      </h3>
                     </div>
-
-                    {notifModalLoading ? (
-                      <div className="flex flex-col items-center justify-center py-8 space-y-3">
-                        <RefreshCw className="h-6 w-6 animate-spin text-[hsl(var(--accent))]" />
-                        <p className="text-xs text-muted-foreground animate-pulse">
-                          {t('outfits.generatingProposals', { defaultValue: 'Generating outfit recommendations from your closet...' })}
-                        </p>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        size="xs" 
+                        variant="outline" 
+                        className="rounded-lg h-7 text-xs font-semibold px-2.5" 
+                        onClick={() => setCurrentCalendarMonth(new Date())}
+                      >
+                        {t('calendar.todayBtn', { defaultValue: 'Today' })}
+                      </Button>
+                      <div className="flex items-center border border-border rounded-lg overflow-hidden h-7">
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-7 w-7 rounded-none border-r border-border" 
+                          onClick={() => setCurrentCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} 
+                          aria-label="Previous month"
+                        >
+                          <ChevronLeft className="h-3.5 w-3.5" />
+                        </Button>
+                        <span className="px-3 text-xs font-semibold font-display min-w-[110px] text-center select-none">
+                          {currentCalendarMonth.toLocaleString(i18n.language || 'en', { month: 'long', year: 'numeric' })}
+                        </span>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-7 w-7 rounded-none border-l border-border" 
+                          onClick={() => setCurrentCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))} 
+                          aria-label="Next month"
+                        >
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
-                    ) : (activeNotifContext?.payload?.outfit_recommendations && Array.isArray(activeNotifContext.payload.outfit_recommendations) && activeNotifContext.payload.outfit_recommendations.filter(Boolean).length > 0) ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        {activeNotifContext.payload.outfit_recommendations.filter(Boolean).map((rec, i) => (
-                          <div key={i} className="relative group">
-                            <OutfitRecommendationCard
-                              rec={rec}
-                              index={i}
-                              sessionId={null}
-                              onItemClick={(itemId) => setFloaterItemId(itemId)}
-                              onSave={(r) => handleSaveOutfit(r, activeNotifContext)}
-                              draggable={false}
-                            />
+                    </div>
+                  </div>
+
+                  {/* Calendar Weekday Headers */}
+                  <div className="grid grid-cols-7 gap-1.5 text-center mb-1">
+                    {Array.from({ length: 7 }).map((_, idx) => (
+                      <div key={idx} className="text-[10px] font-bold caps-label text-muted-foreground/75 py-1">
+                        {getWeekdayShortName(idx, i18n.language)}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Calendar Grid Cells */}
+                  <div className="grid grid-cols-7 gap-1.5 flex-1 min-h-0">
+                    {getDaysInMonth(currentCalendarMonth).map(({ date, isCurrentMonth }, idx) => {
+                      const dayStr = date.toISOString().split('T')[0];
+                      const todayStr = new Date().toISOString().split('T')[0];
+                      const isToday = dayStr === todayStr;
+                      const dayOutfit = outfits.find(o => o.usage?.date === dayStr);
+
+                      return (
+                        <div
+                          key={idx}
+                          onClick={() => {
+                            if (dayOutfit) {
+                              setSelectedOutfitForDetail(dayOutfit);
+                              setIsEditingOutfit(false);
+                              setActiveTab('shuffle');
+                            } else {
+                              setSchedulingDate(dayStr);
+                            }
+                          }}
+                          className={cn(
+                            "relative rounded-xl border p-1 flex flex-col justify-between transition-all duration-200 select-none cursor-pointer group bg-card min-h-[60px] sm:min-h-[90px] hover:border-[hsl(var(--accent))]/80 hover:shadow-sm",
+                            isCurrentMonth ? "border-border/60" : "border-border/20 opacity-40 bg-muted/5",
+                            isToday && "border-[hsl(var(--accent))] ring-1 ring-[hsl(var(--accent))]/20 bg-[hsl(var(--accent))]/5"
+                          )}
+                        >
+                          {/* Day Number */}
+                          <span className={cn(
+                            "text-[10px] sm:text-xs font-semibold self-start px-0.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center",
+                            isToday ? "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]" : "text-foreground"
+                          )}>
+                            {date.getDate()}
+                          </span>
+
+                          {/* Outfit Thumbnail */}
+                          <div className="w-full flex-grow aspect-[4/5] mt-0.5 rounded-lg overflow-hidden relative flex items-center justify-center bg-secondary/5 border border-dashed border-border/40">
+                            {dayOutfit ? (
+                              <div className="absolute inset-0 scale-[0.95]">
+                                <AvatarViewer
+                                  shapeParams={user?.avatar_shape_params || {}}
+                                  sex={user?.sex || 'female'}
+                                  outfitItems={getOutfitPiecesMap(dayOutfit)}
+                                />
+                              </div>
+                            ) : (
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Plus className="h-3.5 w-3.5 text-muted-foreground/60" />
+                              </div>
+                            )}
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-muted-foreground italic">
-                        {t('outfits.noRecommendationsPayload', { defaultValue: 'No structured recommendations available for this notification.' })}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Tinder Swiper */}
-              <OutfitTinderSwiper />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </main>
