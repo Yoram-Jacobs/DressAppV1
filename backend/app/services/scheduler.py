@@ -282,7 +282,6 @@ async def check_scheduler_triggers() -> None:
                     ret_dt_str = arch.get("return_time")
                     if ret_dt_str:
                         try:
-                            from datetime import timedelta
                             ret_dt = datetime.fromisoformat(ret_dt_str.replace("Z", "+00:00"))
                             if ret_dt.tzinfo is None:
                                 ret_dt = ret_dt.replace(tzinfo=timezone.utc)
