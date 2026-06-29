@@ -2076,7 +2076,7 @@ export default function Stylist() {
             </TabsContent>
 
             <TabsContent value="shuffle" className="w-full min-w-0 flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none p-4 data-[state=active]:flex flex-col gap-8 max-w-4xl mx-auto">
-              <div className="flex items-center justify-between gap-3 w-full border-b border-border/40 pb-3">
+              <div className="flex flex-col items-start gap-3 w-full border-b border-border/40 pb-3">
                 <div className="min-w-0">
                   <h2 className="font-display text-xl font-medium">{t('stylist.outfitPlanner', { defaultValue: 'Outfit Planner' })}</h2>
                   <p className="text-xs text-muted-foreground mt-0.5">{t('outfits.viewDescription', { defaultValue: 'View outfits you have composed and scheduled.' })}</p>
