@@ -51,6 +51,21 @@ def _generate_fallback_advice(
     style_dress_for: str,
     weather_ctx: dict[str, Any] | None = None
 ) -> dict[str, Any]:
+    import re
+    
+    def _check_words(text: str, tags: list[str], target_patterns: list[str]) -> bool:
+        for pat in target_patterns:
+            # Check tags (exact match or word boundary)
+            if any(pat == tag or f" {pat} " in f" {tag} " or tag.startswith(f"{pat} ") or tag.endswith(f" {pat}") for tag in tags):
+                return True
+            # Check text (replace - with space for easier boundary checking)
+            clean_text = text.replace("-", " ")
+            clean_pat = pat.replace("-", " ")
+            escaped_pat = re.escape(clean_pat)
+            if re.search(r'\b' + escaped_pat + r'\b', clean_text):
+                return True
+        return False
+
     style_key = (style_dress_for or "").lower().strip()
     
     # Multilingual synonyms map
@@ -92,11 +107,11 @@ def _generate_fallback_advice(
             if temp_c < 15:
                 if category in {"jacket", "coat", "blazer", "outerwear"}:
                     score += 15
-                if category in {"pants", "trousers", "jeans"} or any(w in title for w in ["pants", "jeans", "trousers"]):
+                if category in {"pants", "trousers", "jeans"} or _check_words(title, tags, ["pants", "jeans", "trousers"]):
                     score += 10
-                elif category == "bottom" and any(w in title or w in tags for w in ["shorts", "skirt", "קצרים", "חצאית"]):
+                elif category == "bottom" and _check_words(title, tags, ["shorts", "skirt", "קצרים", "חצאית"]):
                     score -= 15
-                if category == "top" and any(w in title or w in tags for w in ["sweater", "knit", "hoodie", "cardigan", "long sleeve", "ארוך", "סוודר"]):
+                if category == "top" and _check_words(title, tags, ["sweater", "knit", "hoodie", "cardigan", "long sleeve", "ארוך", "סוודר"]):
                     score += 10
             
             # Heatwave/Summer weather (>= 28°C) - strict hot weather enforcement
@@ -105,37 +120,37 @@ def _generate_fallback_advice(
                     score -= 30
                 # Strict top restrictions
                 if category == "top":
-                    if any(w in title or w in tags for w in ["long sleeve", "long-sleeve", "sweater", "coat", "wool", "knit", "heavy", "ארוך", "סוודר"]):
+                    if _check_words(title, tags, ["long sleeve", "long-sleeve", "sweater", "coat", "wool", "knit", "heavy", "ארוך", "סוודר"]):
                         score -= 30
-                    elif any(w in title or w in tags for w in ["short sleeve", "short-sleeve", "tshirt", "tee", "tank", "polo", "קצר", "גופייה", "טי"]):
+                    elif _check_words(title, tags, ["short sleeve", "short-sleeve", "tshirt", "t-shirt", "tee", "tank", "polo", "קצר", "גופייה", "טי"]):
                         score += 30
                 # Strict bottom restrictions
                 if category == "bottom":
-                    if any(w in title or w in tags for w in ["shorts", "skirt", "קצרים", "חצאית"]):
+                    if _check_words(title, tags, ["shorts", "skirt", "קצרים", "חצאית"]):
                         score += 30
-                    elif any(w in title or w in tags for w in ["pants", "jeans", "trousers", "ארוכים"]) and not any(w in title for w in ["linen", "light", "thin"]):
+                    elif _check_words(title, tags, ["pants", "jeans", "trousers", "ארוכים"]) and not _check_words(title, tags, ["linen", "light", "thin"]):
                         score -= 20
                         
             # Normal warm weather (25°C to 28°C)
             elif temp_c >= 25:
                 if category in {"jacket", "coat", "blazer", "outerwear"}:
                     score -= 20
-                if category in {"pants", "trousers", "jeans"} and not any(w in title for w in ["linen", "light", "thin"]):
+                if category in {"pants", "trousers", "jeans"} and not _check_words(title, tags, ["linen", "light", "thin"]):
                     score -= 5
-                if category == "bottom" and any(w in title or category in {"shorts", "skirt"} or w in tags for w in ["shorts", "skirt", "קצרים"]):
+                if category == "bottom" and _check_words(title, tags, ["shorts", "skirt", "קצרים"]):
                     score += 10
-                if category == "top" and any(w in title or w in tags for w in ["tshirt", "tank", "tee", "short sleeve", "polo", "קצר", "טי"]):
+                if category == "top" and _check_words(title, tags, ["tshirt", "t-shirt", "tank", "tee", "short sleeve", "short-sleeve", "polo", "קצר", "טי"]):
                     score += 10
-                elif category == "top" and any(w in title or w in tags for w in ["sweater", "wool", "knit", "heavy", "סוודר"]):
+                elif category == "top" and _check_words(title, tags, ["sweater", "wool", "knit", "heavy", "סוודר"]):
                     score -= 15
 
         # 3. Rain matching
         if is_rainy:
             if category in {"jacket", "coat", "outerwear"}:
                 score += 10
-            if category == "shoes" and any(w in title or w in tags for w in ["boot", "sneaker", "waterproof", "מגפיים"]):
+            if category == "shoes" and _check_words(title, tags, ["boot", "sneaker", "waterproof", "מגפיים"]):
                 score += 10
-            elif category == "shoes" and any(w in title or w in tags for w in ["sandal", "heel", "flipflop", "flip flop", "סנדל", "כפכף"]):
+            elif category == "shoes" and _check_words(title, tags, ["sandal", "heel", "flipflop", "flip flop", "סנדל", "כפכף"]):
                 score -= 15
                 
         item["weather_style_score"] = score
