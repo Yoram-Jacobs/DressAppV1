@@ -528,6 +528,10 @@ async def check_scheduler_triggers() -> None:
                                 logger.info("Auto-saved scheduled outfit %s for user %s on %s", outfit_id, user["id"], tomorrow_str)
 
                     # Build push notification text using localized i18n keys
+                    style_display = style_dress_for
+                    if style_dress_for in {"casual", "smart-casual", "formal", "athletic"}:
+                        style_display = t(f"taxonomy.dress_code.{style_dress_for}", lang)
+
                     if is_quota_issue:
                         title = t("outfits.notification.quotaTitle", lang)
                         quota_msg = t("outfits.notification.quotaBody", lang)
@@ -543,7 +547,7 @@ async def check_scheduler_triggers() -> None:
                             body_text = quota_msg
                     else:
                         title = t("outfits.notification.dailyTitle", lang, emoji="👕")
-                        prefix = t("outfits.notification.proposalsTitle", lang, style=style_dress_for)
+                        prefix = t("outfits.notification.proposalsTitle", lang, style=style_display)
                         
                         if advice and advice.get("outfit_recommendations"):
                             recs = advice.get("outfit_recommendations") or []
@@ -553,7 +557,7 @@ async def check_scheduler_triggers() -> None:
                                 rec_lines.append(f"• {r.get('name') or 'Outfit'}: {items_str}")
                             body_text = f"{prefix}\n" + "\n".join(rec_lines)
                         else:
-                            body_text = t("outfits.notification.dailyBody", lang, style=style_dress_for)
+                            body_text = t("outfits.notification.dailyBody", lang, style=style_display)
 
                     if advice:
                         advice["is_fallback"] = is_quota_issue

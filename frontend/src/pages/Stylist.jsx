@@ -146,13 +146,7 @@ const getStyleLabel = (styleOpt, customStyle, t) => {
   if (styleOpt === 'custom') {
     return customStyle || t('credits.custom', { defaultValue: 'Custom' });
   }
-  switch (styleOpt) {
-    case 'casual': return t('outfits.dressCode.casual', { defaultValue: 'Casual' });
-    case 'smart-casual': return t('outfits.dressCode.smart-casual', { defaultValue: 'Smart Casual' });
-    case 'formal': return t('outfits.dressCode.formal', { defaultValue: 'Formal' });
-    case 'athletic': return t('outfits.dressCode.athletic', { defaultValue: 'Athletic' });
-    default: return styleOpt;
-  }
+  return labelForDressCode(styleOpt, t);
 };
 
 const formatLocalDate = (date) => {
@@ -2202,7 +2196,7 @@ export default function Stylist() {
                         <div className="p-2.5 bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] rounded-xl shrink-0">
                           <Bell className="h-5 w-5" />
                         </div>
-                        <div className="text-left space-y-1">
+                        <div className="text-start space-y-1">
                           <h3 className="font-display text-base font-semibold text-foreground">
                             {t('profile.schedulerPushReminders', { defaultValue: 'Schedule & Push Reminders' })}
                           </h3>
@@ -2571,7 +2565,7 @@ export default function Stylist() {
             return (
               <div className="flex flex-col gap-3 p-3 bg-rose-500/5 border border-rose-500/10 rounded-xl mb-4">
                 {dayOutfit.is_fallback && (
-                  <div className="text-[11px] font-semibold text-rose-700 leading-normal text-left pb-2 border-b border-rose-500/10">
+                  <div className="text-[11px] font-semibold text-rose-700 leading-normal text-start pb-2 border-b border-rose-500/10">
                     {t('outfits.notification.quotaBody', { defaultValue: 'AI service quota limit reached. A fallback suggestion from your closet rotation has been scheduled for tomorrow:' })}
                   </div>
                 )}
@@ -2580,7 +2574,7 @@ export default function Stylist() {
                     <div className="w-10 h-12 bg-secondary/10 rounded-lg overflow-hidden border border-border/40 shrink-0">
                       <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={getOutfitPiecesMap(dayOutfit)} />
                     </div>
-                    <div className="min-w-0 text-left">
+                    <div className="min-w-0 text-start">
                       <div className="text-[9px] caps-label text-rose-600 font-semibold">{t('calendar.scheduled', { defaultValue: 'Scheduled' })}</div>
                       <div className="font-semibold text-xs text-foreground truncate">{dayOutfit.name}</div>
                     </div>

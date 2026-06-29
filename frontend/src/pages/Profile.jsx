@@ -155,7 +155,7 @@ function SchedulerSettingsCard() {
       <Accordion type="single" collapsible value={openVal} onValueChange={setOpenVal}>
         <AccordionItem value="scheduler" className="border-none">
           <AccordionTrigger className="px-6 py-4 hover:no-underline">
-            <div className="flex items-center gap-3 text-left">
+            <div className="flex items-center gap-3 text-start">
               <Bell className="h-5 w-5 text-[hsl(var(--accent))]" />
               <div>
                 <div className="caps-label text-muted-foreground">{t('profile.aiStylist', { defaultValue: 'AI Stylist' })}</div>
@@ -169,13 +169,13 @@ function SchedulerSettingsCard() {
         <div className="flex items-center justify-between gap-3 p-3 bg-secondary/30 rounded-xl border border-border">
           <div className="space-y-1">
             <div className="font-semibold text-sm">{t('profile.enableSchedulerProposals', { defaultValue: 'Enable Scheduler Proposals' })}</div>
-            <div className="text-xs text-muted-foreground text-left">{t('profile.receivePushReminders', { defaultValue: 'Receive push notification reminders with customized outfit proposals.' })}</div>
+            <div className="text-xs text-muted-foreground text-start">{t('profile.receivePushReminders', { defaultValue: 'Receive push notification reminders with customized outfit proposals.' })}</div>
           </div>
           <Switch checked={enabled} onCheckedChange={setEnabled} data-testid="scheduler-enabled-switch" />
         </div>
 
         {enabled && (
-          <div className="space-y-4 pt-2 text-left">
+          <div className="space-y-4 pt-2 text-start">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="s-freq">{t('profile.notificationFrequency', { defaultValue: 'Notification Frequency' })}</Label>
@@ -247,13 +247,13 @@ function SchedulerSettingsCard() {
           <div className="flex items-center justify-between gap-3 p-3 bg-secondary/30 rounded-xl border border-border">
             <div className="space-y-1">
               <div className="font-semibold text-sm">{t('profile.browserPushAlerts', { defaultValue: 'Browser Push Alerts (Native Web Push)' })}</div>
-              <div className="text-xs text-muted-foreground text-left">{t('profile.receiveDirectBrowserAlerts', { defaultValue: 'Receive direct browser notification alerts on this device.' })}</div>
+              <div className="text-xs text-muted-foreground text-start">{t('profile.receiveDirectBrowserAlerts', { defaultValue: 'Receive direct browser notification alerts on this device.' })}</div>
             </div>
             <Switch checked={pushEnabled} onCheckedChange={handlePushToggle} disabled={busy} />
           </div>
         )}
 
-        <div className="text-xs text-muted-foreground p-3 bg-secondary/20 rounded-xl border border-dashed border-border/80 text-left">
+        <div className="text-xs text-muted-foreground p-3 bg-secondary/20 rounded-xl border border-dashed border-border/80 text-start">
           {t('profile.phoneWarningStart', { defaultValue: '* Ensure your phone number is configured under the ' })}
           <strong>{t('profile.identity', { defaultValue: 'Identity' })}</strong>
           {t('profile.phoneWarningEnd', { defaultValue: ' section to successfully route simulated push alerts.' })}
