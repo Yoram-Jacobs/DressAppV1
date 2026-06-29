@@ -2071,11 +2071,10 @@ export default function Stylist() {
           ? "lg:grid-cols-[minmax(0,1fr)]"
           : "lg:grid-cols-[200px_minmax(0,1fr)]"
       )}>
-        {/* Left rail — desktop only */}
         <aside
           className={cn(
-            "hidden lg:flex rounded-[calc(var(--radius)+6px)] bg-card border border-border overflow-hidden transition-all duration-300",
-            (sidebarCollapsed || activeTab !== 'chat') ? "w-0 border-0 opacity-0 pointer-events-none" : "w-[200px]"
+            "rounded-[calc(var(--radius)+6px)] bg-card border border-border overflow-hidden transition-all duration-300",
+            (sidebarCollapsed || activeTab !== 'chat') ? "hidden" : "hidden lg:flex w-[200px]"
           )}
           data-testid="stylist-conversation-sidebar"
         >
