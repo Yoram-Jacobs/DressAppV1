@@ -1854,7 +1854,7 @@ export default function Stylist() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6 items-start overflow-y-auto max-h-[calc(100dvh-200px)] md:max-h-[calc(100dvh-240px)] pr-1 scrollbar-thin">
             {/* Large Avatar Viewer */}
             <div className="relative w-full aspect-[4/5] bg-secondary/10 rounded-2xl overflow-hidden border border-border/60">
               <AvatarViewer
