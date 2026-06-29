@@ -1722,7 +1722,13 @@
       "eventTitle": "Il est temps de vous préparer pour {{name}} ! 🌟",
       "eventBody": "La tenue choisie est prête. Passez un excellent moment !",
       "dailyTitle": "La suggestion de tenue pour demain est prête ! {{emoji}}",
-      "dailyBody": "Votre Styliste IA a préparé 3 suggestions de tenues pour votre journée : {{style}}."
+      "dailyBody": "Votre Styliste IA a préparé 3 suggestions de tenues pour votre journée : {{style}}.",
+      "quotaTitle": "Mise à jour du styliste IA ⚠️",
+      "quotaBody": "Limite de quota du service IA atteinte. Une suggestion de secours issue de la rotation de votre garde-robe a été planifiée pour demain :",
+      "travelTitle": "Tenue de voyage de demain 👕",
+      "travelBody": "Votre suggestion de tenue pour demain ({{date}}) est prête :",
+      "welcomeBackTitle": "Bon retour ! ✈️",
+      "welcomeBackBody": "N'oubliez pas de laver bientôt les vêtements de votre valise pour les garder frais !"
     }
   },
   "stats": {

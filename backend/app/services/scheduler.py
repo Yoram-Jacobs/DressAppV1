@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import uuid
 from datetime import datetime, timezone, timedelta
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -15,6 +14,7 @@ from app.db.database import get_db
 from app.services.trend_scout import run_trend_scout
 from app.services.push_service import send_push_notification
 from app.services.stylist_scheduler_brain import generate_scheduled_proposals
+from app.services.i18n import t
 
 logger = logging.getLogger(__name__)
 
@@ -184,6 +184,7 @@ async def check_scheduler_triggers() -> None:
                         logger.info("Scheduler: Auto-unpacking suitcase for user=%s", user["id"])
                         
                         # Archive the completed trip
+                        import uuid
                         archive_doc = {
                             "id": str(uuid.uuid4()),
                             "user_id": user["id"],
@@ -240,10 +241,13 @@ async def check_scheduler_triggers() -> None:
                             items_str = ", ".join(it.get("description") or it.get("title") or "item" for it in o.get("items", []) if it.get("status") != "missing")
                             rec_lines.append(f"• {o.get('outfit_name') or 'Outfit'}: {items_str}")
                         
-                        body_text = f"Your outfit recommendation for tomorrow ({tomorrow_str}) is ready:\n" + "\n".join(rec_lines)
+                        lang = user.get("preferred_language") or "en"
+                        title = t("outfits.notification.travelTitle", lang)
+                        prefix = t("outfits.notification.travelBody", lang, date=tomorrow_str)
+                        body_text = f"{prefix}\n" + "\n".join(rec_lines)
                         await send_push_notification(
                             user_id=user["id"],
-                            title="Tomorrow's Travel Outfit 👕",
+                            title=title,
                             body=body_text
                         )
                 # Ignore regular scheduler notifications while traveling
@@ -257,20 +261,7 @@ async def check_scheduler_triggers() -> None:
             weekday = s_set.get("weekday")
 
             try:
-                # Handle potential AM/PM format
-                clean_time_str = time_str.strip().upper()
-                is_pm = "PM" in clean_time_str
-                is_am = "AM" in clean_time_str
-                clean_time_str = clean_time_str.replace("AM", "").replace("PM", "").strip()
-                
-                parts = clean_time_str.split(":")
-                uh = int(parts[0])
-                um = int(parts[1]) if len(parts) > 1 else 0
-                
-                if is_pm and uh < 12:
-                    uh += 12
-                elif is_am and uh == 12:
-                    uh = 0
+                uh, um = map(int, time_str.split(":", 1))
             except Exception:
                 uh, um = 8, 0
 
@@ -286,10 +277,13 @@ async def check_scheduler_triggers() -> None:
                                 ret_dt = ret_dt.replace(tzinfo=timezone.utc)
                             target_date = (ret_dt.astimezone(user_tz) + timedelta(days=1)).date()
                             if local_now.date() >= target_date:
+                                lang = user.get("preferred_language") or "en"
+                                title = t("outfits.notification.welcomeBackTitle", lang)
+                                body = t("outfits.notification.welcomeBackBody", lang)
                                 await send_push_notification(
                                     user_id=user["id"],
-                                    title="Welcome Back! ✈️",
-                                    body="Don't forget to launder the garments from your suitcase soon to keep them fresh!"
+                                    title=title,
+                                    body=body
                                 )
                                 await db.suitcase_archives.update_one({"id": arch["id"]}, {"$set": {"push_notification_sent": True}})
                         except Exception as e:
@@ -309,69 +303,121 @@ async def check_scheduler_triggers() -> None:
 
                 if should_notify:
                     style_dress_for = s_set.get("style_dress_for") or "casual/daily dress"
+                    lang = user.get("preferred_language") or "en"
+                    tomorrow_local = local_now + timedelta(days=1)
+                    tomorrow_str = tomorrow_local.strftime("%Y-%m-%d")
+
                     advice = None
+                    is_quota_issue = False
                     try:
                         advice = await generate_scheduled_proposals(user, style_dress_for)
-                        recs = advice.get("outfit_recommendations") or []
-                        
-                        rec_lines = []
-                        for r in recs:
-                            items_str = ", ".join(it.get("description") or it.get("title") or "item" for it in r.get("items") or [])
-                            rec_lines.append(f"• {r.get('name') or 'Outfit'}: {items_str}")
-                        
-                        body_text = f"Proposals for {style_dress_for}:\n" + "\n".join(rec_lines)
                     except Exception as exc:
-                        logger.warning("Failed to generate scheduled proposals in cron: %s", exc)
-                        is_quota_issue = "429" in str(exc) or "RESOURCE_EXHAUSTED" in str(exc) or "quota" in str(exc).lower()
+                        logger.warning("Failed to generate scheduled proposals in cron (possible quota limit): %s", exc)
+                        is_quota_issue = True
                         try:
                             from app.services.stylist_scheduler_brain import get_rotation_prioritized_closet
                             closet_items = await get_rotation_prioritized_closet(user["id"], limit=20)
                             advice = _generate_fallback_advice(closet_items, style_dress_for)
+                        except Exception as inner_exc:
+                            logger.error("Failed to generate fallback scheduled proposals: %s", inner_exc)
+                            advice = None
+
+                    # Automatically save scheduled outfit recommendation to outfits collection
+                    if advice and advice.get("outfit_recommendations"):
+                        recs = advice.get("outfit_recommendations") or []
+                        if recs:
+                            first_rec = recs[0]
+                            # Guard against duplicate scheduled outfits for the same day
+                            existing_outfit = await db.outfits.find_one({
+                                "user_id": user["id"],
+                                "usage.date": tomorrow_str,
+                                "source_workflow": "scheduled"
+                            })
+                            if not existing_outfit:
+                                import uuid
+                                outfit_id = str(uuid.uuid4())
+                                now_iso = datetime.now(timezone.utc).isoformat()
+                                
+                                garments = []
+                                for it in first_rec.get("items") or []:
+                                    g_dict = {
+                                        "closet_item_id": it.get("closet_item_id"),
+                                        "role": it.get("role") or "accessory",
+                                        "title": it.get("description") or it.get("title") or "item"
+                                    }
+                                    if g_dict["closet_item_id"]:
+                                        item = await db.closet_items.find_one({"id": g_dict["closet_item_id"]})
+                                        if item:
+                                            g_dict["title"] = item.get("title") or item.get("name") or g_dict["title"]
+                                            g_dict["image_url"] = item.get("thumbnail_data_url") or item.get("segmented_image_url") or item.get("original_image_url")
+                                    garments.append(g_dict)
+                                    
+                                outfit_doc = {
+                                    "id": outfit_id,
+                                    "user_id": user["id"],
+                                    "name": first_rec.get("name") or "Outfit 1",
+                                    "description": first_rec.get("why") or advice.get("reasoning_summary"),
+                                    "source_workflow": "scheduled",
+                                    "prompt": style_dress_for,
+                                    "garments": garments,
+                                    "usage": {
+                                        "date": tomorrow_str,
+                                        "time": time_str,
+                                        "location": None,
+                                        "event_name": style_dress_for
+                                    },
+                                    "use_count": 1,
+                                    "created_at": now_iso,
+                                    "updated_at": now_iso,
+                                }
+                                await db.outfits.insert_one(outfit_doc)
+                                
+                                # Update closet item wear count
+                                closet_item_ids = [g["closet_item_id"] for g in garments if g["closet_item_id"]]
+                                if closet_item_ids:
+                                    await db.closet_items.update_many(
+                                        {"id": {"$in": closet_item_ids}, "user_id": user["id"]},
+                                        {
+                                            "$inc": {"wear_count": 1},
+                                            "$set": {
+                                                "last_worn_at": tomorrow_str,
+                                                "updated_at": now_iso
+                                            }
+                                        }
+                                    )
+                                logger.info("Auto-saved scheduled outfit %s for user %s on %s", outfit_id, user["id"], tomorrow_str)
+
+                    # Build push notification text using localized i18n keys
+                    if is_quota_issue:
+                        title = t("outfits.notification.quotaTitle", lang)
+                        quota_msg = t("outfits.notification.quotaBody", lang)
+                        
+                        if advice and advice.get("outfit_recommendations"):
                             recs = advice.get("outfit_recommendations") or []
-                            
                             rec_lines = []
                             for r in recs:
                                 items_str = ", ".join(it.get("description") or it.get("title") or "item" for it in r.get("items") or [])
                                 rec_lines.append(f"• {r.get('name') or 'Outfit'}: {items_str}")
-                            
-                            prefix = "⚠️ [AI Quota Limit] Surfacing fallback selections from your closet rotation:\n" if is_quota_issue else f"Proposals for {style_dress_for}:\n"
-                            body_text = prefix + "\n".join(rec_lines)
-                        except Exception as inner_exc:
-                            logger.error("Failed to generate fallback scheduled proposals: %s", inner_exc)
-                            if is_quota_issue:
-                                body_text = "⚠️ [AI Quota Limit] Your AI Stylist is currently offline. Please check back later!"
-                            else:
-                                body_text = f"Your AI Stylist prepared outfit options for your: {style_dress_for}."
-                            advice = None
-
-                    # Auto-save the first recommendation to tomorrow's calendar so the user can view it on the grid
-                    if advice and advice.get("outfit_recommendations"):
-                        first_rec = advice["outfit_recommendations"][0]
-                        tomorrow_date_str = (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%d")
+                            body_text = f"{quota_msg}\n" + "\n".join(rec_lines)
+                        else:
+                            body_text = quota_msg
+                    else:
+                        title = t("outfits.notification.dailyTitle", lang, emoji="👕")
+                        prefix = t("outfits.notification.proposalsTitle", lang, style=style_dress_for)
                         
-                        outfit_doc = {
-                            "id": str(uuid.uuid4()),
-                            "user_id": user["id"],
-                            "prompt": f"Scheduled AI Proposal for {style_dress_for}",
-                            "garments": first_rec.get("items", []),
-                            "usage": {
-                                "date": tomorrow_date_str,
-                                "location": "",
-                                "event_name": "AI Scheduled Proposal"
-                            },
-                            "use_count": 1,
-                            "created_at": datetime.now(timezone.utc).isoformat(),
-                            "updated_at": datetime.now(timezone.utc).isoformat()
-                        }
-                        try:
-                            await db.outfits.insert_one(outfit_doc)
-                            logger.info(f"Auto-saved scheduled outfit {outfit_doc['id']} for {tomorrow_date_str}")
-                        except Exception as e:
-                            logger.error(f"Failed to auto-save scheduled outfit: {e}")
+                        if advice and advice.get("outfit_recommendations"):
+                            recs = advice.get("outfit_recommendations") or []
+                            rec_lines = []
+                            for r in recs:
+                                items_str = ", ".join(it.get("description") or it.get("title") or "item" for it in r.get("items") or [])
+                                rec_lines.append(f"• {r.get('name') or 'Outfit'}: {items_str}")
+                            body_text = f"{prefix}\n" + "\n".join(rec_lines)
+                        else:
+                            body_text = t("outfits.notification.dailyBody", lang, style=style_dress_for)
 
                     await send_push_notification(
                         user_id=user["id"],
-                        title="Tomorrow's Outfit Proposal is Ready! 👕",
+                        title=title,
                         body=body_text,
                         payload=advice
                     )
@@ -404,10 +450,14 @@ async def check_scheduler_triggers() -> None:
             time_str = usage.get("time")
             if date_str and time_str:
                 if date_str == now.strftime("%Y-%m-%d") and current_time_str == time_str:
+                    user_doc = await db.users.find_one({"id": outfit["user_id"]})
+                    user_lang = user_doc.get("preferred_language") or "en" if user_doc else "en"
+                    title = t("outfits.notification.eventTitle", user_lang, name=outfit.get("name"))
+                    body = t("outfits.notification.eventBody", user_lang)
                     await send_push_notification(
                         user_id=outfit["user_id"],
-                        title=f"Time to get ready for {outfit.get('name')}! 🌟",
-                        body=f"Your chosen outfit is prepared. Have a wonderful time!"
+                        title=title,
+                        body=body
                     )
     except Exception as exc:
         logger.warning("Error checking scheduler triggers: %s", exc)

@@ -1722,7 +1722,13 @@
       "eventTitle": "是时候准备您的{{name}}穿搭了！🌟",
       "eventBody": "您选定的穿搭已准备就绪。祝您度过美好时光！",
       "dailyTitle": "明天的穿搭建议已准备就绪！{{emoji}}",
-      "dailyBody": "您的 AI 造型师已为您的{{style}}活动准备了 3 套穿搭选择。"
+      "dailyBody": "您的 AI 造型师已为您的{{style}}活动准备了 3 套穿搭选择。",
+      "quotaTitle": "AI 搭配助手更新 ⚠️",
+      "quotaBody": "已达到 AI 服务配额上限。已为您安排明日的衣橱轮换备用建议：",
+      "travelTitle": "明日旅行穿搭 👕",
+      "travelBody": "您明天的旅行穿搭建议（{{date}}）已准备就绪：",
+      "welcomeBackTitle": "欢迎回来！ ✈️",
+      "welcomeBackBody": "别忘了尽快清洗行李箱里的衣物以保持干净！"
     }
   },
   "stats": {

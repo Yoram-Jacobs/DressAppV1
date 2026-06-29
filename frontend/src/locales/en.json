@@ -1737,7 +1737,13 @@
       "eventBody": "Your chosen outfit is prepared. Have a wonderful time!",
       "dailyTitle": "Tomorrow's Outfit Proposal is Ready! {{emoji}}",
       "dailyBody": "Your AI Stylist prepared 3 outfit options for your: {{style}}.",
-      "proposalsTitle": "Proposals for {{style}}:"
+      "proposalsTitle": "Proposals for {{style}}:",
+      "quotaTitle": "AI Stylist Update ⚠️",
+      "quotaBody": "AI service quota limit reached. A fallback suggestion from your closet rotation has been scheduled for tomorrow:",
+      "travelTitle": "Tomorrow's Travel Outfit 👕",
+      "travelBody": "Your outfit recommendation for tomorrow ({{date}}) is ready:",
+      "welcomeBackTitle": "Welcome Back! ✈️",
+      "welcomeBackBody": "Don't forget to launder the garments from your suitcase soon to keep them fresh!"
     }
   },
   "stats": {
