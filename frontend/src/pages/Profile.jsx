@@ -207,7 +207,7 @@ function SchedulerSettingsCard() {
               )}
 
               <div className="space-y-1.5">
-                <Label htmlFor="s-time">{t('profile.notificationTime', { defaultValue: 'Notification Time (UTC)' })}</Label>
+                <Label htmlFor="s-time">{t('profile.notificationTime', { defaultValue: 'Notification Time (Local)' })}</Label>
                 <Input id="s-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} className="rounded-xl" />
               </div>
             </div>

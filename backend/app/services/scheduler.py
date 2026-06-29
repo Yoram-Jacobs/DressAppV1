@@ -258,7 +258,20 @@ async def check_scheduler_triggers() -> None:
             weekday = s_set.get("weekday")
 
             try:
-                uh, um = map(int, time_str.split(":", 1))
+                # Handle potential AM/PM format
+                clean_time_str = time_str.strip().upper()
+                is_pm = "PM" in clean_time_str
+                is_am = "AM" in clean_time_str
+                clean_time_str = clean_time_str.replace("AM", "").replace("PM", "").strip()
+                
+                parts = clean_time_str.split(":")
+                uh = int(parts[0])
+                um = int(parts[1]) if len(parts) > 1 else 0
+                
+                if is_pm and uh < 12:
+                    uh += 12
+                elif is_am and uh == 12:
+                    uh = 0
             except Exception:
                 uh, um = 8, 0
 

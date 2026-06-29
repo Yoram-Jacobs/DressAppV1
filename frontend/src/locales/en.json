@@ -903,7 +903,7 @@
     "twiceAWeek": "Twice a Week",
     "onWeekday": "On Weekday",
     "chooseDay": "Choose Day",
-    "notificationTime": "Notification Time (UTC)",
+    "notificationTime": "Notification Time (Local)",
     "styleDressFor": "Style / Dress For",
     "dressForDemands": "Dress For Demands",
     "customStylePlaceholder": "e.g. Gym, Hiking, Church",
