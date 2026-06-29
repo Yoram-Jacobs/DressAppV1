@@ -2180,7 +2180,7 @@ export default function Stylist() {
               ) : (
                 <>
                   {/* 1. Schedule & Push Notifications Settings Summary */}
-                  <Card className="border border-border/80 rounded-2xl shadow-editorial overflow-hidden bg-card w-full">
+                  <Card className="border border-border/80 rounded-2xl shadow-editorial overflow-hidden bg-card w-full shrink-0">
                     <CardContent className="p-4 md:p-5 flex items-center justify-between gap-4 flex-wrap">
                       <div className="flex items-center gap-3">
                         <div className="p-2.5 bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] rounded-xl shrink-0">
@@ -2206,12 +2206,17 @@ export default function Stylist() {
                                     {getFrequencyLabel(user?.scheduler_settings?.frequency, user?.scheduler_settings?.weekday, i18n.language, t)}
                                     {', '}
                                     {(() => {
-                                      const tVal = user?.scheduler_settings?.time || '07:00';
-                                      const [h, m] = tVal.split(':');
-                                      const hInt = parseInt(h, 10);
-                                      const ampm = hInt >= 12 ? 'PM' : 'AM';
-                                      const h12 = hInt % 12 || 12;
-                                      return `${h12.toString().padStart(2, '0')}:${m} ${ampm}`;
+                                      try {
+                                        const tVal = (typeof user?.scheduler_settings?.time === 'string') ? user.scheduler_settings.time : '07:00';
+                                        const [h, m] = tVal.split(':');
+                                        const hInt = parseInt(h, 10) || 7;
+                                        const mStr = m || '00';
+                                        const ampm = hInt >= 12 ? 'PM' : 'AM';
+                                        const h12 = hInt % 12 || 12;
+                                        return `${h12.toString().padStart(2, '0')}:${mStr} ${ampm}`;
+                                      } catch (e) {
+                                        return '07:00 AM';
+                                      }
                                     })()}
                                     {', '}
                                     <span className="capitalize">
