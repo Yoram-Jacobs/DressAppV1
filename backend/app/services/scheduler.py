@@ -352,10 +352,17 @@ async def check_scheduler_triggers() -> None:
                                             g_dict["image_url"] = item.get("thumbnail_data_url") or item.get("segmented_image_url") or item.get("original_image_url")
                                     garments.append(g_dict)
                                     
+                                # Format date as M.D.YYYY
+                                try:
+                                    date_parts = tomorrow_str.split("-")
+                                    display_name = f"{int(date_parts[1])}.{int(date_parts[2])}.{date_parts[0]}"
+                                except Exception:
+                                    display_name = tomorrow_str
+
                                 outfit_doc = {
                                     "id": outfit_id,
                                     "user_id": user["id"],
-                                    "name": first_rec.get("name") or "Outfit 1",
+                                    "name": display_name,
                                     "description": first_rec.get("why") or advice.get("reasoning_summary"),
                                     "source_workflow": "scheduled",
                                     "prompt": style_dress_for,

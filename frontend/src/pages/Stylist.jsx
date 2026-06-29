@@ -155,6 +155,14 @@ const getStyleLabel = (styleOpt, customStyle, t) => {
   }
 };
 
+const formatLocalDate = (date) => {
+  if (!date) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const getWeekdayShortName = (dayIndex, locale) => {
   const date = new Date(2026, 4, 24 + dayIndex); // May 24, 2026 is Sunday
   return new Intl.DateTimeFormat(locale || 'en', { weekday: 'short' }).format(date);
@@ -296,9 +304,20 @@ export default function Stylist() {
       messageOrNotif?.payload?.source_workflow === 'event';
       
     const eventDetails = messageOrNotif?.payload?.event_details || {};
+    const targetDate = isEvent ? (eventDetails.date || formatLocalDate(new Date())) : formatLocalDate(new Date(Date.now() + 86400000));
+
+    let displayName = rec.name;
+    if (!isEvent) {
+      try {
+        const [y, m, d] = targetDate.split('-');
+        displayName = `${parseInt(m, 10)}.${parseInt(d, 10)}.${y}`;
+      } catch (e) {
+        displayName = rec.name;
+      }
+    }
 
     const body = {
-      name: rec.name,
+      name: displayName,
       description: rec.why || '',
       source_workflow: isEvent ? 'event' : 'scheduled',
       prompt: isEvent ? (eventDetails.prompt || 'Event') : (user?.scheduler_settings?.style_dress_for || 'casual'),
@@ -308,7 +327,7 @@ export default function Stylist() {
         title: it.description,
       })),
       usage: {
-        date: isEvent ? (eventDetails.date || new Date().toISOString().split('T')[0]) : new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        date: targetDate,
         time: isEvent ? (eventDetails.time || '12:00') : (user?.scheduler_settings?.time || '08:00'),
         location: isEvent ? eventDetails.location : null,
         event_name: isEvent ? eventDetails.event_name : null,
@@ -537,8 +556,18 @@ export default function Stylist() {
     
     const isEvent = (notif?.title || '').toLowerCase().includes('get ready');
     
+    let displayName = rec.name;
+    if (!isEvent) {
+      try {
+        const [y, m, d] = targetDate.split('-');
+        displayName = `${parseInt(m, 10)}.${parseInt(d, 10)}.${y}`;
+      } catch (e) {
+        displayName = rec.name;
+      }
+    }
+
     const body = {
-      name: rec.name,
+      name: displayName,
       source_workflow: isEvent ? 'event' : 'scheduled',
       prompt: isEvent ? 'Event' : (user?.scheduler_settings?.style_dress_for || 'casual'),
       garments: (rec.items || []).map((it) => ({
@@ -618,7 +647,7 @@ export default function Stylist() {
 
   // Event Proposal Dialog state
   const [eventModalOpen, setEventModalOpen] = useState(false);
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = formatLocalDate(new Date());
   const [eventForm, setEventForm] = useState({
     event_name: '',
     location: '',
@@ -2061,8 +2090,8 @@ export default function Stylist() {
         </aside>
 
         {/* Center — chat */}
-        <main className="min-w-0 flex flex-col h-full min-h-0">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full min-w-0 h-full flex flex-col">
+        <main className="min-w-0 flex flex-col h-full min-h-0 overflow-hidden">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full min-w-0 h-full flex flex-col overflow-hidden">
             <div className="flex justify-center mb-3 bg-muted/60 p-1 rounded-2xl max-w-sm mx-auto w-full border border-border/40">
               <TabsList className="grid grid-cols-3 w-full bg-transparent p-0 h-8">
                 <TabsTrigger value="chat" className="rounded-xl text-xs font-semibold data-[state=active]:bg-brand data-[state=active]:text-brand-foreground shadow-sm">{t('stylist.chatPanel')}</TabsTrigger>
@@ -2272,8 +2301,8 @@ export default function Stylist() {
                       {/* Calendar Grid Cells */}
                       <div className="grid grid-cols-7 gap-1.5 flex-1 min-h-0">
                         {getDaysInMonth(currentCalendarMonth).map(({ date, isCurrentMonth }, idx) => {
-                          const dayStr = date.toISOString().split('T')[0];
-                          const todayStr = new Date().toISOString().split('T')[0];
+                          const dayStr = formatLocalDate(date);
+                          const todayStr = formatLocalDate(new Date());
                           const isToday = dayStr === todayStr;
                           const dayOutfit = outfits.find(o => o.usage?.date === dayStr);
 
@@ -2461,10 +2490,10 @@ export default function Stylist() {
             {Array.from({ length: 7 }).map((_, idx) => {
               const day = new Date(calendarStartDate);
               day.setDate(day.getDate() + idx);
-              const dayStr = day.toISOString().split('T')[0];
+              const dayStr = formatLocalDate(day);
               
               const today = new Date();
-              const isToday = today.toISOString().split('T')[0] === dayStr;
+              const isToday = formatLocalDate(today) === dayStr;
               const dayOutfit = outfits.find(o => o.usage?.date === dayStr);
               
               return (
