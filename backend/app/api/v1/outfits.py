@@ -41,6 +41,7 @@ class SaveOutfitIn(BaseModel):
     prompt: str | None = None
     garments: list[GarmentItemIn]
     usage: OutfitUsageIn
+    is_fallback: bool | None = None
 
 
 class EventProposalIn(BaseModel):
@@ -103,6 +104,7 @@ async def save_outfit(
         "use_count": use_count,
         "created_at": now,
         "updated_at": now,
+        "is_fallback": payload.is_fallback or False,
     }
 
     # Insert Saved Outfit

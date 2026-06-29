@@ -46,10 +46,77 @@ async def _safe_run() -> None:
         logger.warning("Trend-Scout daily run failed: %s", exc)
 
 
-def _generate_fallback_advice(closet_items: list[dict[str, Any]], style_dress_for: str) -> dict[str, Any]:
+def _generate_fallback_advice(
+    closet_items: list[dict[str, Any]], 
+    style_dress_for: str,
+    weather_ctx: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    style_key = (style_dress_for or "").lower().strip()
+    
+    # Extract temperature and rain condition
+    temp_c = None
+    is_rainy = False
+    if weather_ctx:
+        temp_c = weather_ctx.get("temp_c")
+        cond = (weather_ctx.get("condition") or "").lower()
+        desc = (weather_ctx.get("description") or "").lower()
+        if any(w in cond or w in desc for w in ["rain", "shower", "storm", "drizzle"]):
+            is_rainy = True
+
+    # Compute a matching score for each closet item
+    for idx, item in enumerate(closet_items):
+        item["original_index"] = idx
+        score = 0
+        
+        tags = [t.lower() for t in item.get("tags") or []]
+        title = (item.get("title") or "").lower()
+        category = (item.get("category") or "").lower()
+        brand = (item.get("brand") or "").lower()
+        
+        # 1. Style preference matching
+        if style_key in tags or style_key in title or style_key in category or style_key in brand:
+            score += 15
+            
+        # 2. Weather matching
+        if temp_c is not None:
+            # Cold weather (< 15°C)
+            if temp_c < 15:
+                if category in {"jacket", "coat", "blazer", "outerwear"}:
+                    score += 15
+                if category in {"pants", "trousers", "jeans"}:
+                    score += 10
+                elif category == "bottom" and any(w in title for w in ["shorts", "skirt"]):
+                    score -= 15
+                if category == "top" and any(w in title or w in tags for w in ["sweater", "knit", "hoodie", "cardigan", "long sleeve"]):
+                    score += 10
+            # Hot weather (>= 25°C)
+            elif temp_c >= 25:
+                if category in {"jacket", "coat", "blazer", "outerwear"}:
+                    score -= 20
+                if category in {"pants", "trousers", "jeans"} and not any(w in title for w in ["linen", "light", "thin"]):
+                    score -= 5
+                if category == "bottom" and any(w in title or category in {"shorts", "skirt"} for w in ["shorts", "skirt"]):
+                    score += 10
+                if category == "top" and any(w in title or w in tags for w in ["tshirt", "tank", "tee", "short sleeve", "polo"]):
+                    score += 10
+                elif category == "top" and any(w in title or w in tags for w in ["sweater", "wool", "knit", "heavy"]):
+                    score -= 15
+
+        # 3. Rain matching
+        if is_rainy:
+            if category in {"jacket", "coat", "outerwear"}:
+                score += 10
+            if category == "shoes" and any(w in title or w in tags for w in ["boot", "sneaker", "waterproof"]):
+                score += 10
+            elif category == "shoes" and any(w in title or w in tags for w in ["sandal", "heel", "flipflop", "flip flop"]):
+                score -= 15
+                
+        item["weather_style_score"] = score
+
+    # Group closet items by category
     by_cat: dict[str, list[dict[str, Any]]] = {}
-    for it in closet_items:
-        cat = (it.get("category") or "top").lower()
+    for item in closet_items:
+        cat = (item.get("category") or "top").lower()
         if cat in {"shoe", "footwear", "sneaker", "boot", "heel", "shoes"}:
             c_key = "shoes"
         elif cat in {"shirt", "tshirt", "top", "blouse", "sweater", "knit", "polo"}:
@@ -62,62 +129,71 @@ def _generate_fallback_advice(closet_items: list[dict[str, Any]], style_dress_fo
             c_key = "outerwear"
         else:
             c_key = "accessory"
-        by_cat.setdefault(c_key, []).append(it)
+        by_cat.setdefault(c_key, []).append(item)
+
+    # Sort each category by (score DESC, original_index ASC)
+    for c_key in by_cat:
+        by_cat[c_key].sort(key=lambda x: (x["weather_style_score"], -x["original_index"]), reverse=True)
 
     recs = []
 
-    # Outfit 1: top + bottom + shoes
+    # Outfit 1: top + bottom + shoes (with outerwear for cold weather)
     o1_items = []
     t_item = by_cat.get("top", [None])[0]
     b_item = by_cat.get("bottom", [None])[0]
     s_item = by_cat.get("shoes", [None])[0]
+    outer_item = by_cat.get("outerwear", [None])[0]
+    
     if t_item:
         o1_items.append({"role": "top", "description": t_item.get("title", "Top"), "closet_item_id": t_item.get("id")})
     if b_item:
         o1_items.append({"role": "bottom", "description": b_item.get("title", "Bottom"), "closet_item_id": b_item.get("id")})
+    if temp_c is not None and temp_c < 15 and outer_item:
+        o1_items.append({"role": "outerwear", "description": outer_item.get("title", "Outerwear"), "closet_item_id": outer_item.get("id")})
     if s_item:
         o1_items.append({"role": "shoes", "description": s_item.get("title", "Shoes"), "closet_item_id": s_item.get("id")})
+        
     if o1_items:
         recs.append({
             "name": "Outfit 1",
             "items": o1_items,
-            "why": f"A balanced daily outfit matching your preferred {style_dress_for} style.",
+            "why": f"A balanced daily outfit matching your preferred {style_dress_for} style and local weather.",
             "confidence": 0.85
         })
 
     # Outfit 2: dress + shoes / top + bottom + outerwear
     o2_items = []
     d_item = by_cat.get("dress", [None])[0]
-    if d_item:
+    if d_item and (temp_c is None or temp_c >= 18):
         o2_items.append({"role": "dress", "description": d_item.get("title", "Dress"), "closet_item_id": d_item.get("id")})
-        s_item_2 = by_cat.get("shoes", [None])[-1] if len(by_cat.get("shoes", [])) > 1 else s_item
+        s_item_2 = by_cat.get("shoes", [None])[1] if len(by_cat.get("shoes", [])) > 1 else s_item
         if s_item_2:
             o2_items.append({"role": "shoes", "description": s_item_2.get("title", "Shoes"), "closet_item_id": s_item_2.get("id")})
     else:
-        t_item_2 = by_cat.get("top", [None])[-1] if len(by_cat.get("top", [])) > 1 else t_item
-        b_item_2 = by_cat.get("bottom", [None])[-1] if len(by_cat.get("bottom", [])) > 1 else b_item
-        o_item = by_cat.get("outerwear", [None])[0]
+        t_item_2 = by_cat.get("top", [None])[1] if len(by_cat.get("top", [])) > 1 else t_item
+        b_item_2 = by_cat.get("bottom", [None])[1] if len(by_cat.get("bottom", [])) > 1 else b_item
         if t_item_2:
             o2_items.append({"role": "top", "description": t_item_2.get("title", "Top"), "closet_item_id": t_item_2.get("id")})
         if b_item_2:
             o2_items.append({"role": "bottom", "description": b_item_2.get("title", "Bottom"), "closet_item_id": b_item_2.get("id")})
-        if o_item:
-            o2_items.append({"role": "outerwear", "description": o_item.get("title", "Jacket"), "closet_item_id": o_item.get("id")})
+        if outer_item and outer_item not in [it.get("closet_item_id") for it in o1_items]:
+            o2_items.append({"role": "outerwear", "description": outer_item.get("title", "Jacket"), "closet_item_id": outer_item.get("id")})
         if s_item:
             o2_items.append({"role": "shoes", "description": s_item.get("title", "Shoes"), "closet_item_id": s_item.get("id")})
+            
     if o2_items:
         recs.append({
             "name": "Outfit 2",
             "items": o2_items,
-            "why": f"An alternative casual look selected to maximize your wardrobe rotation.",
+            "why": f"An alternative style matching your preferred {style_dress_for} and current conditions.",
             "confidence": 0.88
         })
 
     # Outfit 3: default fallback or another combo
     o3_items = []
-    t_item_3 = by_cat.get("top", [None])[len(by_cat.get("top", [])) // 2] if len(by_cat.get("top", [])) > 2 else None
-    b_item_3 = by_cat.get("bottom", [None])[len(by_cat.get("bottom", [])) // 2] if len(by_cat.get("bottom", [])) > 2 else None
-    s_item_3 = by_cat.get("shoes", [None])[len(by_cat.get("shoes", [])) // 2] if len(by_cat.get("shoes", [])) > 2 else None
+    t_item_3 = by_cat.get("top", [None])[2] if len(by_cat.get("top", [])) > 2 else None
+    b_item_3 = by_cat.get("bottom", [None])[2] if len(by_cat.get("bottom", [])) > 2 else None
+    s_item_3 = by_cat.get("shoes", [None])[2] if len(by_cat.get("shoes", [])) > 2 else None
     if t_item_3:
         o3_items.append({"role": "top", "description": t_item_3.get("title", "Top"), "closet_item_id": t_item_3.get("id")})
     if b_item_3:
@@ -133,11 +209,10 @@ def _generate_fallback_advice(closet_items: list[dict[str, Any]], style_dress_fo
         recs.append({
             "name": "Outfit 3",
             "items": o3_items,
-            "why": f"A coordinates-driven selection based on your preferred {style_dress_for}.",
+            "why": f"A rotation-focused outfit aligned with your {style_dress_for} style choice.",
             "confidence": 0.82
         })
 
-    # If all recommendations are empty, use fallback static text items
     if not recs:
         recs = [{
             "name": "Outfit 1",
@@ -307,6 +382,18 @@ async def check_scheduler_triggers() -> None:
                     tomorrow_local = local_now + timedelta(days=1)
                     tomorrow_str = tomorrow_local.strftime("%Y-%m-%d")
 
+                    # Fetch weather context for fallback
+                    weather_ctx = None
+                    try:
+                        from app.services.weather_service import weather_service
+                        home = user.get("home_location") or {}
+                        lat = home.get("lat")
+                        lng = home.get("lng")
+                        if lat is not None and lng is not None and weather_service is not None:
+                            weather_ctx = await weather_service.fetch(float(lat), float(lng), lang=lang)
+                    except Exception as w_exc:
+                        logger.warning("Failed to fetch weather for user %s: %s", user["id"], w_exc)
+
                     advice = None
                     is_quota_issue = False
                     try:
@@ -317,7 +404,7 @@ async def check_scheduler_triggers() -> None:
                         try:
                             from app.services.stylist_scheduler_brain import get_rotation_prioritized_closet
                             closet_items = await get_rotation_prioritized_closet(user["id"], limit=20)
-                            advice = _generate_fallback_advice(closet_items, style_dress_for)
+                            advice = _generate_fallback_advice(closet_items, style_dress_for, weather_ctx)
                         except Exception as inner_exc:
                             logger.error("Failed to generate fallback scheduled proposals: %s", inner_exc)
                             advice = None
@@ -376,6 +463,7 @@ async def check_scheduler_triggers() -> None:
                                     "use_count": 1,
                                     "created_at": now_iso,
                                     "updated_at": now_iso,
+                                    "is_fallback": is_quota_issue,
                                 }
                                 await db.outfits.insert_one(outfit_doc)
                                 
@@ -421,6 +509,9 @@ async def check_scheduler_triggers() -> None:
                             body_text = f"{prefix}\n" + "\n".join(rec_lines)
                         else:
                             body_text = t("outfits.notification.dailyBody", lang, style=style_dress_for)
+
+                    if advice:
+                        advice["is_fallback"] = is_quota_issue
 
                     await send_push_notification(
                         user_id=user["id"],

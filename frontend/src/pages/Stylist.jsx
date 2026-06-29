@@ -332,6 +332,7 @@ export default function Stylist() {
         location: isEvent ? eventDetails.location : null,
         event_name: isEvent ? eventDetails.event_name : null,
       },
+      is_fallback: messageOrNotif?.payload?.is_fallback || false,
     };
 
     try {
@@ -581,6 +582,7 @@ export default function Stylist() {
         location: null,
         event_name: null,
       },
+      is_fallback: notif?.payload?.is_fallback || false,
     };
 
     try {
@@ -2249,8 +2251,8 @@ export default function Stylist() {
                   </Card>
 
                   {/* 2. Scheduled Outfits Monthly Calendar Grid */}
-                  <Card className="border border-border/80 rounded-2xl shadow-editorial overflow-hidden bg-card w-full flex flex-col flex-1 min-h-[480px]">
-                    <CardContent className="p-4 md:p-5 flex flex-col h-full flex-1">
+                  <Card className="border border-border/80 rounded-2xl shadow-editorial overflow-hidden bg-card w-full flex flex-col min-h-[480px] h-auto shrink-0">
+                    <CardContent className="p-4 md:p-5 flex flex-col">
                       {/* Calendar Month Header */}
                       <div className="flex items-center justify-center mb-4">
                         <div className="flex items-center gap-2">
@@ -2559,25 +2561,32 @@ export default function Stylist() {
             const dayOutfit = outfits.find(o => o.usage?.date === schedulingDate);
             if (!dayOutfit) return null;
             return (
-              <div className="flex items-center justify-between p-3 bg-rose-500/5 border border-rose-500/10 rounded-xl mb-4">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-12 bg-secondary/10 rounded-lg overflow-hidden border border-border/40 shrink-0">
-                    <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={getOutfitPiecesMap(dayOutfit)} />
+              <div className="flex flex-col gap-3 p-3 bg-rose-500/5 border border-rose-500/10 rounded-xl mb-4">
+                {dayOutfit.is_fallback && (
+                  <div className="text-[11px] font-semibold text-rose-700 leading-normal text-left pb-2 border-b border-rose-500/10">
+                    {t('outfits.notification.quotaBody', { defaultValue: 'AI service quota limit reached. A fallback suggestion from your closet rotation has been scheduled for tomorrow:' })}
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-[9px] caps-label text-rose-600 font-semibold">{t('calendar.scheduled', { defaultValue: 'Scheduled' })}</div>
-                    <div className="font-semibold text-xs text-foreground truncate">{dayOutfit.name}</div>
+                )}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-12 bg-secondary/10 rounded-lg overflow-hidden border border-border/40 shrink-0">
+                      <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={getOutfitPiecesMap(dayOutfit)} />
+                    </div>
+                    <div className="min-w-0 text-left">
+                      <div className="text-[9px] caps-label text-rose-600 font-semibold">{t('calendar.scheduled', { defaultValue: 'Scheduled' })}</div>
+                      <div className="font-semibold text-xs text-foreground truncate">{dayOutfit.name}</div>
+                    </div>
                   </div>
+                  <Button
+                    size="xs"
+                    variant="destructive"
+                    onClick={() => handleUnscheduleOutfit(dayOutfit.id)}
+                    className="rounded-lg text-[10px] font-semibold h-7 px-2.5 flex items-center gap-1 shrink-0"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    {t('calendar.unschedule', { defaultValue: 'Remove' })}
+                  </Button>
                 </div>
-                <Button
-                  size="xs"
-                  variant="destructive"
-                  onClick={() => handleUnscheduleOutfit(dayOutfit.id)}
-                  className="rounded-lg text-[10px] font-semibold h-7 px-2.5 flex items-center gap-1 shrink-0"
-                >
-                  <Trash2 className="h-3 w-3" />
-                  {t('calendar.unschedule', { defaultValue: 'Remove' })}
-                </Button>
               </div>
             );
           })()}
