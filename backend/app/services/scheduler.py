@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timezone
+import uuid
+from datetime import datetime, timezone, timedelta
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -326,6 +327,31 @@ async def check_scheduler_triggers() -> None:
                             logger.error("Failed to generate fallback scheduled proposals: %s", inner_exc)
                             body_text = f"Your AI Stylist prepared outfit options for your: {style_dress_for}."
                             advice = None
+
+                    # Auto-save the first recommendation to tomorrow's calendar so the user can view it on the grid
+                    if advice and advice.get("outfit_recommendations"):
+                        first_rec = advice["outfit_recommendations"][0]
+                        tomorrow_date_str = (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%d")
+                        
+                        outfit_doc = {
+                            "id": str(uuid.uuid4()),
+                            "user_id": user["id"],
+                            "prompt": f"Scheduled AI Proposal for {style_dress_for}",
+                            "garments": first_rec.get("items", []),
+                            "usage": {
+                                "date": tomorrow_date_str,
+                                "location": "",
+                                "event_name": "AI Scheduled Proposal"
+                            },
+                            "use_count": 1,
+                            "created_at": datetime.now(timezone.utc).isoformat(),
+                            "updated_at": datetime.now(timezone.utc).isoformat()
+                        }
+                        try:
+                            await db.outfits.insert_one(outfit_doc)
+                            logger.info(f"Auto-saved scheduled outfit {outfit_doc['id']} for {tomorrow_date_str}")
+                        except Exception as e:
+                            logger.error(f"Failed to auto-save scheduled outfit: {e}")
 
                     await send_push_notification(
                         user_id=user["id"],
