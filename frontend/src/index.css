@@ -264,3 +264,9 @@ img {
 
 [data-sonner-toast][data-type='error'] { transform: scale(0.85); transform-origin: top center; margin-top: -8px; }
 
+/* Fix Radix UI ScrollArea viewport table layout expansion bug on mobile */
+[data-radix-scroll-area-viewport] > div {
+  display: block !important;
+}
+
+

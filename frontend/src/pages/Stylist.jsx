@@ -1285,7 +1285,7 @@ export default function Stylist() {
 
   /* ---------- Render helpers ---------- */
   const chatColumn = (
-    <Card className="h-full flex flex-col rounded-[calc(var(--radius)+6px)] shadow-editorial overflow-hidden">
+    <Card className="w-full min-w-0 h-full flex flex-col rounded-[calc(var(--radius)+6px)] shadow-editorial overflow-hidden">
       {/* Sticky top bar */}
       <div className="flex items-center justify-between gap-2 border-b border-border px-3 md:px-4 py-2.5 bg-background">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -1343,8 +1343,8 @@ export default function Stylist() {
         </div>
       </div>
 
-      <ScrollArea className="flex-1" data-testid="stylist-chat-thread">
-        <div ref={threadRef} className="p-3 md:p-6 space-y-4">
+      <ScrollArea className="flex-1 w-full min-w-0" data-testid="stylist-chat-thread">
+        <div ref={threadRef} className="p-3 md:p-6 space-y-4 w-full">
           {/* CSS-fix Phase Z2.5 — outer padding eased from p-4 to p-3
               on mobile to give ~8px more horizontal room to the
               bubbles below. The desktop value (md:p-6) is unchanged. */}
@@ -1877,9 +1877,9 @@ export default function Stylist() {
   );
 
   return (
-    <div className="container-px max-w-[1600px] mx-auto pt-4 md:pt-6">
+    <div className="container-px w-full max-w-[1600px] mx-auto pt-4 md:pt-6">
       <div className={cn(
-        "grid grid-cols-1 gap-4 h-[calc(100dvh-180px)] md:h-[calc(100dvh-140px)] transition-all duration-300",
+        "grid grid-cols-1 gap-4 h-[calc(100dvh-180px)] md:h-[calc(100dvh-140px)] w-full max-w-full min-w-0 transition-all duration-300",
         (sidebarCollapsed || activeTab !== 'chat')
           ? "lg:grid-cols-[minmax(0,1fr)]"
           : "lg:grid-cols-[200px_minmax(0,1fr)]"
@@ -1904,7 +1904,7 @@ export default function Stylist() {
 
         {/* Center — chat */}
         <main className="min-w-0 flex flex-col h-full min-h-0">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full min-w-0 h-full flex flex-col">
             <div className="flex justify-center mb-3 bg-muted/60 p-1 rounded-2xl max-w-sm mx-auto w-full border border-border/40">
               <TabsList className="grid grid-cols-3 w-full bg-transparent p-0 h-8">
                 <TabsTrigger value="chat" className="rounded-xl text-xs font-semibold data-[state=active]:bg-brand data-[state=active]:text-brand-foreground shadow-sm">{t('stylist.chatPanel')}</TabsTrigger>
@@ -1913,11 +1913,11 @@ export default function Stylist() {
               </TabsList>
             </div>
 
-            <TabsContent value="chat" className="flex-1 min-h-0 data-[state=active]:flex flex-col mt-0 focus-visible:outline-none">
+            <TabsContent value="chat" className="w-full min-w-0 flex-1 min-h-0 data-[state=active]:flex flex-col mt-0 focus-visible:outline-none">
               {chatColumn}
             </TabsContent>
 
-            <TabsContent value="shuffle" className="flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none p-4 data-[state=active]:flex flex-col gap-8 w-full max-w-4xl mx-auto">
+            <TabsContent value="shuffle" className="w-full min-w-0 flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none p-4 data-[state=active]:flex flex-col gap-8 max-w-4xl mx-auto">
               <div className="flex items-center justify-between gap-3 w-full border-b border-border/40 pb-3">
                 <div className="min-w-0">
                   <h2 className="font-display text-xl font-medium truncate">{t('stylist.outfitPlanner', { defaultValue: 'Outfit Planner' })}</h2>
@@ -2230,7 +2230,7 @@ export default function Stylist() {
               </div>
             </TabsContent>
 
-            <TabsContent value="match" className="flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none p-4 data-[state=active]:flex flex-col gap-6 w-full max-w-4xl mx-auto">
+            <TabsContent value="match" className="w-full min-w-0 flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none p-4 data-[state=active]:flex flex-col gap-6 max-w-4xl mx-auto">
               {/* Notification Center */}
               <Card className="border border-border/80 rounded-2xl shadow-editorial overflow-hidden bg-[hsl(var(--accent))]/5 w-full">
                 <CardContent className="p-5 space-y-4">
