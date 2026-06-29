@@ -322,6 +322,7 @@ async def check_scheduler_triggers() -> None:
                         body_text = f"Proposals for {style_dress_for}:\n" + "\n".join(rec_lines)
                     except Exception as exc:
                         logger.warning("Failed to generate scheduled proposals in cron: %s", exc)
+                        is_quota_issue = "429" in str(exc) or "RESOURCE_EXHAUSTED" in str(exc) or "quota" in str(exc).lower()
                         try:
                             from app.services.stylist_scheduler_brain import get_rotation_prioritized_closet
                             closet_items = await get_rotation_prioritized_closet(user["id"], limit=20)
@@ -333,10 +334,14 @@ async def check_scheduler_triggers() -> None:
                                 items_str = ", ".join(it.get("description") or it.get("title") or "item" for it in r.get("items") or [])
                                 rec_lines.append(f"• {r.get('name') or 'Outfit'}: {items_str}")
                             
-                            body_text = f"Proposals for {style_dress_for}:\n" + "\n".join(rec_lines)
+                            prefix = "⚠️ [AI Quota Limit] Surfacing fallback selections from your closet rotation:\n" if is_quota_issue else f"Proposals for {style_dress_for}:\n"
+                            body_text = prefix + "\n".join(rec_lines)
                         except Exception as inner_exc:
                             logger.error("Failed to generate fallback scheduled proposals: %s", inner_exc)
-                            body_text = f"Your AI Stylist prepared outfit options for your: {style_dress_for}."
+                            if is_quota_issue:
+                                body_text = "⚠️ [AI Quota Limit] Your AI Stylist is currently offline. Please check back later!"
+                            else:
+                                body_text = f"Your AI Stylist prepared outfit options for your: {style_dress_for}."
                             advice = None
 
                     # Auto-save the first recommendation to tomorrow's calendar so the user can view it on the grid
