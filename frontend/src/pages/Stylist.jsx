@@ -1615,38 +1615,16 @@ export default function Stylist() {
         </div>
 
         <div className="max-w-3xl mx-auto w-full flex items-center gap-3 flex-wrap text-xs text-muted-foreground border-b border-border/40 pb-2">
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={includeCalendar}
-              onCheckedChange={setIncludeCalendar}
-              id="inc-cal"
-              data-testid="stylist-include-calendar-switch"
-            />
-            <label
-              htmlFor="inc-cal"
-              className="text-[11px] text-muted-foreground inline-flex items-center gap-1 cursor-pointer"
-            >
-              <CalIcon className="h-3.5 w-3.5" /> {t('stylist.includeCalendar')}
-            </label>
-            {includeCalendar && calendarConnected && (
-              <Badge
-                variant="outline"
-                className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] py-0 h-5"
-                data-testid="stylist-calendar-live-badge"
-              >
-                {t('stylist.liveCalendar')}
-              </Badge>
-            )}
-          </div>
-          {includeCalendar && !calendarConnected && (
-            <input
-              value={occasion}
-              onChange={(e) => setOccasion(e.target.value)}
-              placeholder={t('stylist.occasionPlaceholder')}
-              className="text-[11px] bg-secondary border border-border rounded-lg px-2 py-0.5"
-              data-testid="stylist-occasion-input"
-            />
-          )}
+          <Button
+            variant="outline"
+            size="xs"
+            onClick={() => navigate('/trends')}
+            className="rounded-full h-7 px-3 text-[11px] flex items-center gap-1.5"
+            data-testid="stylist-trends-btn"
+          >
+            <TrendingUp className="h-3.5 w-3.5" />
+            {t('trendScout', { defaultValue: 'Trends' })}
+          </Button>
           {imageFile && (
             <div
               className="flex items-center gap-1.5 rounded-full border border-border bg-card px-2 py-0.5 text-[11px]"
