@@ -591,7 +591,8 @@
     "trendsLabel": "Trends",
     "tagFilterLabel": "Etiqueta",
     "tagFilterPlaceholder": "p. ej. Trabajo, Gimnasio",
-    "styleFilterLabel": "Estilo"
+    "styleFilterLabel": "Estilo",
+    "fallbackError": "Lo siento — tuve problemas para armar esa recomendación. Intenta reformularla o adjunta una foto para que pueda ver con qué estás trabajando."
   },
   "outfitCompletion": {
     "cta": "Completar el look",

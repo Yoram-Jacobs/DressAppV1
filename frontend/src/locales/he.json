@@ -591,7 +591,8 @@
     "outfitPlanner": "מתכנן תלבושות",
     "tagFilterLabel": "תגית",
     "tagFilterPlaceholder": "למשל: עבודה, כושר",
-    "styleFilterLabel": "סגנון"
+    "styleFilterLabel": "סגנון",
+    "fallbackError": "מצטער — התקשיתי להרכיב את ההמלצה הזו. נסה לנסח מחדש, או צרף תמונה כדי שאוכל לראות עם מה אתה עובד."
   },
   "outfitCompletion": {
     "cta": "השלם את הלוק",

@@ -591,7 +591,8 @@
     "trendsLabel": "Trends",
     "tagFilterLabel": "标签",
     "tagFilterPlaceholder": "例如：工作、健身房",
-    "styleFilterLabel": "风格"
+    "styleFilterLabel": "风格",
+    "fallbackError": "抱歉 — 我在整合该搭配建议时遇到了困难。请尝试重新描述，或上传一张照片以便我了解您的具体穿搭。"
   },
   "outfitCompletion": {
     "cta": "完成搭配",

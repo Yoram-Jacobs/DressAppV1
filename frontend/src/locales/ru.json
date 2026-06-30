@@ -591,7 +591,8 @@
     "trendsLabel": "Trends",
     "tagFilterLabel": "Тег",
     "tagFilterPlaceholder": "например: Работа, Спортзал",
-    "styleFilterLabel": "Стиль"
+    "styleFilterLabel": "Стиль",
+    "fallbackError": "Извините — у меня возникли трудности с составлением этой рекомендации. Попробуйте перефразировать или прикрепите фото, чтобы я видел, с чем вы работаете."
   },
   "outfitCompletion": {
     "cta": "Завершить образ",

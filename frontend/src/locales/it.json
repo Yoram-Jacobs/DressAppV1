@@ -591,7 +591,8 @@
     "trendsLabel": "Trends",
     "tagFilterLabel": "Tag",
     "tagFilterPlaceholder": "es. Lavoro, Palestra",
-    "styleFilterLabel": "Stile"
+    "styleFilterLabel": "Stile",
+    "fallbackError": "Spiacente — ho avuto difficoltà a mettere insieme questa raccomandazione. Prova a riformulare o allega una foto così posso vedere con cosa stai lavorando."
   },
   "outfitCompletion": {
     "cta": "Completa l'outfit",

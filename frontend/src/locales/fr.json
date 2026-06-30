@@ -591,7 +591,8 @@
     "trendsLabel": "Trends",
     "tagFilterLabel": "Étiquette",
     "tagFilterPlaceholder": "ex. Travail, Sport",
-    "styleFilterLabel": "Style"
+    "styleFilterLabel": "Style",
+    "fallbackError": "Désolé — j'ai eu du mal à formuler cette recommandation. Essayez de reformuler, ou joignez une photo pour que je puisse voir avec quoi vous travaillez."
   },
   "outfitCompletion": {
     "cta": "Compléter la tenue",

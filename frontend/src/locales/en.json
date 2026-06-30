@@ -591,7 +591,8 @@
     "outfitPlanner": "Outfit Planner",
     "tagFilterLabel": "Tag",
     "tagFilterPlaceholder": "e.g. Work, Gym",
-    "styleFilterLabel": "Style"
+    "styleFilterLabel": "Style",
+    "fallbackError": "Sorry — I had trouble putting that recommendation together. Try rephrasing, or attach a photo so I can see what you're working with."
   },
   "outfitCompletion": {
     "cta": "Complete the outfit",

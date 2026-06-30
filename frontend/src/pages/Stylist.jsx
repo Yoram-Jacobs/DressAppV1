@@ -1132,9 +1132,12 @@ export default function Stylist() {
   /* ---------- Local TTS ---------- */
   const playLocalSpeech = async (id, txt) => {
     if (!txt) return;
+    const spokenTxt = txt.includes("trouble putting that recommendation together")
+      ? t('stylist.fallbackError', { defaultValue: txt })
+      : txt;
     try {
       setSpeakingId(id);
-      await speak(txt, { lang: userLang });
+      await speak(spokenTxt, { lang: userLang });
     } catch (err) {
       console.debug('[Stylist] playLocalSpeech failed:', err?.message || err);
     } finally {
@@ -1403,7 +1406,11 @@ export default function Stylist() {
                   )}
                   {m.transcript && (
                     <p className="text-sm whitespace-pre-wrap">
-                      {typeof m.transcript === 'string' ? m.transcript : JSON.stringify(m.transcript)}
+                      {typeof m.transcript === 'string'
+                        ? (m.transcript.includes("trouble putting that recommendation together")
+                          ? t('stylist.fallbackError', { defaultValue: m.transcript })
+                          : m.transcript)
+                        : JSON.stringify(m.transcript)}
                     </p>
                   )}
                   {m.role === 'assistant' && m.outfit_canvas && (

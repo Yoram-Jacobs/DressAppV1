@@ -591,7 +591,8 @@
     "trendsLabel": "Trends",
     "tagFilterLabel": "タグ",
     "tagFilterPlaceholder": "例：仕事、ジム",
-    "styleFilterLabel": "スタイル"
+    "styleFilterLabel": "スタイル",
+    "fallbackError": "申し訳ありません — このコーディネート提案の作成に問題が発生しました。表現を変えてみるか、写真を添付して手持ちのアイテムを見せてください。"
   },
   "outfitCompletion": {
     "cta": "コーデを完成",

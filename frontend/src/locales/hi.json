@@ -591,7 +591,8 @@
     "trendsLabel": "Trends",
     "tagFilterLabel": "टैग",
     "tagFilterPlaceholder": "जैसे: काम, जिम",
-    "styleFilterLabel": "शैली"
+    "styleFilterLabel": "शैली",
+    "fallbackError": "क्षमा करें — मुझे इस सिफारिश को तैयार करने में समस्या आ रही है। कृपया दूसरे तरीके से पूछें, या एक फोटो संलग्न करें ताकि मैं देख सकूं कि आप किस पर काम कर रहे हैं।"
   },
   "outfitCompletion": {
     "cta": "आउटफ़िट पूरा करें",
