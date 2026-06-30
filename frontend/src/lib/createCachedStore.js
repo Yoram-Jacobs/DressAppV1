@@ -121,8 +121,11 @@ export function createCachedStore({
   const upsertItem = (filters, item) => {
     if (!item || !item.id) return;
     const key = _stableKey(filters);
-    const slot = cache.get(key);
-    if (!slot) return;
+    let slot = cache.get(key);
+    if (!slot) {
+      slot = { items: [], total: 0, ts: Date.now() };
+      cache.set(key, slot);
+    }
     const idx = slot.items.findIndex((it) => it.id === item.id);
     if (idx >= 0) {
       slot.items = [
