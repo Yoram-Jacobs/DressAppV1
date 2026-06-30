@@ -9,7 +9,7 @@ self.addEventListener('push', function(event) {
         icon: '/favicon-48x48.png',
         badge: '/favicon-16x16.png',
         vibrate: [100, 50, 100],
-        data: { url: '/outfits' }
+        data: { url: data.url || '/stylist?tab=match' }
       };
       
       event.waitUntil(
@@ -24,6 +24,6 @@ self.addEventListener('push', function(event) {
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
   event.waitUntil(
-    clients.openWindow(event.notification.data?.url || '/outfits')
+    clients.openWindow(event.notification.data?.url || '/stylist?tab=match')
   );
 });
