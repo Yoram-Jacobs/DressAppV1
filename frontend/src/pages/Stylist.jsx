@@ -1132,7 +1132,8 @@ export default function Stylist() {
   /* ---------- Local TTS ---------- */
   const playLocalSpeech = async (id, txt) => {
     if (!txt) return;
-    const spokenTxt = txt.includes("trouble putting that recommendation together")
+    const isStr = typeof txt === 'string';
+    const spokenTxt = isStr && txt.includes("trouble putting that recommendation together")
       ? t('stylist.fallbackError', { defaultValue: txt })
       : txt;
     try {

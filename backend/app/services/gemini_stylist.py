@@ -111,7 +111,7 @@ class GeminiStylistService:
     async def advise(
         self,
         session_id: str,
-        user_text: str,
+        user_text: str | None,
         image_base64: str | None,
         image_mime: str = "image/jpeg",
         weather: dict[str, Any] | None = None,
@@ -121,6 +121,9 @@ class GeminiStylistService:
         closet_summary: list[dict[str, Any]] | None = None,
         user_preferences_block: str | None = None,
     ) -> dict[str, Any]:
+        # Prepend the URL parser context block to the user request.
+        user_text = await parse_urls_and_context(user_text, session_id=session_id)
+
         # Phase S: prepend the rendered user-preference block (sex, age,
         # body, region, modesty, style aesthetics, avoid list...) directly
         # to the system message so EVERY recommendation respects them.
@@ -238,6 +241,57 @@ def _parse_json(raw: str) -> dict[str, Any]:
 
 def image_bytes_to_base64(img: bytes) -> str:
     return base64.b64encode(img).decode("ascii")
+
+
+async def parse_urls_and_context(text: str | None, session_id: str = "") -> str:
+    """
+    Given the user input text, parses any URLs present in it.
+    If a URL is recognized as an item or clothing list URL, fetches the metadata
+    and appends a context block to the user text.
+    """
+    if not text or not isinstance(text, str):
+        return ""
+
+    urls = re.findall(r'https?://[^\s]+', text)
+    if not urls:
+        return text
+
+    for url in urls:
+        try:
+            # Parse listing id from the url
+            # e.g., dressapp.co/listings/123 or similar patterns
+            # Fetch info from local db or marketplace API
+            import httpx
+            from app.db.database import get_db
+            
+            # 1) If it is a local listing url
+            # Format: .../listings/{id}
+            listing_match = re.search(r'/listings/([a-zA-Z0-9\-]+)', url)
+            if listing_match:
+                listing_id = listing_match.group(1)
+                db = get_db()
+                listing = await db.listings.find_one({"id": listing_id})
+                if listing:
+                    desc = f"Garment: {listing.get('title')}, category: {listing.get('category')}, brand: {listing.get('brand')}, price: {listing.get('price')} {listing.get('currency')}"
+                    text = text.replace(url, f"{url} ({desc})")
+                    continue
+
+            # 2) If it is an external URL, scrape title/description using a simple HTTP GET
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                resp = await client.get(url, follow_redirects=True)
+                if resp.status_code == 200:
+                    # Extract html title
+                    html_text = resp.text
+                    title_match = re.search(r'<title>(.*?)</title>', html_text, re.IGNORECASE)
+                    title = title_match.group(1).strip() if title_match else "Webpage"
+                    # Clean title
+                    title = re.sub(r'\s+', ' ', title)
+                    desc = f"Link: {title}"
+                    text = text.replace(url, f"{url} ({desc})")
+        except Exception as e:
+            logger.warning("Failed to parse URL %s: %s", url, e)
+            
+    return text
 
 
 gemini_stylist_service = (
