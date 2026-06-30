@@ -24,6 +24,38 @@ from app.services import repos
 from app.services.auth import get_current_user, get_current_user_optional
 from app.services.fashion_clip import fashion_clip_service
 from app.services.fees import compute_fees
+import math
+
+def haversine_distance(coord1: list[float], coord2: list[float]) -> float:
+    # coord1, coord2 are [lng, lat]
+    lon1, lat1 = coord1
+    lon2, lat2 = coord2
+    R = 6371.0  # Earth radius in km
+    
+    dlon = math.radians(lon2 - lon1)
+    dlat = math.radians(lat2 - lat1)
+    a = (math.sin(dlat / 2) ** 2 +
+         math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return R * c
+
+def calculate_distance_km(listing_loc: dict | None, lat: float | None, lng: float | None) -> float | None:
+    if not listing_loc or lat is None or lng is None:
+        return None
+    try:
+        if isinstance(listing_loc, dict):
+            if listing_loc.get("type") == "Point" and isinstance(listing_loc.get("coordinates"), list):
+                coords = listing_loc["coordinates"]
+                if len(coords) >= 2:
+                    l_lng, l_lat = coords[0], coords[1]
+                    return round(haversine_distance([l_lng, l_lat], [lng, lat]), 1)
+            elif listing_loc.get("lat") is not None and listing_loc.get("lng") is not None:
+                l_lat = float(listing_loc["lat"])
+                l_lng = float(listing_loc["lng"])
+                return round(haversine_distance([l_lng, l_lat], [lng, lat]), 1)
+    except Exception:
+        pass
+    return None
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/listings", tags=["listings"])
@@ -132,6 +164,21 @@ async def create_listing(
                     images.append(url)
                     break
 
+    # Default to seller's home location if not provided
+    location = payload.location
+    if not location and user.get("home_location"):
+        home = user["home_location"]
+        lat_coord = home.get("lat")
+        lng_coord = home.get("lng")
+        if lat_coord is not None and lng_coord is not None:
+            location = {
+                "type": "Point",
+                "coordinates": [float(lng_coord), float(lat_coord)],
+                "city": home.get("city"),
+                "country": home.get("country"),
+                "region": home.get("region"),
+            }
+
     listing = Listing(
         closet_item_id=payload.closet_item_id,
         seller_id=user["id"],
@@ -143,7 +190,7 @@ async def create_listing(
         size=payload.size,
         condition=payload.condition,
         images=images,
-        location=payload.location,
+        location=location,
         ships_to=payload.ships_to,
         financial_metadata=financial,
         shipping_fee_cents=payload.shipping_fee_cents,
@@ -197,10 +244,11 @@ async def browse_listings(
             max_price_cents
         )
 
-    # Geo-ranked browse: when the caller provides coordinates we run a
-    # $geoNear aggregation so listings near the user float to the top and
-    # every result carries its `distance_km` for the UI badge.
-    if lat is not None and lng is not None:
+    # Geo-ranked browse: only run $geoNear if a specific radius filter is requested.
+    # Otherwise, run a standard find so that listings with location=None are not excluded.
+    use_geo = lat is not None and lng is not None and radius_km is not None
+
+    if use_geo:
         geo_near_opts = {
             "near": {"type": "Point", "coordinates": [lng, lat]},
             "distanceField": "distance_m",
@@ -227,6 +275,13 @@ async def browse_listings(
     items = await repos.find_many(
         db.listings, query, sort=[("created_at", -1)], limit=limit, skip=skip
     )
+    # Calculate distance in Python for any listings that do have location info
+    if lat is not None and lng is not None:
+        for doc in items:
+            dist = calculate_distance_km(doc.get("location"), lat, lng)
+            if dist is not None:
+                doc["distance_km"] = dist
+
     total = await repos.count(db.listings, query)
     return {"items": items, "total": total, "limit": limit, "skip": skip}
 
@@ -247,6 +302,12 @@ async def browse_listings_stream(
     radius_km: float | None = Query(default=None, ge=1, le=20037),
     user: dict | None = Depends(get_current_user_optional),
 ):
+    # Geo-ranked browse: only run $geoNear if a specific radius filter is requested.
+    # Otherwise, run a standard find so that listings with location=None are not excluded.
+    use_geo = lat is not None and lng is not None and radius_km is not None
+    
+    # Indicate to client whether coordinates are available in start event
+    start_geo = lat is not None and lng is not None
     """**NDJSON-streaming** counterpart to ``GET /listings``.
 
     Same filters, same ranking (incl. geo ``$geoNear``), but each
@@ -309,7 +370,7 @@ async def browse_listings_stream(
         total = await repos.count(db.listings, query)
         yield (
             json.dumps(
-                {"type": "start", "total": total, "geo": use_geo}
+                {"type": "start", "total": total, "geo": start_geo}
             )
             + "\n"
         )
@@ -347,6 +408,10 @@ async def browse_listings_stream(
                 .limit(limit)
             )
             async for doc in cursor:
+                if lat is not None and lng is not None:
+                    dist = calculate_distance_km(doc.get("location"), lat, lng)
+                    if dist is not None:
+                        doc["distance_km"] = dist
                 yield (
                     json.dumps({"type": "item", "data": doc}) + "\n"
                 )

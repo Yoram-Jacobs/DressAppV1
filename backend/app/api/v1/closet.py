@@ -2976,6 +2976,20 @@ async def backfill_marketplace_listings(
                 item.get("condition") or item.get("state") or "good"
             )
             listing_condition = _COND_MAP.get(raw_cond, "good")
+            location = item.get("location")
+            if not location and user.get("home_location"):
+                home = user["home_location"]
+                lat_coord = home.get("lat")
+                lng_coord = home.get("lng")
+                if lat_coord is not None and lng_coord is not None:
+                    location = {
+                        "type": "Point",
+                        "coordinates": [float(lng_coord), float(lat_coord)],
+                        "city": home.get("city"),
+                        "country": home.get("country"),
+                        "region": home.get("region"),
+                    }
+
             listing = Listing(
                 closet_item_id=item["id"],
                 seller_id=user["id"],
@@ -2987,7 +3001,7 @@ async def backfill_marketplace_listings(
                 size=item.get("size"),
                 condition=listing_condition,
                 images=images,
-                location=item.get("location"),
+                location=location,
                 financial_metadata=FinancialMetadata(
                     list_price_cents=price_cents,
                     currency="USD",

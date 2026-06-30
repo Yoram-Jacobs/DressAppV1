@@ -150,6 +150,32 @@ async def ensure_indexes() -> None:
     await db.outfits.create_index([("user_id", 1), ("created_at", -1)])
     await db.simulated_notifications.create_index([("user_id", 1), ("created_at", -1)])
 
+    # Backfill missing listing locations from seller home_location
+    try:
+        updated_count = 0
+        async for listing in db.listings.find({"$or": [{"location": None}, {"location.type": {"$exists": False}}]}):
+            seller_id = listing.get("seller_id")
+            if seller_id:
+                seller = await db.users.find_one({"id": seller_id}, {"home_location": 1})
+                if seller and seller.get("home_location"):
+                    home = seller["home_location"]
+                    lat_coord = home.get("lat")
+                    lng_coord = home.get("lng")
+                    if lat_coord is not None and lng_coord is not None:
+                        new_loc = {
+                            "type": "Point",
+                            "coordinates": [float(lng_coord), float(lat_coord)],
+                            "city": home.get("city"),
+                            "country": home.get("country"),
+                            "region": home.get("region"),
+                        }
+                        await db.listings.update_one({"id": listing["id"]}, {"$set": {"location": new_loc}})
+                        updated_count += 1
+        if updated_count > 0:
+            logger.info("MongoDB migration: backfilled coordinates for %d listings", updated_count)
+    except Exception as e:
+        logger.warning("MongoDB listing location backfill failed: %s", e)
+
     logger.info("MongoDB indexes ensured")
 
 
