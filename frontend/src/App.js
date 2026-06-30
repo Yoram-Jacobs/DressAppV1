@@ -1,5 +1,5 @@
 import '@/App.css';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/lib/auth';
@@ -54,6 +54,12 @@ function GlobalScrollListener() {
   return null;
 }
 
+function OutfitsRedirect() {
+  const location = useLocation();
+  const search = location.search;
+  return <Navigate to={`/stylist?tab=match${search ? '&' + search.substring(1) : ''}`} replace />;
+}
+
 function App() {
   const { t, i18n } = useTranslation();
 
@@ -98,7 +104,7 @@ function App() {
               <Route path="/closet/add" element={<AddItem />} />
               <Route path="/closet/:id" element={<ItemDetail />} />
               <Route path="/stylist" element={<Stylist />} />
-              <Route path="/outfits" element={<Navigate to="/stylist?tab=shuffle" replace />} />
+              <Route path="/outfits" element={<OutfitsRedirect />} />
               <Route path="/market" element={<Marketplace />} />
               <Route path="/market/create" element={<CreateListing />} />
               <Route path="/market/:id" element={<ListingDetail />} />
