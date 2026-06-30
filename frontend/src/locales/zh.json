@@ -588,7 +588,10 @@
     "preferencesApplied_one": "{{count}} preference applied",
     "preferencesApplied_other": "{{count}} preferences applied",
     "trend": "Trend",
-    "trendsLabel": "Trends"
+    "trendsLabel": "Trends",
+    "tagFilterLabel": "标签",
+    "tagFilterPlaceholder": "例如：工作、健身房",
+    "styleFilterLabel": "风格"
   },
   "outfitCompletion": {
     "cta": "完成搭配",
@@ -1068,7 +1071,8 @@
       "business": "商务",
       "formal": "正式",
       "athletic": "运动",
-      "loungewear": "居家服"
+      "loungewear": "居家服",
+      "all": "所有风格"
     },
     "gender": {
       "men": "男士",

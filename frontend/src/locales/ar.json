@@ -588,7 +588,10 @@
     "preferencesApplied_one": "{{count}} preference applied",
     "preferencesApplied_other": "{{count}} preferences applied",
     "trend": "Trend",
-    "trendsLabel": "Trends"
+    "trendsLabel": "Trends",
+    "tagFilterLabel": "علامة",
+    "tagFilterPlaceholder": "مثال: العمل، النادي",
+    "styleFilterLabel": "النمط"
   },
   "outfitCompletion": {
     "cta": "أكمل الإطلالة",
@@ -1068,7 +1071,8 @@
       "business": "عملي",
       "formal": "رسمي",
       "athletic": "رياضي",
-      "loungewear": "منزلي"
+      "loungewear": "منزلي",
+      "all": "جميع الأنماط"
     },
     "gender": {
       "men": "رجال",

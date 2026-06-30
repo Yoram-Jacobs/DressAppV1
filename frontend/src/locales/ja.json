@@ -588,7 +588,10 @@
     "preferencesApplied_one": "{{count}} preference applied",
     "preferencesApplied_other": "{{count}} preferences applied",
     "trend": "Trend",
-    "trendsLabel": "Trends"
+    "trendsLabel": "Trends",
+    "tagFilterLabel": "タグ",
+    "tagFilterPlaceholder": "例：仕事、ジム",
+    "styleFilterLabel": "スタイル"
   },
   "outfitCompletion": {
     "cta": "コーデを完成",
@@ -1068,7 +1071,8 @@
       "business": "ビジネス",
       "formal": "フォーマル",
       "athletic": "アスレチック",
-      "loungewear": "ラウンジウェア"
+      "loungewear": "ラウンジウェア",
+      "all": "すべてのスタイル"
     },
     "gender": {
       "men": "メンズ",

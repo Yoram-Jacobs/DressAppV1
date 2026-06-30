@@ -588,7 +588,10 @@
     "preferencesApplied_one": "{{count}} preference applied",
     "preferencesApplied_other": "{{count}} preferences applied",
     "trend": "Trend",
-    "trendsLabel": "Trends"
+    "trendsLabel": "Trends",
+    "tagFilterLabel": "Tag",
+    "tagFilterPlaceholder": "z.B. Arbeit, Fitness",
+    "styleFilterLabel": "Stil"
   },
   "outfitCompletion": {
     "cta": "Outfit vervollständigen",
@@ -1068,7 +1071,8 @@
       "business": "Geschäftlich",
       "formal": "Formell",
       "athletic": "Sportlich",
-      "loungewear": "Freizeitkleidung"
+      "loungewear": "Freizeitkleidung",
+      "all": "Alle Stile"
     },
     "gender": {
       "men": "Herren",

@@ -588,7 +588,10 @@
     "saveOutfit": "Save Outfit",
     "shoppingSuggestions": "AI Stylist Shopping Suggestions",
     "suggestOthers": "Suggest 3 Others",
-    "outfitPlanner": "Outfit Planner"
+    "outfitPlanner": "Outfit Planner",
+    "tagFilterLabel": "Tag",
+    "tagFilterPlaceholder": "e.g. Work, Gym",
+    "styleFilterLabel": "Style"
   },
   "outfitCompletion": {
     "cta": "Complete the outfit",
@@ -1068,7 +1071,8 @@
       "business": "Business",
       "formal": "Formal",
       "athletic": "Athletic",
-      "loungewear": "Loungewear"
+      "loungewear": "Loungewear",
+      "all": "All Styles"
     },
     "gender": {
       "men": "Men",

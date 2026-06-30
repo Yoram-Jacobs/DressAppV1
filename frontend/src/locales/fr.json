@@ -588,7 +588,10 @@
     "preferencesApplied_one": "{{count}} preference applied",
     "preferencesApplied_other": "{{count}} preferences applied",
     "trend": "Trend",
-    "trendsLabel": "Trends"
+    "trendsLabel": "Trends",
+    "tagFilterLabel": "Étiquette",
+    "tagFilterPlaceholder": "ex. Travail, Sport",
+    "styleFilterLabel": "Style"
   },
   "outfitCompletion": {
     "cta": "Compléter la tenue",
@@ -1068,7 +1071,8 @@
       "business": "Business",
       "formal": "Formal",
       "athletic": "Athletic",
-      "loungewear": "Loungewear"
+      "loungewear": "Loungewear",
+      "all": "Tous les styles"
     },
     "gender": {
       "men": "Men",

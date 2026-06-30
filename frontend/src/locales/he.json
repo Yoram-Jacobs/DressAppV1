@@ -588,7 +588,10 @@
     "shoppingSuggestions": "הצעות קניות של סטייליסט AI",
     "shuffledLook": "לוק מעורבב",
     "suggestOthers": "הצע 3 אחרים",
-    "outfitPlanner": "מתכנן תלבושות"
+    "outfitPlanner": "מתכנן תלבושות",
+    "tagFilterLabel": "תגית",
+    "tagFilterPlaceholder": "למשל: עבודה, כושר",
+    "styleFilterLabel": "סגנון"
   },
   "outfitCompletion": {
     "cta": "השלם את הלוק",
@@ -1068,7 +1071,8 @@
       "business": "עסקי",
       "formal": "רשמי",
       "athletic": "אתלטי",
-      "loungewear": "בית"
+      "loungewear": "בית",
+      "all": "כל הסגנונות"
     },
     "gender": {
       "men": "גברים",

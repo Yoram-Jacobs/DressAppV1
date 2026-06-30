@@ -588,7 +588,10 @@
     "preferencesApplied_one": "{{count}} preference applied",
     "preferencesApplied_other": "{{count}} preferences applied",
     "trend": "Trend",
-    "trendsLabel": "Trends"
+    "trendsLabel": "Trends",
+    "tagFilterLabel": "Тег",
+    "tagFilterPlaceholder": "например: Работа, Спортзал",
+    "styleFilterLabel": "Стиль"
   },
   "outfitCompletion": {
     "cta": "Завершить образ",
@@ -1068,7 +1071,8 @@
       "business": "Деловой",
       "formal": "Формальный",
       "athletic": "Спортивный",
-      "loungewear": "Домашняя одежда"
+      "loungewear": "Домашняя одежда",
+      "all": "Все стили"
     },
     "gender": {
       "men": "Мужское",

@@ -588,7 +588,10 @@
     "preferencesApplied_one": "{{count}} preference applied",
     "preferencesApplied_other": "{{count}} preferences applied",
     "trend": "Trend",
-    "trendsLabel": "Trends"
+    "trendsLabel": "Trends",
+    "tagFilterLabel": "टैग",
+    "tagFilterPlaceholder": "जैसे: काम, जिम",
+    "styleFilterLabel": "शैली"
   },
   "outfitCompletion": {
     "cta": "आउटफ़िट पूरा करें",
@@ -1068,7 +1071,8 @@
       "business": "बिजनेस",
       "formal": "फॉर्मल",
       "athletic": "एथलेटिक",
-      "loungewear": "लाउंजवियर"
+      "loungewear": "लाउंजवियर",
+      "all": "सभी शैलियाँ"
     },
     "gender": {
       "men": "पुरुष",
