@@ -914,7 +914,9 @@
     "receivePushReminders": "Получать push-уведомления с персональными подборками образов.",
     "schedulerPushReminders": "Планировщик и Push-напоминания",
     "styleDressFor": "Стиль одежды",
-    "twiceAWeek": "Дважды в неделю"
+    "twiceAWeek": "Дважды в неделю",
+    "everyday": "Everyday",
+    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts."
   },
   "admin": {
     "title": "Админ",

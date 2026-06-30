@@ -914,7 +914,9 @@
     "receivePushReminders": "通过推送通知接收定制的每日搭配方案。",
     "schedulerPushReminders": "日程规划与推送提醒",
     "styleDressFor": "搭配风格",
-    "twiceAWeek": "每周两次"
+    "twiceAWeek": "每周两次",
+    "everyday": "Everyday",
+    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts."
   },
   "admin": {
     "title": "管理",

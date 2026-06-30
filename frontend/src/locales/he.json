@@ -914,7 +914,9 @@
     "failedToTogglePushNotifications": "שינוי מצב התראות פוש נכשל.",
     "aiStylistSchedulerSettingsUpdated": "הגדרות תזמון הסטייליסט עודכנו.",
     "exploreTitle": "גלה את DressApp",
-    "statsTitle": "נתונים"
+    "statsTitle": "נתונים",
+    "everyday": "Everyday",
+    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts."
   },
   "admin": {
     "title": "ניהול",

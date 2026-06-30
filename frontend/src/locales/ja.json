@@ -914,7 +914,9 @@
     "receivePushReminders": "カスタマイズされたコーディネート提案のプッシュ通知を受け取ります。",
     "schedulerPushReminders": "スケジューラ＆プッシュ通知リマインダー",
     "styleDressFor": "スタイル / 着こなし目的",
-    "twiceAWeek": "週に2回"
+    "twiceAWeek": "週に2回",
+    "everyday": "Everyday",
+    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts."
   },
   "admin": {
     "title": "管理",

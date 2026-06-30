@@ -914,7 +914,9 @@
     "receivePushReminders": "تلقي تذكيرات عبر إشعارات الدفع مع مقترحات ملابس مخصصة.",
     "schedulerPushReminders": "الجدولة وتذكيرات الإشعارات",
     "styleDressFor": "نمط اللباس لـ",
-    "twiceAWeek": "مرتين في الأسبوع"
+    "twiceAWeek": "مرتين في الأسبوع",
+    "everyday": "Everyday",
+    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts."
   },
   "admin": {
     "title": "الإدارة",

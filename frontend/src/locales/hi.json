@@ -914,7 +914,9 @@
     "receivePushReminders": "कस्टमाइज्ड आउटफिट प्रस्तावों के साथ पुश नोटिफिकेशन रिमाइंडर्स प्राप्त करें।",
     "schedulerPushReminders": "शेड्यूलर और पुश रिमाइंडर्स",
     "styleDressFor": "शैली / किस लिए तैयार होना है",
-    "twiceAWeek": "सप्ताह में दो बार"
+    "twiceAWeek": "सप्ताह में दो बार",
+    "everyday": "Everyday",
+    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts."
   },
   "admin": {
     "title": "व्यवस्थापक",

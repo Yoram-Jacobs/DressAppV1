@@ -914,7 +914,9 @@
     "browserPushNotificationsSuccessfullyEnabled": "Browser push notifications successfully enabled.",
     "browserPushNotificationsDisabled": "Browser push notifications disabled.",
     "failedToTogglePushNotifications": "Failed to toggle push notifications.",
-    "aiStylistSchedulerSettingsUpdated": "AI Stylist Scheduler settings updated."
+    "aiStylistSchedulerSettingsUpdated": "AI Stylist Scheduler settings updated.",
+    "everyday": "Everyday",
+    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts."
   },
   "admin": {
     "title": "Admin",

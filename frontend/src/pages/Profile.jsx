@@ -182,7 +182,7 @@ function SchedulerSettingsCard() {
                 <Select value={frequency} onValueChange={setFrequency}>
                   <SelectTrigger id="s-freq" className="rounded-xl"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="everyday">{t('pages.admin.daily_utc', { defaultValue: 'Everyday' }).split(' ')[0].replace(':', '')}</SelectItem>
+                    <SelectItem value="everyday">{t('profile.everyday', { defaultValue: 'Everyday' })}</SelectItem>
                     <SelectItem value="every_other_day">{t('profile.everyOtherDay', { defaultValue: 'Every Other Day' })}</SelectItem>
                     <SelectItem value="twice_a_week">{t('profile.twiceAWeek', { defaultValue: 'Twice a Week' })}</SelectItem>
                     <SelectItem value="on_weekday">{t('profile.onWeekday', { defaultValue: 'On Weekday' })}</SelectItem>
@@ -254,9 +254,7 @@ function SchedulerSettingsCard() {
         )}
 
         <div className="text-xs text-muted-foreground p-3 bg-secondary/20 rounded-xl border border-dashed border-border/80 text-start">
-          {t('profile.phoneWarningStart', { defaultValue: '* Configure phone number under ' })}
-          <strong>{t('profile.identity', { defaultValue: 'Identity' })}</strong>
-          {t('profile.phoneWarningEnd', { defaultValue: ' to receive simulated push alerts.' })}
+          {t('profile.phoneWarning', { defaultValue: '* Configure phone number under Identity to receive simulated push alerts.' })}
         </div>
 
         <div className="flex">
@@ -461,7 +459,7 @@ export default function Profile() {
       <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
         <CardContent className="p-6">
           <form onSubmit={save} className="space-y-6" data-testid="settings-form">
-            <Accordion type="single" collapsible>
+            <Accordion type="multiple" defaultValue={["identity", "style", "context", "voice"]}>
               <AccordionItem value="identity" className="border-none">
                 <AccordionTrigger className="py-2 hover:no-underline">
                   <div className="caps-label text-muted-foreground text-start m-0">{t('profile.identity')}</div>
@@ -485,90 +483,90 @@ export default function Profile() {
                   </div>
                 </AccordionContent>
               </AccordionItem>
-            </Accordion>
 
-            <Separator />
+              <AccordionItem value="style" className="border-none" data-testid="settings-style-profile">
+                <AccordionTrigger className="py-2 hover:no-underline">
+                  <div className="caps-label text-muted-foreground text-start m-0">{t('profile.styleProfile')}</div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-2 space-y-3 pb-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <Label>{t('profile.aesthetics')}</Label>
+                      <Input value={form.aesthetics} onChange={(e) => setForm({ ...form, aesthetics: e.target.value })}
+                        placeholder={t('profile.aestheticsPlaceholder')} className="rounded-xl" data-testid="settings-aesthetics" />
+                    </div>
+                    <div>
+                      <Label>{t('profile.colorPalette')}</Label>
+                      <Input value={form.color_palette} onChange={(e) => setForm({ ...form, color_palette: e.target.value })}
+                        placeholder={t('profile.colorPalettePlaceholder')} className="rounded-xl" data-testid="settings-palette" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label>{t('profile.avoid')}</Label>
+                      <Input value={form.avoid} onChange={(e) => setForm({ ...form, avoid: e.target.value })}
+                        placeholder={t('profile.avoidPlaceholder')} className="rounded-xl" data-testid="settings-avoid" />
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
 
-            <section className="space-y-3" data-testid="settings-style-profile">
-              <div className="caps-label text-muted-foreground">{t('profile.styleProfile')}</div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <Label>{t('profile.aesthetics')}</Label>
-                  <Input value={form.aesthetics} onChange={(e) => setForm({ ...form, aesthetics: e.target.value })}
-                    placeholder={t('profile.aestheticsPlaceholder')} className="rounded-xl" data-testid="settings-aesthetics" />
-                </div>
-                <div>
-                  <Label>{t('profile.colorPalette')}</Label>
-                  <Input value={form.color_palette} onChange={(e) => setForm({ ...form, color_palette: e.target.value })}
-                    placeholder={t('profile.colorPalettePlaceholder')} className="rounded-xl" data-testid="settings-palette" />
-                </div>
-                <div className="md:col-span-2">
-                  <Label>{t('profile.avoid')}</Label>
-                  <Input value={form.avoid} onChange={(e) => setForm({ ...form, avoid: e.target.value })}
-                    placeholder={t('profile.avoidPlaceholder')} className="rounded-xl" data-testid="settings-avoid" />
-                </div>
-              </div>
-            </section>
-
-            <Separator />
-
-            <Accordion type="single" collapsible>
               <AccordionItem value="context" className="border-none">
                 <AccordionTrigger className="py-2 hover:no-underline">
                   <div className="caps-label text-muted-foreground text-start m-0">{t('profile.context')}</div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-2 space-y-3 pb-2">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <Label>{t('profile.homeCity')}</Label>
-                  <Input value={form.home_city} onChange={(e) => setForm({ ...form, home_city: e.target.value })}
-                    className="rounded-xl" data-testid="settings-home-city" />
-                </div>
-                <div>
-                  <Label>{t('profile.latitude')}</Label>
-                  <Input value={form.home_lat} onChange={(e) => setForm({ ...form, home_lat: e.target.value })}
-                    className="rounded-xl" data-testid="settings-home-lat" />
-                </div>
-                <div>
-                  <Label>{t('profile.longitude')}</Label>
-                  <Input value={form.home_lng} onChange={(e) => setForm({ ...form, home_lng: e.target.value })}
-                    className="rounded-xl" data-testid="settings-home-lng" />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <Label>{t('profile.region')}</Label>
-                  <Input value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })}
-                    className="rounded-xl" data-testid="settings-region" placeholder={t('profile.regionPlaceholder')} />
-                </div>
-                <div>
-                  <Label>{t('profile.conservativeness')}</Label>
-                  <Select value={form.dress_conservativeness} onValueChange={(v) => setForm({ ...form, dress_conservativeness: v })}>
-                    <SelectTrigger className="rounded-xl" data-testid="settings-conservativeness"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">{t('profile.conservLow')}</SelectItem>
-                      <SelectItem value="moderate">{t('profile.conservModerate')}</SelectItem>
-                      <SelectItem value="high">{t('profile.conservHigh')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+                    <div>
+                      <Label>{t('profile.homeCity')}</Label>
+                      <Input value={form.home_city} onChange={(e) => setForm({ ...form, home_city: e.target.value })}
+                        className="rounded-xl" data-testid="settings-home-city" />
+                    </div>
+                    <div>
+                      <Label>{t('profile.latitude')}</Label>
+                      <Input value={form.home_lat} onChange={(e) => setForm({ ...form, home_lat: e.target.value })}
+                        className="rounded-xl" data-testid="settings-home-lat" />
+                    </div>
+                    <div>
+                      <Label>{t('profile.longitude')}</Label>
+                      <Input value={form.home_lng} onChange={(e) => setForm({ ...form, home_lng: e.target.value })}
+                        className="rounded-xl" data-testid="settings-home-lng" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <Label>{t('profile.region')}</Label>
+                      <Input value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })}
+                        className="rounded-xl" data-testid="settings-region" placeholder={t('profile.regionPlaceholder')} />
+                    </div>
+                    <div>
+                      <Label>{t('profile.conservativeness')}</Label>
+                      <Select value={form.dress_conservativeness} onValueChange={(v) => setForm({ ...form, dress_conservativeness: v })}>
+                        <SelectTrigger className="rounded-xl" data-testid="settings-conservativeness"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">{t('profile.conservLow')}</SelectItem>
+                          <SelectItem value="moderate">{t('profile.conservModerate')}</SelectItem>
+                          <SelectItem value="high">{t('profile.conservHigh')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="voice" className="border-none">
+                <AccordionTrigger className="py-2 hover:no-underline">
+                  <div className="caps-label text-muted-foreground text-start m-0">{t('profile.voiceLanguage')}</div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-2 space-y-3 pb-2">
+                  <div>
+                    <Label>{t('profile.voice')}</Label>
+                    <Select value={form.preferred_voice_id} onValueChange={(v) => setForm({ ...form, preferred_voice_id: v })}>
+                      <SelectTrigger className="rounded-xl" data-testid="settings-voice"><SelectValue /></SelectTrigger>
+                      <SelectContent>{VOICES.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-
-            <Separator />
-
-            <section className="space-y-3">
-              <div className="caps-label text-muted-foreground">{t('profile.voiceLanguage')}</div>
-              <div>
-                <Label>{t('profile.voice')}</Label>
-                <Select value={form.preferred_voice_id} onValueChange={(v) => setForm({ ...form, preferred_voice_id: v })}>
-                  <SelectTrigger className="rounded-xl" data-testid="settings-voice"><SelectValue /></SelectTrigger>
-                  <SelectContent>{VOICES.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-            </section>
 
             <div className="flex gap-3">
               <Button type="submit" disabled={busy} className="rounded-xl" data-testid="settings-save-button">

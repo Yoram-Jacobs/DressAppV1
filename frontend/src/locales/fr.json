@@ -914,7 +914,9 @@
     "receivePushReminders": "Recevoir des rappels par notification push avec des suggestions de tenues personnalisées.",
     "schedulerPushReminders": "Planificateur et rappels push",
     "styleDressFor": "Style / S'habiller pour",
-    "twiceAWeek": "Deux fois par semaine"
+    "twiceAWeek": "Deux fois par semaine",
+    "everyday": "Everyday",
+    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts."
   },
   "admin": {
     "title": "Admin",
