@@ -1844,7 +1844,7 @@ export default function Stylist() {
     ) : 0;
 
     return (
-      <Card className="border border-border/85 rounded-2xl shadow-editorial bg-card w-full overflow-hidden animate-[slideDown_0.2s_ease-out]">
+      <Card className="border border-border/85 rounded-2xl shadow-editorial bg-card w-full shrink-0 overflow-hidden animate-[slideDown_0.2s_ease-out]">
         <CardContent className="p-6">
           <div className="flex items-center justify-between border-b border-border/50 pb-3 mb-4">
             <Button
