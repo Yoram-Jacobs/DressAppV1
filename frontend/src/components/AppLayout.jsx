@@ -6,10 +6,24 @@ import { LanguageSync } from '@/components/LanguageSync';
 import { LocationBanner } from '@/components/LocationBanner';
 import { useAuth } from '@/lib/auth';
 import { closetStore } from '@/lib/closetStore';
-import { prewarmMarketplace, resetMarketplace } from '@/lib/marketplaceStore';
+import { prewarmMarketplace, resetMarketplace, myListingsStore } from '@/lib/marketplaceStore';
 import { prewarmExperts, resetExperts } from '@/lib/expertsStore';
 import { prewarmSuitcase, resetSuitcase } from '@/lib/suitcaseStore';
 import { Loader2 } from 'lucide-react';
+import { api } from '@/lib/api';
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
 
 export const AppLayout = () => {
   const { user, loading } = useAuth();
@@ -37,6 +51,63 @@ export const AppLayout = () => {
       resetMarketplace();
       resetExperts();
       resetSuitcase();
+    }
+  }, [user, loading]);
+
+  // Background polling to keep devices in sync (Closet, Suitcase, and User Listings)
+  useEffect(() => {
+    if (loading || !user) return;
+
+    const intervalId = setInterval(() => {
+      closetStore.incrementalSync().catch(() => {});
+      prewarmSuitcase({ force: true }).catch(() => {});
+      myListingsStore.ensure({ seller_id: user.id }, { force: true }).catch(() => {});
+    }, 30 * 1000); // sync every 30 seconds
+
+    return () => clearInterval(intervalId);
+  }, [user, loading]);
+
+  // Web Push device synchronization logic
+  useEffect(() => {
+    if (loading || !user) return;
+
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      navigator.serviceWorker.ready.then(async (reg) => {
+        try {
+          let sub = await reg.pushManager.getSubscription();
+
+          const registerSub = async (subscription) => {
+            try {
+              await api.subscribeWebPush(subscription.toJSON());
+            } catch (err) {
+              console.warn('Failed to register web push on server', err);
+            }
+          };
+
+          if (sub) {
+            // Already subscribed on this device, ensure it's registered on the server
+            await registerSub(sub);
+          } else if (
+            Notification.permission === 'granted' || 
+            (user?.scheduler_settings?.enabled && Notification.permission === 'default')
+          ) {
+            // Either already granted permission, OR scheduler is enabled and permission is default (prompt).
+            if (Notification.permission === 'default') {
+              const permission = await Notification.requestPermission();
+              if (permission !== 'granted') return;
+            }
+            const res = await api.getVapidKey();
+            const pubKey = urlBase64ToUint8Array(res.public_key);
+            sub = await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: pubKey,
+            });
+            await registerSub(sub);
+          }
+        } catch (err) {
+          console.warn('Auto Web Push subscription failed', err);
+        }
+      });
     }
   }, [user, loading]);
 

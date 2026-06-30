@@ -213,9 +213,9 @@ export const suitcaseStore = {
   }
 };
 
-export async function prewarmSuitcase() {
+export async function prewarmSuitcase(opts) {
   try {
-    await suitcaseStore.prewarm();
+    await suitcaseStore.prewarm(opts);
   } catch { /* best-effort */ }
 }
 

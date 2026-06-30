@@ -201,17 +201,16 @@ async def browse_listings(
     # $geoNear aggregation so listings near the user float to the top and
     # every result carries its `distance_km` for the UI badge.
     if lat is not None and lng is not None:
-        max_meters = (radius_km * 1000) if radius_km else 200_000
+        geo_near_opts = {
+            "near": {"type": "Point", "coordinates": [lng, lat]},
+            "distanceField": "distance_m",
+            "query": query,
+            "spherical": True,
+        }
+        if radius_km:
+            geo_near_opts["maxDistance"] = radius_km * 1000
         pipeline = [
-            {
-                "$geoNear": {
-                    "near": {"type": "Point", "coordinates": [lng, lat]},
-                    "distanceField": "distance_m",
-                    "maxDistance": max_meters,
-                    "query": query,
-                    "spherical": True,
-                }
-            },
+            {"$geoNear": geo_near_opts},
             {"$skip": skip},
             {"$limit": limit},
             {"$project": {"_id": 0}},
@@ -317,17 +316,16 @@ async def browse_listings_stream(
 
         emitted = 0
         if use_geo:
-            max_meters = (radius_km * 1000) if radius_km else 200_000
+            geo_near_opts = {
+                "near": {"type": "Point", "coordinates": [lng, lat]},
+                "distanceField": "distance_m",
+                "query": query,
+                "spherical": True,
+            }
+            if radius_km:
+                geo_near_opts["maxDistance"] = radius_km * 1000
             pipeline = [
-                {
-                    "$geoNear": {
-                        "near": {"type": "Point", "coordinates": [lng, lat]},
-                        "distanceField": "distance_m",
-                        "maxDistance": max_meters,
-                        "query": query,
-                        "spherical": True,
-                    }
-                },
+                {"$geoNear": geo_near_opts},
                 {"$skip": skip},
                 {"$limit": limit},
                 {"$project": {"_id": 0}},
