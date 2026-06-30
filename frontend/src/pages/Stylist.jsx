@@ -1638,14 +1638,14 @@ export default function Stylist() {
       </ScrollArea>
 
       <div className="border-t border-border p-3 md:p-4 space-y-3 bg-background">
-        {/* Quick Scheduler Actions */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1.5 border-b border-border/40" data-testid="stylist-scheduler-actions">
+        {/* Quick Actions Row */}
+        <div className="max-w-3xl mx-auto w-full flex items-center gap-2 flex-wrap text-xs text-muted-foreground border-b border-border/40 pb-2" data-testid="stylist-scheduler-actions">
           <Button
             size="xs"
             variant="outline"
             onClick={handleTriggerScheduled}
             disabled={busy}
-            className="rounded-full bg-card hover:bg-secondary text-xs h-7 gap-1"
+            className="rounded-full bg-card hover:bg-secondary text-[11px] h-7 gap-1"
             data-testid="stylist-daily-suggestion-btn"
           >
             <Sparkles className="h-3.5 w-3.5 text-[hsl(var(--accent))]" />
@@ -1656,15 +1656,12 @@ export default function Stylist() {
             variant="outline"
             onClick={() => setEventModalOpen(true)}
             disabled={busy}
-            className="rounded-full bg-card hover:bg-secondary text-xs h-7 gap-1"
+            className="rounded-full bg-card hover:bg-secondary text-[11px] h-7 gap-1"
             data-testid="stylist-plan-event-btn"
           >
             <CalIcon className="h-3.5 w-3.5" />
             {t('stylist.planEventOutfit', { defaultValue: 'Plan Event Outfit' })}
           </Button>
-        </div>
-
-        <div className="max-w-3xl mx-auto w-full flex items-center gap-3 flex-wrap text-xs text-muted-foreground border-b border-border/40 pb-2">
           <Button
             variant="outline"
             size="xs"
