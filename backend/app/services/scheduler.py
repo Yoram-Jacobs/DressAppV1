@@ -491,8 +491,6 @@ async def check_scheduler_triggers() -> None:
 
                                 if is_quota_issue:
                                     display_name = f"{display_name} (Fallback. Quota exhausted)"
-                            else:
-                                outfit_id = existing_outfit.get("id") or existing_outfit.get("_id")
 
                                 outfit_doc = {
                                     "id": outfit_id,
@@ -528,6 +526,8 @@ async def check_scheduler_triggers() -> None:
                                             }
                                         }
                                     )
+                            else:
+                                outfit_id = existing_outfit.get("id") or existing_outfit.get("_id")
                                 logger.info("Auto-saved scheduled outfit %s for user %s on %s", outfit_id, user["id"], tomorrow_str)
 
                     # Build push notification text using localized i18n keys
