@@ -86,6 +86,13 @@ async def compose_outfit(
     rejected.extend(dedup_rejects)
     timings["dedup_ms"] = int((time.perf_counter() - t1) * 1000)
 
+    user_profile = {
+        "preferred_language": (language or user.get("preferred_language") or "en").lower(),
+        "preferred_voice_id": user.get("preferred_voice_id") or "aura-2-thalia-en",
+        "style_profile": user.get("style_profile"),
+        "cultural_context": user.get("cultural_context"),
+    }
+
     # 3) Brief scoring + outfit composition ------------------------
     t2 = time.perf_counter()
     composition = await _compose_with_llm(
@@ -94,6 +101,7 @@ async def compose_outfit(
         constraints=constraints,
         language=language,
         user_preferences_block=user_preferences_block,
+        user_profile=user_profile,
     )
     timings["compose_ms"] = int((time.perf_counter() - t2) * 1000)
 
@@ -276,6 +284,7 @@ async def _compose_with_llm(
     constraints: dict[str, Any],
     language: str,
     user_preferences_block: str | None = None,
+    user_profile: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Ask the Stylist LLM to assign candidates to outfit slots.
 
@@ -349,6 +358,7 @@ async def _compose_with_llm(
             user_text=instruction,
             image_base64=None,
             user_preferences_block=user_preferences_block,
+            user_profile=user_profile,
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning("Composer LLM call failed: %s — falling back", repr(exc)[:160])

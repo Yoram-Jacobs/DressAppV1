@@ -84,8 +84,8 @@ async def stylist_endpoint(
     lat: float | None = Form(default=None),
     lng: float | None = Form(default=None),
     include_calendar: bool = Form(default=False),
-    language: str = Form(default="en"),
-    voice_id: str = Form(default="aura-2-thalia-en"),
+    language: str | None = Form(default=None),
+    voice_id: str | None = Form(default=None),
     occasion: str | None = Form(default=None),
     skip_tts: bool = Form(default=False),
     session_id: str | None = Form(default=None),
@@ -138,7 +138,7 @@ async def stylist_endpoint(
 
     user_profile = {
         "preferred_language": (language or user.get("preferred_language") or "en").lower(),
-        "preferred_voice_id": user.get("preferred_voice_id", voice_id),
+        "preferred_voice_id": user.get("preferred_voice_id") or voice_id or "aura-2-thalia-en",
         "style_profile": user.get("style_profile"),
         "cultural_context": user.get("cultural_context"),
         "conversation_history": [
@@ -173,7 +173,7 @@ async def stylist_endpoint(
     # populated by the time the response arrives. Failures are non-fatal.
     if is_first_turn and text:
         try:
-            title = await generate_session_title(text, language=language)
+            title = await generate_session_title(text, language=user_profile["preferred_language"])
             if title:
                 await update_session(session["id"], user["id"], title=title)
                 session["title"] = title
@@ -183,7 +183,7 @@ async def stylist_endpoint(
     # Phase S — render user preferences once (cheap, ~1ms) so we can
     # both inject them into the LLM prompt AND echo the applied keys.
     from app.services.user_preferences import render_user_preferences
-    prefs_block, applied_prefs = render_user_preferences(user_profile)
+    prefs_block, applied_prefs = render_user_preferences(user)
 
     try:
         advice = await get_styling_advice(
@@ -198,8 +198,8 @@ async def stylist_endpoint(
             infill_prompt=infill_prompt,
             lat=lat,
             lng=lng,
-            language=language,
-            voice_id=voice_id,
+            language=user_profile["preferred_language"],
+            voice_id=user_profile["preferred_voice_id"],
             calendar_events=calendar_events,
             cultural_rules=None,
             user_profile=user_profile,
