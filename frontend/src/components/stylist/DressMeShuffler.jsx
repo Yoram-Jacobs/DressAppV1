@@ -6,23 +6,37 @@ import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { bestImageUrl } from '@/lib/itemImage';
-import { labelForRole } from '@/lib/taxonomy';
+import { labelForRole, labelForDressCode } from '@/lib/taxonomy';
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
 } from '@/components/ui/carousel';
 import { ItemFloater } from '@/components/stylist/ItemFloater';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+const DRESS_CODE_OPTIONS = ['all', 'casual', 'smart-casual', 'business', 'formal', 'athletic', 'loungewear'];
 
 export default function DressMeShuffler({ onSaveSuccess }) {
   const { t } = useTranslation();
   const store = useClosetStore();
   const items = store.items || [];
 
+  const [selectedStyle, setSelectedStyle] = useState('all');
+
   // Categorize items
   const tops = items.filter(it => it.category === 'Top' || it.category === 'Outerwear' || it.category === 'Full Body');
   const bottoms = items.filter(it => it.category === 'Bottom');
   const shoes = items.filter(it => it.category === 'Footwear');
+
+  const filteredTops = selectedStyle && selectedStyle !== 'all'
+    ? tops.filter(it => it.dress_code === selectedStyle)
+    : tops;
+  const filteredBottoms = selectedStyle && selectedStyle !== 'all'
+    ? bottoms.filter(it => it.dress_code === selectedStyle)
+    : bottoms;
+  const filteredShoes = selectedStyle && selectedStyle !== 'all'
+    ? shoes.filter(it => it.dress_code === selectedStyle)
+    : shoes;
 
   // List duplication helper to enable Embla infinite loop / scrolling for small datasets
   const getDuplicatedList = (list) => {
@@ -36,9 +50,9 @@ export default function DressMeShuffler({ onSaveSuccess }) {
     return duplicated;
   };
 
-  const duplicatedTops = getDuplicatedList(tops);
-  const duplicatedBottoms = getDuplicatedList(bottoms);
-  const duplicatedShoes = getDuplicatedList(shoes);
+  const duplicatedTops = getDuplicatedList(filteredTops);
+  const duplicatedBottoms = getDuplicatedList(filteredBottoms);
+  const duplicatedShoes = getDuplicatedList(filteredShoes);
 
   // Focus tracking (which item is currently centered in each row)
   const [topFocusIdx, setTopFocusIdx] = useState(0);
@@ -59,6 +73,21 @@ export default function DressMeShuffler({ onSaveSuccess }) {
 
   const [isSpinning, setIsSpinning] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Reset focus index and scrolls on style filter change
+  useEffect(() => {
+    setTopFocusIdx(0);
+    setBottomFocusIdx(0);
+    setShoeFocusIdx(0);
+    setTopSelectedIdx(null);
+    setBottomSelectedIdx(null);
+    setShoeSelectedIdx(null);
+    setActiveFloaterItemId(null);
+    
+    if (topApi && filteredTops.length > 0) topApi.scrollTo(0, false);
+    if (bottomApi && filteredBottoms.length > 0) bottomApi.scrollTo(0, false);
+    if (shoeApi && filteredShoes.length > 0) shoeApi.scrollTo(0, false);
+  }, [selectedStyle, topApi, bottomApi, shoeApi, filteredTops.length, filteredBottoms.length, filteredShoes.length]);
 
   // Sync initial indices when items load
   useEffect(() => {
@@ -168,7 +197,7 @@ export default function DressMeShuffler({ onSaveSuccess }) {
   // Slot machine spin animation
   const handleShuffle = () => {
     if (isSpinning) return;
-    if (tops.length === 0 && bottoms.length === 0 && shoes.length === 0) {
+    if (filteredTops.length === 0 && filteredBottoms.length === 0 && filteredShoes.length === 0) {
       toast.error(t('closet.emptySub'));
       return;
     }
@@ -209,9 +238,9 @@ export default function DressMeShuffler({ onSaveSuccess }) {
 
   const handleSave = async () => {
     // Resolve to focused item in center of the carousels
-    const selectedTop = tops.length > 0 ? tops[topFocusIdx % tops.length] : null;
-    const selectedBottom = bottoms.length > 0 ? bottoms[bottomFocusIdx % bottoms.length] : null;
-    const selectedShoe = shoes.length > 0 ? shoes[shoeFocusIdx % shoes.length] : null;
+    const selectedTop = filteredTops.length > 0 ? filteredTops[topFocusIdx % filteredTops.length] : null;
+    const selectedBottom = filteredBottoms.length > 0 ? filteredBottoms[bottomFocusIdx % filteredBottoms.length] : null;
+    const selectedShoe = filteredShoes.length > 0 ? filteredShoes[shoeFocusIdx % filteredShoes.length] : null;
 
     const outfitItems = [selectedTop, selectedBottom, selectedShoe].filter(Boolean);
     if (outfitItems.length === 0) {
@@ -437,10 +466,30 @@ export default function DressMeShuffler({ onSaveSuccess }) {
 
   return (
     <div className="flex flex-col items-center gap-6 py-4 w-full">
+      <div className="w-full max-w-sm flex flex-col items-center gap-1.5 px-4 mb-2">
+        <label className="text-[10px] caps-label text-muted-foreground font-semibold self-start ps-1">
+          {t('stylist.styleFilterLabel', { defaultValue: 'Style' })}
+        </label>
+        <Select value={selectedStyle} onValueChange={setSelectedStyle} disabled={isSpinning}>
+          <SelectTrigger className="w-full rounded-2xl border-border bg-card shadow-sm h-11 text-xs font-medium focus:ring-[hsl(var(--accent))]">
+            <SelectValue placeholder={t('stylist.selectStyle', { defaultValue: 'Select Style' })} />
+          </SelectTrigger>
+          <SelectContent className="rounded-2xl border-border bg-card shadow-md">
+            {DRESS_CODE_OPTIONS.map((style) => (
+              <SelectItem key={style} value={style} className="text-xs focus:bg-accent focus:text-accent-foreground rounded-xl py-2">
+                {style === 'all' 
+                  ? t('taxonomy.dress_code.all', { defaultValue: 'All Styles' }) 
+                  : labelForDressCode(style, t)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="flex flex-col gap-4 w-full items-center">
-        {renderRow(labelForRole('top', t), tops, topFocusIdx, topSelectedIdx, setTopSelectedIdx, setTopApi, topApi)}
-        {renderRow(labelForRole('bottom', t), bottoms, bottomFocusIdx, bottomSelectedIdx, setBottomSelectedIdx, setBottomApi, bottomApi)}
-        {renderRow(labelForRole('shoes', t), shoes, shoeFocusIdx, shoeSelectedIdx, setShoeSelectedIdx, setShoeApi, shoeApi)}
+        {renderRow(labelForRole('top', t), filteredTops, topFocusIdx, topSelectedIdx, setTopSelectedIdx, setTopApi, topApi)}
+        {renderRow(labelForRole('bottom', t), filteredBottoms, bottomFocusIdx, bottomSelectedIdx, setBottomSelectedIdx, setBottomApi, bottomApi)}
+        {renderRow(labelForRole('shoes', t), filteredShoes, shoeFocusIdx, shoeSelectedIdx, setShoeSelectedIdx, setShoeApi, shoeApi)}
       </div>
 
       <div className="flex items-center gap-4 mt-2">
@@ -455,7 +504,7 @@ export default function DressMeShuffler({ onSaveSuccess }) {
 
         <Button
           onClick={handleSave}
-          disabled={saving || isSpinning || (tops.length === 0 && bottoms.length === 0 && shoes.length === 0)}
+          disabled={saving || isSpinning || (filteredTops.length === 0 && filteredBottoms.length === 0 && filteredShoes.length === 0)}
           variant="outline"
           className="rounded-2xl px-6 py-6 border-brand/20 hover:bg-accent-lilac/30 text-brand font-semibold flex items-center gap-2 text-sm"
         >
