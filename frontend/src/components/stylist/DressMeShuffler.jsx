@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Sparkles, Save, ImageOff, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sparkles, Save, ImageOff, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { bestImageUrl } from '@/lib/itemImage';
@@ -22,21 +23,40 @@ export default function DressMeShuffler({ onSaveSuccess }) {
   const items = store.items || [];
 
   const [selectedStyle, setSelectedStyle] = useState('all');
+  const [tagInput, setTagInput] = useState('');
+  const [selectedTag, setSelectedTag] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Extract all unique tags
+  const allUniqueTags = Array.from(
+    new Set(items.flatMap(it => Array.isArray(it.tags) ? it.tags : []))
+  ).filter(Boolean);
+
+  // Suggestions filtered by input text
+  const tagSuggestions = tagInput
+    ? allUniqueTags.filter(t => t.toLowerCase().includes(tagInput.toLowerCase()) && t !== selectedTag)
+    : allUniqueTags;
 
   // Categorize items
   const tops = items.filter(it => it.category === 'Top' || it.category === 'Outerwear' || it.category === 'Full Body');
   const bottoms = items.filter(it => it.category === 'Bottom');
   const shoes = items.filter(it => it.category === 'Footwear');
 
-  const filteredTops = selectedStyle && selectedStyle !== 'all'
-    ? tops.filter(it => it.dress_code === selectedStyle)
-    : tops;
-  const filteredBottoms = selectedStyle && selectedStyle !== 'all'
-    ? bottoms.filter(it => it.dress_code === selectedStyle)
-    : bottoms;
-  const filteredShoes = selectedStyle && selectedStyle !== 'all'
-    ? shoes.filter(it => it.dress_code === selectedStyle)
-    : shoes;
+  const filteredTops = tops.filter(it => {
+    if (selectedStyle && selectedStyle !== 'all' && it.dress_code !== selectedStyle) return false;
+    if (selectedTag && (!Array.isArray(it.tags) || !it.tags.includes(selectedTag))) return false;
+    return true;
+  });
+  const filteredBottoms = bottoms.filter(it => {
+    if (selectedStyle && selectedStyle !== 'all' && it.dress_code !== selectedStyle) return false;
+    if (selectedTag && (!Array.isArray(it.tags) || !it.tags.includes(selectedTag))) return false;
+    return true;
+  });
+  const filteredShoes = shoes.filter(it => {
+    if (selectedStyle && selectedStyle !== 'all' && it.dress_code !== selectedStyle) return false;
+    if (selectedTag && (!Array.isArray(it.tags) || !it.tags.includes(selectedTag))) return false;
+    return true;
+  });
 
   // List duplication helper to enable Embla infinite loop / scrolling for small datasets
   const getDuplicatedList = (list) => {
@@ -74,7 +94,7 @@ export default function DressMeShuffler({ onSaveSuccess }) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Reset focus index and scrolls on style filter change
+  // Reset focus index and scrolls on style/tag filter change
   useEffect(() => {
     setTopFocusIdx(0);
     setBottomFocusIdx(0);
@@ -87,7 +107,7 @@ export default function DressMeShuffler({ onSaveSuccess }) {
     if (topApi && filteredTops.length > 0) topApi.scrollTo(0, false);
     if (bottomApi && filteredBottoms.length > 0) bottomApi.scrollTo(0, false);
     if (shoeApi && filteredShoes.length > 0) shoeApi.scrollTo(0, false);
-  }, [selectedStyle, topApi, bottomApi, shoeApi, filteredTops.length, filteredBottoms.length, filteredShoes.length]);
+  }, [selectedStyle, selectedTag, topApi, bottomApi, shoeApi, filteredTops.length, filteredBottoms.length, filteredShoes.length]);
 
   // Sync initial indices when items load
   useEffect(() => {
@@ -466,24 +486,83 @@ export default function DressMeShuffler({ onSaveSuccess }) {
 
   return (
     <div className="flex flex-col items-center gap-6 py-4 w-full">
-      <div className="w-full max-w-sm flex flex-col items-center gap-1.5 px-4 mb-2">
-        <label className="text-[10px] caps-label text-muted-foreground font-semibold self-start ps-1">
-          {t('stylist.styleFilterLabel', { defaultValue: 'Style' })}
-        </label>
-        <Select value={selectedStyle} onValueChange={setSelectedStyle} disabled={isSpinning}>
-          <SelectTrigger className="w-full rounded-2xl border-border bg-card shadow-sm h-11 text-xs font-medium focus:ring-[hsl(var(--accent))]">
-            <SelectValue placeholder={t('stylist.selectStyle', { defaultValue: 'Select Style' })} />
-          </SelectTrigger>
-          <SelectContent className="rounded-2xl border-border bg-card shadow-md">
-            {DRESS_CODE_OPTIONS.map((style) => (
-              <SelectItem key={style} value={style} className="text-xs focus:bg-accent focus:text-accent-foreground rounded-xl py-2">
-                {style === 'all' 
-                  ? t('taxonomy.dress_code.all', { defaultValue: 'All Styles' }) 
-                  : labelForDressCode(style, t)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="w-full max-w-sm flex items-end gap-3 px-4 mb-2">
+        {/* Tag Filter (Autocomplete) */}
+        <div className="flex-[1.2] min-w-0 relative">
+          <label className="text-[10px] caps-label text-muted-foreground font-semibold block mb-1.5 ps-1 text-start">
+            {t('stylist.tagFilterLabel', { defaultValue: 'Tag' })}
+          </label>
+          <div className="relative">
+            <Input
+              value={tagInput}
+              onChange={(e) => {
+                setTagInput(e.target.value);
+                setShowSuggestions(true);
+                if (!e.target.value) {
+                  setSelectedTag('');
+                }
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => {
+                // Delay blur so click on suggestion registers first
+                setTimeout(() => setShowSuggestions(false), 200);
+              }}
+              placeholder={t('stylist.tagFilterPlaceholder', { defaultValue: 'e.g. Work, Gym' })}
+              className="rounded-2xl border-border bg-card shadow-sm h-11 text-xs font-medium focus:ring-[hsl(var(--accent))] pe-8 rtl:pe-3 rtl:ps-8"
+              disabled={isSpinning}
+            />
+            {tagInput && (
+              <button
+                onClick={() => {
+                  setTagInput('');
+                  setSelectedTag('');
+                }}
+                className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {showSuggestions && tagSuggestions.length > 0 && (
+            <div className="absolute z-20 left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-card border border-border rounded-xl shadow-lg p-1">
+              {tagSuggestions.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => {
+                    setTagInput(tag);
+                    setSelectedTag(tag);
+                    setShowSuggestions(false);
+                  }}
+                  className="w-full text-start px-3 py-2 text-xs hover:bg-accent hover:text-accent-foreground rounded-lg transition-colors"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Style Filter */}
+        <div className="flex-[0.8] min-w-0">
+          <label className="text-[10px] caps-label text-muted-foreground font-semibold block mb-1.5 ps-1 text-start">
+            {t('stylist.styleFilterLabel', { defaultValue: 'Style' })}
+          </label>
+          <Select value={selectedStyle} onValueChange={setSelectedStyle} disabled={isSpinning}>
+            <SelectTrigger className="w-full rounded-2xl border-border bg-card shadow-sm h-11 text-xs font-medium focus:ring-[hsl(var(--accent))]">
+              <SelectValue placeholder={t('stylist.selectStyle', { defaultValue: 'Select Style' })} />
+            </SelectTrigger>
+            <SelectContent className="rounded-2xl border-border bg-card shadow-md">
+              {DRESS_CODE_OPTIONS.map((style) => (
+                <SelectItem key={style} value={style} className="text-xs focus:bg-accent focus:text-accent-foreground rounded-xl py-2">
+                  {style === 'all' 
+                    ? t('taxonomy.dress_code.all', { defaultValue: 'All Styles' }) 
+                    : labelForDressCode(style, t)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="flex flex-col gap-4 w-full items-center">
