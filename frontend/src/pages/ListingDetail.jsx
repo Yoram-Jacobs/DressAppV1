@@ -294,12 +294,12 @@ export default function ListingDetail() {
               >
                 {removing ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="h-4 w-4 me-2 animate-spin" />
                     {t('market.removing', { defaultValue: 'Removing…' })}
                   </>
                 ) : (
                   <>
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    <Trash2 className="h-4 w-4 me-2" />
                     {t('market.removeListing', { defaultValue: 'Remove from marketplace' })}
                   </>
                 )}
@@ -320,7 +320,7 @@ export default function ListingDetail() {
                     onClick={() => setSwapOpen(true)}
                     data-testid="listing-swap-button"
                   >
-                    <Repeat className="h-4 w-4 mr-2" />
+                    <Repeat className="h-4 w-4 me-2" />
                     {t('pages.listingDetail.propose_a_swap')}
                   </Button>
                   <div className="text-[11px] text-muted-foreground text-center leading-relaxed">
@@ -396,12 +396,12 @@ export default function ListingDetail() {
                       >
                         {donateSubmitting ? (
                           <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            <Loader2 className="h-4 w-4 me-2 animate-spin" />
                             {t('components.swapPickerModal.sending')}
                           </>
                         ) : (
                           <>
-                            <HeartHandshake className="h-4 w-4 mr-2" />
+                            <HeartHandshake className="h-4 w-4 me-2" />
                             {t('pages.listingDetail.claim_this_donation')}
                           </>
                         )}
@@ -492,7 +492,7 @@ export default function ListingDetail() {
                           : <div className="w-full h-full flex items-center justify-center text-muted-foreground caps-label">{t('market.noImage')}</div>}
                         {typeof s._score === 'number' && (
                           <Badge variant="outline"
-                            className="absolute top-2 right-2 bg-background/85 backdrop-blur text-[10px] border-[hsl(var(--accent))]/50 flex items-center gap-1"
+                            className="absolute top-2 end-2 bg-background/85 backdrop-blur text-[10px] border-[hsl(var(--accent))]/50 flex items-center gap-1"
                             data-testid="listing-similar-score">
                             <Sparkles className="h-2.5 w-2.5 text-[hsl(var(--accent))]" />
                             {Math.round(s._score * 100)}%

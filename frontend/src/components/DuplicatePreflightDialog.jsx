@@ -109,7 +109,7 @@ export default function DuplicatePreflightDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[55vh] pr-3">
+        <ScrollArea className="max-h-[55vh] pe-3">
           <div
             className="flex flex-col gap-3"
             data-testid="duplicate-preflight-list"
@@ -202,7 +202,7 @@ export default function DuplicatePreflightDialog({
                         onClick={() => handleRow(m.matchKey, "skip")}
                         data-testid={`duplicate-preflight-skip-${shortKey}`}
                       >
-                        <X className="mr-1 h-3.5 w-3.5" />
+                        <X className="me-1 h-3.5 w-3.5" />
                         {t("addItem.preflight.rowSkip", {
                           defaultValue: "Skip",
                         })}
@@ -220,7 +220,7 @@ export default function DuplicatePreflightDialog({
                         data-testid={`duplicate-preflight-add-${shortKey}`}
                       >
                         <Star
-                          className={`mr-1 h-3.5 w-3.5 ${
+                          className={`me-1 h-3.5 w-3.5 ${
                             decision === "add"
                               ? "fill-white"
                               : "fill-rose-500 text-rose-500"
@@ -266,7 +266,7 @@ export default function DuplicatePreflightDialog({
               data-testid="duplicate-preflight-add-all"
               className="border-rose-200 text-rose-700 hover:bg-rose-50 dark:border-rose-900 dark:text-rose-400 dark:hover:bg-rose-950"
             >
-              <Star className="mr-1 h-3.5 w-3.5 fill-rose-500 text-rose-500" />
+              <Star className="me-1 h-3.5 w-3.5 fill-rose-500 text-rose-500" />
               {t("addItem.preflight.addAll", {
                 defaultValue: "Add all anyway",
               })}

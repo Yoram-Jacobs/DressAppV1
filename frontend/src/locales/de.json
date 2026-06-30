@@ -186,7 +186,12 @@
       "body": "Die zu gruppierenden Artikel weisen abweichende Eigenschaften auf: {{mismatches}}. Möchten Sie sie trotzdem gruppieren?",
       "confirm": "Trotzdem gruppieren",
       "cancel": "Abbrechen"
-    }
+    },
+    "tagConfirmBody": "Enter tags separated by commas to add them to all selected garments.",
+    "tagConfirmTitle": "Tag Selected Items",
+    "tagSelected": "Tag",
+    "tagsAppliedError": "Some tags failed to sync to the server",
+    "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
     "title": "Teile hinzufügen",
@@ -579,7 +584,11 @@
     "shoppingSuggestions": "KI-Stylist Shopping-Vorschläge",
     "shuffledLook": "Zufälliger Look",
     "suggestOthers": "3 andere vorschlagen",
-    "outfitPlanner": "Outfit-Planer"
+    "outfitPlanner": "Outfit-Planer",
+    "preferencesApplied_one": "{{count}} preference applied",
+    "preferencesApplied_other": "{{count}} preferences applied",
+    "trend": "Trend",
+    "trendsLabel": "Trends"
   },
   "outfitCompletion": {
     "cta": "Outfit vervollständigen",
@@ -1030,6 +1039,10 @@
       "market_listing": {
         "title": "Marktplatz-Eintrag",
         "description": "Ein Teil zum Verkauf auf DressApp."
+      },
+      "trends": {
+        "description": "Your personalized DressApp fashion trends and styling recommendations since you signed in.",
+        "title": "Trend Scout"
       }
     }
   },
@@ -1728,8 +1741,10 @@
       "travelTitle": "Reiseoutfit für morgen 👕",
       "travelBody": "Ihre Outfit-Empfehlung für morgen ({{date}}) ist fertig:",
       "welcomeBackTitle": "Willkommen zurück! ✈️",
-      "welcomeBackBody": "Vergessen Sie nicht, die Kleidungsstücke aus Ihrem Koffer bald zu waschen, um sie frisch zu halten!"
-    }
+      "welcomeBackBody": "Vergessen Sie nicht, die Kleidungsstücke aus Ihrem Koffer bald zu waschen, um sie frisch zu halten!",
+      "proposalsTitle": "Proposals for {{style}}:"
+    },
+    "outfit": "Outfit"
   },
   "stats": {
     "category": "DressApp Ausgepackt",

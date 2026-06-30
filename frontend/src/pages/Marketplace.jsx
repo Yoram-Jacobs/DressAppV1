@@ -511,7 +511,7 @@ function InlineTransactions() {
                     <div className="font-medium text-sm">{t('transactions.listingShort', { id: tx.listing_id.slice(0, 8) })}</div>
                     <div className="text-xs text-muted-foreground">{tx.status} · {new Date(tx.created_at).toLocaleString()}</div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <div className="font-display text-lg">{fmt(tx.financial?.gross_cents, tx.currency)}</div>
                     <div className="text-[11px] text-muted-foreground">
                       {t('market.platformFee')}: {fmt(tx.financial?.platform_fee_cents, tx.currency)} · {t('market.sellerNet')}: {fmt(tx.financial?.seller_net_cents, tx.currency)}

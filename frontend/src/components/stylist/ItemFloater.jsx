@@ -140,10 +140,10 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
       data-testid="item-floater-panel"
       className={cn(
         'fixed z-50 flex flex-col bg-card border border-border shadow-2xl transition-transform duration-300 ease-out',
-        'bottom-4 left-4 right-4 top-auto max-h-[75vh] rounded-2xl',
-        'sm:bottom-0 sm:left-auto sm:right-0 sm:top-0 sm:h-full sm:w-[360px] sm:max-h-none sm:rounded-none sm:border-l sm:border-t-0 sm:border-r-0 sm:border-b-0',
+        'bottom-4 start-4 end-4 top-auto max-h-[75vh] rounded-2xl',
+        'sm:bottom-0 sm:start-auto sm:end-0 sm:top-0 sm:h-full sm:w-[360px] sm:max-h-none sm:rounded-none sm:border-l sm:border-t-0 sm:border-r-0 sm:border-b-0',
         entering 
-          ? 'translate-y-[calc(100%+1rem)] sm:translate-y-0 sm:translate-x-full' 
+          ? 'translate-y-[calc(100%+1rem)] sm:translate-y-0 sm:translate-x-full rtl:sm:-translate-x-full' 
           : 'translate-y-0 sm:translate-x-0',
       )}
     >

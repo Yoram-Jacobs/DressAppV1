@@ -364,7 +364,7 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
                     </div>
                     <p className="text-sm whitespace-pre-wrap">{result.rationale}</p>
                     {result.do_dont?.length > 0 && (
-                      <ul className="text-xs text-muted-foreground list-disc pl-5 mt-3 space-y-0.5">
+                      <ul className="text-xs text-muted-foreground list-disc ps-5 mt-3 space-y-0.5">
                         {result.do_dont.map((d, i) => (
                           <li key={`dd-${i}-${String(d).slice(0, 24)}`}>{d}</li>
                         ))}
@@ -385,7 +385,7 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
                           {t('stylist.outfitN', { n: i + 1 })}
                         </div>
                         <div className="font-display text-base mt-1">{rec.name}</div>
-                        <ul className="text-xs text-muted-foreground list-disc pl-5 mt-2 space-y-0.5">
+                        <ul className="text-xs text-muted-foreground list-disc ps-5 mt-2 space-y-0.5">
                           {(rec.items || []).map((it, j) => (
                             <li key={`${rec.id || i}-item-${j}-${it.role || ''}`}>{it.description || it.role}</li>
                           ))}

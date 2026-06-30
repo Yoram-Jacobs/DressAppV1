@@ -62,7 +62,7 @@ export function ScanningPipeline({ variant = 'inline' }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}
-          className="flex items-center gap-2 absolute left-0"
+          className="flex items-center gap-2 absolute start-0"
         >
           <CurrentIcon className="h-3.5 w-3.5 text-[hsl(var(--accent))] animate-pulse shrink-0" />
           <span className="font-medium whitespace-nowrap text-xs">{steps[currentIndex].text}</span>

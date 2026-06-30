@@ -83,7 +83,7 @@ export function WeightedList({
                       : Math.max(0, Math.min(100, Number(e.target.value))),
                 })
               }
-              className="w-16 rounded-xl h-9 text-right"
+              className="w-16 rounded-xl h-9 text-end"
               disabled={disabled}
               data-testid={`${testid}-pct-${i}`}
               aria-label={`${heading} item percentage ${i + 1}`}

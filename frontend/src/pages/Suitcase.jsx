@@ -1999,7 +1999,7 @@ function Suitcase() {
                   
                   {fullscreenOutfit.reasoning && (
                     <div className="border-t border-border pt-3">
-                      <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider mb-1">Stylist Notes</h4>
+                      <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider mb-1">{t('suitcase.stylistNotes', { defaultValue: 'Stylist Notes' })}</h4>
                       <p className="text-xs leading-relaxed text-muted-foreground italic">{fullscreenOutfit.reasoning}</p>
                     </div>
                   )}

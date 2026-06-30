@@ -186,7 +186,12 @@
       "body": "הפריטים שברצונך לקבץ כוללים מאפיינים שאינם תואמים: {{mismatches}}. האם את/ה בטוח/ה שברצונך לקבץ אותם?",
       "confirm": "קבץ בכל זאת",
       "cancel": "ביטול"
-    }
+    },
+    "tagConfirmBody": "Enter tags separated by commas to add them to all selected garments.",
+    "tagConfirmTitle": "Tag Selected Items",
+    "tagSelected": "Tag",
+    "tagsAppliedError": "Some tags failed to sync to the server",
+    "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
     "title": "העלאה ומילוי אוטומטי",
@@ -1034,6 +1039,10 @@
       "market_listing": {
         "title": "פריט במרקטפלייס",
         "description": "פריט שמוצע למכירה ב-DressApp."
+      },
+      "trends": {
+        "description": "Your personalized DressApp fashion trends and styling recommendations since you signed in.",
+        "title": "Trend Scout"
       }
     }
   },

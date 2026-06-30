@@ -1469,7 +1469,7 @@ export default function ItemDetail() {
                       disabled={saving}
                       className="flex-1 bg-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/90 text-white h-10"
                     >
-                      <BadgeCheck className="h-4 w-4 mr-2" />
+                      <BadgeCheck className="h-4 w-4 me-2" />
                       {t('common.apply')}
                     </Button>
                     <Button
@@ -1479,7 +1479,7 @@ export default function ItemDetail() {
                       disabled={saving}
                       className="flex-1 h-10"
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
+                      <Trash2 className="h-4 w-4 me-2" />
                       {t('addItem.remove')}
                     </Button>
                   </>
@@ -1616,7 +1616,7 @@ export default function ItemDetail() {
                     variant="outline"
                   >
                     <Camera className="h-5 w-5 me-3 shrink-0 text-muted-foreground" />
-                    <span className="text-left text-xs sm:text-sm whitespace-normal">{t('addItem.uploadPhotos')}</span>
+                    <span className="text-start text-xs sm:text-sm whitespace-normal">{t('addItem.uploadPhotos')}</span>
                   </Button>
                 </div>
 
@@ -1641,7 +1641,7 @@ export default function ItemDetail() {
                   </div>
 
                   {/* Candidates Grid */}
-                  <div className="flex-1 overflow-y-auto pr-1 space-y-2 scrollbar-thin min-h-0">
+                  <div className="flex-1 overflow-y-auto pe-1 space-y-2 scrollbar-thin min-h-0">
                     {filteredCandidates.length === 0 ? (
                       <div className="text-center py-8 text-sm text-muted-foreground">
                         {t('common.noResults')}
@@ -1661,7 +1661,7 @@ export default function ItemDetail() {
                                 className="w-full h-full object-contain transition-transform group-hover:scale-105"
                               />
                             </div>
-                            <div className="p-2 text-left border-t border-border/50 bg-background/50">
+                            <div className="p-2 text-start border-t border-border/50 bg-background/50">
                               <p className="text-[10px] font-semibold text-foreground truncate">
                                 {cItem.title || cItem.name}
                               </p>
@@ -2093,7 +2093,7 @@ export default function ItemDetail() {
                     value={form.currency}
                     onChange={(v) => setField('currency', v || 'USD')}
                     options={CURRENCY_OPTIONS}
-                    placeholder="USD"
+                    placeholder={t('addItem.currencyPlaceholder', { defaultValue: 'USD' })}
                     testid="item-edit-field-currency"
                   />
                 </Field>
@@ -2102,7 +2102,7 @@ export default function ItemDetail() {
                     value={form.marketplace_intent}
                     onChange={(v) => setField('marketplace_intent', v || 'own')}
                     options={INTENT_OPTIONS}
-                    placeholder="own"
+                    placeholder={t('addItem.sourceTagPlaceholder', { defaultValue: 'own' })}
                     testid="item-edit-field-marketplace_intent"
                     format={(o) => labelForIntent(o, t)}
                   />

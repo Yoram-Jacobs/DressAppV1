@@ -364,7 +364,7 @@ function TransactionRow({ tx, userId, onConfirmed }) {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-right sm:text-left">
+        <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-end sm:text-start">
           {kind === 'buy' ? (
             <>
               <div>

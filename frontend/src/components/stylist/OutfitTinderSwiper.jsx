@@ -201,7 +201,7 @@ export default function OutfitTinderSwiper() {
             <ImageOff className="h-4 w-4 text-muted-foreground" />
           )}
         </div>
-        <div className="flex flex-col min-w-0 text-left">
+        <div className="flex flex-col min-w-0 text-start">
           <span className="text-xs font-semibold truncate text-foreground">{item.name || item.title || 'Garment'}</span>
           <span className="text-[10px] text-muted-foreground caps-label tracking-wider">{roleName}</span>
         </div>
@@ -243,12 +243,12 @@ export default function OutfitTinderSwiper() {
         >
           {/* Overlay tags based on swipe distance */}
           {swipeDirection === 'right' && (
-            <div className="absolute top-6 left-6 rotate-[-12deg] border-4 border-accent-green text-accent-green font-bold text-lg px-3 py-1 rounded-lg uppercase tracking-wider z-20 pointer-events-none">
+            <div className="absolute top-6 start-6 rotate-[-12deg] border-4 border-accent-green text-accent-green font-bold text-lg px-3 py-1 rounded-lg uppercase tracking-wider z-20 pointer-events-none">
               {t('common.save')}
             </div>
           )}
           {swipeDirection === 'left' && (
-            <div className="absolute top-6 right-6 rotate-[12deg] border-4 border-destructive text-destructive font-bold text-lg px-3 py-1 rounded-lg uppercase tracking-wider z-20 pointer-events-none">
+            <div className="absolute top-6 end-6 rotate-[12deg] border-4 border-destructive text-destructive font-bold text-lg px-3 py-1 rounded-lg uppercase tracking-wider z-20 pointer-events-none">
               {t('addItem.preflight.rowSkip')}
             </div>
           )}

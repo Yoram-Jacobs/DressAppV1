@@ -186,7 +186,12 @@
       "body": "Группируемые вами элементы имеют несовпадающие свойства: {{mismatches}}. Вы уверены, что хотите сгруппировать их?",
       "confirm": "Всё равно сгруппировать",
       "cancel": "Отмена"
-    }
+    },
+    "tagConfirmBody": "Enter tags separated by commas to add them to all selected garments.",
+    "tagConfirmTitle": "Tag Selected Items",
+    "tagSelected": "Tag",
+    "tagsAppliedError": "Some tags failed to sync to the server",
+    "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
     "title": "Добавить вещи",
@@ -579,7 +584,11 @@
     "shoppingSuggestions": "Покупки с ИИ-стилистом",
     "shuffledLook": "Случайный образ",
     "suggestOthers": "Предложить 3 других",
-    "outfitPlanner": "Планировщик образов"
+    "outfitPlanner": "Планировщик образов",
+    "preferencesApplied_one": "{{count}} preference applied",
+    "preferencesApplied_other": "{{count}} preferences applied",
+    "trend": "Trend",
+    "trendsLabel": "Trends"
   },
   "outfitCompletion": {
     "cta": "Завершить образ",
@@ -1030,6 +1039,10 @@
       "market_listing": {
         "title": "Объявление маркетплейса",
         "description": "Вещь на продажу в DressApp."
+      },
+      "trends": {
+        "description": "Your personalized DressApp fashion trends and styling recommendations since you signed in.",
+        "title": "Trend Scout"
       }
     }
   },
@@ -1728,8 +1741,10 @@
       "travelTitle": "Дорожный наряд на завтра 👕",
       "travelBody": "Ваша рекомендация наряда на завтра ({{date}}) готова:",
       "welcomeBackTitle": "С возвращением! ✈️",
-      "welcomeBackBody": "Не забудьте постирать вещи из чемодана в ближайшее время, чтобы они оставались свежими!"
-    }
+      "welcomeBackBody": "Не забудьте постирать вещи из чемодана в ближайшее время, чтобы они оставались свежими!",
+      "proposalsTitle": "Proposals for {{style}}:"
+    },
+    "outfit": "Outfit"
   },
   "stats": {
     "category": "DressApp Разбор гардероба",

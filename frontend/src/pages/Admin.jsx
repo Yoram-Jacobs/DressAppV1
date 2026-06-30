@@ -128,7 +128,7 @@ function OverviewSection() {
     <div className="space-y-6">
       <div className="flex justify-end">
         <Button variant="outline" onClick={refresh} className="rounded-xl" data-testid="admin-overview-refresh">
-          <RefreshCcw className="h-4 w-4 mr-2" /> {t('stylist.refreshScout', { defaultValue: 'Refresh' })}
+          <RefreshCcw className="h-4 w-4 me-2" /> {t('stylist.refreshScout', { defaultValue: 'Refresh' })}
         </Button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="admin-overview-grid">
@@ -179,11 +179,11 @@ function ProviderTable({ rows }) {
         <TableHeader>
           <TableRow>
             <TableHead>{t('pages.admin.provider')}</TableHead>
-            <TableHead className="text-right">{t('pages.admin.calls')}</TableHead>
-            <TableHead className="text-right">{t('pages.admin.errors')}</TableHead>
-            <TableHead className="text-right">{t('pages.admin.error_rate')}</TableHead>
-            <TableHead className="text-right">avg ms</TableHead>
-            <TableHead className="text-right">p95 ms</TableHead>
+            <TableHead className="text-end">{t('pages.admin.calls')}</TableHead>
+            <TableHead className="text-end">{t('pages.admin.errors')}</TableHead>
+            <TableHead className="text-end">{t('pages.admin.error_rate')}</TableHead>
+            <TableHead className="text-end">{t('pages.admin.avg_ms', { defaultValue: 'avg ms' })}</TableHead>
+            <TableHead className="text-end">{t('pages.admin.p95_ms', { defaultValue: 'p95 ms' })}</TableHead>
             <TableHead>{t('pages.admin.last')}</TableHead>
           </TableRow>
         </TableHeader>
@@ -191,15 +191,15 @@ function ProviderTable({ rows }) {
           {rows.map((p) => (
             <TableRow key={p.provider} data-testid="admin-providers-row">
               <TableCell className="font-mono text-xs">{p.provider}</TableCell>
-              <TableCell className="text-right">{fmtNum(p.total)}</TableCell>
-              <TableCell className="text-right">{fmtNum(p.fail)}</TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-end">{fmtNum(p.total)}</TableCell>
+              <TableCell className="text-end">{fmtNum(p.fail)}</TableCell>
+              <TableCell className="text-end">
                 <Badge variant="outline" className={`text-[11px] ${PROVIDER_TONE[tone(p.error_rate)]}`}>
                   {(p.error_rate * 100).toFixed(1)}%
                 </Badge>
               </TableCell>
-              <TableCell className="text-right">{fmtNum(p.avg_ms)}</TableCell>
-              <TableCell className="text-right">{fmtNum(p.p95_ms)}</TableCell>
+              <TableCell className="text-end">{fmtNum(p.avg_ms)}</TableCell>
+              <TableCell className="text-end">{fmtNum(p.p95_ms)}</TableCell>
               <TableCell className="text-xs">
                 <div className="flex items-center gap-1">
                   {p.last_ok ? (
@@ -241,7 +241,7 @@ function ProvidersSection() {
     <div className="space-y-6">
       <div className="flex justify-end">
         <Button variant="outline" onClick={refresh} className="rounded-xl" data-testid="admin-providers-refresh">
-          <RefreshCcw className="h-4 w-4 mr-2" /> {t('stylist.refreshScout', { defaultValue: 'Refresh' })}
+          <RefreshCcw className="h-4 w-4 me-2" /> {t('stylist.refreshScout', { defaultValue: 'Refresh' })}
         </Button>
       </div>
       <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
@@ -319,10 +319,10 @@ function TrendScoutSection() {
     <div className="space-y-6">
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={refresh} className="rounded-xl" data-testid="admin-trends-refresh">
-          <RefreshCcw className="h-4 w-4 mr-2" /> {t('stylist.refreshScout', { defaultValue: 'Refresh' })}
+          <RefreshCcw className="h-4 w-4 me-2" /> {t('stylist.refreshScout', { defaultValue: 'Refresh' })}
         </Button>
         <Button onClick={run} disabled={busy} className="rounded-xl" data-testid="admin-trends-run">
-          <Play className="h-4 w-4 mr-2" /> {busy ? 'Running...' : 'Force run now'}
+          <Play className="h-4 w-4 me-2" /> {busy ? t('pages.admin.running', { defaultValue: 'Running...' }) : t('pages.admin.force_run_now', { defaultValue: 'Force run now' })}
         </Button>
       </div>
       {items === null ? (
@@ -387,20 +387,20 @@ function UsersSection() {
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <div className="relative flex-1 max-w-md">
-          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Search className="h-4 w-4 absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={t('pages.admin.search_by_email_or_display')}
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && refresh()}
-            className="pl-9 rounded-xl"
+            className="ps-9 rounded-xl"
             data-testid="admin-users-search"
           />
         </div>
         <Button onClick={() => refresh()} variant="outline" className="rounded-xl" data-testid="admin-users-search-btn">
-          Search
+          {t('common.search', { defaultValue: 'Search' })}
         </Button>
-        <span className="text-xs text-muted-foreground ml-auto">{fmtNum(total)} total</span>
+        <span className="text-xs text-muted-foreground ms-auto">{t('pages.admin.total_count', { count: total, defaultValue: '{{count}} total' })}</span>
       </div>
       <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
         <CardContent className="p-0">
@@ -411,8 +411,8 @@ function UsersSection() {
                   <TableHead>{t('auth.email', { defaultValue: 'Email' })}</TableHead>
                   <TableHead>{t('auth.displayName', { defaultValue: 'Display name' })}</TableHead>
                   <TableHead>{t('pages.admin.roles')}</TableHead>
-                  <TableHead className="text-right">{t('nav.closet', { defaultValue: 'Closet' })}</TableHead>
-                  <TableHead className="text-right">{t('admin.listings', { defaultValue: 'Listings' })}</TableHead>
+                  <TableHead className="text-end">{t('nav.closet', { defaultValue: 'Closet' })}</TableHead>
+                  <TableHead className="text-end">{t('admin.listings', { defaultValue: 'Listings' })}</TableHead>
                   <TableHead>{t('pages.admin.calendar')}</TableHead>
                   <TableHead>{t('pages.admin.created')}</TableHead>
                   <TableHead></TableHead>
@@ -431,22 +431,22 @@ function UsersSection() {
                       <TableCell className="text-sm">{u.display_name}</TableCell>
                       <TableCell>
                         {(u.roles || []).map((r) => (
-                          <Badge key={r} variant="outline" className="text-[11px] mr-1">{r}</Badge>
+                          <Badge key={r} variant="outline" className="text-[11px] me-1">{r}</Badge>
                         ))}
                       </TableCell>
-                      <TableCell className="text-right text-sm">{fmtNum(u.closet_count)}</TableCell>
-                      <TableCell className="text-right text-sm">{fmtNum(u.listing_count)}</TableCell>
+                      <TableCell className="text-end text-sm">{fmtNum(u.closet_count)}</TableCell>
+                      <TableCell className="text-end text-sm">{fmtNum(u.listing_count)}</TableCell>
                       <TableCell>
                         {u.calendar_connected ? (
-                          <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[11px]">connected</Badge>
+                          <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[11px]">{t('pages.admin.connected', { defaultValue: 'connected' })}</Badge>
                         ) : (
-                          <Badge variant="outline" className="text-[11px]">no</Badge>
+                          <Badge variant="outline" className="text-[11px]">{t('pages.admin.no', { defaultValue: 'no' })}</Badge>
                         )}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-end">
                         <Button
                           size="sm"
                           variant="outline"
@@ -454,8 +454,8 @@ function UsersSection() {
                           onClick={() => togglePromotion(u)}
                           data-testid="admin-user-toggle-admin"
                         >
-                          {isAdmin ? <ShieldOff className="h-3 w-3 mr-1" /> : <ShieldCheck className="h-3 w-3 mr-1" />}
-                          {isAdmin ? 'Demote' : 'Promote'}
+                          {isAdmin ? <ShieldOff className="h-3 w-3 me-1" /> : <ShieldCheck className="h-3 w-3 me-1" />}
+                          {isAdmin ? t('pages.admin.demote', { defaultValue: 'Demote' }) : t('pages.admin.promote', { defaultValue: 'Promote' })}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -517,7 +517,7 @@ function ListingsSection() {
                 <TableRow>
                   <TableHead>{t('pages.admin.listing')}</TableHead>
                   <TableHead>{t('transactions.seller', { defaultValue: 'Seller' })}</TableHead>
-                  <TableHead className="text-right">{t('addItem.price', { defaultValue: 'Price' })}</TableHead>
+                  <TableHead className="text-end">{t('addItem.price', { defaultValue: 'Price' })}</TableHead>
                   <TableHead>{t('market.status', { defaultValue: 'Status' })}</TableHead>
                   <TableHead>{t('pages.admin.source_tag')}</TableHead>
                   <TableHead>{t('pages.admin.created')}</TableHead>
@@ -533,27 +533,27 @@ function ListingsSection() {
                   <TableRow key={l.id} data-testid="admin-listings-row">
                     <TableCell className="text-xs font-mono">{(l.id || '').slice(0, 8)}…</TableCell>
                     <TableCell className="text-xs font-mono">{(l.seller_id || '').slice(0, 8)}…</TableCell>
-                    <TableCell className="text-right">{fmtCents(l.list_price_cents, l.currency)}</TableCell>
+                    <TableCell className="text-end">{fmtCents(l.list_price_cents, l.currency)}</TableCell>
                     <TableCell><Badge variant="outline" className="capitalize text-[11px]">{l.status}</Badge></TableCell>
                     <TableCell><Badge variant="outline" className="text-[11px]">{l.source_tag || '—'}</Badge></TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {l.created_at ? new Date(l.created_at).toLocaleDateString() : '—'}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-end">
                       <div className="flex justify-end gap-1">
                         {l.status !== 'paused' && (
                           <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => setListingStatus(l.id, 'paused')} data-testid="admin-listing-pause">
-                            Pause
+                            {t('pages.admin.pause', { defaultValue: 'Pause' })}
                           </Button>
                         )}
                         {l.status !== 'active' && (
                           <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => setListingStatus(l.id, 'active')} data-testid="admin-listing-activate">
-                            Activate
+                            {t('pages.admin.activate', { defaultValue: 'Activate' })}
                           </Button>
                         )}
                         {l.status !== 'removed' && (
                           <Button size="sm" variant="ghost" className="text-xs h-7 text-rose-700" onClick={() => setListingStatus(l.id, 'removed')} data-testid="admin-listing-remove">
-                            Remove
+                            {t('pages.admin.remove', { defaultValue: 'Remove' })}
                           </Button>
                         )}
                       </div>
@@ -608,16 +608,16 @@ function TransactionsSection() {
             className="rounded-xl"
             data-testid={`admin-transactions-filter-${s || 'all'}`}
           >
-            {s || 'All'}
+            {s || t('pages.admin.all', { defaultValue: 'All' })}
           </Button>
         ))}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Gross (paid)', value: fmtCents(aggregate.gross), id: 'agg-gross' },
+          { label: t('pages.admin.gross_paid', { defaultValue: 'Gross (paid)' }), value: fmtCents(aggregate.gross), id: 'agg-gross' },
           { label: t('transactions.platform7', { defaultValue: 'Platform 7%' }), value: fmtCents(aggregate.platform), id: 'agg-platform' },
-          { label: t('pages.admin.stripe_fees'), value: fmtCents(aggregate.stripe), id: 'agg-stripe' },
-          { label: t('pages.admin.seller_net'), value: fmtCents(aggregate.net), id: 'agg-net' },
+          { label: t('pages.admin.stripe_fees', { defaultValue: 'Stripe fees' }), value: fmtCents(aggregate.stripe), id: 'agg-stripe' },
+          { label: t('pages.admin.seller_net', { defaultValue: 'Seller net' }), value: fmtCents(aggregate.net), id: 'agg-net' },
         ].map((c) => (
           <Card key={c.id} className="rounded-[calc(var(--radius)+6px)]" data-testid={`admin-tx-${c.id}`}>
             <CardContent className="p-4">
@@ -635,10 +635,10 @@ function TransactionsSection() {
                 <TableRow>
                   <TableHead>{t('pages.admin.tx')}</TableHead>
                   <TableHead>{t('market.status', { defaultValue: 'Status' })}</TableHead>
-                  <TableHead className="text-right">{t('transactions.gross', { defaultValue: 'Gross' })}</TableHead>
-                  <TableHead className="text-right">{t('pages.admin.platform')}</TableHead>
-                  <TableHead className="text-right">{t('pages.admin.stripe')}</TableHead>
-                  <TableHead className="text-right">{t('pages.admin.seller_net')}</TableHead>
+                  <TableHead className="text-end">{t('transactions.gross', { defaultValue: 'Gross' })}</TableHead>
+                  <TableHead className="text-end">{t('pages.admin.platform')}</TableHead>
+                  <TableHead className="text-end">{t('pages.admin.stripe')}</TableHead>
+                  <TableHead className="text-end">{t('pages.admin.seller_net')}</TableHead>
                   <TableHead>{t('pages.admin.created')}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -653,10 +653,10 @@ function TransactionsSection() {
                     <TableRow key={t.id} data-testid="admin-transactions-row">
                       <TableCell className="text-xs font-mono">{(t.id || '').slice(0, 8)}…</TableCell>
                       <TableCell><Badge variant="outline" className="capitalize text-[11px]">{t.status}</Badge></TableCell>
-                      <TableCell className="text-right">{fmtCents(f.gross_cents, t.currency)}</TableCell>
-                      <TableCell className="text-right">{fmtCents(f.platform_fee_cents, t.currency)}</TableCell>
-                      <TableCell className="text-right">{fmtCents(f.stripe_fee_cents, t.currency)}</TableCell>
-                      <TableCell className="text-right">{fmtCents(f.seller_net_cents, t.currency)}</TableCell>
+                      <TableCell className="text-end">{fmtCents(f.gross_cents, t.currency)}</TableCell>
+                      <TableCell className="text-end">{fmtCents(f.platform_fee_cents, t.currency)}</TableCell>
+                      <TableCell className="text-end">{fmtCents(f.stripe_fee_cents, t.currency)}</TableCell>
+                      <TableCell className="text-end">{fmtCents(f.seller_net_cents, t.currency)}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {t.created_at ? new Date(t.created_at).toLocaleString() : '—'}
                       </TableCell>
@@ -685,13 +685,13 @@ function SystemSection() {
       <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
         <CardContent className="p-5">
           <h3 className="font-display text-xl mb-3 flex items-center gap-2">
-            <Settings className="h-4 w-4" /> AI configuration
+            <Settings className="h-4 w-4" /> {t('pages.admin.ai_config', { defaultValue: 'AI configuration' })}
           </h3>
           <dl className="text-sm space-y-2">
             {Object.entries(data.ai || {}).map(([k, v]) => (
               <div key={k} className="flex justify-between gap-4">
                 <dt className="text-muted-foreground">{k}</dt>
-                <dd className="font-mono text-xs text-right break-all">{String(v)}</dd>
+                <dd className="font-mono text-xs text-end break-all">{String(v)}</dd>
               </div>
             ))}
           </dl>
@@ -700,7 +700,7 @@ function SystemSection() {
       <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
         <CardContent className="p-5">
           <h3 className="font-display text-xl mb-3 flex items-center gap-2">
-            <KeyRound className="h-4 w-4" /> API keys present
+            <KeyRound className="h-4 w-4" /> {t('pages.admin.api_keys_present', { defaultValue: 'API keys present' })}
           </h3>
           <ul className="text-sm space-y-2">
             {Object.entries(data.keys_present || {}).map(([k, ok]) => (
@@ -711,7 +711,7 @@ function SystemSection() {
                   className={`text-[11px] ${ok ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-800 border-rose-200'}`}
                   data-testid={`admin-key-${k.toLowerCase()}`}
                 >
-                  {ok ? 'set' : 'missing'}
+                  {ok ? t('pages.admin.set', { defaultValue: 'set' }) : t('pages.admin.missing', { defaultValue: 'missing' })}
                 </Badge>
               </li>
             ))}
@@ -724,9 +724,9 @@ function SystemSection() {
             <Activity className="h-4 w-4" /> {t('home.trendScout', { defaultValue: 'Trend-Scout' })}
           </h3>
           <div className="text-sm flex flex-wrap gap-x-8 gap-y-2">
-            <div>{t('pages.admin.enabled')} <Badge variant="outline" className="ml-1 text-[11px]">{String(data.trend_scout?.enabled)}</Badge></div>
+            <div>{t('pages.admin.enabled')} <Badge variant="outline" className="ms-1 text-[11px]">{String(data.trend_scout?.enabled)}</Badge></div>
             <div>{t('pages.admin.daily_utc')} <span className="font-mono">{data.trend_scout?.schedule_utc}</span></div>
-            <div>{t('pages.admin.dev_bypass')} <Badge variant="outline" className="ml-1 text-[11px]">{String(data.dev?.allow_dev_bypass)}</Badge></div>
+            <div>{t('pages.admin.dev_bypass')} <Badge variant="outline" className="ms-1 text-[11px]">{String(data.dev?.allow_dev_bypass)}</Badge></div>
           </div>
         </CardContent>
       </Card>

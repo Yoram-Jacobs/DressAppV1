@@ -102,7 +102,7 @@ export function SwapPickerModal({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[55vh] pr-2 -mr-2">
+        <ScrollArea className="max-h-[55vh] pe-2 -me-2">
           {loading ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -135,7 +135,7 @@ export function SwapPickerModal({
                     onClick={() => setSelected(isSelected ? null : it.id)}
                     className={[
                       'group relative rounded-[calc(var(--radius)+4px)] overflow-hidden',
-                      'border transition-shadow text-left',
+                      'border transition-shadow text-start',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]',
                       isSelected
                         ? 'border-[hsl(var(--accent))] shadow-editorial-md ring-2 ring-[hsl(var(--accent))]'
@@ -157,7 +157,7 @@ export function SwapPickerModal({
                         </div>
                       )}
                       {isSelected && (
-                        <div className="absolute top-2 right-2 rounded-full bg-background/95 text-[hsl(var(--accent))] p-1 shadow">
+                        <div className="absolute top-2 end-2 rounded-full bg-background/95 text-[hsl(var(--accent))] p-1 shadow">
                           <CheckCircle2 className="h-5 w-5" />
                         </div>
                       )}
@@ -203,7 +203,7 @@ export function SwapPickerModal({
           >
             {submitting ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-4 w-4 me-2 animate-spin" />
                 {t('components.swapPickerModal.sending')}
               </>
             ) : (

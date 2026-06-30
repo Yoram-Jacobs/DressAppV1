@@ -1417,7 +1417,7 @@ export default function Closet() {
               type="text"
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
-              placeholder="e.g. Work, GYM, Swimwear"
+              placeholder={t('closet.customTagPlaceholder', { defaultValue: 'e.g. Work, GYM, Swimwear' })}
               className="rounded-xl"
               data-testid="closet-tag-input"
             />
@@ -1605,7 +1605,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
                 data-testid="closet-item-dpp-placeholder"
               >
                 <QrCode className="h-7 w-7 text-[hsl(var(--accent))]/70" />
-                <span className="caps-label text-[10px]">DPP</span>
+                <span className="caps-label text-[10px]">{t('closet.dpp', { defaultValue: 'DPP' })}</span>
               </div>
             );
           }

@@ -186,7 +186,12 @@
       "body": "العناصر التي تقوم بتجميعها تحتوي على خصائص غير متطابقة: {{mismatches}}. هل أنت متأكد من رغبتك في تجميعها؟",
       "confirm": "التجميع على أي حال",
       "cancel": "إلغاء"
-    }
+    },
+    "tagConfirmBody": "Enter tags separated by commas to add them to all selected garments.",
+    "tagConfirmTitle": "Tag Selected Items",
+    "tagSelected": "Tag",
+    "tagsAppliedError": "Some tags failed to sync to the server",
+    "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
     "title": "إضافة عناصر",
@@ -579,7 +584,11 @@
     "shoppingSuggestions": "اقتراحات التسوق من منسق الملابس الذكي",
     "shuffledLook": "مظهر عشوائي",
     "suggestOthers": "اقتراح 3 بدائل",
-    "outfitPlanner": "مخطط التنسيقات"
+    "outfitPlanner": "مخطط التنسيقات",
+    "preferencesApplied_one": "{{count}} preference applied",
+    "preferencesApplied_other": "{{count}} preferences applied",
+    "trend": "Trend",
+    "trendsLabel": "Trends"
   },
   "outfitCompletion": {
     "cta": "أكمل الإطلالة",
@@ -1030,6 +1039,10 @@
       "market_listing": {
         "title": "إعلان في السوق",
         "description": "قطعة معروضة للبيع على DressApp."
+      },
+      "trends": {
+        "description": "Your personalized DressApp fashion trends and styling recommendations since you signed in.",
+        "title": "Trend Scout"
       }
     }
   },
@@ -1728,8 +1741,10 @@
       "travelTitle": "ملابس السفر ليوم غد 👕",
       "travelBody": "اقتراح ملابسك ليوم غد ({{date}}) جاهز:",
       "welcomeBackTitle": "أهلاً بك مجدداً! ✈️",
-      "welcomeBackBody": "لا تنسَ غسل الملابس من حقيبة السفر قريباً للحفاظ على انتعاشها!"
-    }
+      "welcomeBackBody": "لا تنسَ غسل الملابس من حقيبة السفر قريباً للحفاظ على انتعاشها!",
+      "proposalsTitle": "Proposals for {{style}}:"
+    },
+    "outfit": "Outfit"
   },
   "stats": {
     "category": "DressApp تحليل الخزانة",

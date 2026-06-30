@@ -186,7 +186,12 @@
       "body": "グループ化しようとしているアイテムには、一致しない属性があります：{{mismatches}}。本当にグループ化しますか？",
       "confirm": "グループ化する",
       "cancel": "キャンセル"
-    }
+    },
+    "tagConfirmBody": "Enter tags separated by commas to add them to all selected garments.",
+    "tagConfirmTitle": "Tag Selected Items",
+    "tagSelected": "Tag",
+    "tagsAppliedError": "Some tags failed to sync to the server",
+    "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
     "title": "アイテムを追加",
@@ -579,7 +584,11 @@
     "shoppingSuggestions": "AIスタイリスト購入提案",
     "shuffledLook": "シャッフルコーディネート",
     "suggestOthers": "他の3つを提案",
-    "outfitPlanner": "アウトフィットプランナー"
+    "outfitPlanner": "アウトフィットプランナー",
+    "preferencesApplied_one": "{{count}} preference applied",
+    "preferencesApplied_other": "{{count}} preferences applied",
+    "trend": "Trend",
+    "trendsLabel": "Trends"
   },
   "outfitCompletion": {
     "cta": "コーデを完成",
@@ -1030,6 +1039,10 @@
       "market_listing": {
         "title": "マーケット出品",
         "description": "DressApp で販売中のアイテム。"
+      },
+      "trends": {
+        "description": "Your personalized DressApp fashion trends and styling recommendations since you signed in.",
+        "title": "Trend Scout"
       }
     }
   },
@@ -1728,8 +1741,10 @@
       "travelTitle": "明日の旅行用アウトフィット 👕",
       "travelBody": "明日のコーディネート提案（{{date}}）の準備ができました：",
       "welcomeBackTitle": "おかえりなさい！ ✈️",
-      "welcomeBackBody": "衣類を清潔に保つために、スーツケースの中の服を早めに洗濯することをお忘れなく！"
-    }
+      "welcomeBackBody": "衣類を清潔に保つために、スーツケースの中の服を早めに洗濯することをお忘れなく！",
+      "proposalsTitle": "Proposals for {{style}}:"
+    },
+    "outfit": "Outfit"
   },
   "stats": {
     "category": "DressApp アンパック",

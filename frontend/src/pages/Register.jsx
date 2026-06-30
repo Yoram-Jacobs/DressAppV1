@@ -70,7 +70,7 @@ export default function Register() {
                 <Label htmlFor="name">{t('auth.displayName')}</Label>
                 <Input id="name" value={form.display_name}
                   onChange={(e) => setForm({ ...form, display_name: e.target.value })}
-                  data-testid="register-name-input" placeholder="Alex" />
+                  data-testid="register-name-input" placeholder={t('auth.namePlaceholder', { defaultValue: 'Alex' })} />
               </div>
               <div>
                 <Label htmlFor="email">{t('auth.email')}</Label>

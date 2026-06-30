@@ -186,7 +186,12 @@
       "body": "जिन वस्तुओं को आप समूहित कर रहे हैं उनके गुण मेल नहीं खाते: {{mismatches}}। क्या आप वाकई उन्हें समूहित करना चाहते हैं?",
       "confirm": "फिर भी समूहित करें",
       "cancel": "रद्द करें"
-    }
+    },
+    "tagConfirmBody": "Enter tags separated by commas to add them to all selected garments.",
+    "tagConfirmTitle": "Tag Selected Items",
+    "tagSelected": "Tag",
+    "tagsAppliedError": "Some tags failed to sync to the server",
+    "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
     "title": "आइटम जोड़ें",
@@ -579,7 +584,11 @@
     "shoppingSuggestions": "AI स्टाइलिस्ट खरीदारी सुझाव",
     "shuffledLook": "यादृच्छिक आउटफिट",
     "suggestOthers": "3 अन्य के सुझाव दें",
-    "outfitPlanner": "आउटफिट प्लानर"
+    "outfitPlanner": "आउटफिट प्लानर",
+    "preferencesApplied_one": "{{count}} preference applied",
+    "preferencesApplied_other": "{{count}} preferences applied",
+    "trend": "Trend",
+    "trendsLabel": "Trends"
   },
   "outfitCompletion": {
     "cta": "आउटफ़िट पूरा करें",
@@ -1030,6 +1039,10 @@
       "market_listing": {
         "title": "मार्केटप्लेस लिस्टिंग",
         "description": "DressApp पर बिक्री के लिए एक पीस।"
+      },
+      "trends": {
+        "description": "Your personalized DressApp fashion trends and styling recommendations since you signed in.",
+        "title": "Trend Scout"
       }
     }
   },
@@ -1728,8 +1741,10 @@
       "travelTitle": "कल का यात्रा पोशाक 👕",
       "travelBody": "कल ({{date}}) के लिए आपकी पोशाक की सिफारिश तैयार है:",
       "welcomeBackTitle": "वापसी पर आपका स्वागत है! ✈️",
-      "welcomeBackBody": "कपड़ों को ताज़ा रखने के लिए जल्द ही अपने सूटकेस के कपड़ों को धोना न भूलें!"
-    }
+      "welcomeBackBody": "कपड़ों को ताज़ा रखने के लिए जल्द ही अपने सूटकेस के कपड़ों को धोना न भूलें!",
+      "proposalsTitle": "Proposals for {{style}}:"
+    },
+    "outfit": "Outfit"
   },
   "stats": {
     "category": "DressApp अनपैक किया गया",

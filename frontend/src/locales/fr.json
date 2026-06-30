@@ -186,7 +186,12 @@
       "body": "Les articles que vous regroupez ont des propriétés incompatibles : {{mismatches}}. Êtes-vous sûr de vouloir les regrouper ?",
       "confirm": "Regrouper quand même",
       "cancel": "Annuler"
-    }
+    },
+    "tagConfirmBody": "Enter tags separated by commas to add them to all selected garments.",
+    "tagConfirmTitle": "Tag Selected Items",
+    "tagSelected": "Tag",
+    "tagsAppliedError": "Some tags failed to sync to the server",
+    "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
     "title": "Ajouter des pièces",
@@ -579,7 +584,11 @@
     "shoppingSuggestions": "Suggestions d'achat du Styliste IA",
     "shuffledLook": "Tenue mélangée",
     "suggestOthers": "En suggérer 3 autres",
-    "outfitPlanner": "Planificateur de tenues"
+    "outfitPlanner": "Planificateur de tenues",
+    "preferencesApplied_one": "{{count}} preference applied",
+    "preferencesApplied_other": "{{count}} preferences applied",
+    "trend": "Trend",
+    "trendsLabel": "Trends"
   },
   "outfitCompletion": {
     "cta": "Compléter la tenue",
@@ -1030,6 +1039,10 @@
       "market_listing": {
         "title": "Annonce marketplace",
         "description": "Une pièce en vente sur DressApp."
+      },
+      "trends": {
+        "description": "Your personalized DressApp fashion trends and styling recommendations since you signed in.",
+        "title": "Trend Scout"
       }
     }
   },
@@ -1728,8 +1741,10 @@
       "travelTitle": "Tenue de voyage de demain 👕",
       "travelBody": "Votre suggestion de tenue pour demain ({{date}}) est prête :",
       "welcomeBackTitle": "Bon retour ! ✈️",
-      "welcomeBackBody": "N'oubliez pas de laver bientôt les vêtements de votre valise pour les garder frais !"
-    }
+      "welcomeBackBody": "N'oubliez pas de laver bientôt les vêtements de votre valise pour les garder frais !",
+      "proposalsTitle": "Proposals for {{style}}:"
+    },
+    "outfit": "Outfit"
   },
   "stats": {
     "category": "DressApp Décryptage",

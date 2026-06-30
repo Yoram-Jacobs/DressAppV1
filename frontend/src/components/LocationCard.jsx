@@ -60,7 +60,7 @@ export const LocationCard = () => {
       <Accordion type="single" collapsible>
         <AccordionItem value="location" className="border-none">
           <AccordionTrigger className="px-6 py-4 hover:no-underline">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 text-left w-full pe-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 text-start w-full pe-4">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
                   <MapPin className="h-5 w-5" />

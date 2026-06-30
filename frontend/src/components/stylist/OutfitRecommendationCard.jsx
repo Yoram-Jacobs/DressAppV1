@@ -91,7 +91,7 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
          outfitItemsMap={outfitItemsMap}
          onItemClick={onItemClick}
       />
-      <div className="p-3 text-left">
+      <div className="p-3 text-start">
         <div className="caps-label text-[hsl(var(--accent))] font-semibold">
           {t('stylist.outfitN', { n: index + 1 })}
         </div>

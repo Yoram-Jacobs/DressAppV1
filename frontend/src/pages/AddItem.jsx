@@ -196,7 +196,7 @@ function Stepper({ cards, saving, bgBatch }) {
     <div className="w-full max-w-2xl mx-auto mb-8 px-4" data-testid="capture-stepper">
       <div className="relative flex items-center justify-between">
         {/* Progress Line */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 right-0 h-0.5 bg-border -z-10">
+        <div className="absolute start-0 top-1/2 -translate-y-1/2 end-0 h-0.5 bg-border -z-10">
           <motion.div 
             className="h-full bg-[hsl(var(--accent))]"
             initial={false}
@@ -1985,8 +1985,8 @@ export default function AddItem() {
               data-testid="add-item-digital-import-pane"
             >
               {/* Subtle background glow */}
-              <div className="absolute top-0 right-0 w-48 h-48 bg-[hsl(var(--accent))]/5 rounded-full blur-3xl pointer-events-none -mr-12 -mt-12" />
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-[hsl(var(--accent))]/5 rounded-full blur-3xl pointer-events-none -ml-12 -mb-12" />
+              <div className="absolute top-0 end-0 w-48 h-48 bg-[hsl(var(--accent))]/5 rounded-full blur-3xl pointer-events-none -me-12 -mt-12" />
+              <div className="absolute bottom-0 start-0 w-48 h-48 bg-[hsl(var(--accent))]/5 rounded-full blur-3xl pointer-events-none -ms-12 -mb-12" />
 
               <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center mb-4 border border-border">
                 <Sparkles className="h-6 w-6 text-[hsl(var(--accent))]" />
@@ -2252,7 +2252,7 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
             )}
             {isBusy && (
               <div
-                className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm px-3 py-2"
+                className="absolute bottom-0 start-0 end-0 bg-background/80 backdrop-blur-sm px-3 py-2"
                 data-testid="add-item-scanning-overlay"
               >
                 <ScanningPipeline variant="inline" />
@@ -2260,7 +2260,7 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
               </div>
             )}
             {status === 'error' && !isBusy && (
-              <div className="absolute bottom-0 left-0 right-0 bg-rose-50/95 text-rose-900 px-3 py-2 text-xs flex items-start gap-2">
+              <div className="absolute bottom-0 start-0 end-0 bg-rose-50/95 text-rose-900 px-3 py-2 text-xs flex items-start gap-2">
                 <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                 <span className="flex-1">{error || t('addItem.analyzeFailed')}</span>
                 <button onClick={onRetry} className="underline shrink-0" data-testid="add-item-retry">
@@ -2277,7 +2277,7 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
               <button
                 type="button"
                 onClick={onRemove}
-                className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background"
+                className="absolute top-2 end-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background"
                 aria-label={t('addItem.removePhoto')}
                 data-testid="add-item-remove"
               >
@@ -2286,7 +2286,7 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
             )}
             {card.label && !isBusy && status !== 'error' && (
               <div
-                className="absolute top-2 left-2 max-w-[70%]"
+                className="absolute top-2 start-2 max-w-[70%]"
                 data-testid="add-item-detected-label"
               >
                 <Badge
@@ -2307,9 +2307,9 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
               <button
                 type="button"
                 onClick={() => toggleSection('basic')}
-                className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-left focus:outline-none"
+                className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-start focus:outline-none"
               >
-                <div className="flex-1 min-w-0 pr-2">
+                <div className="flex-1 min-w-0 pe-2">
                   <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
                     {t('addItem.section.basic', { defaultValue: 'Basic Info' })}
                   </span>
@@ -2343,9 +2343,9 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
               <button
                 type="button"
                 onClick={() => toggleSection('styling')}
-                className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-left focus:outline-none"
+                className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-start focus:outline-none"
               >
-                <div className="flex-1 min-w-0 pr-2">
+                <div className="flex-1 min-w-0 pe-2">
                   <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
                     {t('addItem.section.styling', { defaultValue: 'Styling Details' })}
                   </span>
@@ -2399,9 +2399,9 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
               <button
                 type="button"
                 onClick={() => toggleSection('care')}
-                className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-left focus:outline-none"
+                className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-start focus:outline-none"
               >
-                <div className="flex-1 min-w-0 pr-2">
+                <div className="flex-1 min-w-0 pe-2">
                   <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
                     {t('addItem.section.care', { defaultValue: 'Care & Repair' })}
                   </span>
@@ -2766,7 +2766,7 @@ function TagsEditor({ idPrefix, items, onChange, disabled }) {
       <Label htmlFor={fieldId} className="caps-label text-muted-foreground">{t('addItem.tags')}</Label>
       <div className="mt-1 flex flex-wrap gap-1.5" data-testid="add-item-tags">
         {items.map((tag) => (
-          <Badge key={tag} variant="outline" className="text-[11px] pl-2 pr-1 flex items-center gap-1">
+          <Badge key={tag} variant="outline" className="text-[11px] ps-2 pe-1 flex items-center gap-1">
             {tag}
             <button
               type="button"

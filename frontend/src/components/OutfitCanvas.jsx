@@ -100,10 +100,10 @@ function SlotCard({ slot, candidate, onOpen }) {
           <CandidateImage src={candidate.image_data_url} alt={candidate.title || label} className="h-full w-full" />
         )}
         {!empty && candidate.source === 'closet' && (
-          <Badge variant="secondary" className="absolute top-1 left-1 text-[10px] px-1 py-0">closet</Badge>
+          <Badge variant="secondary" className="absolute top-1 start-1 text-[10px] px-1 py-0">{t('common.closet', { defaultValue: 'closet' })}</Badge>
         )}
         {empty && (
-          <Badge variant="outline" className="absolute top-1 left-1 text-[10px] px-1 py-0 border-amber-500 text-amber-600 dark:text-amber-400">gap</Badge>
+          <Badge variant="outline" className="absolute top-1 start-1 text-[10px] px-1 py-0 border-amber-500 text-amber-600 dark:text-amber-400">{t('common.gap', { defaultValue: 'gap' })}</Badge>
         )}
       </div>
       <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
@@ -267,7 +267,7 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false }) {
           )}
         </div>
         {onClose && (
-          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close" data-testid="outfit-canvas-close">
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label={t('common.close', { defaultValue: 'Close' })} data-testid="outfit-canvas-close">
             <X className="h-4 w-4" />
           </Button>
         )}
@@ -323,7 +323,7 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false }) {
       {/* Professional referral */}
       {pro && (
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">A pro can help</div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">{t('stylist.proHelp', { defaultValue: 'A pro can help' })}</div>
           <ProfessionalCard pro={pro} />
         </div>
       )}

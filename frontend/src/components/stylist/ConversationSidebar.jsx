@@ -78,11 +78,11 @@ function SessionRow({
       onClick={() => onSelect(session.id)}
       data-testid={`stylist-session-row-${session.id}`}
     >
-      <div className="flex items-start gap-2 min-w-0 pr-16">
+      <div className="flex items-start gap-2 min-w-0 pe-16">
         <div className="relative mt-1 shrink-0">
           <MessageSquare className={cn('h-3.5 w-3.5 opacity-70', isUnread && 'text-[hsl(var(--accent))]')} />
           {isUnread && (
-            <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-[hsl(var(--accent))]" />
+            <span className="absolute -top-0.5 -end-0.5 h-1.5 w-1.5 rounded-full bg-[hsl(var(--accent))]" />
           )}
         </div>
         <div className="flex-1 min-w-0">
@@ -104,7 +104,7 @@ function SessionRow({
       </div>
 
       <div
-        className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 bg-background/95 backdrop-blur pl-1 rounded-full py-0.5 shadow-sm border border-border/40 z-10"
+        className="absolute end-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 bg-background/95 backdrop-blur ps-1 rounded-full py-0.5 shadow-sm border border-border/40 z-10"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Dropdown Menu */}

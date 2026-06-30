@@ -2258,7 +2258,7 @@ export default function Stylist() {
                               variant="ghost" 
                               className="h-7 w-7 rounded-none border-r border-border" 
                               onClick={() => setCurrentCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} 
-                              aria-label="Previous month"
+                              aria-label={t('calendar.prevMonthAria', { defaultValue: 'Previous month' })}
                             >
                               <ChevronLeft className="h-3.5 w-3.5 rtl:rotate-180" />
                             </Button>
@@ -2270,7 +2270,7 @@ export default function Stylist() {
                               variant="ghost" 
                               className="h-7 w-7 rounded-none border-l border-border" 
                               onClick={() => setCurrentCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))} 
-                              aria-label="Next month"
+                              aria-label={t('calendar.nextMonthAria', { defaultValue: 'Next month' })}
                             >
                               <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
                             </Button>
@@ -2459,15 +2459,15 @@ export default function Stylist() {
               <CalIcon className="h-5 w-5 text-[hsl(var(--accent))]" />
               <DialogTitle className="font-display text-lg font-medium">{t('calendar.title', { defaultValue: 'Google Calendar' })}</DialogTitle>
             </div>
-            <div className="flex items-center gap-2 pr-6">
+            <div className="flex items-center gap-2 pe-6">
               <Button size="xs" variant="outline" className="rounded-lg h-8 text-xs font-semibold px-3" onClick={handleJumpToToday}>
                 {t('calendar.todayBtn', { defaultValue: 'Today' })}
               </Button>
               <div className="flex items-center border border-border rounded-lg overflow-hidden h-8">
-                <Button size="icon" variant="ghost" className="h-full w-8 rounded-none border-r border-border" onClick={handlePrevDay} aria-label="Previous day">
+                <Button size="icon" variant="ghost" className="h-full w-8 rounded-none border-r border-border" onClick={handlePrevDay} aria-label={t('calendar.prevDayAria', { defaultValue: 'Previous day' })}>
                   <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-full w-8 rounded-none" onClick={handleNextDay} aria-label="Next day">
+                <Button size="icon" variant="ghost" className="h-full w-8 rounded-none" onClick={handleNextDay} aria-label={t('calendar.nextDayAria', { defaultValue: 'Next day' })}>
                   <ChevronRight className="h-4 w-4 rtl:rotate-180" />
                 </Button>
               </div>
@@ -2595,7 +2595,7 @@ export default function Stylist() {
                 {t('outfits.noSavedOutfitsDesc', { defaultValue: 'No outfits saved yet' })}
               </div>
             ) : (
-              <div className="max-h-[50vh] overflow-y-auto pr-1 scrollbar-thin">
+              <div className="max-h-[50vh] overflow-y-auto pe-1 scrollbar-thin">
                 <div className="grid grid-cols-2 gap-3">
                   {outfits.map((o) => {
                     const isAlreadyScheduled = o.usage?.date === schedulingDate;

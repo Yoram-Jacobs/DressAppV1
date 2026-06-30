@@ -40,7 +40,7 @@ export default function StyleSandbox({ isOpen, onClose, listingItem }) {
     }
 
     return (
-      <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+      <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pe-1">
         {list.map(it => {
           const isSelected = selected?.id === it.id;
           const imgUrl = bestImageUrl(it);
@@ -82,14 +82,14 @@ export default function StyleSandbox({ isOpen, onClose, listingItem }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
           {/* Canvas Outfit Preview Area */}
           <div className="flex flex-col items-center justify-center p-4 bg-secondary/20 rounded-2xl border border-border/60 relative min-h-[300px]">
-            <span className="absolute top-2 left-2 text-[10px] caps-label text-muted-foreground/60">{t('sandbox.canvas', { defaultValue: 'Outfit Canvas' })}</span>
+            <span className="absolute top-2 start-2 text-[10px] caps-label text-muted-foreground/60">{t('sandbox.canvas', { defaultValue: 'Outfit Canvas' })}</span>
             
             <div className="flex flex-col items-center gap-2 relative w-full justify-center py-2">
               {/* Top Layer */}
               <div className="relative">
                 {isListingTop ? (
                   <div className="h-24 w-24 bg-card rounded-xl border-2 border-brand/50 p-1 flex flex-col items-center justify-center shadow-md relative">
-                    <span className="absolute top-0.5 right-1.5 text-[8px] font-bold text-brand uppercase tracking-wider">{t('sandbox.listing', { defaultValue: 'Buy' })}</span>
+                    <span className="absolute top-0.5 end-1.5 text-[8px] font-bold text-brand uppercase tracking-wider">{t('sandbox.listing', { defaultValue: 'Buy' })}</span>
                     <img src={listingItem?.images?.[0] || listingItem?.image_url} alt="" className="max-h-full max-w-full object-contain" />
                   </div>
                 ) : (
@@ -107,7 +107,7 @@ export default function StyleSandbox({ isOpen, onClose, listingItem }) {
               <div className="relative">
                 {isListingBottom ? (
                   <div className="h-24 w-24 bg-card rounded-xl border-2 border-brand/50 p-1 flex flex-col items-center justify-center shadow-md relative">
-                    <span className="absolute top-0.5 right-1.5 text-[8px] font-bold text-brand uppercase tracking-wider">{t('sandbox.listing', { defaultValue: 'Buy' })}</span>
+                    <span className="absolute top-0.5 end-1.5 text-[8px] font-bold text-brand uppercase tracking-wider">{t('sandbox.listing', { defaultValue: 'Buy' })}</span>
                     <img src={listingItem?.images?.[0] || listingItem?.image_url} alt="" className="max-h-full max-w-full object-contain" />
                   </div>
                 ) : (
@@ -125,7 +125,7 @@ export default function StyleSandbox({ isOpen, onClose, listingItem }) {
               <div className="relative">
                 {isListingShoe ? (
                   <div className="h-20 w-20 bg-card rounded-xl border-2 border-brand/50 p-1 flex flex-col items-center justify-center shadow-md relative">
-                    <span className="absolute top-0.5 right-1.5 text-[8px] font-bold text-brand uppercase tracking-wider">{t('sandbox.listing', { defaultValue: 'Buy' })}</span>
+                    <span className="absolute top-0.5 end-1.5 text-[8px] font-bold text-brand uppercase tracking-wider">{t('sandbox.listing', { defaultValue: 'Buy' })}</span>
                     <img src={listingItem?.images?.[0] || listingItem?.image_url} alt="" className="max-h-full max-w-full object-contain" />
                   </div>
                 ) : (

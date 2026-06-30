@@ -169,7 +169,7 @@ function SchedulerSettingsCard() {
         <div className="flex items-center justify-between gap-3 p-3 bg-secondary/30 rounded-xl border border-border">
           <div className="space-y-1">
             <div className="font-semibold text-sm">{t('profile.enableSchedulerProposals', { defaultValue: 'Enable Scheduler Proposals' })}</div>
-            <div className="text-xs text-muted-foreground text-start">{t('profile.receivePushReminders', { defaultValue: 'Receive push notification reminders with customized outfit proposals.' })}</div>
+            <div className="text-xs text-muted-foreground text-start">{t('profile.receivePushReminders', { defaultValue: 'Receive customized daily outfit proposals.' })}</div>
           </div>
           <Switch checked={enabled} onCheckedChange={setEnabled} data-testid="scheduler-enabled-switch" />
         </div>
@@ -178,7 +178,7 @@ function SchedulerSettingsCard() {
           <div className="space-y-4 pt-2 text-start">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="s-freq">{t('profile.notificationFrequency', { defaultValue: 'Notification Frequency' })}</Label>
+                <Label htmlFor="s-freq">{t('profile.notificationFrequency', { defaultValue: 'Frequency' })}</Label>
                 <Select value={frequency} onValueChange={setFrequency}>
                   <SelectTrigger id="s-freq" className="rounded-xl"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -207,7 +207,7 @@ function SchedulerSettingsCard() {
               )}
 
               <div className="space-y-1.5">
-                <Label htmlFor="s-time">{t('profile.notificationTime', { defaultValue: 'Notification Time (Local)' })}</Label>
+                <Label htmlFor="s-time">{t('profile.notificationTime', { defaultValue: 'Notification Time' })}</Label>
                 <Input id="s-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} className="rounded-xl" />
               </div>
             </div>
@@ -246,17 +246,17 @@ function SchedulerSettingsCard() {
         {pushSupported && (
           <div className="flex items-center justify-between gap-3 p-3 bg-secondary/30 rounded-xl border border-border">
             <div className="space-y-1">
-              <div className="font-semibold text-sm">{t('profile.browserPushAlerts', { defaultValue: 'Browser Push Alerts (Native Web Push)' })}</div>
-              <div className="text-xs text-muted-foreground text-start">{t('profile.receiveDirectBrowserAlerts', { defaultValue: 'Receive direct browser notification alerts on this device.' })}</div>
+              <div className="font-semibold text-sm">{t('profile.browserPushAlerts', { defaultValue: 'Push Alerts' })}</div>
+              <div className="text-xs text-muted-foreground text-start">{t('profile.receiveDirectBrowserAlerts', { defaultValue: 'Receive alerts on this device.' })}</div>
             </div>
             <Switch checked={pushEnabled} onCheckedChange={handlePushToggle} disabled={busy} />
           </div>
         )}
 
         <div className="text-xs text-muted-foreground p-3 bg-secondary/20 rounded-xl border border-dashed border-border/80 text-start">
-          {t('profile.phoneWarningStart', { defaultValue: '* Ensure your phone number is configured under the ' })}
+          {t('profile.phoneWarningStart', { defaultValue: '* Configure phone number under ' })}
           <strong>{t('profile.identity', { defaultValue: 'Identity' })}</strong>
-          {t('profile.phoneWarningEnd', { defaultValue: ' section to successfully route simulated push alerts.' })}
+          {t('profile.phoneWarningEnd', { defaultValue: ' to receive simulated push alerts.' })}
         </div>
 
         <div className="flex">
@@ -464,7 +464,7 @@ export default function Profile() {
             <Accordion type="single" collapsible>
               <AccordionItem value="identity" className="border-none">
                 <AccordionTrigger className="py-2 hover:no-underline">
-                  <div className="caps-label text-muted-foreground text-left m-0">{t('profile.identity')}</div>
+                  <div className="caps-label text-muted-foreground text-start m-0">{t('profile.identity')}</div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-2 space-y-3 pb-2">
                   <div>
@@ -515,7 +515,7 @@ export default function Profile() {
             <Accordion type="single" collapsible>
               <AccordionItem value="context" className="border-none">
                 <AccordionTrigger className="py-2 hover:no-underline">
-                  <div className="caps-label text-muted-foreground text-left m-0">{t('profile.context')}</div>
+                  <div className="caps-label text-muted-foreground text-start m-0">{t('profile.context')}</div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-2 space-y-3 pb-2">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

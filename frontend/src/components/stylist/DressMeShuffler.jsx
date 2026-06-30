@@ -403,7 +403,7 @@ export default function DressMeShuffler({ onSaveSuccess }) {
             opts={{ align: 'center', loop: true, watchDrag: !isSpinning, dragFree: true }}
             className="w-full"
           >
-            <CarouselContent className="-ml-2">
+            <CarouselContent className="-ms-2">
               {hasItems ? (
                 duplicatedList.map((item, itemIdx) => {
                   const imageUrl = bestImageUrl(item);
@@ -412,7 +412,7 @@ export default function DressMeShuffler({ onSaveSuccess }) {
                   return (
                     <CarouselItem 
                       key={`${item.id}-${itemIdx}`} 
-                      className="pl-2 basis-1/3 flex items-center justify-center cursor-pointer"
+                      className="ps-2 basis-1/3 flex items-center justify-center cursor-pointer"
                       onClick={() => !isSpinning && handleItemClick(itemIdx, item)}
                     >
                       <div className={`relative h-20 w-20 rounded-xl overflow-hidden flex items-center justify-center border transition-all duration-300 select-none ${
@@ -443,7 +443,7 @@ export default function DressMeShuffler({ onSaveSuccess }) {
                   );
                 })
               ) : (
-                <CarouselItem className="pl-2 basis-full flex items-center justify-center">
+                <CarouselItem className="ps-2 basis-full flex items-center justify-center">
                   <div className="relative h-20 w-20 bg-secondary/30 rounded-xl overflow-hidden flex items-center justify-center border border-border/50 select-none">
                     <div className="text-center p-2 text-muted-foreground/60">
                       <ImageOff className="h-5 w-5 mx-auto mb-0.5 opacity-40" />
@@ -459,7 +459,7 @@ export default function DressMeShuffler({ onSaveSuccess }) {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground z-10" 
+                  className="hidden md:flex absolute start-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground z-10" 
                   disabled={isSpinning}
                   onClick={() => api?.scrollPrev()}
                 >
@@ -469,7 +469,7 @@ export default function DressMeShuffler({ onSaveSuccess }) {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground z-10" 
+                  className="hidden md:flex absolute end-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground z-10" 
                   disabled={isSpinning}
                   onClick={() => api?.scrollNext()}
                 >
@@ -517,7 +517,7 @@ export default function DressMeShuffler({ onSaveSuccess }) {
                   setTagInput('');
                   setSelectedTag('');
                 }}
-                className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground"
+                className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -525,7 +525,7 @@ export default function DressMeShuffler({ onSaveSuccess }) {
           </div>
 
           {showSuggestions && tagSuggestions.length > 0 && (
-            <div className="absolute z-20 left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-card border border-border rounded-xl shadow-lg p-1">
+            <div className="absolute z-20 start-0 end-0 mt-1 max-h-40 overflow-y-auto bg-card border border-border rounded-xl shadow-lg p-1">
               {tagSuggestions.map((tag) => (
                 <button
                   key={tag}

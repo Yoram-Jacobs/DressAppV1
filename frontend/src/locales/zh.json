@@ -186,7 +186,12 @@
       "body": "您要分组的项目具有不匹配的属性：{{mismatches}}。您确定要将它们分组吗？",
       "confirm": "仍然分组",
       "cancel": "取消"
-    }
+    },
+    "tagConfirmBody": "Enter tags separated by commas to add them to all selected garments.",
+    "tagConfirmTitle": "Tag Selected Items",
+    "tagSelected": "Tag",
+    "tagsAppliedError": "Some tags failed to sync to the server",
+    "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
     "title": "添加单品",
@@ -579,7 +584,11 @@
     "shoppingSuggestions": "AI造型师选购建议",
     "shuffledLook": "随机搭配",
     "suggestOthers": "换一批 (3种)",
-    "outfitPlanner": "搭配计划"
+    "outfitPlanner": "搭配计划",
+    "preferencesApplied_one": "{{count}} preference applied",
+    "preferencesApplied_other": "{{count}} preferences applied",
+    "trend": "Trend",
+    "trendsLabel": "Trends"
   },
   "outfitCompletion": {
     "cta": "完成搭配",
@@ -1030,6 +1039,10 @@
       "market_listing": {
         "title": "市场商品",
         "description": "DressApp 上一件待售的单品。"
+      },
+      "trends": {
+        "description": "Your personalized DressApp fashion trends and styling recommendations since you signed in.",
+        "title": "Trend Scout"
       }
     }
   },
@@ -1728,8 +1741,10 @@
       "travelTitle": "明日旅行穿搭 👕",
       "travelBody": "您明天的旅行穿搭建议（{{date}}）已准备就绪：",
       "welcomeBackTitle": "欢迎回来！ ✈️",
-      "welcomeBackBody": "别忘了尽快清洗行李箱里的衣物以保持干净！"
-    }
+      "welcomeBackBody": "别忘了尽快清洗行李箱里的衣物以保持干净！",
+      "proposalsTitle": "Proposals for {{style}}:"
+    },
+    "outfit": "Outfit"
   },
   "stats": {
     "category": "DressApp 解构衣橱",
