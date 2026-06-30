@@ -272,13 +272,20 @@ export default function Stylist() {
   }, [loadOutfitsAndNotifications]);
 
   useEffect(() => {
-    if (location.state?.selectedOutfitId && outfits.length > 0) {
-      const found = outfits.find(o => o.id === location.state.selectedOutfitId);
-      if (found) {
-        setSelectedOutfitForDetail(found);
+    if (outfits.length > 0) {
+      let targetId = location.state?.selectedOutfitId;
+      if (!targetId) {
+        const params = new URLSearchParams(location.search);
+        targetId = params.get('outfitId');
+      }
+      if (targetId) {
+        const found = outfits.find(o => o.id === targetId);
+        if (found) {
+          setSelectedOutfitForDetail(found);
+        }
       }
     }
-  }, [location.state, outfits]);
+  }, [location.state, location.search, outfits]);
 
   const deleteOutfit = async (id) => {
     try {

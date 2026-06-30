@@ -66,10 +66,17 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
         logger.warning("VAPID keys not configured in server environment. Skipping browser Web Push.")
         return {k: v for k, v in doc.items() if k != "_id"}
 
-    payload = json.dumps({
+    payload_dict = {
         "title": title,
         "body": body,
-    })
+    }
+    if payload and isinstance(payload, dict):
+        if "id" in payload:
+            payload_dict["url"] = f"/stylist?tab=match&outfitId={payload['id']}"
+        elif "url" in payload:
+            payload_dict["url"] = payload["url"]
+
+    payload_data_str = json.dumps(payload_dict)
 
     # Send web push to each registered subscription endpoint
     for sub in subscriptions:
@@ -78,7 +85,7 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
             # In a production environment, this could be delegated to a task runner.
             webpush(
                 subscription_info=sub,
-                data=payload,
+                data=payload_data_str,
                 vapid_private_key=settings.VAPID_PRIVATE_KEY,
                 vapid_claims={"sub": f"mailto:{settings.VAPID_CLAIM_EMAIL}"}
             )
