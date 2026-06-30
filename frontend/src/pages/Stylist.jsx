@@ -1525,37 +1525,7 @@ export default function Stylist() {
                           </div>
                         );
                       })()}
-                      {Array.isArray(m.payload.fashion_scout_picks) && m.payload.fashion_scout_picks.filter(Boolean).length > 0 && (
-                        <div className="space-y-1" data-testid="stylist-scout-strip">
-                          <div className="caps-label text-muted-foreground flex items-center gap-1">
-                            <TrendingUp className="h-3 w-3" />
-                            {t('stylist.trendsLabel', { defaultValue: 'Trends' })}
-                          </div>
-                          <div className="flex gap-2 overflow-x-auto pb-1">
-                            {m.payload.fashion_scout_picks.filter(Boolean).map((tp) => (
-                              <a
-                                key={`tp-${m.id}-${tp.id}`}
-                                href={tp.source_url || '#'}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="block min-w-[140px] max-w-[220px] w-max shrink-0 rounded-lg border border-border bg-card hover:border-[hsl(var(--accent))]/60"
-                              >
-                                {tp.image_url && (
-                                  <img src={tp.image_url} alt="" className="w-full aspect-square rounded-t-lg object-cover" />
-                                )}
-                                <div className="p-1.5">
-                                  <div className="text-[11px] line-clamp-2 leading-tight font-medium">
-                                    {tp.title === 'Trend' ? t('stylist.trend', { defaultValue: 'Trend' }) : tp.title}
-                                  </div>
-                                  {tp.source_name && (
-                                    <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{tp.source_name}</div>
-                                  )}
-                                </div>
-                              </a>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+
                       {Array.isArray(m.payload.applied_preferences) && m.payload.applied_preferences.filter(Boolean).length > 0 && (
                         <details className="text-[11px] text-muted-foreground">
                           <summary className="cursor-pointer hover:text-foreground">
