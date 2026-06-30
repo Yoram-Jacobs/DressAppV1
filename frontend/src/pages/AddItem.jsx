@@ -1702,9 +1702,7 @@ export default function AddItem() {
         data-testid="add-item-action-bar"
       >
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => nav(isSuitcase ? '/suitcase' : -1)} className="rounded-full" data-testid="add-item-back">
-            <ArrowLeft className="h-4 w-4 me-2 rtl:rotate-180" /> {t('common.back')}
-          </Button>
+
           <div className="flex-1" />
           <Button onClick={pickFiles} variant="outline" className="rounded-xl" disabled={!!bgBatch} data-testid="add-item-add-more">
             <Plus className="h-4 w-4 me-2" /> {t('addItem.addPhotos')}
