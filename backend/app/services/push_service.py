@@ -69,12 +69,8 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
     payload_dict = {
         "title": title,
         "body": body,
+        "url": "/stylist?tab=match"
     }
-    if payload and isinstance(payload, dict):
-        if "id" in payload:
-            payload_dict["url"] = f"/stylist?tab=match&outfitId={payload['id']}"
-        elif "url" in payload:
-            payload_dict["url"] = payload["url"]
 
     payload_data_str = json.dumps(payload_dict)
 

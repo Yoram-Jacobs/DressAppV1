@@ -271,21 +271,31 @@ export default function Stylist() {
     loadOutfitsAndNotifications();
   }, [loadOutfitsAndNotifications]);
 
+  const [hasAutoSelected, setHasAutoSelected] = useState(false);
+
   useEffect(() => {
-    if (outfits.length > 0) {
-      let targetId = location.state?.selectedOutfitId;
-      if (!targetId) {
-        const params = new URLSearchParams(location.search);
-        targetId = params.get('outfitId');
-      }
-      if (targetId) {
-        const found = outfits.find(o => o.id === targetId);
-        if (found) {
-          setSelectedOutfitForDetail(found);
-        }
+    if (location.state?.selectedOutfitId && outfits.length > 0) {
+      const found = outfits.find(o => o.id === location.state.selectedOutfitId);
+      if (found) {
+        setSelectedOutfitForDetail(found);
       }
     }
-  }, [location.state, location.search, outfits]);
+  }, [location.state, outfits]);
+
+  useEffect(() => {
+    if (activeTab === 'match' && outfits.length > 0 && !selectedOutfitForDetail && !hasAutoSelected) {
+      const todayStr = formatLocalDate(new Date());
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = formatLocalDate(tomorrow);
+      
+      const targetOutfit = outfits.find(o => o.usage?.date === tomorrowStr) || outfits.find(o => o.usage?.date === todayStr);
+      if (targetOutfit) {
+        setSelectedOutfitForDetail(targetOutfit);
+        setHasAutoSelected(true);
+      }
+    }
+  }, [activeTab, outfits, selectedOutfitForDetail, hasAutoSelected]);
 
   const deleteOutfit = async (id) => {
     try {
