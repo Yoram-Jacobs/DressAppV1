@@ -849,6 +849,16 @@ export default function Closet() {
             >
               <ListChecks className="h-4 w-4 me-0 md:me-2" /> <span className="hidden md:inline">{t('closet.bulkSelect')}</span>
             </Button>
+            <Button
+              asChild
+              className="hidden md:flex rounded-xl shadow-sm bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-neutral-200"
+              data-testid="closet-add-item-floater-button"
+            >
+              <Link to="/closet/add">
+                <Plus className="h-4 w-4 me-2 text-yellow-400 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" /> 
+                <span className="text-yellow-400 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] font-semibold">{t('closet.addItem', { defaultValue: 'Add item' })}</span>
+              </Link>
+            </Button>
           </>
         ) : (
           <>
