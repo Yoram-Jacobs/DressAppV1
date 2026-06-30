@@ -452,6 +452,7 @@ async def check_scheduler_triggers() -> None:
                             advice = None
 
                     # Automatically save scheduled outfit recommendation to outfits collection
+                    outfit_id = None
                     if advice and advice.get("outfit_recommendations"):
                         recs = advice.get("outfit_recommendations") or []
                         if recs:
@@ -489,7 +490,9 @@ async def check_scheduler_triggers() -> None:
                                     display_name = tomorrow_str
 
                                 if is_quota_issue:
-                                    display_name = f"{display_name} (Fallback)"
+                                    display_name = f"{display_name} (Fallback. Quota exhausted)"
+                            else:
+                                outfit_id = existing_outfit.get("id") or existing_outfit.get("_id")
 
                                 outfit_doc = {
                                     "id": outfit_id,
@@ -561,7 +564,9 @@ async def check_scheduler_triggers() -> None:
 
                     if advice:
                         advice["is_fallback"] = is_quota_issue
-
+                        if outfit_id:
+                            advice["id"] = outfit_id
+                            
                     await send_push_notification(
                         user_id=user["id"],
                         title=title,
