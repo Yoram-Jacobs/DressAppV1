@@ -322,7 +322,8 @@ export default function Stylist() {
     if (!isEvent) {
       try {
         const [y, m, d] = targetDate.split('-');
-        displayName = `${parseInt(m, 10)}.${parseInt(d, 10)}.${y}`;
+        const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+        displayName = dateObj.toLocaleDateString(i18n.language || 'en', { month: 'numeric', day: 'numeric', year: 'numeric' });
       } catch (e) {
         displayName = rec.name;
       }
@@ -577,7 +578,8 @@ export default function Stylist() {
     if (!isEvent) {
       try {
         const [y, m, d] = targetDate.split('-');
-        displayName = `${parseInt(m, 10)}.${parseInt(d, 10)}.${y}`;
+        const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+        displayName = dateObj.toLocaleDateString(i18n.language || 'en', { month: 'numeric', day: 'numeric', year: 'numeric' });
       } catch (e) {
         displayName = rec.name;
       }
@@ -2079,7 +2081,7 @@ export default function Stylist() {
         {/* Center — chat */}
         <main className="min-w-0 flex flex-col h-full min-h-0 overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full min-w-0 h-full flex flex-col overflow-hidden">
-            <div className="flex justify-center mb-3 bg-muted/60 p-1 rounded-2xl max-w-sm mx-auto w-full border border-border/40">
+            <div className="flex justify-center mb-3 bg-muted/60 p-1 rounded-2xl max-w-md mx-auto w-full border border-border/40">
               <TabsList className="grid grid-cols-3 w-full bg-transparent p-0 h-8">
                 <TabsTrigger value="chat" className="rounded-xl text-xs font-semibold data-[state=active]:bg-brand data-[state=active]:text-brand-foreground shadow-sm">{t('stylist.chatPanel')}</TabsTrigger>
                 <TabsTrigger value="shuffle" className="rounded-xl text-xs font-semibold data-[state=active]:bg-brand data-[state=active]:text-brand-foreground shadow-sm">{t('stylist.outfitPlanner', { defaultValue: 'Outfit Planner' })}</TabsTrigger>
