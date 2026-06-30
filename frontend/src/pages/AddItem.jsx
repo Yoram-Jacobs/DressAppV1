@@ -1697,38 +1697,40 @@ export default function AddItem() {
 
   return (
     <div className="container-px max-w-6xl mx-auto pt-6 md:pt-10 pb-28" data-testid="add-item-page">
-      <div
-        className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mb-6 bg-background/85 backdrop-blur-md border-b border-border/40 supports-[backdrop-filter]:bg-background/70"
-        data-testid="add-item-action-bar"
-      >
-        <div className="flex items-center gap-2">
+      {(cards.length > 0 || !!bgBatch) && (
+        <div
+          className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mb-6 bg-background/85 backdrop-blur-md border-b border-border/40 supports-[backdrop-filter]:bg-background/70"
+          data-testid="add-item-action-bar"
+        >
+          <div className="flex items-center gap-2">
 
-          <div className="flex-1" />
-          <Button onClick={pickFiles} variant="outline" className="rounded-xl" disabled={!!bgBatch} data-testid="add-item-add-more">
-            <Plus className="h-4 w-4 me-2" /> {t('addItem.addPhotos')}
-          </Button>
-          <Button
-            onClick={saveAll}
-            disabled={
-              saving
-              || !!bgBatch
-              // Patch M20.2 — Allow Save while some cards are still
-              // scanning (so the user can queue the batch); keep
-              // disabled while a previous queue is still draining
-              // (``pendingAutoSave``) to avoid re-entrant calls.
-              || pendingAutoSave
-              || (!cards.some((c) => c.status === 'ready') && !cards.some((c) => c.status === 'scanning'))
-            }
-            className="rounded-xl"
-            data-testid="add-item-save-all"
-          >
-            {(saving || pendingAutoSave) ? <Loader2 className="h-4 w-4 me-2 animate-spin" /> : <Save className="h-4 w-4 me-2" />}
-            {pendingAutoSave
-              ? t('addItem.saveAllPending', { defaultValue: 'Saving — waiting for analysis…' })
-              : t('addItem.saveAll')}
-          </Button>
+            <div className="flex-1" />
+            <Button onClick={pickFiles} variant="outline" className="rounded-xl" disabled={!!bgBatch} data-testid="add-item-add-more">
+              <Plus className="h-4 w-4 me-2" /> {t('addItem.addPhotos')}
+            </Button>
+            <Button
+              onClick={saveAll}
+              disabled={
+                saving
+                || !!bgBatch
+                // Patch M20.2 — Allow Save while some cards are still
+                // scanning (so the user can queue the batch); keep
+                // disabled while a previous queue is still draining
+                // (``pendingAutoSave``) to avoid re-entrant calls.
+                || pendingAutoSave
+                || (!cards.some((c) => c.status === 'ready') && !cards.some((c) => c.status === 'scanning'))
+              }
+              className="rounded-xl"
+              data-testid="add-item-save-all"
+            >
+              {(saving || pendingAutoSave) ? <Loader2 className="h-4 w-4 me-2 animate-spin" /> : <Save className="h-4 w-4 me-2" />}
+              {pendingAutoSave
+                ? t('addItem.saveAllPending', { defaultValue: 'Saving — waiting for analysis…' })
+                : t('addItem.saveAll')}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       <Stepper cards={cards} saving={saving} bgBatch={bgBatch} />
 
