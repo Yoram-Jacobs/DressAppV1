@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Upload, Plus, Loader2, Eye, Wand2, Shirt, Store,
   HandCoins, Gift, Repeat, Trash2, Save, Tag, AlertTriangle,
-  X, Sparkles, Camera, RefreshCw, QrCode, ChevronDown, ChevronUp,
+  X, Sparkles, Camera, RefreshCw, QrCode,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +19,6 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { api } from '@/lib/api';
 import { sha256File, aHashFile, colorSignatureFile } from '@/lib/utils';
 import { findDuplicatesInCloset } from '@/lib/duplicateDetection';
@@ -29,7 +27,6 @@ import { workStore } from '@/lib/workStore';
 import DuplicatePreflightDialog from '@/components/DuplicatePreflightDialog';
 import { DppScanner } from '@/components/DppScanner';
 import { WeightedList } from '@/components/WeightedList';
-import { ScanningPipeline } from '@/components/ScanningPipeline';
 import { useAuth } from '@/lib/auth';
 import { deriveSizeFromPreferences } from '@/lib/size_preferences';
 import {
@@ -69,68 +66,17 @@ const INTENT_OPTIONS = [
   { value: 'swap', icon: Repeat, tone: 'bg-sky-100 text-sky-900 border-sky-200' },
 ];
 
-const fileToBase64 = async (file, maxSide = 1024, quality = 0.8) => {
-  let img = null;
-  if (typeof createImageBitmap === 'function') {
-    try {
-      img = await createImageBitmap(file, { imageOrientation: 'from-image' });
-    } catch (_) {}
-  }
-  
-  if (!img) {
-    img = await new Promise((resolve, reject) => {
-      const i = new Image();
-      const objectUrl = URL.createObjectURL(file);
-      i.onload = () => {
-        URL.revokeObjectURL(objectUrl);
-        resolve(i);
-      };
-      i.onerror = (e) => {
-        URL.revokeObjectURL(objectUrl);
-        reject(e);
-      };
-      i.src = objectUrl;
-    });
-  }
-
-  let { width, height } = img;
-  if (width > maxSide || height > maxSide) {
-    if (width > height) {
-      height = Math.round((height * maxSide) / width);
-      width = maxSide;
-    } else {
-      width = Math.round((width * maxSide) / height);
-      height = maxSide;
-    }
-  }
-
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  
-  // Fill white background in case it's a transparent image being saved as JPEG
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, 0, width, height);
-  
-  ctx.drawImage(img, 0, 0, width, height);
-  
-  // Free memory
-  if (img.close) img.close();
-  else img.src = '';
-
-  // Use webp if supported by the browser, fallback to jpeg.
-  // Actually, standardizing on jpeg is safer for the backend since webp support in some older backend libraries can be spotty.
-  // The request says "(e.g. jpeg/webp)", so jpeg is standard.
-  const outDataUrl = canvas.toDataURL('image/jpeg', quality);
-  
-  // Clear canvas memory
-  canvas.width = 0;
-  canvas.height = 0;
-
-  const comma = outDataUrl.indexOf(',');
-  return comma >= 0 ? outDataUrl.slice(comma + 1) : outDataUrl;
-};
+const fileToBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onerror = reject;
+    r.onload = () => {
+      const s = String(r.result || '');
+      const comma = s.indexOf(',');
+      resolve(comma >= 0 ? s.slice(comma + 1) : s);
+    };
+    r.readAsDataURL(file);
+  });
 
 const fmtCents = (cents, cur = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: cur || 'USD' }).format(
@@ -177,92 +123,12 @@ const hydrate = (a, user) => {
   return out;
 };
 
-/* -------------------- Stepper Component -------------------- */
-function Stepper({ cards, saving, bgBatch }) {
-  const { t } = useTranslation();
-  
-  // Calculate states
-  const total = cards.length || (bgBatch ? bgBatch.total : 0);
-  const scanned = cards.filter(c => c.status !== 'scanning' && c.status !== 'error').length;
-  
-  let currentStep = 1;
-  if (saving || (bgBatch && bgBatch.processed === bgBatch.total)) {
-    currentStep = 3;
-  } else if (total > 0) {
-    currentStep = 2;
-  }
-  
-  return (
-    <div className="w-full max-w-2xl mx-auto mb-8 px-4" data-testid="capture-stepper">
-      <div className="relative flex items-center justify-between">
-        {/* Progress Line */}
-        <div className="absolute start-0 top-1/2 -translate-y-1/2 end-0 h-0.5 bg-border -z-10">
-          <motion.div 
-            className="h-full bg-[hsl(var(--accent))]"
-            initial={false}
-            animate={{ 
-              width: currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%' 
-            }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
-        
-        {/* Step 1: Capture */}
-        <div className="flex flex-col items-center">
-          <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-colors duration-300 ${
-            currentStep >= 1 
-              ? 'bg-[hsl(var(--accent))] text-white border-[hsl(var(--accent))] shadow-[0_0_10px_rgba(31,111,107,0.3)]' 
-              : 'bg-background text-muted-foreground border-border'
-          }`}>
-            {currentStep > 1 ? '✓' : '1'}
-          </div>
-          <span className={`text-[10px] caps-label mt-2 font-medium text-center ${currentStep >= 1 ? 'text-foreground' : 'text-muted-foreground'}`}>
-            {t('addItem.step.capture', { defaultValue: 'Capture' })}
-          </span>
-        </div>
-
-        {/* Step 2: Refine Details */}
-        <div className="flex flex-col items-center">
-          <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-colors duration-300 ${
-            currentStep >= 2
-              ? currentStep > 2 
-                ? 'bg-[hsl(var(--accent))] text-white border-[hsl(var(--accent))] shadow-[0_0_10px_rgba(31,111,107,0.3)]'
-                : 'bg-background text-[hsl(var(--accent))] border-[hsl(var(--accent))] font-bold shadow-[0_0_10px_rgba(31,111,107,0.15)]'
-              : 'bg-background text-muted-foreground border-border'
-          }`}>
-            {currentStep > 2 ? '✓' : '2'}
-          </div>
-          <span className={`text-[10px] caps-label mt-2 font-medium text-center ${currentStep >= 2 ? 'text-foreground' : 'text-muted-foreground'}`}>
-            {t('addItem.step.refinement', { defaultValue: 'Refine' })}
-            {currentStep === 2 && total > 0 && ` (${scanned}/${total})`}
-          </span>
-        </div>
-
-        {/* Step 3: Save */}
-        <div className="flex flex-col items-center">
-          <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-colors duration-300 ${
-            currentStep === 3 
-              ? 'bg-brand text-brand-foreground border-brand shadow-[0_0_12px_rgba(232,96,60,0.4)] animate-pulse' 
-              : 'bg-background text-muted-foreground border-border'
-          }`}>
-            3
-          </div>
-          <span className={`text-[10px] caps-label mt-2 font-medium text-center ${currentStep === 3 ? 'text-foreground' : 'text-muted-foreground'}`}>
-            {t('addItem.step.save', { defaultValue: 'Integrate' })}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* -------------------- page -------------------- */
 export default function AddItem() {
   const { t, i18n } = useTranslation();
   const nav = useNavigate();
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const isSuitcase = searchParams.get('from') === 'suitcase';
   const [cards, setCards] = useState([]); // [{id,file,previewUrl,base64,status,progress,fields,error,dppData?}]
   const [saving, setSaving] = useState(false);
   // Patch M20.2 (May 2026) — auto-save queue.
@@ -280,12 +146,6 @@ export default function AddItem() {
   // ``saveAll`` to flush them too and then navigates.
   const [pendingAutoSave, setPendingAutoSave] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
-  const [receiptText, setReceiptText] = useState('');
-  const [isExtracting, setIsExtracting] = useState(false);
-  const [importMode, setImportMode] = useState('text'); // 'text' | 'file' | 'url'
-  const [importFile, setImportFile] = useState(null);
-  const [importUrl, setImportUrl] = useState('');
-  const receiptFileInputRef = useRef(null);
   // Background batch state — shown instead of cards when user uploads
   // more than BG_THRESHOLD photos at once. Auto-analyzes + auto-saves
   // each item with sane defaults; user is told to fix any misfits in
@@ -385,120 +245,6 @@ export default function AddItem() {
     }
   };
 
-  const handleExtractReceipt = async () => {
-    let loadingMsg = t('addItem.import.extracting', { defaultValue: 'Extracting...' });
-    const formData = new FormData();
-
-    if (importMode === 'text') {
-      if (!receiptText || !receiptText.trim()) {
-        toast.error(t('addItem.import.error', { defaultValue: 'Please enter receipt or email text.' }));
-        return;
-      }
-      formData.append('text', receiptText);
-    } else if (importMode === 'file') {
-      if (!importFile) {
-        toast.error(t('addItem.import.error', { defaultValue: 'Please upload a receipt file.' }));
-        return;
-      }
-      formData.append('file', importFile);
-      loadingMsg = t('addItem.import.states.ocr', { defaultValue: 'Reading document bounds & performing OCR...' });
-    } else if (importMode === 'url') {
-      if (!importUrl || !importUrl.trim()) {
-        toast.error(t('addItem.import.error', { defaultValue: 'Please enter a valid receipt URL.' }));
-        return;
-      }
-      formData.append('url', importUrl);
-      loadingMsg = t('addItem.import.states.fetch', { defaultValue: 'Connecting to secure merchant host & fetching page metadata...' });
-    }
-
-    setIsExtracting(true);
-    const loadingId = toast.loading(loadingMsg);
-    
-    try {
-      const res = await api.parseReceipt(formData);
-      
-      const brand = res.brand || 'Generic';
-      const item_type = res.item_type || 'Garment';
-      const size = res.size || 'M';
-      const priceCents = res.price_cents || 0;
-      const category = res.category || 'Top';
-      const name = res.name || `${brand} ${item_type}`;
-
-      // Normalize colors to the required `{ name, pct }` object format expected by WeightedList
-      const colors = res.colors && res.colors.length
-        ? res.colors.map(c => {
-            if (typeof c === 'string') return { name: c, pct: null };
-            if (c && typeof c === 'object' && c.name) return { name: c.name, pct: c.pct ?? null };
-            return { name: 'grey', pct: null };
-          })
-        : [{ name: 'grey', pct: null }];
-
-      // Generate a premium SVG placeholder image representation of the garment if no cropped photo
-      const svgColor = (colors && colors[0] && colors[0].name) || 'hsl(var(--accent))';
-      const svgIcon = `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
-          <defs>
-            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:hsl(200, 30%, 20%);stop-opacity:1" />
-              <stop offset="100%" style="stop-color:hsl(200, 30%, 10%);stop-opacity:1" />
-            </linearGradient>
-          </defs>
-          <rect width="100" height="100" rx="10" fill="url(#grad)" />
-          <circle cx="50" cy="50" r="30" fill="none" stroke="${svgColor}" stroke-width="2" stroke-dasharray="4 2" opacity="0.3" />
-          <path d="M35 30 L50 20 L65 30 L65 45 L50 40 L35 45 Z" fill="none" stroke="${svgColor}" stroke-width="3" stroke-linejoin="round" />
-          <path d="M50 20 L50 40" fill="none" stroke="${svgColor}" stroke-width="2" opacity="0.5" />
-          <text x="50" y="75" font-family="system-ui, sans-serif" font-size="8" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="1">${brand.toUpperCase()}</text>
-          <text x="50" y="85" font-family="system-ui, sans-serif" font-size="6" fill="hsl(var(--muted-foreground))" text-anchor="middle">${item_type.toUpperCase()}</text>
-        </svg>
-      `;
-      const base64Svg = btoa(unescape(encodeURIComponent(svgIcon.trim())));
-      
-      const hasImage = !!res.image_base64;
-      const previewUrl = hasImage 
-        ? `data:${res.image_mime || 'image/jpeg'};base64,${res.image_base64}` 
-        : `data:image/svg+xml;base64,${base64Svg}`;
-
-      const analysis = {
-        ...res,
-        name,
-        title: name,
-        category,
-        item_type: item_type.toLowerCase(),
-        brand,
-        size,
-        price_cents: priceCents,
-        colors,
-      };
-
-      const draft = {
-        id: `receipt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        file: null,
-        mime: hasImage ? (res.image_mime || 'image/jpeg') : 'image/svg+xml',
-        previewUrl,
-        base64: hasImage ? res.image_base64 : null,
-        status: 'ready',
-        progress: 100,
-        fields: hydrate(analysis, user),
-        error: null,
-        label: item_type,
-        source: 'receipt',
-        sourceFilename: hasImage ? 'cropped_receipt_item.jpg' : null,
-      };
-
-      setCards((prev) => [draft, ...prev]);
-      setReceiptText('');
-      setImportFile(null);
-      setImportUrl('');
-      toast.dismiss(loadingId);
-      toast.success(t('addItem.import.success', { defaultValue: 'Successfully extracted garment details!' }));
-    } catch (err) {
-      toast.dismiss(loadingId);
-      toast.error(err?.response?.data?.detail || t('addItem.import.error', { defaultValue: 'Could not parse receipt. Please verify formatting and try again.' }));
-    } finally {
-      setIsExtracting(false);
-    }
-  };
-
   const handleFiles = async (fileList) => {
     const files = Array.from(fileList || []);
     if (!files.length) return;
@@ -519,62 +265,31 @@ export default function AddItem() {
     // 300–1500 ms of pure overhead. Endpoint is now deprecated, kept
     // mounted as a fallback for older clients.
     // ----------------------------------------------------------------
-    const fingerprints = [];
-    for (const rawF of files) {
-      try {
-        const b64 = await fileToBase64(rawF);
-        if (!b64) continue;
-        
-        // Convert base64 to Blob synchronously to bypass CSP connection blocks on data URLs
-        const byteCharacters = atob(b64);
-        const byteArrays = [];
-        const sliceSize = 512;
-        for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-          const slice = byteCharacters.slice(offset, offset + sliceSize);
-          const byteNumbers = new Array(slice.length);
-          for (let i = 0; i < slice.length; i++) {
-            byteNumbers[i] = slice.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          byteArrays.push(byteArray);
-        }
-        const blob = new Blob(byteArrays, { type: 'image/jpeg' });
-        
-        // Use a safe File constructor wrapper that falls back to Blob to avoid TypeError: File constructor is not supported on certain WebView/mobile browsers
-        let f;
-        try {
-          f = new File([blob], rawF.name || 'image.jpg', { type: 'image/jpeg' });
-        } catch (_) {
-          f = blob;
-          try {
-            Object.defineProperty(f, 'name', {
-              value: rawF.name || 'image.jpg',
-              writable: false,
-              configurable: true
-            });
-          } catch (_) {
-            f.name = rawF.name || 'image.jpg';
-          }
-        }
-
-        const sha256 = await sha256File(f);
-        const phash = await aHashFile(f);
-        const color_sig = await colorSignatureFile(f);
-        
-        fingerprints.push({
+    const fingerprints = await Promise.all(
+      files.map(async (f) => {
+        // Compute all three fingerprints in parallel:
+        //   * sha256       → exact-byte re-upload (post-Z2 items)
+        //   * aHash        → shape similarity (survives JPEG re-compression)
+        //   * colour sig   → chroma signature so two same-shape garments
+        //                    of *different* colours (navy vs grey shorts)
+        //                    are correctly distinguished. Without this the
+        //                    aHash alone produced false-positive duplicate
+        //                    flags reported on dressapp.co.
+        const [sha256, phash, color_sig] = await Promise.all([
+          sha256File(f),
+          aHashFile(f),
+          colorSignatureFile(f),
+        ]);
+        return {
           file: f,
-          originalFile: rawF,
           sha256,
           phash,
           color_sig,
-          filename: rawF.name || null,
-          size_bytes: blob.size,
-          _b64: b64,
-        });
-      } catch (err) {
-        console.error('[handleFiles] Error processing image file:', rawF.name, err);
-      }
-    }
+          filename: f.name || null,
+          size_bytes: typeof f.size === 'number' ? f.size : null,
+        };
+      }),
+    );
 
     let matches = [];
     try {
@@ -614,7 +329,7 @@ export default function AddItem() {
 
     // No duplicates → straight through.
     if (!matches.length) {
-      if (isBatch) return handleBatchBackground(fingerprints, 0);
+      if (isBatch) return continueInteractive(fingerprints, {});
       return continueInteractive(fingerprints, /* duplicateAcks */ {});
     }
 
@@ -645,7 +360,7 @@ export default function AddItem() {
         );
         return;
       }
-      return handleBatchBackground(survivors.map(f => fingerprints.find(x => x.file === f)), skipped);
+      return continueInteractive(survivors.map(f => fingerprints.find(x => x.file === f)), {});
     }
 
     // INTERACTIVE path (≤5 photos): open the scrollable confirm
@@ -664,7 +379,7 @@ export default function AddItem() {
           (m.phash && x.phash === m.phash),
       );
       const file = fp?.file;
-      const previewUrl = fp?._b64 ? `data:${file?.type || 'image/jpeg'};base64,${fp._b64}` : null;
+      const previewUrl = file ? URL.createObjectURL(file) : null;
       const matchKey = m.sha256 || m.phash || `${m.filename}-${m.size_bytes}`;
       return { ...m, previewUrl, matchKey };
     });
@@ -733,35 +448,36 @@ export default function AddItem() {
       duplicateAcks && (duplicateAcks.sha || duplicateAcks.ph)
         ? duplicateAcks
         : { sha: new Set(), ph: new Set() };
-    const drafts = [];
-    for (const fp of fingerprints) {
-      const file = fp.file;
-      const b64 = fp._b64 || await fileToBase64(file);
-      const isDup =
-        (fp.sha256 && acks.sha.has(fp.sha256)) ||
-        (fp.phash && acks.ph.has(fp.phash));
-      drafts.push({
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        file,
-        mime: file.type || 'image/jpeg',
-        previewUrl: b64 ? `data:${file.type || 'image/jpeg'};base64,${b64}` : null,
-        base64: b64,
-        status: 'scanning', // scanning | ready | error | saving | saved
-        progress: 4,
-        fields: blankFields(),
-        error: null,
-        label: null,
-        // Phase Z2 — fingerprint passthrough. Stored on the card so
-        // buildCreatePayload can hand them to /closet POST and the
-        // backend can persist them on the ClosetItem document.
-        sourceSha256: fp.sha256 || null,
-        sourcePhash: fp.phash || null,
-        sourceColorSig: fp.color_sig || null,
-        sourceFilename: fp.filename || null,
-        sourceSizeBytes: fp.size_bytes || null,
-        isDuplicate: !!isDup,
-      });
-    }
+    const drafts = await Promise.all(
+      fingerprints.map(async (fp) => {
+        const file = fp.file;
+        const b64 = await fileToBase64(file);
+        const isDup =
+          (fp.sha256 && acks.sha.has(fp.sha256)) ||
+          (fp.phash && acks.ph.has(fp.phash));
+        return {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          file,
+          mime: file.type || 'image/jpeg',
+          previewUrl: URL.createObjectURL(file),
+          base64: b64,
+          status: 'scanning', // scanning | ready | error | saving | saved
+          progress: 4,
+          fields: blankFields(),
+          error: null,
+          label: null,
+          // Phase Z2 — fingerprint passthrough. Stored on the card so
+          // buildCreatePayload can hand them to /closet POST and the
+          // backend can persist them on the ClosetItem document.
+          sourceSha256: fp.sha256 || null,
+          sourcePhash: fp.phash || null,
+          sourceColorSig: fp.color_sig || null,
+          sourceFilename: fp.filename || null,
+          sourceSizeBytes: fp.size_bytes || null,
+          isDuplicate: !!isDup,
+        };
+      }),
+    );
     setCards((prev) => [...prev, ...drafts]);
     analyzeCards(drafts);
   };
@@ -775,144 +491,289 @@ export default function AddItem() {
   // time, items 2..N actually get analysed instead of silently
   // falling through to the "save raw image" branch.
   // ------------------------------------------------------------------
-    const handleBatchBackground = async (fingerprints, skippedDuplicates = 0) => {
+  const handleBatchBackground = async (files, skippedDuplicates = 0) => {
     setBgBatch({
-      total: fingerprints.length,
+      total: files.length,
       processed: 0,
       saved: 0,
       failed: 0,
-      fallbackSaves: 0,
-      skippedDuplicates,
-      pendingDuplicates: 0,
+      // Items where the analyze call failed and we had to save the
+      // raw photo with blank fields. Surfaced in the final toast so
+      // the user knows which ones need cleanup in /closet.
       analyzeFailed: 0,
+      // Items the analyzer flagged as potential_duplicate of an
+      // already-saved closet entry. The batch path no longer
+      // auto-saves these — instead each one is kicked over to the
+      // interactive `cards` list so the existing
+      // DuplicateConfirmDialog can ask the user to confirm/discard.
+      // We track the count so the final toast tells the user how
+      // many items still need their attention before we navigate.
+      pendingDuplicates: 0,
+      // Phase Z2 — pre-flight skipped this many photos because their
+      // SHA-256 hash already existed in the closet. Surfaced in the
+      // final toast so the user knows none of their selection went
+      // missing silently.
+      skippedDuplicates: skippedDuplicates || 0,
     });
+    toast.success(
+      t('addItem.bgUpload.started', {
+        count: files.length,
+        defaultValue: `Uploading ${files.length} photos in the background…`,
+      })
+    );
 
+    const queue = [...files];
+
+    // Try analysis with a single retry on failure. The first failure
+    // is usually a transient timeout / cold-start; a 1.2s pause and a
+    // second attempt clears most of those without piling more work
+    // onto an already-stressed backend.
+    //
+    // We pass ``language: i18n.language`` so The Eyes' Gemini prompt
+    // produces ``name`` / ``title`` / ``caption`` in the locale the
+    // user is currently viewing the UI in \u2014 not whatever was on
+    // their profile at signup. Enum / category strings stay canonical
+    // English; the frontend i18n layer translates those for display.
     const requestLang = (i18n.language || '').split('-')[0] || 'en';
-    const b64List = [];
-    for (const fp of fingerprints) {
-      b64List.push(fp._b64 || await fileToBase64(fp.file));
-    }
-    
-    let detectMetas = [];
-    let totalItemsExpected = 0;
-    const savePromises = [];
-    
-    const handleDetect = (frame) => {
-      // detect frame gives us total items across all images
-      const metas = frame.items_meta || [];
-      detectMetas = metas;
-      totalItemsExpected = metas.length;
-      // We can bump processed to something to show it started
-      setBgBatch(b => b ? { ...b, processed: 1 } : null);
+    const analyzeWithRetry = async (b64) => {
+      try {
+        return await api.analyzeItemImage({ image_base64: b64, language: requestLang });
+      } catch (firstErr) {
+        await new Promise((r) => setTimeout(r, 1200));
+        try {
+          return await api.analyzeItemImage({ image_base64: b64, language: requestLang });
+        } catch (_secondErr) {
+          throw firstErr;
+        }
+      }
     };
 
-    const handleItem = (frame) => {
-      const p = (async () => {
-      const meta = detectMetas[frame.index] || {};
-      const idx = meta.image_index ?? frame.image_index ?? 0;
-      const fp = fingerprints[idx];
+    const processOne = async (file) => {
+      let createdHere = 0;
+      let failedHere = 0;
+      let analyzeFailedHere = 0;
+      let b64 = null;
+      // Phase Z2 — recompute the fingerprint here so each saved item
+      // carries source_sha256/filename/size in the DB, even on the
+      // batch path. (We already verified upstream none of these are
+      // duplicates of existing closet items, otherwise the pre-flight
+      // gate would have dropped them; the hash is stored so *future*
+      // uploads of the same file are caught for free.)
+      let sha256 = null;
+      let phash = null;
+      try {
+        [sha256, phash] = await Promise.all([
+          sha256File(file),
+          aHashFile(file),
+        ]);
+      } catch (_) {
+        sha256 = null;
+        phash = null;
+      }
       const sourceMeta = {
-        sourceSha256: fp.sha256 || null,
-        sourcePhash: fp.phash || null,
-        sourceColorSig: fp.color_sig || null,
-        sourceFilename: fp.file?.name || null,
-        sourceSizeBytes: typeof fp.file?.size === 'number' ? fp.file.size : null,
+        sourceSha256: sha256,
+        sourcePhash: phash,
+        sourceFilename: file?.name || null,
+        sourceSizeBytes: typeof file?.size === 'number' ? file.size : null,
       };
-      
-      const analysis = frame.analysis || {};
-      const cropB64 = meta.crop_base64 || b64List[idx];
-      const mime = meta.crop_mime || fp.file?.type || 'image/jpeg';
-      
-      const cardLike = {
-        base64: b64List[idx],
-        cropBase64: meta.crop_base64 || undefined,
-        mime,
-        file: null,
-        fields: hydrate(analysis, user),
-        useReconstructed: false,
-        deferMatte: !!meta.defer_matte,
-        ...sourceMeta,
-      };
-
-      if (frame.potential_duplicate) {
-        const dupCard = {
-          id: `bgdup-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-          file: null,
-          mime,
-          previewUrl: `data:${mime};base64,${cropB64}`,
-          base64: cropB64,
-          originalCropUrl: `data:${mime};base64,${cropB64}`,
-          status: 'ready',
-          progress: 100,
-          fields: cardLike.fields,
-          potentialDuplicate: frame.potential_duplicate,
-          pendingBatchSave: true,
-        };
-        setCards((prev) => [...prev, dupCard]);
-        setBgBatch((b) => b ? { ...b, pendingDuplicates: (b.pendingDuplicates || 0) + 1, processed: b.processed + 1 } : b);
+      try {
+        b64 = await fileToBase64(file);
+      } catch (_) {
+        failedHere += 1;
+        setBgBatch((b) => (b ? { ...b, processed: b.processed + 1, failed: b.failed + failedHere } : null));
         return;
       }
 
+      // Try analysis; on failure, fall back to saving the raw image
+      // with blank fields so the user still gets the item in /closet.
+      // Track the analyze-failure count separately so the final toast
+      // can tell the user "X items need fields filled in".
+      let analysisItems = null;
       try {
-        const created = await api.createItem(buildCreatePayload(cardLike, isSuitcase));
-        if (created && created.id) {
-          try {
-            const { closetStore } = await import('@/lib/closetStore');
-            closetStore.upsert(created);
-          } catch { /* ignore */ }
-        }
-        setBgBatch(b => b ? { ...b, saved: b.saved + 1, processed: b.processed + 1 } : null);
+        const resp = await analyzeWithRetry(b64);
+        analysisItems =
+          Array.isArray(resp?.items) && resp.items.length > 0
+            ? resp.items
+            : [{ analysis: resp, crop_base64: b64, crop_mime: file.type || 'image/jpeg' }];
       } catch (_) {
-        setBgBatch(b => b ? { ...b, failed: b.failed + 1, processed: b.processed + 1 } : null);
+        analyzeFailedHere += 1;
+        analysisItems = [
+          { analysis: {}, crop_base64: b64, crop_mime: file.type || 'image/jpeg' },
+        ];
       }
-      })();
-      savePromises.push(p);
-      return p;
-    };
 
-    const handleItemSkip = (frame) => {
-      setBgBatch(b => b ? { ...b, processed: b.processed + 1 } : null);
-    };
+      for (const it of analysisItems) {
+        const cardLike = {
+          base64: it.crop_base64 || b64,
+          mime: it.crop_mime || file.type || 'image/jpeg',
+          file: null,
+          fields: hydrate(it.analysis || {}, user),
+          useReconstructed: false,
+          // Phase Z2 — fingerprint passthrough into buildCreatePayload
+          // so the row stored in Mongo carries source_sha256 etc. and
+          // future uploads of the same file get caught by the
+          // client-side duplicate check against ``closetStore``
+          // (Phase Z3 — was /closet/preflight before).
+          ...sourceMeta,
+        };
 
-    try {
-      await api.analyzeItemImage(
-        { images_base64: b64List, language: requestLang },
-        { onDetect: handleDetect, onItem: handleItem, onItemSkip: handleItemSkip }
+        // Duplicate gate (regression fix, restored): if the analyzer
+        // flagged this item as a likely re-upload of something already
+        // in the user's closet, do NOT silently auto-save. Surface the
+        // crop as an interactive card so the existing
+        // DuplicateConfirmDialog can ask the user whether to add it
+        // anyway. The batch path keeps processing the rest of the
+        // queue while the dialog is open — duplicates pile up one
+        // card at a time and the modal pops them serially.
+        if (it.potential_duplicate) {
+          const mime = cardLike.mime;
+          const dupCard = {
+            id: `bgdup-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            file: null,
+            mime,
+            previewUrl: cardLike.base64
+              ? `data:${mime};base64,${cardLike.base64}`
+              : null,
+            base64: cardLike.base64,
+            originalCropUrl: cardLike.base64
+              ? `data:${mime};base64,${cardLike.base64}`
+              : null,
+            status: 'ready',
+            progress: 100,
+            fields: cardLike.fields,
+            potentialDuplicate: it.potential_duplicate,
+            // Flag set on cards that were redirected here mid-batch.
+            // The DuplicateConfirmDialog's onConfirm uses this to
+            // immediately POST /closet (instead of waiting for the
+            // user to click "Save All"), keeping the batch flow
+            // close to the original "fire-and-forget" feel.
+            pendingBatchSave: true,
+          };
+          setCards((prev) => [...prev, dupCard]);
+          setBgBatch((b) =>
+            b ? { ...b, pendingDuplicates: (b.pendingDuplicates || 0) + 1 } : b,
+          );
+          continue;
+        }
+
+        try {
+          const created = await api.createItem(buildCreatePayload(cardLike));
+          createdHere += 1;
+          // Patch the global closet store so /closet shows the new
+          // card the moment the user navigates there — no full
+          // refetch required. ``created`` is the persisted document
+          // returned by POST /closet (already includes id,
+          // created_at, etc.).
+          if (created && created.id) {
+            try {
+              const { closetStore } = await import('@/lib/closetStore');
+              closetStore.upsert(created);
+            } catch { /* store import failure should never block upload */ }
+          }
+        } catch (_) {
+          failedHere += 1;
+        }
+      }
+
+      setBgBatch((b) =>
+        b
+          ? {
+              ...b,
+              processed: b.processed + 1,
+              saved: b.saved + createdHere,
+              failed: b.failed + failedHere,
+              analyzeFailed: (b.analyzeFailed || 0) + analyzeFailedHere,
+            }
+          : null
       );
-    } catch (err) {
-      // Stream failed. Try to save all remaining as fallbacks?
-      // For now just error out gracefully
-      setBgBatch(b => b ? { ...b, failed: b.failed + (b.total - b.processed) } : null);
+    };
+
+    // Sequential worker — process one file at a time. The earlier
+    // CONCURRENCY=3 implementation tried to run 3 analyse calls in
+    // parallel and got bitten by VPS RAM limits on production: the
+    // first item completed, items 2..N OOM'd inside rembg, fell into
+    // the catch above, and got saved as raw photos with empty fields.
+    while (queue.length) {
+      const next = queue.shift();
+      if (next) {
+        // eslint-disable-next-line no-await-in-loop
+        await processOne(next);
+      }
     }
 
-    await Promise.all(savePromises);
-
-    // Final checks and navigation
+    // Read final counts from state via functional update so we don't
+    // race with React batching.
     setBgBatch((b) => {
       const saved = b?.saved ?? 0;
       const failed = b?.failed ?? 0;
       const analyzeFailed = b?.analyzeFailed ?? 0;
       const pendingDuplicates = b?.pendingDuplicates ?? 0;
-      const skippedDups = b?.skippedDuplicates ?? 0;
-      
-      const dupTrailer = skippedDups ? ' (skipped ' + skippedDups + ' already in closet)' : '';
-      
+      const skippedDuplicates = b?.skippedDuplicates ?? 0;
+      // Phase Z2 — appended to whichever toast variant fires below
+      // so the user knows the pre-flight silently dropped some
+      // photos that were already in the closet.
+      const dupTrailer = skippedDuplicates
+        ? ' ' +
+          t('addItem.bgUpload.skippedDupSuffix', {
+            count: skippedDuplicates,
+            defaultValue: `(skipped ${skippedDuplicates} already in closet)`,
+          })
+        : '';
       if (pendingDuplicates) {
-        toast.message(`Saved ${saved} new items. ${pendingDuplicates} duplicates pending.` + dupTrailer);
-      } else if (saved && !failed) {
-        toast.success(`Saved ${saved} items.` + dupTrailer);
+        // Some uploads matched existing closet items — we surfaced
+        // them as interactive cards so the duplicate-confirm dialog
+        // can ask the user. Don't auto-navigate to /closet: the user
+        // needs to confirm/discard each one first.
+        toast.message(
+          t('addItem.bgUpload.duplicatesPending', {
+            saved,
+            pending: pendingDuplicates,
+            defaultValue: `Saved ${saved} new items · ${pendingDuplicates} look like duplicates — review them below.`,
+          }) + dupTrailer,
+        );
+      } else if (saved && !failed && !analyzeFailed) {
+        toast.success(
+          t('addItem.bgUpload.done', {
+            count: saved,
+            defaultValue: `Saved ${saved} items. Edit any misfits in your closet.`,
+          }) + dupTrailer,
+        );
+      } else if (saved && analyzeFailed && !failed) {
+        // All items saved, but some skipped analysis — tell the user
+        // which need attention so they're not surprised by blank
+        // cards in the closet.
+        toast.message(
+          t('addItem.bgUpload.partialAnalyze', {
+            saved,
+            analyzeFailed,
+            defaultValue: `Saved ${saved} items · ${analyzeFailed} need fields filled in (analysis failed).`,
+          }) + dupTrailer,
+        );
       } else if (saved && failed) {
-        toast.message(`Saved ${saved} · ${failed} failed` + dupTrailer);
-      } else if (!saved && !pendingDuplicates && !skippedDups) {
-        toast.error(t('addItem.bgUpload.failed', { defaultValue: 'Could not save any items. Please try again.' }));
+        toast.message(
+          t('addItem.bgUpload.partial', {
+            saved,
+            failed,
+            defaultValue: `Saved ${saved} · ${failed} failed`,
+          }) + dupTrailer,
+        );
+      } else if (!saved && !pendingDuplicates && !skippedDuplicates) {
+        toast.error(
+          t('addItem.bgUpload.failed', {
+            defaultValue: 'Could not save any items. Please try again.',
+          })
+        );
       }
-      
+      // Brief pause so the user sees the final 100% before navigating.
+      // Only auto-navigate when there are no pending duplicates — those
+      // need the user's explicit confirm/discard click first.
       setTimeout(() => {
-        if (saved && !pendingDuplicates) nav(isSuitcase ? '/suitcase' : '/closet');
+        if (saved && !pendingDuplicates) nav('/closet');
       }, 1200);
       return null;
     });
   };
+
 
   const analyzeCards = async (cardsList) => {
     const cardsToProcess = cardsList.filter((card) => {
@@ -980,15 +841,11 @@ export default function AddItem() {
         if (metas.length === 0) return;
 
         const counts = {};
-        metas.forEach(m => {
-          const imgIdx = m.image_index ?? 0;
-          counts[imgIdx] = (counts[imgIdx] || 0) + 1;
-        });
+        metas.forEach(m => { counts[m.image_index] = (counts[m.image_index] || 0) + 1; });
 
         const newCards = [];
         metas.forEach((m) => {
-           const imgIdx = m.image_index ?? 0;
-           const origCard = cardsToProcess[imgIdx];
+           const origCard = cardsToProcess[m.image_index];
            if (!origCard) {
                flatSlotIds.push(null);
                return;
@@ -1078,10 +935,8 @@ export default function AddItem() {
       };
 
       const images_base64 = cardsToProcess.map(c => c.base64);
-      const payload = { images_base64, language: requestLang };
-
       const resp = await api.analyzeItemImage(
-        payload,
+        { images_base64, language: requestLang },
         {
           onDetect: handleDetect,
           onItem: handleItem,
@@ -1284,7 +1139,7 @@ export default function AddItem() {
                   potentialDuplicate: frame.potential_duplicate || null,
                   fromOnePass: !!frame.one_pass,
                   reconstructionAdvised: !!frame.reconstruction_advised,
-                  deferMatte: frame.defer_matte !== undefined ? !!frame.defer_matte : c.deferMatte,
+                  deferMatte: !!frame.defer_matte,
                   needsReconstruction: !!frame.needs_reconstruction,
                   reconstructionReasons: frame.reconstruction_reasons || [],
                   reconstructedUrl,
@@ -1388,7 +1243,7 @@ export default function AddItem() {
   const removeCard = (cardId) => {
     setCards((prev) => {
       const target = prev.find((c) => c.id === cardId);
-      if (target?.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(target.previewUrl);
+      if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl);
       return prev.filter((c) => c.id !== cardId);
     });
   };
@@ -1480,7 +1335,7 @@ export default function AddItem() {
         continue;
       }
       try {
-        const body = buildCreatePayload(card, isSuitcase);
+        const body = buildCreatePayload(card);
         if (!body.title) throw new Error('Title is required');
         validCards.push({ card, body });
       } catch (err) {
@@ -1607,7 +1462,7 @@ export default function AddItem() {
       );
       setSaving(false);
       setPendingAutoSave(false);
-      nav(isSuitcase ? '/suitcase' : '/closet');
+      nav('/closet');
     }
     
     // Step 4+5 — parallel persistence + reconciliation. Runs after
@@ -1659,7 +1514,6 @@ export default function AddItem() {
       if (failures.length) {
         closetStore.recordSaveFailures(failures);
       }
-      closetStore.triggerRepair();
     };
     // Don't await — let it run in the background. The Closet page
     // is a separate React tree at this point.
@@ -1697,42 +1551,40 @@ export default function AddItem() {
 
   return (
     <div className="container-px max-w-6xl mx-auto pt-6 md:pt-10 pb-28" data-testid="add-item-page">
-      {(cards.length > 0 || !!bgBatch) && (
-        <div
-          className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mb-6 bg-background/85 backdrop-blur-md border-b border-border/40 supports-[backdrop-filter]:bg-background/70"
-          data-testid="add-item-action-bar"
-        >
-          <div className="flex items-center gap-2">
-
-            <div className="flex-1" />
-            <Button onClick={pickFiles} variant="outline" className="rounded-xl" disabled={!!bgBatch} data-testid="add-item-add-more">
-              <Plus className="h-4 w-4 me-2" /> {t('addItem.addPhotos')}
-            </Button>
-            <Button
-              onClick={saveAll}
-              disabled={
-                saving
-                || !!bgBatch
-                // Patch M20.2 — Allow Save while some cards are still
-                // scanning (so the user can queue the batch); keep
-                // disabled while a previous queue is still draining
-                // (``pendingAutoSave``) to avoid re-entrant calls.
-                || pendingAutoSave
-                || (!cards.some((c) => c.status === 'ready') && !cards.some((c) => c.status === 'scanning'))
-              }
-              className="rounded-xl"
-              data-testid="add-item-save-all"
-            >
-              {(saving || pendingAutoSave) ? <Loader2 className="h-4 w-4 me-2 animate-spin" /> : <Save className="h-4 w-4 me-2" />}
-              {pendingAutoSave
-                ? t('addItem.saveAllPending', { defaultValue: 'Saving — waiting for analysis…' })
-                : t('addItem.saveAll')}
-            </Button>
-          </div>
+      <div
+        className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mb-6 bg-background/85 backdrop-blur-md border-b border-border/40 supports-[backdrop-filter]:bg-background/70"
+        data-testid="add-item-action-bar"
+      >
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => nav(-1)} className="rounded-full" data-testid="add-item-back">
+            <ArrowLeft className="h-4 w-4 me-2 rtl:rotate-180" /> {t('common.back')}
+          </Button>
+          <div className="flex-1" />
+          <Button onClick={pickFiles} variant="outline" className="rounded-xl" disabled={!!bgBatch} data-testid="add-item-add-more">
+            <Plus className="h-4 w-4 me-2" /> {t('addItem.addPhotos')}
+          </Button>
+          <Button
+            onClick={saveAll}
+            disabled={
+              saving
+              || !!bgBatch
+              // Patch M20.2 — Allow Save while some cards are still
+              // scanning (so the user can queue the batch); keep
+              // disabled while a previous queue is still draining
+              // (``pendingAutoSave``) to avoid re-entrant calls.
+              || pendingAutoSave
+              || (!cards.some((c) => c.status === 'ready') && !cards.some((c) => c.status === 'scanning'))
+            }
+            className="rounded-xl"
+            data-testid="add-item-save-all"
+          >
+            {(saving || pendingAutoSave) ? <Loader2 className="h-4 w-4 me-2 animate-spin" /> : <Save className="h-4 w-4 me-2" />}
+            {pendingAutoSave
+              ? t('addItem.saveAllPending', { defaultValue: 'Saving — waiting for analysis…' })
+              : t('addItem.saveAll')}
+          </Button>
         </div>
-      )}
-
-      <Stepper cards={cards} saving={saving} bgBatch={bgBatch} />
+      </div>
 
       <div className="mb-6">
         <div className="caps-label text-muted-foreground">{t('addItem.label')}</div>
@@ -1745,7 +1597,7 @@ export default function AddItem() {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg, image/png, image/webp, image/heic, image/heif, .jpg, .jpeg, .png, .webp, .heic, .heif, .HEIC, .HEIF"
+        accept="image/*"
         multiple
         className="sr-only"
         data-testid="add-item-file-input"
@@ -1833,7 +1685,7 @@ export default function AddItem() {
           // background" UX while still requiring an explicit user
           // confirmation for each duplicate.
           try {
-            await api.createItem(buildCreatePayload(card, isSuitcase));
+            await api.createItem(buildCreatePayload(card));
             setCards((prev) => prev.filter((c) => c.id !== cardId));
             setBgBatch((b) =>
               b
@@ -1876,7 +1728,12 @@ export default function AddItem() {
           data-testid="add-item-bg-batch-card"
           aria-live="polite"
         >
-          <ScanningPipeline variant="block" />
+          <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center mb-3">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </div>
+          <div className="font-display text-xl">
+            {t('addItem.bgUpload.processingTitle', { defaultValue: 'Processing your photos…' })}
+          </div>
           <div className="text-sm text-muted-foreground mt-1 max-w-md">
             {t('addItem.bgUpload.processingBody', {
               defaultValue: 'You can leave this page — we’ll keep going in the background. Edit any misfits in your closet when we’re done.',
@@ -1918,219 +1775,54 @@ export default function AddItem() {
           </div>
         </div>
       ) : cards.length === 0 ? (
-        <Tabs defaultValue="upload" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6 max-w-md mx-auto p-1 bg-muted/60 rounded-xl">
-            <TabsTrigger value="upload" className="rounded-lg py-2 text-sm font-medium transition-all" data-testid="add-item-tab-upload">
-              <Camera className="h-4 w-4 me-2" /> {t('addItem.tabs.upload', { defaultValue: 'Camera & Upload' })}
-            </TabsTrigger>
-            <TabsTrigger value="import" className="rounded-lg py-2 text-sm font-medium transition-all" data-testid="add-item-tab-import">
-              <Sparkles className="h-4 w-4 me-2" /> {t('addItem.tabs.import', { defaultValue: 'Digital Import' })}
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="upload" className="mt-0 focus-visible:ring-0 focus-visible:ring-offset-0">
-            <div
-              className="w-full border-2 border-dashed border-border rounded-[calc(var(--radius)+10px)] p-10 sm:p-12 bg-card flex flex-col items-center text-center cursor-pointer hover:bg-card/85 transition-colors"
-              data-testid="add-item-dropzone"
+        <div
+          className="w-full border-2 border-dashed border-border rounded-[calc(var(--radius)+10px)] p-10 sm:p-12 bg-card flex flex-col items-center text-center"
+          data-testid="add-item-dropzone"
+        >
+          <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center mb-3">
+            <Eye className="h-6 w-6" />
+          </div>
+          <div className="font-display text-xl">{t('addItem.dropzoneTitle')}</div>
+          <div className="text-sm text-muted-foreground mt-1 max-w-md">
+            {t('addItem.dropzoneBody')}
+          </div>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            <Button
+              type="button"
+              className="rounded-xl"
+              onClick={openCamera}
+              data-testid="add-item-open-camera-button"
+            >
+              <Camera className="h-4 w-4 me-2" /> {t('addItem.takePhoto')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-xl"
               onClick={pickFiles}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                e.preventDefault();
-                handleFiles(e.dataTransfer.files);
-              }}
+              data-testid="add-item-pick-files-button"
             >
-              <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center mb-3">
-                <Eye className="h-6 w-6" />
-              </div>
-              <div className="font-display text-xl">{t('addItem.dropzoneTitle')}</div>
-              <div className="text-sm text-muted-foreground mt-1 max-w-md">
-                {t('addItem.dropzoneBody')}
-              </div>
-              <div 
-                className="mt-5 flex flex-wrap items-center justify-center gap-2"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Button
-                  type="button"
-                  className="rounded-xl"
-                  onClick={openCamera}
-                  data-testid="add-item-open-camera-button"
-                >
-                  <Camera className="h-4 w-4 me-2" /> {t('addItem.takePhoto')}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="rounded-xl"
-                  onClick={pickFiles}
-                  data-testid="add-item-pick-files-button"
-                >
-                  <Upload className="h-4 w-4 me-2" /> {t('addItem.uploadPhotos')}
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="rounded-xl"
-                  onClick={openScanner}
-                  data-testid="add-item-scan-dpp-button"
-                >
-                  <QrCode className="h-4 w-4 me-2" /> {t('dpp.nav.scanLabel')}
-                </Button>
-              </div>
-              <div className="mt-4 flex items-center justify-center">
-                <div className="text-xs text-muted-foreground flex items-center gap-2 max-w-md">
-                  <Badge variant="outline" className="border-[hsl(var(--accent))] text-[hsl(var(--accent))]">
-                    {t('dpp.addItem.tileBadge')}
-                  </Badge>
-                  <span>{t('dpp.addItem.tileSubtitle')}</span>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="import" className="mt-0 focus-visible:ring-0 focus-visible:ring-offset-0">
-            <div 
-              className="w-full border border-border rounded-[calc(var(--radius)+10px)] p-8 sm:p-10 bg-card/60 backdrop-blur-md flex flex-col items-center text-center relative overflow-hidden"
-              data-testid="add-item-digital-import-pane"
+              <Upload className="h-4 w-4 me-2" /> {t('addItem.uploadPhotos')}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              className="rounded-xl"
+              onClick={openScanner}
+              data-testid="add-item-scan-dpp-button"
             >
-              {/* Subtle background glow */}
-              <div className="absolute top-0 end-0 w-48 h-48 bg-[hsl(var(--accent))]/5 rounded-full blur-3xl pointer-events-none -me-12 -mt-12" />
-              <div className="absolute bottom-0 start-0 w-48 h-48 bg-[hsl(var(--accent))]/5 rounded-full blur-3xl pointer-events-none -ms-12 -mb-12" />
-
-              <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center mb-4 border border-border">
-                <Sparkles className="h-6 w-6 text-[hsl(var(--accent))]" />
-              </div>
-              
-              <h3 className="font-display text-xl font-semibold mb-2">
-                {t('addItem.import.title', { defaultValue: 'Digital Receipt & Email Import' })}
-              </h3>
-              <p className="text-sm text-muted-foreground max-w-md mb-6">
-                {t('addItem.import.body', { defaultValue: 'Paste the text of a digital receipt, order confirmation email, or store invoice. Our parser will instantly extract brand, price, size, and category details.' })}
-              </p>
-
-              {/* Import Mode Selector */}
-              <div className="flex items-center gap-1.5 p-1 bg-muted rounded-xl mb-6 max-w-sm w-full border border-border/40">
-                <button
-                  type="button"
-                  onClick={() => setImportMode('text')}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    importMode === 'text'
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {t('addItem.import.modes.text', { defaultValue: 'Paste Text' })}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setImportMode('file')}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    importMode === 'file'
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {t('addItem.import.modes.file', { defaultValue: 'Upload File' })}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setImportMode('url')}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    importMode === 'url'
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {t('addItem.import.modes.url', { defaultValue: 'Web Link' })}
-                </button>
-              </div>
-              
-              <div className="w-full max-w-lg mb-6 min-h-[160px] flex flex-col justify-center">
-                {importMode === 'text' && (
-                  <Textarea
-                    value={receiptText}
-                    onChange={(e) => setReceiptText(e.target.value)}
-                    placeholder={t('addItem.import.placeholder', { 
-                      defaultValue: 'Paste order confirmation email or receipt text here...\n\nExample:\nOrder Date: June 15, 2026\nMerchant: Zara\n1x Cotton Poplin Shirt - Blue - Size M - $49.90' 
-                    })}
-                    className="min-h-[160px] bg-background/50 border-border rounded-xl placeholder:text-muted-foreground/50 focus-visible:ring-[hsl(var(--accent))] transition-all duration-300 resize-y p-4 text-sm"
-                    disabled={isExtracting}
-                  />
-                )}
-                
-                {importMode === 'file' && (
-                  <div 
-                    onClick={() => receiptFileInputRef.current?.click()}
-                    className="border-2 border-dashed border-border hover:border-[hsl(var(--accent))] bg-background/30 hover:bg-background/50 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 group min-h-[160px]"
-                  >
-                    <input
-                      type="file"
-                      ref={receiptFileInputRef}
-                      accept="image/jpeg, image/png, image/webp, image/heic, image/heif, application/pdf, .jpg, .jpeg, .png, .webp, .heic, .heif, .HEIC, .HEIF"
-                      onChange={(e) => setImportFile(e.target.files?.[0] || null)}
-                      className="sr-only"
-                    />
-                    <Upload className="h-8 w-8 text-muted-foreground group-hover:text-[hsl(var(--accent))] mb-3 transition-colors" />
-                    {importFile ? (
-                      <div className="text-sm font-medium text-[hsl(var(--accent))]">
-                        {t('addItem.import.fileSelected', { defaultValue: 'Selected file: {{name}}', name: importFile.name })}
-                      </div>
-                    ) : (
-                      <>
-                        <div className="text-sm font-medium text-foreground mb-1">
-                          {t('addItem.import.fileDropzoneTitle', { defaultValue: 'Drag & drop your receipt or invoice' })}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {t('addItem.import.fileDropzoneBody', { defaultValue: 'Supports JPG, PNG, HEIC, and PDF files' })}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {importMode === 'url' && (
-                  <Input
-                    type="url"
-                    value={importUrl}
-                    onChange={(e) => setImportUrl(e.target.value)}
-                    placeholder={t('addItem.import.urlPlaceholder', { 
-                      defaultValue: 'Enter receipt URL (e.g., https://zara.com/orders/...)' 
-                    })}
-                    className="bg-background/50 border-border rounded-xl placeholder:text-muted-foreground/50 focus-visible:ring-[hsl(var(--accent))] transition-all duration-300 p-4 text-sm h-12"
-                    disabled={isExtracting}
-                  />
-                )}
-              </div>
-
-              <div className="flex justify-center w-full">
-                <Button
-                  type="button"
-                  onClick={handleExtractReceipt}
-                  disabled={
-                    isExtracting || 
-                    (importMode === 'text' && !receiptText.trim()) ||
-                    (importMode === 'file' && !importFile) ||
-                    (importMode === 'url' && !importUrl.trim())
-                  }
-                  className="rounded-xl px-6 py-2.5 bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--accent-hover,var(--accent)))] text-white font-medium shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 disabled:transform-none disabled:opacity-50"
-                  data-testid="extract-receipt-button"
-                >
-                  {isExtracting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 me-2 animate-spin" />
-                      {t('addItem.import.extracting', { defaultValue: 'Extracting...' })}
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4 me-2" />
-                      {t('addItem.import.extractButton', { defaultValue: 'Extract Items' })}
-                    </>
-                  )}
-                </Button>
-              </div>
+              <QrCode className="h-4 w-4 me-2" /> {t('dpp.nav.scanLabel')}
+            </Button>
+          </div>
+          <div className="mt-4 flex items-center justify-center">
+            <div className="text-xs text-muted-foreground flex items-center gap-2 max-w-md">
+              <Badge variant="outline" className="border-[hsl(var(--accent))] text-[hsl(var(--accent))]">
+                {t('dpp.addItem.tileBadge')}
+              </Badge>
+              <span>{t('dpp.addItem.tileSubtitle')}</span>
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       ) : (
         <>
           <div className="flex items-center justify-end gap-2 mb-3">
@@ -2197,16 +1889,6 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
   const hasReconstruction = !!(card.reconstructedUrl && card.reconstructionMeta);
   const showingReconstructed = hasReconstruction && card.useReconstructed;
 
-  const [sections, setSections] = useState({
-    basic: true,
-    styling: false,
-    care: false,
-  });
-
-  const toggleSection = (sec) => {
-    setSections((prev) => ({ ...prev, [sec]: !prev[sec] }));
-  };
-
   return (
     <Card
       className={`rounded-[calc(var(--radius)+10px)] shadow-editorial overflow-hidden ${saved ? 'opacity-75' : ''}`}
@@ -2261,15 +1943,18 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
             )}
             {isBusy && (
               <div
-                className="absolute bottom-0 start-0 end-0 bg-background/80 backdrop-blur-sm px-3 py-2"
+                className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm px-3 py-2"
                 data-testid="add-item-scanning-overlay"
               >
-                <ScanningPipeline variant="inline" />
+                <div className="flex items-center gap-2 text-xs">
+                  <Eye className="h-3.5 w-3.5 text-[hsl(var(--accent))] animate-pulse" />
+                  <span className="font-medium">{t('addItem.scanning')}…</span>
+                </div>
                 <Progress value={progress} className="h-1 mt-1.5" />
               </div>
             )}
             {status === 'error' && !isBusy && (
-              <div className="absolute bottom-0 start-0 end-0 bg-rose-50/95 text-rose-900 px-3 py-2 text-xs flex items-start gap-2">
+              <div className="absolute bottom-0 left-0 right-0 bg-rose-50/95 text-rose-900 px-3 py-2 text-xs flex items-start gap-2">
                 <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                 <span className="flex-1">{error || t('addItem.analyzeFailed')}</span>
                 <button onClick={onRetry} className="underline shrink-0" data-testid="add-item-retry">
@@ -2286,7 +1971,7 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
               <button
                 type="button"
                 onClick={onRemove}
-                className="absolute top-2 end-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background"
+                className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background"
                 aria-label={t('addItem.removePhoto')}
                 data-testid="add-item-remove"
               >
@@ -2295,7 +1980,7 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
             )}
             {card.label && !isBusy && status !== 'error' && (
               <div
-                className="absolute top-2 start-2 max-w-[70%]"
+                className="absolute top-2 left-2 max-w-[70%]"
                 data-testid="add-item-detected-label"
               >
                 <Badge
@@ -2311,153 +1996,44 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
 
           {/* Fields */}
           <div className="p-5 space-y-4">
-            {/* 1. Basic Info Section */}
-            <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
-              <button
-                type="button"
-                onClick={() => toggleSection('basic')}
-                className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-start focus:outline-none"
+            <NameCaption fields={fields} onChange={onChange} disabled={saved} />
+            <IntentSelector fields={fields} onChange={onChange} disabled={saved} />
+            {fields.repair_advice && (
+              <div
+                className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 text-amber-900 text-xs"
+                data-testid="add-item-repair-advice"
               >
-                <div className="flex-1 min-w-0 pe-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                    {t('addItem.section.basic', { defaultValue: 'Basic Info' })}
-                  </span>
-                  {!sections.basic && (
-                    <div className="text-[11px] text-muted-foreground truncate mt-0.5">
-                      {[fields.category, fields.brand, fields.size].filter(Boolean).join(' · ') || '—'}
-                    </div>
-                  )}
+                <Wand2 className="h-4 w-4 mt-0.5 shrink-0" />
+                <div>
+                  <div className="font-medium">{t('addItem.repairTip')}</div>
+                  <div className="mt-0.5">{fields.repair_advice}</div>
                 </div>
-                {sections.basic ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-              </button>
-              
-              <AnimatePresence initial={false}>
-                {sections.basic && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="border-t border-border p-4 space-y-4 overflow-hidden"
-                  >
-                    <NameCaption idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
-                    <BasicTaxonomyGrid idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* 2. Styling Details Section */}
-            <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
-              <button
-                type="button"
-                onClick={() => toggleSection('styling')}
-                className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-start focus:outline-none"
-              >
-                <div className="flex-1 min-w-0 pe-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                    {t('addItem.section.styling', { defaultValue: 'Styling Details' })}
-                  </span>
-                  {!sections.styling && (
-                    <div className="text-[11px] text-muted-foreground truncate mt-0.5">
-                      {[
-                        fields.gender, 
-                        fields.dress_code, 
-                        fields.season && fields.season.length ? fields.season.join('/') : null
-                      ].filter(Boolean).join(' · ') || '—'}
-                    </div>
-                  )}
-                </div>
-                {sections.styling ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-              </button>
-              
-              <AnimatePresence initial={false}>
-                {sections.styling && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="border-t border-border p-4 space-y-4 overflow-hidden"
-                  >
-                    <StylingTaxonomyGrid idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
-                    <SeasonPicker idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
-                    <WeightedList
-                      idPrefix={card.id}
-                      labelKey="addItem.color"
-                      items={fields.colors}
-                      onChange={(v) => onChange({ colors: v })}
-                      placeholder={t('addItem.colorSlotPlaceholder')}
-                      disabled={saved}
-                      testid="add-item-colors"
-                    />
-                    <TagsEditor
-                      idPrefix={card.id}
-                      items={fields.tags}
-                      onChange={(v) => onChange({ tags: v })}
-                      disabled={saved}
-                    />
-                    <IntentSelector idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* 3. Care & Repair Section */}
-            <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
-              <button
-                type="button"
-                onClick={() => toggleSection('care')}
-                className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-start focus:outline-none"
-              >
-                <div className="flex-1 min-w-0 pe-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                    {t('addItem.section.care', { defaultValue: 'Care & Repair' })}
-                  </span>
-                  {!sections.care && (
-                    <div className="text-[11px] text-muted-foreground truncate mt-0.5">
-                      {[fields.state, fields.condition, fields.quality].filter(Boolean).join(' · ') || '—'}
-                    </div>
-                  )}
-                </div>
-                {sections.care ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-              </button>
-              
-              <AnimatePresence initial={false}>
-                {sections.care && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="border-t border-border p-4 space-y-4 overflow-hidden"
-                  >
-                    {fields.repair_advice && (
-                      <div
-                        className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 text-amber-900 text-xs"
-                        data-testid="add-item-repair-advice"
-                      >
-                        <Wand2 className="h-4 w-4 mt-0.5 shrink-0" />
-                        <div>
-                          <div className="font-medium">{t('addItem.repairTip')}</div>
-                          <div className="mt-0.5">{fields.repair_advice}</div>
-                        </div>
-                      </div>
-                    )}
-                    <QualityRow idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
-                    <WeightedList
-                      idPrefix={card.id}
-                      labelKey="addItem.material"
-                      items={fields.fabric_materials}
-                      onChange={(v) => onChange({ fabric_materials: v })}
-                      placeholder={t('addItem.fabricSlotPlaceholder')}
-                      disabled={saved}
-                      testid="add-item-fabrics"
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+              </div>
+            )}
+            <TaxonomyGrid fields={fields} onChange={onChange} disabled={saved} />
+            <WeightedList
+              labelKey="addItem.color"
+              items={fields.colors}
+              onChange={(v) => onChange({ colors: v })}
+              placeholder={t('addItem.colorSlotPlaceholder')}
+              disabled={saved}
+              testid="add-item-colors"
+            />
+            <WeightedList
+              labelKey="addItem.material"
+              items={fields.fabric_materials}
+              onChange={(v) => onChange({ fabric_materials: v })}
+              placeholder={t('addItem.fabricSlotPlaceholder')}
+              disabled={saved}
+              testid="add-item-fabrics"
+            />
+            <QualityRow fields={fields} onChange={onChange} disabled={saved} />
+            <SeasonPicker fields={fields} onChange={onChange} disabled={saved} />
+            <TagsEditor
+              items={fields.tags}
+              onChange={(v) => onChange({ tags: v })}
+              disabled={saved}
+            />
           </div>
         </div>
       </CardContent>
@@ -2466,14 +2042,13 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
 }
 
 /* -------------------- sub-sections -------------------- */
-function NameCaption({ idPrefix, fields, onChange, disabled }) {
+function NameCaption({ fields, onChange, disabled }) {
   const { t } = useTranslation();
   return (
     <div className="space-y-3">
       <div>
-        <Label htmlFor={`${idPrefix}-name`} className="caps-label text-muted-foreground">{t('addItem.itemName')}</Label>
+        <Label className="caps-label text-muted-foreground">{t('addItem.itemName')}</Label>
         <Input
-          id={`${idPrefix}-name`}
           value={fields.name || ''}
           onChange={(e) => onChange({ name: e.target.value })}
           placeholder={t('addItem.namePlaceholder')}
@@ -2483,9 +2058,8 @@ function NameCaption({ idPrefix, fields, onChange, disabled }) {
         />
       </div>
       <div>
-        <Label htmlFor={`${idPrefix}-caption`} className="caps-label text-muted-foreground">{t('addItem.caption')}</Label>
+        <Label className="caps-label text-muted-foreground">{t('addItem.caption')}</Label>
         <Textarea
-          id={`${idPrefix}-caption`}
           value={fields.caption || ''}
           onChange={(e) => onChange({ caption: e.target.value })}
           rows={2}
@@ -2499,7 +2073,7 @@ function NameCaption({ idPrefix, fields, onChange, disabled }) {
   );
 }
 
-function IntentSelector({ idPrefix, fields, onChange, disabled }) {
+function IntentSelector({ fields, onChange, disabled }) {
   const { t } = useTranslation();
   const intent = fields.marketplace_intent || 'own';
   // Only compute preview for 'for_sale'
@@ -2548,11 +2122,10 @@ function IntentSelector({ idPrefix, fields, onChange, disabled }) {
       {intent === 'for_sale' && (
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="add-item-fee-preview">
           <div>
-            <Label htmlFor={`${idPrefix}-price`} className="caps-label text-muted-foreground">
+            <Label className="caps-label text-muted-foreground">
               {t('addItem.price')} ({fields.currency || 'USD'})
             </Label>
             <Input
-              id={`${idPrefix}-price`}
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
@@ -2598,16 +2171,14 @@ function IntentSelector({ idPrefix, fields, onChange, disabled }) {
   );
 }
 
-function BasicTaxonomyGrid({ idPrefix, fields, onChange, disabled }) {
+function TaxonomyGrid({ fields, onChange, disabled }) {
   const { t } = useTranslation();
-  const row = (label, value, setter, options, testid, placeholder, formatter) => {
-    const fieldId = `${idPrefix}-${testid}`;
-    return (
+  const row = (label, value, setter, options, testid, placeholder, formatter) => (
     <div>
-      <Label htmlFor={fieldId} className="caps-label text-muted-foreground">{label}</Label>
+      <Label className="caps-label text-muted-foreground">{label}</Label>
       {options ? (
         <Select value={value || ''} onValueChange={(v) => setter(v === '__clear' ? '' : v)} disabled={disabled}>
-          <SelectTrigger id={fieldId} className="mt-1 rounded-xl" data-testid={testid}>
+          <SelectTrigger className="mt-1 rounded-xl" data-testid={testid}>
             <SelectValue placeholder={placeholder || t('addItem.selectPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
@@ -2620,7 +2191,6 @@ function BasicTaxonomyGrid({ idPrefix, fields, onChange, disabled }) {
         </Select>
       ) : (
         <Input
-          id={fieldId}
           value={value || ''}
           onChange={(e) => setter(e.target.value)}
           placeholder={placeholder || ''}
@@ -2630,7 +2200,7 @@ function BasicTaxonomyGrid({ idPrefix, fields, onChange, disabled }) {
         />
       )}
     </div>
-  )};
+  );
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -2638,64 +2208,22 @@ function BasicTaxonomyGrid({ idPrefix, fields, onChange, disabled }) {
       {row(t('addItem.subCategory'), fields.sub_category, (v) => onChange({ sub_category: v }), null, 'add-item-subcategory', t('addItem.subCategoryPlaceholder'))}
       {row(t('addItem.itemType'), fields.item_type, (v) => onChange({ item_type: v }), null, 'add-item-itemtype', t('addItem.itemTypePlaceholder'))}
       {row(t('addItem.brand'), fields.brand, (v) => onChange({ brand: v }), null, 'add-item-brand', t('addItem.brandPlaceholder'))}
+      {row(t('itemDetail.edit.gender'), fields.gender, (v) => onChange({ gender: v }), GENDER_OPTIONS, 'add-item-gender', t('addItem.genderPlaceholder'), labelForGender)}
+      {row(t('addItem.dressCode'), fields.dress_code, (v) => onChange({ dress_code: v }), DRESS_CODE_OPTIONS, 'add-item-dresscode', t('addItem.dressCodePlaceholder'), labelForDressCode)}
+      {row(t('addItem.pattern'), fields.pattern, (v) => onChange({ pattern: v }), PATTERN_OPTIONS, 'add-item-pattern', t('addItem.patternPlaceholder'), labelForPattern)}
+      {row(t('addItem.tradition'), fields.tradition, (v) => onChange({ tradition: v }), null, 'add-item-tradition', t('addItem.traditionPlaceholder'))}
       {row(t('addItem.size'), fields.size, (v) => onChange({ size: v }), null, 'add-item-size', t('addItem.sizePlaceholder'))}
     </div>
   );
 }
 
-function StylingTaxonomyGrid({ idPrefix, fields, onChange, disabled }) {
+function QualityRow({ fields, onChange, disabled }) {
   const { t } = useTranslation();
-  const row = (label, value, setter, options, testid, placeholder, formatter) => {
-    const fieldId = `${idPrefix}-${testid}`;
-    return (
+  const cell = (label, value, setter, options, testid, formatter) => (
     <div>
-      <Label htmlFor={fieldId} className="caps-label text-muted-foreground">{label}</Label>
-      {options ? (
-        <Select value={value || ''} onValueChange={(v) => setter(v === '__clear' ? '' : v)} disabled={disabled}>
-          <SelectTrigger id={fieldId} className="mt-1 rounded-xl" data-testid={testid}>
-            <SelectValue placeholder={placeholder || t('addItem.selectPlaceholder')} />
-          </SelectTrigger>
-          <SelectContent>
-            {options.map((o) => (
-              <SelectItem key={o} value={o}>
-                {formatter ? formatter(o, t) : o}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ) : (
-        <Input
-          id={fieldId}
-          value={value || ''}
-          onChange={(e) => setter(e.target.value)}
-          placeholder={placeholder || ''}
-          disabled={disabled}
-          data-testid={testid}
-          className="mt-1 rounded-xl"
-        />
-      )}
-    </div>
-  )};
-
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
-      {row(t('itemDetail.edit.gender'), fields.gender, (v) => onChange({ gender: v }), GENDER_OPTIONS, 'add-item-gender', t('addItem.genderPlaceholder'), labelForGender)}
-      {row(t('addItem.dressCode'), fields.dress_code, (v) => onChange({ dress_code: v }), DRESS_CODE_OPTIONS, 'add-item-dresscode', t('addItem.dressCodePlaceholder'), labelForDressCode)}
-      {row(t('addItem.pattern'), fields.pattern, (v) => onChange({ pattern: v }), PATTERN_OPTIONS, 'add-item-pattern', t('addItem.patternPlaceholder'), labelForPattern)}
-      {row(t('addItem.tradition'), fields.tradition, (v) => onChange({ tradition: v }), null, 'add-item-tradition', t('addItem.traditionPlaceholder'))}
-    </div>
-  );
-}
-
-function QualityRow({ idPrefix, fields, onChange, disabled }) {
-  const { t } = useTranslation();
-  const cell = (label, value, setter, options, testid, formatter) => {
-    const fieldId = `${idPrefix}-${testid}`;
-    return (
-    <div>
-      <Label htmlFor={fieldId} className="caps-label text-muted-foreground">{label}</Label>
+      <Label className="caps-label text-muted-foreground">{label}</Label>
       <Select value={value || ''} onValueChange={(v) => setter(v === '__clear' ? '' : v)} disabled={disabled}>
-        <SelectTrigger id={fieldId} className="mt-1 rounded-xl" data-testid={testid}>
+        <SelectTrigger className="mt-1 rounded-xl" data-testid={testid}>
           <SelectValue placeholder={t('addItem.selectPlaceholder')} />
         </SelectTrigger>
         <SelectContent>
@@ -2707,7 +2235,7 @@ function QualityRow({ idPrefix, fields, onChange, disabled }) {
         </SelectContent>
       </Select>
     </div>
-  )};
+  );
   return (
     <div className="grid grid-cols-3 gap-3">
       {cell(t('addItem.state'), fields.state, (v) => onChange({ state: v }), STATE_OPTIONS, 'add-item-state', labelForState)}
@@ -2717,7 +2245,7 @@ function QualityRow({ idPrefix, fields, onChange, disabled }) {
   );
 }
 
-function SeasonPicker({ idPrefix, fields, onChange, disabled }) {
+function SeasonPicker({ fields, onChange, disabled }) {
   const { t } = useTranslation();
   const active = new Set(fields.season || []);
   const toggle = (s) => {
@@ -2729,11 +2257,10 @@ function SeasonPicker({ idPrefix, fields, onChange, disabled }) {
     }
     onChange({ season: Array.from(next) });
   };
-  const labelId = `${idPrefix}-season`;
   return (
     <div>
-      <Label id={labelId} className="caps-label text-muted-foreground">{t('addItem.season')}</Label>
-      <div className="mt-1 flex flex-wrap gap-1.5" role="group" aria-labelledby={labelId} data-testid="add-item-season">
+      <Label className="caps-label text-muted-foreground">{t('addItem.season')}</Label>
+      <div className="mt-1 flex flex-wrap gap-1.5" data-testid="add-item-season">
         {SEASON_OPTIONS.map((s) => {
           const on = active.has(s);
           return (
@@ -2760,7 +2287,7 @@ function SeasonPicker({ idPrefix, fields, onChange, disabled }) {
 // `WeightedList` (colour & fabric percentage editor) now lives in
 // `components/WeightedList.jsx` so the Item Detail edit page can
 // reuse the exact same control. See top-of-file imports.
-function TagsEditor({ idPrefix, items, onChange, disabled }) {
+function TagsEditor({ items, onChange, disabled }) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState('');
   const add = () => {
@@ -2769,13 +2296,12 @@ function TagsEditor({ idPrefix, items, onChange, disabled }) {
     if (!items.includes(v)) onChange([...items, v]);
     setDraft('');
   };
-  const fieldId = `${idPrefix}-tag-input`;
   return (
     <div>
-      <Label htmlFor={fieldId} className="caps-label text-muted-foreground">{t('addItem.tags')}</Label>
+      <Label className="caps-label text-muted-foreground">{t('addItem.tags')}</Label>
       <div className="mt-1 flex flex-wrap gap-1.5" data-testid="add-item-tags">
         {items.map((tag) => (
-          <Badge key={tag} variant="outline" className="text-[11px] ps-2 pe-1 flex items-center gap-1">
+          <Badge key={tag} variant="outline" className="text-[11px] pl-2 pr-1 flex items-center gap-1">
             {tag}
             <button
               type="button"
@@ -2790,7 +2316,6 @@ function TagsEditor({ idPrefix, items, onChange, disabled }) {
         ))}
         <div className="flex items-center gap-1">
           <Input
-            id={fieldId}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
@@ -2809,7 +2334,7 @@ function TagsEditor({ idPrefix, items, onChange, disabled }) {
 }
 
 /* -------------------- payload builder -------------------- */
-function buildCreatePayload(card, inSuitcase = false) {
+function buildCreatePayload(card) {
   const f = card.fields || {};
   const asBase64 = card.base64;
   // Drop empty/falsy optional keys to satisfy enum validators on the backend.
@@ -2862,7 +2387,6 @@ function buildCreatePayload(card, inSuitcase = false) {
     source_size_bytes:
       typeof card.sourceSizeBytes === 'number' ? card.sourceSizeBytes : undefined,
     is_duplicate: card.isDuplicate ? true : undefined,
-    in_suitcase: inSuitcase ? true : undefined,
     // Phase O.6 — flag the backend so it skips the synchronous
     // SegFormer cutout (the photo is already bbox-cropped to a single
     // garment) and queues rembg as a BackgroundTask that populates

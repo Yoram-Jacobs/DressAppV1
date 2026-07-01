@@ -197,6 +197,7 @@
     "title": "アイテムを追加",
     "subtitle": "1枚や複数枚の写真をアップロード — “Eyes” が自動分析。",
     "uploadPhotos": "写真をアップロード",
+    "uploadDrive": "Driveからアップロード",
     "takePhoto": "撮影",
     "analyze": "分析",
     "scanning": "スキャン中",

@@ -197,6 +197,7 @@
     "title": "添加单品",
     "subtitle": "上传一张或多张照片 — “Eyes” 自动处理。",
     "uploadPhotos": "上传照片",
+    "uploadDrive": "从云端硬盘上传",
     "takePhoto": "拍照",
     "analyze": "分析",
     "scanning": "扫描中",
