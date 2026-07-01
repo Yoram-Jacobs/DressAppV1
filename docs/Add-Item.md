@@ -180,6 +180,12 @@ while (x) {
 The color signature vector distance is calculated as the Manhattan distance across 4 quadrants and 3 RGB color channels (12 bytes total):
 $$d_{\text{color}}(a, b) = \sum_{i=1}^{12} |a_i - b_i|$$
 
+#### Switchable Eyes Vision Provider (Gemini vs. Gemma)
+The ingestion vision pipeline supports hot-swapping the core vision processing model dynamically:
+*   **Gemini (Development/Default)**: Native integrations leverage Google's Gemini 2.5 Flash model. Gemini is the current development model driving the ingestion backend.
+*   **Gemma (Edge/Production)**: To support offline scenarios and deployment to low-power edge devices, Gemma (running locally inside a Docker container) will take Gemini's place when DressApp is deployed to production/edge environments.
+*   **Dynamic Override Flag**: Admins can hot-swap providers via the admin panel. The preference is written to MongoDB config document `config.{_id: "eyes_provider"}`. Pods dynamically resolve the active provider with a 5-second TTL cache (bypassing restarts), falling back to the configured `EYES_PROVIDER` environment variable if the database document is missing.
+
 #### Nano Banana AI Reconstruction
 For garments that touch the frame boundaries, the backend uses a generative inpainting model to reconstruct occluded details. The frontend displays a toggle letting the user switch `useReconstructed` on or off:
 
