@@ -500,7 +500,11 @@ export default function AddItem() {
   };
 
   const handleFiles = async (fileList) => {
-    const files = Array.from(fileList || []);
+    const files = Array.from(fileList || []).filter(f => {
+      const type = f.type || '';
+      const name = f.name || '';
+      return type.startsWith('image/') || /\.(jpe?g|png|webp|heic|heif)$/i.test(name);
+    });
     if (!files.length) return;
 
     // ----------------------------------------------------------------
@@ -1745,7 +1749,7 @@ export default function AddItem() {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg, image/png, image/webp, image/heic, image/heif, .jpg, .jpeg, .png, .webp, .heic, .heif, .HEIC, .HEIF"
+        accept="image/*"
         multiple
         className="sr-only"
         data-testid="add-item-file-input"
