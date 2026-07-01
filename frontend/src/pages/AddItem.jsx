@@ -564,8 +564,9 @@ export default function AddItem() {
       e.preventDefault();
       const t1 = e.touches[0];
       const t2 = e.touches[1];
-      const initialDx = Math.abs(t1.clientX - t2.clientX);
-      const initialDy = Math.abs(t1.clientY - t2.clientY);
+      const dx = t1.clientX - t2.clientX;
+      const dy = t1.clientY - t2.clientY;
+      const initialDist = Math.sqrt(dx * dx + dy * dy);
       
       setDragState({
         id,
@@ -574,8 +575,7 @@ export default function AddItem() {
         startHeight: selector.h,
         startLeft: selector.x,
         startTop: selector.y,
-        initialDx: initialDx || 1,
-        initialDy: initialDy || 1,
+        initialDist: initialDist || 1,
         containerWidth: rect.width,
         containerHeight: rect.height,
         startScrollTop: host ? host.scrollTop : 0,
@@ -614,17 +614,17 @@ export default function AddItem() {
       if (dragState.mode === 'pinch' && e.type === 'touchmove' && e.touches && e.touches.length === 2) {
         const t1 = e.touches[0];
         const t2 = e.touches[1];
-        const currentDx = Math.abs(t1.clientX - t2.clientX);
-        const currentDy = Math.abs(t1.clientY - t2.clientY);
+        const dx = t1.clientX - t2.clientX;
+        const dy = t1.clientY - t2.clientY;
+        const currentDist = Math.sqrt(dx * dx + dy * dy);
         
-        const scaleX = currentDx / (dragState.initialDx || 1);
-        const scaleY = currentDy / (dragState.initialDy || 1);
+        const scale = currentDist / (dragState.initialDist || 1);
         
         setSelectors(prev => prev.map(s => {
           if (s.id !== dragState.id) return s;
           
-          const newW = Math.max(10, Math.min(100 - s.x, dragState.startWidth * scaleX));
-          const newH = Math.max(10, Math.min(100 - s.y, dragState.startHeight * scaleY));
+          const newW = Math.max(10, Math.min(100 - s.x, dragState.startWidth * scale));
+          const newH = Math.max(5, Math.min(100 - s.y, dragState.startHeight * scale));
           return { ...s, w: Number(newW.toFixed(2)), h: Number(newH.toFixed(2)) };
         }));
         return;
