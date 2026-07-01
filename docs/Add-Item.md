@@ -82,14 +82,20 @@ graph TD
 
 #### A. Camera & Upload Flow
 1.  **Selection**: The user clicks **Take Photo** or **Upload Photos**.
-    *   On mobile, the `capture="environment"` attribute prompts the native rear camera.
-    *   On desktop, it falls back to a standard file dialog. Multi-file selection is enabled.
-2.  **In-Browser Duplicate Pre-Flight**:
+    *   **Take Photo** activates the camera. On mobile, `capture="environment"` prompts the native rear camera directly.
+    *   **Upload Photos** opens a unified, standard native file picker. 
+        *   The file input uses `accept="image/*"` and `multiple`.
+        *   This enables native **Google Drive multi-selection** (allowing users to check multiple items and tap the enabled "Select" button).
+        *   It also **bypasses the "Photo/Files" intent chooser** on Chrome for Android, going straight to the system file explorer (SAF).
+        *   *Note*: Firefox for Android intercepts `accept="image/*"` to present its own built-in camera/files prompt. This is native browser-level behavior and cannot be web-bypassed.
+2.  **MIME-Type & Extension Filtering**:
+    *   When files are selected, the frontend checks if they are valid images. To prevent Android from discarding cloud files whose MIME types aren't immediately resolved, `handleFiles` filters selected items by validating that either their MIME type starts with `image/` or their filename ends with a supported extension (`.jpg`, `.jpeg`, `.png`, `.webp`, `.heic`, `.heif`).
+3.  **In-Browser Duplicate Pre-Flight**:
     *   The browser reads each image into a canvas, converts it to a base64 JPEG byte string, and computes its SHA-256 hash, visual aHash, and color signature.
     *   If any uploads match items in `closetStore.getSnapshot().items`, they are handled by the collision pathways:
         *   **Interactive Path (≤5 photos)**: A scrollable `DuplicatePreflightDialog` displays side-by-side matches. The user can toggle individual items to **Skip** or **Add anyway ⭐** (marking them as duplicate entries).
         *   **Batch Path (>5 photos)**: Duplicates are silently omitted based on user preferences.
-3.  **Streaming Analysis**: Surviving files are uploaded to `/closet/analyze` with the `Accept: application/x-ndjson` header.
+4.  **Streaming Analysis**: Surviving files are uploaded to `/closet/analyze` with the `Accept: application/x-ndjson` header.
     *   The frontend splits the single upload card into $N$ child cards during the `detect` frame.
     *   Each child card shows a scanning animation and progressive progress indicator.
     *   Individual `item` frames populate each card's fields and previews as they return from Gemini.
