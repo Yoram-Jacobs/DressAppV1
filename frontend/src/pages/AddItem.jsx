@@ -312,7 +312,7 @@ export default function AddItem() {
       setImagePreviewUrl(null);
       return;
     }
-    if (importFile.type.startsWith('image/')) {
+    if (importFile.type.startsWith('image/') || importFile.type === 'application/pdf') {
       const url = URL.createObjectURL(importFile);
       setImagePreviewUrl(url);
       return () => URL.revokeObjectURL(url);
@@ -2478,14 +2478,18 @@ export default function AddItem() {
                         alt="Receipt Preview"
                         className="w-full h-full object-contain pointer-events-none"
                       />
-                    ) : (importFile && importFile.type === 'application/pdf') ? (
-                      <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-muted-foreground bg-muted/40 pointer-events-none">
-                        <FileText className="h-10 w-10 text-[hsl(var(--accent))] mb-3" />
-                        <div className="text-sm font-semibold">{importFile.name}</div>
-                        <div className="text-xs mt-1">
-                          {t('addItem.import.pdfNotice', { defaultValue: 'PDF Document loaded. Draw selectors to isolate text lines for each item.' })}
-                        </div>
-                      </div>
+                    ) : (importFile && importFile.type === 'application/pdf' && imagePreviewUrl) ? (
+                      <object
+                        data={imagePreviewUrl}
+                        type="application/pdf"
+                        className="w-full h-full border-0 pointer-events-none"
+                      >
+                        <iframe
+                          src={imagePreviewUrl}
+                          className="w-full h-full border-0 pointer-events-none"
+                          title="PDF Preview"
+                        />
+                      </object>
                     ) : (
                       // Text block (either pasted or text file)
                       <div className="w-full h-full overflow-y-auto p-4 bg-background/50 font-mono text-xs text-left whitespace-pre-wrap leading-normal pointer-events-none">
