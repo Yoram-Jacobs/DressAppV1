@@ -418,7 +418,7 @@ export default function AddItem() {
     }
   };
 
-  const handleImportFileChange = (e) => {
+  const handleImportFileChange = async (e) => {
     const file = e.target.files?.[0] || null;
     if (!file) {
       setImportFile(null);
@@ -426,6 +426,29 @@ export default function AddItem() {
     }
     
     setImportFile(file);
+    
+    // If it is a PDF file, extract text via backend
+    if (file.type === 'application/pdf') {
+      setIsExtracting(true);
+      const loadingId = toast.loading(t('addItem.import.extractingPdfText', { defaultValue: 'Extracting text from PDF...' }));
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await api.extractPdfText(formData);
+        if (res.text) {
+          setReceiptText(res.text);
+          toast.success(t('addItem.import.pdfTextExtracted', { defaultValue: 'PDF text extracted successfully!' }), { id: loadingId });
+        } else {
+          toast.error(t('addItem.import.pdfTextEmpty', { defaultValue: 'No readable text found in PDF.' }), { id: loadingId });
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error(err?.response?.data?.detail || t('addItem.import.pdfTextError', { defaultValue: 'Failed to read PDF text.' }), { id: loadingId });
+      } finally {
+        setIsExtracting(false);
+      }
+      return;
+    }
     
     // Check if it is a text-based format
     const isText = file.type.startsWith('text/') || 
@@ -444,6 +467,13 @@ export default function AddItem() {
       };
       reader.readAsText(file);
     }
+  };
+
+  const handleCancelDocument = () => {
+    setImportFile(null);
+    setReceiptText('');
+    setImportUrl('');
+    setExtractedItems([]);
   };
 
   const cropImageFile = async (file, selector) => {
@@ -2344,129 +2374,135 @@ export default function AddItem() {
               <div className="absolute top-0 end-0 w-48 h-48 bg-[hsl(var(--accent))]/5 rounded-full blur-3xl pointer-events-none -me-12 -mt-12" />
               <div className="absolute bottom-0 start-0 w-48 h-48 bg-[hsl(var(--accent))]/5 rounded-full blur-3xl pointer-events-none -ms-12 -mb-12" />
 
-              <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center mb-4 border border-border">
-                <Sparkles className="h-6 w-6 text-[hsl(var(--accent))]" />
-              </div>
-              
-              <h3 className="font-display text-xl font-semibold mb-2">
-                {t('addItem.import.title', { defaultValue: 'Digital Receipt & Email Import' })}
-              </h3>
-              <p className="text-sm text-muted-foreground max-w-md mb-6">
-                {t('addItem.import.body', { defaultValue: 'Paste the text of a digital receipt, order confirmation email, or store invoice. Our parser will instantly extract brand, price, size, and category details.' })}
-              </p>
+              {!(importFile || (importMode === 'text' && receiptText.trim()) || (importMode === 'url' && importUrl.trim())) ? (
+                <>
+                  <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center mb-4 border border-border">
+                    <Sparkles className="h-6 w-6 text-[hsl(var(--accent))]" />
+                  </div>
+                  
+                  <h3 className="font-display text-xl font-semibold mb-2">
+                    {t('addItem.import.title', { defaultValue: 'Digital Receipt & Email Import' })}
+                  </h3>
+                  <p className="text-sm text-muted-foreground max-w-md mb-6">
+                    {t('addItem.import.body', { defaultValue: 'Paste the text of a digital receipt, order confirmation email, or store invoice. Our parser will instantly extract brand, price, size, and category details.' })}
+                  </p>
 
-              {/* Import Mode Selector */}
-              <div className="flex items-center gap-1.5 p-1 bg-muted rounded-xl mb-6 max-w-sm w-full border border-border/40">
-                <button
-                  type="button"
-                  onClick={() => { setImportMode('text'); setImportFile(null); }}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    importMode === 'text'
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {t('addItem.import.modes.text', { defaultValue: 'Paste Text' })}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setImportMode('file'); setReceiptText(''); }}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    importMode === 'file'
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {t('addItem.import.modes.file', { defaultValue: 'Upload File' })}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setImportMode('url'); setImportFile(null); setReceiptText(''); }}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    importMode === 'url'
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {t('addItem.import.modes.url', { defaultValue: 'Web Link' })}
-                </button>
-              </div>
-              
-              <div className="w-full max-w-lg mb-6 min-h-[160px] flex flex-col justify-center">
-                {importMode === 'text' && (
-                  <Textarea
-                    value={receiptText}
-                    onChange={(e) => setReceiptText(e.target.value)}
-                    placeholder={t('addItem.import.placeholder', { 
-                      defaultValue: 'Paste order confirmation email or receipt text here...\n\nExample:\nOrder Date: June 15, 2026\nMerchant: Zara\n1x Cotton Poplin Shirt - Blue - Size M - $49.90' 
-                    })}
-                    className="min-h-[160px] bg-background/50 border-border rounded-xl placeholder:text-muted-foreground/50 focus-visible:ring-[hsl(var(--accent))] transition-all duration-300 resize-y p-4 text-sm"
-                    disabled={isExtracting}
-                  />
-                )}
-                
-                {importMode === 'file' && (
-                  <div 
-                    onClick={() => receiptFileInputRef.current?.click()}
-                    className="border-2 border-dashed border-border hover:border-[hsl(var(--accent))] bg-background/30 hover:bg-background/50 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 group min-h-[160px]"
-                  >
-                    <input
-                      type="file"
-                      ref={receiptFileInputRef}
-                      accept="image/*, application/pdf, text/plain, text/html, text/csv, application/json, application/rtf, .txt, .html, .htm, .csv, .json, .rtf, .doc, .docx"
-                      onChange={handleImportFileChange}
-                      className="sr-only"
-                    />
-                    <Upload className="h-8 w-8 text-muted-foreground group-hover:text-[hsl(var(--accent))] mb-3 transition-colors" />
-                    {importFile ? (
-                      <div className="text-sm font-medium text-[hsl(var(--accent))]">
-                        {t('addItem.import.fileSelected', { defaultValue: 'Selected file: {{name}}', name: importFile.name })}
-                      </div>
-                    ) : (
-                      <>
+                  {/* Import Mode Selector */}
+                  <div className="flex items-center gap-1.5 p-1 bg-muted rounded-xl mb-6 max-w-sm w-full border border-border/40">
+                    <button
+                      type="button"
+                      onClick={() => { setImportMode('text'); setImportFile(null); }}
+                      className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 ${
+                        importMode === 'text'
+                          ? 'bg-background text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {t('addItem.import.modes.text', { defaultValue: 'Paste Text' })}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setImportMode('file'); setReceiptText(''); }}
+                      className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 ${
+                        importMode === 'file'
+                          ? 'bg-background text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {t('addItem.import.modes.file', { defaultValue: 'Upload File' })}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setImportMode('url'); setImportFile(null); setReceiptText(''); }}
+                      className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 ${
+                        importMode === 'url'
+                          ? 'bg-background text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {t('addItem.import.modes.url', { defaultValue: 'Web Link' })}
+                    </button>
+                  </div>
+                  
+                  <div className="w-full max-w-lg mb-6 min-h-[160px] flex flex-col justify-center">
+                    {importMode === 'text' && (
+                      <Textarea
+                        value={receiptText}
+                        onChange={(e) => setReceiptText(e.target.value)}
+                        placeholder={t('addItem.import.placeholder', { 
+                          defaultValue: 'Paste order confirmation email or receipt text here...\n\nExample:\nOrder Date: June 15, 2026\nMerchant: Zara\n1x Cotton Poplin Shirt - Blue - Size M - $49.90' 
+                        })}
+                        className="min-h-[160px] bg-background/50 border-border rounded-xl placeholder:text-muted-foreground/50 focus-visible:ring-[hsl(var(--accent))] transition-all duration-300 resize-y p-4 text-sm"
+                        disabled={isExtracting}
+                      />
+                    )}
+                    
+                    {importMode === 'file' && (
+                      <div 
+                        onClick={() => receiptFileInputRef.current?.click()}
+                        className="border-2 border-dashed border-border hover:border-[hsl(var(--accent))] bg-background/30 hover:bg-background/50 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 group min-h-[160px]"
+                      >
+                        <input
+                          type="file"
+                          ref={receiptFileInputRef}
+                          accept="image/*, application/pdf, text/plain, text/html, text/csv, application/json, application/rtf, .txt, .html, .htm, .csv, .json, .rtf, .doc, .docx"
+                          onChange={handleImportFileChange}
+                          className="sr-only"
+                        />
+                        <Upload className="h-8 w-8 text-muted-foreground group-hover:text-[hsl(var(--accent))] mb-3 transition-colors" />
                         <div className="text-sm font-medium text-foreground mb-1">
                           {t('addItem.import.fileDropzoneTitle', { defaultValue: 'Drag & drop your receipt or invoice' })}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {t('addItem.import.fileDropzoneBody', { defaultValue: 'Supports image, PDF, text, JSON, and document files' })}
                         </div>
-                      </>
+                      </div>
+                    )}
+
+                    {importMode === 'url' && (
+                      <Input
+                        type="url"
+                        value={importUrl}
+                        onChange={(e) => setImportUrl(e.target.value)}
+                        placeholder={t('addItem.import.urlPlaceholder', { 
+                          defaultValue: 'Enter receipt URL (e.g., https://zara.com/orders/...)' 
+                        })}
+                        className="bg-background/50 border-border rounded-xl placeholder:text-muted-foreground/50 focus-visible:ring-[hsl(var(--accent))] transition-all duration-300 p-4 text-sm h-12"
+                        disabled={isExtracting}
+                      />
                     )}
                   </div>
-                )}
-
-                {importMode === 'url' && (
-                  <Input
-                    type="url"
-                    value={importUrl}
-                    onChange={(e) => setImportUrl(e.target.value)}
-                    placeholder={t('addItem.import.urlPlaceholder', { 
-                      defaultValue: 'Enter receipt URL (e.g., https://zara.com/orders/...)' 
-                    })}
-                    className="bg-background/50 border-border rounded-xl placeholder:text-muted-foreground/50 focus-visible:ring-[hsl(var(--accent))] transition-all duration-300 p-4 text-sm h-12"
-                    disabled={isExtracting}
-                  />
-                )}
-              </div>
-
-              {/* Document Preview & Selector Container */}
-              {(importFile || (importMode === 'text' && receiptText.trim())) && (
-                <div className="w-full flex flex-col items-center mt-6 border-t border-border/40 pt-6">
-                  <div className="text-sm font-semibold mb-3 flex items-center justify-between w-full">
+                </>
+              ) : (
+                /* Document Preview & Selector Container */
+                <div className="w-full flex flex-col items-center mt-2">
+                  <div className="text-sm font-semibold mb-3 flex items-center justify-between w-full border-b border-border/40 pb-3">
                     <span className="flex items-center gap-1.5">
                       <FileText className="h-4 w-4 text-[hsl(var(--accent))]" />
                       {t('addItem.import.previewTitle', { defaultValue: 'Receipt Region Selector' })}
                     </span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="xs"
-                      onClick={handleAddSelector}
-                      className="rounded-lg text-[11px] font-semibold text-[hsl(var(--accent))] hover:bg-secondary flex items-center gap-1"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      {t('addItem.import.addSelector', { defaultValue: 'Add Item Selector' })}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
+                        onClick={handleCancelDocument}
+                        className="rounded-lg text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary flex items-center gap-1"
+                      >
+                        <ArrowLeft className="h-3 w-3" />
+                        {t('addItem.import.changeDocument', { defaultValue: 'Change File' })}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
+                        onClick={handleAddSelector}
+                        className="rounded-lg text-[11px] font-semibold text-[hsl(var(--accent))] hover:bg-secondary flex items-center gap-1"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        {t('addItem.import.addSelector', { defaultValue: 'Add Item Selector' })}
+                      </Button>
+                    </div>
                   </div>
                   
                   {/* Selector Container */}

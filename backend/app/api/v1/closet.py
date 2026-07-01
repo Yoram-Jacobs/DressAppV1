@@ -5605,6 +5605,27 @@ async def edit_item_image(
     return {"variant_url": variant_url, "variants": variants}
 
 
+@router.post("/extract-pdf-text")
+async def extract_pdf_text(
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user),
+):
+    """Extract raw text from an uploaded PDF file."""
+    import pypdf
+    import io
+    from fastapi import HTTPException
+
+    try:
+        file_bytes = await file.read()
+        reader = pypdf.PdfReader(io.BytesIO(file_bytes))
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text() or ""
+        return {"text": text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to extract PDF text: {e}")
+
+
 @router.post("/parse-receipt")
 async def parse_receipt(
     text: str | None = Form(None),

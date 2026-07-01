@@ -583,6 +583,15 @@ export const api = {
         timeout: 60000,
       })
       .then((r) => r.data),
+  extractPdfText: (formData) =>
+    client
+      .post('/closet/extract-pdf-text', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 30000,
+      })
+      .then((r) => r.data),
   // Phase V6 — add or replace an item's photo (runs The Eyes single-item).
   // ``language`` (optional ISO-639-1 code) overrides the analyzer's output
   // language for this call — see ``AnalyzeIn.language`` on the backend.
