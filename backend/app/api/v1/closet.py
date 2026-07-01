@@ -5624,10 +5624,12 @@ async def extract_pdf_text(
         gemini = await get_default_client()
         prompt = (
             "You are a high-precision, multilingual OCR engine. "
-            "Extract and return ALL text from the attached document precisely as written. "
-            "Maintain the layout and line breaks where possible. "
+            "Extract and transcribe ALL text from the attached document row-by-row (horizontally across the page). "
+            "Crucially, do NOT extract text in separate vertical columns. Instead, merge columns line-by-line horizontally "
+            "so that each line shows the item name, description, code, and price/discount aligned together on the same row. "
+            "Reduce unnecessary whitespace between columns to ensure each item's details fit neatly on a single line. "
             "Do not add any preamble, summary, explanation, markdown formatting, or notes. "
-            "Start directly with the extracted text."
+            "Start directly with the transcribed text."
         )
 
         user_parts = [

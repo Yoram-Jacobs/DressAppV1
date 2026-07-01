@@ -533,6 +533,7 @@ export default function AddItem() {
     const container = e.currentTarget.closest('.selector-container');
     if (!container) return;
     const rect = container.getBoundingClientRect();
+    const host = container.parentElement;
     
     setDragState({
       id,
@@ -544,7 +545,9 @@ export default function AddItem() {
       startWidth: selector.w,
       startHeight: selector.h,
       containerWidth: rect.width,
-      containerHeight: rect.height
+      containerHeight: rect.height,
+      startScrollTop: host ? host.scrollTop : 0,
+      startScrollLeft: host ? host.scrollLeft : 0
     });
   };
 
@@ -557,6 +560,7 @@ export default function AddItem() {
     const container = e.currentTarget.closest('.selector-container');
     if (!container) return;
     const rect = container.getBoundingClientRect();
+    const host = container.parentElement;
     
     setDragState({
       id,
@@ -568,7 +572,9 @@ export default function AddItem() {
       startWidth: selector.w,
       startHeight: selector.h,
       containerWidth: rect.width,
-      containerHeight: rect.height
+      containerHeight: rect.height,
+      startScrollTop: host ? host.scrollTop : 0,
+      startScrollLeft: host ? host.scrollLeft : 0
     });
   };
 
@@ -579,8 +585,16 @@ export default function AddItem() {
       const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
       const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
       
-      const deltaX = clientX - dragState.startX;
-      const deltaY = clientY - dragState.startY;
+      const container = document.querySelector('.selector-container');
+      const host = container ? container.parentElement : null;
+      const currentScrollTop = host ? host.scrollTop : 0;
+      const currentScrollLeft = host ? host.scrollLeft : 0;
+      
+      const scrollDeltaX = currentScrollLeft - (dragState.startScrollLeft || 0);
+      const scrollDeltaY = currentScrollTop - (dragState.startScrollTop || 0);
+      
+      const deltaX = (clientX - dragState.startX) + scrollDeltaX;
+      const deltaY = (clientY - dragState.startY) + scrollDeltaY;
       
       const deltaXPercent = (deltaX / dragState.containerWidth) * 100;
       const deltaYPercent = (deltaY / dragState.containerHeight) * 100;
