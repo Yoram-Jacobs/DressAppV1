@@ -5630,11 +5630,29 @@ async def parse_receipt(
         mime_type = file.content_type
         if not mime_type or mime_type == "application/octet-stream":
             mime_type = mimetypes.guess_type(file.filename)[0] or "image/jpeg"
-        parts.append((file_bytes, mime_type))
-        if mime_type and "image" in mime_type.lower():
-            is_image = True
-            image_bytes = file_bytes
-            image_mime = mime_type
+        
+        is_text = False
+        if mime_type:
+            mime_lower = mime_type.lower()
+            if (
+                mime_lower.startswith("text/")
+                or mime_lower in ["application/json", "application/rtf", "application/javascript", "text/csv"]
+                or file.filename.endswith((".txt", ".csv", ".json", ".html", ".htm", ".rtf"))
+            ):
+                is_text = True
+                
+        if is_text:
+            try:
+                decoded_text = file_bytes.decode("utf-8", errors="ignore")
+                parts.append(decoded_text)
+            except Exception:
+                parts.append((file_bytes, mime_type))
+        else:
+            parts.append((file_bytes, mime_type))
+            if mime_type and "image" in mime_type.lower():
+                is_image = True
+                image_bytes = file_bytes
+                image_mime = mime_type
     elif url and url.strip():
         url_str = url.strip()
         try:

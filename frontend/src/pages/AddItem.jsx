@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,6 +6,7 @@ import {
   ArrowLeft, Upload, Plus, Loader2, Eye, Wand2, Shirt, Store,
   HandCoins, Gift, Repeat, Trash2, Save, Tag, AlertTriangle,
   X, Sparkles, Camera, RefreshCw, QrCode, ChevronDown, ChevronUp,
+  FileText, Folder, Check, Image as ImageIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,11 +21,13 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { api } from '@/lib/api';
-import { sha256File, aHashFile, colorSignatureFile } from '@/lib/utils';
+import { cn, sha256File, aHashFile, colorSignatureFile } from '@/lib/utils';
 import { findDuplicatesInCloset } from '@/lib/duplicateDetection';
 import { closetStore } from '@/lib/closetStore';
+import { useClosetStore } from '@/lib/useClosetStore';
 import { workStore } from '@/lib/workStore';
 import DuplicatePreflightDialog from '@/components/DuplicatePreflightDialog';
 import { DppScanner } from '@/components/DppScanner';
@@ -285,6 +288,36 @@ export default function AddItem() {
   const [importMode, setImportMode] = useState('text'); // 'text' | 'file' | 'url'
   const [importFile, setImportFile] = useState(null);
   const [importUrl, setImportUrl] = useState('');
+  const [selectors, setSelectors] = useState([{ id: 1, x: 10, y: 10, w: 80, h: 20 }]);
+  const [dragState, setDragState] = useState(null);
+  const [extractedItems, setExtractedItems] = useState([]);
+  const [linkingItemId, setLinkingItemId] = useState(null);
+  const [closetModalOpen, setClosetModalOpen] = useState(false);
+  const [closetSearch, setClosetSearch] = useState('');
+  const itemImageInputRef = useRef(null);
+  const [activeItemForImage, setActiveItemForImage] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+
+  const { items: closetItems } = useClosetStore();
+  const closetItemsFiltered = useMemo(() => {
+    return (closetItems || []).filter(it => 
+      it.title?.toLowerCase().includes(closetSearch.toLowerCase()) ||
+      it.brand?.toLowerCase().includes(closetSearch.toLowerCase()) ||
+      it.category?.toLowerCase().includes(closetSearch.toLowerCase())
+    );
+  }, [closetItems, closetSearch]);
+
+  useEffect(() => {
+    if (!importFile) {
+      setImagePreviewUrl(null);
+      return;
+    }
+    if (importFile.type.startsWith('image/')) {
+      const url = URL.createObjectURL(importFile);
+      setImagePreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [importFile]);
   const receiptFileInputRef = useRef(null);
   // Background batch state — shown instead of cards when user uploads
   // more than BG_THRESHOLD photos at once. Auto-analyzes + auto-saves
@@ -385,117 +418,427 @@ export default function AddItem() {
     }
   };
 
-  const handleExtractReceipt = async () => {
-    let loadingMsg = t('addItem.import.extracting', { defaultValue: 'Extracting...' });
-    const formData = new FormData();
-
-    if (importMode === 'text') {
-      if (!receiptText || !receiptText.trim()) {
-        toast.error(t('addItem.import.error', { defaultValue: 'Please enter receipt or email text.' }));
-        return;
-      }
-      formData.append('text', receiptText);
-    } else if (importMode === 'file') {
-      if (!importFile) {
-        toast.error(t('addItem.import.error', { defaultValue: 'Please upload a receipt file.' }));
-        return;
-      }
-      formData.append('file', importFile);
-      loadingMsg = t('addItem.import.states.ocr', { defaultValue: 'Reading document bounds & performing OCR...' });
-    } else if (importMode === 'url') {
-      if (!importUrl || !importUrl.trim()) {
-        toast.error(t('addItem.import.error', { defaultValue: 'Please enter a valid receipt URL.' }));
-        return;
-      }
-      formData.append('url', importUrl);
-      loadingMsg = t('addItem.import.states.fetch', { defaultValue: 'Connecting to secure merchant host & fetching page metadata...' });
+  const handleImportFileChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    if (!file) {
+      setImportFile(null);
+      return;
     }
+    
+    setImportFile(file);
+    
+    // Check if it is a text-based format
+    const isText = file.type.startsWith('text/') || 
+                   file.name.endsWith('.txt') || 
+                   file.name.endsWith('.csv') || 
+                   file.name.endsWith('.json') || 
+                   file.name.endsWith('.html') || 
+                   file.name.endsWith('.rtf') ||
+                   file.name.endsWith('.xml') ||
+                   file.name.endsWith('.md');
+                   
+    if (isText) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        setReceiptText(evt.target?.result || '');
+      };
+      reader.readAsText(file);
+    }
+  };
 
+  const cropImageFile = async (file, selector) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Calculate bounds in pixels
+          const x = (selector.x / 100) * img.width;
+          const y = (selector.y / 100) * img.height;
+          const w = (selector.w / 100) * img.width;
+          const h = (selector.h / 100) * img.height;
+          
+          canvas.width = w;
+          canvas.height = h;
+          ctx.drawImage(img, x, y, w, h, 0, 0, w, h);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const croppedFile = new File([blob], `crop-${selector.id}-${file.name}`, { type: 'image/jpeg' });
+              resolve(croppedFile);
+            } else {
+              reject(new Error('Canvas crop failed'));
+            }
+          }, 'image/jpeg', 0.9);
+        };
+        img.onerror = () => reject(new Error('Image load failed'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const cropText = (text, selector) => {
+    const lines = text.split('\n');
+    const startLine = Math.floor((selector.y / 100) * lines.length);
+    const endLine = Math.ceil(((selector.y + selector.h) / 100) * lines.length);
+    return lines.slice(startLine, endLine).join('\n');
+  };
+
+  const handleSelectorMouseDown = (e, id, mode) => {
+    e.preventDefault();
+    const selector = selectors.find(s => s.id === id);
+    if (!selector) return;
+    
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    
+    const container = e.currentTarget.closest('.selector-container');
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    
+    setDragState({
+      id,
+      mode,
+      startX: clientX,
+      startY: clientY,
+      startLeft: selector.x,
+      startTop: selector.y,
+      startWidth: selector.w,
+      startHeight: selector.h,
+      containerWidth: rect.width,
+      containerHeight: rect.height
+    });
+  };
+
+  const handleSelectorTouchStart = (e, id, mode) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    const selector = selectors.find(s => s.id === id);
+    if (!selector) return;
+    
+    const container = e.currentTarget.closest('.selector-container');
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    
+    setDragState({
+      id,
+      mode,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      startLeft: selector.x,
+      startTop: selector.y,
+      startWidth: selector.w,
+      startHeight: selector.h,
+      containerWidth: rect.width,
+      containerHeight: rect.height
+    });
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!dragState) return;
+      
+      const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+      const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+      
+      const deltaX = clientX - dragState.startX;
+      const deltaY = clientY - dragState.startY;
+      
+      const deltaXPercent = (deltaX / dragState.containerWidth) * 100;
+      const deltaYPercent = (deltaY / dragState.containerHeight) * 100;
+      
+      setSelectors(prev => prev.map(s => {
+        if (s.id !== dragState.id) return s;
+        
+        if (dragState.mode === 'move') {
+          const newX = Math.max(0, Math.min(100 - s.w, dragState.startLeft + deltaXPercent));
+          const newY = Math.max(0, Math.min(100 - s.h, dragState.startTop + deltaYPercent));
+          return { ...s, x: Number(newX.toFixed(2)), y: Number(newY.toFixed(2)) };
+        } else if (dragState.mode === 'resize') {
+          const newW = Math.max(10, Math.min(100 - s.x, dragState.startWidth + deltaXPercent));
+          const newH = Math.max(10, Math.min(100 - s.y, dragState.startHeight + deltaYPercent));
+          return { ...s, w: Number(newW.toFixed(2)), h: Number(newH.toFixed(2)) };
+        }
+        return s;
+      }));
+    };
+
+    const handleMouseUp = () => {
+      setDragState(null);
+    };
+
+    if (dragState) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('touchmove', handleMouseMove);
+      window.addEventListener('touchend', handleMouseUp);
+    }
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleMouseMove);
+      window.removeEventListener('touchend', handleMouseUp);
+    };
+  }, [dragState]);
+
+  const handleAddSelector = () => {
+    const nextY = 20 + (selectors.length * 15) % 60;
+    setSelectors(prev => [...prev, {
+      id: Date.now(),
+      x: 20,
+      y: nextY,
+      w: 60,
+      h: 12
+    }]);
+  };
+
+  const handleRemoveSelector = (id) => {
+    setSelectors(prev => prev.filter(s => s.id !== id));
+  };
+
+  const handleExtractReceipt = async () => {
     setIsExtracting(true);
-    const loadingId = toast.loading(loadingMsg);
+    const loadingId = toast.loading(t('addItem.import.extracting', { defaultValue: 'Extracting items...' }));
     
     try {
-      const res = await api.parseReceipt(formData);
+      const results = [];
+      const isImage = importFile && importFile.type.startsWith('image/');
       
-      const brand = res.brand || 'Generic';
-      const item_type = res.item_type || 'Garment';
-      const size = res.size || 'M';
-      const priceCents = res.price_cents || 0;
-      const category = res.category || 'Top';
-      const name = res.name || `${brand} ${item_type}`;
-
-      // Normalize colors to the required `{ name, pct }` object format expected by WeightedList
-      const colors = res.colors && res.colors.length
-        ? res.colors.map(c => {
-            if (typeof c === 'string') return { name: c, pct: null };
-            if (c && typeof c === 'object' && c.name) return { name: c.name, pct: c.pct ?? null };
-            return { name: 'grey', pct: null };
-          })
-        : [{ name: 'grey', pct: null }];
-
-      // Generate a premium SVG placeholder image representation of the garment if no cropped photo
-      const svgColor = (colors && colors[0] && colors[0].name) || 'hsl(var(--accent))';
-      const svgIcon = `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
-          <defs>
-            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:hsl(200, 30%, 20%);stop-opacity:1" />
-              <stop offset="100%" style="stop-color:hsl(200, 30%, 10%);stop-opacity:1" />
-            </linearGradient>
-          </defs>
-          <rect width="100" height="100" rx="10" fill="url(#grad)" />
-          <circle cx="50" cy="50" r="30" fill="none" stroke="${svgColor}" stroke-width="2" stroke-dasharray="4 2" opacity="0.3" />
-          <path d="M35 30 L50 20 L65 30 L65 45 L50 40 L35 45 Z" fill="none" stroke="${svgColor}" stroke-width="3" stroke-linejoin="round" />
-          <path d="M50 20 L50 40" fill="none" stroke="${svgColor}" stroke-width="2" opacity="0.5" />
-          <text x="50" y="75" font-family="system-ui, sans-serif" font-size="8" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="1">${brand.toUpperCase()}</text>
-          <text x="50" y="85" font-family="system-ui, sans-serif" font-size="6" fill="hsl(var(--muted-foreground))" text-anchor="middle">${item_type.toUpperCase()}</text>
-        </svg>
-      `;
-      const base64Svg = btoa(unescape(encodeURIComponent(svgIcon.trim())));
+      for (let i = 0; i < selectors.length; i++) {
+        const sel = selectors[i];
+        const formData = new FormData();
+        let croppedFile = null;
+        
+        if (isImage) {
+          try {
+            croppedFile = await cropImageFile(importFile, sel);
+            formData.append('file', croppedFile);
+          } catch (cropErr) {
+            console.error('Cropping failed for selector', sel.id, cropErr);
+            formData.append('file', importFile);
+          }
+        } else if (importFile) {
+          const textToParse = receiptText || '';
+          const croppedText = cropText(textToParse, sel);
+          formData.append('text', croppedText);
+        } else if (importMode === 'text') {
+          const croppedText = cropText(receiptText, sel);
+          formData.append('text', croppedText);
+        } else if (importMode === 'url') {
+          formData.append('url', importUrl);
+        }
+        
+        const res = await api.parseReceipt(formData);
+        
+        const brand = res.brand || 'Generic';
+        const item_type = res.item_type || 'Garment';
+        const size = res.size || 'M';
+        const priceCents = res.price_cents || 0;
+        const category = res.category || 'Top';
+        const name = res.name || `${brand} ${item_type}`;
+        
+        const colors = res.colors && res.colors.length
+          ? res.colors.map(c => {
+              if (typeof c === 'string') return { name: c, pct: null };
+              if (c && typeof c === 'object' && c.name) return { name: c.name, pct: c.pct ?? null };
+              return { name: 'grey', pct: null };
+            })
+          : [{ name: 'grey', pct: null }];
+          
+        let base64Preview = null;
+        if (croppedFile) {
+          try {
+            const b64 = await fileToBase64(croppedFile);
+            base64Preview = `data:image/jpeg;base64,${b64}`;
+          } catch (_) {}
+        } else if (res.image_base64) {
+          base64Preview = `data:${res.image_mime || 'image/jpeg'};base64,${res.image_base64}`;
+        } else {
+          const svgColor = (colors && colors[0] && colors[0].name) || 'hsl(var(--accent))';
+          const svgIcon = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+              <defs>
+                <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:hsl(200, 30%, 20%);stop-opacity:1" />
+                  <stop offset="100%" style="stop-color:hsl(200, 30%, 10%);stop-opacity:1" />
+                </linearGradient>
+              </defs>
+              <rect width="100" height="100" rx="10" fill="url(#grad)" />
+              <circle cx="50" cy="50" r="30" fill="none" stroke="${svgColor}" stroke-width="2" stroke-dasharray="4 2" opacity="0.3" />
+              <path d="M35 30 L50 20 L65 30 L65 45 L50 40 L35 45 Z" fill="none" stroke="${svgColor}" stroke-width="3" stroke-linejoin="round" />
+              <path d="M50 20 L50 40" fill="none" stroke="${svgColor}" stroke-width="2" opacity="0.5" />
+              <text x="50" y="75" font-family="system-ui, sans-serif" font-size="8" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="1">${brand.toUpperCase()}</text>
+              <text x="50" y="85" font-family="system-ui, sans-serif" font-size="6" fill="hsl(var(--muted-foreground))" text-anchor="middle">${item_type.toUpperCase()}</text>
+            </svg>
+          `;
+          const base64Svg = btoa(unescape(encodeURIComponent(svgIcon.trim())));
+          base64Preview = `data:image/svg+xml;base64,${base64Svg}`;
+        }
+        
+        results.push({
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          name,
+          brand,
+          category,
+          price_cents: priceCents,
+          size,
+          colors,
+          item_type: item_type.toLowerCase(),
+          base64Image: base64Preview,
+          closetItem: null,
+          selected: true
+        });
+      }
       
-      const hasImage = !!res.image_base64;
-      const previewUrl = hasImage 
-        ? `data:${res.image_mime || 'image/jpeg'};base64,${res.image_base64}` 
-        : `data:image/svg+xml;base64,${base64Svg}`;
-
-      const analysis = {
-        ...res,
-        name,
-        title: name,
-        category,
-        item_type: item_type.toLowerCase(),
-        brand,
-        size,
-        price_cents: priceCents,
-        colors,
-      };
-
-      const draft = {
-        id: `receipt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        file: null,
-        mime: hasImage ? (res.image_mime || 'image/jpeg') : 'image/svg+xml',
-        previewUrl,
-        base64: hasImage ? res.image_base64 : null,
-        status: 'ready',
-        progress: 100,
-        fields: hydrate(analysis, user),
-        error: null,
-        label: item_type,
-        source: 'receipt',
-        sourceFilename: hasImage ? 'cropped_receipt_item.jpg' : null,
-      };
-
-      setCards((prev) => [draft, ...prev]);
-      setReceiptText('');
-      setImportFile(null);
-      setImportUrl('');
+      setExtractedItems(prev => [...prev, ...results]);
       toast.dismiss(loadingId);
-      toast.success(t('addItem.import.success', { defaultValue: 'Successfully extracted garment details!' }));
+      toast.success(t('addItem.import.success', { defaultValue: 'Successfully extracted items!' }));
     } catch (err) {
       toast.dismiss(loadingId);
       toast.error(err?.response?.data?.detail || t('addItem.import.error', { defaultValue: 'Could not parse receipt. Please verify formatting and try again.' }));
     } finally {
       setIsExtracting(false);
+    }
+  };
+
+  const handleItemImageChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeItemForImage) return;
+    
+    try {
+      const b64 = await fileToBase64(file);
+      setExtractedItems(prev => prev.map(item => {
+        if (item.id === activeItemForImage) {
+          return {
+            ...item,
+            base64Image: `data:${file.type || 'image/jpeg'};base64,${b64}`
+          };
+        }
+        return item;
+      }));
+      toast.success(t('addItem.import.imageAttached', { defaultValue: 'Photo attached.' }));
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to load image.');
+    } finally {
+      setActiveItemForImage(null);
+      e.target.value = '';
+    }
+  };
+
+  const triggerFileForExtractedItem = (itemId) => {
+    setActiveItemForImage(itemId);
+    itemImageInputRef.current?.click();
+  };
+
+  const openSelectClosetItemModal = (itemId) => {
+    setLinkingItemId(itemId);
+    setClosetSearch('');
+    setClosetModalOpen(true);
+  };
+
+  const handleLinkItem = (closetItem) => {
+    setExtractedItems(prev => prev.map(item => {
+      if (item.id === linkingItemId) {
+        return {
+          ...item,
+          closetItem,
+          base64Image: item.base64Image || closetItem.original_image_url || closetItem.clean_image_url || null
+        };
+      }
+      return item;
+    }));
+    setClosetModalOpen(false);
+    setLinkingItemId(null);
+  };
+
+  const handleUnlinkItem = (itemId) => {
+    setExtractedItems(prev => prev.map(item => {
+      if (item.id === itemId) {
+        return { ...item, closetItem: null };
+      }
+      return item;
+    }));
+  };
+
+  const handleToggleItemSelect = (itemId) => {
+    setExtractedItems(prev => prev.map(item => {
+      if (item.id === itemId) {
+        return { ...item, selected: !item.selected };
+      }
+      return item;
+    }));
+  };
+
+  const handleEditItemField = (itemId, field, value) => {
+    setExtractedItems(prev => prev.map(item => {
+      if (item.id === itemId) {
+        return { ...item, [field]: value };
+      }
+      return item;
+    }));
+  };
+
+  const handleSaveExtractedItems = async () => {
+    const itemsToSave = extractedItems.filter(item => item.selected);
+    if (!itemsToSave.length) {
+      toast.error(t('addItem.import.noSelectedItems', { defaultValue: 'Please select at least one item to save.' }));
+      return;
+    }
+    
+    setSaving(true);
+    const loadingId = toast.loading(t('addItem.import.savingItems', { defaultValue: 'Ingesting items...' }));
+    
+    try {
+      for (const item of itemsToSave) {
+        if (item.closetItem) {
+          const patchBody = {
+            brand: item.brand || item.closetItem.brand,
+            size: item.size || item.closetItem.size,
+            price_cents: item.price_cents || 0,
+            purchase_price_cents: item.price_cents || 0,
+            purchase_date: new Date().toISOString().split('T')[0],
+          };
+          await api.updateItem(item.closetItem.id, patchBody);
+        } else {
+          const isSvg = item.base64Image && item.base64Image.startsWith('data:image/svg+xml');
+          const payload = {
+            title: item.name || 'Unnamed Garment',
+            category: item.category || 'Top',
+            brand: item.brand || 'Generic',
+            size: item.size || 'M',
+            price_cents: item.price_cents || 0,
+            purchase_price_cents: item.price_cents || 0,
+            color: item.colors?.[0]?.name || 'grey',
+            colors: item.colors && item.colors.length 
+              ? item.colors.map(c => typeof c === 'string' ? { name: c, pct: null } : c)
+              : [{ name: 'grey', pct: null }],
+            image_base64: item.base64Image && !isSvg ? item.base64Image.split(',')[1] : undefined,
+            image_mime: item.base64Image && !isSvg ? 'image/jpeg' : undefined,
+            purchase_date: new Date().toISOString().split('T')[0],
+          };
+          await api.createItem(payload);
+        }
+      }
+      
+      toast.dismiss(loadingId);
+      toast.success(t('addItem.import.savedSuccess', { defaultValue: 'Garments successfully cataloged!' }));
+      setExtractedItems([]);
+      setReceiptText('');
+      setImportFile(null);
+      setImportUrl('');
+      nav('/closet');
+    } catch (err) {
+      toast.dismiss(loadingId);
+      toast.error(err?.response?.data?.detail || t('addItem.import.saveFailed', { defaultValue: 'Ingestion failed' }));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -2016,7 +2359,7 @@ export default function AddItem() {
               <div className="flex items-center gap-1.5 p-1 bg-muted rounded-xl mb-6 max-w-sm w-full border border-border/40">
                 <button
                   type="button"
-                  onClick={() => setImportMode('text')}
+                  onClick={() => { setImportMode('text'); setImportFile(null); }}
                   className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 ${
                     importMode === 'text'
                       ? 'bg-background text-foreground shadow-sm'
@@ -2027,7 +2370,7 @@ export default function AddItem() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setImportMode('file')}
+                  onClick={() => { setImportMode('file'); setReceiptText(''); }}
                   className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 ${
                     importMode === 'file'
                       ? 'bg-background text-foreground shadow-sm'
@@ -2038,7 +2381,7 @@ export default function AddItem() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setImportMode('url')}
+                  onClick={() => { setImportMode('url'); setImportFile(null); setReceiptText(''); }}
                   className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 ${
                     importMode === 'url'
                       ? 'bg-background text-foreground shadow-sm'
@@ -2070,8 +2413,8 @@ export default function AddItem() {
                     <input
                       type="file"
                       ref={receiptFileInputRef}
-                      accept="image/jpeg, image/png, image/webp, image/heic, image/heif, application/pdf, .jpg, .jpeg, .png, .webp, .heic, .heif, .HEIC, .HEIF"
-                      onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+                      accept="image/*, application/pdf, text/plain, text/html, text/csv, application/json, application/rtf, .txt, .html, .htm, .csv, .json, .rtf, .doc, .docx"
+                      onChange={handleImportFileChange}
                       className="sr-only"
                     />
                     <Upload className="h-8 w-8 text-muted-foreground group-hover:text-[hsl(var(--accent))] mb-3 transition-colors" />
@@ -2085,7 +2428,7 @@ export default function AddItem() {
                           {t('addItem.import.fileDropzoneTitle', { defaultValue: 'Drag & drop your receipt or invoice' })}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {t('addItem.import.fileDropzoneBody', { defaultValue: 'Supports JPG, PNG, HEIC, and PDF files' })}
+                          {t('addItem.import.fileDropzoneBody', { defaultValue: 'Supports image, PDF, text, JSON, and document files' })}
                         </div>
                       </>
                     )}
@@ -2106,7 +2449,103 @@ export default function AddItem() {
                 )}
               </div>
 
-              <div className="flex justify-center w-full">
+              {/* Document Preview & Selector Container */}
+              {(importFile || (importMode === 'text' && receiptText.trim())) && (
+                <div className="w-full flex flex-col items-center mt-6 border-t border-border/40 pt-6">
+                  <div className="text-sm font-semibold mb-3 flex items-center justify-between w-full">
+                    <span className="flex items-center gap-1.5">
+                      <FileText className="h-4 w-4 text-[hsl(var(--accent))]" />
+                      {t('addItem.import.previewTitle', { defaultValue: 'Receipt Region Selector' })}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="xs"
+                      onClick={handleAddSelector}
+                      className="rounded-lg text-[11px] font-semibold text-[hsl(var(--accent))] hover:bg-secondary flex items-center gap-1"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      {t('addItem.import.addSelector', { defaultValue: 'Add Item Selector' })}
+                    </Button>
+                  </div>
+                  
+                  {/* Selector Container */}
+                  <div className="relative w-full max-w-lg aspect-[3/4] bg-muted/20 border border-border rounded-2xl overflow-hidden selector-container select-none">
+                    {/* The Preview Content */}
+                    {importFile && importFile.type.startsWith('image/') && imagePreviewUrl ? (
+                      <img
+                        src={imagePreviewUrl}
+                        alt="Receipt Preview"
+                        className="w-full h-full object-contain pointer-events-none"
+                      />
+                    ) : (importFile && importFile.type === 'application/pdf') ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-muted-foreground bg-muted/40 pointer-events-none">
+                        <FileText className="h-10 w-10 text-[hsl(var(--accent))] mb-3" />
+                        <div className="text-sm font-semibold">{importFile.name}</div>
+                        <div className="text-xs mt-1">
+                          {t('addItem.import.pdfNotice', { defaultValue: 'PDF Document loaded. Draw selectors to isolate text lines for each item.' })}
+                        </div>
+                      </div>
+                    ) : (
+                      // Text block (either pasted or text file)
+                      <div className="w-full h-full overflow-y-auto p-4 bg-background/50 font-mono text-xs text-left whitespace-pre-wrap leading-normal pointer-events-none">
+                        {receiptText}
+                      </div>
+                    )}
+                    
+                    {/* Draggable Selectors Overlay */}
+                    <div className="absolute inset-0 z-10">
+                      {selectors.map((sel, idx) => (
+                        <div
+                          key={sel.id}
+                          style={{
+                            left: `${sel.x}%`,
+                            top: `${sel.y}%`,
+                            width: `${sel.w}%`,
+                            height: `${sel.h}%`,
+                          }}
+                          className="absolute border-2 border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/10 flex flex-col justify-between p-1 cursor-move select-none"
+                          onMouseDown={(e) => handleSelectorMouseDown(e, sel.id, 'move')}
+                          onTouchStart={(e) => handleSelectorTouchStart(e, sel.id, 'move')}
+                        >
+                          <div className="flex justify-between items-start pointer-events-auto">
+                            <span className="text-[9px] font-bold text-white bg-[hsl(var(--accent))] px-1 rounded shadow-sm">
+                              Item {idx + 1}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveSelector(sel.id);
+                              }}
+                              className="h-4.5 w-4.5 bg-rose-600 hover:bg-rose-700 text-white rounded flex items-center justify-center cursor-pointer shadow-sm border-0"
+                            >
+                              <X className="h-2.5 w-2.5" />
+                            </button>
+                          </div>
+                          
+                          {/* Resize Handle */}
+                          <div
+                            className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize flex items-end justify-end p-0.5 pointer-events-auto"
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              handleSelectorMouseDown(e, sel.id, 'resize');
+                            }}
+                            onTouchStart={(e) => {
+                              e.stopPropagation();
+                              handleSelectorTouchStart(e, sel.id, 'resize');
+                            }}
+                          >
+                            <div className="w-2 h-2 border-r-2 border-b-2 border-[hsl(var(--accent))]" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-center w-full mt-6">
                 <Button
                   type="button"
                   onClick={handleExtractReceipt}
@@ -2127,12 +2566,222 @@ export default function AddItem() {
                   ) : (
                     <>
                       <Sparkles className="h-4 w-4 me-2" />
-                      {t('addItem.import.extractButton', { defaultValue: 'Extract Items' })}
+                      {t('addItem.import.extractButton', { defaultValue: 'Extract Selected Items' })}
                     </>
                   )}
                 </Button>
               </div>
+
+              {/* Extracted Ingestion List */}
+              {extractedItems.length > 0 && (
+                <div className="w-full flex flex-col mt-8 border-t border-border/40 pt-6 text-left">
+                  <h4 className="font-display text-base font-semibold mb-4 flex items-center justify-between">
+                    <span>{t('addItem.import.extractedListTitle', { defaultValue: 'Parsed Receipt Items' })}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {extractedItems.filter(i => i.selected).length} / {extractedItems.length} {t('addItem.import.selected', { defaultValue: 'selected' })}
+                    </span>
+                  </h4>
+                  
+                  <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin">
+                    {extractedItems.map((item, idx) => (
+                      <div 
+                        key={item.id} 
+                        className={cn(
+                          "p-4 rounded-2xl border flex flex-col md:flex-row gap-4 transition-all duration-300 relative",
+                          item.selected ? "border-border bg-card" : "border-border/30 bg-card/20 opacity-60"
+                        )}
+                      >
+                        {/* Checkbox */}
+                        <div className="absolute top-4 left-4 md:static flex items-center justify-center">
+                          <input
+                            type="checkbox"
+                            checked={item.selected}
+                            onChange={() => handleToggleItemSelect(item.id)}
+                            className="h-4 w-4 rounded border-border text-[hsl(var(--accent))] focus:ring-[hsl(var(--accent))]"
+                          />
+                        </div>
+                        
+                        {/* Image Preview / Plus Button */}
+                        <div className="relative w-20 h-24 bg-secondary/10 rounded-xl overflow-hidden shrink-0 border border-border/40 flex items-center justify-center self-center">
+                          {item.base64Image ? (
+                            <img src={item.base64Image} alt={item.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center p-2 text-center text-[10px] text-muted-foreground/60">
+                              <Shirt className="h-6 w-6 opacity-30 mb-1" />
+                              <span>No Image</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Item Details Inputs */}
+                        <div className="flex-1 min-w-0 grid grid-cols-2 gap-3 pt-6 md:pt-0">
+                          <div className="col-span-2">
+                            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Title</Label>
+                            <Input
+                              value={item.name}
+                              onChange={(e) => handleEditItemField(item.id, 'name', e.target.value)}
+                              className="h-9 rounded-lg text-xs"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Brand</Label>
+                            <Input
+                              value={item.brand}
+                              onChange={(e) => handleEditItemField(item.id, 'brand', e.target.value)}
+                              className="h-9 rounded-lg text-xs"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Price ($)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={item.price_cents / 100}
+                              onChange={(e) => handleEditItemField(item.id, 'price_cents', Math.round(Number(e.target.value) * 100))}
+                              className="h-9 rounded-lg text-xs"
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Actions Pane */}
+                        <div className="flex flex-row md:flex-col justify-center gap-2 border-t md:border-t-0 md:border-l border-border/30 pt-3 md:pt-0 md:pl-4 min-w-[120px]">
+                          {/* Attach Image Button */}
+                          <Button
+                            variant="outline"
+                            size="xs"
+                            type="button"
+                            onClick={() => triggerFileForExtractedItem(item.id)}
+                            className="flex-1 md:flex-initial rounded-lg text-[10px] font-semibold h-8 flex items-center justify-center gap-1.5"
+                          >
+                            <Plus className="h-3 w-3" />
+                            Attach Photo
+                          </Button>
+                          
+                          {/* Link Closet Item Button */}
+                          <Button
+                            variant="outline"
+                            size="xs"
+                            type="button"
+                            onClick={() => openSelectClosetItemModal(item.id)}
+                            className={cn(
+                              "flex-1 md:flex-initial rounded-lg text-[10px] font-semibold h-8 flex items-center justify-center gap-1.5",
+                              item.closetItem ? "bg-[hsl(var(--accent))]/10 border-[hsl(var(--accent))]/30 text-[hsl(var(--accent))]" : ""
+                            )}
+                          >
+                            <Folder className="h-3 w-3" />
+                            {item.closetItem ? 'Linked' : 'Link Closet'}
+                          </Button>
+                          
+                          {item.closetItem && (
+                            <div className="flex flex-col items-center mt-1">
+                              <div className="text-[9px] text-muted-foreground truncate max-w-[120px] mb-0.5">
+                                {item.closetItem.title}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleUnlinkItem(item.id)}
+                                className="text-[9px] text-rose-600 hover:underline border-0 bg-transparent cursor-pointer"
+                              >
+                                Remove Link
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex justify-end gap-3 mt-6">
+                    <Button
+                      variant="outline"
+                      type="button"
+                      onClick={() => setExtractedItems([])}
+                      className="rounded-xl px-5 h-11 text-sm font-semibold"
+                    >
+                      Clear List
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleSaveExtractedItems}
+                      disabled={saving || !extractedItems.some(i => i.selected)}
+                      className="rounded-xl px-6 h-11 bg-brand text-brand-foreground hover:bg-brand/90 font-semibold shadow-sm flex items-center gap-2"
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Check className="h-4 w-4" />
+                          Save & Ingest Items
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Hidden file input for item attachment */}
+            <input
+              type="file"
+              ref={itemImageInputRef}
+              accept="image/*"
+              onChange={handleItemImageChange}
+              className="sr-only"
+            />
+
+            {/* Select Closet Item Dialog */}
+            <Dialog open={closetModalOpen} onOpenChange={setClosetModalOpen}>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>{t('addItem.import.selectClosetItem', { defaultValue: 'Link to Closet Item' })}</DialogTitle>
+                  <DialogDescription>
+                    {t('addItem.import.selectClosetItemDesc', { defaultValue: 'Select an existing item in your closet to update its price and brand details.' })}
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="space-y-4 py-2">
+                  <Input
+                    type="search"
+                    placeholder={t('common.search', { defaultValue: 'Search closet...' })}
+                    value={closetSearch}
+                    onChange={(e) => setClosetSearch(e.target.value)}
+                    className="rounded-xl border-border focus-visible:ring-[hsl(var(--accent))]"
+                  />
+                  
+                  <ScrollArea className="h-[250px] pr-2">
+                    <div className="space-y-2">
+                      {closetItemsFiltered.map((it) => (
+                        <div
+                          key={it.id}
+                          onClick={() => handleLinkItem(it)}
+                          className="flex items-center gap-3 p-2 rounded-xl border border-border/60 hover:border-[hsl(var(--accent))] hover:bg-secondary/40 cursor-pointer transition-colors"
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-secondary/20 overflow-hidden shrink-0 border border-border/40 flex items-center justify-center">
+                            {it.original_image_url || it.clean_image_url ? (
+                              <img src={it.original_image_url || it.clean_image_url} alt={it.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <Shirt className="h-5 w-5 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-semibold text-foreground truncate">{it.title}</div>
+                            <div className="text-[10px] text-muted-foreground truncate">{it.brand || 'Generic'} · {it.category}</div>
+                          </div>
+                        </div>
+                      ))}
+                      {closetItemsFiltered.length === 0 && (
+                        <div className="text-center py-8 text-xs text-muted-foreground">
+                          {t('addItem.import.noMatchingItems', { defaultValue: 'No closet items found.' })}
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </DialogContent>
+            </Dialog>
           </TabsContent>
         </Tabs>
       ) : (
