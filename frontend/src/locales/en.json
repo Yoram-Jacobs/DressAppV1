@@ -199,6 +199,7 @@
     "label": "Add to closet",
     "addPhotos": "Add photos",
     "uploadPhotos": "Upload photos",
+    "uploadDrive": "Upload from Drive",
     "takePhoto": "Take photo",
     "dropzoneTitle": "Let The Eyes see your pieces",
     "dropzoneBody": "Snap a quick shot with your camera or upload existing photos. JPG, PNG, HEIC supported — each piece is analysed in parallel.",

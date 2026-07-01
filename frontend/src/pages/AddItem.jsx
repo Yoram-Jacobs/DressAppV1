@@ -298,6 +298,7 @@ export default function AddItem() {
   // skip/add per row. Null when the dialog is closed.
   const [preflight, setPreflight] = useState(null);
   const fileInputRef = useRef(null);
+  const fileInputSingleRef = useRef(null);
   const cameraInputRef = useRef(null);
   // Patch 12 (May 2026) — analyzeCard in-flight guard. The user reported
   // a single upload producing two `/analyze` passes 90 s apart (saving
@@ -311,6 +312,7 @@ export default function AddItem() {
   const analyzeInFlight = useRef(new Set());
 
   const pickFiles = () => fileInputRef.current?.click();
+  const pickSingleFile = () => fileInputSingleRef.current?.click();
   const openCamera = () => cameraInputRef.current?.click();
   const openScanner = () => setScanOpen(true);
 
@@ -1708,6 +1710,9 @@ export default function AddItem() {
             <Button onClick={pickFiles} variant="outline" className="rounded-xl" disabled={!!bgBatch} data-testid="add-item-add-more">
               <Plus className="h-4 w-4 me-2" /> {t('addItem.addPhotos')}
             </Button>
+            <Button onClick={pickSingleFile} variant="outline" className="rounded-xl" disabled={!!bgBatch} data-testid="add-item-add-more-drive">
+              <Plus className="h-4 w-4 me-2" /> {t('addItem.uploadDrive', { defaultValue: 'Upload from Drive' })}
+            </Button>
             <Button
               onClick={saveAll}
               disabled={
@@ -1749,6 +1754,14 @@ export default function AddItem() {
         multiple
         className="sr-only"
         data-testid="add-item-file-input"
+        onChange={(e) => { handleFiles(e.target.files); e.target.value = ''; }}
+      />
+      <input
+        ref={fileInputSingleRef}
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        data-testid="add-item-file-input-single"
         onChange={(e) => { handleFiles(e.target.files); e.target.value = ''; }}
       />
       {/* Native camera capture — on mobile, `capture="environment"` opens
@@ -1960,6 +1973,15 @@ export default function AddItem() {
                 </Button>
                 <Button
                   type="button"
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={pickSingleFile}
+                  data-testid="add-item-pick-single-file-button"
+                >
+                  <Upload className="h-4 w-4 me-2" /> {t('addItem.uploadDrive', { defaultValue: 'Upload from Drive' })}
+                </Button>
+                <Button
+                  type="button"
                   variant="secondary"
                   className="rounded-xl"
                   onClick={openScanner}
@@ -2144,6 +2166,16 @@ export default function AddItem() {
               data-testid="add-item-upload-more-button"
             >
               <Plus className="h-4 w-4 me-1.5" /> {t('addItem.addPhotos')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-lg"
+              onClick={pickSingleFile}
+              data-testid="add-item-upload-more-drive-button"
+            >
+              <Plus className="h-4 w-4 me-1.5" /> {t('addItem.uploadDrive', { defaultValue: 'Upload from Drive' })}
             </Button>
             <Button
               type="button"
