@@ -2509,32 +2509,33 @@ export default function AddItem() {
                   </div>
                   
                   {/* Selector Container */}
-                  <div className="relative w-full max-w-lg aspect-[3/4] bg-muted/20 border border-border rounded-2xl overflow-hidden selector-container select-none">
-                    {/* The Preview Content */}
-                    {receiptText ? (
-                      // Text block (either pasted, text file, or OCR'd text)
-                      <div className="w-full h-full overflow-y-auto p-4 bg-background/50 font-mono text-xs text-left whitespace-pre-wrap leading-normal pointer-events-none">
-                        {receiptText}
-                      </div>
-                    ) : importFile && importFile.type.startsWith('image/') && imagePreviewUrl ? (
-                      <img
-                        src={imagePreviewUrl}
-                        alt="Receipt Preview"
-                        className="w-full h-full object-contain pointer-events-none"
-                      />
-                    ) : (importFile && importFile.type === 'application/pdf' && imagePreviewUrl) ? (
-                      <object
-                        data={imagePreviewUrl}
-                        type="application/pdf"
-                        className="w-full h-full border-0 pointer-events-none"
-                      >
-                        <iframe
+                  <div className="w-full max-w-lg aspect-[3/4] overflow-y-auto border border-border rounded-2xl bg-muted/20 scrollbar-thin">
+                    <div className="relative w-full min-h-full selector-container select-none">
+                      {/* The Preview Content */}
+                      {receiptText ? (
+                        // Text block (either pasted, text file, or OCR'd text)
+                        <div className="w-full h-auto p-4 bg-background/50 font-mono text-xs text-left whitespace-pre-wrap leading-normal pointer-events-none">
+                          {receiptText}
+                        </div>
+                      ) : importFile && importFile.type.startsWith('image/') && imagePreviewUrl ? (
+                        <img
                           src={imagePreviewUrl}
-                          className="w-full h-full border-0 pointer-events-none"
-                          title="PDF Preview"
+                          alt="Receipt Preview"
+                          className="w-full h-auto object-contain pointer-events-none"
                         />
-                      </object>
-                    ) : null}
+                      ) : (importFile && importFile.type === 'application/pdf' && imagePreviewUrl) ? (
+                        <object
+                          data={imagePreviewUrl}
+                          type="application/pdf"
+                          className="w-full min-h-[500px] border-0 pointer-events-none"
+                        >
+                          <iframe
+                            src={imagePreviewUrl}
+                            className="w-full min-h-[500px] border-0 pointer-events-none"
+                            title="PDF Preview"
+                          />
+                        </object>
+                      ) : null}
                     
                     {/* Draggable Selectors Overlay */}
                     <div className="absolute inset-0 z-10">
@@ -2586,6 +2587,7 @@ export default function AddItem() {
                     </div>
                   </div>
                 </div>
+              </div>
               )}
 
               <div className="flex justify-center w-full mt-6">
