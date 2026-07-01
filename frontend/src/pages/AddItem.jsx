@@ -581,6 +581,9 @@ export default function AddItem() {
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!dragState) return;
+      if (e.type === 'touchmove' && e.cancelable) {
+        e.preventDefault();
+      }
       
       const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
       const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
@@ -622,14 +625,14 @@ export default function AddItem() {
     if (dragState) {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
-      window.addEventListener('touchmove', handleMouseMove);
+      window.addEventListener('touchmove', handleMouseMove, { passive: false });
       window.addEventListener('touchend', handleMouseUp);
     }
     
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('touchmove', handleMouseMove);
+      window.removeEventListener('touchmove', handleMouseMove, { passive: false });
       window.removeEventListener('touchend', handleMouseUp);
     };
   }, [dragState]);
@@ -2524,7 +2527,7 @@ export default function AddItem() {
                   
                   {/* Selector Container */}
                   <div className="w-full max-w-lg aspect-[3/4] overflow-y-auto border border-border rounded-2xl bg-muted/20 scrollbar-thin">
-                    <div className="relative w-full min-h-full selector-container select-none">
+                    <div className="relative w-full min-h-full pb-64 selector-container select-none">
                       {/* The Preview Content */}
                       {receiptText ? (
                         // Text block (either pasted, text file, or OCR'd text)
@@ -2541,11 +2544,11 @@ export default function AddItem() {
                         <object
                           data={imagePreviewUrl}
                           type="application/pdf"
-                          className="w-full min-h-[500px] border-0 pointer-events-none"
+                          className="w-full h-[2000px] border-0 pointer-events-none"
                         >
                           <iframe
                             src={imagePreviewUrl}
-                            className="w-full min-h-[500px] border-0 pointer-events-none"
+                            className="w-full h-[2000px] border-0 pointer-events-none"
                             title="PDF Preview"
                           />
                         </object>

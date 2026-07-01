@@ -5610,10 +5610,12 @@ async def extract_pdf_text(
     file: UploadFile = File(...),
     user: dict = Depends(get_current_user),
 ):
-    """Extract raw text from an uploaded file (PDF/Image) using Gemini's native OCR."""
+    """Extract raw text from an uploaded file (PDF/Image) using Gemini's native OCR with a local pypdf fallback for PDFs."""
     from app.services.gemini_client import get_default_client
     from fastapi import HTTPException
     import mimetypes
+    import pypdf
+    import io
 
     try:
         file_bytes = await file.read()
@@ -5621,29 +5623,52 @@ async def extract_pdf_text(
         if not mime_type or mime_type == "application/octet-stream":
             mime_type = mimetypes.guess_type(file.filename)[0] or "application/pdf"
 
-        gemini = await get_default_client()
-        prompt = (
-            "You are a high-precision, multilingual OCR engine. "
-            "Extract and transcribe ALL text from the attached document row-by-row (horizontally across the page). "
-            "Crucially, do NOT extract text in separate vertical columns. Instead, merge columns line-by-line horizontally "
-            "so that each line shows the item name, description, code, and price/discount aligned together on the same row. "
-            "Reduce unnecessary whitespace between columns to ensure each item's details fit neatly on a single line. "
-            "Do not add any preamble, summary, explanation, markdown formatting, or notes. "
-            "Start directly with the transcribed text."
-        )
+        is_pdf = mime_type == "application/pdf" or file.filename.endswith(".pdf")
 
-        user_parts = [
-            prompt,
-            (file_bytes, mime_type)
-        ]
+        # Try Gemini Multimodal OCR first
+        try:
+            gemini = await get_default_client()
+            prompt = (
+                "You are a high-precision, multilingual OCR engine. "
+                "Extract and transcribe ALL text from the attached document row-by-row (horizontally across the page). "
+                "Crucially, do NOT extract text in separate vertical columns. Instead, merge columns line-by-line horizontally "
+                "so that each line shows the item name, description, code, and price/discount aligned together on the same row. "
+                "Reduce unnecessary whitespace between columns to ensure each item's details fit neatly on a single line. "
+                "Do not add any preamble, summary, explanation, markdown formatting, or notes. "
+                "Start directly with the transcribed text."
+            )
 
-        ocr_text = await gemini.vision(
-            user_parts=user_parts,
-            temperature=0.0
-        )
-        return {"text": ocr_text.strip()}
+            user_parts = [
+                prompt,
+                (file_bytes, mime_type)
+            ]
+
+            ocr_text = await gemini.vision(
+                user_parts=user_parts,
+                temperature=0.0
+            )
+            if ocr_text and ocr_text.strip():
+                return {"text": ocr_text.strip()}
+        except Exception as e:
+            logger.warning("Gemini OCR failed, trying fallback: %s", e)
+
+        # Fallback for PDFs: Use local pypdf parser
+        if is_pdf:
+            try:
+                reader = pypdf.PdfReader(io.BytesIO(file_bytes))
+                text = ""
+                for page in reader.pages:
+                    text += page.extract_text() or ""
+                if text.strip():
+                    return {"text": text.strip()}
+            except Exception as e:
+                logger.error("pypdf fallback failed: %s", e)
+
+        raise HTTPException(status_code=500, detail="Failed to extract readable text from document.")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to perform Gemini OCR: {e}")
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Failed to process document: {e}")
 
 
 @router.post("/parse-receipt")
