@@ -5610,20 +5610,38 @@ async def extract_pdf_text(
     file: UploadFile = File(...),
     user: dict = Depends(get_current_user),
 ):
-    """Extract raw text from an uploaded PDF file."""
-    import pypdf
-    import io
+    """Extract raw text from an uploaded file (PDF/Image) using Gemini's native OCR."""
+    from app.services.gemini_client import get_default_client
     from fastapi import HTTPException
+    import mimetypes
 
     try:
         file_bytes = await file.read()
-        reader = pypdf.PdfReader(io.BytesIO(file_bytes))
-        text = ""
-        for page in reader.pages:
-            text += page.extract_text() or ""
-        return {"text": text}
+        mime_type = file.content_type
+        if not mime_type or mime_type == "application/octet-stream":
+            mime_type = mimetypes.guess_type(file.filename)[0] or "application/pdf"
+
+        gemini = await get_default_client()
+        prompt = (
+            "You are a high-precision, multilingual OCR engine. "
+            "Extract and return ALL text from the attached document precisely as written. "
+            "Maintain the layout and line breaks where possible. "
+            "Do not add any preamble, summary, explanation, markdown formatting, or notes. "
+            "Start directly with the extracted text."
+        )
+
+        user_parts = [
+            prompt,
+            (file_bytes, mime_type)
+        ]
+
+        ocr_text = await gemini.vision(
+            user_parts=user_parts,
+            temperature=0.0
+        )
+        return {"text": ocr_text.strip()}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to extract PDF text: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to perform Gemini OCR: {e}")
 
 
 @router.post("/parse-receipt")

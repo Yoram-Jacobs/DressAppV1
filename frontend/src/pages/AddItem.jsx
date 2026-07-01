@@ -427,23 +427,26 @@ export default function AddItem() {
     
     setImportFile(file);
     
-    // If it is a PDF file, extract text via backend
-    if (file.type === 'application/pdf') {
+    const isImage = file.type.startsWith('image/');
+    const isPdf = file.type === 'application/pdf';
+    
+    // If it is a PDF or image file, extract text via Gemini OCR backend
+    if (isPdf || isImage) {
       setIsExtracting(true);
-      const loadingId = toast.loading(t('addItem.import.extractingPdfText', { defaultValue: 'Extracting text from PDF...' }));
+      const loadingId = toast.loading(t('addItem.import.extractingText', { defaultValue: 'Extracting text using Gemini OCR...' }));
       try {
         const formData = new FormData();
         formData.append('file', file);
         const res = await api.extractPdfText(formData);
         if (res.text) {
           setReceiptText(res.text);
-          toast.success(t('addItem.import.pdfTextExtracted', { defaultValue: 'PDF text extracted successfully!' }), { id: loadingId });
+          toast.success(t('addItem.import.textExtracted', { defaultValue: 'Text extracted successfully via Gemini OCR!' }), { id: loadingId });
         } else {
-          toast.error(t('addItem.import.pdfTextEmpty', { defaultValue: 'No readable text found in PDF.' }), { id: loadingId });
+          toast.error(t('addItem.import.textEmpty', { defaultValue: 'No readable text found.' }), { id: loadingId });
         }
       } catch (err) {
         console.error(err);
-        toast.error(err?.response?.data?.detail || t('addItem.import.pdfTextError', { defaultValue: 'Failed to read PDF text.' }), { id: loadingId });
+        toast.error(err?.response?.data?.detail || t('addItem.import.textError', { defaultValue: 'Failed to extract text.' }), { id: loadingId });
       } finally {
         setIsExtracting(false);
       }
@@ -2508,7 +2511,12 @@ export default function AddItem() {
                   {/* Selector Container */}
                   <div className="relative w-full max-w-lg aspect-[3/4] bg-muted/20 border border-border rounded-2xl overflow-hidden selector-container select-none">
                     {/* The Preview Content */}
-                    {importFile && importFile.type.startsWith('image/') && imagePreviewUrl ? (
+                    {receiptText ? (
+                      // Text block (either pasted, text file, or OCR'd text)
+                      <div className="w-full h-full overflow-y-auto p-4 bg-background/50 font-mono text-xs text-left whitespace-pre-wrap leading-normal pointer-events-none">
+                        {receiptText}
+                      </div>
+                    ) : importFile && importFile.type.startsWith('image/') && imagePreviewUrl ? (
                       <img
                         src={imagePreviewUrl}
                         alt="Receipt Preview"
@@ -2526,12 +2534,7 @@ export default function AddItem() {
                           title="PDF Preview"
                         />
                       </object>
-                    ) : (
-                      // Text block (either pasted or text file)
-                      <div className="w-full h-full overflow-y-auto p-4 bg-background/50 font-mono text-xs text-left whitespace-pre-wrap leading-normal pointer-events-none">
-                        {receiptText}
-                      </div>
-                    )}
+                    ) : null}
                     
                     {/* Draggable Selectors Overlay */}
                     <div className="absolute inset-0 z-10">
