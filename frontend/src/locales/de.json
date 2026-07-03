@@ -384,7 +384,17 @@
       "ingestSyncing": "Wird mit Ihrem Kleiderschrank synchronisiert…",
       "ingestAnalysisHint": "rembg & Gemini Vision laufen im Hintergrund.",
       "ingestSyncingHint": "Ihre Garderobe wird aktualisiert — fast geschafft."
-    }
+    },
+    "failedToLoadImage": "Bild konnte nicht geladen werden.",
+    "titleRequired": "Titel ist erforderlich",
+    "receiptPreviewAlt": "Belegvorschau",
+    "pdfPreviewTitle": "PDF-Vorschau",
+    "selectorItemLabel": "Artikel {{n}}",
+    "genericBrand": "Generisch",
+    "sizeChipLabel": "Größe {{size}}",
+    "pendingGarmentAlt": "Ausstehende Kleidung",
+    "queuedForAutoSave": "Warten auf {{count}} Foto(s) — wird automatisch gespeichert.",
+    "savedSomeWaitingForRest": "{{saved}} gespeichert — warte auf {{remaining}} weitere."
   },
   "itemDetail": {
     "back": "Zurück zur Garderobe",

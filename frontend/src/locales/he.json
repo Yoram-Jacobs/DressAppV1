@@ -384,7 +384,17 @@
       "ingestSyncing": "מסנכרן עם הארון שלך…",
       "ingestAnalysisHint": "rembg ו‐Gemini Vision רצים ברקע.",
       "ingestSyncingHint": "מעדכן את הארון שלך — כמעט סיימנו."
-    }
+    },
+    "failedToLoadImage": "טעינת התמונה נכשלה.",
+    "titleRequired": "כותרת נדרשת",
+    "receiptPreviewAlt": "תצוגה מקדימה של הקבלה",
+    "pdfPreviewTitle": "תצוגה מקדימה של PDF",
+    "selectorItemLabel": "פריט {{n}}",
+    "genericBrand": "כללי",
+    "sizeChipLabel": "מידה {{size}}",
+    "pendingGarmentAlt": "פריט בהמתנה",
+    "queuedForAutoSave": "ממתין ל‑{{count}} תמונות — ישמר אוטומטית.",
+    "savedSomeWaitingForRest": "{{saved}} נשמרו — ממתין ל‑{{remaining}} נוספים."
   },
   "itemDetail": {
     "back": "חזור",

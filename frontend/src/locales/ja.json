@@ -384,7 +384,17 @@
       "ingestSyncing": "クローゼットと同期中…",
       "ingestAnalysisHint": "rembg & Gemini Vision がバックグラウンドで実行中。",
       "ingestSyncingHint": "ワードローブを更新中 — もうすぐ完了します。"
-    }
+    },
+    "failedToLoadImage": "画像の読み込みに失敗しました。",
+    "titleRequired": "タイトルは必須です",
+    "receiptPreviewAlt": "レシートプレビュー",
+    "pdfPreviewTitle": "PDFプレビュー",
+    "selectorItemLabel": "アイテム {{n}}",
+    "genericBrand": "一般",
+    "sizeChipLabel": "サイズ {{size}}",
+    "pendingGarmentAlt": "保留中の衣服",
+    "queuedForAutoSave": "{{count}} 枚の写真を待機中 — 自動保存されます。",
+    "savedSomeWaitingForRest": "{{saved}} 件保存済 — さらに {{remaining}} 件を待機中。"
   },
   "itemDetail": {
     "back": "クローゼットに戻る",

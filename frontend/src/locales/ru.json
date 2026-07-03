@@ -384,7 +384,17 @@
       "ingestSyncing": "Синхронизация с вашим гардеробом…",
       "ingestAnalysisHint": "rembg и Gemini Vision работают в фоновом режиме.",
       "ingestSyncingHint": "Обновление гардероба — почти готово."
-    }
+    },
+    "failedToLoadImage": "Не удалось загрузить изображение.",
+    "titleRequired": "Название обязательно",
+    "receiptPreviewAlt": "Предпросмотр чека",
+    "pdfPreviewTitle": "Предпросмотр PDF",
+    "selectorItemLabel": "Товар {{n}}",
+    "genericBrand": "Без бренда",
+    "sizeChipLabel": "Размер {{size}}",
+    "pendingGarmentAlt": "Ожидающая одежда",
+    "queuedForAutoSave": "Ожидание {{count}} фото — будет сохранено автоматически.",
+    "savedSomeWaitingForRest": "{{saved}} сохранено — ожидание ещё {{remaining}}."
   },
   "itemDetail": {
     "back": "Назад в гардероб",

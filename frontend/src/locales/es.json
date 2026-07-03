@@ -384,7 +384,17 @@
       "ingestSyncing": "Sincronizando con tu armario…",
       "ingestAnalysisHint": "rembg y Gemini Vision se ejecutan en segundo plano.",
       "ingestSyncingHint": "Actualizando tu guardarropa — casi listo."
-    }
+    },
+    "failedToLoadImage": "No se pudo cargar la imagen.",
+    "titleRequired": "El título es obligatorio",
+    "receiptPreviewAlt": "Vista previa del recibo",
+    "pdfPreviewTitle": "Vista previa de PDF",
+    "selectorItemLabel": "Artículo {{n}}",
+    "genericBrand": "Genérico",
+    "sizeChipLabel": "Talla {{size}}",
+    "pendingGarmentAlt": "Prenda pendiente",
+    "queuedForAutoSave": "Esperando {{count}} foto(s) — se guardará automáticamente.",
+    "savedSomeWaitingForRest": "{{saved}} guardados — esperando {{remaining}} más."
   },
   "itemDetail": {
     "back": "Volver al armario",

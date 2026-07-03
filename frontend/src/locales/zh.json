@@ -384,7 +384,17 @@
       "ingestSyncing": "正在同步到您的衣橱…",
       "ingestAnalysisHint": "rembg 与 Gemini Vision 正在后台运行。",
       "ingestSyncingHint": "正在更新您的衣橱 — 即将完成。"
-    }
+    },
+    "failedToLoadImage": "图片加载失败。",
+    "titleRequired": "标题为必填项",
+    "receiptPreviewAlt": "收据预览",
+    "pdfPreviewTitle": "PDF 预览",
+    "selectorItemLabel": "商品 {{n}}",
+    "genericBrand": "通用",
+    "sizeChipLabel": "尺码 {{size}}",
+    "pendingGarmentAlt": "待处理服装",
+    "queuedForAutoSave": "等待 {{count}} 张照片 — 将自动保存。",
+    "savedSomeWaitingForRest": "已保存 {{saved}} — 等待另外 {{remaining}} 张。"
   },
   "itemDetail": {
     "back": "返回衣橱",

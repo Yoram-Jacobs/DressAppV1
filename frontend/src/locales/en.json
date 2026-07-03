@@ -384,7 +384,17 @@
       "ingestSyncing": "Syncing to your Closet…",
       "ingestAnalysisHint": "Running rembg & Gemini Vision in the background.",
       "ingestSyncingHint": "Refreshing your wardrobe — almost there."
-    }
+    },
+    "failedToLoadImage": "Failed to load image.",
+    "titleRequired": "Title is required",
+    "receiptPreviewAlt": "Receipt Preview",
+    "pdfPreviewTitle": "PDF Preview",
+    "selectorItemLabel": "Item {{n}}",
+    "genericBrand": "Generic",
+    "sizeChipLabel": "Size {{size}}",
+    "pendingGarmentAlt": "Pending garment",
+    "queuedForAutoSave": "Waiting for {{count}} photo(s) to finish analysing — will save automatically.",
+    "savedSomeWaitingForRest": "Saved {{saved}} — waiting for {{remaining}} more to finish analysing."
   },
   "itemDetail": {
     "back": "Back",

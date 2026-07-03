@@ -384,7 +384,17 @@
       "ingestSyncing": "جارِ المزامنة مع خزانتك…",
       "ingestAnalysisHint": "rembg و Gemini Vision يعملان في الخلفية.",
       "ingestSyncingHint": "جارِ تحديث خزانتك — انتهينا تقريباً."
-    }
+    },
+    "failedToLoadImage": "فشل في تحميل الصورة.",
+    "titleRequired": "العنوان مطلوب",
+    "receiptPreviewAlt": "معاينة الإيصال",
+    "pdfPreviewTitle": "معاينة PDF",
+    "selectorItemLabel": "عنصر {{n}}",
+    "genericBrand": "عام",
+    "sizeChipLabel": "المقاس {{size}}",
+    "pendingGarmentAlt": "ملبس معلّق",
+    "queuedForAutoSave": "في انتظار {{count}} صورة — سيُحفظ تلقائياً.",
+    "savedSomeWaitingForRest": "تم حفظ {{saved}} — في انتظار {{remaining}} آخرين."
   },
   "itemDetail": {
     "back": "العودة إلى الخزانة",

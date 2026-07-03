@@ -384,7 +384,17 @@
       "ingestSyncing": "आपकी कोठरी से सिंक हो रहा है…",
       "ingestAnalysisHint": "rembg & Gemini Vision पृष्ठभूमि में चल रहे हैं.",
       "ingestSyncingHint": "आपकी वर्दरोब अपडेट हो रही है — लगभग हो गया."
-    }
+    },
+    "failedToLoadImage": "छवि लोड करना विफल रहा।",
+    "titleRequired": "शीर्षक आवश्यक है",
+    "receiptPreviewAlt": "रसीद पूर्वावलोकन",
+    "pdfPreviewTitle": "PDF पूर्वावलोकन",
+    "selectorItemLabel": "आइटम {{n}}",
+    "genericBrand": "सामान्य",
+    "sizeChipLabel": "आकार {{size}}",
+    "pendingGarmentAlt": "लंबित परिधान",
+    "queuedForAutoSave": "{{count}} फ़ोटो की प्रतीक्षा — स्वचालित रूप से सहेजा जाएगा।",
+    "savedSomeWaitingForRest": "{{saved}} सहेजे गए — {{remaining}} और की प्रतीक्षा।"
   },
   "itemDetail": {
     "back": "अलमारी पर वापस",

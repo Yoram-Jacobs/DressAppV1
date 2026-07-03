@@ -861,7 +861,7 @@ export default function AddItem() {
       toast.success(t('addItem.import.imageAttached', { defaultValue: 'Photo attached.' }));
     } catch (err) {
       console.error(err);
-      toast.error('Failed to load image.');
+      toast.error(t('addItem.failedToLoadImage', { defaultValue: 'Failed to load image.' }));
     } finally {
       setActiveItemForImage(null);
       e.target.value = '';
@@ -1408,14 +1408,25 @@ export default function AddItem() {
       const pendingDuplicates = b?.pendingDuplicates ?? 0;
       const skippedDups = b?.skippedDuplicates ?? 0;
       
-      const dupTrailer = skippedDups ? ' (skipped ' + skippedDups + ' already in closet)' : '';
-      
+      const dupTrailer = skippedDups
+        ? ' ' + t('addItem.bgUpload.skippedDupSuffix', { count: skippedDups, defaultValue: '(skipped {{count}} already in closet)' })
+        : '';
+
       if (pendingDuplicates) {
-        toast.message(`Saved ${saved} new items. ${pendingDuplicates} duplicates pending.` + dupTrailer);
+        toast.message(t('addItem.bgUpload.duplicatesPending', {
+          saved, pending: pendingDuplicates,
+          defaultValue: 'Saved {{saved}} new items · {{pending}} look like duplicates — review them below.',
+        }) + dupTrailer);
       } else if (saved && !failed) {
-        toast.success(`Saved ${saved} items.` + dupTrailer);
+        toast.success(t('addItem.bgUpload.done', {
+          count: saved,
+          defaultValue: 'Saved {{count}} items. Edit any misfits in your closet.',
+        }) + dupTrailer);
       } else if (saved && failed) {
-        toast.message(`Saved ${saved} · ${failed} failed` + dupTrailer);
+        toast.message(t('addItem.bgUpload.partial', {
+          saved, failed,
+          defaultValue: 'Saved {{saved}} · {{failed}} failed',
+        }) + dupTrailer);
       } else if (!saved && !pendingDuplicates && !skippedDups) {
         toast.error(t('addItem.bgUpload.failed', { defaultValue: 'Could not save any items. Please try again.' }));
       }
@@ -1994,7 +2005,7 @@ export default function AddItem() {
       }
       try {
         const body = buildCreatePayload(card, isSuitcase);
-        if (!body.title) throw new Error('Title is required');
+        if (!body.title) throw new Error(t('addItem.titleRequired', { defaultValue: 'Title is required' }));
         validCards.push({ card, body });
       } catch (err) {
         skipped.push({ ...card, _buildErr: err });
@@ -2004,7 +2015,7 @@ export default function AddItem() {
     if (skipped.length) {
       setCards((prev) => prev.map((c) =>
         skipped.find((s) => s.id === c.id)
-          ? { ...c, status: 'error', error: c.error || 'Title is required' }
+          ? { ...c, status: 'error', error: c.error || t('addItem.titleRequired', { defaultValue: 'Title is required' }) }
           : c,
       ));
     }
@@ -2653,7 +2664,7 @@ export default function AddItem() {
                       ) : importFile && importFile.type.startsWith('image/') && imagePreviewUrl ? (
                         <img
                           src={imagePreviewUrl}
-                          alt="Receipt Preview"
+                          alt={t('addItem.receiptPreviewAlt', { defaultValue: 'Receipt Preview' })}
                           className="w-full h-auto object-contain pointer-events-none"
                         />
                       ) : (importFile && importFile.type === 'application/pdf' && imagePreviewUrl) ? (
@@ -2665,7 +2676,7 @@ export default function AddItem() {
                           <iframe
                             src={imagePreviewUrl}
                             className="w-full h-[2000px] border-0 pointer-events-none"
-                            title="PDF Preview"
+                            title={t('addItem.pdfPreviewTitle', { defaultValue: 'PDF Preview' })}
                           />
                         </object>
                       ) : null}
@@ -2687,7 +2698,7 @@ export default function AddItem() {
                         >
                           <div className="flex justify-between items-start pointer-events-auto">
                             <span className="text-[9px] font-bold text-white bg-[hsl(var(--accent))] px-1 rounded shadow-sm">
-                              Item {idx + 1}
+                              {t('addItem.selectorItemLabel', { n: idx + 1, defaultValue: 'Item {{n}}' })}
                             </span>
                             <button
                               type="button"
@@ -3074,7 +3085,7 @@ export default function AddItem() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="text-xs font-semibold text-foreground truncate">{it.title}</div>
-                            <div className="text-[10px] text-muted-foreground truncate">{it.brand || 'Generic'} · {it.category}</div>
+                            <div className="text-[10px] text-muted-foreground truncate">{it.brand || t('addItem.genericBrand', { defaultValue: 'Generic' })} · {it.category}</div>
                           </div>
                         </div>
                       ))}
@@ -3121,7 +3132,7 @@ export default function AddItem() {
                           <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">{closetItemDetailPane.category}</span>
                         )}
                         {closetItemDetailPane.size && (
-                          <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">Size {closetItemDetailPane.size}</span>
+                          <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">{t('addItem.sizeChipLabel', { size: closetItemDetailPane.size, defaultValue: 'Size {{size}}' })}</span>
                         )}
                         {closetItemDetailPane.color && (
                           <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">{closetItemDetailPane.color}</span>
@@ -3230,7 +3241,7 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
             >
               <img
                 src={previewUrl}
-                alt={fields.name || fields.title || 'Pending garment'}
+                alt={fields.name || fields.title || t('addItem.pendingGarmentAlt', { defaultValue: 'Pending garment' })}
                 className="w-full h-full object-cover"
               />
             </div>

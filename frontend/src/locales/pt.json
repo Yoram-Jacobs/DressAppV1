@@ -384,7 +384,17 @@
       "ingestSyncing": "Sincronizando com seu guarda-roupa…",
       "ingestAnalysisHint": "rembg e Gemini Vision em execução em segundo plano.",
       "ingestSyncingHint": "Atualizando seu guarda-roupa — quase pronto."
-    }
+    },
+    "failedToLoadImage": "Falha ao carregar imagem.",
+    "titleRequired": "O título é obrigatório",
+    "receiptPreviewAlt": "Pré-visualização do recibo",
+    "pdfPreviewTitle": "Pré-visualização de PDF",
+    "selectorItemLabel": "Item {{n}}",
+    "genericBrand": "Genérico",
+    "sizeChipLabel": "Tamanho {{size}}",
+    "pendingGarmentAlt": "Peça pendente",
+    "queuedForAutoSave": "Aguardando {{count}} foto(s) — será salvo automaticamente.",
+    "savedSomeWaitingForRest": "{{saved}} salvos — aguardando mais {{remaining}}."
   },
   "itemDetail": {
     "back": "Voltar ao closet",

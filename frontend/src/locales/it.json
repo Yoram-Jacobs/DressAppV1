@@ -384,7 +384,17 @@
       "ingestSyncing": "Sincronizzazione con il tuo guardaroba…",
       "ingestAnalysisHint": "rembg e Gemini Vision in esecuzione in background.",
       "ingestSyncingHint": "Aggiornamento del tuo guardaroba — quasi fatto."
-    }
+    },
+    "failedToLoadImage": "Impossibile caricare l'immagine.",
+    "titleRequired": "Il titolo è obbligatorio",
+    "receiptPreviewAlt": "Anteprima ricevuta",
+    "pdfPreviewTitle": "Anteprima PDF",
+    "selectorItemLabel": "Articolo {{n}}",
+    "genericBrand": "Generico",
+    "sizeChipLabel": "Taglia {{size}}",
+    "pendingGarmentAlt": "Capo in attesa",
+    "queuedForAutoSave": "In attesa di {{count}} foto — verrà salvato automaticamente.",
+    "savedSomeWaitingForRest": "{{saved}} salvati — in attesa di altri {{remaining}}."
   },
   "itemDetail": {
     "back": "Torna all’armadio",
