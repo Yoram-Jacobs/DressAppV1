@@ -944,6 +944,7 @@ export default function AddItem() {
             image_base64: item.base64Image && !isSvg ? item.base64Image.split(',')[1] : undefined,
             image_mime: item.base64Image && !isSvg ? 'image/jpeg' : undefined,
             purchase_date: new Date().toISOString().split('T')[0],
+            from_one_pass: item.base64Image && !isSvg ? true : undefined,
           };
           await api.createItem(payload);
         }
