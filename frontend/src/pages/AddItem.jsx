@@ -288,7 +288,7 @@ export default function AddItem() {
   const [importMode, setImportMode] = useState('text'); // 'text' | 'file' | 'url'
   const [importFile, setImportFile] = useState(null);
   const [importUrl, setImportUrl] = useState('');
-  const [selectors, setSelectors] = useState([{ id: 1, x: 10, y: 10, w: 80, h: 20 }]);
+  const [selectors, setSelectors] = useState([{ id: 1, x: 0, y: 10, w: 100, h: 2 }]);
   const [dragState, setDragState] = useState(null);
   const [extractedItems, setExtractedItems] = useState([]);
   const [linkingItemId, setLinkingItemId] = useState(null);
@@ -631,7 +631,7 @@ export default function AddItem() {
           const scaleX = currentDx / (dragState.initialDx || 1);
           setSelectors(prev => prev.map(s => {
             if (s.id !== dragState.id) return s;
-            const newW = Math.max(10, Math.min(100 - s.x, dragState.startWidth * scaleX));
+            const newW = Math.max(5, Math.min(100 - s.x, dragState.startWidth * scaleX));
             return { ...s, w: Number(newW.toFixed(2)) };
           }));
         } else if (dragState.mode === 'pinchY') {
@@ -639,7 +639,7 @@ export default function AddItem() {
           const scaleY = currentDy / (dragState.initialDy || 1);
           setSelectors(prev => prev.map(s => {
             if (s.id !== dragState.id) return s;
-            const newH = Math.max(5, Math.min(100 - s.y, dragState.startHeight * scaleY));
+            const newH = Math.max(1.2, Math.min(100 - s.y, dragState.startHeight * scaleY));
             return { ...s, h: Number(newH.toFixed(2)) };
           }));
         } else if (dragState.mode === 'pinchDiag') {
@@ -649,8 +649,8 @@ export default function AddItem() {
           const scale = currentDist / (dragState.initialDist || 1);
           setSelectors(prev => prev.map(s => {
             if (s.id !== dragState.id) return s;
-            const newW = Math.max(10, Math.min(100 - s.x, dragState.startWidth * scale));
-            const newH = Math.max(5, Math.min(100 - s.y, dragState.startHeight * scale));
+            const newW = Math.max(5, Math.min(100 - s.x, dragState.startWidth * scale));
+            const newH = Math.max(1.2, Math.min(100 - s.y, dragState.startHeight * scale));
             return { ...s, w: Number(newW.toFixed(2)), h: Number(newH.toFixed(2)) };
           }));
         }
@@ -682,8 +682,8 @@ export default function AddItem() {
           const newY = Math.max(0, Math.min(100 - s.h, dragState.startTop + deltaYPercent));
           return { ...s, x: Number(newX.toFixed(2)), y: Number(newY.toFixed(2)) };
         } else if (dragState.mode === 'resize') {
-          const newW = Math.max(10, Math.min(100 - s.x, dragState.startWidth + deltaXPercent));
-          const newH = Math.max(10, Math.min(100 - s.y, dragState.startHeight + deltaYPercent));
+          const newW = Math.max(5, Math.min(100 - s.x, dragState.startWidth + deltaXPercent));
+          const newH = Math.max(1.2, Math.min(100 - s.y, dragState.startHeight + deltaYPercent));
           return { ...s, w: Number(newW.toFixed(2)), h: Number(newH.toFixed(2)) };
         }
         return s;
@@ -713,10 +713,10 @@ export default function AddItem() {
     const nextY = 20 + (selectors.length * 15) % 60;
     setSelectors(prev => [...prev, {
       id: Date.now(),
-      x: 20,
+      x: 0,
       y: nextY,
-      w: 60,
-      h: 12
+      w: 100,
+      h: 2
     }]);
   };
 
