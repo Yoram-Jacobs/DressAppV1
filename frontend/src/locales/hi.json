@@ -379,7 +379,11 @@
       "saveIngest": "सहेजें और आइटम शामिल करें",
       "selectClosetItem": "कोठरी के आइटम से लिंक करें",
       "selectClosetItemDesc": "मूल्य और ब्रांड विवरण अपडेट करने के लिए अपनी कोठरी का कोई मौजूदा आइटम चुनें।",
-      "noMatchingItems": "कोठरी में कोई आइटम नहीं मिला।"
+      "noMatchingItems": "कोठरी में कोई आइटम नहीं मिला।",
+      "ingestCataloguing": "{{total}} में से {{done}} आइटम सूचीबद्ध हो रहा है…",
+      "ingestSyncing": "आपकी कोठरी से सिंक हो रहा है…",
+      "ingestAnalysisHint": "rembg & Gemini Vision पृष्ठभूमि में चल रहे हैं.",
+      "ingestSyncingHint": "आपकी वर्दरोब अपडेट हो रही है — लगभग हो गया."
     }
   },
   "itemDetail": {

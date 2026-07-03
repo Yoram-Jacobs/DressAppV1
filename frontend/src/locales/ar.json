@@ -379,7 +379,11 @@
       "saveIngest": "حفظ واستيعاب العناصر",
       "selectClosetItem": "ربط بعنصر في الخزانة",
       "selectClosetItemDesc": "اختر عنصراً موجوداً في خزانتك لتحديث بيانات السعر والعلامة التجارية.",
-      "noMatchingItems": "لم يُعثر على عناصر في الخزانة."
+      "noMatchingItems": "لم يُعثر على عناصر في الخزانة.",
+      "ingestCataloguing": "جارِ تصنيف العنصر {{done}} من {{total}}…",
+      "ingestSyncing": "جارِ المزامنة مع خزانتك…",
+      "ingestAnalysisHint": "rembg و Gemini Vision يعملان في الخلفية.",
+      "ingestSyncingHint": "جارِ تحديث خزانتك — انتهينا تقريباً."
     }
   },
   "itemDetail": {

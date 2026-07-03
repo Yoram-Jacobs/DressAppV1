@@ -379,7 +379,11 @@
       "saveIngest": "保存并导入商品",
       "selectClosetItem": "关联衣橱中的商品",
       "selectClosetItemDesc": "从您的衣橱中选择现有商品以更新其价格和品牌信息。",
-      "noMatchingItems": "衣橱中未找到商品。"
+      "noMatchingItems": "衣橱中未找到商品。",
+      "ingestCataloguing": "正在归档第 {{done}} / {{total}} 件商品…",
+      "ingestSyncing": "正在同步到您的衣橱…",
+      "ingestAnalysisHint": "rembg 与 Gemini Vision 正在后台运行。",
+      "ingestSyncingHint": "正在更新您的衣橱 — 即将完成。"
     }
   },
   "itemDetail": {

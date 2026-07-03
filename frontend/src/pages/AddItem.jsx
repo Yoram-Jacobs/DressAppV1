@@ -268,6 +268,11 @@ export default function AddItem() {
   const isSuitcase = searchParams.get('from') === 'suitcase';
   const [cards, setCards] = useState([]); // [{id,file,previewUrl,base64,status,progress,fields,error,dppData?}]
   const [saving, setSaving] = useState(false);
+  // Phase R — receipt ingest animation overlay state.
+  // ``ingestPhase``: null | 'saving' | 'syncing'
+  // ``ingestProgress``: { done: number, total: number }
+  const [ingestPhase, setIngestPhase] = useState(null);
+  const [ingestProgress, setIngestProgress] = useState({ done: 0, total: 0 });
   // Patch M20.2 (May 2026) — auto-save queue.
   //
   // Problem: user uploads N photos, presses Save the moment the FIRST
@@ -922,10 +927,11 @@ export default function AddItem() {
       toast.error(t('addItem.import.noSelectedItems', { defaultValue: 'Please select at least one item to save.' }));
       return;
     }
-    
+
     setSaving(true);
-    const loadingId = toast.loading(t('addItem.import.savingItems', { defaultValue: 'Ingesting items...' }));
-    
+    setIngestPhase('saving');
+    setIngestProgress({ done: 0, total: itemsToSave.length });
+
     try {
       for (const item of itemsToSave) {
         if (item.closetItem) {
@@ -936,16 +942,14 @@ export default function AddItem() {
             purchase_price_cents: item.price_cents || 0,
             purchase_date: new Date().toISOString().split('T')[0],
           };
-          await api.updateItem(item.closetItem.id, patchBody);
+          const updated = await api.updateItem(item.closetItem.id, patchBody);
+          // Upsert the patched item into the store immediately so the
+          // Closet grid shows the fresh price/brand without a round-trip.
+          if (updated?.item) closetStore.upsert(updated.item);
         } else {
           const isSvg = item.base64Image && item.base64Image.startsWith('data:image/svg+xml');
           const hasImage = !!(item.base64Image && !isSvg);
 
-          // Build the set of fields that came from the receipt parser.
-          // These will be stored on the document and permanently protect
-          // that data from being overwritten by Gemini analysis — both
-          // during the initial background matte+analyze task and on any
-          // subsequent "Analyse" action in ItemDetail.
           const receiptLockedFields = [
             item.name   ? 'title' : null,
             item.brand  ? 'brand' : null,
@@ -958,7 +962,6 @@ export default function AddItem() {
           ].filter(Boolean);
 
           const payload = {
-            // Receipt-provided descriptive fields
             title: item.name || 'Unnamed Garment',
             category: item.category || 'Top',
             brand: item.brand || 'Generic',
@@ -970,36 +973,40 @@ export default function AddItem() {
               ? item.colors.map(c => typeof c === 'string' ? { name: c, pct: null } : c)
               : [{ name: 'grey', pct: null }],
             purchase_date: new Date().toISOString().split('T')[0],
-            // Image — when present, triggers the full GarmentVision
-            // pipeline (rembg + SegFormer + Gemini analysis) on the
-            // backend as a fire-and-forget BackgroundTask.
             image_base64: hasImage ? item.base64Image.split(',')[1] : undefined,
             image_mime: hasImage ? 'image/jpeg' : undefined,
-            // Phase R — receipt provenance flags. The backend uses these
-            // to select the matte+analyze path (vs matte-only or skip)
-            // and to permanently store the locked field set on the doc.
             from_receipt: true,
             receipt_locked_fields: receiptLockedFields,
           };
-          await api.createItem(payload);
+          const created = await api.createItem(payload);
+          // Optimistic upsert: push the new item into the store right
+          // away so it's visible when we navigate to /closet.
+          if (created?.item) closetStore.upsert(created.item);
         }
-
+        // Advance the progress ring after each item saves.
+        setIngestProgress(prev => ({ ...prev, done: prev.done + 1 }));
       }
-      
-      toast.dismiss(loadingId);
-      toast.success(t('addItem.import.savedSuccess', { defaultValue: 'Garments successfully cataloged!' }));
+
+      // Phase 2: force-refresh the store so the Closet grid shows the
+      // real server state (includes clean_image_status, thumbnails, etc.)
+      setIngestPhase('syncing');
+      await closetStore.prewarm({ force: true });
+
+      // All done — navigate with a clean slate.
       setExtractedItems([]);
       setReceiptText('');
       setImportFile(null);
       setImportUrl('');
       nav('/closet');
     } catch (err) {
-      toast.dismiss(loadingId);
       toast.error(err?.response?.data?.detail || t('addItem.import.saveFailed', { defaultValue: 'Ingestion failed' }));
     } finally {
       setSaving(false);
+      setIngestPhase(null);
+      setIngestProgress({ done: 0, total: 0 });
     }
   };
+
 
   const handleFiles = async (fileList) => {
     const files = Array.from(fileList || []).filter(f => {
@@ -2911,6 +2918,113 @@ export default function AddItem() {
                       )}
                     </Button>
                   </div>
+
+                  {/* ── Phase R — Receipt ingest analysis overlay ──────────────────── */}
+                  <AnimatePresence>
+                    {ingestPhase && (
+                      <motion.div
+                        key="ingest-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl"
+                        style={{
+                          background: 'hsl(var(--background) / 0.92)',
+                          backdropFilter: 'blur(12px)',
+                          WebkitBackdropFilter: 'blur(12px)',
+                        }}
+                      >
+                        <div className="relative flex items-center justify-center mb-8">
+                          <motion.div
+                            className="absolute rounded-full border-2 border-[hsl(var(--accent))]/30"
+                            style={{ width: 120, height: 120 }}
+                            animate={{ scale: [1, 1.18, 1], opacity: [0.4, 0.1, 0.4] }}
+                            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+                          />
+                          <motion.div
+                            className="absolute rounded-full border border-[hsl(var(--accent))]/20"
+                            style={{ width: 90, height: 90 }}
+                            animate={{ scale: [1, 1.12, 1], opacity: [0.3, 0.05, 0.3] }}
+                            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+                          />
+                          <svg width="80" height="80" viewBox="0 0 80 80" className="-rotate-90">
+                            <circle
+                              cx="40" cy="40" r="34"
+                              fill="none"
+                              stroke="hsl(var(--border))"
+                              strokeWidth="4"
+                            />
+                            <motion.circle
+                              cx="40" cy="40" r="34"
+                              fill="none"
+                              stroke="hsl(var(--accent))"
+                              strokeWidth="4"
+                              strokeLinecap="round"
+                              strokeDasharray={2 * Math.PI * 34}
+                              animate={{
+                                strokeDashoffset: ingestPhase === 'syncing'
+                                  ? 0
+                                  : ingestProgress.total > 0
+                                    ? (2 * Math.PI * 34) * (1 - ingestProgress.done / ingestProgress.total)
+                                    : 2 * Math.PI * 34,
+                              }}
+                              transition={{ duration: 0.5, ease: 'easeOut' }}
+                            />
+                          </svg>
+                          <div className="absolute flex items-center justify-center">
+                            {ingestPhase === 'syncing' ? (
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                              >
+                                <RefreshCw className="h-7 w-7 text-[hsl(var(--accent))]" />
+                              </motion.div>
+                            ) : (
+                              <Sparkles className="h-7 w-7 text-[hsl(var(--accent))]" />
+                            )}
+                          </div>
+                        </div>
+
+                        <AnimatePresence mode="wait">
+                          <motion.p
+                            key={ingestPhase}
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -6 }}
+                            transition={{ duration: 0.25 }}
+                            className="text-base font-semibold text-foreground mb-1 text-center"
+                          >
+                            {ingestPhase === 'syncing'
+                              ? t('addItem.import.ingestSyncing', { defaultValue: 'Syncing to your Closet…' })
+                              : t('addItem.import.ingestCataloguing', {
+                                  defaultValue: 'Cataloguing item {{done}} of {{total}}…',
+                                  done: ingestProgress.done + 1,
+                                  total: ingestProgress.total,
+                                })
+                            }
+                          </motion.p>
+                        </AnimatePresence>
+
+                        <p className="text-xs text-muted-foreground text-center max-w-[240px]">
+                          {ingestPhase === 'syncing'
+                            ? t('addItem.import.ingestSyncingHint', { defaultValue: 'Refreshing your wardrobe — almost there.' })
+                            : t('addItem.import.ingestAnalysisHint', { defaultValue: 'Running rembg & Gemini Vision in the background.' })
+                          }
+                        </p>
+
+                        {ingestPhase === 'saving' && ingestProgress.total > 0 && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.85 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="mt-5 px-4 py-1.5 rounded-full bg-[hsl(var(--accent))]/10 border border-[hsl(var(--accent))]/20 text-xs font-mono text-[hsl(var(--accent))]"
+                          >
+                            {ingestProgress.done} / {ingestProgress.total}
+                          </motion.div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               )}
             </div>

@@ -379,7 +379,11 @@
       "saveIngest": "Salva e incorpora articoli",
       "selectClosetItem": "Collega ad articolo del guardaroba",
       "selectClosetItemDesc": "Seleziona un articolo esistente nel tuo guardaroba per aggiornare i dati di prezzo e marca.",
-      "noMatchingItems": "Nessun articolo trovato nel guardaroba."
+      "noMatchingItems": "Nessun articolo trovato nel guardaroba.",
+      "ingestCataloguing": "Catalogazione articolo {{done}} di {{total}}…",
+      "ingestSyncing": "Sincronizzazione con il tuo guardaroba…",
+      "ingestAnalysisHint": "rembg e Gemini Vision in esecuzione in background.",
+      "ingestSyncingHint": "Aggiornamento del tuo guardaroba — quasi fatto."
     }
   },
   "itemDetail": {

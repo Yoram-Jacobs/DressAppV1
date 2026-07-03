@@ -379,7 +379,11 @@
       "states": {
         "ocr": "Reading document bounds & performing OCR…",
         "fetch": "Connecting to secure merchant host & fetching page metadata…"
-      }
+      },
+      "ingestCataloguing": "Cataloguing item {{done}} of {{total}}…",
+      "ingestSyncing": "Syncing to your Closet…",
+      "ingestAnalysisHint": "Running rembg & Gemini Vision in the background.",
+      "ingestSyncingHint": "Refreshing your wardrobe — almost there."
     }
   },
   "itemDetail": {

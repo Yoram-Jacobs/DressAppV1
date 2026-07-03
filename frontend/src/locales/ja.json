@@ -379,7 +379,11 @@
       "saveIngest": "保存してアイテムを取り込む",
       "selectClosetItem": "クローゼットのアイテムにリンク",
       "selectClosetItemDesc": "クローゼット内の既存アイテムを選択して、価格とブランドのデータを更新します。",
-      "noMatchingItems": "クローゼットにアイテムが見つかりません。"
+      "noMatchingItems": "クローゼットにアイテムが見つかりません。",
+      "ingestCataloguing": "アイテム {{done}} / {{total}} をカタログ中…",
+      "ingestSyncing": "クローゼットと同期中…",
+      "ingestAnalysisHint": "rembg & Gemini Vision がバックグラウンドで実行中。",
+      "ingestSyncingHint": "ワードローブを更新中 — もうすぐ完了します。"
     }
   },
   "itemDetail": {

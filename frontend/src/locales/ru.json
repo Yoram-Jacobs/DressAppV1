@@ -379,7 +379,11 @@
       "saveIngest": "Сохранить и добавить товары",
       "selectClosetItem": "Связать с товаром из гардероба",
       "selectClosetItemDesc": "Выберите существующий товар в вашем гардеробе для обновления данных о цене и бренде.",
-      "noMatchingItems": "Товары в гардеробе не найдены."
+      "noMatchingItems": "Товары в гардеробе не найдены.",
+      "ingestCataloguing": "Каталогизация товара {{done}} из {{total}}…",
+      "ingestSyncing": "Синхронизация с вашим гардеробом…",
+      "ingestAnalysisHint": "rembg и Gemini Vision работают в фоновом режиме.",
+      "ingestSyncingHint": "Обновление гардероба — почти готово."
     }
   },
   "itemDetail": {

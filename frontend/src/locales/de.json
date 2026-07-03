@@ -379,7 +379,11 @@
       "saveIngest": "Speichern & Artikel aufnehmen",
       "selectClosetItem": "Mit Kleiderschrank-Artikel verknüpfen",
       "selectClosetItemDesc": "Wählen Sie einen vorhandenen Artikel in Ihrem Kleiderschrank aus, um Preis- und Markendaten zu aktualisieren.",
-      "noMatchingItems": "Keine Kleiderschrank-Artikel gefunden."
+      "noMatchingItems": "Keine Kleiderschrank-Artikel gefunden.",
+      "ingestCataloguing": "Artikel {{done}} von {{total}} wird katalogisiert…",
+      "ingestSyncing": "Wird mit Ihrem Kleiderschrank synchronisiert…",
+      "ingestAnalysisHint": "rembg & Gemini Vision laufen im Hintergrund.",
+      "ingestSyncingHint": "Ihre Garderobe wird aktualisiert — fast geschafft."
     }
   },
   "itemDetail": {
