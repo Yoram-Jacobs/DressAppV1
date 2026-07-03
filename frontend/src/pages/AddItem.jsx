@@ -442,8 +442,11 @@ export default function AddItem() {
     const isImage = file.type.startsWith('image/');
     const isPdf = file.type === 'application/pdf';
     
-    // If it is a PDF or image file, extract text via Gemini OCR backend
-    if (isPdf || isImage) {
+    // PDFs need upfront text extraction (Gemini OCR / pypdf) because the
+    // canvas crop-to-region technique only works on images. Images skip
+    // this step entirely — OCR runs per-selector inside handleExtractReceipt
+    // when the user clicks "Extract Items", saving both time and API credits.
+    if (isPdf) {
       setIsExtracting(true);
       const loadingId = toast.loading(t('addItem.import.extractingText', { defaultValue: 'Extracting text using Gemini OCR...' }));
       try {
@@ -464,6 +467,13 @@ export default function AddItem() {
       }
       return;
     }
+
+    // Images: just show the preview and let the selector overlay work.
+    // The per-selector crop is sent to parse-receipt when Extract Items runs.
+    if (isImage) {
+      return;
+    }
+
     
     // Check if it is a text-based format
     const isText = file.type.startsWith('text/') || 
