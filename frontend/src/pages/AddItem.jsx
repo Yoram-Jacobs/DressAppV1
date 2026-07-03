@@ -1612,19 +1612,19 @@ export default function AddItem() {
                   ...c,
                   status: 'error',
                   progress: 0,
-                  error: t('addItem.analyzeFailed'),
+                  error: t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' }),
                 }
               : c
           )
         );
-        toast.error(t('addItem.analyzeFailed'));
+        toast.error(t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' }));
         return;
       }
 
-      toast.success(t('addItem.detected', { count: finalCount }));
+      toast.success(t('addItem.detected', { count: finalCount, defaultValue: 'Detected {{count}} item(s)' }));
     } catch (err) {
       clearInterval(tick);
-      const msg = err?.response?.data?.detail || err?.message || t('addItem.analyzeFailed');
+      const msg = err?.response?.data?.detail || err?.message || t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' });
 
       const erroredIds = new Set();
       cardsToProcess.forEach(origCard => {
@@ -1845,19 +1845,19 @@ export default function AddItem() {
                   ...c,
                   status: 'error',
                   progress: 0,
-                  error: t('addItem.analyzeFailed'),
+                  error: t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' }),
                 }
               : c
           )
         );
-        toast.error(t('addItem.analyzeFailed'));
+        toast.error(t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' }));
         return;
       }
 
-      toast.success(t('addItem.detected', { count: finalCount }));
+      toast.success(t('addItem.detected', { count: finalCount, defaultValue: 'Detected {{count}} item(s)' }));
     } catch (err) {
       clearInterval(tick);
-      const msg = err?.response?.data?.detail || err?.message || t('addItem.analyzeFailed');
+      const msg = err?.response?.data?.detail || err?.message || t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' });
       // Bug-fix May 2026 — when ``handleDetect`` has already replaced
       // the original ``card.id`` with per-item slot cards
       // (``perCardIds`` populated), the stream error that follows
@@ -1937,7 +1937,7 @@ export default function AddItem() {
 
     // Patch M20.2 — neither ready nor scanning → nothing to save.
     if (!ready.length && !scanning.length) {
-      toast.error(t('addItem.nothingToSave'));
+      toast.error(t('addItem.nothingToSave', { defaultValue: 'Nothing to save yet' }));
       return;
     }
 
@@ -2010,7 +2010,7 @@ export default function AddItem() {
     }
     if (!validCards.length) {
       setSaving(false);
-      toast.error(t('addItem.noneSaved'));
+      toast.error(t('addItem.noneSaved', { defaultValue: 'No items were saved' }));
       return;
     }
 
@@ -2219,7 +2219,7 @@ export default function AddItem() {
 
             <div className="flex-1" />
             <Button onClick={pickFiles} variant="outline" className="rounded-xl" disabled={!!bgBatch} data-testid="add-item-add-more">
-              <Plus className="h-4 w-4 me-2" /> {t('addItem.addPhotos')}
+              <Plus className="h-4 w-4 me-2" /> {t('addItem.addPhotos', { defaultValue: 'Add photos' })}
             </Button>
             <Button
               onClick={saveAll}
@@ -2239,7 +2239,7 @@ export default function AddItem() {
               {(saving || pendingAutoSave) ? <Loader2 className="h-4 w-4 me-2 animate-spin" /> : <Save className="h-4 w-4 me-2" />}
               {pendingAutoSave
                 ? t('addItem.saveAllPending', { defaultValue: 'Saving — waiting for analysis…' })
-                : t('addItem.saveAll')}
+                : t('addItem.saveAll', { defaultValue: 'Save' })}
             </Button>
           </div>
         </div>
@@ -2248,10 +2248,10 @@ export default function AddItem() {
       <Stepper cards={cards} saving={saving} bgBatch={bgBatch} />
 
       <div className="mb-6">
-        <div className="caps-label text-muted-foreground">{t('addItem.label')}</div>
-        <h1 className="font-display text-3xl sm:text-4xl mt-1">{t('addItem.title')}</h1>
+        <div className="caps-label text-muted-foreground">{t('addItem.label', { defaultValue: 'Add to closet' })}</div>
+        <h1 className="font-display text-3xl sm:text-4xl mt-1">{t('addItem.title', { defaultValue: 'Upload & auto-fill' })}</h1>
         <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
-          {t('addItem.subtitle')}
+          {t('addItem.subtitle', { defaultValue: 'Pick one or many photos. The Eyes will scan each piece and pre-fill every field — you review, tweak, and tag for the marketplace.' })}
         </p>
       </div>
 
@@ -2455,9 +2455,9 @@ export default function AddItem() {
               <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center mb-3">
                 <Eye className="h-6 w-6" />
               </div>
-              <div className="font-display text-xl">{t('addItem.dropzoneTitle')}</div>
+              <div className="font-display text-xl">{t('addItem.dropzoneTitle', { defaultValue: 'Let The Eyes see your pieces' })}</div>
               <div className="text-sm text-muted-foreground mt-1 max-w-md">
-                {t('addItem.dropzoneBody')}
+                {t('addItem.dropzoneBody', { defaultValue: 'Snap a quick shot with your camera or upload existing photos. JPG, PNG, HEIC supported — each piece is analysed in parallel.' })}
               </div>
               <div 
                 className="mt-5 flex flex-wrap items-center justify-center gap-2"
@@ -2469,7 +2469,7 @@ export default function AddItem() {
                   onClick={openCamera}
                   data-testid="add-item-open-camera-button"
                 >
-                  <Camera className="h-4 w-4 me-2" /> {t('addItem.takePhoto')}
+                  <Camera className="h-4 w-4 me-2" /> {t('addItem.takePhoto', { defaultValue: 'Take photo' })}
                 </Button>
                 <Button
                   type="button"
@@ -2478,7 +2478,7 @@ export default function AddItem() {
                   onClick={pickFiles}
                   data-testid="add-item-pick-files-button"
                 >
-                  <Upload className="h-4 w-4 me-2" /> {t('addItem.uploadPhotos')}
+                  <Upload className="h-4 w-4 me-2" /> {t('addItem.uploadPhotos', { defaultValue: 'Upload photos' })}
                 </Button>
                 <Button
                   type="button"
@@ -3279,15 +3279,15 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
             {status === 'error' && !isBusy && (
               <div className="absolute bottom-0 start-0 end-0 bg-rose-50/95 text-rose-900 px-3 py-2 text-xs flex items-start gap-2">
                 <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                <span className="flex-1">{error || t('addItem.analyzeFailed')}</span>
+                <span className="flex-1">{error || t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' })}</span>
                 <button onClick={onRetry} className="underline shrink-0" data-testid="add-item-retry">
-                  {t('addItem.tryAgain')}
+                  {t('addItem.tryAgain', { defaultValue: 'Try again' })}
                 </button>
               </div>
             )}
             {saved && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
-                <Badge className="bg-emerald-600 text-white">{t('addItem.saved')}</Badge>
+                <Badge className="bg-emerald-600 text-white">{t('addItem.saved', { defaultValue: 'Saved' })}</Badge>
               </div>
             )}
             {!saved && (
@@ -3295,7 +3295,7 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
                 type="button"
                 onClick={onRemove}
                 className="absolute top-2 end-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background"
-                aria-label={t('addItem.removePhoto')}
+                aria-label={t('addItem.removePhoto', { defaultValue: 'Remove this photo' })}
                 data-testid="add-item-remove"
               >
                 <X className="h-4 w-4" />
@@ -3395,7 +3395,7 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
                       labelKey="addItem.color"
                       items={fields.colors}
                       onChange={(v) => onChange({ colors: v })}
-                      placeholder={t('addItem.colorSlotPlaceholder')}
+                      placeholder={t('addItem.colorSlotPlaceholder', { defaultValue: 'Color name' })}
                       disabled={saved}
                       testid="add-item-colors"
                     />
@@ -3447,7 +3447,7 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
                       >
                         <Wand2 className="h-4 w-4 mt-0.5 shrink-0" />
                         <div>
-                          <div className="font-medium">{t('addItem.repairTip')}</div>
+                          <div className="font-medium">{t('addItem.repairTip', { defaultValue: 'Repair tip' })}</div>
                           <div className="mt-0.5">{fields.repair_advice}</div>
                         </div>
                       </div>
@@ -3458,7 +3458,7 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
                       labelKey="addItem.material"
                       items={fields.fabric_materials}
                       onChange={(v) => onChange({ fabric_materials: v })}
-                      placeholder={t('addItem.fabricSlotPlaceholder')}
+                      placeholder={t('addItem.fabricSlotPlaceholder', { defaultValue: 'Fabric name' })}
                       disabled={saved}
                       testid="add-item-fabrics"
                     />
