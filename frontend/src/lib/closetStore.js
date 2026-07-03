@@ -237,6 +237,25 @@ export const closetStore = {
     return _state;
   },
 
+  /**
+   * Lean items-only selector for useSyncExternalStore.
+   *
+   * Returns ``_state.items`` directly — the same array reference that
+   * ``_set`` replaces on every mutation. Because ``Object.is`` on two
+   * identical array references returns ``true``, consumers subscribed
+   * through this snapshot only re-render when the item list actually
+   * changes (add, remove, upsert). Loading spinners, repair-progress
+   * ticks, and error flags do not trigger a re-render.
+   *
+   * Cross-tab sync works automatically: the ``storage`` event handler
+   * above replaces ``_state`` with a new object that also carries a
+   * new ``items`` array reference, so ``_notify`` fires and every tab's
+   * ``useSyncExternalStore`` subscriber sees the update.
+   */
+  getItemsSnapshot() {
+    return _state.items;
+  },
+
   subscribe(fn) {
     _listeners.add(fn);
     return () => _listeners.delete(fn);

@@ -27,7 +27,7 @@ import { api } from '@/lib/api';
 import { cn, sha256File, aHashFile, colorSignatureFile } from '@/lib/utils';
 import { findDuplicatesInCloset } from '@/lib/duplicateDetection';
 import { closetStore } from '@/lib/closetStore';
-import { useClosetStore } from '@/lib/useClosetStore';
+import { useClosetStore, useClosetItems } from '@/lib/useClosetStore';
 import { workStore } from '@/lib/workStore';
 import DuplicatePreflightDialog from '@/components/DuplicatePreflightDialog';
 import { DppScanner } from '@/components/DppScanner';
@@ -299,7 +299,13 @@ export default function AddItem() {
   const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
   const [closetItemDetailPane, setClosetItemDetailPane] = useState(null); // closet item to show in detail pane
 
-  const { items: closetItems } = useClosetStore();
+  // useClosetItems() subscribes to the items-only snapshot via
+  // useSyncExternalStore so this component only re-renders when the
+  // item list actually changes — not on loading / repair-progress ticks.
+  // Cross-tab sync is automatic: the storage event in closetStore.js
+  // replaces the array reference, triggering useSyncExternalStore on
+  // every open tab simultaneously.
+  const closetItems = useClosetItems();
   const closetItemsFiltered = useMemo(() => {
     return (closetItems || []).filter(it => 
       it.title?.toLowerCase().includes(closetSearch.toLowerCase()) ||
