@@ -297,6 +297,7 @@ export default function AddItem() {
   const itemImageInputRef = useRef(null);
   const [activeItemForImage, setActiveItemForImage] = useState(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+  const [closetItemDetailPane, setClosetItemDetailPane] = useState(null); // closet item to show in detail pane
 
   const { items: closetItems } = useClosetStore();
   const closetItemsFiltered = useMemo(() => {
@@ -710,13 +711,15 @@ export default function AddItem() {
   }, [dragState]);
 
   const handleAddSelector = () => {
-    const nextY = 20 + (selectors.length * 15) % 60;
+    // Place the new selector directly below the last one (bottom edge + small gap)
+    const last = selectors[selectors.length - 1];
+    const nextY = last ? Math.min(last.y + last.h + 2, 90) : 10;
     setSelectors(prev => [...prev, {
       id: Date.now(),
-      x: 0,
+      x: last ? last.x : 0,
       y: nextY,
-      w: 100,
-      h: 2
+      w: last ? last.w : 100,
+      h: last ? last.h : 2
     }]);
   };
 
@@ -2793,33 +2796,54 @@ export default function AddItem() {
                           </Button>
                           
                           {/* Link Closet Item Button */}
-                          <Button
-                            variant="outline"
-                            size="xs"
-                            type="button"
-                            onClick={() => openSelectClosetItemModal(item.id)}
-                            className={cn(
-                              "flex-1 md:flex-initial rounded-lg text-[10px] font-semibold h-8 flex items-center justify-center gap-1.5",
-                              item.closetItem ? "bg-[hsl(var(--accent))]/10 border-[hsl(var(--accent))]/30 text-[hsl(var(--accent))]" : ""
-                            )}
-                          >
-                            <Folder className="h-3 w-3" />
-                            {item.closetItem ? 'Linked' : 'Link Closet'}
-                          </Button>
-                          
-                          {item.closetItem && (
-                            <div className="flex flex-col items-center mt-1">
-                              <div className="text-[9px] text-muted-foreground truncate max-w-[120px] mb-0.5">
-                                {item.closetItem.title}
-                              </div>
+                          {item.closetItem ? (
+                            // Linked state — show thumbnail chip
+                            <div className="flex flex-col items-center gap-1 mt-0.5">
+                              <button
+                                type="button"
+                                title={item.closetItem.title}
+                                onClick={() => setClosetItemDetailPane(item.closetItem)}
+                                className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-[hsl(var(--accent))] shadow-md hover:scale-105 active:scale-95 transition-transform bg-secondary/20 flex items-center justify-center cursor-pointer"
+                              >
+                                {item.closetItem.original_image_url || item.closetItem.clean_image_url ? (
+                                  <img
+                                    src={item.closetItem.original_image_url || item.closetItem.clean_image_url}
+                                    alt={item.closetItem.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <Shirt className="h-6 w-6 text-[hsl(var(--accent))]/60" />
+                                )}
+                                <span className="absolute inset-0 flex items-end justify-center pb-1 bg-gradient-to-t from-black/50 to-transparent">
+                                  <span className="text-[8px] font-bold text-white leading-none text-center px-0.5 truncate max-w-full">Linked</span>
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => openSelectClosetItemModal(item.id)}
+                                className="text-[8px] text-muted-foreground hover:text-foreground border-0 bg-transparent cursor-pointer underline underline-offset-1"
+                              >
+                                Change
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => handleUnlinkItem(item.id)}
-                                className="text-[9px] text-rose-600 hover:underline border-0 bg-transparent cursor-pointer"
+                                className="text-[8px] text-rose-500 hover:text-rose-700 border-0 bg-transparent cursor-pointer"
                               >
-                                Remove Link
+                                Unlink
                               </button>
                             </div>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="xs"
+                              type="button"
+                              onClick={() => openSelectClosetItemModal(item.id)}
+                              className="flex-1 md:flex-initial rounded-lg text-[10px] font-semibold h-8 flex items-center justify-center gap-1.5"
+                            >
+                              <Folder className="h-3 w-3" />
+                              Link Closet
+                            </Button>
                           )}
                         </div>
                       </div>
@@ -2915,6 +2939,55 @@ export default function AddItem() {
                     </div>
                   </ScrollArea>
                 </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Closet Item Detail Pane */}
+            <Dialog open={!!closetItemDetailPane} onOpenChange={(open) => { if (!open) setClosetItemDetailPane(null); }}>
+              <DialogContent className="sm:max-w-[380px] p-0 overflow-hidden rounded-2xl">
+                {closetItemDetailPane && (
+                  <>
+                    {/* Image */}
+                    <div className="w-full aspect-[3/4] bg-secondary/20 relative overflow-hidden">
+                      {closetItemDetailPane.original_image_url || closetItemDetailPane.clean_image_url ? (
+                        <img
+                          src={closetItemDetailPane.original_image_url || closetItemDetailPane.clean_image_url}
+                          alt={closetItemDetailPane.title}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Shirt className="h-20 w-20 text-muted-foreground/30" />
+                        </div>
+                      )}
+                      {/* Gradient overlay */}
+                      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background/90 to-transparent pointer-events-none" />
+                    </div>
+                    {/* Details */}
+                    <div className="px-5 pb-5 pt-3 space-y-2">
+                      <h3 className="font-display font-semibold text-base text-foreground leading-tight">{closetItemDetailPane.title}</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {closetItemDetailPane.brand && (
+                          <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">{closetItemDetailPane.brand}</span>
+                        )}
+                        {closetItemDetailPane.category && (
+                          <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">{closetItemDetailPane.category}</span>
+                        )}
+                        {closetItemDetailPane.size && (
+                          <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">Size {closetItemDetailPane.size}</span>
+                        )}
+                        {closetItemDetailPane.color && (
+                          <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">{closetItemDetailPane.color}</span>
+                        )}
+                      </div>
+                      {closetItemDetailPane.price_cents > 0 && (
+                        <p className="text-sm font-semibold text-[hsl(var(--accent))]">
+                          ${(closetItemDetailPane.price_cents / 100).toFixed(2)}
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
               </DialogContent>
             </Dialog>
           </TabsContent>
