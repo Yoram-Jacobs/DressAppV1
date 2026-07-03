@@ -328,29 +328,58 @@
     },
     "tabs": {
       "upload": "Camera & Upload",
-      "import": "Digital Import"
+      "import": "ייבוא דיגיטלי"
     },
     "import": {
-      "title": "Digital Receipt & Email Import",
-      "body": "Paste the text of a digital receipt, order confirmation email, or store invoice. Our parser will instantly extract brand, price, size, and category details.",
-      "placeholder": "Paste order confirmation email or receipt text here...\n\nExample:\nOrder Date: June 15, 2026\nMerchant: Zara\n1x Cotton Poplin Shirt - Blue - Size M - $49.90",
-      "extractButton": "Extract Items",
-      "extracting": "Extracting...",
-      "error": "Could not find any items in the pasted text. Please verify formatting.",
-      "success": "Successfully extracted garment details!",
+      "title": "ייבוא קבלות ואימיילים דיגיטליים",
+      "body": "הדבד את טקסט הקבלה הדיגיטלית, אימייל אישור ההזמנה או חשבונית החנות. המנתח שלנו יחלץ מיידית מותג, מחיר, מידה וקטגוריה.",
+      "placeholder": "הדבד כאן את טקסט אימייל האישור או הקבלה...\n\nדוגמה:\nתאריך הזמנה: 15 ביוני 2026\nספק: Zara\n1 חולצת פופלין כותנה - כחול - מידה M - ‏$49.90",
+      "extractButton": "חלץ פריטים נבחרים",
+      "extracting": "מחלץ…",
+      "error": "לא ניתן לנתח את הקבלה. אנא בדוק את הפורמט ונסה שוב.",
+      "success": "הפריטים חולצו בהצלחה!",
       "modes": {
-        "text": "Paste Text",
-        "file": "Upload File",
-        "url": "Web Link"
+        "text": "הדבד טקסט",
+        "file": "העלה קובץ",
+        "url": "קישור אינטרנט"
       },
-      "urlPlaceholder": "Enter receipt URL (e.g., https://zara.com/orders/...)",
-      "fileDropzoneTitle": "Drag & drop your receipt or invoice",
-      "fileDropzoneBody": "Supports JPG, PNG, HEIC, and PDF files",
-      "fileSelected": "Selected file: {{name}}",
+      "urlPlaceholder": "הכנס כתובת URL של הקבלה (לדוגמה: https://zara.com/orders/...)",
+      "fileDropzoneTitle": "גרור ושחרר את הקבלה או החשבונית",
+      "fileDropzoneBody": "תומך בתמונות, PDF, טקסט, JSON ומסמכים",
+      "fileSelected": "קובץ שנבחר: {{name}}",
       "states": {
-        "ocr": "Reading document bounds & performing OCR...",
-        "fetch": "Connecting to secure merchant host & fetching page metadata..."
-      }
+        "ocr": "קריאת גבולות המסמך וביצוע OCR…",
+        "fetch": "התחברות לשרת הסוחר המאובטח ואחזור מטאדטה…"
+      },
+      "extractingText": "מחלץ טקסט באמצעות Gemini OCR…",
+      "textExtracted": "הטקסט חולץ בהצלחה דרך Gemini OCR!",
+      "textEmpty": "לא נמצא טקסט קריא.",
+      "textError": "חילוץ הטקסט נכשל.",
+      "imageAttached": "תמונה צורפה.",
+      "noSelectedItems": "אנא בחר לפחות פריט אחד לשמירה.",
+      "savingItems": "מעבד פריטים…",
+      "savedSuccess": "הבגדים קוטלגו בהצלחה!",
+      "saveFailed": "העיבוד נכשל.",
+      "previewTitle": "בורר אזור קבלה",
+      "changeDocument": "החלף קובץ",
+      "addSelector": "הוסף בורר פריט",
+      "extractedListTitle": "פריטי קבלה שנותחו",
+      "selected": "נבחרו",
+      "noImage": "אין תמונה",
+      "fieldTitle": "כותרת",
+      "fieldBrand": "מותג",
+      "fieldPrice": "מחיר ($)",
+      "attachPhoto": "צרף תמונה",
+      "linked": "מקושר",
+      "change": "שנה",
+      "unlink": "נתק",
+      "linkCloset": "קשר לארון",
+      "clearList": "נקה רשימה",
+      "saving": "שומר…",
+      "saveIngest": "שמור ועבד פריטים",
+      "selectClosetItem": "קשר לפריט בארון",
+      "selectClosetItemDesc": "בחר פריט קיים בארון שלך לעדכון נתוני המחיר והמותג.",
+      "noMatchingItems": "לא נמצאו פריטים בארון."
     }
   },
   "itemDetail": {

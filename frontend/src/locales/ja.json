@@ -328,29 +328,58 @@
     },
     "tabs": {
       "upload": "Camera & Upload",
-      "import": "Digital Import"
+      "import": "デジタルインポート"
     },
     "import": {
-      "title": "Digital Receipt & Email Import",
-      "body": "Paste the text of a digital receipt, order confirmation email, or store invoice. Our parser will instantly extract brand, price, size, and category details.",
-      "placeholder": "Paste order confirmation email or receipt text here...\n\nExample:\nOrder Date: June 15, 2026\nMerchant: Zara\n1x Cotton Poplin Shirt - Blue - Size M - $49.90",
-      "extractButton": "Extract Items",
-      "extracting": "Extracting...",
-      "error": "Could not find any items in the pasted text. Please verify formatting.",
-      "success": "Successfully extracted garment details!",
+      "title": "デジタルレシート・メールインポート",
+      "body": "デジタルレシート、注文確認メール、または店舗インボイスのテキストを貼り付けてください。パーサーがブランド、価格、サイズ、カテゴリをすぐに抽出します。",
+      "placeholder": "注文確認メールまたはレシートのテキストをここに貼り付けてください...\n\n例:\n注文日: 2026年6月15日\n販売店: Zara\n1x コットンポプリンシャツ - ブルー - サイズ M - $49.90",
+      "extractButton": "選択したアイテムを抽出",
+      "extracting": "抽出中…",
+      "error": "レシートを解析できませんでした。フォーマットを確認して再試行してください。",
+      "success": "アイテムを正常に抽出しました！",
       "modes": {
-        "text": "Paste Text",
-        "file": "Upload File",
-        "url": "Web Link"
+        "text": "テキストを貼り付け",
+        "file": "ファイルをアップロード",
+        "url": "Webリンク"
       },
-      "urlPlaceholder": "Enter receipt URL (e.g., https://zara.com/orders/...)",
-      "fileDropzoneTitle": "Drag & drop your receipt or invoice",
-      "fileDropzoneBody": "Supports JPG, PNG, HEIC, and PDF files",
-      "fileSelected": "Selected file: {{name}}",
+      "urlPlaceholder": "レシートのURL を入力（例: https://zara.com/orders/...）",
+      "fileDropzoneTitle": "レシートまたはインボイスをドラッグ＆ドロップ",
+      "fileDropzoneBody": "画像、PDF、テキスト、JSON、ドキュメントに対応",
+      "fileSelected": "選択ファイル: {{name}}",
       "states": {
-        "ocr": "Reading document bounds & performing OCR...",
-        "fetch": "Connecting to secure merchant host & fetching page metadata..."
-      }
+        "ocr": "ドキュメントの範囲を読み取り、OCR を実行中…",
+        "fetch": "安全な販売店ホストに接続し、ページのメタデータを取得中…"
+      },
+      "extractingText": "Gemini OCR でテキストを抽出中…",
+      "textExtracted": "Gemini OCR でテキストを正常に抽出しました！",
+      "textEmpty": "読み取り可能なテキストが見つかりません。",
+      "textError": "テキストの抽出に失敗しました。",
+      "imageAttached": "写真を添付しました。",
+      "noSelectedItems": "保存するアイテムを少なくとも1つ選択してください。",
+      "savingItems": "アイテムを処理中…",
+      "savedSuccess": "衣類を正常にカタログ化しました！",
+      "saveFailed": "処理に失敗しました。",
+      "previewTitle": "レシート領域セレクター",
+      "changeDocument": "ファイルを変更",
+      "addSelector": "アイテムセレクターを追加",
+      "extractedListTitle": "解析済みレシートアイテム",
+      "selected": "件選択済み",
+      "noImage": "画像なし",
+      "fieldTitle": "タイトル",
+      "fieldBrand": "ブランド",
+      "fieldPrice": "価格 ($)",
+      "attachPhoto": "写真を添付",
+      "linked": "リンク済み",
+      "change": "変更",
+      "unlink": "リンク解除",
+      "linkCloset": "クローゼットにリンク",
+      "clearList": "リストをクリア",
+      "saving": "保存中…",
+      "saveIngest": "保存してアイテムを取り込む",
+      "selectClosetItem": "クローゼットのアイテムにリンク",
+      "selectClosetItemDesc": "クローゼット内の既存アイテムを選択して、価格とブランドのデータを更新します。",
+      "noMatchingItems": "クローゼットにアイテムが見つかりません。"
     }
   },
   "itemDetail": {

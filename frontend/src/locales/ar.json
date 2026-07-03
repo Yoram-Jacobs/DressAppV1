@@ -328,29 +328,58 @@
     },
     "tabs": {
       "upload": "Camera & Upload",
-      "import": "Digital Import"
+      "import": "استيراد رقمي"
     },
     "import": {
-      "title": "Digital Receipt & Email Import",
-      "body": "Paste the text of a digital receipt, order confirmation email, or store invoice. Our parser will instantly extract brand, price, size, and category details.",
-      "placeholder": "Paste order confirmation email or receipt text here...\n\nExample:\nOrder Date: June 15, 2026\nMerchant: Zara\n1x Cotton Poplin Shirt - Blue - Size M - $49.90",
-      "extractButton": "Extract Items",
-      "extracting": "Extracting...",
-      "error": "Could not find any items in the pasted text. Please verify formatting.",
-      "success": "Successfully extracted garment details!",
+      "title": "استيراد الإيصالات الرقمية والبريد الإلكتروني",
+      "body": "الصق نص إيصال رقمي أو بريد إلكتروني لتأكيد الطلب أو فاتورة متجر. سيستخرج المحلل فوراً العلامة التجارية والسعر والمقاس والفئة.",
+      "placeholder": "الصق هنا نص بريد التأكيد أو الإيصال...\n\nمثال:\nتاريخ الطلب: ١٥ يونيو ٢٠٢٦\nالتاجر: زارا\n١ قميص قطني بوبلين - أزرق - مقاس M - ٤٩.٩٠$",
+      "extractButton": "استخراج العناصر المحددة",
+      "extracting": "جارٍ الاستخراج…",
+      "error": "تعذّر تحليل الإيصال. يرجى التحقق من التنسيق والمحاولة مجدداً.",
+      "success": "تمّ استخراج العناصر بنجاح!",
       "modes": {
-        "text": "Paste Text",
-        "file": "Upload File",
-        "url": "Web Link"
+        "text": "لصق النص",
+        "file": "رفع ملف",
+        "url": "رابط ويب"
       },
-      "urlPlaceholder": "Enter receipt URL (e.g., https://zara.com/orders/...)",
-      "fileDropzoneTitle": "Drag & drop your receipt or invoice",
-      "fileDropzoneBody": "Supports JPG, PNG, HEIC, and PDF files",
-      "fileSelected": "Selected file: {{name}}",
+      "urlPlaceholder": "أدخل رابط الإيصال (مثال: https://zara.com/orders/...)",
+      "fileDropzoneTitle": "اسحب وأفلت إيصالك أو فاتورتك",
+      "fileDropzoneBody": "يدعم الصور وملفات PDF والنصوص وJSON والمستندات",
+      "fileSelected": "الملف المحدد: {{name}}",
       "states": {
-        "ocr": "Reading document bounds & performing OCR...",
-        "fetch": "Connecting to secure merchant host & fetching page metadata..."
-      }
+        "ocr": "قراءة حدود المستند وتنفيذ OCR…",
+        "fetch": "الاتصال بالخادم الآمن للتاجر وجلب بيانات الصفحة…"
+      },
+      "extractingText": "استخراج النص باستخدام Gemini OCR…",
+      "textExtracted": "تمّ استخراج النص بنجاح عبر Gemini OCR!",
+      "textEmpty": "لم يُعثر على نص قابل للقراءة.",
+      "textError": "فشل استخراج النص.",
+      "imageAttached": "تمّ إرفاق الصورة.",
+      "noSelectedItems": "يرجى تحديد عنصر واحد على الأقل للحفظ.",
+      "savingItems": "جارٍ استيعاب العناصر…",
+      "savedSuccess": "تمّ تصنيف الملابس بنجاح!",
+      "saveFailed": "فشل الاستيعاب.",
+      "previewTitle": "محدد منطقة الإيصال",
+      "changeDocument": "تغيير الملف",
+      "addSelector": "إضافة محدد عنصر",
+      "extractedListTitle": "عناصر الإيصال المحللة",
+      "selected": "محدد",
+      "noImage": "لا توجد صورة",
+      "fieldTitle": "العنوان",
+      "fieldBrand": "العلامة التجارية",
+      "fieldPrice": "السعر ($)",
+      "attachPhoto": "إرفاق صورة",
+      "linked": "مرتبط",
+      "change": "تغيير",
+      "unlink": "إلغاء الارتباط",
+      "linkCloset": "ربط بالخزانة",
+      "clearList": "مسح القائمة",
+      "saving": "جارٍ الحفظ…",
+      "saveIngest": "حفظ واستيعاب العناصر",
+      "selectClosetItem": "ربط بعنصر في الخزانة",
+      "selectClosetItemDesc": "اختر عنصراً موجوداً في خزانتك لتحديث بيانات السعر والعلامة التجارية.",
+      "noMatchingItems": "لم يُعثر على عناصر في الخزانة."
     }
   },
   "itemDetail": {

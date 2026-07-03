@@ -2779,7 +2779,7 @@ export default function AddItem() {
                           ) : (
                             <div className="flex flex-col items-center justify-center p-2 text-center text-[10px] text-muted-foreground/60">
                               <Shirt className="h-6 w-6 opacity-30 mb-1" />
-                              <span>No Image</span>
+                              <span>{t('addItem.import.noImage', { defaultValue: 'No Image' })}</span>
                             </div>
                           )}
                         </div>
@@ -2787,7 +2787,7 @@ export default function AddItem() {
                         {/* Item Details Inputs */}
                         <div className="flex-1 min-w-0 grid grid-cols-2 gap-3 pt-6 md:pt-0">
                           <div className="col-span-2">
-                            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Title</Label>
+                            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{t('addItem.import.fieldTitle', { defaultValue: 'Title' })}</Label>
                             <Input
                               value={item.name}
                               onChange={(e) => handleEditItemField(item.id, 'name', e.target.value)}
@@ -2795,7 +2795,7 @@ export default function AddItem() {
                             />
                           </div>
                           <div>
-                            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Brand</Label>
+                            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{t('addItem.import.fieldBrand', { defaultValue: 'Brand' })}</Label>
                             <Input
                               value={item.brand}
                               onChange={(e) => handleEditItemField(item.id, 'brand', e.target.value)}
@@ -2803,7 +2803,7 @@ export default function AddItem() {
                             />
                           </div>
                           <div>
-                            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Price ($)</Label>
+                            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{t('addItem.import.fieldPrice', { defaultValue: 'Price ($)' })}</Label>
                             <Input
                               type="number"
                               step="0.01"
@@ -2825,7 +2825,7 @@ export default function AddItem() {
                             className="flex-1 md:flex-initial rounded-lg text-[10px] font-semibold h-8 flex items-center justify-center gap-1.5"
                           >
                             <Plus className="h-3 w-3" />
-                            Attach Photo
+                            {t('addItem.import.attachPhoto', { defaultValue: 'Attach Photo' })}
                           </Button>
                           
                           {/* Link Closet Item Button */}
@@ -2848,7 +2848,7 @@ export default function AddItem() {
                                   <Shirt className="h-6 w-6 text-[hsl(var(--accent))]/60" />
                                 )}
                                 <span className="absolute inset-0 flex items-end justify-center pb-1 bg-gradient-to-t from-black/50 to-transparent">
-                                  <span className="text-[8px] font-bold text-white leading-none text-center px-0.5 truncate max-w-full">Linked</span>
+                                  <span className="text-[8px] font-bold text-white leading-none text-center px-0.5 truncate max-w-full">{t('addItem.import.linked', { defaultValue: 'Linked' })}</span>
                                 </span>
                               </button>
                               <button
@@ -2856,14 +2856,14 @@ export default function AddItem() {
                                 onClick={() => openSelectClosetItemModal(item.id)}
                                 className="text-[8px] text-muted-foreground hover:text-foreground border-0 bg-transparent cursor-pointer underline underline-offset-1"
                               >
-                                Change
+                                {t('addItem.import.change', { defaultValue: 'Change' })}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleUnlinkItem(item.id)}
                                 className="text-[8px] text-rose-500 hover:text-rose-700 border-0 bg-transparent cursor-pointer"
                               >
-                                Unlink
+                                {t('addItem.import.unlink', { defaultValue: 'Unlink' })}
                               </button>
                             </div>
                           ) : (
@@ -2875,7 +2875,7 @@ export default function AddItem() {
                               className="flex-1 md:flex-initial rounded-lg text-[10px] font-semibold h-8 flex items-center justify-center gap-1.5"
                             >
                               <Folder className="h-3 w-3" />
-                              Link Closet
+                              {t('addItem.import.linkCloset', { defaultValue: 'Link Closet' })}
                             </Button>
                           )}
                         </div>
@@ -2890,7 +2890,7 @@ export default function AddItem() {
                       onClick={() => setExtractedItems([])}
                       className="rounded-xl px-5 h-11 text-sm font-semibold"
                     >
-                      Clear List
+                      {t('addItem.import.clearList', { defaultValue: 'Clear List' })}
                     </Button>
                     <Button
                       type="button"
@@ -2901,12 +2901,12 @@ export default function AddItem() {
                       {saving ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          Saving...
+                          {t('addItem.import.saving', { defaultValue: 'Saving…' })}
                         </>
                       ) : (
                         <>
                           <Check className="h-4 w-4" />
-                          Save & Ingest Items
+                          {t('addItem.import.saveIngest', { defaultValue: 'Save & Ingest Items' })}
                         </>
                       )}
                     </Button>

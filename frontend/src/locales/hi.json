@@ -328,29 +328,58 @@
     },
     "tabs": {
       "upload": "Camera & Upload",
-      "import": "Digital Import"
+      "import": "डिजिटल आयात"
     },
     "import": {
-      "title": "Digital Receipt & Email Import",
-      "body": "Paste the text of a digital receipt, order confirmation email, or store invoice. Our parser will instantly extract brand, price, size, and category details.",
-      "placeholder": "Paste order confirmation email or receipt text here...\n\nExample:\nOrder Date: June 15, 2026\nMerchant: Zara\n1x Cotton Poplin Shirt - Blue - Size M - $49.90",
-      "extractButton": "Extract Items",
-      "extracting": "Extracting...",
-      "error": "Could not find any items in the pasted text. Please verify formatting.",
-      "success": "Successfully extracted garment details!",
+      "title": "डिजिटल रसीद और ईमेल आयात",
+      "body": "डिजिटल रसीद, ऑर्डर पुष्टि ईमेल या स्टोर इनवॉइस का टेक्स्ट पेस्ट करें। हमारा पार्सर तुरंत ब्रांड, मूल्य, साइज़ और श्रेणी विवरण निकालेगा।",
+      "placeholder": "यहाँ ऑर्डर पुष्टि ईमेल या रसीद का टेक्स्ट पेस्ट करें...\n\nउदाहरण:\nऑर्डर दिनांक: 15 जून 2026\nव्यापारी: Zara\n1x कॉटन पॉपलिन शर्ट - नीली - साइज़ M - $49.90",
+      "extractButton": "चुने गए आइटम निकालें",
+      "extracting": "निकाला जा रहा है…",
+      "error": "रसीद पार्स नहीं हो सकी। कृपया फ़ॉर्मेट जाँचें और पुनः प्रयास करें।",
+      "success": "आइटम सफलतापूर्वक निकाले गए!",
       "modes": {
-        "text": "Paste Text",
-        "file": "Upload File",
-        "url": "Web Link"
+        "text": "टेक्स्ट पेस्ट करें",
+        "file": "फ़ाइल अपलोड करें",
+        "url": "वेब लिंक"
       },
-      "urlPlaceholder": "Enter receipt URL (e.g., https://zara.com/orders/...)",
-      "fileDropzoneTitle": "Drag & drop your receipt or invoice",
-      "fileDropzoneBody": "Supports JPG, PNG, HEIC, and PDF files",
-      "fileSelected": "Selected file: {{name}}",
+      "urlPlaceholder": "रसीद URL दर्ज करें (जैसे: https://zara.com/orders/...)",
+      "fileDropzoneTitle": "अपनी रसीद या इनवॉइस यहाँ खींचें और छोड़ें",
+      "fileDropzoneBody": "छवि, PDF, टेक्स्ट, JSON और दस्तावेज़ समर्थित हैं",
+      "fileSelected": "चयनित फ़ाइल: {{name}}",
       "states": {
-        "ocr": "Reading document bounds & performing OCR...",
-        "fetch": "Connecting to secure merchant host & fetching page metadata..."
-      }
+        "ocr": "दस्तावेज़ सीमाएँ पढ़ना और OCR चला रहे हैं…",
+        "fetch": "सुरक्षित व्यापारी होस्ट से जुड़ रहे हैं और पेज मेटाडेटा प्राप्त कर रहे हैं…"
+      },
+      "extractingText": "Gemini OCR द्वारा टेक्स्ट निकाला जा रहा है…",
+      "textExtracted": "Gemini OCR द्वारा टेक्स्ट सफलतापूर्वक निकाला गया!",
+      "textEmpty": "कोई पठनीय टेक्स्ट नहीं मिला।",
+      "textError": "टेक्स्ट निकालने में विफल।",
+      "imageAttached": "फ़ोटो संलग्न की गई।",
+      "noSelectedItems": "कृपया सहेजने के लिए कम से कम एक आइटम चुनें।",
+      "savingItems": "आइटम प्रोसेस किए जा रहे हैं…",
+      "savedSuccess": "कपड़े सफलतापूर्वक सूचीबद्ध किए गए!",
+      "saveFailed": "प्रोसेसिंग विफल।",
+      "previewTitle": "रसीद क्षेत्र चयनकर्ता",
+      "changeDocument": "फ़ाइल बदलें",
+      "addSelector": "आइटम चयनकर्ता जोड़ें",
+      "extractedListTitle": "पार्स किए गए रसीद आइटम",
+      "selected": "चयनित",
+      "noImage": "कोई छवि नहीं",
+      "fieldTitle": "शीर्षक",
+      "fieldBrand": "ब्रांड",
+      "fieldPrice": "मूल्य ($)",
+      "attachPhoto": "फ़ोटो संलग्न करें",
+      "linked": "लिंक किया गया",
+      "change": "बदलें",
+      "unlink": "अनलिंक करें",
+      "linkCloset": "कोठरी से जोड़ें",
+      "clearList": "सूची साफ़ करें",
+      "saving": "सहेजा जा रहा है…",
+      "saveIngest": "सहेजें और आइटम शामिल करें",
+      "selectClosetItem": "कोठरी के आइटम से लिंक करें",
+      "selectClosetItemDesc": "मूल्य और ब्रांड विवरण अपडेट करने के लिए अपनी कोठरी का कोई मौजूदा आइटम चुनें।",
+      "noMatchingItems": "कोठरी में कोई आइटम नहीं मिला।"
     }
   },
   "itemDetail": {

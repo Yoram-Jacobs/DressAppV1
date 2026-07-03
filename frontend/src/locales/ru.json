@@ -328,29 +328,58 @@
     },
     "tabs": {
       "upload": "Camera & Upload",
-      "import": "Digital Import"
+      "import": "Цифровой импорт"
     },
     "import": {
-      "title": "Digital Receipt & Email Import",
-      "body": "Paste the text of a digital receipt, order confirmation email, or store invoice. Our parser will instantly extract brand, price, size, and category details.",
-      "placeholder": "Paste order confirmation email or receipt text here...\n\nExample:\nOrder Date: June 15, 2026\nMerchant: Zara\n1x Cotton Poplin Shirt - Blue - Size M - $49.90",
-      "extractButton": "Extract Items",
-      "extracting": "Extracting...",
-      "error": "Could not find any items in the pasted text. Please verify formatting.",
-      "success": "Successfully extracted garment details!",
+      "title": "Импорт цифровых чеков и электронных писем",
+      "body": "Вставьте текст цифрового чека, письма с подтверждением заказа или счёта магазина. Наш парсер мгновенно извлечёт бренд, цену, размер и категорию.",
+      "placeholder": "Вставьте сюда текст письма с подтверждением заказа или чека...\n\nПример:\nДата заказа: 15 июня 2026 г.\nМагазин: Zara\n1 хлопковая рубашка поплин - голубая - размер M - $49.90",
+      "extractButton": "Извлечь выбранные товары",
+      "extracting": "Извлечение…",
+      "error": "Не удалось обработать чек. Проверьте формат и попробуйте снова.",
+      "success": "Товары успешно извлечены!",
       "modes": {
-        "text": "Paste Text",
-        "file": "Upload File",
-        "url": "Web Link"
+        "text": "Вставить текст",
+        "file": "Загрузить файл",
+        "url": "Веб-ссылка"
       },
-      "urlPlaceholder": "Enter receipt URL (e.g., https://zara.com/orders/...)",
-      "fileDropzoneTitle": "Drag & drop your receipt or invoice",
-      "fileDropzoneBody": "Supports JPG, PNG, HEIC, and PDF files",
-      "fileSelected": "Selected file: {{name}}",
+      "urlPlaceholder": "Введите URL чека (например: https://zara.com/orders/...)",
+      "fileDropzoneTitle": "Перетащите сюда чек или счёт",
+      "fileDropzoneBody": "Поддерживаются изображения, PDF, текст, JSON и документы",
+      "fileSelected": "Выбранный файл: {{name}}",
       "states": {
-        "ocr": "Reading document bounds & performing OCR...",
-        "fetch": "Connecting to secure merchant host & fetching page metadata..."
-      }
+        "ocr": "Чтение границ документа и выполнение OCR…",
+        "fetch": "Подключение к защищённому серверу продавца и получение метаданных…"
+      },
+      "extractingText": "Извлечение текста с помощью Gemini OCR…",
+      "textExtracted": "Текст успешно извлечён через Gemini OCR!",
+      "textEmpty": "Читаемый текст не найден.",
+      "textError": "Не удалось извлечь текст.",
+      "imageAttached": "Фото прикреплено.",
+      "noSelectedItems": "Выберите хотя бы один товар для сохранения.",
+      "savingItems": "Обработка товаров…",
+      "savedSuccess": "Одежда успешно каталогизирована!",
+      "saveFailed": "Обработка не удалась.",
+      "previewTitle": "Выбор области чека",
+      "changeDocument": "Изменить файл",
+      "addSelector": "Добавить выбор товара",
+      "extractedListTitle": "Проанализированные товары чека",
+      "selected": "выбрано",
+      "noImage": "Нет изображения",
+      "fieldTitle": "Название",
+      "fieldBrand": "Бренд",
+      "fieldPrice": "Цена ($)",
+      "attachPhoto": "Прикрепить фото",
+      "linked": "Связано",
+      "change": "Изменить",
+      "unlink": "Отвязать",
+      "linkCloset": "Связать с гардеробом",
+      "clearList": "Очистить список",
+      "saving": "Сохранение…",
+      "saveIngest": "Сохранить и добавить товары",
+      "selectClosetItem": "Связать с товаром из гардероба",
+      "selectClosetItemDesc": "Выберите существующий товар в вашем гардеробе для обновления данных о цене и бренде.",
+      "noMatchingItems": "Товары в гардеробе не найдены."
     }
   },
   "itemDetail": {

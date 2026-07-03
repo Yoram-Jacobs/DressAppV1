@@ -328,29 +328,58 @@
     },
     "tabs": {
       "upload": "Camera & Upload",
-      "import": "Digital Import"
+      "import": "数字导入"
     },
     "import": {
-      "title": "Digital Receipt & Email Import",
-      "body": "Paste the text of a digital receipt, order confirmation email, or store invoice. Our parser will instantly extract brand, price, size, and category details.",
-      "placeholder": "Paste order confirmation email or receipt text here...\n\nExample:\nOrder Date: June 15, 2026\nMerchant: Zara\n1x Cotton Poplin Shirt - Blue - Size M - $49.90",
-      "extractButton": "Extract Items",
-      "extracting": "Extracting...",
-      "error": "Could not find any items in the pasted text. Please verify formatting.",
-      "success": "Successfully extracted garment details!",
+      "title": "导入电子收据和邮件",
+      "body": "粘贴数字收据、订单确认邮件或商店发票的文本。我们的解析器将立即提取品牌、价格、尺码和分类信息。",
+      "placeholder": "在此粘贴订单确认邮件或收据文本...\n\n示例：\n订单日期：2026年6月15日\n商家：Zara\n1件棉质府绸衬衫 - 蓝色 - 尺码M - $49.90",
+      "extractButton": "提取所选商品",
+      "extracting": "提取中…",
+      "error": "无法解析收据。请检查格式后重试。",
+      "success": "商品提取成功！",
       "modes": {
-        "text": "Paste Text",
-        "file": "Upload File",
-        "url": "Web Link"
+        "text": "粘贴文本",
+        "file": "上传文件",
+        "url": "网页链接"
       },
-      "urlPlaceholder": "Enter receipt URL (e.g., https://zara.com/orders/...)",
-      "fileDropzoneTitle": "Drag & drop your receipt or invoice",
-      "fileDropzoneBody": "Supports JPG, PNG, HEIC, and PDF files",
-      "fileSelected": "Selected file: {{name}}",
+      "urlPlaceholder": "输入收据URL（例如：https://zara.com/orders/...）",
+      "fileDropzoneTitle": "将收据或发票拖放至此",
+      "fileDropzoneBody": "支持图片、PDF、文本、JSON及文档文件",
+      "fileSelected": "已选文件：{{name}}",
       "states": {
-        "ocr": "Reading document bounds & performing OCR...",
-        "fetch": "Connecting to secure merchant host & fetching page metadata..."
-      }
+        "ocr": "读取文档边界并执行OCR…",
+        "fetch": "正在连接安全商家服务器并获取页面元数据…"
+      },
+      "extractingText": "正在使用Gemini OCR提取文本…",
+      "textExtracted": "已通过Gemini OCR成功提取文本！",
+      "textEmpty": "未找到可读文本。",
+      "textError": "文本提取失败。",
+      "imageAttached": "照片已附加。",
+      "noSelectedItems": "请至少选择一个商品以保存。",
+      "savingItems": "正在处理商品…",
+      "savedSuccess": "服装已成功入库！",
+      "saveFailed": "处理失败。",
+      "previewTitle": "收据区域选择器",
+      "changeDocument": "更换文件",
+      "addSelector": "添加商品选择器",
+      "extractedListTitle": "已解析的收据商品",
+      "selected": "已选",
+      "noImage": "无图片",
+      "fieldTitle": "标题",
+      "fieldBrand": "品牌",
+      "fieldPrice": "价格 ($)",
+      "attachPhoto": "附加照片",
+      "linked": "已关联",
+      "change": "更改",
+      "unlink": "取消关联",
+      "linkCloset": "关联衣橱",
+      "clearList": "清空列表",
+      "saving": "保存中…",
+      "saveIngest": "保存并导入商品",
+      "selectClosetItem": "关联衣橱中的商品",
+      "selectClosetItemDesc": "从您的衣橱中选择现有商品以更新其价格和品牌信息。",
+      "noMatchingItems": "衣橱中未找到商品。"
     }
   },
   "itemDetail": {
