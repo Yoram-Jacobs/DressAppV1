@@ -564,10 +564,13 @@ export const api = {
   // fields back onto the doc. Used by the "Analyze" action on the
   // edit page after a photo replace, or to recover from a bad first
   // analysis without re-uploading the image.
-  reanalyzeItem: (itemId) =>
-    client
-      .post(`/closet/${itemId}/reanalyze`, null, { timeout: 90000 })
-      .then((r) => r.data),
+  reanalyzeItem: (itemId, { fill_empty_only = false } = {}) => {
+    const params = fill_empty_only ? { fill_empty_only: true } : {};
+    return client
+      .post(`/closet/${itemId}/reanalyze`, null, { timeout: 90000, params })
+      .then((r) => r.data);
+  },
+
   // Phase V6 — EU Digital Product Passport (DPP) import via QR scan
   importDpp: (qrPayload) =>
     client

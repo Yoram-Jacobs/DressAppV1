@@ -181,6 +181,19 @@ class CreateItemIn(BaseModel):
     # ``defer_matte`` / ``_run_background_matte`` pattern.
     needs_reconstruction: bool = False
     reconstruction_reasons: list[str] = []
+    # Phase R (July 2026) — digital receipt import provenance.
+    # When True, this item was created from a parsed digital receipt.
+    # If an image is also supplied, the background task runs the full
+    # GarmentVision pipeline (rembg + SegFormer + Gemini analysis) and
+    # then merges the analysis result, skipping any field listed in
+    # ``receipt_locked_fields`` so the receipt data is never overwritten.
+    # When no image is supplied, no analysis runs at all.
+    from_receipt: bool = False
+    # Field names whose values came from the receipt parser. The background
+    # matte-and-analyze task and the ``/reanalyze`` endpoint both treat
+    # these as immutable: Gemini output for a locked field is silently
+    # discarded unless the current DB value is empty/falsy.
+    receipt_locked_fields: list[str] = Field(default_factory=list)
 
 
 class UpdateItemIn(BaseModel):
@@ -622,6 +635,143 @@ async def _run_background_matte(
     )
 
 
+
+async def _run_background_matte_and_analyze(
+    item_id: str,
+    raw_bytes: bytes,
+    category: str | None,
+    receipt_locked_fields: list[str],
+) -> None:
+    """Phase R (July 2026) — Full GarmentVision pipeline for receipt imports.
+
+    Chains :func:`_run_background_matte` with a Gemini VLM analysis pass
+    so receipt-imported items with an attached photo get the same rich
+    taxonomy (dress_code, season, pattern, fabric, condition, tags, …) as
+    items added via the standard camera / file-upload flow.
+
+    Merge rule
+    ----------
+    Receipt fields listed in ``receipt_locked_fields`` are **never**
+    overwritten by the Gemini output, even if Gemini returns a value for
+    them. For every other analysis field the task applies the value only
+    when the current document value is empty/falsy — so a manual edit
+    made between save and analysis completion is not clobbered.
+
+    Failure modes (all soft)
+    ------------------------
+    * rembg fails → logged; clean_image_status = "failed"; no analysis.
+    * GarmentVision not configured → skipped with info log.
+    * Gemini returns garbage / _is_unidentifiable → skipped.
+    * Any exception → logged; item remains saved with its original data.
+    """
+    # Step 1: run the standard matte pipeline.  This writes
+    # ``clean_image_url`` and ``clean_image_status`` to the document.
+    await _run_background_matte(item_id, raw_bytes, category)
+
+    # Step 2: Gemini VLM analysis — only runs when the Eyes service is
+    # available. The model analyses the same raw bytes that rembg just
+    # processed; we don't re-read the clean PNG from the DB because the
+    # GarmentVision service handles its own cropping internally and the
+    # original bytes give the full picture (literally).
+    if garment_vision_service is None:
+        logger.info(
+            "Receipt matte+analyze: Gemini skipped for item %s "
+            "(garment_vision_service not configured)",
+            item_id,
+        )
+        return
+
+    db = get_db()
+    try:
+        parsed = await garment_vision_service.analyze(raw_bytes)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "Receipt matte+analyze: Gemini FAILED for item %s: %s",
+            item_id, repr(exc)[:200],
+        )
+        return
+
+    analysis = _safe_analysis(parsed)
+    try:
+        from app.services.vision import _is_unidentifiable
+        if _is_unidentifiable(analysis):
+            logger.info(
+                "Receipt matte+analyze: Gemini returned unidentifiable "
+                "result for item %s — skipping merge",
+                item_id,
+            )
+            return
+    except Exception:  # noqa: BLE001
+        pass
+
+    # Step 3: merge analysis → document, honouring the locked fields.
+    # Fields The Eyes is allowed to set on any item:
+    ANALYSIS_KEYS = (
+        "title", "name", "caption", "category", "sub_category", "item_type",
+        "brand", "gender", "dress_code", "season", "tradition", "colors",
+        "fabric_materials", "pattern", "state", "condition", "quality",
+        "repair_advice", "tags",
+    )
+
+    # Fetch the current document so we can check which fields are already
+    # populated (receipt data wins even if it arrived first).
+    item_doc = await repos.find_one(db.closet_items, {"id": item_id})
+    if not item_doc:
+        logger.info(
+            "Receipt matte+analyze: item %s no longer exists — aborting merge",
+            item_id,
+        )
+        return
+
+    locked = set(receipt_locked_fields or [])
+    update_doc: dict[str, Any] = {
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    for key in ANALYSIS_KEYS:
+        if key not in analysis:
+            continue
+        # Receipt-locked: skip entirely (never overwrite).
+        if key in locked:
+            continue
+        # Already populated by the user/receipt: skip (fill-empty rule).
+        current = item_doc.get(key)
+        if current or current == 0:  # 0 is a valid int — treat as set
+            continue
+        update_doc[key] = analysis[key]
+
+    # Mirror dominant colour/material into legacy scalar fields if not locked.
+    if "color" not in locked:
+        colors_list = analysis.get("colors") or []
+        if colors_list and isinstance(colors_list, list):
+            first = colors_list[0]
+            if isinstance(first, dict) and first.get("name") and not item_doc.get("color"):
+                update_doc["color"] = first["name"]
+
+    if "material" not in locked:
+        mats = analysis.get("fabric_materials") or []
+        if mats and isinstance(mats, list):
+            first = mats[0]
+            if isinstance(first, dict) and first.get("name") and not item_doc.get("material"):
+                update_doc["material"] = first["name"]
+
+    if len(update_doc) > 1:  # at least one non-timestamp field
+        await db.closet_items.update_one(
+            {"id": item_id},
+            {"$set": update_doc},
+        )
+        logger.info(
+            "Receipt matte+analyze: merged %d analysis field(s) onto item %s",
+            len(update_doc) - 1, item_id,
+        )
+    else:
+        logger.info(
+            "Receipt matte+analyze: no new fields to merge for item %s "
+            "(all analysis fields already populated or locked)",
+            item_id,
+        )
+
+
 async def _run_background_reconstruction(
     item_id: str,
     crop_bytes: bytes,
@@ -840,6 +990,15 @@ async def create_item(
             f"data:{mime};base64,{payload.reconstructed_image_b64}"
         )
 
+    # Phase R (July 2026) — receipt-import provenance persistence.
+    # Store receipt flags before any background task is queued so the
+    # document is complete even if the task fires before the insert
+    # completes (unlikely with MongoDB's durability guarantees, but
+    # belt-and-braces).
+    if payload.from_receipt:
+        doc["from_receipt"] = True
+        doc["receipt_locked_fields"] = list(payload.receipt_locked_fields or [])
+
     # Best-effort segmentation (non-blocking for POC latency): try once, soft-fail.
     # Phase O.6 — when the item came from the single-pass /analyze path,
     # the photo is already bbox-cropped to a single garment. Skip the
@@ -854,29 +1013,54 @@ async def create_item(
     # analyzer marks each item with ``defer_matte=true`` and the
     # frontend echoes it here so we queue the same background task as
     # the one-pass path. Either flag triggers the same code.
+    #
+    # Phase R (July 2026) — receipt-import items with an image get the
+    # full matte + Gemini analysis chain. Those without an image skip
+    # all pipeline work — the receipt fields are the complete data.
     needs_bg_matte = (payload.from_one_pass or payload.defer_matte) and (payload.crop_base64 or payload.image_base64)
-    if needs_bg_matte:
+
+    # Resolve the raw bytes for the background task once, shared by all branches.
+    raw_for_bg: bytes | None = None
+    if payload.crop_base64:
+        if payload.crop_base64.startswith("data:"):
+            raw_for_bg = _bytes_from_data_url(payload.crop_base64)
+        else:
+            try:
+                raw_for_bg = base64.b64decode(payload.crop_base64, validate=True)
+            except Exception:
+                pass
+    if not raw_for_bg:
+        raw_for_bg = raw_bytes
+
+    item_id_for_bg = doc["id"]
+
+    if payload.from_receipt and raw_for_bg:
+        # Receipt item WITH image → full pipeline: rembg + SegFormer +
+        # Gemini analysis. The task chains the matte step first, then
+        # merges the VLM result while honouring receipt_locked_fields.
         doc["clean_image_status"] = "pending"
-        # Snapshot what the background task needs: the item id and the
-        # raw bytes. Use crop_base64 if available, fallback to full image.
-        item_id_for_bg = doc["id"]
-        
-        raw_for_bg = None
-        if payload.crop_base64:
-            if payload.crop_base64.startswith("data:"):
-                raw_for_bg = _bytes_from_data_url(payload.crop_base64)
-            else:
-                try:
-                    raw_for_bg = base64.b64decode(payload.crop_base64, validate=True)
-                except Exception:
-                    pass
-        if not raw_for_bg:
-            raw_for_bg = raw_bytes
+        background_tasks.add_task(
+            _run_background_matte_and_analyze,
+            item_id_for_bg,
+            raw_for_bg,
+            payload.category,
+            list(payload.receipt_locked_fields or []),
+        )
+    elif needs_bg_matte and raw_for_bg:
+        # Standard single-pass or deferred-matte path (no Gemini analysis).
+        doc["clean_image_status"] = "pending"
         background_tasks.add_task(
             _run_background_matte,
             item_id_for_bg,
             raw_for_bg,
             payload.category,
+        )
+    elif payload.from_receipt and not raw_for_bg:
+        # Receipt item WITHOUT image → no pipeline at all. The receipt
+        # fields are the complete data; nothing to matte or analyse.
+        logger.info(
+            "Receipt import: no image for item %s — skipping pipeline",
+            item_id_for_bg,
         )
     elif raw_bytes:
         # Legacy HF Inference API segmentation fallback was removed in May
@@ -4059,6 +4243,14 @@ async def set_item_photo(
 @router.post("/{item_id}/reanalyze")
 async def reanalyze_item(
     item_id: str,
+    fill_empty_only: bool = Query(
+        False,
+        description=(
+            "When True, only write analysis fields where the current document "
+            "value is empty/falsy. Used for receipt-sourced items so The Eyes "
+            "fills in gaps without overwriting receipt-provided data."
+        ),
+    ),
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Re-run **The Eyes** on an existing item's stored image and patch
@@ -4070,11 +4262,16 @@ async def reanalyze_item(
       and now wants the form auto-filled from the new photo.
     * A previous analysis returned junk (regression / model glitch)
       and the user wants a fresh attempt.
+    * Receipt-sourced item has an attached image; the user taps "Analyse"
+      and only wants empty chips filled in (``fill_empty_only=True``).
 
     The endpoint preserves user-managed fields (size, price, currency,
-    marketplace_intent, notes, cultural_tags, purchase history, ...)
+    marketplace_intent, notes, cultural_tags, purchase history, ...)\
     and only overwrites the fields that The Eyes actually populates
     (title, taxonomy, colours/materials, condition, tags, …).
+    When ``fill_empty_only=True`` it additionally respects
+    ``receipt_locked_fields`` stored on the document, which permanently
+    protects fields that originated from the receipt parser.
     """
     if garment_vision_service is None:
         raise HTTPException(503, "Garment analyzer not configured")
@@ -4158,9 +4355,25 @@ async def reanalyze_item(
     update_doc: dict[str, Any] = {
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
+
+    # Phase R — fill-empty-only mode for receipt-sourced items.
+    # receipt_locked_fields is the permanent "protected set" stored on
+    # the document at creation time; fill_empty_only extends that by
+    # also protecting any field already populated (even if not locked).
+    locked: set[str] = set(item.get("receipt_locked_fields") or [])
+
     for key in OVERWRITE_KEYS:
-        if key in analysis:
-            update_doc[key] = analysis[key]
+        if key not in analysis:
+            continue
+        if fill_empty_only:
+            # Skip receipt-locked fields unconditionally.
+            if key in locked:
+                continue
+            # Skip fields that already have a value.
+            current = item.get(key)
+            if current or current == 0:
+                continue
+        update_doc[key] = analysis[key]
 
     # Mirror the dominant colour / material into the legacy single-string
     # fields too — older parts of the UI (and downstream Stylist
@@ -4169,12 +4382,14 @@ async def reanalyze_item(
     if colors_list and isinstance(colors_list, list):
         first_colour = colors_list[0]
         if isinstance(first_colour, dict) and first_colour.get("name"):
-            update_doc["color"] = first_colour["name"]
+            if not fill_empty_only or ("color" not in locked and not item.get("color")):
+                update_doc["color"] = first_colour["name"]
     materials_list = analysis.get("fabric_materials") or []
     if materials_list and isinstance(materials_list, list):
         first_material = materials_list[0]
         if isinstance(first_material, dict) and first_material.get("name"):
-            update_doc["material"] = first_material["name"]
+            if not fill_empty_only or ("material" not in locked and not item.get("material")):
+                update_doc["material"] = first_material["name"]
 
     await db.closet_items.update_one(
         {"id": item_id, "user_id": user["id"]},

@@ -991,7 +991,15 @@ export default function ItemDetail() {
       });
     }, 350);
     try {
-      const res = await api.reanalyzeItem(id);
+      // Phase R — receipt-sourced items must never have their receipt
+      // data overwritten by The Eyes.  Detect via from_receipt flag or
+      // the receipt_locked_fields list stored at creation time, then
+      // pass fill_empty_only=true so the backend only fills in chips
+      // that are currently empty/falsy.
+      const isReceiptItem =
+        item?.from_receipt ||
+        (Array.isArray(item?.receipt_locked_fields) && item.receipt_locked_fields.length > 0);
+      const res = await api.reanalyzeItem(id, { fill_empty_only: isReceiptItem });
       setItem(res.item);
       setForm(toFormState(res.item, user));
       toast.success(t('itemDetail.reanalyze.success'));
@@ -1008,6 +1016,7 @@ export default function ItemDetail() {
       }, 350);
     }
   };
+
 
   /* ------------------- Clean background (rembg matte; Phase V Fix 2) ----- */
   const onCleanBackground = async () => {

@@ -939,24 +939,51 @@ export default function AddItem() {
           await api.updateItem(item.closetItem.id, patchBody);
         } else {
           const isSvg = item.base64Image && item.base64Image.startsWith('data:image/svg+xml');
+          const hasImage = !!(item.base64Image && !isSvg);
+
+          // Build the set of fields that came from the receipt parser.
+          // These will be stored on the document and permanently protect
+          // that data from being overwritten by Gemini analysis — both
+          // during the initial background matte+analyze task and on any
+          // subsequent "Analyse" action in ItemDetail.
+          const receiptLockedFields = [
+            item.name   ? 'title' : null,
+            item.brand  ? 'brand' : null,
+            item.size   ? 'size' : null,
+            (item.price_cents || item.price_cents === 0) ? 'price_cents' : null,
+            (item.price_cents || item.price_cents === 0) ? 'purchase_price_cents' : null,
+            item.category ? 'category' : null,
+            (item.colors && item.colors.length) ? 'colors' : null,
+            (item.colors && item.colors.length) ? 'color' : null,
+          ].filter(Boolean);
+
           const payload = {
+            // Receipt-provided descriptive fields
             title: item.name || 'Unnamed Garment',
             category: item.category || 'Top',
             brand: item.brand || 'Generic',
-            size: item.size || 'M',
+            size: item.size || '',
             price_cents: item.price_cents || 0,
             purchase_price_cents: item.price_cents || 0,
             color: item.colors?.[0]?.name || 'grey',
-            colors: item.colors && item.colors.length 
+            colors: item.colors && item.colors.length
               ? item.colors.map(c => typeof c === 'string' ? { name: c, pct: null } : c)
               : [{ name: 'grey', pct: null }],
-            image_base64: item.base64Image && !isSvg ? item.base64Image.split(',')[1] : undefined,
-            image_mime: item.base64Image && !isSvg ? 'image/jpeg' : undefined,
             purchase_date: new Date().toISOString().split('T')[0],
-            from_one_pass: item.base64Image && !isSvg ? true : undefined,
+            // Image — when present, triggers the full GarmentVision
+            // pipeline (rembg + SegFormer + Gemini analysis) on the
+            // backend as a fire-and-forget BackgroundTask.
+            image_base64: hasImage ? item.base64Image.split(',')[1] : undefined,
+            image_mime: hasImage ? 'image/jpeg' : undefined,
+            // Phase R — receipt provenance flags. The backend uses these
+            // to select the matte+analyze path (vs matte-only or skip)
+            // and to permanently store the locked field set on the doc.
+            from_receipt: true,
+            receipt_locked_fields: receiptLockedFields,
           };
           await api.createItem(payload);
         }
+
       }
       
       toast.dismiss(loadingId);

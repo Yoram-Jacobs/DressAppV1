@@ -277,6 +277,19 @@ class ClosetItem(BaseDoc):
     # the recommendation pool to prevent doubled-up outfit suggestions.
     is_duplicate: bool = False
 
+    # Phase R (July 2026) — digital receipt import provenance.
+    # ``from_receipt=True`` means this item was created from a parsed
+    # digital receipt (email / text / PDF). The Gemini analysis pipeline
+    # runs on the attached image (if any), but receipt-provided fields
+    # listed in ``receipt_locked_fields`` are never overwritten by The
+    # Eyes — not during the initial background matte+analyze task, and
+    # not on any subsequent ``/reanalyze`` call.
+    from_receipt: bool = False
+    # Immutable set of field names supplied by the receipt parser.
+    # Persisted so ItemDetail's "Analyse" button can honour the rule
+    # even after the item is saved (no need to re-derive it from source).
+    receipt_locked_fields: list[str] = Field(default_factory=list)
+
     # --- AI Stylist Scheduler & Rotation (Phase Scheduler) ---
     rejection_count: int = 0
     last_suggested_at: str | None = None
