@@ -1039,7 +1039,9 @@
       "connectKey": "Conectar Clave",
       "standardInstructions": "Configure su propia clave Google Gemini para ejecutar consultas personalizadas. El plan estándar utiliza la cuota gratuita para desarrolladores de Google.",
       "creditsUsed": "El precio mensual del crédito es de $0.005. Se agrega una tarifa de plataforma del 7%.",
-      "edgeNotice": "Ejecutando Gemma4-E2B local sin conexión. Las métricas de uso se monitorean localmente y se acreditan mediante Google Nano Banana."
+      "edgeNotice": "Ejecutando Gemma4-E2B local sin conexión. Las métricas de uso se monitorean localmente y se acreditan mediante Google Nano Banana.",
+      "appFeeLabel": "Tarifa de Aplicación Acumulada",
+      "appFeeDescription": "Tarifa de plataforma no pagada acumulada por el uso de créditos."
     }
   },
   "admin": {

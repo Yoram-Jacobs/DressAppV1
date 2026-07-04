@@ -1039,7 +1039,9 @@
       "connectKey": "Connetti Chiave",
       "standardInstructions": "Configura la tua chiave Google Gemini per eseguire query di modelli personalizzati. Il piano standard utilizza la quota sviluppatore gratuita di Google.",
       "creditsUsed": "Il prezzo mensile del credito è $0.005. Viene aggiunta una commissione di piattaforma del 7%.",
-      "edgeNotice": "Esecuzione locale di Gemma4-E2B offline. Le metriche di utilizzo sono monitorate localmente e accreditate tramite Google Nano Banana."
+      "edgeNotice": "Esecuzione locale di Gemma4-E2B offline. Le metriche di utilizzo sono monitorate localmente e accreditate tramite Google Nano Banana.",
+      "appFeeLabel": "Tariffa dell'app accumulata",
+      "appFeeDescription": "Tariffa della piattaforma non pagata accumulata dall'uso dei crediti."
     }
   },
   "admin": {

@@ -1039,7 +1039,9 @@
       "connectKey": "キーを接続",
       "standardInstructions": "パーソナライズされたクエリを実行するために、独自のGoogle Geminiキーを設定します。標準プランでは、Googleの無料枠開発者APIを使用します。",
       "creditsUsed": "月額クレジット単価は $0.005 です。7% のプラットフォーム手数料が加算されます。",
-      "edgeNotice": "ローカルの Gemma4-E2B をオフラインで実行しています。使用統計はローカルで監視され、Google Nano Banana 経由で還元されます。"
+      "edgeNotice": "ローカルの Gemma4-E2B をオフラインで実行しています。使用統計はローカルで監視され、Google Nano Banana 経由で還元されます。",
+      "appFeeLabel": "未払いのアプリ利用料",
+      "appFeeDescription": "クレジット利用から発生した未払いのプラットフォーム手数料。"
     }
   },
   "admin": {

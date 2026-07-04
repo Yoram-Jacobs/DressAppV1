@@ -363,3 +363,174 @@ async def donation_both(
 {_btn("View in DressApp", f"{_APP_URL}/transactions")}
 """
     return await _send(to, f"Donation confirmed: {item.get('title','your item')}", _wrap(body, preheader="Donation completed — thank you both."))
+
+
+async def send_thank_you_payment(
+    *, to: str, user: dict, amount_cents: int, currency: str, credits_purchased: int, transaction_id: str
+) -> dict:
+    lang = (user.get("preferred_language") or "en").lower().split("-")[0]
+    
+    matrix = {
+        "en": {
+            "subject": "Thank you for your payment!",
+            "header": "Thank you for your payment! ❤️",
+            "body": f"We received your payment of {currency} {amount_cents/100:.2f} and credited {credits_purchased} credits to your account. Your monthly App Fee has been successfully reset.",
+            "details": "Transaction Details",
+            "txn_id": "Transaction ID",
+            "amount": "Amount Paid",
+            "credits": "Credits Added",
+            "status": "Status",
+            "completed": "Completed"
+        },
+        "zh": {
+            "subject": "感谢您的付款！",
+            "header": "感谢您的付款！ ❤️",
+            "body": f"我们已收到您 {currency} {amount_cents/100:.2f} 的付款，并已将 {credits_purchased} 额度存入您的账户。您的每月应用服务费已成功重置。",
+            "details": "交易详情",
+            "txn_id": "交易 ID",
+            "amount": "付款金额",
+            "credits": "存入额度",
+            "status": "状态",
+            "completed": "已完成"
+        },
+        "he": {
+            "subject": "תודה רבה על התשלום!",
+            "header": "תודה רבה על התשלום! ❤️",
+            "body": f"קיבלנו את התשלום שלך בסך {currency} {amount_cents/100:.2f} והוספנו {credits_purchased} קרדיטים לחשבונך. עמלת הפלטפורמה החודשית שלך אופסה בהצלחה.",
+            "details": "פרטי העסקה",
+            "txn_id": "מזהה עסקה",
+            "amount": "סכום ששולם",
+            "credits": "קרדיטים שנוספו",
+            "status": "סטטוס",
+            "completed": "הושלם"
+        },
+        "ar": {
+            "subject": "شكراً لك على الدفع!",
+            "header": "شكراً لك على الدفع! ❤️",
+            "body": f"لقد استلمنا دفعتك بقيمة {currency} {amount_cents/100:.2f} وتمت إضافة {credits_purchased} نقطة إلى حسابك. تم إعادة تعيين رسوم التطبيق الشهرية بنجاح.",
+            "details": "تفاصيل المعاملة",
+            "txn_id": "رقم العملية",
+            "amount": "المبلغ المدفوع",
+            "credits": "النقاط المضافة",
+            "status": "الحالة",
+            "completed": "مكتمل"
+        },
+        "de": {
+            "subject": "Vielen Dank für Ihre Zahlung!",
+            "header": "Vielen Dank für Ihre Zahlung! ❤️",
+            "body": f"Wir haben Ihre Zahlung in Höhe von {currency} {amount_cents/100:.2f} erhalten und {credits_purchased} Credits gutgeschrieben. Ihre monatliche App-Gebühr wurde erfolgreich zurückgesetzt.",
+            "details": "Transaktionsdetails",
+            "txn_id": "Transaktions-ID",
+            "amount": "Bezahlter Betrag",
+            "credits": "Hinzugefügte Credits",
+            "status": "Status",
+            "completed": "Abgeschlossen"
+        },
+        "es": {
+            "subject": "¡Gracias por su pago!",
+            "header": "¡Gracias por su pago! ❤️",
+            "body": f"Hemos recibido su pago de {currency} {amount_cents/100:.2f} y hemos abonado {credits_purchased} créditos a su cuenta. Su tarifa mensual de la aplicación se ha restablecido correctamente.",
+            "details": "Detalles de la Transacción",
+            "txn_id": "ID de Transacción",
+            "amount": "Monto Pagado",
+            "credits": "Créditos Añadidos",
+            "status": "Estado",
+            "completed": "Completado"
+        },
+        "fr": {
+            "subject": "Merci pour votre paiement !",
+            "header": "Merci pour votre paiement ! ❤️",
+            "body": f"Nous avons bien reçu votre paiement de {currency} {amount_cents/100:.2f} et crédité {credits_purchased} crédits sur votre compte. Vos frais d'application mensuels ont été réinitialisés avec succès.",
+            "details": "Détails de la transaction",
+            "txn_id": "ID de transaction",
+            "amount": "Montant payé",
+            "credits": "Crédits ajoutés",
+            "status": "Statut",
+            "completed": "Terminé"
+        },
+        "it": {
+            "subject": "Grazie per il pagamento!",
+            "header": "Grazie per il pagamento! ❤️",
+            "body": f"Abbiamo ricevuto il pagamento di {currency} {amount_cents/100:.2f} e accreditato {credits_purchased} credits sul tuo account. La tua tariffa mensile dell'app è stata azzerata con successo.",
+            "details": "Dettagli della transazione",
+            "txn_id": "ID transazione",
+            "amount": "Importo pagato",
+            "credits": "Crediti aggiunti",
+            "status": "Stato",
+            "completed": "Completado"
+        },
+        "ja": {
+            "subject": "お支払いが完了しました！",
+            "header": "お支払いありがとうございます！ ❤️",
+            "body": f"{currency} {amount_cents/100:.2f} のお支払いを受領し、アカウントに {credits_purchased} クレジットを追加しました。月額アプリ利用手数料が正常にリセットされました。",
+            "details": "取引詳細",
+            "txn_id": "取引ID",
+            "amount": "支払金額",
+            "credits": "追加クレジット",
+            "status": "ステータス",
+            "completed": "完了"
+        },
+        "pt": {
+            "subject": "Obrigado pelo seu pagamento!",
+            "header": "Obrigado pelo seu pagamento! ❤️",
+            "body": f"Recebemos o seu pagamento de {currency} {amount_cents/100:.2f} e creditamos {credits_purchased} créditos na sua conta. A taxa mensal do seu aplicativo foi redefinida com sucesso.",
+            "details": "Detalhes da Transação",
+            "txn_id": "ID da Transação",
+            "amount": "Valor Pago",
+            "credits": "Créditos Adicionados",
+            "status": "Status",
+            "completed": "Concluído"
+        },
+        "ru": {
+            "subject": "Спасибо за ваш платеж!",
+            "header": "Спасибо за ваш платеж! ❤️",
+            "body": f"Мы получили ваш платеж в размере {currency} {amount_cents/100:.2f} и зачислили {credits_purchased} кредитов на ваш счет. Ваша ежемесячная плата за приложение была успешно сброшена.",
+            "details": "Детали транзакции",
+            "txn_id": "ID транзакции",
+            "amount": "Оплаченная сумма",
+            "credits": "Добавлено кредитов",
+            "status": "Статус",
+            "completed": "Завершено"
+        },
+        "hi": {
+            "subject": "आपके भुगतान के लिए धन्यवाद!",
+            "header": "आपके भुगतान के लिए धन्यवाद! ❤️",
+            "body": f"हमें आपका {currency} {amount_cents/100:.2f} का भुगतान प्राप्त हो गया है और आपके खाते में {credits_purchased} क्रेडिट जोड़ दिए गए हैं। आपका मासिक ऐप शुल्क सफलतापूर्वक रीसेट कर दिया गया है।",
+            "details": "लेन-देन का विवरण",
+            "txn_id": "लेन-देन आईडी",
+            "amount": "भुगतान की गई राशि",
+            "credits": "क्रेडिट जोड़े गए",
+            "status": "स्थिति",
+            "completed": "पूरा हुआ"
+        }
+    }
+    
+    t_data = matrix.get(lang) or matrix["en"]
+    
+    body_html = f"""\
+<h1 style="margin:0 0 14px;font-size:22px;">{t_data['header']}</h1>
+<p>{t_data['body']}</p>
+<div style="font-size:12px;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-top:18px;margin-bottom:8px;font-weight:bold;">
+  {t_data['details']}
+</div>
+<table role="presentation" cellpadding="0" cellspacing="0" style="border:1px solid #eee;border-radius:10px;padding:16px;width:100%;background:#fafafa;font-size:14px;line-height:1.6;">
+  <tr>
+    <td style="padding-bottom:8px;color:#666;width:140px;">{t_data['txn_id']}:</td>
+    <td style="padding-bottom:8px;font-weight:600;font-family:monospace;">{transaction_id}</td>
+  </tr>
+  <tr>
+    <td style="padding-bottom:8px;color:#666;">{t_data['amount']}:</td>
+    <td style="padding-bottom:8px;font-weight:600;">{currency} {amount_cents/100:.2f}</td>
+  </tr>
+  <tr>
+    <td style="padding-bottom:8px;color:#666;">{t_data['credits']}:</td>
+    <td style="padding-bottom:8px;font-weight:600;">{credits_purchased}</td>
+  </tr>
+  <tr>
+    <td>{t_data['status']}:</td>
+    <td style="color:#1F6F6B;font-weight:600;">{t_data['completed']}</td>
+  </tr>
+</table>
+"""
+    return await _send(to, t_data["subject"], _wrap(body_html, preheader=t_data["subject"]))
+

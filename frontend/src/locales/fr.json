@@ -1039,7 +1039,9 @@
       "connectKey": "Connecter la Clé",
       "standardInstructions": "Configurez votre propre clé Google Gemini pour exécuter des requêtes de modèle personnalisées. Le plan standard utilise le quota gratuit de Google pour les développeurs.",
       "creditsUsed": "Le prix mensuel du crédit est de 0,005 $. Des frais de plateforme de 7 % s'ajoutent.",
-      "edgeNotice": "Exécution locale de Gemma4-E2B hors ligne. Les statistiques d'utilisation sont suivies localement et créditées via Google Nano Banana."
+      "edgeNotice": "Exécution locale de Gemma4-E2B hors ligne. Les statistiques d'utilisation sont suivies localement et créditées via Google Nano Banana.",
+      "appFeeLabel": "Frais d'application accumulés",
+      "appFeeDescription": "Frais de plateforme non payés accumulés suite à l'utilisation des crédits."
     }
   },
   "admin": {

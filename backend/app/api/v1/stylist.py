@@ -221,6 +221,26 @@ async def stylist_endpoint(
             synthesize_tts=not skip_tts,
             api_key=api_key_resolved,
         )
+        
+        # Deduct credit and count usage
+        from app.db.database import get_db
+        ai_config = user.get("ai_configuration") or {}
+        provider_mode = ai_config.get("provider_mode", "standard")
+        if provider_mode in ("standard", "on_device"):
+            db = get_db()
+            update_fields = {}
+            if provider_mode == "standard":
+                current_credits = max(0, int(ai_config.get("current_credits", 1000)) - 1)
+                update_fields["ai_configuration.current_credits"] = current_credits
+            
+            credits_used = int(ai_config.get("credits_used_this_month", 0)) + 1
+            update_fields["ai_configuration.credits_used_this_month"] = credits_used
+            
+            if update_fields:
+                await db.users.update_one(
+                    {"id": user["id"]},
+                    {"$set": update_fields}
+                )
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     except RuntimeError as exc:

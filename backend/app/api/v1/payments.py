@@ -369,6 +369,37 @@ async def capture_topup(
             upsert=True,
         )
 
+        # Update user's profile credits and reset monthly usage fee counter
+        credits_purchased = int(int(topup["amount_cents"]) * 2)  # $0.005 per credit
+        ai_config = user.get("ai_configuration") or {}
+        existing_credits = int(ai_config.get("current_credits", 1000))
+        await db.users.update_one(
+            {"id": user["id"]},
+            {
+                "$set": {
+                    "ai_configuration.current_credits": existing_credits + credits_purchased,
+                    "ai_configuration.credits_used_this_month": 0,
+                    "ai_configuration.provider_mode": ai_config.get("provider_mode") or "standard",
+                    "ai_configuration.selected_provider": ai_config.get("selected_provider") or "google_ai",
+                    "ai_configuration.selected_model": ai_config.get("selected_model") or "gemini-2.5-flash",
+                }
+            }
+        )
+
+        # Dispatch localized thank-you receipt email
+        from app.services.email_service import send_thank_you_payment
+        import asyncio
+        asyncio.create_task(
+            send_thank_you_payment(
+                to=user["email"],
+                user=user,
+                amount_cents=int(topup["amount_cents"]),
+                currency=topup["currency"],
+                credits_purchased=credits_purchased,
+                transaction_id=capture_id or topup_id,
+            )
+        )
+
     final = await db.credit_topups.find_one({"id": topup_id}, {"_id": 0})
     balance = await _get_or_create_credits(db, user["id"], topup["currency"])
     return {

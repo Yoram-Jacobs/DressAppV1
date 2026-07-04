@@ -606,19 +606,36 @@ function AIConfigurationCard() {
               )}
 
               {providerMode !== 'on_device' && (
-                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <Coins className="h-5 w-5 text-primary/80" />
-                    <div>
-                      <div className="text-xs font-semibold text-foreground">
-                        {t('profile.aiConfig.creditsLabel', { defaultValue: 'Remaining Credits' })}
-                      </div>
-                      <div className="text-[11px] text-muted-foreground mt-0.5">
-                        {t('profile.aiConfig.creditsUsed', { defaultValue: 'Monthly credit price is $0.005. 7% platform fee is added.' })}
+                <div className="space-y-3">
+                  <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Coins className="h-5 w-5 text-primary/80" />
+                      <div>
+                        <div className="text-xs font-semibold text-foreground">
+                          {t('profile.aiConfig.creditsLabel', { defaultValue: 'Remaining Credits' })}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">
+                          {t('profile.aiConfig.creditsUsed', { defaultValue: 'Monthly credit price is $0.005. 7% platform fee is added.' })}
+                        </div>
                       </div>
                     </div>
+                    <span className="text-base font-bold text-primary">{currentCredits}</span>
                   </div>
-                  <span className="text-base font-bold text-primary">{currentCredits}</span>
+
+                  <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Coins className="h-5 w-5 text-amber-500/80" />
+                      <div>
+                        <div className="text-xs font-semibold text-foreground">
+                          {t('profile.aiConfig.appFeeLabel', { defaultValue: 'Accrued App Fee' })}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">
+                          {t('profile.aiConfig.appFeeDescription', { defaultValue: 'Unpaid platform fee accrued from credit usage.' })}
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-base font-bold text-amber-600 dark:text-amber-400">${calculatedFee}</span>
+                  </div>
                 </div>
               )}
 

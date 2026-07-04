@@ -1039,7 +1039,9 @@
       "connectKey": "Connect Key",
       "standardInstructions": "Configure your own Google Gemini key to run personalized model queries. The standard plan uses Google's free-tier developer API quota.",
       "creditsUsed": "Monthly credit price is $0.005. 7% platform fee is added.",
-      "edgeNotice": "Running local Gemma4-E2B offline. Execution usage metrics are monitored locally and credited back via Google Nano Banana."
+      "edgeNotice": "Running local Gemma4-E2B offline. Execution usage metrics are monitored locally and credited back via Google Nano Banana.",
+      "appFeeLabel": "Accrued App Fee",
+      "appFeeDescription": "Unpaid platform fee accrued from credit usage."
     }
   },
   "admin": {
