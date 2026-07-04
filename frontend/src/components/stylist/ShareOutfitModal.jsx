@@ -96,11 +96,20 @@ export default function ShareOutfitModal({ open, onOpenChange, outfit, sessionId
           outfit: {
             name: outfit.name || 'Suggested Outfit',
             why: outfit.why || outfit.description || '',
-            items: items.map((it) => ({
-              closet_item_id: it.closet_item_id || it.id,
-              role: it.role,
-              description: it.description || it.title || '',
-            })),
+            items: items.map((it) => {
+              const id = it.closet_item_id || it.id;
+              // Look up candidate color if available
+              const candidate = (outfit?.candidates || []).find(
+                (c) => c.candidate_id === id || c.closet_item_id === id
+              );
+              return {
+                closet_item_id: id,
+                role: it.role,
+                description: it.description || it.title || '',
+                color: it.color || candidate?.color || candidate?.color_name || null,
+                image_url: images[id] || it.image_url || null,
+              };
+            }),
           },
         });
         const url = snapshot?.share_url || `${window.location.origin}/shared/${snapshot.id}`;

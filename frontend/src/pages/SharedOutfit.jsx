@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { LanguagePicker } from '@/components/LanguagePicker';
 import { api } from '@/lib/api';
 import { Loader2, AlertCircle, Sparkles, ImageOff } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
+import HarmonyBadge from '@/components/stylist/HarmonyBadge';
 
 export default function SharedOutfit() {
   const { id } = useParams();
@@ -35,6 +36,16 @@ export default function SharedOutfit() {
   const outfitName = outfit.name || t('stylist.untitledConversation', { defaultValue: 'Untitled outfit' });
   const outfitWhy = outfit.why || outfit.description || '';
   const shareCardImage = sharedData?.share_card_b64 || outfit.share_card_b64 || null;
+
+  const outfitColors = useMemo(() => {
+    const itemsList = outfit.items || outfit.garments || [];
+    return itemsList
+      .map((it) => {
+        const name = it.color || null;
+        return name ? { name } : null;
+      })
+      .filter(Boolean);
+  }, [outfit]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative noise">
@@ -86,6 +97,11 @@ export default function SharedOutfit() {
                 {t('stylist.shareOutfit.suggestedLook', { defaultValue: 'Suggested Look' })}
               </div>
               <h1 className="text-2xl font-bold tracking-tight text-foreground">{outfitName}</h1>
+              {outfitColors.length >= 2 && (
+                <div className="flex justify-center mt-1">
+                  <HarmonyBadge colors={outfitColors} />
+                </div>
+              )}
               {outfitWhy && <p className="text-sm text-muted-foreground italic px-4">"{outfitWhy}"</p>}
             </div>
 

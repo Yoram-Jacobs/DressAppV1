@@ -61,6 +61,7 @@ import { labelForRole, labelForDressCode } from '@/lib/taxonomy';
 
 import { OutfitRecommendationCard } from '@/components/stylist/OutfitRecommendationCard';
 import { ItemFloater } from '@/components/stylist/ItemFloater';
+import HarmonyBadge from '@/components/stylist/HarmonyBadge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import DressMeShuffler from '@/components/stylist/DressMeShuffler';
 import { AttachmentPicker } from '@/components/stylist/AttachmentPicker';
@@ -1820,6 +1821,16 @@ export default function Stylist() {
       (detailMetrics.color + detailMetrics.pattern + detailMetrics.fit + detailMetrics.weather + detailMetrics.event + detailMetrics.location) / 6
     ) : 0;
 
+    const detailColors = selectedOutfitForDetail.garments
+      ? selectedOutfitForDetail.garments
+          .map((g) => {
+            const item = closetItems.find((it) => it.id === g.closet_item_id);
+            const name = g.color || item?.color || (Array.isArray(item?.colors) && item.colors[0]?.name) || null;
+            return name ? { name } : null;
+          })
+          .filter(Boolean)
+      : [];
+
     return (
       <Card className="border border-border/85 rounded-2xl shadow-editorial bg-card w-full shrink-0 overflow-hidden animate-[slideDown_0.2s_ease-out]">
         <CardContent className="p-6">
@@ -1910,9 +1921,16 @@ export default function Stylist() {
                   ) : (
                     <div className="space-y-1.5">
                       <div className="flex items-start justify-between gap-4">
-                        <h3 className="font-display text-2xl font-semibold text-foreground leading-tight">
-                          {selectedOutfitForDetail.name}
-                        </h3>
+                        <div className="space-y-1">
+                          <h3 className="font-display text-2xl font-semibold text-foreground leading-tight">
+                            {selectedOutfitForDetail.name}
+                          </h3>
+                          {detailColors.length >= 2 && (
+                            <div className="mt-1">
+                              <HarmonyBadge colors={detailColors} />
+                            </div>
+                          )}
+                        </div>
                         <Button
                           variant="ghost"
                           size="icon"

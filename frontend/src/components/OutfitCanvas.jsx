@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import ShareOutfitModal from '@/components/stylist/ShareOutfitModal';
+import HarmonyBadge from '@/components/stylist/HarmonyBadge';
 
 import { useTranslation } from 'react-i18next';
 const SLOT_LABELS = {
@@ -203,11 +204,30 @@ export function OutfitCanvasPreview({ canvas, onExpand }) {
   const gaps = slots.length - filled;
   const market = canvas.marketplace_suggestions || [];
 
+  const outfitColors = useMemo(() => {
+    return (canvas.slots || [])
+      .map((slot) => {
+        if (slot.is_gap || !slot.candidate_id) return null;
+        const cand = candidatesById[slot.candidate_id];
+        if (!cand) return null;
+        const name = cand.color || cand.color_name || (Array.isArray(cand.colors) && cand.colors[0]?.name) || null;
+        return name ? { name } : null;
+      })
+      .filter(Boolean);
+  }, [canvas.slots, candidatesById]);
+
   return (
     <div className="rounded-2xl border border-border bg-card p-3 space-y-2" data-testid="outfit-canvas-preview">
-      <div className="flex items-center gap-2">
-        <Sparkles className="h-4 w-4 text-[hsl(var(--accent))]" />
-        <span className="text-sm font-medium">{canvas.summary || 'Your outfit'}</span>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <Sparkles className="h-4 w-4 text-[hsl(var(--accent))] shrink-0" />
+          <span className="text-sm font-medium truncate">{canvas.summary || 'Your outfit'}</span>
+        </div>
+        {outfitColors.length >= 2 && (
+          <div className="shrink-0">
+            <HarmonyBadge colors={outfitColors} />
+          </div>
+        )}
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" data-testid="outfit-slot-strip">
         {slots.map((slot, i) => (
@@ -248,6 +268,18 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
   const market = canvas.marketplace_suggestions || [];
   const pro = canvas.professional_suggestion;
 
+  const outfitColors = useMemo(() => {
+    return (canvas.slots || [])
+      .map((slot) => {
+        if (slot.is_gap || !slot.candidate_id) return null;
+        const cand = candidatesById[slot.candidate_id];
+        if (!cand) return null;
+        const name = cand.color || cand.color_name || (Array.isArray(cand.colors) && cand.colors[0]?.name) || null;
+        return name ? { name } : null;
+      })
+      .filter(Boolean);
+  }, [canvas.slots, candidatesById]);
+
   return (
     <div
       className={cn(
@@ -264,6 +296,11 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
             <span className="text-xs font-semibold uppercase tracking-wide">{t('nav.outfits')}</span>
           </div>
           <h2 className="text-lg font-semibold mt-1 leading-snug">{canvas.summary || 'Your outfit'}</h2>
+          {outfitColors.length >= 2 && (
+            <div className="mt-1.5 mb-1">
+              <HarmonyBadge colors={outfitColors} />
+            </div>
+          )}
           {canvas.brief && (
             <p className="text-xs text-muted-foreground mt-1">{t('components.outfitCanvas.brief')} <span className="italic">{canvas.brief}</span></p>
           )}
