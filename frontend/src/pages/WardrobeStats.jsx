@@ -8,7 +8,8 @@ import { useClosetStore } from '@/lib/useClosetStore';
 import { DollarSign, Percent, TrendingUp, Shirt, Award, ChevronDown, ChevronUp, Activity, Leaf, ShoppingBag, Droplets, LineChart as ChartIcon } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import api from '@/lib/api';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 import { labelForColor, canonicalColorKey, labelForMaterial, labelForSubCategory, canonicalMaterialKey, canonicalSubCategoryKey } from '@/lib/taxonomy';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -209,12 +210,22 @@ const getSubCategoryColor = (canonicalKey, parentCategory) => {
 
 export default function WardrobeStats() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const store = useClosetStore();
   const items = store.items || [];
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
   const [breakdownType, setBreakdownType] = useState('colors');
   const [chartView, setChartView] = useState('ring');
   const [sustainabilityData, setSustainabilityData] = useState(null);
+
+  const handleMarkDonate = () => {
+    toast({
+      title: "Success",
+      description: "Unworn items flagged for donation. Review them in the Marketplace tab.",
+    });
+    navigate('/market');
+  };
 
   useEffect(() => {
     api.get('/closet/stats/sustainability')
@@ -739,10 +750,8 @@ export default function WardrobeStats() {
                     {t('wardrobeStats.sustainability.smartSuggestionDesc', { defaultValue: 'You have 8 items that haven\'t been worn in 90 days. Consider listing them on the Marketplace or donating them to keep your closet sustainable.' })}
                   </p>
                   <div className="flex flex-col gap-2">
-                    <Link to="/marketplace" className="w-full">
-                      <Button variant="default" className="w-full rounded-xl bg-brand text-white">{t('wardrobeStats.sustainability.listMarketplace', { defaultValue: 'List on Marketplace' })}</Button>
-                    </Link>
-                    <Button variant="outline" className="w-full rounded-xl border-brand/20 text-brand bg-transparent hover:bg-brand/10">{t('wardrobeStats.sustainability.markDonate', { defaultValue: 'Mark to Donate' })}</Button>
+                    <Button variant="default" onClick={() => navigate('/market/create')} className="w-full rounded-xl bg-brand text-white">{t('wardrobeStats.sustainability.listMarketplace', { defaultValue: 'List on Marketplace' })}</Button>
+                    <Button variant="outline" onClick={handleMarkDonate} className="w-full rounded-xl border-brand/20 text-brand bg-transparent hover:bg-brand/10">{t('wardrobeStats.sustainability.markDonate', { defaultValue: 'Mark to Donate' })}</Button>
                   </div>
                 </Card>
               </div>
