@@ -317,7 +317,7 @@ function AIConfigurationCard() {
         payload.ai_configuration.custom_keys.google_ai = "";
       }
       
-      const updatedUser = await api.updateProfile(payload);
+      const updatedUser = await api.patchMe(payload);
       updateUserLocal(updatedUser);
       setProviderMode(mode);
       toast.success(t('common.success', { defaultValue: 'Settings updated successfully' }));
