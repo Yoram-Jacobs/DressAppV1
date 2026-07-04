@@ -577,7 +577,21 @@
     "askProfessional": "Preguntar a un experto",
     "askProfessionalSoon": "Próximamente — conecta con un estilista.",
     "askProfessionalLocal": "Próximamente — conecta con un estilista local.",
-    "shareOutfit": "Compartir outfit",
+    "shareOutfit": {
+      "notFound": "El atuendo compartido no existe o ha expirado.",
+      "suggestedLook": "Look sugerido",
+      "noImage": "Vista previa no generada",
+      "createCloset": "Digitaliza tu armario",
+      "openInApp": "Abrir en DressApp",
+      "tagline": "Tu editor de moda con IA.",
+      "myLook": "Look sugerido por IA",
+      "pieces": "Piezas del atuendo",
+      "copyLink": "Copiar enlace",
+      "downloadPng": "Descargar PNG",
+      "instagramHint": "¡Imagen descargada! Abre Instagram y selecciona la imagen para tu Story.",
+      "failedLink": "Error al generar el enlace para compartir.",
+      "failedCard": "Error al generar la tarjeta de imagen."
+    },
     "shareCopied": "Enlace copiado",
     "shareOutfitSubject": "Mira este outfit que estoy considerando",
     "shareOutfitBody": "Mi estilista de DressApp me sugirió esto. ¿Qué te parece?",
@@ -636,7 +650,19 @@
     "tagFilterLabel": "Etiqueta",
     "tagFilterPlaceholder": "p. ej. Trabajo, Gimnasio",
     "styleFilterLabel": "Estilo",
-    "fallbackError": "Lo siento — tuve problemas para armar esa recomendación. Intenta reformularla o adjunta una foto para que pueda ver con qué estás trabajando."
+    "fallbackError": "Lo siento — tuve problemas para armar esa recomendación. Intenta reformularla o adjunta una foto para que pueda ver con qué estás trabajando.",
+    "harmonyScore": {
+      "harmonious": "Paleta armoniosa",
+      "neutral": "Paleta equilibrada",
+      "clashing": "Contraste atrevido",
+      "reason": {
+        "monochromatic": "Un look monocromático refinado — el mejor estilo tonal.",
+        "analogous": "Los colores análogos funcionan juntos de manera hermosa.",
+        "allNeutral": "Una paleta neutral clásica — siempre elegante sin esfuerzo.",
+        "balanced": "Una paleta equilibrada con tonos complementarios.",
+        "clashing": "Colores con fuerte contraste — llamativos e intencionados, pero arriesgados."
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "Completar el look",

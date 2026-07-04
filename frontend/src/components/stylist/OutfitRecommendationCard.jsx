@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ImageOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { ShareOutfitButton } from '@/components/stylist/ShareOutfitButton';
 import { useAuth } from '@/lib/auth';
 import OutfitAvatarViewer from '@/components/OutfitAvatarViewer';
-import { useMemo } from 'react';
+import { HarmonyBadge } from '@/components/stylist/HarmonyBadge';
 /**
  * Renders a single outfit recommendation. When recommendation items include
  * `closet_item_id`, we fetch and embed the item's image so the user sees
@@ -26,6 +26,8 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
     .map((it) => it?.closet_item_id)
     .filter(Boolean);
   const [images, setImages] = useState({});
+  // Map of closet_item_id → fetched item object (for color extraction)
+  const [itemData, setItemData] = useState({});
 
   const outfitItemsMap = useMemo(() => {
     const map = {};
@@ -45,28 +47,51 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
     const toFetch = ids.filter((id) => !(id in images));
     if (toFetch.length === 0) return () => {};
     (async () => {
-      const fetched = {};
+      const fetchedImages = {};
+      const fetchedData = {};
       await Promise.all(
         toFetch.map(async (id) => {
           try {
             const item = await api.getItem(id);
-            fetched[id] =
+            fetchedImages[id] =
               item?.reconstructed_image_url ||
               item?.segmented_image_url ||
               item?.image_url ||
               null;
+            fetchedData[id] = item || null;
           } catch {
-            fetched[id] = null;
+            fetchedImages[id] = null;
+            fetchedData[id] = null;
           }
         }),
       );
-      if (!cancelled) setImages((prev) => ({ ...prev, ...fetched }));
+      if (!cancelled) {
+        setImages((prev) => ({ ...prev, ...fetchedImages }));
+        setItemData((prev) => ({ ...prev, ...fetchedData }));
+      }
     })();
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ids.join('|')]);
+
+  // Collect dominant colour of each item (colors[0] or color field)
+  const outfitColors = useMemo(() => {
+    return items
+      .map((it) => {
+        if (!it?.closet_item_id) return null;
+        const data = itemData[it.closet_item_id];
+        if (!data) return null;
+        // WeightedTag: {name, pct} — take the first (highest-pct) entry
+        const colorObj = Array.isArray(data.colors) && data.colors.length > 0
+          ? data.colors[0]
+          : null;
+        const name = colorObj?.name || data.color || null;
+        return name ? { name } : null;
+      })
+      .filter(Boolean);
+  }, [items, itemData]);
 
   const withImages = items.filter((it) => images[it.closet_item_id]);
   const heroImage = withImages[0]
@@ -96,8 +121,10 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
           {t('stylist.outfitN', { n: index + 1 })}
         </div>
         <div className="font-display text-base mt-1 text-foreground">{rec.name}</div>
-        
-
+        {/* F1 — Colour Harmony Score Badge */}
+        {outfitColors.length >= 2 && (
+          <HarmonyBadge colors={outfitColors} />
+        )}
         {rec.why ? <p className="text-xs mt-2.5 italic break-words text-muted-foreground/95">{rec.why}</p> : null}
         <div className="mt-4 flex items-center justify-between gap-2 pt-2 border-t border-[hsl(var(--accent))]/10">
           {onSave ? (

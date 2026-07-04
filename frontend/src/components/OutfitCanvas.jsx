@@ -19,10 +19,11 @@
  */
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, AlertTriangle, ShoppingBag, UserRound, X, ImageOff } from 'lucide-react';
+import { Sparkles, AlertTriangle, ShoppingBag, UserRound, X, ImageOff, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import ShareOutfitModal from '@/components/stylist/ShareOutfitModal';
 
 import { useTranslation } from 'react-i18next';
 const SLOT_LABELS = {
@@ -232,8 +233,9 @@ export function OutfitCanvasPreview({ canvas, onExpand }) {
 }
 
 /** Full canvas — used inside a modal or on /stylist/compose. */
-export function OutfitCanvasFull({ canvas, onClose, embedded = false }) {
+export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId = null }) {
   const { t } = useTranslation();
+  const [shareModalOpen, setShareModalOpen] = useState(false);
 
   const candidatesById = useMemo(() => {
     const map = {};
@@ -266,11 +268,22 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false }) {
             <p className="text-xs text-muted-foreground mt-1">{t('components.outfitCanvas.brief')} <span className="italic">{canvas.brief}</span></p>
           )}
         </div>
-        {onClose && (
-          <Button variant="ghost" size="icon" onClick={onClose} aria-label={t('common.close', { defaultValue: 'Close' })} data-testid="outfit-canvas-close">
-            <X className="h-4 w-4" />
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShareModalOpen(true)}
+            aria-label={t('stylist.shareOutfit', { defaultValue: 'Share Outfit' })}
+            data-testid="outfit-canvas-share-btn"
+          >
+            <Share2 className="h-4 w-4" />
           </Button>
-        )}
+          {onClose && (
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label={t('common.close', { defaultValue: 'Close' })} data-testid="outfit-canvas-close">
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {canvas.detailed_rationale && (
@@ -327,12 +340,19 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false }) {
           <ProfessionalCard pro={pro} />
         </div>
       )}
+
+      <ShareOutfitModal
+        open={shareModalOpen}
+        onOpenChange={setShareModalOpen}
+        outfit={canvas}
+        sessionId={sessionId}
+      />
     </div>
   );
 }
 
 /** Convenience wrapper: button + modal, all in one. */
-export function OutfitCanvasMessage({ canvas }) {
+export function OutfitCanvasMessage({ canvas, sessionId = null }) {
   const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
@@ -349,7 +369,7 @@ export function OutfitCanvasMessage({ canvas }) {
             className="bg-background border border-border rounded-2xl max-w-2xl w-full max-h-[88vh] overflow-y-auto shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <OutfitCanvasFull canvas={canvas} onClose={() => setOpen(false)} />
+            <OutfitCanvasFull canvas={canvas} onClose={() => setOpen(false)} sessionId={sessionId} />
           </div>
         </div>
       )}

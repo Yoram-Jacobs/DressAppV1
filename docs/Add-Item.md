@@ -1,245 +1,615 @@
-# Wardrobe Cataloging & Ingestion: Add Item Workflows
+# Add Item — Wardrobe Ingestion: Architecture & User Manual
 
-This document provides a comprehensive architectural and functional breakdown of DressApp's **Add Item** cataloging module (`AddItem.jsx`). It covers every wardrobe ingestion pathway, client-side pre-flight verification, streaming analysis pipeline, background processing task, database schema, and frontend state management pattern.
+> **Module:** `frontend/src/pages/AddItem.jsx` (4,029 lines)
+> **Backend:** `backend/app/api/v1/closet.py`
+> **Stores:** `lib/closetStore.js` · `lib/workStore.js`
+> **Lib:** `lib/duplicateDetection.js` · `lib/utils.js` (sha256File, aHashFile, colorSignatureFile)
+> **Last Updated:** July 2026 (Phase R)
 
 ---
 
 ## 1. Executive Summary & Value Proposition
 
-### High-Level Overview
-The Add Item module (`AddItem.jsx`) serves as the entry point for cataloging a user's physical wardrobe. The feature coordinates client-side performance optimizations with RAM-heavy backend machine learning pipelines. It accepts image files, live camera streams, merchant receipt text/PDFs, and Digital Product Passports (DPP) to automatically segment, reconstruct, tag, and persist garments into the user's closet database.
+### Overview
+
+The **Add Item** module is DressApp's primary wardrobe ingestion gateway. It unifies four distinct input paradigms — live camera capture, photo upload, QR-code DPP scanning, and digital receipt import — into a single, coherent three-step experience: **Capture → Refine → Integrate**. Under the hood, it coordinates client-side machine-learning fingerprinting, a progressive NDJSON streaming analysis pipeline, an optimistic UI persistence model, and a receipt-locked field protection system — all while remaining RTL-aware and fully localised into 12 languages.
+
+### Architectural Flow
 
 ```mermaid
 graph TD
-    User([User]) -->|Camera/Upload/Receipt/DPP| UI[React SPA Frontend: AddItem.jsx]
-    UI -->|1. Client-Side Hash Pre-Flight| LocalCache[(closetStore Cache)]
-    UI -->|2. Stream Request: application/x-ndjson| Backend[FastAPI Gateway: v1/closet.py]
-    
-    subgraph Backend Orchestration
-        Backend -->|3a. OCR + Layout Parsing| GeminiVision[Gemini 2.5 Vision API]
-        Backend -->|3b. Bbox Segmentation| SegFormer[SegFormer Model]
-        Backend -->|4. Concurrent Single-Item Calls| GeminiTagging[Gemini 2.5 Flash Tagging]
+    User([User]) -->|Camera / Upload / Receipt / DPP QR| UI[AddItem.jsx SPA]
+
+    UI -->|fileToBase64 + sha256 + aHash + colorSig| FP[Client-Side Fingerprinting]
+    FP -->|findDuplicatesInCloset| Cache[(closetStore snapshot)]
+    Cache -->|"≤5 photos: matches"| Dialog[DuplicatePreflightDialog]
+    Cache -->|">5 photos: batch"| BG[Background Batch Path]
+    Dialog -->|User resolves| Continue[continueInteractive]
+    Continue -->|analyzeCards| Stream["POST /closet/analyze · NDJSON"]
+
+    subgraph Backend_Analyze_Pipeline ["Backend — Analyze Pipeline"]
+        Stream -->|detect frame| Detect[SegFormer Bbox Detection]
+        Detect -->|item frames| Gemini[Gemini 2.5 Flash Tagging]
+        Gemini -->|reconstruction frame| NanoBanana[Nano Banana Inpainting]
     end
 
-    Backend -->|5. Instant NDJSON Frame Response| UI
-    UI -->|6. Optimistic Sync| UICloset[Closet Store View]
-    UI -->|7. Parallel Persistence| BackendPost[FastAPI POST /closet]
-    BackendPost -->|8. Write Doc| DB[(MongoDB)]
-    
-    BackendPost -.->|9a. Deferred Task| MatteTask[Background Matting Task: rembg + SegFormer]
-    BackendPost -.->|9b. Deferred Task| ReconstructTask[Background Reconstruction Task: Nano Banana]
-    MatteTask -.->|10. Update URL| DB
-    ReconstructTask -.->|10. Update URL| DB
+    Stream -->|detect frame: split card| Cards["Per-Item Cards — scanning→ready"]
+    Cards -->|Save All — Phase Z4| Optimistic[Optimistic Ghosts in closetStore]
+    Optimistic -->|nav /closet| ClosetGrid[Closet Grid — instant paint]
+    Optimistic -.->|Promise.allSettled| API["POST /closet · createItem"]
+    API -->|success: replace ghost| closetStore
+    API -.->|failure: remove ghost| FailureLog[closetStore.saveFailures]
+    API -.->|defer_matte=true| MatteTask[Background rembg + SegFormer]
+    API -.->|needs_reconstruction| RecTask[Background Nano Banana]
+
+    UI -->|Digital Import tab| Receipt[Receipt Import]
+    Receipt -->|"per-selector cropImageFile / cropText"| ParseAPI["POST /closet/parse-receipt"]
+    ParseAPI -->|asyncio.gather OCR + Vision| ExtractedCards[Extracted Item Cards]
+    ExtractedCards -->|handleSaveExtractedItems| IngestOverlay[Ingest Overlay Animation]
+    IngestOverlay -->|closetStore.upsert + prewarm| ClosetGrid
 ```
 
 ### User Value Proposition
-*   **Zero-Overhead Duplicate Protection**: In-browser fingerprinting identifies exact and visual duplicates against the locally cached wardrobe before incurring any network, model, or API execution cost.
-*   **Progressive UI Responsiveness**: Interactive streaming via NDJSON displays garment bounding boxes and placeholder crops within 5–7 seconds, allowing the user to review items while downstream Gemini tagging runs in parallel.
-*   **Failure-Resilient Bulk Ingestion**: Ingesting large batches (>5 items) automatically routes garments to a background batch queue, sequentially processing models to prevent server Out-Of-Memory (OOM) failures and letting the user navigate away immediately.
-*   **Intelligent Auto-Hydration**: Machine learning and OCR models extract brand, item type, category, price, and color vectors to pre-fill the cataloging form, falling back to stored body size preferences when garment tag OCR is unreadable.
-*   **AI Garment Restoration**: Occluded or poorly cropped edges are automatically identified and patched using the backend's Nano Banana generative inpainting models, returning a clean, full-bleed product card.
+
+- **Zero-overhead duplicate protection**: SHA-256, average-hash (aHash), and 24-byte color signature are computed entirely in-browser (~150–250 ms per file) before any network round-trip fires. The backend's `POST /closet/preflight` endpoint is now deprecated.
+- **Progressive streaming feedback**: The NDJSON stream delivers a `detect` frame within ~5–7 s, splitting the single upload card into N placeholder cards with garment thumbnails. The user can start reviewing item #1 while items #2–N are still being tagged by Gemini.
+- **Failure-resilient batch mode**: Uploading more than five photos automatically routes to a background sequential analysis path (`handleBatchBackground`) that prevents OOM on the server by never running two GPU-bound SegFormer/rembg pipelines in parallel.
+- **Optimistic-first save (Phase Z4)**: Items appear in the Closet grid within ~16 ms of clicking Save. Background `Promise.allSettled` reconciliation replaces each ghost with the canonical server document; failures are surfaced via a summary dialog in `/closet`, not by blocking navigation.
+- **Receipt-to-Closet import (Phase R)**: Four sub-modes (Paste Text, Upload Image, Upload PDF, Web Link) extract brand, price, size, and category from any commerce document using Gemini's multimodal vision. Extracted facts are locked against future GarmentVision re-analysis via `receipt_locked_fields`.
+- **AI garment reconstruction (Nano Banana)**: Garments touching frame edges are identified by the backend and inpainted in a deferred task. The frontend exposes a `useReconstructed` toggle so the user can compare the original crop against the restored version.
+- **Auto-save queue (Patch M20.2)**: Pressing Save while cards are still scanning queues the batch via `pendingAutoSave`. A descriptive banner keeps the user informed; a `useEffect` re-fires `saveAll` once all cards reach a terminal state.
+- **12-language localisation with size preference fallback**: The `hydrate()` function fills the size field from the user's stored body-measurement preferences (`deriveSizeFromPreferences`) when the analyzer cannot read a garment tag.
 
 ---
 
 ## 2. Comprehensive User Manual
 
-### Visual Interface Topology
+### 2.1 Visual Interface Topology
 
 ```text
-+---------------------------------------------------------------------------------------+
-|  <- Back                                 [Add Photos Button]   [Save All (Integrate)] |
-+---------------------------------------------------------------------------------------+
-|                       (1) CAPTURE  ===>  (2) REFINE (0/N)  ===>  (3) INTEGRATE        |
-+---------------------------------------------------------------------------------------+
-|  +---------------------------------------------------------------------------------+  |
-|  | [ Camera & Upload Tab ]                          [ Digital Import Tab ]         |  |
-|  +---------------------------------------------------------------------------------+  |
-|  |                                                                                 |  |
-|  |                              DRAG & DROP IMAGE ZONE                             |  |
-|  |                                                                                 |  |
-|  |    [ Take Photo (Camera) ]     [ Upload Photos (File) ]    [ Scan QR (DPP) ]    |  |
-|  |                                                                                 |  |
-|  +---------------------------------------------------------------------------------+  |
-+---------------------------------------------------------------------------------------+
-|  CARDS GRID (REFINEMENT PHASE)                                                        |
-|  +---------------------------------------+ +---------------------------------------+  |
-|  | [GARMENT PREVIEW PANEL]               | | [TAXONOMY ACCORDIONS]                 |  |
-|  | +-----------------------------------+ | | v Basic Info                          |  |
-|  | |                                   | | |   Name:   [ Cream Linen Blazer      ] |  |
-|  | |                                   | | |   Brand:  [ Zara                    ] |  |
-|  | |          GARMENT IMAGE            | | |   Size:   [ M                       ] |  |
-|  | |                                   | | |   Type:   [ Blazer                  ] |  |
-|  | |                                   | | |   Category: [ Outerwear             ] |  |
-|  | +-----------------------------------+ | | ------------------------------------- |  |
-|  | | [Wand] Showing Original / AI      | | | > Styling Details                     |  |
-|  | +-----------------------------------+ | | ------------------------------------- |  |
-|  | | [Progress Bar / Scanning Overlay] | | | > Care & Repair                       |  |
-|  +---------------------------------------+ +---------------------------------------+  |
-+---------------------------------------------------------------------------------------+
++------------------------------------------------------------------+
+|  <- Back                    [Add Photos]          [Save (N)]     |
++------------------------------------------------------------------+
+|           (1)Capture ------  (2)Refine (k/N) ------  (3)Integrate  |   <- Stepper
++------------------------------------------------------------------+
+|  +----------------------------------------------------------+   |
+|  | [Camera & Upload]                 [Digital Import]       |   |   <- Tabs
+|  +----------------------------------------------------------+   |
+|                                                                   |
+|  Camera & Upload tab:                                             |
+|  +------------------------------------------------------------+  |
+|  |    Drag & drop  .  Take Photo  .  Upload Photos            |  |
+|  |          .  Camera  .  Scan QR (DPP)                       |  |
+|  +------------------------------------------------------------+  |
+|                                                                   |
+|  +----------------------+  +--------------------------------+    |
+|  |  GARMENT THUMBNAIL   |  | v Basic Info                   |    |
+|  |  [scanning overlay]  |  |   Name . Brand . Size . Type   |    |
+|  |  --------------------  |  |   Category . Dress Code        |    |
+|  |  [Wand toggle]       |  | v Styling Details              |    |
+|  |  [Original/AI]       |  |   Colors . Materials . Pattern |    |
+|  |  [Progress Bar]      |  |   Season . Gender . Quality    |    |
+|  +----------------------+  | v Care & Repair                |    |
+|                             |   State . Condition . Tags     |    |
+|  [Intent chips: Own /       |   Repair Advice                |    |
+|   Sell / Donate / Swap]     +--------------------------------+    |
++------------------------------------------------------------------+
 ```
-
-### Mode & Workflow Walkthroughs
-
-#### A. Camera & Upload Flow
-1.  **Selection**: The user clicks **Take Photo** or **Upload Photos**.
-    *   **Take Photo** activates the camera. On mobile, `capture="environment"` prompts the native rear camera directly.
-    *   **Upload Photos** opens a unified, standard native file picker. 
-        *   The file input uses `accept="image/*"` and `multiple`.
-        *   This enables native **Google Drive multi-selection** (allowing users to check multiple items and tap the enabled "Select" button).
-        *   It also **bypasses the "Photo/Files" intent chooser** on Chrome for Android, going straight to the system file explorer (SAF).
-        *   *Note*: Firefox for Android intercepts `accept="image/*"` to present its own built-in camera/files prompt. This is native browser-level behavior and cannot be web-bypassed.
-2.  **MIME-Type & Extension Filtering**:
-    *   When files are selected, the frontend checks if they are valid images. To prevent Android from discarding cloud files whose MIME types aren't immediately resolved, `handleFiles` filters selected items by validating that either their MIME type starts with `image/` or their filename ends with a supported extension (`.jpg`, `.jpeg`, `.png`, `.webp`, `.heic`, `.heif`).
-3.  **In-Browser Duplicate Pre-Flight**:
-    *   The browser reads each image into a canvas, converts it to a base64 JPEG byte string, and computes its SHA-256 hash, visual aHash, and color signature.
-    *   If any uploads match items in `closetStore.getSnapshot().items`, they are handled by the collision pathways:
-        *   **Interactive Path (≤5 photos)**: A scrollable `DuplicatePreflightDialog` displays side-by-side matches. The user can toggle individual items to **Skip** or **Add anyway ⭐** (marking them as duplicate entries).
-        *   **Batch Path (>5 photos)**: Duplicates are silently omitted based on user preferences.
-4.  **Streaming Analysis**: Surviving files are uploaded to `/closet/analyze` with the `Accept: application/x-ndjson` header.
-    *   The frontend splits the single upload card into $N$ child cards during the `detect` frame.
-    *   Each child card shows a scanning animation and progressive progress indicator.
-    *   Individual `item` frames populate each card's fields and previews as they return from Gemini.
-
-#### B. Digital Receipt & Email Import Flow
-1.  **Input Modes**: The user switches to the **Digital Import** tab and selects:
-    *   **Paste Text**: Raw text from merchant emails, invoice confirmations, or markdown-based logs.
-    *   **Upload File**: Receipt PDF documents or invoice images.
-    *   **Web Link**: A merchant URL (e.g., Zara order confirmation).
-2.  **Extraction**: The user clicks **Extract Items**. The frontend submits the payload to `/closet/parse-receipt`.
-    *   The backend triggers OCR Gemini parsing and visual item cropping concurrently.
-    *   The return payload populates fields including `brand`, `item_type`, `size`, `price_cents`, `category`, and `colors`.
-3.  **Form Hydration & Fallback rendering**:
-    *   If a cropped image base64 exists, the card displays the image preview.
-    *   If no image crop is available, the frontend generates an inline SVG placeholder displaying the brand name and the dominant color signature.
-
-#### C. Digital Product Passport (DPP) Scan Flow
-1.  **Scan**: The user scans a QR code using `DppScanner` or inputs a DPP URL.
-2.  **Hydration**: The frontend calls `api.importDpp(payload)`. The response contains official manufacturing details:
-    *   Fiber composition percentages (e.g., $100\%$ organic cotton).
-    *   Carbon footprint metrics and supply chain location origins.
-    *   Official garment thumbnails, structural taxonomy, and care instructions.
 
 ---
 
-### Error Handling & Feedback
+### 2.2 The Three-Step Stepper
 
-*   **API Outage and Quota Failures**: Gemini and backend model execution errors (e.g., `401 Unauthenticated`, `403 Permission Denied`, `429 Quota Exhausted`, `503 Service Unavailable`, `504 Timeout`) are intercepted. The card transitions to `status: 'error'`, displaying the specific server diagnostic message next to a **Try Again** action.
-*   **Idempotency Guards**: To prevent user multi-clicks or React StrictMode from firing duplicate API requests, `analyzeInFlight.current` tracks active card IDs and rejects redundant analysis triggers.
-*   **Auto-Save Queue**: If the user clicks **Save All** while some cards are still in a `scanning` state, the frontend saves the ready cards and toggles `pendingAutoSave: true`. The user remains on the `/add` page with a descriptive progress banner; as the scanning cards complete, they are automatically saved, and the page redirects.
-*   **Optimistic Save Reconciliation**: Ready cards are saved in parallel via `Promise.allSettled`. If a save fails, the optimistic item is removed, and a summary dialog displays the failed items' names, filenames, thumbnails, and errors.
+The `Stepper` component (lines 184–260) renders a 3-node progress indicator driven entirely by the `cards` array and the `saving`/`bgBatch` states:
+
+| Step | Label | Condition |
+|---|---|---|
+| 1 — Capture | `addItem.step.capture` | Default (no cards present) |
+| 2 — Refine | `addItem.step.refinement` + `(k/N)` badge | `cards.length > 0` |
+| 3 — Integrate | `addItem.step.save` | `saving === true` or `bgBatch.processed === bgBatch.total` |
+
+The connecting line between steps is a `<motion.div>` that animates its `width` from `0%` → `50%` → `100%` over 300 ms. Step 3's ring pulses via `animate-pulse` with a brand-color glow when active.
+
+---
+
+### 2.3 Mode A — Camera & Upload
+
+#### A.1 File Selection
+
+Three entry points all funnel into `handleFiles(fileList)`:
+
+| Control | Input | Notes |
+|---|---|---|
+| **Take Photo** (`openCamera`) | `<input ref={cameraInputRef} capture="environment">` | Triggers native rear camera on mobile; bypasses chooser on Chrome Android |
+| **Upload Photos** (`pickFiles`) | `<input ref={fileInputRef} accept="image/*" multiple>` | Enables Google Drive multi-select; bypasses Photo/Files intent chooser |
+| **Drag & Drop** | `onDrop` on the dropzone `<div>` | Passes `event.dataTransfer.files` to `handleFiles` |
+
+MIME-type filter applied in `handleFiles` (line 1022–1026):
+```javascript
+files.filter(f =>
+  f.type.startsWith('image/') ||
+  /\.(jpe?g|png|webp|heic|heif)$/i.test(f.name)
+)
+```
+This prevents Android from dropping cloud files whose MIME types haven't resolved yet.
+
+#### A.2 Client-Side Fingerprinting (Lines 1044–1100)
+
+For each file:
+1. `fileToBase64(rawF)` — renders the image onto a capped-1024px canvas, exports as JPEG at 80% quality, returns the base64 string. Uses `createImageBitmap` if available (faster on modern browsers), falls back to `new Image()`.
+2. A CSP-safe blob conversion (bypasses `data:` URL connection blocks in some WebViews).
+3. `sha256File(f)` — SHA-256 of the JPEG bytes via SubtleCrypto.
+4. `aHashFile(f)` — 64-bit average perceptual hash.
+5. `colorSignatureFile(f)` — 24-byte spatial color signature (4 quadrants x 3 RGB channels).
+
+All three hashes are assembled into a `fingerprint` object and passed to `findDuplicatesInCloset`.
+
+#### A.3 Duplicate Detection (Lines 1102–1246)
+
+`findDuplicatesInCloset(fpForLookup, closetItems)` runs entirely client-side against `closetStore.getSnapshot().items`. It is a 1:1 port of the backend's `is_duplicate_match`:
+
+| Match Level | Condition | Used When |
+|---|---|---|
+| **Exact** | `sha256A === sha256B` | Always |
+| **Lenient** (both color sigs present) | `hamming(phashA, phashB) <= 6 AND colorDist(A,B) <= 220` | Standard path |
+| **Strict** (missing color sig) | `hamming(phashA, phashB) <= 3` | Legacy items without `source_color_sig` |
+
+Hamming distance uses Brian Kernighan's bit-clearing algorithm: `x &= x - 1` until `x === 0`. Color distance is the Manhattan distance across all 12 bytes:
+
+$$d = \sum_{i=1}^{12} |a_i - b_i|$$
+
+**Two resolution paths based on batch size:**
+
+| Path | Trigger | Behavior |
+|---|---|---|
+| **Interactive** | `files.length <= 5` | Opens `DuplicatePreflightDialog` with side-by-side thumbnails. Per-row: Skip or Add anyway |
+| **Batch** | `files.length > 5` | Silently drops duplicate fingerprints; toast reports skipped count; survivors go to `handleBatchBackground` |
+
+#### A.4 Streaming Analysis — Interactive Path
+
+`continueInteractive(fingerprints, duplicateAcks)` builds draft cards (`status: 'scanning'`, `progress: 4`) and calls `analyzeCards(drafts)`.
+
+**`analyzeCards` NDJSON streaming (lines 1451–1674):**
+
+```
+POST /closet/analyze
+Accept: application/x-ndjson
+Body: { images_base64: string[], language: 'en' | 'he' | ... }
+```
+
+Frame sequence received:
+```
+-> detect  { items_meta: [{crop_base64, crop_mime, label, defer_matte, image_index}...] }
+-> item    { index, analysis, label, potential_duplicate, reconstruction?, defer_matte, ... }
+-> item    ...
+-> item_skip { index }
+-> done
+```
+
+**On `detect` frame** (line 1512–1554): the original single card is replaced in `setCards` with N placeholder cards (one per detected garment). Each inherits the original base64 but gets `crop_base64` as its `previewUrl`. `workStore.updateAnalyze(cardId, { items: 0, total: N })` updates the global analysis floater.
+
+**On `item` frame** (line 1557–1606): the matching slot card transitions to `status: 'ready'`, `progress: 100`. The `hydrate(frame.analysis, user)` call populates all taxonomy fields, with size fallback from user preferences. If `reconstruction.validated === true`, `useReconstructed` is set `true` and `previewUrl` points to the Nano Banana result.
+
+**Faux-progress timer** (line 1464–1475): a `setInterval` at 250 ms ticks `progress` toward 92% using `target = min(92, 4 + elapsed_seconds * 5)`, ensuring the scanning animation always looks active during slow Gemini calls.
+
+**Idempotency guard** (`analyzeInFlight.current`, Patch 12): a `Set` of card IDs currently being analyzed prevents duplicate calls from React StrictMode double-fires or user "Try again" races. Cleared in `finally`.
+
+**`workStore` integration**: each card registers a job with `workStore.registerAnalyze(cardId, filename)`. The global `WorkProgressFloater` mounted at App root reads this store to show cross-page progress even if the user navigates away during analysis.
+
+#### A.5 Background Batch Path (Lines 1292–1449)
+
+When `files.length > 5`, `handleBatchBackground(fingerprints, skippedDuplicates)` runs. A `bgBatch` state object drives a banner UI instead of individual cards.
+
+Key constraint: items are analyzed and saved **strictly sequentially** to prevent concurrent SegFormer/rembg calls from OOM-ing the production VPS. Each `api.createItem` is awaited before the next analyze begins.
+
+Potential duplicates from the batch path surface as `status: 'ready'` cards with `potentialDuplicate` set, requiring per-card user confirmation before saving.
+
+---
+
+### 2.4 Mode B — Digital Product Passport (DPP)
+
+1. User taps **Scan QR** → `setScanOpen(true)` → `<DppScanner>` component renders.
+2. On decode: `handleScanDecoded(payload)` → `api.importDpp(payload)` → `hydrateFromDpp(res)`.
+3. `hydrateFromDpp` builds a card with `source: 'dpp'` and `dppData` containing official manufacturer metadata: fiber composition, carbon footprint, supply-chain origins, care instructions.
+4. If the app was launched via `?source=dpp` (from TopNav QR shortcut), a `useEffect` reads `sessionStorage.dpp_draft`, calls `hydrateFromDpp`, and clears the URL parameter to prevent replay on refresh.
+
+---
+
+### 2.5 Mode C — Digital Receipt & Email Import
+
+See [`docs/Receipt-Digital-Import.md`](./Receipt-Digital-Import.md) for the complete technical manual. Summary of the four sub-modes:
+
+| Sub-mode | Trigger | OCR Timing | API |
+|---|---|---|---|
+| **Paste Text** | `importMode = 'text'` | On Extract (per-selector) | `POST /closet/parse-receipt` with `text=` |
+| **Upload Image** | `importFile.type.startsWith('image/')` | On Extract (per-selector canvas crop) | `POST /closet/parse-receipt` with `file=` |
+| **Upload PDF** | `importFile.type === 'application/pdf'` | On file select (upfront, Gemini + pypdf) | `POST /closet/extract-pdf-text` then per-selector |
+| **Web Link** | `importMode = 'url'` | On Extract | `POST /closet/parse-receipt` with `url=` |
+
+The **selector overlay** (`selectors` state, lines 296, 547–732) provides draggable, resizable region boxes in % coordinates. `handleAddSelector` stacks new selectors below the previous one with a 2% gap. Touch support includes two-finger pinch-to-resize (`pinchX`, `pinchY`, `pinchDiag` drag modes) tracked via `dragState`.
+
+**`handleSaveExtractedItems`** (lines 934–1018) orchestrates the ingest workflow:
+- Linked items (`item.closetItem`) — `PATCH` with `{brand, size, price_cents, purchase_price_cents}` only. **Title is never overwritten.**
+- New items — `POST /closet` with `from_receipt: true` and `receipt_locked_fields` array computed from which fields actually have data.
+- Per-item `closetStore.upsert(result)` for instant grid update.
+- `setIngestPhase('syncing')` → `closetStore.prewarm({ force: true })` → `nav('/closet')`.
+
+---
+
+### 2.6 Taxonomy Form — Refine Phase
+
+Each card in the `ready` state renders a two-column layout: garment preview (left) + three accordion sections (right).
+
+| Accordion | Fields |
+|---|---|
+| **Basic Info** (`addItem.section.basic`) | Name, Brand, Sub-category, Item type, Category, Size, Dress code, Tradition, Gender, Season (multi-select) |
+| **Styling Details** (`addItem.section.styling`) | Colors (WeightedList), Fabric materials (WeightedList), Pattern, State, Condition, Quality, Tags |
+| **Care & Repair** (`addItem.section.care`) | Repair advice, Marketplace intent (Own / Sell / Donate / Swap), Price / Currency, Asking price preview with Stripe fee deduction |
+
+The **intent selector** (lines 68–73) renders colored chip buttons:
+
+| Value | Color | Icon |
+|---|---|---|
+| `own` | slate | Shirt |
+| `for_sale` | amber | HandCoins |
+| `donate` | emerald | Gift |
+| `swap` | sky | Repeat |
+
+The **Wand toggle** (`useReconstructed`) switches the preview between `originalCropUrl` and `reconstructedUrl` when Nano Banana produced a validated inpainting result.
+
+---
+
+### 2.7 Save All — Optimistic-First Phase Z4 (Lines 1955–2260)
+
+```
+saveAll()
+  |-- ready cards = cards where status in {ready, error-with-title}
+  |-- scanning cards = cards where status === 'scanning'
+  |
+  |-- [scanning only] --> setPendingAutoSave(true) --> toast.info --> return
+  |                       useEffect re-fires saveAll() when all scanning -> terminal
+  |
+  +-- [ready cards exist]:
+       for each valid card:
+         tempId = crypto.randomUUID()
+         optimisticItem = { id: tempId, _pendingSync: true, ...fields, thumbnail_data_url: dataUrl }
+         closetStore.upsert(optimisticItem)      <- instant Closet grid paint
+         ghosts.set(tempId, { body, title, filename, dataUrl, cardId })
+
+       nav(isSuitcase ? '/suitcase' : '/closet')  <- navigate immediately
+       setSaving(true)
+
+       results = await Promise.allSettled(         <- parallel saves
+         validCards.map(async ({ card, body }) => {
+           const created = await createItemWithTimeout(body, 45_000)
+           closetStore.upsert(created.item)        <- replace ghost
+           workStore.completeAnalyze(card.id)
+         })
+       )
+
+       // Reconcile failures
+       results.filter(r => r.status === 'rejected').forEach(r => {
+         closetStore.remove(ghost.tempId)
+         closetStore.addSaveFailure(ghost)
+       })
+```
+
+`createItemWithTimeout` wraps `api.createItem` in a 45-second `Promise.race` to prevent stalled saves from blocking reconciliation.
+
+The `_pendingSync: true` marker on ghost items causes the Closet card to render a sparkling overlay. The overlay disappears the moment the server item replaces the ghost via `closetStore.upsert`.
+
+---
+
+### 2.8 Auto-Save Queue (Patch M20.2)
+
+```javascript
+useEffect(() => {
+  if (!pendingAutoSave) return;
+  const anyScanning = cards.some(c => c.status === 'scanning');
+  if (anyScanning) return;
+  setPendingAutoSave(false);
+  saveAll();
+}, [cards, pendingAutoSave]);
+```
+
+If all cards complete and `pendingAutoSave` is true, `saveAll` fires automatically. Cards that reach `status: 'error'` are still included — the user may have filled the title manually.
+
+---
+
+### 2.9 Ingest Overlay Animation (Receipt Path)
+
+During `handleSaveExtractedItems`, an `<AnimatePresence>` overlay covers the full screen (`absolute inset-0 z-50`):
+
+| Phase | SVG Ring | Icon | Label |
+|---|---|---|---|
+| `saving` | Animated: `strokeDashoffset = 2*PI*34 * (1 - done/total)` | Sparkles | `addItem.import.ingestCataloguing` |
+| `syncing` | Full circle (offset = 0) | Spinning RefreshCw | `addItem.import.ingestSyncing` |
+
+Phase transitions use `AnimatePresence mode="wait"` keyed on `ingestPhase`, with `y: 6->0` enter and `y: 0->-6` exit animations (200 ms). Backdrop: `hsl(var(--background)/0.92)` with `backdrop-filter: blur(12px)`.
+
+---
+
+### 2.10 Error Handling Reference
+
+| Scenario | UX Response |
+|---|---|
+| Analysis stream returns 0 items | Card → `status: 'error'`; `toast.error(addItem.analyzeFailed)` |
+| Analysis stream throws after `detect` (Gemini 403) | All per-item slot cards → `status: 'error'` (Patch M19 bug fix) |
+| `createItem` times out (>45 s) | Ghost removed; failure logged to `closetStore.saveFailures` |
+| DPP `parse_error` field present | `toast.error(dpp.scanner.errors.{parse_error})` |
+| PDF OCR fails (Gemini + pypdf) | `toast.error(addItem.import.textError)` |
+| Receipt extract returns no matches | `toast.error(addItem.import.error)` |
+| Save with nothing selected | `toast.error(addItem.import.noSelectedItems)` |
+| User presses Save while all cards scanning | `toast.info(addItem.queuedForAutoSave)`, `pendingAutoSave = true` |
+| All batch photos are duplicates | `toast.message(addItem.preflight.allDuplicatesSkippedBatch)` |
 
 ---
 
 ## 3. Technology Stack & Capability Deep-Dive
 
-### Core Orchestration & AI/Logic
+### 3.1 Top-Level Constants & Helpers (Lines 52–181)
 
-#### SegFormer Classification & Image Matting
-The backend leverages a local SegFormer model (`clothing_parser.py`) to classify clothing pixels. User-facing categories mapped by the frontend collapse onto the SegFormer taxonomy:
+| Symbol | Type | Purpose |
+|---|---|---|
+| `CATEGORY_OPTIONS` | `string[]` | 7 canonical garment categories |
+| `DRESS_CODE_OPTIONS` | `string[]` | 6 dress code values |
+| `GENDER_OPTIONS / SEASON_OPTIONS / STATE_OPTIONS` | `string[]` | Taxonomy enumerations |
+| `CONDITION_OPTIONS / QUALITY_OPTIONS / PATTERN_OPTIONS` | `string[]` | Refinement taxonomy |
+| `INTENT_OPTIONS` | `{value, icon, tone}[]` | Marketplace intent with styled chip data |
+| `fileToBase64(file, maxSide=1024, quality=0.8)` | `async (File) -> string` | Resize + JPEG encode; white background fill; `createImageBitmap` fast path |
+| `fmtCents(cents, cur='USD')` | `(number, string) -> string` | `Intl.NumberFormat` currency format |
+| `blankFields()` | `() -> object` | Zero-value form state: `price_cents: 0`, `currency: 'USD'`, `marketplace_intent: 'own'` |
+| `hydrate(analysis, user)` | `(object, User) -> object` | Merges analysis onto `blankFields()`; size fallback via `deriveSizeFromPreferences` |
+| `Stepper` | React component | 3-step animated progress indicator |
 
-| User Category | SegFormer Target Class |
-| :--- | :--- |
-| Top, Tops, Shirt, Blouse, Underwear | `top` |
-| Outerwear, Jacket, Coat | `top` |
-| Bottom, Bottoms, Pants, Trousers, Jeans, Skirt, Shorts | `bottom` |
-| Dress, Dresses, Full Body, Full-body | `dress` |
-| Footwear, Shoes, Sneakers, Boots | `footwear` |
-| Accessory, Accessories, Bag, Belt, Scarf | `accessory` |
-| Headwear, Hat, Hats | `headwear` |
+### 3.2 State Variables (Lines 262–356)
 
-During background matting (`_run_background_matte`), the backend intersects the `rembg` alpha mask with the SegFormer binary mask:
-$$\text{Alpha}_{\text{final}} = \text{Alpha}_{\text{rembg}} \cap \text{Mask}_{\text{SegFormer}}$$
-This intersection removes non-garment background items (e.g., plants, hangers, posters) that `rembg` might otherwise retain.
+| Variable | Initial | Role |
+|---|---|---|
+| `cards` | `[]` | Array of card objects: `{id, file, mime, previewUrl, base64, cropBase64, status, progress, fields, error, label, dppData?, sourceSha256, sourcePhash, sourceColorSig, isDuplicate, useReconstructed, reconstructedUrl, needsReconstruction, deferMatte, potentialDuplicate, _pendingSync?}` |
+| `saving` | `false` | Global save spinner / disables Save button |
+| `ingestPhase` | `null` | Receipt overlay: `null | 'saving' | 'syncing'` |
+| `ingestProgress` | `{done:0, total:0}` | Ring progress counters |
+| `pendingAutoSave` | `false` | Auto-save queue flag (Patch M20.2) |
+| `scanOpen` | `false` | DPP scanner dialog open |
+| `receiptText` | `''` | Pasted or PDF-extracted text |
+| `isExtracting` | `false` | Disables Extract button; shows spinner |
+| `importMode` | `'text'` | `'text' \| 'file' \| 'url'` |
+| `importFile` | `null` | File object from file picker |
+| `importUrl` | `''` | Web link URL |
+| `selectors` | `[{id:1, x:0, y:10, w:100, h:2}]` | Region selector boxes (% coords) |
+| `dragState` | `null` | Active drag/resize session for selectors |
+| `extractedItems` | `[]` | Parsed receipt cards |
+| `linkingItemId` | `null` | Card whose closet-link dialog is open |
+| `closetModalOpen` | `false` | Closet picker dialog visibility |
+| `closetSearch` | `''` | Filter query inside closet picker |
+| `activeItemForImage` | `null` | Card whose photo-attach input is active |
+| `imagePreviewUrl` | `null` | `URL.createObjectURL(importFile)` for preview |
+| `closetItemDetailPane` | `null` | Linked closet item shown in detail dialog |
+| `bgBatch` | `null` | Background batch progress object |
+| `preflight` | `null` | `{matches, onResolve}` for DuplicatePreflightDialog |
+| `isSuitcase` | computed | `searchParams.get('from') === 'suitcase'` |
 
-#### Visual Item Matching Algorithm
-The client-side visual duplicate detection algorithm (`duplicateDetection.js`) replicates the backend's matching logic using three parameters:
+### 3.3 Key Refs
+
+| Ref | Purpose |
+|---|---|
+| `fileInputRef` | Hidden `<input type="file" multiple>` — triggered by Upload Photos |
+| `cameraInputRef` | Hidden `<input capture="environment">` — triggered by Take Photo |
+| `receiptFileInputRef` | Hidden `<input>` for receipt file upload |
+| `itemImageInputRef` | Hidden `<input>` for per-extracted-item photo attach |
+| `analyzeInFlight` | `useRef(new Set())` — idempotency guard (Patch 12) |
+
+### 3.4 `buildCreatePayload(card, isSuitcase)`
+
+Constructs the `POST /closet` body from a card object. Key decisions:
+- Uses `cropBase64` over `base64` when available (the GarmentVision crop is more precise than the full image).
+- Sets `defer_matte: true` when the backend signalled it in the `detect` or `item` frame.
+- Sets `is_suitcase_item: isSuitcase` based on the `?from=suitcase` URL parameter.
+- Passes `source_sha256`, `source_phash`, `source_color_sig`, `source_filename`, `source_size_bytes` for deduplication persistence.
+- Sets `is_duplicate: true` if the card was explicitly acknowledged by the user in the preflight dialog.
+
+### 3.5 `cropImageFile(file, selector)` — Canvas Crop (Lines 504–538)
 
 ```javascript
-const HAMMING_THRESHOLD = 6;
-const HAMMING_THRESHOLD_STRICT = 3;
-const COLOR_THRESHOLD = 220;
+const x = (selector.x / 100) * img.width;
+const y = (selector.y / 100) * img.height;
+const w = (selector.w / 100) * img.width;
+const h = (selector.h / 100) * img.height;
+canvas.width = w; canvas.height = h;
+ctx.drawImage(img, x, y, w, h, 0, 0, w, h);
+canvas.toBlob(resolve, 'image/jpeg', 0.9);
+```
+Produces a `File` named `crop-{selectorId}-{original filename}` for multipart submission to `/closet/parse-receipt`.
+
+### 3.6 `cropText(text, selector)` — Text Layer Crop (Lines 540–545)
+
+```javascript
+const lines = text.split('\n');
+const startLine = Math.floor((selector.y / 100) * lines.length);
+const endLine   = Math.ceil(((selector.y + selector.h) / 100) * lines.length);
+return lines.slice(startLine, endLine).join('\n');
+```
+Maps selector vertical position (0–100%) to character-line offsets.
+
+### 3.7 Backend — `/closet/analyze` Streaming Pipeline
+
+| Frame Type | Timing | Content |
+|---|---|---|
+| `detect` | ~5–7 s | `{type: 'detect', items_meta: [{crop_base64, crop_mime, label, defer_matte, image_index}]}` |
+| `item` | ~1–2 s per item | `{type: 'item', index, analysis, label, potential_duplicate, reconstruction?, needs_reconstruction, reconstruction_reasons, defer_matte}` |
+| `item_skip` | On duplicate detection | `{type: 'item_skip', index}` |
+| `done` | Final | `{type: 'done', count}` |
+
+The `detect` frame's `defer_matte: true` signals that background matting (`rembg + SegFormer alpha intersection`) will run after `POST /closet` rather than inline. This prevents the analyze endpoint's response time from growing linearly with batch size.
+
+**SegFormer Category Mapping:**
+
+| User Category | SegFormer Target |
+|---|---|
+| Top, Shirt, Blouse, Underwear | `top` |
+| Outerwear, Jacket, Coat | `top` |
+| Bottom, Pants, Trousers, Jeans, Skirt, Shorts | `bottom` |
+| Full Body, Dress | `dress` |
+| Footwear, Shoes, Sneakers, Boots | `footwear` |
+| Accessories, Bag, Belt, Scarf | `accessory` |
+
+During background matting, the backend intersects the `rembg` alpha mask with the SegFormer binary mask:
+
+$$\text{Alpha}_\text{final} = \text{Alpha}_\text{rembg} \cap \text{Mask}_\text{SegFormer}$$
+
+This removes non-garment background items (plants, hangers, posters) that `rembg` might otherwise retain.
+
+### 3.8 Backend — `/closet/parse-receipt` (Digital Import)
+
+Concurrent dual-path analysis for image receipts:
+```python
+ocr_result, visual_result = await asyncio.gather(run_ocr(), run_visual())
+```
+- `run_ocr()` — Gemini Multimodal Vision with structured JSON extraction prompt.
+- `run_visual()` — SegFormer bbox detection → largest garment crop → 18-field GarmentVision analysis.
+- **Field priority**: OCR wins on transactional facts (`brand`, `size`, `price_cents`, `name`); GarmentVision wins on aesthetic attributes (`colors`, `pattern`, `dress_code`, `season`).
+
+### 3.9 Receipt-Locked Field System
+
+Locks are computed on the frontend before `POST /closet`:
+```javascript
+const receiptLockedFields = [
+  item.name         ? 'title'                : null,
+  item.brand        ? 'brand'                : null,
+  item.size         ? 'size'                 : null,
+  item.price_cents  ? 'price_cents'          : null,
+  item.price_cents  ? 'purchase_price_cents' : null,
+  item.category     ? 'category'             : null,
+  item.colors?.length ? 'colors'             : null,
+  item.colors?.length ? 'color'              : null,
+].filter(Boolean);
 ```
 
-1.  **Exact Match**: The SHA-256 byte hashes are compared:
-    $$\text{shaA} = \text{shaB} \implies \text{Duplicate}$$
-2.  **Lenient Hash (Both Colors Present)**: The Hamming distance of the two 64-bit perceptual hashes (average hash) and the Manhattan distance of the 24-char color signature vectors are compared:
-    $$\text{HammingDist}(\text{phashA}, \text{phashB}) \le 6 \quad \land \quad \text{ColorDist}(\text{colorA}, \text{colorB}) \le 220 \implies \text{Duplicate}$$
-3.  **Strict Hash (Missing Color Signature)**: Used if one or both items lack a color signature (e.g., legacy closet entries). The Hamming threshold is tightened to prevent false positives between same-silhouette garments of different colors:
-    $$\text{HammingDist}(\text{phashA}, \text{phashB}) \le 3 \implies \text{Duplicate}$$
+The backend persists `receipt_locked_fields` on the MongoDB document. `_run_background_matte_and_analyze` enforces fill-empty-only for locked fields. The same guard applies in `PATCH /closet/{id}`.
 
-The Hamming distance is computed in JavaScript using Brian Kernighan's bit-counting algorithm:
-```javascript
-let dist = 0;
-let x = ai ^ bi;
-while (x) {
-  dist += 1;
-  x &= x - 1; // Clears the lowest set bit
+### 3.10 Closet Store Integration
+
+| Operation | Call | Effect |
+|---|---|---|
+| Optimistic insert | `closetStore.upsert(optimisticItem)` | Instantly visible in Closet grid |
+| Ghost replacement | `closetStore.upsert(created.item)` | Removes `_pendingSync`, shows real thumbnail |
+| Ghost removal (failure) | `closetStore.remove(tempId)` | Disappears from grid |
+| Failure record | `closetStore.addSaveFailure(ghost)` | Closet renders failure summary dialog |
+| Post-receipt sync | `closetStore.prewarm({ force: true })` | Full server fetch; clears TTL cache |
+
+`useClosetItems()` subscribes via `useSyncExternalStore`. Cross-tab sync is automatic: `closetStore.js` fires the `storage` event on every `upsert`/`remove`, triggering a re-render on all open tabs simultaneously.
+
+### 3.11 Vision Provider Hot-Swap (Gemini vs. Gemma)
+
+The ingestion vision pipeline supports dynamic model swapping:
+- **Gemini (default)**: Google Gemini 2.5 Flash — the current development and production model.
+- **Gemma (edge)**: Runs locally inside a Docker container for offline/low-power edge deployments.
+- **Dynamic override**: Admins toggle via the admin panel. The preference is written to MongoDB `config.{_id: "eyes_provider"}` with a 5-second TTL cache on pods, falling back to the `EYES_PROVIDER` environment variable.
+
+### 3.12 Localisation Architecture
+
+- **Prompt alignment**: `(i18n.language || '').split('-')[0]` is passed as `language` in analyze requests, ensuring Gemini returns `title`, `caption`, and aesthetic attributes in the user's language.
+- **Taxonomy mapping**: All enum values use `labelForCategory`, `labelForDressCode`, etc. from `lib/taxonomy.js`, which map canonical keys to localised strings.
+- **RTL**: Layout components automatically mirror spacing, icon placement, and text direction for `he` and `ar` locales.
+- **`{ defaultValue }` rule**: Every `t()` call in the file uses the object form `t('key', { defaultValue: '...' })` — never bare positional syntax.
+
+---
+
+## 4. API Contract Reference
+
+### `POST /closet/analyze`
+
+**Content-Type:** `application/json` · **Accept:** `application/x-ndjson` · **Auth:** Bearer JWT
+
+```json
+{
+  "images_base64": ["<base64-jpeg>"],
+  "language": "en"
 }
 ```
 
-The color signature vector distance is calculated as the Manhattan distance across 4 quadrants and 3 RGB color channels (12 bytes total):
-$$d_{\text{color}}(a, b) = \sum_{i=1}^{12} |a_i - b_i|$$
+Streams NDJSON frames: `detect`, `item`, `item_skip`, `done`.
 
-#### Switchable Eyes Vision Provider (Gemini vs. Gemma)
-The ingestion vision pipeline supports hot-swapping the core vision processing model dynamically:
-*   **Gemini (Development/Default)**: Native integrations leverage Google's Gemini 2.5 Flash model. Gemini is the current development model driving the ingestion backend.
-*   **Gemma (Edge/Production)**: To support offline scenarios and deployment to low-power edge devices, Gemma (running locally inside a Docker container) will take Gemini's place when DressApp is deployed to production/edge environments.
-*   **Dynamic Override Flag**: Admins can hot-swap providers via the admin panel. The preference is written to MongoDB config document `config.{_id: "eyes_provider"}`. Pods dynamically resolve the active provider with a 5-second TTL cache (bypassing restarts), falling back to the configured `EYES_PROVIDER` environment variable if the database document is missing.
+### `POST /closet` (Create Item)
 
-#### Nano Banana AI Reconstruction
-For garments that touch the frame boundaries, the backend uses a generative inpainting model to reconstruct occluded details. The frontend displays a toggle letting the user switch `useReconstructed` on or off:
+**Content-Type:** `application/json` · **Auth:** Bearer JWT · **Client timeout:** 45 s
 
-*   `true`: Sets the preview and database image to `reconstructed_image_url`.
-*   `false`: Falls back to the standard segmented bbox crop.
+Key fields:
 
----
+```json
+{
+  "title": "string",
+  "category": "Top | Bottom | Outerwear | Full Body | Footwear | Accessories | Underwear",
+  "image_base64": "string | null",
+  "image_mime": "image/jpeg | image/png",
+  "defer_matte": true,
+  "needs_reconstruction": false,
+  "from_receipt": false,
+  "receipt_locked_fields": [],
+  "source_sha256": "string | null",
+  "source_phash": "string | null",
+  "source_color_sig": "string | null",
+  "is_duplicate": false,
+  "is_suitcase_item": false
+}
+```
 
-### Data & Context Pipelines
+### `PATCH /closet/{id}` (Receipt Link Path)
 
-#### FastAPI Gateway Endpoints
-*   `POST /closet/analyze`: Accepts base64 images and streams NDJSON frames.
-*   `POST /closet/parse-receipt`: Processes text, PDF/image files, or merchant URLs. OCR Gemini Vision parsing and visual crop detection run in parallel via `asyncio.gather`.
-*   `POST /closet`: Persists the cataloged items in MongoDB.
+Only `brand`, `size`, `price_cents`, `purchase_price_cents`, `purchase_date` are sent — title and thumbnail are always preserved.
 
-#### Asynchronous Background Tasks
-To maintain fast response times, heavy ML tasks are deferred after calling `POST /closet`:
+### `POST /closet/parse-receipt` and `POST /closet/extract-pdf-text`
 
-1.  **Deferred Matting** (`_run_background_matte`): Triggered if `defer_matte=True`. It runs SegFormer mask extraction, calls `rembg`, intersects their alphas, base64-encodes the resulting PNG, and writes it to `clean_image_url`. It also nulls `thumbnail_data_url` to invalidate the cached thumbnail and trigger a frontend refresh.
-2.  **Deferred Reconstruction** (`_run_background_reconstruction`): Triggered if `needs_reconstruction=True`. It sends the cropped garment image to the reconstruction pipeline, writes the result to `reconstructed_image_url`, and invalidates the cached thumbnail.
-3.  **Stale Matte Recovery** (`_maybe_retry_stale_matte`): Monitors items stuck in a `pending` status. If an item has been updating for more than 90 seconds without completing, the task re-queues the background matte runner.
+See [`docs/Receipt-Digital-Import.md §4`](./Receipt-Digital-Import.md) for full schemas.
 
----
+### `GET /dpp/import`
 
-### Frontend & Client Architecture
-
-#### Zustand Store Integration
-*   `closetStore`: Reads the cached closet snapshot to run duplicate checks offline, updates local states dynamically on sync, and logs failures.
-*   `workStore`: Manages progress markers (`analyzeJobs`), allowing progress bars to stay active across pages even if the user leaves the `/add` screen.
-
-#### Optimistic UI Updates
-To eliminate waiting for the database write during saving, the frontend uses an optimistic update pattern:
-
-1.  A temporary Client-side UUID is generated for the new item.
-2.  A data URL of the cropped garment is assigned to both the image and the thumbnail.
-3.  The item is upserted into `closetStore` with a `_pendingSync: true` marker, which renders a sparkling overlay on the Closet page.
-4.  The page navigates to `/closet` immediately.
-5.  `api.createItem` requests are sent in parallel.
-6.  Upon success, the temporary item is replaced with the database document. If an item fails to save, the temporary item is removed, and the failure is recorded in the store.
-
-#### Internationalization & Localization
-*   **Prompt Alignment**: The user's active locale is passed in the analysis headers (`payload.language`). This configures the Gemini prompt to return names and descriptions in the language the user is reading the app in.
-*   **Taxonomy Mirroring**: Standardized taxonomy keys (e.g., `item_type`, `season`, `condition`) map to localized string values (`lib/taxonomy.js`) using dynamic translations.
-*   **Directionality**: Layout components automatically mirror spacing and icons when switching to RTL languages (e.g., Hebrew or Arabic).
+Returns `{items: [{analysis, dpp_data, crop_base64, crop_mime, label}], parse_error?}`.
 
 ---
 
-## 4. Ingestion Workflow Comparison
+## 5. i18n Key Reference
 
-| Metric / Feature | Camera & File Upload | receipt / Email Import | DPP Integration |
-| :--- | :--- | :--- | :--- |
-| **Primary Input** | Image byte stream | Pasted text, PDF, URL | QR code scan, URL |
-| **Processing Path** | SegFormer -> Gemini analyze | OCR Gemini + Bbox crop | HTTP JSON API fetch |
-| **Matting Pipeline** | Deferred `rembg` | Sequential crop-matting | Vendor-provided asset |
-| **Duplicate Check** | In-browser SHA256/aHash | Local cache check post-crop | Database ID query |
-| **UI Fallback** | Original uploaded photo | Dynamic inline SVG icon | Brand logo placeholder |
-| **Taxonomy Source** | Visual LLM classification | Text OCR parsing | Official manufacturer |
+| Key | Default (en) | Notes |
+|---|---|---|
+| `addItem.title` | Upload & auto-fill | Page hero |
+| `addItem.step.capture` | Capture | Stepper step 1 |
+| `addItem.step.refinement` | Refine | Stepper step 2 |
+| `addItem.step.save` | Integrate | Stepper step 3 |
+| `addItem.tabs.upload` | Camera & Upload | Tab label |
+| `addItem.tabs.import` | Digital Import | Tab label |
+| `addItem.scanning` | Scanning | Card scanning state label |
+| `addItem.scanningSub` | Reading fabrics, colors and construction… | Card scanning subtitle |
+| `addItem.analyzeFailed` | Analysis failed | Error toast + card state |
+| `addItem.detected` | Detected {{count}} item(s) | Success toast after stream |
+| `addItem.saveAll` | Save | Save All button |
+| `addItem.savedOptimistic_one` | Added to your closet — syncing in background | Optimistic save toast |
+| `addItem.savedOptimistic_other` | {{count}} items added to your closet… | Batch optimistic toast |
+| `addItem.nothingToSave` | Nothing to save yet | No-op save guard |
+| `addItem.queuedForAutoSave` | Waiting for {{count}} photo(s)… | Auto-save queue toast |
+| `addItem.savedSomeWaitingForRest` | Saved {{saved}} — waiting for {{remaining}} more… | Partial auto-save banner |
+| `addItem.preflight.*` | (8 keys) | DuplicatePreflightDialog strings |
+| `addItem.bgUpload.*` | (7 keys) | Background batch progress + result toasts |
+| `addItem.section.basic/styling/care` | Basic Info / Styling Details / Care & Repair | Accordion section labels |
+| `addItem.import.*` | (30+ keys) | Full Digital Import tab strings |
+| `addItem.selectorItemLabel` | Item {{n}} | Selector box labels |
+| `addItem.titleRequired` | Title is required | Validation error |
+| `addItem.failedToLoadImage` | Failed to load image. | Image attach error |
+
+---
+
+## 6. Ingestion Workflow Comparison
+
+| Dimension | Camera & Upload (Interactive) | Camera & Upload (Batch >5) | DPP QR Scan | Digital Receipt |
+|---|---|---|---|---|
+| **Input** | JPEG/PNG/WEBP/HEIC files | Same | QR code / DPP URL | Text / Image / PDF / URL |
+| **Fingerprinting** | SHA-256, aHash, color-sig in-browser | Same | DB ID query | N/A |
+| **Duplicate check** | Client-side + interactive dialog | Silent drop | Backend check | Optional closet-link |
+| **Analysis** | NDJSON streaming — SegFormer + Gemini | Sequential per-item | HTTP JSON API | asyncio.gather OCR + Vision |
+| **Cards** | N cards split from original | Auto-save, banner UI | 1 card, pre-filled | M cards per selector |
+| **Save pattern** | Phase Z4 optimistic | Auto-save per item | Phase Z4 optimistic | Sequential + ingest overlay |
+| **Background tasks** | rembg matte + Nano Banana reconstruction | rembg matte | None | rembg matte + GarmentVision |
+| **Navigation** | Immediate to /closet | After batch (1.2 s delay) | Stays on /add | After prewarm to /closet |
+| **Locked fields** | None | None | None | `receipt_locked_fields` |
+| **DPP data** | None | None | `dpp_data` struct on card | None |

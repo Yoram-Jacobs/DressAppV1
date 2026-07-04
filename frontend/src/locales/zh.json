@@ -577,7 +577,21 @@
     "askProfessional": "咨询专业人士",
     "askProfessionalSoon": "即将推出——与造型师连线。",
     "askProfessionalLocal": "即将推出——与本地造型师连线。",
-    "shareOutfit": "分享穿搭",
+    "shareOutfit": {
+      "notFound": "未找到分享的穿搭或已过期。",
+      "suggestedLook": "推荐造型",
+      "noImage": "未生成预览",
+      "createCloset": "数字化您的衣橱",
+      "openInApp": "在 DressApp 中打开",
+      "tagline": "您的 AI 时尚编辑器。",
+      "myLook": "AI 推荐造型",
+      "pieces": "搭配单品",
+      "copyLink": "复制链接",
+      "downloadPng": "下载 PNG",
+      "instagramHint": "图片已下载！请打开 Instagram 并选择此图片作为快拍（Story）。",
+      "failedLink": "生成分享链接失败。",
+      "failedCard": "生成图片卡片失败。"
+    },
     "shareCopied": "链接已复制",
     "shareOutfitSubject": "看看我正在考虑的这身穿搭",
     "shareOutfitBody": "我的DressApp造型师建议了这身打扮。你觉得呢？",
@@ -636,7 +650,19 @@
     "tagFilterLabel": "标签",
     "tagFilterPlaceholder": "例如：工作、健身房",
     "styleFilterLabel": "风格",
-    "fallbackError": "抱歉 — 我在整合该搭配建议时遇到了困难。请尝试重新描述，或上传一张照片以便我了解您的具体穿搭。"
+    "fallbackError": "抱歉 — 我在整合该搭配建议时遇到了困难。请尝试重新描述，或上传一张照片以便我了解您的具体穿搭。",
+    "harmonyScore": {
+      "harmonious": "和谐配色",
+      "neutral": "均衡配色",
+      "clashing": "大胆撞色",
+      "reason": {
+        "monochromatic": "精致的同色系造型——色调穿搭的最佳体现。",
+        "analogous": "相邻色系完美搭配，和谐美观。",
+        "allNeutral": "经典中性色调——永远从容优雅。",
+        "balanced": "互补色调构成的均衡配色。",
+        "clashing": "大胆的撞色设计——引人注目且刻意为之，但有风险。"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "完成搭配",

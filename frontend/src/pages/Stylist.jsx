@@ -1416,7 +1416,7 @@ export default function Stylist() {
                   )}
                   {m.role === 'assistant' && m.outfit_canvas && (
                     <div className="mt-3">
-                      <OutfitCanvasMessage canvas={m.outfit_canvas} />
+                      <OutfitCanvasMessage canvas={m.outfit_canvas} sessionId={activeSessionId} />
                     </div>
                   )}
                   {m.role === 'assistant' && m.payload && (

@@ -577,7 +577,21 @@
     "askProfessional": "Einen Experten fragen",
     "askProfessionalSoon": "Demnächst — vernetze dich mit einem Stylisten.",
     "askProfessionalLocal": "Demnächst — vernetze dich mit einem lokalen Stylisten.",
-    "shareOutfit": "Outfit teilen",
+    "shareOutfit": {
+      "notFound": "Geteiltes Outfit nicht gefunden oder abgelaufen.",
+      "suggestedLook": "Empfohlener Look",
+      "noImage": "Vorschau nicht erstellt",
+      "createCloset": "Digitalisiere deinen Kleiderschrank",
+      "openInApp": "In DressApp öffnen",
+      "tagline": "Dein AI-Mode-Editor.",
+      "myLook": "KI-empfohlener Look",
+      "pieces": "Outfit-Teile",
+      "copyLink": "Link kopieren",
+      "downloadPng": "PNG herunterladen",
+      "instagramHint": "Bild heruntergeladen! Öffne Instagram und wähle das Bild für deine Story.",
+      "failedLink": "Fehler beim Erstellen des Freigabelinks.",
+      "failedCard": "Fehler beim Erstellen der Bildkarte."
+    },
     "shareCopied": "Link kopiert",
     "shareOutfitSubject": "Schau dir dieses Outfit an, das ich in Erwägung ziehe",
     "shareOutfitBody": "Mein DressApp-Stylist hat dies vorgeschlagen. Was denkst du?",
@@ -636,7 +650,19 @@
     "tagFilterLabel": "Tag",
     "tagFilterPlaceholder": "z.B. Arbeit, Fitness",
     "styleFilterLabel": "Stil",
-    "fallbackError": "Entschuldigung — ich hatte Schwierigkeiten, diese Empfehlung zusammenzustellen. Versuchen Sie es anders zu formulieren, oder hängen Sie ein Foto an, damit ich sehen kann, womit Sie arbeiten."
+    "fallbackError": "Entschuldigung — ich hatte Schwierigkeiten, diese Empfehlung zusammenzustellen. Versuchen Sie es anders zu formulieren, oder hängen Sie ein Foto an, damit ich sehen kann, womit Sie arbeiten.",
+    "harmonyScore": {
+      "harmonious": "Harmonische Palette",
+      "neutral": "Ausgewogene Palette",
+      "clashing": "Starker Kontrast",
+      "reason": {
+        "monochromatic": "Ein raffinierter monochromatischer Look — tonales Dressing at its best.",
+        "analogous": "Analoge Farben harmonieren wunderschön miteinander.",
+        "allNeutral": "Eine klassische neutrale Palette — immer mühelos elegant.",
+        "balanced": "Eine ausgewogene Palette mit komplementären Tönen.",
+        "clashing": "Starke Kontrastfarben — auffallend und gewagt, aber riskant."
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "Outfit vervollständigen",

@@ -577,7 +577,21 @@
     "askProfessional": "プロに相談",
     "askProfessionalSoon": "近日公開 — スタイリストと繋がれます。",
     "askProfessionalLocal": "近日公開 — 地元のスタイリストと繋がれます。",
-    "shareOutfit": "コーディネートをシェア",
+    "shareOutfit": {
+      "notFound": "共有されたアウトフィットが見つからないか、期限切れです。",
+      "suggestedLook": "おすすめのルック",
+      "noImage": "プレビューが生成されていません",
+      "createCloset": "クローゼットをデジタル化する",
+      "openInApp": "DressAppで開く",
+      "tagline": "あなたのAIファッションエディター。",
+      "myLook": "AIおすすめルック",
+      "pieces": "衣装アイテム",
+      "copyLink": "リンクをコピー",
+      "downloadPng": "PNGをダウンロード",
+      "instagramHint": "画像がダウンロードされました！Instagramを開き、ストーリーの画像を選択してください。",
+      "failedLink": "共有リンクの生成に失敗しました。",
+      "failedCard": "画像カードの生成に失敗しました。"
+    },
     "shareCopied": "リンクをコピーしました",
     "shareOutfitSubject": "検討中のコーディネートを見て",
     "shareOutfitBody": "DressAppのスタイリストが提案してくれました。どう思う?",
@@ -636,7 +650,19 @@
     "tagFilterLabel": "タグ",
     "tagFilterPlaceholder": "例：仕事、ジム",
     "styleFilterLabel": "スタイル",
-    "fallbackError": "申し訳ありません — このコーディネート提案の作成に問題が発生しました。表現を変えてみるか、写真を添付して手持ちのアイテムを見せてください。"
+    "fallbackError": "申し訳ありません — このコーディネート提案の作成に問題が発生しました。表現を変えてみるか、写真を添付して手持ちのアイテムを見せてください。",
+    "harmonyScore": {
+      "harmonious": "調和のとれたパレット",
+      "neutral": "バランスの取れたパレット",
+      "clashing": "大胆なコントラスト",
+      "reason": {
+        "monochromatic": "洗練されたモノクロルック — トーナルドレッシングの真骨頂。",
+        "analogous": "アナログカラーが美しく調和しています。",
+        "allNeutral": "クラシックなニュートラルパレット — 常に自然な上品さ。",
+        "balanced": "補色のトーンで構成されたバランスの取れたパレット。",
+        "clashing": "大胆なコントラストカラー — 目を引く存在感、ただしリスクも伴います。"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "コーデを完成",

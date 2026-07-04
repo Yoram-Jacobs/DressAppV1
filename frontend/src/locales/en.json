@@ -636,7 +636,34 @@
     "tagFilterLabel": "Tag",
     "tagFilterPlaceholder": "e.g. Work, Gym",
     "styleFilterLabel": "Style",
-    "fallbackError": "Sorry — I had trouble putting that recommendation together. Try rephrasing, or attach a photo so I can see what you're working with."
+    "fallbackError": "Sorry — I had trouble putting that recommendation together. Try rephrasing, or attach a photo so I can see what you're working with.",
+    "harmonyScore": {
+      "harmonious": "Harmonious palette",
+      "neutral": "Balanced palette",
+      "clashing": "Bold contrast",
+      "reason": {
+        "monochromatic": "A refined monochromatic look — tonal dressing at its best.",
+        "analogous": "Analogous colours work together beautifully.",
+        "allNeutral": "A classic neutral palette — always effortlessly elegant.",
+        "balanced": "A balanced palette with complementary tones.",
+        "clashing": "Bold contrasting colours — intentional and eye-catching, but risky."
+      }
+    },
+    "shareOutfit": {
+      "notFound": "Shared outfit not found or has expired.",
+      "suggestedLook": "Suggested Look",
+      "noImage": "Preview not generated",
+      "createCloset": "Digitize Your Closet",
+      "openInApp": "Open in DressApp",
+      "tagline": "Your AI fashion editor.",
+      "myLook": "AI Suggested Look",
+      "pieces": "Outfit Pieces",
+      "copyLink": "Copy Link",
+      "downloadPng": "Download PNG",
+      "instagramHint": "Image downloaded! Open Instagram and select the image for your Story.",
+      "failedLink": "Failed to generate share link.",
+      "failedCard": "Failed to generate image card."
+    }
   },
   "outfitCompletion": {
     "cta": "Complete the outfit",

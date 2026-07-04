@@ -577,7 +577,21 @@
     "askProfessional": "Chiedi a un professionista",
     "askProfessionalSoon": "Prossimamente — connettiti con uno stylist.",
     "askProfessionalLocal": "Prossimamente — connettiti con uno stylist locale.",
-    "shareOutfit": "Condividi outfit",
+    "shareOutfit": {
+      "notFound": "Outfit condiviso non trovato o scaduto.",
+      "suggestedLook": "Look suggerito",
+      "noImage": "Anteprima non generata",
+      "createCloset": "Digitalizza il tuo armadio",
+      "openInApp": "Apri in DressApp",
+      "tagline": "Il tuo editor di moda IA.",
+      "myLook": "Look suggerito da IA",
+      "pieces": "Pezzi dell'outfit",
+      "copyLink": "Copia link",
+      "downloadPng": "Scarica PNG",
+      "instagramHint": "Immagine scaricata! Apri Instagram e seleziona l'immagine per la tua Story.",
+      "failedLink": "Impossibile generare il link di condivisione.",
+      "failedCard": "Impossibile generare la scheda immagine."
+    },
     "shareCopied": "Link copiato",
     "shareOutfitSubject": "Guarda questo outfit che sto considerando",
     "shareOutfitBody": "Il mio stylist di DressApp mi ha suggerito questo. Cosa ne pensi?",
@@ -636,7 +650,19 @@
     "tagFilterLabel": "Tag",
     "tagFilterPlaceholder": "es. Lavoro, Palestra",
     "styleFilterLabel": "Stile",
-    "fallbackError": "Spiacente — ho avuto difficoltà a mettere insieme questa raccomandazione. Prova a riformulare o allega una foto così posso vedere con cosa stai lavorando."
+    "fallbackError": "Spiacente — ho avuto difficoltà a mettere insieme questa raccomandazione. Prova a riformulare o allega una foto così posso vedere con cosa stai lavorando.",
+    "harmonyScore": {
+      "harmonious": "Palette armoniosa",
+      "neutral": "Palette equilibrata",
+      "clashing": "Contrasto audace",
+      "reason": {
+        "monochromatic": "Un look monocromatico raffinato — il dressing tonale al massimo.",
+        "analogous": "I colori analoghi si combinano magnificamente.",
+        "allNeutral": "Una palette neutra classica — sempre elegante senza sforzo.",
+        "balanced": "Una palette equilibrata con toni complementari.",
+        "clashing": "Colori con contrasto deciso — d'effetto e intenzionali, ma rischiosi."
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "Completa l'outfit",

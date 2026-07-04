@@ -658,6 +658,10 @@ export const api = {
     }),
   getSharedOutfit: (id) =>
     client.get(`/share/outfit/${id}`).then((r) => r.data),
+  saveOutfitShareCard: (id, image_b64) =>
+    client.post(`/outfits/${id}/share-card`, { image_b64 }).then((r) => r.data),
+  saveSharedOutfitShareCard: (id, image_b64) =>
+    client.post(`/share/outfit/${id}/share-card`, { image_b64 }).then((r) => r.data),
 
   // admin
   adminOverview: () => client.get('/admin/overview').then((r) => r.data),

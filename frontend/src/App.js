@@ -34,6 +34,7 @@ import ExtensionConnect from '@/pages/ExtensionConnect';
 import AvatarPage from '@/pages/AvatarPage';
 import TrendScout from '@/pages/TrendScout';
 import Suitcase from '@/pages/Suitcase';
+import SharedOutfit from '@/pages/SharedOutfit';
 
 import { useEffect } from 'react';
 import { toast } from 'sonner';
@@ -91,6 +92,8 @@ function App() {
             {/* OAuth callback — outside PublicOnly so it can install the
                 token and forward, regardless of current auth state. */}
             <Route path="/auth/callback" element={<AuthCallback />} />
+            {/* Public Shared Outfit view */}
+            <Route path="/shared/:id" element={<SharedOutfit />} />
             {/*
              * Chrome-extension auth bridge: rendered standalone (no
              * AppLayout chrome) so it works when opened from the
