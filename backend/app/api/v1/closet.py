@@ -1598,6 +1598,12 @@ async def analyze_item_image(
     if not raw_list:
         raise HTTPException(400, "Could not load image bytes")
 
+    # Deduct credits for the AI model calls
+    from app.db.database import get_db
+    from app.services.billing_service import deduct_user_credits
+    db = get_db()
+    await deduct_user_credits(db, user, cost=len(raw_list))
+
     # Multi-item pipeline (default). Degrades gracefully to single.
     # Language priority: explicit request override > profile setting > "en".
     # Letting the frontend pass ``i18n.language`` here keeps the Eyes
@@ -3646,6 +3652,9 @@ async def complete_outfit(
     rationale grounded in the anchors + shortlist.
     """
     db = get_db()
+    from app.services.billing_service import deduct_user_credits
+    await deduct_user_credits(db, user, cost=1)
+
     # ------- 1. Fetch & validate anchors (preserve client-supplied order) -------
     fetched = await repos.find_many(
         db.closet_items,
@@ -4457,6 +4466,9 @@ async def repair_item_image(
             crop_bytes = base64.b64decode(b64_part)
         except Exception:  # noqa: BLE001
             crop_bytes = b""
+
+    from app.services.billing_service import deduct_user_credits
+    await deduct_user_credits(db, user, cost=1)
 
     out = await reconstruct(
         crop_bytes,
@@ -5784,6 +5796,9 @@ async def edit_item_image(
         # instead of silently degrading.
         raise HTTPException(503, "Image generation service not configured")
     try:
+        from app.services.billing_service import deduct_user_credits
+        await deduct_user_credits(db, user, cost=1)
+
         edit = await gemini_image_service.edit(
             source_url,
             prompt,
@@ -5839,6 +5854,12 @@ async def extract_pdf_text(
             mime_type = mimetypes.guess_type(file.filename)[0] or "application/pdf"
 
         is_pdf = mime_type == "application/pdf" or file.filename.endswith(".pdf")
+
+        # Deduct AI credits for the OCR model call
+        from app.db.database import get_db
+        from app.services.billing_service import deduct_user_credits
+        db = get_db()
+        await deduct_user_credits(db, user, cost=1)
 
         # Try Gemini Multimodal OCR first
         try:
@@ -5978,6 +5999,11 @@ async def parse_receipt(
     """
 
     async def run_ocr():
+        from app.db.database import get_db
+        from app.services.billing_service import deduct_user_credits
+        db = get_db()
+        await deduct_user_credits(db, user, cost=1)
+
         gemini = await get_default_client()
         response_text = await gemini.vision(
             user_parts=parts,

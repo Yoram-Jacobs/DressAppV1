@@ -168,6 +168,15 @@ async def stylist_endpoint(
         context={"lat": lat, "lng": lng, "include_calendar": include_calendar},
     )
 
+    # Resolve active user custom API key if configured
+    api_key_resolved = None
+    ai_config = user.get("ai_configuration") or {}
+    if ai_config.get("provider_mode") == "custom_keys":
+        encrypted_key = (ai_config.get("custom_keys") or {}).get("google_ai")
+        if encrypted_key:
+            from app.services.auth import decrypt_api_key
+            api_key_resolved = decrypt_api_key(encrypted_key)
+
     # Kick off title generation for brand-new sessions. We do it synchronously
     # because it's a fast Gemini Flash call and we want the sidebar label
     # populated by the time the response arrives. Failures are non-fatal.
@@ -188,15 +197,6 @@ async def stylist_endpoint(
     # both inject them into the LLM prompt AND echo the applied keys.
     from app.services.user_preferences import render_user_preferences
     prefs_block, applied_prefs = render_user_preferences(user)
-
-    # Resolve active user custom API key if configured
-    api_key_resolved = None
-    ai_config = user.get("ai_configuration") or {}
-    if ai_config.get("provider_mode") == "custom_keys":
-        encrypted_key = (ai_config.get("custom_keys") or {}).get("google_ai")
-        if encrypted_key:
-            from app.services.auth import decrypt_api_key
-            api_key_resolved = decrypt_api_key(encrypted_key)
 
     try:
         advice = await get_styling_advice(
@@ -224,23 +224,9 @@ async def stylist_endpoint(
         
         # Deduct credit and count usage
         from app.db.database import get_db
-        ai_config = user.get("ai_configuration") or {}
-        provider_mode = ai_config.get("provider_mode", "standard")
-        if provider_mode in ("standard", "on_device"):
-            db = get_db()
-            update_fields = {}
-            if provider_mode == "standard":
-                current_credits = max(0, int(ai_config.get("current_credits", 1000)) - 1)
-                update_fields["ai_configuration.current_credits"] = current_credits
-            
-            credits_used = int(ai_config.get("credits_used_this_month", 0)) + 1
-            update_fields["ai_configuration.credits_used_this_month"] = credits_used
-            
-            if update_fields:
-                await db.users.update_one(
-                    {"id": user["id"]},
-                    {"$set": update_fields}
-                )
+        from app.services.billing_service import deduct_user_credits
+        db = get_db()
+        await deduct_user_credits(db, user, cost=1)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     except RuntimeError as exc:
