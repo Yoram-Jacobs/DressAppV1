@@ -151,6 +151,8 @@ async def update_me(
         set_ops["ai_configuration"] = {
             "provider_mode": provider_mode,
             "custom_keys": merged_keys,
+            "selected_provider": ai_config.get("selected_provider") or existing_config.get("selected_provider") or "google_ai",
+            "selected_model": ai_config.get("selected_model") or existing_config.get("selected_model") or "gemini-2.5-flash",
             "current_credits": ai_config.get("current_credits", existing_config.get("current_credits", 1000)),
             "credits_used_this_month": ai_config.get("credits_used_this_month", existing_config.get("credits_used_this_month", 0))
         }
