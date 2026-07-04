@@ -290,9 +290,10 @@ const PROVIDERS = [
 ];
 
 function AIConfigurationCard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, updateUserLocal } = useAuth();
   const location = useLocation();
+  const isRtl = i18n.dir() === 'rtl';
   
   const [providerMode, setProviderMode] = useState(user?.ai_configuration?.provider_mode || 'standard');
   const [activeProviderId, setActiveProviderId] = useState(user?.ai_configuration?.selected_provider || 'google_ai');
@@ -446,6 +447,7 @@ function AIConfigurationCard() {
                   value={providerMode}
                   onValueChange={(val) => handleSaveConfig(val)}
                   disabled={busy}
+                  dir={isRtl ? 'rtl' : 'ltr'}
                 >
                   <SelectTrigger className="rounded-xl w-full">
                     <SelectValue />
@@ -474,6 +476,7 @@ function AIConfigurationCard() {
                       value={activeProviderId}
                       onValueChange={(val) => handleSaveConfig(providerMode, null, val)}
                       disabled={busy}
+                      dir={isRtl ? 'rtl' : 'ltr'}
                     >
                       <SelectTrigger className="rounded-xl w-full">
                         <SelectValue />
@@ -494,6 +497,7 @@ function AIConfigurationCard() {
                       value={activeModel}
                       onValueChange={(val) => handleSaveConfig(providerMode, null, null, val)}
                       disabled={busy}
+                      dir={isRtl ? 'rtl' : 'ltr'}
                     >
                       <SelectTrigger className="rounded-xl w-full">
                         <SelectValue />
