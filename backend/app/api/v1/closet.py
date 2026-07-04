@@ -6129,7 +6129,7 @@ async def get_sustainability_stats(
         items.append(item)
     
     total_items = len(items)
-    worn_items = sum(1 for item in items if item.get("wear_count", 0) > 0)
+    worn_items = sum(1 for item in items if (item.get("wear_count") or 0) > 0)
     utilisation_pct = round((worn_items / total_items) * 100) if total_items > 0 else 0
     
     receipt_items = sum(1 for item in items if item.get("from_receipt", False))
@@ -6151,8 +6151,10 @@ async def get_sustainability_stats(
                 carbon_sum += float(match.group(1))
         
         # Calculate CPW aggregates
-        total_price += item.get("price_cents", 0) / 100
-        total_wears += item.get("wear_count", 0)
+        price = item.get("price_cents")
+        if price is not None:
+            total_price += price / 100
+        total_wears += (item.get("wear_count") or 0)
 
     current_cpw = (total_price / total_wears) if total_wears > 0 else total_price
 
