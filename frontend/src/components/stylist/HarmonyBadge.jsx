@@ -25,6 +25,7 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { labelForColor } from '@/lib/taxonomy';
 
 // ---------------------------------------------------------------------------
 // Colour name → HSL hue lookup (0..360). Only hue matters for harmony.
@@ -181,8 +182,106 @@ const VERDICT_CONFIG = {
   },
 };
 
-// CSS colour approximations for swatch dots (best-effort visual)
-const HUE_TO_CSS = (hue) => hue !== null ? `hsl(${hue}, 65%, 52%)` : null;
+// Resolve named color to visual Hex/HSL values, splitting and rendering linear gradients for multi-color values
+function getCssBackground(colorName) {
+  if (!colorName) return '#d1d5db';
+  
+  const name = colorName.toLowerCase().trim();
+  
+  const getSingleColor = (color) => {
+    const c = color.trim().replace(/[\s_\-]+/g, ' ');
+    
+    // Direct hue HSL lookup if matching
+    const lookupKey = c.replace(' ', '_');
+    const hue = HUE_MAP[lookupKey] ?? HUE_MAP[c] ?? null;
+    if (hue !== null) {
+      return `hsl(${hue}, 65%, 52%)`;
+    }
+    
+    const exactMap = {
+      black: '#111827',
+      white: '#ffffff',
+      grey: '#6b7280',
+      gray: '#6b7280',
+      'dark grey': '#374151',
+      'dark gray': '#374151',
+      'light grey': '#e5e7eb',
+      'light gray': '#e5e7eb',
+      silver: '#cbd5e1',
+      beige: '#f5f5dc',
+      cream: '#fef08a',
+      ivory: '#fffff0',
+      'off white': '#fafaf9',
+      'off-white': '#fafaf9',
+      ecru: '#f5f5dc',
+      linen: '#f7f7f7',
+      nude: '#fed7aa',
+      oatmeal: '#e2e8f0',
+      champagne: '#fde047',
+      navy: '#1e3a8a',
+      charcoal: '#1f2937',
+    };
+    
+    if (c in exactMap) return exactMap[c];
+    
+    // Fallback checks
+    if (c.includes('dark')) {
+      const sub = c.replace('dark', '').trim();
+      if (sub in exactMap) return exactMap[sub];
+    }
+    if (c.includes('light')) {
+      const sub = c.replace('light', '').trim();
+      if (sub in exactMap) return exactMap[sub];
+    }
+    
+    return c;
+  };
+  
+  const separators = [/\s+&\s+/, /\s+and\s+/, /\s*\/\s*/, /\s*-\s*/];
+  let parts = [name];
+  for (const sep of separators) {
+    if (sep.test(name)) {
+      parts = name.split(sep);
+      break;
+    }
+  }
+  
+  if (parts.length > 1) {
+    const cssColors = parts.map(getSingleColor);
+    const gradientParts = cssColors.map((color, index) => {
+      const startPct = Math.round((index / cssColors.length) * 100);
+      const endPct = Math.round(((index + 1) / cssColors.length) * 100);
+      return `${color} ${startPct}%, ${color} ${endPct}%`;
+    });
+    return `linear-gradient(135deg, ${gradientParts.join(', ')})`;
+  }
+  
+  return getSingleColor(name);
+}
+
+// Localize color name using existing taxonomy module, handling compound colors
+function translateColorName(colorName, t) {
+  if (!colorName) return '';
+  
+  const name = colorName.toLowerCase().trim();
+  
+  const separators = [
+    { regex: /\s+&\s+/, joiner: ' & ' },
+    { regex: /\s+and\s+/, joiner: ' & ' },
+    { regex: /\s*\/\s*/, joiner: ' / ' },
+    { regex: /\s*-\s*/, joiner: ' - ' }
+  ];
+  
+  for (const sep of separators) {
+    if (sep.regex.test(name)) {
+      const parts = colorName.split(sep.regex);
+      const translatedParts = parts.map(part => labelForColor(part.trim(), t));
+      return translatedParts.join(sep.joiner);
+    }
+  }
+  
+  return labelForColor(colorName, t);
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -259,23 +358,23 @@ export function HarmonyBadge({ colors }) {
               {harmony.palette?.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {harmony.palette.map((c, i) => {
-                    const css = HUE_TO_CSS(c.hue);
+                    const bg = getCssBackground(c.name);
+                    const displayName = translateColorName(c.name, t);
                     return (
                       <div
                         key={`${c.name}-${i}`}
                         className="flex items-center gap-1"
-                        title={c.name}
+                        title={displayName}
                       >
                         <span
                           className="w-3.5 h-3.5 rounded-full border border-black/10 flex-shrink-0"
                           style={{
-                            background: css || '#d1d5db',
-                            outline: !css ? '1px dashed #9ca3af' : 'none',
+                            background: bg,
                           }}
                           aria-hidden="true"
                         />
                         <span className={cn('text-[10px] capitalize', cfg.text)}>
-                          {c.name}
+                          {displayName}
                         </span>
                       </div>
                     );
