@@ -208,6 +208,27 @@ export default function Stylist() {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('chat');
+  const [keyErrorOpen, setKeyErrorOpen] = useState(false);
+
+  const isAiConfigValid = () => {
+    if (!user) return true;
+    const config = user.ai_configuration;
+    if (!config) return false;
+    
+    const mode = config.provider_mode || 'standard';
+    if (mode === 'on_device') return true;
+    
+    if (mode === 'standard') {
+      return !!config.custom_keys?.google_ai;
+    }
+    
+    if (mode === 'custom_keys') {
+      const activeProvider = config.selected_provider || 'google_ai';
+      return !!config.custom_keys?.[activeProvider];
+    }
+    
+    return false;
+  };
 
   useEffect(() => {
     if (location.state?.tab) {
@@ -1156,6 +1177,10 @@ export default function Stylist() {
 
   /* ---------- Compose + send turn ---------- */
   const sendTurn = async ({ voiceBlob = null, overrideText = null } = {}) => {
+    if (!isAiConfigValid()) {
+      setKeyErrorOpen(true);
+      return;
+    }
     if (busy) return;
     const outgoingText = (overrideText ?? text).trim();
     // Route: 2+ images → multi-image outfit composer (Phase R).
@@ -2675,6 +2700,40 @@ export default function Stylist() {
                 </div>
               </div>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={keyErrorOpen} onOpenChange={setKeyErrorOpen}>
+        <DialogContent className="rounded-2xl max-w-sm p-6 text-center space-y-4">
+          <div className="mx-auto w-12 h-12 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center mb-2">
+            <Key className="h-6 w-6" />
+          </div>
+          <DialogHeader className="space-y-1.5">
+            <DialogTitle className="text-lg font-bold text-foreground">
+              {t('stylist.keyRequiredTitle', { defaultValue: 'AI API Key Required' })}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
+              {t('stylist.keyRequiredDesc', { defaultValue: 'To use the AI Stylist, please configure your Gemini API Key in the settings page. Google AI Studio offers a free-tier quota for personal use.' })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 pt-2">
+            <Button 
+              className="rounded-xl text-xs h-9 font-semibold w-full"
+              onClick={() => {
+                setKeyErrorOpen(false);
+                navigate('/profile', { state: { scrollTo: 'ai-configuration-section' } });
+              }}
+            >
+              {t('stylist.goToSettings', { defaultValue: 'Configure in Settings' })}
+            </Button>
+            <Button 
+              variant="outline"
+              className="rounded-xl text-xs h-9 font-semibold w-full text-muted-foreground"
+              onClick={() => setKeyErrorOpen(false)}
+            >
+              {t('common.cancel', { defaultValue: 'Cancel' })}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

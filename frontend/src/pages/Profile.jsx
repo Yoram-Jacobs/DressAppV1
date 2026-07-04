@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams, useLocation } from 'react-router-dom';
 import { CalendarConnect } from '@/components/CalendarConnect';
 import { LocationCard } from '@/components/LocationCard';
 import { InviteFriendsButton } from '@/components/InviteFriendsButton';
@@ -292,6 +292,7 @@ const PROVIDERS = [
 function AIConfigurationCard() {
   const { t } = useTranslation();
   const { user, updateUserLocal } = useAuth();
+  const location = useLocation();
   
   const [providerMode, setProviderMode] = useState(user?.ai_configuration?.provider_mode || 'standard');
   const [activeProviderId, setActiveProviderId] = useState(user?.ai_configuration?.selected_provider || 'google_ai');
@@ -299,6 +300,17 @@ function AIConfigurationCard() {
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [accordionVal, setAccordionVal] = useState(undefined);
+
+  useEffect(() => {
+    if (location.hash === '#ai-configuration-section' || location.state?.scrollTo === 'ai-configuration-section') {
+      setAccordionVal('ai-config');
+      setTimeout(() => {
+        const el = document.getElementById('ai-configuration-section');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+    }
+  }, [location]);
   
   const currentCredits = user?.ai_configuration?.current_credits ?? 1000;
   const creditsUsed = user?.ai_configuration?.credits_used_this_month ?? 0;
@@ -407,7 +419,7 @@ function AIConfigurationCard() {
   return (
     <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial" id="ai-configuration-section">
       <CardContent className="p-6">
-        <Accordion type="single" collapsible defaultValue={undefined}>
+        <Accordion type="single" collapsible value={accordionVal} onValueChange={setAccordionVal}>
           <AccordionItem value="ai-config" className="border-none">
             <AccordionTrigger className="py-2 hover:no-underline">
               <div className="flex items-center gap-3 text-start">
