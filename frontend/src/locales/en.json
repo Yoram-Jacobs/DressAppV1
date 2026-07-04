@@ -1001,13 +1001,13 @@
       "standardPlan": "Standard Plan (Credit-based)",
       "customKeys": "My Own API Keys (SaaS)",
       "onDevice": "On-Device Local AI (Gemma)",
-      "setupInstructions": "Setting up your custom Gemini API key is easy! Follow these steps:",
+      "setupInstructions": "Setting up your custom API key is easy! Follow these steps:",
       "step1": "1. Click 'Get API Key' to visit Google AI Studio.",
       "step2": "2. Sign in with any Google account and click 'Create API Key'.",
       "step3": "3. Copy the generated key, paste it below, and click Save.",
       "getKeyBtn": "Get API Key",
       "saveBtn": "Save Configuration",
-      "keyPlaceholder": "Paste your Gemini API key here...",
+      "keyPlaceholder": "Paste your API key here...",
       "creditsLabel": "Remaining Credits",
       "feeNotice": "A 7% platform fee is applied to your credit usage to cover custom technology, layout rendering, and prompt processing.",
       "modelSelectorTitle": "Select AI Provider",
@@ -1034,7 +1034,11 @@
       "stepQwen3": "3. Copy the key, paste it below, and click Save.",
       "stepGemini1": "1. Click 'Get API Key' to visit Google AI Studio.",
       "stepGemini2": "2. Sign in with any Google account and click 'Create API Key'.",
-      "stepGemini3": "3. Copy the generated key, paste it below, and click Save."
+      "stepGemini3": "3. Copy the generated key, paste it below, and click Save.",
+      "connectKey": "Connect Key",
+      "standardInstructions": "Configure your own Google Gemini key to run personalized model queries. The standard plan uses Google's free-tier developer API quota.",
+      "creditsUsed": "Monthly credit price is $0.005. 7% platform fee is added.",
+      "edgeNotice": "Running local Gemma4-E2B offline. Execution usage metrics are monitored locally and credited back via Google Nano Banana."
     }
   },
   "admin": {
