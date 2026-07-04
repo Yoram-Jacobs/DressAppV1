@@ -662,7 +662,10 @@
         "balanced": "פלטה מאוזנת עם גוונים משלימים.",
         "clashing": "צבעים מנוגדים ונועזים — בולטים ומכוונים, אך מסוכנים."
       }
-    }
+    },
+    "keyRequiredTitle": "נדרש מפתח API",
+    "keyRequiredDesc": "כדי להשתמש בסטייליסט ה-AI, אנא הגדר את מפתח Gemini API שלך בדף ההגדרות. Google AI Studio מציעה מכסה חינמית לשימוש אישי.",
+    "goToSettings": "הגדר בהגדרות"
   },
   "outfitCompletion": {
     "cta": "השלם את הלוק",
@@ -1009,7 +1012,29 @@
       "feeNotice": "עמלת פלטפורמה של 7% מתווספת לשימוש בקרדיטים לכיסוי עלויות הטכנולוגיה, יצירת אאוטפיטים ועיבוד הפרומפטים.",
       "modelSelectorTitle": "בחר ספק בינה מלאכותית",
       "statusActive": "פעיל",
-      "statusInactive": "לא פעיל"
+      "statusInactive": "לא פעיל",
+      "providerLabel": "ספק פעיל",
+      "modelLabel": "העדפת מודל",
+      "geminiKeyLabel": "מפתח Google Gemini:",
+      "providerKeyLabel": "מפתח {{providerName}}:",
+      "modelSelectorTitleGemini": "חיבור מפתח Gemini",
+      "modelSelectorTitleProvider": "חיבור מפתח {{providerName}}",
+      "apiKeyLabel": "מפתח API",
+      "stepOpenAI1": "1. לחץ על 'קבל מפתח API' כדי לבקר בפלטפורמת המפתחים של OpenAI.",
+      "stepOpenAI2": "2. התחבר ועבור למסך מפתחות ה-API.",
+      "stepOpenAI3": "3. צור מפתח סודי חדש, העתק אותו והדבק למטה.",
+      "stepAnthropic1": "1. לחץ על 'קבל מפתח API' כדי לבקר בקונסולת המפתחים של Anthropic.",
+      "stepAnthropic2": "2. התחבר עם חשבון המפתח שלך.",
+      "stepAnthropic3": "3. צור מפתח API בהגדרות, העתק אותו והדבק למטה.",
+      "stepDeepSeek1": "1. לחץ על 'קבל מפתח API' כדי לבקר בפלטפורמת הפיתוח של DeepSeek.",
+      "stepDeepSeek2": "2. צור חשבון מפתח והתחבר.",
+      "stepDeepSeek3": "3. צור מפתח API חדש, העתק אותו והדבק למטה.",
+      "stepQwen1": "1. לחץ על 'קבל מפתח API' כדי לבקר בקונסולת Alibaba DashScope.",
+      "stepQwen2": "2. התחבר ועבור לניהול מפתחות API.",
+      "stepQwen3": "3. העתק את המפתח, הדבק אותו למטה ולחץ על שמירה.",
+      "stepGemini1": "1. לחץ על 'קבל מפתח API' כדי לבקר ב-Google AI Studio.",
+      "stepGemini2": "2. התחבר עם חשבון גוגל ולחץ על 'Create API Key'.",
+      "stepGemini3": "3. העתק את המפתח שנוצר, הדבק אותו למטה ולחץ על שמירה."
     }
   },
   "admin": {

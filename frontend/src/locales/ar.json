@@ -662,7 +662,10 @@
         "balanced": "لوحة متوازنة بنبرات متكاملة.",
         "clashing": "ألوان متباينة جريئة — مثيرة للنظر لكنها خطرة."
       }
-    }
+    },
+    "keyRequiredTitle": "مفتاح API مطلوب",
+    "keyRequiredDesc": "لاستخدام AI Stylist، يرجى تهيئة مفتاح Gemini API الخاص بك في صفحة الإعدادات. يوفر Google AI Studio حصة مجانية للاستخدام الشخصي.",
+    "goToSettings": "تكوين في الإعدادات"
   },
   "outfitCompletion": {
     "cta": "أكمل الإطلالة",
@@ -1009,7 +1012,29 @@
       "feeNotice": "يتم تطبيق رسوم منصة بنسبة 7٪ على استخدام رصيدك لتغطية تكاليف التكنولوجيا وتنسيق المخطط ومعالجة الطلبات.",
       "modelSelectorTitle": "اختر مزود الذكاء الاصطناعي",
       "statusActive": "نشط",
-      "statusInactive": "غير نشط"
+      "statusInactive": "غير نشط",
+      "providerLabel": "المزود النشط",
+      "modelLabel": "تفضيل النموذج",
+      "geminiKeyLabel": "مفتاح Google Gemini:",
+      "providerKeyLabel": "مفتاح {{providerName}}:",
+      "modelSelectorTitleGemini": "ربط مفتاح Gemini",
+      "modelSelectorTitleProvider": "ربط مفتاح {{providerName}}",
+      "apiKeyLabel": "مفتاح API",
+      "stepOpenAI1": "1. انقر فوق 'احصل على مفتاح API' لزيارة منصة مطوري OpenAI.",
+      "stepOpenAI2": "2. قم بتسجيل الدخول وانتقل إلى لوحة مفاتيح API.",
+      "stepOpenAI3": "3. قم بإنشاء مفتاح سري جديد، وانسخه والصقه أدناه.",
+      "stepAnthropic1": "1. انقر فوق 'احصل على مفتاح API' لزيارة وحدة تحكم مطوري Anthropic.",
+      "stepAnthropic2": "2. قم بتسجيل الدخول باستخدام حساب المطور الخاص بك.",
+      "stepAnthropic3": "3. قم بإنشاء مفتاح API في الإعدادات، وانسخه والصقه أدناه.",
+      "stepDeepSeek1": "1. انقر فوق 'احصل على مفتاح API' لزيارة منصة مطوري DeepSeek.",
+      "stepDeepSeek2": "2. قم بإنشاء حساب مطور وقم بتسجيل الدخول.",
+      "stepDeepSeek3": "3. قم بإنشاء مفتاح API جديد، وانسخه والصقه أدناه.",
+      "stepQwen1": "1. انقر فوق 'احصل على مفتاح API' لزيارة وحدة تحكم Alibaba DashScope.",
+      "stepQwen2": "2. قم بتسجيل الدخول وانتقل إلى إدارة مفاتيح API.",
+      "stepQwen3": "3. انسخ المفتاح والصقه أدناه وانقر فوق حفظ.",
+      "stepGemini1": "1. انقر فوق 'احصل على مفتاح API' لزيارة Google AI Studio.",
+      "stepGemini2": "2. قم بتسجيل الدخول باستخدام أي حساب Google وانقر على 'Create API Key'.",
+      "stepGemini3": "3. انسخ المفتاح الذي تم إنشاؤه، والصقه أدناه، وانقر فوق حفظ."
     }
   },
   "admin": {

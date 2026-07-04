@@ -378,38 +378,38 @@ function AIConfigurationCard() {
     switch (activeProviderId) {
       case 'openai':
         return {
-          step1: "1. Click 'Get API Key' to visit OpenAI Developer Platform.",
-          step2: "2. Sign in and navigate to API Keys dashboard.",
-          step3: "3. Create a new secret key, copy it, and paste it below.",
+          step1: t('profile.aiConfig.stepOpenAI1', { defaultValue: "1. Click 'Get API Key' to visit OpenAI Developer Platform." }),
+          step2: t('profile.aiConfig.stepOpenAI2', { defaultValue: "2. Sign in and navigate to API Keys dashboard." }),
+          step3: t('profile.aiConfig.stepOpenAI3', { defaultValue: "3. Create a new secret key, copy it, and paste it below." }),
           link: "https://platform.openai.com/api-keys"
         };
       case 'anthropic':
         return {
-          step1: "1. Click 'Get API Key' to visit Anthropic Developer Console.",
-          step2: "2. Sign in with your developer account.",
-          step3: "3. Create an API key in settings, copy it, and paste it below.",
+          step1: t('profile.aiConfig.stepAnthropic1', { defaultValue: "1. Click 'Get API Key' to visit Anthropic Developer Console." }),
+          step2: t('profile.aiConfig.stepAnthropic2', { defaultValue: "2. Sign in with your developer account." }),
+          step3: t('profile.aiConfig.stepAnthropic3', { defaultValue: "3. Create an API key in settings, copy it, and paste it below." }),
           link: "https://console.anthropic.com/settings/keys"
         };
       case 'deepseek':
         return {
-          step1: "1. Click 'Get API Key' to visit DeepSeek Open Platform.",
-          step2: "2. Create a developer account and sign in.",
-          step3: "3. Generate a new API key, copy it, and paste it below.",
+          step1: t('profile.aiConfig.stepDeepSeek1', { defaultValue: "1. Click 'Get API Key' to visit DeepSeek Open Platform." }),
+          step2: t('profile.aiConfig.stepDeepSeek2', { defaultValue: "2. Create a developer account and sign in." }),
+          step3: t('profile.aiConfig.stepDeepSeek3', { defaultValue: "3. Generate a new API key, copy it, and paste it below." }),
           link: "https://platform.deepseek.com/api_keys"
         };
       case 'qwen':
         return {
-          step1: "1. Click 'Get API Key' to visit Alibaba DashScope Console.",
-          step2: "2. Login and navigate to API Key Management.",
-          step3: "3. Copy the key, paste it below, and click Save.",
+          step1: t('profile.aiConfig.stepQwen1', { defaultValue: "1. Click 'Get API Key' to visit Alibaba DashScope Console." }),
+          step2: t('profile.aiConfig.stepQwen2', { defaultValue: "2. Login and navigate to API Key Management." }),
+          step3: t('profile.aiConfig.stepQwen3', { defaultValue: "3. Copy the key, paste it below, and click Save." }),
           link: "https://dashscope.console.aliyun.com/apiKey"
         };
       case 'google_ai':
       default:
         return {
-          step1: "1. Click 'Get API Key' to visit Google AI Studio.",
-          step2: "2. Sign in with any Google account and click 'Create API Key'.",
-          step3: "3. Copy the generated key, paste it below, and click Save.",
+          step1: t('profile.aiConfig.stepGemini1', { defaultValue: "1. Click 'Get API Key' to visit Google AI Studio." }),
+          step2: t('profile.aiConfig.stepGemini2', { defaultValue: "2. Sign in with any Google account and click 'Create API Key'." }),
+          step3: t('profile.aiConfig.stepGemini3', { defaultValue: "3. Copy the generated key, paste it below, and click Save." }),
           link: "https://aistudio.google.com/"
         };
     }
@@ -512,7 +512,9 @@ function AIConfigurationCard() {
                 <div className="p-4 rounded-2xl bg-secondary/30 border border-border/50 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-foreground flex items-center gap-2">
-                      {providerMode === 'standard' ? 'Google Gemini Key:' : `${activeProvider.name} Key:`}
+                      {providerMode === 'standard' 
+                        ? t('profile.aiConfig.geminiKeyLabel', { defaultValue: 'Google Gemini Key:' }) 
+                        : t('profile.aiConfig.providerKeyLabel', { defaultValue: '{{providerName}} Key:', providerName: activeProvider.name })}
                       {((providerMode === 'standard' && !!user?.ai_configuration?.custom_keys?.google_ai) || 
                         (providerMode === 'custom_keys' && hasSelectedProviderKey)) ? (
                         <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
@@ -539,7 +541,9 @@ function AIConfigurationCard() {
                         <DialogHeader>
                           <DialogTitle className="text-base font-bold flex items-center gap-2">
                             <Key className="h-4 w-4 text-primary" />
-                            {t('profile.aiConfig.modelSelectorTitle', { defaultValue: `Connect ${providerMode === 'standard' ? 'Gemini' : activeProvider.name} Key` })}
+                            {providerMode === 'standard'
+                              ? t('profile.aiConfig.modelSelectorTitleGemini', { defaultValue: 'Connect Gemini Key' })
+                              : t('profile.aiConfig.modelSelectorTitleProvider', { defaultValue: 'Connect {{providerName}} Key', providerName: activeProvider.name })}
                           </DialogTitle>
                           <DialogDescription className="text-xs text-muted-foreground">
                             {t('profile.aiConfig.setupInstructions', { defaultValue: 'Setting up your custom API key is easy! Follow these steps:' })}
@@ -566,7 +570,7 @@ function AIConfigurationCard() {
                           </div>
 
                           <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold">API Key</Label>
+                            <Label className="text-xs font-semibold">{t('profile.aiConfig.apiKeyLabel', { defaultValue: 'API Key' })}</Label>
                             <Input 
                               type="password"
                               value={apiKeyInput}
