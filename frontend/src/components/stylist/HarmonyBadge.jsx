@@ -192,7 +192,7 @@ const HUE_TO_CSS = (hue) => hue !== null ? `hsl(${hue}, 65%, 52%)` : null;
  *   colors — array of dominant colour objects, one per outfit item.
  *   Pass the output of the parent's color-collection loop.
  */
-export function HarmonyBadge({ colors }) {
+export default function HarmonyBadge({ colors }) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
