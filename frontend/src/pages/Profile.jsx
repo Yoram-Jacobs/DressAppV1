@@ -307,7 +307,7 @@ function AIConfigurationCard() {
         }
       };
       
-      if (mode === 'custom_keys') {
+      if (mode === 'standard' || mode === 'custom_keys') {
         if (keyVal !== null) {
           payload.ai_configuration.custom_keys.google_ai = keyVal;
         } else {
@@ -378,7 +378,7 @@ function AIConfigurationCard() {
                 </Select>
               </div>
 
-              {providerMode === 'custom_keys' && (
+              {(providerMode === 'standard' || providerMode === 'custom_keys') && (
                 <div className="p-4 rounded-2xl bg-secondary/30 border border-border/50 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-foreground flex items-center gap-2">
@@ -444,7 +444,7 @@ function AIConfigurationCard() {
                           
                           <Button 
                             className="w-full rounded-xl text-xs h-9 font-semibold"
-                            onClick={() => handleSaveConfig('custom_keys', geminiKey)}
+                            onClick={() => handleSaveConfig(providerMode, geminiKey)}
                             disabled={busy || !geminiKey}
                           >
                             {busy && <Loader2 className="h-3 w-3 animate-spin mr-1.5" />}
@@ -455,7 +455,10 @@ function AIConfigurationCard() {
                     </Dialog>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-normal">
-                    {t('profile.aiConfig.setupInstructions', { defaultValue: 'Configure your own Google AI key to run personalized model queries directly against your own developer account quota.' })}
+                    {providerMode === 'standard' 
+                      ? t('profile.aiConfig.standardInstructions', { defaultValue: 'Configure your own Google Gemini key to run personalized model queries. The standard plan uses Google\'s free-tier developer API quota.' })
+                      : t('profile.aiConfig.setupInstructions', { defaultValue: 'Configure your own Google AI key to run personalized model queries directly against your own developer account quota.' })
+                    }
                   </p>
                 </div>
               )}
