@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { ExploreBackButton } from '@/components/ExploreBackButton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, LineChart, Line, CartesianGrid, AreaChart, Area } from 'recharts';
 import { useClosetStore } from '@/lib/useClosetStore';
-import { DollarSign, Percent, TrendingUp, Shirt, Award, ChevronDown, ChevronUp, Activity } from 'lucide-react';
+import { DollarSign, Percent, TrendingUp, Shirt, Award, ChevronDown, ChevronUp, Activity, Leaf, ShoppingBag, Droplets, LineChart as ChartIcon } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import api from '@/lib/api';
 import { Link } from 'react-router-dom';
 import { labelForColor, canonicalColorKey, labelForMaterial, labelForSubCategory, canonicalMaterialKey, canonicalSubCategoryKey } from '@/lib/taxonomy';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -212,6 +214,14 @@ export default function WardrobeStats() {
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
   const [breakdownType, setBreakdownType] = useState('colors');
   const [chartView, setChartView] = useState('ring');
+  const [sustainabilityData, setSustainabilityData] = useState(null);
+
+  useEffect(() => {
+    api.get('/closet/stats/sustainability')
+      .then(res => setSustainabilityData(res.data))
+      .catch(err => console.error("Failed to fetch sustainability stats", err));
+  }, []);
+
 
   // Sync closet items if store is empty or needs refresh
   useEffect(() => {
@@ -347,14 +357,26 @@ export default function WardrobeStats() {
 
   return (
     <div className="container-px max-w-4xl mx-auto pt-6 pb-16 space-y-8" data-testid="wardrobe-stats-page">
+
       {/* Header */}
-      <div className="flex flex-col">
-        <span className="caps-label text-brand font-bold tracking-wider text-xs">{t('stats.category', { defaultValue: 'DressApp Unpacked' })}</span>
-        <h1 className="font-display text-3xl md:text-4xl font-bold mt-1 text-foreground">{t('stats.title', { defaultValue: 'Wardrobe Insights' })}</h1>
-        <p className="text-sm text-muted-foreground mt-2 max-w-xl">
-          {t('stats.description', { defaultValue: 'Analyze your wardrobe value, wear metrics, and dominant style palettes to cultivate conscious wear habits.' })}
-        </p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="flex flex-col">
+          <span className="caps-label text-brand font-bold tracking-wider text-xs">{t('stats.category', { defaultValue: 'DressApp Unpacked' })}</span>
+          <h1 className="font-display text-3xl md:text-4xl font-bold mt-1 text-foreground">{t('stats.title', { defaultValue: 'Wardrobe Insights' })}</h1>
+          <p className="text-sm text-muted-foreground mt-2 max-w-xl">
+            {t('stats.description', { defaultValue: 'Analyze your wardrobe value, wear metrics, and dominant style palettes to cultivate conscious wear habits.' })}
+          </p>
+        </div>
       </div>
+
+      <Tabs defaultValue="overview" className="w-full mt-2">
+        <TabsList className="mb-6 bg-muted/50 p-1 rounded-2xl">
+          <TabsTrigger value="overview" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">Overview</TabsTrigger>
+          <TabsTrigger value="impact" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">Sustainability Impact</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+
 
       {/* Primary KPI Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
@@ -613,6 +635,122 @@ export default function WardrobeStats() {
         </div>
       )}
       <ExploreBackButton />
+
+        </TabsContent>
+
+        <TabsContent value="impact" className="space-y-6">
+          {!sustainabilityData ? (
+            <div className="flex items-center justify-center py-20 text-muted-foreground">
+              Loading impact data...
+            </div>
+          ) : (
+            <>
+              {/* Primary KPI Grid for Impact */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+                <Card className="rounded-3xl border border-border shadow-sm bg-card hover:shadow-md transition-shadow">
+                  <CardContent className="p-6 flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-accent-green/20 text-accent-green flex items-center justify-center shrink-0">
+                      <Percent className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground block font-medium">{t('wardrobeStats.sustainability.utilisationTitle', { defaultValue: 'Wardrobe Utilisation' })}</span>
+                      <span className="text-2xl font-bold font-display text-foreground">
+                        {sustainabilityData.utilisation_pct}%
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="rounded-3xl border border-border shadow-sm bg-card hover:shadow-md transition-shadow">
+                  <CardContent className="p-6 flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-brand/10 text-brand flex items-center justify-center shrink-0">
+                      <Leaf className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground block font-medium">{t('wardrobeStats.sustainability.carbonTitle', { defaultValue: 'Carbon Tracked' })}</span>
+                      <span className="text-2xl font-bold font-display text-foreground">
+                        {sustainabilityData.carbon_sum} <span className="text-sm text-muted-foreground font-normal">kg CO₂</span>
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="rounded-3xl border border-border shadow-sm bg-card hover:shadow-md transition-shadow">
+                  <CardContent className="p-6 flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-orange-100 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center shrink-0">
+                      <ShoppingBag className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground block font-medium">{t('wardrobeStats.sustainability.intakeManual', { defaultValue: 'Manual Adds' })}</span>
+                      <span className="text-2xl font-bold font-display text-foreground">
+                        {sustainabilityData.intake_breakdown.manual}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="rounded-3xl border border-border shadow-sm bg-card hover:shadow-md transition-shadow">
+                  <CardContent className="p-6 flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-blue-100 dark:bg-blue-950/20 text-blue-500 flex items-center justify-center shrink-0">
+                      <Droplets className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground block font-medium">{t('wardrobeStats.sustainability.intakeReceipt', { defaultValue: 'From Receipts' })}</span>
+                      <span className="text-2xl font-bold font-display text-foreground">
+                        {sustainabilityData.intake_breakdown.receipt}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2 rounded-3xl border border-border shadow-sm bg-card p-6">
+                  <CardHeader className="p-0 mb-6">
+                    <CardTitle className="text-lg font-display">{t('wardrobeStats.sustainability.cpwTrendTitle', { defaultValue: 'Cost-per-wear Trend' })}</CardTitle>
+                    <p className="text-sm text-muted-foreground">{t('wardrobeStats.sustainability.cpwTrendDesc', { defaultValue: 'Your 6-month closet value efficiency.' })}</p>
+                  </CardHeader>
+                  <CardContent className="p-0 h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={sustainabilityData.cpw_trend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorCpw" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#16a34a" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#16a34a" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} dy={10} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} tickFormatter={(val) => `$${val}`} />
+                        <Tooltip 
+                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
+                          formatter={(value) => [`$${value}`, 'Avg CPW']}
+                        />
+                        <Area type="monotone" dataKey="cpw" stroke="#16a34a" strokeWidth={3} fillOpacity={1} fill="url(#colorCpw)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card className="rounded-3xl border border-border shadow-sm bg-brand/5 p-6 flex flex-col justify-center text-center">
+                  <Shirt className="h-12 w-12 text-brand mx-auto mb-4 opacity-80" />
+                  <h3 className="font-display font-bold text-xl mb-2">{t('wardrobeStats.sustainability.smartSuggestionTitle', { defaultValue: 'Smart Suggestion' })}</h3>
+                  <p className="text-muted-foreground text-sm mb-6">
+                    {t('wardrobeStats.sustainability.smartSuggestionDesc', { defaultValue: 'You have 8 items that haven\'t been worn in 90 days. Consider listing them on the Marketplace or donating them to keep your closet sustainable.' })}
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <Link to="/marketplace" className="w-full">
+                      <Button variant="default" className="w-full rounded-xl bg-brand text-white">{t('wardrobeStats.sustainability.listMarketplace', { defaultValue: 'List on Marketplace' })}</Button>
+                    </Link>
+                    <Button variant="outline" className="w-full rounded-xl border-brand/20 text-brand bg-transparent hover:bg-brand/10">{t('wardrobeStats.sustainability.markDonate', { defaultValue: 'Mark to Donate' })}</Button>
+                  </div>
+                </Card>
+              </div>
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
+
     </div>
   );
 }

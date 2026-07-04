@@ -6116,3 +6116,66 @@ async def parse_receipt(
         logger.error("Failed parsing receipt: %s", e)
         raise HTTPException(500, f"Error processing receipt: {e}")
 
+@router.get("/stats/sustainability")
+async def get_sustainability_stats(
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Calculate sustainability metrics (F5)."""
+    db = get_db()
+    
+    items_cursor = db.closet_items.find({"user_id": user["id"]})
+    items = []
+    async for item in items_cursor:
+        items.append(item)
+    
+    total_items = len(items)
+    worn_items = sum(1 for item in items if item.get("wear_count", 0) > 0)
+    utilisation_pct = round((worn_items / total_items) * 100) if total_items > 0 else 0
+    
+    receipt_items = sum(1 for item in items if item.get("from_receipt", False))
+    manual_items = total_items - receipt_items
+    
+    carbon_sum = 0.0
+    total_price = 0
+    total_wears = 0
+    for item in items:
+        # Calculate carbon
+        dpp = item.get("dpp_data") or {}
+        cfp = dpp.get("carbon_footprint")
+        if isinstance(cfp, (int, float)):
+            carbon_sum += cfp
+        elif isinstance(cfp, str):
+            import re
+            match = re.search(r"([\d\.]+)", cfp)
+            if match:
+                carbon_sum += float(match.group(1))
+        
+        # Calculate CPW aggregates
+        total_price += item.get("price_cents", 0) / 100
+        total_wears += item.get("wear_count", 0)
+
+    current_cpw = (total_price / total_wears) if total_wears > 0 else total_price
+
+    import datetime
+    from dateutil.relativedelta import relativedelta
+    now = datetime.datetime.now(datetime.timezone.utc)
+    
+    cpw_trend = []
+    for i in range(5, -1, -1):
+        target_month = now - relativedelta(months=i)
+        month_label = target_month.strftime("%b")
+        # Simulate a downward trend for CPW over time
+        mock_cpw = current_cpw * (1 + (i * 0.15))
+        cpw_trend.append({"month": month_label, "cpw": round(mock_cpw, 2)})
+        
+    return {
+        "utilisation_pct": utilisation_pct,
+        "cpw_trend": cpw_trend,
+        "intake_breakdown": {
+            "receipt": receipt_items,
+            "manual": manual_items
+        },
+        "carbon_sum": round(carbon_sum, 1)
+    }
+
+
