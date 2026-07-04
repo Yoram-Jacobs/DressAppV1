@@ -48,6 +48,7 @@ import {
   labelForItemType,
 } from '@/lib/taxonomy';
 import { toast } from 'sonner';
+import { useRememberedDirectory } from '@/hooks/useRememberedDirectory';
 
 /* -------------------- constants -------------------- */
 const CATEGORY_OPTIONS = [
@@ -359,6 +360,21 @@ export default function AddItem() {
   const pickFiles = () => fileInputRef.current?.click();
   const openCamera = () => cameraInputRef.current?.click();
   const openScanner = () => setScanOpen(true);
+
+  // Remember last-used directory independently for image uploads and receipt
+  // uploads.  On Chrome/Edge the File System Access API (showOpenFilePicker)
+  // persists a FileSystemFileHandle in IndexedDB so the OS-level picker
+  // re-opens in the same folder next time.  Safari/Firefox fall back to the
+  // hidden <input> .click() path — the browser handles its own last-dir.
+  const { openFilePicker: openImagePicker } = useRememberedDirectory('images');
+  const { openFilePicker: openReceiptPicker } = useRememberedDirectory('receipts');
+
+  const pickFilesWithMemory = () => openImagePicker({
+    accept: [{ description: 'Images', accept: { 'image/*': [] } }],
+    multiple: true,
+    fallbackInputRef: fileInputRef,
+    onFiles: (files) => handleFiles(files),
+  });
 
   // Hydrate from a DPP scan (e.g. user hit "Scan QR" in TopNav → we're
   // now opening AddItem with ?source=dpp and a draft in sessionStorage).
@@ -2240,7 +2256,7 @@ export default function AddItem() {
           <div className="flex items-center gap-2">
 
             <div className="flex-1" />
-            <Button onClick={pickFiles} variant="outline" className="rounded-xl" disabled={!!bgBatch} data-testid="add-item-add-more">
+            <Button onClick={pickFilesWithMemory} variant="outline" className="rounded-xl" disabled={!!bgBatch} data-testid="add-item-add-more">
               <Plus className="h-4 w-4 me-2" /> {t('addItem.addPhotos', { defaultValue: 'Add photos' })}
             </Button>
             <Button
@@ -2467,7 +2483,7 @@ export default function AddItem() {
             <div
               className="w-full border-2 border-dashed border-border rounded-[calc(var(--radius)+10px)] p-10 sm:p-12 bg-card flex flex-col items-center text-center cursor-pointer hover:bg-card/85 transition-colors"
               data-testid="add-item-dropzone"
-              onClick={pickFiles}
+              onClick={pickFilesWithMemory}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault();
@@ -2497,7 +2513,7 @@ export default function AddItem() {
                   type="button"
                   variant="outline"
                   className="rounded-xl"
-                  onClick={pickFiles}
+                  onClick={pickFilesWithMemory}
                   data-testid="add-item-pick-files-button"
                 >
                   <Upload className="h-4 w-4 me-2" /> {t('addItem.uploadPhotos', { defaultValue: 'Upload photos' })}
@@ -2597,7 +2613,27 @@ export default function AddItem() {
                     
                     {importMode === 'file' && (
                       <div 
-                        onClick={() => receiptFileInputRef.current?.click()}
+                        onClick={() => openReceiptPicker({
+                          accept: [
+                            { description: 'Images', accept: { 'image/*': [] } },
+                            { description: 'Documents', accept: {
+                              'application/pdf': ['.pdf'],
+                              'text/plain': ['.txt'],
+                              'text/html': ['.html', '.htm'],
+                              'text/csv': ['.csv'],
+                              'application/json': ['.json'],
+                              'application/rtf': ['.rtf'],
+                            }},
+                          ],
+                          multiple: false,
+                          fallbackInputRef: receiptFileInputRef,
+                          onFiles: ([file]) => {
+                            // Synthesise a fake event to reuse the existing handler
+                            const dt = new DataTransfer();
+                            dt.items.add(file);
+                            handleImportFileChange({ target: { files: dt.files } });
+                          },
+                        })}
                         className="border-2 border-dashed border-border hover:border-[hsl(var(--accent))] bg-background/30 hover:bg-background/50 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 group min-h-[160px]"
                       >
                         <input
@@ -3199,7 +3235,7 @@ export default function AddItem() {
                 variant="outline"
                 size="sm"
                 className="rounded-lg"
-                onClick={pickFiles}
+                onClick={pickFilesWithMemory}
                 data-testid="add-item-upload-more-button"
               >
                 <Plus className="h-4 w-4 me-1.5" /> {t('addItem.addPhotos')}
