@@ -394,7 +394,8 @@
     "sizeChipLabel": "आकार {{size}}",
     "pendingGarmentAlt": "लंबित परिधान",
     "queuedForAutoSave": "{{count}} फ़ोटो की प्रतीक्षा — स्वचालित रूप से सहेजा जाएगा।",
-    "savedSomeWaitingForRest": "{{saved}} सहेजे गए — {{remaining}} और की प्रतीक्षा।"
+    "savedSomeWaitingForRest": "{{saved}} सहेजे गए — {{remaining}} और की प्रतीक्षा।",
+    "quickConfirmMode": "त्वरित पुष्टि मोड"
   },
   "itemDetail": {
     "back": "अलमारी पर वापस",

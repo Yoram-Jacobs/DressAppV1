@@ -394,7 +394,8 @@
     "sizeChipLabel": "尺码 {{size}}",
     "pendingGarmentAlt": "待处理服装",
     "queuedForAutoSave": "等待 {{count}} 张照片 — 将自动保存。",
-    "savedSomeWaitingForRest": "已保存 {{saved}} — 等待另外 {{remaining}} 张。"
+    "savedSomeWaitingForRest": "已保存 {{saved}} — 等待另外 {{remaining}} 张。",
+    "quickConfirmMode": "快速确认模式"
   },
   "itemDetail": {
     "back": "返回衣橱",

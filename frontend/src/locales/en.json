@@ -394,7 +394,8 @@
     "sizeChipLabel": "Size {{size}}",
     "pendingGarmentAlt": "Pending garment",
     "queuedForAutoSave": "Waiting for {{count}} photo(s) to finish analysing — will save automatically.",
-    "savedSomeWaitingForRest": "Saved {{saved}} — waiting for {{remaining}} more to finish analysing."
+    "savedSomeWaitingForRest": "Saved {{saved}} — waiting for {{remaining}} more to finish analysing.",
+    "quickConfirmMode": "Quick Confirm Mode"
   },
   "itemDetail": {
     "back": "Back",

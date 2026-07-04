@@ -394,7 +394,8 @@
     "sizeChipLabel": "サイズ {{size}}",
     "pendingGarmentAlt": "保留中の衣服",
     "queuedForAutoSave": "{{count}} 枚の写真を待機中 — 自動保存されます。",
-    "savedSomeWaitingForRest": "{{saved}} 件保存済 — さらに {{remaining}} 件を待機中。"
+    "savedSomeWaitingForRest": "{{saved}} 件保存済 — さらに {{remaining}} 件を待機中。",
+    "quickConfirmMode": "クイック確認モード"
   },
   "itemDetail": {
     "back": "クローゼットに戻る",

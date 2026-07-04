@@ -394,7 +394,8 @@
     "sizeChipLabel": "Talla {{size}}",
     "pendingGarmentAlt": "Prenda pendiente",
     "queuedForAutoSave": "Esperando {{count}} foto(s) — se guardará automáticamente.",
-    "savedSomeWaitingForRest": "{{saved}} guardados — esperando {{remaining}} más."
+    "savedSomeWaitingForRest": "{{saved}} guardados — esperando {{remaining}} más.",
+    "quickConfirmMode": "Modo de Confirmación Rápida"
   },
   "itemDetail": {
     "back": "Volver al armario",

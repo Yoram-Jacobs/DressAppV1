@@ -394,7 +394,8 @@
     "sizeChipLabel": "מידה {{size}}",
     "pendingGarmentAlt": "פריט בהמתנה",
     "queuedForAutoSave": "ממתין ל‑{{count}} תמונות — ישמר אוטומטית.",
-    "savedSomeWaitingForRest": "{{saved}} נשמרו — ממתין ל‑{{remaining}} נוספים."
+    "savedSomeWaitingForRest": "{{saved}} נשמרו — ממתין ל‑{{remaining}} נוספים.",
+    "quickConfirmMode": "מצב אישור מהיר"
   },
   "itemDetail": {
     "back": "חזור",

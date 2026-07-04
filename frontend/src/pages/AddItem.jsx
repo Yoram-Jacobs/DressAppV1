@@ -268,6 +268,7 @@ export default function AddItem() {
   const isSuitcase = searchParams.get('from') === 'suitcase';
   const [cards, setCards] = useState([]); // [{id,file,previewUrl,base64,status,progress,fields,error,dppData?}]
   const [saving, setSaving] = useState(false);
+  const [quickConfirm, setQuickConfirm] = useState(false);
   // Phase R — receipt ingest animation overlay state.
   // ``ingestPhase``: null | 'saving' | 'syncing'
   // ``ingestProgress``: { done: number, total: number }
@@ -3162,38 +3163,60 @@ export default function AddItem() {
         </Tabs>
       ) : (
         <>
-          <div className="flex items-center justify-end gap-2 mb-3">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="rounded-lg"
-              onClick={openCamera}
-              data-testid="add-item-camera-more-button"
-            >
-              <Camera className="h-4 w-4 me-1.5" /> {t('addItem.takePhoto')}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="rounded-lg"
-              onClick={pickFiles}
-              data-testid="add-item-upload-more-button"
-            >
-              <Plus className="h-4 w-4 me-1.5" /> {t('addItem.addPhotos')}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              className="rounded-lg"
-              onClick={openScanner}
-              data-testid="add-item-scan-dpp-more-button"
-            >
-              <QrCode className="h-4 w-4 me-1.5" /> {t('dpp.nav.scanLabel')}
-            </Button>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-2 bg-secondary/30 px-3 py-1.5 rounded-xl border border-border/50 self-start sm:self-auto">
+              <input
+                type="checkbox"
+                id="quick-confirm-mode"
+                checked={quickConfirm}
+                onChange={(e) => setQuickConfirm(e.target.checked)}
+                className="sr-only peer"
+                data-testid="quick-confirm-toggle"
+              />
+              <label
+                htmlFor="quick-confirm-mode"
+                className="relative w-8 h-4 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[hsl(var(--accent))] cursor-pointer"
+              />
+              <label htmlFor="quick-confirm-mode" className="text-xs font-semibold cursor-pointer select-none text-foreground flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-[hsl(var(--accent))]" />
+                {t('addItem.quickConfirmMode', { defaultValue: 'Quick Confirm Mode' })}
+              </label>
+            </div>
+            
+            <div className="flex items-center gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-lg"
+                onClick={openCamera}
+                data-testid="add-item-camera-more-button"
+              >
+                <Camera className="h-4 w-4 me-1.5" /> {t('addItem.takePhoto')}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-lg"
+                onClick={pickFiles}
+                data-testid="add-item-upload-more-button"
+              >
+                <Plus className="h-4 w-4 me-1.5" /> {t('addItem.addPhotos')}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="rounded-lg"
+                onClick={openScanner}
+                data-testid="add-item-scan-dpp-more-button"
+              >
+                <QrCode className="h-4 w-4 me-1.5" /> {t('dpp.nav.scanLabel')}
+              </Button>
+            </div>
           </div>
+          
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" data-testid="add-item-cards-grid">
             {cards.map((card) => (
               <ItemCard
@@ -3203,6 +3226,7 @@ export default function AddItem() {
                 onRemove={() => removeCard(card.id)}
                 onChange={(patch) => updateField(card.id, patch)}
                 onCardPatch={(patch) => patchCard(card.id, patch)}
+                quickConfirm={quickConfirm}
               />
             ))}
           </div>
@@ -3218,7 +3242,7 @@ export default function AddItem() {
 }
 
 /* -------------------- item card -------------------- */
-function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
+function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch, quickConfirm }) {
   const { t } = useTranslation();
   const { fields, status, progress, previewUrl, error } = card;
   const isBusy = status === 'scanning';
@@ -3340,153 +3364,244 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch }) {
 
           {/* Fields */}
           <div className="p-5 space-y-4">
-            {/* 1. Basic Info Section */}
-            <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
-              <button
-                type="button"
-                onClick={() => toggleSection('basic')}
-                className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-start focus:outline-none"
-              >
-                <div className="flex-1 min-w-0 pe-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                    {t('addItem.section.basic', { defaultValue: 'Basic Info' })}
-                  </span>
-                  {!sections.basic && (
-                    <div className="text-[11px] text-muted-foreground truncate mt-0.5">
-                      {[fields.category, fields.brand, fields.size].filter(Boolean).join(' · ') || '—'}
-                    </div>
-                  )}
+            {quickConfirm ? (
+              <div className="space-y-4" data-testid="quick-confirm-fields">
+                {/* Item Name */}
+                <div className="space-y-1">
+                  <Label htmlFor={`${card.id}-quick-name`} className="caps-label text-muted-foreground">
+                    {t('addItem.itemName', { defaultValue: 'Item Name' })}
+                  </Label>
+                  <Input
+                    id={`${card.id}-quick-name`}
+                    value={fields.name || ''}
+                    onChange={(e) => onChange({ name: e.target.value })}
+                    placeholder={t('addItem.namePlaceholder', { defaultValue: 'e.g. Cotton Blue Shirt' })}
+                    disabled={saved}
+                    data-testid="add-item-name"
+                    className="font-display text-lg bg-transparent border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-[hsl(var(--accent))]"
+                  />
                 </div>
-                {sections.basic ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-              </button>
-              
-              <AnimatePresence initial={false}>
-                {sections.basic && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="border-t border-border p-4 space-y-4 overflow-hidden"
-                  >
-                    <NameCaption idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
-                    <BasicTaxonomyGrid idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
 
-            {/* 2. Styling Details Section */}
-            <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
-              <button
-                type="button"
-                onClick={() => toggleSection('styling')}
-                className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-start focus:outline-none"
-              >
-                <div className="flex-1 min-w-0 pe-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                    {t('addItem.section.styling', { defaultValue: 'Styling Details' })}
-                  </span>
-                  {!sections.styling && (
-                    <div className="text-[11px] text-muted-foreground truncate mt-0.5">
-                      {[
-                        fields.gender, 
-                        fields.dress_code, 
-                        fields.season && fields.season.length ? fields.season.join('/') : null
-                      ].filter(Boolean).join(' · ') || '—'}
-                    </div>
-                  )}
-                </div>
-                {sections.styling ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-              </button>
-              
-              <AnimatePresence initial={false}>
-                {sections.styling && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="border-t border-border p-4 space-y-4 overflow-hidden"
-                  >
-                    <StylingTaxonomyGrid idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
-                    <SeasonPicker idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
-                    <WeightedList
-                      idPrefix={card.id}
-                      labelKey="addItem.color"
-                      items={fields.colors}
-                      onChange={(v) => onChange({ colors: v })}
-                      placeholder={t('addItem.colorSlotPlaceholder', { defaultValue: 'Color name' })}
+                {/* Category, Brand, Size Grid */}
+                <div className="grid grid-cols-3 gap-3">
+                  {/* Category */}
+                  <div className="space-y-1">
+                    <Label htmlFor={`${card.id}-quick-category`} className="caps-label text-muted-foreground">
+                      {t('addItem.category', { defaultValue: 'Category' })}
+                    </Label>
+                    <Select
+                      value={fields.category || ''}
+                      onValueChange={(v) => onChange({ category: v === '__clear' ? '' : v })}
                       disabled={saved}
-                      testid="add-item-colors"
-                    />
-                    <TagsEditor
-                      idPrefix={card.id}
-                      items={fields.tags}
-                      onChange={(v) => onChange({ tags: v })}
-                      disabled={saved}
-                    />
-                    <IntentSelector idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                    >
+                      <SelectTrigger id={`${card.id}-quick-category`} className="rounded-xl" data-testid="add-item-category">
+                        <SelectValue placeholder={t('addItem.selectPlaceholder', { defaultValue: 'Select...' })} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORY_OPTIONS.map((o) => (
+                          <SelectItem key={o} value={o}>
+                            {labelForCategory(o, t)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-            {/* 3. Care & Repair Section */}
-            <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
-              <button
-                type="button"
-                onClick={() => toggleSection('care')}
-                className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-start focus:outline-none"
-              >
-                <div className="flex-1 min-w-0 pe-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                    {t('addItem.section.care', { defaultValue: 'Care & Repair' })}
-                  </span>
-                  {!sections.care && (
-                    <div className="text-[11px] text-muted-foreground truncate mt-0.5">
-                      {[fields.state, fields.condition, fields.quality].filter(Boolean).join(' · ') || '—'}
-                    </div>
-                  )}
+                  {/* Brand */}
+                  <div className="space-y-1">
+                    <Label htmlFor={`${card.id}-quick-brand`} className="caps-label text-muted-foreground">
+                      {t('addItem.brand', { defaultValue: 'Brand' })}
+                    </Label>
+                    <Input
+                      id={`${card.id}-quick-brand`}
+                      value={fields.brand || ''}
+                      onChange={(e) => onChange({ brand: e.target.value })}
+                      placeholder={t('addItem.brandPlaceholder', { defaultValue: 'e.g. Zara' })}
+                      disabled={saved}
+                      data-testid="add-item-brand"
+                      className="rounded-xl"
+                    />
+                  </div>
+
+                  {/* Size */}
+                  <div className="space-y-1">
+                    <Label htmlFor={`${card.id}-quick-size`} className="caps-label text-muted-foreground">
+                      {t('addItem.size', { defaultValue: 'Size' })}
+                    </Label>
+                    <Input
+                      id={`${card.id}-quick-size`}
+                      value={fields.size || ''}
+                      onChange={(e) => onChange({ size: e.target.value })}
+                      placeholder={t('addItem.sizePlaceholder', { defaultValue: 'e.g. M' })}
+                      disabled={saved}
+                      data-testid="add-item-size"
+                      className="rounded-xl"
+                    />
+                  </div>
                 </div>
-                {sections.care ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-              </button>
-              
-              <AnimatePresence initial={false}>
-                {sections.care && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="border-t border-border p-4 space-y-4 overflow-hidden"
+
+                {/* Colors */}
+                <WeightedList
+                  idPrefix={card.id}
+                  labelKey="addItem.color"
+                  items={fields.colors}
+                  onChange={(v) => onChange({ colors: v })}
+                  placeholder={t('addItem.colorSlotPlaceholder', { defaultValue: 'Color name' })}
+                  disabled={saved}
+                  testid="add-item-colors"
+                />
+              </div>
+            ) : (
+              <>
+                {/* 1. Basic Info Section */}
+                <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => toggleSection('basic')}
+                    className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-start focus:outline-none"
                   >
-                    {fields.repair_advice && (
-                      <div
-                        className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 text-amber-900 text-xs"
-                        data-testid="add-item-repair-advice"
-                      >
-                        <Wand2 className="h-4 w-4 mt-0.5 shrink-0" />
-                        <div>
-                          <div className="font-medium">{t('addItem.repairTip', { defaultValue: 'Repair tip' })}</div>
-                          <div className="mt-0.5">{fields.repair_advice}</div>
+                    <div className="flex-1 min-w-0 pe-2">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                        {t('addItem.section.basic', { defaultValue: 'Basic Info' })}
+                      </span>
+                      {!sections.basic && (
+                        <div className="text-[11px] text-muted-foreground truncate mt-0.5">
+                          {[fields.category, fields.brand, fields.size].filter(Boolean).join(' · ') || '—'}
                         </div>
-                      </div>
+                      )}
+                    </div>
+                    {sections.basic ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                  </button>
+                  
+                  <AnimatePresence initial={false}>
+                    {sections.basic && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="border-t border-border p-4 space-y-4 overflow-hidden"
+                      >
+                        <NameCaption idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
+                        <BasicTaxonomyGrid idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
+                      </motion.div>
                     )}
-                    <QualityRow idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
-                    <WeightedList
-                      idPrefix={card.id}
-                      labelKey="addItem.material"
-                      items={fields.fabric_materials}
-                      onChange={(v) => onChange({ fabric_materials: v })}
-                      placeholder={t('addItem.fabricSlotPlaceholder', { defaultValue: 'Fabric name' })}
-                      disabled={saved}
-                      testid="add-item-fabrics"
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                  </AnimatePresence>
+                </div>
+
+                {/* 2. Styling Details Section */}
+                <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => toggleSection('styling')}
+                    className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-start focus:outline-none"
+                  >
+                    <div className="flex-1 min-w-0 pe-2">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                        {t('addItem.section.styling', { defaultValue: 'Styling Details' })}
+                      </span>
+                      {!sections.styling && (
+                        <div className="text-[11px] text-muted-foreground truncate mt-0.5">
+                          {[
+                            fields.gender, 
+                            fields.dress_code, 
+                            fields.season && fields.season.length ? fields.season.join('/') : null
+                          ].filter(Boolean).join(' · ') || '—'}
+                        </div>
+                      )}
+                    </div>
+                    {sections.styling ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                  </button>
+                  
+                  <AnimatePresence initial={false}>
+                    {sections.styling && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="border-t border-border p-4 space-y-4 overflow-hidden"
+                      >
+                        <StylingTaxonomyGrid idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
+                        <SeasonPicker idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
+                        <WeightedList
+                          idPrefix={card.id}
+                          labelKey="addItem.color"
+                          items={fields.colors}
+                          onChange={(v) => onChange({ colors: v })}
+                          placeholder={t('addItem.colorSlotPlaceholder', { defaultValue: 'Color name' })}
+                          disabled={saved}
+                          testid="add-item-colors"
+                        />
+                        <TagsEditor
+                          idPrefix={card.id}
+                          items={fields.tags}
+                          onChange={(v) => onChange({ tags: v })}
+                          disabled={saved}
+                        />
+                        <IntentSelector idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* 3. Care & Repair Section */}
+                <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => toggleSection('care')}
+                    className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-start focus:outline-none"
+                  >
+                    <div className="flex-1 min-w-0 pe-2">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                        {t('addItem.section.care', { defaultValue: 'Care & Repair' })}
+                      </span>
+                      {!sections.care && (
+                        <div className="text-[11px] text-muted-foreground truncate mt-0.5">
+                          {[fields.state, fields.condition, fields.quality].filter(Boolean).join(' · ') || '—'}
+                        </div>
+                      )}
+                    </div>
+                    {sections.care ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                  </button>
+                  
+                  <AnimatePresence initial={false}>
+                    {sections.care && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="border-t border-border p-4 space-y-4 overflow-hidden"
+                      >
+                        {fields.repair_advice && (
+                          <div
+                            className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 text-amber-900 text-xs"
+                            data-testid="add-item-repair-advice"
+                          >
+                            <Wand2 className="h-4 w-4 mt-0.5 shrink-0" />
+                            <div>
+                              <div className="font-medium">{t('addItem.repairTip', { defaultValue: 'Repair tip' })}</div>
+                              <div className="mt-0.5">{fields.repair_advice}</div>
+                            </div>
+                          </div>
+                        )}
+                        <QualityRow idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
+                        <WeightedList
+                          idPrefix={card.id}
+                          labelKey="addItem.material"
+                          items={fields.fabric_materials}
+                          onChange={(v) => onChange({ fabric_materials: v })}
+                          placeholder={t('addItem.fabricSlotPlaceholder', { defaultValue: 'Fabric name' })}
+                          disabled={saved}
+                          testid="add-item-fabrics"
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </CardContent>

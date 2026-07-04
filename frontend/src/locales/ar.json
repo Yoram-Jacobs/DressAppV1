@@ -394,7 +394,8 @@
     "sizeChipLabel": "المقاس {{size}}",
     "pendingGarmentAlt": "ملبس معلّق",
     "queuedForAutoSave": "في انتظار {{count}} صورة — سيُحفظ تلقائياً.",
-    "savedSomeWaitingForRest": "تم حفظ {{saved}} — في انتظار {{remaining}} آخرين."
+    "savedSomeWaitingForRest": "تم حفظ {{saved}} — في انتظار {{remaining}} آخرين.",
+    "quickConfirmMode": "وضع التأكيد السريع"
   },
   "itemDetail": {
     "back": "العودة إلى الخزانة",

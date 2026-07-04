@@ -394,7 +394,8 @@
     "sizeChipLabel": "Taglia {{size}}",
     "pendingGarmentAlt": "Capo in attesa",
     "queuedForAutoSave": "In attesa di {{count}} foto — verrà salvato automaticamente.",
-    "savedSomeWaitingForRest": "{{saved}} salvati — in attesa di altri {{remaining}}."
+    "savedSomeWaitingForRest": "{{saved}} salvati — in attesa di altri {{remaining}}.",
+    "quickConfirmMode": "Modalità di Conferma Rapida"
   },
   "itemDetail": {
     "back": "Torna all’armadio",

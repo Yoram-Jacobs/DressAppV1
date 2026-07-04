@@ -394,7 +394,8 @@
     "sizeChipLabel": "Größe {{size}}",
     "pendingGarmentAlt": "Ausstehende Kleidung",
     "queuedForAutoSave": "Warten auf {{count}} Foto(s) — wird automatisch gespeichert.",
-    "savedSomeWaitingForRest": "{{saved}} gespeichert — warte auf {{remaining}} weitere."
+    "savedSomeWaitingForRest": "{{saved}} gespeichert — warte auf {{remaining}} weitere.",
+    "quickConfirmMode": "Schnellbestätigungs-Modus"
   },
   "itemDetail": {
     "back": "Zurück zur Garderobe",

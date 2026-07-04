@@ -394,7 +394,8 @@
     "sizeChipLabel": "Taille {{size}}",
     "pendingGarmentAlt": "Vêtement en attente",
     "queuedForAutoSave": "Attente de {{count}} photo(s) — sauvegarde automatique.",
-    "savedSomeWaitingForRest": "{{saved}} sauvegardés — en attente de {{remaining}} autres."
+    "savedSomeWaitingForRest": "{{saved}} sauvegardés — en attente de {{remaining}} autres.",
+    "quickConfirmMode": "Mode de Confirmation Rapide"
   },
   "itemDetail": {
     "back": "Retour au dressing",

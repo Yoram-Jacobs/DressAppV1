@@ -394,7 +394,8 @@
     "sizeChipLabel": "Размер {{size}}",
     "pendingGarmentAlt": "Ожидающая одежда",
     "queuedForAutoSave": "Ожидание {{count}} фото — будет сохранено автоматически.",
-    "savedSomeWaitingForRest": "{{saved}} сохранено — ожидание ещё {{remaining}}."
+    "savedSomeWaitingForRest": "{{saved}} сохранено — ожидание ещё {{remaining}}.",
+    "quickConfirmMode": "Режим быстрого подтверждения"
   },
   "itemDetail": {
     "back": "Назад в гардероб",
