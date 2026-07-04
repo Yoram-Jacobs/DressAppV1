@@ -67,7 +67,7 @@ export function ShareOutfitButton({ rec, sessionId, size = 'sm' }) {
       ) : (
         <Copy className="h-3.5 w-3.5" />
       )}
-      <span className="text-xs">{t('stylist.shareOutfit')}</span>
+      <span className="text-xs">{t('common.share', { defaultValue: 'Share' })}</span>
     </Button>
   );
 }

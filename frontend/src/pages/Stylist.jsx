@@ -25,6 +25,7 @@ import {
   ChevronRight,
   GripVertical,
   ArrowLeft,
+  Share2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -62,6 +63,7 @@ import { labelForRole, labelForDressCode } from '@/lib/taxonomy';
 import { OutfitRecommendationCard } from '@/components/stylist/OutfitRecommendationCard';
 import { ItemFloater } from '@/components/stylist/ItemFloater';
 import HarmonyBadge from '@/components/stylist/HarmonyBadge';
+import ShareOutfitModal from '@/components/stylist/ShareOutfitModal';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import DressMeShuffler from '@/components/stylist/DressMeShuffler';
 import { AttachmentPicker } from '@/components/stylist/AttachmentPicker';
@@ -240,6 +242,7 @@ export default function Stylist() {
   });
   const [dragOverDay, setDragOverDay] = useState(null);
   const [selectedOutfitForDetail, setSelectedOutfitForDetail] = useState(null);
+  const [shareDetailModalOpen, setShareDetailModalOpen] = useState(false);
   const [calendarModalOpen, setCalendarModalOpen] = useState(false);
   const [schedulingDate, setSchedulingDate] = useState(null);
   const [currentCalendarMonth, setCurrentCalendarMonth] = useState(() => new Date());
@@ -1651,7 +1654,7 @@ export default function Stylist() {
             data-testid="stylist-trends-btn"
           >
             <TrendingUp className="h-3.5 w-3.5" />
-            {t('trendScout', { defaultValue: 'Trends' })}
+            {t('home.trendScout', { defaultValue: 'Trends' })}
           </Button>
           {imageFile && (
             <div
@@ -1847,18 +1850,28 @@ export default function Stylist() {
             >
               <ArrowLeft className="h-4 w-4 rtl:rotate-180" /> {t('common.back', { defaultValue: 'Back' })}
             </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={async () => {
-                await deleteOutfit(selectedOutfitForDetail.id);
-                setSelectedOutfitForDetail(null);
-                setIsEditingOutfit(false);
-              }}
-              className="rounded-xl h-8 text-xs font-semibold flex items-center gap-1.5"
-            >
-              <Trash2 className="h-3.5 w-3.5" /> {t('common.delete', { defaultValue: 'Delete' })}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShareDetailModalOpen(true)}
+                className="rounded-xl h-8 text-xs font-semibold flex items-center gap-1.5"
+              >
+                <Share2 className="h-3.5 w-3.5" /> {t('common.share', { defaultValue: 'Share' })}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={async () => {
+                  await deleteOutfit(selectedOutfitForDetail.id);
+                  setSelectedOutfitForDetail(null);
+                  setIsEditingOutfit(false);
+                }}
+                className="rounded-xl h-8 text-xs font-semibold flex items-center gap-1.5"
+              >
+                <Trash2 className="h-3.5 w-3.5" /> {t('common.delete', { defaultValue: 'Delete' })}
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6 items-start">
@@ -2075,6 +2088,11 @@ export default function Stylist() {
             </div>
           </div>
         </CardContent>
+        <ShareOutfitModal
+          open={shareDetailModalOpen}
+          onOpenChange={setShareDetailModalOpen}
+          outfit={selectedOutfitForDetail}
+        />
       </Card>
     );
   };
