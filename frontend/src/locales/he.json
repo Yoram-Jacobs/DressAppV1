@@ -990,7 +990,27 @@
     "exploreTitle": "גלה את DressApp",
     "statsTitle": "נתונים",
     "everyday": "Everyday",
-    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts."
+    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts.",
+    "aiConfig": {
+      "title": "הגדרות בינה מלאכותית",
+      "subtitle": "נהל את ספקי שירותי ה-AI שלך, התאם אישית מפתחות API, או עבור למודלי AI מקומיים.",
+      "modeLabel": "מצב ספק בינה מלאכותית",
+      "standardPlan": "תוכנית סטנדרטית (מבוססת קרדיטים)",
+      "customKeys": "מפתחות ה-API שלי (SaaS)",
+      "onDevice": "בינה מלאכותית מקומית במכשיר (Gemma)",
+      "setupInstructions": "הגדרת מפתח Gemini API האישי שלך קלה מאוד! בצע את השלבים הבאים:",
+      "step1": "1. לחץ על 'קבל מפתח API' כדי לבקר ב-Google AI Studio.",
+      "step2": "2. התחבר עם חשבون גוגל ולחץ על 'Create API Key'.",
+      "step3": "3. העתק את המפתח שנוצר, הדבק אותו למטה ולחץ על שמירה.",
+      "getKeyBtn": "קבל מפתח API",
+      "saveBtn": "שמור הגדרות",
+      "keyPlaceholder": "הדבק את מפתח ה-Gemini API שלך כאן...",
+      "creditsLabel": "קרדיטים שנותרו",
+      "feeNotice": "עמלת פלטפורמה של 7% מתווספת לשימוש בקרדיטים לכיסוי עלויות הטכנולוגיה, יצירת אאוטפיטים ועיבוד הפרומפטים.",
+      "modelSelectorTitle": "בחר ספק בינה מלאכותית",
+      "statusActive": "פעיל",
+      "statusInactive": "לא פעיל"
+    }
   },
   "admin": {
     "title": "ניהול",

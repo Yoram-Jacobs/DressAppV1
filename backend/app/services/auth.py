@@ -8,10 +8,13 @@ Exposes:
 """
 from __future__ import annotations
 
+import base64
+import hashlib
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from cryptography.fernet import Fernet
 import jwt
 from fastapi import Depends, Header, HTTPException, status
 from passlib.context import CryptContext
@@ -109,3 +112,19 @@ def apply_admin_role(roles: list[str] | None, email: str | None) -> list[str]:
     if email and email.lower() in settings.admin_emails_set and "admin" not in base:
         base.append("admin")
     return base
+
+
+def encrypt_api_key(plain_key: str) -> str:
+    key = hashlib.sha256(settings.JWT_SECRET.encode()).digest()
+    cipher = Fernet(base64.urlsafe_b64encode(key))
+    return cipher.encrypt(plain_key.encode()).decode()
+
+
+def decrypt_api_key(encrypted_key: str) -> str | None:
+    try:
+        key = hashlib.sha256(settings.JWT_SECRET.encode()).digest()
+        cipher = Fernet(base64.urlsafe_b64encode(key))
+        return cipher.decrypt(encrypted_key.encode()).decode()
+    except Exception as exc:
+        logger.error("Failed to decrypt API key: %s", exc)
+        return None

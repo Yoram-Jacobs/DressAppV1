@@ -93,17 +93,17 @@ def _language_directive(code: str | None) -> str:
 
 
 class GeminiStylistService:
-    def __init__(self) -> None:
+    def __init__(self, api_key: str | None = None) -> None:
         # Native google-genai path: requires a direct GEMINI_API_KEY.
         # The legacy EMERGENT_LLM_KEY fallback was removed when this
         # service migrated off the Emergent proxy — keeping the var
         # defined in env is harmless but it never feeds into real
         # calls any more.
-        if not settings.GEMINI_API_KEY:
+        self.api_key = api_key or settings.GEMINI_API_KEY
+        if not self.api_key:
             raise RuntimeError(
-                "No GEMINI_API_KEY configured. Set it in /app/backend/.env."
+                "No GEMINI_API_KEY configured. Set it in /app/backend/.env or pass it explicitly."
             )
-        self.api_key = settings.GEMINI_API_KEY
         self.model = settings.DEFAULT_STYLIST_MODEL
         self.provider = settings.DEFAULT_STYLIST_PROVIDER
         self._client = GeminiClient(api_key=self.api_key)

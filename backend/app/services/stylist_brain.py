@@ -65,13 +65,17 @@ class GeminiStylistBrain:
 
     provider_name = "gemini"
 
-    def __init__(self) -> None:
-        if gemini_stylist_service is None:
-            raise RuntimeError(
-                "Gemini stylist service unavailable. Set GEMINI_API_KEY "
-                "or EMERGENT_LLM_KEY to enable it."
-            )
-        self._svc = gemini_stylist_service
+    def __init__(self, api_key: str | None = None) -> None:
+        if api_key:
+            from app.services.gemini_stylist import GeminiStylistService
+            self._svc = GeminiStylistService(api_key=api_key)
+        else:
+            if gemini_stylist_service is None:
+                raise RuntimeError(
+                    "Gemini stylist service unavailable. Set GEMINI_API_KEY "
+                    "or EMERGENT_LLM_KEY to enable it."
+                )
+            self._svc = gemini_stylist_service
 
     async def advise(self, **kwargs: Any) -> dict[str, Any]:
         return await self._svc.advise(**kwargs)
@@ -194,7 +198,9 @@ def build_stylist_brain() -> StylistBrain:
 _service: StylistBrain | None = None
 
 
-def stylist_brain_service() -> StylistBrain:
+def stylist_brain_service(api_key: str | None = None) -> StylistBrain:
+    if api_key:
+        return GeminiStylistBrain(api_key=api_key)
     global _service
     if _service is None:
         _service = build_stylist_brain()

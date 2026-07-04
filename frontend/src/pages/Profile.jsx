@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { LogOut, Loader2, Languages, Bell, Newspaper, Calendar, Users, TrendingUp } from 'lucide-react';
+import { LogOut, Loader2, Languages, Bell, Newspaper, Calendar, Users, TrendingUp, Key, Coins, Info, ExternalLink } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -20,6 +20,7 @@ import { ProfileDetailsCard } from '@/components/ProfileDetailsCard';
 import { DeveloperPanel } from '@/components/DeveloperPanel';
 import { SUPPORTED_LANGUAGES } from '@/lib/i18n';
 import { labelForDressCode } from '@/lib/taxonomy';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 
 const VOICES = [
   'aura-2-thalia-en', 'aura-2-hermes-en', 'aura-2-electra-en',
@@ -280,6 +281,227 @@ function SchedulerSettingsCard() {
   );
 }
 
+function AIConfigurationCard() {
+  const { t } = useTranslation();
+  const { user, updateUserLocal } = useAuth();
+  
+  const [providerMode, setProviderMode] = useState(user?.ai_configuration?.provider_mode || 'standard');
+  const [geminiKey, setGeminiKey] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  
+  const hasGeminiKey = !!user?.ai_configuration?.custom_keys?.google_ai;
+  const currentCredits = user?.ai_configuration?.current_credits ?? 1000;
+  const creditsUsed = user?.ai_configuration?.credits_used_this_month ?? 0;
+  const creditPrice = 0.005; // $0.005 per credit
+  
+  const calculatedFee = (creditsUsed * creditPrice * 0.07).toFixed(4);
+
+  const handleSaveConfig = async (mode, keyVal = null) => {
+    setBusy(true);
+    try {
+      const payload = {
+        ai_configuration: {
+          provider_mode: mode,
+          custom_keys: {}
+        }
+      };
+      
+      if (mode === 'custom_keys') {
+        if (keyVal !== null) {
+          payload.ai_configuration.custom_keys.google_ai = keyVal;
+        } else {
+          payload.ai_configuration.custom_keys.google_ai = true;
+        }
+      } else {
+        payload.ai_configuration.custom_keys.google_ai = "";
+      }
+      
+      const updatedUser = await api.updateProfile(payload);
+      updateUserLocal(updatedUser);
+      setProviderMode(mode);
+      toast.success(t('common.success', { defaultValue: 'Settings updated successfully' }));
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      toast.error(t('profile.saveFailed', { defaultValue: 'Save failed' }));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial" id="ai-configuration-section">
+      <CardContent className="p-6">
+        <Accordion type="single" collapsible defaultValue={undefined}>
+          <AccordionItem value="ai-config" className="border-none">
+            <AccordionTrigger className="py-2 hover:no-underline">
+              <div className="flex items-center gap-3 text-start">
+                <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                  <Key className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold tracking-tight text-foreground">
+                    {t('profile.aiConfig.title', { defaultValue: 'AI Configuration' })}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {t('profile.aiConfig.subtitle', { defaultValue: 'Manage your AI service providers, customize API keys, or switch to edge AI models.' })}
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            
+            <AccordionContent className="pt-4 space-y-4 pb-2">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {t('profile.aiConfig.modeLabel', { defaultValue: 'AI Provider Mode' })}
+                </Label>
+                <Select
+                  value={providerMode}
+                  onValueChange={(val) => handleSaveConfig(val)}
+                  disabled={busy}
+                >
+                  <SelectTrigger className="rounded-xl w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="standard">
+                      {t('profile.aiConfig.standardPlan', { defaultValue: 'Standard Plan (Credit-based)' })}
+                    </SelectItem>
+                    <SelectItem value="custom_keys">
+                      {t('profile.aiConfig.customKeys', { defaultValue: 'My Own API Keys (SaaS)' })}
+                    </SelectItem>
+                    <SelectItem value="on_device">
+                      {t('profile.aiConfig.onDevice', { defaultValue: 'On-Device Local AI (Gemma)' })}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {providerMode === 'custom_keys' && (
+                <div className="p-4 rounded-2xl bg-secondary/30 border border-border/50 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-foreground flex items-center gap-2">
+                      Google Gemini Key:
+                      {hasGeminiKey ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          {t('profile.aiConfig.statusActive', { defaultValue: 'Active' })}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-rose-500 font-medium">
+                          <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                          {t('profile.aiConfig.statusInactive', { defaultValue: 'Inactive' })}
+                        </span>
+                      )}
+                    </span>
+                    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="xs" className="rounded-lg text-[10px] h-6">
+                          {hasGeminiKey ? t('common.edit', { defaultValue: 'Edit' }) : t('profile.aiConfig.connectKey', { defaultValue: 'Connect Key' })}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="rounded-2xl max-w-md">
+                        <DialogHeader>
+                          <DialogTitle className="text-base font-bold flex items-center gap-2">
+                            <Key className="h-4 w-4 text-primary" />
+                            {t('profile.aiConfig.modelSelectorTitle', { defaultValue: 'Connect Gemini Key' })}
+                          </DialogTitle>
+                          <DialogDescription className="text-xs text-muted-foreground">
+                            {t('profile.aiConfig.setupInstructions', { defaultValue: 'Setting up your custom Gemini API key is easy! Follow these steps:' })}
+                          </DialogDescription>
+                        </DialogHeader>
+                        
+                        <div className="space-y-4 py-2">
+                          <div className="text-xs space-y-2 text-foreground/90 bg-secondary/25 p-3.5 rounded-xl border border-border/40">
+                            <p>{t('profile.aiConfig.step1', { defaultValue: "1. Click 'Get API Key' to visit Google AI Studio." })}</p>
+                            <p>{t('profile.aiConfig.step2', { defaultValue: "2. Sign in with any Google account and click 'Create API Key'." })}</p>
+                            <p>{t('profile.aiConfig.step3', { defaultValue: "3. Copy the generated key, paste it below, and click Save." })}</p>
+                          </div>
+
+                          <div className="flex justify-end">
+                            <a 
+                              href="https://aistudio.google.com/" 
+                              target="_blank" 
+                              rel="noreferrer"
+                              className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                            >
+                              {t('profile.aiConfig.getKeyBtn', { defaultValue: 'Get API Key' })}
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold">Gemini API Key</Label>
+                            <Input 
+                              type="password"
+                              value={geminiKey}
+                              onChange={(e) => setGeminiKey(e.target.value)}
+                              placeholder={t('profile.aiConfig.keyPlaceholder', { defaultValue: 'Paste your Gemini API key here...' })}
+                              className="rounded-xl text-xs h-9"
+                            />
+                          </div>
+                          
+                          <Button 
+                            className="w-full rounded-xl text-xs h-9 font-semibold"
+                            onClick={() => handleSaveConfig('custom_keys', geminiKey)}
+                            disabled={busy || !geminiKey}
+                          >
+                            {busy && <Loader2 className="h-3 w-3 animate-spin mr-1.5" />}
+                            {t('profile.aiConfig.saveBtn', { defaultValue: 'Save Configuration' })}
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-normal">
+                    {t('profile.aiConfig.setupInstructions', { defaultValue: 'Configure your own Google AI key to run personalized model queries directly against your own developer account quota.' })}
+                  </p>
+                </div>
+              )}
+
+              {providerMode !== 'on_device' && (
+                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <Coins className="h-5 w-5 text-primary/80" />
+                    <div>
+                      <div className="text-xs font-semibold text-foreground">
+                        {t('profile.aiConfig.creditsLabel', { defaultValue: 'Remaining Credits' })}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5">
+                        {t('profile.aiConfig.creditsUsed', { defaultValue: 'Monthly credit price is $0.005. 7% platform fee is added.' })}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-base font-bold text-primary">{currentCredits}</span>
+                </div>
+              )}
+
+              {providerMode === 'on_device' && (
+                <div className="p-4 rounded-2xl bg-secondary/40 border border-border/60 flex items-center gap-3">
+                  <Info className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <p className="text-[11px] text-muted-foreground leading-normal">
+                    {t('profile.aiConfig.edgeNotice', { defaultValue: 'Running local Gemma4-E2B offline. Execution usage metrics are monitored locally and credited back via Google Nano Banana.' })}
+                  </p>
+                </div>
+              )}
+
+              <div className="text-[10px] text-muted-foreground leading-normal flex items-start gap-1.5 p-1 bg-secondary/15 rounded-lg">
+                <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                <span>
+                  {t('profile.aiConfig.feeNotice', { defaultValue: 'A 7% platform fee is applied to your credit usage to cover custom technology, layout rendering, and prompt processing.' })}
+                  {creditsUsed > 0 && ` Current fee: $${calculatedFee}.`}
+                </span>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </CardContent>
+    </Card>
+  );
+}
+
+
 export default function Profile() {
   const { t, i18n } = useTranslation();
   const { user, updateUserLocal, logout } = useAuth();
@@ -438,6 +660,10 @@ export default function Profile() {
 
       <div className="mb-6">
         <ProfileDetailsCard />
+      </div>
+
+      <div className="mb-6">
+        <AIConfigurationCard />
       </div>
 
       <div className="mb-6">

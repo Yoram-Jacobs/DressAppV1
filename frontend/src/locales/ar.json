@@ -990,7 +990,27 @@
     "styleDressFor": "نمط اللباس لـ",
     "twiceAWeek": "مرتين في الأسبوع",
     "everyday": "Everyday",
-    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts."
+    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts.",
+    "aiConfig": {
+      "title": "إعدادات الذكاء الاصطناعي",
+      "subtitle": "إدارة مزودي خدمة الذكاء الاصطناعي، وتخصيص مفاتيح API، أو التبديل إلى نماذج الذكاء الاصطناعي المحلية.",
+      "modeLabel": "وضع مزود الذكاء الاصطناعي",
+      "standardPlan": "الخطة القياسية (تعتمد على الرصيد)",
+      "customKeys": "مفاتيح API الخاصة بي (SaaS)",
+      "onDevice": "الذكاء الاصطناعي المحلي على الجهاز (Gemma)",
+      "setupInstructions": "إعداد مفتاح Gemini API المخصص سهل للغاية! اتبع هذه الخطوات:",
+      "step1": "1. انقر فوق 'احصل على مفتاح API' لزيارة Google AI Studio.",
+      "step2": "2. قم بتسجيل الدخول باستخدام أي حساب Google وانقر على 'Create API Key'.",
+      "step3": "3. انسخ المفتاح الذي تم إنشاؤه، والصقه أدناه، وانقر فوق حفظ.",
+      "getKeyBtn": "احصل على مفتاح API",
+      "saveBtn": "حفظ الإعدادات",
+      "keyPlaceholder": "الصق مفتاح Gemini API الخاص بك هنا...",
+      "creditsLabel": "الرصيد المتبقي",
+      "feeNotice": "يتم تطبيق رسوم منصة بنسبة 7٪ على استخدام رصيدك لتغطية تكاليف التكنولوجيا وتنسيق المخطط ومعالجة الطلبات.",
+      "modelSelectorTitle": "اختر مزود الذكاء الاصطناعي",
+      "statusActive": "نشط",
+      "statusInactive": "غير نشط"
+    }
   },
   "admin": {
     "title": "الإدارة",

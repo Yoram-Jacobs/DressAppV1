@@ -53,11 +53,28 @@ class UpdateUserIn(BaseModel):
     # --- AI Stylist Scheduler Settings (Phase Scheduler) ---
     scheduler_settings: dict[str, Any] | None = None
 
+    # --- AI Settings (F3 pay-as-you-go) ---
+    ai_configuration: dict[str, Any] | None = None
+
 
 @router.get("/me")
 async def get_me(user: dict = Depends(get_current_user)) -> dict[str, Any]:
     safe = {k: v for k, v in user.items() if k not in {"password_hash", "google_oauth"}}
     safe["google_connected"] = bool(user.get("google_oauth"))
+    
+    # Mask API keys to keep them secured
+    if "ai_configuration" in safe:
+        ai_config = dict(safe["ai_configuration"])
+        if "custom_keys" in ai_config:
+            custom_keys = dict(ai_config["custom_keys"])
+            for key_name in list(custom_keys.keys()):
+                if custom_keys[key_name]:
+                    custom_keys[key_name] = True
+                else:
+                    custom_keys[key_name] = False
+            ai_config["custom_keys"] = custom_keys
+        safe["ai_configuration"] = ai_config
+        
     return safe
 
 
@@ -108,7 +125,39 @@ async def update_me(
 
     db = get_db()
     set_ops: dict[str, Any] = {}
+
+    if "ai_configuration" in patch and patch["ai_configuration"] is not None:
+        ai_config = patch["ai_configuration"]
+        existing_config = user.get("ai_configuration") or {}
+        provider_mode = ai_config.get("provider_mode") or existing_config.get("provider_mode") or "standard"
+        
+        # Merge custom keys
+        existing_keys = existing_config.get("custom_keys") or {}
+        new_keys = ai_config.get("custom_keys") or {}
+        
+        merged_keys = dict(existing_keys)
+        for key_name, key_val in new_keys.items():
+            if key_val is True:
+                # Keep existing key
+                continue
+            elif key_val == "" or key_val is None:
+                # Remove key
+                merged_keys.pop(key_name, None)
+            else:
+                # Encrypt new key
+                from app.services.auth import encrypt_api_key
+                merged_keys[key_name] = encrypt_api_key(str(key_val))
+                
+        set_ops["ai_configuration"] = {
+            "provider_mode": provider_mode,
+            "custom_keys": merged_keys,
+            "current_credits": ai_config.get("current_credits", existing_config.get("current_credits", 1000)),
+            "credits_used_this_month": ai_config.get("credits_used_this_month", existing_config.get("credits_used_this_month", 0))
+        }
+
     for k, v in patch.items():
+        if k == "ai_configuration":
+            continue
         if k in _MERGEABLE_DICT_FIELDS and isinstance(v, dict):
             # Mongo dot-notation: ``$set: {"body_measurements.chest": 92}``
             # leaves every other ``body_measurements.*`` field untouched.

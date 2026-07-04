@@ -173,7 +173,11 @@ async def stylist_endpoint(
     # populated by the time the response arrives. Failures are non-fatal.
     if is_first_turn and text:
         try:
-            title = await generate_session_title(text, language=user_profile["preferred_language"])
+            title = await generate_session_title(
+                text,
+                language=user_profile["preferred_language"],
+                api_key=api_key_resolved
+            )
             if title:
                 await update_session(session["id"], user["id"], title=title)
                 session["title"] = title
@@ -184,6 +188,15 @@ async def stylist_endpoint(
     # both inject them into the LLM prompt AND echo the applied keys.
     from app.services.user_preferences import render_user_preferences
     prefs_block, applied_prefs = render_user_preferences(user)
+
+    # Resolve active user custom API key if configured
+    api_key_resolved = None
+    ai_config = user.get("ai_configuration") or {}
+    if ai_config.get("provider_mode") == "custom_keys":
+        encrypted_key = (ai_config.get("custom_keys") or {}).get("google_ai")
+        if encrypted_key:
+            from app.services.auth import decrypt_api_key
+            api_key_resolved = decrypt_api_key(encrypted_key)
 
     try:
         advice = await get_styling_advice(
@@ -201,11 +214,12 @@ async def stylist_endpoint(
             language=user_profile["preferred_language"],
             voice_id=user_profile["preferred_voice_id"],
             calendar_events=calendar_events,
-            cultural_rules=None,
+            cultural_rules=user.get("cultural_context"),
             user_profile=user_profile,
             closet_summary=closet,
             user_preferences_block=prefs_block,
             synthesize_tts=not skip_tts,
+            api_key=api_key_resolved,
         )
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc

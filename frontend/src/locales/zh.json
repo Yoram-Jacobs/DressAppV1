@@ -990,7 +990,27 @@
     "styleDressFor": "搭配风格",
     "twiceAWeek": "每周两次",
     "everyday": "Everyday",
-    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts."
+    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts.",
+    "aiConfig": {
+      "title": "AI Configuration",
+      "subtitle": "Manage your AI service providers, customize API keys, or switch to edge AI models.",
+      "modeLabel": "AI Provider Mode",
+      "standardPlan": "Standard Plan (Credit-based)",
+      "customKeys": "My Own API Keys (SaaS)",
+      "onDevice": "On-Device Local AI (Gemma)",
+      "setupInstructions": "Setting up your custom Gemini API key is easy! Follow these steps:",
+      "step1": "1. Click 'Get API Key' to visit Google AI Studio.",
+      "step2": "2. Sign in with any Google account and click 'Create API Key'.",
+      "step3": "3. Copy the generated key, paste it below, and click Save.",
+      "getKeyBtn": "Get API Key",
+      "saveBtn": "Save Configuration",
+      "keyPlaceholder": "Paste your Gemini API key here...",
+      "creditsLabel": "Remaining Credits",
+      "feeNotice": "A 7% platform fee is applied to your credit usage to cover custom technology, layout rendering, and prompt processing.",
+      "modelSelectorTitle": "Select AI Provider",
+      "statusActive": "Active",
+      "statusInactive": "Inactive"
+    }
   },
   "admin": {
     "title": "管理",

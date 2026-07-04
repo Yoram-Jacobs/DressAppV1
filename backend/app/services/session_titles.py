@@ -39,12 +39,13 @@ def _fallback_title(text: str) -> str:
     return " ".join(words[:5])[:60]
 
 
-async def generate_session_title(text: str, language: str = "en") -> str:
+async def generate_session_title(text: str, language: str = "en", api_key: str | None = None) -> str:
     """Return a crisp 3–5 word conversation title based on the first user turn."""
     text = (text or "").strip()
     if not text:
         return "New conversation"
-    if not settings.GEMINI_API_KEY:
+    active_key = api_key or settings.GEMINI_API_KEY
+    if not active_key:
         return _fallback_title(text)
 
     lang_code = (language or "en").lower()
@@ -56,7 +57,7 @@ async def generate_session_title(text: str, language: str = "en") -> str:
         "the target language uses it. Do NOT prefix with words like 'Topic:' "
         "or 'Title:'."
     )
-    client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+    client = GeminiClient(api_key=active_key)
     try:
         # Flash is more than enough for a 5-word summary.
         raw = await client.text(
