@@ -2116,7 +2116,7 @@ export default function ItemDetail() {
                     // see the ``price_cents`` branch in diffPatch
                     // for why fractional cents are deliberately
                     // dropped from the UI.
-                    value={form.price_cents === '' || form.price_cents == null ? 0 : form.price_cents}
+                    value={form.price_cents === '' || form.price_cents == null || form.price_cents === 0 ? '' : form.price_cents}
                     onChange={(e) => {
                       const raw = e.target.value;
                       if (raw && !/^\d*$/.test(raw)) return;

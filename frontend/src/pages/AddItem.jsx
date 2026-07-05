@@ -3752,9 +3752,9 @@ function IntentSelector({ idPrefix, fields, onChange, disabled }) {
               // it as 100 cents = $1). Whole-unit semantics are now
               // identical between AddItem and ItemDetail.
               value={
-                fields.price_cents != null && fields.price_cents !== ''
+                fields.price_cents != null && fields.price_cents !== '' && Number(fields.price_cents) !== 0
                   ? String(Math.round(Number(fields.price_cents) / 100))
-                  : '0'
+                  : ''
               }
               onChange={(e) => {
                 const raw = e.target.value;
