@@ -248,6 +248,30 @@ export default function Stylist() {
   const [sessions, setSessions] = useState([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [activeSessionId, setActiveSessionId] = useState(null);
+
+  const getOutfitName = (name) => {
+    if (!name) return '';
+    let localized = name;
+    localized = localized.replace('(Fallback. Quota exhausted)', t('stylist.fallbackQuotaExhausted', { defaultValue: '(Fallback. Quota exhausted)' }));
+    localized = localized.replace('(Fallback)', t('stylist.fallbackLabel', { defaultValue: '(Fallback)' }));
+    return localized;
+  };
+
+  const getOutfitDescription = (desc) => {
+    if (!desc) return '';
+    if (typeof desc !== 'string') return desc;
+    const regex = /^A balanced daily outfit matching your preferred (.+) style and local weather\.$/i;
+    const match = desc.match(regex);
+    if (match) {
+      const style = match[1].toLowerCase();
+      const styleLabel = labelForDressCode(style, t);
+      return t('stylist.fallbackDescriptionPattern', { 
+        defaultValue: 'A balanced daily outfit matching your preferred {{style}} style and local weather.',
+        style: styleLabel 
+      });
+    }
+    return desc;
+  };
   const [messages, setMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -1963,7 +1987,7 @@ export default function Stylist() {
                       <div className="flex items-start justify-between gap-4">
                         <div className="space-y-1">
                           <h3 className="font-display text-2xl font-semibold text-foreground leading-tight">
-                            {selectedOutfitForDetail.name}
+                            {getOutfitName(selectedOutfitForDetail.name)}
                           </h3>
                           {detailColors.length >= 2 && (
                             <div className="mt-1">
@@ -1987,7 +2011,7 @@ export default function Stylist() {
                       </div>
                       {(selectedOutfitForDetail.description || selectedOutfitForDetail.prompt) && (
                         <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                          {selectedOutfitForDetail.description || selectedOutfitForDetail.prompt}
+                          {getOutfitDescription(selectedOutfitForDetail.description) || labelForDressCode((selectedOutfitForDetail.prompt || '').toLowerCase(), t)}
                         </p>
                       )}
                     </div>
@@ -2061,7 +2085,7 @@ export default function Stylist() {
                           {t('outfits.styleLabel', { defaultValue: 'Style' })}
                         </div>
                         <div className="font-semibold text-foreground">
-                          {determineOutfitStyle(selectedOutfitForDetail)}
+                          {labelForDressCode(determineOutfitStyle(selectedOutfitForDetail).toLowerCase(), t)}
                         </div>
                       </div>
                       <div>
@@ -2077,7 +2101,7 @@ export default function Stylist() {
                           {t('outfits.valueLabel', { defaultValue: 'Total Value' })}
                         </div>
                         <div className="font-semibold text-foreground">
-                          ${calculateOutfitValue(selectedOutfitForDetail).toFixed(2)}
+                          {t('common.currencyFormat', { defaultValue: '${{val}}', val: calculateOutfitValue(selectedOutfitForDetail).toFixed(2) })}
                         </div>
                       </div>
                     </div>
@@ -2229,7 +2253,7 @@ export default function Stylist() {
                             </div>
                             <div className="p-2 flex-1 flex flex-col justify-center min-w-0">
                               <div className="text-[11px] font-semibold truncate text-foreground text-center">
-                                {o.name}
+                                {getOutfitName(o.name)}
                               </div>
                             </div>
                           </Card>
@@ -2694,7 +2718,7 @@ export default function Stylist() {
                           )}
                         </div>
                         <div className="text-[11px] font-semibold truncate text-foreground mt-2 w-full px-1">
-                          {o.name}
+                          {getOutfitName(o.name)}
                         </div>
                       </div>
                     );

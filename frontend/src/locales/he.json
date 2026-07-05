@@ -58,7 +58,10 @@
     "remove": "הסר",
     "share": "שתף",
     "time": "שעה",
-    "unknownColor": "אחר"
+    "unknownColor": "אחר",
+    "confirming": "מאשר...",
+    "untitled": "ללא שם",
+    "currencyFormat": "₪{{val}}"
   },
   "auth": {
     "welcomeBack": "ברוך שובך",
@@ -666,7 +669,10 @@
     },
     "keyRequiredTitle": "נדרש מפתח API",
     "keyRequiredDesc": "כדי להשתמש בסטייליסט ה-AI, אנא הגדר את מפתח Gemini API שלך בדף ההגדרות. Google AI Studio מציעה מכסה חינמית לשימוש אישי.",
-    "goToSettings": "הגדר בהגדרות"
+    "goToSettings": "הגדר בהגדרות",
+    "fallbackQuotaExhausted": "(חלופי. המכסה אזלה)",
+    "fallbackLabel": "(חלופי)",
+    "fallbackDescriptionPattern": "לוק יומי מאוזן המתאים לסגנון ה-{{style}} המועדף עליך ולמזג האוויר המקומי."
   },
   "outfitCompletion": {
     "cta": "השלם את הלוק",
@@ -1393,7 +1399,7 @@
       "blue": "כחול",
       "light_blue": "תכלת",
       "navy": "כחול כהה",
-      "charcoal_grey": "כחול-אפור כהה",
+      "charcoal_grey": "אפור כהה",
       "green": "ירוק",
       "olive": "ירוק זית",
       "yellow": "צהוב",
@@ -1403,8 +1409,10 @@
       "terracotta_brown": "חום חמרה",
       "beige": "בז'",
       "cream": "קרם",
-      "champagne_gold": "זהב שמפניה",
-      "red": "אדום"
+      "champagne_gold": "זהב",
+      "red": "אדום",
+      "royal_blue": "כחול רויאל",
+      "dark_green": "ירוק כהה"
     },
     "material": {
       "acrylic": "אקריליק",
@@ -1873,6 +1881,19 @@
       "travelBody": "המלצת הלבוש שלך למחר ({{date}}) מוכנה:",
       "welcomeBackTitle": "ברוך הבא בחזרה! ✈️",
       "welcomeBackBody": "אל תשכח לכבס את הבגדים מהמזוודה שלך בקרוב כדי לשמור עליהם רעננים!"
+    },
+    "styleLabel": "סגנון",
+    "wornLabel": "מספר לבישות",
+    "valueLabel": "ערך כולל",
+    "piecesTab": "פריטים",
+    "metricsTabWithPct": "מדדים={{pct}}%",
+    "metrics": {
+      "color": "התאמת צבעים",
+      "pattern": "התאמת דוגמה",
+      "fit": "התאמת גזרה",
+      "weather": "התאמה למזג האוויר",
+      "event": "התאמה לאירוע",
+      "location": "התאמה למיקום"
     }
   },
   "stats": {
@@ -2059,5 +2080,24 @@
     "silhouette": "Analyzing Silhouette...",
     "materials": "Inferring Fabric Materials...",
     "tags": "Generating Stylist Tags..."
+  },
+  "wardrobeStats": {
+    "sustainability": {
+      "utilisationTitle": "ניצול ארון",
+      "carbonTitle": "פחמן במעקב",
+      "intakeManual": "הוספה ידנית",
+      "intakeReceipt": "מתוך קבלות",
+      "cpwTrendTitle": "מגמת עלות ללבישה",
+      "cpwTrendDesc": "יעילות ערך הארון שלך ב-6 החודשים האחרונים.",
+      "smartSuggestionTitle": "הצעה חכמה",
+      "smartSuggestionDesc": "יש לך {{count}} פריטים שלא נלבשו 90 ימים. מומלץ להעלות אותם לשוק או לתרום אותם כדי לשמור על הארון שלך בר קיימא.",
+      "listMarketplace": "העלה לשוק",
+      "markDonate": "סמן לתרומה",
+      "selectToSell": "בחר פריטים למכירה",
+      "selectToDonate": "בחר פריטים לתרומה",
+      "noUnwornItems": "לא נמצאו פריטים שלא נלבשו."
+    },
+    "tabOverview": "סקירה",
+    "tabSustainability": "השפעה סביבתית"
   }
 }
