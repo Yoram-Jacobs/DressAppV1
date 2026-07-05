@@ -2196,8 +2196,10 @@ export default function Stylist() {
               className="w-full min-w-0 flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none p-4 data-[state=active]:flex flex-col gap-6 max-w-4xl mx-auto"
             >
 
-              {/* Shuffler */}
-              <DressMeShuffler onSaveSuccess={loadOutfitsAndNotifications} />
+              <DressMeShuffler 
+                onSaveSuccess={loadOutfitsAndNotifications} 
+                onOpenCalendar={() => setCalendarModalOpen(true)} 
+              />
 
               {/* Outfits Gallery Grid / Detail view */}
               <div className="w-full space-y-4">

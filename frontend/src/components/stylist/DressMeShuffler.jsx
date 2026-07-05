@@ -19,7 +19,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 const DRESS_CODE_OPTIONS = ['all', 'casual', 'smart-casual', 'business', 'formal', 'athletic', 'loungewear'];
 
-export default function DressMeShuffler({ onSaveSuccess }) {
+export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
   const { t, i18n } = useTranslation();
   const store = useClosetStore();
   const items = store.items || [];
@@ -144,21 +144,6 @@ export default function DressMeShuffler({ onSaveSuccess }) {
 
   const [isSpinning, setIsSpinning] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const d = new Date();
-    d.setHours(0,0,0,0);
-    return d;
-  });
-
-  const getNext7Days = () => {
-    return Array.from({ length: 7 }).map((_, i) => {
-      const d = new Date();
-      d.setHours(0,0,0,0);
-      d.setDate(d.getDate() + i);
-      return d;
-    });
-  };
 
   // Reset focus index and scrolls on style/tag filter change
   useEffect(() => {
@@ -477,7 +462,7 @@ export default function DressMeShuffler({ onSaveSuccess }) {
         title: it.name || it.title || ''
       })),
       usage: {
-        date: selectedDate.toISOString().split('T')[0],
+        date: new Date().toISOString().split('T')[0],
         time: '12:00',
         location: null,
         event_name: t('stylist.shuffledLook', { defaultValue: 'Shuffled Look' })
@@ -613,27 +598,17 @@ export default function DressMeShuffler({ onSaveSuccess }) {
     <div className="flex flex-col items-center gap-4 py-2 w-full">
       {/* Location, Weather & Calendar Header */}
       <div className="w-full max-w-sm flex flex-col gap-3 px-4">
-        {/* 7-Day Planner Row */}
-        <div className="flex items-center justify-between gap-1 bg-secondary/20 p-1.5 rounded-2xl border border-border/40 w-full overflow-x-auto no-scrollbar">
-          {getNext7Days().map((d, i) => {
-            const isSelected = selectedDate.getTime() === d.getTime();
-            const dayName = new Intl.DateTimeFormat(i18n.language || 'en', { weekday: 'short' }).format(d).toUpperCase();
-            return (
-              <button
-                key={i}
-                onClick={() => setSelectedDate(d)}
-                className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl min-w-[38px] transition-all ${
-                  isSelected 
-                    ? 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] shadow-sm scale-105' 
-                    : 'text-muted-foreground hover:bg-secondary/40 hover:text-foreground'
-                }`}
-              >
-                <span className="text-[9px] font-bold tracking-wider mb-0.5">{dayName}</span>
-                <span className={`text-xs font-semibold ${isSelected ? '' : 'text-foreground/80'}`}>{d.getDate()}</span>
-              </button>
-            );
-          })}
-        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onOpenCalendar}
+          className="rounded-2xl flex items-center justify-center gap-2 w-full h-11 border-border/80 shadow-sm font-semibold text-xs text-foreground/90 bg-secondary/30 hover:bg-secondary/50"
+          data-testid="stylist-open-calendar-btn"
+          disabled={isSpinning}
+        >
+          <CalendarDays className="h-4 w-4 text-[hsl(var(--accent))]" />
+          <span>{t('calendar.viewCalendar', { defaultValue: 'View 7-Day Planner' })}</span>
+        </Button>
 
         {/* Switchable Calendar Agenda Toggle */}
         <div className="flex items-center justify-between p-3.5 rounded-2xl bg-secondary/20 border border-border/50 w-full">
