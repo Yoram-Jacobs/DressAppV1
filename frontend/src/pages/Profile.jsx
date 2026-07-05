@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { LogOut, Loader2, Languages, Bell, Newspaper, Calendar, Users, TrendingUp, Key, Coins, Info, ExternalLink } from 'lucide-react';
+import { LogOut, Loader2, Languages, Bell, Newspaper, Calendar, Users, TrendingUp, Key, Coins, Info, ExternalLink, Save } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -956,15 +956,23 @@ export default function Profile() {
               </AccordionItem>
             </Accordion>
 
-            <div className="flex gap-3">
-              <Button type="submit" disabled={busy} className="rounded-xl" data-testid="settings-save-button">
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t('profile.saveChanges')}
-              </Button>
-              <Button type="button" variant="secondary" className="rounded-xl ms-auto"
+            <div className="flex pt-2">
+              <Button type="button" variant="secondary" className="rounded-xl w-full"
                 onClick={() => { logout(); nav('/login'); }} data-testid="settings-logout-button">
                 <LogOut className="h-4 w-4 me-2" /> {t('profile.signOut')}
               </Button>
             </div>
+            
+            {/* Floating Save Changes Button */}
+            <Button 
+              type="submit" 
+              disabled={busy} 
+              className="fixed bottom-20 end-6 md:bottom-8 md:end-8 z-40 shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 rounded-full h-12 px-6 flex items-center gap-2"
+              data-testid="settings-save-button"
+            >
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              <span className="font-semibold">{t('profile.saveChanges', { defaultValue: 'Save Changes' })}</span>
+            </Button>
           </form>
 
           {/*
