@@ -64,6 +64,7 @@ async def compose_outfit(
     language: str = "en",
     constraints: dict[str, Any] | None = None,
     user_preferences_block: str | None = None,
+    api_key: str | None = None,
 ) -> dict[str, Any]:
     """Run the full composer pipeline and return a serialised
     ``OutfitCanvas`` dict ready to ship to the frontend / persist.
@@ -102,6 +103,7 @@ async def compose_outfit(
         language=language,
         user_preferences_block=user_preferences_block,
         user_profile=user_profile,
+        api_key=api_key,
     )
     timings["compose_ms"] = int((time.perf_counter() - t2) * 1000)
 
@@ -285,6 +287,7 @@ async def _compose_with_llm(
     language: str,
     user_preferences_block: str | None = None,
     user_profile: dict[str, Any] | None = None,
+    api_key: str | None = None,
 ) -> dict[str, Any]:
     """Ask the Stylist LLM to assign candidates to outfit slots.
 
@@ -353,7 +356,11 @@ async def _compose_with_llm(
     )
 
     try:
-        out = await gemini_stylist_service.advise(
+        from app.services.gemini_stylist import GeminiStylistService
+        svc = GeminiStylistService(api_key=api_key) if api_key else gemini_stylist_service
+        if svc is None:
+            raise RuntimeError("Gemini stylist service unavailable")
+        out = await svc.advise(
             session_id=f"compose-{uuid.uuid4().hex[:8]}",
             user_text=instruction,
             image_base64=None,

@@ -168,10 +168,11 @@ async def stylist_endpoint(
         context={"lat": lat, "lng": lng, "include_calendar": include_calendar},
     )
 
-    # Resolve active user custom API key if configured
+    # Resolve active user custom API key if configured (both standard and custom_keys modes use the user's custom key)
     api_key_resolved = None
     ai_config = user.get("ai_configuration") or {}
-    if ai_config.get("provider_mode") == "custom_keys":
+    provider_mode = ai_config.get("provider_mode", "standard")
+    if provider_mode in ["standard", "custom_keys"]:
         encrypted_key = (ai_config.get("custom_keys") or {}).get("google_ai")
         if encrypted_key:
             from app.services.auth import decrypt_api_key
@@ -389,6 +390,16 @@ async def compose_outfit_endpoint(
     from app.services.user_preferences import render_user_preferences
     prefs_block, applied_prefs = render_user_preferences(user)
 
+    # Resolve active user custom API key if configured
+    api_key_resolved = None
+    ai_config = user.get("ai_configuration") or {}
+    provider_mode = ai_config.get("provider_mode", "standard")
+    if provider_mode in ["standard", "custom_keys"]:
+        encrypted_key = (ai_config.get("custom_keys") or {}).get("google_ai")
+        if encrypted_key:
+            from app.services.auth import decrypt_api_key
+            api_key_resolved = decrypt_api_key(encrypted_key)
+
     try:
         canvas = await outfit_composer.compose_outfit(
             user=user,
@@ -397,6 +408,7 @@ async def compose_outfit_endpoint(
             language=language,
             constraints=constraints,
             user_preferences_block=prefs_block,
+            api_key=api_key_resolved,
         )
         # Echo applied preferences for transparency in the canvas UI.
         canvas["applied_preferences"] = applied_prefs

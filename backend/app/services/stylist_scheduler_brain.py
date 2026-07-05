@@ -135,6 +135,24 @@ async def check_event_similarities(
                     break
 
 
+
+def _get_scheduler_stylist_service(user: dict[str, Any]):
+    api_key_resolved = None
+    ai_config = user.get("ai_configuration") or {}
+    provider_mode = ai_config.get("provider_mode", "standard")
+    if provider_mode in ["standard", "custom_keys"]:
+        encrypted_key = (ai_config.get("custom_keys") or {}).get("google_ai")
+        if encrypted_key:
+            from app.services.auth import decrypt_api_key
+            api_key_resolved = decrypt_api_key(encrypted_key)
+
+    from app.services.gemini_stylist import GeminiStylistService, gemini_stylist_service
+    if api_key_resolved:
+        return GeminiStylistService(api_key=api_key_resolved)
+    if gemini_stylist_service is not None:
+        return gemini_stylist_service
+    raise RuntimeError("No Gemini API key configured for stylist service")
+
 async def generate_scheduled_proposals(
     user: dict[str, Any],
     style_dress_for: str | None = None
@@ -175,8 +193,9 @@ async def generate_scheduled_proposals(
     from app.services.user_preferences import render_user_preferences
     prefs_block, _ = render_user_preferences(user)
 
-    # Trigger Gemini Stylist
-    res_json = await gemini_stylist_service.advise(
+    # Trigger Gemini Stylist with resolved API key
+    svc = _get_scheduler_stylist_service(user)
+    res_json = await svc.advise(
         session_id=f"scheduled-scheduler-{uuid.uuid4().hex[:8]}",
         user_text=prompt,
         image_base64=None,
@@ -262,7 +281,8 @@ async def generate_event_proposals(
     from app.services.user_preferences import render_user_preferences
     prefs_block, _ = render_user_preferences(user)
 
-    res_json = await gemini_stylist_service.advise(
+    svc = _get_scheduler_stylist_service(user)
+    res_json = await svc.advise(
         session_id=f"event-scheduler-{uuid.uuid4().hex[:8]}",
         user_text=prompt,
         image_base64=None,
