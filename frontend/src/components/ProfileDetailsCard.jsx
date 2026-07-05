@@ -356,7 +356,9 @@ export function ProfileDetailsCard() {
               {t('profile.autofilledFromGoogle')}
             </Badge>
           )}
-        </di        <Accordion
+        </div>
+
+        <Accordion
           type="multiple"
           defaultValue={['identity']}
           className="w-full space-y-4"
