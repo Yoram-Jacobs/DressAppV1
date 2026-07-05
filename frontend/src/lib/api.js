@@ -770,6 +770,7 @@ export const api = {
   subscribeWebPush: (sub) => client.post('/outfits/webpush/subscribe', sub).then((r) => r.data),
   unsubscribeWebPush: (endpoint) => client.post('/outfits/webpush/unsubscribe', { endpoint }).then((r) => r.data),
   getVapidKey: () => client.get('/outfits/webpush/vapid-key').then((r) => r.data),
+  plannerScout: (body) => client.post('/stylist/planner-scout', body).then((r) => r.data),
 
   // --- DressApp Suitcase ---
   getSuitcaseActive: () => client.get('/suitcase/active').then((r) => r.data),

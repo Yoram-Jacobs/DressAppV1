@@ -466,3 +466,171 @@ async def compose_outfit_endpoint(
         canvas_session_id = None
 
     return {"canvas": canvas, "session_id": canvas_session_id}
+
+
+from pydantic import BaseModel
+import uuid
+
+class PlannerScoutPayload(BaseModel):
+    lat: float | None = None
+    lng: float | None = None
+    dress_code: str | None = None
+    tag: str | None = None
+    include_calendar: bool = False
+
+@router.post("/planner-scout")
+async def planner_scout_endpoint(
+    payload: PlannerScoutPayload,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    from app.db.database import get_db
+    db = get_db()
+    
+    # 1. Billing check & deduction
+    from app.services.billing_service import deduct_user_credits
+    await deduct_user_credits(db, user, cost=1)
+
+    # 2. Weather fetching (soft-fail)
+    from app.services.weather_service import weather_service
+    weather_summary = "Weather information unavailable."
+    weather_ctx = None
+    lat = payload.lat
+    lng = payload.lng
+    if lat is None or lng is None:
+        home = user.get("home_location") or {}
+        lat = home.get("lat")
+        lng = home.get("lng")
+    
+    if lat is not None and lng is not None and weather_service is not None:
+        try:
+            weather_ctx = await weather_service.fetch(
+                float(lat),
+                float(lng),
+                lang=(user.get("preferred_language") or "en"),
+            )
+            if weather_ctx:
+                parts = [
+                    f"{weather_ctx.get('temp_c')}°C",
+                    weather_ctx.get("description") or weather_ctx.get("condition") or "",
+                    weather_ctx.get("city") or "",
+                ]
+                weather_summary = " · ".join(p for p in parts if p)
+        except Exception as exc:
+            logger.warning("Planner weather fetch failed: %s", exc)
+
+    # 3. Calendar events (soft-fail)
+    calendar_events = []
+    if payload.include_calendar:
+        try:
+            from app.services.calendar_service import calendar_service
+            calendar_events = await calendar_service.get_events_for_user(user, hours_ahead=24)
+        except Exception as exc:
+            logger.warning("Planner calendar fetch failed: %s", exc)
+
+    # 4. Retrieve closet items
+    cursor = db.closet_items.find({
+        "user_id": user["id"],
+        "group_role": {"$ne": "member"},  # only host garments
+    })
+    garments = []
+    async for doc in cursor:
+        garments.append(doc)
+
+    filtered = []
+    for g in garments:
+        if payload.dress_code and payload.dress_code != "all":
+            if g.get("dress_code") != payload.dress_code:
+                continue
+        if payload.tag:
+            g_tags = g.get("tags") or []
+            if payload.tag not in g_tags:
+                continue
+        filtered.append(g)
+
+    if not filtered:
+        raise HTTPException(status_code=400, detail="No matching garments found in your closet for these filters.")
+
+    tops = [g for g in filtered if g.get("category") in ["Top", "Outerwear", "Full Body"]]
+    bottoms = [g for g in filtered if g.get("category") == "Bottom"]
+    shoes = [g for g in filtered if g.get("category") == "Footwear"]
+
+    if not tops:
+        tops = [g for g in garments if g.get("category") in ["Top", "Outerwear", "Full Body"]]
+    if not bottoms:
+        bottoms = [g for g in garments if g.get("category") == "Bottom"]
+    if not shoes:
+        shoes = [g for g in garments if g.get("category") == "Footwear"]
+
+    if not tops or not bottoms or not shoes:
+        raise HTTPException(status_code=400, detail="Ensure your closet has at least one Top/Outerwear, one Bottom, and one pair of shoes.")
+
+    def slim(lst):
+        return [
+            {
+                "id": g["id"],
+                "title": g.get("title") or g.get("name") or "Garment",
+                "color": g.get("color"),
+                "colors": g.get("colors"),
+                "pattern": g.get("pattern"),
+                "brand": g.get("brand"),
+                "dress_code": g.get("dress_code"),
+            }
+            for g in lst
+        ]
+
+    # Resolve user API key
+    api_key_resolved = None
+    ai_config = user.get("ai_configuration") or {}
+    provider_mode = ai_config.get("provider_mode", "standard")
+    if provider_mode in ["standard", "custom_keys"]:
+        encrypted_key = (ai_config.get("custom_keys") or {}).get("google_ai")
+        if encrypted_key:
+            from app.services.auth import decrypt_api_key
+            api_key_resolved = decrypt_api_key(encrypted_key)
+
+    prompt = (
+        f"You are the AI Stylist for DressApp.\n"
+        f"Select EXACTLY one Top/Outerwear, one Bottom, and one pair of Footwear from the candidates below to compose a perfectly coordinated look.\n\n"
+        f"Current Weather: {weather_summary}\n"
+        f"Today's Calendar Events: {calendar_events}\n"
+        f"Constraints:\n"
+        f"- Target Style/Dress Code: {payload.dress_code or 'any'}\n"
+        f"- Target Tag: {payload.tag or 'any'}\n"
+        f"- Honor the weather, calendar events, cultural conventions, and modest/religious appropriateness where applicable.\n\n"
+        f"Top Candidates:\n{slim(tops)[:40]}\n\n"
+        f"Bottom Candidates:\n{slim(bottoms)[:40]}\n\n"
+        f"Footwear Candidates:\n{slim(shoes)[:40]}\n\n"
+        f"Output MUST be in JSON matching this schema:\n"
+        f"{{\n"
+        f"  \"top_id\": string,\n"
+        f"  \"bottom_id\": string,\n"
+        f"  \"shoes_id\": string,\n"
+        f"  \"why\": string // styling advice and rationale in 1-2 sentences\n"
+        f"}}"
+    )
+
+    from app.services.gemini_stylist import GeminiStylistService, gemini_stylist_service
+    svc = GeminiStylistService(api_key=api_key_resolved) if api_key_resolved else gemini_stylist_service
+    if svc is None:
+        raise RuntimeError("Stylist service unavailable")
+
+    res_json = await svc.advise(
+        session_id=f"planner-scout-{uuid.uuid4().hex[:8]}",
+        user_text=prompt,
+        image_base64=None,
+        user_profile=user,
+    )
+
+    updated_user = await db.users.find_one({"id": user["id"]})
+    current_credits = (updated_user.get("ai_configuration") or {}).get("current_credits", 0)
+
+    return {
+        "top_id": res_json.get("top_id"),
+        "bottom_id": res_json.get("bottom_id"),
+        "shoes_id": res_json.get("shoes_id"),
+        "why": res_json.get("why"),
+        "weather": weather_ctx,
+        "weather_summary": weather_summary,
+        "events": calendar_events,
+        "credits_left": current_credits,
+    }

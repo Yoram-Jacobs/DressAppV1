@@ -395,7 +395,7 @@ export default function WardrobeStats() {
     : 0;
 
   const topEfficient5 = sortedByEfficiency.slice(0, 5).map(it => ({
-    name: it.name || it.title || 'Untitled',
+    name: it.name || it.title || t('common.untitled', { defaultValue: 'Untitled' }),
     cpw: parseFloat(it.cpw.toFixed(2)),
     wears: it.wear_count || 0
   }));
@@ -416,8 +416,8 @@ export default function WardrobeStats() {
 
       <Tabs defaultValue="overview" className="w-full mt-2">
         <TabsList className="mb-6 bg-muted/50 p-1 rounded-2xl">
-          <TabsTrigger value="overview" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">Overview</TabsTrigger>
-          <TabsTrigger value="impact" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">Sustainability Impact</TabsTrigger>
+          <TabsTrigger value="overview" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">{t('wardrobeStats.tabOverview', { defaultValue: 'Overview' })}</TabsTrigger>
+          <TabsTrigger value="impact" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">{t('wardrobeStats.tabSustainability', { defaultValue: 'Sustainability Impact' })}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -794,7 +794,7 @@ export default function WardrobeStats() {
                     <div className="flex flex-col h-full w-full text-left">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="font-display font-bold text-lg text-brand">
-                          {actionType === 'sell' ? 'Select items to sell' : 'Select items to donate'}
+                          {actionType === 'sell' ? t('wardrobeStats.sustainability.selectToSell', { defaultValue: 'Select items to sell' }) : t('wardrobeStats.sustainability.selectToDonate', { defaultValue: 'Select items to donate' })}
                         </h3>
                         <Button variant="ghost" size="icon" onClick={() => { setActionType(null); setSelectedItemIds([]); }} className="h-8 w-8 text-muted-foreground hover:bg-black/5 rounded-full">
                           <X className="h-4 w-4" />
@@ -829,14 +829,14 @@ export default function WardrobeStats() {
                                   className="cursor-pointer hover:underline text-foreground"
                                   onClick={() => navigate(`/closet/${item.id}`)}
                                 >
-                                  <p className="text-sm font-medium truncate">{item.title || 'Untitled'}</p>
+                                  <p className="text-sm font-medium truncate">{item.title || t('common.untitled', { defaultValue: 'Untitled' })}</p>
                                 </div>
                               </div>
                             </div>
                           );
                         })}
                         {unwornItems.length === 0 && (
-                          <div className="text-center text-muted-foreground text-sm py-4">No unworn items found.</div>
+                          <div className="text-center text-muted-foreground text-sm py-4">{t('wardrobeStats.sustainability.noUnwornItems', { defaultValue: 'No unworn items found.' })}</div>
                         )}
                       </div>
                       
@@ -854,7 +854,7 @@ export default function WardrobeStats() {
                           className="flex-1 rounded-xl bg-brand text-white"
                           disabled={selectedItemIds.length === 0 || isConfirming}
                         >
-                          {isConfirming ? 'Confirming...' : 'Confirm'}
+                          {isConfirming ? t('common.confirming', { defaultValue: 'Confirming...' }) : t('common.confirm', { defaultValue: 'Confirm' })}
                         </Button>
                       </div>
                     </div>

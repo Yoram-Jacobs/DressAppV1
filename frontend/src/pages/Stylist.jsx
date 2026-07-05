@@ -2188,23 +2188,7 @@ export default function Stylist() {
               {chatColumn}
             </TabsContent>
 
-            <TabsContent value="shuffle" className="w-full min-w-0 flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none p-4 data-[state=active]:flex flex-col gap-8 max-w-4xl mx-auto">
-              <div className="flex flex-col items-start gap-3 w-full border-b border-border/40 pb-3">
-                <div className="min-w-0">
-                  <h2 className="font-display text-xl font-medium">{t('stylist.outfitPlanner', { defaultValue: 'Outfit Planner' })}</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t('outfits.viewDescription', { defaultValue: 'View outfits you have composed and scheduled.' })}</p>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setCalendarModalOpen(true)}
-                  className="rounded-xl flex items-center gap-2 shrink-0 shadow-sm border-border/80"
-                  data-testid="stylist-open-calendar-btn"
-                >
-                  <CalIcon className="h-4 w-4 text-[hsl(var(--accent))]" />
-                  <span>{t('calendar.viewCalendar', { defaultValue: 'View Calendar' })}</span>
-                </Button>
-              </div>
+            <TabsContent value="shuffle" className="w-full min-w-0 flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none p-4 data-[state=active]:flex flex-col gap-6 max-w-4xl mx-auto">
 
               {/* Shuffler */}
               <DressMeShuffler onSaveSuccess={loadOutfitsAndNotifications} />

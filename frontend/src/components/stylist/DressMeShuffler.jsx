@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Sparkles, Save, ImageOff, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Sparkles, Save, ImageOff, ChevronLeft, ChevronRight, X, Globe, CalendarDays, Loader2 } from 'lucide-react';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/carousel';
 import { ItemFloater } from '@/components/stylist/ItemFloater';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 const DRESS_CODE_OPTIONS = ['all', 'casual', 'smart-casual', 'business', 'formal', 'athletic', 'loungewear'];
 
 export default function DressMeShuffler({ onSaveSuccess }) {
@@ -26,6 +28,55 @@ export default function DressMeShuffler({ onSaveSuccess }) {
   const [tagInput, setTagInput] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // New States for Weather, Location, Calendar, Rationale
+  const [coords, setCoords] = useState(null);
+  const [weatherSummary, setWeatherSummary] = useState('');
+  const [includeCalendar, setIncludeCalendar] = useState(false);
+  const [calendarEvents, setCalendarEvents] = useState([]);
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const [aiRationale, setAiRationale] = useState('');
+
+  // Geolocation Fetch Hook
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCoords({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.warn('Geolocation access failed:', error);
+        }
+      );
+    }
+  }, []);
+
+  // Switchable Calendar Events Sync
+  useEffect(() => {
+    if (includeCalendar) {
+      setCalendarLoading(true);
+      api.calendarUpcoming(24)
+        .then((res) => {
+          const todayStr = new Date().toISOString().split('T')[0];
+          const todayEvents = (res.events || []).filter(e => {
+            const start = e.start?.dateTime || e.start?.date || '';
+            return start.startsWith(todayStr);
+          });
+          setCalendarEvents(todayEvents);
+        })
+        .catch((err) => {
+          console.warn('Failed to load events:', err);
+        })
+        .finally(() => {
+          setCalendarLoading(false);
+        });
+    } else {
+      setCalendarEvents([]);
+    }
+  }, [includeCalendar]);
 
   // Extract all unique tags
   const allUniqueTags = Array.from(
@@ -214,46 +265,105 @@ export default function DressMeShuffler({ onSaveSuccess }) {
     }
   }, [shoeSelectedIdx, shoeApi, duplicatedShoes.length, isSpinning]);
 
-  // Slot machine spin animation
-  const handleShuffle = () => {
+  // AI-driven, weather- and calendar-aware shuffler scout
+  const handleShuffle = async () => {
     if (isSpinning) return;
-    if (filteredTops.length === 0 && filteredBottoms.length === 0 && filteredShoes.length === 0) {
-      toast.error(t('closet.emptySub'));
-      return;
-    }
     
     // Clear selection and close floater when starting shuffle
     handleStartScroll();
-
     setIsSpinning(true);
-    let count = 0;
-    const totalTicks = 8;
-    const intervalTime = 80; // Total spin duration: 640ms (responsive feedback)
+    setAiRationale('');
 
-    const timer = setInterval(() => {
+    // Pre-spin / visual slot-machine effect to delight the user while the API call is in flight
+    let spinCount = 0;
+    const spinTimer = setInterval(() => {
       if (duplicatedTops.length > 1) {
-        const rand = Math.floor(Math.random() * duplicatedTops.length);
-        setTopFocusIdx(rand);
-        topApi?.scrollTo(rand, true);
+        topApi?.scrollTo(Math.floor(Math.random() * duplicatedTops.length), true);
       }
       if (duplicatedBottoms.length > 1) {
-        const rand = Math.floor(Math.random() * duplicatedBottoms.length);
-        setBottomFocusIdx(rand);
-        bottomApi?.scrollTo(rand, true);
+        bottomApi?.scrollTo(Math.floor(Math.random() * duplicatedBottoms.length), true);
       }
       if (duplicatedShoes.length > 1) {
-        const rand = Math.floor(Math.random() * duplicatedShoes.length);
-        setShoeFocusIdx(rand);
-        shoeApi?.scrollTo(rand, true);
+        shoeApi?.scrollTo(Math.floor(Math.random() * duplicatedShoes.length), true);
+      }
+      spinCount++;
+    }, 120);
+
+    try {
+      const payload = {
+        lat: coords?.lat ?? null,
+        lng: coords?.lng ?? null,
+        dress_code: selectedStyle,
+        tag: selectedTag || null,
+        include_calendar: includeCalendar,
+      };
+
+      const res = await api.plannerScout(payload);
+      
+      // Stop the spinning interval
+      clearInterval(spinTimer);
+
+      if (res.weather_summary) {
+        setWeatherSummary(res.weather_summary);
+      }
+      if (res.why) {
+        setAiRationale(res.why);
       }
 
-      count++;
-      if (count >= totalTicks) {
-        clearInterval(timer);
-        setIsSpinning(false);
-        toast.success(t('common.success'), { duration: 1500 });
+      // Scroll to the recommended top
+      if (res.top_id) {
+        let tIdx = filteredTops.findIndex(it => it.id === res.top_id);
+        if (tIdx === -1) {
+          tIdx = tops.findIndex(it => it.id === res.top_id);
+          if (tIdx !== -1) {
+            setSelectedStyle('all');
+            setSelectedTag('');
+            setTagInput('');
+          }
+        }
+        if (tIdx !== -1) {
+          setTopFocusIdx(tIdx);
+          topApi?.scrollTo(tIdx, true);
+        }
       }
-    }, intervalTime);
+
+      // Scroll to the recommended bottom
+      if (res.bottom_id) {
+        let bIdx = filteredBottoms.findIndex(it => it.id === res.bottom_id);
+        if (bIdx === -1) {
+          bIdx = bottoms.findIndex(it => it.id === res.bottom_id);
+        }
+        if (bIdx !== -1) {
+          setBottomFocusIdx(bIdx);
+          bottomApi?.scrollTo(bIdx, true);
+        }
+      }
+
+      // Scroll to the recommended shoes
+      if (res.shoes_id) {
+        let sIdx = filteredShoes.findIndex(it => it.id === res.shoes_id);
+        if (sIdx === -1) {
+          sIdx = shoes.findIndex(it => it.id === res.shoes_id);
+        }
+        if (sIdx !== -1) {
+          setShoeFocusIdx(sIdx);
+          shoeApi?.scrollTo(sIdx, true);
+        }
+      }
+
+      toast.success(t('stylist.aiPlannerSuccess', { defaultValue: 'AI Scouting Complete! 1 Credit charged.' }), { duration: 3000 });
+    } catch (err) {
+      clearInterval(spinTimer);
+      console.error('AI Planner Scout failed:', err);
+      const detail = err.response?.data?.detail || '';
+      if (detail.includes('quota') || detail.includes('exhausted') || err.response?.status === 402) {
+        toast.error(t('stylist.quotaExhausted', { defaultValue: 'Quota Exhausted. Please check your credit balance or input your own API Key.' }), { duration: 5000 });
+      } else {
+        toast.error(err.response?.data?.detail || t('stylist.failedScout', { defaultValue: 'Failed to Scout: ensure you have enough items in closet.' }));
+      }
+    } finally {
+      setIsSpinning(false);
+    }
   };
 
   const handleSave = async () => {
@@ -485,11 +595,83 @@ export default function DressMeShuffler({ onSaveSuccess }) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-6 py-4 w-full">
-      <div className="w-full max-w-sm flex items-end gap-3 px-4 mb-2">
+    <div className="flex flex-col items-center gap-4 py-2 w-full">
+      {/* Location, Weather & Calendar Header */}
+      <div className="w-full max-w-sm flex flex-col gap-3 px-4">
+        <div className="flex items-center justify-between gap-2 bg-secondary/30 px-3.5 py-2.5 rounded-2xl border border-border/40">
+          <div className="flex items-center gap-2 text-xs font-semibold">
+            <Globe className="h-4 w-4 text-[hsl(var(--accent))]" />
+            <span className="text-foreground/90 truncate max-w-[200px]">
+              {weatherSummary || t('stylist.locationWeatherAware', { defaultValue: 'Location & Weather Aware' })}
+            </span>
+          </div>
+          {coords && (
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" title="GPS Active" />
+          )}
+        </div>
+
+        {/* Switchable Calendar Agenda Toggle */}
+        <div className="flex items-center justify-between p-3.5 rounded-2xl bg-secondary/20 border border-border/50 w-full">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-4.5 w-4.5 text-[hsl(var(--accent))]" />
+            <div className="text-start">
+              <Label htmlFor="include-calendar" className="text-xs font-semibold block cursor-pointer select-none">
+                {t('stylist.todayEvents', { defaultValue: "Today's Agenda" })}
+              </Label>
+              <span className="text-[10px] text-muted-foreground block">
+                {includeCalendar 
+                  ? t('stylist.calendarSyncOn', { defaultValue: 'Syncing calendar items' }) 
+                  : t('stylist.calendarSyncOff', { defaultValue: 'Toggle to check events' })}
+              </span>
+            </div>
+          </div>
+          <Switch
+            id="include-calendar"
+            checked={includeCalendar}
+            onCheckedChange={setIncludeCalendar}
+            disabled={isSpinning}
+          />
+        </div>
+
+        {/* Collapsible agenda items */}
+        {includeCalendar && (
+          <div className="w-full rounded-2xl border border-border/60 bg-card/60 p-3 space-y-2 text-start animate-[fadeIn_0.2s_ease-out]">
+            <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider px-1">
+              {t('stylist.todaysAgenda', { defaultValue: "Today's Schedule" })}
+            </div>
+            {calendarLoading ? (
+              <div className="text-xs text-muted-foreground px-1 py-1 flex items-center gap-2">
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-[hsl(var(--accent))]" />
+                {t('common.loading')}
+              </div>
+            ) : calendarEvents.length === 0 ? (
+              <div className="text-xs text-muted-foreground/75 px-1 py-1 italic">
+                {t('stylist.noEventsToday', { defaultValue: 'No events scheduled for today.' })}
+              </div>
+            ) : (
+              <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                {calendarEvents.map((evt, idx) => (
+                  <div key={idx} className="text-xs flex items-center gap-2 p-1.5 rounded-lg bg-secondary/40 border border-border/30">
+                    <span className="h-1.5 w-1.5 rounded-full bg-brand shrink-0" />
+                    <span className="font-semibold truncate">{evt.summary}</span>
+                    {evt.start?.dateTime && (
+                      <span className="text-[10px] text-muted-foreground ms-auto">
+                        {new Date(evt.start.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Filter Row */}
+      <div className="w-full max-w-sm flex items-end gap-3 px-4 mb-1">
         {/* Tag Filter (Autocomplete) */}
         <div className="flex-[1.2] min-w-0 relative">
-          <label className="text-[10px] caps-label text-muted-foreground font-semibold block mb-1.5 ps-1 text-start">
+          <label className="text-[10px] caps-label text-muted-foreground font-semibold block mb-1 ps-1 text-start">
             {t('stylist.tagFilterLabel', { defaultValue: 'Tag' })}
           </label>
           <div className="relative">
@@ -504,11 +686,10 @@ export default function DressMeShuffler({ onSaveSuccess }) {
               }}
               onFocus={() => setShowSuggestions(true)}
               onBlur={() => {
-                // Delay blur so click on suggestion registers first
                 setTimeout(() => setShowSuggestions(false), 200);
               }}
               placeholder={t('stylist.tagFilterPlaceholder', { defaultValue: 'e.g. Work, Gym' })}
-              className="rounded-2xl border-border bg-card shadow-sm h-11 text-xs font-medium focus:ring-[hsl(var(--accent))] pe-8 rtl:pe-3 rtl:ps-8"
+              className="rounded-2xl border-border bg-card shadow-sm h-10 text-xs font-medium focus:ring-[hsl(var(--accent))] pe-8 rtl:pe-3 rtl:ps-8"
               disabled={isSpinning}
             />
             {tagInput && (
@@ -545,11 +726,11 @@ export default function DressMeShuffler({ onSaveSuccess }) {
 
         {/* Style Filter */}
         <div className="flex-[0.8] min-w-0">
-          <label className="text-[10px] caps-label text-muted-foreground font-semibold block mb-1.5 ps-1 text-start">
+          <label className="text-[10px] caps-label text-muted-foreground font-semibold block mb-1 ps-1 text-start">
             {t('stylist.styleFilterLabel', { defaultValue: 'Style' })}
           </label>
           <Select value={selectedStyle} onValueChange={setSelectedStyle} disabled={isSpinning}>
-            <SelectTrigger className="w-full rounded-2xl border-border bg-card shadow-sm h-11 text-xs font-medium focus:ring-[hsl(var(--accent))]">
+            <SelectTrigger className="w-full rounded-2xl border-border bg-card shadow-sm h-10 text-xs font-medium focus:ring-[hsl(var(--accent))]">
               <SelectValue placeholder={t('stylist.selectStyle', { defaultValue: 'Select Style' })} />
             </SelectTrigger>
             <SelectContent className="rounded-2xl border-border bg-card shadow-md">
@@ -565,17 +746,33 @@ export default function DressMeShuffler({ onSaveSuccess }) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 w-full items-center">
+      {/* Outfit Canvas Carousel Rows */}
+      <div className="flex flex-col gap-3 w-full items-center">
         {renderRow(labelForRole('top', t), filteredTops, topFocusIdx, topSelectedIdx, setTopSelectedIdx, setTopApi, topApi)}
         {renderRow(labelForRole('bottom', t), filteredBottoms, bottomFocusIdx, bottomSelectedIdx, setBottomSelectedIdx, setBottomApi, bottomApi)}
         {renderRow(labelForRole('shoes', t), filteredShoes, shoeFocusIdx, shoeSelectedIdx, setShoeSelectedIdx, setShoeApi, shoeApi)}
       </div>
 
+      {/* AI Styling Rationale */}
+      {aiRationale && (
+        <div className="w-full max-w-sm px-4 mt-1 animate-[fadeIn_0.35s_ease-out]">
+          <div className="p-3.5 rounded-2xl border border-brand/20 bg-accent-lilac/10 text-start">
+            <span className="text-[10px] font-bold text-brand uppercase tracking-wider block mb-1">
+              {t('stylist.aiRationale', { defaultValue: "Stylist's Advice" })}
+            </span>
+            <p className="text-xs text-foreground/90 font-medium leading-relaxed">
+              {aiRationale}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Buttons */}
       <div className="flex items-center gap-4 mt-2">
         <Button
           onClick={handleShuffle}
           disabled={isSpinning}
-          className="rounded-2xl bg-brand text-brand-foreground hover:bg-brand/90 px-6 py-6 shadow-md hover:scale-[1.03] active:scale-[0.97] transition-all flex items-center gap-2 text-sm font-semibold"
+          className="rounded-2xl bg-brand text-brand-foreground hover:bg-brand/90 px-6 py-6 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 text-sm font-semibold"
         >
           <Sparkles className={`h-4 w-4 ${isSpinning ? 'animate-spin' : ''}`} />
           {t('stylist.refreshScout')}
