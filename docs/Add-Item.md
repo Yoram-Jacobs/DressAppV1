@@ -3,7 +3,7 @@
 > **Module:** `frontend/src/pages/AddItem.jsx` (4,029 lines)
 > **Backend:** `backend/app/api/v1/closet.py`
 > **Stores:** `lib/closetStore.js` · `lib/workStore.js`
-> **Lib:** `lib/duplicateDetection.js` · `lib/utils.js` (sha256File, aHashFile, colorSignatureFile)
+> **Lib:** `lib/duplicateDetection.js` · `lib/utils.js` (sha256File, aHashFile [dHash])
 > **Last Updated:** July 2026 (Phase R)
 
 ---
@@ -20,7 +20,7 @@ The **Add Item** module is DressApp's primary wardrobe ingestion gateway. It uni
 graph TD
     User([User]) -->|Camera / Upload / Receipt / DPP QR| UI[AddItem.jsx SPA]
 
-    UI -->|fileToBase64 + sha256 + aHash + colorSig| FP[Client-Side Fingerprinting]
+    UI -->|fileToBase64 + sha256 + dHash| FP[Client-Side Fingerprinting]
     FP -->|findDuplicatesInCloset| Cache[(closetStore snapshot)]
     Cache -->|"≤5 photos: matches"| Dialog[DuplicatePreflightDialog]
     Cache -->|">5 photos: batch"| BG[Background Batch Path]
@@ -51,7 +51,7 @@ graph TD
 
 ### User Value Proposition
 
-- **Zero-overhead duplicate protection**: SHA-256, average-hash (aHash), and 24-byte color signature are computed entirely in-browser (~150–250 ms per file) before any network round-trip fires. The backend's `POST /closet/preflight` endpoint is now deprecated.
+- **Zero-overhead duplicate protection**: SHA-256 and horizontal difference-hash (dHash) are computed entirely in-browser (~100–180 ms per file) before any network round-trip fires. Perceptual matching checks dHash Hamming distance ($\le 10$ bits) to catch re-uploads of the same garment under slight shifts without relying on heavy or complex color signature calculations. The backend's `POST /closet/preflight` endpoint is now deprecated.
 - **Progressive streaming feedback**: The NDJSON stream delivers a `detect` frame within ~5–7 s, splitting the single upload card into N placeholder cards with garment thumbnails. The user can start reviewing item #1 while items #2–N are still being tagged by Gemini.
 - **Failure-resilient batch mode**: Uploading more than five photos automatically routes to a background sequential analysis path (`handleBatchBackground`) that prevents OOM on the server by never running two GPU-bound SegFormer/rembg pipelines in parallel.
 - **Optimistic-first save (Phase Z4)**: Items appear in the Closet grid within ~16 ms of clicking Save. Background `Promise.allSettled` reconciliation replaces each ghost with the canonical server document; failures are surfaced via a summary dialog in `/closet`, not by blocking navigation.
@@ -139,10 +139,9 @@ For each file:
 1. `fileToBase64(rawF)` — renders the image onto a capped-1024px canvas, exports as JPEG at 80% quality, returns the base64 string. Uses `createImageBitmap` if available (faster on modern browsers), falls back to `new Image()`.
 2. A CSP-safe blob conversion (bypasses `data:` URL connection blocks in some WebViews).
 3. `sha256File(f)` — SHA-256 of the JPEG bytes via SubtleCrypto.
-4. `aHashFile(f)` — 64-bit average perceptual hash.
-5. `colorSignatureFile(f)` — 24-byte spatial color signature (4 quadrants x 3 RGB channels).
+4. `aHashFile(f)` — 64-bit horizontal difference-hash (dHash) computed by resizing the image to 9x8 and checking whether each column is brighter than the previous one (`col + 1 > col`).
 
-All three hashes are assembled into a `fingerprint` object and passed to `findDuplicatesInCloset`.
+All hashes are assembled into a `fingerprint` object and passed to `findDuplicatesInCloset`.
 
 #### A.3 Duplicate Detection (Lines 1102–1246)
 
@@ -151,12 +150,9 @@ All three hashes are assembled into a `fingerprint` object and passed to `findDu
 | Match Level | Condition | Used When |
 |---|---|---|
 | **Exact** | `sha256A === sha256B` | Always |
-| **Lenient** (both color sigs present) | `hamming(phashA, phashB) <= 6 AND colorDist(A,B) <= 220` | Standard path |
-| **Strict** (missing color sig) | `hamming(phashA, phashB) <= 3` | Legacy items without `source_color_sig` |
+| **Perceptual** | `hamming(dhashA, dhashB) <= 10` | Standard path (no color or metadata fallbacks used) |
 
-Hamming distance uses Brian Kernighan's bit-clearing algorithm: `x &= x - 1` until `x === 0`. Color distance is the Manhattan distance across all 12 bytes:
-
-$$d = \sum_{i=1}^{12} |a_i - b_i|$$
+Hamming distance uses Brian Kernighan's bit-clearing algorithm: `x &= x - 1` until `x === 0`. color signature check is fully bypassed.
 
 **Two resolution paths based on batch size:**
 
@@ -604,7 +600,7 @@ Returns `{items: [{analysis, dpp_data, crop_base64, crop_mime, label}], parse_er
 | Dimension | Camera & Upload (Interactive) | Camera & Upload (Batch >5) | DPP QR Scan | Digital Receipt |
 |---|---|---|---|---|
 | **Input** | JPEG/PNG/WEBP/HEIC files | Same | QR code / DPP URL | Text / Image / PDF / URL |
-| **Fingerprinting** | SHA-256, aHash, color-sig in-browser | Same | DB ID query | N/A |
+| **Fingerprinting** | SHA-256 and dHash in-browser | Same | DB ID query | N/A |
 | **Duplicate check** | Client-side + interactive dialog | Silent drop | Backend check | Optional closet-link |
 | **Analysis** | NDJSON streaming — SegFormer + Gemini | Sequential per-item | HTTP JSON API | asyncio.gather OCR + Vision |
 | **Cards** | N cards split from original | Auto-save, banner UI | 1 card, pre-filled | M cards per selector |
