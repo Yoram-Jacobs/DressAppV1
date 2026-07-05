@@ -20,6 +20,8 @@
     "outfits": "Conjuntos"
   },
   "common": {
+    "day": "día",
+    "garment": "Prenda",
     "save": "Guardar",
     "saveAll": "Guardar",
     "saveChanges": "Guardar cambios",
@@ -54,7 +56,6 @@
     "gotIt": "Entendido",
     "selectAll": "Seleccionar todo",
     "date": "Fecha",
-    "garment": "Prenda",
     "remove": "Eliminar",
     "share": "Compartir",
     "time": "Hora",
@@ -194,7 +195,9 @@
     "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
-    "title": "Añadir prendas",
+    "intent_rent": "Alquilar",
+    "priceDaily": "Tarifa diaria",
+    "title": "Upload & auto-fill",
     "subtitle": "Sube una o varias fotos — los Ojos hacen el resto.",
     "uploadPhotos": "Subir fotos",
     "uploadDrive": "Subir desde Drive",
@@ -732,6 +735,7 @@
     "noMyListings": "Aún no tienes anuncios.",
     "reserveFor": "Reservar por {{price}}",
     "buyFor": "Comprar por {{price}}",
+    "rentFor": "Alquilar por {{price}} / día",
     "purchased": "Pago completado — consulta tus transacciones",
     "statusNotice": "Este artículo está {{status}}.",
     "similarVisual": "Visualmente similares",
@@ -1255,10 +1259,11 @@
       "formal": "Formal"
     },
     "intent": {
-      "own": "Guardar",
-      "for_sale": "En venta",
-      "donate": "Donar",
-      "swap": "Intercambiar"
+      "own": "Keep",
+      "for_sale": "For sale",
+      "donate": "Donate",
+      "swap": "Intercambiar",
+      "rent": "Alquiler"
     },
     "source": {
       "all": "Todos los orígenes",

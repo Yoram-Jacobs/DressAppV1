@@ -20,6 +20,8 @@
     "outfits": "التنسيقات"
   },
   "common": {
+    "day": "يوم",
+    "garment": "ملبس",
     "save": "حفظ",
     "saveAll": "حفظ",
     "saveChanges": "حفظ التغييرات",
@@ -194,6 +196,8 @@
     "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
+    "intent_rent": "تأجير",
+    "priceDaily": "التعرفة اليومية",
     "title": "إضافة عناصر",
     "subtitle": "ارفع صورة أو عدة صور — الـEyes يتولى الباقي.",
     "uploadPhotos": "رفع صور",
@@ -732,6 +736,7 @@
     "noMyListings": "ليس لديك إعلانات بعد.",
     "reserveFor": "احجز مقابل {{price}}",
     "buyFor": "اشترِ مقابل {{price}}",
+    "rentFor": "استأجر مقابل {{price}} / يوم",
     "purchased": "اكتمل الدفع — راجع معاملاتك",
     "statusNotice": "هذا الإعلان {{status}}.",
     "similarVisual": "متشابه بصرياً",
@@ -1258,7 +1263,8 @@
       "own": "احتفظ به",
       "for_sale": "للبيع",
       "donate": "تبرع",
-      "swap": "تبديل"
+      "swap": "تبديل",
+      "rent": "للإيجار"
     },
     "source": {
       "all": "الكل",

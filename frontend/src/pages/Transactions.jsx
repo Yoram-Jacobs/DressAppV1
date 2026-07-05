@@ -77,6 +77,7 @@ const KIND_META = {
   buy: { icon: ShoppingBag },
   swap: { icon: Repeat },
   donate: { icon: HeartHandshake },
+  rent: { icon: Clock },
 };
 
 const STATUS_FILTER_OPTIONS = [
@@ -131,8 +132,8 @@ export default function Transactions() {
   // --------- partitioned counts for the tab labels ---------
   const partitioned = useMemo(() => {
     const me = user?.id;
-    const buying = items.filter((tx) => tx.buyer_id === me && (tx.kind || 'buy') === 'buy');
-    const selling = items.filter((tx) => tx.seller_id === me && (tx.kind || 'buy') === 'buy');
+    const buying = items.filter((tx) => tx.buyer_id === me && ((tx.kind || 'buy') === 'buy' || tx.kind === 'rent'));
+    const selling = items.filter((tx) => tx.seller_id === me && ((tx.kind || 'buy') === 'buy' || tx.kind === 'rent'));
     const swaps = items.filter((tx) => tx.kind === 'swap');
     const donations = items.filter((tx) => tx.kind === 'donate');
     return { all: items, buying, selling, swaps, donations };
@@ -342,6 +343,7 @@ function TransactionRow({ tx, userId, onConfirmed }) {
             <KIcon className="h-4 w-4 text-[hsl(var(--accent))] shrink-0" />
             <span className="font-medium text-sm truncate">
               {kind === 'buy' && t('pages.transactions.purchase', { defaultValue: 'Purchase' })}
+              {kind === 'rent' && t('pages.transactions.rental', { defaultValue: 'Rental' })}
               {kind === 'swap' && t('pages.transactions.swap', { defaultValue: 'Swap' })}
               {kind === 'donate' && t('pages.transactions.donation', { defaultValue: 'Donation' })}
             </span>
@@ -353,7 +355,7 @@ function TransactionRow({ tx, userId, onConfirmed }) {
               {SIcon && <SIcon className="h-3 w-3" />}
               {t(`pages.transactions.status.${tx.status}`, { defaultValue: tx.status })}
             </Badge>
-            {kind === 'buy' && (
+            {(kind === 'buy' || kind === 'rent') && (
               <span className="text-xs text-muted-foreground">
                 · {isBuyerSide ? t('transactions.buyer') : t('transactions.seller')}
               </span>
@@ -365,7 +367,7 @@ function TransactionRow({ tx, userId, onConfirmed }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-end sm:text-start">
-          {kind === 'buy' ? (
+          {(kind === 'buy' || kind === 'rent') ? (
             <>
               <div>
                 <div className="caps-label text-muted-foreground">{t('transactions.gross')}</div>

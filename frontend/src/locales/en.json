@@ -20,6 +20,7 @@
     "outfits": "Outfits"
   },
   "common": {
+    "day": "day",
     "garment": "Garment",
     "save": "Save",
     "saveAll": "Save",
@@ -194,6 +195,8 @@
     }
   },
   "addItem": {
+    "intent_rent": "Rent",
+    "priceDaily": "Daily Tariff",
     "title": "Upload & auto-fill",
     "subtitle": "Pick one or many photos. The Eyes will scan each piece and pre-fill every field — you review, tweak, and tag for the marketplace.",
     "label": "Add to closet",
@@ -716,6 +719,7 @@
     "buyNow": "Buy now",
     "reserveFor": "Reserve for {{price}}",
     "buyFor": "Buy for {{price}}",
+    "rentFor": "Rent for {{price}} / day",
     "purchased": "Payment complete — check your transactions",
     "statusNotice": "This listing is {{status}}.",
     "similarTitle": "Items like this",
@@ -1258,7 +1262,8 @@
       "own": "Keep",
       "for_sale": "For sale",
       "donate": "Donate",
-      "swap": "Swap"
+      "swap": "Swap",
+      "rent": "Rent"
     },
     "source": {
       "all": "All sources",

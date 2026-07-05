@@ -20,6 +20,8 @@
     "ads": "我的广告"
   },
   "common": {
+    "day": "天",
+    "garment": "Garment",
     "save": "保存",
     "saveAll": "保存",
     "saveChanges": "保存更改",
@@ -54,7 +56,6 @@
     "gotIt": "知道了",
     "selectAll": "全选",
     "date": "日期",
-    "garment": "单品",
     "remove": "移除",
     "share": "分享",
     "time": "时间",
@@ -194,7 +195,9 @@
     "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
-    "title": "添加单品",
+    "intent_rent": "出租",
+    "priceDaily": "日租金",
+    "title": "Upload & auto-fill",
     "subtitle": "上传一张或多张照片 — “Eyes” 自动处理。",
     "uploadPhotos": "上传照片",
     "uploadDrive": "从云端硬盘上传",
@@ -732,6 +735,7 @@
     "noMyListings": "您还没有任何发布。",
     "reserveFor": "以 {{price}} 预订",
     "buyFor": "以 {{price}} 购买",
+    "rentFor": "以 {{price}} / 天出租",
     "purchased": "支付完成 — 请查看您的交易记录",
     "statusNotice": "此商品状态为 {{status}}。",
     "similarVisual": "视觉相似",
@@ -1255,10 +1259,11 @@
       "formal": "正式"
     },
     "intent": {
-      "own": "保留",
-      "for_sale": "出售",
-      "donate": "捐赠",
-      "swap": "交换"
+      "own": "Keep",
+      "for_sale": "For sale",
+      "donate": "Donate",
+      "swap": "交换",
+      "rent": "租赁"
     },
     "source": {
       "all": "全部来源",

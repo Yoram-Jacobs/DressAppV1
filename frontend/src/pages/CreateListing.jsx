@@ -254,6 +254,7 @@ export default function CreateListing() {
                     <SelectTrigger className="rounded-xl" data-testid="listing-mode-select"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="sell">{t('createListing.modeSell')}</SelectItem>
+                      <SelectItem value="rent">{t('createListing.modeRent', { defaultValue: 'Rent' })}</SelectItem>
                       <SelectItem value="swap">{t('createListing.modeSwap')}</SelectItem>
                       <SelectItem value="donate">{t('createListing.modeDonate')}</SelectItem>
                     </SelectContent>

@@ -20,6 +20,7 @@
     "outfits": "Outfit"
   },
   "common": {
+    "day": "giorno",
     "save": "Salva",
     "saveAll": "Salva",
     "saveChanges": "Salva modifiche",
@@ -194,7 +195,9 @@
     "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
-    "title": "Aggiungi capi",
+    "intent_rent": "Noleggiare",
+    "priceDaily": "Tariffa giornaliera",
+    "title": "Upload & auto-fill",
     "subtitle": "Carica una o più foto — gli Occhi fanno il resto.",
     "uploadPhotos": "Carica foto",
     "uploadDrive": "Carica da Drive",
@@ -732,6 +735,7 @@
     "noMyListings": "Non hai ancora annunci.",
     "reserveFor": "Riserva per {{price}}",
     "buyFor": "Acquista per {{price}}",
+    "rentFor": "Noleggia per {{price}} / giorno",
     "purchased": "Pagamento completato — controlla le tue transazioni",
     "statusNotice": "Questo annuncio è {{status}}.",
     "similarVisual": "Simili visivamente",
@@ -1255,10 +1259,11 @@
       "formal": "Formale"
     },
     "intent": {
-      "own": "Tieni",
-      "for_sale": "In vendita",
-      "donate": "Dona",
-      "swap": "Scambia"
+      "own": "Keep",
+      "for_sale": "For sale",
+      "donate": "Donate",
+      "swap": "Scambia",
+      "rent": "Noleggio"
     },
     "source": {
       "all": "Tutte le fonti",

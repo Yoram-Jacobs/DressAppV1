@@ -20,6 +20,8 @@
     "outfits": "コーディネート"
   },
   "common": {
+    "day": "日",
+    "garment": "Garment",
     "save": "保存",
     "saveAll": "保存",
     "saveChanges": "変更を保存",
@@ -54,7 +56,6 @@
     "gotIt": "了解",
     "selectAll": "すべて選択",
     "date": "日付",
-    "garment": "洋服",
     "remove": "削除",
     "share": "共有",
     "time": "時間",
@@ -194,7 +195,9 @@
     "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
-    "title": "アイテムを追加",
+    "intent_rent": "レンタル",
+    "priceDaily": "1日あたりの料金",
+    "title": "Upload & auto-fill",
     "subtitle": "1枚や複数枚の写真をアップロード — “Eyes” が自動分析。",
     "uploadPhotos": "写真をアップロード",
     "uploadDrive": "Driveからアップロード",
@@ -638,7 +641,7 @@
     "locationPlaceholder": "例: ルーフトップレストラン",
     "outfitSaved": "コーディネートが日記に保存されました！",
     "planEventOutfit": "イベントコーディネートの計画",
-    "planEventOutfitTitle": "イベントコーディネート의計画",
+    "planEventOutfitTitle": "イベントコーディネートの計画",
     "promptPlaceholder": "例: カジュアルシック、アウトドアな服装など要望を入力",
     "proposalFailed": "提案の生成に失敗しました。",
     "proposalGenerated": "新しい提案が正常に生成されました！",
@@ -732,6 +735,7 @@
     "noMyListings": "まだ出品していません。",
     "reserveFor": "{{price}}で予約",
     "buyFor": "{{price}}で購入",
+    "rentFor": "{{price}} / 日でレンタル",
     "purchased": "支払い完了 — 取引を確認してください",
     "statusNotice": "この商品は{{status}}です。",
     "similarVisual": "見た目が似ている",
@@ -1255,10 +1259,11 @@
       "formal": "フォーマル"
     },
     "intent": {
-      "own": "保管",
-      "for_sale": "販売",
-      "donate": "寄付",
-      "swap": "交換"
+      "own": "Keep",
+      "for_sale": "For sale",
+      "donate": "Donate",
+      "swap": "交換",
+      "rent": "レンタル"
     },
     "source": {
       "all": "すべてのソース",

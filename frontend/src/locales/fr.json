@@ -20,6 +20,7 @@
     "outfits": "Tenues"
   },
   "common": {
+    "day": "jour",
     "save": "Enregistrer",
     "saveAll": "Enregistrer",
     "saveChanges": "Enregistrer les modifications",
@@ -194,6 +195,8 @@
     "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
+    "intent_rent": "Louer",
+    "priceDaily": "Tarif journalier",
     "title": "Ajouter des pièces",
     "subtitle": "Importez une ou plusieurs photos — les Yeux s’occupent du reste.",
     "uploadPhotos": "Importer des photos",
@@ -732,6 +735,7 @@
     "noMyListings": "Vous n'avez pas encore d'annonces.",
     "reserveFor": "Réserver pour {{price}}",
     "buyFor": "Acheter pour {{price}}",
+    "rentFor": "Louer pour {{price}} / jour",
     "purchased": "Paiement terminé — consultez vos transactions",
     "statusNotice": "Cette annonce est {{status}}.",
     "similarVisual": "Visuellement similaires",
@@ -1258,7 +1262,8 @@
       "own": "Keep",
       "for_sale": "For sale",
       "donate": "Donate",
-      "swap": "Swap"
+      "swap": "Swap",
+      "rent": "Location"
     },
     "source": {
       "all": "All sources",

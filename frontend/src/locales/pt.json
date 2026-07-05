@@ -20,6 +20,8 @@
     "outfits": "Conjuntos"
   },
   "common": {
+    "day": "dia",
+    "garment": "Garment",
     "save": "Salvar",
     "saveAll": "Salvar",
     "saveChanges": "Salvar alterações",
@@ -54,7 +56,6 @@
     "gotIt": "Entendi",
     "selectAll": "Selecionar tudo",
     "date": "Data",
-    "garment": "Peça de roupa",
     "remove": "Remover",
     "share": "Partilhar",
     "time": "Hora",
@@ -194,7 +195,9 @@
     "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
-    "title": "Adicionar peças",
+    "intent_rent": "Alugar",
+    "priceDaily": "Tarifa diária",
+    "title": "Upload & auto-fill",
     "subtitle": "Envie uma ou várias fotos — os Olhos cuidam do resto.",
     "uploadPhotos": "Enviar fotos",
     "uploadDrive": "Carregar do Drive",
@@ -732,6 +735,7 @@
     "noMyListings": "Ainda não tem anúncios.",
     "reserveFor": "Reservar por {{price}}",
     "buyFor": "Comprar por {{price}}",
+    "rentFor": "Alugar por {{price}} / dia",
     "purchased": "Pagamento concluído — verifique suas transações",
     "statusNotice": "Este anúncio está {{status}}.",
     "similarVisual": "Visualmente semelhantes",
@@ -1255,10 +1259,11 @@
       "formal": "Formal"
     },
     "intent": {
-      "own": "Ficar com",
-      "for_sale": "À venda",
-      "donate": "Doar",
-      "swap": "Trocar"
+      "own": "Keep",
+      "for_sale": "For sale",
+      "donate": "Donate",
+      "swap": "Trocar",
+      "rent": "Aluguel"
     },
     "source": {
       "all": "Todas as fontes",

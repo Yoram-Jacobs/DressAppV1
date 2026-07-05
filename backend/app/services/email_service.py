@@ -245,17 +245,31 @@ def _contact_block(label: str, person: dict[str, Any]) -> str:
 # ---------------------------------------------------------------------------
 async def sale_seller(
     *, to: str, seller: dict, buyer: dict, item: dict, gross_cents: int,
-    seller_net_cents: int, currency: str,
+    seller_net_cents: int, currency: str, is_rental: bool = False,
 ) -> dict:
     seller_name = seller.get("display_name") or seller.get("name") or "there"
     gross = f"{currency} {gross_cents/100:.2f}"
     net = f"{currency} {seller_net_cents/100:.2f}"
+    
+    if is_rental:
+        title_text = f"Congratulations! Your item has been rented, {seller_name}! 🎉"
+        intro_text = "Your item just found a temporary home. Here are the details:"
+        price_label = f"Rental tariff: <strong>{gross} / day</strong>"
+        subject = f"Your item was rented: {item.get('title','your item')}!"
+        preheader = "Congrats — please dispatch within 3 days."
+    else:
+        title_text = f"Congratulations on your sale, {seller_name}! 🎉"
+        intro_text = "Your item just found a new home. Here are the details:"
+        price_label = f"Sale price: <strong>{gross}</strong>"
+        subject = f"You sold {item.get('title','your item')}!"
+        preheader = "Congrats — please dispatch within 3 days."
+
     body = f"""\
-<h1 style="margin:0 0 14px;font-size:22px;">Congratulations on your sale, {seller_name}! 🎉</h1>
-<p>Your item just found a new home. Here are the details:</p>
+<h1 style="margin:0 0 14px;font-size:22px;">{title_text}</h1>
+<p>{intro_text}</p>
 {_item_card(item)}
 <p>
-  Sale price: <strong>{gross}</strong><br>
+  {price_label}<br>
   Your payout (after fees): <strong>{net}</strong>
 </p>
 <p>Please ship the item using the buyer's contact details below. Buyers
@@ -263,25 +277,42 @@ expect dispatch within 3 working days.</p>
 {_contact_block("Buyer contact", buyer)}
 {_btn("View transaction in DressApp", f"{_APP_URL}/transactions")}
 """
-    return await _send(to, f"You sold {item.get('title','your item')}!", _wrap(body, preheader="Congrats — please dispatch within 3 days."))
+    return await _send(to, subject, _wrap(body, preheader=preheader))
 
 
 async def sale_buyer(
     *, to: str, buyer: dict, seller: dict, item: dict, gross_cents: int, currency: str,
+    is_rental: bool = False,
 ) -> dict:
     buyer_name = buyer.get("display_name") or buyer.get("name") or "there"
     gross = f"{currency} {gross_cents/100:.2f}"
+
+    if is_rental:
+        title_text = f"You rented it, {buyer_name}! 🛍️"
+        intro_text = "Your rental is confirmed. Here are the details:"
+        price_label = f"You paid: <strong>{gross}</strong> (daily tariff)"
+        subject = f"Your rental: {item.get('title','your item')}"
+        preheader = "Rental confirmed — owner will dispatch within 3 days."
+        contact_label = "Owner contact"
+    else:
+        title_text = f"You got it, {buyer_name}! 🛍️"
+        intro_text = "Your purchase is confirmed. Here are the details:"
+        price_label = f"You paid: <strong>{gross}</strong>"
+        subject = f"Your purchase: {item.get('title','your new item')}"
+        preheader = "Sale confirmed — seller will dispatch within 3 days."
+        contact_label = "Seller contact"
+
     body = f"""\
-<h1 style="margin:0 0 14px;font-size:22px;">You got it, {buyer_name}! 🛍️</h1>
-<p>Your purchase is confirmed. Here are the details:</p>
+<h1 style="margin:0 0 14px;font-size:22px;">{title_text}</h1>
+<p>{intro_text}</p>
 {_item_card(item)}
-<p>You paid: <strong>{gross}</strong></p>
-<p>The seller has been notified and will dispatch within 3 working days.
+<p>{price_label}</p>
+<p>The owner has been notified and will dispatch within 3 working days.
 Reach out to them directly if you need to coordinate delivery:</p>
-{_contact_block("Seller contact", seller)}
+{_contact_block(contact_label, seller)}
 {_btn("View transaction in DressApp", f"{_APP_URL}/transactions")}
 """
-    return await _send(to, f"Your purchase: {item.get('title','your new item')}", _wrap(body, preheader="Sale confirmed — seller will dispatch within 3 days."))
+    return await _send(to, subject, _wrap(body, preheader=preheader))
 
 
 async def swap_request(

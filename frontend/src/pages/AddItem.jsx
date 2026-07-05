@@ -6,7 +6,7 @@ import {
   ArrowLeft, Upload, Plus, Loader2, Eye, Wand2, Shirt, Store,
   HandCoins, Gift, Repeat, Trash2, Save, Tag, AlertTriangle,
   X, Sparkles, Camera, RefreshCw, QrCode, ChevronDown, ChevronUp,
-  FileText, Folder, Check, Image as ImageIcon
+  FileText, Folder, Check, Image as ImageIcon, Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -71,6 +71,7 @@ const INTENT_OPTIONS = [
   { value: 'for_sale', icon: HandCoins, tone: 'bg-amber-100 text-amber-900 border-amber-200' },
   { value: 'donate', icon: Gift, tone: 'bg-emerald-100 text-emerald-900 border-emerald-200' },
   { value: 'swap', icon: Repeat, tone: 'bg-sky-100 text-sky-900 border-sky-200' },
+  { value: 'rent', icon: Calendar, tone: 'bg-indigo-100 text-indigo-900 border-indigo-200' },
 ];
 
 const fileToBase64 = async (file, maxSide = 1024, quality = 0.8) => {
@@ -3682,9 +3683,10 @@ function NameCaption({ idPrefix, fields, onChange, disabled }) {
 function IntentSelector({ idPrefix, fields, onChange, disabled }) {
   const { t } = useTranslation();
   const intent = fields.marketplace_intent || 'own';
-  // Only compute preview for 'for_sale'
+  const showPriceInput = intent === 'for_sale' || intent === 'rent';
+  // Only compute preview for 'for_sale' or 'rent'
   const priceCents = Number(fields.price_cents) || 0;
-  const stripeFee = intent === 'for_sale' ? Math.round(priceCents * 0.029) + (priceCents > 0 ? 30 : 0) : 0;
+  const stripeFee = showPriceInput ? Math.round(priceCents * 0.029) + (priceCents > 0 ? 30 : 0) : 0;
   const netAfterStripe = Math.max(0, priceCents - stripeFee);
   const platformFee = Math.round(netAfterStripe * 0.07);
   const sellerNet = netAfterStripe - platformFee;
@@ -3725,11 +3727,13 @@ function IntentSelector({ idPrefix, fields, onChange, disabled }) {
           );
         })}
       </div>
-      {intent === 'for_sale' && (
+      {showPriceInput && (
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="add-item-fee-preview">
           <div>
             <Label htmlFor={`${idPrefix}-price`} className="caps-label text-muted-foreground">
-              {t('addItem.price')} ({fields.currency || 'USD'})
+              {intent === 'rent'
+                ? `${t('addItem.priceDaily', { defaultValue: 'Daily Tariff' })} (${fields.currency || 'USD'})`
+                : `${t('addItem.price')} (${fields.currency || 'USD'})`}
             </Label>
             <Input
               id={`${idPrefix}-price`}

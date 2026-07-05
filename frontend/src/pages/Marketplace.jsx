@@ -33,9 +33,9 @@ const fmt = (cents, cur = 'USD') =>
 // Values in {Retail} key on listing.source; values in
 // {for_sale, swap, donate} key on listing.mode (where ``for_sale`` →
 // ``mode=sell`` on the wire).
-const SOURCES = ['all', 'for_sale', 'swap', 'donate', 'Retail'];
-const _INTENT_VALUES = new Set(['for_sale', 'swap', 'donate']);
-const _INTENT_TO_MODE = { for_sale: 'sell', swap: 'swap', donate: 'donate' };
+const SOURCES = ['all', 'for_sale', 'swap', 'donate', 'rent', 'Retail'];
+const _INTENT_VALUES = new Set(['for_sale', 'swap', 'donate', 'rent']);
+const _INTENT_TO_MODE = { for_sale: 'sell', swap: 'swap', donate: 'donate', rent: 'rent' };
 const CATEGORIES = ['all', 'top', 'bottom', 'outerwear', 'shoes', 'accessory', 'dress'];
 const RADIUS_OPTIONS = ['any', '5', '25', '50', '200'];
 
@@ -229,6 +229,7 @@ export default function Marketplace() {
                               l.financial_metadata?.list_price_cents,
                               l.financial_metadata?.currency || l.currency,
                             )}
+                            {l.mode === 'rent' && ` / ${t('common.day', { defaultValue: 'day' })}`}
                           </span>
                           <SourceTagBadge source={l.source} mode={l.mode} className="hidden md:inline-flex" />
                         </div>

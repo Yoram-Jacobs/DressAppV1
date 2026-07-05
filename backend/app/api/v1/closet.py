@@ -1121,10 +1121,10 @@ async def create_item(
     # If the user tagged this item for the marketplace, auto-create a listing.
     # Modes: for_sale -> sell, donate -> donate, swap -> swap. 'own' stays private.
     listing_id: str | None = None
-    if payload.marketplace_intent in ("for_sale", "donate", "swap"):
-        mode_map = {"for_sale": "sell", "donate": "donate", "swap": "swap"}
+    if payload.marketplace_intent in ("for_sale", "donate", "swap", "rent"):
+        mode_map = {"for_sale": "sell", "donate": "donate", "swap": "swap", "rent": "rent"}
         mode = mode_map[payload.marketplace_intent]
-        list_price = (payload.price_cents or 0) if mode == "sell" else 0
+        list_price = (payload.price_cents or 0) if mode in ("sell", "rent") else 0
         fees = compute_fees(list_price)
         financial = FinancialMetadata(
             list_price_cents=list_price,
@@ -1142,7 +1142,7 @@ async def create_item(
             source="Shared",
             mode=mode,
             title=payload.name or payload.title,
-            description=payload.caption,
+            description=payload.notes or payload.caption,
             category=payload.category,
             size=payload.size,
             condition=listing_condition,
@@ -3083,7 +3083,7 @@ async def backfill_marketplace_listings(
     from app.models.schemas import FinancialMetadata, Listing
 
     db = get_db()
-    INTENT_TO_MODE = {"for_sale": "sell", "swap": "swap", "donate": "donate"}
+    INTENT_TO_MODE = {"for_sale": "sell", "swap": "swap", "donate": "donate", "rent": "rent"}
     candidates_cursor = db.closet_items.find(
         {
             "user_id": user["id"],
@@ -3144,7 +3144,7 @@ async def backfill_marketplace_listings(
             mode = INTENT_TO_MODE[item["marketplace_intent"]]
             price_cents = (
                 int(item.get("price_cents") or 0)
-                if mode == "sell"
+                if mode in ("sell", "rent")
                 else 0
             )
             # Map our fine-grained GarmentCondition values
@@ -3274,7 +3274,7 @@ async def backfill_marketplace_listings_stream(
     from app.models.schemas import FinancialMetadata, Listing
 
     db = get_db()
-    INTENT_TO_MODE = {"for_sale": "sell", "swap": "swap", "donate": "donate"}
+    INTENT_TO_MODE = {"for_sale": "sell", "swap": "swap", "donate": "donate", "rent": "rent"}
 
     candidates_cursor = db.closet_items.find(
         {
@@ -3424,7 +3424,7 @@ async def backfill_marketplace_listings_stream(
                 mode = INTENT_TO_MODE[item["marketplace_intent"]]
                 price_cents = (
                     int(item.get("price_cents") or 0)
-                    if mode == "sell"
+                    if mode in ("sell", "rent")
                     else 0
                 )
                 raw_cond = (
@@ -5270,8 +5270,8 @@ async def update_item(
     new_intent = patch.get("marketplace_intent")
     prior_intent = (prior or {}).get("marketplace_intent") or "own"
 
-    _MARKETPLACE_INTENTS = {"for_sale", "swap", "donate"}
-    _INTENT_TO_MODE = {"for_sale": "sell", "swap": "swap", "donate": "donate"}
+    _MARKETPLACE_INTENTS = {"for_sale", "swap", "donate", "rent"}
+    _INTENT_TO_MODE = {"for_sale": "sell", "swap": "swap", "donate": "donate", "rent": "rent"}
 
     # Should we OPEN a listing on this update?
     # Triggered when EITHER signal newly indicates marketplace participation.
@@ -5295,7 +5295,7 @@ async def update_item(
         open_listing = True
         chosen_mode = _INTENT_TO_MODE[new_intent]
         # Carry the user's listed price across when they set one.
-        if new_intent == "for_sale":
+        if new_intent in ("for_sale", "rent"):
             chosen_price_cents = int(
                 patch.get("price_cents") or updated.get("price_cents") or 0
             )
@@ -5412,7 +5412,7 @@ async def update_item(
                     source="Shared",
                     mode=chosen_mode,
                     title=updated.get("title") or "Untitled",
-                    description=updated.get("description"),
+                    description=updated.get("notes") or updated.get("caption"),
                     category=updated.get("category") or "Top",
                     size=updated.get("size"),
                     condition=listing_condition,
@@ -5544,7 +5544,7 @@ async def update_item(
                     # on the closet item, so a user fiddling with
                     # price on a swap listing doesn't accidentally
                     # publish a price for a non-sale item.
-                    if existing.get("mode") == "sell":
+                    if existing.get("mode") in ("sell", "rent"):
                         synced_price = int(
                             patch.get("price_cents")
                             or updated.get("price_cents")
@@ -5557,6 +5557,7 @@ async def update_item(
                         {"id": existing["id"]},
                         {"$set": {
                             "currency": chosen_currency,
+                            "description": updated.get("notes") or updated.get("caption") or existing.get("description"),
                             "financial_metadata.list_price_cents": synced_price,
                             "financial_metadata.currency": chosen_currency,
                             "financial_metadata.platform_fee_percent": 7.0,

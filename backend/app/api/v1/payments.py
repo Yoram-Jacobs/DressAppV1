@@ -453,10 +453,12 @@ async def listing_buy_create(
     # payouts/refunds can reason about the two amounts independently.
     financial = _platform_fee_math(list_price_cents)
     financial.gross_cents = total_cents  # bookkeeping: total charged to buyer
+    kind = "rent" if listing.get("mode") == "rent" else "buy"
     tx = Transaction(
         listing_id=listing_id,
         buyer_id=user["id"],
         seller_id=listing["seller_id"],
+        kind=kind,
         currency=currency,
         financial=financial,
         paypal=PayPalPointer(order_id=order["id"]),
@@ -608,17 +610,21 @@ async def listing_buy_capture(
         net = int(tx["financial"]["seller_net_cents"])
         currency = tx.get("currency", "USD")
 
+        is_rental = (listing_doc or {}).get("mode") == "rent"
+
         if seller_full and seller_full.get("email"):
             await es.sale_seller(
                 to=seller_full["email"],
                 seller=seller_full, buyer=buyer_full or {}, item=item_doc,
                 gross_cents=gross, seller_net_cents=net, currency=currency,
+                is_rental=is_rental,
             )
         if buyer_full and buyer_full.get("email"):
             await es.sale_buyer(
                 to=buyer_full["email"],
                 buyer=buyer_full, seller=seller_full or {}, item=item_doc,
                 gross_cents=gross, currency=currency,
+                is_rental=is_rental,
             )
     except Exception as exc:  # noqa: BLE001
         logger.warning("post-sale email dispatch failed for %s: %s", tx["id"], exc)

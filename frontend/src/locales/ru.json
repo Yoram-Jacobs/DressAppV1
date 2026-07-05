@@ -20,6 +20,7 @@
     "outfits": "Образы"
   },
   "common": {
+    "day": "день",
     "save": "Сохранить",
     "saveAll": "Сохранить",
     "saveChanges": "Сохранить изменения",
@@ -194,7 +195,9 @@
     "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
-    "title": "Добавить вещи",
+    "intent_rent": "Арендовать",
+    "priceDaily": "Дневной тариф",
+    "title": "Upload & auto-fill",
     "subtitle": "Загрузите одно или несколько фото — «Глаза» сделают остальное.",
     "uploadPhotos": "Загрузить фото",
     "uploadDrive": "Загрузить с Drive",
@@ -732,6 +735,7 @@
     "noMyListings": "У вас пока нет объявлений.",
     "reserveFor": "Забронировать за {{price}}",
     "buyFor": "Купить за {{price}}",
+    "rentFor": "Аренда за {{price}} / день",
     "purchased": "Оплата завершена — проверьте транзакции",
     "statusNotice": "Это объявление {{status}}.",
     "similarVisual": "Визуально похожие",
@@ -1255,10 +1259,11 @@
       "formal": "Формальный"
     },
     "intent": {
-      "own": "Оставить",
-      "for_sale": "На продажу",
-      "donate": "На благотворительность",
-      "swap": "На обмен"
+      "own": "Keep",
+      "for_sale": "For sale",
+      "donate": "Donate",
+      "swap": "На обмен",
+      "rent": "Аренда"
     },
     "source": {
       "all": "Все источники",

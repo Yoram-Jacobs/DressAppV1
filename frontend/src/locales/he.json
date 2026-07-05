@@ -54,6 +54,7 @@
     "comingSoon": "בקרוב",
     "gotIt": "הבנתי",
     "date": "תאריך",
+    "day": "יום",
     "garment": "פריט לבוש",
     "remove": "הסר",
     "share": "שתף",
@@ -197,6 +198,8 @@
     "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
+    "intent_rent": "להשכיר",
+    "priceDaily": "תעריף יומי",
     "title": "העלאה ומילוי אוטומטי",
     "subtitle": "בחר תמונה אחת או יותר. ‘העיניים’ יסרקו כל פריט וימלאו את כל השדות — אתה רק סוקר ומתאים.",
     "label": "הוספה לארון",
@@ -722,6 +725,7 @@
     "buyNow": "קנה עכשיו",
     "reserveFor": "שריין תמורת {{price}}",
     "buyFor": "קנה תמורת {{price}}",
+    "rentFor": "שכור תמורת {{price}} ליום",
     "purchased": "התשלום הושלם — בדוק בעסקאות שלך",
     "statusNotice": "המודעה הזו {{status}}.",
     "similarTitle": "פריטים דומים",
@@ -1264,7 +1268,8 @@
       "own": "שמור בארון",
       "for_sale": "למכירה",
       "donate": "תרומה",
-      "swap": "החלפה"
+      "swap": "החלפה",
+      "rent": "השכרה"
     },
     "source": {
       "all": "הכל",

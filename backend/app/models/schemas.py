@@ -22,7 +22,7 @@ def _new_id() -> str:
 
 Source = Literal["Private", "Shared", "Retail"]
 ListingSource = Literal["Shared", "Retail"]
-ListingMode = Literal["sell", "swap", "donate"]
+ListingMode = Literal["sell", "swap", "donate", "rent"]
 ListingStatus = Literal["draft", "active", "reserved", "sold", "removed"]
 # Transaction lifecycle covers buy + swap + donate. Older clients only
 # read pending/paid/refunded/failed/disputed; the new "accepted",
@@ -32,7 +32,7 @@ TxStatus = Literal[
     "pending", "paid", "refunded", "failed", "disputed",
     "accepted", "denied", "shipped", "completed",
 ]
-TxKind = Literal["buy", "swap", "donate"]
+TxKind = Literal["buy", "swap", "donate", "rent"]
 Formality = Literal["casual", "smart-casual", "business", "formal"]
 Condition = Literal["new", "like_new", "good", "fair"]
 # Rich closet-item enums (used by AddItem flow + The Eyes analyzer)
@@ -40,7 +40,7 @@ GarmentState = Literal["new", "used"]
 GarmentCondition = Literal["bad", "fair", "good", "excellent"]
 GarmentQuality = Literal["budget", "mid", "premium", "luxury"]
 GarmentGender = Literal["men", "women", "unisex", "kids"]
-MarketplaceIntent = Literal["own", "for_sale", "donate", "swap"]
+MarketplaceIntent = Literal["own", "for_sale", "donate", "swap", "rent"]
 DressCode = Literal[
     "casual", "smart-casual", "business", "formal", "athletic", "loungewear"
 ]

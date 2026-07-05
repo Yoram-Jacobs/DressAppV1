@@ -20,6 +20,7 @@
     "outfits": "Outfits"
   },
   "common": {
+    "day": "Tag",
     "save": "Speichern",
     "saveAll": "Speichern",
     "saveChanges": "Änderungen speichern",
@@ -194,7 +195,9 @@
     "tagsAppliedSuccess": "Tags applied successfully"
   },
   "addItem": {
-    "title": "Teile hinzufügen",
+    "intent_rent": "Mieten",
+    "priceDaily": "Tagespreis",
+    "title": "Upload & auto-fill",
     "subtitle": "Lade ein oder mehrere Fotos hoch — die Augen erledigen den Rest.",
     "uploadPhotos": "Fotos hochladen",
     "uploadDrive": "Aus Drive hochladen",
@@ -732,6 +735,7 @@
     "noMyListings": "Du hast noch keine Angebote.",
     "reserveFor": "Reservieren für {{price}}",
     "buyFor": "Kaufen für {{price}}",
+    "rentFor": "Mieten für {{price}} / Tag",
     "purchased": "Zahlung abgeschlossen — überprüfe deine Transaktionen",
     "statusNotice": "Dieses Angebot ist {{status}}.",
     "similarVisual": "Optisch ähnlich",
@@ -1255,10 +1259,11 @@
       "formal": "Formell"
     },
     "intent": {
-      "own": "Behalten",
-      "for_sale": "Zu verkaufen",
-      "donate": "Spenden",
-      "swap": "Tauschen"
+      "own": "Keep",
+      "for_sale": "For sale",
+      "donate": "Donate",
+      "swap": "Tauschen",
+      "rent": "Mieten"
     },
     "source": {
       "all": "Alle Quellen",

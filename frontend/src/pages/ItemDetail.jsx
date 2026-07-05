@@ -119,7 +119,7 @@ const PATTERN_OPTIONS = [
   'abstract',
 ];
 const FORMALITY_OPTIONS = ['casual', 'smart-casual', 'business', 'formal'];
-const INTENT_OPTIONS = ['own', 'for_sale', 'donate', 'swap'];
+const INTENT_OPTIONS = ['own', 'for_sale', 'donate', 'swap', 'rent'];
 const CURRENCY_OPTIONS = ['USD', 'EUR', 'GBP', 'ILS'];
 
 const EDITABLE_FIELDS = [

@@ -119,7 +119,10 @@ export default function ListingDetail() {
                 </div>
                 <SourceTagBadge source={listing.source} mode={listing.mode} />
               </div>
-              <div className="mt-3 font-display text-3xl" data-testid="listing-detail-price">{fmt(fm.list_price_cents, fm.currency)}</div>
+              <div className="mt-3 font-display text-3xl" data-testid="listing-detail-price">
+                {fmt(fm.list_price_cents, fm.currency)}
+                {listing.mode === 'rent' && ` / ${t('common.day', { defaultValue: 'day' })}`}
+              </div>
 
               {/* Wave 3 — shipping fee line. Hidden when 0 (listing is
                   pickup-only). Copy intentionally leans on the
@@ -247,7 +250,14 @@ export default function ListingDetail() {
             <CardContent className="p-5">
               <div className="caps-label text-muted-foreground">{t('market.feeBreakdown')}</div>
               <dl className="mt-3 text-sm space-y-2">
-                <div className="flex justify-between"><dt className="text-muted-foreground">{t('market.listPrice')}</dt><dd>{fmt(fm.list_price_cents, fm.currency)}</dd></div>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">
+                    {listing.mode === 'rent'
+                      ? t('market.rentalPriceDay', { defaultValue: 'Daily Tariff' })
+                      : t('market.listPrice')}
+                  </dt>
+                  <dd>{fmt(fm.list_price_cents, fm.currency)}</dd>
+                </div>
                 <div className="flex justify-between"><dt className="text-muted-foreground">{t('market.processingFee')}</dt><dd>− {fmt(fm.stripe_processing_fee_fixed_cents, fm.currency)} + 2.9%</dd></div>
                 <div className="flex justify-between"><dt className="text-muted-foreground">{t('market.platformFee')}</dt><dd></dd></div>
                 <div className="flex justify-between font-medium border-t border-border pt-2"><dt>{t('market.sellerNet')}</dt><dd>{fmt(fm.estimated_seller_net_cents, fm.currency)}</dd></div>
@@ -419,9 +429,14 @@ export default function ListingDetail() {
                     captureOrder={captureOrder}
                     onSuccess={onBuySuccess}
                     onError={onBuyError}
-                    amountLabel={t('market.buyFor', {
-                      price: fmt(fm.list_price_cents, fm.currency),
-                    })}
+                    amountLabel={listing.mode === 'rent'
+                      ? t('market.rentFor', {
+                          price: fmt(fm.list_price_cents, fm.currency),
+                        })
+                      : t('market.buyFor', {
+                          price: fmt(fm.list_price_cents, fm.currency),
+                        })
+                    }
                     className="w-full"
                     testId="listing-buy-button"
                   />

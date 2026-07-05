@@ -36,6 +36,8 @@ const INTENT_STYLES = {
     'bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] border border-[hsl(var(--accent))]/30',
   donate:
     'bg-primary/10 text-primary border border-primary/30',
+  rent:
+    'bg-[hsl(var(--brand))]/10 text-[hsl(var(--brand))] border border-[hsl(var(--brand))]/30',
 };
 
 // Listings carry ``mode`` (``sell|swap|donate``); closet items carry
@@ -44,7 +46,7 @@ const INTENT_STYLES = {
 const _normalizeIntent = (intent, mode) => {
   if (intent && intent !== 'own') return intent;
   if (mode === 'sell') return 'for_sale';
-  if (mode === 'swap' || mode === 'donate') return mode;
+  if (mode === 'swap' || mode === 'donate' || mode === 'rent') return mode;
   return null;
 };
 
