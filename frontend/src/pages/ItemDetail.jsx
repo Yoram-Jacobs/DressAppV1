@@ -28,6 +28,7 @@ import {
   Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ScrollToTop } from '@/components/ScrollToTop';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -2269,6 +2270,7 @@ export default function ItemDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <ScrollToTop />
     </div>
   );
 }

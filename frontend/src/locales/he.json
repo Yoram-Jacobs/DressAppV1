@@ -672,7 +672,13 @@
     "goToSettings": "הגדר בהגדרות",
     "fallbackQuotaExhausted": "(חלופי. המכסה אזלה)",
     "fallbackLabel": "(חלופי)",
-    "fallbackDescriptionPattern": "לוק יומי מאוזן המתאים לסגנון ה-{{style}} המועדף עליך ולמזג האוויר המקומי."
+    "fallbackDescriptionPattern": "לוק יומי מאוזן המתאים לסגנון ה-{{style}} המועדף עליך ולמזג האוויר המקומי.",
+    "todayEvents": "לוז יומי",
+    "calendarSyncOn": "מסנכרן אירועי יומן",
+    "calendarSyncOff": "הפעל כדי לבדוק אירועים",
+    "todaysAgenda": "לוז יומי",
+    "noEventsToday": "אין אירועים מתוכננים להיום.",
+    "aiRationale": "עצת הסטייליסט"
   },
   "outfitCompletion": {
     "cta": "השלם את הלוק",

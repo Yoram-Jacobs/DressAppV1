@@ -666,7 +666,13 @@
     },
     "keyRequiredTitle": "Clave API de IA Requerida",
     "keyRequiredDesc": "Para usar el Estilista de IA, configure su clave API de Gemini en la página de configuración. Google AI Studio ofrece una cuota gratuita para uso personal.",
-    "goToSettings": "Configurar en Ajustes"
+    "goToSettings": "Configurar en Ajustes",
+    "todayEvents": "Today's Agenda",
+    "calendarSyncOn": "Syncing calendar items",
+    "calendarSyncOff": "Toggle to check events",
+    "todaysAgenda": "Today's Schedule",
+    "noEventsToday": "No events scheduled for today.",
+    "aiRationale": "Stylist's Advice"
   },
   "outfitCompletion": {
     "cta": "Completar el look",

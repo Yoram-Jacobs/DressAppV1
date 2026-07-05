@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { ScrollToTop } from '@/components/ScrollToTop';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -211,6 +212,7 @@ export default function Stylist() {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('chat');
   const [keyErrorOpen, setKeyErrorOpen] = useState(false);
+  const shuffleScrollRef = useRef(null);
 
   const isAiConfigValid = () => {
     if (!user) return true;
@@ -2175,7 +2177,7 @@ export default function Stylist() {
 
         {/* Center — chat */}
         <main className="min-w-0 flex flex-col h-full min-h-0 overflow-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full min-w-0 h-full flex flex-col overflow-hidden">
+          <Tabs value={activeTab} onValueChange={setActiveTab} dir={i18n.dir()} className="w-full min-w-0 h-full flex flex-col overflow-hidden">
             <div className="flex justify-center mb-3 bg-muted/60 p-1 rounded-2xl max-w-md mx-auto w-full border border-border/40">
               <TabsList className="grid grid-cols-3 w-full bg-transparent p-0 h-8">
                 <TabsTrigger value="chat" className="rounded-xl text-xs font-semibold data-[state=active]:bg-brand data-[state=active]:text-brand-foreground shadow-sm">{t('stylist.chatPanel')}</TabsTrigger>
@@ -2188,7 +2190,11 @@ export default function Stylist() {
               {chatColumn}
             </TabsContent>
 
-            <TabsContent value="shuffle" className="w-full min-w-0 flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none p-4 data-[state=active]:flex flex-col gap-6 max-w-4xl mx-auto">
+            <TabsContent
+              ref={shuffleScrollRef}
+              value="shuffle"
+              className="w-full min-w-0 flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none p-4 data-[state=active]:flex flex-col gap-6 max-w-4xl mx-auto"
+            >
 
               {/* Shuffler */}
               <DressMeShuffler onSaveSuccess={loadOutfitsAndNotifications} />
@@ -2247,6 +2253,7 @@ export default function Stylist() {
                   </>
                 )}
               </div>
+              <ScrollToTop scrollContainerRef={shuffleScrollRef} />
             </TabsContent>
 
             <TabsContent value="match" className="w-full min-w-0 flex-1 min-h-0 overflow-y-auto mt-0 focus-visible:outline-none p-4 data-[state=active]:flex flex-col gap-4 max-w-4xl mx-auto pb-8">

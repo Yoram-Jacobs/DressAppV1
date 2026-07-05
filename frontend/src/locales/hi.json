@@ -666,7 +666,13 @@
     },
     "keyRequiredTitle": "एआई एपीआई कुंजी आवश्यक है",
     "keyRequiredDesc": "एआई स्टाइलिस्ट का उपयोग करने के लिए, कृपया सेटिंग्स पेज में अपनी Gemini एपीआई कुंजी को कॉन्फ़िगर करें। Google AI Studio व्यक्तिगत उपयोग के लिए मुफ़्त कोटा प्रदान करता है।",
-    "goToSettings": "सेटिंग्स में कॉन्फ़िगर करें"
+    "goToSettings": "सेटिंग्स में कॉन्फ़िगर करें",
+    "todayEvents": "Today's Agenda",
+    "calendarSyncOn": "Syncing calendar items",
+    "calendarSyncOff": "Toggle to check events",
+    "todaysAgenda": "Today's Schedule",
+    "noEventsToday": "No events scheduled for today.",
+    "aiRationale": "Stylist's Advice"
   },
   "outfitCompletion": {
     "cta": "आउटफ़िट पूरा करें",

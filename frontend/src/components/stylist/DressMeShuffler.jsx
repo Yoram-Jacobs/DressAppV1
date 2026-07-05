@@ -145,6 +145,21 @@ export default function DressMeShuffler({ onSaveSuccess }) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const d = new Date();
+    d.setHours(0,0,0,0);
+    return d;
+  });
+
+  const getNext7Days = () => {
+    return Array.from({ length: 7 }).map((_, i) => {
+      const d = new Date();
+      d.setHours(0,0,0,0);
+      d.setDate(d.getDate() + i);
+      return d;
+    });
+  };
+
   // Reset focus index and scrolls on style/tag filter change
   useEffect(() => {
     setTopFocusIdx(0);
@@ -462,7 +477,7 @@ export default function DressMeShuffler({ onSaveSuccess }) {
         title: it.name || it.title || ''
       })),
       usage: {
-        date: new Date().toISOString().split('T')[0],
+        date: selectedDate.toISOString().split('T')[0],
         time: '12:00',
         location: null,
         event_name: t('stylist.shuffledLook', { defaultValue: 'Shuffled Look' })
@@ -598,16 +613,26 @@ export default function DressMeShuffler({ onSaveSuccess }) {
     <div className="flex flex-col items-center gap-4 py-2 w-full">
       {/* Location, Weather & Calendar Header */}
       <div className="w-full max-w-sm flex flex-col gap-3 px-4">
-        <div className="flex items-center justify-between gap-2 bg-secondary/30 px-3.5 py-2.5 rounded-2xl border border-border/40">
-          <div className="flex items-center gap-2 text-xs font-semibold">
-            <Globe className="h-4 w-4 text-[hsl(var(--accent))]" />
-            <span className="text-foreground/90 truncate max-w-[200px]">
-              {weatherSummary || t('stylist.locationWeatherAware', { defaultValue: 'Location & Weather Aware' })}
-            </span>
-          </div>
-          {coords && (
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" title="GPS Active" />
-          )}
+        {/* 7-Day Planner Row */}
+        <div className="flex items-center justify-between gap-1 bg-secondary/20 p-1.5 rounded-2xl border border-border/40 w-full overflow-x-auto no-scrollbar">
+          {getNext7Days().map((d, i) => {
+            const isSelected = selectedDate.getTime() === d.getTime();
+            const dayName = new Intl.DateTimeFormat(i18n.language || 'en', { weekday: 'short' }).format(d).toUpperCase();
+            return (
+              <button
+                key={i}
+                onClick={() => setSelectedDate(d)}
+                className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl min-w-[38px] transition-all ${
+                  isSelected 
+                    ? 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] shadow-sm scale-105' 
+                    : 'text-muted-foreground hover:bg-secondary/40 hover:text-foreground'
+                }`}
+              >
+                <span className="text-[9px] font-bold tracking-wider mb-0.5">{dayName}</span>
+                <span className={`text-xs font-semibold ${isSelected ? '' : 'text-foreground/80'}`}>{d.getDate()}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Switchable Calendar Agenda Toggle */}

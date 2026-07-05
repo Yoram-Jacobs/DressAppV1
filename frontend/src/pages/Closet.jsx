@@ -33,6 +33,7 @@ import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
 import { closetStore } from '@/lib/closetStore';
 import { workStore } from '@/lib/workStore';
 import { toast } from 'sonner';
+import { ScrollToTop } from '@/components/ScrollToTop';
 
 const CATEGORIES = ['all', 'top', 'bottom', 'outerwear', 'shoes', 'accessory', 'dress'];
 // Filter dropdown options. We replaced the catch-all "Shared" with the
@@ -1528,6 +1529,7 @@ export default function Closet() {
           })()}
         </div>
       )}
+      <ScrollToTop />
     </div>
   );
 }

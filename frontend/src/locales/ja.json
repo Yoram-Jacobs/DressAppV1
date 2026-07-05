@@ -666,7 +666,13 @@
     },
     "keyRequiredTitle": "AI API キーが必要です",
     "keyRequiredDesc": "AI スタイリストを使用するには、設定ページで Gemini API キーを設定してください。Google AI Studio は、個人利用向けに無料枠を提供しています。",
-    "goToSettings": "設定で接続する"
+    "goToSettings": "設定で接続する",
+    "todayEvents": "Today's Agenda",
+    "calendarSyncOn": "Syncing calendar items",
+    "calendarSyncOff": "Toggle to check events",
+    "todaysAgenda": "Today's Schedule",
+    "noEventsToday": "No events scheduled for today.",
+    "aiRationale": "Stylist's Advice"
   },
   "outfitCompletion": {
     "cta": "コーデを完成",

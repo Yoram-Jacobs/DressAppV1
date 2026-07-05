@@ -666,7 +666,13 @@
     },
     "keyRequiredTitle": "Chiave API IA Richiesta",
     "keyRequiredDesc": "Per utilizzare lo Stylist IA, configura la tua chiave API Gemini nella pagina delle impostazioni. Google AI Studio offre una quota gratuita per uso personale.",
-    "goToSettings": "Configura nelle Impostazioni"
+    "goToSettings": "Configura nelle Impostazioni",
+    "todayEvents": "Today's Agenda",
+    "calendarSyncOn": "Syncing calendar items",
+    "calendarSyncOff": "Toggle to check events",
+    "todaysAgenda": "Today's Schedule",
+    "noEventsToday": "No events scheduled for today.",
+    "aiRationale": "Stylist's Advice"
   },
   "outfitCompletion": {
     "cta": "Completa l'outfit",

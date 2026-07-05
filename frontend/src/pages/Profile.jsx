@@ -312,6 +312,14 @@ function AIConfigurationCard() {
       }, 150);
     }
   }, [location]);
+
+  useEffect(() => {
+    api.getMe().then((freshUser) => {
+      if (freshUser) {
+        updateUserLocal(freshUser);
+      }
+    }).catch(console.error);
+  }, [updateUserLocal]);
   
   const currentCredits = user?.ai_configuration?.current_credits ?? 1000;
   const creditsUsed = user?.ai_configuration?.credits_used_this_month ?? 0;
