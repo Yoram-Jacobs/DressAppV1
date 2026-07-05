@@ -677,18 +677,8 @@ export default function Profile() {
   const { user, updateUserLocal, logout } = useAuth();
   const nav = useNavigate();
   const [form, setForm] = useState({
-    display_name: user?.display_name || '',
-    phone: user?.phone || '',
     preferred_language: (user?.preferred_language || i18n.language || 'en').toLowerCase(),
     preferred_voice_id: user?.preferred_voice_id || 'aura-2-thalia-en',
-    home_city: user?.home_location?.city || '',
-    home_lat: user?.home_location?.lat ?? '',
-    home_lng: user?.home_location?.lng ?? '',
-    aesthetics: (user?.style_profile?.aesthetics || []).join(', '),
-    color_palette: (user?.style_profile?.color_palette || []).join(', '),
-    avoid: (user?.style_profile?.avoid || []).join(', '),
-    region: user?.cultural_context?.region || '',
-    dress_conservativeness: user?.cultural_context?.dress_conservativeness || 'moderate',
   });
   const [busy, setBusy] = useState(false);
   const [langBusy, setLangBusy] = useState(false);
@@ -696,18 +686,8 @@ export default function Profile() {
   const isDirty = useMemo(() => {
     if (!user) return false;
     const initial = {
-      display_name: user.display_name || '',
-      phone: user.phone || '',
       preferred_language: (user.preferred_language || i18n.language || 'en').toLowerCase(),
       preferred_voice_id: user.preferred_voice_id || 'aura-2-thalia-en',
-      home_city: user.home_location?.city || '',
-      home_lat: user.home_location?.lat ?? '',
-      home_lng: user.home_location?.lng ?? '',
-      aesthetics: (user.style_profile?.aesthetics || []).join(', '),
-      color_palette: (user.style_profile?.color_palette || []).join(', '),
-      avoid: (user.style_profile?.avoid || []).join(', '),
-      region: user.cultural_context?.region || '',
-      dress_conservativeness: user.cultural_context?.dress_conservativeness || 'moderate',
     };
 
     return Object.keys(initial).some(
@@ -747,27 +727,9 @@ export default function Profile() {
     setBusy(true);
     try {
       const body = {
-        display_name: form.display_name || null,
-        phone: form.phone || null,
         preferred_language: form.preferred_language,
         preferred_voice_id: form.preferred_voice_id,
-        style_profile: {
-          aesthetics: form.aesthetics.split(',').map((s) => s.trim()).filter(Boolean),
-          color_palette: form.color_palette.split(',').map((s) => s.trim()).filter(Boolean),
-          avoid: form.avoid.split(',').map((s) => s.trim()).filter(Boolean),
-        },
-        cultural_context: {
-          region: form.region || null,
-          dress_conservativeness: form.dress_conservativeness,
-        },
       };
-      if (form.home_city || form.home_lat || form.home_lng) {
-        body.home_location = {
-          city: form.home_city || null,
-          lat: form.home_lat === '' ? null : Number(form.home_lat),
-          lng: form.home_lng === '' ? null : Number(form.home_lng),
-        };
-      }
       const res = await api.patchMe(body);
       updateUserLocal(res);
       toast.success(t('profile.profileSaved'));
@@ -877,99 +839,7 @@ export default function Profile() {
       <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
         <CardContent className="p-6">
           <form onSubmit={save} className="space-y-6" data-testid="settings-form">
-            <Accordion type="multiple" defaultValue={["identity", "style", "context", "voice"]}>
-              <AccordionItem value="identity" className="border-none">
-                <AccordionTrigger className="py-2 hover:no-underline">
-                  <div className="caps-label text-muted-foreground text-start m-0">{t('profile.identity')}</div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-2 space-y-3 pb-2">
-                  <div>
-                    <Label>{t('profile.displayName')}</Label>
-                    <Input value={form.display_name}
-                      onChange={(e) => setForm({ ...form, display_name: e.target.value })}
-                      className="rounded-xl" data-testid="settings-display-name" />
-                  </div>
-                  <div>
-                    <Label>{t('profile.phoneNumber', { defaultValue: 'Phone Number' })}</Label>
-                    <Input value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      placeholder={t('profile.phonePlaceholder', { defaultValue: 'e.g. +1234567890' })}
-                      className="rounded-xl" data-testid="settings-phone" />
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {t('profile.emailReadonly')}: <span className="font-medium">{user?.email}</span>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="style" className="border-none" data-testid="settings-style-profile">
-                <AccordionTrigger className="py-2 hover:no-underline">
-                  <div className="caps-label text-muted-foreground text-start m-0">{t('profile.styleProfile')}</div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-2 space-y-3 pb-2">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <Label>{t('profile.aesthetics')}</Label>
-                      <Input value={form.aesthetics} onChange={(e) => setForm({ ...form, aesthetics: e.target.value })}
-                        placeholder={t('profile.aestheticsPlaceholder')} className="rounded-xl" data-testid="settings-aesthetics" />
-                    </div>
-                    <div>
-                      <Label>{t('profile.colorPalette')}</Label>
-                      <Input value={form.color_palette} onChange={(e) => setForm({ ...form, color_palette: e.target.value })}
-                        placeholder={t('profile.colorPalettePlaceholder')} className="rounded-xl" data-testid="settings-palette" />
-                    </div>
-                    <div className="md:col-span-2">
-                      <Label>{t('profile.avoid')}</Label>
-                      <Input value={form.avoid} onChange={(e) => setForm({ ...form, avoid: e.target.value })}
-                        placeholder={t('profile.avoidPlaceholder')} className="rounded-xl" data-testid="settings-avoid" />
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="context" className="border-none">
-                <AccordionTrigger className="py-2 hover:no-underline">
-                  <div className="caps-label text-muted-foreground text-start m-0">{t('profile.context')}</div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-2 space-y-3 pb-2">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                      <Label>{t('profile.homeCity')}</Label>
-                      <Input value={form.home_city} onChange={(e) => setForm({ ...form, home_city: e.target.value })}
-                        className="rounded-xl" data-testid="settings-home-city" />
-                    </div>
-                    <div>
-                      <Label>{t('profile.latitude')}</Label>
-                      <Input value={form.home_lat} onChange={(e) => setForm({ ...form, home_lat: e.target.value })}
-                        className="rounded-xl" data-testid="settings-home-lat" />
-                    </div>
-                    <div>
-                      <Label>{t('profile.longitude')}</Label>
-                      <Input value={form.home_lng} onChange={(e) => setForm({ ...form, home_lng: e.target.value })}
-                        className="rounded-xl" data-testid="settings-home-lng" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <Label>{t('profile.region')}</Label>
-                      <Input value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })}
-                        className="rounded-xl" data-testid="settings-region" placeholder={t('profile.regionPlaceholder')} />
-                    </div>
-                    <div>
-                      <Label>{t('profile.conservativeness')}</Label>
-                      <Select value={form.dress_conservativeness} onValueChange={(v) => setForm({ ...form, dress_conservativeness: v })}>
-                        <SelectTrigger className="rounded-xl" data-testid="settings-conservativeness"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">{t('profile.conservLow')}</SelectItem>
-                          <SelectItem value="moderate">{t('profile.conservModerate')}</SelectItem>
-                          <SelectItem value="high">{t('profile.conservHigh')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
+            <Accordion type="multiple" defaultValue={["voice"]}>
               <AccordionItem value="voice" className="border-none">
                 <AccordionTrigger className="py-2 hover:no-underline">
                   <div className="caps-label text-muted-foreground text-start m-0">{t('profile.voiceLanguage')}</div>
