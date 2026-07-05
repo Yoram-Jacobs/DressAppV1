@@ -1693,8 +1693,15 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
           <div className="font-medium text-sm truncate">{item.title}</div>
           <SourceTagBadge source={item.source} intent={item.marketplace_intent} className="hidden md:inline-flex" />
         </div>
-        <div className="text-xs text-muted-foreground mt-1">
-          {[labelForCategory(item.category, t), labelForColor(item.color, t)].filter(Boolean).join(' · ')}
+        <div className="text-xs text-muted-foreground mt-1 flex justify-between items-center gap-2">
+          <span className="truncate">
+            {[labelForCategory(item.category, t), labelForColor(item.color, t)].filter(Boolean).join(' · ')}
+          </span>
+          {typeof item.wear_count === 'number' && (
+            <span className="text-[10px] font-medium bg-secondary/80 px-1.5 py-0.5 rounded-full text-foreground whitespace-nowrap shrink-0" title={t('item.timesWorn', { count: item.wear_count, defaultValue: `Worn ${item.wear_count} times` })}>
+              {t('item.wearsCount', { count: item.wear_count, defaultValue: `${item.wear_count} wear${item.wear_count === 1 ? '' : 's'}` })}
+            </span>
+          )}
         </div>
         {/* Auto-list "Complete listing" CTA — appears when an item
             has been auto-listed (Private→Shared toggle) and the user

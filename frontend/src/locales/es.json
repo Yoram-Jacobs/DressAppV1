@@ -534,6 +534,11 @@
       "body": "Este elemento principal y los miembros de su grupo tienen propiedades no coincidentes: {{mismatches}}. ¿Estás seguro de que quieres guardar estos cambios?",
       "confirm": "Guardar de todos modos",
       "cancel": "Cancelar"
+    },
+    "stats": {
+      "label": "Wardrobe Insights",
+      "timesWorn": "Times Worn",
+      "costPerWear": "Cost per Wear"
     }
   },
   "stylist": {
@@ -1853,7 +1858,9 @@
     "repairingPhoto": "Restaurando…",
     "reshootSuccess": "Foto restaurada.",
     "reshootRejected": "Se rechazó la foto restaurada — se conserva la original.",
-    "reshootError": "No se pudo restaurar la foto. Inténtalo de nuevo."
+    "reshootError": "No se pudo restaurar la foto. Inténtalo de nuevo.",
+    "wearsCount": "{{count}} wears",
+    "timesWorn": "Worn {{count}} times"
   },
   "outfits": {
     "viewDescription": "Ver los outfits que has creado y programado. Tu Estilista de IA se asegura de que utilices todas las prendas de tu armario y te advierte si repites en las mismas ocasiones.",

@@ -534,6 +534,11 @@
       "body": "Este item principal e os membros do seu grupo têm propriedades divergentes: {{mismatches}}. Tem certeza de que deseja salvar estas alterações?",
       "confirm": "Salvar mesmo assim",
       "cancel": "Cancelar"
+    },
+    "stats": {
+      "label": "Wardrobe Insights",
+      "timesWorn": "Times Worn",
+      "costPerWear": "Cost per Wear"
     }
   },
   "stylist": {
@@ -1853,7 +1858,9 @@
     "repairingPhoto": "Restaurando…",
     "reshootSuccess": "Foto restaurada.",
     "reshootRejected": "A foto restaurada foi rejeitada — mantendo a original.",
-    "reshootError": "Não foi possível restaurar a foto. Tente novamente."
+    "reshootError": "Não foi possível restaurar a foto. Tente novamente.",
+    "wearsCount": "{{count}} wears",
+    "timesWorn": "Worn {{count}} times"
   },
   "outfits": {
     "viewDescription": "Visualize os outfits que você compôs e programou. Seu AI Stylist garante que você utilize todas as peças do seu guarda-roupa e o avisa de repetições nas mesmas ocasiões.",

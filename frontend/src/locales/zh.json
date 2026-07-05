@@ -534,6 +534,11 @@
       "body": "此主项目及其组成员具有不匹配的属性：{{mismatches}}。您确定要保存这些更改吗？",
       "confirm": "仍然保存",
       "cancel": "取消"
+    },
+    "stats": {
+      "label": "Wardrobe Insights",
+      "timesWorn": "Times Worn",
+      "costPerWear": "Cost per Wear"
     }
   },
   "stylist": {
@@ -1853,7 +1858,9 @@
     "repairingPhoto": "修复中…",
     "reshootSuccess": "照片已修复。",
     "reshootRejected": "修复后的照片未通过验证 — 保留原图。",
-    "reshootError": "无法修复照片，请重试。"
+    "reshootError": "无法修复照片，请重试。",
+    "wearsCount": "{{count}} wears",
+    "timesWorn": "Worn {{count}} times"
   },
   "outfits": {
     "viewDescription": "查看您设计和安排的穿搭。您的 AI 造型师会确保您充分利用衣橱里的所有单品，并就以往重复穿着的场合提出警告。",

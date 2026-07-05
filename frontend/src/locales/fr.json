@@ -534,6 +534,11 @@
       "body": "Cet article principal et les membres de son groupe ont des propriétés incompatibles : {{mismatches}}. Êtes-vous sûr de vouloir enregistrer ces modifications ?",
       "confirm": "Enregistrer quand même",
       "cancel": "Annuler"
+    },
+    "stats": {
+      "label": "Wardrobe Insights",
+      "timesWorn": "Times Worn",
+      "costPerWear": "Cost per Wear"
     }
   },
   "stylist": {
@@ -1853,7 +1858,9 @@
     "repairingPhoto": "Restauration…",
     "reshootSuccess": "Photo restaurée.",
     "reshootRejected": "La photo restaurée a été refusée — nous gardons l'originale.",
-    "reshootError": "Impossible de restaurer la photo. Réessayez."
+    "reshootError": "Impossible de restaurer la photo. Réessayez.",
+    "wearsCount": "{{count}} wears",
+    "timesWorn": "Worn {{count}} times"
   },
   "outfits": {
     "viewDescription": "Consultez les tenues que vous avez composées et programmées. Votre Styliste IA s'assure que vous utilisez toutes les pièces de votre garde-robe et vous avertit en cas de répétition pour des occasions similaires.",

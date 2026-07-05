@@ -1453,6 +1453,31 @@ export default function ItemDetail() {
             </div>
           </Card>
 
+          {/* Wardrobe Insights / Wear Stats */}
+          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial overflow-hidden" data-testid="item-insights-card">
+            <CardContent className="p-5 space-y-3">
+              <div className="caps-label text-muted-foreground">{t('itemDetail.stats.label', { defaultValue: 'Wardrobe Insights' })}</div>
+              <div className="grid grid-cols-2 gap-4 pt-1">
+                <div className="space-y-1">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('itemDetail.stats.timesWorn', { defaultValue: 'Times Worn' })}</div>
+                  <div className="text-2xl font-display font-semibold text-[hsl(var(--accent))]">
+                    {item.wear_count || 0}
+                  </div>
+                </div>
+                {item.price_cents > 0 && (
+                  <div className="space-y-1">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('itemDetail.stats.costPerWear', { defaultValue: 'Cost per Wear' })}</div>
+                    <div className="text-2xl font-display font-semibold">
+                      {new Intl.NumberFormat(i18n.language, { style: 'currency', currency: item.currency || 'USD' }).format(
+                        ((item.price_cents || 0) / 100) / (item.wear_count || 1)
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Garment Views (Item Group) picker */}
           <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial overflow-hidden" data-testid="item-group-views-card">
             <CardContent className="p-5 space-y-3">

@@ -534,6 +534,11 @@
       "body": "Dieser Hauptartikel und seine Gruppenmitglieder weisen abweichende Eigenschaften auf: {{mismatches}}. Möchten Sie diese Änderungen wirklich speichern?",
       "confirm": "Trotzdem speichern",
       "cancel": "Abbrechen"
+    },
+    "stats": {
+      "label": "Wardrobe Insights",
+      "timesWorn": "Times Worn",
+      "costPerWear": "Cost per Wear"
     }
   },
   "stylist": {
@@ -1853,7 +1858,9 @@
     "repairingPhoto": "Wiederherstellen…",
     "reshootSuccess": "Foto wiederhergestellt.",
     "reshootRejected": "Das wiederhergestellte Foto wurde abgelehnt — Original bleibt erhalten.",
-    "reshootError": "Foto konnte nicht wiederhergestellt werden. Bitte erneut versuchen."
+    "reshootError": "Foto konnte nicht wiederhergestellt werden. Bitte erneut versuchen.",
+    "wearsCount": "{{count}} wears",
+    "timesWorn": "Worn {{count}} times"
   },
   "outfits": {
     "viewDescription": "Sieh dir die Outfits an, die du zusammengestellt und geplant hast. Dein AI-Stylist stellt sicher, dass du alle Kleidungsstücke nutzt und warnt dich vor wiederholtem Tragen bei gleichen Anlässen.",

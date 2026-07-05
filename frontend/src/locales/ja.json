@@ -534,6 +534,11 @@
       "body": "このホストアイテムとグループメンバーには、一致しない属性があります：{{mismatches}}。本当にこれらの変更を保存しますか？",
       "confirm": "保存する",
       "cancel": "キャンセル"
+    },
+    "stats": {
+      "label": "Wardrobe Insights",
+      "timesWorn": "Times Worn",
+      "costPerWear": "Cost per Wear"
     }
   },
   "stylist": {
@@ -1853,7 +1858,9 @@
     "repairingPhoto": "修復中…",
     "reshootSuccess": "写真を修復しました。",
     "reshootRejected": "修復された写真は不採用となり、オリジナルを維持します。",
-    "reshootError": "写真を修復できませんでした。もう一度お試しください。"
+    "reshootError": "写真を修復できませんでした。もう一度お試しください。",
+    "wearsCount": "{{count}} wears",
+    "timesWorn": "Worn {{count}} times"
   },
   "outfits": {
     "viewDescription": "作成およびスケジュールされたコーディネートを表示します。AIスタイリストはすべてのワードローブ資産の活用をサポートし、同じ機会に同じ服装をすることを防ぎます。",

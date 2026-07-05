@@ -534,6 +534,11 @@
       "body": "This host item and its group members have mismatched properties: {{mismatches}}. Are you sure you want to save these changes?",
       "confirm": "Save anyway",
       "cancel": "Cancel"
+    },
+    "stats": {
+      "label": "Wardrobe Insights",
+      "timesWorn": "Times Worn",
+      "costPerWear": "Cost per Wear"
     }
   },
   "stylist": {
@@ -1853,7 +1858,10 @@
     "repairingPhoto": "Restoring…",
     "reshootSuccess": "Photo restored.",
     "reshootRejected": "Restored photo was rejected — keeping the original.",
-    "reshootError": "Could not restore photo. Please try again."
+    "reshootError": "Could not restore photo. Please try again.",
+    "wearsCount": "{{count}} wear",
+    "wearsCount_plural": "{{count}} wears",
+    "timesWorn": "Worn {{count}} times"
   },
   "outfits": {
     "viewDescription": "View outfits you have composed and scheduled. Your AI Stylist ensures you utilize all closet assets and warns you of previous occasion repetitions.",
