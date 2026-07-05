@@ -1217,9 +1217,12 @@ export default function ItemDetail() {
   /* ========================= RENDER ========================= */
   return (
     <div className="container-px max-w-5xl mx-auto pt-4 md:pt-8 pb-24">
-      {/* Top bar */}
-      <div className="flex items-center justify-between gap-3 mb-4">
-        <button
+      {/* Floating Action Bar */}
+      <div className="fixed bottom-20 start-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-3 py-2 rounded-full border border-border bg-card/90 backdrop-blur-lg shadow-xl md:bottom-8 max-w-[calc(100vw-2rem)] shrink-0 animate-[slideUp_0.2s_ease-out]">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => {
             if (location.state?.fromOutfits) {
               nav('/stylist', { 
@@ -1235,46 +1238,50 @@ export default function ItemDetail() {
               nav('/closet', { replace: true });
             }
           }}
-          className="inline-flex items-center text-sm text-muted-foreground"
+          className="rounded-full h-9 text-xs font-semibold flex items-center"
           data-testid="item-back"
         >
           <ArrowLeft className="h-4 w-4 me-1 rtl:rotate-180" /> {t('common.back')}
-        </button>
-        <div className="flex items-center gap-2">
-          {isDirty && (
-            <Badge
-              variant="outline"
-              className="rounded-full text-[10px] py-0 h-6"
-              data-testid="item-edit-dirty-badge"
-            >
-              {t('itemDetail.edit.unsaved', { count: Object.keys(patch).length })}
-            </Badge>
+        </Button>
+        
+        <div className="h-4 w-[1px] bg-border mx-1" />
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onDiscard}
+          disabled={!isDirty || saving}
+          className="rounded-full h-9 text-xs font-semibold"
+          data-testid="item-edit-discard-button"
+        >
+          <Undo2 className="h-4 w-4 me-1.5" /> {t('itemDetail.edit.discard')}
+        </Button>
+
+        <Button
+          type="button"
+          onClick={onSave}
+          disabled={!isDirty || saving}
+          size="sm"
+          className="rounded-full h-9 text-xs font-semibold px-4 flex items-center gap-1.5"
+          data-testid="item-edit-save-button"
+        >
+          {saving ? (
+            <><Loader2 className="h-3.5 w-3.5 animate-spin" />{t('itemDetail.edit.saving')}</>
+          ) : (
+            <><Save className="h-3.5 w-3.5" />{t('itemDetail.edit.save')}</>
           )}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onDiscard}
-            disabled={!isDirty || saving}
-            data-testid="item-edit-discard-button"
+        </Button>
+
+        {isDirty && (
+          <Badge
+            variant="outline"
+            className="rounded-full text-[9px] px-2 h-5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 whitespace-nowrap"
+            data-testid="item-edit-dirty-badge"
           >
-            <Undo2 className="h-4 w-4 me-1.5" /> {t('itemDetail.edit.discard')}
-          </Button>
-          <Button
-            type="button"
-            onClick={onSave}
-            disabled={!isDirty || saving}
-            size="sm"
-            className="rounded-xl"
-            data-testid="item-edit-save-button"
-          >
-            {saving ? (
-              <><Loader2 className="h-4 w-4 animate-spin me-1.5" />{t('itemDetail.edit.saving')}</>
-            ) : (
-              <><Save className="h-4 w-4 me-1.5" />{t('itemDetail.edit.save')}</>
-            )}
-          </Button>
-        </div>
+            {t('itemDetail.edit.unsaved', { count: Object.keys(patch).length })}
+          </Badge>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
