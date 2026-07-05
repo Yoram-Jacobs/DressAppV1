@@ -967,11 +967,10 @@ export default function Profile() {
             <Button 
               type="submit" 
               disabled={busy} 
-              className="fixed bottom-20 end-6 md:bottom-8 md:end-8 z-40 shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 rounded-full h-12 px-6 flex items-center gap-2"
+              className="fixed bottom-20 end-6 md:bottom-8 md:end-8 z-40 shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 rounded-full h-12 w-12 p-0 flex items-center justify-center"
               data-testid="settings-save-button"
             >
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              <span className="font-semibold">{t('profile.saveChanges', { defaultValue: 'Save Changes' })}</span>
+              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
             </Button>
           </form>
 
