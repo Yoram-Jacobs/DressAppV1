@@ -1073,7 +1073,15 @@
     "runNow": "अभी चलाएं",
     "promote": "एडमिन बनाएं",
     "demote": "घटाएं",
-    "setStatus": "स्थिति सेट करें"
+    "setStatus": "स्थिति सेट करें",
+    "gemini_api_key": "Gemini API कुंजी",
+    "gemini_key_usage": "Gemini कुंजी स्थिति",
+    "manage_in_google_ai_studio": "Google AI Studio में प्रबंधित करें",
+    "model": "मॉडल",
+    "credits_quota": "क्रेडिट कोटा",
+    "credit_used": "उपयोग किया गया क्रेडिट",
+    "dressapp_fee": "DressApp शुल्क",
+    "billing_history": "बिलिंग इतिहास"
   },
   "calendar": {
     "connect": "Google कैलेंडर जोड़ें",

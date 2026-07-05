@@ -72,8 +72,7 @@ class GeminiStylistBrain:
         else:
             if gemini_stylist_service is None:
                 raise RuntimeError(
-                    "Gemini stylist service unavailable. Set GEMINI_API_KEY "
-                    "or EMERGENT_LLM_KEY to enable it."
+                    "Gemini stylist service unavailable. Set GEMINI_API_KEY to enable it."
                 )
             self._svc = gemini_stylist_service
 
@@ -170,8 +169,7 @@ def build_stylist_brain() -> StylistBrain:
     if primary is None and fallback is None:
         raise RuntimeError(
             "No stylist brain provider is configured. Set "
-            "STYLIST_PROVIDER=gemini and provide GEMINI_API_KEY "
-            "(or EMERGENT_LLM_KEY)."
+            "STYLIST_PROVIDER=gemini and provide GEMINI_API_KEY."
         )
     if primary is None:
         logger.warning(

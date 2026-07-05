@@ -129,6 +129,20 @@ async def list_users(
         )
         # never leak the raw tokens object
         doc.pop("google_calendar_tokens", None)
+
+        # add AI configuration and billing fields
+        ai_config = doc.get("ai_configuration") or {}
+        doc["selected_model"] = ai_config.get("selected_model") or "gemini-2.5-flash"
+        doc["credits_quota"] = ai_config.get("current_credits", 1000)
+        doc["credits_used"] = ai_config.get("credits_used_this_month", 0)
+        doc["dressapp_fee"] = doc["credits_used"] * 0.005
+
+        # Calculate Billing History (overall payment sum of captured topups)
+        total_payment_cents = 0
+        async for t_doc in db.credit_topups.find({"user_id": doc["id"], "status": "captured"}):
+            total_payment_cents += t_doc.get("amount_cents", 0)
+        doc["billing_history_sum"] = total_payment_cents / 100.0
+
         items.append(doc)
     return {"items": items, "total": total, "skip": skip, "limit": limit}
 
@@ -456,42 +470,41 @@ async def trend_scout_run(
 # -------------------- LLM key usage --------------------
 @router.get("/llm-usage")
 async def llm_usage(_: dict = Depends(require_admin)) -> dict[str, Any]:
-    """Best-effort probe of the Emergent universal-key usage endpoint.
+    """Best-effort probe of the development Gemini API key.
 
-    The Emergent proxy exposes a usage endpoint; if it ever changes we just
-    return an informational stub instead of failing the dashboard. When
-    production has flipped to a direct Gemini key, the Emergent endpoint
-    is irrelevant — we surface that explicitly.
+    Verifies whether GEMINI_API_KEY is configured and performs a minimal
+    ping check using the native client.
     """
-    if settings.has_native_gemini and not settings.EMERGENT_LLM_KEY:
+    if not settings.GEMINI_API_KEY:
         return {
             "available": False,
-            "reason": "Production is using a direct GEMINI_API_KEY; Emergent "
-            "usage is not applicable. Check usage at "
-            "https://aistudio.google.com/apikey or in Google Cloud Console.",
+            "reason": "GEMINI_API_KEY is not configured.",
             "backend": "google-direct",
+            "manage_url": "https://aistudio.google.com/apikey",
         }
-    if not settings.EMERGENT_LLM_KEY:
-        return {"available": False, "reason": "EMERGENT_LLM_KEY not set"}
-    headers = {"Authorization": f"Bearer {settings.EMERGENT_LLM_KEY}"}
-    candidates = [
-        "https://integrations.emergentagent.com/v1/usage",
-        "https://emergent-llm.com/v1/usage",
-    ]
-    for url in candidates:
-        try:
-            async with httpx.AsyncClient(timeout=8.0) as c:
-                resp = await c.get(url, headers=headers)
-            if resp.status_code == 200:
-                data = resp.json()
-                return {"available": True, "source": url, "usage": data}
-        except Exception as exc:  # noqa: BLE001
-            logger.debug("LLM usage probe %s failed: %s", url, exc)
-    return {
-        "available": False,
-        "reason": "No usage endpoint reachable; check Emergent dashboard.",
-        "manage_url": "https://emergentagent.com/profile/universal-key",
-    }
+    try:
+        from app.services.gemini_client import get_default_client
+        client = await get_default_client()
+        # Make a tiny probe call to verify the key
+        await client.text(user_text="ping", max_tokens=5)
+        return {
+            "available": True,
+            "backend": "google-direct",
+            "usage": {
+                "status": "Active & Validated",
+                "model": "gemini-2.5-flash",
+                "provider": "google-direct"
+            },
+            "manage_url": "https://aistudio.google.com/apikey",
+        }
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("Gemini API key verification failed: %s", exc)
+        return {
+            "available": False,
+            "backend": "google-direct",
+            "reason": f"Gemini API key verification failed: {exc}",
+            "manage_url": "https://aistudio.google.com/apikey",
+        }
 
 
 # -------------------- system / config view --------------------

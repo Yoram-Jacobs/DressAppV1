@@ -264,8 +264,8 @@ function ProvidersSection() {
               <KeyRound className="h-5 w-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="caps-label text-muted-foreground">{t('pages.admin.emergent_llm_key')}</div>
-              <h3 className="font-display text-xl mt-1">{t('pages.admin.universal_key_usage')}</h3>
+              <div className="caps-label text-muted-foreground">{t('pages.admin.gemini_api_key', { defaultValue: 'Gemini API Key' })}</div>
+              <h3 className="font-display text-xl mt-1">{t('pages.admin.gemini_key_usage', { defaultValue: 'Gemini API Status' })}</h3>
               {usage === null ? (
                 <Skeleton className="h-5 w-64 mt-2" />
               ) : usage.available ? (
@@ -277,7 +277,7 @@ function ProvidersSection() {
                   {usage.reason || 'Live usage not available.'}{' '}
                   {usage.manage_url && (
                     <a className="underline" href={usage.manage_url} target="_blank" rel="noreferrer">
-                      {t('pages.admin.manage_in_emergent_profile')}
+                      {t('pages.admin.manage_in_google_ai_studio', { defaultValue: 'Manage in Google AI Studio' })}
                     </a>
                   )}
                 </p>
@@ -411,6 +411,11 @@ function UsersSection() {
                   <TableHead>{t('auth.email', { defaultValue: 'Email' })}</TableHead>
                   <TableHead>{t('auth.displayName', { defaultValue: 'Display name' })}</TableHead>
                   <TableHead>{t('pages.admin.roles')}</TableHead>
+                  <TableHead>{t('pages.admin.model', { defaultValue: 'Model' })}</TableHead>
+                  <TableHead className="text-end">{t('pages.admin.credits_quota', { defaultValue: 'Credits quota' })}</TableHead>
+                  <TableHead className="text-end">{t('pages.admin.credit_used', { defaultValue: 'Credit used' })}</TableHead>
+                  <TableHead className="text-end">{t('pages.admin.dressapp_fee', { defaultValue: 'DressApp fee' })}</TableHead>
+                  <TableHead className="text-end">{t('pages.admin.billing_history', { defaultValue: 'Billing History' })}</TableHead>
                   <TableHead className="text-end">{t('nav.closet', { defaultValue: 'Closet' })}</TableHead>
                   <TableHead className="text-end">{t('admin.listings', { defaultValue: 'Listings' })}</TableHead>
                   <TableHead>{t('pages.admin.calendar')}</TableHead>
@@ -420,9 +425,9 @@ function UsersSection() {
               </TableHeader>
               <TableBody>
                 {items === null ? (
-                  <TableRow><TableCell colSpan={8}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={13}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
                 ) : items.length === 0 ? (
-                  <TableRow><TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-6">{t('pages.admin.no_users_match')}</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={13} className="text-center text-sm text-muted-foreground py-6">{t('pages.admin.no_users_match')}</TableCell></TableRow>
                 ) : items.map((u) => {
                   const isAdmin = (u.roles || []).includes('admin');
                   return (
@@ -433,6 +438,15 @@ function UsersSection() {
                         {(u.roles || []).map((r) => (
                           <Badge key={r} variant="outline" className="text-[11px] me-1">{r}</Badge>
                         ))}
+                      </TableCell>
+                      <TableCell className="text-sm font-mono text-muted-foreground">{u.selected_model || '—'}</TableCell>
+                      <TableCell className="text-end text-sm">{fmtNum(u.credits_quota)}</TableCell>
+                      <TableCell className="text-end text-sm">{fmtNum(u.credits_used)}</TableCell>
+                      <TableCell className="text-end text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                        ${(u.dressapp_fee || 0).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-end text-sm font-medium">
+                        ${(u.billing_history_sum || 0).toFixed(2)}
                       </TableCell>
                       <TableCell className="text-end text-sm">{fmtNum(u.closet_count)}</TableCell>
                       <TableCell className="text-end text-sm">{fmtNum(u.listing_count)}</TableCell>

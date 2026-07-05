@@ -1082,7 +1082,15 @@
     "runNow": "הפעל כעת",
     "promote": "קדם למנהל",
     "demote": "הורד",
-    "setStatus": "עדכן סטטוס"
+    "setStatus": "עדכן סטטוס",
+    "gemini_api_key": "מפתח Gemini API",
+    "gemini_key_usage": "מצב מפתח Gemini",
+    "manage_in_google_ai_studio": "נהל ב-Google AI Studio",
+    "model": "מודל",
+    "credits_quota": "מכסת קרדיטים",
+    "credit_used": "קרדיט בשימוש",
+    "dressapp_fee": "עמלת DressApp",
+    "billing_history": "היסטוריית חיובים"
   },
   "calendar": {
     "connect": "חבר את Google יומן",

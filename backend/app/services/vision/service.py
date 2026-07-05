@@ -80,8 +80,7 @@ class GarmentVisionService:
         # Fail fast when the service cannot actually run anything.
         if self.provider == "gemini" and not self.api_key:
             raise RuntimeError(
-                "GARMENT_VISION_PROVIDER=gemini but neither GEMINI_API_KEY "
-                "nor EMERGENT_LLM_KEY is set."
+                "GARMENT_VISION_PROVIDER=gemini but GEMINI_API_KEY is not set."
             )
         if self.provider == "hf" and not settings.GARMENT_VISION_ENDPOINT_KEY:
             raise RuntimeError(
@@ -1254,7 +1253,7 @@ class GarmentVisionService:
             return []
         if not self.api_key:
             raise RuntimeError(
-                "analyze_batch: requires GEMINI_API_KEY or EMERGENT_LLM_KEY"
+                "analyze_batch: requires GEMINI_API_KEY"
             )
 
         # streaming paths emit equivalent prompts.
@@ -2376,7 +2375,7 @@ def _build_vision_service() -> GarmentVisionService | None:
     if want_gemini_analyze and not has_gemini_chat:
         logger.warning(
             "Garment vision disabled: provider=gemini but no Gemini chat key set "
-            "(GEMINI_API_KEY / EMERGENT_LLM_KEY)."
+            "(GEMINI_API_KEY)."
         )
         return None
     try:

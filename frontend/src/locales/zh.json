@@ -1076,7 +1076,15 @@
     "runNow": "立即运行",
     "promote": "提升为管理员",
     "demote": "降级",
-    "setStatus": "设置状态"
+    "setStatus": "设置状态",
+    "gemini_api_key": "Gemini API 密钥",
+    "gemini_key_usage": "Gemini 密钥状态",
+    "manage_in_google_ai_studio": "在 Google AI Studio 中管理",
+    "model": "模型",
+    "credits_quota": "信用额度",
+    "credit_used": "已用信用额",
+    "dressapp_fee": "DressApp 费用",
+    "billing_history": "账单历史"
   },
   "calendar": {
     "connect": "连接 Google Calendar",

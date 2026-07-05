@@ -1076,7 +1076,15 @@
     "runNow": "Run now",
     "promote": "Promote to admin",
     "demote": "Demote",
-    "setStatus": "Set status"
+    "setStatus": "Set status",
+    "gemini_api_key": "Gemini API Key",
+    "gemini_key_usage": "Gemini API Status",
+    "manage_in_google_ai_studio": "Manage in Google AI Studio",
+    "model": "Model",
+    "credits_quota": "Credits quota",
+    "credit_used": "Credit used",
+    "dressapp_fee": "DressApp fee",
+    "billing_history": "Billing History"
   },
   "calendar": {
     "connect": "Connect Google Calendar",

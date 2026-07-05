@@ -1076,7 +1076,15 @@
     "runNow": "今すぐ実行",
     "promote": "管理者に昇格",
     "demote": "降格",
-    "setStatus": "ステータスを設定"
+    "setStatus": "ステータスを設定",
+    "gemini_api_key": "Gemini APIキー",
+    "gemini_key_usage": "Geminiキーのステータス",
+    "manage_in_google_ai_studio": "Google AI Studioで管理",
+    "model": "モデル",
+    "credits_quota": "クレジット枠",
+    "credit_used": "使用済みクレジット",
+    "dressapp_fee": "DressApp手数料",
+    "billing_history": "請求履歴"
   },
   "calendar": {
     "connect": "Google カレンダーを接続",

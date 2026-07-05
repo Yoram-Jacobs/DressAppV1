@@ -93,9 +93,8 @@ on the VPS — never in the repo.
 > backend (chat, vision, streaming) flows through
 > `backend/app/services/gemini_client.py` which talks directly to
 > Google's `generativelanguage` endpoint using `GEMINI_API_KEY`. The
-> legacy `EMERGENT_LLM_KEY` env var may still appear in `.env` /
-> `config.py` for rollback safety but it is **no longer consulted by
-> any runtime call**.
+> legacy `EMERGENT_LLM_KEY` has been deprecated and fully replaced by the
+> direct `GEMINI_API_KEY` check on the admin dashboard.
 
 > **🛑 Auth surface — `HF_TOKEN` / `EYES_HF_TOKEN` are NOT part of
 > DressApp.** Any reference to either in the live tree is a sabotage

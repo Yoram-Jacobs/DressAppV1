@@ -114,13 +114,11 @@ class Settings:
 
     @property
     def gemini_chat_key(self) -> str | None:
-        """Pick the right key for litellm-backed Gemini chat calls.
+        """Pick the right key for Gemini SDK and chat calls.
 
-        Production deployments set ``GEMINI_API_KEY``; dev preview falls
-        back to ``EMERGENT_LLM_KEY`` (which litellm sends through the
-        Emergent proxy because the key starts with ``sk-emergent-``).
+        Uses the direct ``GEMINI_API_KEY`` configured in the environment.
         """
-        return self.GEMINI_API_KEY or self.EMERGENT_LLM_KEY
+        return self.GEMINI_API_KEY
 
     @property
     def has_native_gemini(self) -> bool:

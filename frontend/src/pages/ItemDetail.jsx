@@ -120,7 +120,41 @@ const PATTERN_OPTIONS = [
 ];
 const FORMALITY_OPTIONS = ['casual', 'smart-casual', 'business', 'formal'];
 const INTENT_OPTIONS = ['own', 'for_sale', 'donate', 'swap', 'rent'];
-const CURRENCY_OPTIONS = ['USD', 'EUR', 'GBP', 'ILS'];
+const ALL_CURRENCY_OPTIONS = [
+  'USD', 'EUR', 'GBP', 'ILS', 'CAD', 'AUD', 'JPY', 'INR', 'RUB', 'CNY', 
+  'BRL', 'MXN', 'CHF', 'AED', 'SAR', 'ZAR', 'SGD', 'HKD', 'SEK', 'NOK', 
+  'TRY', 'NZD', 'KRW'
+];
+
+const getDefaultCurrency = () => {
+  try {
+    const locale = (navigator.language || 'en-US').toUpperCase();
+    const country = locale.split('-')[1];
+    
+    const countryToCurrency = {
+      US: 'USD', IL: 'ILS', GB: 'GBP', JP: 'JPY', IN: 'INR', RU: 'RUB',
+      CN: 'CNY', TW: 'TWD', HK: 'HKD', CA: 'CAD', AU: 'AUD', NZ: 'NZD',
+      CH: 'CHF', BR: 'BRL', MX: 'MXN', AR: 'ARS', CL: 'CLP', CO: 'COP',
+      PE: 'PEN', UY: 'UYU', ZA: 'ZAR', SG: 'SGD', MY: 'MYR', TH: 'THB',
+      ID: 'IDR', PH: 'PHP', KR: 'KRW', AE: 'AED', SA: 'SAR', EG: 'EGP',
+      TR: 'TRY', SE: 'SEK', NO: 'NOK', DK: 'DKK', PL: 'PLN'
+    };
+
+    if (country && countryToCurrency[country]) {
+      return countryToCurrency[country];
+    }
+
+    const lang = locale.split('-')[0].toLowerCase();
+    const langToCurrency = {
+      he: 'ILS', ja: 'JPY', hi: 'INR', ru: 'RUB', zh: 'CNY',
+      de: 'EUR', fr: 'EUR', it: 'EUR', es: 'EUR', pt: 'EUR', ar: 'AED'
+    };
+
+    return langToCurrency[lang] || 'USD';
+  } catch (e) {
+    return 'USD';
+  }
+};
 
 const EDITABLE_FIELDS = [
   'title',
@@ -220,7 +254,7 @@ function toFormState(item, user = null) {
     // by 100". Defaulting to 0 also drops the awkward "—"/empty
     // initial state.
     price_cents: Math.round(Number(item.price_cents ?? 0) / 100),
-    currency: item.currency || 'USD',
+    currency: item.currency || getDefaultCurrency(),
     marketplace_intent: item.marketplace_intent || 'own',
     formality: item.formality || '',
     cultural_tags: Array.isArray(item.cultural_tags) ? item.cultural_tags : [],
@@ -2131,13 +2165,21 @@ export default function ItemDetail() {
                   />
                 </Field>
                 <Field label={t('itemDetail.edit.currency')}>
-                  <NullableSelect
-                    value={form.currency}
-                    onChange={(v) => setField('currency', v || 'USD')}
-                    options={CURRENCY_OPTIONS}
+                  <Input
+                    type="text"
+                    maxLength={3}
+                    list="currency-options"
+                    value={form.currency || ''}
+                    onChange={(e) => setField('currency', e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
+                    className="uppercase rounded-xl"
                     placeholder={t('addItem.currencyPlaceholder', { defaultValue: 'USD' })}
-                    testid="item-edit-field-currency"
+                    data-testid="item-edit-field-currency"
                   />
+                  <datalist id="currency-options">
+                    {ALL_CURRENCY_OPTIONS.map((c) => (
+                      <option key={c} value={c} />
+                    ))}
+                  </datalist>
                 </Field>
                 <Field label={t('itemDetail.edit.intent')}>
                   <NullableSelect

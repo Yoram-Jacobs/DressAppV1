@@ -1076,7 +1076,15 @@
     "runNow": "Esegui ora",
     "promote": "Promuovi ad admin",
     "demote": "Declassa",
-    "setStatus": "Imposta stato"
+    "setStatus": "Imposta stato",
+    "gemini_api_key": "Chiave API Gemini",
+    "gemini_key_usage": "Stato della chiave Gemini",
+    "manage_in_google_ai_studio": "Gestisci in Google AI Studio",
+    "model": "Modello",
+    "credits_quota": "Quota crediti",
+    "credit_used": "Credito utilizzato",
+    "dressapp_fee": "Tariffa DressApp",
+    "billing_history": "Cronologia fatturazione"
   },
   "calendar": {
     "connect": "Collega Google Calendar",

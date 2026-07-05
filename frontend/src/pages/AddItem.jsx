@@ -74,6 +74,36 @@ const INTENT_OPTIONS = [
   { value: 'rent', icon: Calendar, tone: 'bg-indigo-100 text-indigo-900 border-indigo-200' },
 ];
 
+const getDefaultCurrency = () => {
+  try {
+    const locale = (navigator.language || 'en-US').toUpperCase();
+    const country = locale.split('-')[1];
+    
+    const countryToCurrency = {
+      US: 'USD', IL: 'ILS', GB: 'GBP', JP: 'JPY', IN: 'INR', RU: 'RUB',
+      CN: 'CNY', TW: 'TWD', HK: 'HKD', CA: 'CAD', AU: 'AUD', NZ: 'NZD',
+      CH: 'CHF', BR: 'BRL', MX: 'MXN', AR: 'ARS', CL: 'CLP', CO: 'COP',
+      PE: 'PEN', UY: 'UYU', ZA: 'ZAR', SG: 'SGD', MY: 'MYR', TH: 'THB',
+      ID: 'IDR', PH: 'PHP', KR: 'KRW', AE: 'AED', SA: 'SAR', EG: 'EGP',
+      TR: 'TRY', SE: 'SEK', NO: 'NOK', DK: 'DKK', PL: 'PLN'
+    };
+
+    if (country && countryToCurrency[country]) {
+      return countryToCurrency[country];
+    }
+
+    const lang = locale.split('-')[0].toLowerCase();
+    const langToCurrency = {
+      he: 'ILS', ja: 'JPY', hi: 'INR', ru: 'RUB', zh: 'CNY',
+      de: 'EUR', fr: 'EUR', it: 'EUR', es: 'EUR', pt: 'EUR', ar: 'AED'
+    };
+
+    return langToCurrency[lang] || 'USD';
+  } catch (e) {
+    return 'USD';
+  }
+};
+
 const fileToBase64 = async (file, maxSide = 1024, quality = 0.8) => {
   let img = null;
   if (typeof createImageBitmap === 'function') {
@@ -153,7 +183,7 @@ const blankFields = () => ({
   // through an awkward "first time you set a price" path. ``currency``
   // defaults to USD but ItemDetail lets the user change it later;
   // the marketplace card now honours whatever's on the item.
-  size: '', price_cents: 0, currency: 'USD',
+  size: '', price_cents: 0, currency: getDefaultCurrency(),
   marketplace_intent: 'own',
   repair_advice: '',
   tags: [],
@@ -2096,7 +2126,7 @@ export default function AddItem() {
         condition: body.condition || null,
         quality: body.quality || null,
         price_cents: body.price_cents || 0,
-        currency: body.currency || 'USD',
+        currency: body.currency || getDefaultCurrency(),
         marketplace_intent: body.marketplace_intent || 'own',
         tags: body.tags || [],
         original_image_url: dataUrl,
@@ -4020,7 +4050,7 @@ function buildCreatePayload(card, inSuitcase = false) {
     quality: f.quality || undefined,
     repair_advice: f.repair_advice || undefined,
     price_cents: f.price_cents === '' || f.price_cents == null ? 0 : Number(f.price_cents),
-    currency: f.currency || 'USD',
+    currency: f.currency || getDefaultCurrency(),
     marketplace_intent: f.marketplace_intent || 'own',
     tags: f.tags || [],
     image_base64: asBase64 || undefined,

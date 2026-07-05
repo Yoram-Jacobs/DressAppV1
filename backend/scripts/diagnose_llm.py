@@ -37,7 +37,6 @@ def mask(val: str | None) -> str:
 def check_keys() -> None:
     print_header("1) Environment keys (masked)")
     for k in [
-        "EMERGENT_LLM_KEY",
         "GEMINI_API_KEY",
         "GOOGLE_API_KEY",
         # ``HF_TOKEN`` is deliberately NOT in this list — DressApp
@@ -61,7 +60,7 @@ async def check_stylist() -> None:
         print(f"  IMPORT FAIL: {type(e).__name__}: {e}")
         return
     if gemini_stylist_service is None:
-        print("  service is None — check GEMINI_API_KEY / EMERGENT_LLM_KEY")
+        print("  service is None — check GEMINI_API_KEY")
         return
     print(
         f"  service={type(gemini_stylist_service).__name__} "
