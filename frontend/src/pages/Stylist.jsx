@@ -213,6 +213,7 @@ export default function Stylist() {
   const [activeTab, setActiveTab] = useState('chat');
   const [keyErrorOpen, setKeyErrorOpen] = useState(false);
   const shuffleScrollRef = useRef(null);
+  const todayRef = useRef(null);
 
   const isAiConfigValid = () => {
     if (!user) return true;
@@ -717,6 +718,9 @@ export default function Stylist() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     setCalendarStartDate(today);
+    setTimeout(() => {
+      todayRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }, 100);
   };
 
 
@@ -2576,6 +2580,7 @@ export default function Stylist() {
               return (
                 <div
                   key={dayStr}
+                  ref={isToday ? todayRef : null}
                   onClick={() => setSchedulingDate(dayStr)}
                   className={cn(
                     "flex-1 min-w-[130px] sm:min-w-0 rounded-2xl border p-3 flex flex-col items-center justify-between text-center transition-all duration-300 bg-card select-none cursor-pointer hover:border-[hsl(var(--accent))]/80 hover:shadow-sm",
