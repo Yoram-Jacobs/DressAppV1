@@ -42,7 +42,7 @@ _HASH_SIZE = 8
 # empirically corresponds to "obvious re-upload of the same photo
 # even after JPEG re-compression". Higher = more matches but more
 # false positives.
-DEFAULT_HAMMING_THRESHOLD = 6
+DEFAULT_HAMMING_THRESHOLD = 10
 
 # Stricter threshold used ONLY when the colour gate cannot apply
 # (either side missing ``source_color_sig``). 8×8 aHash on
@@ -98,106 +98,39 @@ def _decode_to_pil(image_data: str | bytes | None) -> Optional[Image.Image]:
 
 
 def average_hash(image_data) -> Optional[str]:
-    """Compute a 64-bit average-hash of the given image and return it
+    """Compute a 64-bit difference-hash (dHash) of the given image and return it
     as a 16-char lowercase hex string. ``None`` means the input was
     unreadable (we keep going rather than blowing up the upload)."""
     img = _decode_to_pil(image_data)
     if img is None:
         return None
     try:
+        # Resize to 9x8 for horizontal difference
         small = img.convert("L").resize(
-            (_HASH_SIZE, _HASH_SIZE), Image.Resampling.LANCZOS
+            (9, 8), Image.Resampling.LANCZOS
         )
         arr = np.asarray(small, dtype=np.uint8)
-        avg = arr.mean()
-        bits = (arr > avg).flatten().astype(np.uint8)
-        # Pack 64 bits → 8 bytes → 16 hex chars
+        # Compare adjacent pixels in each row
+        diff = arr[:, 1:] > arr[:, :-1]
+        bits = diff.flatten().astype(np.uint8)
         packed = np.packbits(bits)
         return packed.tobytes().hex()
     except Exception as exc:  # noqa: BLE001
-        logger.debug("phash compute failed: %s", exc)
+        logger.debug("dhash compute failed: %s", exc)
         return None
 
 
 def color_signature(image_data) -> Optional[str]:
-    """Compute a coarse RGB colour signature: average colour per
-    quadrant (2x2 grid), packed as 12 bytes = 24 hex chars.
-
-    The phash above throws away colour by converting to greyscale —
-    that's intentional for matching the *same garment* across
-    lighting changes, but it's the reason a navy and a grey pair of
-    shorts of the same cut produce near-identical hashes. The colour
-    signature recovers enough chroma information to tell those apart
-    without sacrificing the phash's robustness.
-    """
-    img = _decode_to_pil(image_data)
-    if img is None:
-        return None
-    try:
-        # Resize to a tiny grid then read average colour per cell.
-        # 16x16 is large enough to be representative but small enough
-        # that the operation is sub-millisecond.
-        small = img.resize((16, 16), Image.Resampling.LANCZOS)
-        arr = np.asarray(small, dtype=np.uint8)  # shape (16, 16, 3)
-        cell = 16 // _COLOR_GRID  # 8
-        out: list[int] = []
-        for gy in range(_COLOR_GRID):
-            for gx in range(_COLOR_GRID):
-                block = arr[
-                    gy * cell : (gy + 1) * cell,
-                    gx * cell : (gx + 1) * cell,
-                    :,
-                ]
-                # Per-channel mean → 3 ints (0–255 each)
-                mean = block.reshape(-1, 3).mean(axis=0).astype(np.uint8)
-                out.extend(int(c) for c in mean)
-        return bytes(out).hex()
-    except Exception as exc:  # noqa: BLE001
-        logger.debug("color signature compute failed: %s", exc)
-        return None
+    """Coarse RGB colour signature is disabled — returns None."""
+    return None
 
 
 def compute_signatures(image_data) -> tuple[str | None, str | None]:
-    """Decode the image once and return both an aHash and a colour
-    signature. Used by the lazy backfill in /preflight where decoding
-    is by far the dominant cost — calling ``average_hash`` and
-    ``color_signature`` separately re-decodes the same data URL twice
-    per row, which on a 300-item closet adds up to multi-second
-    request latency. This helper halves that.
+    """Decode the image once and return both a dHash and a None color
+    signature.
     """
-    img = _decode_to_pil(image_data)
-    if img is None:
-        return (None, None)
-    ph: str | None = None
-    cs: str | None = None
-    try:
-        small = img.convert("L").resize(
-            (_HASH_SIZE, _HASH_SIZE), Image.Resampling.LANCZOS
-        )
-        arr = np.asarray(small, dtype=np.uint8)
-        avg = arr.mean()
-        bits = (arr > avg).flatten().astype(np.uint8)
-        ph = np.packbits(bits).tobytes().hex()
-    except Exception as exc:  # noqa: BLE001
-        logger.debug("phash compute failed: %s", exc)
-    try:
-        small = img.resize((16, 16), Image.Resampling.LANCZOS)
-        arr = np.asarray(small, dtype=np.uint8)
-        cell = 16 // _COLOR_GRID
-        out: list[int] = []
-        for gy in range(_COLOR_GRID):
-            for gx in range(_COLOR_GRID):
-                block = arr[
-                    gy * cell : (gy + 1) * cell,
-                    gx * cell : (gx + 1) * cell,
-                    :,
-                ]
-                mean = block.reshape(-1, 3).mean(axis=0).astype(np.uint8)
-                out.extend(int(c) for c in mean)
-        cs = bytes(out).hex()
-    except Exception as exc:  # noqa: BLE001
-        logger.debug("color signature compute failed: %s", exc)
-    return (ph, cs)
+    ph = average_hash(image_data)
+    return (ph, None)
 
 
 # ── Phase Z2.3 — authoritative source selection ────────────────────
@@ -303,49 +236,16 @@ def is_duplicate_match(
     sha_b: str | None,
     phash_a: str | None,
     phash_b: str | None,
-    color_a: str | None,
-    color_b: str | None,
+    color_a: str | None = None,
+    color_b: str | None = None,
     *,
     hamming_threshold: int = DEFAULT_HAMMING_THRESHOLD,
     hamming_threshold_strict: int = DEFAULT_HAMMING_THRESHOLD_STRICT,
     color_threshold: int = DEFAULT_COLOR_THRESHOLD,
 ) -> bool:
-    """Single source of truth for "are these two images duplicates?".
-
-    Decision tree:
-      1. Exact SHA-256 match → duplicate (re-upload of the exact bytes).
-      2. Both sides have a colour signature:
-         shape similar (Hamming ≤ ``hamming_threshold``) AND
-         colour distance ≤ ``color_threshold`` → duplicate.
-      3. At least one side lacks a colour signature:
-         shape similar under the **strict** threshold
-         (Hamming ≤ ``hamming_threshold_strict``) → duplicate.
-      4. Otherwise → not a duplicate.
-
-    Rule (2)'s colour gate is the fix for "navy shorts flagged as a
-    duplicate of grey shorts of the same cut".
-
-    Rule (3) is the fix for "white polo flagged as a duplicate of a
-    white graphic tee" — the closet item predates the Z2.2 colour-sig
-    backfill, so ``color_b`` is ``None`` and the old code fell back to
-    rule (2)'s lenient threshold without the gate. Requiring the
-    strict threshold instead means perceptual-only matches must be
-    *much* closer in silhouette/brightness before we declare them a
-    duplicate, which is the only honest thing to do with no colour
-    information.
-    """
+    """Check duplicate matches using SHA-256 and dHash."""
     if sha_a and sha_b and sha_a == sha_b:
         return True
     if not phash_a or not phash_b:
         return False
-    have_both_colors = bool(color_a) and bool(color_b)
-    effective_threshold = (
-        hamming_threshold if have_both_colors else hamming_threshold_strict
-    )
-    if hamming_distance(phash_a, phash_b) > effective_threshold:
-        return False
-    if have_both_colors:
-        return color_distance(color_a, color_b) <= color_threshold
-    # No colour gate available, but we already required the strict
-    # Hamming threshold above, so we can declare a match here.
-    return True
+    return hamming_distance(phash_a, phash_b) <= hamming_threshold

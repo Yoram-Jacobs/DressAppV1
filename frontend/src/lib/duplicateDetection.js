@@ -40,7 +40,7 @@
 // Match the backend constants exactly. If you change these, change
 // ``DEFAULT_HAMMING_THRESHOLD`` / ``DEFAULT_HAMMING_THRESHOLD_STRICT`` /
 // ``DEFAULT_COLOR_THRESHOLD`` in ``image_hash.py`` to the same values.
-const HAMMING_THRESHOLD = 6;
+const HAMMING_THRESHOLD = 10;
 // Stricter threshold used ONLY when the colour gate cannot apply
 // (either side missing ``source_color_sig``). 8×8 aHash on greyscale
 // is essentially "silhouette + brightness pattern": two *different*
@@ -122,25 +122,13 @@ export function colorDistance(a, b) {
 export function isDuplicateMatch({
   shaA, shaB, phashA, phashB, colorA, colorB,
   hammingThreshold = HAMMING_THRESHOLD,
-  hammingThresholdStrict = HAMMING_THRESHOLD_STRICT,
-  colorThreshold = COLOR_THRESHOLD,
 } = {}) {
   // Pass 1 — exact byte match.
   if (shaA && shaB && shaA === shaB) return true;
   // Pass 2 — shape similarity is the prerequisite; without phashes
   // we can't say anything about visual similarity.
   if (!phashA || !phashB) return false;
-  const haveBothColors = !!(colorA && colorB);
-  const effectiveThreshold = haveBothColors
-    ? hammingThreshold
-    : hammingThresholdStrict;
-  if (hammingDistance(phashA, phashB) > effectiveThreshold) return false;
-  if (haveBothColors) {
-    return colorDistance(colorA, colorB) <= colorThreshold;
-  }
-  // No colour gate available; the strict Hamming gate above already
-  // enforced a much tighter shape match, so we can declare here.
-  return true;
+  return hammingDistance(phashA, phashB) <= hammingThreshold;
 }
 
 /**

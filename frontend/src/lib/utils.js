@@ -80,33 +80,37 @@ export async function aHashFile(file) {
         im.src = objectUrl;
       });
     }
-    const HASH_SIZE = 8;
+    const WIDTH = 9;
+    const HEIGHT = 8;
     const canvas = document.createElement("canvas");
-    canvas.width = HASH_SIZE;
-    canvas.height = HASH_SIZE;
+    canvas.width = WIDTH;
+    canvas.height = HEIGHT;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return null;
-    // Filter == grayscale → match backend's `.convert('L')` step.
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(bmp, 0, 0, HASH_SIZE, HASH_SIZE);
-    const { data } = ctx.getImageData(0, 0, HASH_SIZE, HASH_SIZE);
-    // Luminance per ITU-R BT.601 (matches PIL .convert('L')).
-    const lum = new Uint8Array(HASH_SIZE * HASH_SIZE);
-    let sum = 0;
+    ctx.drawImage(bmp, 0, 0, WIDTH, HEIGHT);
+    const { data } = ctx.getImageData(0, 0, WIDTH, HEIGHT);
+    // Luminance per ITU-R BT.601.
+    const lum = new Uint8Array(WIDTH * HEIGHT);
     for (let i = 0, j = 0; i < data.length; i += 4, j += 1) {
-      const v = Math.round(
+      lum[j] = Math.round(
         0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2],
       );
-      lum[j] = v;
-      sum += v;
     }
-    const avg = sum / lum.length;
-    // Pack 64 bits big-endian, just like Python's np.packbits default.
+    // dHash: compare adjacent pixels horizontally in each row
+    const bits = new Uint8Array(64);
+    let bitIdx = 0;
+    for (let row = 0; row < HEIGHT; row++) {
+      for (let col = 0; col < WIDTH - 1; col++) {
+        const idx = row * WIDTH + col;
+        bits[bitIdx++] = lum[idx + 1] > lum[idx] ? 1 : 0;
+      }
+    }
+    // Pack 64 bits big-endian
     const bytes = new Uint8Array(8);
     for (let i = 0; i < 64; i++) {
-      const bit = lum[i] > avg ? 1 : 0;
-      bytes[i >> 3] |= bit << (7 - (i & 7));
+      bytes[i >> 3] |= bits[i] << (7 - (i & 7));
     }
     let out = "";
     for (let i = 0; i < bytes.length; i++) {
@@ -136,64 +140,5 @@ export async function aHashFile(file) {
  * @returns {Promise<string|null>} 48-char lowercase hex digest
  */
 export async function colorSignatureFile(file) {
-  if (!file) return null;
-  try {
-    let bmp = null;
-    if (typeof createImageBitmap === "function") {
-      try { bmp = await createImageBitmap(file); } catch (_) { bmp = null; }
-    }
-    if (!bmp) {
-      bmp = await new Promise((resolve, reject) => {
-        const im = new Image();
-        const objectUrl = URL.createObjectURL(file);
-        im.onload = () => {
-          URL.revokeObjectURL(objectUrl);
-          resolve(im);
-        };
-        im.onerror = (e) => {
-          URL.revokeObjectURL(objectUrl);
-          reject(e);
-        };
-        im.src = objectUrl;
-      });
-    }
-    // Resize to 16x16 — large enough to be representative, small
-    // enough that the readback is sub-millisecond on mobile.
-    const SIZE = 16;
-    const GRID = 2; // 2x2 grid of quadrants → 4 quadrants × 3 channels
-    const canvas = document.createElement("canvas");
-    canvas.width = SIZE;
-    canvas.height = SIZE;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return null;
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(bmp, 0, 0, SIZE, SIZE);
-    const { data } = ctx.getImageData(0, 0, SIZE, SIZE);
-    const cell = SIZE / GRID; // 8
-    const out = new Uint8Array(GRID * GRID * 3);
-    let outIdx = 0;
-    for (let gy = 0; gy < GRID; gy++) {
-      for (let gx = 0; gx < GRID; gx++) {
-        let r = 0, g = 0, b = 0, n = 0;
-        for (let yy = 0; yy < cell; yy++) {
-          for (let xx = 0; xx < cell; xx++) {
-            const px = ((gy * cell + yy) * SIZE + (gx * cell + xx)) * 4;
-            r += data[px];
-            g += data[px + 1];
-            b += data[px + 2];
-            n += 1;
-          }
-        }
-        out[outIdx++] = Math.round(r / n);
-        out[outIdx++] = Math.round(g / n);
-        out[outIdx++] = Math.round(b / n);
-      }
-    }
-    let hex = "";
-    for (let i = 0; i < out.length; i++) hex += out[i].toString(16).padStart(2, "0");
-    return hex;
-  } catch (_) {
-    return null;
-  }
+  return null;
 }
