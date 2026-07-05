@@ -1,7 +1,10 @@
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Camera, Image as ImgIcon, Save, Trash2, Loader2, Sparkles } from 'lucide-react';
+import {
+  Camera, Image as ImgIcon, Save, Trash2, Loader2, Sparkles,
+  User, MapPin, Fingerprint, Sliders, Ruler, Scissors, Briefcase, CreditCard
+} from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -353,29 +356,39 @@ export function ProfileDetailsCard() {
               {t('profile.autofilledFromGoogle')}
             </Badge>
           )}
-        </div>
-
-        <Accordion
+        </di        <Accordion
           type="multiple"
           defaultValue={['identity']}
-          className="w-full"
+          className="w-full space-y-4"
         >
           {/* --- Identity --- */}
-          <AccordionItem value="identity">
+          <AccordionItem value="identity" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
             <AccordionTrigger
-              className="caps-label"
+              className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
               data-testid="profile-accordion-identity"
             >
-              {t('profile.sections.identity')}
+              <div className="flex items-center gap-4 text-start">
+                <div className="p-2.5 rounded-xl bg-[hsl(271_81%_95%)] text-[hsl(271_81%_56%)] dark:bg-[hsl(271_30%_18%)] dark:text-[hsl(271_81%_70%)] shrink-0 transition-transform duration-200">
+                  <User className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('profile.sections.identity')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('profile.sections.identityDesc', { defaultValue: 'Your name, email address, and date of birth' })}
+                  </span>
+                </div>
+              </div>
             </AccordionTrigger>
-            <AccordionContent>
+            <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label={t('profile.firstName')} htmlFor="f-first">
                   <Input
                     id="f-first"
                     value={form.first_name}
                     onChange={(e) => setField('first_name', e.target.value)}
-                    className="rounded-xl"
+                    className="rounded-xl bg-card"
                     data-testid="profile-field-first_name"
                   />
                 </Field>
@@ -384,7 +397,7 @@ export function ProfileDetailsCard() {
                     id="f-last"
                     value={form.last_name}
                     onChange={(e) => setField('last_name', e.target.value)}
-                    className="rounded-xl"
+                    className="rounded-xl bg-card"
                     data-testid="profile-field-last_name"
                   />
                 </Field>
@@ -392,7 +405,7 @@ export function ProfileDetailsCard() {
                   <Input
                     value={user?.email || ''}
                     readOnly
-                    className="rounded-xl bg-secondary/60"
+                    className="rounded-xl bg-secondary/40 cursor-not-allowed text-muted-foreground"
                     data-testid="profile-field-email"
                   />
                 </Field>
@@ -402,7 +415,7 @@ export function ProfileDetailsCard() {
                     type="date"
                     value={form.date_of_birth || ''}
                     onChange={(e) => setField('date_of_birth', e.target.value)}
-                    className="rounded-xl"
+                    className="rounded-xl bg-card"
                     data-testid="profile-field-date_of_birth"
                   />
                 </Field>
@@ -411,11 +424,26 @@ export function ProfileDetailsCard() {
           </AccordionItem>
 
           {/* --- Contact --- */}
-          <AccordionItem value="contact">
-            <AccordionTrigger className="caps-label" data-testid="profile-accordion-contact">
-              {t('profile.sections.contact')}
+          <AccordionItem value="contact" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
+            <AccordionTrigger
+              className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+              data-testid="profile-accordion-contact"
+            >
+              <div className="flex items-center gap-4 text-start">
+                <div className="p-2.5 rounded-xl bg-[hsl(174_44%_93%)] text-[hsl(174_44%_33%)] dark:bg-[hsl(174_30%_18%)] dark:text-[hsl(174_44%_60%)] shrink-0 transition-transform duration-200">
+                  <MapPin className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('profile.sections.contact')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('profile.sections.contactDesc', { defaultValue: 'Phone number, delivery address, and localization' })}
+                  </span>
+                </div>
+              </div>
             </AccordionTrigger>
-            <AccordionContent>
+            <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label={t('profile.phone')} htmlFor="f-phone">
                   <Input
@@ -424,7 +452,7 @@ export function ProfileDetailsCard() {
                     value={form.phone}
                     onChange={(e) => setField('phone', e.target.value)}
                     placeholder={t('profile.phonePlaceholder')}
-                    className="rounded-xl"
+                    className="rounded-xl bg-card"
                     data-testid="profile-field-phone"
                   />
                 </Field>
@@ -466,7 +494,7 @@ export function ProfileDetailsCard() {
                     value={form.address.line2}
                     onChange={(e) => setNested('address', 'line2', e.target.value)}
                     autoComplete="address-line2"
-                    className="rounded-xl"
+                    className="rounded-xl bg-card"
                   />
                 </Field>
                 <Field label={t('profile.city')} htmlFor="f-city">
@@ -503,7 +531,7 @@ export function ProfileDetailsCard() {
                     value={form.address.region}
                     onChange={(e) => setNested('address', 'region', e.target.value)}
                     autoComplete="address-level1"
-                    className="rounded-xl"
+                    className="rounded-xl bg-card"
                   />
                 </Field>
                 <Field label={t('profile.postalCode')} htmlFor="f-zip">
@@ -512,7 +540,7 @@ export function ProfileDetailsCard() {
                     value={form.address.postal_code}
                     onChange={(e) => setNested('address', 'postal_code', e.target.value)}
                     autoComplete="postal-code"
-                    className="rounded-xl"
+                    className="rounded-xl bg-card"
                   />
                 </Field>
                 <Field label={t('profile.country')} htmlFor="f-country">
@@ -534,22 +562,34 @@ export function ProfileDetailsCard() {
           </AccordionItem>
 
           {/* --- Demographics --- */}
-          <AccordionItem value="demographics">
+          <AccordionItem value="demographics" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
             <AccordionTrigger
-              className="caps-label"
+              className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
               data-testid="profile-accordion-demographics"
             >
-              {t('profile.sections.demographics')}
+              <div className="flex items-center gap-4 text-start">
+                <div className="p-2.5 rounded-xl bg-[hsl(18_78%_94%)] text-[hsl(18_78%_56%)] dark:bg-[hsl(18_30%_18%)] dark:text-[hsl(18_78%_70%)] shrink-0 transition-transform duration-200">
+                  <Fingerprint className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('profile.sections.demographics')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('profile.sections.demographicsDesc', { defaultValue: 'Gender, occupational background, and personal status' })}
+                  </span>
+                </div>
+              </div>
             </AccordionTrigger>
-            <AccordionContent>
+            <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label={t('profile.sex')}>
                   <Select
-                    value={form.sex || ''}
-                    onValueChange={(v) => setField('sex', v || '')}
+                     value={form.sex || ''}
+                     onValueChange={(v) => setField('sex', v || '')}
                   >
                     <SelectTrigger
-                      className="rounded-xl"
+                      className="rounded-xl bg-card"
                       data-testid="profile-field-sex"
                     >
                       <SelectValue />
@@ -569,7 +609,7 @@ export function ProfileDetailsCard() {
                     onValueChange={(v) => setField('personal_status', v || '')}
                   >
                     <SelectTrigger
-                      className="rounded-xl"
+                      className="rounded-xl bg-card"
                       data-testid="profile-field-personal_status"
                     >
                       <SelectValue />
@@ -604,7 +644,7 @@ export function ProfileDetailsCard() {
                     })}
                     maxLength={80}
                     autoComplete="organization-title"
-                    className="rounded-xl"
+                    className="rounded-xl bg-card"
                     data-testid="profile-field-occupation"
                   />
                 </Field>
@@ -613,21 +653,33 @@ export function ProfileDetailsCard() {
           </AccordionItem>
 
           {/* --- Preferences (units) --- */}
-          <AccordionItem value="preferences">
+          <AccordionItem value="preferences" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
             <AccordionTrigger
-              className="caps-label"
+              className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
               data-testid="profile-accordion-preferences"
             >
-              {t('profile.sections.preferences')} — {t('profile.units')}
+              <div className="flex items-center gap-4 text-start">
+                <div className="p-2.5 rounded-xl bg-[hsl(200_80%_93%)] text-[hsl(200_80%_45%)] dark:bg-[hsl(200_30%_18%)] dark:text-[hsl(200_80%_65%)] shrink-0 transition-transform duration-200">
+                  <Sliders className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('profile.sections.preferences')} — {t('profile.units')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('profile.sections.preferencesDesc', { defaultValue: 'Default measurement scales for sizes, lengths, and weights' })}
+                  </span>
+                </div>
+              </div>
             </AccordionTrigger>
-            <AccordionContent>
+            <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
               <div className="grid grid-cols-2 gap-3">
                 <Field label={t('profile.unitsWeight')}>
                   <Select
                     value={wUnit}
                     onValueChange={(v) => setNested('units', 'weight', v)}
                   >
-                    <SelectTrigger className="rounded-xl" data-testid="profile-unit-weight">
+                    <SelectTrigger className="rounded-xl bg-card" data-testid="profile-unit-weight">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -641,7 +693,7 @@ export function ProfileDetailsCard() {
                     value={lUnit}
                     onValueChange={(v) => setNested('units', 'length', v)}
                   >
-                    <SelectTrigger className="rounded-xl" data-testid="profile-unit-length">
+                    <SelectTrigger className="rounded-xl bg-card" data-testid="profile-unit-length">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -655,14 +707,26 @@ export function ProfileDetailsCard() {
           </AccordionItem>
 
           {/* --- Photos & Avatar --- */}
-          <AccordionItem value="photos">
+          <AccordionItem value="photos" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
             <AccordionTrigger
-              className="caps-label"
+              className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
               data-testid="profile-accordion-photos"
             >
-              {t('profile.sections.photosAvatar', { defaultValue: 'Photos & Avatar' })}
+              <div className="flex items-center gap-4 text-start">
+                <div className="p-2.5 rounded-xl bg-[hsl(320_80%_94%)] text-[hsl(320_80%_56%)] dark:bg-[hsl(320_30%_18%)] dark:text-[hsl(320_80%_70%)] shrink-0 transition-transform duration-200">
+                  <Camera className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('profile.sections.photosAvatar', { defaultValue: 'Photos & Avatar' })}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('profile.sections.photosAvatarDesc', { defaultValue: 'Avatar model visual reference photos and body-render shape' })}
+                  </span>
+                </div>
+              </div>
             </AccordionTrigger>
-            <AccordionContent>
+            <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <PhotoSlot
                   label={t('profile.facePhoto')}
@@ -670,7 +734,7 @@ export function ProfileDetailsCard() {
                   onChange={(v) => setField('face_photo_url', v)}
                   testid="face"
                 />
-                <div className="rounded-2xl border border-border p-3 bg-secondary/40 flex flex-col">
+                <div className="rounded-2xl border border-border p-3 bg-card flex flex-col shadow-inner">
                   <div className="caps-label text-muted-foreground mb-2">
                     {t('profile.sections.digitalAvatar', { defaultValue: '3D Digital Avatar' })}
                   </div>
@@ -686,14 +750,26 @@ export function ProfileDetailsCard() {
           </AccordionItem>
 
           {/* --- Measurements --- */}
-          <AccordionItem value="measurements">
+          <AccordionItem value="measurements" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
             <AccordionTrigger
-              className="caps-label"
+              className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
               data-testid="profile-accordion-measurements"
             >
-              {t('profile.sections.measurements')}
+              <div className="flex items-center gap-4 text-start">
+                <div className="p-2.5 rounded-xl bg-[hsl(142_71%_93%)] text-[hsl(142_71%_35%)] dark:bg-[hsl(142_30%_15%)] dark:text-[hsl(142_71%_55%)] shrink-0 transition-transform duration-200">
+                  <Ruler className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('profile.sections.measurements')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('profile.sections.measurementsDesc', { defaultValue: 'Garment sizing fits (height, chest, waist, and inseams)' })}
+                  </span>
+                </div>
+              </div>
             </AccordionTrigger>
-            <AccordionContent>
+            <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
               <MeasurementsGrid
                 form={form}
                 onChange={(k, v) => setNested('body_measurements', k, v)}
@@ -705,21 +781,33 @@ export function ProfileDetailsCard() {
           </AccordionItem>
 
           {/* --- Hair --- */}
-          <AccordionItem value="hair">
+          <AccordionItem value="hair" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
             <AccordionTrigger
-              className="caps-label"
+              className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
               data-testid="profile-accordion-hair"
             >
-              {t('profile.sections.hair')}
+              <div className="flex items-center gap-4 text-start">
+                <div className="p-2.5 rounded-xl bg-[hsl(38_90%_92%)] text-[hsl(38_90%_45%)] dark:bg-[hsl(38_30%_18%)] dark:text-[hsl(38_90%_65%)] shrink-0 transition-transform duration-200">
+                  <Scissors className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('profile.sections.hair')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('profile.sections.hairDesc', { defaultValue: 'Hair length, type, style, and color properties' })}
+                  </span>
+                </div>
+              </div>
             </AccordionTrigger>
-            <AccordionContent>
+            <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
               <div className="grid grid-cols-2 gap-3">
                 <Field label={t('profile.hairFields.length')}>
                   <Select
                     value={form.hair.length || ''}
                     onValueChange={(v) => setNested('hair', 'length', v)}
                   >
-                    <SelectTrigger className="rounded-xl" data-testid="profile-hair-length">
+                    <SelectTrigger className="rounded-xl bg-card" data-testid="profile-hair-length">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -736,7 +824,7 @@ export function ProfileDetailsCard() {
                     value={form.hair.type || ''}
                     onValueChange={(v) => setNested('hair', 'type', v)}
                   >
-                    <SelectTrigger className="rounded-xl" data-testid="profile-hair-type">
+                    <SelectTrigger className="rounded-xl bg-card" data-testid="profile-hair-type">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -752,7 +840,7 @@ export function ProfileDetailsCard() {
                   <Input
                     value={form.hair.color}
                     onChange={(e) => setNested('hair', 'color', e.target.value)}
-                    className="rounded-xl"
+                    className="rounded-xl bg-card"
                     data-testid="profile-hair-color"
                   />
                 </Field>
@@ -760,7 +848,7 @@ export function ProfileDetailsCard() {
                   <Input
                     value={form.hair.style}
                     onChange={(e) => setNested('hair', 'style', e.target.value)}
-                    className="rounded-xl"
+                    className="rounded-xl bg-card"
                     data-testid="profile-hair-style"
                   />
                 </Field>
@@ -769,24 +857,38 @@ export function ProfileDetailsCard() {
           </AccordionItem>
 
           {/* --- Professional (Phase U) --- */}
-          <AccordionItem value="professional">
+          <AccordionItem value="professional" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
             <AccordionTrigger
-              className="caps-label"
+              className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
               data-testid="profile-accordion-professional"
             >
-              {t('profile.professional.sectionTitle')}
-              {form.professional.is_professional && (
-                <Badge
-                  variant="outline"
-                  className="ms-2 text-[10px] bg-card rounded-full"
-                >
-                  {t('ads.status_active')}
-                </Badge>
-              )}
+              <div className="flex items-center gap-4 text-start">
+                <div className="p-2.5 rounded-xl bg-[hsl(220_80%_93%)] text-[hsl(220_80%_50%)] dark:bg-[hsl(220_30%_18%)] dark:text-[hsl(220_80%_70%)] shrink-0 transition-transform duration-200">
+                  <Briefcase className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                      {t('profile.professional.sectionTitle')}
+                    </span>
+                    {form.professional.is_professional && (
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] bg-[hsl(var(--accent))]/12 text-[hsl(var(--accent))] border-[hsl(var(--accent))]/20 rounded-full py-0.5 px-2 font-semibold"
+                      >
+                        {t('ads.status_active')}
+                      </Badge>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('profile.professional.sectionDesc', { defaultValue: 'Business approval credentials and professional directory listings' })}
+                  </span>
+                </div>
+              </div>
             </AccordionTrigger>
-            <AccordionContent>
+            <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
               <div className="space-y-4">
-                <div className="flex items-start gap-3 rounded-xl border border-border p-3 bg-secondary/40">
+                <div className="flex items-start gap-3 rounded-xl border border-border p-3 bg-card shadow-sm">
                   <Switch
                     checked={form.professional.is_professional}
                     onCheckedChange={(v) =>
@@ -830,7 +932,7 @@ export function ProfileDetailsCard() {
                           placeholder={t(
                             'profile.professional.professionPlaceholder',
                           )}
-                          className="rounded-xl"
+                          className="rounded-xl bg-card"
                           data-testid="profile-professional-profession"
                         />
                       </Field>
@@ -846,7 +948,7 @@ export function ProfileDetailsCard() {
                               },
                             })
                           }
-                          className="rounded-xl"
+                          className="rounded-xl bg-card"
                           data-testid="profile-professional-business-name"
                         />
                       </Field>
@@ -862,7 +964,7 @@ export function ProfileDetailsCard() {
                               },
                             })
                           }
-                          className="rounded-xl"
+                          className="rounded-xl bg-card"
                           data-testid="profile-professional-business-address"
                         />
                       </Field>
@@ -879,7 +981,7 @@ export function ProfileDetailsCard() {
                               },
                             })
                           }
-                          className="rounded-xl"
+                          className="rounded-xl bg-card"
                           data-testid="profile-professional-business-phone"
                         />
                       </Field>
@@ -896,7 +998,7 @@ export function ProfileDetailsCard() {
                               },
                             })
                           }
-                          className="rounded-xl"
+                          className="rounded-xl bg-card"
                           data-testid="profile-professional-business-email"
                         />
                       </Field>
@@ -914,7 +1016,7 @@ export function ProfileDetailsCard() {
                               },
                             })
                           }
-                          className="rounded-xl"
+                          className="rounded-xl bg-card"
                           data-testid="profile-professional-business-website"
                         />
                       </Field>
@@ -932,7 +1034,7 @@ export function ProfileDetailsCard() {
                             },
                           })
                         }
-                        className="rounded-xl"
+                        className="rounded-xl bg-card"
                         data-testid="profile-professional-business-description"
                       />
                     </Field>
@@ -947,24 +1049,38 @@ export function ProfileDetailsCard() {
           </AccordionItem>
 
           {/* --- Payouts (Phase 4P) --- */}
-          <AccordionItem value="payouts">
+          <AccordionItem value="payouts" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
             <AccordionTrigger
-              className="caps-label"
+              className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
               data-testid="profile-accordion-payouts"
             >
-              {t('profile.payouts.sectionTitle')}
-              {form.paypal_receiver_email && (
-                <Badge
-                  variant="outline"
-                  className="ms-2 text-[10px] bg-card rounded-full"
-                >
-                  {t('profile.payouts.linked')}
-                </Badge>
-              )}
+              <div className="flex items-center gap-4 text-start">
+                <div className="p-2.5 rounded-xl bg-[hsl(150_80%_92%)] text-[hsl(150_80%_35%)] dark:bg-[hsl(150_30%_15%)] dark:text-[hsl(150_80%_60%)] shrink-0 transition-transform duration-200">
+                  <CreditCard className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                      {t('profile.payouts.sectionTitle')}
+                    </span>
+                    {form.paypal_receiver_email && (
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] bg-[hsl(var(--accent))]/12 text-[hsl(var(--accent))] border-[hsl(var(--accent))]/20 rounded-full py-0.5 px-2 font-semibold"
+                      >
+                        {t('profile.payouts.linked')}
+                      </Badge>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('profile.payouts.sectionDesc', { defaultValue: 'Linked PayPal billing address for designer and listing sales' })}
+                  </span>
+                </div>
+              </div>
             </AccordionTrigger>
-            <AccordionContent>
+            <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
               <div className="space-y-3">
-                <div className="rounded-xl border border-border p-3 bg-secondary/40 text-xs text-muted-foreground">
+                <div className="rounded-xl border border-border p-3 bg-card text-xs text-muted-foreground shadow-sm">
                   {t('profile.payouts.description')}
                 </div>
                 <Field label={t('profile.payouts.paypalEmail')}>
@@ -975,7 +1091,7 @@ export function ProfileDetailsCard() {
                       setField('paypal_receiver_email', e.target.value)
                     }
                     placeholder={t('components.profileDetailsCard.nameexamplecom')}
-                    className="rounded-xl"
+                    className="rounded-xl bg-card"
                     data-testid="profile-paypal-email"
                   />
                 </Field>
@@ -1006,7 +1122,6 @@ export function ProfileDetailsCard() {
 }
 
 /**
-/**
  * Numeric measurement field. Defined OUTSIDE its parent so React keeps
  * the same component identity across renders — without this, a new
  * function reference would be created on every parent render, React
@@ -1025,7 +1140,7 @@ const MeasurementNumField = ({ field, label, value, onChange, testId }) => (
       autoComplete="off"
       value={value ?? ''}
       onChange={(e) => onChange(field, e.target.value)}
-      className="rounded-xl"
+      className="rounded-xl bg-card"
       data-testid={testId}
     />
   </Field>
@@ -1037,7 +1152,7 @@ const MeasurementTextField = ({ field, label, value, onChange, testId }) => (
       autoComplete="off"
       value={value ?? ''}
       onChange={(e) => onChange(field, e.target.value)}
-      className="rounded-xl"
+      className="rounded-xl bg-card"
       data-testid={testId}
     />
   </Field>
