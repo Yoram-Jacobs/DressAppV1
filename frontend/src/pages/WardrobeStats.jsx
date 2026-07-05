@@ -1,17 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ExploreBackButton } from '@/components/ExploreBackButton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, LineChart, Line, CartesianGrid, AreaChart, Area } from 'recharts';
 import { useClosetStore } from '@/lib/useClosetStore';
-import { DollarSign, Percent, TrendingUp, Shirt, Award, ChevronDown, ChevronUp, Activity, Leaf, ShoppingBag, Droplets, LineChart as ChartIcon } from 'lucide-react';
+import { DollarSign, Percent, TrendingUp, Shirt, Award, ChevronDown, ChevronUp, Activity, Leaf, ShoppingBag, Droplets, LineChart as ChartIcon, CheckSquare, Square, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import api from '@/lib/api';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { labelForColor, canonicalColorKey, labelForMaterial, labelForSubCategory, canonicalMaterialKey, canonicalSubCategoryKey } from '@/lib/taxonomy';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { bestImageUrl } from '@/lib/itemImage';
 
 const COLOR_HEX_MAP = {
   white: '#f8fafc',
@@ -214,18 +215,51 @@ export default function WardrobeStats() {
   const { toast } = useToast();
   const store = useClosetStore();
   const items = store.items || [];
+
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
   const [breakdownType, setBreakdownType] = useState('colors');
   const [chartView, setChartView] = useState('ring');
   const [sustainabilityData, setSustainabilityData] = useState(null);
-
-  const handleMarkDonate = () => {
-    toast({
-      title: "Success",
-      description: "Unworn items flagged for donation. Review them in the Marketplace tab.",
-    });
-    navigate('/market');
+  
+  const [actionType, setActionType] = useState(null);
+  const [selectedItemIds, setSelectedItemIds] = useState([]);
+  
+  const unwornItems = useMemo(() => {
+    return items.filter(it => (it.wear_count || 0) === 0);
+  }, [items]);
+  
+  const toggleSelection = (id) => {
+    setSelectedItemIds(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
   };
+  
+  const [isConfirming, setIsConfirming] = useState(false);
+  const handleConfirmAction = async () => {
+    if (selectedItemIds.length === 0) return;
+    setIsConfirming(true);
+    try {
+      const mode = actionType === 'sell' ? 'for_sale' : 'donate';
+      for (const id of selectedItemIds) {
+        await api.put(`/closet/${id}`, { marketplace_intent: mode, marketplace_visibility: 'public' });
+      }
+      toast({
+        title: "Success",
+        description: actionType === 'sell' ? "Items listed on Marketplace!" : "Items flagged for donation!",
+      });
+      setActionType(null);
+      setSelectedItemIds([]);
+      if (store.fetchItems) store.fetchItems();
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Error", description: "Failed to process items", variant: "destructive" });
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
+
+
 
   useEffect(() => {
     api.get('/closet/stats/sustainability')
@@ -743,16 +777,88 @@ export default function WardrobeStats() {
                   </CardContent>
                 </Card>
 
-                <Card className="rounded-3xl border border-border shadow-sm bg-brand/5 p-6 flex flex-col justify-center text-center">
-                  <Shirt className="h-12 w-12 text-brand mx-auto mb-4 opacity-80" />
-                  <h3 className="font-display font-bold text-xl mb-2">{t('wardrobeStats.sustainability.smartSuggestionTitle', { defaultValue: 'Smart Suggestion' })}</h3>
-                  <p className="text-muted-foreground text-sm mb-6">
-                    {t('wardrobeStats.sustainability.smartSuggestionDesc', { defaultValue: 'You have 8 items that haven\'t been worn in 90 days. Consider listing them on the Marketplace or donating them to keep your closet sustainable.' })}
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    <Button variant="default" onClick={() => navigate('/market/create')} className="w-full rounded-xl bg-brand text-white">{t('wardrobeStats.sustainability.listMarketplace', { defaultValue: 'List on Marketplace' })}</Button>
-                    <Button variant="outline" onClick={handleMarkDonate} className="w-full rounded-xl border-brand/20 text-brand bg-transparent hover:bg-brand/10">{t('wardrobeStats.sustainability.markDonate', { defaultValue: 'Mark to Donate' })}</Button>
-                  </div>
+                <Card className="rounded-3xl border border-border shadow-sm bg-brand/5 p-6 flex flex-col justify-center text-center overflow-hidden flex-1 min-h-[300px]">
+                  {!actionType ? (
+                    <>
+                      <Shirt className="h-12 w-12 text-brand mx-auto mb-4 opacity-80" />
+                      <h3 className="font-display font-bold text-xl mb-2">{t('wardrobeStats.sustainability.smartSuggestionTitle', { defaultValue: 'Smart Suggestion' })}</h3>
+                      <p className="text-muted-foreground text-sm mb-6">
+                        {t('wardrobeStats.sustainability.smartSuggestionDesc', { count: unwornItems.length, defaultValue: `You have ${unwornItems.length} items that haven't been worn in 90 days. Consider listing them on the Marketplace or donating them to keep your closet sustainable.` })}
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        <Button variant="default" onClick={() => { setActionType('sell'); setSelectedItemIds(unwornItems.map(i => i.id)); }} className="w-full rounded-xl bg-brand text-white">{t('wardrobeStats.sustainability.listMarketplace', { defaultValue: 'List on Marketplace' })}</Button>
+                        <Button variant="outline" onClick={() => { setActionType('donate'); setSelectedItemIds(unwornItems.map(i => i.id)); }} className="w-full rounded-xl border-brand/20 text-brand bg-transparent hover:bg-brand/10">{t('wardrobeStats.sustainability.markDonate', { defaultValue: 'Mark to Donate' })}</Button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col h-full w-full text-left">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-display font-bold text-lg text-brand">
+                          {actionType === 'sell' ? 'Select items to sell' : 'Select items to donate'}
+                        </h3>
+                        <Button variant="ghost" size="icon" onClick={() => { setActionType(null); setSelectedItemIds([]); }} className="h-8 w-8 text-muted-foreground hover:bg-black/5 rounded-full">
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="flex-1 overflow-y-auto min-h-0 pr-1 -mr-2 space-y-2 max-h-[220px]">
+                        {unwornItems.map((item) => {
+                          const isSelected = selectedItemIds.includes(item.id);
+                          return (
+                            <div key={item.id} className="flex items-center gap-3 py-2 bg-white/50 rounded-xl px-3 border border-border/50">
+                              <button
+                                onClick={() => toggleSelection(item.id)}
+                                className="text-brand focus:outline-none shrink-0"
+                              >
+                                {isSelected ? (
+                                  <CheckSquare className="h-5 w-5 fill-brand/20 text-brand" />
+                                ) : (
+                                  <Square className="h-5 w-5 text-muted-foreground" />
+                                )}
+                              </button>
+                              
+                              <img
+                                src={bestImageUrl(item) || 'https://via.placeholder.com/150'}
+                                alt={item.title}
+                                className="h-10 w-10 rounded-lg object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={() => navigate(`/closet/${item.id}`)}
+                              />
+                              
+                              <div className="min-w-0 flex-1">
+                                <div 
+                                  className="cursor-pointer hover:underline text-foreground"
+                                  onClick={() => navigate(`/closet/${item.id}`)}
+                                >
+                                  <p className="text-sm font-medium truncate">{item.title || 'Untitled'}</p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {unwornItems.length === 0 && (
+                          <div className="text-center text-muted-foreground text-sm py-4">No unworn items found.</div>
+                        )}
+                      </div>
+                      
+                      <div className="pt-4 mt-auto border-t border-border/50 flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => { setActionType(null); setSelectedItemIds([]); }}
+                          className="flex-1 rounded-xl bg-white border-border"
+                          disabled={isConfirming}
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          onClick={handleConfirmAction} 
+                          className="flex-1 rounded-xl bg-brand text-white"
+                          disabled={selectedItemIds.length === 0 || isConfirming}
+                        >
+                          {isConfirming ? 'Confirming...' : 'Confirm'}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </Card>
               </div>
             </>
