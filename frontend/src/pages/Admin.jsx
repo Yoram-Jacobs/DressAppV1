@@ -94,7 +94,7 @@ function OverviewSection() {
     try {
       setData(await api.adminOverview());
     } catch (err) {
-      toast.error(err?.response?.data?.detail || 'Failed to load overview');
+      toast.error(err?.response?.data?.detail || t('pages.admin.failed_to_load_overview', { defaultValue: 'Failed to load overview' }));
     } finally {
       setLoading(false);
     }
@@ -114,14 +114,14 @@ function OverviewSection() {
 
   const r = data.revenue_cents || {};
   const cards = [
-    { label: t('admin.users', { defaultValue: 'Users' }), value: fmtNum(data.users.total), sub: `+${fmtNum(data.users.new_24h)} new in 24h`, icon: UsersIcon, testid: 'admin-stat-users' },
-    { label: t('pages.admin.closet_items'), value: fmtNum(data.closet_items.total), sub: 'across all users', icon: Sparkles, testid: 'admin-stat-closet' },
-    { label: t('admin.activeListings', { defaultValue: 'Active listings' }), value: fmtNum(data.listings.active), sub: `${fmtNum(data.listings.total)} total`, icon: ShoppingBag, testid: 'admin-stat-listings' },
-    { label: t('nav.transactions', { defaultValue: 'Transactions' }), value: fmtNum(data.transactions.total), sub: `${fmtNum(data.transactions.paid)} paid`, icon: Receipt, testid: 'admin-stat-transactions' },
-    { label: t('pages.admin.gross_volume'), value: fmtCents(r.gross), sub: 'lifetime, paid only', icon: Receipt, testid: 'admin-stat-gross' },
-    { label: t('pages.admin.platform_fees'), value: fmtCents(r.platform_fee), sub: '7% revenue', icon: Receipt, testid: 'admin-stat-platform-fee' },
-    { label: t('pages.admin.stylist_24h'), value: fmtNum(data.stylist.messages_24h), sub: `${fmtNum(data.stylist.messages_7d)} this week`, icon: Activity, testid: 'admin-stat-stylist' },
-    { label: t('pages.admin.trend_cards_live'), value: fmtNum(data.trend_scout.count), sub: 'today\u2019s edition', icon: Sparkles, testid: 'admin-stat-trend' },
+    { label: t('admin.users', { defaultValue: 'Users' }), value: fmtNum(data.users.total), sub: t('pages.admin.new_users_24h', { defaultValue: '+{{count}} new in 24h', count: data.users.new_24h }), icon: UsersIcon, testid: 'admin-stat-users' },
+    { label: t('pages.admin.closet_items'), value: fmtNum(data.closet_items.total), sub: t('pages.admin.across_all_users', { defaultValue: 'across all users' }), icon: Sparkles, testid: 'admin-stat-closet' },
+    { label: t('admin.activeListings', { defaultValue: 'Active listings' }), value: fmtNum(data.listings.active), sub: t('pages.admin.total_count', { count: data.listings.total, defaultValue: '{{count}} total' }), icon: ShoppingBag, testid: 'admin-stat-listings' },
+    { label: t('nav.transactions', { defaultValue: 'Transactions' }), value: fmtNum(data.transactions.total), sub: t('pages.admin.paid_count', { count: data.transactions.paid, defaultValue: '{{count}} paid' }), icon: Receipt, testid: 'admin-stat-transactions' },
+    { label: t('pages.admin.gross_volume'), value: fmtCents(r.gross), sub: t('pages.admin.lifetime_paid_only', { defaultValue: 'lifetime, paid only' }), icon: Receipt, testid: 'admin-stat-gross' },
+    { label: t('pages.admin.platform_fees'), value: fmtCents(r.platform_fee), sub: t('pages.admin.platform_fee_percent_sub', { defaultValue: '7% revenue' }), icon: Receipt, testid: 'admin-stat-platform-fee' },
+    { label: t('pages.admin.stylist_24h'), value: fmtNum(data.stylist.messages_24h), sub: t('pages.admin.messages_this_week', { count: data.stylist.messages_7d, defaultValue: '{{count}} this week' }), icon: Activity, testid: 'admin-stat-stylist' },
+    { label: t('pages.admin.trend_cards_live'), value: fmtNum(data.trend_scout.count), sub: t('pages.admin.todays_edition', { defaultValue: 'today’s edition' }), icon: Sparkles, testid: 'admin-stat-trend' },
   ];
 
   return (
@@ -308,10 +308,10 @@ function TrendScoutSection() {
     setBusy(true);
     try {
       const res = await api.adminTrendScoutRun(true);
-      toast.success(`Generated ${res.generated?.length || 0} card(s)`);
+      toast.success(t('pages.admin.generated_cards', { defaultValue: 'Generated {{count}} card(s)', count: res.generated?.length || 0 }));
       await refresh();
     } catch (err) {
-      toast.error(err?.response?.data?.detail || 'Run failed');
+      toast.error(err?.response?.data?.detail || t('pages.admin.run_failed', { defaultValue: 'Run failed' }));
     } finally { setBusy(false); }
   };
 
@@ -376,10 +376,10 @@ function UsersSection() {
     try {
       if (isAdmin) await api.adminDemoteUser(u.id);
       else await api.adminPromoteUser(u.id);
-      toast.success(isAdmin ? 'Removed admin role' : 'Promoted to admin');
+      toast.success(isAdmin ? t('pages.admin.removed_admin_role', { defaultValue: 'Removed admin role' }) : t('pages.admin.promoted_to_admin', { defaultValue: 'Promoted to admin' }));
       refresh();
     } catch (err) {
-      toast.error(err?.response?.data?.detail || 'Action failed');
+      toast.error(err?.response?.data?.detail || t('pages.admin.action_failed', { defaultValue: 'Action failed' }));
     }
   };
 
@@ -500,10 +500,10 @@ function ListingsSection() {
   const setListingStatus = async (id, newStatus) => {
     try {
       await api.adminSetListingStatus(id, newStatus);
-      toast.success(`Listing set to ${newStatus}`);
+      toast.success(t('pages.admin.listing_status_updated', { defaultValue: 'Listing set to {{status}}', status: newStatus }));
       refresh();
     } catch (err) {
-      toast.error(err?.response?.data?.detail || 'Update failed');
+      toast.error(err?.response?.data?.detail || t('pages.admin.update_failed', { defaultValue: 'Update failed' }));
     }
   };
 
@@ -519,7 +519,7 @@ function ListingsSection() {
             className="rounded-xl"
             data-testid={`admin-listings-filter-${s || 'all'}`}
           >
-            {s || 'All'}
+            {s || t('pages.admin.all', { defaultValue: 'All' })}
           </Button>
         ))}
       </div>

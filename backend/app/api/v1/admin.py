@@ -71,6 +71,18 @@ async def overview(_: dict = Depends(require_admin)) -> dict[str, Any]:
             }
         )
 
+    # Add captured credit topups to overall application revenue
+    topup_pipeline = [
+        {"$match": {"status": "captured"}},
+        {"$group": {"_id": None, "total": {"$sum": "$amount_cents"}}},
+    ]
+    topups_total_cents = 0
+    async for row in db.credit_topups.aggregate(topup_pipeline):
+        topups_total_cents = row.get("total", 0)
+
+    revenue["gross"] += topups_total_cents
+    revenue["platform_fee"] += topups_total_cents
+
     stylist_24h = await db.stylist_messages.count_documents(
         {"created_at": {"$gte": last_24h}}
     )
