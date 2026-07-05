@@ -19,6 +19,7 @@ import { browseStore, myListingsStore } from '@/lib/marketplaceStore';
 import { useMarketplaceProgress } from '@/lib/useMarketplaceProgress';
 import { useCachedList } from '@/lib/createCachedStore';
 import { toast } from 'sonner';
+import { ScrollToTop } from '@/components/ScrollToTop';
 
 const fmt = (cents, cur = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format((cents || 0) / 100);
@@ -266,6 +267,7 @@ export default function Marketplace() {
         <TabsContent value="mine"><MyListings /></TabsContent>
         <TabsContent value="tx"><InlineTransactions /></TabsContent>
       </Tabs>
+      <ScrollToTop />
     </div>
   );
 }
