@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Camera, Image as ImgIcon, Save, Trash2, Loader2, Sparkles,
-  User, MapPin, Fingerprint, Sliders, Ruler, Scissors, Briefcase, CreditCard
+  User, MapPin, Fingerprint, Sliders, Ruler, Scissors, Briefcase, CreditCard, Palette
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -247,6 +247,10 @@ export function ProfileDetailsCard() {
         },
       },
       paypal_receiver_email: user?.paypal_receiver_email || '',
+      aesthetics: (user?.style_profile?.aesthetics || []).join(', '),
+      color_palette: (user?.style_profile?.color_palette || []).join(', '),
+      avoid: (user?.style_profile?.avoid || []).join(', '),
+      dress_conservativeness: user?.cultural_context?.dress_conservativeness || 'moderate',
     }),
     [user],
   );
@@ -314,6 +318,16 @@ export function ProfileDetailsCard() {
             }
           : { is_professional: false },
         paypal_receiver_email: form.paypal_receiver_email || null,
+        style_profile: {
+          ...user?.style_profile,
+          aesthetics: form.aesthetics ? form.aesthetics.split(',').map((s) => s.trim()).filter(Boolean) : [],
+          color_palette: form.color_palette ? form.color_palette.split(',').map((s) => s.trim()).filter(Boolean) : [],
+          avoid: form.avoid ? form.avoid.split(',').map((s) => s.trim()).filter(Boolean) : [],
+        },
+        cultural_context: {
+          ...user?.cultural_context,
+          dress_conservativeness: form.dress_conservativeness,
+        },
       };
       const updated = await api.patchMe(payload);
       updateUserLocal?.(updated);
@@ -747,6 +761,77 @@ export function ProfileDetailsCard() {
                     {t('profile.sections.avatarGenerationDesc', { defaultValue: 'Generated from your body measurements below.' })}
                   </div>
                 </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* --- Style Profile --- */}
+          <AccordionItem value="style" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
+            <AccordionTrigger
+              className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+              data-testid="profile-accordion-style"
+            >
+              <div className="flex items-center gap-4 text-start">
+                <div className="p-2.5 rounded-xl bg-[hsl(210_80%_95%)] text-[hsl(210_80%_45%)] dark:bg-[hsl(210_30%_18%)] dark:text-[hsl(210_80%_65%)] shrink-0 transition-transform duration-200">
+                  <Palette className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('profile.styleProfile')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('profile.styleProfileDesc', { defaultValue: 'Aesthetics, color palette preferences, things to avoid, and conservativeness' })}
+                  </span>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Field label={t('profile.aesthetics')} htmlFor="f-aesthetics">
+                  <Input
+                    id="f-aesthetics"
+                    value={form.aesthetics}
+                    onChange={(e) => setField('aesthetics', e.target.value)}
+                    placeholder={t('profile.aestheticsPlaceholder')}
+                    className="rounded-xl bg-card"
+                    data-testid="settings-aesthetics"
+                  />
+                </Field>
+                <Field label={t('profile.colorPalette')} htmlFor="f-palette">
+                  <Input
+                    id="f-palette"
+                    value={form.color_palette}
+                    onChange={(e) => setField('color_palette', e.target.value)}
+                    placeholder={t('profile.colorPalettePlaceholder')}
+                    className="rounded-xl bg-card"
+                    data-testid="settings-palette"
+                  />
+                </Field>
+                <Field label={t('profile.avoid')} htmlFor="f-avoid">
+                  <Input
+                    id="f-avoid"
+                    value={form.avoid}
+                    onChange={(e) => setField('avoid', e.target.value)}
+                    placeholder={t('profile.avoidPlaceholder')}
+                    className="rounded-xl bg-card"
+                    data-testid="settings-avoid"
+                  />
+                </Field>
+                <Field label={t('profile.conservativeness')}>
+                  <Select
+                    value={form.dress_conservativeness}
+                    onValueChange={(v) => setField('dress_conservativeness', v)}
+                  >
+                    <SelectTrigger className="rounded-xl bg-card" data-testid="settings-conservativeness">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">{t('profile.conservLow')}</SelectItem>
+                      <SelectItem value="moderate">{t('profile.conservModerate')}</SelectItem>
+                      <SelectItem value="high">{t('profile.conservHigh')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
               </div>
             </AccordionContent>
           </AccordionItem>
