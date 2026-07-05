@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
@@ -693,6 +693,28 @@ export default function Profile() {
   const [busy, setBusy] = useState(false);
   const [langBusy, setLangBusy] = useState(false);
 
+  const isDirty = useMemo(() => {
+    if (!user) return false;
+    const initial = {
+      display_name: user.display_name || '',
+      phone: user.phone || '',
+      preferred_language: (user.preferred_language || i18n.language || 'en').toLowerCase(),
+      preferred_voice_id: user.preferred_voice_id || 'aura-2-thalia-en',
+      home_city: user.home_location?.city || '',
+      home_lat: user.home_location?.lat ?? '',
+      home_lng: user.home_location?.lng ?? '',
+      aesthetics: (user.style_profile?.aesthetics || []).join(', '),
+      color_palette: (user.style_profile?.color_palette || []).join(', '),
+      avoid: (user.style_profile?.avoid || []).join(', '),
+      region: user.cultural_context?.region || '',
+      dress_conservativeness: user.cultural_context?.dress_conservativeness || 'moderate',
+    };
+
+    return Object.keys(initial).some(
+      (key) => String(form[key]) !== String(initial[key])
+    );
+  }, [user, form, i18n.language]);
+
   useEffect(() => {
     if (user?.preferred_language) {
       const code = user.preferred_language.toLowerCase();
@@ -972,14 +994,16 @@ export default function Profile() {
             </div>
             
             {/* Floating Save Changes Button */}
-            <Button 
-              type="submit" 
-              disabled={busy} 
-              className="fixed bottom-20 end-6 md:bottom-8 md:end-8 z-40 shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 rounded-full h-12 w-12 p-0 flex items-center justify-center"
-              data-testid="settings-save-button"
-            >
-              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
-            </Button>
+            {isDirty && (
+              <Button 
+                type="submit" 
+                disabled={busy} 
+                className="fixed bottom-20 end-6 md:bottom-8 md:end-8 z-40 shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 rounded-full h-12 w-12 p-0 flex items-center justify-center"
+                data-testid="settings-save-button"
+              >
+                {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+              </Button>
+            )}
           </form>
 
           {/*
