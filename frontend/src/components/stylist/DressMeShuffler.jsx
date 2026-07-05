@@ -20,7 +20,7 @@ import { Label } from '@/components/ui/label';
 const DRESS_CODE_OPTIONS = ['all', 'casual', 'smart-casual', 'business', 'formal', 'athletic', 'loungewear'];
 
 export default function DressMeShuffler({ onSaveSuccess }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const store = useClosetStore();
   const items = store.items || [];
 
