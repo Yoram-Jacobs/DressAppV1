@@ -298,7 +298,8 @@ function AIConfigurationAccordionItem() {
         updateUserLocal(freshUser);
       }
     }).catch(console.error);
-  }, [updateUserLocal]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   const currentCredits = user?.ai_configuration?.current_credits ?? 1000;
   const creditsUsed = user?.ai_configuration?.credits_used_this_month ?? 0;
