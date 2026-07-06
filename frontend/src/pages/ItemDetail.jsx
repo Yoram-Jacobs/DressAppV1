@@ -26,6 +26,13 @@ import {
   BadgeCheck,
   ExternalLink,
   Search,
+  Tag,
+  Sliders,
+  Calendar,
+  Palette,
+  CreditCard,
+  Ruler,
+  Briefcase,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollToTop } from '@/components/ScrollToTop';
@@ -433,7 +440,7 @@ function PillMultiSelect({ value, options, onChange, testidPrefix, format }) {
 }
 
 /* -------------------- single-select shadcn wrapper that tolerates "" -------------------- */
-function NullableSelect({ value, onChange, options, placeholder, testid, format }) {
+function NullableSelect({ value, onChange, options, placeholder, testid, format, className }) {
   // Shadcn Select rejects empty string as a value; we map "" -> __none__ for the control.
   const v = value || '__none__';
   return (
@@ -441,7 +448,7 @@ function NullableSelect({ value, onChange, options, placeholder, testid, format 
       value={v}
       onValueChange={(next) => onChange(next === '__none__' ? '' : next)}
     >
-      <SelectTrigger className="rounded-xl h-10" data-testid={testid}>
+      <SelectTrigger className={`rounded-xl h-10 ${className || ''}`} data-testid={testid}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
@@ -1784,11 +1791,19 @@ export default function ItemDetail() {
           <DppPanel dppData={item.dpp_data} />
 
           {/* Clean background card (Phase V Fix 2) */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial" data-testid="item-clean-bg-card">
+          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(325_80%_65%)]" data-testid="item-clean-bg-card">
             <CardContent className="p-5 space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <div className="caps-label text-muted-foreground">
-                  {t('itemDetail.cleanBackground.label')}
+              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
+                <div className="p-2 rounded-xl bg-[hsl(325_80%_95%)] text-[hsl(325_80%_50%)] dark:bg-[hsl(325_30%_18%)] dark:text-[hsl(325_80%_70%)] shrink-0">
+                  <Wand2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('itemDetail.cleanBackground.label')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('itemDetail.edit.sectionCleanBgDesc', { defaultValue: 'Remove background using non-generative matting models' })}
+                  </span>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -1839,12 +1854,22 @@ export default function ItemDetail() {
               skips auto-analysis), or to recover from a bad first
               analysis without re-uploading. */}
           <Card
-            className="rounded-[calc(var(--radius)+6px)] shadow-editorial"
+            className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(199_89%_65%)]"
             data-testid="item-reanalyze-card"
           >
             <CardContent className="p-5 space-y-3">
-              <div className="caps-label text-muted-foreground">
-                {t('itemDetail.reanalyze.label')}
+              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
+                <div className="p-2 rounded-xl bg-[hsl(199_89%_95%)] text-[hsl(199_89%_48%)] dark:bg-[hsl(199_30%_18%)] dark:text-[hsl(199_89%_70%)] shrink-0">
+                  <RefreshCw className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('itemDetail.reanalyze.label')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('itemDetail.edit.sectionReanalyseDesc', { defaultValue: 'Re-run analysis to extract details from the image' })}
+                  </span>
+                </div>
               </div>
               <p className="text-sm text-muted-foreground">
                 {t('itemDetail.reanalyze.subtitle')}
@@ -1899,15 +1924,27 @@ export default function ItemDetail() {
         <div className="md:col-span-2 space-y-4" data-testid="item-edit-form">
 
           {/* Identity */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
+          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(271_81%_65%)]">
             <CardContent className="p-5 space-y-3">
-              <div className="caps-label text-muted-foreground">{t('itemDetail.edit.sectionIdentity')}</div>
+              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
+                <div className="p-2 rounded-xl bg-[hsl(271_81%_95%)] text-[hsl(271_81%_56%)] dark:bg-[hsl(271_30%_18%)] dark:text-[hsl(271_81%_70%)] shrink-0">
+                  <Tag className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('itemDetail.edit.sectionIdentity')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('itemDetail.edit.sectionIdentityDesc', { defaultValue: 'Item title, name, brand, and description details' })}
+                  </span>
+                </div>
+              </div>
               <Field label={t('itemDetail.edit.title')} htmlFor="f-title" required>
                 <Input
                   id="f-title"
                   value={form.title}
                   onChange={(e) => setField('title', e.target.value)}
-                  className="rounded-xl"
+                  className={`rounded-xl ${!form.title ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
                   data-testid="item-edit-field-title"
                 />
               </Field>
@@ -1916,7 +1953,7 @@ export default function ItemDetail() {
                   id="f-name"
                   value={form.name}
                   onChange={(e) => setField('name', e.target.value)}
-                  className="rounded-xl"
+                  className={`rounded-xl ${!form.name ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
                   data-testid="item-edit-field-name"
                 />
               </Field>
@@ -1925,7 +1962,7 @@ export default function ItemDetail() {
                   id="f-brand"
                   value={form.brand}
                   onChange={(e) => setField('brand', e.target.value)}
-                  className="rounded-xl"
+                  className={`rounded-xl ${!form.brand ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
                   data-testid="item-edit-field-brand"
                 />
               </Field>
@@ -1935,7 +1972,7 @@ export default function ItemDetail() {
                   value={form.caption}
                   onChange={(e) => setField('caption', e.target.value)}
                   rows={2}
-                  className="rounded-xl resize-none"
+                  className={`rounded-xl resize-none ${!form.caption ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
                   data-testid="item-edit-field-caption"
                 />
               </Field>
@@ -1943,9 +1980,21 @@ export default function ItemDetail() {
           </Card>
 
           {/* Taxonomy */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
+          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(250_95%_70%)]">
             <CardContent className="p-5 space-y-3">
-              <div className="caps-label text-muted-foreground">{t('itemDetail.edit.sectionTaxonomy')}</div>
+              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
+                <div className="p-2 rounded-xl bg-[hsl(250_95%_95%)] text-[hsl(250_95%_56%)] dark:bg-[hsl(250_30%_18%)] dark:text-[hsl(250_95%_75%)] shrink-0">
+                  <Sliders className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('itemDetail.edit.sectionTaxonomy')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('itemDetail.edit.sectionTaxonomyDesc', { defaultValue: 'Category, item type, gender, and aesthetic styles' })}
+                  </span>
+                </div>
+              </div>
               <Field label={t('itemDetail.edit.category')}>
                 <NullableSelect
                   value={form.category}
@@ -1954,6 +2003,7 @@ export default function ItemDetail() {
                   placeholder={t('itemDetail.edit.category')}
                   testid="item-edit-field-category"
                   format={(o) => labelForCategory(o, t)}
+                  className={!form.category ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
                 />
               </Field>
               <Field label={t('itemDetail.edit.subCategory')} htmlFor="f-sub">
@@ -1961,7 +2011,7 @@ export default function ItemDetail() {
                   id="f-sub"
                   value={form.sub_category}
                   onChange={(e) => setField('sub_category', e.target.value)}
-                  className="rounded-xl"
+                  className={`rounded-xl ${!form.sub_category ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
                   data-testid="item-edit-field-sub_category"
                 />
                 <LocalizedHint raw={form.sub_category} translated={labelForSubCategory(form.sub_category, t)} />
@@ -1971,7 +2021,7 @@ export default function ItemDetail() {
                   id="f-itemtype"
                   value={form.item_type}
                   onChange={(e) => setField('item_type', e.target.value)}
-                  className="rounded-xl"
+                  className={`rounded-xl ${!form.item_type ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
                   data-testid="item-edit-field-item_type"
                 />
                 <LocalizedHint raw={form.item_type} translated={labelForItemType(form.item_type, t)} />
@@ -1985,6 +2035,7 @@ export default function ItemDetail() {
                     placeholder="—"
                     testid="item-edit-field-gender"
                     format={(o) => labelForGender(o, t)}
+                    className={!form.gender ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
                   />
                 </Field>
                 <Field label={t('itemDetail.edit.dressCode')}>
@@ -1995,6 +2046,7 @@ export default function ItemDetail() {
                     placeholder="—"
                     testid="item-edit-field-dress_code"
                     format={(o) => labelForDressCode(o, t)}
+                    className={!form.dress_code ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
                   />
                 </Field>
               </div>
@@ -2012,7 +2064,7 @@ export default function ItemDetail() {
                   id="f-tradition"
                   value={form.tradition}
                   onChange={(e) => setField('tradition', e.target.value)}
-                  className="rounded-xl"
+                  className={`rounded-xl ${!form.tradition ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
                   placeholder={t('itemDetail.edit.traditionPlaceholder')}
                   data-testid="item-edit-field-tradition"
                 />
@@ -2021,16 +2073,28 @@ export default function ItemDetail() {
           </Card>
 
           {/* Composition */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
+          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(187_92%_60%)]">
             <CardContent className="p-5 space-y-3">
-              <div className="caps-label text-muted-foreground">{t('itemDetail.edit.sectionComposition')}</div>
+              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
+                <div className="p-2 rounded-xl bg-[hsl(187_92%_95%)] text-[hsl(187_92%_45%)] dark:bg-[hsl(187_30%_18%)] dark:text-[hsl(187_92%_65%)] shrink-0">
+                  <Palette className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('itemDetail.edit.sectionComposition')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('itemDetail.edit.sectionCompositionDesc', { defaultValue: 'Garment size, colors, patterns, and fabric materials' })}
+                  </span>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <Field label={t('itemDetail.edit.size')} htmlFor="f-size">
                   <Input
                     id="f-size"
                     value={form.size}
                     onChange={(e) => setField('size', e.target.value)}
-                    className="rounded-xl"
+                    className={`rounded-xl ${!form.size ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
                     data-testid="item-edit-field-size"
                   />
                 </Field>
@@ -2039,7 +2103,7 @@ export default function ItemDetail() {
                     id="f-color"
                     value={form.color}
                     onChange={(e) => setField('color', e.target.value)}
-                    className="rounded-xl"
+                    className={`rounded-xl ${!form.color ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
                     data-testid="item-edit-field-color"
                   />
                   <LocalizedHint raw={form.color} translated={labelForColor(form.color, t)} />
@@ -2053,6 +2117,7 @@ export default function ItemDetail() {
                     placeholder="—"
                     testid="item-edit-field-pattern"
                     format={(o) => labelForPattern(o, t)}
+                    className={!form.pattern ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
                   />
                 </Field>
               </div>
@@ -2079,9 +2144,21 @@ export default function ItemDetail() {
           </Card>
 
           {/* Quality */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
+          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(142_72%_50%)]">
             <CardContent className="p-5 space-y-3">
-              <div className="caps-label text-muted-foreground">{t('itemDetail.edit.sectionQuality')}</div>
+              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
+                <div className="p-2 rounded-xl bg-[hsl(142_72%_95%)] text-[hsl(142_72%_33%)] dark:bg-[hsl(142_30%_18%)] dark:text-[hsl(142_72%_55%)] shrink-0">
+                  <Ruler className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('itemDetail.edit.sectionQuality')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('itemDetail.edit.sectionQualityDesc', { defaultValue: 'Garment state, wear condition, and repair advice' })}
+                  </span>
+                </div>
+              </div>
               <div className="grid grid-cols-3 gap-3">
                 <Field label={t('itemDetail.edit.state')}>
                   <NullableSelect
@@ -2091,6 +2168,7 @@ export default function ItemDetail() {
                     placeholder="—"
                     testid="item-edit-field-state"
                     format={(o) => labelForState(o, t)}
+                    className={!form.state ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
                   />
                 </Field>
                 <Field label={t('itemDetail.edit.condition')}>
@@ -2101,6 +2179,7 @@ export default function ItemDetail() {
                     placeholder="—"
                     testid="item-edit-field-condition"
                     format={(o) => labelForCondition(o, t)}
+                    className={!form.condition ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
                   />
                 </Field>
                 <Field label={t('itemDetail.edit.qualityTier')}>
@@ -2111,6 +2190,7 @@ export default function ItemDetail() {
                     placeholder="—"
                     testid="item-edit-field-quality"
                     format={(o) => labelForQuality(o, t)}
+                    className={!form.quality ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
                   />
                 </Field>
               </div>
@@ -2120,7 +2200,7 @@ export default function ItemDetail() {
                   value={form.repair_advice}
                   onChange={(e) => setField('repair_advice', e.target.value)}
                   rows={2}
-                  className="rounded-xl resize-none"
+                  className={`rounded-xl resize-none ${!form.repair_advice ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
                   data-testid="item-edit-field-repair_advice"
                 />
               </Field>
@@ -2128,9 +2208,21 @@ export default function ItemDetail() {
           </Card>
 
           {/* Pricing & intent */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
+          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(174_44%_50%)]">
             <CardContent className="p-5 space-y-3">
-              <div className="caps-label text-muted-foreground">{t('itemDetail.edit.sectionPricing')}</div>
+              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
+                <div className="p-2 rounded-xl bg-[hsl(174_44%_93%)] text-[hsl(174_44%_33%)] dark:bg-[hsl(174_30%_18%)] dark:text-[hsl(174_44%_60%)] shrink-0">
+                  <CreditCard className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('itemDetail.edit.sectionPricing')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('itemDetail.edit.sectionPricingDesc', { defaultValue: 'Item purchase or retail pricing and transaction intent' })}
+                  </span>
+                </div>
+              </div>
               <div className="grid grid-cols-3 gap-3">
                 <Field
                   label={`${t('itemDetail.edit.priceCents', { defaultValue: 'Price' })} (${form.currency || 'USD'})`}
@@ -2142,12 +2234,6 @@ export default function ItemDetail() {
                     min="0"
                     step="1"
                     inputMode="numeric"
-                    // Integer-only: whole currency units. The form
-                    // value lives in units (e.g. ``29`` for ₪29) and
-                    // ``diffPatch`` re-multiplies by 100 on save —
-                    // see the ``price_cents`` branch in diffPatch
-                    // for why fractional cents are deliberately
-                    // dropped from the UI.
                     value={form.price_cents === '' || form.price_cents == null || form.price_cents === 0 ? '' : form.price_cents}
                     onChange={(e) => {
                       const raw = e.target.value;
@@ -2158,7 +2244,7 @@ export default function ItemDetail() {
                       );
                     }}
                     placeholder="0"
-                    className="rounded-xl"
+                    className={`rounded-xl ${!form.price_cents ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
                     data-testid="item-edit-field-price_cents"
                   />
                 </Field>
@@ -2169,7 +2255,7 @@ export default function ItemDetail() {
                     list="currency-options"
                     value={form.currency || ''}
                     onChange={(e) => setField('currency', e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
-                    className="uppercase rounded-xl"
+                    className={`uppercase rounded-xl ${!form.currency ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
                     placeholder={t('addItem.currencyPlaceholder', { defaultValue: 'USD' })}
                     data-testid="item-edit-field-currency"
                   />
@@ -2187,6 +2273,7 @@ export default function ItemDetail() {
                     placeholder={t('addItem.sourceTagPlaceholder', { defaultValue: 'own' })}
                     testid="item-edit-field-marketplace_intent"
                     format={(o) => labelForIntent(o, t)}
+                    className={!form.marketplace_intent ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
                   />
                 </Field>
               </div>
@@ -2194,9 +2281,21 @@ export default function ItemDetail() {
           </Card>
 
           {/* Organization */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
+          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(346_87%_60%)]">
             <CardContent className="p-5 space-y-3">
-              <div className="caps-label text-muted-foreground">{t('itemDetail.edit.sectionOrganization')}</div>
+              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
+                <div className="p-2 rounded-xl bg-[hsl(346_87%_95%)] text-[hsl(346_87%_53%)] dark:bg-[hsl(346_30%_18%)] dark:text-[hsl(346_87%_70%)] shrink-0">
+                  <Ruler className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('itemDetail.edit.sectionOrganization')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('itemDetail.edit.sectionOrganizationDesc', { defaultValue: 'Outfit formality level, tags, and cultural styling notes' })}
+                  </span>
+                </div>
+              </div>
               <Field label={t('itemDetail.edit.formality')}>
                 <NullableSelect
                   value={form.formality}
@@ -2205,6 +2304,7 @@ export default function ItemDetail() {
                   placeholder="—"
                   testid="item-edit-field-formality"
                   format={(o) => labelForFormality(o, t)}
+                  className={!form.formality ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
                 />
               </Field>
               <Field label={t('itemDetail.edit.tags')}>
@@ -2229,7 +2329,7 @@ export default function ItemDetail() {
                   value={form.notes}
                   onChange={(e) => setField('notes', e.target.value)}
                   rows={3}
-                  className="rounded-xl resize-none"
+                  className={`rounded-xl resize-none ${!form.notes ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
                   data-testid="item-edit-field-notes"
                 />
               </Field>
@@ -2237,15 +2337,26 @@ export default function ItemDetail() {
           </Card>
 
           {/* Variant generator (existing) */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial" data-testid="item-edit-image-card">
+          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(271_81%_65%)]" data-testid="item-edit-image-card">
             <CardContent className="p-5 space-y-3">
-              <div className="caps-label text-muted-foreground">{t('itemDetail.generateVariant')}</div>
-              <p className="text-sm text-muted-foreground">{t('itemDetail.generateVariantSub')}</p>
+              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
+                <div className="p-2 rounded-xl bg-[hsl(271_81%_95%)] text-[hsl(271_81%_56%)] dark:bg-[hsl(271_30%_18%)] dark:text-[hsl(271_81%_70%)] shrink-0">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('itemDetail.generateVariant')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('itemDetail.generateVariantDesc', { defaultValue: 'Create new variations of this item using Generative AI' })}
+                  </span>
+                </div>
+              </div>
               <Input
                 value={editPrompt}
                 onChange={(e) => setEditPrompt(e.target.value)}
                 placeholder={t('itemDetail.variantPlaceholder')}
-                className="rounded-xl"
+                className={`rounded-xl ${!editPrompt.trim() ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
                 data-testid="item-edit-prompt-input"
               />
               <Button onClick={onGenerateVariant} disabled={editing || !editPrompt.trim()} className="w-full rounded-xl" data-testid="item-generate-variant-button">
