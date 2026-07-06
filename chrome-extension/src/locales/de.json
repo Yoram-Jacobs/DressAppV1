@@ -1,5 +1,6 @@
 {
   "title": "DressApp",
+  "enableAssistant": "Einkaufsassistent",
   "subtitle": "Einkaufsassistent",
   "connect": "Mit DressApp verbinden",
   "staleSession": "Ihre vorherige Sitzung ist nicht mehr gültig. Verbinden Sie sich erneut, um fortzufahren.",

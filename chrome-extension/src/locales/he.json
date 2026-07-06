@@ -1,5 +1,6 @@
 {
   "title": "DressApp",
+  "enableAssistant": "עוזר קניות פעיל",
   "subtitle": "עוזר קניות",
   "connect": "התחברות ל-DressApp",
   "staleSession": "החיבור הקודם שלך אינו תקף יותר. יש להתחבר מחדש כדי להמשיך.",

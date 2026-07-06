@@ -784,7 +784,7 @@ export default function Profile() {
             <div className="mt-3 md:mt-0 md:ms-auto w-full md:w-72">
               <Select
                 value={form.preferred_language}
-                onLanguageChange={onLanguageChange}
+                onValueChange={onLanguageChange}
                 disabled={langBusy}
               >
                 <SelectTrigger className="rounded-xl" data-testid="language-selector">

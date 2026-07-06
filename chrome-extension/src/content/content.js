@@ -708,27 +708,83 @@ function _loadImage(src) {
 }
 
 // ---------------------------------------------------------------------
-// Mount lifecycle
+// Mount lifecycle & Toggle State
 // ---------------------------------------------------------------------
+let widgetEnabled = true;
+
+async function checkEnabledState() {
+  try {
+    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+      const res = await chrome.storage.local.get(['widget_enabled']);
+      widgetEnabled = res.widget_enabled !== false;
+    } else {
+      const res = localStorage.getItem('dressapp_widget_enabled');
+      widgetEnabled = res !== 'false';
+    }
+  } catch (_) {
+    widgetEnabled = true;
+  }
+}
+
+function removeWidget() {
+  const fab = document.getElementById(FAB_ID);
+  if (fab) fab.remove();
+  document.querySelectorAll('.dressapp-anchor-btn').forEach((btn) => btn.remove());
+  document.querySelectorAll(`[${ANCHOR_MOUNTED_ATTR}]`).forEach((el) => {
+    el.removeAttribute(ANCHOR_MOUNTED_ATTR);
+  });
+  dismissOverlay();
+}
+
 let pending = false;
-function scheduleMount() {
+async function scheduleMount() {
   if (pending) return;
   pending = true;
-  requestAnimationFrame(() => {
+  requestAnimationFrame(async () => {
     pending = false;
+    await checkEnabledState();
+    if (!widgetEnabled) {
+      removeWidget();
+      return;
+    }
     mountAnchorButton();
     ensureFab();
   });
 }
 
+// Watch for storage changes in extension environment
+if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+  chrome.storage.onChanged.addListener((changes) => {
+    if (changes.widget_enabled) {
+      widgetEnabled = changes.widget_enabled.newValue !== false;
+      if (widgetEnabled) {
+        void scheduleMount();
+      } else {
+        removeWidget();
+      }
+    }
+  });
+}
+
+// Watch for postMessage changes in mobile/webview environment
+window.addEventListener('message', (e) => {
+  if (e.data && e.data.type === 'DRESSAPP_WIDGET_TOGGLE') {
+    widgetEnabled = e.data.enabled !== false;
+    if (widgetEnabled) {
+      void scheduleMount();
+    } else {
+      removeWidget();
+    }
+  }
+});
+
 const observer = new MutationObserver(scheduleMount);
 observer.observe(document.documentElement, { subtree: true, childList: true });
-mountAnchorButton();
-ensureFab();
+void scheduleMount();
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !_cropActive) {
     dismissOverlay();
-    showFab();
+    if (widgetEnabled) showFab();
   }
 }, true);

@@ -31,11 +31,42 @@ export default function Popup() {
     error: null,
     backend: null, // origin we're talking to — purely informational
   });
+  const [widgetEnabled, setWidgetEnabled] = useState(true);
 
   // Dynamically update layout direction based on language
   useEffect(() => {
     document.documentElement.dir = isRtl(i18n.language) ? 'rtl' : 'ltr';
   }, [i18n.language]);
+
+  // Load initial widget state
+  useEffect(() => {
+    async function loadWidgetState() {
+      try {
+        if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+          const res = await chrome.storage.local.get(['widget_enabled']);
+          setWidgetEnabled(res.widget_enabled !== false);
+        } else {
+          const res = localStorage.getItem('dressapp_widget_enabled');
+          setWidgetEnabled(res !== 'false');
+        }
+      } catch (_) {}
+    }
+    void loadWidgetState();
+  }, []);
+
+  async function toggleWidget() {
+    const nextState = !widgetEnabled;
+    setWidgetEnabled(nextState);
+    try {
+      if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+        await chrome.storage.local.set({ widget_enabled: nextState });
+      } else {
+        localStorage.setItem('dressapp_widget_enabled', String(nextState));
+        // Dispatch global postMessage for mobile WebView context
+        window.postMessage({ type: 'DRESSAPP_WIDGET_TOGGLE', enabled: nextState }, '*');
+      }
+    } catch (_) {}
+  }
 
   async function refresh() {
     setState((s) => ({ ...s, phase: 'loading', error: null }));
@@ -121,6 +152,20 @@ export default function Popup() {
           dressapp.co <ExternalLink className="h-3 w-3" />
         </a>
       </header>
+
+      {/* Toggle switch for enabling/disabling the overlay widget */}
+      <div className="flex items-center justify-between rounded-xl border bg-muted/20 px-3 py-2 text-xs">
+        <span className="font-medium text-muted-foreground">{t('enableAssistant', { defaultValue: 'Shopping Assistant' })}</span>
+        <button
+          onClick={toggleWidget}
+          className={`relative inline-flex h-5.5 w-10 items-center rounded-full px-0.5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${widgetEnabled ? 'bg-emerald-500' : 'bg-slate-300'} ${widgetEnabled ? 'justify-end' : 'justify-start'}`}
+          role="switch"
+          aria-checked={widgetEnabled}
+          data-testid="widget-toggle"
+        >
+          <span className="inline-block h-4 w-4 rounded-full bg-background shadow" />
+        </button>
+      </div>
 
       {state.phase === 'loading' ? (
         <div className="flex h-32 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
