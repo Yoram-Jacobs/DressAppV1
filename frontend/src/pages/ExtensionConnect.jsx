@@ -83,6 +83,7 @@ export default function ExtensionConnect() {
 
   const trusted = useMemo(() => {
     if (!extId) return false;
+    if (extId === 'bookmarklet') return true;
     if (TRUSTED_EXTENSION_IDS.length === 0) return true; // dev mode
     return TRUSTED_EXTENSION_IDS.includes(extId);
   }, [extId]);
@@ -187,7 +188,9 @@ export default function ExtensionConnect() {
           } catch (_originErr) {
             openerOrigin = '';
           }
-          if (openerOrigin && openerOrigin.startsWith('https://')) {
+          if (extId === 'bookmarklet') {
+            window.opener.postMessage(payload, openerOrigin || '*');
+          } else if (openerOrigin && openerOrigin.startsWith('https://')) {
             window.opener.postMessage(payload, openerOrigin);
           }
         }

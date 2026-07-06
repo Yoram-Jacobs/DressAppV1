@@ -237,8 +237,8 @@ async function onAnalyze(ev) {
     if (!status?.ok || !status.token) {
       mountOverlay({
         kind: 'auth',
-        title: 'Connect DressApp first',
-        message: 'Open the DressApp extension popup and click "Connect to DressApp" to enable size recommendations.',
+        title: i18n.t('connectFirstTitle', { defaultValue: 'Connect DressApp first' }),
+        message: i18n.t('connectFirstPrompt', { defaultValue: 'Open the DressApp extension popup and click "Connect to DressApp" to enable size recommendations.' }),
         onDismiss: showFab,
       });
       return;
@@ -766,15 +766,25 @@ if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
   });
 }
 
-// Watch for postMessage changes in mobile/webview environment
-window.addEventListener('message', (e) => {
-  if (e.data && e.data.type === 'DRESSAPP_WIDGET_TOGGLE') {
+// Watch for postMessage changes in mobile/webview/bookmarklet environment
+window.addEventListener('message', async (e) => {
+  if (!e.data) return;
+
+  if (e.data.type === 'DRESSAPP_WIDGET_TOGGLE') {
     widgetEnabled = e.data.enabled !== false;
     if (widgetEnabled) {
       void scheduleMount();
     } else {
       removeWidget();
     }
+  }
+
+  if (e.data.type === 'DRESSAPP_EXT_TOKEN' && e.data.ext_id === 'bookmarklet') {
+    await sendToBackground({
+      type: messages.RECEIVE_HANDOFF,
+      payload: e.data
+    });
+    void scheduleMount();
   }
 });
 

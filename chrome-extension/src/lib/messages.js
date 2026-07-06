@@ -31,8 +31,58 @@ export function sendToBackground(payload) {
     });
   }
 
-  // Running in a mobile WebView context: delegate to the mobile bridge
-  return import('./mobile-bridge.js').then((bridge) => {
-    return bridge.sendToNative(payload.type, payload.payload || payload);
+  // If running in a mobile WebView container WITH native bridge, use the native bridge
+  if (typeof window !== 'undefined' && (window.ReactNativeWebView || window.webkit?.messageHandlers?.dressapp)) {
+    return import('./mobile-bridge.js').then((bridge) => {
+      return bridge.sendToNative(payload.type, payload.payload || payload);
+    });
+  }
+
+  // Running as a Bookmarklet: fulfill locally inside the page context
+  return import('./widget-core.js').then(async (core) => {
+    const localStore = {
+      get: async (keys) => {
+        const res = {};
+        keys.forEach(k => {
+          const val = localStorage.getItem('dressapp_widget_' + k);
+          try {
+            res[k] = val ? JSON.parse(val) : null;
+          } catch {
+            res[k] = val;
+          }
+        });
+        return res;
+      },
+      set: async (obj) => {
+        Object.entries(obj).forEach(([k, v]) => {
+          localStorage.setItem('dressapp_widget_' + k, typeof v === 'object' ? JSON.stringify(v) : v);
+        });
+      },
+      remove: async (keys) => {
+        keys.forEach(k => {
+          localStorage.removeItem('dressapp_widget_' + k);
+        });
+      }
+    };
+
+    if (payload.type === messages.RECEIVE_HANDOFF) {
+      return core.handleHandoff(localStore, payload.payload || payload);
+    }
+    if (payload.type === messages.AUTH_STATUS) {
+      return core.handleAuthStatus(localStore);
+    }
+    if (payload.type === messages.CLEAR_AUTH) {
+      return core.handleClearAuth(localStore);
+    }
+    if (payload.type === messages.FETCH_ME) {
+      return core.handleFetchMe(localStore);
+    }
+    if (payload.type === messages.ANALYZE_CHART) {
+      return core.handleAnalyze(localStore, payload.payload || payload);
+    }
+    if (payload.type === messages.CAPTURE_VISIBLE_TAB) {
+      return { ok: false, error: 'Screen capture is not supported in bookmarklets' };
+    }
+    return { ok: false, error: 'Unknown message type' };
   });
 }

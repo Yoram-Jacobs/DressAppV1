@@ -112,6 +112,18 @@ export function mountOverlay(opts) {
       const small = document.createElement('small');
       small.textContent = i18n.t('connectPrompt', { defaultValue: 'Connect to your DressApp account to get personalised size recommendations on every shopping site.' });
       body.appendChild(small);
+
+      const isBookmarklet = typeof chrome === 'undefined' || !chrome.runtime?.sendMessage;
+      if (isBookmarklet) {
+        const connectBtn = document.createElement('a');
+        connectBtn.className = 'dressapp-overlay-cta';
+        connectBtn.style.display = 'inline-block';
+        connectBtn.style.marginTop = '12px';
+        connectBtn.href = `https://dressapp.co/extension/connect?ext_id=bookmarklet&v=1`;
+        connectBtn.target = '_blank';
+        connectBtn.textContent = i18n.t('connect', { defaultValue: 'Connect to DressApp' });
+        body.appendChild(connectBtn);
+      }
     }
   }
 
