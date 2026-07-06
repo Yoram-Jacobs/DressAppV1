@@ -124,6 +124,7 @@ export function mountOverlay(opts) {
         connectBtn.href = `https://dressapp.co/extension/connect?ext_id=${encodeURIComponent(chrome.runtime.id)}&v=1`;
       }
       connectBtn.target = '_blank';
+      connectBtn.rel = 'opener';
       connectBtn.textContent = i18n.t('connect', { defaultValue: 'Connect to DressApp' });
       body.appendChild(connectBtn);
     }

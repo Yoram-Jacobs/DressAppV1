@@ -169,8 +169,7 @@ export default function ExtensionConnect() {
     // service worker.
     if (!delivered) {
       try {
-        const ev = new MessageEvent('message', { data: payload, origin: window.location.origin });
-        window.dispatchEvent(ev);
+        window.postMessage(payload, window.location.origin);
         if (window.opener && !window.opener.closed) {
           // SECURITY: never postMessage an auth token with targetOrigin='*'
           // — any other tab listening could read it. We derive the
