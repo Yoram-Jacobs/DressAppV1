@@ -1253,11 +1253,11 @@ export default function ItemDetail() {
   return (
     <div className="container-px max-w-5xl mx-auto pt-4 md:pt-8 pb-24">
       {/* Floating Action Bar */}
-      <div className="fixed bottom-20 start-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-3 py-2 rounded-full border border-border bg-card/90 backdrop-blur-lg shadow-xl md:bottom-8 max-w-[calc(100vw-2rem)] shrink-0 animate-[slideUp_0.2s_ease-out]">
+      <div className="fixed bottom-20 start-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-border bg-card/90 backdrop-blur-lg shadow-xl md:bottom-8 max-w-[calc(100vw-2rem)] shrink-0 animate-[slideUp_0.2s_ease-out]">
         <Button
           type="button"
           variant="ghost"
-          size="sm"
+          size="icon"
           onClick={() => {
             if (location.state?.fromOutfits) {
               nav('/stylist', { 
@@ -1273,38 +1273,44 @@ export default function ItemDetail() {
               nav('/closet', { replace: true });
             }
           }}
-          className="rounded-full h-9 text-xs font-semibold flex items-center"
+          className="rounded-full h-9 w-9 flex items-center justify-center"
           data-testid="item-back"
+          title={t('common.back')}
+          aria-label={t('common.back')}
         >
-          <ArrowLeft className="h-4 w-4 me-1 rtl:rotate-180" /> {t('common.back')}
+          <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
         </Button>
         
-        <div className="h-4 w-[1px] bg-border mx-1" />
+        <div className="h-4 w-[1px] bg-border mx-0.5" />
 
         <Button
           type="button"
           variant="ghost"
-          size="sm"
+          size="icon"
           onClick={onDiscard}
           disabled={!isDirty || saving}
-          className="rounded-full h-9 text-xs font-semibold"
+          className="rounded-full h-9 w-9 flex items-center justify-center"
           data-testid="item-edit-discard-button"
+          title={t('itemDetail.edit.discard')}
+          aria-label={t('itemDetail.edit.discard')}
         >
-          <Undo2 className="h-4 w-4 me-1.5" /> {t('itemDetail.edit.discard')}
+          <Undo2 className="h-4 w-4" />
         </Button>
 
         <Button
           type="button"
           onClick={onSave}
           disabled={!isDirty || saving}
-          size="sm"
-          className="rounded-full h-9 text-xs font-semibold px-4 flex items-center gap-1.5"
+          size="icon"
+          className="rounded-full h-9 w-9 flex items-center justify-center"
           data-testid="item-edit-save-button"
+          title={saving ? t('itemDetail.edit.saving') : t('itemDetail.edit.save')}
+          aria-label={saving ? t('itemDetail.edit.saving') : t('itemDetail.edit.save')}
         >
           {saving ? (
-            <><Loader2 className="h-3.5 w-3.5 animate-spin" />{t('itemDetail.edit.saving')}</>
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <><Save className="h-3.5 w-3.5" />{t('itemDetail.edit.save')}</>
+            <Save className="h-4 w-4" />
           )}
         </Button>
 
@@ -1314,7 +1320,7 @@ export default function ItemDetail() {
             className="rounded-full text-[9px] px-2 h-5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 whitespace-nowrap"
             data-testid="item-edit-dirty-badge"
           >
-            {t('itemDetail.edit.unsaved', { count: Object.keys(patch).length })}
+            {Object.keys(patch).length}
           </Badge>
         )}
       </div>
