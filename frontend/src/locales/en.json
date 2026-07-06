@@ -879,6 +879,8 @@
     "inviteSubject": "Join me on DressApp",
     "inviteBody": "I'm using DressApp to manage my wardrobe with an AI stylist. Join me here:",
     "inviteCopied": "Invite link copied",
+    "inviteDesc": "Share DressApp with your friends and family",
+    "settingsTitle": "System Preferences",
     "sections": {
       "identity": "Identity",
       "identityDesc": "Your name, email address, and date of birth",
@@ -896,7 +898,8 @@
       "hair": "Hair",
       "hairDesc": "Hair length, type, style, and color properties",
       "preferences": "Preferences",
-      "preferencesDesc": "Default measurement scales for sizes, lengths, and weights"
+      "preferencesDesc": "Default measurement scales for sizes, lengths, and weights",
+      "settings": "Settings & Integrations"
     },
     "firstName": "First name",
     "lastName": "Last name",
@@ -1464,6 +1467,7 @@
   },
   "location": {
     "title": "Use your location?",
+    "description": "Used for weather-accurate outfit recommendations and sunrise/sunset sync",
     "rationale": "Location powers weather-aware styling, nearby stores, local marketplace results, and regional fashion trends. We only send your coordinates to the Stylist and never share them with other users.",
     "allow": "Use my location",
     "notNow": "Not now",
