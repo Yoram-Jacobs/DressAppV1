@@ -1253,7 +1253,7 @@ export default function ItemDetail() {
   return (
     <div className="container-px max-w-5xl mx-auto pt-4 md:pt-8 pb-24">
       {/* Floating Action Bar */}
-      <div className="fixed bottom-20 start-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-border bg-card/90 backdrop-blur-lg shadow-xl md:bottom-8 max-w-[calc(100vw-2rem)] shrink-0 animate-[slideUp_0.2s_ease-out]">
+      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-border bg-card/90 backdrop-blur-lg shadow-xl md:bottom-8 max-w-[calc(100vw-2rem)] shrink-0 animate-[slideUp_0.2s_ease-out]">
         <Button
           type="button"
           variant="ghost"

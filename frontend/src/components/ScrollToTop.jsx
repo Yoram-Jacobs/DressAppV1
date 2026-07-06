@@ -43,7 +43,7 @@ export function ScrollToTop({ scrollContainerRef }) {
     <Button
       onClick={handleScrollToTop}
       size="icon"
-      className="fixed bottom-20 end-6 md:bottom-8 md:end-8 z-50 rounded-full h-11 w-11 bg-brand text-brand-foreground hover:bg-brand/90 shadow-lg hover:scale-105 active:scale-95 transition-all duration-200"
+      className="fixed bottom-20 right-6 md:bottom-8 md:right-8 z-50 rounded-full h-11 w-11 bg-brand text-brand-foreground hover:bg-brand/90 shadow-lg hover:scale-105 active:scale-95 transition-all duration-200"
       aria-label="Scroll to top"
     >
       <ArrowUp className="h-5 w-5" />
