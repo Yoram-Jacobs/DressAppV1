@@ -10,6 +10,8 @@
  * testing agent (and future Playwright suites) can drive the overlay
  * without relying on text or class selectors.
  */
+import i18n, { isRtl } from '@/lib/i18n.js';
+
 const OVERLAY_ID = 'dressapp-overlay-root';
 const SPINNER_ID = 'dressapp-overlay-spinner';
 
@@ -49,7 +51,7 @@ export function mountSpinner() {
   el.id = SPINNER_ID;
   el.className = 'dressapp-overlay-spinner';
   el.setAttribute('data-testid', 'dressapp-overlay-spinner');
-  el.innerHTML = `<div class="dressapp-spinner" aria-hidden="true"></div><span>DressApp is reading the size chart…</span>`;
+  el.innerHTML = `<div class="dressapp-spinner" aria-hidden="true"></div><span>${i18n.t('spinnerLoading', { defaultValue: 'DressApp is reading the size chart…' })}</span>`;
   document.body.appendChild(el);
 }
 
@@ -76,9 +78,14 @@ export function mountOverlay(opts) {
   card.setAttribute('aria-live', 'polite');
   card.setAttribute('data-testid', `dressapp-overlay-${opts.kind || 'info'}`);
 
+  // Support RTL mirroring layout for Hebrew/Arabic
+  if (isRtl(i18n.language)) {
+    card.dir = 'rtl';
+  }
+
   const close = document.createElement('button');
   close.className = 'dressapp-overlay-close';
-  close.setAttribute('aria-label', 'Close DressApp recommendation');
+  close.setAttribute('aria-label', i18n.t('errorCloseOverlay', { defaultValue: 'Close DressApp recommendation' }));
   close.setAttribute('data-testid', 'dressapp-overlay-close');
   close.textContent = '×';
   close.addEventListener('click', _dismissAndCallback);
@@ -103,7 +110,7 @@ export function mountOverlay(opts) {
     body.appendChild(p);
     if (opts.kind === 'auth') {
       const small = document.createElement('small');
-      small.textContent = 'Click the DressApp icon in the toolbar to connect.';
+      small.textContent = i18n.t('connectPrompt', { defaultValue: 'Connect to your DressApp account to get personalised size recommendations on every shopping site.' });
       body.appendChild(small);
     }
   }
@@ -116,7 +123,7 @@ export function mountOverlay(opts) {
     const retry = document.createElement('button');
     retry.className = 'dressapp-overlay-cta';
     retry.type = 'button';
-    retry.textContent = 'Retry';
+    retry.textContent = i18n.t('retry', { defaultValue: 'Retry' });
     retry.setAttribute('data-testid', 'dressapp-overlay-retry');
     retry.addEventListener('click', (e) => {
       e.preventDefault();
@@ -131,32 +138,33 @@ export function mountOverlay(opts) {
 
 function _renderRecommendation(title, body, r) {
   if (!r.has_measurements) {
-    title.textContent = 'Add your measurements';
+    title.textContent = i18n.t('recommendationNoMeasurementsTitle', { defaultValue: 'Add your measurements' });
     const p = document.createElement('p');
-    p.textContent = 'DressApp couldn\'t recommend a size because your profile has no measurements yet.';
+    p.textContent = i18n.t('recommendationNoMeasurementsPrompt', { defaultValue: 'DressApp couldn\'t recommend a size because your profile has no measurements yet.' });
     body.appendChild(p);
     const cta = document.createElement('a');
     cta.className = 'dressapp-overlay-cta';
     cta.target = '_blank';
     cta.rel = 'noreferrer';
     cta.href = 'https://dressapp.co/me';
-    cta.textContent = 'Open DressApp profile';
+    cta.textContent = i18n.t('recommendationOpenProfile', { defaultValue: 'Open DressApp profile' });
     cta.setAttribute('data-testid', 'dressapp-overlay-open-profile');
     body.appendChild(cta);
     return;
   }
   if (!r.recommended_size) {
-    title.textContent = 'No clear match';
+    title.textContent = i18n.t('recommendationNoMatchTitle', { defaultValue: 'No clear match' });
     const p = document.createElement('p');
-    p.textContent = r.reasoning || 'We couldn\'t determine a size from this chart.';
+    p.textContent = r.reasoning || i18n.t('recommendationNoMatchPrompt', { defaultValue: 'We couldn\'t determine a size from this chart.' });
     body.appendChild(p);
     const meta = document.createElement('small');
-    meta.textContent = `via ${sourceLabel(r.source)} · ${r.elapsed_ms ?? 0} ms`;
+    const src = sourceLabel(r.source);
+    meta.textContent = i18n.t('recommendationSourceLabel', { source: src, elapsed: r.elapsed_ms ?? 0, defaultValue: `via ${src} · ${r.elapsed_ms ?? 0} ms` });
     body.appendChild(meta);
     return;
   }
   title.innerHTML = '';
-  const lead = document.createTextNode('DressApp recommends size ');
+  const lead = document.createTextNode(i18n.t('recommendationRecommends', { defaultValue: 'DressApp recommends size ' }));
   const strong = document.createElement('strong');
   strong.textContent = String(r.recommended_size);
   strong.setAttribute('data-testid', 'dressapp-overlay-size');
@@ -172,14 +180,10 @@ function _renderRecommendation(title, body, r) {
   }
 
   const why = document.createElement('p');
-  why.textContent = r.reasoning || 'Based on your measurements.';
+  why.textContent = r.reasoning || i18n.t('recommendationDefaultReasoning', { defaultValue: 'Based on your measurements.' });
   body.appendChild(why);
 
-  // Soft data-quality warnings. The model surfaces these when one of
-  // the user's stored measurements looks obviously implausible vs.
-  // the chart's range (e.g. shoulders=75 cm on a chart that maxes
-  // at 50 cm). Render them as a stack of yellow callouts above the
-  // meta line so they're impossible to miss.
+  // Soft data-quality warnings.
   if (Array.isArray(r.warnings) && r.warnings.length) {
     const warnBox = document.createElement('div');
     warnBox.className = 'dressapp-warnings';
@@ -190,7 +194,6 @@ function _renderRecommendation(title, body, r) {
       const item = document.createElement('div');
       item.className = 'dressapp-warning-item';
       item.setAttribute('data-testid', `dressapp-overlay-warning-${idx}`);
-      // Leading icon (vector, no emoji).
       const icon = document.createElement('span');
       icon.className = 'dressapp-warning-icon';
       icon.setAttribute('aria-hidden', 'true');
@@ -205,17 +208,23 @@ function _renderRecommendation(title, body, r) {
     body.appendChild(warnBox);
   }
 
-  const matched = (r.matched_columns || []).join(' · ') || 'your stored measurements';
+  const matched = (r.matched_columns || []).join(' · ') || i18n.t('recommendationDefaultMatched', { defaultValue: 'your stored measurements' });
   const meta = document.createElement('small');
   meta.className = 'dressapp-meta';
-  meta.textContent = `Matched on: ${matched} · via ${sourceLabel(r.source)} · ${r.elapsed_ms ?? 0} ms`;
+  const src = sourceLabel(r.source);
+  meta.textContent = i18n.t('recommendationMatchedOn', {
+    matched,
+    source: src,
+    elapsed: r.elapsed_ms ?? 0,
+    defaultValue: `Matched on: ${matched} · via ${src} · ${r.elapsed_ms ?? 0} ms`
+  });
   body.appendChild(meta);
 
   if (Array.isArray(r.alternatives) && r.alternatives.length) {
     const alts = document.createElement('div');
     alts.className = 'dressapp-alts';
     alts.setAttribute('data-testid', 'dressapp-overlay-alternatives');
-    alts.appendChild(document.createTextNode('Alternatives: '));
+    alts.appendChild(document.createTextNode(i18n.t('recommendationAlternatives', { defaultValue: 'Alternatives: ' })));
     r.alternatives.forEach((a, idx) => {
       const span = document.createElement('span');
       span.textContent = `${a.size} `;

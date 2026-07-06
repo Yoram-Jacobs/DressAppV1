@@ -15,17 +15,24 @@ export const messages = {
  *  callbacks. Returns ``{ok:false, error}`` for any failure mode
  *  (no extension context, runtime.lastError, throw inside handler). */
 export function sendToBackground(payload) {
-  return new Promise((resolve) => {
-    try {
-      chrome.runtime.sendMessage(payload, (response) => {
-        if (chrome.runtime.lastError) {
-          resolve({ ok: false, error: chrome.runtime.lastError.message });
-          return;
-        }
-        resolve(response || { ok: false, error: 'empty response' });
-      });
-    } catch (e) {
-      resolve({ ok: false, error: e?.message || 'sendMessage threw' });
-    }
+  if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+    return new Promise((resolve) => {
+      try {
+        chrome.runtime.sendMessage(payload, (response) => {
+          if (chrome.runtime.lastError) {
+            resolve({ ok: false, error: chrome.runtime.lastError.message });
+            return;
+          }
+          resolve(response || { ok: false, error: 'empty response' });
+        });
+      } catch (e) {
+        resolve({ ok: false, error: e?.message || 'sendMessage threw' });
+      }
+    });
+  }
+
+  // Running in a mobile WebView context: delegate to the mobile bridge
+  return import('./mobile-bridge.js').then((bridge) => {
+    return bridge.sendToNative(payload.type, payload.payload || payload);
   });
 }

@@ -21,6 +21,7 @@ import { getAdapter } from './adapters/sites.js';
 import generic from './adapters/generic.js';
 import { messages, sendToBackground } from '@/lib/messages.js';
 import { mountOverlay, mountSpinner, dismissOverlay } from './overlay.js';
+import i18n, { isRtl } from '@/lib/i18n.js';
 
 const HOST = location.hostname;
 const adapter = getAdapter(HOST);
@@ -40,9 +41,9 @@ function createAnchorButton() {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'dressapp-anchor-btn';
-  btn.setAttribute('aria-label', 'DressApp size recommendation');
+  btn.setAttribute('aria-label', i18n.t('buttonSizeGuideAria', { defaultValue: 'DressApp size recommendation' }));
   btn.setAttribute('data-testid', 'dressapp-anchor-btn');
-  btn.innerHTML = `<span class="dressapp-dot" aria-hidden="true"></span>DressApp size`;
+  btn.innerHTML = `<span class="dressapp-dot" aria-hidden="true"></span>${i18n.t('buttonSizeGuide', { defaultValue: 'DressApp size' })}`;
   btn.addEventListener('click', onAnalyze);
   return btn;
 }
@@ -70,16 +71,16 @@ function ensureFab() {
   fab.id = FAB_ID;
   fab.type = 'button';
   fab.className = 'dressapp-fab';
-  fab.setAttribute('aria-label', 'Get DressApp size recommendation');
+  fab.setAttribute('aria-label', i18n.t('buttonFabAria', { defaultValue: 'Get DressApp size recommendation' }));
   fab.setAttribute('data-testid', 'dressapp-fab');
-  fab.title = 'Click for a DressApp size recommendation. If we can\'t find the chart automatically, you\'ll be asked to click it.';
+  fab.title = i18n.t('buttonFabTitle', { defaultValue: 'Click for a DressApp size recommendation. If we can\'t find the chart automatically, you\'ll be asked to click it.' });
   fab.innerHTML = `
     <span class="dressapp-fab-icon" aria-hidden="true">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2 9 8l-7 1 5 5-1 7 6-3 6 3-1-7 5-5-7-1z"></path>
       </svg>
     </span>
-    <span class="dressapp-fab-label">DressApp</span>
+    <span class="dressapp-fab-label">${i18n.t('title', { defaultValue: 'DressApp' })}</span>
   `;
   fab.addEventListener('click', onAnalyze);
   document.body.appendChild(fab);
@@ -396,14 +397,17 @@ function enterCropMode({ reason = 'manual' } = {}) {
   banner.className = 'dressapp-pick-banner';
   banner.setAttribute('role', 'status');
   banner.setAttribute('data-testid', 'dressapp-crop-banner');
+  if (isRtl(i18n.language)) {
+    banner.dir = 'rtl';
+  }
   banner.innerHTML = `
     <div class="dressapp-pick-text">
-      <strong>Drag a box around the size chart</strong>
-      <span data-role="hint">${reason === 'auto-failed' ? "We couldn't find it automatically." : 'Drag to select. Drag the corners or edges to adjust. Click Apply.'}</span>
+      <strong>${i18n.t('cropBannerTitle', { defaultValue: 'Drag a box around the size chart' })}</strong>
+      <span data-role="hint">${reason === 'auto-failed' ? i18n.t('cropBannerHintAutoFailed', { defaultValue: "We couldn't find it automatically." }) : i18n.t('cropBannerHintDefault', { defaultValue: 'Drag corners or edges to refine. Click Apply.' })}</span>
     </div>
     <span class="dressapp-crop-size" data-testid="dressapp-crop-size" hidden>0×0</span>
-    <button type="button" class="dressapp-pick-cancel" data-testid="dressapp-crop-cancel">Cancel</button>
-    <button type="button" class="dressapp-crop-apply" data-testid="dressapp-crop-apply" disabled>Apply</button>
+    <button type="button" class="dressapp-pick-cancel" data-testid="dressapp-crop-cancel">${i18n.t('cropCancel', { defaultValue: 'Cancel' })}</button>
+    <button type="button" class="dressapp-crop-apply" data-testid="dressapp-crop-apply" disabled>${i18n.t('cropApply', { defaultValue: 'Apply' })}</button>
   `;
   document.body.appendChild(banner);
 
@@ -457,7 +461,7 @@ function enterCropMode({ reason = 'manual' } = {}) {
     applyBtn.disabled = !big;
     sizeReadout.hidden = !big;
     sizeReadout.textContent = `${Math.round(rect.w)}×${Math.round(rect.h)}`;
-    if (big && hintEl) hintEl.textContent = 'Drag corners or edges to refine. Click Apply.';
+    if (big && hintEl) hintEl.textContent = i18n.t('cropBannerHintDefault', { defaultValue: 'Drag corners or edges to refine. Click Apply.' });
   }
 
   function onDown(e) {

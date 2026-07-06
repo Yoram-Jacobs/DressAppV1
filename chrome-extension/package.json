@@ -7,13 +7,16 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:mobile": "vite build -c vite.mobile.config.js",
     "preview": "vite preview",
     "lint": "echo 'lint runs from repo root via main eslint config'"
   },
   "dependencies": {
+    "i18next": "^26.0.6",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-i18next": "^17.0.4"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.0",

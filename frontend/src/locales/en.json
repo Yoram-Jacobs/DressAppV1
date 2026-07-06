@@ -850,6 +850,7 @@
     "displayName": "Display name",
     "emailReadonly": "Email",
     "styleProfile": "Style profile",
+    "styleProfileDesc": "Aesthetics, color palette preferences, things to avoid, and conservativeness",
     "aesthetics": "Aesthetics",
     "aestheticsPlaceholder": "minimalist, smart-casual",
     "colorPalette": "Color palette",
@@ -880,15 +881,22 @@
     "inviteCopied": "Invite link copied",
     "sections": {
       "identity": "Identity",
+      "identityDesc": "Your name, email address, and date of birth",
       "contact": "Contact",
+      "contactDesc": "Phone number, delivery address, and localization",
       "demographics": "Demographics",
+      "demographicsDesc": "Gender, occupational background, and personal status",
       "photos": "Photos",
       "photosAvatar": "Photos & Avatar",
+      "photosAvatarDesc": "Avatar model visual reference photos and body-render shape",
       "digitalAvatar": "3D Digital Avatar",
       "avatarGenerationDesc": "Generated from your body measurements below.",
       "measurements": "Body measurements",
+      "measurementsDesc": "Garment sizing fits (height, chest, waist, and inseams)",
       "hair": "Hair",
-      "preferences": "Preferences"
+      "hairDesc": "Hair length, type, style, and color properties",
+      "preferences": "Preferences",
+      "preferencesDesc": "Default measurement scales for sizes, lengths, and weights"
     },
     "firstName": "First name",
     "lastName": "Last name",
@@ -965,6 +973,7 @@
     "autofilledFromGoogle": "Auto-filled from Google — edit anytime.",
     "professional": {
       "sectionTitle": "Professional fashion expert",
+      "sectionDesc": "Business approval credentials and professional directory listings",
       "checkboxLabel": "I'm a professional fashion expert",
       "checkboxHint": "Appear in the Experts directory and run regional ads.",
       "profession": "Profession",
@@ -1010,6 +1019,8 @@
     "aiStylistSchedulerSettingsUpdated": "AI Stylist Scheduler settings updated.",
     "everyday": "Everyday",
     "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts.",
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
+    "schedulerDesc": "Daily outfit proposals, push alerts, and scheduling options",
     "aiConfig": {
       "title": "AI Configuration",
       "subtitle": "Manage your AI service providers, customize API keys, or switch to edge AI models.",
