@@ -2044,15 +2044,7 @@ export default function ItemDetail() {
                   />
                   <LocalizedHint raw={form.color} translated={labelForColor(form.color, t)} />
                 </Field>
-                <Field label={t('itemDetail.edit.material')} htmlFor="f-material">
-                  <Input
-                    id="f-material"
-                    value={form.material}
-                    onChange={(e) => setField('material', e.target.value)}
-                    className="rounded-xl"
-                    data-testid="item-edit-field-material"
-                  />
-                </Field>
+
                 <Field label={t('itemDetail.edit.pattern')}>
                   <NullableSelect
                     value={form.pattern}
