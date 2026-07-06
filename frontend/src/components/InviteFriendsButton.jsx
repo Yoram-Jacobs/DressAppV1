@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Share2, Copy, Users, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { toast } from 'sonner';
 
 /**
@@ -51,26 +52,31 @@ export function InviteFriendsButton() {
   };
 
   return (
-    <Card
-      className="rounded-[calc(var(--radius)+6px)] shadow-editorial"
+    <AccordionItem
+      value="invite"
+      className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300"
       data-testid="invite-friends-card"
     >
-      <CardContent className="p-6">
-        <div className="flex flex-col sm:flex-row items-start gap-4">
-          <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
+      <AccordionTrigger className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none">
+        <div className="flex items-center gap-4 text-start">
+          <div className="p-2.5 rounded-xl bg-[hsl(271_81%_95%)] text-[hsl(271_81%_56%)] dark:bg-[hsl(271_30%_18%)] dark:text-[hsl(271_81%_70%)] shrink-0 transition-transform duration-200">
             <Users className="h-5 w-5" />
           </div>
-          <div className="flex-1 min-w-0 w-full">
-            <div className="caps-label text-muted-foreground">
-              {t('profile.inviteFriends')}
-            </div>
-            <h3 className="font-display text-xl mt-1">
-              {t('profile.inviteSubject')}
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1 max-w-xl">
-              {t('profile.inviteBody')}
-            </p>
+          <div>
+            <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+              {t('profile.inviteFriends', { defaultValue: 'Invite Friends' })}
+            </span>
+            <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+              {t('profile.inviteDesc', { defaultValue: 'Share DressApp with your friends and family' })}
+            </span>
           </div>
+        </div>
+      </AccordionTrigger>
+      <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground max-w-md text-start">
+            {t('profile.inviteBody')}
+          </p>
           <div className="shrink-0 w-full sm:w-auto">
             <Button
               onClick={share}
@@ -93,7 +99,7 @@ export function InviteFriendsButton() {
             </Button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </AccordionContent>
+    </AccordionItem>
   );
 }

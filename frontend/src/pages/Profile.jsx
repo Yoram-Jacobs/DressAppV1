@@ -50,23 +50,10 @@ const getWeekdayName = (day, locale) => {
 
 const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-function SchedulerSettingsCard() {
+function SchedulerSettingsAccordionItem() {
   const { t, i18n } = useTranslation();
   const { user, updateUserLocal } = useAuth();
-  const [searchParams] = useSearchParams();
-  const [openVal, setOpenVal] = useState(
-    searchParams.get('open') === 'scheduler' ? 'scheduler' : undefined
-  );
-
-  useEffect(() => {
-    if (searchParams.get('open') === 'scheduler') {
-      setOpenVal('scheduler');
-      setTimeout(() => {
-        document.getElementById('scheduler-settings-section')?.scrollIntoView({ behavior: 'smooth' });
-      }, 150);
-    }
-  }, [searchParams]);
-
+  
   const [enabled, setEnabled] = useState(user?.scheduler_settings?.enabled || false);
   const [frequency, setFrequency] = useState(user?.scheduler_settings?.frequency || 'everyday');
   const [weekday, setWeekday] = useState(user?.scheduler_settings?.weekday || 'monday');
@@ -152,22 +139,28 @@ function SchedulerSettingsCard() {
   };
 
   return (
-    <Card id="scheduler-settings-section" className="rounded-[calc(var(--radius)+6px)] shadow-editorial" data-testid="scheduler-settings-card">
-      <Accordion type="single" collapsible value={openVal} onValueChange={setOpenVal}>
-        <AccordionItem value="scheduler" className="border-none">
-          <AccordionTrigger className="px-6 py-4 hover:no-underline">
-            <div className="flex items-center gap-3 text-start">
-              <Bell className="h-5 w-5 text-[hsl(var(--accent))]" />
-              <div>
-                <div className="caps-label text-muted-foreground">{t('profile.aiStylist', { defaultValue: 'AI Stylist' })}</div>
-                <h3 className="font-display text-xl font-semibold m-0">{t('profile.schedulerPushReminders', { defaultValue: 'Scheduler & Push Reminders' })}</h3>
-              </div>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-6 pb-6 space-y-4 pt-0">
-            <Separator />
-        
-        <div className="flex items-center justify-between gap-3 p-3 bg-secondary/30 rounded-xl border border-border">
+    <AccordionItem
+      value="scheduler"
+      className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300"
+      id="scheduler-settings-section"
+    >
+      <AccordionTrigger className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none">
+        <div className="flex items-center gap-4 text-start">
+          <div className="p-2.5 rounded-xl bg-[hsl(343_85%_96%)] text-[hsl(343_85%_58%)] dark:bg-[hsl(343_30%_18%)] dark:text-[hsl(343_85%_72%)] shrink-0 transition-transform duration-200">
+            <Bell className="h-5 w-5" />
+          </div>
+          <div>
+            <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+              {t('profile.schedulerPushReminders', { defaultValue: 'Scheduler & Push' })}
+            </span>
+            <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+              {t('profile.schedulerDesc', { defaultValue: 'Daily outfit proposals, push alerts, and scheduling options' })}
+            </span>
+          </div>
+        </div>
+      </AccordionTrigger>
+      <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5 space-y-4">
+        <div className="flex items-center justify-between gap-3 p-3 bg-card rounded-xl border border-border/70 shadow-sm text-start">
           <div className="space-y-1">
             <div className="font-semibold text-sm">{t('profile.enableSchedulerProposals', { defaultValue: 'Enable Scheduler Proposals' })}</div>
             <div className="text-xs text-muted-foreground text-start">{t('profile.receivePushReminders', { defaultValue: 'Receive customized daily outfit proposals.' })}</div>
@@ -181,8 +174,8 @@ function SchedulerSettingsCard() {
               <div className="space-y-1.5">
                 <Label htmlFor="s-freq">{t('profile.notificationFrequency', { defaultValue: 'Frequency' })}</Label>
                 <Select value={frequency} onValueChange={setFrequency}>
-                  <SelectTrigger id="s-freq" className="rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent>
+                  <SelectTrigger id="s-freq" className="rounded-xl bg-card"><SelectValue /></SelectTrigger>
+                  <SelectContent className="rounded-xl">
                     <SelectItem value="everyday">{t('profile.everyday', { defaultValue: 'Everyday' })}</SelectItem>
                     <SelectItem value="every_other_day">{t('profile.everyOtherDay', { defaultValue: 'Every Other Day' })}</SelectItem>
                     <SelectItem value="twice_a_week">{t('profile.twiceAWeek', { defaultValue: 'Twice a Week' })}</SelectItem>
@@ -195,8 +188,8 @@ function SchedulerSettingsCard() {
                 <div className="space-y-1.5">
                   <Label htmlFor="s-day">{t('profile.chooseDay', { defaultValue: 'Choose Day' })}</Label>
                   <Select value={weekday} onValueChange={setWeekday}>
-                    <SelectTrigger id="s-day" className="rounded-xl"><SelectValue /></SelectTrigger>
-                    <SelectContent>
+                    <SelectTrigger id="s-day" className="rounded-xl bg-card"><SelectValue /></SelectTrigger>
+                    <SelectContent className="rounded-xl">
                       {WEEKDAYS.map((day) => (
                         <SelectItem key={day} value={day}>
                           {getWeekdayName(day, i18n.language)}
@@ -209,7 +202,7 @@ function SchedulerSettingsCard() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="s-time">{t('profile.notificationTime', { defaultValue: 'Notification Time' })}</Label>
-                <Input id="s-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} className="rounded-xl" />
+                <Input id="s-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} className="rounded-xl bg-card" />
               </div>
             </div>
 
@@ -217,8 +210,8 @@ function SchedulerSettingsCard() {
               <div className="space-y-1.5">
                 <Label htmlFor="s-style">{t('profile.styleDressFor', { defaultValue: 'Style / Dress For' })}</Label>
                 <Select value={styleOption} onValueChange={setStyleOption}>
-                  <SelectTrigger id="s-style" className="rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent>
+                  <SelectTrigger id="s-style" className="rounded-xl bg-card"><SelectValue /></SelectTrigger>
+                  <SelectContent className="rounded-xl">
                     <SelectItem value="casual">{labelForDressCode('casual', t)}</SelectItem>
                     <SelectItem value="smart-casual">{labelForDressCode('smart-casual', t)}</SelectItem>
                     <SelectItem value="formal">{labelForDressCode('formal', t)}</SelectItem>
@@ -236,7 +229,7 @@ function SchedulerSettingsCard() {
                     value={customStyle} 
                     onChange={(e) => setCustomStyle(e.target.value)} 
                     placeholder={t('profile.customStylePlaceholder', { defaultValue: 'e.g. Gym, Hiking, Church' })} 
-                    className="rounded-xl" 
+                    className="rounded-xl bg-card" 
                   />
                 </div>
               )}
@@ -245,7 +238,7 @@ function SchedulerSettingsCard() {
         )}
 
         {pushSupported && (
-          <div className="flex items-center justify-between gap-3 p-3 bg-secondary/30 rounded-xl border border-border">
+          <div className="flex items-center justify-between gap-3 p-3 bg-card rounded-xl border border-border/70 shadow-sm text-start">
             <div className="space-y-1">
               <div className="font-semibold text-sm">{t('profile.browserPushAlerts', { defaultValue: 'Push Alerts' })}</div>
               <div className="text-xs text-muted-foreground text-start">{t('profile.receiveDirectBrowserAlerts', { defaultValue: 'Receive alerts on this device.' })}</div>
@@ -258,7 +251,7 @@ function SchedulerSettingsCard() {
           {t('profile.phoneWarning', { defaultValue: '* Configure phone number under Identity to receive simulated push alerts.' })}
         </div>
 
-        <div className="flex">
+        <div className="flex justify-end pt-2">
           <Button 
             onClick={save} 
             disabled={busy} 
@@ -274,10 +267,8 @@ function SchedulerSettingsCard() {
             )}
           </Button>
         </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </Card>
+      </AccordionContent>
+    </AccordionItem>
   );
 }
 
@@ -289,10 +280,9 @@ const PROVIDERS = [
   { id: 'qwen', name: 'Alibaba Qwen', defaultModel: 'qwen-plus', models: ['qwen-plus', 'qwen-max'] }
 ];
 
-function AIConfigurationCard() {
+function AIConfigurationAccordionItem() {
   const { t, i18n } = useTranslation();
   const { user, updateUserLocal } = useAuth();
-  const location = useLocation();
   const isRtl = i18n.dir() === 'rtl';
   
   const [providerMode, setProviderMode] = useState(user?.ai_configuration?.provider_mode || 'standard');
@@ -301,17 +291,6 @@ function AIConfigurationCard() {
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [accordionVal, setAccordionVal] = useState(undefined);
-
-  useEffect(() => {
-    if (location.hash === '#ai-configuration-section' || location.state?.scrollTo === 'ai-configuration-section') {
-      setAccordionVal('ai-config');
-      setTimeout(() => {
-        const el = document.getElementById('ai-configuration-section');
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-      }, 150);
-    }
-  }, [location]);
 
   useEffect(() => {
     api.getMe().then((freshUser) => {
@@ -426,262 +405,262 @@ function AIConfigurationCard() {
   const steps = getStepInstructions();
 
   return (
-    <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial" id="ai-configuration-section">
-      <CardContent className="p-6">
-        <Accordion type="single" collapsible value={accordionVal} onValueChange={setAccordionVal}>
-          <AccordionItem value="ai-config" className="border-none">
-            <AccordionTrigger className="py-2 hover:no-underline">
-              <div className="flex items-center gap-3 text-start">
-                <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                  <Key className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold tracking-tight text-foreground">
-                    {t('profile.aiConfig.title', { defaultValue: 'AI Configuration' })}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {t('profile.aiConfig.subtitle', { defaultValue: 'Manage your AI service providers, customize API keys, or switch to edge AI models.' })}
-                  </p>
-                </div>
-              </div>
-            </AccordionTrigger>
-            
-            <AccordionContent className="pt-4 space-y-4 pb-2">
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {t('profile.aiConfig.modeLabel', { defaultValue: 'AI Provider Mode' })}
-                </Label>
-                <Select
-                  value={providerMode}
-                  onValueChange={(val) => handleSaveConfig(val)}
-                  disabled={busy}
-                  dir={isRtl ? 'rtl' : 'ltr'}
-                >
-                  <SelectTrigger className="rounded-xl w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    <SelectItem value="standard">
-                      {t('profile.aiConfig.standardPlan', { defaultValue: 'Standard Plan (Credit-based)' })}
-                    </SelectItem>
-                    <SelectItem value="custom_keys">
-                      {t('profile.aiConfig.customKeys', { defaultValue: 'My Own API Keys (SaaS)' })}
-                    </SelectItem>
-                    <SelectItem value="on_device">
-                      {t('profile.aiConfig.onDevice', { defaultValue: 'On-Device Local AI (Gemma)' })}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+    <AccordionItem
+      value="ai-config"
+      className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300"
+      id="ai-configuration-section"
+    >
+      <AccordionTrigger className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none">
+        <div className="flex items-center gap-4 text-start">
+          <div className="p-2.5 rounded-xl bg-[hsl(35_92%_95%)] text-[hsl(35_92%_52%)] dark:bg-[hsl(35_30%_18%)] dark:text-[hsl(35_92%_70%)] shrink-0 transition-transform duration-200">
+            <Key className="h-5 w-5" />
+          </div>
+          <div>
+            <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+              {t('profile.aiConfig.title', { defaultValue: 'AI Configuration' })}
+            </span>
+            <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+              {t('profile.aiConfig.subtitle', { defaultValue: 'Manage your AI service providers, customize API keys, or switch to edge AI models.' })}
+            </span>
+          </div>
+        </div>
+      </AccordionTrigger>
+      
+      <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5 space-y-4">
+        <div className="space-y-2 text-start">
+          <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {t('profile.aiConfig.modeLabel', { defaultValue: 'AI Provider Mode' })}
+          </Label>
+          <Select
+            value={providerMode}
+            onValueChange={(val) => handleSaveConfig(val)}
+            disabled={busy}
+            dir={isRtl ? 'rtl' : 'ltr'}
+          >
+            <SelectTrigger className="rounded-xl bg-card w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl">
+              <SelectItem value="standard">
+                {t('profile.aiConfig.standardPlan', { defaultValue: 'Standard Plan (Credit-based)' })}
+              </SelectItem>
+              <SelectItem value="custom_keys">
+                {t('profile.aiConfig.customKeys', { defaultValue: 'My Own API Keys (SaaS)' })}
+              </SelectItem>
+              <SelectItem value="on_device">
+                {t('profile.aiConfig.onDevice', { defaultValue: 'On-Device Local AI (Gemma)' })}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-              {providerMode === 'custom_keys' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      {t('profile.aiConfig.providerLabel', { defaultValue: 'Active Provider' })}
-                    </Label>
-                    <Select
-                      value={activeProviderId}
-                      onValueChange={(val) => handleSaveConfig(providerMode, null, val)}
-                      disabled={busy}
-                      dir={isRtl ? 'rtl' : 'ltr'}
-                    >
-                      <SelectTrigger className="rounded-xl w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        {PROVIDERS.map(p => (
-                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+        {providerMode === 'custom_keys' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start">
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {t('profile.aiConfig.providerLabel', { defaultValue: 'Active Provider' })}
+              </Label>
+              <Select
+                value={activeProviderId}
+                onValueChange={(val) => handleSaveConfig(providerMode, null, val)}
+                disabled={busy}
+                dir={isRtl ? 'rtl' : 'ltr'}
+              >
+                <SelectTrigger className="rounded-xl bg-card w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  {PROVIDERS.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      {t('profile.aiConfig.modelLabel', { defaultValue: 'Model Preference' })}
-                    </Label>
-                    <Select
-                      value={activeModel}
-                      onValueChange={(val) => handleSaveConfig(providerMode, null, null, val)}
-                      disabled={busy}
-                      dir={isRtl ? 'rtl' : 'ltr'}
-                    >
-                      <SelectTrigger className="rounded-xl w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        {activeProvider.models.map(m => (
-                          <SelectItem key={m} value={m}>{m}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {t('profile.aiConfig.modelLabel', { defaultValue: 'Model Preference' })}
+              </Label>
+              <Select
+                value={activeModel}
+                onValueChange={(val) => handleSaveConfig(providerMode, null, null, val)}
+                disabled={busy}
+                dir={isRtl ? 'rtl' : 'ltr'}
+              >
+                <SelectTrigger className="rounded-xl bg-card w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  {activeProvider.models.map(m => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
 
-              {(providerMode === 'standard' || providerMode === 'custom_keys') && (
-                <div className="p-4 rounded-2xl bg-secondary/30 border border-border/50 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-foreground flex items-center gap-2">
-                      {providerMode === 'standard' 
-                        ? t('profile.aiConfig.geminiKeyLabel', { defaultValue: 'Google Gemini Key:' }) 
-                        : t('profile.aiConfig.providerKeyLabel', { defaultValue: '{{providerName}} Key:', providerName: activeProvider.name })}
-                      {((providerMode === 'standard' && !!user?.ai_configuration?.custom_keys?.google_ai) || 
-                        (providerMode === 'custom_keys' && hasSelectedProviderKey)) ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          {t('profile.aiConfig.statusActive', { defaultValue: 'Active' })}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-[10px] text-rose-500 font-medium">
-                          <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                          {t('profile.aiConfig.statusInactive', { defaultValue: 'Inactive' })}
-                        </span>
-                      )}
-                    </span>
-                    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="xs" className="rounded-lg text-[10px] h-6">
-                          {((providerMode === 'standard' && !!user?.ai_configuration?.custom_keys?.google_ai) || 
-                            (providerMode === 'custom_keys' && hasSelectedProviderKey)) 
-                            ? t('common.edit', { defaultValue: 'Edit' }) 
-                            : t('profile.aiConfig.connectKey', { defaultValue: 'Connect Key' })}
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="rounded-2xl max-w-md">
-                        <DialogHeader>
-                          <DialogTitle className="text-base font-bold flex items-center gap-2">
-                            <Key className="h-4 w-4 text-primary" />
-                            {providerMode === 'standard'
-                              ? t('profile.aiConfig.modelSelectorTitleGemini', { defaultValue: 'Connect Gemini Key' })
-                              : t('profile.aiConfig.modelSelectorTitleProvider', { defaultValue: 'Connect {{providerName}} Key', providerName: activeProvider.name })}
-                          </DialogTitle>
-                          <DialogDescription className="text-xs text-muted-foreground">
-                            {t('profile.aiConfig.setupInstructions', { defaultValue: 'Setting up your custom API key is easy! Follow these steps:' })}
-                          </DialogDescription>
-                        </DialogHeader>
-                        
-                        <div className="space-y-4 py-2">
-                          <div className="text-xs space-y-2 text-foreground/90 bg-secondary/25 p-3.5 rounded-xl border border-border/40">
-                            <p>{steps.step1}</p>
-                            <p>{steps.step2}</p>
-                            <p>{steps.step3}</p>
-                          </div>
-
-                          <div className="flex justify-end">
-                            <a 
-                              href={steps.link} 
-                              target="_blank" 
-                              rel="noreferrer"
-                              className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
-                            >
-                              {t('profile.aiConfig.getKeyBtn', { defaultValue: 'Get API Key' })}
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold">{t('profile.aiConfig.apiKeyLabel', { defaultValue: 'API Key' })}</Label>
-                            <Input 
-                              type="password"
-                              value={apiKeyInput}
-                              onChange={(e) => setApiKeyInput(e.target.value)}
-                              placeholder={t('profile.aiConfig.keyPlaceholder', { defaultValue: 'Paste your API key here...' })}
-                              className="rounded-xl text-xs h-9"
-                            />
-                          </div>
-                          
-                          <Button 
-                            className="w-full rounded-xl text-xs h-9 font-semibold"
-                            onClick={() => handleSaveConfig(providerMode, apiKeyInput, providerMode === 'standard' ? 'google_ai' : activeProviderId)}
-                            disabled={busy || !apiKeyInput}
-                          >
-                            {busy && <Loader2 className="h-3 w-3 animate-spin mr-1.5" />}
-                            {t('profile.aiConfig.saveBtn', { defaultValue: 'Save Configuration' })}
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground leading-normal">
-                    {providerMode === 'standard' 
-                      ? t('profile.aiConfig.standardInstructions', { defaultValue: 'Configure your own Google Gemini key to run personalized model queries. The standard plan uses Google\'s free-tier developer API quota.' })
-                      : t('profile.aiConfig.setupInstructions', { defaultValue: 'Configure your own developer key to run queries directly against your own account quota.' })
-                    }
-                  </p>
-                </div>
-              )}
-
-              {providerMode !== 'on_device' && (
-                <div className="space-y-3">
-                  <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <Coins className="h-5 w-5 text-primary/80" />
-                      <div>
-                        <div className="text-xs font-semibold text-foreground">
-                          {t('profile.aiConfig.creditsLabel', { defaultValue: 'Remaining Credits' })}
-                        </div>
-                        <div className="text-[11px] text-muted-foreground mt-0.5">
-                          {t('profile.aiConfig.creditsUsed', { defaultValue: 'Monthly credit price is $0.005. 7% platform fee is added.' })}
-                        </div>
-                      </div>
+        {(providerMode === 'standard' || providerMode === 'custom_keys') && (
+          <div className="p-4 rounded-2xl bg-card border border-border/50 space-y-3 shadow-sm text-start">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-foreground flex items-center gap-2">
+                {providerMode === 'standard' 
+                  ? t('profile.aiConfig.geminiKeyLabel', { defaultValue: 'Google Gemini Key:' }) 
+                  : t('profile.aiConfig.providerKeyLabel', { defaultValue: '{{providerName}} Key:', providerName: activeProvider.name })}
+                {((providerMode === 'standard' && !!user?.ai_configuration?.custom_keys?.google_ai) || 
+                  (providerMode === 'custom_keys' && hasSelectedProviderKey)) ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    {t('profile.aiConfig.statusActive', { defaultValue: 'Active' })}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-rose-500 font-medium">
+                    <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                    {t('profile.aiConfig.statusInactive', { defaultValue: 'Inactive' })}
+                  </span>
+                )}
+              </span>
+              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="xs" className="rounded-lg text-[10px] h-6 bg-secondary/50">
+                    {((providerMode === 'standard' && !!user?.ai_configuration?.custom_keys?.google_ai) || 
+                      (providerMode === 'custom_keys' && hasSelectedProviderKey)) 
+                      ? t('common.edit', { defaultValue: 'Edit' }) 
+                      : t('profile.aiConfig.connectKey', { defaultValue: 'Connect Key' })}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="rounded-2xl max-w-md bg-card border border-border shadow-lg">
+                  <DialogHeader>
+                    <DialogTitle className="text-base font-bold flex items-center gap-2">
+                      <Key className="h-4 w-4 text-primary" />
+                      {providerMode === 'standard'
+                        ? t('profile.aiConfig.modelSelectorTitleGemini', { defaultValue: 'Connect Gemini Key' })
+                        : t('profile.aiConfig.modelSelectorTitleProvider', { defaultValue: 'Connect {{providerName}} Key', providerName: activeProvider.name })}
+                    </DialogTitle>
+                    <DialogDescription className="text-xs text-muted-foreground">
+                      {t('profile.aiConfig.setupInstructions', { defaultValue: 'Setting up your custom API key is easy! Follow these steps:' })}
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="space-y-4 py-2">
+                    <div className="text-xs space-y-2 text-foreground/90 bg-secondary/25 p-3.5 rounded-xl border border-border/40">
+                      <p>{steps.step1}</p>
+                      <p>{steps.step2}</p>
+                      <p>{steps.step3}</p>
                     </div>
-                    <span className="text-base font-bold text-primary">{currentCredits}</span>
-                  </div>
 
-                  <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <Coins className="h-5 w-5 text-amber-500/80" />
-                      <div>
-                        <div className="text-xs font-semibold text-foreground">
-                          {t('profile.aiConfig.appFeeLabel', { defaultValue: 'Accrued App Fee' })}
-                        </div>
-                        <div className="text-[11px] text-muted-foreground mt-0.5">
-                          {t('profile.aiConfig.appFeeDescription', { defaultValue: 'Unpaid platform fee accrued from credit usage.' })}
-                        </div>
-                      </div>
+                    <div className="flex justify-end">
+                      <a 
+                        href={steps.link} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                      >
+                        {t('profile.aiConfig.getKeyBtn', { defaultValue: 'Get API Key' })}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
                     </div>
-                    <span className="text-base font-bold text-amber-600 dark:text-amber-400">${calculatedFee}</span>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold">{t('profile.aiConfig.apiKeyLabel', { defaultValue: 'API Key' })}</Label>
+                      <Input 
+                        type="password"
+                        value={apiKeyInput}
+                        onChange={(e) => setApiKeyInput(e.target.value)}
+                        placeholder={t('profile.aiConfig.keyPlaceholder', { defaultValue: 'Paste your API key here...' })}
+                        className="rounded-xl text-xs h-9 bg-card"
+                      />
+                    </div>
+                    
+                    <Button 
+                      className="w-full rounded-xl text-xs h-9 font-semibold"
+                      onClick={() => handleSaveConfig(providerMode, apiKeyInput, providerMode === 'standard' ? 'google_ai' : activeProviderId)}
+                      disabled={busy || !apiKeyInput}
+                    >
+                      {busy && <Loader2 className="h-3 w-3 animate-spin mr-1.5" />}
+                      {t('profile.aiConfig.saveBtn', { defaultValue: 'Save Configuration' })}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-normal">
+              {providerMode === 'standard' 
+                ? t('profile.aiConfig.standardInstructions', { defaultValue: 'Configure your own Google Gemini key to run personalized model queries. The standard plan uses Google\'s free-tier developer API quota.' })
+                : t('profile.aiConfig.setupInstructions', { defaultValue: 'Configure your own developer key to run queries directly against your own account quota.' })
+              }
+            </p>
+          </div>
+        )}
+
+        {providerMode !== 'on_device' && (
+          <div className="space-y-3">
+            <div className="p-4 rounded-2xl bg-card border border-border/50 flex items-center justify-between shadow-sm">
+              <div className="flex items-center gap-2.5">
+                <Coins className="h-5 w-5 text-primary/80" />
+                <div className="text-start">
+                  <div className="text-xs font-semibold text-foreground">
+                    {t('profile.aiConfig.creditsLabel', { defaultValue: 'Remaining Credits' })}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {t('profile.aiConfig.creditsUsed', { defaultValue: 'Monthly credit price is $0.005. 7% platform fee is added.' })}
                   </div>
                 </div>
-              )}
-
-              {providerMode === 'on_device' && (
-                <div className="p-4 rounded-2xl bg-secondary/40 border border-border/60 flex items-center gap-3">
-                  <Info className="h-5 w-5 text-muted-foreground shrink-0" />
-                  <p className="text-[11px] text-muted-foreground leading-normal">
-                    {t('profile.aiConfig.edgeNotice', { defaultValue: 'Running local Gemma4-E2B offline. Execution usage metrics are monitored locally and credited back via Google Nano Banana.' })}
-                  </p>
-                </div>
-              )}
-
-              <div className="text-[10px] text-muted-foreground leading-normal flex items-start gap-1.5 p-1 bg-secondary/15 rounded-lg">
-                <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
-                <span>
-                  {t('profile.aiConfig.feeNotice', { defaultValue: 'A 7% platform fee is applied to your credit usage to cover custom technology, layout rendering, and prompt processing.' })}
-                  {creditsUsed > 0 && ` Current fee: $${calculatedFee}.`}
-                </span>
               </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </CardContent>
-    </Card>
+              <span className="text-base font-bold text-primary">{currentCredits}</span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-card border border-border/50 flex items-center justify-between shadow-sm">
+              <div className="flex items-center gap-2.5">
+                <Coins className="h-5 w-5 text-amber-500/80" />
+                <div className="text-start">
+                  <div className="text-xs font-semibold text-foreground">
+                    {t('profile.aiConfig.appFeeLabel', { defaultValue: 'Accrued App Fee' })}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {t('profile.aiConfig.appFeeDescription', { defaultValue: 'Unpaid platform fee accrued from credit usage.' })}
+                  </div>
+                </div>
+              </div>
+              <span className="text-base font-bold text-amber-600 dark:text-amber-400">${calculatedFee}</span>
+            </div>
+          </div>
+        )}
+
+        {providerMode === 'on_device' && (
+          <div className="p-4 rounded-2xl bg-card border border-border/60 flex items-center gap-3 text-start shadow-sm">
+            <Info className="h-5 w-5 text-muted-foreground shrink-0" />
+            <p className="text-[11px] text-muted-foreground leading-normal">
+              {t('profile.aiConfig.edgeNotice', { defaultValue: 'Running local Gemma4-E2B offline. Execution usage metrics are monitored locally and credited back via Google Nano Banana.' })}
+            </p>
+          </div>
+        )}
+
+        <div className="text-[10px] text-muted-foreground leading-normal flex items-start gap-1.5 p-1 bg-secondary/15 rounded-lg text-start">
+          <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+          <span>
+            {t('profile.aiConfig.feeNotice', { defaultValue: 'A 7% platform fee is applied to your credit usage to cover custom technology, layout rendering, and prompt processing.' })}
+            {creditsUsed > 0 && ` Current fee: $${calculatedFee}.`}
+          </span>
+        </div>
+      </AccordionContent>
+    </AccordionItem>
   );
 }
-
 
 export default function Profile() {
   const { t, i18n } = useTranslation();
   const { user, updateUserLocal, logout } = useAuth();
   const nav = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [form, setForm] = useState({
     preferred_language: (user?.preferred_language || i18n.language || 'en').toLowerCase(),
     preferred_voice_id: user?.preferred_voice_id || 'aura-2-thalia-en',
   });
   const [busy, setBusy] = useState(false);
   const [langBusy, setLangBusy] = useState(false);
+  const [expandedItems, setExpandedItems] = useState([]);
 
   const isDirty = useMemo(() => {
     if (!user) return false;
@@ -694,6 +673,25 @@ export default function Profile() {
       (key) => String(form[key]) !== String(initial[key])
     );
   }, [user, form, i18n.language]);
+
+  useEffect(() => {
+    const items = [];
+    if (searchParams.get('open') === 'scheduler' || location.hash === '#scheduler-settings-section' || location.state?.scrollTo === 'scheduler-settings-section') {
+      items.push('scheduler');
+      setTimeout(() => {
+        document.getElementById('scheduler-settings-section')?.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+    }
+    if (location.hash === '#ai-configuration-section' || location.state?.scrollTo === 'ai-configuration-section') {
+      items.push('ai-config');
+      setTimeout(() => {
+        document.getElementById('ai-configuration-section')?.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+    }
+    if (items.length > 0) {
+      setExpandedItems(items);
+    }
+  }, [searchParams, location]);
 
   useEffect(() => {
     if (user?.preferred_language) {
@@ -723,7 +721,7 @@ export default function Profile() {
   };
 
   const save = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     setBusy(true);
     try {
       const body = {
@@ -786,7 +784,7 @@ export default function Profile() {
             <div className="mt-3 md:mt-0 md:ms-auto w-full md:w-72">
               <Select
                 value={form.preferred_language}
-                onValueChange={onLanguageChange}
+                onLanguageChange={onLanguageChange}
                 disabled={langBusy}
               >
                 <SelectTrigger className="rounded-xl" data-testid="language-selector">
@@ -817,75 +815,93 @@ export default function Profile() {
       </div>
 
       <div className="mb-6">
-        <AIConfigurationCard />
-      </div>
+        <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial" data-testid="profile-settings-card">
+          <CardContent className="p-6 space-y-4">
+            <div>
+              <div className="caps-label text-muted-foreground">
+                {t('profile.sections.settings', { defaultValue: 'Settings & Integrations' })}
+              </div>
+              <h3 className="font-display text-xl mt-0.5">{t('profile.settingsTitle', { defaultValue: 'System Preferences' })}</h3>
+            </div>
 
-      <div className="mb-6">
-        <SchedulerSettingsCard />
-      </div>
+            <Accordion
+              type="multiple"
+              value={expandedItems}
+              onValueChange={setExpandedItems}
+              className="w-full space-y-4"
+            >
+              <AIConfigurationAccordionItem />
+              <SchedulerSettingsAccordionItem />
+              <CalendarConnect />
+              <LocationCard />
+              <InviteFriendsButton />
 
-      <div className="mb-6">
-        <CalendarConnect />
-      </div>
-
-      <div className="mb-6">
-        <LocationCard />
-      </div>
-
-      <div className="mb-6">
-        <InviteFriendsButton />
-      </div>
-
-      <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
-        <CardContent className="p-6">
-          <form onSubmit={save} className="space-y-6" data-testid="settings-form">
-            <Accordion type="multiple" defaultValue={["voice"]}>
-              <AccordionItem value="voice" className="border-none">
-                <AccordionTrigger className="py-2 hover:no-underline">
-                  <div className="caps-label text-muted-foreground text-start m-0">{t('profile.voiceLanguage')}</div>
+              {/* --- Voice & Language (Self-contained) --- */}
+              <AccordionItem
+                value="voice"
+                className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300"
+              >
+                <AccordionTrigger className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none">
+                  <div className="flex items-center gap-4 text-start">
+                    <div className="p-2.5 rounded-xl bg-[hsl(174_44%_93%)] text-[hsl(174_44%_33%)] dark:bg-[hsl(174_30%_18%)] dark:text-[hsl(174_44%_60%)] shrink-0 transition-transform duration-200">
+                      <Languages className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                        {t('profile.voiceLanguage', { defaultValue: 'Voice & Language' })}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                        {t('profile.voiceLanguageDesc', { defaultValue: 'Stylist virtual voice and accessibility settings' })}
+                      </span>
+                    </div>
+                  </div>
                 </AccordionTrigger>
-                <AccordionContent className="pt-2 space-y-3 pb-2">
-                  <div>
-                    <Label>{t('profile.voice')}</Label>
+                <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5 space-y-4">
+                  <div className="text-start">
+                    <Label htmlFor="preferred-voice">{t('profile.voice', { defaultValue: 'Stylist Voice' })}</Label>
                     <Select value={form.preferred_voice_id} onValueChange={(v) => setForm({ ...form, preferred_voice_id: v })}>
-                      <SelectTrigger className="rounded-xl" data-testid="settings-voice"><SelectValue /></SelectTrigger>
-                      <SelectContent>{VOICES.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent>
+                      <SelectTrigger id="preferred-voice" className="rounded-xl bg-card mt-1.5" data-testid="settings-voice">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        {VOICES.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+                      </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <Button 
+                      onClick={save} 
+                      disabled={busy || !isDirty}
+                      className="rounded-xl"
+                      data-testid="settings-save-button"
+                    >
+                      {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 me-2" />}
+                      {t('profile.saveProfile', { defaultValue: 'Save Voice Settings' })}
+                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
 
-            <div className="flex pt-2">
-              <Button type="button" variant="secondary" className="rounded-xl w-full"
-                onClick={() => { logout(); nav('/login'); }} data-testid="settings-logout-button">
+            <div className="flex pt-4">
+              <Button
+                type="button"
+                variant="secondary"
+                className="rounded-xl w-full hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all duration-300"
+                onClick={() => { logout(); nav('/login'); }}
+                data-testid="settings-logout-button"
+              >
                 <LogOut className="h-4 w-4 me-2" /> {t('profile.signOut')}
               </Button>
             </div>
             
-            {/* Floating Save Changes Button */}
-            {isDirty && (
-              <Button 
-                type="submit" 
-                disabled={busy} 
-                className="fixed bottom-20 end-6 md:bottom-8 md:end-8 z-40 shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 rounded-full h-12 w-12 p-0 flex items-center justify-center"
-                data-testid="settings-save-button"
-              >
-                {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
-              </Button>
-            )}
-          </form>
-
-          {/*
-            Admin-only Developer panel. Renders nothing for non-admin
-            users (gate is inside the component) so this block is safe
-            to leave unconditionally mounted.
-          */}
-          <div className="mt-6">
-            <DeveloperPanel user={user} />
-          </div>
-        </CardContent>
-      </Card>
+            <div className="mt-6">
+              <DeveloperPanel user={user} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, CheckCircle2, AlertCircle, Loader2, Link as LinkIcon, Unlink } from 'lucide-react';
+import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 
@@ -79,97 +80,101 @@ export const CalendarConnect = () => {
   };
 
   return (
-    <Card
-      className="rounded-[calc(var(--radius)+6px)] shadow-editorial"
+    <AccordionItem
+      value="calendar"
+      className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300"
       data-testid="calendar-connect-card"
     >
-      <CardContent className="p-6">
-        <div className="flex flex-col sm:flex-row items-start gap-4">
-          <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
+      <AccordionTrigger className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none">
+        <div className="flex items-center gap-4 text-start">
+          <div className="p-2.5 rounded-xl bg-[hsl(217_91%_95%)] text-[hsl(217_91%_56%)] dark:bg-[hsl(217_30%_18%)] dark:text-[hsl(217_91%_70%)] shrink-0 transition-transform duration-200">
             <Calendar className="h-5 w-5" />
           </div>
-          <div className="flex-1 min-w-0 w-full">
+          <div>
             <div className="flex items-center gap-2">
-              <div className="caps-label text-muted-foreground">{t('calendar.context')}</div>
+              <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                {t('calendar.title', { defaultValue: 'Google Calendar' })}
+              </span>
               {loading ? null : status.connected ? (
                 <Badge
                   variant="outline"
-                  className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[11px]"
+                  className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] rounded-full py-0.5 px-2 font-semibold"
                   data-testid="calendar-connected-badge"
                 >
-                  <CheckCircle2 className="h-3 w-3 me-1" /> {t('calendar.connectedBadge')}
+                  <CheckCircle2 className="h-3 w-3 me-1 inline" /> {t('calendar.connectedBadge')}
                 </Badge>
               ) : (
                 <Badge
                   variant="outline"
-                  className="text-[11px]"
+                  className="text-[10px] rounded-full py-0.5 px-2 font-semibold"
                   data-testid="calendar-disconnected-badge"
                 >
                   {t('calendar.notConnected')}
                 </Badge>
               )}
             </div>
-            <h3 className="font-display text-xl mt-1">{t('calendar.title')}</h3>
-            <p className="text-sm text-muted-foreground mt-1 max-w-xl">
-              {t('calendar.description')}
-            </p>
-            {status.connected && status.google_email ? (
-              <div
-                className="text-xs text-muted-foreground mt-2"
-                data-testid="calendar-connected-email"
-              >
-                {t('calendar.signedInAs')} <span className="font-medium">{status.google_email}</span>
-              </div>
-            ) : null}
-          </div>
-          <div className="shrink-0 w-full sm:w-auto">
-            {loading ? (
-              <Button variant="secondary" disabled className="rounded-xl w-full sm:w-auto">
-                <Loader2 className="h-4 w-4 animate-spin" />
-              </Button>
-            ) : status.connected ? (
-              <Button
-                variant="outline"
-                disabled={busy}
-                onClick={disconnect}
-                className="rounded-xl w-full sm:w-auto"
-                data-testid="calendar-disconnect-button"
-              >
-                {busy ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    <Unlink className="h-4 w-4 me-2" /> {t('calendar.disconnectAction')}
-                  </>
-                )}
-              </Button>
-            ) : (
-              <Button
-                disabled={busy}
-                onClick={connect}
-                className="rounded-xl w-full sm:w-auto"
-                data-testid="calendar-connect-button"
-              >
-                {busy ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    <LinkIcon className="h-4 w-4 me-2" /> {t('calendar.connectAction')}
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-        </div>
-        {!loading && !status.connected ? (
-          <div className="mt-4 flex items-start gap-2 text-xs text-muted-foreground">
-            <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-            <span>
-              {t('calendar.offlineHint')} <em>{t('calendar.includeCalendarEm')}</em>.
+            <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+              {t('calendar.description', { defaultValue: 'Sync daily outfit proposals directly to your Google Calendar' })}
             </span>
           </div>
-        ) : null}
-      </CardContent>
-    </Card>
+        </div>
+      </AccordionTrigger>
+      <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
+        <div className="space-y-3">
+          {status.connected && status.google_email ? (
+            <div
+              className="text-xs text-muted-foreground text-start"
+              data-testid="calendar-connected-email"
+            >
+              {t('calendar.signedInAs')} <span className="font-medium text-foreground">{status.google_email}</span>
+            </div>
+          ) : null}
+
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+            <p className="text-xs text-muted-foreground max-w-md text-start">
+              {t('calendar.offlineHint', { defaultValue: 'Connect your Google account to automatically export styled outfits as calendar events.' })}
+            </p>
+            <div className="shrink-0 w-full sm:w-auto">
+              {loading ? (
+                <Button variant="secondary" disabled className="rounded-xl w-full sm:w-auto">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                </Button>
+              ) : status.connected ? (
+                <Button
+                  variant="outline"
+                  disabled={busy}
+                  onClick={disconnect}
+                  className="rounded-xl w-full sm:w-auto bg-card"
+                  data-testid="calendar-disconnect-button"
+                >
+                  {busy ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Unlink className="h-4 w-4 me-2" /> {t('calendar.disconnectAction')}
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  disabled={busy}
+                  onClick={connect}
+                  className="rounded-xl w-full sm:w-auto"
+                  data-testid="calendar-connect-button"
+                >
+                  {busy ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <LinkIcon className="h-4 w-4 me-2" /> {t('calendar.connectAction')}
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </AccordionContent>
+    </AccordionItem>
   );
 };
