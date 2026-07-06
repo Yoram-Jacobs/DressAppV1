@@ -960,11 +960,16 @@ function ShoppingAssistantAccordionItem() {
           
           <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <a
-              href="javascript:(function(){if(!document.getElementById('dressapp-mobile-styles')){var s=document.createElement('script');s.src='https://dressapp.co/widget/dressapp-mobile-floater.js';document.body.appendChild(s);}})();"
+              ref={(el) => {
+                if (el) {
+                  el.setAttribute('href', "javascript:(function(){if(!document.getElementById('dressapp-mobile-styles')){var s=document.createElement('script');s.src='https://dressapp.co/widget/dressapp-mobile-floater.js';document.body.appendChild(s);}})();");
+                }
+              }}
               title="DressApp Shopping Assistant"
               className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-emerald-500 transition-colors cursor-grab"
               onClick={(e) => {
                 // If clicked, trigger alert instruction on how to add to bookmark
+                e.preventDefault();
                 alert(t('profile.bookmarkletInstruction', { defaultValue: "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations." }));
               }}
             >
