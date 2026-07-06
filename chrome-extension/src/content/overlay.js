@@ -114,16 +114,18 @@ export function mountOverlay(opts) {
       body.appendChild(small);
 
       const isBookmarklet = typeof chrome === 'undefined' || !chrome.runtime?.sendMessage;
+      const connectBtn = document.createElement('a');
+      connectBtn.className = 'dressapp-overlay-cta';
+      connectBtn.style.display = 'inline-block';
+      connectBtn.style.marginTop = '12px';
       if (isBookmarklet) {
-        const connectBtn = document.createElement('a');
-        connectBtn.className = 'dressapp-overlay-cta';
-        connectBtn.style.display = 'inline-block';
-        connectBtn.style.marginTop = '12px';
         connectBtn.href = `https://dressapp.co/extension/connect?ext_id=bookmarklet&v=1`;
-        connectBtn.target = '_blank';
-        connectBtn.textContent = i18n.t('connect', { defaultValue: 'Connect to DressApp' });
-        body.appendChild(connectBtn);
+      } else {
+        connectBtn.href = `https://dressapp.co/extension/connect?ext_id=${encodeURIComponent(chrome.runtime.id)}&v=1`;
       }
+      connectBtn.target = '_blank';
+      connectBtn.textContent = i18n.t('connect', { defaultValue: 'Connect to DressApp' });
+      body.appendChild(connectBtn);
     }
   }
 

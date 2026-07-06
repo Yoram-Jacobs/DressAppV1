@@ -119,6 +119,7 @@ export default function ExtensionConnect() {
     setError(null);
     const payload = {
       type: 'DRESSAPP_EXT_TOKEN',
+      ext_id: extId || null,
       version: HANDOFF_VERSION,
       issued_at: new Date().toISOString(),
       token,

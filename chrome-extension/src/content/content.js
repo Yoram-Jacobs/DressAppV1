@@ -779,11 +779,14 @@ window.addEventListener('message', async (e) => {
     }
   }
 
-  if (e.data.type === 'DRESSAPP_EXT_TOKEN' && e.data.ext_id === 'bookmarklet') {
-    await sendToBackground({
-      type: messages.RECEIVE_HANDOFF,
-      payload: e.data
-    });
+  if (e.data.type === 'DRESSAPP_EXT_TOKEN') {
+    const isBookmarklet = typeof chrome === 'undefined' || !chrome.runtime?.sendMessage;
+    if (isBookmarklet || e.data.ext_id === 'bookmarklet') {
+      await sendToBackground({
+        type: messages.RECEIVE_HANDOFF,
+        payload: e.data
+      });
+    }
     void scheduleMount();
   }
 });
