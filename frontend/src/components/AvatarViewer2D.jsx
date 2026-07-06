@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { ImageOff, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { bestImageUrl } from '@/lib/itemImage';
+import { closetStore } from '@/lib/closetStore';
+
 export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfitItems = {}, onItemClick }) {
   const { t } = useTranslation();
 
@@ -33,12 +35,49 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
     };
   }, [params]);
 
-// AvatarViewer2D.jsx
   // Determine outfit garment URLs and IDs
   const garments = useMemo(() => {
     const res = {};
+    const allClosetItems = closetStore.getSnapshot().items || [];
+
     Object.entries(outfitItems || {}).forEach(([role, item]) => {
       if (item) {
+        // Resolve item from closetStore to see if it is part of a set
+        const itemId = item.closet_item_id || item.id;
+        const closetItem = allClosetItems.find(it => it.id === itemId);
+        
+        if (closetItem && closetItem.group_id) {
+          // Find all items in this group
+          const groupItems = allClosetItems.filter(it => it.group_id === closetItem.group_id);
+          // Check if it's a set (multiple categories)
+          const normCategory = (cat) => {
+            const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');
+            if (s === 'top' || s === 'tops') return 'top';
+            if (s === 'bottom' || s === 'bottoms') return 'bottom';
+            if (s === 'footwear' || s === 'shoes') return 'footwear';
+            if (s === 'accessory' || s === 'accessories') return 'accessories';
+            return s;
+          };
+          const categories = new Set(groupItems.map(it => normCategory(it.category)));
+          
+          if (categories.size > 1) {
+            // It's a set! Map each group item to its correct category
+            groupItems.forEach(gItem => {
+              const cat = (gItem.category || '').toLowerCase().trim();
+              let slot = cat;
+              if (cat === 'footwear') slot = 'shoes';
+              if (cat === 'accessories') slot = 'accessory';
+              
+              res[slot] = {
+                url: bestImageUrl(gItem) || gItem.image_data_url || gItem.segmented_image_url || gItem.image_url || gItem.original_image_url,
+                id: gItem.id
+              };
+            });
+            return; // Skip the default mapping since we mapped the whole set
+          }
+        }
+
+        // Default mapping if not a set
         res[role] = {
            url: bestImageUrl(item) || item.image_data_url || item.segmented_image_url || item.image_url || item.original_image_url || item.url,
            id: item.closet_item_id || item.id || null

@@ -37,6 +37,42 @@ async def get_rotation_prioritized_closet(user_id: str, limit: int = 40) -> list
         if "_id" in item:
             item.pop("_id")
 
+    # Hydrate group members if they are part of a set
+    group_ids = [r["group_id"] for r in items if r.get("group_id")]
+    if group_ids:
+        members_cursor = db.closet_items.find({
+            "group_id": {"$in": group_ids},
+            "group_role": "member",
+            "is_duplicate": {"$ne": True},
+        })
+        members = [doc async for doc in members_cursor]
+        
+        from collections import defaultdict
+        members_by_group = defaultdict(list)
+        for m in members:
+            if "_id" in m:
+                m.pop("_id")
+            members_by_group[m["group_id"]].append(m)
+            
+        def norm_category(cat):
+            s = str(cat or "").strip().lower().replace(" ", "_")
+            if s in ("top", "tops"): return "top"
+            if s in ("bottom", "bottoms"): return "bottom"
+            if s in ("footwear", "shoes"): return "footwear"
+            if s in ("accessory", "accessories"): return "accessories"
+            return s
+            
+        final_items = []
+        for item in items:
+            final_items.append(item)
+            g_id = item.get("group_id")
+            if g_id and g_id in members_by_group:
+                g_members = members_by_group[g_id]
+                all_cats = {norm_category(item.get("category")), *(norm_category(m.get("category")) for m in g_members)}
+                if len(all_cats) > 1:
+                    final_items.extend(g_members)
+        items = final_items
+
     # Define sort key
     def sort_key(item: dict[str, Any]) -> tuple:
         last_sug = item.get("last_suggested_at") or ""

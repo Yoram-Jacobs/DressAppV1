@@ -982,12 +982,25 @@ export default function ItemDetail() {
       tradition: form.tradition
     };
 
+    const normCategory = (cat) => {
+      const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');
+      if (s === 'top' || s === 'tops') return 'top';
+      if (s === 'bottom' || s === 'bottoms') return 'bottom';
+      if (s === 'footwear' || s === 'shoes') return 'footwear';
+      if (s === 'accessory' || s === 'accessories') return 'accessories';
+      return s;
+    };
+    const allItemsInGroup = [hostObj, ...members].filter(Boolean);
+    const categories = new Set(allItemsInGroup.map(it => normCategory(it.category)));
+    const isGroupSet = categories.size > 1;
+
     const mismatchesSet = new Set();
-    const members = currentGroupItems.filter(m => m.id !== hostIdState);
-    for (const m of members) {
-      const diffs = getTaxonomyMismatches(hostObj, m);
-      for (const d of diffs) {
-        mismatchesSet.add(d);
+    if (!isGroupSet) {
+      for (const m of members) {
+        const diffs = getTaxonomyMismatches(hostObj, m);
+        for (const d of diffs) {
+          mismatchesSet.add(d);
+        }
       }
     }
 

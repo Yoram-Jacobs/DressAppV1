@@ -100,5 +100,59 @@ async def run_test():
 
     print("✅ reanalyze_group_helper test PASSED successfully!")
 
+async def run_set_test():
+    print("Starting set-aware reanalyze_group_helper test...")
+
+    # Mock items in the group with different categories
+    item1 = {
+        "id": "item1",
+        "group_id": "group123",
+        "user_id": "user123",
+        "group_role": "host",
+        "category": "top",
+    }
+    item2 = {
+        "id": "item2",
+        "group_id": "group123",
+        "user_id": "user123",
+        "group_role": "member",
+        "category": "bottom",
+    }
+    group_items = [item1, item2]
+
+    # Setup database mocks
+    mock_db = MagicMock()
+    mock_db.closet_items = AsyncMock()
+
+    # Track updates (update_many)
+    updates_sent = {}
+    async def mock_update_many(filter_doc, update_doc):
+        updates_sent["filter"] = filter_doc
+        updates_sent["update"] = update_doc["$set"]
+        return MagicMock()
+
+    mock_db.closet_items.update_many = mock_update_many
+
+    # Mock vision service (should NOT be called!)
+    mock_service = AsyncMock()
+
+    with patch("app.api.v1.closet.get_db", return_value=mock_db), \
+         patch("app.api.v1.closet.repos.find_many", AsyncMock(return_value=group_items)), \
+         patch("app.api.v1.closet.garment_vision_service", mock_service):
+
+        await reanalyze_group_helper("group123", "user123")
+
+    # Assertions
+    assert not mock_service.analyze_group.called, "analyze_group should not be called for sets"
+    assert "filter" in updates_sent, "update_many was not called"
+    assert updates_sent["filter"]["id"]["$in"] == ["item1", "item2"]
+    assert updates_sent["update"]["group_analysis_status"] == "ready"
+
+    print("✅ set-aware reanalyze_group_helper test PASSED successfully!")
+
+async def main():
+    await run_test()
+    await run_set_test()
+
 if __name__ == "__main__":
-    asyncio.run(run_test())
+    asyncio.run(main())

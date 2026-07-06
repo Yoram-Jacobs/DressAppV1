@@ -348,14 +348,31 @@ export default function Closet() {
         });
     };
 
-    const mismatches = getTaxonomyMismatches(sourceItem, targetItem);
-    if (mismatches.length > 0) {
-      setGatekeeperMismatches(mismatches);
-      setGatekeeperPendingAction({
-        onApprove: runGrouping
-      });
-      setGatekeeperOpen(true);
+    const normCategory = (cat) => {
+      const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');
+      if (s === 'top' || s === 'tops') return 'top';
+      if (s === 'bottom' || s === 'bottoms') return 'bottom';
+      if (s === 'footwear' || s === 'shoes') return 'footwear';
+      if (s === 'accessory' || s === 'accessories') return 'accessories';
+      return s;
+    };
+    const sourceCategory = normCategory(sourceItem?.category);
+    const targetCategory = normCategory(targetItem?.category);
+    const isSameCategory = sourceCategory === targetCategory;
+
+    if (isSameCategory) {
+      const mismatches = getTaxonomyMismatches(sourceItem, targetItem);
+      if (mismatches.length > 0) {
+        setGatekeeperMismatches(mismatches);
+        setGatekeeperPendingAction({
+          onApprove: runGrouping
+        });
+        setGatekeeperOpen(true);
+      } else {
+        runGrouping();
+      }
     } else {
+      // Auto-recognized as a set, group directly!
       runGrouping();
     }
   };
@@ -365,12 +382,12 @@ export default function Closet() {
     touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
     touchLastPosRef.current = { x: touch.clientX, y: touch.clientY };
     touchCurrentPosRef.current = { x: touch.clientX, y: touch.clientY };
+    setTouchPos({ x: touch.clientX, y: touch.clientY });
     setIsTouchDragging(false);
 
     touchTimeoutRef.current = setTimeout(() => {
       setIsTouchDragging(true);
       setDraggedId(id);
-      setTouchPos({ x: touchCurrentPosRef.current.x, y: touchCurrentPosRef.current.y });
       if (navigator.vibrate) {
         navigator.vibrate(45);
       }
@@ -384,6 +401,7 @@ export default function Closet() {
     const deltaY = touch.clientY - touchLastPosRef.current.y;
     touchLastPosRef.current = { x: touch.clientX, y: touch.clientY };
     touchCurrentPosRef.current = { x: touch.clientX, y: touch.clientY };
+    setTouchPos({ x: touch.clientX, y: touch.clientY });
 
     if (!isTouchDragging) {
       if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
@@ -394,8 +412,6 @@ export default function Closet() {
       }
       return;
     }
-
-    setTouchPos({ x: touch.clientX, y: touch.clientY });
 
     if (e.cancelable) {
       e.preventDefault();
@@ -468,14 +484,31 @@ export default function Closet() {
           });
       };
 
-      const mismatches = getTaxonomyMismatches(sourceItem, targetItem);
-      if (mismatches.length > 0) {
-        setGatekeeperMismatches(mismatches);
-        setGatekeeperPendingAction({
-          onApprove: runGrouping
-        });
-        setGatekeeperOpen(true);
+      const normCategory = (cat) => {
+        const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');
+        if (s === 'top' || s === 'tops') return 'top';
+        if (s === 'bottom' || s === 'bottoms') return 'bottom';
+        if (s === 'footwear' || s === 'shoes') return 'footwear';
+        if (s === 'accessory' || s === 'accessories') return 'accessories';
+        return s;
+      };
+      const sourceCategory = normCategory(sourceItem?.category);
+      const targetCategory = normCategory(targetItem?.category);
+      const isSameCategory = sourceCategory === targetCategory;
+
+      if (isSameCategory) {
+        const mismatches = getTaxonomyMismatches(sourceItem, targetItem);
+        if (mismatches.length > 0) {
+          setGatekeeperMismatches(mismatches);
+          setGatekeeperPendingAction({
+            onApprove: runGrouping
+          });
+          setGatekeeperOpen(true);
+        } else {
+          runGrouping();
+        }
       } else {
+        // Auto-recognized as a set, group directly!
         runGrouping();
       }
     }
@@ -1278,11 +1311,25 @@ export default function Closet() {
                 const hostItem = (store.items || []).find(it => it.id === hostId);
                 const memberItems = memberIds.map(mid => (store.items || []).find(it => it.id === mid)).filter(Boolean);
 
+                const normCategory = (cat) => {
+                  const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');
+                  if (s === 'top' || s === 'tops') return 'top';
+                  if (s === 'bottom' || s === 'bottoms') return 'bottom';
+                  if (s === 'footwear' || s === 'shoes') return 'footwear';
+                  if (s === 'accessory' || s === 'accessories') return 'accessories';
+                  return s;
+                };
+                const allItemsInGroup = [hostItem, ...memberItems].filter(Boolean);
+                const categories = new Set(allItemsInGroup.map(it => normCategory(it.category)));
+                const isBulkSet = categories.size > 1;
+
                 const mismatchesSet = new Set();
-                for (const m of memberItems) {
-                  const diffs = getTaxonomyMismatches(hostItem, m);
-                  for (const d of diffs) {
-                    mismatchesSet.add(d);
+                if (!isBulkSet) {
+                  for (const m of memberItems) {
+                    const diffs = getTaxonomyMismatches(hostItem, m);
+                    for (const d of diffs) {
+                      mismatchesSet.add(d);
+                    }
                   }
                 }
                 const mismatches = Array.from(mismatchesSet);
@@ -1537,6 +1584,26 @@ export default function Closet() {
 /* -------------------- shared card body -------------------- */
 function ItemCardInner({ item, isSelected, showCheckbox, score }) {
   const { t } = useTranslation();
+  const groupItems = useMemo(() => {
+    if (!item.group_id) return [];
+    const allItems = closetStore.getSnapshot().items || [];
+    return allItems.filter(it => it.group_id === item.group_id);
+  }, [item.group_id]);
+
+  const isSet = useMemo(() => {
+    if (groupItems.length <= 1) return false;
+    const normCategory = (cat) => {
+      const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');
+      if (s === 'top' || s === 'tops') return 'top';
+      if (s === 'bottom' || s === 'bottoms') return 'bottom';
+      if (s === 'footwear' || s === 'shoes') return 'footwear';
+      if (s === 'accessory' || s === 'accessories') return 'accessories';
+      return s;
+    };
+    const categories = new Set(groupItems.map(it => normCategory(it.category)));
+    return categories.size > 1;
+  }, [groupItems]);
+
   return (
     <Card
       className={`rounded-[calc(var(--radius)+6px)] overflow-hidden border-border shadow-editorial group-hover:shadow-editorial-md transition-shadow ${
@@ -1691,11 +1758,26 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
       <CardContent className="p-3">
         <div className="flex items-center justify-between gap-2">
           <div className="font-medium text-sm truncate">{item.title}</div>
-          <SourceTagBadge source={item.source} intent={item.marketplace_intent} className="hidden md:inline-flex" />
+          <div className="flex items-center gap-1.5 shrink-0">
+            {isSet && (
+              <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[10px] caps-label px-1.5 py-0.5 rounded">
+                {t('closet.outfitSet', { defaultValue: 'Outfit set' })}
+              </Badge>
+            )}
+            <SourceTagBadge source={item.source} intent={item.marketplace_intent} className="hidden md:inline-flex" />
+          </div>
         </div>
         <div className="text-xs text-muted-foreground mt-1 flex justify-between items-center gap-2">
           <span className="truncate">
-            {[labelForCategory(item.category, t), labelForColor(item.color, t)].filter(Boolean).join(' · ')}
+            {isSet ? (
+              (() => {
+                const sorted = [...groupItems].sort((a, b) => (a.group_role === 'host' ? -1 : 1));
+                const categoryNames = sorted.map(it => labelForCategory(it.category, t));
+                return categoryNames.join(' · ');
+              })()
+            ) : (
+              [labelForCategory(item.category, t), labelForColor(item.color, t)].filter(Boolean).join(' · ')
+            )}
           </span>
           {typeof item.wear_count === 'number' && (
             <span className="text-[10px] font-medium bg-secondary/80 px-1.5 py-0.5 rounded-full text-foreground whitespace-nowrap shrink-0" title={t('item.timesWorn', { count: item.wear_count, defaultValue: `Worn ${item.wear_count} times` })}>

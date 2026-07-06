@@ -191,7 +191,9 @@
     "tagConfirmTitle": "Tag Selected Items",
     "tagSelected": "Tag",
     "tagsAppliedError": "Some tags failed to sync to the server",
-    "tagsAppliedSuccess": "Tags applied successfully"
+    "tagsAppliedSuccess": "Tags applied successfully",
+    "outfitSet": "आउटफ़िट सेट",
+    "divideSet": "सेट विभाजित करें"
   },
   "addItem": {
     "title": "आइटम जोड़ें",

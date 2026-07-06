@@ -179,8 +179,55 @@ async def closet_summary_for(user_id: str, limit: int = 40) -> list[dict[str, An
         sort=[("updated_at", -1)],
         limit=limit,
     )
-    return [
-        {
+
+    # Collect group_ids of the loaded items to fetch members
+    group_ids = [r["group_id"] for r in rows if r.get("group_id")]
+    members_by_group = {}
+    if group_ids:
+        members_cursor = db.closet_items.find({
+            "group_id": {"$in": group_ids},
+            "group_role": "member",
+            "is_duplicate": {"$ne": True},
+        })
+        members = [doc async for doc in members_cursor]
+        from collections import defaultdict
+        members_by_group = defaultdict(list)
+        for m in members:
+            members_by_group[m["group_id"]].append(m)
+
+    def norm_category(cat):
+        s = str(cat or "").strip().lower().replace(" ", "_")
+        if s in ("top", "tops"): return "top"
+        if s in ("bottom", "bottoms"): return "bottom"
+        if s in ("footwear", "shoes"): return "footwear"
+        if s in ("accessory", "accessories"): return "accessories"
+        return s
+
+    final_items = []
+    for r in rows:
+        final_items.append(r)
+        g_id = r.get("group_id")
+        if g_id and g_id in members_by_group:
+            g_members = members_by_group[g_id]
+            # Check if it is a set (different categories)
+            all_cats = {norm_category(r.get("category")), *(norm_category(m.get("category")) for m in g_members)}
+            if len(all_cats) > 1:
+                # It's a set! Append the members of the set as well
+                final_items.extend(g_members)
+
+    res = []
+    for r in final_items:
+        g_id = r.get("group_id")
+        is_part_of_set = False
+        if g_id and g_id in members_by_group:
+            g_members = members_by_group[g_id]
+            all_cats = {norm_category(r.get("category")), *(norm_category(m.get("category")) for m in g_members)}
+            is_part_of_set = len(all_cats) > 1
+        elif g_id:
+            # If it's in final_items and is a member, it was added because it's a set!
+            is_part_of_set = True
+
+        item_dict = {
             "id": r["id"],
             "title": r.get("title"),
             "category": r.get("category"),
@@ -193,8 +240,13 @@ async def closet_summary_for(user_id: str, limit: int = 40) -> list[dict[str, An
             "tags": r.get("tags") or [],
             "source": r.get("source"),
         }
-        for r in rows
-    ]
+        if is_part_of_set:
+            item_dict["group_id"] = g_id
+            item_dict["group_role"] = r.get("group_role")
+            item_dict["is_set"] = True
+        res.append(item_dict)
+
+    return res
 
 
 # ---------------------------------------------------------------------------

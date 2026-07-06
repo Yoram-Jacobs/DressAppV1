@@ -4548,6 +4548,25 @@ async def reanalyze_group_helper(group_id: str, user_id: str) -> None:
     if not group_items:
         return
 
+    # Check if it's a set (multiple categories)
+    def norm_category(cat):
+        s = str(cat or "").strip().lower().replace(" ", "_")
+        if s in ("top", "tops"): return "top"
+        if s in ("bottom", "bottoms"): return "bottom"
+        if s in ("footwear", "shoes"): return "footwear"
+        if s in ("accessory", "accessories"): return "accessories"
+        return s
+
+    categories = {norm_category(r.get("category")) for r in group_items if r.get("category")}
+    if len(categories) > 1:
+        # It's a set of clothes! Skip LLM reanalysis.
+        item_ids = [it["id"] for it in group_items]
+        await db.closet_items.update_many(
+            {"id": {"$in": item_ids}, "user_id": user_id},
+            {"$set": {"group_analysis_status": "ready", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        return
+
     # Sort host first, then members
     group_items.sort(key=lambda x: 0 if x.get("group_role") == "host" else 1)
 

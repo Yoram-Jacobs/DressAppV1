@@ -31,6 +31,7 @@ import { useAuth } from '@/lib/auth';
 import { isTTSSupported, speak, cancelSpeak } from '@/lib/speech';
 import { ItemFloater } from '@/components/stylist/ItemFloater';
 import { bestImageUrl } from '@/lib/itemImage';
+import { closetStore } from '@/lib/closetStore';
 
 /**
  * Outfit Completion bottom sheet.
@@ -110,6 +111,27 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
   // Seeded from anchorsHint each time the sheet opens so the user can
   // reshuffle priority without leaving Closet.
   const [orderedAnchors, setOrderedAnchors] = useState([]);
+
+  const allClosetItems = closetStore.getSnapshot().items || [];
+  const getGroupItems = (item) => {
+    if (!item || !item.group_id) return [item];
+    return allClosetItems.filter(it => it.group_id === item.group_id);
+  };
+  const isSet = (item) => {
+    if (!item) return false;
+    const gItems = getGroupItems(item);
+    if (gItems.length <= 1) return false;
+    const normCategory = (cat) => {
+      const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');
+      if (s === 'top' || s === 'tops') return 'top';
+      if (s === 'bottom' || s === 'bottoms') return 'bottom';
+      if (s === 'footwear' || s === 'shoes') return 'footwear';
+      if (s === 'accessory' || s === 'accessories') return 'accessories';
+      return s;
+    };
+    const categories = new Set(gItems.map(it => normCategory(it.category)));
+    return categories.size > 1;
+  };
 
   const ttsSupported = isTTSSupported();
   const userLang = (user?.preferred_language || 'en').toLowerCase();
@@ -224,44 +246,84 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
                   className="grid grid-cols-3 sm:grid-cols-4 gap-3"
                   data-testid="outfit-completion-anchor-grid"
                 >
-                  {orderedAnchors.map((a, idx) => (
-                    <div key={a.id} className="relative">
-                      <ItemThumb item={a} />
-                      {/* Priority pill */}
-                      <div
-                        className="absolute top-2 start-2 h-5 min-w-[20px] px-1.5 rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] text-[10px] font-semibold flex items-center justify-center"
-                        aria-label={t('outfitCompletion.priorityLabel', { n: idx + 1 })}
-                        data-testid={`outfit-completion-anchor-priority-${idx}`}
-                      >
-                        {idx + 1}
-                      </div>
-                      {/* Reorder controls (only when >1 anchors) */}
-                      {orderedAnchors.length > 1 && (
-                        <div className="absolute top-2 end-2 flex flex-col gap-1">
+                  {orderedAnchors.map((a, idx) => {
+                    const itemIsSet = isSet(a);
+                    return (
+                      <div key={a.id} className="relative flex flex-col">
+                        <div className="relative">
+                          <ItemThumb item={a} />
+                          {/* Priority pill */}
+                          <div
+                            className="absolute top-2 start-2 h-5 min-w-[20px] px-1.5 rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] text-[10px] font-semibold flex items-center justify-center"
+                            aria-label={t('outfitCompletion.priorityLabel', { n: idx + 1 })}
+                            data-testid={`outfit-completion-anchor-priority-${idx}`}
+                          >
+                            {idx + 1}
+                          </div>
+                          {/* Remove button */}
                           <button
                             type="button"
-                            onClick={() => moveAnchor(idx, -1)}
-                            disabled={idx === 0}
-                            aria-label={t('outfitCompletion.moveUp')}
-                            data-testid={`outfit-completion-anchor-up-${idx}`}
-                            className="h-6 w-6 rounded-full bg-background/90 border border-border backdrop-blur flex items-center justify-center disabled:opacity-40 hover:bg-secondary transition-colors"
+                            onClick={() => {
+                              setOrderedAnchors((prev) => prev.filter((_, i) => i !== idx));
+                            }}
+                            aria-label={t('common.remove', { defaultValue: 'Remove' })}
+                            className="absolute -top-1.5 -end-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 flex items-center justify-center shadow-sm z-30 transition-transform hover:scale-110"
+                            data-testid={`outfit-completion-anchor-remove-${idx}`}
                           >
-                            <ArrowUp className="h-3 w-3" />
+                            <X className="h-3 w-3" strokeWidth={3} />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => moveAnchor(idx, 1)}
-                            disabled={idx === orderedAnchors.length - 1}
-                            aria-label={t('outfitCompletion.moveDown')}
-                            data-testid={`outfit-completion-anchor-down-${idx}`}
-                            className="h-6 w-6 rounded-full bg-background/90 border border-border backdrop-blur flex items-center justify-center disabled:opacity-40 hover:bg-secondary transition-colors"
-                          >
-                            <ArrowDown className="h-3 w-3" />
-                          </button>
+                          {/* Reorder controls (only when >1 anchors) */}
+                          {orderedAnchors.length > 1 && (
+                            <div className="absolute top-2 end-2 flex flex-col gap-1">
+                              <button
+                                type="button"
+                                onClick={() => moveAnchor(idx, -1)}
+                                disabled={idx === 0}
+                                aria-label={t('outfitCompletion.moveUp')}
+                                data-testid={`outfit-completion-anchor-up-${idx}`}
+                                className="h-6 w-6 rounded-full bg-background/90 border border-border backdrop-blur flex items-center justify-center disabled:opacity-40 hover:bg-secondary transition-colors"
+                              >
+                                <ArrowUp className="h-3 w-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => moveAnchor(idx, 1)}
+                                disabled={idx === orderedAnchors.length - 1}
+                                aria-label={t('outfitCompletion.moveDown')}
+                                data-testid={`outfit-completion-anchor-down-${idx}`}
+                                className="h-6 w-6 rounded-full bg-background/90 border border-border backdrop-blur flex items-center justify-center disabled:opacity-40 hover:bg-secondary transition-colors"
+                              >
+                                <ArrowDown className="h-3 w-3" />
+                              </button>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        {/* Divide set button */}
+                        {itemIsSet && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="xs"
+                            onClick={() => {
+                              const gItems = getGroupItems(a);
+                              setOrderedAnchors((prev) => {
+                                const next = [...prev];
+                                const existingIds = new Set(next.filter(item => item.id !== a.id).map(item => item.id));
+                                const uniqueGItems = gItems.filter(item => !existingIds.has(item.id));
+                                next.splice(idx, 1, ...uniqueGItems);
+                                return next;
+                              });
+                            }}
+                            className="mt-1.5 w-full h-6 text-[10px] uppercase font-semibold text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/10 border border-[hsl(var(--accent))]/25 rounded-md flex items-center justify-center gap-1 shrink-0"
+                            data-testid={`outfit-completion-anchor-divide-${idx}`}
+                          >
+                            <Sparkles className="h-2.5 w-2.5" />
+                            {t('closet.divideSet', { defaultValue: 'Divide Set' })}
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

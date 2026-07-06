@@ -195,7 +195,9 @@
     "tagConfirmTitle": "Tag Selected Items",
     "tagSelected": "Tag",
     "tagsAppliedError": "Some tags failed to sync to the server",
-    "tagsAppliedSuccess": "Tags applied successfully"
+    "tagsAppliedSuccess": "Tags applied successfully",
+    "outfitSet": "סט בגדים",
+    "divideSet": "פרק סט"
   },
   "addItem": {
     "intent_rent": "להשכיר",
@@ -881,6 +883,15 @@
     "conservModerate": "בינונית",
     "conservHigh": "גבוהה",
     "voiceLanguage": "קול ושפה",
+    "shoppingAssistant": "עוזר קניות",
+    "shoppingAssistantDesc": "שלב המלצות מידה ישירות בדפדפן הקניות שלך",
+    "chromeStoreTitle": "תוסף לחנות האינטרנט של כרום",
+    "chromeStoreDesc": "קבל את התוסף הרשמי לדפדפן עבור המלצות מידה אוטומטיות בחנויות מקוונות נתמכות.",
+    "chromeStoreComingSoon": "בקרוב בחנות האינטרנט של כרום",
+    "bookmarkletTitle": "סימניה אוניברסלית (Bookmarklet)",
+    "bookmarkletDesc": "גרור את הכפתור למטה לסרגל הסימניות שלך. בנייד, שמור אותו בסימניות וקרא לו 'DressApp Shopping Assistant'. לחץ עליו בכל עמוד מוצר בחנות.",
+    "bookmarkletBtn": "עוזר DressApp",
+    "bookmarkletInstruction": "אופן השימוש: גרור כפתור זה לסרגל הסימניות שלך. לחץ עליו בכל עמוד מוצר בחנות כדי לקבל המלצות מידה.",
     "voiceLanguageDesc": "הגדרות קול של הסטייליסט הווירטואלי והגדרות נגישות",
     "language": "שפה",
     "voice": "קול (Deepgram Aura-2)",

@@ -192,7 +192,9 @@
     "tagConfirmTitle": "Tag Selected Items",
     "tagSelected": "Tag",
     "tagsAppliedError": "Some tags failed to sync to the server",
-    "tagsAppliedSuccess": "Tags applied successfully"
+    "tagsAppliedSuccess": "Tags applied successfully",
+    "outfitSet": "Outfit-Set",
+    "divideSet": "Set aufteilen"
   },
   "addItem": {
     "intent_rent": "Mieten",
@@ -865,6 +867,15 @@
     "conservModerate": "Moderat",
     "conservHigh": "Streng",
     "voiceLanguage": "Stimme & Sprache",
+    "shoppingAssistant": "Einkaufsassistent",
+    "shoppingAssistantDesc": "Integrieren Sie Größenempfehlungen direkt in Ihren Shopping-Browser",
+    "chromeStoreTitle": "Chrome Web Store Erweiterung",
+    "chromeStoreDesc": "Holen Sie sich die offizielle Browser-Erweiterung für automatische Größenempfehlungen in unterstützten Online-Shops.",
+    "chromeStoreComingSoon": "Demnächst im Chrome Web Store verfügbar",
+    "bookmarkletTitle": "Universelles Bookmarklet",
+    "bookmarkletDesc": "Ziehen Sie die Schaltfläche unten in Ihre Lesezeichenleiste. Fügen Sie sie auf Mobilgeräten zu Ihren Lesezeichen hinzu und nennen Sie sie 'DressApp Shopping Assistant'. Klicken Sie auf einer Produktseite darauf.",
+    "bookmarkletBtn": "DressApp Assistent",
+    "bookmarkletInstruction": "Verwendung: Ziehen Sie diese Schaltfläche in Ihre Lesezeichenleiste. Klicken Sie auf einer Produktseite darauf, um Größenempfehlungen zu erhalten.",
     "language": "Sprache",
     "voice": "Stimme (Deepgram Aura-2)",
     "saveChanges": "Änderungen speichern",

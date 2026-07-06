@@ -192,7 +192,9 @@
     "tagConfirmTitle": "Tag Selected Items",
     "tagSelected": "Tag",
     "tagsAppliedError": "Some tags failed to sync to the server",
-    "tagsAppliedSuccess": "Tags applied successfully"
+    "tagsAppliedSuccess": "Tags applied successfully",
+    "outfitSet": "Conjunto",
+    "divideSet": "Dividir conjunto"
   },
   "addItem": {
     "intent_rent": "Alugar",

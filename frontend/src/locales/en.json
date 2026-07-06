@@ -192,7 +192,9 @@
       "body": "The items you are grouping have mismatched properties: {{mismatches}}. Are you sure you want to group them?",
       "confirm": "Group anyway",
       "cancel": "Cancel"
-    }
+    },
+    "outfitSet": "Outfit set",
+    "divideSet": "Divide Set"
   },
   "addItem": {
     "intent_rent": "Rent",
@@ -877,6 +879,15 @@
     "conservModerate": "Moderate",
     "conservHigh": "High",
     "voiceLanguage": "Voice & language",
+    "shoppingAssistant": "Shopping Assistant",
+    "shoppingAssistantDesc": "Integrate size recommendations directly into your shopping browser",
+    "chromeStoreTitle": "Chrome Web Store Extension",
+    "chromeStoreDesc": "Get the official browser extension for automatic sizing on supported online stores.",
+    "chromeStoreComingSoon": "Coming Soon to the Chrome Web Store",
+    "bookmarkletTitle": "Universal Bookmarklet",
+    "bookmarkletDesc": "Drag the button below to your bookmarks bar. On mobile, add it to your bookmarks and name it 'DressApp Shopping Assistant'. Click it when on any product page.",
+    "bookmarkletBtn": "DressApp Assistant",
+    "bookmarkletInstruction": "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations.",
     "language": "Language",
     "voice": "Voice (Deepgram Aura-2)",
     "saveChanges": "Save changes",
