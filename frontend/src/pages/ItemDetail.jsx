@@ -617,9 +617,7 @@ export default function ItemDetail() {
   const recognitionRef = useRef(null);
   const sttSupported = useRef(isSTTSupported());
 
-  // Variant edit state (existing feature, preserved)
-  const [editPrompt, setEditPrompt] = useState('');
-  const [editing, setEditing] = useState(false);
+
 
   /* ------------------- load + sync ------------------- */
   const load = async () => {
@@ -1171,21 +1169,7 @@ export default function ItemDetail() {
     try { recognitionRef.current?.stop?.(); } catch { /* ignore */ }
   };
 
-  /* ------------------- variant generation (unchanged) ------------------- */
-  const onGenerateVariant = async () => {
-    if (!editPrompt.trim()) return;
-    setEditing(true);
-    try {
-      const res = await api.editItemImage(id, editPrompt.trim());
-      toast.success(t('itemDetail.variantGenerated'));
-      setItem((it) => ({ ...it, variants: res.variants }));
-      setEditPrompt('');
-    } catch (err) {
-      toast.error(err?.response?.data?.detail || t('itemDetail.editUnavailable'));
-    } finally {
-      setEditing(false);
-    }
-  };
+
 
   const onDelete = async () => {
     // Optimistic-first delete: the closetStore is the user's "edge
@@ -2336,34 +2320,7 @@ export default function ItemDetail() {
             </CardContent>
           </Card>
 
-          {/* Variant generator (existing) */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(271_81%_65%)]" data-testid="item-edit-image-card">
-            <CardContent className="p-5 space-y-3">
-              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
-                <div className="p-2 rounded-xl bg-[hsl(271_81%_95%)] text-[hsl(271_81%_56%)] dark:bg-[hsl(271_30%_18%)] dark:text-[hsl(271_81%_70%)] shrink-0">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
-                    {t('itemDetail.generateVariant')}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
-                    {t('itemDetail.generateVariantDesc', { defaultValue: 'Create new variations of this item using Generative AI' })}
-                  </span>
-                </div>
-              </div>
-              <Input
-                value={editPrompt}
-                onChange={(e) => setEditPrompt(e.target.value)}
-                placeholder={t('itemDetail.variantPlaceholder')}
-                className={`rounded-xl ${!editPrompt.trim() ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
-                data-testid="item-edit-prompt-input"
-              />
-              <Button onClick={onGenerateVariant} disabled={editing || !editPrompt.trim()} className="w-full rounded-xl" data-testid="item-generate-variant-button">
-                {editing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Sparkles className="h-4 w-4 me-2" />{t('itemDetail.generateVariant')}</>}
-              </Button>
-            </CardContent>
-          </Card>
+
 
           {/* Bottom actions */}
           <div className="grid grid-cols-2 gap-3">
