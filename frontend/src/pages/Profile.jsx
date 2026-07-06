@@ -963,7 +963,7 @@ function ShoppingAssistantAccordionItem() {
             <a
               ref={(el) => {
                 if (el) {
-                  el.setAttribute('href', "javascript:(function(){if(!document.getElementById('dressapp-mobile-styles')){var s=document.createElement('script');s.src='https://dressapp.co/widget/dressapp-mobile-floater.js';document.body.appendChild(s);}})();");
+                  el.setAttribute('href', "javascript:(function(){if(!document.getElementById('dressapp-mobile-styles')){var s=document.createElement('script');s.src='https://dressapp.co/widget/dressapp-mobile-floater.js?t='+Date.now();document.body.appendChild(s);}})();");
                 }
               }}
               title="DressApp Shopping Assistant"
