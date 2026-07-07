@@ -974,6 +974,7 @@ async def analyze_chart(
                 user_preferred_units=payload.user_preferred_units,
                 chart_text=combined_text,
             )
+            log.info("Gemini text-only fallback: combined_text len=%d, snippet=%r", len(combined_text), combined_text[:200])
             t_text = time.time()
             try:
                 client = GeminiClient(api_key=settings.GEMINI_API_KEY)
@@ -984,7 +985,7 @@ async def analyze_chart(
                         model="gemini-2.5-flash",
                         response_mime_type="application/json",
                     ),
-                    timeout=20.0,
+                    timeout=30.0,
                 )
                 parsed = _coerce_response(raw)
                 if parsed:
@@ -996,7 +997,7 @@ async def analyze_chart(
                     extra={"provider": "gemini", "op": "size-chart-text"},
                 )
             except Exception as exc:  # noqa: BLE001
-                log.info("Gemini text-only fallback failed: %s", exc)
+                log.warning("Gemini text-only fallback failed: %r (after %d ms)", exc, int((time.time() - t_text) * 1000))
 
     # ---------------------------------------------------------------
     # Step 3 — total failure. Surface a friendly retry message.
