@@ -279,7 +279,7 @@ async function onAnalyze(ev) {
         };
         if (rect.w >= 32 && rect.h >= 32) {
           // Reuse the manual-crop pipeline so behavior is identical.
-          await cropAndAnalyze(rect);
+          await cropAndAnalyze(rect, chartEl);
           return;
         }
       } catch {
@@ -312,10 +312,12 @@ async function onAnalyze(ev) {
   }
 }
 
-async function _sendForAnalysis({ chart_screenshot_b64, garment_type }) {
+async function _sendForAnalysis({ chart_screenshot_b64, chart_html, chart_text, garment_type }) {
   mountSpinner();
   const payload = {
     chart_screenshot_b64,
+    chart_html,
+    chart_text,
     garment_type: garment_type ?? generic.detectGarmentType(document),
     store: HOST.replace(/^www\./, ''),
     page_url: location.href,
@@ -610,7 +612,7 @@ function _normaliseRect({ x, y, w, h }) {
  * extraction). The backend's Gemini 2.5 Flash vision call OCRs the
  * chart and returns the size recommendation in one shot.
  */
-async function cropAndAnalyze(rect) {
+async function cropAndAnalyze(rect, targetEl = null) {
   mountSpinner();
   try {
     // Capture and crop the viewport screenshot for the vision call.
@@ -620,6 +622,9 @@ async function cropAndAnalyze(rect) {
     const needsPermission = typeof cap === 'string' ? false : !!cap?.needs_permission;
     const staleContext = typeof cap === 'string' ? false : !!cap?.stale_context;
     let cropped = null;
+    let fallbackHtml = null;
+    let fallbackText = null;
+
     if (screenshot) {
       try {
         const dataUrl = `data:image/jpeg;base64,${screenshot}`;
@@ -651,9 +656,37 @@ async function cropAndAnalyze(rect) {
       } catch (e) {
         log('crop canvas failed', e);
       }
+    } else {
+      try {
+        let container = targetEl;
+        if (!container) {
+          const cx = rect.x + rect.w / 2;
+          const cy = rect.y + rect.h / 2;
+          let centerEl = document.elementFromPoint(cx, cy);
+          if (centerEl) {
+            container = centerEl;
+            while (container && container !== document.body && container.parentElement) {
+              const tagName = container.tagName.toLowerCase();
+              if (tagName === 'table' || tagName === 'tbody' || container.className?.includes?.('size') || container.id?.includes?.('size')) {
+                break;
+              }
+              container = container.parentElement;
+            }
+            if (!container || container === document.body) {
+              container = centerEl;
+            }
+          }
+        }
+        if (container) {
+          fallbackHtml = container.outerHTML;
+          fallbackText = container.innerText || container.textContent;
+        }
+      } catch (e) {
+        log('DOM extraction fallback failed', e);
+      }
     }
 
-    if (!cropped) {
+    if (!cropped && !fallbackHtml && !fallbackText) {
       // Surface the actual underlying error so we can debug what's
       // blocking captureVisibleTab. Three known causes:
       //   1. Extension was reloaded → orphaned content script (stale_context).
@@ -685,14 +718,16 @@ async function cropAndAnalyze(rect) {
 
     await _sendForAnalysis({
       chart_screenshot_b64: cropped,
+      chart_html: fallbackHtml,
+      chart_text: fallbackText,
       garment_type: generic.detectGarmentType(document),
     });
   } catch (e) {
     mountOverlay({
       kind: 'error',
-      title: 'Couldn\'t process the crop',
+      title: 'Analysis failed',
       message: e?.message || String(e),
-      retry: () => enterCropMode({ reason: 'manual' }),
+      retry: () => cropAndAnalyze(rect, targetEl),
       onDismiss: showFab,
     });
   }

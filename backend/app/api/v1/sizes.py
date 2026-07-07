@@ -376,6 +376,72 @@ def _build_user_prompt(
     return "\n\n".join(parts)
 
 
+def _build_user_text_only_prompt(
+    *,
+    measurements: dict[str, Any],
+    garment_type: str | None,
+    store: str | None,
+    page_title: str | None,
+    user_preferred_units: str,
+    chart_text: str,
+) -> str:
+    expanded = _expand_measurement_aliases(measurements)
+    _CLOTHING_SIZE_KEYS = {
+        "shirt_size", "pants_size", "shoe_size",
+        "shirts_size", "pant_size", "trouser_size",
+    }
+    _CONTEXT_ONLY_KEYS = {"height", "weight", "body_height", "stature", "body_weight"}
+    body_dims = {
+        k: v for k, v in expanded.items()
+        if k not in _CLOTHING_SIZE_KEYS and k not in _CONTEXT_ONLY_KEYS
+    }
+    clothing_sizes = {
+        k: v for k, v in expanded.items() if k in _CLOTHING_SIZE_KEYS
+    }
+    context_dims = {
+        k: v for k, v in expanded.items() if k in _CONTEXT_ONLY_KEYS
+    }
+
+    body_dims_str = json.dumps(body_dims, ensure_ascii=False)
+    clothing_sizes_str = json.dumps(clothing_sizes, ensure_ascii=False)
+    context_dims_str = json.dumps(context_dims, ensure_ascii=False)
+
+    parts: list[str] = [
+        f"USER BODY CIRCUMFERENCES (cm, JSON — every chart-column synonym is pre-expanded):\n{body_dims_str}",
+        f"USER CLOTHING SIZES THEY NORMALLY BUY:\n{clothing_sizes_str}",
+        f"USER HEIGHT / WEIGHT CONTEXT:\n{context_dims_str}",
+        (
+            "IMPORTANT:\n"
+            "- BODY CIRCUMFERENCES already include every common synonym "
+            "(``chest`` = ``bust``; ``shoulder`` = ``shoulder_width``; "
+            "``hip`` = ``bottom``). Case-insensitive substring is enough.\n"
+            "- If BODY CIRCUMFERENCES is empty `{}` but CLOTHING SIZES has "
+            "``shirt_size``/``pants_size``, USE THAT as the primary signal.\n"
+            "- Do **NOT** reply that 'measurements were not provided' if "
+            "any of the three sections above contain at least one key. "
+            "Always emit a best-effort recommendation."
+        ),
+    ]
+    ctx_lines: list[str] = []
+    if store:
+        ctx_lines.append(f"store: {store}")
+    if page_title:
+        ctx_lines.append(f"page title: {page_title}")
+    if garment_type:
+        ctx_lines.append(f"garment type hint: {garment_type}")
+    ctx_lines.append(f"user prefers units: {user_preferred_units}")
+    parts.append("CONTEXT:\n" + "\n".join(ctx_lines))
+
+    parts.append(
+        "SIZE CHART TEXT DATA:\n" + chart_text.strip()[:8000]
+    )
+
+    parts.append(
+        "Read the size chart text data above and emit the JSON object only."
+    )
+    return "\n\n".join(parts)
+
+
 # ----------------------------- helpers -------------------------------
 _TAG_RE = re.compile(r"<[^>]+>")
 _WS_RE = re.compile(r"[ \t]+")
@@ -889,6 +955,48 @@ async def analyze_chart(
                 extra={"provider": "gemini", "op": "size-chart"},
             )
             log.info("Gemini vision call failed: %s", exc)
+
+    # ---------------------------------------------------------------
+    # Step 2.5 — Gemini 2.5 Flash text completion fallback.
+    # Used when we don't have a screenshot (e.g., in bookmarklet mode)
+    # but we do have raw chart text or HTML.
+    # ---------------------------------------------------------------
+    if parsed is None and (chart_text or chart_text_html or chart_text_innertext):
+        combined_text = "\n".join(
+            t for t in (chart_text, chart_text_html, chart_text_innertext) if t
+        )
+        if len(combined_text.strip()) > 5:
+            user_prompt = _build_user_text_only_prompt(
+                measurements=measurements,
+                garment_type=payload.garment_type,
+                store=payload.store,
+                page_title=payload.page_title,
+                user_preferred_units=payload.user_preferred_units,
+                chart_text=combined_text,
+            )
+            t_text = time.time()
+            try:
+                client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+                raw = await asyncio.wait_for(
+                    client.text(
+                        user_text=user_prompt,
+                        system=_SYSTEM_PROMPT,
+                        model="gemini-2.5-flash",
+                        response_mime_type="application/json",
+                    ),
+                    timeout=20.0,
+                )
+                parsed = _coerce_response(raw)
+                if parsed:
+                    source = "gemini-text"
+                provider_activity.record(
+                    "garment-text",
+                    ok=parsed is not None,
+                    latency_ms=int((time.time() - t_text) * 1000),
+                    extra={"provider": "gemini", "op": "size-chart-text"},
+                )
+            except Exception as exc:  # noqa: BLE001
+                log.info("Gemini text-only fallback failed: %s", exc)
 
     # ---------------------------------------------------------------
     # Step 3 — total failure. Surface a friendly retry message.
