@@ -5,7 +5,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Header
 
 from app.db.database import get_db
 from app.services.auth import get_current_user, get_current_user_optional, require_admin
@@ -121,15 +121,18 @@ async def get_fashion_scout_feed(
 @router.post("/run-now")
 async def run_trend_scout_now(
     force: bool = Query(default=False),
+    x_device_type: str | None = Header(default=None),
     _: dict = Depends(require_admin),
 ) -> dict[str, Any]:
     """Admin-only trigger for an immediate Trend-Scout run (for testing)."""
-    return await run_trend_scout(force=force)
+    client_type = "mobile" if x_device_type == "mobile" else "desktop"
+    return await run_trend_scout(force=force, client_type=client_type)
 
 
 @router.post("/run-now-dev")
 async def run_trend_scout_now_dev(
     force: bool = Query(default=True),
+    x_device_type: str | None = Header(default=None),
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Dev helper: any authenticated user can trigger a run while we don't
@@ -138,4 +141,5 @@ async def run_trend_scout_now_dev(
     """
     if not user:
         raise HTTPException(401, "auth required")
-    return await run_trend_scout(force=force)
+    client_type = "mobile" if x_device_type == "mobile" else "desktop"
+    return await run_trend_scout(force=force, client_type=client_type, user=user)

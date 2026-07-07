@@ -34,6 +34,9 @@ import uuid
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
+import httpx
+from bs4 import BeautifulSoup
+
 from app.config import settings
 from app.db.database import get_db
 from app.services.gemini_client import GeminiClient
@@ -107,28 +110,40 @@ BUCKETS: list[dict[str, str]] = [
 
 
 SYSTEM_PROMPT = (
-    "You are DressApp's Fashion-Scout — a sharp, concise fashion journalist."
-    " Write for a reader who already dresses well and wants ONE actionable"
-    " insight per card. Voice: editorial, confident, never salesy."
-    "\n\nOutput contract: return ONLY a JSON object with these keys:"
-    ' {"headline": string (<= 8 words),'
-    ' "body": string (1-2 sentences, <= 220 chars),'
-    ' "tag": string (short all-caps category tag),'
-    ' "source_name": string (publication or outlet the insight could be'
-    ' attributed to, e.g., "Vogue Runway", "Business of Fashion", "Hypebeast",'
-    ' or the influencer\'s handle),'
-    ' "source_url": string (a plausible landing URL on that source — https'
-    ' only; may be a best-guess homepage if a deep link is unknown),'
-    ' "image_url": string (direct https link to a free-to-use stock image,'
-    ' OR null if uncertain — never fabricate a private CDN URL),'
-    ' "video_url": string (optional direct https link to a short public video,'
-    ' else null)}. No markdown, no prose outside JSON, no trailing commentary.'
+    "You are DressApp's Fashion-Scout — an independent agent searching for fashion trends.\n"
+    "You can browse the web to find real-time insights.\n"
+    "Write for a reader who already dresses well and wants ONE actionable insight per card.\n\n"
+    "Output contract: return ONLY a JSON object.\n"
+    'If you need to search a website, return: {"action": "browse_web", "url": "<https URL>"}.\n'
+    'Once you have enough context, return: {"action": "finish", "card": {\n'
+    ' "headline": string (<= 8 words),\n'
+    ' "body": string (1-2 sentences, <= 220 chars),\n'
+    ' "tag": string (short all-caps category tag),\n'
+    ' "source_name": string (e.g., "Vogue Runway", "Hypebeast"),\n'
+    ' "source_url": string (plausible landing URL),\n'
+    ' "image_url": string (or null),\n'
+    ' "video_url": string (or null)\n'
+    "}}. No markdown, no prose outside JSON."
 )
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+async def browse_web(url: str) -> str:
+    """Agent tool to fetch and extract text from a webpage."""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(url, follow_redirects=True)
+            resp.raise_for_status()
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            for tag in soup(["script", "style", "nav", "footer", "header"]):
+                tag.extract()
+            text = soup.get_text(separator=' ', strip=True)
+            return text[:3000]
+    except Exception as exc:
+        return f"Failed to fetch {url}: {exc}"
+
 def _extract_json(raw: str) -> dict[str, Any]:
     if not raw:
         return {}
@@ -344,41 +359,83 @@ def rank_cards_for_user(
     return sorted(by_recency, key=_sort_key)
 
 
-async def _generate_one(bucket: dict[str, str]) -> dict[str, Any] | None:
+async def _generate_one(bucket: dict[str, str], client_type: str = "desktop") -> dict[str, Any] | None:
     if not settings.GEMINI_API_KEY:
-        raise RuntimeError(
-            "No GEMINI_API_KEY set — cannot run Trend-Scout"
-        )
-    # Phase: Flash is fast/cheap and ample for trend scouting (per user
-    # preference — Pro reserved for the Stylist).
-    client = GeminiClient(api_key=settings.GEMINI_API_KEY)
-    try:
-        raw = await client.text(
-            system=SYSTEM_PROMPT,
-            user_text=bucket["prompt"],
-            model="gemini-2.5-flash",
-            response_mime_type="application/json",
-        )
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Fashion-Scout LLM call failed for %s: %s", bucket["slug"], exc)
-        return None
-    parsed = _extract_json(raw or "")
-    if not parsed.get("headline") or not parsed.get("body"):
-        logger.warning(
-            "Fashion-Scout returned unparseable payload for %s: %s",
-            bucket["slug"],
-            (raw or "")[:200],
-        )
-        return None
-    return {
-        "headline": str(parsed["headline"])[:140],
-        "body": str(parsed["body"])[:400],
-        "tag": (parsed.get("tag") or bucket["label"]).upper()[:40],
-        "source_name": (parsed.get("source_name") or "")[:80] or None,
-        "source_url": _clean_url(parsed.get("source_url")),
-        "image_url": _clean_url(parsed.get("image_url")),
-        "video_url": _clean_url(parsed.get("video_url")),
-    }
+        raise RuntimeError("No GEMINI_API_KEY set — cannot run Trend-Scout")
+    
+    history = [f"Task: {bucket['prompt']}"]
+    
+    for _ in range(3):
+        user_text = "\n".join(history)
+        if client_type == "mobile":
+            # Mobile package uses local Gemma4-E2B (running in dressapp-eyes)
+            try:
+                async with httpx.AsyncClient() as client:
+                    resp = await client.post(
+                        "http://eyes:7860/v1/chat/completions",
+                        json={
+                            "messages": [
+                                {"role": "system", "content": SYSTEM_PROMPT},
+                                {"role": "user", "content": user_text}
+                            ],
+                            "temperature": 0.3,
+                        },
+                        timeout=30.0
+                    )
+                    resp.raise_for_status()
+                    raw = resp.json()["choices"][0]["message"]["content"]
+            except Exception as exc:
+                logger.warning("Gemma mobile call failed for %s: %s", bucket["slug"], exc)
+                return None
+        else:
+            # Desktop uses Gemini 2.5 Flash
+            gemini_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+            try:
+                raw = await gemini_client.text(
+                    system=SYSTEM_PROMPT,
+                    user_text=user_text,
+                    model="gemini-2.5-flash",
+                    response_mime_type="application/json",
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Fashion-Scout LLM call failed for %s: %s", bucket["slug"], exc)
+                return None
+                
+        parsed = _extract_json(raw or "")
+        
+        if parsed.get("action") == "browse_web" and parsed.get("url"):
+            url = parsed["url"]
+            content = await browse_web(url)
+            history.append(f"Result from {url}: {content}")
+            continue
+        elif parsed.get("action") == "finish" and parsed.get("card"):
+            card_data = parsed["card"]
+            if not card_data.get("headline") or not card_data.get("body"):
+                return None
+            return {
+                "headline": str(card_data["headline"])[:140],
+                "body": str(card_data["body"])[:400],
+                "tag": (card_data.get("tag") or bucket["label"]).upper()[:40],
+                "source_name": (card_data.get("source_name") or "")[:80] or None,
+                "source_url": _clean_url(card_data.get("source_url")),
+                "image_url": _clean_url(card_data.get("image_url")),
+                "video_url": _clean_url(card_data.get("video_url")),
+            }
+        else:
+            # Attempt to fall back gracefully if the LLM skips the action envelope
+            if parsed.get("headline") and parsed.get("body"):
+                return {
+                    "headline": str(parsed["headline"])[:140],
+                    "body": str(parsed["body"])[:400],
+                    "tag": (parsed.get("tag") or bucket["label"]).upper()[:40],
+                    "source_name": (parsed.get("source_name") or "")[:80] or None,
+                    "source_url": _clean_url(parsed.get("source_url")),
+                    "image_url": _clean_url(parsed.get("image_url")),
+                    "video_url": _clean_url(parsed.get("video_url")),
+                }
+            logger.warning("Invalid agent action for %s: %s", bucket["slug"], parsed)
+            return None
+    return None
 
 
 async def _already_today(bucket_slug: str) -> bool:
@@ -390,7 +447,7 @@ async def _already_today(bucket_slug: str) -> bool:
     return bool(existing)
 
 
-async def run_trend_scout(*, force: bool = False) -> dict[str, Any]:
+async def run_trend_scout(*, force: bool = False, client_type: str = "desktop", user: dict | None = None) -> dict[str, Any]:
     """Generate and persist today's fashion-scout cards. Safe to call on demand."""
     db = get_db()
     today = date.today().isoformat()
@@ -400,7 +457,7 @@ async def run_trend_scout(*, force: bool = False) -> dict[str, Any]:
         if not force and await _already_today(bucket["slug"]):
             skipped.append(bucket["slug"])
             continue
-        card = await _generate_one(bucket)
+        card = await _generate_one(bucket, client_type=client_type)
         if not card:
             continue
         doc = {
@@ -424,10 +481,16 @@ async def run_trend_scout(*, force: bool = False) -> dict[str, Any]:
             {"bucket": bucket["slug"], "date": today, "language": "en"}, doc, upsert=True
         )
         results.append(doc)
+        
+    if user and results:
+        from app.services.billing_service import deduct_user_credits
+        await deduct_user_credits(db, user, cost=1)
+        
     logger.info(
-        "Fashion-Scout run complete: generated=%d, skipped=%d",
+        "Fashion-Scout run complete: generated=%d, skipped=%d, client_type=%s",
         len(results),
         len(skipped),
+        client_type
     )
     return {
         "generated": [{k: v for k, v in r.items() if k != "_id"} for r in results],
