@@ -660,21 +660,34 @@ async function cropAndAnalyze(rect, targetEl = null) {
       try {
         let container = targetEl;
         if (!container) {
-          const cx = rect.x + rect.w / 2;
-          const cy = rect.y + rect.h / 2;
-          let centerEl = document.elementFromPoint(cx, cy);
-          if (centerEl) {
-            container = centerEl;
-            while (container && container !== document.body && container.parentElement) {
-              const tagName = container.tagName.toLowerCase();
-              if (tagName === 'table' || tagName === 'tbody' || container.className?.includes?.('size') || container.id?.includes?.('size')) {
-                break;
+          let allEls = document.body.getElementsByTagName('*');
+          let bestEl = document.body;
+          let bestIou = 0;
+          for (let i = 0; i < allEls.length; i++) {
+            let el = allEls[i];
+            let r = el.getBoundingClientRect();
+            if (r.width === 0 || r.height === 0) continue;
+            let ix = Math.max(rect.x, r.left);
+            let iy = Math.max(rect.y, r.top);
+            let iw = Math.min(rect.x + rect.w, r.right) - ix;
+            let ih = Math.min(rect.y + rect.h, r.bottom) - iy;
+            if (iw > 0 && ih > 0) {
+              let intersectionArea = iw * ih;
+              let unionArea = (rect.w * rect.h) + (r.width * r.height) - intersectionArea;
+              let iou = intersectionArea / unionArea;
+              if (iou > bestIou) {
+                bestIou = iou;
+                bestEl = el;
               }
-              container = container.parentElement;
             }
-            if (!container || container === document.body) {
-              container = centerEl;
-            }
+          }
+          container = bestEl;
+          if (container && container.tagName && container.tagName.toLowerCase() === 'iframe') {
+            try {
+              if (container.contentDocument && container.contentDocument.body) {
+                container = container.contentDocument.body;
+              }
+            } catch (e) { /* cross-origin */ }
           }
         }
         if (container) {
