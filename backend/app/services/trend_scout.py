@@ -55,6 +55,7 @@ BUCKETS: list[dict[str, str]] = [
             "Summarise ONE concrete SS26 runway trend worth a closet update."
             " Focus on silhouette, fabric, or signature colour."
         ),
+        "starter_url": "https://www.vogue.com/fashion",
     },
     {
         "slug": "street",
@@ -63,6 +64,7 @@ BUCKETS: list[dict[str, str]] = [
             "Name ONE street-style shift that's actually being worn (not"
             " editorial fantasy). Call out the key item and the styling move."
         ),
+        "starter_url": "https://hypebeast.com/fashion",
     },
     {
         "slug": "sustainability",
@@ -71,6 +73,7 @@ BUCKETS: list[dict[str, str]] = [
             "Pick ONE emerging sustainability story (resale, swap, materials,"
             " repair, rental) and state the user-facing implication."
         ),
+        "starter_url": "https://www.vogue.com/sustainable-fashion",
     },
     {
         "slug": "influencers",
@@ -80,6 +83,7 @@ BUCKETS: list[dict[str, str]] = [
             " how people are dressing right now. Name the person, their"
             " signature move, and why it matters."
         ),
+        "starter_url": "https://www.vogue.com/celebrity-style",
     },
     {
         "slug": "second_hand",
@@ -88,6 +92,7 @@ BUCKETS: list[dict[str, str]] = [
             "Spotlight ONE concrete second-hand / vintage marketplace trend"
             " (platform, category, buyer behaviour). Make it actionable."
         ),
+        "starter_url": "https://hypebeast.com/tags/vintage",
     },
     {
         "slug": "recycling",
@@ -96,6 +101,7 @@ BUCKETS: list[dict[str, str]] = [
             "Call out ONE innovative clothing-recycling or repair idea that"
             " a home wardrobe could realistically adopt this month."
         ),
+        "starter_url": "https://www.vogue.com/tag/upcycling",
     },
     {
         "slug": "news_flash",
@@ -105,6 +111,7 @@ BUCKETS: list[dict[str, str]] = [
             " a news-flash ticker (brand move, collaboration, regulation,"
             " launch). Be factual-sounding and editorial."
         ),
+        "starter_url": "https://hypebeast.com/",
     },
 ]
 
@@ -133,7 +140,12 @@ SYSTEM_PROMPT = (
 async def browse_web(url: str) -> str:
     """Agent tool to fetch and extract text from a webpage."""
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+        }
+        async with httpx.AsyncClient(timeout=10.0, headers=headers) as client:
             resp = await client.get(url, follow_redirects=True)
             resp.raise_for_status()
             soup = BeautifulSoup(resp.text, 'html.parser')
@@ -363,9 +375,16 @@ async def _generate_one(bucket: dict[str, str], client_type: str = "desktop") ->
     if not settings.GEMINI_API_KEY:
         raise RuntimeError("No GEMINI_API_KEY set — cannot run Trend-Scout")
     
-    history = [f"Task: {bucket['prompt']}"]
+    starter_url = bucket.get("starter_url", "https://hypebeast.com/fashion")
+    history = [
+        f"Task: {bucket['prompt']}",
+        f"You MUST start by browsing the starter URL to find recent articles: {starter_url}",
+        "Important: Do not finish without first browsing. The source_url in your final card must be a specific article deep link (e.g. https://www.vogue.com/article/something) rather than a general homepage."
+    ]
     
-    for _ in range(3):
+    browsed_urls = []
+    
+    for attempt in range(4):
         user_text = "\n".join(history)
         if client_type == "mobile":
             # Mobile package uses local Gemma4-E2B (running in dressapp-eyes)
@@ -403,38 +422,57 @@ async def _generate_one(bucket: dict[str, str], client_type: str = "desktop") ->
                 
         parsed = _extract_json(raw or "")
         
+        # Enforce browsing requirement
+        if not browsed_urls and (parsed.get("action") == "finish" or (parsed.get("headline") and parsed.get("body"))):
+            history.append(f"Error: You have not browsed any websites yet. You MUST call action 'browse_web' on the starter URL first: {starter_url}")
+            continue
+        
         if parsed.get("action") == "browse_web" and parsed.get("url"):
             url = parsed["url"]
             content = await browse_web(url)
-            history.append(f"Result from {url}: {content}")
+            browsed_urls.append(url)
+            history.append(f"Result from {url}: {content[:3000]}")
             continue
         elif parsed.get("action") == "finish" and parsed.get("card"):
             card_data = parsed["card"]
             if not card_data.get("headline") or not card_data.get("body"):
                 return None
+            
+            source_url = _clean_url(card_data.get("source_url"))
+            # If model returned a generic homepage URL, try to resolve to a deep link browsed
+            if source_url and source_url.rstrip("/") in ["https://www.vogue.com", "https://hypebeast.com", "https://www.businessoffashion.com", "https://www.vogue.com/fashion"]:
+                deep_links = [u for u in browsed_urls if len(u.split("/")) > 3]
+                if deep_links:
+                    source_url = deep_links[0]
+            
             return {
                 "headline": str(card_data["headline"])[:140],
                 "body": str(card_data["body"])[:400],
                 "tag": (card_data.get("tag") or bucket["label"]).upper()[:40],
                 "source_name": (card_data.get("source_name") or "")[:80] or None,
-                "source_url": _clean_url(card_data.get("source_url")),
+                "source_url": source_url,
                 "image_url": _clean_url(card_data.get("image_url")),
                 "video_url": _clean_url(card_data.get("video_url")),
             }
         else:
             # Attempt to fall back gracefully if the LLM skips the action envelope
-            if parsed.get("headline") and parsed.get("body"):
+            if parsed.get("headline") and parsed.get("body") and browsed_urls:
+                source_url = _clean_url(parsed.get("source_url"))
+                if source_url and source_url.rstrip("/") in ["https://www.vogue.com", "https://hypebeast.com", "https://www.businessoffashion.com", "https://www.vogue.com/fashion"]:
+                    deep_links = [u for u in browsed_urls if len(u.split("/")) > 3]
+                    if deep_links:
+                        source_url = deep_links[0]
                 return {
                     "headline": str(parsed["headline"])[:140],
                     "body": str(parsed["body"])[:400],
                     "tag": (parsed.get("tag") or bucket["label"]).upper()[:40],
                     "source_name": (parsed.get("source_name") or "")[:80] or None,
-                    "source_url": _clean_url(parsed.get("source_url")),
+                    "source_url": source_url,
                     "image_url": _clean_url(parsed.get("image_url")),
                     "video_url": _clean_url(parsed.get("video_url")),
                 }
             logger.warning("Invalid agent action for %s: %s", bucket["slug"], parsed)
-            return None
+            history.append("Error: Invalid response format. You must return either browse_web or finish.")
     return None
 
 
