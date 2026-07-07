@@ -66,9 +66,21 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
         logger.warning("VAPID keys not configured in server environment. Skipping browser Web Push.")
         return {k: v for k, v in doc.items() if k != "_id"}
 
+    # For native browser push, send a truncated body if it is too long or contains newlines,
+    # to keep the encrypted push payload under the 4096-byte Web Push protocol limit
+    web_push_body = body
+    if len(body.encode('utf-8')) > 1000 or "\n" in body:
+        first_line = body.split("\n")[0].strip()
+        if len(first_line.encode('utf-8')) > 200:
+            web_push_body = first_line[:150] + "..."
+        else:
+            web_push_body = first_line
+            if ":" in web_push_body:
+                web_push_body = web_push_body.rstrip(":") + ". Tap to view recommendations."
+
     payload_dict = {
         "title": title,
-        "body": body,
+        "body": web_push_body,
         "url": "/stylist?tab=match"
     }
 
