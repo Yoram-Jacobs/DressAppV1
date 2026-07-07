@@ -253,7 +253,7 @@ with Atlas M10. Contest-ready build.
 ### Known issues / deferred
 - ~500 MB of inline base64 image data still sits in Atlas `closet_items`.
   M10 tier provides comfortable headroom; proper migration to object storage
-  (Cloudflare R2 or Emergent integration) is deferred to v1.1.
+  (Cloudflare R2 or Antigravity integration) is deferred to v1.1.
 - `AddItem.jsx` is > 1800 lines and overdue for refactor (tracked for v1.2+).
 
 ---

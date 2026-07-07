@@ -1,8 +1,8 @@
-# dressapp.co — Recovery checklist (Hetzner-only, post Emergent-host migration)
+# dressapp.co — Recovery checklist (Hetzner-only, post Antigravity-host migration)
 
 You said you no longer use `https://ai-stylist-api.emergent.host`. Right
 now `dressapp.co` is **broken** because its DNS is still pointed at
-infrastructure (AWS) that 301-redirects the root to the Emergent host
+infrastructure (AWS) that 301-redirects the root to the Antigravity host
 and 404/405's every `/api/*` path. This file walks through the exact
 steps to bring `dressapp.co` back to life on your Hetzner VPS.
 
@@ -60,7 +60,7 @@ Your domain registrar's DNS panel (GoDaddy / Namecheap / Cloudflare / Hetzner DN
 | A    | www  | `<HETZNER_VPS_IPv4>` | 300 |
 | AAAA | @    | `<HETZNER_VPS_IPv6>` (optional) | 300 |
 
-⚠️ **Delete or disable** any of these that may exist from the Emergent
+⚠️ **Delete or disable** any of these that may exist from the previous Antigravity
 migration:
 - Old `A` / `AAAA` records pointing at AWS IPs (anything in `15.197.x.x`).
 - Any `CNAME @ → emergent.host` flattened-CNAME records.
