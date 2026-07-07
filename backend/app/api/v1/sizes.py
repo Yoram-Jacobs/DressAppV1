@@ -999,6 +999,15 @@ async def analyze_chart(
             except Exception as exc:  # noqa: BLE001
                 log.warning("Gemini text-only fallback failed: %r (after %d ms)", exc, int((time.time() - t_text) * 1000))
 
+    # Deduct credit and count usage if we used any Gemini engine
+    if source in ("gemini-text", "gemini-vision") or (parsed is None and source != "heuristic"):
+        try:
+            from app.db.database import get_db
+            from app.services.billing_service import deduct_user_credits
+            await deduct_user_credits(get_db(), user, cost=1)
+        except Exception as exc:  # noqa: BLE001
+            log.exception("Failed to deduct user credits for size-chart analysis: %s", exc)
+
     # ---------------------------------------------------------------
     # Step 3 — total failure. Surface a friendly retry message.
     # ---------------------------------------------------------------
