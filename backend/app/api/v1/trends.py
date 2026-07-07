@@ -122,11 +122,11 @@ async def get_fashion_scout_feed(
 async def run_trend_scout_now(
     force: bool = Query(default=False),
     x_device_type: str | None = Header(default=None),
-    _: dict = Depends(require_admin),
+    user: dict = Depends(require_admin),
 ) -> dict[str, Any]:
     """Admin-only trigger for an immediate Trend-Scout run (for testing)."""
     client_type = "mobile" if x_device_type == "mobile" else "desktop"
-    return await run_trend_scout(force=force, client_type=client_type)
+    return await run_trend_scout(force=force, client_type=client_type, user=user)
 
 
 @router.post("/run-now-dev")

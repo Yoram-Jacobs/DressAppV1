@@ -319,6 +319,7 @@ def rank_cards_for_user(
     """Sort ``cards`` (highest relevance first) for the supplied user.
 
     Scoring:
+      * +10 recency boost for cards matching the newest date in the candidate pool.
       * +2 for each user-keyword token that appears in the card text.
       * +0..2 bucket-affinity boost based on user keywords.
       * +3 if the card text mentions a country we associate with the user.
@@ -330,6 +331,8 @@ def rank_cards_for_user(
     user_keywords = _user_keyword_set(user)
     user_countries = _country_codes(user)
     sex = user.get("sex") if isinstance(user.get("sex"), str) else None
+    
+    latest_date = max(((c.get("date") or "") for c in cards), default="")
 
     def _score(card: dict[str, Any]) -> float:
         text_tokens = _tokens(
@@ -339,7 +342,10 @@ def rank_cards_for_user(
             )
         )
         score = 0.0
-        # 1) Keyword overlap.
+        # 1) Recency boost.
+        if latest_date and card.get("date") == latest_date:
+            score += 10.0
+        # 2) Keyword overlap.
         overlap = user_keywords & text_tokens
         score += 2.0 * len(overlap)
         # 2) Bucket affinity from the user's vocabulary.
