@@ -195,7 +195,24 @@ async def generate_scheduled_proposals(
 ) -> dict[str, Any]:
     """Generate 3 scheduled outfit proposals using the rotation prioritized items."""
     user_id = user["id"]
-    prioritized_closet = await get_rotation_prioritized_closet(user_id, limit=40)
+    raw_closet = await get_rotation_prioritized_closet(user_id, limit=40)
+    
+    # Slim down closet items to prevent sending massive base64 image strings and embeddings to the LLM
+    prioritized_closet = [
+        {
+            "id": item["id"],
+            "title": item.get("title") or item.get("name") or "Garment",
+            "category": item.get("category"),
+            "sub_category": item.get("sub_category"),
+            "color": item.get("color"),
+            "brand": item.get("brand"),
+            "pattern": item.get("pattern"),
+            "material": item.get("material"),
+            "dress_code": item.get("dress_code"),
+            "season": item.get("season"),
+        }
+        for item in raw_closet
+    ]
     
     # We will query Gemini with customized rotation options
     closet_summary_str = "\n".join(
