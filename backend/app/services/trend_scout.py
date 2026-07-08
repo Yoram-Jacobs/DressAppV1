@@ -494,7 +494,15 @@ async def _generate_one(bucket: dict[str, Any], client_type: str = "desktop") ->
             # Extract links from markdown content
             found_links = re.findall(r'\[.*?\]\((https?://[^\s)\]]+)\)', content)
             discovered_urls.update(found_links)
-            history.append(f"Result from {url}: {content[:3000]}")
+            
+            # Check if content is empty or blocked (anti-scrape challenge page)
+            if len(content.strip()) < 150:
+                history.append(
+                    f"Warning: The page at '{url}' returned empty or blocked content (status 202/challenge). "
+                    f"You MUST call action 'browse_web' on a DIFFERENT starter URL from the list to find active articles: {urls_list_str}"
+                )
+            else:
+                history.append(f"Result from {url}: {content[:3000]}")
             continue
         elif parsed.get("action") == "finish" and parsed.get("card"):
             card_data = parsed["card"]
