@@ -138,7 +138,8 @@ SYSTEM_PROMPT = (
 # Helpers
 # ---------------------------------------------------------------------------
 async def browse_web(url: str) -> str:
-    """Agent tool to fetch and extract text from a webpage."""
+    """Agent tool to fetch and extract text and inline links from a webpage."""
+    from urllib.parse import urljoin
     try:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -149,10 +150,21 @@ async def browse_web(url: str) -> str:
             resp = await client.get(url, follow_redirects=True)
             resp.raise_for_status()
             soup = BeautifulSoup(resp.text, 'html.parser')
-            for tag in soup(["script", "style", "nav", "footer", "header"]):
+            for tag in soup(["script", "style", "nav", "footer", "header", "noscript"]):
                 tag.extract()
+            
+            for a in soup.find_all("a", href=True):
+                href = a["href"].strip()
+                if not href or href.startswith("#") or href.startswith("javascript:"):
+                    continue
+                absolute_url = urljoin(url, href)
+                link_text = a.get_text(strip=True)
+                if link_text:
+                    a.replace_with(f" [{link_text}]({absolute_url}) ")
+                    
             text = soup.get_text(separator=' ', strip=True)
-            return text[:3000]
+            text = " ".join(text.split())
+            return text[:4000]
     except Exception as exc:
         return f"Failed to fetch {url}: {exc}"
 

@@ -10,7 +10,7 @@ Your AI fashion editor: photograph any garment, get weather + calendar-aware out
 
 ## What it does
 
-DressApp turns a closet of physical clothes into a structured, queryable wardrobe and uses that wardrobe to drive everyday styling decisions.
+DressApp turns a closet of physical clothes into a structured, quarriable wardrobe and uses that wardrobe to drive everyday styling decisions.
 
 ### Core flows
 
