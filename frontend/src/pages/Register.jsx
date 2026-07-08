@@ -26,7 +26,8 @@ export default function Register() {
     }
     setBusy(true);
     try {
-      await register(form);
+      const referrerId = sessionStorage.getItem('referrer_id') || null;
+      await register({ ...form, referrer_id: referrerId });
       toast.success(t('brand'));
       nav('/home');
     } catch (err) {

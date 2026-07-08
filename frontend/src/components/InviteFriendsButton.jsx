@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { toast } from 'sonner';
+import { useAuth } from '@/lib/auth';
 
 /**
  * Invite-friends action — web-today, mobile-ready-tomorrow.
@@ -18,9 +19,10 @@ import { toast } from 'sonner';
  */
 export function InviteFriendsButton() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [busy, setBusy] = useState(false);
 
-  const inviteUrl = `${window.location.origin}/?ref=invite`;
+  const inviteUrl = user?.id ? `${window.location.origin}/?ref=${user.id}` : `${window.location.origin}/?ref=invite`;
 
   const share = async () => {
     setBusy(true);

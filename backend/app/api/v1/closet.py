@@ -884,6 +884,21 @@ async def create_item(
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     db = get_db()
+    sub_active = (user.get("subscription") or {}).get("is_active", False)
+    if not sub_active:
+        current_count = await db.closet_items.count_documents({"user_id": user["id"]})
+        capacity_limit = 150 + user.get("closet_capacity_bonus", 0)
+        if current_count >= capacity_limit:
+            raise HTTPException(
+                status_code=402,
+                detail={
+                    "code": "closet_capacity_exceeded",
+                    "message": f"You have reached your free closet capacity of {capacity_limit} items. Upgrade to DressApp Pro to add more items.",
+                    "capacity": capacity_limit,
+                    "current_count": current_count
+                }
+            )
+
     raw_bytes: bytes | None = None
     if payload.image_base64:
         try:
@@ -4785,6 +4800,21 @@ async def upload_group_member(
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     db = get_db()
+    sub_active = (user.get("subscription") or {}).get("is_active", False)
+    if not sub_active:
+        current_count = await db.closet_items.count_documents({"user_id": user["id"]})
+        capacity_limit = 150 + user.get("closet_capacity_bonus", 0)
+        if current_count >= capacity_limit:
+            raise HTTPException(
+                status_code=402,
+                detail={
+                    "code": "closet_capacity_exceeded",
+                    "message": f"You have reached your free closet capacity of {capacity_limit} items. Upgrade to DressApp Pro to add more items.",
+                    "capacity": capacity_limit,
+                    "current_count": current_count
+                }
+            )
+
     host = await db.closet_items.find_one({"id": host_id, "user_id": user["id"]})
     if not host:
         raise HTTPException(404, "Host item not found")

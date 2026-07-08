@@ -747,6 +747,12 @@ export const api = {
     client.post('/credits/topup', body).then((r) => r.data),
   creditsTopupCapture: (topupId) =>
     client.post(`/credits/topup/${topupId}/capture`).then((r) => r.data),
+  createSubscription: (body) =>
+    client.post('/paypal/subscribe', body).then((r) => r.data),
+  captureSubscription: (subId) =>
+    client.post(`/paypal/subscribe/capture/${subId}`).then((r) => r.data),
+  cancelSubscription: () =>
+    client.post('/paypal/subscribe/cancel').then((r) => r.data),
 
   listingBuyCreate: (listingId) =>
     client.post(`/listings/${listingId}/buy`).then((r) => r.data),

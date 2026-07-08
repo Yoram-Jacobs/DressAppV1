@@ -81,6 +81,15 @@ class GoogleOAuthTokens(BaseModel):
     scopes: list[str] = Field(default_factory=list)
 
 
+class SubscriptionInfo(BaseModel):
+    is_active: bool = False
+    plan_type: Literal["free", "monthly", "yearly"] = "free"
+    stripe_subscription_id: str | None = None
+    paypal_subscription_id: str | None = None
+    expires_at: str | None = None
+    cancelled_at: str | None = None
+
+
 class User(BaseDoc):
     email: EmailStr
     password_hash: str | None = None
@@ -96,6 +105,8 @@ class User(BaseDoc):
     stripe_account_id: str | None = None
     stripe_onboarding_complete: bool = False
     roles: list[str] = Field(default_factory=lambda: ["user"])
+    subscription: SubscriptionInfo = Field(default_factory=SubscriptionInfo)
+    closet_capacity_bonus: int = 0
 
     # --- Extended profile (Phase T) -------------------------------------
     # Plain identity — populated from OAuth `given_name` / `family_name` on

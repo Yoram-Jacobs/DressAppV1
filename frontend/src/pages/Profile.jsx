@@ -21,6 +21,8 @@ import { DeveloperPanel } from '@/components/DeveloperPanel';
 import { SUPPORTED_LANGUAGES } from '@/lib/i18n';
 import { labelForDressCode } from '@/lib/taxonomy';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { useClosetStore } from '@/lib/useClosetStore';
 
 const VOICES = [
   'aura-2-thalia-en', 'aura-2-hermes-en', 'aura-2-electra-en',
@@ -832,6 +834,7 @@ export default function Profile() {
               className="w-full space-y-4"
             >
               <AIConfigurationAccordionItem />
+              <SubscriptionSettingsAccordionItem />
               <SchedulerSettingsAccordionItem />
               <CalendarConnect />
               <LocationCard />
@@ -982,6 +985,216 @@ function ShoppingAssistantAccordionItem() {
           </div>
         </div>
 
+      </AccordionContent>
+    </AccordionItem>
+  );
+}
+
+
+function SubscriptionSettingsAccordionItem() {
+  const { t } = useTranslation();
+  const { user, refresh } = useAuth();
+  const { total: closetCount } = useClosetStore();
+  const [busy, setBusy] = useState(false);
+
+  const sub = user?.subscription || {};
+  const isActive = sub.is_active || false;
+  const planType = sub.plan_type || 'free';
+  const expiresAt = sub.expires_at ? new Date(sub.expires_at).toLocaleDateString() : '';
+
+  const capacity = 150 + (user?.closet_capacity_bonus || 0);
+
+  const handleUpgrade = async (type) => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const res = await api.createSubscription({
+        plan_type: type,
+        return_url: `${window.location.origin}/me?sub_status=success`,
+        cancel_url: `${window.location.origin}/me?sub_status=cancel`,
+      });
+      if (res.approve_url) {
+        window.location.href = res.approve_url;
+      } else {
+        toast.error('Failed to initiate subscription payment.');
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.detail?.message || 'Error creating subscription');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (busy) return;
+    if (!window.confirm('Are you sure you want to cancel your subscription? You will lose premium features.')) return;
+    setBusy(true);
+    try {
+      await api.cancelSubscription();
+      toast.success('Subscription cancelled successfully.');
+      await refresh();
+    } catch (err) {
+      toast.error('Failed to cancel subscription.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const subStatus = searchParams.get('sub_status');
+    const token = searchParams.get('token');
+    if (subStatus === 'success' && token) {
+      const capture = async () => {
+        setBusy(true);
+        try {
+          await api.captureSubscription(token);
+          toast.success('Subscription activated successfully! Welcome to DressApp Pro.');
+          await refresh();
+          searchParams.delete('sub_status');
+          searchParams.delete('token');
+          setSearchParams(searchParams);
+        } catch (err) {
+          toast.error('Error activating subscription.');
+        } finally {
+          setBusy(false);
+        }
+      };
+      capture();
+    } else if (subStatus === 'cancel') {
+      toast.info('Subscription checkout cancelled.');
+      searchParams.delete('sub_status');
+      setSearchParams(searchParams);
+    }
+  }, [searchParams, setSearchParams, refresh]);
+
+  return (
+    <AccordionItem
+      value="subscription"
+      className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300"
+    >
+      <AccordionTrigger className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none">
+        <div className="flex items-center gap-4 text-start">
+          <div className="p-2.5 rounded-xl bg-[hsl(47_95%_90%)] text-[hsl(47_95%_40%)] dark:bg-[hsl(47_30%_18%)] dark:text-[hsl(47_95%_70%)] shrink-0 transition-transform duration-200">
+            <Crown className="h-5 w-5" />
+          </div>
+          <div>
+            <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+              {t('profile.subscription', { defaultValue: 'Subscription & Limits' })}
+            </span>
+            <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+              {isActive 
+                ? `Active: ${planType.toUpperCase()} plan (Expires: ${expiresAt})`
+                : `Free Plan: ${closetCount} / ${capacity} items used`
+              }
+            </span>
+          </div>
+        </div>
+      </AccordionTrigger>
+      <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5 space-y-4">
+        {isActive ? (
+          <div className="space-y-3 text-start">
+            <div className="p-4 rounded-xl border border-[hsl(47_95%_80%)] bg-[hsl(47_95%_97%)] dark:bg-[hsl(47_30%_12%)] dark:border-[hsl(47_30%_25%)] flex items-center justify-between">
+              <div>
+                <h4 className="font-semibold text-foreground flex items-center gap-1.5">
+                  <Crown className="h-4 w-4 text-[hsl(47_95%_50%)]" /> DressApp Pro ({planType.toUpperCase()})
+                </h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Renewal date: {expiresAt}
+                </p>
+              </div>
+              <Badge className="bg-[hsl(47_95%_45%)] text-white dark:bg-[hsl(47_95%_35%)]">Active</Badge>
+            </div>
+            
+            <p className="text-xs text-muted-foreground">
+              You have unlimited closet slots and fast GPU image segmentation enabled.
+            </p>
+
+            <div className="pt-2 flex justify-end">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleCancel}
+                disabled={busy}
+                className="rounded-xl"
+              >
+                {busy && <Loader2 className="h-4 w-4 animate-spin me-2" />}
+                Cancel Subscription
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4 text-start">
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-foreground font-medium mb-1">
+                <span>Closet Capacity</span>
+                <span>{closetCount} / {capacity} items</span>
+              </div>
+              <div className="h-2 bg-border rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{ width: `${Math.min(100, (closetCount / capacity) * 100)}%` }}
+                />
+              </div>
+              {closetCount >= capacity && (
+                <p className="text-xs text-destructive font-medium mt-1">
+                  You have reached your closet limit. Upgrade to add more garments!
+                </p>
+              )}
+            </div>
+
+            <Separator className="my-2" />
+
+            <div className="grid sm:grid-cols-2 gap-4 pt-1">
+              <div className="border border-border rounded-2xl p-4 bg-card flex flex-col justify-between hover:shadow-sm transition-shadow">
+                <div>
+                  <h4 className="font-bold text-sm text-foreground">Monthly Plan</h4>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Flexible monthly cycle, cancel anytime.
+                  </p>
+                  <div className="my-3">
+                    <span className="text-2xl font-extrabold text-foreground">$4.99</span>
+                    <span className="text-xs text-muted-foreground"> / month</span>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => handleUpgrade('monthly')} 
+                  disabled={busy}
+                  className="rounded-xl w-full"
+                >
+                  {busy && <Loader2 className="h-4 w-4 animate-spin me-2" />}
+                  Upgrade Monthly
+                </Button>
+              </div>
+
+              <div className="border border-[hsl(47_95%_60%)] rounded-2xl p-4 bg-card flex flex-col justify-between hover:shadow-sm transition-shadow relative overflow-hidden">
+                <div className="absolute top-0 right-0 bg-[hsl(47_95%_45%)] text-white text-[9px] font-bold uppercase tracking-wider py-1 px-3 rounded-bl-xl">
+                  Best Value
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-foreground flex items-center gap-1">
+                    <Crown className="h-3.5 w-3.5 text-[hsl(47_95%_50%)]" /> Annual Plan
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Save 50% compared to monthly billing.
+                  </p>
+                  <div className="my-3">
+                    <span className="text-2xl font-extrabold text-foreground">$29.99</span>
+                    <span className="text-xs text-muted-foreground"> / year</span>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => handleUpgrade('yearly')} 
+                  disabled={busy}
+                  className="rounded-xl w-full bg-[hsl(47_95%_45%)] hover:bg-[hsl(47_95%_40%)] text-white"
+                >
+                  {busy && <Loader2 className="h-4 w-4 animate-spin me-2" />}
+                  Upgrade Annual
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </AccordionContent>
     </AccordionItem>
   );

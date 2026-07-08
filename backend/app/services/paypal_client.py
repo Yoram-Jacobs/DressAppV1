@@ -357,6 +357,81 @@ async def verify_webhook_signature(
         return False
 
 
+async def create_subscription(
+    plan_id: str,
+    return_url: str | None = None,
+    cancel_url: str | None = None,
+) -> dict[str, Any]:
+    token = await _get_access_token()
+    if _is_mock_token(token) or plan_id.startswith("P-MOCK"):
+        mock_sub_id = f"MOCK-SUB-{uuid.uuid4().hex[:14].upper()}"
+        logger.info("[PAYPAL MOCK] create_subscription %s → %s", plan_id, mock_sub_id)
+        return {
+            "id": mock_sub_id,
+            "status": "APPROVAL_PENDING",
+            "links": [
+                {
+                    "href": f"https://www.sandbox.paypal.com/checkoutnow?token={mock_sub_id}",
+                    "rel": "approve",
+                    "method": "GET",
+                }
+            ],
+        }
+
+    body: dict[str, Any] = {
+        "plan_id": plan_id,
+    }
+    ctx: dict[str, Any] = {}
+    if return_url:
+        ctx["return_url"] = return_url
+    if cancel_url:
+        ctx["cancel_url"] = cancel_url
+    if ctx:
+        body["application_context"] = ctx
+
+    return await _request("POST", "/v1/billing/subscriptions", json=body)
+
+
+async def get_subscription(subscription_id: str) -> dict[str, Any]:
+    token = await _get_access_token()
+    if _is_mock_token(token) or subscription_id.startswith("MOCK-"):
+        from datetime import datetime, timezone, timedelta
+        next_billing = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+        return {
+            "id": subscription_id,
+            "status": "ACTIVE",
+            "plan_id": "P-MOCK",
+            "subscriber": {
+                "email_address": "mock-subscriber@example.com",
+            },
+            "billing_info": {
+                "next_billing_time": next_billing,
+            },
+        }
+
+    return await _request("GET", f"/v1/billing/subscriptions/{subscription_id}")
+
+
+async def cancel_subscription(
+    subscription_id: str, reason: str = "User request"
+) -> dict[str, Any]:
+    token = await _get_access_token()
+    if _is_mock_token(token) or subscription_id.startswith("MOCK-"):
+        logger.info("[PAYPAL MOCK] cancel_subscription %s", subscription_id)
+        return {
+            "id": subscription_id,
+            "status": "CANCELLED",
+        }
+
+    body = {"reason": reason}
+    return await _request(
+        "POST",
+        f"/v1/billing/subscriptions/{subscription_id}/cancel",
+        json=body,
+        expect_status=(204,),
+    )
+
+
 def public_config() -> dict[str, Any]:
     """Config surface for the frontend PayPal JS SDK loader."""
     return {

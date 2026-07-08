@@ -56,9 +56,9 @@ BUCKETS: list[dict[str, Any]] = [
             " Focus on silhouette, fabric, or signature colour."
         ),
         "starter_urls": [
-            "https://www.vogue.com/fashion/runway",
-            "https://www.harpersbazaar.com/fashion/shows-trends/",
-            "https://www.elle.com/runway-shows/"
+            "https://www.vogue.com/runway",
+            "https://www.elle.com/runway/",
+            "https://www.harpersbazaar.com/fashion/"
         ],
     },
     {
@@ -82,8 +82,8 @@ BUCKETS: list[dict[str, Any]] = [
             " repair, rental) and state the user-facing implication."
         ),
         "starter_urls": [
-            "https://www.vogue.com/sustainable-fashion",
-            "https://www.whowhatwear.com/sustainability"
+            "https://www.vogue.com/fashion",
+            "https://www.whowhatwear.com/"
         ],
     },
     {
@@ -95,9 +95,9 @@ BUCKETS: list[dict[str, Any]] = [
             " signature move, and why it matters."
         ),
         "starter_urls": [
-            "https://www.vogue.com/celebrity-style",
-            "https://www.harpersbazaar.com/celebrity-style/",
-            "https://www.elle.com/culture/celebrities/"
+            "https://www.elle.com/culture/celebrities/",
+            "https://www.vogue.com/fashion",
+            "https://www.harpersbazaar.com/fashion/"
         ],
     },
     {
@@ -120,7 +120,7 @@ BUCKETS: list[dict[str, Any]] = [
             " a home wardrobe could realistically adopt this month."
         ),
         "starter_urls": [
-            "https://www.vogue.com/tag/upcycling"
+            "https://www.vogue.com/fashion"
         ],
     },
     {
@@ -132,7 +132,7 @@ BUCKETS: list[dict[str, Any]] = [
             " launch). Be factual-sounding and editorial."
         ),
         "starter_urls": [
-            "https://hypebeast.com/",
+            "https://hypebeast.com/fashion",
             "https://www.highsnobiety.com/",
             "https://www.harpersbazaar.com/fashion/",
             "https://www.elle.com/fashion/"

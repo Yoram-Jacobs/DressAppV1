@@ -30,6 +30,7 @@ class RegisterIn(BaseModel):
     display_name: str | None = None
     preferred_language: str = "en"
     preferred_voice_id: str = "aura-2-thalia-en"
+    referrer_id: str | None = None
 
 
 class LoginIn(BaseModel):
@@ -68,6 +69,20 @@ async def register(payload: RegisterIn) -> TokenOut:
     # of an allow-listed email already has admin powers.
     doc["roles"] = apply_admin_role(doc.get("roles"), user.email)
     await repos.insert(db.users, doc)
+    
+    # Handle referral capacity bonus
+    if payload.referrer_id:
+        ref_user = await db.users.find_one({"id": payload.referrer_id})
+        if ref_user:
+            await db.users.update_one(
+                {"id": payload.referrer_id},
+                {
+                    "$inc": {"closet_capacity_bonus": 10},
+                    "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}
+                }
+            )
+            logger.info("Referred by %s, awarded +10 closet capacity slots", payload.referrer_id)
+
     logger.info("user registered email=%s id=%s", user.email, user.id)
     token = create_access_token(user.id, {"email": user.email})
     return TokenOut(access_token=token, user=_public_user(doc))

@@ -61,6 +61,18 @@ function OutfitsRedirect() {
   return <Navigate to={`/stylist?tab=match${search ? '&' + search.substring(1) : ''}`} replace />;
 }
 
+function ReferrerTracker() {
+  const location = useLocation();
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const ref = params.get('ref');
+    if (ref && ref !== 'invite') {
+      sessionStorage.setItem('referrer_id', ref);
+    }
+  }, [location]);
+  return null;
+}
+
 function App() {
   const { t, i18n } = useTranslation();
 
@@ -74,6 +86,7 @@ function App() {
         <LocationProvider>
           <PayPalProvider>
             <BrowserRouter>
+              <ReferrerTracker />
               <GlobalScrollListener />
               <SeoBase />
               <LanguageSwitchOverlay />

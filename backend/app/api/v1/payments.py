@@ -630,3 +630,130 @@ async def listing_buy_capture(
         logger.warning("post-sale email dispatch failed for %s: %s", tx["id"], exc)
 
     return {"ok": True, "transaction": final}
+
+
+# ------------------------------------------------------------------
+# Subscriptions (Phase 4P Subscription Gating Additions)
+# ------------------------------------------------------------------
+class SubscribeIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    plan_type: Literal["monthly", "yearly"]
+    return_url: str | None = None
+    cancel_url: str | None = None
+
+
+@paypal_router.post("/subscribe")
+async def create_subscription_order(
+    payload: SubscribeIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    import os
+    _require_configured()
+    plan_id = (
+        os.environ.get("PAYPAL_PLAN_YEARLY", "P-MOCK-YEARLY")
+        if payload.plan_type == "yearly"
+        else os.environ.get("PAYPAL_PLAN_MONTHLY", "P-MOCK-MONTHLY")
+    )
+    try:
+        sub = await paypal_client.create_subscription(
+            plan_id=plan_id,
+            return_url=payload.return_url,
+            cancel_url=payload.cancel_url,
+        )
+    except paypal_client.PayPalError as exc:
+        raise HTTPException(502, {"paypal_error": str(exc.body)}) from exc
+
+    return {
+        "subscription_id": sub["id"],
+        "status": sub.get("status"),
+        "approve_url": next(
+            (link["href"] for link in sub.get("links", []) if link["rel"] == "approve"),
+            None,
+        ),
+    }
+
+
+@paypal_router.post("/subscribe/capture/{subscription_id}")
+async def capture_subscription(
+    subscription_id: str,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    import os
+    _require_configured()
+    try:
+        sub = await paypal_client.get_subscription(subscription_id)
+    except paypal_client.PayPalError as exc:
+        raise HTTPException(502, {"paypal_error": str(exc.body)}) from exc
+
+    status = sub.get("status")
+    if status not in ("ACTIVE", "APPROVED"):
+        raise HTTPException(
+            400,
+            {
+                "code": "subscription_not_approved",
+                "message": f"Subscription status is {status}, must be ACTIVE or APPROVED.",
+            },
+        )
+
+    plan_id = sub.get("plan_id", "")
+    plan_type = "monthly"
+    duration_days = 30
+    if plan_id == os.environ.get("PAYPAL_PLAN_YEARLY", "P-MOCK-YEARLY"):
+        plan_type = "yearly"
+        duration_days = 365
+
+    from datetime import datetime, timezone, timedelta
+    expires_at = (datetime.now(timezone.utc) + timedelta(days=duration_days)).isoformat()
+
+    db = get_db()
+    sub_doc = {
+        "is_active": True,
+        "plan_type": plan_type,
+        "stripe_subscription_id": None,
+        "paypal_subscription_id": subscription_id,
+        "expires_at": expires_at,
+        "cancelled_at": None,
+    }
+
+    await db.users.update_one(
+        {"id": user["id"]},
+        {
+            "$set": {
+                "subscription": sub_doc,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+        },
+    )
+
+    return {"ok": True, "subscription": sub_doc}
+
+
+@paypal_router.post("/subscribe/cancel")
+async def cancel_subscription_endpoint(
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    _require_configured()
+    sub_info = user.get("subscription") or {}
+    sub_id = sub_info.get("paypal_subscription_id")
+    if not sub_id:
+        raise HTTPException(400, "No active PayPal subscription found.")
+
+    try:
+        await paypal_client.cancel_subscription(sub_id)
+    except paypal_client.PayPalError as exc:
+        raise HTTPException(502, {"paypal_error": str(exc.body)}) from exc
+
+    from datetime import datetime, timezone
+    db = get_db()
+    await db.users.update_one(
+        {"id": user["id"]},
+        {
+            "$set": {
+                "subscription.cancelled_at": datetime.now(timezone.utc).isoformat(),
+                "subscription.is_active": False,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+        },
+    )
+
+    return {"ok": True, "message": "Subscription cancelled successfully."}
