@@ -141,6 +141,58 @@ BUCKETS: list[dict[str, Any]] = [
 ]
 
 
+LOCALIZED_STARTER_URLS: dict[str, dict[str, list[str]]] = {
+    "IL": {
+        "ss26-runway": [
+            "https://fashionforward.mako.co.il/",
+            "https://fashionforward.mako.co.il/news/"
+        ],
+        "street": [
+            "https://fashionforward.mako.co.il/"
+        ],
+        "sustainability": [
+            "https://fashionforward.mako.co.il/news/"
+        ],
+        "influencers": [
+            "https://fashionforward.mako.co.il/celebs/"
+        ],
+        "second_hand": [
+            "https://fashionforward.mako.co.il/"
+        ],
+        "recycling": [
+            "https://fashionforward.mako.co.il/"
+        ],
+        "news_flash": [
+            "https://fashionforward.mako.co.il/news/"
+        ]
+    },
+    "JP": {
+        "ss26-runway": [
+            "https://www.elle.com/jp/runway/"
+        ],
+        "street": [
+            "https://hypebeast.com/jp/fashion"
+        ],
+        "sustainability": [
+            "https://www.elle.com/jp/fashion/"
+        ],
+        "influencers": [
+            "https://www.elle.com/jp/culture/celebs/"
+        ],
+        "second_hand": [
+            "https://hypebeast.com/jp/tags/vintage"
+        ],
+        "recycling": [
+            "https://www.elle.com/jp/fashion/"
+        ],
+        "news_flash": [
+            "https://hypebeast.com/jp/fashion",
+            "https://www.elle.com/jp/fashion/"
+        ]
+    }
+}
+
+
 SYSTEM_PROMPT = (
     "You are DressApp's Fashion-Scout — an independent agent searching for fashion trends.\n"
     "You can browse the web to find real-time insights.\n"
