@@ -191,7 +191,8 @@ def _get_scheduler_stylist_service(user: dict[str, Any]):
 
 async def generate_scheduled_proposals(
     user: dict[str, Any],
-    style_dress_for: str | None = None
+    style_dress_for: str | None = None,
+    weather: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """Generate 3 scheduled outfit proposals using the rotation prioritized items."""
     user_id = user["id"]
@@ -243,6 +244,19 @@ async def generate_scheduled_proposals(
         f"}}"
     )
 
+    # If weather is not provided, try to fetch it
+    if weather is None:
+        try:
+            from app.services.weather_service import weather_service
+            home = user.get("home_location") or {}
+            lat = home.get("lat")
+            lng = home.get("lng")
+            lang = user.get("preferred_language") or "en"
+            if lat is not None and lng is not None and weather_service is not None:
+                weather = await weather_service.fetch(float(lat), float(lng), lang=lang)
+        except Exception as w_exc:
+            logger.warning("Failed to fetch weather inside scheduler brain for user %s: %s", user_id, w_exc)
+
     from app.services.user_preferences import render_user_preferences
     prefs_block, _ = render_user_preferences(user)
 
@@ -252,6 +266,7 @@ async def generate_scheduled_proposals(
         session_id=f"scheduled-scheduler-{uuid.uuid4().hex[:8]}",
         user_text=prompt,
         image_base64=None,
+        weather=weather,
         user_profile=user,
         closet_summary=prioritized_closet,
         user_preferences_block=prefs_block,

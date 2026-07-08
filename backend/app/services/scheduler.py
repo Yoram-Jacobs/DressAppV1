@@ -439,7 +439,7 @@ async def check_scheduler_triggers() -> None:
                     advice = None
                     is_quota_issue = False
                     try:
-                        advice = await generate_scheduled_proposals(user, style_dress_for)
+                        advice = await generate_scheduled_proposals(user, style_dress_for, weather=weather_ctx)
                     except Exception as exc:
                         logger.warning("Failed to generate scheduled proposals in cron (possible quota limit): %s", exc)
                         is_quota_issue = True
