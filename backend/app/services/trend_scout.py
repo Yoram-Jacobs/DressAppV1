@@ -450,6 +450,10 @@ def rank_cards_for_user(
             blob = f"{card.get('body', '')} {card.get('headline', '')}".upper()
             if any(cc and cc in blob for cc in user_countries):
                 score += 3.0
+            # Country code match boost (massive boost if card generated for user's country)
+            card_country = card.get("country_code")
+            if card_country and card_country.upper() in user_countries:
+                score += 8.0
         # 4) Opposite-gender soft penalty.
         score += _opposite_gender_penalty(card, sex)
         return score
@@ -469,17 +473,24 @@ def rank_cards_for_user(
     return sorted(by_recency, key=_sort_key)
 
 
-async def _generate_one(bucket: dict[str, Any], client_type: str = "desktop") -> dict[str, Any] | None:
+async def _generate_one(bucket: dict[str, Any], client_type: str = "desktop", country_code: str | None = None) -> dict[str, Any] | None:
     if not settings.GEMINI_API_KEY:
         raise RuntimeError("No GEMINI_API_KEY set — cannot run Trend-Scout")
     
     starter_urls = bucket.get("starter_urls", ["https://hypebeast.com/fashion"])
+    if country_code and country_code.upper() in LOCALIZED_STARTER_URLS:
+        starter_urls = LOCALIZED_STARTER_URLS[country_code.upper()].get(bucket["slug"], starter_urls)
+        
     urls_list_str = ", ".join(starter_urls)
     history = [
         f"Task: {bucket['prompt']}",
         f"You MUST start by calling action 'browse_web' on one of the following starter URLs to find recent articles: {urls_list_str}",
         "Important: Do not finish without first browsing. The source_url in your final card must be a specific article deep link (e.g. https://www.vogue.com/article/something) rather than a general homepage. The source_url MUST be one of the exact article URLs found within the browsed page content."
     ]
+    if country_code:
+        history.append(
+            f"Note: You are scraping localized sources for country '{country_code.upper()}'. Read the local content, but your final card output MUST be in English. Focus on trends, styles, designers, or stores relevant to '{country_code.upper()}'."
+        )
     
     browsed_urls = []
     discovered_urls = set()
@@ -621,26 +632,34 @@ async def _generate_one(bucket: dict[str, Any], client_type: str = "desktop") ->
     return None
 
 
-async def _already_today(bucket_slug: str) -> bool:
+async def _already_today(bucket_slug: str, country_code: str | None = None) -> bool:
     db = get_db()
     today = date.today().isoformat()
     existing = await db.trend_reports.find_one(
-        {"bucket": bucket_slug, "date": today, "language": {"$in": [None, "en"]}}
+        {"bucket": bucket_slug, "date": today, "language": {"$in": [None, "en"]}, "country_code": country_code}
     )
     return bool(existing)
 
 
-async def run_trend_scout(*, force: bool = False, client_type: str = "desktop", user: dict | None = None) -> dict[str, Any]:
+async def run_trend_scout(*, force: bool = False, client_type: str = "desktop", user: dict | None = None, country_code: str | None = None) -> dict[str, Any]:
     """Generate and persist today's fashion-scout cards. Safe to call on demand."""
     db = get_db()
     today = date.today().isoformat()
+    
+    if not country_code and user:
+        user_countries = _country_codes(user)
+        if user_countries:
+            country_code = next(iter(user_countries))
+            
+    country_code = country_code.upper() if country_code else None
+    
     results: list[dict[str, Any]] = []
     skipped: list[str] = []
     for bucket in BUCKETS:
-        if not force and await _already_today(bucket["slug"]):
+        if not force and await _already_today(bucket["slug"], country_code):
             skipped.append(bucket["slug"])
             continue
-        card = await _generate_one(bucket, client_type=client_type)
+        card = await _generate_one(bucket, client_type=client_type, country_code=country_code)
         if not card:
             continue
         doc = {
@@ -649,7 +668,7 @@ async def run_trend_scout(*, force: bool = False, client_type: str = "desktop", 
             "bucket_label": bucket["label"],
             "date": today,
             "language": "en",
-            "country_code": None,
+            "country_code": country_code,
             "headline": card["headline"],
             "body": card["body"],
             "tag": card["tag"],
@@ -661,7 +680,7 @@ async def run_trend_scout(*, force: bool = False, client_type: str = "desktop", 
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
         await db.trend_reports.replace_one(
-            {"bucket": bucket["slug"], "date": today, "language": "en"}, doc, upsert=True
+            {"bucket": bucket["slug"], "date": today, "language": "en", "country_code": country_code}, doc, upsert=True
         )
         results.append(doc)
         
@@ -670,10 +689,11 @@ async def run_trend_scout(*, force: bool = False, client_type: str = "desktop", 
         await deduct_user_credits(db, user, cost=1)
         
     logger.info(
-        "Fashion-Scout run complete: generated=%d, skipped=%d, client_type=%s",
+        "Fashion-Scout run complete: generated=%d, skipped=%d, client_type=%s, country_code=%s",
         len(results),
         len(skipped),
-        client_type
+        client_type,
+        country_code
     )
     return {
         "generated": [{k: v for k, v in r.items() if k != "_id"} for r in results],
@@ -682,8 +702,8 @@ async def run_trend_scout(*, force: bool = False, client_type: str = "desktop", 
     }
 
 
-_REFRESH_LOCK: asyncio.Lock | None = None
-_LAST_AUTO_REFRESH: datetime | None = None
+_REFRESH_LOCKS: dict[str | None, asyncio.Lock] = {}
+_LAST_AUTO_REFRESH: dict[str | None, datetime] = {}
 
 
 def _stale_threshold() -> int:
@@ -697,26 +717,22 @@ def _stale_threshold() -> int:
         return 24
 
 
-async def _maybe_background_refresh(cards: list[dict[str, Any]]) -> None:
+async def _maybe_background_refresh(cards: list[dict[str, Any]], country_code: str | None = None) -> None:
     """If the newest card is older than the configured stale window,
     fire a background `run_trend_scout` so the next visit gets fresh
     data. Throttled to at most one auto-refresh per stale window to
     avoid hammering the LLM on a busy home page.
-
-    NOTE: we look at ``created_at`` (a real ISO timestamp), not
-    ``date`` (a YYYY-MM-DD string) — ``date`` resolution would force a
-    refresh as soon as the clock crossed midnight UTC even when fresh
-    data from 23:59 had just been written.
     """
-    global _LAST_AUTO_REFRESH, _REFRESH_LOCK
+    global _LAST_AUTO_REFRESH, _REFRESH_LOCKS
     if not getattr(settings, "TREND_SCOUT_ENABLED", True):
         return
     threshold = timedelta(hours=_stale_threshold())
     now = datetime.now(timezone.utc)
-    if _LAST_AUTO_REFRESH and (now - _LAST_AUTO_REFRESH) < threshold:
+    
+    last_refresh = _LAST_AUTO_REFRESH.get(country_code)
+    if last_refresh and (now - last_refresh) < threshold:
         return  # already auto-refreshed within this stale window
     if not cards:
-        # Nothing to compare against — let on-startup / cron handle it.
         return
     newest_iso = max(
         (c.get("created_at") or c.get("updated_at") or "") for c in cards
@@ -729,38 +745,43 @@ async def _maybe_background_refresh(cards: list[dict[str, Any]]) -> None:
         newest = newest.replace(tzinfo=timezone.utc)
     if (now - newest) < threshold:
         return  # still fresh
-    if _REFRESH_LOCK is None:
-        _REFRESH_LOCK = asyncio.Lock()
-    if _REFRESH_LOCK.locked():
+        
+    if country_code not in _REFRESH_LOCKS:
+        _REFRESH_LOCKS[country_code] = asyncio.Lock()
+    lock = _REFRESH_LOCKS[country_code]
+    if lock.locked():
         return  # someone already kicked off a refresh
 
     async def _go() -> None:
         global _LAST_AUTO_REFRESH
-        async with _REFRESH_LOCK:
+        async with lock:
             try:
-                _LAST_AUTO_REFRESH = datetime.now(timezone.utc)
+                _LAST_AUTO_REFRESH[country_code] = datetime.now(timezone.utc)
                 logger.info(
-                    "Trend-Scout auto-refresh kicked off (newest card was %s)",
+                    "Trend-Scout auto-refresh kicked off for country %s (newest card was %s)",
+                    country_code,
                     newest.isoformat(),
                 )
-                await run_trend_scout()
+                await run_trend_scout(country_code=country_code)
             except Exception as exc:  # noqa: BLE001
-                logger.warning("Trend-Scout auto-refresh failed: %s", exc)
+                logger.warning("Trend-Scout auto-refresh failed for country %s: %s", country_code, exc)
 
     asyncio.create_task(_go())
 
 
-async def latest_trend_cards(limit_per_bucket: int = 1) -> list[dict[str, Any]]:
+async def latest_trend_cards(limit_per_bucket: int = 1, country: str | None = None) -> list[dict[str, Any]]:
     """Return the most recent English card for each bucket, newest first
     (legacy feed). Opportunistically schedules a background refresh
     when the newest card is older than ``TREND_SCOUT_STALE_AFTER_HOURS``.
     """
     db = get_db()
     out: list[dict[str, Any]] = []
+    country = country.upper() if country else None
+    
     for bucket in BUCKETS:
         cursor = (
             db.trend_reports.find(
-                {"bucket": bucket["slug"], "language": {"$in": [None, "en"]}},
+                {"bucket": bucket["slug"], "language": {"$in": [None, "en"]}, "country_code": country},
                 {"_id": 0},
             )
             .sort("date", -1)
@@ -768,9 +789,26 @@ async def latest_trend_cards(limit_per_bucket: int = 1) -> list[dict[str, Any]]:
         )
         async for doc in cursor:
             out.append(doc)
+            
+    # Fallback to global cards for missing buckets
+    if country and len(out) < len(BUCKETS):
+        existing_slugs = {c["bucket"] for c in out}
+        for bucket in BUCKETS:
+            if bucket["slug"] not in existing_slugs:
+                cursor = (
+                    db.trend_reports.find(
+                        {"bucket": bucket["slug"], "language": {"$in": [None, "en"]}, "country_code": None},
+                        {"_id": 0},
+                    )
+                    .sort("date", -1)
+                    .limit(limit_per_bucket)
+                )
+                async for doc in cursor:
+                    out.append(doc)
+                    
     # Best-effort auto-refresh — never blocks the response.
     try:
-        await _maybe_background_refresh(out)
+        await _maybe_background_refresh(out, country_code=country)
     except Exception:  # noqa: BLE001
         pass
     return out
@@ -807,9 +845,13 @@ async def fashion_scout_feed(
     fetch_limit = max(limit, pool_size or (30 if user else limit))
     fetch_limit = min(fetch_limit, 60)
 
+    country = country.upper() if country else None
     # Pull newest-first English canon for the requested limit.
     cursor = (
-        db.trend_reports.find({"language": {"$in": [None, "en"]}}, {"_id": 0})
+        db.trend_reports.find(
+            {"language": {"$in": [None, "en"]}, "country_code": {"$in": [None, country]}},
+            {"_id": 0},
+        )
         .sort([("date", -1), ("created_at", -1)])
         .limit(fetch_limit)
     )

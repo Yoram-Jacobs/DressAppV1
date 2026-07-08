@@ -15,6 +15,7 @@ from app.services.trend_scout import (
     latest_trend_cards,
     rank_cards_for_user,
     run_trend_scout,
+    _country_codes,
 )
 
 logger = logging.getLogger(__name__)
@@ -25,9 +26,15 @@ router = APIRouter(prefix="/trends", tags=["trends"])
 @router.get("/latest")
 async def get_latest_trends(
     per_bucket: int = Query(default=1, ge=1, le=5),
+    user: dict | None = Depends(get_current_user_optional),
 ) -> dict[str, Any]:
     """Public-safe read: newest card(s) per bucket for the Home page feed."""
-    cards = await latest_trend_cards(limit_per_bucket=per_bucket)
+    country = None
+    if user:
+        user_countries = _country_codes(user)
+        if user_countries:
+            country = next(iter(user_countries))
+    cards = await latest_trend_cards(limit_per_bucket=per_bucket, country=country)
     return {"cards": cards, "count": len(cards)}
 
 
