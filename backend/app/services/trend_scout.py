@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Buckets — prompts read like mini editorial briefs.
 # ---------------------------------------------------------------------------
-BUCKETS: list[dict[str, str]] = [
+BUCKETS: list[dict[str, Any]] = [
     {
         "slug": "ss26-runway",
         "label": "Runway",
@@ -55,7 +55,11 @@ BUCKETS: list[dict[str, str]] = [
             "Summarise ONE concrete SS26 runway trend worth a closet update."
             " Focus on silhouette, fabric, or signature colour."
         ),
-        "starter_url": "https://www.vogue.com/fashion",
+        "starter_urls": [
+            "https://www.vogue.com/fashion/runway",
+            "https://www.harpersbazaar.com/fashion/shows-trends/",
+            "https://www.elle.com/runway-shows/"
+        ],
     },
     {
         "slug": "street",
@@ -64,7 +68,11 @@ BUCKETS: list[dict[str, str]] = [
             "Name ONE street-style shift that's actually being worn (not"
             " editorial fantasy). Call out the key item and the styling move."
         ),
-        "starter_url": "https://hypebeast.com/fashion",
+        "starter_urls": [
+            "https://hypebeast.com/fashion",
+            "https://www.highsnobiety.com/",
+            "https://www.whowhatwear.com/"
+        ],
     },
     {
         "slug": "sustainability",
@@ -73,7 +81,10 @@ BUCKETS: list[dict[str, str]] = [
             "Pick ONE emerging sustainability story (resale, swap, materials,"
             " repair, rental) and state the user-facing implication."
         ),
-        "starter_url": "https://www.vogue.com/sustainable-fashion",
+        "starter_urls": [
+            "https://www.vogue.com/sustainable-fashion",
+            "https://www.whowhatwear.com/sustainability"
+        ],
     },
     {
         "slug": "influencers",
@@ -83,7 +94,11 @@ BUCKETS: list[dict[str, str]] = [
             " how people are dressing right now. Name the person, their"
             " signature move, and why it matters."
         ),
-        "starter_url": "https://www.vogue.com/celebrity-style",
+        "starter_urls": [
+            "https://www.vogue.com/celebrity-style",
+            "https://www.harpersbazaar.com/celebrity-style/",
+            "https://www.elle.com/culture/celebrities/"
+        ],
     },
     {
         "slug": "second_hand",
@@ -92,7 +107,10 @@ BUCKETS: list[dict[str, str]] = [
             "Spotlight ONE concrete second-hand / vintage marketplace trend"
             " (platform, category, buyer behaviour). Make it actionable."
         ),
-        "starter_url": "https://hypebeast.com/tags/vintage",
+        "starter_urls": [
+            "https://hypebeast.com/tags/vintage",
+            "https://www.highsnobiety.com/tag/vintage/"
+        ],
     },
     {
         "slug": "recycling",
@@ -101,7 +119,9 @@ BUCKETS: list[dict[str, str]] = [
             "Call out ONE innovative clothing-recycling or repair idea that"
             " a home wardrobe could realistically adopt this month."
         ),
-        "starter_url": "https://www.vogue.com/tag/upcycling",
+        "starter_urls": [
+            "https://www.vogue.com/tag/upcycling"
+        ],
     },
     {
         "slug": "news_flash",
@@ -111,7 +131,12 @@ BUCKETS: list[dict[str, str]] = [
             " a news-flash ticker (brand move, collaboration, regulation,"
             " launch). Be factual-sounding and editorial."
         ),
-        "starter_url": "https://hypebeast.com/",
+        "starter_urls": [
+            "https://hypebeast.com/",
+            "https://www.highsnobiety.com/",
+            "https://www.harpersbazaar.com/fashion/",
+            "https://www.elle.com/fashion/"
+        ],
     },
 ]
 
@@ -120,6 +145,9 @@ SYSTEM_PROMPT = (
     "You are DressApp's Fashion-Scout — an independent agent searching for fashion trends.\n"
     "You can browse the web to find real-time insights.\n"
     "Write for a reader who already dresses well and wants ONE actionable insight per card.\n\n"
+    "Rules for sources:\n"
+    "- NEVER use 'Vogue Business' (which is subscription-walled). Instead, use 'Vogue Runway' for Vogue runway/fashion articles.\n"
+    "- The source_url in your final card MUST be one of the exact article URLs found within the browsed page content (in markdown format, e.g. [title](url)).\n\n"
     "Output contract: return ONLY a JSON object.\n"
     'If you need to search a website, return: {"action": "browse_web", "url": "<https URL>"}.\n'
     'Once you have enough context, return: {"action": "finish", "card": {\n'
@@ -127,7 +155,7 @@ SYSTEM_PROMPT = (
     ' "body": string (1-2 sentences, <= 220 chars),\n'
     ' "tag": string (short all-caps category tag),\n'
     ' "source_name": string (e.g., "Vogue Runway", "Hypebeast"),\n'
-    ' "source_url": string (plausible landing URL),\n'
+    ' "source_url": string (must be a specific deep link found in the browsed text),\n'
     ' "image_url": string (or null),\n'
     ' "video_url": string (or null)\n'
     "}}. No markdown, no prose outside JSON."
@@ -389,19 +417,32 @@ def rank_cards_for_user(
     return sorted(by_recency, key=_sort_key)
 
 
-async def _generate_one(bucket: dict[str, str], client_type: str = "desktop") -> dict[str, Any] | None:
+async def _generate_one(bucket: dict[str, Any], client_type: str = "desktop") -> dict[str, Any] | None:
     if not settings.GEMINI_API_KEY:
         raise RuntimeError("No GEMINI_API_KEY set — cannot run Trend-Scout")
     
-    starter_url = bucket.get("starter_url", "https://hypebeast.com/fashion")
+    starter_urls = bucket.get("starter_urls", ["https://hypebeast.com/fashion"])
+    urls_list_str = ", ".join(starter_urls)
     history = [
         f"Task: {bucket['prompt']}",
-        f"You MUST start by browsing the starter URL to find recent articles: {starter_url}",
-        "Important: Do not finish without first browsing. The source_url in your final card must be a specific article deep link (e.g. https://www.vogue.com/article/something) rather than a general homepage."
+        f"You MUST start by calling action 'browse_web' on one of the following starter URLs to find recent articles: {urls_list_str}",
+        "Important: Do not finish without first browsing. The source_url in your final card must be a specific article deep link (e.g. https://www.vogue.com/article/something) rather than a general homepage. The source_url MUST be one of the exact article URLs found within the browsed page content."
     ]
     
     browsed_urls = []
+    discovered_urls = set()
     
+    def normalize_url(u: str) -> str:
+        if not u:
+            return ""
+        u = u.lower().strip()
+        for prefix in ("http://", "https://"):
+            if u.startswith(prefix):
+                u = u[len(prefix):]
+        if u.startswith("www."):
+            u = u[4:]
+        return u.rstrip("/")
+
     for attempt in range(4):
         user_text = "\n".join(history)
         if client_type == "mobile":
@@ -442,13 +483,17 @@ async def _generate_one(bucket: dict[str, str], client_type: str = "desktop") ->
         
         # Enforce browsing requirement
         if not browsed_urls and (parsed.get("action") == "finish" or (parsed.get("headline") and parsed.get("body"))):
-            history.append(f"Error: You have not browsed any websites yet. You MUST call action 'browse_web' on the starter URL first: {starter_url}")
+            history.append(f"Error: You have not browsed any websites yet. You MUST call action 'browse_web' on one of the starter URLs first: {urls_list_str}")
             continue
         
         if parsed.get("action") == "browse_web" and parsed.get("url"):
             url = parsed["url"]
             content = await browse_web(url)
             browsed_urls.append(url)
+            discovered_urls.add(url)
+            # Extract links from markdown content
+            found_links = re.findall(r'\[.*?\]\((https?://[^\s)\]]+)\)', content)
+            discovered_urls.update(found_links)
             history.append(f"Result from {url}: {content[:3000]}")
             continue
         elif parsed.get("action") == "finish" and parsed.get("card"):
@@ -457,6 +502,20 @@ async def _generate_one(bucket: dict[str, str], client_type: str = "desktop") ->
                 return None
             
             source_url = _clean_url(card_data.get("source_url"))
+            
+            # Normalize and check source_url against discovered URLs
+            normalized_source = normalize_url(source_url)
+            normalized_discovered = {normalize_url(u) for u in discovered_urls}
+            
+            if source_url and normalized_source not in normalized_discovered:
+                available = [u for u in discovered_urls if len(u.split("/")) > 3][:10]
+                history.append(
+                    f"Error: The source_url '{source_url}' was not found in the browsed pages. "
+                    f"You MUST use one of the exact article URLs found on the pages you browsed. "
+                    f"Available URLs: {available}"
+                )
+                continue
+            
             # If model returned a generic homepage URL, try to resolve to a deep link browsed
             if source_url and source_url.rstrip("/") in ["https://www.vogue.com", "https://hypebeast.com", "https://www.businessoffashion.com", "https://www.vogue.com/fashion"]:
                 deep_links = [u for u in browsed_urls if len(u.split("/")) > 3]
@@ -476,10 +535,18 @@ async def _generate_one(bucket: dict[str, str], client_type: str = "desktop") ->
             # Attempt to fall back gracefully if the LLM skips the action envelope
             if parsed.get("headline") and parsed.get("body") and browsed_urls:
                 source_url = _clean_url(parsed.get("source_url"))
-                if source_url and source_url.rstrip("/") in ["https://www.vogue.com", "https://hypebeast.com", "https://www.businessoffashion.com", "https://www.vogue.com/fashion"]:
-                    deep_links = [u for u in browsed_urls if len(u.split("/")) > 3]
+                
+                normalized_source = normalize_url(source_url)
+                normalized_discovered = {normalize_url(u) for u in discovered_urls}
+                
+                if source_url and normalized_source not in normalized_discovered:
+                    # Try to fall back to first deep link browsed
+                    deep_links = [u for u in discovered_urls if len(u.split("/")) > 3]
                     if deep_links:
                         source_url = deep_links[0]
+                    else:
+                        source_url = browsed_urls[0]
+                        
                 return {
                     "headline": str(parsed["headline"])[:140],
                     "body": str(parsed["body"])[:400],
