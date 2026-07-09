@@ -366,12 +366,17 @@ async def create_subscription(
     if _is_mock_token(token) or plan_id.startswith("P-MOCK"):
         mock_sub_id = f"MOCK-SUB-{uuid.uuid4().hex[:14].upper()}"
         logger.info("[PAYPAL MOCK] create_subscription %s → %s", plan_id, mock_sub_id)
+        checkout_href = (
+            f"{return_url}&token={mock_sub_id}"
+            if return_url
+            else f"https://www.sandbox.paypal.com/checkoutnow?token={mock_sub_id}"
+        )
         return {
             "id": mock_sub_id,
             "status": "APPROVAL_PENDING",
             "links": [
                 {
-                    "href": f"https://www.sandbox.paypal.com/checkoutnow?token={mock_sub_id}",
+                    "href": checkout_href,
                     "rel": "approve",
                     "method": "GET",
                 }
