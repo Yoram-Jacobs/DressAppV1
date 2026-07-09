@@ -76,7 +76,13 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
         else:
             web_push_body = first_line
             if ":" in web_push_body:
-                web_push_body = web_push_body.rstrip(":") + ". Tap to view recommendations."
+                clean_body = web_push_body.rstrip(":")
+                if any("\u0590" <= c <= "\u05ff" for c in clean_body):
+                    web_push_body = clean_body + " · לחץ לצפייה בהצעות."
+                elif any("\u0600" <= c <= "\u06ff" for c in clean_body):
+                    web_push_body = clean_body + " · اضغط לעرض المقترحات."
+                else:
+                    web_push_body = clean_body + " · Tap to view recommendations."
 
     payload_dict = {
         "title": title,
