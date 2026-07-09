@@ -70,6 +70,7 @@ RUN pip install --no-cache-dir \
 
 # --- Application code ------------------------------------------------
 COPY backend/ ./backend/
+COPY frontend/src/locales/ /app/frontend/src/locales/
 
 # Pre-create the model-cache mountpoint with writable perms.
 RUN mkdir -p /models/huggingface /models/u2net
