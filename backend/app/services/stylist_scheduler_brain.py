@@ -275,6 +275,16 @@ async def generate_scheduled_proposals(
     # Extract proposals
     proposals = res_json.get("outfit_recommendations") or []
     
+    # Resolve any truncated IDs returned by the LLM back to the full UUIDs in raw_closet
+    for prop in proposals:
+        for item in prop.get("items", []):
+            cid = item.get("closet_item_id")
+            if cid and len(cid) < 36:
+                match = next((x["id"] for x in raw_closet if x["id"].startswith(cid)), None)
+                if match:
+                    item["closet_item_id"] = match
+                    logger.info("Resolved truncated ID %s to full UUID %s", cid, match)
+    
     # Track suggested items to update last_suggested_at
     suggested_ids = []
     for prop in proposals:
