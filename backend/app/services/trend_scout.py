@@ -375,15 +375,27 @@ def _user_keyword_set(user: dict[str, Any]) -> set[str]:
 
 
 def _country_codes(user: dict[str, Any]) -> set[str]:
-    """Best-effort country code set for the viewer (upper-case)."""
+    """Best-effort country code set for the viewer (upper-case, 2-letter)."""
     out: set[str] = set()
+    name_to_code = {
+        "ISRAEL": "IL",
+        "JAPAN": "JP",
+        "UNITED STATES": "US",
+        "USA": "US",
+        "UNITED KINGDOM": "GB",
+        "UK": "GB",
+    }
     for source_key in ("home_location", "address"):
         source = user.get(source_key) or {}
         if isinstance(source, dict):
             for k in ("country_code", "country"):
                 v = source.get(k)
                 if isinstance(v, str) and v.strip():
-                    out.add(v.strip().upper())
+                    val = v.strip().upper()
+                    if len(val) == 2:
+                        out.add(val)
+                    elif val in name_to_code:
+                        out.add(name_to_code[val])
     return out
 
 

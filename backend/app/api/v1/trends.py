@@ -128,17 +128,19 @@ async def get_fashion_scout_feed(
 @router.post("/run-now")
 async def run_trend_scout_now(
     force: bool = Query(default=False),
+    country: str | None = Query(default=None, max_length=4),
     x_device_type: str | None = Header(default=None),
     user: dict = Depends(require_admin),
 ) -> dict[str, Any]:
     """Admin-only trigger for an immediate Trend-Scout run (for testing)."""
     client_type = "mobile" if x_device_type == "mobile" else "desktop"
-    return await run_trend_scout(force=force, client_type=client_type, user=user)
+    return await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country)
 
 
 @router.post("/run-now-dev")
 async def run_trend_scout_now_dev(
     force: bool = Query(default=True),
+    country: str | None = Query(default=None, max_length=4),
     x_device_type: str | None = Header(default=None),
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
@@ -149,4 +151,4 @@ async def run_trend_scout_now_dev(
     if not user:
         raise HTTPException(401, "auth required")
     client_type = "mobile" if x_device_type == "mobile" else "desktop"
-    return await run_trend_scout(force=force, client_type=client_type, user=user)
+    return await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country)
