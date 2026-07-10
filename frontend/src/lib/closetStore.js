@@ -155,8 +155,8 @@ function saveState(state) {
   
   if (state.items && state.items.length > 0) {
     setItem('closet_items', state.items).catch(e => console.error('Failed to save items to IndexedDB', e));
-  } else if (state.items && state.items.length === 0 && (state.lastFullSync || state.lastFullSync === 0)) {
-    // If the closet is truly empty or reset, clear the DB
+  } else if (state.items && state.items.length === 0 && state.lastFullSync) {
+    // If the closet is truly empty, clear the DB
     setItem('closet_items', []).catch(e => console.error('Failed to clear items from IndexedDB', e));
   }
 }
@@ -476,7 +476,6 @@ export const closetStore = {
         lastError: null,
       },
     });
-    setItem('closet_items', []).catch(e => console.error('Failed to clear items from IndexedDB on reset', e));
   },
 
   /**

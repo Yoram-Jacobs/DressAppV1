@@ -26,6 +26,9 @@ services:
     image: dressapp-backend:latest
     container_name: dressapp-backend
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     env_file: ./.env
     environment:
       # Make sure the backend trusts the Caddy forwarded headers.

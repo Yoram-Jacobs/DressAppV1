@@ -2560,8 +2560,11 @@ async def repair_hashes_stream(
         "source_phash": 1,
         "source_color_sig": 1,
     }
-    count = await db.closet_items.count_documents({"user_id": user["id"]})
-    total_count = min(count, limit)
+    rows: list[dict[str, Any]] = []
+    async for r in db.closet_items.find(
+        {"user_id": user["id"]}, proj
+    ).limit(limit):
+        rows.append(r)
 
     from app.services.image_hash import (
         compute_authoritative_signatures,
@@ -2575,7 +2578,7 @@ async def repair_hashes_stream(
             json.dumps(
                 {
                     "type": "start",
-                    "total": total_count,
+                    "total": len(rows),
                     "only_missing": only_missing,
                     "dry_run": dry_run,
                 }
@@ -2583,16 +2586,11 @@ async def repair_hashes_stream(
             + "\n"
         )
 
-        scanned = repaired = cleared = unchanged = skipped = failed = 0
+        repaired = cleared = unchanged = skipped = failed = 0
         wrote_db = False
         loop = asyncio.get_running_loop()
 
-        cursor = db.closet_items.find(
-            {"user_id": user["id"]}, proj
-        ).limit(limit)
-
-        async for row in cursor:
-            scanned += 1
+        for row in rows:
             rid = row.get("id")
             if not rid:
                 failed += 1
@@ -2754,7 +2752,7 @@ async def repair_hashes_stream(
             json.dumps(
                 {
                     "type": "done",
-                    "scanned": scanned,
+                    "scanned": len(rows),
                     "repaired": repaired,
                     "cleared": cleared,
                     "unchanged": unchanged,
