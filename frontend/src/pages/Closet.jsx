@@ -615,10 +615,10 @@ export default function Closet() {
       // Read the LIVE store snapshot, not the stale closure. ``store``
       // captured at effect-mount can be many ticks behind by the time
       // this runs (settle() finishing, parallel incremental sync, etc.).
-      const liveItems = closetStore.getSnapshot().items || [];
+      const liveItems = (closetStore.getSnapshot().items || []).filter(Boolean);
       const stillPending = pendingIds.filter((id) =>
         liveItems.find(
-          (it) => it.id === id && it.clean_image_status === 'pending',
+          (it) => it && it.id === id && it.clean_image_status === 'pending',
         ),
       );
       if (stillPending.length === 0) {
@@ -1587,7 +1587,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
   const { t } = useTranslation();
   const groupItems = useMemo(() => {
     if (!item.group_id) return [];
-    const allItems = closetStore.getSnapshot().items || [];
+    const allItems = (closetStore.getSnapshot().items || []).filter(Boolean);
     return allItems.filter(it => it && it.group_id === item.group_id);
   }, [item.group_id]);
 

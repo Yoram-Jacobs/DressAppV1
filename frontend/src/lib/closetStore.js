@@ -154,7 +154,7 @@ function saveState(state) {
   }
   
   if (state.items && state.items.length > 0) {
-    setItem('closet_items', state.items).catch(e => console.error('Failed to save items to IndexedDB', e));
+    setItem('closet_items', state.items.filter(Boolean)).catch(e => console.error('Failed to save items to IndexedDB', e));
   } else if (state.items && state.items.length === 0 && state.lastFullSync) {
     // If the closet is truly empty, clear the DB
     setItem('closet_items', []).catch(e => console.error('Failed to clear items from IndexedDB', e));
@@ -539,8 +539,8 @@ export const closetStore = {
             // detector picks up the corrected hashes immediately —
             // no need to wait for the ``done`` event.
             if (ev.id && ev.patch && typeof ev.patch === 'object') {
-              const items = _state.items;
-              const idx = items.findIndex((it) => it.id === ev.id);
+              const items = (_state.items || []).filter(Boolean);
+              const idx = items.findIndex((it) => it && it.id === ev.id);
               if (idx >= 0) {
                 const merged = { ...items[idx], ...ev.patch };
                 const nextItems = [
@@ -655,8 +655,8 @@ export const closetStore = {
             // can't splice the new bytes in here because the server
             // doesn't echo them — see method docstring.
             if (ev.id && ev.status === 'regenerated') {
-              const items = _state.items;
-              const idx = items.findIndex((it) => it.id === ev.id);
+              const items = (_state.items || []).filter(Boolean);
+              const idx = items.findIndex((it) => it && it.id === ev.id);
               if (idx >= 0) {
                 const merged = {
                   ...items[idx],
