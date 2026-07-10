@@ -44,6 +44,11 @@ from app.services.fees import compute_fees
 from app.services.vision import garment_vision_service
 from app.services.fashion_clip import fashion_clip_service
 from app.services.gemini_image_service import gemini_image_service
+from app.services.image_compression import (
+    compress_b64_image,
+    compress_image_bytes,
+    compress_image_url_or_b64,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/closet", tags=["closet"])
@@ -586,10 +591,18 @@ async def _run_background_matte(
         )
         return
 
-    data_url = (
-        "data:image/png;base64,"
-        + base64.b64encode(result).decode("ascii")
-    )
+    try:
+        compressed_result = compress_image_bytes(result, max_dim=1024, quality=75)
+        import io
+        from PIL import Image
+        temp_img = Image.open(io.BytesIO(compressed_result))
+        mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/jpeg"
+        data_url = f"data:{mime};base64," + base64.b64encode(compressed_result).decode("ascii")
+    except Exception:
+        data_url = (
+            "data:image/png;base64,"
+            + base64.b64encode(result).decode("ascii")
+        )
     await db.closet_items.update_one(
         {"id": item_id},
         {
@@ -841,8 +854,16 @@ async def _run_background_reconstruction(
         )
         return
 
-    mime = result.get("mime_type", "image/png")
-    data_url = f"data:{mime};base64,{result['image_b64']}"
+    recon_b64 = compress_b64_image(result['image_b64'], max_dim=1024, quality=75)
+    try:
+        import io
+        from PIL import Image
+        temp_raw = base64.b64decode(recon_b64)
+        temp_img = Image.open(io.BytesIO(temp_raw))
+        mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/jpeg"
+    except Exception:
+        mime = result.get("mime_type", "image/png")
+    data_url = f"data:{mime};base64,{recon_b64}"
     meta = {
         "method": "reconstruction",
         "model": result.get("model"),
@@ -898,6 +919,24 @@ async def create_item(
                     "current_count": current_count
                 }
             )
+
+    # Compress input base64 images to avoid bloating MongoDB
+    if payload.image_base64:
+        payload.image_base64 = compress_b64_image(payload.image_base64, max_dim=1024, quality=75)
+        try:
+            import io
+            from PIL import Image
+            temp_raw = base64.b64decode(payload.image_base64)
+            temp_img = Image.open(io.BytesIO(temp_raw))
+            payload.image_mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/jpeg"
+        except Exception:
+            pass
+
+    if payload.crop_base64:
+        payload.crop_base64 = compress_b64_image(payload.crop_base64, max_dim=1024, quality=75)
+
+    if payload.reconstructed_image_b64:
+        payload.reconstructed_image_b64 = compress_b64_image(payload.reconstructed_image_b64, max_dim=1024, quality=75)
 
     raw_bytes: bytes | None = None
     if payload.image_base64:
@@ -5251,10 +5290,9 @@ async def get_item(
 async def update_item(
     item_id: str, payload: UpdateItemIn, user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
-    # ``exclude_none=True`` keeps the PATCH semantics of "send only what you
-    # want to change" — a client can e.g. update just `notes` without
-    # wiping every other optional field.
     patch = payload.model_dump(exclude_none=True)
+    if "reconstructed_image_url" in patch and patch["reconstructed_image_url"]:
+        patch["reconstructed_image_url"] = compress_image_url_or_b64(patch["reconstructed_image_url"], max_dim=1024, quality=75)
     # The `clear_reconstruction` flag is a command, not a value we persist.
     # Pop it + translate into explicit null-sets on the related columns.
     if patch.pop("clear_reconstruction", False):
