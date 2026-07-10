@@ -307,7 +307,7 @@ export const closetStore = {
    * Returns the number of items added/updated.
    */
   async incrementalSync() {
-    if (!_state.lastFullSync) {
+    if (!_state.lastFullSync || _state.items.length === 0) {
       // Never fully populated — incremental makes no sense yet.
       return this.prewarm();
     }
