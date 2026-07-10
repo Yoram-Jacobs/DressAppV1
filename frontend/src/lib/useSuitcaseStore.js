@@ -3,12 +3,11 @@ import { suitcaseStore } from '@/lib/suitcaseStore';
 import { useAuth } from '@/lib/auth';
 import { useTranslation } from 'react-i18next';
 
+const _subscribe = suitcaseStore.subscribe.bind(suitcaseStore);
+const _getSnapshot = suitcaseStore.getSnapshot.bind(suitcaseStore);
+
 export function useSuitcaseStore({ prewarm = false } = {}) {
-  const snap = useSyncExternalStore(
-    suitcaseStore.subscribe.bind(suitcaseStore),
-    suitcaseStore.getSnapshot.bind(suitcaseStore),
-    suitcaseStore.getSnapshot.bind(suitcaseStore),
-  );
+  const snap = useSyncExternalStore(_subscribe, _getSnapshot, _getSnapshot);
   const { user } = useAuth();
   const { t } = useTranslation();
 
