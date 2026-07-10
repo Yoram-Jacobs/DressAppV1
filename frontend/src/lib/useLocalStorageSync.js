@@ -30,9 +30,11 @@ export function useLocalStorageSync(key, initialValue) {
     return localStorage.getItem(key);
   }, [key]);
 
+  const serializedInitial = useMemo(() => JSON.stringify(initialValue), [initialValue]);
+
   const getServerSnapshot = useCallback(() => {
-    return JSON.stringify(initialValue);
-  }, [initialValue]);
+    return serializedInitial;
+  }, [serializedInitial]);
 
   const storeValue = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 

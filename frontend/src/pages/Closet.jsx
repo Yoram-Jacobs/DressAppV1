@@ -96,7 +96,9 @@ export default function Closet() {
   const store = useClosetStore();
   const initialFilters = { category: 'all', source: 'all', search: '' };
   const [filters, setFilters] = useLocalStorageSync('dressapp.closet.filters', initialFilters);
-  const activeFilters = filters || initialFilters;
+  const activeFilters = (filters && typeof filters === 'object' && !Array.isArray(filters))
+    ? { ...initialFilters, ...filters }
+    : initialFilters;
   // Search mode: 'keyword' uses Mongo text search, 'meaning' calls FashionCLIP.
   const [searchMode, setSearchMode] = useLocalStorageSync('dressapp.closet.searchMode', 'keyword');
   const [semanticActive, setSemanticActive] = useState(false);
