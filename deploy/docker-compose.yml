@@ -159,4 +159,4 @@ networks:
   dress:
     driver: bridge
     driver_opts:
-      com.docker.network.driver.mtu: 1400
+      com.docker.network.driver.mtu: 1280
