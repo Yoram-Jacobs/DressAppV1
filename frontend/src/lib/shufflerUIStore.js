@@ -20,4 +20,22 @@ export const shufflerUIStore = createSimpleStore({
   activeFloaterItemId: null,
   isSpinning: false,
   saving: false
+}, {
+  storageKey: 'dressapp_shuffler_store',
+  persistKeys: [
+    'selectedStyle',
+    'tagInput',
+    'selectedTag',
+    'coords',
+    'weatherSummary',
+    'includeCalendar',
+    'calendarEvents',
+    'aiRationale',
+    'topFocusIdx',
+    'bottomFocusIdx',
+    'shoeFocusIdx',
+    'topSelectedIdx',
+    'bottomSelectedIdx',
+    'shoeSelectedIdx'
+  ]
 });

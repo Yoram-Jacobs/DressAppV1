@@ -31,4 +31,30 @@ export const stylistUIStore = createSimpleStore({
   speakingId: null,
   sidebarOpen: false,
   floaterItemId: null,
+}, {
+  storageKey: 'dressapp_stylist_store',
+  persistKeys: [
+    'messages',
+    'sessions',
+    'activeSessionId',
+    'outfits',
+    'notifications',
+    'calendarStartDate',
+    'currentCalendarMonth',
+    'text',
+    'includeCalendar',
+    'occasion',
+    'sidebarOpen',
+    'eventForm'
+  ],
+  deserialize: (parsed) => {
+    const result = { ...parsed };
+    if (result.calendarStartDate) {
+      result.calendarStartDate = new Date(result.calendarStartDate);
+    }
+    if (result.currentCalendarMonth) {
+      result.currentCalendarMonth = new Date(result.currentCalendarMonth);
+    }
+    return result;
+  }
 });
