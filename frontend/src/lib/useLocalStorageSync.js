@@ -39,7 +39,8 @@ export function useLocalStorageSync(key, initialValue) {
   const parsedValue = useMemo(() => {
     if (storeValue === null) return initialValue;
     try {
-      return JSON.parse(storeValue);
+      const val = JSON.parse(storeValue);
+      return val || initialValue;
     } catch {
       return initialValue;
     }

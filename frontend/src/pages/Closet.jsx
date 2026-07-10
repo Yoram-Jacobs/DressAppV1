@@ -95,6 +95,7 @@ export default function Closet() {
   const store = useClosetStore();
   const initialFilters = { category: 'all', source: 'all', search: '' };
   const [filters, setFilters] = useLocalStorageSync('dressapp.closet.filters', initialFilters);
+  const activeFilters = filters || initialFilters;
   // Search mode: 'keyword' uses Mongo text search, 'meaning' calls FashionCLIP.
   const [searchMode, setSearchMode] = useLocalStorageSync('dressapp.closet.searchMode', 'keyword');
   const [semanticActive, setSemanticActive] = useState(false);
@@ -111,16 +112,16 @@ export default function Closet() {
       (it) =>
         it &&
         it.group_role !== 'member' &&
-        _matchesCategory(it, filters.category) &&
-        _matchesSource(it, filters.source) &&
-        _matchesSearch(it, filters.search),
+        _matchesCategory(it, activeFilters.category) &&
+        _matchesSource(it, activeFilters.source) &&
+        _matchesSearch(it, activeFilters.search),
     );
-  }, [store.items, filters.category, filters.source, filters.search, semanticActive, semanticItems]);
+  }, [store.items, activeFilters.category, activeFilters.source, activeFilters.search, semanticActive, semanticItems]);
 
   const items = filteredItems;
   const total = semanticActive
     ? semanticItems.length
-    : (filters.category === 'all' && filters.source === 'all' && !filters.search
+    : (activeFilters.category === 'all' && activeFilters.source === 'all' && !activeFilters.search
       ? store.total
       : filteredItems.length);
   // Show the skeleton in either of two cases:
@@ -713,16 +714,16 @@ export default function Closet() {
   // client-side over the store snapshot, so no network involvement.
   useEffect(() => {
     if (searchMode !== 'meaning') return undefined;
-    const q = filters.search.trim();
+    const q = (activeFilters.search || '').trim();
     if (!q) return undefined;
     const handle = setTimeout(() => { fetchSemantic(q); }, 300);
     return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.search, searchMode]);
+  }, [activeFilters.search, searchMode]);
 
   const onSearch = (e) => {
     e.preventDefault();
-    const q = filters.search.trim();
+    const q = (activeFilters.search || '').trim();
     if (searchMode === 'meaning' && q) {
       fetchSemantic(q);
     } else {
@@ -734,14 +735,14 @@ export default function Closet() {
   // re-fetches without needing an extra trip through Enter / Search.
   const clearSearch = () => {
     setSemanticActive(false);
-    setFilters((f) => ({ ...f, search: '' }));
+    setFilters((f) => ({ ...(f || {}), search: '' }));
     // Let the debounced effect handle the actual re-fetch on the
     // next tick so we don't double-fire.
   };
 
   const clearSemantic = () => {
     setSemanticActive(false);
-    setFilters((f) => ({ ...f, search: '' }));
+    setFilters((f) => ({ ...(f || {}), search: '' }));
     fetchItems();
   };
 
@@ -1009,20 +1010,20 @@ export default function Closet() {
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             )}
             <Input
-              value={filters.search}
-              onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+              value={activeFilters.search || ''}
+              onChange={(e) => setFilters((f) => ({ ...(f || {}), search: e.target.value }))}
               placeholder={
                 searchMode === 'meaning'
                   ? t('closet.semanticHint')
                   : t('closet.searchPlaceholder')
               }
-              className={`ps-9 ${filters.search ? 'pe-40' : 'pe-24'} rounded-xl`}
+              className={`ps-9 ${activeFilters.search ? 'pe-40' : 'pe-24'} rounded-xl`}
               data-testid="closet-search-input"
             />
             {/* Clear (x) button — only appears when there's text, so
                 the in-input mode switch stays visible when the field
                 is empty. Sits to the left of the Keyword/Meaning pill. */}
-            {filters.search && (
+            {activeFilters.search && (
               <button
                 type="button"
                 onClick={clearSearch}
@@ -1067,7 +1068,7 @@ export default function Closet() {
               </button>
             </div>
           </div>
-          <Select value={filters.category} onValueChange={(v) => setFilters((f) => ({ ...f, category: v }))}>
+          <Select value={activeFilters.category} onValueChange={(v) => setFilters((f) => ({ ...(f || {}), category: v }))}>
             <SelectTrigger className="w-[140px] rounded-xl" data-testid="closet-category-select">
               <SelectValue placeholder={t('closet.category')} />
             </SelectTrigger>
@@ -1077,7 +1078,7 @@ export default function Closet() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={filters.source} onValueChange={(v) => setFilters((f) => ({ ...f, source: v }))}>
+          <Select value={activeFilters.source} onValueChange={(v) => setFilters((f) => ({ ...(f || {}), source: v }))}>
             <SelectTrigger className="w-[140px] rounded-xl" data-testid="closet-source-select">
               <SelectValue placeholder={labelForSource('all', t)} />
             </SelectTrigger>
