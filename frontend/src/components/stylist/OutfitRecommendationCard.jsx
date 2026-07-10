@@ -35,14 +35,16 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
     const map = {};
     items.forEach(it => {
       if (it && it.role) {
+        const itemObj = itemData[it.closet_item_id];
         map[it.role] = {
            id: it.closet_item_id,
-           url: images[it.closet_item_id]
+           url: images[it.closet_item_id],
+           placeholder: itemObj?.placeholder_data_url || null
         };
       }
     });
     return map;
-  }, [items, images]);
+  }, [items, images, itemData]);
 
   useEffect(() => {
     let cancelled = false;

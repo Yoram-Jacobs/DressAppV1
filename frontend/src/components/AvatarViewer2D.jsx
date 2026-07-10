@@ -4,6 +4,7 @@ import { ImageOff, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { bestImageUrl } from '@/lib/itemImage';
 import { closetStore } from '@/lib/closetStore';
+import ImageWithPlaceholder from '@/components/ImageWithPlaceholder';
 
 export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfitItems = {}, onItemClick }) {
   const { t } = useTranslation();
@@ -70,16 +71,18 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
               
               res[slot] = {
                 url: bestImageUrl(gItem) || gItem.image_data_url || gItem.segmented_image_url || gItem.image_url || gItem.original_image_url,
+                placeholder: gItem.placeholder_data_url || null,
                 id: gItem.id
               };
             });
             return; // Skip the default mapping since we mapped the whole set
           }
         }
-
+ 
         // Default mapping if not a set
         res[role] = {
            url: bestImageUrl(item) || item.image_data_url || item.segmented_image_url || item.image_url || item.original_image_url || item.url,
+           placeholder: item.placeholder_data_url || item.placeholder || null,
            id: item.closet_item_id || item.id || null
         };
       }
@@ -92,14 +95,20 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
     if (!garment || !garment.url) return null;
     const clickable = onItemClick && garment.id;
     return (
-      <motion.img
+      <motion.div
         initial={initial}
         animate={animate}
-        src={garment.url}
-        alt={t(`taxonomy.categories.${roleKey}`, { defaultValue: fallbackAlt })}
-        className={`absolute object-contain drop-shadow-md ${extraClasses} ${clickable ? 'cursor-pointer hover:scale-[1.02] transition-transform z-50' : 'pointer-events-none'}`}
+        className={`absolute drop-shadow-md ${extraClasses} ${clickable ? 'cursor-pointer hover:scale-[1.02] transition-transform z-50' : 'pointer-events-none'}`}
         onClick={clickable ? (e) => { e.stopPropagation(); onItemClick(garment.id); } : undefined}
-      />
+      >
+        <ImageWithPlaceholder
+          src={garment.url}
+          placeholder={garment.placeholder}
+          alt={t(`taxonomy.categories.${roleKey}`, { defaultValue: fallbackAlt })}
+          objectFit="contain"
+          className="w-full h-full"
+        />
+      </motion.div>
     );
   };
 
