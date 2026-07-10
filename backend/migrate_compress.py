@@ -16,7 +16,7 @@ from app.services.image_compression import compress_image_url_or_b64
 
 async def run_migration():
     logger.info("Connecting to MongoDB Atlas...")
-    client = MongoClient(settings.MONGO_URI)
+    client = MongoClient(settings.MONGO_URL)
     db = client.get_default_database()
     
     # 1. Compress closet items
