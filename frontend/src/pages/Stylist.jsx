@@ -56,6 +56,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Pencil } from 'lucide-react';
 import { useClosetStore } from '@/lib/useClosetStore';
+import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { WaveformAudioPlayer } from '@/components/WaveformAudioPlayer';
 import { ConversationSidebar } from '@/components/stylist/ConversationSidebar';
@@ -210,7 +211,7 @@ export default function Stylist() {
   const loc = useAppLocation();
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState('chat');
+  const [activeTab, setActiveTab] = useLocalStorageSync('dressapp.stylist.activeTab', 'chat');
   const [keyErrorOpen, setKeyErrorOpen] = useState(false);
   const shuffleScrollRef = useRef(null);
   const todayRef = useRef(null);

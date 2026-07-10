@@ -88,17 +88,18 @@ function _matchesSearch(item, q) {
   return haystack.includes(needle);
 }
 
+const INITIAL_FILTERS = { category: 'all', source: 'all', search: '' };
+
 export default function Closet() {
   const { t } = useTranslation();
   // Single source of truth: the global closet store. Reading from it
   // means navigating to /closet paints **instantly** (no network) —
   // the prewarm in AppLayout has already populated the snapshot.
   const store = useClosetStore();
-  const initialFilters = { category: 'all', source: 'all', search: '' };
-  const [filters, setFilters] = useLocalStorageSync('dressapp.closet.filters', initialFilters);
+  const [filters, setFilters] = useLocalStorageSync('dressapp.closet.filters', INITIAL_FILTERS);
   const activeFilters = (filters && typeof filters === 'object' && !Array.isArray(filters))
-    ? { ...initialFilters, ...filters }
-    : initialFilters;
+    ? { ...INITIAL_FILTERS, ...filters }
+    : INITIAL_FILTERS;
   // Search mode: 'keyword' uses Mongo text search, 'meaning' calls FashionCLIP.
   const [searchMode, setSearchMode] = useLocalStorageSync('dressapp.closet.searchMode', 'keyword');
   const [semanticActive, setSemanticActive] = useState(false);

@@ -22,11 +22,19 @@ import { AdTicker } from '@/components/AdTicker';
 import { useAuth } from '@/lib/auth';
 import { expertsStore } from '@/lib/expertsStore';
 import { useCachedList } from '@/lib/createCachedStore';
+import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
 
 /**
  * Experts directory — public-facing list of self-certified fashion pros.
  * Pre-filters by viewer's country when LocationProvider has coordinates.
  */
+const INITIAL_FILTERS = {
+  profession: '',
+  country: '',
+  region: '',
+  q: '',
+};
+
 export default function ExpertsDirectory() {
   const { t } = useTranslation();
   const loc = useLocation?.();
@@ -36,18 +44,15 @@ export default function ExpertsDirectory() {
   // We only promote ``draft -> applied`` when the user clicks Search,
   // hits Enter, or clears. Initial ``applied`` is the empty filter
   // set so we hit the same cache slot the AppLayout prewarm warmed.
-  const [draft, setDraft] = useState({
-    profession: '',
-    country: '',
-    region: '',
-    q: '',
-  });
-  const [applied, setApplied] = useState({
-    profession: '',
-    country: '',
-    region: '',
-    q: '',
-  });
+  const [rawDraft, setDraft] = useLocalStorageSync('dressapp.experts.draftFilters', INITIAL_FILTERS);
+  const draft = (rawDraft && typeof rawDraft === 'object' && !Array.isArray(rawDraft))
+    ? { ...INITIAL_FILTERS, ...rawDraft }
+    : INITIAL_FILTERS;
+
+  const [rawApplied, setApplied] = useLocalStorageSync('dressapp.experts.appliedFilters', INITIAL_FILTERS);
+  const applied = (rawApplied && typeof rawApplied === 'object' && !Array.isArray(rawApplied))
+    ? { ...INITIAL_FILTERS, ...rawApplied }
+    : INITIAL_FILTERS;
 
   // Pre-seed country & region from device location on first mount.
   // We seed only the *draft* — the user still has to apply it. This

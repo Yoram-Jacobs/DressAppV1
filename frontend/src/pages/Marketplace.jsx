@@ -17,6 +17,7 @@ import { useLocation as useAppLocation } from '@/lib/location';
 import { useAuth } from '@/lib/auth';
 import { browseStore, myListingsStore } from '@/lib/marketplaceStore';
 import { useMarketplaceProgress } from '@/lib/useMarketplaceProgress';
+import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
 import { useCachedList } from '@/lib/createCachedStore';
 import { toast } from 'sonner';
 import { ScrollToTop } from '@/components/ScrollToTop';
@@ -39,10 +40,17 @@ const _INTENT_TO_MODE = { for_sale: 'sell', swap: 'swap', donate: 'donate', rent
 const CATEGORIES = ['all', 'top', 'bottom', 'outerwear', 'shoes', 'accessory', 'dress'];
 const RADIUS_OPTIONS = ['any', '5', '25', '50', '200'];
 
+const INITIAL_FILTERS = { source: 'all', category: 'all', radius: 'any' };
+
 export default function Marketplace() {
   const { t } = useTranslation();
   const loc = useAppLocation();
-  const [filters, setFilters] = useState({ source: 'all', category: 'all', radius: 'any' });
+  const [rawFilters, setFilters] = useLocalStorageSync('dressapp.marketplace.filters', INITIAL_FILTERS);
+  const filters = (rawFilters && typeof rawFilters === 'object' && !Array.isArray(rawFilters))
+    ? { ...INITIAL_FILTERS, ...rawFilters }
+    : INITIAL_FILTERS;
+
+  const [activeTab, setActiveTab] = useLocalStorageSync('dressapp.marketplace.activeTab', 'browse');
 
   // Stable params object — keyed inputs to the cached browse store.
   // Mirrors the original wire-shape decisions: classic source values
@@ -126,7 +134,7 @@ export default function Marketplace() {
         </Button>
       </div>
 
-      <Tabs defaultValue="browse" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="rounded-xl" data-testid="marketplace-tabs">
           <TabsTrigger value="browse" data-testid="marketplace-tab-browse">{t('market.browse')}</TabsTrigger>
           <TabsTrigger value="mine" data-testid="marketplace-tab-mine">{t('market.myListings')}</TabsTrigger>
@@ -486,7 +494,7 @@ function MyListings() {
 
 function InlineTransactions() {
   const { t } = useTranslation();
-  const [tab, setTab] = useState('buyer');
+  const [tab, setTab] = useLocalStorageSync('dressapp.marketplace.inlineTab', 'buyer');
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
