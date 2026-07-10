@@ -29,11 +29,13 @@ def compress_image_bytes(image_bytes: bytes, max_dim: int = 1024, quality: int =
             
         out_io = io.BytesIO()
         if has_alpha:
-            img.save(out_io, format="PNG", optimize=True)
+            if img.mode != "RGBA":
+                img = img.convert("RGBA")
+            img.save(out_io, format="WEBP", quality=quality)
         else:
             if img.mode != "RGB":
                 img = img.convert("RGB")
-            img.save(out_io, format="JPEG", quality=quality, optimize=True)
+            img.save(out_io, format="WEBP", quality=quality)
         return out_io.getvalue()
     except Exception as e:
         logger.warning("Failed to compress image bytes: %s", e)
@@ -55,11 +57,7 @@ def compress_b64_image(b64_str: str | None, max_dim: int = 1024, quality: int = 
     try:
         raw_bytes = base64.b64decode(clean_b64)
         compressed = compress_image_bytes(raw_bytes, max_dim=max_dim, quality=quality)
-        
-        # Open to check mode for proper prefix
-        img = Image.open(io.BytesIO(compressed))
-        has_alpha = img.mode in ("RGBA", "LA")
-        mime = "image/png" if has_alpha else "image/jpeg"
+        mime = "image/webp"
         
         compressed_b64 = base64.b64encode(compressed).decode("ascii")
         if prefix:

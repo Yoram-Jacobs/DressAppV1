@@ -2467,17 +2467,20 @@ async def list_items(
     #      endpoint GET /closet/{id} still returns them in full.
     from app.services import thumbnails as _thumbs
 
-    pairs = await _thumbs.backfill_thumbnails(items)
-    if pairs:
+    updates = await _thumbs.backfill_thumbnails(items)
+    if updates:
         import asyncio as _asyncio
-        await _asyncio.gather(
-            *[
-                db.closet_items.update_one(
-                    {"id": _id}, {"$set": {"thumbnail_data_url": _t}}
-                )
-                for (_id, _t) in pairs
-            ]
-        )
+
+        async def _save_one(_id, _t, _p):
+            up = {}
+            if _t:
+                up["thumbnail_data_url"] = _t
+            if _p:
+                up["placeholder_data_url"] = _p
+            if up:
+                await db.closet_items.update_one({"id": _id}, {"$set": up})
+
+        await _asyncio.gather(*[_save_one(_id, _t, _p) for (_id, _t, _p) in updates])
 
     _HEAVY_FIELDS = (
         "clip_embedding",

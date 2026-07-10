@@ -27,6 +27,7 @@ import { HashRepairChip } from '@/components/closet/HashRepairChip';
 import { ThumbRepairChip } from '@/components/closet/ThumbRepairChip';
 import { api } from '@/lib/api';
 import { bestImageUrl, isCleanImagePending } from '@/lib/itemImage';
+import ImageWithPlaceholder from '@/components/ImageWithPlaceholder';
 import { labelForCategory, labelForSource, labelForIntent, labelForColor, getTaxonomyMismatches } from '@/lib/taxonomy';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
@@ -1619,23 +1620,14 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
           if (thumbUrl) {
             return (
               <>
-                <img
+                <ImageWithPlaceholder
                   src={thumbUrl}
+                  placeholder={item.placeholder_data_url}
                   alt={item.title}
-                  loading="lazy"
-                  decoding="async"
+                  objectFit="contain"
+                  className="w-full h-full select-none"
                   draggable={false}
                   onContextMenu={(e) => e.preventDefault()}
-                  // Patch 12 (May 2026) — ``object-contain`` (was
-                  // ``object-cover``). Cover scales the source up to
-                  // fill the 3:4 card, which on small crops produces
-                  // a visible bilinear blur. Contain renders the
-                  // source at its native aspect ratio with neutral
-                  // letterbox gutters against ``bg-secondary``. Crisp
-                  // for tiny crops, indistinguishable from cover on
-                  // garment-shaped portrait images that already match
-                  // ~3:4.
-                  className="w-full h-full object-contain select-none"
                   style={{ WebkitTouchCallout: 'none' }}
                   data-testid="closet-item-thumb"
                 />

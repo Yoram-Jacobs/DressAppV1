@@ -76,13 +76,11 @@ def _has_meaningful_alpha(img: Image.Image) -> bool:
         return False
 
 
-def _downsize_bytes(raw: bytes) -> bytes | None:
-    """Decode → shrink → re-encode. Returns ``None`` on any error.
+def _downsize_bytes(raw: bytes, max_size=MAX_THUMB_SIZE, quality=THUMB_QUALITY) -> bytes | None:
+    """Decode → shrink → re-encode as WebP. Returns ``None`` on any error.
 
-    PNGs with real transparency (rembg cutouts, SegFormer-masked PNGs)
-    are kept as PNG so the closet grid renders them on the page
-    background instead of mashing them onto an opaque colour. Fully-
-    opaque inputs become JPEG to keep payload tiny.
+    Both transparent cutouts (which keep alpha) and fully opaque images
+    are compressed as WebP to minimize payload sizes over cellular networks.
     """
     try:
         img = Image.open(io.BytesIO(raw))
@@ -95,20 +93,18 @@ def _downsize_bytes(raw: bytes) -> bytes | None:
     try:
         keep_alpha = _has_meaningful_alpha(img)
         if keep_alpha:
-            # Resize the RGBA image directly — Pillow handles alpha
-            # downsampling correctly with LANCZOS.
             if img.mode != "RGBA":
                 img = img.convert("RGBA")
-            img.thumbnail(MAX_THUMB_SIZE, Image.LANCZOS)
+            img.thumbnail(max_size, Image.LANCZOS)
             buf = io.BytesIO()
-            img.save(buf, format="PNG", optimize=True)
+            img.save(buf, format="WEBP", quality=quality)
             return buf.getvalue()
-        # No alpha to preserve — JPEG keeps the closet payload small.
+        # Opaque image — convert to RGB and save as lossy WebP.
         if img.mode != "RGB":
             img = img.convert("RGB")
-        img.thumbnail(MAX_THUMB_SIZE, Image.LANCZOS)
+        img.thumbnail(max_size, Image.LANCZOS)
         buf = io.BytesIO()
-        img.save(buf, format="JPEG", quality=THUMB_QUALITY, optimize=True)
+        img.save(buf, format="WEBP", quality=quality)
         return buf.getvalue()
     except Exception as exc:  # noqa: BLE001
         logger.info("thumbnail resize failed: %s", repr(exc)[:120])
@@ -116,21 +112,25 @@ def _downsize_bytes(raw: bytes) -> bytes | None:
 
 
 def make_thumb_from_data_url(data_url: str) -> str | None:
-    """Synchronous core — data URL in, data URL out (or ``None`` on failure).
-
-    Returns a ``data:image/png;base64,...`` URL when the source has
-    real transparency, otherwise ``data:image/jpeg;base64,...``.
-    """
+    """Synchronous core — data URL in, WebP data URL out."""
     raw = _decode_data_url(data_url)
     if not raw:
         return None
     small = _downsize_bytes(raw)
     if not small:
         return None
-    # Sniff the encoded format (first byte of PNG vs JPEG marker).
-    is_png = small[:8] == b"\x89PNG\r\n\x1a\n"
-    mime = "image/png" if is_png else "image/jpeg"
-    return f"data:{mime};base64," + base64.b64encode(small).decode("ascii")
+    return "data:image/webp;base64," + base64.b64encode(small).decode("ascii")
+
+
+def make_placeholder_from_data_url(data_url: str) -> str | None:
+    """Generate a super tiny placeholder image (max 32x42) as a WebP data URL."""
+    raw = _decode_data_url(data_url)
+    if not raw:
+        return None
+    small = _downsize_bytes(raw, max_size=(32, 42), quality=15)
+    if not small:
+        return None
+    return "data:image/webp;base64," + base64.b64encode(small).decode("ascii")
 
 
 def pick_source_data_url(item: dict[str, Any]) -> str | None:
@@ -170,64 +170,69 @@ def pick_source_data_url(item: dict[str, Any]) -> str | None:
     return None
 
 
-async def ensure_thumbnail(item: dict[str, Any]) -> str | None:
-    """Return a thumbnail data URL for ``item``, generating it if absent.
+async def ensure_thumbnail_and_placeholder(item: dict[str, Any]) -> tuple[str | None, str | None]:
+    """Return a WebP thumbnail and WebP placeholder data URL for ``item``, generating them if absent.
 
-    Does **not** touch the database — caller is responsible for
-    persisting the result (so a background list scan can batch-update).
-
-    Returns ``None`` when no source image is available, in which case
-    the frontend falls back to its placeholder.
-
-    Stale-thumbnail invalidation: if the cached thumbnail is JPEG but
-    the source image is a transparent PNG (a rembg/SegFormer cutout),
-    we regenerate it. This handles items that were saved before the
-    "preserve transparency" fix shipped — without that, those closet
-    cards would forever show the garment composited onto grey.
+    Does **not** touch the database — caller is responsible for persisting the results.
     """
-    existing = item.get("thumbnail_data_url")
+    existing_thumb = item.get("thumbnail_data_url")
+    existing_place = item.get("placeholder_data_url")
     source = pick_source_data_url(item)
-    if isinstance(existing, str) and existing.startswith("data:image"):
-        # Detect stale thumbs: source is PNG (likely transparent) but
-        # the cached thumb is JPEG → regenerate to recover transparency.
+
+    thumb = existing_thumb
+    place = existing_place
+
+    # Regenerate if thumbnail is missing, or not WebP format, or if placeholder is missing.
+    need_thumb = not isinstance(existing_thumb, str) or not existing_thumb.startswith("data:image/webp")
+    need_place = not isinstance(existing_place, str) or not existing_place.startswith("data:image/webp")
+
+    # If the source is PNG but the cached thumb is JPEG (from legacy formats), regenerate it.
+    if isinstance(existing_thumb, str) and existing_thumb.startswith("data:image/jpeg"):
         source_is_png = isinstance(source, str) and source.startswith("data:image/png")
-        thumb_is_jpeg = existing.startswith("data:image/jpeg")
-        if not (source_is_png and thumb_is_jpeg):
-            return existing
-        logger.info("regenerating stale thumbnail (source PNG → cached thumb was JPEG)")
-    if not source:
-        return None
-    return await asyncio.to_thread(make_thumb_from_data_url, source)
+        if source_is_png:
+            need_thumb = True
+
+    if (need_thumb or need_place) and source:
+        if need_thumb:
+            thumb = await asyncio.to_thread(make_thumb_from_data_url, source)
+        if need_place:
+            place = await asyncio.to_thread(make_placeholder_from_data_url, source)
+
+    return thumb, place
 
 
 async def backfill_thumbnails(
     items: list[dict[str, Any]],
     *,
     concurrency: int = 4,
-) -> list[tuple[str, str]]:
-    """Generate thumbnails for any items missing one. Returns ``(item_id, thumb)``
-    pairs so the caller can persist them in one batched Mongo update.
+) -> list[tuple[str, str | None, str | None]]:
+    """Generate WebP thumbnails and WebP placeholders for any items missing them.
+    Returns ``(item_id, thumb, placeholder)`` triples so the caller can persist them.
 
-    Runs with bounded concurrency so a large first-load doesn't spike
-    CPU or saturate the thread pool.
+    Runs with bounded concurrency to limit CPU usage.
     """
     sem = asyncio.Semaphore(concurrency)
 
-    async def _one(it: dict[str, Any]) -> tuple[str, str] | None:
-        # Reuse ensure_thumbnail's freshness logic so stale JPEGs over
-        # transparent PNG sources get regenerated automatically.
+    async def _one(it: dict[str, Any]) -> tuple[str, str | None, str | None] | None:
         async with sem:
-            thumb = await ensure_thumbnail(it)
-        if not thumb:
+            thumb, place = await ensure_thumbnail_and_placeholder(it)
+        
+        thumb_changed = thumb != it.get("thumbnail_data_url")
+        place_changed = place != it.get("placeholder_data_url")
+
+        if not thumb_changed and not place_changed:
             return None
-        if thumb == it.get("thumbnail_data_url"):
-            return None  # unchanged
-        it["thumbnail_data_url"] = thumb
-        return (it.get("id", ""), thumb) if it.get("id") else None
+
+        if thumb:
+            it["thumbnail_data_url"] = thumb
+        if place:
+            it["placeholder_data_url"] = place
+
+        return (it.get("id", ""), thumb, place) if it.get("id") else None
 
     results = await asyncio.gather(*[_one(it) for it in items], return_exceptions=True)
-    pairs: list[tuple[str, str]] = []
+    updates: list[tuple[str, str | None, str | None]] = []
     for r in results:
         if isinstance(r, tuple):
-            pairs.append(r)
-    return pairs
+            updates.append(r)
+    return updates

@@ -243,6 +243,7 @@ class ClosetItem(BaseDoc):
     clean_image_url: str | None = None
     clean_image_status: str | None = None  # "pending" | "ready" | "failed"
     variants: list[dict[str, Any]] = Field(default_factory=list)
+    placeholder_data_url: str | None = None
     embedding_id: str | None = None
     # Purchase history
     purchase_price_cents: int | None = None
