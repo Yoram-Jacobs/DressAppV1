@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Save, ImageOff, ChevronLeft, ChevronRight, X, Globe, CalendarDays, Loader2 } from 'lucide-react';
 import { useStoreState } from '@/lib/createSimpleStore';
@@ -133,19 +133,28 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
   const [isSpinning, setIsSpinning] = useStoreState(shufflerUIStore, 'isSpinning');
   const [saving, setSaving] = useStoreState(shufflerUIStore, 'saving');
 
+  const lastFilterRef = useRef({ style: selectedStyle, tag: selectedTag });
+
   // Reset focus index and scrolls on style/tag filter change
   useEffect(() => {
-    setTopFocusIdx(0);
-    setBottomFocusIdx(0);
-    setShoeFocusIdx(0);
-    setTopSelectedIdx(null);
-    setBottomSelectedIdx(null);
-    setShoeSelectedIdx(null);
-    setActiveFloaterItemId(null);
-    
-    if (topApi && filteredTops.length > 0) topApi.scrollTo(0, false);
-    if (bottomApi && filteredBottoms.length > 0) bottomApi.scrollTo(0, false);
-    if (shoeApi && filteredShoes.length > 0) shoeApi.scrollTo(0, false);
+    const styleChanged = lastFilterRef.current.style !== selectedStyle;
+    const tagChanged = lastFilterRef.current.tag !== selectedTag;
+
+    if (styleChanged || tagChanged) {
+      setTopFocusIdx(0);
+      setBottomFocusIdx(0);
+      setShoeFocusIdx(0);
+      setTopSelectedIdx(null);
+      setBottomSelectedIdx(null);
+      setShoeSelectedIdx(null);
+      setActiveFloaterItemId(null);
+      
+      if (topApi && filteredTops.length > 0) topApi.scrollTo(0, false);
+      if (bottomApi && filteredBottoms.length > 0) bottomApi.scrollTo(0, false);
+      if (shoeApi && filteredShoes.length > 0) shoeApi.scrollTo(0, false);
+      
+      lastFilterRef.current = { style: selectedStyle, tag: selectedTag };
+    }
   }, [selectedStyle, selectedTag, topApi, bottomApi, shoeApi, filteredTops.length, filteredBottoms.length, filteredShoes.length]);
 
   // Sync initial indices when items load
@@ -498,7 +507,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
         <div className="w-full relative px-10">
           <Carousel
             setApi={setApi}
-            opts={{ align: 'center', loop: true, watchDrag: !isSpinning, dragFree: true }}
+            opts={{ align: 'center', loop: true, watchDrag: !isSpinning, dragFree: true, startIndex: focusIdx || 0 }}
             className="w-full"
           >
             <CarouselContent className="-ms-2">
