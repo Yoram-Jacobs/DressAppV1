@@ -1588,7 +1588,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
   const groupItems = useMemo(() => {
     if (!item.group_id) return [];
     const allItems = closetStore.getSnapshot().items || [];
-    return allItems.filter(it => it.group_id === item.group_id);
+    return allItems.filter(it => it && it.group_id === item.group_id);
   }, [item.group_id]);
 
   const isSet = useMemo(() => {
@@ -1601,7 +1601,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
       if (s === 'accessory' || s === 'accessories') return 'accessories';
       return s;
     };
-    const categories = new Set(groupItems.map(it => normCategory(it.category)));
+    const categories = new Set(groupItems.filter(Boolean).map(it => normCategory(it.category)));
     return categories.size > 1;
   }, [groupItems]);
 

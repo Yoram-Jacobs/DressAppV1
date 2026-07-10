@@ -165,7 +165,7 @@ let _state = loadState();
 
 let _idbPromise = typeof window !== 'undefined' ? getItem('closet_items').then(items => {
   if (items && items.length > 0 && _state.items.length === 0) {
-    _state.items = items;
+    _state.items = items.filter(Boolean);
     _notify();
   }
 }).catch(e => console.error('Failed to load items from IndexedDB', e)) : Promise.resolve();
@@ -279,7 +279,7 @@ export const closetStore = {
     _set({ loading: true, error: null });
     try {
       const res = await api.listCloset({ limit: 2000 });
-      const next = (res.items || []).filter((it) => !_deletedIds.has(it.id)).sort(_byCreatedDesc);
+      const next = (res.items || []).filter(Boolean).filter((it) => !_deletedIds.has(it.id)).sort(_byCreatedDesc);
       const now = Date.now();
       _set({
         items: next,
@@ -329,11 +329,12 @@ export const closetStore = {
       // Build the next items list off the current snapshot. We avoid
       // mutating _state until we have the final shape, then publish
       // it in a single _set() call.
-      let nextItems = _state.items;
+      let nextItems = _state.items.filter(Boolean);
       let mutations = 0;
       if (changedItems.length) {
         const byId = new Map(nextItems.map((it) => [it.id, it]));
         for (const it of changedItems) {
+          if (!it) continue;
           const prev = byId.get(it.id) || {};
           const merged = { ...prev, ...it };
           
@@ -355,7 +356,7 @@ export const closetStore = {
         mutations += changedItems.length;
       }
       const beforeCount = nextItems.length;
-      nextItems = nextItems.filter((it) => liveIds.has(it.id) && !_deletedIds.has(it.id));
+      nextItems = nextItems.filter(Boolean).filter((it) => liveIds.has(it.id) && !_deletedIds.has(it.id));
       const removed = beforeCount - nextItems.length;
       mutations += removed;
 
