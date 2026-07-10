@@ -314,8 +314,8 @@ export default function Closet() {
 
     if (!sourceId || sourceId === targetId) return;
 
-    const sourceItem = (store.items || []).find(it => it.id === sourceId);
-    const targetItem = (store.items || []).find(it => it.id === targetId);
+    const sourceItem = (store.items || []).find(it => it && it.id === sourceId);
+    const targetItem = (store.items || []).find(it => it && it.id === targetId);
 
     const backupSource = sourceItem ? { ...sourceItem } : null;
     const backupTarget = targetItem ? { ...targetItem } : null;
@@ -450,8 +450,8 @@ export default function Closet() {
     setIsTouchDragging(false);
 
     if (targetId && sourceId && sourceId !== targetId) {
-      const sourceItem = (store.items || []).find(it => it.id === sourceId);
-      const targetItem = (store.items || []).find(it => it.id === targetId);
+      const sourceItem = (store.items || []).find(it => it && it.id === sourceId);
+      const targetItem = (store.items || []).find(it => it && it.id === targetId);
 
       const backupSource = sourceItem ? { ...sourceItem } : null;
       const backupTarget = targetItem ? { ...targetItem } : null;
@@ -1285,7 +1285,7 @@ export default function Closet() {
               </SelectTrigger>
               <SelectContent className="max-h-[300px]">
                 {Array.from(selected).map((id) => {
-                  const item = (store.items || []).find((it) => it.id === id);
+                  const item = (store.items || []).find((it) => it && it.id === id);
                   return (
                     <SelectItem key={id} value={id}>
                       <div className="flex items-center gap-2">
@@ -1309,8 +1309,8 @@ export default function Closet() {
                 const hostId = groupHostId;
                 const memberIds = Array.from(selected).filter(id => id !== hostId);
                 
-                const hostItem = (store.items || []).find(it => it.id === hostId);
-                const memberItems = memberIds.map(mid => (store.items || []).find(it => it.id === mid)).filter(Boolean);
+                const hostItem = (store.items || []).find(it => it && it.id === hostId);
+                const memberItems = memberIds.map(mid => (store.items || []).find(it => it && it.id === mid)).filter(Boolean);
 
                 const normCategory = (cat) => {
                   const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');
@@ -1340,7 +1340,7 @@ export default function Closet() {
                   const backups = [
                     { id: hostId, data: hostItem ? { ...hostItem } : null },
                     ...memberIds.map(mid => {
-                      const it = (store.items || []).find(x => x.id === mid);
+                      const it = (store.items || []).find(x => x && x.id === mid);
                       return { id: mid, data: it ? { ...it } : null };
                     })
                   ];
@@ -1488,7 +1488,7 @@ export default function Closet() {
                 // 1. First, add the new tags to the selected frontend Closet items
                 const selectedIds = Array.from(selected);
                 selectedIds.forEach((id) => {
-                  const item = (store.items || []).find((it) => it.id === id);
+                  const item = (store.items || []).find((it) => it && it.id === id);
                   if (item) {
                     const existingTags = Array.isArray(item.tags) ? item.tags : [];
                     const mergedTags = Array.from(new Set([...existingTags, ...newTags]));
@@ -1504,7 +1504,7 @@ export default function Closet() {
                 // 2. Update the DB in the background
                 try {
                   const tagPromises = selectedIds.map(async (id) => {
-                    const item = (store.items || []).find((it) => it.id === id);
+                    const item = (store.items || []).find((it) => it && it.id === id);
                     if (!item) return;
                     const existingTags = Array.isArray(item.tags) ? item.tags : [];
                     const mergedTags = Array.from(new Set([...existingTags, ...newTags]));
@@ -1566,7 +1566,7 @@ export default function Closet() {
           }}
         >
           {(() => {
-            const draggedItem = (store.items || []).find(x => x.id === draggedId);
+            const draggedItem = (store.items || []).find(x => x && x.id === draggedId);
             return draggedItem ? (
               <img
                 src={bestImageUrl(draggedItem)}

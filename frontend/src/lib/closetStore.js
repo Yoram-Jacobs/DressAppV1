@@ -379,7 +379,7 @@ export const closetStore = {
   upsert(item) {
     if (!item || !item.id) return;
     _deletedIds.delete(item.id);
-    const items = _state.items;
+    const items = (_state.items || []).filter(Boolean);
     const idx = items.findIndex((it) => it.id === item.id);
     let nextItems;
     let nextTotal = _state.total;
@@ -423,7 +423,7 @@ export const closetStore = {
     if (!itemId) return;
     _deletedIds.add(itemId);
     const before = _state.items.length;
-    const nextItems = _state.items.filter((it) => it.id !== itemId);
+    const nextItems = (_state.items || []).filter(Boolean).filter((it) => it.id !== itemId);
     if (nextItems.length !== before) {
       _set({
         items: nextItems,
@@ -434,7 +434,7 @@ export const closetStore = {
 
   /** Bulk replace — used by the page after a filtered/semantic search. */
   replaceAll(items, total) {
-    const sorted = (items || []).slice().sort(_byCreatedDesc);
+    const sorted = (items || []).filter(Boolean).slice().sort(_byCreatedDesc);
     const now = Date.now();
     _set({
       items: sorted,

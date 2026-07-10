@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Loader2, ShirtIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import { bestImageUrl } from '@/lib/itemImage';
 
 import { useTranslation } from 'react-i18next';
 export function SwapPickerModal({
@@ -61,12 +62,7 @@ export function SwapPickerModal({
       .finally(() => setLoading(false));
   }, [open]);
 
-  const imageFor = (it) =>
-    it.thumbnail_data_url
-    || it.segmented_image_url
-    || it.reconstructed_image_url
-    || it.original_image_url
-    || null;
+  const imageFor = (it) => bestImageUrl(it) || null;
 
   const handleSubmit = async () => {
     if (!selected) return;

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { bestImageUrl } from '@/lib/itemImage';
 import {
   labelForCategory,
   labelForSubCategory,
@@ -116,13 +117,7 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
 
   if (!itemId) return null;
 
-  const heroImage =
-    item?.reconstructed_image_url ||
-    item?.clean_image_url ||
-    item?.segmented_image_url ||
-    item?.original_image_url ||
-    item?.image_url ||
-    null;
+  const heroImage = bestImageUrl(item) || item?.image_url || null;
 
   const onViewDetails = () => {
     onClose?.();

@@ -38,17 +38,17 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
   // Determine outfit garment URLs and IDs
   const garments = useMemo(() => {
     const res = {};
-    const allClosetItems = closetStore.getSnapshot().items || [];
+    const allClosetItems = (closetStore.getSnapshot().items || []).filter(Boolean);
 
     Object.entries(outfitItems || {}).forEach(([role, item]) => {
       if (item) {
         // Resolve item from closetStore to see if it is part of a set
         const itemId = item.closet_item_id || item.id;
-        const closetItem = allClosetItems.find(it => it.id === itemId);
+        const closetItem = allClosetItems.find(it => it && it.id === itemId);
         
         if (closetItem && closetItem.group_id) {
           // Find all items in this group
-          const groupItems = allClosetItems.filter(it => it.group_id === closetItem.group_id);
+          const groupItems = allClosetItems.filter(it => it && it.group_id === closetItem.group_id);
           // Check if it's a set (multiple categories)
           const normCategory = (cat) => {
             const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');

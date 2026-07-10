@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth';
 import OutfitAvatarViewer from '@/components/OutfitAvatarViewer';
 import { HarmonyBadge } from '@/components/stylist/HarmonyBadge';
 import { closetStore } from '@/lib/closetStore';
+import { bestImageUrl } from '@/lib/itemImage';
 /**
  * Renders a single outfit recommendation. When recommendation items include
  * `closet_item_id`, we fetch and embed the item's image so the user sees
@@ -56,11 +57,7 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
       if (id in images) continue;
       const localItem = localMap.get(id);
       if (localItem) {
-        fetchedImages[id] =
-          localItem.reconstructed_image_url ||
-          localItem.segmented_image_url ||
-          localItem.image_url ||
-          null;
+        fetchedImages[id] = bestImageUrl(localItem);
         fetchedData[id] = localItem;
       } else {
         toFetch.push(id);
@@ -81,11 +78,7 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
         toFetch.map(async (id) => {
           try {
             const item = await api.getItem(id);
-            netImages[id] =
-              item?.reconstructed_image_url ||
-              item?.segmented_image_url ||
-              item?.image_url ||
-              null;
+            netImages[id] = bestImageUrl(item);
             netData[id] = item || null;
           } catch {
             netImages[id] = null;

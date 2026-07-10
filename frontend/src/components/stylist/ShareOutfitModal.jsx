@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { closetStore } from '@/lib/closetStore';
+import { bestImageUrl } from '@/lib/itemImage';
 import OutfitAvatarViewer from '@/components/OutfitAvatarViewer';
 import {
   Loader2,
@@ -48,24 +50,46 @@ export default function ShareOutfitModal({ open, onOpenChange, outfit, sessionId
   useEffect(() => {
     let cancelled = false;
     if (ids.length === 0) return () => {};
+
+    const localItems = (closetStore.getItemsSnapshot() || []).filter(Boolean);
+    const localMap = new Map(localItems.map(it => [it.id, it]));
+
+    const fetchedImages = {};
+    const toFetch = [];
+
+    for (const id of ids) {
+      if (id in images) continue;
+      const localItem = localMap.get(id);
+      if (localItem) {
+        fetchedImages[id] = bestImageUrl(localItem);
+      } else {
+        toFetch.push(id);
+      }
+    }
+
+    if (Object.keys(fetchedImages).length > 0 && !cancelled) {
+      setImages((prev) => ({ ...prev, ...fetchedImages }));
+    }
+
+    if (toFetch.length === 0) return () => {};
+
     (async () => {
-      const fetched = {};
+      const netImages = {};
       await Promise.all(
-        ids.map(async (id) => {
+        toFetch.map(async (id) => {
           try {
             const item = await api.getItem(id);
-            fetched[id] =
-              item?.reconstructed_image_url ||
-              item?.segmented_image_url ||
-              item?.image_url ||
-              null;
+            netImages[id] = bestImageUrl(item);
           } catch {
-            fetched[id] = null;
+            netImages[id] = null;
           }
         })
       );
-      if (!cancelled) setImages((prev) => ({ ...prev, ...fetched }));
+      if (!cancelled) {
+        setImages((prev) => ({ ...prev, ...netImages }));
+      }
     })();
+
     return () => {
       cancelled = true;
     };
