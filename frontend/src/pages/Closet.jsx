@@ -106,9 +106,10 @@ export default function Closet() {
   // memo so re-renders triggered by other state (selection, etc.)
   // don't re-walk a 300-item list unnecessarily.
   const filteredItems = useMemo(() => {
-    if (semanticActive) return semanticItems.filter((it) => it.group_role !== 'member');
+    if (semanticActive) return semanticItems.filter((it) => it && it.group_role !== 'member');
     return (store.items || []).filter(
       (it) =>
+        it &&
         it.group_role !== 'member' &&
         _matchesCategory(it, filters.category) &&
         _matchesSource(it, filters.source) &&

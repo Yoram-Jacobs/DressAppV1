@@ -104,7 +104,7 @@ const getDefaultCurrency = () => {
   }
 };
 
-const fileToBase64 = async (file, maxSide = 1024, quality = 0.8) => {
+const fileToBase64 = async (file, maxSide = 800, quality = 0.6) => {
   let img = null;
   if (typeof createImageBitmap === 'function') {
     try {
