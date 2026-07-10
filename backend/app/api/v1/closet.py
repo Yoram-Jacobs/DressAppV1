@@ -1123,6 +1123,17 @@ async def create_item(
         # ``segmented_image_url`` here is expected when neither was wired.
         pass
 
+    # NEW: Trigger the Dynamic Transcoding Pipeline for BlurHash, WebP, AVIF
+    if raw_bytes:
+        from app.services.encoder_pipeline import process_image_pipeline
+        background_tasks.add_task(
+            process_image_pipeline,
+            item_id_for_bg,
+            user["id"],
+            raw_bytes,
+            payload.image_mime or "image/jpeg"
+        )
+
     # Patch M14 (May 2026) — Post-save Nano Banana reconstruction. The
     # analyzer marked this item with ``needs_reconstruction=true`` so
     # the /analyze response could leave inside the ingress 60 s ceiling

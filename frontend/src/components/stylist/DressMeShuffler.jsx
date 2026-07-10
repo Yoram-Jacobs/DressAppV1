@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Save, ImageOff, ChevronLeft, ChevronRight, X, Globe, CalendarDays, Loader2 } from 'lucide-react';
+import { useStoreState } from '@/lib/createSimpleStore';
+import { shufflerUIStore } from '@/lib/shufflerUIStore';
+import ProgressiveImage from '@/components/ui/ProgressiveImage';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,35 +27,20 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
   const store = useClosetStore();
   const items = (store.items || []).filter(Boolean);
 
-  const [selectedStyle, setSelectedStyle] = useState('all');
-  const [tagInput, setTagInput] = useState('');
-  const [selectedTag, setSelectedTag] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedStyle, setSelectedStyle] = useStoreState(shufflerUIStore, 'selectedStyle');
+  const [tagInput, setTagInput] = useStoreState(shufflerUIStore, 'tagInput');
+  const [selectedTag, setSelectedTag] = useStoreState(shufflerUIStore, 'selectedTag');
+  const [showSuggestions, setShowSuggestions] = useStoreState(shufflerUIStore, 'showSuggestions');
 
   // New States for Weather, Location, Calendar, Rationale
-  const [coords, setCoords] = useState(null);
-  const [weatherSummary, setWeatherSummary] = useState('');
-  const [includeCalendar, setIncludeCalendar] = useState(false);
-  const [calendarEvents, setCalendarEvents] = useState([]);
-  const [calendarLoading, setCalendarLoading] = useState(false);
-  const [aiRationale, setAiRationale] = useState('');
+  const [coords, setCoords] = useStoreState(shufflerUIStore, 'coords');
+  const [weatherSummary, setWeatherSummary] = useStoreState(shufflerUIStore, 'weatherSummary');
+  const [includeCalendar, setIncludeCalendar] = useStoreState(shufflerUIStore, 'includeCalendar');
+  const [calendarEvents, setCalendarEvents] = useStoreState(shufflerUIStore, 'calendarEvents');
+  const [calendarLoading, setCalendarLoading] = useStoreState(shufflerUIStore, 'calendarLoading');
+  const [aiRationale, setAiRationale] = useStoreState(shufflerUIStore, 'aiRationale');
 
-  // Geolocation Fetch Hook
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setCoords({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        (error) => {
-          console.warn('Geolocation access failed:', error);
-        }
-      );
-    }
-  }, []);
+
 
   // Switchable Calendar Events Sync
   useEffect(() => {
@@ -126,24 +114,24 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
   const duplicatedShoes = getDuplicatedList(filteredShoes);
 
   // Focus tracking (which item is currently centered in each row)
-  const [topFocusIdx, setTopFocusIdx] = useState(0);
-  const [bottomFocusIdx, setBottomFocusIdx] = useState(0);
-  const [shoeFocusIdx, setShoeFocusIdx] = useState(0);
+  const [topFocusIdx, setTopFocusIdx] = useStoreState(shufflerUIStore, 'topFocusIdx');
+  const [bottomFocusIdx, setBottomFocusIdx] = useStoreState(shufflerUIStore, 'bottomFocusIdx');
+  const [shoeFocusIdx, setShoeFocusIdx] = useStoreState(shufflerUIStore, 'shoeFocusIdx');
 
   // Selection tracking (which item has been picked/selected)
-  const [topSelectedIdx, setTopSelectedIdx] = useState(null);
-  const [bottomSelectedIdx, setBottomSelectedIdx] = useState(null);
-  const [shoeSelectedIdx, setShoeSelectedIdx] = useState(null);
+  const [topSelectedIdx, setTopSelectedIdx] = useStoreState(shufflerUIStore, 'topSelectedIdx');
+  const [bottomSelectedIdx, setBottomSelectedIdx] = useStoreState(shufflerUIStore, 'bottomSelectedIdx');
+  const [shoeSelectedIdx, setShoeSelectedIdx] = useStoreState(shufflerUIStore, 'shoeSelectedIdx');
 
   // Active item detail floater
-  const [activeFloaterItemId, setActiveFloaterItemId] = useState(null);
+  const [activeFloaterItemId, setActiveFloaterItemId] = useStoreState(shufflerUIStore, 'activeFloaterItemId');
   
   const [topApi, setTopApi] = useState(null);
   const [bottomApi, setBottomApi] = useState(null);
   const [shoeApi, setShoeApi] = useState(null);
 
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [isSpinning, setIsSpinning] = useStoreState(shufflerUIStore, 'isSpinning');
+  const [saving, setSaving] = useStoreState(shufflerUIStore, 'saving');
 
   // Reset focus index and scrolls on style/tag filter change
   useEffect(() => {
@@ -535,8 +523,9 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
                           : "border-border/40 bg-secondary/10"
                       }`}>
                         {imageUrl ? (
-                          <img
-                            src={imageUrl}
+                          <ProgressiveImage
+                            variants={item.image_variants}
+                            originalSrc={imageUrl}
                             alt={item.name || label}
                             className="max-h-full max-w-full object-contain pointer-events-none p-1.5"
                           />

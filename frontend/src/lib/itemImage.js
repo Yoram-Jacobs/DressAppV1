@@ -16,6 +16,7 @@
  * chain is one edit away from changing in lock-step everywhere.
  *
  * ``opts.skipReconstruction``  \u2014 set to ``true`` on screens that want to
+ * ``opts.skipReconstruction``  — set to ``true`` on screens that want to
  * show the original ("flat", non-reshoot) version, e.g. the "Show original"
  * toggle on ItemDetail. Bypasses fields #1-#2 only.
  */
@@ -25,6 +26,14 @@ export function bestImageUrl(item, opts = {}) {
     if (item.thumbnail_data_url) return item.thumbnail_data_url;
     if (item.reconstructed_image_url) return item.reconstructed_image_url;
   }
+
+  // NEW: Dynamic Transcoding Variants (AVIF/WebP)
+  if (item.image_variants) {
+    if (item.image_variants.avif?.medium) return item.image_variants.avif.medium;
+    if (item.image_variants.webp?.medium) return item.image_variants.webp.medium;
+    if (item.image_variants.original) return item.image_variants.original;
+  }
+
   if (item.clean_image_url) return item.clean_image_url;
   if (item.segmented_image_url) return item.segmented_image_url;
   if (item.original_image_url) return item.original_image_url;
@@ -35,8 +44,8 @@ export function bestImageUrl(item, opts = {}) {
  * Returns ``true`` when the backend is still running its
  * fire-and-forget rembg matte for a Phase-O.6 single-pass item.
  *
- * The closet card uses this to overlay a subtle "polishing photo\u2026"
- * shimmer on the thumbnail until the alpha PNG arrives \u2014 typically
+ * The closet card uses this to overlay a subtle "polishing photo…"
+ * shimmer on the thumbnail until the alpha PNG arrives — typically
  * 4-8 s after ``POST /closet`` returns.
  */
 export function isCleanImagePending(item) {

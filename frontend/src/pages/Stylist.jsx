@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useStoreState } from '@/lib/createSimpleStore';
+import { stylistUIStore } from '@/lib/stylistUIStore';
 import { useTranslation } from 'react-i18next';
 import {
   Mic,
@@ -249,9 +251,9 @@ export default function Stylist() {
   }, [location]);
 
   // Conversation state
-  const [sessions, setSessions] = useState([]);
+  const [sessions, setSessions] = useStoreState(stylistUIStore, 'sessions');
   const [sessionsLoading, setSessionsLoading] = useState(true);
-  const [activeSessionId, setActiveSessionId] = useState(null);
+  const [activeSessionId, setActiveSessionId] = useStoreState(stylistUIStore, 'activeSessionId');
 
   const getOutfitName = (name) => {
     if (!name) return '';
@@ -276,32 +278,27 @@ export default function Stylist() {
     }
     return desc;
   };
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useStoreState(stylistUIStore, 'messages');
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const messagesEndRef = useRef(null);
   const lastAssistantRef = useRef(null);
-
   // Outfits, Notifications, and Calendar states
-  const [outfits, setOutfits] = useState([]);
+  const [outfits, setOutfits] = useStoreState(stylistUIStore, 'outfits');
   const [outfitsLoading, setOutfitsLoading] = useState(true);
-  const [notifications, setNotifications] = useState([]);
-  const [calendarStartDate, setCalendarStartDate] = useState(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  });
-  const [dragOverDay, setDragOverDay] = useState(null);
-  const [selectedOutfitForDetail, setSelectedOutfitForDetail] = useState(null);
-  const [shareDetailModalOpen, setShareDetailModalOpen] = useState(false);
-  const [calendarModalOpen, setCalendarModalOpen] = useState(false);
-  const [schedulingDate, setSchedulingDate] = useState(null);
-  const [currentCalendarMonth, setCurrentCalendarMonth] = useState(() => new Date());
+  const [notifications, setNotifications] = useStoreState(stylistUIStore, 'notifications');
+  const [calendarStartDate, setCalendarStartDate] = useStoreState(stylistUIStore, 'calendarStartDate');
+  const [dragOverDay, setDragOverDay] = useStoreState(stylistUIStore, 'dragOverDay');
+  const [selectedOutfitForDetail, setSelectedOutfitForDetail] = useStoreState(stylistUIStore, 'selectedOutfitForDetail');
+  const [shareDetailModalOpen, setShareDetailModalOpen] = useStoreState(stylistUIStore, 'shareDetailModalOpen');
+  const [calendarModalOpen, setCalendarModalOpen] = useStoreState(stylistUIStore, 'calendarModalOpen');
+  const [schedulingDate, setSchedulingDate] = useStoreState(stylistUIStore, 'schedulingDate');
+  const [currentCalendarMonth, setCurrentCalendarMonth] = useStoreState(stylistUIStore, 'currentCalendarMonth');
 
   const { items: closetItems } = useClosetStore();
-  const [isEditingOutfit, setIsEditingOutfit] = useState(false);
-  const [editOutfitName, setEditOutfitName] = useState('');
-  const [editOutfitDescription, setEditOutfitDescription] = useState('');
+  const [isEditingOutfit, setIsEditingOutfit] = useStoreState(stylistUIStore, 'isEditingOutfit');
+  const [editOutfitName, setEditOutfitName] = useStoreState(stylistUIStore, 'editOutfitName');
+  const [editOutfitDescription, setEditOutfitDescription] = useStoreState(stylistUIStore, 'editOutfitDescription');
 
   const loadOutfitsAndNotifications = useCallback(async () => {
     setOutfitsLoading(true);
@@ -326,7 +323,7 @@ export default function Stylist() {
     loadOutfitsAndNotifications();
   }, [loadOutfitsAndNotifications]);
 
-  const [hasAutoSelected, setHasAutoSelected] = useState(false);
+  const [hasAutoSelected, setHasAutoSelected] = useStoreState(stylistUIStore, 'hasAutoSelected');
 
   useEffect(() => {
     if (location.state?.selectedOutfitId && outfits.length > 0) {
@@ -727,7 +724,7 @@ export default function Stylist() {
 
 
   // Event Proposal Dialog state
-  const [eventModalOpen, setEventModalOpen] = useState(false);
+  const [eventModalOpen, setEventModalOpen] = useStoreState(stylistUIStore, 'eventModalOpen');
   const todayStr = formatLocalDate(new Date());
   const [eventForm, setEventForm] = useState({
     event_name: '',
@@ -738,26 +735,26 @@ export default function Stylist() {
   });
 
   // Composer state
-  const [text, setText] = useState('');
-  const [imageFile, setImageFile] = useState(null);
+  const [text, setText] = useStoreState(stylistUIStore, 'text');
+  const [imageFile, setImageFile] = useStoreState(stylistUIStore, 'imageFile');
   // Phase R: extra attachments (>1 image triggers the multi-image
   // outfit composer instead of the single-image stylist endpoint).
-  const [extraImages, setExtraImages] = useState([]);
-  const [includeCalendar, setIncludeCalendar] = useState(false);
-  const [occasion, setOccasion] = useState('');
-  const [calendarConnected, setCalendarConnected] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [recording, setRecording] = useState(false);
-  const [interim, setInterim] = useState('');
-  const [speakingId, setSpeakingId] = useState(null);
+  const [extraImages, setExtraImages] = useStoreState(stylistUIStore, 'extraImages');
+  const [includeCalendar, setIncludeCalendar] = useStoreState(stylistUIStore, 'includeCalendar');
+  const [occasion, setOccasion] = useStoreState(stylistUIStore, 'occasion');
+  const [calendarConnected, setCalendarConnected] = useStoreState(stylistUIStore, 'calendarConnected');
+  const [busy, setBusy] = useStoreState(stylistUIStore, 'busy');
+  const [recording, setRecording] = useStoreState(stylistUIStore, 'recording');
+  const [interim, setInterim] = useStoreState(stylistUIStore, 'interim');
+  const [speakingId, setSpeakingId] = useStoreState(stylistUIStore, 'speakingId');
 
   // Mobile drawers
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useStoreState(stylistUIStore, 'sidebarOpen');
 
   // Phase S3: ItemFloater (side-sheet preview for closet items in
   // outfit recommendations). Single instance per page — any thumbnail
   // click sets this to the closet item id and the floater slides in.
-  const [floaterItemId, setFloaterItemId] = useState(null);
+  const [floaterItemId, setFloaterItemId] = useStoreState(stylistUIStore, 'floaterItemId');
 
   // Browser capabilities
   const sttSupportedRef = useRef(isSTTSupported());

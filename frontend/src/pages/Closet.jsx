@@ -27,6 +27,7 @@ import { HashRepairChip } from '@/components/closet/HashRepairChip';
 import { ThumbRepairChip } from '@/components/closet/ThumbRepairChip';
 import { api } from '@/lib/api';
 import { bestImageUrl, isCleanImagePending } from '@/lib/itemImage';
+import ProgressiveImage from '@/components/ui/ProgressiveImage';
 import ImageWithPlaceholder from '@/components/ImageWithPlaceholder';
 import { labelForCategory, labelForSource, labelForIntent, labelForColor, getTaxonomyMismatches } from '@/lib/taxonomy';
 import { useClosetStore } from '@/lib/useClosetStore';
@@ -1623,14 +1624,13 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
           if (thumbUrl) {
             return (
               <>
-                <ImageWithPlaceholder
-                  src={thumbUrl}
-                  placeholder={item.placeholder_data_url}
+                <ProgressiveImage
+                  variants={item.image_variants}
+                  originalSrc={thumbUrl}
                   alt={item.title}
                   objectFit="contain"
                   className="w-full h-full select-none"
                   draggable={false}
-                  onContextMenu={(e) => e.preventDefault()}
                   style={{ WebkitTouchCallout: 'none' }}
                   data-testid="closet-item-thumb"
                 />

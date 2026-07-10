@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useStoreState } from '@/lib/createSimpleStore';
+import { marketplaceUIStore } from '@/lib/marketplaceUIStore';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
@@ -495,9 +497,12 @@ function MyListings() {
 function InlineTransactions() {
   const { t } = useTranslation();
   const [tab, setTab] = useLocalStorageSync('dressapp.marketplace.inlineTab', 'buyer');
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useStoreState(marketplaceUIStore, 'transactions');
+  const [loading, setLoading] = useStoreState(marketplaceUIStore, 'transactionsLoading');
+  
   useEffect(() => {
+    // Only fetch if empty to respect the store cache, or force refresh if needed.
+    // For simplicity, we just fetch every time the tab changes, but now the state is global.
     setLoading(true);
     api.listTransactions({ role: tab }).then((res) => setItems(res.items || [])).finally(() => setLoading(false));
   }, [tab]);
