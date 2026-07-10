@@ -22,7 +22,7 @@ const DRESS_CODE_OPTIONS = ['all', 'casual', 'smart-casual', 'business', 'formal
 export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
   const { t, i18n } = useTranslation();
   const store = useClosetStore();
-  const items = store.items || [];
+  const items = (store.items || []).filter(Boolean);
 
   const [selectedStyle, setSelectedStyle] = useState('all');
   const [tagInput, setTagInput] = useState('');

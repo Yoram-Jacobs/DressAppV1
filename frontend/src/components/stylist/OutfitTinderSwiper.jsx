@@ -12,7 +12,7 @@ import { labelForRole } from '@/lib/taxonomy';
 export default function OutfitTinderSwiper() {
   const { t } = useTranslation();
   const store = useClosetStore();
-  const items = store.items || [];
+  const items = (store.items || []).filter(Boolean);
 
   // Group items
   const tops = items.filter(it => it.category === 'Top' || it.category === 'Outerwear' || it.category === 'Full Body');

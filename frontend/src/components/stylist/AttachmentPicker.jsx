@@ -72,7 +72,7 @@ export function AttachmentPicker({
 }) {
   const { t } = useTranslation();
   const closet = useClosetStore({ prewarm: true });
-  const closetItems = closet.items || [];
+  const closetItems = (closet.items || []).filter(Boolean);
 
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState('upload');

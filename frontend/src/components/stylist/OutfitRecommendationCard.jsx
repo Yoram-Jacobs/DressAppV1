@@ -45,7 +45,7 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
 
   useEffect(() => {
     let cancelled = false;
-    const localItems = closetStore.getItemsSnapshot() || [];
+    const localItems = (closetStore.getItemsSnapshot() || []).filter(Boolean);
     const localMap = new Map(localItems.map(it => [it.id, it]));
 
     const fetchedImages = {};
