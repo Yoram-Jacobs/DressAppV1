@@ -2197,9 +2197,15 @@ export default function AddItem() {
     // which the Closet page renders as a single end-of-batch dialog.
     const settle = async () => {
       const tempIds = Array.from(ghosts.keys());
-      const results = await Promise.allSettled(
-        tempIds.map((tid) => createItemWithTimeout(ghosts.get(tid).body)),
-      );
+      const results = [];
+      for (const tid of tempIds) {
+        try {
+          const res = await createItemWithTimeout(ghosts.get(tid).body);
+          results.push({ status: 'fulfilled', value: res });
+        } catch (err) {
+          results.push({ status: 'rejected', reason: err });
+        }
+      }
       const failures = [];
       const polishCandidates = [];
       for (let i = 0; i < results.length; i += 1) {

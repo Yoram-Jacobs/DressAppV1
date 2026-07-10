@@ -10,6 +10,7 @@ import { ShareOutfitButton } from '@/components/stylist/ShareOutfitButton';
 import { useAuth } from '@/lib/auth';
 import OutfitAvatarViewer from '@/components/OutfitAvatarViewer';
 import { HarmonyBadge } from '@/components/stylist/HarmonyBadge';
+import { closetStore } from '@/lib/closetStore';
 /**
  * Renders a single outfit recommendation. When recommendation items include
  * `closet_item_id`, we fetch and embed the item's image so the user sees
@@ -44,30 +45,57 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
 
   useEffect(() => {
     let cancelled = false;
-    const toFetch = ids.filter((id) => !(id in images));
+    const localItems = closetStore.getItemsSnapshot() || [];
+    const localMap = new Map(localItems.map(it => [it.id, it]));
+
+    const fetchedImages = {};
+    const fetchedData = {};
+    const toFetch = [];
+
+    for (const id of ids) {
+      if (id in images) continue;
+      const localItem = localMap.get(id);
+      if (localItem) {
+        fetchedImages[id] =
+          localItem.reconstructed_image_url ||
+          localItem.segmented_image_url ||
+          localItem.image_url ||
+          null;
+        fetchedData[id] = localItem;
+      } else {
+        toFetch.push(id);
+      }
+    }
+
+    if (Object.keys(fetchedImages).length > 0 && !cancelled) {
+      setImages((prev) => ({ ...prev, ...fetchedImages }));
+      setItemData((prev) => ({ ...prev, ...fetchedData }));
+    }
+
     if (toFetch.length === 0) return () => {};
+
     (async () => {
-      const fetchedImages = {};
-      const fetchedData = {};
+      const netImages = {};
+      const netData = {};
       await Promise.all(
         toFetch.map(async (id) => {
           try {
             const item = await api.getItem(id);
-            fetchedImages[id] =
+            netImages[id] =
               item?.reconstructed_image_url ||
               item?.segmented_image_url ||
               item?.image_url ||
               null;
-            fetchedData[id] = item || null;
+            netData[id] = item || null;
           } catch {
-            fetchedImages[id] = null;
-            fetchedData[id] = null;
+            netImages[id] = null;
+            netData[id] = null;
           }
         }),
       );
       if (!cancelled) {
-        setImages((prev) => ({ ...prev, ...fetchedImages }));
-        setItemData((prev) => ({ ...prev, ...fetchedData }));
+        setImages((prev) => ({ ...prev, ...netImages }));
+        setItemData((prev) => ({ ...prev, ...netData }));
       }
     })();
     return () => {
