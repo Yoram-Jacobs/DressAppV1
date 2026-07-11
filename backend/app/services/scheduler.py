@@ -161,14 +161,16 @@ def _generate_fallback_advice(
         cat = (item.get("category") or "top").lower()
         if cat in {"shoe", "footwear", "sneaker", "boot", "heel", "shoes"}:
             c_key = "shoes"
-        elif cat in {"shirt", "tshirt", "top", "blouse", "sweater", "knit", "polo"}:
+        elif cat in {"shirt", "tshirt", "top", "tops", "blouse", "sweater", "knit", "polo"}:
             c_key = "top"
-        elif cat in {"pants", "trousers", "jeans", "shorts", "skirt", "bottom"}:
+        elif cat in {"pants", "trousers", "jeans", "shorts", "skirt", "bottom", "bottoms"}:
             c_key = "bottom"
-        elif cat == "dress":
+        elif cat in {"dress", "dresses"}:
             c_key = "dress"
         elif cat in {"jacket", "coat", "blazer", "outerwear"}:
             c_key = "outerwear"
+        elif cat in {"hat", "cap", "headwear"}:
+            c_key = "headwear"
         else:
             c_key = "accessory"
         by_cat.setdefault(c_key, []).append(item)
@@ -245,7 +247,23 @@ def _generate_fallback_advice(
 
     if not o3_items and closet_items:
         for it in closet_items[1:4]:
-            o3_items.append({"role": "accessory", "description": it.get("title", "Item"), "closet_item_id": it.get("id")})
+            cat = (it.get("category") or "accessory").lower()
+            if cat in {"shirt", "tshirt", "top", "tops", "blouse", "sweater", "knit", "polo"}:
+                r_key = "top"
+            elif cat in {"pants", "trousers", "jeans", "shorts", "skirt", "bottom", "bottoms"}:
+                r_key = "bottom"
+            elif cat in {"shoe", "footwear", "sneaker", "boot", "heel", "shoes"}:
+                r_key = "shoes"
+            elif cat in {"jacket", "coat", "blazer", "outerwear"}:
+                r_key = "outerwear"
+            elif cat in {"dress", "dresses"}:
+                r_key = "dress"
+            elif cat in {"hat", "cap", "headwear"}:
+                r_key = "headwear"
+            else:
+                r_key = "accessory"
+                
+            o3_items.append({"role": r_key, "description": it.get("title", "Item"), "closet_item_id": it.get("id")})
 
     if o3_items:
         recs.append({

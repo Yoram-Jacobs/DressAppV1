@@ -47,29 +47,45 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
         const itemId = item.closet_item_id || item.id;
         const closetItem = allClosetItems.find(it => it && it.id === itemId);
         
+        // Map slot using the closet item's actual category if available, falling back to the assigned role
+        let slot = role;
+        if (closetItem && closetItem.category) {
+          const cat = String(closetItem.category).toLowerCase().trim().replace(/\s+/g, '_');
+          if (cat === 'top' || cat === 'tops') slot = 'top';
+          else if (cat === 'bottom' || cat === 'bottoms') slot = 'bottom';
+          else if (cat === 'footwear' || cat === 'shoes') slot = 'shoes';
+          else if (cat === 'accessories' || cat === 'accessory') slot = 'accessory';
+          else if (cat === 'headwear' || cat === 'hat') slot = 'headwear';
+          else if (cat === 'outerwear' || cat === 'jacket') slot = 'outerwear';
+          else if (cat === 'dress' || cat === 'dresses') slot = 'dress';
+          else slot = cat; // fallback to whatever it is
+        }
+        
+        // Additional fallbacks for common LLM generated roles that don't match our avatar slots perfectly
+        if (slot === 'hat' || slot === 'cap') slot = 'headwear';
+        if (slot === 'accessories') slot = 'accessory';
+        if (slot === 'footwear') slot = 'shoes';
+
         if (closetItem && closetItem.group_id) {
           // Find all items in this group
           const groupItems = allClosetItems.filter(it => it && it.group_id === closetItem.group_id);
           // Check if it's a set (multiple categories)
-          const normCategory = (cat) => {
-            const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');
-            if (s === 'top' || s === 'tops') return 'top';
-            if (s === 'bottom' || s === 'bottoms') return 'bottom';
-            if (s === 'footwear' || s === 'shoes') return 'footwear';
-            if (s === 'accessory' || s === 'accessories') return 'accessories';
-            return s;
-          };
-          const categories = new Set(groupItems.map(it => normCategory(it.category)));
+          const categories = new Set(groupItems.map(it => String(it.category || '').toLowerCase().trim()));
           
           if (categories.size > 1) {
             // It's a set! Map each group item to its correct category
             groupItems.forEach(gItem => {
-              const cat = (gItem.category || '').toLowerCase().trim();
-              let slot = cat;
-              if (cat === 'footwear') slot = 'shoes';
-              if (cat === 'accessories') slot = 'accessory';
+              const cat = String(gItem.category || '').toLowerCase().trim().replace(/\s+/g, '_');
+              let gSlot = cat;
+              if (cat === 'top' || cat === 'tops') gSlot = 'top';
+              else if (cat === 'bottom' || cat === 'bottoms') gSlot = 'bottom';
+              else if (cat === 'footwear' || cat === 'shoes') gSlot = 'shoes';
+              else if (cat === 'accessories' || cat === 'accessory') gSlot = 'accessory';
+              else if (cat === 'headwear' || cat === 'hat') gSlot = 'headwear';
+              else if (cat === 'outerwear' || cat === 'jacket') gSlot = 'outerwear';
+              else if (cat === 'dress' || cat === 'dresses') gSlot = 'dress';
               
-              res[slot] = {
+              res[gSlot] = {
                 url: bestImageUrl(gItem) || gItem.image_data_url || gItem.segmented_image_url || gItem.image_url || gItem.original_image_url,
                 placeholder: gItem.placeholder_data_url || null,
                 id: gItem.id
@@ -79,8 +95,8 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
           }
         }
  
-        // Default mapping if not a set
-        res[role] = {
+        // Default mapping if not a set (or if we are just mapping the single item)
+        res[slot] = {
            url: bestImageUrl(item) || item.image_data_url || item.segmented_image_url || item.image_url || item.original_image_url || item.url,
            placeholder: item.placeholder_data_url || item.placeholder || null,
            id: item.closet_item_id || item.id || null

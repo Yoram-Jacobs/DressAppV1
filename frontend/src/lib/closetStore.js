@@ -357,7 +357,7 @@ export const closetStore = {
         mutations += changedItems.length;
       }
       const beforeCount = nextItems.length;
-      nextItems = nextItems.filter(Boolean).filter((it) => liveIds.has(it.id) && !_deletedIds.has(it.id));
+      nextItems = nextItems.filter(Boolean).filter((it) => (typeof it.id === 'string' && it.id.startsWith('temp-')) || (liveIds.has(it.id) && !_deletedIds.has(it.id)));
       const removed = beforeCount - nextItems.length;
       mutations += removed;
 
