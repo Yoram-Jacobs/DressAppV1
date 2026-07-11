@@ -13,6 +13,15 @@ def _apply_fast_matte(crops: list[tuple[dict[str, Any], bytes, str]]) -> list[tu
     for det, cbytes, mime in crops:
         mask_bbox = det.pop("_mask_bbox", None)
         human_bbox = det.pop("_human_mask_bbox", None)
+        is_single = det.get("is_single_item", False)
+        if is_single:
+            # Bypass fast matting using the SegFormer mask to avoid
+            # preview clipping/glare artifacts. We keep the raw JPEG crop
+            # bytes for preview, and let background rembg handle it on save.
+            det["defer_matte"] = False
+            out.append((det, cbytes, mime))
+            continue
+
         if mask_bbox is not None and mime == "image/jpeg":
             try:
                 im = Image.open(io.BytesIO(cbytes)).convert("RGBA")

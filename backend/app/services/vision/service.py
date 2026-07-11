@@ -864,6 +864,8 @@ class GarmentVisionService:
             # of the same source photo, so dropping it here lets
             # the GC release it once every detection is processed.
             det["_human_mask_full"] = None
+            if is_single_item:
+                det["is_single_item"] = True
             out.append((det, crop_bytes, "image/jpeg"))
         return out
 
@@ -908,7 +910,8 @@ class GarmentVisionService:
                 continue
             seg_mask_bbox = det.get("_mask_bbox")
             human_mask_bbox = det.get("_human_mask_bbox")
-            if seg_mask_bbox is not None:
+            is_single = det.get("is_single_item", False)
+            if seg_mask_bbox is not None and not is_single:
                 try:
                     refined = _cp.apply_alpha_intersection(
                         matted,
