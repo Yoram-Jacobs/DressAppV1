@@ -9,6 +9,7 @@ import { closetStore } from '@/lib/closetStore';
 import { prewarmMarketplace, resetMarketplace, myListingsStore } from '@/lib/marketplaceStore';
 import { prewarmExperts, resetExperts } from '@/lib/expertsStore';
 import { prewarmSuitcase, resetSuitcase } from '@/lib/suitcaseStore';
+import { outfitStore } from '@/lib/outfitStore';
 import { Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
 
@@ -46,11 +47,14 @@ export const AppLayout = () => {
       prewarmMarketplace(user.id).catch(() => {});
       prewarmExperts().catch(() => {});
       prewarmSuitcase().catch(() => {});
+      outfitStore.prewarm().catch(() => {});
     } else {
       closetStore.reset();
       resetMarketplace();
       resetExperts();
       resetSuitcase();
+      outfitStore.reset();
+      resetNavigation();
     }
   }, [user, loading]);
 

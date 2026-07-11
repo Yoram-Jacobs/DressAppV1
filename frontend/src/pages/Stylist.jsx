@@ -76,6 +76,7 @@ import { AttachmentPicker } from '@/components/stylist/AttachmentPicker';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
+import { useOutfitStore } from '@/lib/useOutfitStore';
 import { useLocation as useAppLocation } from '@/lib/location';
 import {
   isSTTSupported,
@@ -284,8 +285,7 @@ export default function Stylist() {
   const messagesEndRef = useRef(null);
   const lastAssistantRef = useRef(null);
   // Outfits, Notifications, and Calendar states
-  const [outfits, setOutfits] = useStoreState(stylistUIStore, 'outfits');
-  const [outfitsLoading, setOutfitsLoading] = useState(true);
+  const { items: outfits, loading: outfitsLoading, incrementalSync, upsert, remove } = useOutfitStore();
   const [notifications, setNotifications] = useStoreState(stylistUIStore, 'notifications');
   const [calendarStartDate, setCalendarStartDate] = useStoreState(stylistUIStore, 'calendarStartDate');
   const [dragOverDay, setDragOverDay] = useStoreState(stylistUIStore, 'dragOverDay');
@@ -301,15 +301,6 @@ export default function Stylist() {
   const [editOutfitDescription, setEditOutfitDescription] = useStoreState(stylistUIStore, 'editOutfitDescription');
 
   const loadOutfitsAndNotifications = useCallback(async () => {
-    setOutfitsLoading(true);
-    try {
-      const res = await api.listSavedOutfits();
-      setOutfits(res.outfits || []);
-    } catch (err) {
-      console.error("Failed to load saved outfits:", err);
-    } finally {
-      setOutfitsLoading(false);
-    }
 
     try {
       const res = await api.listSimulatedNotifications();
@@ -321,7 +312,8 @@ export default function Stylist() {
 
   useEffect(() => {
     loadOutfitsAndNotifications();
-  }, [loadOutfitsAndNotifications]);
+    incrementalSync();
+  }, [loadOutfitsAndNotifications, incrementalSync]);
 
   const [hasAutoSelected, setHasAutoSelected] = useStoreState(stylistUIStore, 'hasAutoSelected');
 
@@ -351,10 +343,11 @@ export default function Stylist() {
 
   const deleteOutfit = async (id) => {
     try {
+      remove(id);
       await api.deleteSavedOutfit(id);
-      setOutfits((prev) => prev.filter((o) => o.id !== id));
       toast.success(t('outfits.removedSuccess', { defaultValue: 'Outfit removed from your diary.' }));
     } catch (err) {
+      incrementalSync();
       toast.error(t('outfits.failedDelete', { defaultValue: 'Failed to delete outfit.' }));
     }
   };
@@ -404,10 +397,9 @@ export default function Stylist() {
     };
 
     try {
-      await api.saveOutfit(body);
+      const saved = await api.saveOutfit(body);
+      upsert(saved?.outfit || saved);
       toast.success(t('stylist.outfitSaved', { defaultValue: 'Outfit saved to your diary!' }));
-      const res = await api.listSavedOutfits();
-      setOutfits(res.outfits || []);
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('stylist.saveFailed', { defaultValue: 'Failed to save outfit.' }));
     }
@@ -434,27 +426,31 @@ export default function Stylist() {
 
   const handleMoveOutfit = async (id, targetDate) => {
     try {
-      await api.updateSavedOutfit(id, { usage: { date: targetDate } });
+      const existing = outfits.find(o => o.id === id);
+      if (existing) upsert({ ...existing, usage: { ...existing.usage, date: targetDate } });
+      const updated = await api.updateSavedOutfit(id, { usage: { date: targetDate } });
+      upsert(updated?.outfit || updated);
       toast.success(t('outfits.rescheduledSuccess', { defaultValue: 'Outfit rescheduled!' }));
-      const res = await api.listSavedOutfits();
-      setOutfits(res.outfits || []);
     } catch (err) {
+      incrementalSync();
       toast.error(t('outfits.failedReschedule', { defaultValue: 'Failed to reschedule outfit.' }));
     }
   };
 
   const handleSaveOutfitEdits = async () => {
     try {
+      if (selectedOutfitForDetail) upsert({ ...selectedOutfitForDetail, name: editOutfitName, description: editOutfitDescription });
       const updated = await api.updateSavedOutfit(selectedOutfitForDetail.id, {
         name: editOutfitName,
         description: editOutfitDescription
       });
-      setSelectedOutfitForDetail(updated);
+      const finalOutfit = updated?.outfit || updated;
+      upsert(finalOutfit);
+      setSelectedOutfitForDetail(finalOutfit);
       setIsEditingOutfit(false);
-      const res = await api.listSavedOutfits();
-      setOutfits(res.outfits || []);
       toast.success(t('outfits.editSuccess', { defaultValue: 'Outfit updated successfully!' }));
     } catch (err) {
+      incrementalSync();
       toast.error(t('outfits.editFailed', { defaultValue: 'Failed to update outfit.' }));
     }
   };
@@ -659,10 +655,9 @@ export default function Stylist() {
     };
 
     try {
-      await api.saveOutfit(body);
+      const saved = await api.saveOutfit(body);
+      upsert(saved?.outfit || saved);
       toast.success(t('stylist.outfitSaved', { defaultValue: 'Outfit saved and scheduled!' }));
-      const res = await api.listSavedOutfits();
-      setOutfits(res.outfits || []);
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('stylist.saveFailed', { defaultValue: 'Failed to save outfit.' }));
     }
@@ -670,28 +665,33 @@ export default function Stylist() {
 
   const handleUnscheduleOutfit = async (id) => {
     try {
-      await api.updateSavedOutfit(id, { usage: { date: '' } });
+      const existing = outfits.find(o => o.id === id);
+      if (existing) upsert({ ...existing, usage: { ...existing.usage, date: '' } });
+      const updated = await api.updateSavedOutfit(id, { usage: { date: '' } });
+      upsert(updated?.outfit || updated);
       toast.success(t('outfits.unscheduledSuccess', { defaultValue: 'Outfit removed from calendar.' }));
-      const res = await api.listSavedOutfits();
-      setOutfits(res.outfits || []);
       setSchedulingDate(null);
     } catch (err) {
+      incrementalSync();
       toast.error(t('outfits.failedUnschedule', { defaultValue: 'Failed to unschedule outfit.' }));
     }
   };
 
   const handleAssignOutfitToDate = async (outfitId, targetDate) => {
     try {
-      const existing = outfits.find(o => o.usage?.date === targetDate);
-      if (existing && existing.id !== outfitId) {
-        await api.updateSavedOutfit(existing.id, { usage: { date: '' } });
+      const existingOnDate = outfits.find(o => o.usage?.date === targetDate);
+      if (existingOnDate && existingOnDate.id !== outfitId) {
+        upsert({ ...existingOnDate, usage: { ...existingOnDate.usage, date: '' } });
+        api.updateSavedOutfit(existingOnDate.id, { usage: { date: '' } }).then(res => upsert(res?.outfit || res));
       }
-      await api.updateSavedOutfit(outfitId, { usage: { date: targetDate } });
+      const existingOutfit = outfits.find(o => o.id === outfitId);
+      if (existingOutfit) upsert({ ...existingOutfit, usage: { ...existingOutfit.usage, date: targetDate } });
+      const updated = await api.updateSavedOutfit(outfitId, { usage: { date: targetDate } });
+      upsert(updated?.outfit || updated);
       toast.success(t('outfits.rescheduledSuccess', { defaultValue: 'Outfit scheduled!' }));
-      const res = await api.listSavedOutfits();
-      setOutfits(res.outfits || []);
       setSchedulingDate(null);
     } catch (err) {
+      incrementalSync();
       toast.error(t('outfits.failedReschedule', { defaultValue: 'Failed to reschedule outfit.' }));
     }
   };
