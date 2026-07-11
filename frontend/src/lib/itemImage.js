@@ -27,6 +27,9 @@ export function bestImageUrl(item, opts = {}) {
     if (item.reconstructed_image_url) return item.reconstructed_image_url;
   }
 
+  if (item.clean_image_url) return item.clean_image_url;
+  if (item.segmented_image_url) return item.segmented_image_url;
+
   // NEW: Dynamic Transcoding Variants (AVIF/WebP)
   if (item.image_variants) {
     if (item.image_variants.avif?.medium) return item.image_variants.avif.medium;
@@ -34,8 +37,6 @@ export function bestImageUrl(item, opts = {}) {
     if (item.image_variants.original) return item.image_variants.original;
   }
 
-  if (item.clean_image_url) return item.clean_image_url;
-  if (item.segmented_image_url) return item.segmented_image_url;
   if (item.original_image_url) return item.original_image_url;
   return null;
 }

@@ -38,8 +38,10 @@ export default function ProgressiveImage({
 
   const handleLoad = () => setIsLoaded(true);
 
+  const isDataUrl = typeof originalSrc === 'string' && originalSrc.startsWith('data:image');
+
   // Fallback to legacy single-image rendering
-  if (!variants || (!variants.blurhash && !variants.webp)) {
+  if (isDataUrl || !variants || (!variants.blurhash && !variants.webp)) {
     return (
       <img
         src={originalSrc || variants?.original}
