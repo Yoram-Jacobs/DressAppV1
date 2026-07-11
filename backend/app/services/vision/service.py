@@ -608,8 +608,8 @@ class GarmentVisionService:
         """
         label = (
             label_hint
-            or analysis.get("item_type")
             or analysis.get("sub_category")
+            or analysis.get("item_type")
             or "garment"
         )
         fitted_bytes, fitted_mime = _fit_crop_to_card(
@@ -729,8 +729,8 @@ class GarmentVisionService:
                 ),
             )
         label = (
-            single.get("item_type")
-            or single.get("sub_category")
+            single.get("sub_category")
+            or single.get("item_type")
             or (best_det.get("label") if best_det else None)
             or "garment"
         )
@@ -1751,7 +1751,7 @@ class GarmentVisionService:
                 "type": "item",
                 "index": 0,
                 "analysis": single,
-                "label": single.get("item_type"),
+                "label": single.get("sub_category") or single.get("item_type"),
                 "needs_reconstruction": False,
                 "reconstruction_reasons": [],
             }
@@ -1867,7 +1867,7 @@ class GarmentVisionService:
                     "type": "item",
                     "index": idx,
                     "analysis": analysis,
-                    "label": analysis.get("item_type"),
+                    "label": analysis.get("sub_category") or analysis.get("item_type"),
                     "needs_reconstruction": needs_reconstruction,
                     "reconstruction_reasons": reasons,
                 }
@@ -2141,7 +2141,7 @@ class GarmentVisionService:
                     "index": slot_idx,
                     "image_index": image_idx,
                     "analysis": analysis,
-                    "label": analysis.get("item_type"),
+                    "label": analysis.get("sub_category") or analysis.get("item_type"),
                     "needs_reconstruction": needs_reconstruction,
                     "reconstruction_reasons": reasons,
                 }

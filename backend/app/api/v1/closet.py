@@ -2343,8 +2343,8 @@ async def import_dpp(
     )
 
     item_entry: dict[str, Any] = {
-        "label": analysis.get("item_type")
-        or analysis.get("sub_category")
+        "label": analysis.get("sub_category")
+        or analysis.get("item_type")
         or analysis.get("category")
         or "garment",
         "kind": "garment",
