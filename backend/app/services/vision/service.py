@@ -825,6 +825,7 @@ class GarmentVisionService:
         except Exception:  # noqa: BLE001
             img_size = None
 
+        import numpy as _np
         for det in useful:
             # Cut the per-bbox crop using the per-category asymmetric
             # padding from _BBOX_PAD_TRBL_BY_CATEGORY. The returned
@@ -851,7 +852,28 @@ class GarmentVisionService:
                 )
                 if mask_bbox is not None:
                     det["_mask_bbox"] = mask_bbox
-                    det["mask"] = None
+            
+            # Compute other garments mask in full-res and slice it to this crop bbox
+            other_garments_mask = None
+            if img_size is not None:
+                other_masks = []
+                for other in useful:
+                    if other is det:
+                        continue
+                    k1 = (det.get("kind") or "").strip().lower()
+                    k2 = (other.get("kind") or "").strip().lower()
+                    if k1 != k2 and other.get("mask") is not None:
+                        other_masks.append(other["mask"])
+                if other_masks:
+                    combined_other = other_masks[0]
+                    for m in other_masks[1:]:
+                        combined_other = _np.maximum(combined_other, m)
+                    other_garments_mask = clothing_parser.slice_mask_to_bbox(
+                        combined_other, img_size, box_px
+                    )
+            if other_garments_mask is not None:
+                det["_other_mask_bbox"] = other_garments_mask
+
             human_full = det.get("_human_mask_full")
             if human_full is not None and img_size is not None and not is_single_item:
                 human_bbox = clothing_parser.slice_mask_to_bbox(
@@ -859,14 +881,15 @@ class GarmentVisionService:
                 )
                 if human_bbox is not None:
                     det["_human_mask_bbox"] = human_bbox
-            # Drop the full-res reference once we have the slice —
-            # the parser hands the SAME ndarray to every detection
-            # of the same source photo, so dropping it here lets
-            # the GC release it once every detection is processed.
-            det["_human_mask_full"] = None
             if is_single_item:
                 det["is_single_item"] = True
             out.append((det, crop_bytes, "image/jpeg"))
+
+        # Release full-res references
+        for d in useful:
+            d["mask"] = None
+            d["_human_mask_full"] = None
+
         return out
 
     async def _matte_crops(
@@ -910,28 +933,16 @@ class GarmentVisionService:
                 continue
             seg_mask_bbox = det.get("_mask_bbox")
             human_mask_bbox = det.get("_human_mask_bbox")
+            other_mask_bbox = det.get("_other_mask_bbox")
             is_single = det.get("is_single_item", False)
             if seg_mask_bbox is not None and not is_single:
                 try:
                     refined = _cp.apply_alpha_intersection(
                         matted,
                         seg_mask_bbox,
-                        # Patch 12i — pass the SegFormer kind so the
-                        # intersection uses the per-category dilation
-                        # budget. Tops/bottoms/dresses get the
-                        # tightened budget (1.5-1.8 %) to stop the
-                        # blouse-skirt rim overlap on shared
-                        # waistlines; footwear/headwear keep the
-                        # original 2.5 % to preserve puffy-cuff /
-                        # low-contrast-shoe recovery.
                         category=det.get("kind"),
-                        # Subtract Face / Hair / limb pixels from the
-                        # dilated soft-mask so rembg's person-shaped
-                        # foreground can't leak skin / hair into the
-                        # final matte. Cheap when present (one
-                        # nearest-neighbour resize + max filter), no-
-                        # op when absent.
                         human_mask=human_mask_bbox,
+                        other_mask=other_mask_bbox,
                     )
                     if refined:
                         matted = refined
@@ -943,6 +954,7 @@ class GarmentVisionService:
                     )
             det.pop("_mask_bbox", None)
             det.pop("_human_mask_bbox", None)
+            det.pop("_other_mask_bbox", None)
 
             # Phantom guard — drop the detection if the final matte
             # has effectively no garment pixels. "Solid" alpha means

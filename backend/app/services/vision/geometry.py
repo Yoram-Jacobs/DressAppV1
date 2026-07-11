@@ -309,16 +309,16 @@ def _looks_already_cropped(detections: list[dict[str, Any]]) -> bool:
         return True  # nothing detectable — safer to analyse whole frame
     frame_area = 1000 * 1000
 
-    # 1. Standalone / Flat lay item check (no human present, at most 1 distinct garment category/kind)
     has_human = False
-    for d in detections:
-        hm = d.get("_human_mask_full")
-        # Check if the human mask has any non-zero pixels
-        if hm is not None and hm.any():
-            has_human = True
-            break
-
+    has_head = any(d.get("has_human_head", False) for d in detections)
     garment_kinds = {d.get("kind", "garment").lower() for d in detections}
+    if has_head or len(garment_kinds) > 1:
+        for d in detections:
+            hm = d.get("_human_mask_full")
+            if hm is not None and hm.any():
+                has_human = True
+                break
+
     if not has_human and len(garment_kinds) <= 1:
         return True
 

@@ -951,8 +951,15 @@ async def parse_garments(image_bytes: bytes) -> list[dict[str, Any]]:
         cid for cid, name in _id2label.items()
         if name in _HUMAN_CLASS_NAMES
     }
+    has_head = False
     if human_class_ids:
         human_mask_full = np.isin(class_mask, list(human_class_ids)).astype(np.uint8)
+        head_class_ids = {
+            cid for cid, name in _id2label.items()
+            if name in {"Face", "Hair", "Neck"}
+        }
+        if head_class_ids:
+            has_head = bool(np.isin(class_mask, list(head_class_ids)).any())
     else:
         human_mask_full = None
 
@@ -1090,6 +1097,7 @@ async def parse_garments(image_bytes: bytes) -> list[dict[str, Any]]:
                 # human classes (defensive — should never happen on
                 # the ATR-18 checkpoint).
                 "_human_mask_full": human_mask_full,
+                "has_human_head": has_head,
             }
         )
     logger.info(
@@ -1249,6 +1257,7 @@ def apply_alpha_intersection(
     category: str | None = None,
     human_mask: np.ndarray | None = None,
     is_padded_canvas: bool = False,
+    other_mask: np.ndarray | None = None,
 ) -> bytes | None:
     """Refine a rembg-matted PNG by AND-ing its alpha with a SegFormer mask.
 
@@ -1448,37 +1457,42 @@ def apply_alpha_intersection(
     # garment-body rows clear this comfortably; sparse rows from
     # spaghetti straps / open collars stay below and the buffer
     # protects them.
-    if category and category.lower().replace(" ", "") in {
-        "top", "outerwear", "dress", "fullbody",
-    }:
+    # New alpha logic: "never crop inside the item's outline"
+    # We initialize new_alpha with the raw rembg alpha (the item's outline).
+    # We only set pixels to 0 if they belong to other overlapping garments
+    # or human skin (if a human wearer is present).
+    new_alpha = arr[:, :, 3].copy()
+
+    # 1. Subtract other overlapping garments (dilated for clean boundaries)
+    if other_mask is not None:
         try:
-            row_mask = (mask_resized > 127)
-            row_cov = row_mask.mean(axis=1)
-            solid_rows = np.where(row_cov >= 0.30)[0]
-            if len(solid_rows) > 0:
-                first_solid_y = int(solid_rows[0])
-                cut_y = max(0, first_solid_y - int(0.05 * Hc))
-                if cut_y > 0:
-                    soft_mask[:cut_y, :] = 0
+            if other_mask.shape != (Hc, Wc):
+                other_resized = np.array(
+                    Image.fromarray(
+                        (other_mask * 255).astype(np.uint8)
+                        if other_mask.dtype != np.uint8
+                        else other_mask,
+                        mode="L",
+                    ).resize((Wc, Hc), Image.NEAREST)
+                )
+            else:
+                other_resized = (
+                    other_mask * 255 if other_mask.dtype != np.uint8 else other_mask
+                ).astype(np.uint8)
+            
+            if dilate_px > 0:
+                other_im = Image.fromarray(other_resized, mode="L")
+                other_im = other_im.filter(ImageFilter.MaxFilter(2 * dilate_px + 1))
+                other_resized = np.array(other_im)
+            
+            new_alpha = np.where(other_resized > 127, np.uint8(0), new_alpha)
         except Exception as exc:  # noqa: BLE001
             logger.info(
-                "apply_alpha_intersection: head-exclusion skipped: %s",
+                "apply_alpha_intersection: other-mask subtraction skipped: %s",
                 repr(exc)[:120],
             )
 
-    # Subtract the human-body mask from the dilated soft-mask. Done
-    # AFTER dilation so we don't accidentally shrink legitimate
-    # garment halo on the non-skin side. The skin mask itself gets a
-    # smaller dilation (half the garment budget) so it covers the
-    # 1-2 px transition pixels at the body/garment seam, where
-    # SegFormer's per-pixel argmax often flickers. A more aggressive
-    # dilation (≥ 1.5× the garment budget) was tried but on torso
-    # crops with a small head region the skin mask grew far enough
-    # to cannibalise the upper-jacket / collar pixels — solid alpha
-    # collapsed to sub-5 % and the phantom guard dropped the entire
-    # card. Keep this conservative; rely on the per-category bbox
-    # top-edge padding to cut off the bulk of the head/neck region
-    # BEFORE this mask intersection ever runs.
+    # 2. Subtract human mask (if present)
     if human_mask is not None:
         try:
             from PIL import ImageFilter as _IF
@@ -1503,28 +1517,36 @@ def apply_alpha_intersection(
                     _IF.MaxFilter(2 * skin_dilate_px + 1)
                 )
                 human_resized = np.array(human_im)
-            soft_mask = np.where(
-                human_resized > 127, np.uint8(0), soft_mask,
-            ).astype(np.uint8)
+            
+            new_alpha = np.where(human_resized > 127, np.uint8(0), new_alpha).astype(np.uint8)
         except Exception as exc:  # noqa: BLE001
             logger.info(
-                "apply_alpha_intersection: human-mask subtract skipped: %s",
+                "apply_alpha_intersection: human-mask subtraction failed: %s",
                 repr(exc)[:120],
             )
 
-    # New alpha = min(rembg_alpha, dilated_soft_mask). Anywhere SegFormer
-    # (after dilation) said "not this garment AND not its halo" we wipe
-    # out, even if rembg thought it was foreground. Where dilation
-    # admitted the halo and rembg agrees → keep. Where dilation admitted
-    # the halo but rembg disagrees → still wipe (rembg has final say).
-    new_alpha = np.minimum(arr[:, :, 3], soft_mask).astype(np.uint8)
-    
-    # Patch 12j (May 2026) — phantom guard. If the intersection wiped out
-    # > 95% of the solid alpha (e.g. SegFormer and rembg completely
-    # disagreed, or head-subtraction erased the only visible garment),
-    # the refined image is perceptually empty and will surface as a "white
-    # window" in the closet. Bail out and let the caller keep the untouched
-    # rembg output.
+    # 3. Apply geometric head exclusion
+    if category and category.lower().replace(" ", "") in {
+        "top", "outerwear", "dress", "fullbody",
+    }:
+        try:
+            row_mask = (mask_resized > 127)
+            row_cov = row_mask.mean(axis=1)
+            solid_rows = np.where(row_cov >= 0.30)[0]
+            if len(solid_rows) > 0:
+                first_solid_y = int(solid_rows[0])
+                cut_y = max(0, first_solid_y - int(0.05 * Hc))
+                if cut_y > 0:
+                    new_alpha[:cut_y, :] = 0
+        except Exception as exc:  # noqa: BLE001
+            logger.info(
+                "apply_alpha_intersection: head-exclusion subtraction skipped: %s",
+                repr(exc)[:120],
+            )
+
+    # Patch 12j (May 2026) — phantom guard. If the subtraction wiped out
+    # > 95% of the solid alpha, the refined image is empty. Bail out and let
+    # the caller keep the untouched rembg output.
     if float((new_alpha >= 128).mean()) < 0.05:
         logger.info(
             "apply_alpha_intersection: intersection wiped out >95%% of solid "
