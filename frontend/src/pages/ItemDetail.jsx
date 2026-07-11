@@ -1257,7 +1257,7 @@ export default function ItemDetail() {
   return (
     <div className="container-px max-w-5xl mx-auto pt-4 md:pt-8 pb-24">
       {/* Floating Action Bar */}
-      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-border bg-card/90 backdrop-blur-lg shadow-xl md:bottom-8 max-w-[calc(100vw-2rem)] shrink-0 animate-[slideUp_0.2s_ease-out]">
+      <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-border bg-card/90 backdrop-blur-lg shadow-xl md:bottom-8 max-w-[calc(100vw-2rem)] shrink-0 animate-[slideUp_0.2s_ease-out]">
         <Button
           type="button"
           variant="ghost"
@@ -2358,26 +2358,6 @@ export default function ItemDetail() {
           </div>
         </div>
       </div>
-
-      {/* Sticky Save footer on mobile (form is long) */}
-      {isDirty && (
-        <div
-          className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 rounded-full bg-background/95 backdrop-blur border border-border shadow-lg px-3 py-2"
-          data-testid="item-edit-sticky-save"
-        >
-          <CheckCircle2 className="h-4 w-4 text-[hsl(var(--accent))]" />
-          <span className="text-xs text-muted-foreground">
-            {t('itemDetail.edit.unsaved', { count: Object.keys(patch).length })}
-          </span>
-          <Button type="button" size="sm" onClick={onSave} disabled={saving} className="rounded-full h-8">
-            {saving ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <><Save className="h-3.5 w-3.5 me-1" />{t('itemDetail.edit.save')}</>
-            )}
-          </Button>
-        </div>
-      )}
 
       {/* Taxonomy gatekeeper warning dialog */}
       <AlertDialog open={gatekeeperOpen} onOpenChange={setGatekeeperOpen}>
