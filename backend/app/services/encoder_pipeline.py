@@ -46,7 +46,13 @@ def _get_dynamic_quality(image: Image.Image) -> int:
     # Simple fallback heuristic for the edge-aware encoder:
     return 75
 
-async def process_image_pipeline(item_id: str, user_id: str, raw_bytes: bytes, original_mime: str):
+async def process_image_pipeline(
+    item_id: str,
+    user_id: str,
+    raw_bytes: bytes,
+    original_mime: str,
+    crop_bytes: bytes | None = None,
+):
     """
     Background worker that transcodes an uploaded image to AVIF/WebP variants
     and computes the BlurHash.
@@ -55,8 +61,12 @@ async def process_image_pipeline(item_id: str, user_id: str, raw_bytes: bytes, o
         # Load image via Pillow
         img = Image.open(io.BytesIO(raw_bytes))
         
+        # If crop_bytes is provided, generate variants (WebP, AVIF, BlurHash) from the cutout/crop.
+        # Otherwise, generate them from the original raw image.
+        variant_img = Image.open(io.BytesIO(crop_bytes)) if crop_bytes else img
+        
         # 1. Compute BlurHash
-        bh_str = _compute_blurhash(img.copy())
+        bh_str = _compute_blurhash(variant_img.copy())
         
         # 2. Upload Original (as fallback)
         orig_ext = "png" if img.mode in ("RGBA", "LA") else "jpeg"
@@ -70,12 +80,12 @@ async def process_image_pipeline(item_id: str, user_id: str, raw_bytes: bytes, o
             "avif": {}
         }
         
-        quality = _get_dynamic_quality(img)
+        quality = _get_dynamic_quality(variant_img)
         
         # 3. Generate Variants
         for size_name, max_dim in VARIANTS.items():
             # Resize while preserving aspect ratio
-            resized = img.copy()
+            resized = variant_img.copy()
             resized.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
             
             # Save as WebP

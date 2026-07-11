@@ -1131,7 +1131,8 @@ async def create_item(
             item_id_for_bg,
             user["id"],
             raw_bytes,
-            payload.image_mime or "image/jpeg"
+            payload.image_mime or "image/jpeg",
+            raw_for_bg,
         )
 
     # Patch M14 (May 2026) — Post-save Nano Banana reconstruction. The
