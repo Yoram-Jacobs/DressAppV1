@@ -64,6 +64,12 @@ export const myListingsStore = createCachedStore({
   }),
 });
 
+export const transactionsStore = createCachedStore({
+  name: 'marketplace-transactions',
+  staleAfterMs: 60 * 1000,
+  fetcher: async (filters) => api.listTransactions(filters),
+});
+
 /**
  * Default browse filter for the prewarm. We deliberately don't
  * include radius / geo here — those vary per session and per user,
@@ -81,12 +87,22 @@ export async function prewarmMarketplace(userId) {
     userId
       ? myListingsStore.prewarm({ seller_id: userId })
       : Promise.resolve(null),
+    userId
+      ? transactionsStore.prewarm({ role: 'buyer' })
+      : Promise.resolve(null),
+    userId
+      ? transactionsStore.prewarm({ role: 'seller' })
+      : Promise.resolve(null),
+    userId
+      ? transactionsStore.prewarm({ role: 'all', limit: 200 })
+      : Promise.resolve(null),
   ]);
 }
 
 export function resetMarketplace() {
   browseStore.reset();
   myListingsStore.reset();
+  transactionsStore.reset();
   // Phase Z2.4 — also wipe transient streaming progress on logout
   // so the next user doesn't briefly see the previous user's "12
   // listed" success chip.

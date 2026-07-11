@@ -17,7 +17,12 @@ import { api } from '@/lib/api';
 import { labelForCategory, labelForSource, labelForIntent } from '@/lib/taxonomy';
 import { useLocation as useAppLocation } from '@/lib/location';
 import { useAuth } from '@/lib/auth';
-import { browseStore, myListingsStore } from '@/lib/marketplaceStore';
+import {
+  browseStore,
+  myListingsStore,
+  transactionsStore,
+  marketplaceProgress,
+} from '@/lib/marketplaceStore';
 import { useMarketplaceProgress } from '@/lib/useMarketplaceProgress';
 import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
 import { useCachedList } from '@/lib/createCachedStore';
@@ -497,15 +502,9 @@ function MyListings() {
 function InlineTransactions() {
   const { t } = useTranslation();
   const [tab, setTab] = useLocalStorageSync('dressapp.marketplace.inlineTab', 'buyer');
-  const [items, setItems] = useStoreState(marketplaceUIStore, 'transactions');
-  const [loading, setLoading] = useStoreState(marketplaceUIStore, 'transactionsLoading');
-  
-  useEffect(() => {
-    // Only fetch if empty to respect the store cache, or force refresh if needed.
-    // For simplicity, we just fetch every time the tab changes, but now the state is global.
-    setLoading(true);
-    api.listTransactions({ role: tab }).then((res) => setItems(res.items || [])).finally(() => setLoading(false));
-  }, [tab]);
+  const { items, loading } = useCachedList(transactionsStore, { role: tab }, {
+    autoRefresh: true,
+  });
   return (
     <div className="pt-2">
       <div className="flex gap-2 mb-4">

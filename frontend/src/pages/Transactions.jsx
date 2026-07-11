@@ -40,6 +40,8 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { transactionsStore } from '@/lib/marketplaceStore';
+import { useCachedList } from '@/lib/createCachedStore';
 import { toast } from 'sonner';
 
 const fmt = (cents, cur = 'USD') =>
@@ -104,30 +106,15 @@ function canConfirmReceipt(tx, userId) {
 export default function Transactions() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { items, loading, invalidate } = useCachedList(transactionsStore, { role: 'all', limit: 200 }, {
+    autoRefresh: true,
+  });
   const [activeKind, setActiveKind] = useState('all');
   const [statusFilter, setStatusFilter] = useState([]);
 
   const refresh = async () => {
-    try {
-      const res = await api.listTransactions({ role: 'all', limit: 200 });
-      setItems(res.items || []);
-    } catch (err) {
-      toast.error(err?.response?.data?.detail || t('transactions.loadFailed', { defaultValue: 'Failed to load transactions' }));
-    }
+    invalidate();
   };
-
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    api
-      .listTransactions({ role: 'all', limit: 200 })
-      .then((res) => { if (active) setItems(res.items || []); })
-      .catch((err) => toast.error(err?.response?.data?.detail || t('transactions.loadFailed', { defaultValue: 'Failed to load transactions' })))
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [t]);
 
   // --------- partitioned counts for the tab labels ---------
   const partitioned = useMemo(() => {
