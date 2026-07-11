@@ -589,6 +589,7 @@ class GarmentVisionService:
         label_hint: str | None = None,
         kind_hint: str | None = None,
         crop_mime: str = "image/jpeg",
+        defer_matte: bool = False,
     ) -> dict[str, Any]:
         """Shape a single-item result dict covering the whole frame.
 
@@ -613,6 +614,7 @@ class GarmentVisionService:
             "crop_base64": base64.b64encode(fitted_bytes).decode("ascii"),
             "crop_mime": fitted_mime,
             "analysis": analysis,
+            "defer_matte": defer_matte,
         }
 
     async def _whole_image_matte(self, image_bytes: bytes) -> bytes | None:
@@ -682,6 +684,7 @@ class GarmentVisionService:
         crop_bytes = image_bytes
         crop_mime = "image/jpeg"
 
+        defer_matte = False
         if settings.AUTO_MATTE_CROPS and detections:
             best_det = max(
                 detections,
@@ -695,9 +698,11 @@ class GarmentVisionService:
             )
             out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
             if out:
-                _, crop_bytes, crop_mime = out[0]
+                d_meta, crop_bytes, crop_mime = out[0]
+                defer_matte = d_meta.get("defer_matte", False)
             elif raw_crops:
-                _, crop_bytes, crop_mime = raw_crops[0]
+                d_meta, crop_bytes, crop_mime = raw_crops[0]
+                defer_matte = d_meta.get("defer_matte", False)
 
         single = await self.analyze(
             image_bytes, language=language, think=think,
@@ -726,6 +731,7 @@ class GarmentVisionService:
             self._build_fullframe_item(
                 single, crop_bytes,
                 label_hint=label, kind_hint=kind, crop_mime=crop_mime,
+                defer_matte=defer_matte,
             )
         ]
 
@@ -1688,6 +1694,7 @@ class GarmentVisionService:
             crop_bytes = image_bytes
             crop_mime = "image/jpeg"
 
+            defer_matte = False
             best_det: dict[str, Any] | None = None
             if settings.AUTO_MATTE_CROPS and detections:
                 best_det = max(
@@ -1702,9 +1709,11 @@ class GarmentVisionService:
                 )
                 out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
                 if out:
-                    _, crop_bytes, crop_mime = out[0]
+                    d_meta, crop_bytes, crop_mime = out[0]
+                    defer_matte = d_meta.get("defer_matte", False)
                 elif raw_crops:
-                    _, crop_bytes, crop_mime = raw_crops[0]
+                    d_meta, crop_bytes, crop_mime = raw_crops[0]
+                    defer_matte = d_meta.get("defer_matte", False)
 
             fitted_bytes, fitted_mime = _fit_crop_to_card(
                 crop_bytes, crop_mime=crop_mime,
@@ -1720,7 +1729,7 @@ class GarmentVisionService:
                     "bbox": best_det.get("bbox") if best_det else [0, 0, 1000, 1000],
                     "crop_base64": base64.b64encode(fitted_bytes).decode("ascii"),
                     "crop_mime": fitted_mime,
-                    "defer_matte": False,
+                    "defer_matte": defer_matte,
                 }],
             }
 

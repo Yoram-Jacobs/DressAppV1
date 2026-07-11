@@ -18,7 +18,7 @@ def _apply_fast_matte(crops: list[tuple[dict[str, Any], bytes, str]]) -> list[tu
             # Bypass fast matting using the SegFormer mask to avoid
             # preview clipping/glare artifacts. We keep the raw JPEG crop
             # bytes for preview, and let background rembg handle it on save.
-            det["defer_matte"] = False
+            det["defer_matte"] = True
             out.append((det, cbytes, mime))
             continue
 
