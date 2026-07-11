@@ -34,6 +34,15 @@
         }
     }
 
+    # Static uploads and backend assets — also routed to the backend container.
+    handle /static/* {
+        reverse_proxy backend:8001 {
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-Host  {host}
+            header_up X-Real-IP         {remote_host}
+        }
+    }
+
     # Static frontend SPA.
     handle {
         reverse_proxy frontend:3000 {

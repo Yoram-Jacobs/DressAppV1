@@ -17,6 +17,7 @@ from typing import List
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI
+from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.middleware.cors import CORSMiddleware
@@ -84,6 +85,11 @@ async def get_status_checks() -> List[StatusCheck]:
 # Mount the v1 router under /api/v1
 api_router.include_router(api_v1_router)
 app.include_router(api_router)
+
+# Mount /static to serve static uploads
+static_dir = ROOT_DIR / "static"
+static_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 app.add_middleware(
     CORSMiddleware,
