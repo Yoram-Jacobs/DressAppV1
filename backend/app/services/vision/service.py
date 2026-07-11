@@ -245,7 +245,15 @@ class GarmentVisionService:
         """
         parser_hits = await self._detect_via_clothing_parser(image_bytes)
         if parser_hits:
-            return parser_hits
+            before = len(parser_hits)
+            clean = _nms_detections(parser_hits)
+            logger.info(
+                "detect_items OK model=segformer count=%d (nms removed %d) labels=%s",
+                len(clean),
+                before - len(clean),
+                [c["label"] for c in clean][:8],
+            )
+            return clean
 
         clean = await self._detect_via_gemini(image_bytes)
         # Non-maximum suppression: collapse overlapping detections that
