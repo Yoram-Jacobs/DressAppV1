@@ -342,12 +342,13 @@ export const closetStore = {
           const gainedCleanImage = typeof it.clean_image_url === 'string' && it.clean_image_url && it.clean_image_url !== prev.clean_image_url;
           const gainedReconstruction = typeof it.reconstructed_image_url === 'string' && it.reconstructed_image_url && it.reconstructed_image_url !== prev.reconstructed_image_url;
           
-          if (
-            (flipsToReady || gainedCleanImage || gainedReconstruction || !('thumbnail_data_url' in it))
-            && merged.thumbnail_data_url
-            && !it.thumbnail_data_url
-          ) {
-            merged.thumbnail_data_url = null;
+          if (!it.thumbnail_data_url && prev.thumbnail_data_url) {
+            const invalidating = flipsToReady || gainedCleanImage || gainedReconstruction;
+            if (!invalidating) {
+              merged.thumbnail_data_url = prev.thumbnail_data_url;
+            } else {
+              merged.thumbnail_data_url = null;
+            }
           }
           
           byId.set(it.id, merged);
@@ -399,12 +400,13 @@ export const closetStore = {
         && item.reconstructed_image_url
         && item.reconstructed_image_url !== prev.reconstructed_image_url;
       const merged = { ...prev, ...item };
-      if (
-        (flipsToReady || gainedCleanImage || gainedReconstruction)
-        && merged.thumbnail_data_url
-        && !item.thumbnail_data_url
-      ) {
-        merged.thumbnail_data_url = null;
+      if (!item.thumbnail_data_url && prev.thumbnail_data_url) {
+        const invalidating = flipsToReady || gainedCleanImage || gainedReconstruction;
+        if (!invalidating) {
+          merged.thumbnail_data_url = prev.thumbnail_data_url;
+        } else {
+          merged.thumbnail_data_url = null;
+        }
       }
       nextItems = [
         ...items.slice(0, idx),
