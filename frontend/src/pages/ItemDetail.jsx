@@ -2246,21 +2246,15 @@ export default function ItemDetail() {
                   />
                 </Field>
                 <Field label={t('itemDetail.edit.currency')}>
-                  <Input
-                    type="text"
-                    maxLength={3}
-                    list="currency-options"
-                    value={form.currency || ''}
-                    onChange={(e) => setField('currency', e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
-                    className={`uppercase rounded-xl ${!form.currency ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
+                  <NullableSelect
+                    value={form.currency}
+                    onChange={(v) => setField('currency', v || 'USD')}
+                    options={ALL_CURRENCY_OPTIONS}
                     placeholder={t('addItem.currencyPlaceholder', { defaultValue: 'USD' })}
-                    data-testid="item-edit-field-currency"
+                    testid="item-edit-field-currency"
+                    format={(o) => o}
+                    className={!form.currency ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
                   />
-                  <datalist id="currency-options">
-                    {ALL_CURRENCY_OPTIONS.map((c) => (
-                      <option key={c} value={c} />
-                    ))}
-                  </datalist>
                 </Field>
                 <Field label={t('itemDetail.edit.intent')}>
                   <NullableSelect
