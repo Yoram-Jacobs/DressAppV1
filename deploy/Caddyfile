@@ -35,7 +35,7 @@
     }
 
     # Static uploads and backend assets — also routed to the backend container.
-    handle /static/* {
+    handle /static/uploads/* {
         reverse_proxy backend:8001 {
             header_up X-Forwarded-Proto {scheme}
             header_up X-Forwarded-Host  {host}
