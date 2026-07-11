@@ -853,17 +853,17 @@ class GarmentVisionService:
                     det["_mask_bbox"] = mask_bbox
                     det["mask"] = None
             human_full = det.get("_human_mask_full")
-            if human_full is not None and img_size is not None:
+            if human_full is not None and img_size is not None and not is_single_item:
                 human_bbox = clothing_parser.slice_mask_to_bbox(
                     human_full, img_size, box_px
                 )
                 if human_bbox is not None:
                     det["_human_mask_bbox"] = human_bbox
-                # Drop the full-res reference once we have the slice —
-                # the parser hands the SAME ndarray to every detection
-                # of the same source photo, so dropping it here lets
-                # the GC release it once every detection is processed.
-                det["_human_mask_full"] = None
+            # Drop the full-res reference once we have the slice —
+            # the parser hands the SAME ndarray to every detection
+            # of the same source photo, so dropping it here lets
+            # the GC release it once every detection is processed.
+            det["_human_mask_full"] = None
             out.append((det, crop_bytes, "image/jpeg"))
         return out
 
