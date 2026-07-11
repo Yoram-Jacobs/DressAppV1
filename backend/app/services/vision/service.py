@@ -1751,6 +1751,7 @@ class GarmentVisionService:
                 "type": "item",
                 "index": 0,
                 "analysis": single,
+                "label": single.get("item_type"),
                 "needs_reconstruction": False,
                 "reconstruction_reasons": [],
             }
@@ -1866,6 +1867,7 @@ class GarmentVisionService:
                     "type": "item",
                     "index": idx,
                     "analysis": analysis,
+                    "label": analysis.get("item_type"),
                     "needs_reconstruction": needs_reconstruction,
                     "reconstruction_reasons": reasons,
                 }
@@ -2139,6 +2141,7 @@ class GarmentVisionService:
                     "index": slot_idx,
                     "image_index": image_idx,
                     "analysis": analysis,
+                    "label": analysis.get("item_type"),
                     "needs_reconstruction": needs_reconstruction,
                     "reconstruction_reasons": reasons,
                 }

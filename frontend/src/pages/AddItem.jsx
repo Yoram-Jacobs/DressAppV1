@@ -1628,7 +1628,7 @@ export default function AddItem() {
                   status: 'ready',
                   progress: 100,
                   fields: hydrate(frame.analysis || {}, user),
-                  label: frame.label || c.label,
+                  label: frame.label || frame.analysis?.item_type || c.label,
                   potentialDuplicate: frame.potential_duplicate || null,
                   fromOnePass: !!frame.one_pass,
                   reconstructionAdvised: !!frame.reconstruction_advised,
