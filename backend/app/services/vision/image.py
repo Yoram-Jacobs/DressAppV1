@@ -102,9 +102,14 @@ def _crop_to_bbox(
     if not (0 <= xmin < xmax <= 1000 and 0 <= ymin < ymax <= 1000):
         return None
     if is_single_item:
-        pad_t = pad_r = pad_b = pad_l = 0.04
-    else:
-        pad_t, pad_r, pad_b, pad_l = _resolve_bbox_pad_trbl_for_category(category)
+        # We always want the full item image without any cropping or clipping.
+        # Bypass bbox crop and return the full image coordinates.
+        crop = img.copy()
+        buf = io.BytesIO()
+        crop.save(buf, format="JPEG", quality=88, optimize=True)
+        return buf.getvalue(), (0, 0, w, h)
+
+    pad_t, pad_r, pad_b, pad_l = _resolve_bbox_pad_trbl_for_category(category)
     x1 = max(0, int(xmin / 1000.0 * w - w * pad_l))
     y1 = max(0, int(ymin / 1000.0 * h - h * pad_t))
     x2 = min(w, int(xmax / 1000.0 * w + w * pad_r))
@@ -248,15 +253,9 @@ def _fit_crop_to_card(
     if iw <= 0 or ih <= 0:
         return crop_bytes, crop_mime
 
-    # Scale-to-fit the canvas: choose the smaller of the two ratios so
-    # the entire crop is visible (no clipping) and the longer side
-    # touches the canvas edge. **No upper cap of 1.0** — small bbox
-    # crops (a 25x120 shoe matte from a far-away product photo) get
-    # upscaled to fill the card window (e.g. 250x1200) instead of
-    # rendering as a tiny dot on a mostly-empty canvas. LANCZOS keeps
-    # the upscale acceptably smooth on the modest 5-10x factors we
-    # see in practice.
-    scale = min(canvas_w / float(iw), canvas_h / float(ih))
+    # Scale-to-fit with a safety margin (0.90) so the item always has breathing room
+    # and is never zoomed/stretched to touch the canvas edges, keeping it 100% visible.
+    scale = min(canvas_w * 0.90 / float(iw), canvas_h * 0.90 / float(ih))
     new_w = max(1, int(round(iw * scale)))
     new_h = max(1, int(round(ih * scale)))
     if (new_w, new_h) != (iw, ih):

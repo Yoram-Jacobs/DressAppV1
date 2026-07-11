@@ -65,17 +65,17 @@ _BBOX_PAD_TRBL_BY_CATEGORY: dict[str, tuple[float, float, float, float]] = {
     # of vertical breathing room below before the SegFormer
     # confidence drops). Skirt + footwear cards untouched —
     # they were already clean per the user screenshot.
-    "top":        (0.04, 0.02, -0.01, 0.02),
-    "bottom":     (-0.01, 0.02, -0.015, 0.02),
-    "dress":      (0.02, 0.02, -0.01, 0.02),
-    "fullbody":   (0.02, 0.02, -0.01, 0.02),
-    "full body":  (0.02, 0.02, -0.01, 0.02),
-    "outerwear":  (0.01, 0.03, 0.020, 0.03),
-    "footwear":   (-0.01, 0.03, 0.03, 0.03),
-    "headwear":   (0.04, 0.04, 0.03, 0.04),
-    "accessory":  (0.015, 0.015, 0.015, 0.015),
-    "accessories": (0.015, 0.015, 0.015, 0.015),
-    "underwear":  (0.015, 0.015, 0.015, 0.015),
+    "top":        (0.06, 0.06, 0.06, 0.06),
+    "bottom":     (0.06, 0.06, 0.06, 0.06),
+    "dress":      (0.06, 0.06, 0.06, 0.06),
+    "fullbody":   (0.06, 0.06, 0.06, 0.06),
+    "full body":  (0.06, 0.06, 0.06, 0.06),
+    "outerwear":  (0.06, 0.06, 0.06, 0.06),
+    "footwear":   (0.06, 0.06, 0.06, 0.06),
+    "headwear":   (0.06, 0.06, 0.06, 0.06),
+    "accessory":  (0.06, 0.06, 0.06, 0.06),
+    "accessories": (0.06, 0.06, 0.06, 0.06),
+    "underwear":  (0.06, 0.06, 0.06, 0.06),
 }
 _BBOX_PAD_TRBL_DEFAULT = (
     _BBOX_PADDING_PCT, _BBOX_PADDING_PCT,
