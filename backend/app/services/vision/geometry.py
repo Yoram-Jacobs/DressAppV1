@@ -263,7 +263,7 @@ def _nms_detections(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     if has_head or len(garment_kinds) > 1:
         for d in items:
             hm = d.get("_human_mask_full")
-            if hm is not None and hm.any():
+            if hm is not None and hm.sum() >= 30000:
                 has_human = True
                 break
 
@@ -344,7 +344,7 @@ def _looks_already_cropped(detections: list[dict[str, Any]]) -> bool:
     if has_head or len(garment_kinds) > 1:
         for d in detections:
             hm = d.get("_human_mask_full")
-            if hm is not None and hm.any():
+            if hm is not None and hm.sum() >= 30000:
                 has_human = True
                 break
 

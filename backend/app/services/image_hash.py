@@ -248,4 +248,9 @@ def is_duplicate_match(
         return True
     if not phash_a or not phash_b:
         return False
-    return hamming_distance(phash_a, phash_b) <= hamming_threshold
+    dist = hamming_distance(phash_a, phash_b)
+    if color_a and color_b:
+        if dist <= hamming_threshold:
+            return color_distance(color_a, color_b) <= color_threshold
+        return False
+    return dist <= hamming_threshold_strict
