@@ -990,6 +990,7 @@ export default function ItemDetail() {
       if (s === 'accessory' || s === 'accessories') return 'accessories';
       return s;
     };
+    const members = currentGroupItems.filter(x => x.id !== (hostIdState || id));
     const allItemsInGroup = [hostObj, ...members].filter(Boolean);
     const categories = new Set(allItemsInGroup.map(it => normCategory(it.category)));
     const isGroupSet = categories.size > 1;
