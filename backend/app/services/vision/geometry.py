@@ -301,30 +301,26 @@ def _is_unidentifiable(analysis: dict[str, Any] | None) -> bool:
 def _looks_already_cropped(detections: list[dict[str, Any]]) -> bool:
     """Return True when the photo is already a tight single-item shot.
 
-    Three signals trigger this:
-
-    1. **Single large detection** \u2014 exactly one bbox remains after NMS
-       and it covers at least ``_SINGLE_ITEM_AREA_FRAC`` of the frame.
-    2. **Cluster of sub-parts** \u2014 multiple detections share the same
-       ``kind`` AND their union bbox covers less than
-       ``_SUBPART_UNION_FRAC`` of the frame, which is the tell-tale
-       pattern of the model hallucinating a collar/sleeve/hem as
-       separate items on an already-cropped garment photo.
-    3. **Heavily-overlapping detections** \u2014 multiple detections
-       overlap so much that ``sum(individual_areas) > 1.4 * union_area``.
-       This catches the SegFormer corner case where a single garment
-       with a complex / novelty pattern gets labeled as both
-       ``Upper-clothes`` and ``Dress`` (or shirt + jacket, etc.) on
-       the same pixels. Without this we treat the photo as multi-item
-       and shred it into nonsensical fragments.
-
-    In all cases we skip the server-side cropping step and analyse
-    the image as a single item so we never shred an already-clean
-    product shot.
+    This includes single-item product shots, standalone footwear/accessory
+    photos with no human present, or any photo containing only one category
+    of garment.
     """
     if not detections:
-        return True  # nothing detectable \u2014 safer to analyse whole frame
+        return True  # nothing detectable — safer to analyse whole frame
     frame_area = 1000 * 1000
+
+    # 1. Standalone / Flat lay item check (no human present, at most 1 distinct garment category/kind)
+    has_human = False
+    for d in detections:
+        hm = d.get("_human_mask_full")
+        # Check if the human mask has any non-zero pixels
+        if hm is not None and hm.any():
+            has_human = True
+            break
+
+    garment_kinds = {d.get("kind", "garment").lower() for d in detections}
+    if not has_human and len(garment_kinds) <= 1:
+        return True
 
     def _area(bbox: list[int]) -> int:
         y1, x1, y2, x2 = bbox

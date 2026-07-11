@@ -690,7 +690,9 @@ class GarmentVisionService:
                     * max(0, d["bbox"][3] - d["bbox"][1])
                 ),
             )
-            raw_crops = await asyncio.to_thread(self._bbox_crop_useful, image_bytes, [best_det])
+            raw_crops = await asyncio.to_thread(
+                self._bbox_crop_useful, image_bytes, [best_det], is_single_item=True,
+            )
             out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
             if out:
                 _, crop_bytes, crop_mime = out[0]
@@ -798,7 +800,10 @@ class GarmentVisionService:
 
     @staticmethod
     def _bbox_crop_useful(
-        image_bytes: bytes, useful: list[dict[str, Any]],
+        image_bytes: bytes,
+        useful: list[dict[str, Any]],
+        *,
+        is_single_item: bool = False,
     ) -> list[tuple[dict[str, Any], bytes, str]]:
         """CPU-bound JPEG crop pass. Runs on a thread via
         :func:`asyncio.to_thread` from the caller.
@@ -834,6 +839,7 @@ class GarmentVisionService:
             # intersection.
             result = _crop_to_bbox(
                 image_bytes, det["bbox"], category=det.get("kind"),
+                is_single_item=is_single_item,
             )
             if not result:
                 continue
@@ -1672,7 +1678,9 @@ class GarmentVisionService:
                         * max(0, d["bbox"][3] - d["bbox"][1])
                     ),
                 )
-                raw_crops = await asyncio.to_thread(self._bbox_crop_useful, image_bytes, [best_det])
+                raw_crops = await asyncio.to_thread(
+                    self._bbox_crop_useful, image_bytes, [best_det], is_single_item=True,
+                )
                 out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
                 if out:
                     _, crop_bytes, crop_mime = out[0]
@@ -1972,7 +1980,9 @@ class GarmentVisionService:
                         )
                         # Crop the image to the detected garment bounds so it isn't
                         # floating in a huge frame, and so fast_matte works correctly.
-                        raw_crops = await asyncio.to_thread(self._bbox_crop_useful, img_bytes, [best_det])
+                        raw_crops = await asyncio.to_thread(
+                            self._bbox_crop_useful, img_bytes, [best_det], is_single_item=True,
+                        )
                         fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
                         return idx, fast_crops
                     else:

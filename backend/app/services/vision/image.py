@@ -62,10 +62,11 @@ def _crop_to_bbox(
     bbox_norm: list[int],
     *,
     category: str | None = None,
+    is_single_item: bool = False,
 ) -> tuple[bytes, tuple[int, int, int, int]] | None:
-    """Return (cropped_jpeg_bytes, (x1,y1,x2,y2)) for a 0\u20131000 bbox.
+    """Return (cropped_jpeg_bytes, (x1,y1,x2,y2)) for a 0–1000 bbox.
 
-    ``bbox_norm`` is ``[ymin, xmin, ymax, xmax]`` on a 0\u20131000 scale.
+    ``bbox_norm`` is ``[ymin, xmin, ymax, xmax]`` on a 0–1000 scale.
     Adds a small padding and clamps to the image bounds.
 
     Patch 12j (May 2026) — ``category`` selects the per-edge padding
@@ -74,6 +75,10 @@ def _crop_to_bbox(
     backward compat. With a category, tight torso boundaries (top's
     bottom edge = waistline; bottom's top edge = waistline) shrink to
     0.5 % so the adjacent garment never enters the frame.
+
+    If ``is_single_item`` is True, we bypass category asymmetric/negative
+    padding and use a flat positive 4% padding all-around to ensure
+    no garment edges are cut off.
     """
     try:
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
@@ -84,10 +89,13 @@ def _crop_to_bbox(
         ymin, xmin, ymax, xmax = [int(v) for v in bbox_norm]
     except Exception:  # noqa: BLE001
         return None
-    # Validate scale \u2014 expect 0..1000
+    # Validate scale — expect 0..1000
     if not (0 <= xmin < xmax <= 1000 and 0 <= ymin < ymax <= 1000):
         return None
-    pad_t, pad_r, pad_b, pad_l = _resolve_bbox_pad_trbl_for_category(category)
+    if is_single_item:
+        pad_t = pad_r = pad_b = pad_l = 0.04
+    else:
+        pad_t, pad_r, pad_b, pad_l = _resolve_bbox_pad_trbl_for_category(category)
     x1 = max(0, int(xmin / 1000.0 * w - w * pad_l))
     y1 = max(0, int(ymin / 1000.0 * h - h * pad_t))
     x2 = min(w, int(xmax / 1000.0 * w + w * pad_r))
