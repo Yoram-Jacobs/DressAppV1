@@ -40,6 +40,12 @@ client.interceptors.response.use(
         window.location.href = '/login';
       }
     }
+    if (err?.response?.data?.detail) {
+      const detail = err.response.data.detail;
+      if (typeof detail === 'object') {
+        err.response.data.detail = detail.message || JSON.stringify(detail);
+      }
+    }
     return Promise.reject(err);
   }
 );
