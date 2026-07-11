@@ -309,9 +309,17 @@ def _looks_already_cropped(detections: list[dict[str, Any]]) -> bool:
         return True  # nothing detectable — safer to analyse whole frame
     frame_area = 1000 * 1000
 
+    def _area(bbox: list[int]) -> int:
+        y1, x1, y2, x2 = bbox
+        return max(0, (x2 - x1)) * max(0, (y2 - y1))
+
     has_human = False
     has_head = any(d.get("has_human_head", False) for d in detections)
-    garment_kinds = {d.get("kind", "garment").lower() for d in detections}
+    garment_kinds = {
+        d.get("kind", "garment").lower()
+        for d in detections
+        if _area(d["bbox"]) >= frame_area * 0.03
+    }
     if has_head or len(garment_kinds) > 1:
         for d in detections:
             hm = d.get("_human_mask_full")
@@ -321,10 +329,6 @@ def _looks_already_cropped(detections: list[dict[str, Any]]) -> bool:
 
     if not has_human and len(garment_kinds) <= 1:
         return True
-
-    def _area(bbox: list[int]) -> int:
-        y1, x1, y2, x2 = bbox
-        return max(0, (x2 - x1)) * max(0, (y2 - y1))
 
     areas = [_area(d["bbox"]) for d in detections]
     largest_area = max(areas) if areas else 0

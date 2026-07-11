@@ -863,7 +863,11 @@ class GarmentVisionService:
                     k1 = (det.get("kind") or "").strip().lower()
                     k2 = (other.get("kind") or "").strip().lower()
                     if k1 != k2 and other.get("mask") is not None:
-                        other_masks.append(other["mask"])
+                        # Ignore tiny hallucinated other garments (area < 3% of frame)
+                        oy1, ox1, oy2, ox2 = other["bbox"]
+                        other_area = max(0, oy2 - oy1) * max(0, ox2 - ox1)
+                        if other_area >= 1000 * 1000 * 0.03:
+                            other_masks.append(other["mask"])
                 if other_masks:
                     combined_other = other_masks[0]
                     for m in other_masks[1:]:
