@@ -217,8 +217,8 @@ _SIMILAR_KINDS = {
 }
 
 
-def _same_thing(a: dict[str, Any], b: dict[str, Any]) -> bool:
-    """Heuristic \u2014 are two detections the same physical item?"""
+def _same_thing(a: dict[str, Any], b: dict[str, Any], has_human: bool = False) -> bool:
+    """Heuristic — are two detections the same physical item?"""
     bbox_a, bbox_b = a.get("bbox"), b.get("bbox")
     if not (isinstance(bbox_a, list) and isinstance(bbox_b, list)):
         return False
@@ -230,9 +230,14 @@ def _same_thing(a: dict[str, Any], b: dict[str, Any]) -> bool:
     # Strong overlap -> duplicate, regardless of kind.
     if iou >= _NMS_IOU_THRESHOLD:
         return True
-    # One clearly nested inside the other AND compatible kind -> duplicate.
-    if contain >= 0.8 and compatible_kind:
-        return True
+    # One clearly nested inside the other -> duplicate.
+    # We require compatible kinds only when there's an actual human wearer
+    # (to preserve nested accessories like belts on pants).
+    # In flat lays or single-item contexts (no human), nested items are
+    # always duplicate hallucinations of the same physical item.
+    if contain >= 0.8:
+        if compatible_kind or not has_human:
+            return True
     return False
 
 
@@ -246,11 +251,27 @@ def _nms_detections(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
         y1, x1, y2, x2 = it["bbox"]
         return max(0, (x2 - x1)) * max(0, (y2 - y1))
 
+    # Determine if a wearer is present
+    frame_area = 1000 * 1000
+    has_head = any(d.get("has_human_head", False) for d in items)
+    garment_kinds = {
+        d.get("kind", "garment").lower()
+        for d in items
+        if _area(d) >= frame_area * 0.03
+    }
+    has_human = False
+    if has_head or len(garment_kinds) > 1:
+        for d in items:
+            hm = d.get("_human_mask_full")
+            if hm is not None and hm.any():
+                has_human = True
+                break
+
     # Sort by area DESC so the dominant (larger) box wins.
     sorted_items = sorted(items, key=_area, reverse=True)
     kept: list[dict[str, Any]] = []
     for it in sorted_items:
-        if any(_same_thing(it, k) for k in kept):
+        if any(_same_thing(it, k, has_human) for k in kept):
             continue
         kept.append(it)
     return kept
@@ -258,7 +279,7 @@ def _nms_detections(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def _is_unidentifiable(analysis: dict[str, Any] | None) -> bool:
     """Return True when the LLM analysis indicates it couldn't make sense
-    of the crop \u2014 used to drop noise crops from the closet rather
+    of the crop — used to drop noise crops from the closet rather
     than save useless "Unidentifiable Garment" cards.
 
     Triggers on three signals (any of them is enough):
