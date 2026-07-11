@@ -9,11 +9,10 @@
  */
 
 import { useSyncExternalStore, useEffect, useState } from 'react';
-import { Sparkles, Shirt } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { workStore } from '@/lib/workStore';
-import { closetStore } from '@/lib/closetStore';
 
 export function WorkProgressFloater() {
   const { t } = useTranslation();
@@ -28,10 +27,7 @@ export function WorkProgressFloater() {
   // affordance — gives the user time to register "done".
   const [linger, setLinger] = useState(false);
   const analyzeCount = Object.keys(state.analyzeJobs).length;
-  const polishTotal = state.polishBatchTotal;
-  const polishDone = state.polishBatchCompleted;
-  const polishPending = state.polishPendingIds.size;
-  const active = analyzeCount > 0 || polishPending > 0;
+  const active = analyzeCount > 0;
 
   useEffect(() => {
     if (active) {
@@ -67,25 +63,6 @@ export function WorkProgressFloater() {
           count: analyzeCount,
         });
 
-  const liveItems = closetStore.getSnapshot().items || [];
-  const pendingPolishItems = Array.from(state.polishPendingIds).map(id => liveItems.find(it => it.id === id)).filter(Boolean);
-  const isGroupAnalysing = pendingPolishItems.some(it => it.group_analysis_status === 'pending');
-
-  const polishLabel = isGroupAnalysing
-    ? t('floater.analysingGroup', { defaultValue: 'Analysing group…' })
-    : (polishTotal > 0
-      ? t('floater.polishing', {
-          defaultValue: 'Polishing {{n}}/{{m}} photos',
-          n: polishDone,
-          m: polishTotal,
-        })
-      : t('floater.polishingMore', {
-          defaultValue: 'Polishing {{count}} photo',
-          count: polishPending,
-        }));
-
-  const polishPct =
-    polishTotal > 0 ? Math.min(100, Math.round((polishDone / polishTotal) * 100)) : 0;
   const analyzePct =
     analyzeExpected > 0
       ? Math.min(100, Math.round((analyzeItems / analyzeExpected) * 100))
@@ -105,7 +82,7 @@ export function WorkProgressFloater() {
         }
       >
         {analyzeCount > 0 && (
-          <div className="flex flex-col gap-1.5 mb-2" data-testid="floater-analyze">
+          <div className="flex flex-col gap-1.5" data-testid="floater-analyze">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" aria-hidden />
               <span className="truncate">{analyzeLabel}</span>
@@ -120,26 +97,6 @@ export function WorkProgressFloater() {
               <div
                 className="h-full bg-primary transition-all duration-300"
                 style={{ width: `${Math.max(5, analyzePct)}%` }}
-              />
-            </div>
-          </div>
-        )}
-        {polishPending > 0 && (
-          <div className="flex flex-col gap-1.5" data-testid="floater-polish">
-            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <Shirt className="h-3.5 w-3.5 text-primary animate-pulse" aria-hidden />
-              <span className="truncate">{polishLabel}</span>
-            </div>
-            <div
-              className="h-1 rounded-full bg-muted overflow-hidden"
-              role="progressbar"
-              aria-valuenow={polishPct}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            >
-              <div
-                className="h-full bg-primary transition-all duration-300"
-                style={{ width: `${Math.max(5, polishPct)}%` }}
               />
             </div>
           </div>
