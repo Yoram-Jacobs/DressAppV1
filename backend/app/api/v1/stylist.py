@@ -133,7 +133,7 @@ async def stylist_endpoint(
 
     is_first_turn = (session.get("turns") or 0) == 0
 
-    history = await recent_messages(session["id"], limit=4)
+    history = await recent_messages(session["id"], limit=8)
     closet = await closet_summary_for(user["id"], limit=1000)
 
     user_profile = {
