@@ -41,30 +41,49 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
     const res = {};
     const allClosetItems = (closetStore.getSnapshot().items || []).filter(Boolean);
 
+    const resolveSlot = (roleName, itemObj, dbItem) => {
+      let s = roleName;
+      const category = dbItem?.category || itemObj?.category;
+      if (category) {
+        const cat = String(category).toLowerCase().trim().replace(/\s+/g, '_');
+        if (cat === 'top' || cat === 'tops') s = 'top';
+        else if (cat === 'bottom' || cat === 'bottoms') s = 'bottom';
+        else if (cat === 'footwear' || cat === 'shoes') s = 'shoes';
+        else if (cat === 'accessories' || cat === 'accessory') s = 'accessory';
+        else if (cat === 'headwear' || cat === 'hat') s = 'headwear';
+        else if (cat === 'outerwear' || cat === 'jacket') s = 'outerwear';
+        else if (cat === 'dress' || cat === 'dresses') s = 'dress';
+        else s = cat;
+      }
+      if (s === 'hat' || s === 'cap') s = 'headwear';
+      if (s === 'accessories') s = 'accessory';
+      if (s === 'footwear') s = 'shoes';
+
+      // Force hats/caps categorized as accessory to headwear slot
+      const name = String(itemObj?.name || itemObj?.title || dbItem?.name || dbItem?.title || '').toLowerCase();
+      const isHat = name.includes('hat') || 
+                    name.includes('cap') || 
+                    name.includes('beanie') || 
+                    name.includes('beret') || 
+                    name.includes('fedora') || 
+                    name.includes('visor') || 
+                    name.includes('flat cap') ||
+                    name.includes('bonnet') ||
+                    name.includes('bucket hat') ||
+                    name.includes('helmet');
+      if (isHat && (s === 'accessory' || s === 'accessories')) {
+        return 'headwear';
+      }
+      return s;
+    };
+
     Object.entries(outfitItems || {}).forEach(([role, item]) => {
       if (item) {
         // Resolve item from closetStore to see if it is part of a set
         const itemId = item.closet_item_id || item.id;
         const closetItem = allClosetItems.find(it => it && it.id === itemId);
         
-        // Map slot using the closet item's actual category if available, falling back to the assigned role
-        let slot = role;
-        if (closetItem && closetItem.category) {
-          const cat = String(closetItem.category).toLowerCase().trim().replace(/\s+/g, '_');
-          if (cat === 'top' || cat === 'tops') slot = 'top';
-          else if (cat === 'bottom' || cat === 'bottoms') slot = 'bottom';
-          else if (cat === 'footwear' || cat === 'shoes') slot = 'shoes';
-          else if (cat === 'accessories' || cat === 'accessory') slot = 'accessory';
-          else if (cat === 'headwear' || cat === 'hat') slot = 'headwear';
-          else if (cat === 'outerwear' || cat === 'jacket') slot = 'outerwear';
-          else if (cat === 'dress' || cat === 'dresses') slot = 'dress';
-          else slot = cat; // fallback to whatever it is
-        }
-        
-        // Additional fallbacks for common LLM generated roles that don't match our avatar slots perfectly
-        if (slot === 'hat' || slot === 'cap') slot = 'headwear';
-        if (slot === 'accessories') slot = 'accessory';
-        if (slot === 'footwear') slot = 'shoes';
+        let slot = resolveSlot(role, item, closetItem);
 
         if (closetItem && closetItem.group_id) {
           // Find all items in this group
@@ -75,16 +94,7 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
           if (categories.size > 1) {
             // It's a set! Map each group item to its correct category
             groupItems.forEach(gItem => {
-              const cat = String(gItem.category || '').toLowerCase().trim().replace(/\s+/g, '_');
-              let gSlot = cat;
-              if (cat === 'top' || cat === 'tops') gSlot = 'top';
-              else if (cat === 'bottom' || cat === 'bottoms') gSlot = 'bottom';
-              else if (cat === 'footwear' || cat === 'shoes') gSlot = 'shoes';
-              else if (cat === 'accessories' || cat === 'accessory') gSlot = 'accessory';
-              else if (cat === 'headwear' || cat === 'hat') gSlot = 'headwear';
-              else if (cat === 'outerwear' || cat === 'jacket') gSlot = 'outerwear';
-              else if (cat === 'dress' || cat === 'dresses') gSlot = 'dress';
-              
+              const gSlot = resolveSlot(gItem.category, gItem, gItem);
               res[gSlot] = {
                 url: bestImageUrl(gItem) || gItem.image_data_url || gItem.segmented_image_url || gItem.image_url || gItem.original_image_url,
                 placeholder: gItem.placeholder_data_url || null,
@@ -166,7 +176,7 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
         {renderGarment('headwear', 'Headwear', 'top-0 left-1/2 w-[40%] aspect-square z-30', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
 
         {/* 2. Accessories / Neckwear */}
-        {renderGarment('accessory', 'Accessory', 'top-[14%] left-1/2 w-[35%] z-25', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
+        {renderGarment('accessory', 'Accessory', 'top-[14%] left-1/2 w-[35%] aspect-square z-25', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
 
         {/* 3. Dress (Overrides top/bottom layout) */}
         {garments.dress && garments.dress.url ? (
@@ -188,14 +198,21 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
         {renderGarment('shoes', 'Shoes', 'bottom-0 left-1/2 w-[50%] h-[15%] z-15', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
 
         {/* 6. Bag */}
-        {garments.bag && (
-          <motion.img
+        {garments.bag && garments.bag.url && (
+          <motion.div
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
-            src={garments.bag}
-            alt={t('taxonomy.sub_category.bag', { defaultValue: 'Bag' })}
-            className="absolute top-[40%] right-[-5%] w-[40%] h-[30%] object-contain z-25 drop-shadow-md"
-          />
+            className={`absolute top-[40%] right-[-5%] w-[40%] h-[30%] z-25 drop-shadow-md ${onItemClick && garments.bag.id ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'pointer-events-none'}`}
+            onClick={onItemClick && garments.bag.id ? (e) => { e.stopPropagation(); onItemClick(garments.bag.id); } : undefined}
+          >
+            <ImageWithPlaceholder
+              src={garments.bag.url}
+              placeholder={garments.bag.placeholder}
+              alt={t('taxonomy.sub_category.bag', { defaultValue: 'Bag' })}
+              objectFit="contain"
+              className="w-full h-full"
+            />
+          </motion.div>
         )}
       </div>
 
