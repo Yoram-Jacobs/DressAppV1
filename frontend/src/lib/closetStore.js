@@ -270,9 +270,7 @@ export const closetStore = {
     await _idbPromise;
     if (!force && _state.loading) return _state.items;
     if (!force && _state.lastFullSync && Date.now() - _state.lastFullSync < FRESH_MS) {
-      // If we just migrated from localStorage to IndexedDB, items might be empty
-      // while total > 0. Force a network fetch to repopulate the cache.
-      if (!(_state.items.length === 0 && _state.total > 0)) {
+      if (_state.items && _state.items.length > 0) {
         return _state.items;
       }
     }
