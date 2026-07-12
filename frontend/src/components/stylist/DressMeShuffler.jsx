@@ -593,6 +593,9 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
 
   return (
     <div className="flex flex-col items-center gap-4 py-2 w-full">
+      <div className="text-[10px] text-muted-foreground bg-secondary/20 px-3 py-1 rounded-full">
+        DEBUG: {items.length} items | {tops.length} tops | {bottoms.length} bottoms | {shoes.length} shoes
+      </div>
       {/* Location, Weather & Calendar Header */}
       <div className="w-full max-w-sm flex flex-col gap-3 px-4">
         <Button 
