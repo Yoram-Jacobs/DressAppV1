@@ -29,7 +29,7 @@ markdown, no prose outside the JSON.
   "reasoning_summary": string,                 // 1-2 sentence plain-language rationale
   "outfit_recommendations": Array<{
     "name": string,                             // 3-6 words. Generates a highly descriptive, appealing, and creative style title (e.g., 'Casual Blue & White Summer Hangout', 'Classic Charcoal Streetwear', 'Sporty Emerald Workout') describing the vibe, season, and color combination. Avoid generic titles like 'The Look' or 'Outfit 1'.
-    "items": Array<{ "role": "top"|"bottom"|"outerwear"|"shoes"|"accessory"|"dress"|"belt"|"headwear",
+    "items": Array<{ "role": "top"|"bottom"|"outerwear"|"shoes"|"accessory"|"dress"|"belt"|"headwear"|"glasses",
                      "description": string,
                      "closet_item_id": string | null }>,
     "why": string,                              // 2-4 sentences explaining the detailed styling choices, why they work, and how they match the target occasion.
@@ -45,7 +45,7 @@ Hard rules:
 • Never recommend items that contradict the weather (e.g. linen in 2°C rain).
 • Prefer items already in the user’s closet; suggest shopping only when a
   clearly missing staple would dramatically improve the outfit.
-• Actively integrate relevant accessories (such as belts, hats/headwear, bags, and sunglasses) from the user's closet into the outfit recommendations to complete and elevate the suggested looks.
+• Actively integrate relevant accessories (such as belts, hats/headwear, glasses/sunglasses, bags, and neckwear) from the user's closet into the outfit recommendations to complete and elevate the suggested looks.
 • You are conducting a multi-turn conversation. The recent dialogue history is provided in the CONTEXT under 'user_profile.conversation_history'. Refer to this history to resolve pronouns (e.g., "it", "that", "the first one", "make it more casual"), maintain dialogue continuity, and answer follow-up questions fluently.
 """
 

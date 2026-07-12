@@ -59,6 +59,7 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
       if (s === 'accessories') s = 'accessory';
       if (s === 'footwear') s = 'shoes';
       if (s === 'belt') s = 'belt';
+      if (s === 'glasses' || s === 'sunglasses' || s === 'eyewear') s = 'glasses';
 
       // Force hats/caps categorized as accessory to headwear slot
       const name = String(itemObj?.name || itemObj?.title || dbItem?.name || dbItem?.title || '').toLowerCase();
@@ -80,6 +81,16 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
       const isBelt = name.includes('belt');
       if (isBelt) {
         return 'belt';
+      }
+
+      // Force glasses/sunglasses categorized as accessory to glasses slot
+      const isGlasses = name.includes('glasses') || 
+                        name.includes('spectacles') || 
+                        name.includes('sunglasses') || 
+                        name.includes('eyewear') || 
+                        name.includes('shades');
+      if (isGlasses && (s === 'accessory' || s === 'accessories')) {
+        return 'glasses';
       }
       return s;
     };
@@ -181,6 +192,9 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
 
         {/* 1. Headwear */}
         {renderGarment('headwear', 'Headwear', 'top-0 left-1/2 w-[40%] aspect-square z-30', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
+
+        {/* 1.5. Glasses */}
+        {renderGarment('glasses', 'Glasses', 'top-[11.5%] left-1/2 w-[18%] h-[4.5%] z-28', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
 
         {/* 2. Accessories / Neckwear */}
         {renderGarment('accessory', 'Accessory', 'top-[14%] left-1/2 w-[35%] aspect-square z-25', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
