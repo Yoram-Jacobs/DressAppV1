@@ -27,7 +27,28 @@ export default function Register() {
     setBusy(true);
     try {
       const referrerId = sessionStorage.getItem('referrer_id') || null;
-      await register({ ...form, referrer_id: referrerId });
+      const lang = (localStorage.getItem('dressapp.lang') || 'en').toLowerCase().split('-')[0];
+      const DEFAULT_VOICES = {
+        en: 'en_US-ryan-medium',
+        es: 'es_ES-carl-medium',
+        fr: 'fr_FR-gilles-low',
+        de: 'de_DE-thorsten-medium',
+        it: 'it_IT-riccardo-medium',
+        pt: 'pt_BR-faber-medium',
+        ru: 'ru_RU-dmitri-medium',
+        zh: 'zh_CN-huayan-medium',
+        ja: 'ja_JP-koko-medium',
+        ar: 'ar_JO-kareem-low',
+        hi: 'hi_IN-rohan-medium',
+        he: 'he_IL-hebrew-medium',
+      };
+      const voiceId = DEFAULT_VOICES[lang] || 'en_US-ryan-medium';
+      await register({
+        ...form,
+        referrer_id: referrerId,
+        preferred_language: lang,
+        preferred_voice_id: voiceId,
+      });
       toast.success(t('brand'));
       nav('/home');
     } catch (err) {

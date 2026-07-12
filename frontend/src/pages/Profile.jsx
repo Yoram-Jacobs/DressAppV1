@@ -24,22 +24,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Badge } from '@/components/ui/badge';
 import { useClosetStore } from '@/lib/useClosetStore';
 
-const VOICES = [
-  'en_US-ryan-medium',
-  'en_US-amy-low',
-  'es_ES-carl-medium',
-  'fr_FR-gilles-low',
-  'de_DE-thorsten-medium',
-  'it_IT-riccardo-medium',
-  'pt_BR-faber-medium',
-  'ru_RU-dmitri-medium',
-  'zh_CN-huayan-medium',
-  'ja_JP-koko-medium',
-  'ar_JO-kareem-low',
-  'hi_IN-rohan-medium',
-  'he_IL-hebrew-medium',
-];
-
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding)
@@ -717,14 +701,28 @@ export default function Profile() {
     }
   }, [user?.preferred_language]);
 
-  // Apply language immediately on selection + persist via API.
   const onLanguageChange = async (code) => {
-    setForm((f) => ({ ...f, preferred_language: code }));
+    const DEFAULT_VOICES = {
+      en: 'en_US-ryan-medium',
+      es: 'es_ES-carl-medium',
+      fr: 'fr_FR-gilles-low',
+      de: 'de_DE-thorsten-medium',
+      it: 'it_IT-riccardo-medium',
+      pt: 'pt_BR-faber-medium',
+      ru: 'ru_RU-dmitri-medium',
+      zh: 'zh_CN-huayan-medium',
+      ja: 'ja_JP-koko-medium',
+      ar: 'ar_JO-kareem-low',
+      hi: 'hi_IN-rohan-medium',
+      he: 'he_IL-hebrew-medium',
+    };
+    const voiceId = DEFAULT_VOICES[code] || 'en_US-ryan-medium';
+    setForm((f) => ({ ...f, preferred_language: code, preferred_voice_id: voiceId }));
     setLangBusy(true);
     try {
       await i18n.changeLanguage(code);
       try { localStorage.setItem('dressapp.lang', code); } catch { /* ignore */ }
-      const res = await api.patchMe({ preferred_language: code });
+      const res = await api.patchMe({ preferred_language: code, preferred_voice_id: voiceId });
       updateUserLocal(res);
       toast.success(t('profile.languageUpdated'));
     } catch (err) {
@@ -851,53 +849,6 @@ export default function Profile() {
               <LocationCard />
               <InviteFriendsButton />
               <ShoppingAssistantAccordionItem />
-
-              {/* --- Voice & Language (Self-contained) --- */}
-              <AccordionItem
-                value="voice"
-                className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300"
-              >
-                <AccordionTrigger className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none">
-                  <div className="flex items-center gap-4 text-start">
-                    <div className="p-2.5 rounded-xl bg-[hsl(174_44%_93%)] text-[hsl(174_44%_33%)] dark:bg-[hsl(174_30%_18%)] dark:text-[hsl(174_44%_60%)] shrink-0 transition-transform duration-200">
-                      <Languages className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
-                        {t('profile.voiceLanguage', { defaultValue: 'Voice & Language' })}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
-                        {t('profile.voiceLanguageDesc', { defaultValue: 'Stylist virtual voice and accessibility settings' })}
-                      </span>
-                    </div>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5 space-y-4">
-                  <div className="text-start">
-                    <Label htmlFor="preferred-voice">{t('profile.voice', { defaultValue: 'Stylist Voice' })}</Label>
-                    <Select value={form.preferred_voice_id} onValueChange={(v) => setForm({ ...form, preferred_voice_id: v })}>
-                      <SelectTrigger id="preferred-voice" className="rounded-xl bg-card mt-1.5" data-testid="settings-voice">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        {VOICES.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex justify-end pt-2">
-                    <Button 
-                      onClick={save} 
-                      disabled={busy || !isDirty}
-                      className="rounded-xl"
-                      data-testid="settings-save-button"
-                    >
-                      {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 me-2" />}
-                      {t('profile.saveProfile', { defaultValue: 'Save Voice Settings' })}
-                    </Button>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
             </Accordion>
 
             <div className="flex pt-4">
