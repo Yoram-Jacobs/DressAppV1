@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Sparkles, Save, ImageOff, ChevronLeft, ChevronRight, X, Globe, CalendarDays, Loader2 } from 'lucide-react';
 import { useStoreState } from '@/lib/createSimpleStore';
 import { shufflerUIStore } from '@/lib/shufflerUIStore';
-import ProgressiveImage from '@/components/ui/ProgressiveImage';
 import { useClosetItems } from '@/lib/useClosetStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -532,12 +531,11 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
                           : "border-border/40 bg-secondary/10"
                       }`}>
                         {imageUrl ? (
-                          <ProgressiveImage
-                            variants={item.image_variants}
-                            originalSrc={imageUrl}
+                          <img
+                            src={imageUrl}
                             alt={item.name || label}
                             className="max-h-full max-w-full object-contain pointer-events-none p-1.5"
-                            forceVisible={true}
+                            draggable={false}
                           />
                         ) : (
                           <div className="text-center text-muted-foreground p-1">
