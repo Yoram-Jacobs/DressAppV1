@@ -45,7 +45,7 @@ async def get_styling_advice(
     lat: float | None = None,
     lng: float | None = None,
     language: str = "en",
-    voice_id: str = "aura-2-thalia-en",
+    voice_id: str = "en_US-ryan-medium",
     calendar_events: list[dict[str, Any]] | None = None,
     cultural_rules: list[dict[str, Any]] | None = None,
     user_profile: dict[str, Any] | None = None,

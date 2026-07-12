@@ -47,7 +47,7 @@ graph TD
         Widen -->|Aesthetic Trends| Trends[trend_scout.py]
         Widen -->|Generative Visual| NanoBanana[reconstruction.py / Nano Banana]
         
-        Logic -->|Speak Reply Text| TTS[tts_service.py / Deepgram Aura]
+        Logic -->|Speak Reply Text| TTS[tts_service.py / Gemini TTS / Piper Offline]
         
         ShufflerLogic -->|Billing Check| Billing[billing_service.py / deduct_user_credits]
     end
@@ -172,7 +172,7 @@ if encrypted_key:
 2. **Weather context**: Queries OpenWeather using coordinates. Descriptions are formatted with `·` as a language-neutral separator (e.g., `22°C · Clear Sky · Paris`) to avoid mixing languages in translation files.
 3. **Calendar context**: Synchronizes active Google Calendar events, appending event formality hints (e.g., `[formal]`, `[casual]`).
 4. **Gemini Pro Turn**: Hands the prompt, image context, weather, calendar, style profile, and wardrobe inventory to the `StylistBrain` service, returning a structured JSON document conforming to a strict schema.
-5. **Speech Synthesis**: Converts the concise `spoken_reply` into an MP3 byte stream using Deepgram's Aura voice model, returning a Base64 string to the client.
+5. **Speech Synthesis**: Converts the concise `spoken_reply` into speech audio bytes using `tts_service.py` (Gemini Multimodal TTS fallback) or offline using the Piper TTS model (Sherpa-ONNX SDK) on-device.
 
 #### Shuffler Endpoint: `POST /api/v1/stylist/planner-scout`
 Generates coordinated outfits on request. It checks and deducts **1 credit** from standard accounts, queries closet inventory (excluding duplicates/members), and calls Gemini with candidate lists, local weather summaries, and upcoming calendar logs.

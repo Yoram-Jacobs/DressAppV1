@@ -29,7 +29,7 @@ class RegisterIn(BaseModel):
     password: str = Field(min_length=8, max_length=128)
     display_name: str | None = None
     preferred_language: str = "en"
-    preferred_voice_id: str = "aura-2-thalia-en"
+    preferred_voice_id: str = "en_US-ryan-medium"
     referrer_id: str | None = None
 
 
@@ -138,7 +138,7 @@ async def dev_bypass() -> TokenOut:
             display_name="Dev User",
             roles=["user", "admin"],
             preferred_language="en",
-            preferred_voice_id="aura-2-thalia-en",
+            preferred_voice_id="en_US-ryan-medium",
             home_location={"lat": 40.758, "lng": -73.9855, "city": "New York"},
         )
         doc = new_user.model_dump()

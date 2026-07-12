@@ -44,7 +44,6 @@ def check_keys() -> None:
         # adding it back, see
         # quarantine/2026-05-sabotage/READ_THIS_FIRST.md.
         "GROQ_API_KEY",
-        "DEEPGRAM_API_KEY",
         "OPENWEATHER_API_KEY",
         "MONGO_URL",
     ]:

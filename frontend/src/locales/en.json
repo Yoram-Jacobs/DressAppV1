@@ -889,7 +889,7 @@
     "bookmarkletBtn": "DressApp Assistant",
     "bookmarkletInstruction": "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations.",
     "language": "Language",
-    "voice": "Voice (Deepgram Aura-2)",
+    "voice": "Voice (Piper Offline)",
     "saveChanges": "Save changes",
     "signOut": "Sign out",
     "profileSaved": "Profile saved",

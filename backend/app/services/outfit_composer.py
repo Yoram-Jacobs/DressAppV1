@@ -89,7 +89,7 @@ async def compose_outfit(
 
     user_profile = {
         "preferred_language": (language or user.get("preferred_language") or "en").lower(),
-        "preferred_voice_id": user.get("preferred_voice_id") or "aura-2-thalia-en",
+        "preferred_voice_id": user.get("preferred_voice_id") or "en_US-ryan-medium",
         "style_profile": user.get("style_profile"),
         "cultural_context": user.get("cultural_context"),
     }

@@ -130,7 +130,7 @@ Manages how and when outfit reminders are received.
 - Triggers browser `navigator.geolocation` permissions on request. Coordinates are mapped to reverse-geocoded cities, showing coordinates accuracy in meters (e.g., `±5m accuracy`).
 
 #### 6. Voice & Language
-- Allows changing the virtual stylist's voice model (e.g., `aura-2-thalia-en`, `aura-2-apollo-en`) and changes the interface localization dictionary.
+- Allows changing the virtual stylist's voice model (e.g., `en_US-ryan-medium`, `en_US-amy-low`) and changes the interface localization dictionary.
 
 ---
 
@@ -173,7 +173,7 @@ const isDirty = useMemo(() => {
   if (!user) return false;
   const initial = {
     preferred_language: (user.preferred_language || i18n.language || 'en').toLowerCase(),
-    preferred_voice_id: user.preferred_voice_id || 'aura-2-thalia-en',
+    preferred_voice_id: user.preferred_voice_id || 'en_US-ryan-medium',
   };
   return Object.keys(initial).some(
     (key) => String(form[key]) !== String(initial[key])

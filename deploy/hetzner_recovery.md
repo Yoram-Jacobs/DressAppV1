@@ -128,7 +128,7 @@ $EDITOR deploy/.env
 | `GOOGLE_OAUTH_REDIRECT_URI` | **Leave empty** — backend derives it from the request |
 | `GOOGLE_OAUTH_POST_LOGIN_REDIRECT` | **Leave empty** |
 | `PAYPAL_*` | LIVE creds + webhook ID |
-| `GROQ_API_KEY`, `DEEPGRAM_API_KEY`, `OPENWEATHER_API_KEY`, `HF_TOKEN` | Provider keys |
+| `GROQ_API_KEY`, `OPENWEATHER_API_KEY`, `HF_TOKEN` | Provider keys |
 | `ALLOW_DEV_BYPASS` | `false` for real prod, `true` only while you debug |
 | `USE_LOCAL_CLOTHING_PARSER` | `true` (CX22 has the headroom) — set to `false` only if you're tight on RAM |
 | `AUTO_MATTE_CROPS` | `true` (same logic as above) |

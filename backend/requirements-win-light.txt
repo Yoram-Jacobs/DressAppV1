@@ -22,7 +22,6 @@ cryptography==46.0.7
 # cuda-bindings==13.2.0
 cuda-pathfinder==1.5.3
 # cuda-toolkit==13.0.2
-deepgram-sdk==6.1.1
 distro==1.9.0
 dnspython==2.8.0
 ecdsa==0.19.2

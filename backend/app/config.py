@@ -263,10 +263,10 @@ class Settings:
     GROQ_API_KEY: str | None = os.environ.get("GROQ_API_KEY")
     WHISPER_MODEL: str = os.environ.get("WHISPER_MODEL", "whisper-large-v3")
 
-    # --- Deepgram (Aura-2 TTS) ---
-    DEEPGRAM_API_KEY: str | None = os.environ.get("DEEPGRAM_API_KEY")
-    DEFAULT_TTS_MODEL: str = os.environ.get("DEFAULT_TTS_MODEL", "aura-2-thalia-en")
+    # --- Piper Offline TTS ---
+    DEFAULT_TTS_MODEL: str = os.environ.get("DEFAULT_TTS_MODEL", "en_US-ryan-medium")
     DEFAULT_TTS_ENCODING: str = os.environ.get("DEFAULT_TTS_ENCODING", "mp3")
+
 
     # --- OpenWeatherMap ---
     OPENWEATHER_API_KEY: str | None = os.environ.get("OPENWEATHER_API_KEY")

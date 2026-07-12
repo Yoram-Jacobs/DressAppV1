@@ -19,8 +19,6 @@ REQUIRED_FOR_POC = [
     # artefact — see ``quarantine/2026-05-sabotage/READ_THIS_FIRST.md``.
     # Voice input (Groq Whisper-v3)
     "GROQ_API_KEY",
-    # Voice output (Deepgram Aura-2 with WebSocket streaming)
-    "DEEPGRAM_API_KEY",
     # Weather context
     "OPENWEATHER_API_KEY",
 ]

@@ -25,8 +25,19 @@ import { Badge } from '@/components/ui/badge';
 import { useClosetStore } from '@/lib/useClosetStore';
 
 const VOICES = [
-  'aura-2-thalia-en', 'aura-2-hermes-en', 'aura-2-electra-en',
-  'aura-2-apollo-en', 'aura-2-draco-en', 'aura-2-hyperion-en',
+  'en_US-ryan-medium',
+  'en_US-amy-low',
+  'es_ES-carl-medium',
+  'fr_FR-gilles-low',
+  'de_DE-thorsten-medium',
+  'it_IT-riccardo-medium',
+  'pt_BR-faber-medium',
+  'ru_RU-dmitri-medium',
+  'zh_CN-huayan-medium',
+  'ja_JP-koko-medium',
+  'ar_JO-kareem-low',
+  'hi_IN-rohan-medium',
+  'he_IL-hebrew-medium',
 ];
 
 function urlBase64ToUint8Array(base64String) {

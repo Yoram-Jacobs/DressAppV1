@@ -7,7 +7,7 @@
  *
  * When unsupported (e.g. Firefox desktop), `isSTTSupported()` / `isTTSSupported()`
  * return `false` and callers should fall back to the existing server-side
- * Groq Whisper / Deepgram Aura pipeline.
+ * Groq Whisper / Piper Offline pipeline.
  */
 
 /* ---------- BCP-47 locale mapping ---------- */

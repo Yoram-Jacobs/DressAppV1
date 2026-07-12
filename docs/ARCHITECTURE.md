@@ -47,7 +47,7 @@ The original specification called for a Cloudflare Workers backend with the 2026
 ┌───────────────▼─────────────────────────────────────────────────────────┐
 │                         External AI / Data Providers                     │
 │  fal.ai (SAM-2 + Stable Diffusion)  · Groq (Whisper-v3)  ·               │
-│  Deepgram Aura-2 (streaming TTS)    · Gemini 2.5 Pro (Universal Key)  ·  │
+│  Piper Offline (on-device TTS)      · Gemini 2.5 Pro (Universal Key)  ·  │
 │  OpenWeatherMap · Google Calendar (OAuth)  · Stripe Connect Express      │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
@@ -62,7 +62,7 @@ The original specification called for a Cloudflare Workers backend with the 2026
 | Agents SDK (2026)                     | Long-lived agent orchestration              | `StylistAgent` class in `app/services/logic.py` + persisted `stylist_sessions` collection    |
 | Durable Object (per-user agent state) | Persistent per-user memory                  | MongoDB document `stylist_sessions[user_id]` with `conversation_history`, `outfit_feedback`  |
 | Cloudflare Vectorize                  | Clothing / outfit embedding search          | MongoDB Atlas Vector Search index on `embeddings.vector` (fallback: cosine over stored vec)  |
-| Workers AI / AI Gateway (TTS routing) | Multilingual TTS + model routing            | Direct Deepgram Aura-2 client + centralized `app/services/deepgram_service.py`               |
+| Workers AI / AI Gateway (TTS routing) | Multilingual TTS + model routing            | Local on-device Piper TTS via Sherpa-ONNX SDK                                                |
 | Workers KV                            | Fast config / feature flags                 | MongoDB `config` collection with in-memory LRU cache                                         |
 | Cron Triggers                         | Trend-Scout daily job                       | `APScheduler` with `CronTrigger`                                                             |
 | R2 object storage                     | Image + audio artifacts                     | Phase-2 upgrade: S3-compatible (boto3) object storage; Phase-1 stores base64 in Mongo/disk     |
@@ -84,7 +84,7 @@ POST /api/v1/stylist   (multipart)
   ├─ lat, lng (for weather)
   ├─ include_calendar (bool)
   ├─ language (ISO-639-1, default 'en')
-  └─ voice_id (Aura-2 voice model, default aura-2-thalia-en)
+  └─ voice_id (Piper voice model, default en_US-ryan-medium)
 
         │
         ▼
@@ -96,7 +96,7 @@ POST /api/v1/stylist   (multipart)
 │ 5. Fetch calendar (opt.)    → Google Calendar API            │
 │ 6. Retrieve similar items   → MongoDB Vector Search          │
 │ 7. Generate styling advice  → Gemini 2.5 Pro (Universal Key) │
-│ 8. Synthesize voice reply   → Deepgram Aura-2 (WS streaming) │
+│ 8. Synthesize voice reply   → Piper Offline (on-device VITS) │
 └──────────────────────────────────────────────────────────────┘
         │
         ▼
@@ -113,7 +113,7 @@ Response:
 The stylist route supports two-phase delivery:
 
 1. **REST (/api/v1/stylist)** — returns a JSON envelope + `tts_audio_url` (Phase 1).
-2. **WebSocket (/api/v1/stylist/ws)** — streams: transcript chunks → text deltas from Gemini → raw MP3 bytes from Deepgram Aura-2 (Phase 2). This is how the agent speaks while it is still thinking.
+2. **WebSocket (/api/v1/stylist/ws)** — streams: transcript chunks → text deltas from Gemini → audio playback via Piper Offline on client (Phase 2).
 
 ### 4.2 Closet Service
 

@@ -877,7 +877,7 @@
     "bookmarkletBtn": "DressApp Assistent",
     "bookmarkletInstruction": "Verwendung: Ziehen Sie diese Schaltfläche in Ihre Lesezeichenleiste. Klicken Sie auf einer Produktseite darauf, um Größenempfehlungen zu erhalten.",
     "language": "Sprache",
-    "voice": "Stimme (Deepgram Aura-2)",
+    "voice": "Stimme (Piper Offline)",
     "saveChanges": "Änderungen speichern",
     "signOut": "Abmelden",
     "profileSaved": "Profil gespeichert",

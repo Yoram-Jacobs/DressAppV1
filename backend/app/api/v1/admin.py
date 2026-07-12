@@ -543,7 +543,6 @@ async def system_view(_: dict = Depends(require_admin)) -> dict[str, Any]:
             "EMERGENT_LLM_KEY": _has(settings.EMERGENT_LLM_KEY),
             "GEMINI_API_KEY": _has(settings.GEMINI_API_KEY),
             "GROQ_API_KEY": _has(settings.GROQ_API_KEY),
-            "DEEPGRAM_API_KEY": _has(settings.DEEPGRAM_API_KEY),
             "OPENWEATHER_API_KEY": _has(settings.OPENWEATHER_API_KEY),
             "GOOGLE_OAUTH_CLIENT_ID": _has(settings.GOOGLE_OAUTH_CLIENT_ID),
             "GOOGLE_OAUTH_CLIENT_SECRET": _has(settings.GOOGLE_OAUTH_CLIENT_SECRET),

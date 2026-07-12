@@ -97,7 +97,7 @@ class User(BaseDoc):
     avatar_url: str | None = None
     locale: str = "en-US"
     preferred_language: str = "en"
-    preferred_voice_id: str = "aura-2-thalia-en"
+    preferred_voice_id: str = "en_US-ryan-medium"
     home_location: dict[str, Any] | None = None
     style_profile: StyleProfile = Field(default_factory=StyleProfile)
     cultural_context: CulturalContext = Field(default_factory=CulturalContext)

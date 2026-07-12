@@ -36,7 +36,7 @@ from dotenv import load_dotenv  # noqa: E402
 load_dotenv(BACKEND / ".env")
 
 from app.services.calendar_service import calendar_service  # noqa: E402
-from app.services.deepgram_service import deepgram_service  # noqa: E402
+from app.services.tts_service import tts_service  # noqa: E402
 from app.services.fees import compute_fees  # noqa: E402
 from app.services.gemini_stylist import gemini_stylist_service  # noqa: E402
 from app.services.groq_service import groq_whisper_service  # noqa: E402
@@ -97,27 +97,26 @@ async def check_api_keys() -> None:
     section("1. Verifying API keys are configured")
     require(os.getenv("HF_TOKEN") is not None, "HF_TOKEN present")
     require(os.getenv("GROQ_API_KEY") is not None, "GROQ_API_KEY present")
-    require(os.getenv("DEEPGRAM_API_KEY") is not None, "DEEPGRAM_API_KEY present")
     require(os.getenv("OPENWEATHER_API_KEY") is not None, "OPENWEATHER_API_KEY present")
     require(os.getenv("EMERGENT_LLM_KEY") is not None, "EMERGENT_LLM_KEY present")
 
 
-async def test_deepgram_tts() -> bytes:
-    section("2. Deepgram Aura-2 REST TTS")
+async def test_gemini_tts() -> bytes:
+    section("2. Gemini Multimodal REST TTS")
     text = "Hello from DressApp. I'm your stylist agent and I'm ready to help."
-    audio = await deepgram_service.speak_to_bytes(text, voice="aura-2-thalia-en", encoding="mp3")
-    (ARTIFACTS / "02_deepgram_greeting.mp3").write_bytes(audio)
-    require(len(audio) > 2_000, f"Deepgram returned an MP3 ({len(audio)} bytes)")
+    audio = await tts_service.speak_to_bytes(text, voice="Aoede")
+    (ARTIFACTS / "02_gemini_greeting.mp3").write_bytes(audio)
+    require(len(audio) > 2_000, f"Gemini returned an MP3 ({len(audio)} bytes)")
     return audio
 
 
 async def test_groq_whisper() -> str:
     section("3. Groq Whisper-large-v3 transcription")
-    # Generate a known-content audio clip with Deepgram so we can verify ASR.
+    # Generate a known-content audio clip with Gemini so we can verify ASR.
     spoken = (
         "What should I wear to a client pitch tomorrow morning in the rain?"
     )
-    audio = await deepgram_service.speak_to_bytes(spoken, voice="aura-2-thalia-en", encoding="mp3")
+    audio = await tts_service.speak_to_bytes(spoken, voice="Aoede")
     (ARTIFACTS / "03_voice_input.mp3").write_bytes(audio)
     # Groq SDK call is synchronous \u2014 run in a thread.
     result = await asyncio.to_thread(
@@ -225,13 +224,13 @@ async def test_case_image_plus_text(image_bytes: bytes) -> dict[str, Any]:
 
 async def test_case_image_plus_voice(image_bytes: bytes) -> dict[str, Any]:
     section("8. FULL PIPELINE \u2014 image + VOICE (Whisper \u2192 Gemini \u2192 TTS)")
-    # Synthesize the user's voice via Deepgram (bootstraps Whisper input).
+    # Synthesize the user's voice via Gemini (bootstraps Whisper input).
     spoken = (
         "What should I wear to a casual brunch this Sunday? "
         "The weather is chilly and I want layered minimalist vibes."
     )
-    voice_audio = await deepgram_service.speak_to_bytes(
-        spoken, voice="aura-2-hermes-en", encoding="mp3"
+    voice_audio = await tts_service.speak_to_bytes(
+        spoken, voice="Aoede"
     )
     (ARTIFACTS / "08_user_voice_input.mp3").write_bytes(voice_audio)
 
@@ -310,7 +309,7 @@ async def main() -> None:
     image_bytes = await download_test_image()
 
     # Independent sanity checks (fail-fast per-provider)
-    await test_deepgram_tts()
+    await test_gemini_tts()
     transcript = await test_groq_whisper()
     print("   (Whisper transcript preserved for reference) \u2192", transcript[:80], "\u2026")
 
@@ -326,8 +325,8 @@ async def main() -> None:
     test_fee_math()
 
     section("PHASE 1 POC RESULTS")
-    print("   \u2705 ALL providers (HF SAM + Nano Banana + Groq + Deepgram + Gemini) are green.")
-    print(f"   all artifacts \u2192 {ARTIFACTS}")
+    print("   ✅ ALL providers (HF SAM + Nano Banana + Groq + Gemini) are green.")
+    print(f"   all artifacts → {ARTIFACTS}")
 
 
 if __name__ == "__main__":

@@ -36,7 +36,7 @@ PLATFORM_FEE_PERCENT = "7"
 PLATFORM_FEE_APPLIED_AFTER = "stripe_processing_fee"
 STRIPE_PROCESSING_FEE_PERCENT = "2.9"
 STRIPE_PROCESSING_FEE_FIXED_CENTS = "30"
-DEFAULT_TTS_MODEL = "aura-2-thalia-en"
+DEFAULT_TTS_MODEL = "en_US-ryan-medium"
 DEFAULT_STYLIST_MODEL = "gemini-2.5-pro"
 DEFAULT_SEGMENTATION_MODEL = "fal-ai/sam2/auto-segment"
 DEFAULT_INFILL_MODEL = "fal-ai/fast-sdxl/image-to-image"
@@ -47,7 +47,6 @@ WHISPER_MODEL = "whisper-large-v3"
 # ------------------------------------------------------------
 # wrangler secret put FAL_KEY
 # wrangler secret put GROQ_API_KEY
-# wrangler secret put DEEPGRAM_API_KEY
 # wrangler secret put OPENWEATHER_API_KEY
 # wrangler secret put GEMINI_API_KEY
 # wrangler secret put JWT_SECRET

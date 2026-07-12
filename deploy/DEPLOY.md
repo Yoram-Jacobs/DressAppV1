@@ -133,7 +133,7 @@ $EDITOR deploy/.env   # fill in the values
 | `PAYPAL_LIVE_CLIENT_ID` / `_SECRET` / `_WEBHOOK_ID` | From the PayPal developer dashboard (LIVE credentials) |
 | `PAYPAL_ENV` | `live` for production |
 | `GOOGLE_OAUTH_CLIENT_ID` / `_SECRET` | Google Cloud Console — the Web client whose **Authorized redirect URIs** include `https://YOUR_DOMAIN/api/v1/auth/google/callback` (and the `www` variant) |
-| `GROQ_API_KEY` / `DEEPGRAM_API_KEY` / `OPENWEATHER_API_KEY` | Respective provider dashboards |
+| `GROQ_API_KEY` / `OPENWEATHER_API_KEY` | Respective provider dashboards |
 
 > **Why `HF_TOKEN` isn't in this table.** DressApp does not
 > authenticate to HuggingFace at runtime. The SegFormer and CLIP
