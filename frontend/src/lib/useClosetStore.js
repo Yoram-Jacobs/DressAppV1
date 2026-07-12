@@ -96,10 +96,19 @@ export function useClosetStore({ prewarm = false } = {}) {
  * hook so it stays instantly in sync with the Closet page (and other
  * tabs) without re-rendering on unrelated store updates.
  */
-export function useClosetItems() {
-  return useSyncExternalStore(
+export function useClosetItems({ prewarm = false } = {}) {
+  const items = useSyncExternalStore(
     _subscribe,
     _getItemsSnapshot,
     _getItemsSnapshot, // SSR fallback
   );
+  
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!prewarm || !user) return;
+    closetStore.prewarm().catch(() => {});
+  }, [prewarm, user]);
+
+  return items;
 }

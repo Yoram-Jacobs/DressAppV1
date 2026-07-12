@@ -24,7 +24,7 @@ const DRESS_CODE_OPTIONS = ['all', 'casual', 'smart-casual', 'business', 'formal
 
 export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
   const { t, i18n } = useTranslation();
-  const rawItems = useClosetItems();
+  const rawItems = useClosetItems({ prewarm: true });
   const items = (rawItems || []).filter(Boolean);
 
   const [selectedStyle, setSelectedStyle] = useStoreState(shufflerUIStore, 'selectedStyle');
