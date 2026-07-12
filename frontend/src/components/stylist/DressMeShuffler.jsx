@@ -509,7 +509,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
             opts={{ align: 'center', loop: true, watchDrag: !isSpinning, dragFree: true }}
             className="w-full"
           >
-            <CarouselContent className="-ms-2">
+            <CarouselContent className="-ml-2">
               {hasItems ? (
                 duplicatedList.map((item, itemIdx) => {
                   const imageUrl = bestImageUrl(item);
@@ -518,7 +518,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
                   return (
                     <CarouselItem 
                       key={`${item.id}-${itemIdx}`} 
-                      className="ps-2 basis-1/3 flex items-center justify-center cursor-pointer"
+                      className="pl-2 basis-1/3 flex items-center justify-center cursor-pointer"
                       onClick={() => !isSpinning && handleItemClick(itemIdx, item)}
                     >
                       <div className={`relative h-20 w-20 rounded-xl overflow-hidden flex items-center justify-center border transition-all duration-300 select-none ${
@@ -550,7 +550,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
                   );
                 })
               ) : (
-                <CarouselItem className="ps-2 basis-full flex items-center justify-center">
+                <CarouselItem className="pl-2 basis-full flex items-center justify-center">
                   <div className="relative h-20 w-20 bg-secondary/30 rounded-xl overflow-hidden flex items-center justify-center border border-border/50 select-none">
                     <div className="text-center p-2 text-muted-foreground/60">
                       <ImageOff className="h-5 w-5 mx-auto mb-0.5 opacity-40" />
