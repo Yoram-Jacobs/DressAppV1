@@ -4,7 +4,7 @@ import { Sparkles, Save, ImageOff, ChevronLeft, ChevronRight, X, Globe, Calendar
 import { useStoreState } from '@/lib/createSimpleStore';
 import { shufflerUIStore } from '@/lib/shufflerUIStore';
 import ProgressiveImage from '@/components/ui/ProgressiveImage';
-import { useClosetStore } from '@/lib/useClosetStore';
+import { useClosetItems } from '@/lib/useClosetStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
@@ -24,8 +24,8 @@ const DRESS_CODE_OPTIONS = ['all', 'casual', 'smart-casual', 'business', 'formal
 
 export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
   const { t, i18n } = useTranslation();
-  const store = useClosetStore();
-  const items = (store.items || []).filter(Boolean);
+  const rawItems = useClosetItems();
+  const items = (rawItems || []).filter(Boolean);
 
   const [selectedStyle, setSelectedStyle] = useStoreState(shufflerUIStore, 'selectedStyle');
   const [tagInput, setTagInput] = useStoreState(shufflerUIStore, 'tagInput');
