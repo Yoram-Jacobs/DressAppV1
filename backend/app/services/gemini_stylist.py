@@ -29,7 +29,7 @@ markdown, no prose outside the JSON.
   "reasoning_summary": string,                 // 1-2 sentence plain-language rationale
   "outfit_recommendations": Array<{
     "name": string,                             // 3-6 words. Generates a highly descriptive, appealing, and creative style title (e.g., 'Casual Blue & White Summer Hangout', 'Classic Charcoal Streetwear', 'Sporty Emerald Workout') describing the vibe, season, and color combination. Avoid generic titles like 'The Look' or 'Outfit 1'.
-    "items": Array<{ "role": "top"|"bottom"|"outerwear"|"shoes"|"accessory"|"dress",
+    "items": Array<{ "role": "top"|"bottom"|"outerwear"|"shoes"|"accessory"|"dress"|"belt"|"headwear",
                      "description": string,
                      "closet_item_id": string | null }>,
     "why": string,                              // 2-4 sentences explaining the detailed styling choices, why they work, and how they match the target occasion.
@@ -45,6 +45,7 @@ Hard rules:
 • Never recommend items that contradict the weather (e.g. linen in 2°C rain).
 • Prefer items already in the user’s closet; suggest shopping only when a
   clearly missing staple would dramatically improve the outfit.
+• Actively integrate relevant accessories (such as belts, hats/headwear, bags, and sunglasses) from the user's closet into the outfit recommendations to complete and elevate the suggested looks.
 """
 
 

@@ -58,6 +58,7 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
       if (s === 'hat' || s === 'cap') s = 'headwear';
       if (s === 'accessories') s = 'accessory';
       if (s === 'footwear') s = 'shoes';
+      if (s === 'belt') s = 'belt';
 
       // Force hats/caps categorized as accessory to headwear slot
       const name = String(itemObj?.name || itemObj?.title || dbItem?.name || dbItem?.title || '').toLowerCase();
@@ -73,6 +74,12 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
                     name.includes('helmet');
       if (isHat && (s === 'accessory' || s === 'accessories')) {
         return 'headwear';
+      }
+
+      // Force belts categorized as accessory to belt slot
+      const isBelt = name.includes('belt');
+      if (isBelt) {
+        return 'belt';
       }
       return s;
     };
@@ -190,6 +197,9 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
             {renderGarment('bottom', 'Bottom', 'top-[42%] left-1/2 w-[72%] h-[48%] z-10', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width })}
           </>
         )}
+
+        {/* 3.5. Belt */}
+        {renderGarment('belt', 'Belt', 'top-[42%] left-1/2 w-[72%] h-[5%] z-21', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
 
         {/* 4. Outerwear (Jacket, Coat) - Layered on top of top/dress */}
         {renderGarment('outerwear', 'Outerwear', 'top-[16%] left-1/2 w-[85%] h-[45%] z-22 drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })}

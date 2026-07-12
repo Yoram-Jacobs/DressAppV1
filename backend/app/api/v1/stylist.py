@@ -134,7 +134,7 @@ async def stylist_endpoint(
     is_first_turn = (session.get("turns") or 0) == 0
 
     history = await recent_messages(session["id"], limit=4)
-    closet = await closet_summary_for(user["id"], limit=40)
+    closet = await closet_summary_for(user["id"], limit=1000)
 
     user_profile = {
         "preferred_language": (language or user.get("preferred_language") or "en").lower(),
