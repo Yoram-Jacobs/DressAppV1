@@ -506,7 +506,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
         <div className="w-full relative px-10">
           <Carousel
             setApi={setApi}
-            opts={{ align: 'center', loop: true, watchDrag: !isSpinning, dragFree: true, startIndex: focusIdx || 0 }}
+            opts={{ align: 'center', loop: true, watchDrag: !isSpinning, dragFree: true }}
             className="w-full"
           >
             <CarouselContent className="-ms-2">
