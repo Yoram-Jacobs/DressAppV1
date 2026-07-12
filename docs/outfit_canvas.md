@@ -57,3 +57,11 @@ This document summarizes the architectural and UI/UX improvements made to the ou
 - **Solution**:
   - Added a Pencil edit button to toggle inline editing inputs for the outfit name and description. Edits are persisted directly to the database via a PATCH request to the `/outfits/{id}` endpoint.
   - Cleaned up grid visuals by removing the redundant category badges (`Scheduled` / `Event`) from outfit thumbnail cards and details headers.
+
+## 9. Global Optimistic State Management (The `outfitStore`)
+- **Issue**: The Outfit Canvas originally relied on component-level state and manual `useEffect` network fetches on mount. This resulted in latency, flickering loading skeletons, and lost data during tab navigation, degrading the premium feel.
+- **Solution**: 
+  - Engineered a global, offline-first singleton store (`outfitStore.js`) synchronized directly with React using a bespoke `useOutfitStore` hook powered by React 18's `useSyncExternalStore`.
+  - Data is dual-layered, backing up immediately to `localStorage` for instant paint on reload and persisting heavy arrays to `IndexedDB`.
+  - **App Boot Pre-warming**: Outfits are now preemptively fetched via `outfitStore.prewarm()` during application bootstrap (`AppLayout.jsx`), guaranteeing instantaneous, zero-latency availability the moment a user switches to the Stylist tab.
+  - **Optimistic Mutations**: All outfit CRUD operations (`saveOutfit`, `updateSavedOutfit`, `deleteSavedOutfit`) instantly execute an `upsert()` or `remove()` on the local state for an immediate UI response, delegating the network request to run silently in the background. If a network failure occurs, the store triggers an `incrementalSync()` to gracefully rollback the optimistic update to the server's source of truth.

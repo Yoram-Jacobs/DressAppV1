@@ -129,3 +129,9 @@ The client uses the React 18/19 thread-safe `useSyncExternalStore` Hook to liste
 * The user can browse the marketplace feed offline.
 * Closet and listing drafts are preserved.
 * Changes are synchronized to MongoDB Atlas when the network connection is restored.
+
+### 4. Zero-Latency Transaction Ledger & Global Caching
+To ensure the Marketplace delivers an uninterrupted, liquid browsing experience devoid of loading skeletons, transaction data fetching has been migrated from isolated component lifecycles to unified, globally cached stores (`marketplaceStore.js`):
+* **The `transactionsStore`**: Built atop the `createCachedStore` primitive, this dedicated ledger store centralizes all `buy`, `sell`, and `all` transaction queries.
+* **Parallel Pre-warming**: During application initialization (`prewarmMarketplace`), the client dispatches parallel, non-blocking requests for the user's active buyer, seller, and unified transaction feeds.
+* **Declarative Subscriptions**: UI components like `InlineTransactions` and the standalone `Transactions.jsx` ledger abandon manual `useEffect` fetching. Instead, they subscribe declaratively via `useCachedList(transactionsStore, { role: ... })`, rendering instantly from the memory cache with zero latency.

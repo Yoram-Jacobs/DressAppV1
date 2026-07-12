@@ -1193,7 +1193,7 @@ export default function Stylist() {
       : txt;
     try {
       setSpeakingId(id);
-      await speak(spokenTxt, { lang: userLang });
+      await speak(spokenTxt, userLang);
     } catch (err) {
       console.debug('[Stylist] playLocalSpeech failed:', err?.message || err);
     } finally {
