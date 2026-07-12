@@ -14,14 +14,16 @@ export default function ProgressiveImage({
   alt,
   className,
   style,
-  objectFit = 'cover'
+  objectFit = 'cover',
+  forceVisible = false
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isInView, setIsInView] = useState(false);
+  const [isInView, setIsInView] = useState(forceVisible);
   const imgRef = useRef(null);
 
   // IntersectionObserver for pre-fetching
   useEffect(() => {
+    if (forceVisible) return;
     if (!imgRef.current) return;
     const observer = new IntersectionObserver(
       (entries) => {
@@ -48,7 +50,7 @@ export default function ProgressiveImage({
         alt={alt}
         className={className}
         style={{ objectFit, ...style }}
-        loading="lazy"
+        loading={forceVisible ? undefined : "lazy"}
       />
     );
   }

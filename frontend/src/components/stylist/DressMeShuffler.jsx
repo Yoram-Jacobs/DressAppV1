@@ -537,6 +537,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
                             originalSrc={imageUrl}
                             alt={item.name || label}
                             className="max-h-full max-w-full object-contain pointer-events-none p-1.5"
+                            forceVisible={true}
                           />
                         ) : (
                           <div className="text-center text-muted-foreground p-1">
