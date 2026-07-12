@@ -178,21 +178,7 @@ async def stylist_endpoint(
             from app.services.auth import decrypt_api_key
             api_key_resolved = decrypt_api_key(encrypted_key)
 
-    # Kick off title generation for brand-new sessions. We do it synchronously
-    # because it's a fast Gemini Flash call and we want the sidebar label
-    # populated by the time the response arrives. Failures are non-fatal.
-    if is_first_turn and text:
-        try:
-            title = await generate_session_title(
-                text,
-                language=user_profile["preferred_language"],
-                api_key=api_key_resolved
-            )
-            if title:
-                await update_session(session["id"], user["id"], title=title)
-                session["title"] = title
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("Title generation failed for %s: %s", session["id"], exc)
+
 
     # Phase S — render user preferences once (cheap, ~1ms) so we can
     # both inject them into the LLM prompt AND echo the applied keys.
@@ -295,6 +281,21 @@ async def stylist_endpoint(
         },
         latency_ms=advice.get("latency_ms") or {},
     )
+
+    # Generate session title if it doesn't have one and we have user text/transcript
+    final_text = (text or advice.get("transcript") or "").strip()
+    if not session.get("title") and final_text:
+        try:
+            title = await generate_session_title(
+                final_text,
+                language=user_profile["preferred_language"],
+                api_key=api_key_resolved
+            )
+            if title:
+                await update_session(session["id"], user["id"], title=title)
+                session["title"] = title
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Title generation failed for %s: %s", session["id"], exc)
 
     return {
         "session_id": session["id"],
@@ -460,6 +461,20 @@ async def compose_outfit_endpoint(
             context={},
             assistant_payload={"outfit_canvas": canvas},
         )
+        # Generate session title if it doesn't have one
+        if session and not session.get("title") and (text or "").strip():
+            try:
+                title = await generate_session_title(
+                    text.strip(),
+                    language=language,
+                    api_key=api_key_resolved
+                )
+                if title:
+                    await update_session(session["id"], user["id"], title=title)
+                    session["title"] = title
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Title generation failed for composer session %s: %s", session["id"], exc)
+
         canvas_session_id = session["id"]
     except Exception as exc:  # noqa: BLE001
         logger.warning("compose-outfit persistence skipped: %s", repr(exc)[:200])

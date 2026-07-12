@@ -2158,12 +2158,12 @@ export default function Stylist() {
         "grid grid-cols-1 gap-4 h-[calc(100dvh-112px)] md:h-[calc(100dvh-140px)] w-full max-w-full min-w-0 transition-all duration-300",
         (sidebarCollapsed || activeTab !== 'chat')
           ? "lg:grid-cols-[minmax(0,1fr)]"
-          : "lg:grid-cols-[200px_minmax(0,1fr)]"
+          : "lg:grid-cols-[280px_minmax(0,1fr)]"
       )}>
         <aside
           className={cn(
             "rounded-[calc(var(--radius)+6px)] bg-card border border-border overflow-hidden transition-all duration-300",
-            (sidebarCollapsed || activeTab !== 'chat') ? "hidden" : "hidden lg:flex w-[200px]"
+            (sidebarCollapsed || activeTab !== 'chat') ? "hidden" : "hidden lg:flex w-[280px]"
           )}
           data-testid="stylist-conversation-sidebar"
         >
