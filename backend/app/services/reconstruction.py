@@ -176,8 +176,7 @@ def _build_reconstruction_prompt(analysis: dict[str, Any]) -> str:
         f"{extras_str}. Studio lighting, plain off-white backdrop, "
         "garment-only product shot, centered composition, sharp focus, "
         "photorealistic, preserve fabric texture and pattern details, "
-        "no people, no human skin, no human legs, no body parts, no feet, no shoes, "
-        "no mannequin body, no text, no logos, no watermarks."
+        "no text, no logos, no watermarks."
     )
     return prompt[:1000]
 
