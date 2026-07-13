@@ -132,7 +132,7 @@ class GeminiImageService:
                     contents.append(
                         _genai_types.Part.from_bytes(
                             data=image_bytes,
-                            mime_type="image/jpeg",
+                            mime_type=_detect_mime_type(image_bytes),
                         )
                     )
                 with provider_activity.Track(
@@ -205,6 +205,8 @@ class GeminiImageService:
     def _build_edit_prompt(
         user_prompt: str, meta: dict[str, Any] | None
     ) -> str:
+        if "High-fidelity editorial product photograph" in user_prompt or "Studio lighting" in user_prompt:
+            return user_prompt[:1000]
         meta = meta or {}
         descriptor_bits: list[str] = []
         for key in ("color", "material", "pattern", "brand", "category", "title"):
@@ -221,6 +223,18 @@ class GeminiImageService:
             "no watermarks."
         )
         return composed[:1000]
+
+
+def _detect_mime_type(data: bytes) -> str:
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if data.startswith(b"\xff\xd8"):
+        return "image/jpeg"
+    if data.startswith(b"RIFF") and len(data) > 12 and data[8:12] == b"WEBP":
+        return "image/webp"
+    if data.startswith(b"GIF8"):
+        return "image/gif"
+    return "image/jpeg"  # default fallback
 
 
 # ----------------------------------------------------------------- helpers
