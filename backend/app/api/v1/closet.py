@@ -892,18 +892,8 @@ async def _run_background_matte_and_analyze(
                     try:
                         import io
                         from PIL import Image
-                        from app.services import background_matting
                         temp_raw = base64.b64decode(recon_b64)
-                        # Post-reconstruction matting: remove plain studio backdrop to yield transparent PNG
-                        try:
-                            matted_raw = await background_matting.remove_background(temp_raw)
-                            if matted_raw:
-                                temp_raw = matted_raw
-                        except Exception as mat_err:
-                            logger.warning("Rembg matting on auto-reconstructed image failed: %s", mat_err)
-                            
                         temp_img = Image.open(io.BytesIO(temp_raw))
-                        recon_b64 = base64.b64encode(temp_raw).decode("ascii")
                         mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/jpeg"
                     except Exception:
                         mime = recon_res.get("mime_type", "image/png")
@@ -1007,18 +997,8 @@ async def _run_background_reconstruction(
     try:
         import io
         from PIL import Image
-        from app.services import background_matting
         temp_raw = base64.b64decode(recon_b64)
-        # Post-reconstruction matting: remove plain studio backdrop to yield transparent PNG
-        try:
-            matted_raw = await background_matting.remove_background(temp_raw)
-            if matted_raw:
-                temp_raw = matted_raw
-        except Exception as mat_err:
-            logger.warning("Rembg matting on background-reconstructed image failed: %s", mat_err)
-            
         temp_img = Image.open(io.BytesIO(temp_raw))
-        recon_b64 = base64.b64encode(temp_raw).decode("ascii")
         mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/jpeg"
     except Exception:
         mime = result.get("mime_type", "image/png")
@@ -4722,22 +4702,12 @@ async def repair_item_image(
         }
 
     # Persist the reconstruction on the item.
-    # Post-reconstruction matting: remove plain studio backdrop to yield transparent PNG
     recon_b64 = out["image_b64"]
     try:
         import io
         from PIL import Image
-        from app.services import background_matting
         temp_raw = base64.b64decode(recon_b64)
-        try:
-            matted_raw = await background_matting.remove_background(temp_raw)
-            if matted_raw:
-                temp_raw = matted_raw
-        except Exception as mat_err:
-            logger.warning("Rembg matting on manually reconstructed image failed: %s", mat_err)
-            
         temp_img = Image.open(io.BytesIO(temp_raw))
-        recon_b64 = base64.b64encode(temp_raw).decode("ascii")
         mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/jpeg"
     except Exception:
         mime = out.get("mime_type", "image/png")
