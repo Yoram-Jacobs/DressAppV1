@@ -363,6 +363,45 @@ def _bytes_from_data_url(url: str | None) -> bytes | None:
         return None
 
 
+async def _read_image_bytes_from_url(url: str | None) -> bytes | None:
+    if not isinstance(url, str):
+        return None
+    if url.startswith("data:"):
+        return _bytes_from_data_url(url)
+    
+    # If it is a local upload path (starts with /static/uploads)
+    if url.startswith("/static/uploads/"):
+        relative_path = url[len("/static/uploads/"):]
+        import os
+        from app.services.upload_manager import BUCKET_DIR
+        import aiofiles
+        local_path = os.path.join(BUCKET_DIR, relative_path)
+        if os.path.exists(local_path):
+            try:
+                async with aiofiles.open(local_path, "rb") as f:
+                    return await f.read()
+            except Exception as e:
+                logger.error("Failed to read local uploaded file: %s", e)
+                
+    # Fallback: Download via httpx
+    import httpx
+    try:
+        # Resolve full URL if relative
+        full_url = url
+        if url.startswith("/"):
+            # On staging/production it is hosted at dressapp.co or localhost:8001
+            full_url = f"http://localhost:8001{url}"
+            
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(full_url)
+            if resp.status_code == 200:
+                return resp.content
+    except Exception as e:
+        logger.error("Failed to download image URL %s: %s", url, e)
+        
+    return None
+
+
 # Re-queue matte for items whose BackgroundTask never ran or died
 # mid-flight (process restart, OOM) — otherwise ``clean_image_status``
 # stays ``pending`` forever and the frontend poll never converges.
@@ -1052,6 +1091,8 @@ async def create_item(
     if payload.from_receipt:
         doc["from_receipt"] = True
         doc["receipt_locked_fields"] = list(payload.receipt_locked_fields or [])
+        # Default state to "new" for new receipt purchases
+        doc["state"] = "new"
 
     # Best-effort segmentation (non-blocking for POC latency): try once, soft-fail.
     # Phase O.6 — when the item came from the single-pass /analyze path,
@@ -4041,16 +4082,22 @@ async def clean_item_background(
             "reason": "lightweight_deploy_no_matting",
         }
 
-    crop_url = item.get("segmented_image_url") or item.get("original_image_url")
-    if not isinstance(crop_url, str) or not crop_url.startswith("data:"):
+    crop_url = (
+        item.get("segmented_image_url")
+        or item.get("original_image_url")
+        or (item.get("image_variants") or {}).get("original")
+        or (item.get("image_variants") or {}).get("webp", {}).get("large")
+    )
+    if not crop_url:
         raise HTTPException(
             400, "Item has no cropped image to matte. Re-analyze the item first."
         )
-    try:
-        _, _, b64_part = crop_url.partition(",")
-        crop_bytes = base64.b64decode(b64_part)
-    except Exception as exc:  # noqa: BLE001
-        raise HTTPException(400, "Stored crop is corrupted.") from exc
+    
+    crop_bytes = await _read_image_bytes_from_url(crop_url)
+    if not crop_bytes:
+        raise HTTPException(
+            400, "Failed to retrieve the item image for background matting."
+        )
 
     from app.services import clothing_parser as _cp
 
@@ -6092,6 +6139,7 @@ async def parse_receipt(
     5. colors: A list of primary colors of the garment (e.g., ["black"], ["blue", "white"]). Use lowercase simple color names.
     6. category: The wardrobe category. Must be exactly one of: "Top", "Bottom", "Outerwear", "Full Body", "Footwear", "Underwear", "Accessories".
     7. name: A friendly descriptive name for the garment combining brand and description (e.g., "Wosawe Wind Jacket Lightweight").
+    8. gender: The target gender of the garment. Must be exactly one of: "men", "women", "unisex", "kids". If the receipt mentions gender (e.g. "Men's", "Women's", "unisex"), use that. Otherwise, infer from item characteristics or use "unisex" as fallback.
 
     If multiple items are found in the receipt, return details for the FIRST garment item found.
     Return ONLY a valid JSON object matching this schema. Do not include markdown code fences or other text.
@@ -6207,7 +6255,7 @@ async def parse_receipt(
             final_data.update(visual_result["visual_analysis"])
             
         # Override with authoritative OCR fields
-        for field in ["brand", "size", "price_cents", "category", "item_type"]:
+        for field in ["brand", "size", "price_cents", "category", "item_type", "gender"]:
             if field in ocr_result and ocr_result[field] not in [None, "", "null"]:
                 final_data[field] = ocr_result[field]
                 
@@ -6218,14 +6266,37 @@ async def parse_receipt(
         elif "title" in final_data:
             final_data["name"] = final_data["title"]
             
-        # Merge colors
+        # Merge colors and distribute percentages evenly to total 100%
         if "colors" in ocr_result and ocr_result["colors"]:
-            final_colors = []
+            raw_colors = []
             for col in ocr_result["colors"]:
                 if isinstance(col, str):
-                    final_colors.append({"name": col, "pct": None})
+                    raw_colors.append({"name": col, "pct": None})
                 elif isinstance(col, dict) and "name" in col:
-                    final_colors.append(col)
+                    raw_colors.append({"name": col["name"], "pct": col.get("pct")})
+            
+            has_pct = [c for c in raw_colors if c["pct"] is not None]
+            total_known = sum(c["pct"] for c in has_pct)
+            
+            if len(has_pct) == len(raw_colors):
+                final_colors = raw_colors
+            else:
+                remaining = max(0, 100 - total_known)
+                null_count = len(raw_colors) - len(has_pct)
+                share = remaining // null_count
+                distributed = 0
+                
+                final_colors = []
+                null_seen = 0
+                for c in raw_colors:
+                    if c["pct"] is not None:
+                        final_colors.append(c)
+                    else:
+                        null_seen += 1
+                        val = (remaining - distributed) if null_seen == null_count else share
+                        distributed += val
+                        final_colors.append({"name": c["name"], "pct": val})
+            
             if final_colors:
                 final_data["colors"] = final_colors
                 
@@ -6238,6 +6309,8 @@ async def parse_receipt(
             final_data["size"] = "M"
         if not final_data.get("category"):
             final_data["category"] = "Top"
+        if not final_data.get("gender"):
+            final_data["gender"] = "unisex"
         if not final_data.get("name"):
             brand_val = final_data.get("brand") or "Generic"
             type_val = final_data.get("item_type") or "garment"

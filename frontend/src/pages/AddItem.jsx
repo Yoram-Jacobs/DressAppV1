@@ -821,14 +821,38 @@ export default function AddItem() {
       const priceCents = res.price_cents || 0;
       const category = res.category || 'Top';
       const name = res.name || `${brand} ${item_type}`;
+      const gender = res.gender || 'unisex';
       
-      const colors = res.colors && res.colors.length
-        ? res.colors.map(c => {
-            if (typeof c === 'string') return { name: c, pct: null };
-            if (c && typeof c === 'object' && c.name) return { name: c.name, pct: c.pct ?? null };
-            return { name: 'grey', pct: null };
-          })
-        : [{ name: 'grey', pct: null }];
+      let colors = [];
+      if (res.colors && res.colors.length) {
+        const rawColors = res.colors.map(c => {
+          if (typeof c === 'string') return { name: c, pct: null };
+          if (c && typeof c === 'object' && c.name) return { name: c.name, pct: c.pct ?? null };
+          return { name: 'grey', pct: null };
+        });
+        
+        const hasPctCount = rawColors.filter(c => c.pct !== null).length;
+        const totalKnownPct = rawColors.reduce((sum, c) => sum + (c.pct || 0), 0);
+        
+        if (hasPctCount === rawColors.length) {
+          colors = rawColors;
+        } else {
+          const remainingPct = Math.max(0, 100 - totalKnownPct);
+          const nullCount = rawColors.length - hasPctCount;
+          const share = Math.floor(remainingPct / nullCount);
+          let distributed = 0;
+          
+          colors = rawColors.map((c, idx) => {
+            if (c.pct !== null) return c;
+            const isLastNull = rawColors.slice(idx + 1).every(rc => rc.pct !== null);
+            const val = isLastNull ? (remainingPct - distributed) : share;
+            distributed += val;
+            return { name: c.name, pct: val };
+          });
+        }
+      } else {
+        colors = [{ name: 'grey', pct: 100 }];
+      }
         
       let base64Preview = null;
       if (res.image_base64) {
@@ -875,6 +899,8 @@ export default function AddItem() {
         category ? 'category' : null,
         (colors && colors.length) ? 'colors' : null,
         (colors && colors.length) ? 'color' : null,
+        gender ? 'gender' : null,
+        'state',
       ].filter(Boolean);
 
       const payload = {
@@ -886,6 +912,8 @@ export default function AddItem() {
         purchase_price_cents: priceCents || 0,
         color: colors?.[0]?.name || 'grey',
         colors: colors,
+        gender: gender,
+        state: 'new',
         purchase_date: new Date().toISOString().split('T')[0],
         image_base64: hasImage ? base64Preview.split(',')[1] : undefined,
         image_mime: hasImage ? (base64Preview.split(';')[0].split(':')[1] || 'image/jpeg') : undefined,
