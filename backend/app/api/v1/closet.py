@@ -322,7 +322,7 @@ def _pick_segformer_mask_for_category(
     non-array masks, etc.) and ignores them silently.
     """
     if not garments:
-        return None
+        return None, None
     target_kind = (
         _CATEGORY_TO_SEGFORMER_KIND.get((category or "").strip().lower())
         if category
@@ -4249,8 +4249,9 @@ async def clean_item_background(
     intersection_applied = False
     if settings.USE_LOCAL_CLOTHING_PARSER:
         seg_mask = None
+        human_mask = None
         try:
-            seg_mask = _pick_segformer_mask_for_category(
+            seg_mask, human_mask = _pick_segformer_mask_for_category(
                 garments, item.get("category")
             )
             if seg_mask is None and garments:
@@ -4271,12 +4272,8 @@ async def clean_item_background(
                 maybe_refined = _cp.apply_alpha_intersection(
                     result["image_png"],
                     seg_mask,
-                    # Patch 12i — per-category dilation budget.
-                    # ``item.get("category")`` is the same value
-                    # SegFormer was asked to match (Top / Bottom /
-                    # Outerwear / etc.), so it routes to the right
-                    # table entry.
                     category=item.get("category"),
+                    human_mask=human_mask,
                 )
                 if maybe_refined:
                     logger.info(
