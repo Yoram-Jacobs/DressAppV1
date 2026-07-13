@@ -832,13 +832,13 @@ export default function AddItem() {
         : [{ name: 'grey', pct: null }];
         
       let base64Preview = null;
-      if (file && isImage) {
+      if (res.image_base64) {
+        base64Preview = `data:${res.image_mime || 'image/jpeg'};base64,${res.image_base64}`;
+      } else if (file && isImage) {
         try {
           const b64 = await fileToBase64(file);
           base64Preview = `data:image/jpeg;base64,${b64}`;
         } catch (_) {}
-      } else if (res.image_base64) {
-        base64Preview = `data:${res.image_mime || 'image/jpeg'};base64,${res.image_base64}`;
       } else {
         const svgColor = (colors && colors[0] && colors[0].name) || 'hsl(var(--accent))';
         const svgIcon = `
@@ -1017,7 +1017,7 @@ export default function AddItem() {
               : [{ name: 'grey', pct: null }],
             purchase_date: new Date().toISOString().split('T')[0],
             image_base64: hasImage ? item.base64Image.split(',')[1] : undefined,
-            image_mime: hasImage ? 'image/jpeg' : undefined,
+            image_mime: hasImage ? (item.base64Image.split(';')[0].split(':')[1] || 'image/jpeg') : undefined,
             from_receipt: true,
             receipt_locked_fields: receiptLockedFields,
           };

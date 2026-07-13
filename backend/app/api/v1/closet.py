@@ -6143,6 +6143,17 @@ async def parse_receipt(
                 return None
             
             _, crop_bytes, crop_mime = raw_crops[0]
+            
+            # Apply background remover (rembg) to the cropped item image
+            from app.services import background_matting
+            try:
+                bg_res = await background_matting.remove_background(crop_bytes)
+                if bg_res and bg_res.get("image_png"):
+                    crop_bytes = bg_res["image_png"]
+                    crop_mime = "image/png"
+            except Exception as bg_err:
+                logger.warning("Background removal failed on receipt visual crop: %s", bg_err)
+
             user_lang = user.get("preferred_language") or "en"
             analysis_raw = await garment_vision_service.analyze(
                 crop_bytes,
