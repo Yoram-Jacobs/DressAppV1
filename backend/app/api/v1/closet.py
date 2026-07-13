@@ -363,14 +363,47 @@ def _bytes_from_data_url(url: str | None) -> bytes | None:
         return None
 
 
+def _ensure_min_resolution(image_bytes: bytes, min_dim: int = 512) -> bytes:
+    if not image_bytes:
+        return image_bytes
+    try:
+        import io
+        from PIL import Image
+        img = Image.open(io.BytesIO(image_bytes))
+        w, h = img.size
+        if w >= min_dim and h >= min_dim:
+            return image_bytes
+            
+        # Scale keeping aspect ratio using high-quality BICUBIC resampling
+        if w < h:
+            new_w = min_dim
+            new_h = int(h * (min_dim / w))
+        else:
+            new_h = min_dim
+            new_w = int(w * (min_dim / h))
+            
+        img_resized = img.resize((new_w, new_h), Image.Resampling.BICUBIC)
+        
+        # Save back to bytes in original format or JPEG/PNG
+        out_buf = io.BytesIO()
+        fmt = img.format or "JPEG"
+        img_resized.save(out_buf, format=fmt)
+        return out_buf.getvalue()
+    except Exception as e:
+        logger.warning("Failed to upscale low-resolution image: %s", e)
+        return image_bytes
+
+
 async def _read_image_bytes_from_url(url: str | None) -> bytes | None:
     if not isinstance(url, str):
         return None
+    
+    result_bytes = None
     if url.startswith("data:"):
-        return _bytes_from_data_url(url)
+        result_bytes = _bytes_from_data_url(url)
     
     # If it is a local upload path
-    if "/static/uploads/" in url:
+    elif "/static/uploads/" in url:
         idx = url.find("/static/uploads/")
         relative_path = url[idx + len("/static/uploads/"):]
         import os
@@ -380,26 +413,29 @@ async def _read_image_bytes_from_url(url: str | None) -> bytes | None:
         if os.path.exists(local_path):
             try:
                 async with aiofiles.open(local_path, "rb") as f:
-                    return await f.read()
+                    result_bytes = await f.read()
             except Exception as e:
                 logger.error("Failed to read local uploaded file: %s", e)
                 
     # Fallback: Download via httpx
-    import httpx
-    try:
-        # Resolve full URL if relative
-        full_url = url
-        if url.startswith("/"):
-            # On staging/production it is hosted at dressapp.co or localhost:8001
-            full_url = f"http://localhost:8001{url}"
-            
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(full_url)
-            if resp.status_code == 200:
-                return resp.content
-    except Exception as e:
-        logger.error("Failed to download image URL %s: %s", url, e)
+    if not result_bytes:
+        import httpx
+        try:
+            # Resolve full URL if relative
+            full_url = url
+            if url.startswith("/"):
+                # On staging/production it is hosted at dressapp.co or localhost:8001
+                full_url = f"http://localhost:8001{url}"
+                
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.get(full_url)
+                if resp.status_code == 200:
+                    result_bytes = resp.content
+        except Exception as e:
+            logger.error("Failed to download image URL %s: %s", url, e)
         
+    if result_bytes:
+        return _ensure_min_resolution(result_bytes)
     return None
 
 
@@ -695,6 +731,8 @@ async def _run_background_matte_and_analyze(
     category: str | None,
     receipt_locked_fields: list[str],
 ) -> None:
+    # Ensure minimum resolution for receipt-imported low-resolution raw bytes
+    raw_bytes = _ensure_min_resolution(raw_bytes)
     """Phase R (July 2026) — Full GarmentVision pipeline for receipt imports.
 
     Chains :func:`_run_background_matte` with a Gemini VLM analysis pass
@@ -854,8 +892,18 @@ async def _run_background_matte_and_analyze(
                     try:
                         import io
                         from PIL import Image
+                        from app.services import background_matting
                         temp_raw = base64.b64decode(recon_b64)
+                        # Post-reconstruction matting: remove plain studio backdrop to yield transparent PNG
+                        try:
+                            matted_raw = await background_matting.remove_background(temp_raw)
+                            if matted_raw:
+                                temp_raw = matted_raw
+                        except Exception as mat_err:
+                            logger.warning("Rembg matting on auto-reconstructed image failed: %s", mat_err)
+                            
                         temp_img = Image.open(io.BytesIO(temp_raw))
+                        recon_b64 = base64.b64encode(temp_raw).decode("ascii")
                         mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/jpeg"
                     except Exception:
                         mime = recon_res.get("mime_type", "image/png")
@@ -959,8 +1007,18 @@ async def _run_background_reconstruction(
     try:
         import io
         from PIL import Image
+        from app.services import background_matting
         temp_raw = base64.b64decode(recon_b64)
+        # Post-reconstruction matting: remove plain studio backdrop to yield transparent PNG
+        try:
+            matted_raw = await background_matting.remove_background(temp_raw)
+            if matted_raw:
+                temp_raw = matted_raw
+        except Exception as mat_err:
+            logger.warning("Rembg matting on background-reconstructed image failed: %s", mat_err)
+            
         temp_img = Image.open(io.BytesIO(temp_raw))
+        recon_b64 = base64.b64encode(temp_raw).decode("ascii")
         mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/jpeg"
     except Exception:
         mime = result.get("mime_type", "image/png")
@@ -4664,8 +4722,27 @@ async def repair_item_image(
         }
 
     # Persist the reconstruction on the item.
-    mime = out.get("mime_type", "image/png")
-    data_url = f"data:{mime};base64,{out['image_b64']}"
+    # Post-reconstruction matting: remove plain studio backdrop to yield transparent PNG
+    recon_b64 = out["image_b64"]
+    try:
+        import io
+        from PIL import Image
+        from app.services import background_matting
+        temp_raw = base64.b64decode(recon_b64)
+        try:
+            matted_raw = await background_matting.remove_background(temp_raw)
+            if matted_raw:
+                temp_raw = matted_raw
+        except Exception as mat_err:
+            logger.warning("Rembg matting on manually reconstructed image failed: %s", mat_err)
+            
+        temp_img = Image.open(io.BytesIO(temp_raw))
+        recon_b64 = base64.b64encode(temp_raw).decode("ascii")
+        mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/jpeg"
+    except Exception:
+        mime = out.get("mime_type", "image/png")
+        
+    data_url = f"data:{mime};base64,{recon_b64}"
     meta: dict[str, Any] = {
         "reasons": out.get("reasons", []),
         "prompt": out.get("prompt"),
