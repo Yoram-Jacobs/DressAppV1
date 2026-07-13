@@ -4587,6 +4587,7 @@ async def reanalyze_item(
 async def repair_item_image(
     item_id: str,
     payload: RepairItemIn,
+    preview: bool = False,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Rebuild a clean product-grade image for an existing closet item.
