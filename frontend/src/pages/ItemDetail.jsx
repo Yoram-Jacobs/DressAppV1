@@ -1250,7 +1250,7 @@ export default function ItemDetail() {
   // Hidden once the item carries a ``reconstructed_image_url`` so we
   // don't repeatedly nudge for a feature the user already used.
   const showRepairPhotoCta =
-    !!mergedItem.reconstruction_advised && !mergedItem.reconstructed_image_url;
+    (!!mergedItem.reconstruction_advised || !!mergedItem.from_receipt) && !mergedItem.reconstructed_image_url;
   const reconstructionReasons =
     (mergedItem.reconstruction_metadata && mergedItem.reconstruction_metadata.reasons) || [];
 

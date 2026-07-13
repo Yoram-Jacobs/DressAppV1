@@ -823,6 +823,67 @@ async def _run_background_matte_and_analyze(
             item_id,
         )
 
+    # Step 4: Run Nano Banana reconstruction if enabled.
+    # Since receipt crops often contain models or complex store backgrounds,
+    # we always attempt reconstruction to produce a clean, studio-grade product cutout.
+    if settings.ENABLE_RECONSTRUCTION:
+        # Fetch the updated item doc to have the latest merged analysis
+        item_doc = await repos.find_one(db.closet_items, {"id": item_id})
+        if item_doc:
+            analysis_for_recon = {
+                "title": item_doc.get("title"),
+                "category": item_doc.get("category"),
+                "sub_category": item_doc.get("sub_category"),
+                "item_type": item_doc.get("item_type"),
+                "color": item_doc.get("color"),
+                "material": item_doc.get("material"),
+                "pattern": item_doc.get("pattern"),
+                "brand": item_doc.get("brand"),
+                "dress_code": item_doc.get("dress_code"),
+            }
+            try:
+                from app.services.reconstruction import reconstruct
+                recon_res = await reconstruct(
+                    raw_bytes, 
+                    analysis_for_recon, 
+                    reasons=["receipt_auto_reconstruction"]
+                )
+                if recon_res and recon_res.get("image_b64"):
+                    recon_b64 = compress_b64_image(recon_res['image_b64'], max_dim=1024, quality=75)
+                    try:
+                        import io
+                        from PIL import Image
+                        temp_raw = base64.b64decode(recon_b64)
+                        temp_img = Image.open(io.BytesIO(temp_raw))
+                        mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/jpeg"
+                    except Exception:
+                        mime = recon_res.get("mime_type", "image/png")
+                    data_url = f"data:{mime};base64,{recon_b64}"
+                    
+                    meta = {
+                        "method": "reconstruction",
+                        "model": recon_res.get("model"),
+                        "prompt": recon_res.get("prompt"),
+                        "reasons": ["receipt_auto_reconstruction"],
+                        "deferred": True,
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    }
+                    
+                    await db.closet_items.update_one(
+                        {"id": item_id},
+                        {
+                            "$set": {
+                                "reconstructed_image_url": data_url,
+                                "reconstruction_metadata": meta,
+                                "updated_at": datetime.now(timezone.utc).isoformat(),
+                                "thumbnail_data_url": None,
+                            }
+                        }
+                    )
+                    logger.info("Receipt auto-reconstruction SUCCESS for item %s", item_id)
+            except Exception as recon_err:
+                logger.warning("Receipt auto-reconstruction FAILED for item %s: %s", item_id, recon_err)
+
 
 async def _run_background_reconstruction(
     item_id: str,
@@ -4570,14 +4631,13 @@ async def repair_item_image(
     # Use the segmented image as the visual conditioning when present so
     # HF has SOME pixels to look at; otherwise we still fall back to the
     # original crop or an empty byte string (text-to-image path).
-    crop_url = item.get("segmented_image_url") or item.get("original_image_url")
-    crop_bytes: bytes = b""
-    if isinstance(crop_url, str) and crop_url.startswith("data:"):
-        try:
-            _, _, b64_part = crop_url.partition(",")
-            crop_bytes = base64.b64decode(b64_part)
-        except Exception:  # noqa: BLE001
-            crop_bytes = b""
+    crop_url = (
+        item.get("segmented_image_url")
+        or item.get("original_image_url")
+        or (item.get("image_variants") or {}).get("original")
+        or (item.get("image_variants") or {}).get("webp", {}).get("large")
+    )
+    crop_bytes = await _read_image_bytes_from_url(crop_url) if crop_url else b""
 
     from app.services.billing_service import deduct_user_credits
     await deduct_user_credits(db, user, cost=1)
