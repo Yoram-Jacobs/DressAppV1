@@ -326,7 +326,7 @@ export default function AddItem() {
   const [importMode, setImportMode] = useState('text'); // 'text' | 'file' | 'url'
   const [importFile, setImportFile] = useState(null);
   const [importUrl, setImportUrl] = useState('');
-  const [selectors, setSelectors] = useState([{ id: 1, x: 0, y: 10, w: 100, h: 2 }]);
+  const [selectors, setSelectors] = useState([]);
   const [dragState, setDragState] = useState(null);
   const [extractedItems, setExtractedItems] = useState([]);
   const [linkingItemId, setLinkingItemId] = useState(null);
@@ -490,10 +490,6 @@ export default function AddItem() {
     const isImage = file.type.startsWith('image/');
     const isPdf = file.type === 'application/pdf';
     
-    // PDFs need upfront text extraction (Gemini OCR / pypdf) because the
-    // canvas crop-to-region technique only works on images. Images skip
-    // this step entirely — OCR runs per-selector inside handleExtractReceipt
-    // when the user clicks "Extract Items", saving both time and API credits.
     if (isPdf) {
       setIsExtracting(true);
       const loadingId = toast.loading(t('addItem.import.extractingText', { defaultValue: 'Extracting text using Gemini OCR...' }));
@@ -504,6 +500,7 @@ export default function AddItem() {
         if (res.text) {
           setReceiptText(res.text);
           toast.success(t('addItem.import.textExtracted', { defaultValue: 'Text extracted successfully via Gemini OCR!' }), { id: loadingId });
+          await handleExtractReceipt(file, res.text);
         } else {
           toast.error(t('addItem.import.textEmpty', { defaultValue: 'No readable text found.' }), { id: loadingId });
         }
@@ -516,13 +513,11 @@ export default function AddItem() {
       return;
     }
 
-    // Images: just show the preview and let the selector overlay work.
-    // The per-selector crop is sent to parse-receipt when Extract Items runs.
     if (isImage) {
+      handleExtractReceipt(file);
       return;
     }
 
-    
     // Check if it is a text-based format
     const isText = file.type.startsWith('text/') || 
                    file.name.endsWith('.txt') || 
@@ -535,8 +530,10 @@ export default function AddItem() {
                    
     if (isText) {
       const reader = new FileReader();
-      reader.onload = (evt) => {
-        setReceiptText(evt.target?.result || '');
+      reader.onload = async (evt) => {
+        const text = evt.target?.result || '';
+        setReceiptText(text);
+        await handleExtractReceipt(file, text);
       };
       reader.readAsText(file);
     }
@@ -796,99 +793,87 @@ export default function AddItem() {
     setSelectors(prev => prev.filter(s => s.id !== id));
   };
 
-  const handleExtractReceipt = async () => {
+  const handleExtractReceipt = async (fileToUse = null, textToUse = null) => {
     setIsExtracting(true);
     const loadingId = toast.loading(t('addItem.import.extracting', { defaultValue: 'Extracting items...' }));
     
     try {
       const results = [];
-      const isImage = importFile && importFile.type.startsWith('image/');
+      const file = fileToUse !== null ? fileToUse : importFile;
+      const textVal = textToUse !== null ? textToUse : receiptText;
+      const isImage = file && file.type.startsWith('image/');
       
-      for (let i = 0; i < selectors.length; i++) {
-        const sel = selectors[i];
-        const formData = new FormData();
-        let croppedFile = null;
-        
-        if (isImage) {
-          try {
-            croppedFile = await cropImageFile(importFile, sel);
-            formData.append('file', croppedFile);
-          } catch (cropErr) {
-            console.error('Cropping failed for selector', sel.id, cropErr);
-            formData.append('file', importFile);
-          }
-        } else if (importFile) {
-          const textToParse = receiptText || '';
-          const croppedText = cropText(textToParse, sel);
-          formData.append('text', croppedText);
-        } else if (importMode === 'text') {
-          const croppedText = cropText(receiptText, sel);
-          formData.append('text', croppedText);
-        } else if (importMode === 'url') {
-          formData.append('url', importUrl);
-        }
-        
-        const res = await api.parseReceipt(formData);
-        
-        const brand = res.brand || 'Generic';
-        const item_type = res.item_type || 'Garment';
-        const size = res.size || 'M';
-        const priceCents = res.price_cents || 0;
-        const category = res.category || 'Top';
-        const name = res.name || `${brand} ${item_type}`;
-        
-        const colors = res.colors && res.colors.length
-          ? res.colors.map(c => {
-              if (typeof c === 'string') return { name: c, pct: null };
-              if (c && typeof c === 'object' && c.name) return { name: c.name, pct: c.pct ?? null };
-              return { name: 'grey', pct: null };
-            })
-          : [{ name: 'grey', pct: null }];
-          
-        let base64Preview = null;
-        if (croppedFile) {
-          try {
-            const b64 = await fileToBase64(croppedFile);
-            base64Preview = `data:image/jpeg;base64,${b64}`;
-          } catch (_) {}
-        } else if (res.image_base64) {
-          base64Preview = `data:${res.image_mime || 'image/jpeg'};base64,${res.image_base64}`;
-        } else {
-          const svgColor = (colors && colors[0] && colors[0].name) || 'hsl(var(--accent))';
-          const svgIcon = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
-              <defs>
-                <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style="stop-color:hsl(200, 30%, 20%);stop-opacity:1" />
-                  <stop offset="100%" style="stop-color:hsl(200, 30%, 10%);stop-opacity:1" />
-                </linearGradient>
-              </defs>
-              <rect width="100" height="100" rx="10" fill="url(#grad)" />
-              <circle cx="50" cy="50" r="30" fill="none" stroke="${svgColor}" stroke-width="2" stroke-dasharray="4 2" opacity="0.3" />
-              <path d="M35 30 L50 20 L65 30 L65 45 L50 40 L35 45 Z" fill="none" stroke="${svgColor}" stroke-width="3" stroke-linejoin="round" />
-              <path d="M50 20 L50 40" fill="none" stroke="${svgColor}" stroke-width="2" opacity="0.5" />
-              <text x="50" y="75" font-family="system-ui, sans-serif" font-size="8" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="1">${brand.toUpperCase()}</text>
-              <text x="50" y="85" font-family="system-ui, sans-serif" font-size="6" fill="hsl(var(--muted-foreground))" text-anchor="middle">${item_type.toUpperCase()}</text>
-            </svg>
-          `;
-          const base64Svg = btoa(unescape(encodeURIComponent(svgIcon.trim())));
-          base64Preview = `data:image/svg+xml;base64,${base64Svg}`;
-        }
-        
-        results.push({
-          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          name,
-          brand,
-          category,
-          price_cents: priceCents,
-          size,
-          colors,
-          item_type: item_type.toLowerCase(),
-          base64Image: base64Preview,
-          closetItem: null,
-          selected: true
-        });
+      const formData = new FormData();
+      if (isImage) {
+        formData.append('file', file);
+      } else if (file) {
+        formData.append('text', textVal || '');
+      } else if (importMode === 'text') {
+        formData.append('text', textVal || '');
+      } else if (importMode === 'url') {
+        formData.append('url', importUrl);
       }
+      
+      const res = await api.parseReceipt(formData);
+      
+      const brand = res.brand || 'Generic';
+      const item_type = res.item_type || 'Garment';
+      const size = res.size || 'M';
+      const priceCents = res.price_cents || 0;
+      const category = res.category || 'Top';
+      const name = res.name || `${brand} ${item_type}`;
+      
+      const colors = res.colors && res.colors.length
+        ? res.colors.map(c => {
+            if (typeof c === 'string') return { name: c, pct: null };
+            if (c && typeof c === 'object' && c.name) return { name: c.name, pct: c.pct ?? null };
+            return { name: 'grey', pct: null };
+          })
+        : [{ name: 'grey', pct: null }];
+        
+      let base64Preview = null;
+      if (file && isImage) {
+        try {
+          const b64 = await fileToBase64(file);
+          base64Preview = `data:image/jpeg;base64,${b64}`;
+        } catch (_) {}
+      } else if (res.image_base64) {
+        base64Preview = `data:${res.image_mime || 'image/jpeg'};base64,${res.image_base64}`;
+      } else {
+        const svgColor = (colors && colors[0] && colors[0].name) || 'hsl(var(--accent))';
+        const svgIcon = `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+            <defs>
+              <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:hsl(200, 30%, 20%);stop-opacity:1" />
+                <stop offset="100%" style="stop-color:hsl(200, 30%, 10%);stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <rect width="100" height="100" rx="10" fill="url(#grad)" />
+            <circle cx="50" cy="50" r="30" fill="none" stroke="${svgColor}" stroke-width="2" stroke-dasharray="4 2" opacity="0.3" />
+            <path d="M35 30 L50 20 L65 30 L65 45 L50 40 L35 45 Z" fill="none" stroke="${svgColor}" stroke-width="3" stroke-linejoin="round" />
+            <path d="M50 20 L50 40" fill="none" stroke="${svgColor}" stroke-width="2" opacity="0.5" />
+            <text x="50" y="75" font-family="system-ui, sans-serif" font-size="8" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="1">${brand.toUpperCase()}</text>
+            <text x="50" y="85" font-family="system-ui, sans-serif" font-size="6" fill="hsl(var(--muted-foreground))" text-anchor="middle">${item_type.toUpperCase()}</text>
+          </svg>
+        `;
+        const base64Svg = btoa(unescape(encodeURIComponent(svgIcon.trim())));
+        base64Preview = `data:image/svg+xml;base64,${base64Svg}`;
+      }
+      
+      results.push({
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        name,
+        brand,
+        category,
+        price_cents: priceCents,
+        size,
+        colors,
+        item_type: item_type.toLowerCase(),
+        base64Image: base64Preview,
+        closetItem: null,
+        selected: true
+      });
       
       setExtractedItems(prev => [...prev, ...results]);
       toast.dismiss(loadingId);
@@ -2710,7 +2695,7 @@ export default function AddItem() {
                   <div className="text-sm font-semibold mb-3 flex items-center justify-between w-full border-b border-border/40 pb-3">
                     <span className="flex items-center gap-1.5">
                       <FileText className="h-4 w-4 text-[hsl(var(--accent))]" />
-                      {t('addItem.import.previewTitle', { defaultValue: 'Receipt Region Selector' })}
+                      {t('addItem.import.previewTitle', { defaultValue: 'Receipt Preview' })}
                     </span>
                     <div className="flex items-center gap-2">
                       <Button
@@ -2755,89 +2740,38 @@ export default function AddItem() {
                           />
                         </object>
                       ) : null}
-                    
-                    {/* Draggable Selectors Overlay */}
-                    <div className="absolute inset-0 z-10">
-                      {selectors.map((sel, idx) => (
-                        <div
-                          key={sel.id}
-                          style={{
-                            left: `${sel.x}%`,
-                            top: `${sel.y}%`,
-                            width: `${sel.w}%`,
-                            height: `${sel.h}%`,
-                          }}
-                          className="absolute border-2 border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/10 flex flex-col justify-between p-1 cursor-move select-none"
-                          onMouseDown={(e) => handleSelectorMouseDown(e, sel.id, 'move')}
-                          onTouchStart={(e) => handleSelectorTouchStart(e, sel.id, 'move')}
-                        >
-                          <div className="flex justify-between items-start pointer-events-auto">
-                            <span className="text-[9px] font-bold text-white bg-[hsl(var(--accent))] px-1 rounded shadow-sm">
-                              {t('addItem.selectorItemLabel', { n: idx + 1, defaultValue: 'Item {{n}}' })}
-                            </span>
-                            {selectors.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRemoveSelector(sel.id);
-                                }}
-                                className="h-4.5 w-4.5 bg-rose-600 hover:bg-rose-700 text-white rounded flex items-center justify-center cursor-pointer shadow-sm border-0"
-                                data-testid={`remove-selector-${idx}`}
-                              >
-                                <X className="h-2.5 w-2.5" />
-                              </button>
-                            )}
-                          </div>
-                          
-                          {/* Resize Handle */}
-                          <div
-                            className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize flex items-end justify-end p-0.5 pointer-events-auto"
-                            onMouseDown={(e) => {
-                              e.stopPropagation();
-                              handleSelectorMouseDown(e, sel.id, 'resize');
-                            }}
-                            onTouchStart={(e) => {
-                              e.stopPropagation();
-                              handleSelectorTouchStart(e, sel.id, 'resize');
-                            }}
-                          >
-                            <div className="w-2 h-2 border-r-2 border-b-2 border-[hsl(var(--accent))]" />
-                          </div>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 </div>
-              </div>
               )}
 
-              <div className="flex justify-center w-full mt-6">
-                <Button
-                  type="button"
-                  onClick={handleExtractReceipt}
-                  disabled={
-                    isExtracting || 
-                    (importMode === 'text' && !receiptText.trim()) ||
-                    (importMode === 'file' && !importFile) ||
-                    (importMode === 'url' && !importUrl.trim())
-                  }
-                  className="rounded-xl px-6 py-2.5 bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--accent-hover,var(--accent)))] text-white font-medium shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 disabled:transform-none disabled:opacity-50"
-                  data-testid="extract-receipt-button"
-                >
-                  {isExtracting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 me-2 animate-spin" />
-                      {t('addItem.import.extracting', { defaultValue: 'Extracting...' })}
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4 me-2" />
-                      {t('addItem.import.extractButton', { defaultValue: 'Extract Selected Items' })}
-                    </>
-                  )}
-                </Button>
-              </div>
+              {!importFile && (
+                <div className="flex justify-center w-full mt-6">
+                  <Button
+                    type="button"
+                    onClick={handleExtractReceipt}
+                    disabled={
+                      isExtracting || 
+                      (importMode === 'text' && !receiptText.trim()) ||
+                      (importMode === 'url' && !importUrl.trim())
+                    }
+                    className="rounded-xl px-6 py-2.5 bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--accent-hover,var(--accent)))] text-white font-medium shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 disabled:transform-none disabled:opacity-50"
+                    data-testid="extract-receipt-button"
+                  >
+                    {isExtracting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                        {t('addItem.import.extracting', { defaultValue: 'Extracting...' })}
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 me-2" />
+                        {t('addItem.import.extractButton', { defaultValue: 'Extract Items' })}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
 
               {/* Extracted Ingestion List */}
               {extractedItems.length > 0 && (
