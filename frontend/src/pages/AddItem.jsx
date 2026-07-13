@@ -798,7 +798,6 @@ export default function AddItem() {
     const loadingId = toast.loading(t('addItem.import.extracting', { defaultValue: 'Extracting items...' }));
     
     try {
-      const results = [];
       const file = fileToUse !== null ? fileToUse : importFile;
       const textVal = textToUse !== null ? textToUse : receiptText;
       const isImage = file && file.type.startsWith('image/');
@@ -860,29 +859,63 @@ export default function AddItem() {
         const base64Svg = btoa(unescape(encodeURIComponent(svgIcon.trim())));
         base64Preview = `data:image/svg+xml;base64,${base64Svg}`;
       }
+
+      setSaving(true);
+      setIngestPhase('saving');
+
+      const isSvg = base64Preview && base64Preview.startsWith('data:image/svg+xml');
+      const hasImage = !!(base64Preview && !isSvg);
+
+      const receiptLockedFields = [
+        name ? 'title' : null,
+        brand ? 'brand' : null,
+        size ? 'size' : null,
+        (priceCents || priceCents === 0) ? 'price_cents' : null,
+        (priceCents || priceCents === 0) ? 'purchase_price_cents' : null,
+        category ? 'category' : null,
+        (colors && colors.length) ? 'colors' : null,
+        (colors && colors.length) ? 'color' : null,
+      ].filter(Boolean);
+
+      const payload = {
+        title: name || 'Unnamed Garment',
+        category: category || 'Top',
+        brand: brand || 'Generic',
+        size: size || '',
+        price_cents: priceCents || 0,
+        purchase_price_cents: priceCents || 0,
+        color: colors?.[0]?.name || 'grey',
+        colors: colors,
+        purchase_date: new Date().toISOString().split('T')[0],
+        image_base64: hasImage ? base64Preview.split(',')[1] : undefined,
+        image_mime: hasImage ? (base64Preview.split(';')[0].split(':')[1] || 'image/jpeg') : undefined,
+        from_receipt: true,
+        receipt_locked_fields: receiptLockedFields,
+      };
+
+      const created = await api.createItem(payload);
+      if (created?.item) {
+        closetStore.upsert(created.item);
+      }
       
-      results.push({
-        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        name,
-        brand,
-        category,
-        price_cents: priceCents,
-        size,
-        colors,
-        item_type: item_type.toLowerCase(),
-        base64Image: base64Preview,
-        closetItem: null,
-        selected: true
-      });
-      
-      setExtractedItems(prev => [...prev, ...results]);
       toast.dismiss(loadingId);
-      toast.success(t('addItem.import.success', { defaultValue: 'Successfully extracted items!' }));
+      toast.success(t('addItem.import.success', { defaultValue: 'Successfully extracted and saved item!' }));
+      
+      setIngestPhase('syncing');
+      await closetStore.prewarm({ force: true });
+      
+      setReceiptText('');
+      setImportFile(null);
+      setImportUrl('');
+      
+      nav('/closet');
     } catch (err) {
       toast.dismiss(loadingId);
       toast.error(err?.response?.data?.detail || t('addItem.import.error', { defaultValue: 'Could not parse receipt. Please verify formatting and try again.' }));
     } finally {
       setIsExtracting(false);
+      setSaving(false);
+      setIngestPhase('idle');
     }
   };
 
