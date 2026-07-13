@@ -4421,6 +4421,10 @@ async def set_item_photo(
         # old photo and is now stale.
         "reconstructed_image_url": None,
         "reconstruction_metadata": None,
+        "clean_image_url": None,
+        "clean_image_status": None,
+        "image_variants": None,
+        "thumbnail_data_url": None,
     }
     if segmented_data_url:
         update_doc["segmented_image_url"] = segmented_data_url
