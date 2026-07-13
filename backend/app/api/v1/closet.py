@@ -369,9 +369,10 @@ async def _read_image_bytes_from_url(url: str | None) -> bytes | None:
     if url.startswith("data:"):
         return _bytes_from_data_url(url)
     
-    # If it is a local upload path (starts with /static/uploads)
-    if url.startswith("/static/uploads/"):
-        relative_path = url[len("/static/uploads/"):]
+    # If it is a local upload path
+    if "/static/uploads/" in url:
+        idx = url.find("/static/uploads/")
+        relative_path = url[idx + len("/static/uploads/"):]
         import os
         from app.services.upload_manager import BUCKET_DIR
         import aiofiles
