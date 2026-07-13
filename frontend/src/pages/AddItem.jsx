@@ -2719,19 +2719,10 @@ export default function AddItem() {
                         size="xs"
                         onClick={handleCancelDocument}
                         className="rounded-lg text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary flex items-center gap-1"
+                        data-testid="add-item-change-file-button"
                       >
                         <ArrowLeft className="h-3 w-3" />
                         {t('addItem.import.changeDocument', { defaultValue: 'Change File' })}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="xs"
-                        onClick={handleAddSelector}
-                        className="rounded-lg text-[11px] font-semibold text-[hsl(var(--accent))] hover:bg-secondary flex items-center gap-1"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        {t('addItem.import.addSelector', { defaultValue: 'Add Item Selector' })}
                       </Button>
                     </div>
                   </div>
@@ -2784,16 +2775,19 @@ export default function AddItem() {
                             <span className="text-[9px] font-bold text-white bg-[hsl(var(--accent))] px-1 rounded shadow-sm">
                               {t('addItem.selectorItemLabel', { n: idx + 1, defaultValue: 'Item {{n}}' })}
                             </span>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveSelector(sel.id);
-                              }}
-                              className="h-4.5 w-4.5 bg-rose-600 hover:bg-rose-700 text-white rounded flex items-center justify-center cursor-pointer shadow-sm border-0"
-                            >
-                              <X className="h-2.5 w-2.5" />
-                            </button>
+                            {selectors.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveSelector(sel.id);
+                                }}
+                                className="h-4.5 w-4.5 bg-rose-600 hover:bg-rose-700 text-white rounded flex items-center justify-center cursor-pointer shadow-sm border-0"
+                                data-testid={`remove-selector-${idx}`}
+                              >
+                                <X className="h-2.5 w-2.5" />
+                              </button>
+                            )}
                           </div>
                           
                           {/* Resize Handle */}
