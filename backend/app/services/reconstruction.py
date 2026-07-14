@@ -211,15 +211,20 @@ async def reconstruct(
     
     # Pre-matte the image to remove people/legs/hands and prevent safety blocks
     try:
-        from app.services.vision.matte import remove_background
+        from app.services.background_matting import remove_background
         from PIL import Image
         import io
-        matte_img = await remove_background(crop_bytes)
-        off_white = Image.new("RGBA", matte_img.size, (245, 245, 245, 255))
-        composited = Image.alpha_composite(off_white, matte_img).convert("RGB")
-        matted_io = io.BytesIO()
-        composited.save(matted_io, format="JPEG", quality=95)
-        crop_bytes = matted_io.getvalue()
+        bg_res = await remove_background(crop_bytes)
+        if bg_res.get("success") and bg_res.get("image_png"):
+            matte_img = Image.open(io.BytesIO(bg_res["image_png"]))
+            # Ensure it is in RGBA mode for alpha compositing
+            if matte_img.mode != "RGBA":
+                matte_img = matte_img.convert("RGBA")
+            off_white = Image.new("RGBA", matte_img.size, (245, 245, 245, 255))
+            composited = Image.alpha_composite(off_white, matte_img).convert("RGB")
+            matted_io = io.BytesIO()
+            composited.save(matted_io, format="JPEG", quality=95)
+            crop_bytes = matted_io.getvalue()
     except Exception as matte_exc:
         logger.warning("Reconstruction pre-matting failed: %s", repr(matte_exc))
 
