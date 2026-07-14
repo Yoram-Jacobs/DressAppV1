@@ -159,9 +159,16 @@ class GeminiImageService:
                     if raw:
                         break
                 if not raw:
+                    cand_details = []
+                    for i, cand in enumerate(candidates):
+                        fr = getattr(cand, "finish_reason", "unknown")
+                        sr = getattr(cand, "safety_ratings", []) or []
+                        sr_str = ", ".join(f"{getattr(r, 'category', '')}={getattr(r, 'probability', '')}" for r in sr)
+                        cand_details.append(f"Candidate {i} (finish_reason={fr}, safety={sr_str})")
+                    details_msg = "; ".join(cand_details)
                     raise RuntimeError(
                         "Gemini image response had no inline_data part "
-                        f"(text='{text_out[:160]}')"
+                        f"(text='{text_out[:160]}', details={details_msg})"
                     )
                 logger.info(
                     "Nano Banana OK (%s, %.1fs, %d bytes, edit=%s)",
