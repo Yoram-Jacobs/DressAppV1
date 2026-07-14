@@ -1222,9 +1222,14 @@ export default function ItemDetail() {
 
   const activeViewItem = currentGroupItems.find(x => x.id === activeViewIdState) || item;
   const isViewingHost = !activeViewIdState || activeViewIdState === (hostIdState || id);
+  const hasNewPreview = isViewingHost && (
+    (form.reconstructed_image_url && form.reconstructed_image_url !== item.reconstructed_image_url) ||
+    (form.clean_image_url && form.clean_image_url !== item.clean_image_url)
+  );
   const mergedItem = {
     ...item,
     ...form,
+    thumbnail_data_url: hasNewPreview ? null : item.thumbnail_data_url,
     original_image_url: activeViewItem?.original_image_url,
     segmented_image_url: activeViewItem?.segmented_image_url,
     reconstructed_image_url: isViewingHost ? (form.reconstructed_image_url || activeViewItem?.reconstructed_image_url) : activeViewItem?.reconstructed_image_url,
