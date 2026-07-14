@@ -194,6 +194,8 @@ const EDITABLE_FIELDS = [
   'notes',
   'reconstructed_image_url',
   'reconstruction_metadata',
+  'clean_image_url',
+  'clean_image_status',
 ];
 
 /** Pick the subset of fields we mutate + normalise to a stable shape.
@@ -269,6 +271,8 @@ function toFormState(item, user = null) {
     notes: item.notes || '',
     reconstructed_image_url: item.reconstructed_image_url || null,
     reconstruction_metadata: item.reconstruction_metadata || null,
+    clean_image_url: item.clean_image_url || null,
+    clean_image_status: item.clean_image_status || null,
   };
 }
 
@@ -1092,14 +1096,7 @@ export default function ItemDetail() {
       const res = await api.cleanItemBackground(id, true);
       if (res.applied) {
         toast.success(t('itemDetail.cleanBackground.success'));
-        setItem(res.item);
         setForm(toFormState(res.item, user));
-        try {
-          closetStore.upsert(res.item);
-          closetStore.triggerRepair();
-        } catch (e) {
-          console.warn('ItemDetail: closetStore sync after clean background failed', e);
-        }
         setCleanBackgroundHint('');
       } else {
         toast.warning(res.detail || t('itemDetail.cleanBackground.rejected'));
@@ -1130,14 +1127,7 @@ export default function ItemDetail() {
     try {
       const res = await api.repairItemImage(id, { preview: true });
       if (res?.applied && res.item) {
-        setItem(res.item);
         setForm(toFormState(res.item, user));
-        try {
-          closetStore.upsert(res.item);
-          closetStore.triggerRepair();
-        } catch (e) {
-          console.warn('ItemDetail: closetStore sync after repair failed', e);
-        }
         toast.success(
           t('item.reshootSuccess', { defaultValue: 'Photo restored.' }),
         );
@@ -1231,14 +1221,15 @@ export default function ItemDetail() {
   }
 
   const activeViewItem = currentGroupItems.find(x => x.id === activeViewIdState) || item;
+  const isViewingHost = !activeViewIdState || activeViewIdState === (hostIdState || id);
   const mergedItem = {
     ...item,
     ...form,
     original_image_url: activeViewItem?.original_image_url,
     segmented_image_url: activeViewItem?.segmented_image_url,
-    reconstructed_image_url: activeViewItem?.reconstructed_image_url,
-    clean_image_url: activeViewItem?.clean_image_url,
-    clean_image_status: activeViewItem?.clean_image_status,
+    reconstructed_image_url: isViewingHost ? (form.reconstructed_image_url || activeViewItem?.reconstructed_image_url) : activeViewItem?.reconstructed_image_url,
+    clean_image_url: isViewingHost ? (form.clean_image_url || activeViewItem?.clean_image_url) : activeViewItem?.clean_image_url,
+    clean_image_status: isViewingHost ? (form.clean_image_status || activeViewItem?.clean_image_status) : activeViewItem?.clean_image_status,
   };
   const hasReconstruction = !!mergedItem.reconstructed_image_url;
   // Phase O.6 — image priority centralised via ``lib/itemImage``. When

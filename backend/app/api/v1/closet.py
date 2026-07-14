@@ -247,6 +247,8 @@ class UpdateItemIn(BaseModel):
     # Phase Q — reconstruction knobs
     reconstructed_image_url: str | None = None
     reconstruction_metadata: dict[str, Any] | None = None
+    clean_image_url: str | None = None
+    clean_image_status: str | None = None
     # Allow clearing the reconstruction (user can "revert" via Repair UI)
     clear_reconstruction: bool = False
 
@@ -5466,6 +5468,8 @@ async def update_item(
     if patch.pop("clear_reconstruction", False):
         patch["reconstructed_image_url"] = None
         patch["reconstruction_metadata"] = None
+        patch["clean_image_url"] = None
+        patch["clean_image_status"] = None
     patch["updated_at"] = datetime.now(timezone.utc).isoformat()
     db = get_db()
     # Snapshot prior values so we can detect transitions AFTER the update
