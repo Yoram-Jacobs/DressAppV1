@@ -209,7 +209,7 @@ class GeminiImageService:
             return user_prompt[:1000]
         meta = meta or {}
         descriptor_bits: list[str] = []
-        for key in ("color", "material", "pattern", "brand", "category", "title"):
+        for key in ("color", "material", "pattern", "category"):
             v = meta.get(key)
             if v:
                 descriptor_bits.append(str(v))

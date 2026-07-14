@@ -160,19 +160,15 @@ def _build_reconstruction_prompt(analysis: dict[str, Any]) -> str:
         if v:
             bits.append(str(v))
     descriptor = " ".join(bits) if bits else (
-        analysis.get("category") or analysis.get("title") or "garment"
+        analysis.get("category") or "garment"
     )
-    title = analysis.get("title") or analysis.get("name") or ""
     extras: list[str] = []
-    if analysis.get("brand"):
-        extras.append(f"by {analysis['brand']}")
     if analysis.get("dress_code"):
         extras.append(f"{analysis['dress_code']} style")
     extras_str = (", " + ", ".join(extras)) if extras else ""
     prompt = (
         f"High-fidelity editorial product photograph of a complete, "
         f"full-length {descriptor}"
-        f"{(': ' + title) if title else ''}"
         f"{extras_str}. Studio lighting, plain off-white backdrop, "
         "garment-only product shot, centered composition, sharp focus, "
         "photorealistic, preserve fabric texture and pattern details, "
@@ -240,7 +236,7 @@ async def reconstruct(
 
     validated = True
     rejected_reason: str | None = None
-    if validate:
+    if validate and not (reasons and "manual_repair" in reasons):
         try:
             import base64 as _b64
             from app.services.vision import garment_vision_service
