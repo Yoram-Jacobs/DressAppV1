@@ -245,11 +245,15 @@ async def reconstruct(
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning(
-            "Reconstruction edit failed (engine=%s): %s",
+            "Reconstruction edit failed (engine=%s), falling back to text-to-image generation: %s",
             using,
             repr(exc)[:200],
         )
-        return None
+        try:
+            out = await image_service.generate(prompt)
+        except Exception as gen_exc:
+            logger.error("Reconstruction fallback text-to-image generation also failed: %s", repr(gen_exc))
+            return None
     image_b64 = out.get("image_b64")
     if not image_b64:
         return None
