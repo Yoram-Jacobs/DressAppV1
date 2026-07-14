@@ -208,6 +208,21 @@ async def reconstruct(
         return None
     image_service = gemini_image_service
     using = "nano-banana"
+    
+    # Pre-matte the image to remove people/legs/hands and prevent safety blocks
+    try:
+        from app.services.vision.matte import remove_background
+        from PIL import Image
+        import io
+        matte_img = await remove_background(crop_bytes)
+        off_white = Image.new("RGBA", matte_img.size, (245, 245, 245, 255))
+        composited = Image.alpha_composite(off_white, matte_img).convert("RGB")
+        matted_io = io.BytesIO()
+        composited.save(matted_io, format="JPEG", quality=95)
+        crop_bytes = matted_io.getvalue()
+    except Exception as matte_exc:
+        logger.warning("Reconstruction pre-matting failed: %s", repr(matte_exc))
+
     prompt = _build_reconstruction_prompt(analysis)
     try:
         out = await image_service.edit(
