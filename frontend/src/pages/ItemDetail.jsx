@@ -1092,11 +1092,14 @@ export default function ItemDetail() {
       const res = await api.cleanItemBackground(id, true);
       if (res.applied) {
         toast.success(t('itemDetail.cleanBackground.success'));
-        setForm((prev) => ({
-          ...prev,
-          reconstructed_image_url: res.item.reconstructed_image_url,
-          reconstruction_metadata: res.item.reconstruction_metadata,
-        }));
+        setItem(res.item);
+        setForm(toFormState(res.item, user));
+        try {
+          closetStore.upsert(res.item);
+          closetStore.triggerRepair();
+        } catch (e) {
+          console.warn('ItemDetail: closetStore sync after clean background failed', e);
+        }
         setCleanBackgroundHint('');
       } else {
         toast.warning(res.detail || t('itemDetail.cleanBackground.rejected'));
@@ -1127,11 +1130,14 @@ export default function ItemDetail() {
     try {
       const res = await api.repairItemImage(id, { preview: true });
       if (res?.applied && res.item) {
-        setForm((prev) => ({
-          ...prev,
-          reconstructed_image_url: res.item.reconstructed_image_url,
-          reconstruction_metadata: res.item.reconstruction_metadata,
-        }));
+        setItem(res.item);
+        setForm(toFormState(res.item, user));
+        try {
+          closetStore.upsert(res.item);
+          closetStore.triggerRepair();
+        } catch (e) {
+          console.warn('ItemDetail: closetStore sync after repair failed', e);
+        }
         toast.success(
           t('item.reshootSuccess', { defaultValue: 'Photo restored.' }),
         );

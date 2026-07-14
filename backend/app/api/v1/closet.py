@@ -5831,6 +5831,8 @@ async def update_item(
                     item_id, exc,
                 )
 
+    if updated and "_id" in updated:
+        updated.pop("_id")
     return updated
 
 
