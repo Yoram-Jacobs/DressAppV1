@@ -2402,24 +2402,100 @@ async def fetch_image_url(
 ) -> dict[str, Any]:
     """Fetch an image from a URL and return it in base64 format to bypass CORS."""
     import httpx
+    from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode, urljoin
+    from bs4 import BeautifulSoup
+    import base64
+
+    # Clean the URL by stripping UTM and ad-tracking parameters
+    try:
+        parsed = urlparse(payload.url)
+        qsl = parse_qsl(parsed.query)
+        clean_qsl = [
+            (k, v) for k, v in qsl
+            if not k.lower().startswith("utm_") and k.lower() not in ("cto_pld", "fbclid", "gclid")
+        ]
+        query = urlencode(clean_qsl)
+        url = urlunparse(parsed._replace(query=query))
+    except Exception:
+        url = payload.url
+
     headers = {
         "User-Agent": (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
             "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         ),
-        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.9",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
     }
     try:
         async with httpx.AsyncClient(
             timeout=15.0, follow_redirects=True, headers=headers
         ) as client:
-            resp = await client.get(payload.url)
+            resp = await client.get(url)
             resp.raise_for_status()
             content = resp.content
-            content_type = resp.headers.get("content-type", "image/jpeg")
+            content_type = resp.headers.get("content-type", "")
+
+            # If it is an HTML page, extract the product image link from metadata
+            if "text/html" in content_type:
+                soup = BeautifulSoup(resp.text, "html.parser")
+                img_url = None
+                
+                # Check OpenGraph image metadata
+                og_img = soup.find("meta", property="og:image")
+                if og_img and og_img.get("content"):
+                    img_url = og_img["content"]
+                
+                # Check Twitter card image metadata
+                if not img_url:
+                    tw_img = soup.find("meta", name="twitter:image")
+                    if tw_img and tw_img.get("content"):
+                        img_url = tw_img["content"]
+                
+                # Check link image_src
+                if not img_url:
+                    schema_img = soup.find("link", rel="image_src")
+                    if schema_img and schema_img.get("href"):
+                        img_url = schema_img["href"]
+                
+                # Fallback to first large image
+                if not img_url:
+                    for img in soup.find_all("img"):
+                        src = img.get("src") or img.get("data-src")
+                        if src and src.startswith("http") and not any(x in src.lower() for x in ("logo", "icon", "banner")):
+                            img_url = src
+                            break
+                
+                if not img_url:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Could not find any product image on this webpage."
+                    )
+                
+                resolved_img_url = urljoin(url, img_url)
+                
+                # Download the actual image from the resolved CDN link
+                img_resp = await client.get(resolved_img_url)
+                img_resp.raise_for_status()
+                content = img_resp.content
+                content_type = img_resp.headers.get("content-type", "image/jpeg")
+
             b64_str = base64.b64encode(content).decode("ascii")
             return {"image_b64": b64_str, "mime_type": content_type}
+    except httpx.HTTPStatusError as http_err:
+        status_code = http_err.response.status_code
+        if status_code in (403, 429):
+            detail_msg = (
+                f"Webpage returned status {status_code}. "
+                "The site blocks automated scrapers. To bypass this, "
+                "please right-click the product image and select 'Copy image address' "
+                "to import it directly."
+            )
+        else:
+            detail_msg = f"Failed to load image (status {status_code})."
+        raise HTTPException(status_code=400, detail=detail_msg)
     except Exception as e:
         raise HTTPException(
             status_code=400,
