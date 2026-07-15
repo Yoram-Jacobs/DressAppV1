@@ -1,5 +1,9 @@
 $ErrorActionPreference = "Stop"
 
+# Get the script folder path and change to it
+$scriptFolder = Split-Path -Parent $MyInvocation.MyCommand.Definition
+cd $scriptFolder
+
 # Clean up previously generated project directories to ensure clean update
 $directoriesToClean = @("app", "gradle", "android-project")
 foreach ($dir in $directoriesToClean) {
@@ -77,9 +81,8 @@ $twaManifestContent = @{
 $manifestPath = Join-Path (Get-Location).Path "twa-manifest.json"
 [System.IO.File]::WriteAllText($manifestPath, $twaManifestContent)
 
-# 3. Run bubblewrap update to generate project files in the current folder
-Write-Host "Running bubblewrap update..."
-# We pass empty input/newlines in case it asks to confirm or update anything
-"" | node_modules\.bin\bubblewrap.cmd update
+# 3. Run run_update.js to generate project files in the current folder
+Write-Host "Running run_update.js..."
+node run_update.js
 
 Write-Host "Project updated successfully!"

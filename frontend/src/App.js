@@ -35,6 +35,7 @@ import AvatarPage from '@/pages/AvatarPage';
 import TrendScout from '@/pages/TrendScout';
 import Suitcase from '@/pages/Suitcase';
 import SharedOutfit from '@/pages/SharedOutfit';
+import DeleteAccount from '@/pages/DeleteAccount';
 
 import { useEffect } from 'react';
 import { toast } from 'sonner';
@@ -130,6 +131,7 @@ function App() {
               <Route path="/experts" element={<ExpertsDirectory />} />
               <Route path="/ads" element={<AdsManager />} />
               <Route path="/me" element={<Profile />} />
+              <Route path="/delete-account" element={<DeleteAccount />} />
               <Route path="/me/stats" element={<WardrobeStats />} />
               <Route path="/trends" element={<TrendScout />} />
               <Route path="/avatar" element={<AvatarPage />} />

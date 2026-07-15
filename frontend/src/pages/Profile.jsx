@@ -862,6 +862,16 @@ export default function Profile() {
                 <LogOut className="h-4 w-4 me-2" /> {t('profile.signOut')}
               </Button>
             </div>
+
+            <div className="flex pt-2 justify-center">
+              <Link
+                to="/delete-account"
+                className="text-xs text-muted-foreground hover:text-destructive transition-colors duration-200 mt-2"
+                data-testid="delete-account-link"
+              >
+                {t('profile.deleteAccountLink', { defaultValue: 'Delete my Account' })}
+              </Link>
+            </div>
             
             <div className="mt-6">
               <DeveloperPanel user={user} />

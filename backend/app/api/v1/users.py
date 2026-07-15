@@ -4,12 +4,12 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict
 
 from app.db.database import get_db
 from app.models.schemas import CulturalContext, StyleProfile
-from app.services.auth import get_current_user
+from app.services.auth import get_current_user, verify_password
 from app.services.avatar_service import calculate_shape_parameters
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -190,3 +190,77 @@ async def update_me(
         updated.pop("password_hash", None)
         updated.pop("google_oauth", None)
     return updated or {}
+
+
+class DeleteAccountIn(BaseModel):
+    password: str | None = None
+    oauth_provider: str | None = None
+
+
+@router.post("/me/delete")
+async def delete_me(
+    payload: DeleteAccountIn,
+    user: dict = Depends(get_current_user)
+) -> dict[str, Any]:
+    db = get_db()
+    
+    # 1. Verify user identity
+    if user.get("password_hash"):
+        if not payload.password or not verify_password(payload.password, user["password_hash"]):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid password verification"
+            )
+    else:
+        # OAuth user verification
+        if payload.oauth_provider != "google":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="OAuth verification required"
+            )
+
+    user_id = user["id"]
+    
+    # 2. Collect IDs to delete embeddings
+    closet_items = await db.closet_items.find({"user_id": user_id}, {"id": 1}).to_list(length=None)
+    closet_item_ids = [item["id"] for item in closet_items]
+    
+    outfits = await db.outfits.find({"user_id": user_id}, {"id": 1}).to_list(length=None)
+    outfit_ids = [o["id"] for o in outfits]
+    
+    # 3. Perform cascade deletions across all collections
+    await db.users.delete_one({"id": user_id})
+    await db.closet_items.delete_many({"user_id": user_id})
+    await db.outfits.delete_many({"user_id": user_id})
+    await db.listings.delete_many({"seller_id": user_id})
+    await db.suitcases.delete_many({"user_id": user_id})
+    await db.suitcase_archives.delete_many({"user_id": user_id})
+    await db.simulated_notifications.delete_many({"user_id": user_id})
+    await db.user_credits.delete_many({"user_id": user_id})
+    await db.credit_topups.delete_many({"user_id": user_id})
+    
+    # Cascade Stylist sessions and messages
+    sessions = await db.stylist_sessions.find({"user_id": user_id}, {"id": 1}).to_list(length=None)
+    session_ids = [s["id"] for s in sessions]
+    if session_ids:
+        await db.stylist_messages.delete_many({"session_id": {"$in": session_ids}})
+    await db.stylist_sessions.delete_many({"user_id": user_id})
+    
+    # Delete embeddings
+    entity_ids = [user_id] + closet_item_ids + outfit_ids
+    await db.embeddings.delete_many({"entity_id": {"$in": entity_ids}})
+    
+    # 4. Dispatch deletion notification email
+    from app.services import email_service
+    import logging
+    logger = logging.getLogger(__name__)
+    try:
+        await email_service.send_deletion_email(
+            to=user["email"],
+            display_name=user.get("display_name") or user.get("email").split("@")[0]
+        )
+    except Exception as exc:
+        logger.error("Failed to send deletion email: %s", exc)
+
+    return {"deleted": True}
+

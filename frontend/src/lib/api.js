@@ -797,6 +797,7 @@ export const api = {
   getSuitcaseArchive: () => client.get('/suitcase/archive').then((r) => r.data),
   deleteSuitcaseArchives: (ids) => client.delete(`/suitcase/archive?ids=${ids.join(',')}`).then((r) => r.data),
   suitcaseChat: (body) => client.post('/suitcase/chat', body).then((r) => r.data),
+  deleteAccount: (body) => client.post('/users/me/delete', body).then((r) => r.data),
 };
 
 export default client;

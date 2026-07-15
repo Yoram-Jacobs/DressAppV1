@@ -1059,7 +1059,25 @@
       "edgeNotice": "Exécution locale de Gemma4-E2B hors ligne. Les statistiques d'utilisation sont suivies localement et créditées via Google Nano Banana.",
       "appFeeLabel": "Frais d'application accumulés",
       "appFeeDescription": "Frais de plateforme non payés accumulés suite à l'utilisation des crédits."
-    }
+    },
+    "deleteAccountLink": "Delete my Account",
+    "deleteAccountTitle": "Delete Account",
+    "deleteAccountSubtitle": "Permanent Account Deletion",
+    "deleteWarning": "You are about to delete your account. This will permanently remove your profile, all your closet items (including photos and metadata), and all your saved outfits.",
+    "deleteWarningConfirm": "I understand that this action is irreversible and all my data will be permanently lost.",
+    "enterPasswordToConfirm": "Please enter your password to confirm deletion.",
+    "oauthConfirmText": "Please verify your Google account to confirm identity.",
+    "oauthVerifyBtn": "Verify with Google",
+    "oauthVerified": "Google identity verified successfully.",
+    "finalWarningTitle": "Final Warning",
+    "finalWarning": "This is the absolute final step. Hitting 'Delete My Account' will permanently delete all your data and can never be undone.",
+    "deleteAccountBtn": "Delete My Account",
+    "accountDeletedSuccess": "Your account has been deleted successfully.",
+    "deleteFailed": "Failed to delete account. Please verify your credentials and try again.",
+    "identityVerification": "Identity Verification",
+    "verifyMessage": "For your security, please verify your identity before deleting your account.",
+    "googleConnected": "Connected via Google",
+    "enterPasswordPlaceholder": "Enter your password"
   },
   "admin": {
     "title": "Admin",

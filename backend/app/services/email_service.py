@@ -565,3 +565,16 @@ async def send_thank_you_payment(
 """
     return await _send(to, t_data["subject"], _wrap(body_html, preheader=t_data["subject"]))
 
+
+async def send_deletion_email(*, to: str, display_name: str) -> dict:
+    subject = "We're sorry to see you leave DressApp"
+    body = f"""\
+<h1 style="margin:0 0 14px;font-size:22px;">We're sorry to see you go, {display_name} 😢</h1>
+<p>DressApp is very sorry to see {display_name} leaving.</p>
+<p>Your account, closet items, outfits, and all associated personal data have been permanently deleted from our servers.</p>
+<p>If you ever change your mind and want to start a new circular fashion journey, you can always sign up again to start a new experience!</p>
+{_btn("Sign in to start a new experience", f"{_APP_URL}/login", color=_ACCENT)}
+"""
+    return await _send(to, subject, _wrap(body, preheader="Your DressApp account has been successfully deleted."))
+
+
