@@ -397,7 +397,15 @@
     "pendingGarmentAlt": "लंबित परिधान",
     "queuedForAutoSave": "{{count}} फ़ोटो की प्रतीक्षा — स्वचालित रूप से सहेजा जाएगा।",
     "savedSomeWaitingForRest": "{{saved}} सहेजे गए — {{remaining}} और की प्रतीक्षा।",
-    "quickConfirmMode": "त्वरित पुष्टि मोड"
+    "quickConfirmMode": "त्वरित पुष्टि मोड",
+    "uploadUrl": "यूआरएल लिंक",
+    "urlModalTitle": "यूआरएल से छवि आयात करें",
+    "urlModalLabel": "छवि वेब पता (URL) पेस्ट करें",
+    "urlModalPlaceholder": "https://example.com/garment.jpg",
+    "urlModalButton": "आयात करें",
+    "urlImporting": "यूआरएल से छवि आयात की जा रही है...",
+    "urlImportSuccess": "छवि सफलतापूर्वक आयात की गई!",
+    "urlImportFailed": "यूआरएल से छवि आयात करने में विफल"
   },
   "itemDetail": {
     "back": "अलमारी पर वापस",

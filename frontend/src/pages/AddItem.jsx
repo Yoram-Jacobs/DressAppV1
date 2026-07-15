@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Upload, Plus, Loader2, Eye, Wand2, Shirt, Store,
   HandCoins, Gift, Repeat, Trash2, Save, Tag, AlertTriangle,
-  X, Sparkles, Camera, RefreshCw, QrCode, ChevronDown, ChevronUp,
+  X, Sparkles, Camera, RefreshCw, QrCode, ChevronDown, ChevronUp, Link2,
   FileText, Folder, Check, Image as ImageIcon, Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -397,8 +397,54 @@ export default function AddItem() {
   // persists a FileSystemFileHandle in IndexedDB so the OS-level picker
   // re-opens in the same folder next time.  Safari/Firefox fall back to the
   // hidden <input> .click() path — the browser handles its own last-dir.
+  const [isUrlModalOpen, setIsUrlModalOpen] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
+  const [isUrlLoading, setIsUrlLoading] = useState(false);
+
   const { openFilePicker: openImagePicker } = useRememberedDirectory('images');
   const { openFilePicker: openReceiptPicker } = useRememberedDirectory('receipts');
+
+  const handleUrlUpload = async (url) => {
+    if (!url || !url.trim()) return;
+    setIsUrlLoading(true);
+    const loadingId = toast.loading(t('addItem.urlImporting', { defaultValue: 'Importing image from URL...' }));
+    try {
+      const res = await api.fetchImageUrl(url.trim());
+      if (res?.image_b64) {
+        const b64 = res.image_b64;
+        const mime = res.mime_type || 'image/jpeg';
+        
+        const cardId = `url-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const newCard = {
+          id: cardId,
+          file: null,
+          mime: mime,
+          previewUrl: `data:${mime};base64,${b64}`,
+          base64: b64,
+          status: 'scanning',
+          progress: 4,
+          fields: blankFields(),
+          error: null,
+          label: null,
+          sourceFilename: 'url-upload.jpg',
+        };
+        
+        setCards((prev) => [...prev, newCard]);
+        setIsUrlModalOpen(false);
+        setUrlInput('');
+        toast.success(t('addItem.urlImportSuccess', { defaultValue: 'Image imported successfully!' }), { id: loadingId });
+        
+        analyzeCard(newCard);
+      } else {
+        toast.error(t('addItem.urlImportFailed', { defaultValue: 'Failed to import image from URL' }), { id: loadingId });
+      }
+    } catch (err) {
+      console.error('[handleUrlUpload] Error:', err);
+      toast.error(err?.response?.data?.detail || t('addItem.urlImportFailed', { defaultValue: 'Failed to import image from URL' }), { id: loadingId });
+    } finally {
+      setIsUrlLoading(false);
+    }
+  };
 
   const pickFilesWithMemory = () => openImagePicker({
     accept: [{ description: 'Images', accept: { 'image/*': [] } }],
@@ -2415,6 +2461,61 @@ export default function AddItem() {
         }}
       />
 
+      <Dialog open={isUrlModalOpen} onOpenChange={(open) => { if (!open) { setIsUrlModalOpen(false); setUrlInput(''); } }}>
+        <DialogContent className="sm:max-w-md rounded-[calc(var(--radius)+6px)]">
+          <DialogHeader>
+            <DialogTitle>{t('addItem.urlModalTitle', { defaultValue: 'Import image from URL' })}</DialogTitle>
+            <DialogDescription>
+              {t('addItem.urlModalLabel', { defaultValue: 'Paste image web address (URL)' })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center space-x-2 py-4 rtl:space-x-reverse">
+            <div className="grid flex-1 gap-2">
+              <Label htmlFor="url" className="sr-only">URL</Label>
+              <Input
+                id="url"
+                placeholder={t('addItem.urlModalPlaceholder', { defaultValue: 'https://example.com/garment.jpg' })}
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                disabled={isUrlLoading}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !isUrlLoading) {
+                    handleUrlUpload(urlInput);
+                  }
+                }}
+                className="rounded-xl"
+              />
+            </div>
+          </div>
+          <DialogFooter className="sm:justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => { setIsUrlModalOpen(false); setUrlInput(''); }}
+              disabled={isUrlLoading}
+              className="rounded-xl"
+            >
+              {t('common.cancel', { defaultValue: 'Cancel' })}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => handleUrlUpload(urlInput)}
+              disabled={isUrlLoading || !urlInput.trim()}
+              className="rounded-xl px-5"
+            >
+              {isUrlLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin me-2" />
+                  {t('addItem.urlModalButton', { defaultValue: 'Import' })}
+                </>
+              ) : (
+                t('addItem.urlModalButton', { defaultValue: 'Import' })
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Duplicate-detection modal (post-analysis fallback). Pops one
           first card with an unconfirmed potentialDuplicate becomes the
           active question. "Cancel" discards that card; "Add anyway"
@@ -2603,12 +2704,23 @@ export default function AddItem() {
                 </Button>
                 <Button
                   type="button"
-                  variant="secondary"
+                  variant="outline"
                   className="rounded-xl"
+                  onClick={() => setIsUrlModalOpen(true)}
+                  data-testid="add-item-url-button"
+                >
+                  <Link2 className="h-4 w-4 me-2" /> {t('addItem.uploadUrl', { defaultValue: 'URL' })}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="rounded-xl px-3.5"
                   onClick={openScanner}
+                  title={t('dpp.nav.scanLabel')}
+                  aria-label={t('dpp.nav.scanLabel')}
                   data-testid="add-item-scan-dpp-button"
                 >
-                  <QrCode className="h-4 w-4 me-2" /> {t('dpp.nav.scanLabel')}
+                  <QrCode className="h-4 w-4" />
                 </Button>
               </div>
               <div className="mt-4 flex items-center justify-center">
@@ -3268,13 +3380,25 @@ export default function AddItem() {
               </Button>
               <Button
                 type="button"
-                variant="secondary"
+                variant="outline"
                 size="sm"
                 className="rounded-lg"
+                onClick={() => setIsUrlModalOpen(true)}
+                data-testid="add-item-url-more-button"
+              >
+                <Link2 className="h-4 w-4 me-1.5" /> {t('addItem.uploadUrl', { defaultValue: 'URL' })}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="rounded-lg px-2.5"
                 onClick={openScanner}
+                title={t('dpp.nav.scanLabel')}
+                aria-label={t('dpp.nav.scanLabel')}
                 data-testid="add-item-scan-dpp-more-button"
               >
-                <QrCode className="h-4 w-4 me-1.5" /> {t('dpp.nav.scanLabel')}
+                <QrCode className="h-4 w-4" />
               </Button>
             </div>
           </div>

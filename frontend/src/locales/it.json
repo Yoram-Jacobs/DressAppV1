@@ -400,7 +400,15 @@
     "pendingGarmentAlt": "Capo in attesa",
     "queuedForAutoSave": "In attesa di {{count}} foto — verrà salvato automaticamente.",
     "savedSomeWaitingForRest": "{{saved}} salvati — in attesa di altri {{remaining}}.",
-    "quickConfirmMode": "Modalità di Conferma Rapida"
+    "quickConfirmMode": "Modalità di Conferma Rapida",
+    "uploadUrl": "Link URL",
+    "urlModalTitle": "Importa immagine da URL",
+    "urlModalLabel": "Incolla l'indirizzo web dell'immagine (URL)",
+    "urlModalPlaceholder": "https://example.com/garment.jpg",
+    "urlModalButton": "Importa",
+    "urlImporting": "Importazione dell'immagine da URL...",
+    "urlImportSuccess": "Immagine importata con successo!",
+    "urlImportFailed": "Impossibile importare l'immagine da URL"
   },
   "itemDetail": {
     "back": "Torna all’armadio",

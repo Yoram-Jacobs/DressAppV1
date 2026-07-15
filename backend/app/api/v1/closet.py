@@ -2391,6 +2391,32 @@ async def analyze_diag(
 # -------------------------------------------------------------------
 # Phase V6 — Digital Product Passport (DPP) QR import
 # -------------------------------------------------------------------
+class FetchImageUrlIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    url: str
+
+
+@router.post("/fetch-image-url")
+async def fetch_image_url(
+    payload: FetchImageUrlIn, user: dict = Depends(get_current_user)
+) -> dict[str, Any]:
+    """Fetch an image from a URL and return it in base64 format to bypass CORS."""
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+            resp = await client.get(payload.url)
+            resp.raise_for_status()
+            content = resp.content
+            content_type = resp.headers.get("content-type", "image/jpeg")
+            b64_str = base64.b64encode(content).decode("ascii")
+            return {"image_b64": b64_str, "mime_type": content_type}
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to fetch image from URL: {str(e)}"
+        )
+
+
 class ImportDppIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     # Either the full URL decoded from the QR, or the inline JSON payload

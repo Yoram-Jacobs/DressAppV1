@@ -400,7 +400,15 @@
     "pendingGarmentAlt": "保留中の衣服",
     "queuedForAutoSave": "{{count}} 枚の写真を待機中 — 自動保存されます。",
     "savedSomeWaitingForRest": "{{saved}} 件保存済 — さらに {{remaining}} 件を待機中。",
-    "quickConfirmMode": "クイック確認モード"
+    "quickConfirmMode": "クイック確認モード",
+    "uploadUrl": "URLリンク",
+    "urlModalTitle": "URLから画像をインポート",
+    "urlModalLabel": "画像のウェブアドレス(URL)を貼り付け",
+    "urlModalPlaceholder": "https://example.com/garment.jpg",
+    "urlModalButton": "インポート",
+    "urlImporting": "URLから画像をインポート中...",
+    "urlImportSuccess": "画像のインポートに成功しました！",
+    "urlImportFailed": "URLからの画像のインポートに失敗しました"
   },
   "itemDetail": {
     "back": "クローゼットに戻る",

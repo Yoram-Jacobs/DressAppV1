@@ -400,7 +400,15 @@
     "pendingGarmentAlt": "ملبس معلّق",
     "queuedForAutoSave": "في انتظار {{count}} صورة — سيُحفظ تلقائياً.",
     "savedSomeWaitingForRest": "تم حفظ {{saved}} — في انتظار {{remaining}} آخرين.",
-    "quickConfirmMode": "وضع التأكيد السريع"
+    "quickConfirmMode": "وضع التأكيد السريع",
+    "uploadUrl": "رابط URL",
+    "urlModalTitle": "استيراد صورة من رابط URL",
+    "urlModalLabel": "אלסוק رابط الصورة (URL)",
+    "urlModalPlaceholder": "https://example.com/garment.jpg",
+    "urlModalButton": "استيراد",
+    "urlImporting": "جاري استيراد الصورة...",
+    "urlImportSuccess": "تم استيراد الصورة بنجاح!",
+    "urlImportFailed": "فشل استيراد الصورة"
   },
   "itemDetail": {
     "back": "العودة إلى الخزانة",

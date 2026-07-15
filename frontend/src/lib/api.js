@@ -577,6 +577,11 @@ export const api = {
       .then((r) => r.data);
   },
 
+  // Fetch image from URL to bypass CORS on frontend
+  fetchImageUrl: (url) =>
+    client
+      .post('/closet/fetch-image-url', { url }, { timeout: 20000 })
+      .then((r) => r.data),
   // Phase V6 — EU Digital Product Passport (DPP) import via QR scan
   importDpp: (qrPayload) =>
     client

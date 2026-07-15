@@ -400,7 +400,15 @@
     "pendingGarmentAlt": "Ожидающая одежда",
     "queuedForAutoSave": "Ожидание {{count}} фото — будет сохранено автоматически.",
     "savedSomeWaitingForRest": "{{saved}} сохранено — ожидание ещё {{remaining}}.",
-    "quickConfirmMode": "Режим быстрого подтверждения"
+    "quickConfirmMode": "Режим быстрого подтверждения",
+    "uploadUrl": "Ссылка URL",
+    "urlModalTitle": "Импорт изображения по URL",
+    "urlModalLabel": "Вставьте веб-адрес изображения (URL)",
+    "urlModalPlaceholder": "https://example.com/garment.jpg",
+    "urlModalButton": "Импортировать",
+    "urlImporting": "Импорт изображения по URL...",
+    "urlImportSuccess": "Изображение успешно импортировано!",
+    "urlImportFailed": "Не удалось импортировать изображение по URL"
   },
   "itemDetail": {
     "back": "Назад в гардероб",

@@ -400,7 +400,15 @@
     "pendingGarmentAlt": "待处理服装",
     "queuedForAutoSave": "等待 {{count}} 张照片 — 将自动保存。",
     "savedSomeWaitingForRest": "已保存 {{saved}} — 等待另外 {{remaining}} 张。",
-    "quickConfirmMode": "快速确认模式"
+    "quickConfirmMode": "快速确认模式",
+    "uploadUrl": "URL链接",
+    "urlModalTitle": "从URL导入图片",
+    "urlModalLabel": "粘贴图片网址 (URL)",
+    "urlModalPlaceholder": "https://example.com/garment.jpg",
+    "urlModalButton": "导入",
+    "urlImporting": "正在从URL导入图片...",
+    "urlImportSuccess": "图片导入成功！",
+    "urlImportFailed": "从URL导入图片失败"
   },
   "itemDetail": {
     "back": "返回衣橱",

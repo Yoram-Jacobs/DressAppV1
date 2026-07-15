@@ -403,7 +403,15 @@
     "pendingGarmentAlt": "פריט בהמתנה",
     "queuedForAutoSave": "ממתין ל‑{{count}} תמונות — ישמר אוטומטית.",
     "savedSomeWaitingForRest": "{{saved}} נשמרו — ממתין ל‑{{remaining}} נוספים.",
-    "quickConfirmMode": "מצב אישור מהיר"
+    "quickConfirmMode": "מצב אישור מהיר",
+    "uploadUrl": "קישור URL",
+    "urlModalTitle": "ייבוא תמונה מכתובת URL",
+    "urlModalLabel": "הדבק כתובת אינטרנט של תמונה (URL)",
+    "urlModalPlaceholder": "https://example.com/garment.jpg",
+    "urlModalButton": "ייבוא",
+    "urlImporting": "מייבא תמונה מכתובת URL...",
+    "urlImportSuccess": "התמונה יובאה בהצלחה!",
+    "urlImportFailed": "ייבוא התמונה מכתובת URL נכשל"
   },
   "itemDetail": {
     "back": "חזור",
