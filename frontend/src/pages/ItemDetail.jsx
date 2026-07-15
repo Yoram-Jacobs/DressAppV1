@@ -2290,17 +2290,7 @@ export default function ItemDetail() {
                   </span>
                 </div>
               </div>
-              <Field label={t('itemDetail.edit.formality')}>
-                <NullableSelect
-                  value={form.formality}
-                  onChange={(v) => setField('formality', v)}
-                  options={FORMALITY_OPTIONS}
-                  placeholder="—"
-                  testid="item-edit-field-formality"
-                  format={(o) => labelForFormality(o, t)}
-                  className={!form.formality ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
-                />
-              </Field>
+
               <Field label={t('itemDetail.edit.tags')}>
                 <ChipList
                   value={form.tags}
