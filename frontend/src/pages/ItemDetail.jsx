@@ -1341,7 +1341,7 @@ export default function ItemDetail() {
                 <img
                   src={preferredImage}
                   alt={form.title || item.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                   data-testid="item-detail-main-image"
                 />
               ) : (

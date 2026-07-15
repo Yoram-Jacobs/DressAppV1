@@ -147,9 +147,19 @@ android {
 
         
     }
+    signingConfigs {
+        release {
+            storeFile file('../android.keystore')
+            storePassword 'dressapp'
+            keyAlias 'android'
+            keyPassword 'dressapp'
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled true
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {
