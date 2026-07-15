@@ -692,7 +692,7 @@ class GarmentVisionService:
         crop_bytes = image_bytes
         crop_mime = "image/jpeg"
 
-        defer_matte = False
+        defer_matte = settings.AUTO_MATTE_CROPS
         if settings.AUTO_MATTE_CROPS and detections:
             best_det = max(
                 detections,
@@ -1592,7 +1592,11 @@ class GarmentVisionService:
             single = await self.analyze(
                 image_bytes, language=language, think=think,
             )
-            return [self._build_fullframe_item(single, image_bytes)]
+            return [
+                self._build_fullframe_item(
+                    single, image_bytes, defer_matte=settings.AUTO_MATTE_CROPS
+                )
+            ]
 
         # 4) Crop (CPU-bound; run on a worker thread).
         raw_crops = await asyncio.to_thread(
@@ -1618,7 +1622,11 @@ class GarmentVisionService:
             single = await self.analyze(
                 image_bytes, language=language, think=think,
             )
-            return [self._build_fullframe_item(single, image_bytes)]
+            return [
+                self._build_fullframe_item(
+                    single, image_bytes, defer_matte=settings.AUTO_MATTE_CROPS
+                )
+            ]
 
         # 6) Analyse each crop in parallel.
         items = await self._analyse_crops(crops, language, think=think)
@@ -1626,7 +1634,11 @@ class GarmentVisionService:
         # 7) If every parallel call failed, fall back once.
         if not items:
             single = await self.analyze(image_bytes, think=think)
-            return [self._build_fullframe_item(single, image_bytes)]
+            return [
+                self._build_fullframe_item(
+                    single, image_bytes, defer_matte=settings.AUTO_MATTE_CROPS
+                )
+            ]
 
         # Patch 8 marker: flag every item so the /closet save endpoint
         # knows it must queue a rembg BackgroundTask for this crop
@@ -1702,7 +1714,7 @@ class GarmentVisionService:
             crop_bytes = image_bytes
             crop_mime = "image/jpeg"
 
-            defer_matte = False
+            defer_matte = settings.AUTO_MATTE_CROPS
             best_det: dict[str, Any] | None = None
             if settings.AUTO_MATTE_CROPS and detections:
                 best_det = max(
@@ -2016,19 +2028,31 @@ class GarmentVisionService:
                                 * max(0, d["bbox"][3] - d["bbox"][1])
                             ),
                         )
-                        # Crop the image to the detected garment bounds so it isn't
-                        # floating in a huge frame, and so fast_matte works correctly.
-                        raw_crops = await asyncio.to_thread(
-                            self._bbox_crop_useful, img_bytes, [best_det], is_single_item=True,
-                        )
-                        fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
-                        return idx, fast_crops
                     else:
-                        return idx, []
+                        best_det = {"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment"}
+                    
+                    # Crop the image to the detected garment bounds so it isn't
+                    # floating in a huge frame, and so fast_matte works correctly.
+                    raw_crops = await asyncio.to_thread(
+                        self._bbox_crop_useful, img_bytes, [best_det], is_single_item=True,
+                    )
+                    for det, _, _ in raw_crops:
+                        det["defer_matte"] = settings.AUTO_MATTE_CROPS
+                        det["is_single_item"] = True
+                    fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
+                    return idx, fast_crops
 
                 useful = self._filter_useful_detections(detections, cap)
                 if not useful:
-                    return idx, []
+                    best_det = {"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment"}
+                    raw_crops = await asyncio.to_thread(
+                        self._bbox_crop_useful, img_bytes, [best_det], is_single_item=True,
+                    )
+                    for det, _, _ in raw_crops:
+                        det["defer_matte"] = settings.AUTO_MATTE_CROPS
+                        det["is_single_item"] = True
+                    fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
+                    return idx, fast_crops
 
                 raw_crops = await asyncio.to_thread(self._bbox_crop_useful, img_bytes, useful)
                 
