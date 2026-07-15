@@ -1544,6 +1544,15 @@ def apply_alpha_intersection(
                 repr(exc)[:120],
             )
 
+    # 4. Intersect with the dilated soft mask of the target garment to crop out other garments
+    try:
+        new_alpha = np.minimum(new_alpha, soft_mask).astype(np.uint8)
+    except Exception as exc:  # noqa: BLE001
+        logger.info(
+            "apply_alpha_intersection: soft-mask intersection failed: %s",
+            repr(exc)[:120],
+        )
+
     # Patch 12j (May 2026) — phantom guard. If the subtraction wiped out
     # > 95% of the solid alpha, the refined image is empty. Bail out and let
     # the caller keep the untouched rembg output.
