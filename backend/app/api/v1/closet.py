@@ -2060,6 +2060,78 @@ async def analyze_item_image(
     )
 
 
+class PolishCropIn(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    image_base64: str
+    category: str | None = None
+
+
+@router.post("/polish-crop")
+async def polish_crop(
+    payload: PolishCropIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Run full rembg + SegFormer matting on an already-cropped image from the AddItem review screen.
+
+    This is called by the client *in the background* as soon as an item is
+    scanned/analyzed, allowing the user to see the polished cutout before saving.
+    """
+    try:
+        # Strip data URL prefix if present
+        b64_data = payload.image_base64
+        if b64_data.startswith("data:"):
+            _, b64_data = b64_data.split(",", 1)
+        raw_bytes = base64.b64decode(b64_data, validate=True)
+    except Exception as exc:
+        raise HTTPException(400, f"Invalid image_base64: {exc}") from exc
+
+    if not settings.AUTO_MATTE_CROPS:
+        return {"image_base64": payload.image_base64, "applied": False}
+
+    from app.services import background_matting
+    from app.services import clothing_parser as _cp
+
+    # Run rembg and SegFormer concurrently
+    bg_task = asyncio.create_task(background_matting.remove_background(raw_bytes))
+    cp_task = asyncio.create_task(_cp.parse_garments(raw_bytes))
+    await asyncio.gather(bg_task, cp_task, return_exceptions=True)
+
+    result = bg_task.result() if not bg_task.exception() else {}
+    garments = cp_task.result() if not cp_task.exception() else []
+
+    if not result or not result.get("image_png"):
+        return {"image_base64": payload.image_base64, "applied": False}
+
+    refined_png = result["image_png"]
+    if settings.USE_LOCAL_CLOTHING_PARSER:
+        seg_mask = None
+        human_mask = None
+        try:
+            seg_mask, human_mask = _pick_segformer_mask_for_category(
+                garments, payload.category
+            )
+        except Exception as exc:
+            logger.info("polish_crop SegFormer mask pick skipped: %s", exc)
+
+        if seg_mask is not None:
+            try:
+                maybe_refined = _cp.apply_alpha_intersection(
+                    result["image_png"],
+                    seg_mask,
+                    category=payload.category,
+                    human_mask=human_mask,
+                    is_padded_canvas=True,
+                )
+                if maybe_refined:
+                    refined_png = maybe_refined
+            except Exception as exc:
+                logger.info("polish_crop apply_alpha_intersection failed: %s", exc)
+
+    # Encode back to base64
+    out_b64 = base64.b64encode(refined_png).decode("utf-8")
+    return {"image_base64": f"data:image/png;base64,{out_b64}", "applied": True}
+
+
 # Patch M17 (May 2026) — Module-level config for the keepalive heartbeat
 # inside the ``/analyze`` streaming response. 8 s comfortably beats
 # every commodity ingress idle timeout (Kubernetes nginx default 60 s,
