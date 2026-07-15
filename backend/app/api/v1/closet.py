@@ -1084,20 +1084,26 @@ async def create_item(
     # uncropped user photo is preserved forever, but the UX still gets the crop 
     # to display while the background matte is pending.
     if payload.image_base64:
-        _mime = payload.image_mime or "image/jpeg"
-        if not _mime.startswith("image/"):
-            _mime = "image/jpeg"
-        doc["original_image_url"] = (
-            f"data:{_mime};base64,{payload.image_base64}"
-        )
+        if payload.image_base64.startswith("data:"):
+            doc["original_image_url"] = payload.image_base64
+        else:
+            _mime = payload.image_mime or "image/jpeg"
+            if not _mime.startswith("image/"):
+                _mime = "image/jpeg"
+            doc["original_image_url"] = (
+                f"data:{_mime};base64,{payload.image_base64}"
+            )
     
     if payload.crop_base64:
-        _mime = payload.image_mime or "image/jpeg"
-        if not _mime.startswith("image/"):
-            _mime = "image/jpeg"
-        doc["segmented_image_url"] = (
-            f"data:{_mime};base64,{payload.crop_base64}"
-        )
+        if payload.crop_base64.startswith("data:"):
+            doc["segmented_image_url"] = payload.crop_base64
+        else:
+            _mime = payload.image_mime or "image/jpeg"
+            if not _mime.startswith("image/"):
+                _mime = "image/jpeg"
+            doc["segmented_image_url"] = (
+                f"data:{_mime};base64,{payload.crop_base64}"
+            )
 
     # Phase Z2.1 — if the client didn't compute a phash (older client,
     # camera capture, etc.) AND we have raw bytes here, compute one
@@ -1121,10 +1127,13 @@ async def create_item(
 
     # Phase Q — persist the reconstructed image (data URL) when supplied.
     if payload.reconstructed_image_b64:
-        mime = (payload.reconstruction_metadata or {}).get("mime_type", "image/png")
-        doc["reconstructed_image_url"] = (
-            f"data:{mime};base64,{payload.reconstructed_image_b64}"
-        )
+        if payload.reconstructed_image_b64.startswith("data:"):
+            doc["reconstructed_image_url"] = payload.reconstructed_image_b64
+        else:
+            mime = (payload.reconstruction_metadata or {}).get("mime_type", "image/png")
+            doc["reconstructed_image_url"] = (
+                f"data:{mime};base64,{payload.reconstructed_image_b64}"
+            )
 
     # Phase R (July 2026) — receipt-import provenance persistence.
     # Store receipt flags before any background task is queued so the
@@ -1313,6 +1322,17 @@ async def create_item(
         doc["auto_listing_needs_completion"] = True
         # Lift privacy so the stylist engine also sees it as Shared.
         doc["source"] = "Shared"
+
+    # Pre-generate thumbnail and placeholder to avoid client-side empty card/grey flashes.
+    try:
+        from app.services.thumbnails import ensure_thumbnail_and_placeholder
+        thumb, place = await ensure_thumbnail_and_placeholder(doc)
+        if thumb:
+            doc["thumbnail_data_url"] = thumb
+        if place:
+            doc["placeholder_data_url"] = place
+    except Exception as exc:
+        logger.warning("Pre-generating thumbnail in create_item failed: %s", exc)
 
     await repos.insert(db.closet_items, doc)
 
