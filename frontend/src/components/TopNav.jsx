@@ -112,7 +112,7 @@ export const TopNav = () => {
           </DialogHeader>
           <div className="flex-1 w-full h-full overflow-hidden rounded-lg border border-border bg-muted/20 mt-2">
             <iframe
-              src={`${process.env.REACT_APP_BACKEND_URL || ''}/static/User-manual_easy.pdf`}
+              src="/User-manual_easy.pdf"
               className="w-full h-full border-none"
               title="DressApp User Manual"
             />
