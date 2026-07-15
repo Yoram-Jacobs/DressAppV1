@@ -32,9 +32,10 @@ export const TopNav = () => {
   return (
     <header
       data-testid="top-nav"
-      className="hidden md:block sticky top-0 z-30 bg-background/85 backdrop-blur border-b border-border"
+      className="sticky top-0 z-30 bg-background/85 backdrop-blur border-b border-border"
     >
-      <div className="mx-auto max-w-6xl px-6 h-16 flex items-center gap-8">
+      {/* Desktop Header */}
+      <div className="hidden md:flex mx-auto max-w-6xl px-6 h-16 items-center gap-8">
         <Link to="/home" data-testid="brand-logo" aria-label={t('brand')}>
           <BrandLogo size="md" testId="brand-logo-mark" />
         </Link>
@@ -106,6 +107,24 @@ export const TopNav = () => {
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Mobile Header */}
+      <div className="flex md:hidden h-14 items-center justify-between px-4">
+        <Link to="/home" data-testid="mobile-brand-logo" aria-label={t('brand')}>
+          <BrandLogo size="sm" testId="mobile-brand-logo-mark" />
+        </Link>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full h-10 w-10 p-0 text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+          onClick={() => setHelpOpen(true)}
+          data-testid="mobile-help-button"
+          aria-label="Open Help Menu"
+        >
+          <HelpCircle className="h-5 w-5" />
+        </Button>
+      </div>
+
       <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
         <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0 overflow-hidden">
           <HelpMenu />
