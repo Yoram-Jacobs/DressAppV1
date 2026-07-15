@@ -2402,8 +2402,18 @@ async def fetch_image_url(
 ) -> dict[str, Any]:
     """Fetch an image from a URL and return it in base64 format to bypass CORS."""
     import httpx
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        ),
+        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
     try:
-        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+        async with httpx.AsyncClient(
+            timeout=15.0, follow_redirects=True, headers=headers
+        ) as client:
             resp = await client.get(payload.url)
             resp.raise_for_status()
             content = resp.content
