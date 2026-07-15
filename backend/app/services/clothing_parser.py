@@ -1510,7 +1510,7 @@ def apply_alpha_intersection(
                 human_resized = (
                     human_mask * 255 if human_mask.dtype != np.uint8 else human_mask
                 ).astype(np.uint8)
-            skin_dilate_px = max(1, dilate_px // 2)
+            skin_dilate_px = dilate_px + 2
             if skin_dilate_px > 0:
                 human_im = Image.fromarray(human_resized, mode="L")
                 human_im = human_im.filter(
@@ -1580,25 +1580,30 @@ def apply_alpha_intersection(
 # Underwear) so callers can pass whichever they have in scope without a
 # pre-mapping step.
 _DILATE_PCT_BY_CATEGORY: dict[str, float] = {
-    # Tight-boundary garments (1.2-1.8 %): share an edge with an
+    # Tight-boundary garments (0.8-1.0 %): share an edge with an
     # adjacent garment that rembg also kept as foreground; over-
     # dilating bleeds the adjacent fabric into this cutout.
-    "top": 0.015,
-    "bottom": 0.015,
-    "dress": 0.018,
-    "fullbody": 0.018,
-    "full body": 0.018,
-    "accessory": 0.015,
-    "accessories": 0.015,
-    "underwear": 0.015,
+    "top": 0.008,
+    "bottom": 0.008,
+    "dress": 0.010,
+    "fullbody": 0.010,
+    "full body": 0.010,
+    "accessory": 0.008,
+    "accessories": 0.008,
+    "underwear": 0.008,
     # Outerwear is the middle ground — jackets / coats often have a
     # collar that overlaps a top's neckline but a free-hanging hem.
-    "outerwear": 0.020,
-    # Free-edge garments (2.5 %): no adjacent-garment risk; the
+    "outerwear": 0.012,
+    # Free-edge garments (1.5 %): no adjacent-garment risk; the
     # original Patch 12f budget is preserved to keep the puffy-cuff
     # / low-contrast-shoe recovery working.
-    "footwear": 0.025,
-    "headwear": 0.025,
+    "footwear": 0.015,
+    "shoes": 0.015,
+    "sneakers": 0.015,
+    "boots": 0.015,
+    "headwear": 0.015,
+    "hat": 0.015,
+    "unknown": 0.015,
 }
 _DILATE_PCT_DEFAULT = 0.025  # backward-compat for unknown / missing categories.
 
