@@ -19,15 +19,16 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
 | **Capture** | Snap or upload photos. The vision pipeline crops each garment, removes the background, and auto-fills 20+ attributes (category, fabric, fit, season, dress-code, colours, condition, repair advice…). |
 | **Auto-fill** | Falls back to local SegFormer + rembg + a Gemini stylist for descriptions. Bulk uploads (>5 items) auto-process in the background and land in the closet for review. |
 | **DPP QR scan** | Scans EU Digital Product Passport QR codes (JSON-LD or inline JSON), imports brand, fibre composition, supply-chain trace and care info — even without a photo. |
-| **AI Stylist** | Conversational chat (text or voice) that pulls weather, your calendar, your closet, and your cultural context to suggest complete outfits. Speaks 12 languages. |
+| **AI Stylist & Audio** | Conversational chat (text or voice) that pulls weather, your calendar, your closet, and your cultural context to suggest complete outfits. Speaks 12 languages. Integrated STT/TTS routes between Gemma4 and Gemini 2.5 Flash, with native Web Speech transcription fallback and mobile offline VITS models (Piper/Sherpa-ONNX). |
 | **Marketplace** | Sell, swap or donate pieces. Region-matched feed, Live PayPal checkout, transparent platform fee (7% after processing). |
 | **Experts directory** | Find vetted stylists, tailors and designers. Self-serve promotion campaigns drive a region-aware ticker on the home screen. |
-| **Trend Scout** | Daily background scheduler curates four trend buckets — runway, street, sustainability, influencers. Translated into the user's language at read time. |
+| **Trend Scout** | Daily background scheduler curates four trend buckets — runway, street, sustainability, influencers. Uses web scraping (BeautifulSoup), Gemini JSON synthesis, link-validation and dynamic translation, with personalized demographic ranking. |
 | **Shopping Assistant** | Chrome extension that reads size charts on partner stores (Zara, Asos, etc.) and recommends sizes based on your stored measurements. |
 | **Suitcase** | Intelligent travel packing assistant that generates daily outfits and a packing list based on trip context, weather, and calendar events, with an interactive refinement chat. |
 | **Group Tagging** | Bulk categorize multiple closet garments instantly to speed up wardrobe organization and improve AI Stylist reasoning. |
 | **Outfit Canvas** | Adaptive dual-canvas interactive avatar that accurately layers outerwear over tops, allowing direct clicks on garments to view details. |
 | **Wardrobe Scheduler** | Automated daily push notifications with 3 styled outfit recommendations generated from your closet history, preventing wear repetition. |
+| **Monetization & Limits**| Gated closet space (150-item baseline limit for Free users) with a paid Pro upgrade path via PayPal Subscriptions REST API (mock-testing supported) or free expansion (+10 slots) via invite referral loops. |
 
 ---
 
@@ -41,7 +42,7 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
 * **Hetzner / dev**: `rembg` (U2-Net) for matting · HuggingFace SegFormer-b2-clothes for clothing parsing · Fashion-CLIP for embeddings — all CPU-local. See `requirements-ml.txt` and the auto-detection in `app/config.py`.
 * **Inference Server**: Optional self-hosted GPU endpoint (Modal/RunPod) wrapping SegFormer-b3 and BiRefNet for fast background matting and parsing.
 
-**Voice** — Deepgram (STT + TTS, multi-voice)
+**Voice / Audio** — Deepgram (STT/TTS fallback), Gemini 2.5 Flash native modulations (prebuilt voice configs puck/aoede/charon), Web Speech API browser integration, and local Piper ONNX support.
 
 **LLM** — Direct `GEMINI_API_KEY`. Default stylist model: Gemini Flash 2.x. Image generation: Gemini 2.5 Flash Image.
 
@@ -71,12 +72,17 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
         │
         ├─ MongoDB Atlas (users, closet, listings, trends, …)
         ├─ Vision pipeline: local SegFormer + rembg + Fashion-CLIP
-        ├─ Deepgram (STT/TTS over HTTPS)
+        ├─ Deepgram & Gemini Audio (STT/TTS over HTTPS)
         ├─ OpenWeather, PayPal Live, Google OAuth/Calendar
         └─ Direct GEMINI_API_KEY → text + image generation
 ```
 
-A more detailed write-up lives in [`/app/docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and the database shape in [`/app/docs/MONGODB_SCHEMA.md`](docs/MONGODB_SCHEMA.md).
+A more detailed write-up has been archived to the external Appendix directory to keep the main codebase clean and compact:
+*   Architecture specifications: [ARCHITECTURE.md](file:///D:/ai/Emergent/Appendix/docs/ARCHITECTURE.md)
+*   Database shape & collections: [MONGODB_SCHEMA.md](file:///D:/ai/Emergent/Appendix/docs/MONGODB_SCHEMA.md)
+*   Audio & Speech subsystems: [Audio.md](file:///D:/ai/Emergent/Appendix/docs/Audio.md)
+*   Monetization & billing engine: [Monetization.md](file:///D:/ai/Emergent/Appendix/docs/Monetization.md)
+*   Fashion news scraper & Personalization: [Trends-Scout.md](file:///D:/ai/Emergent/Appendix/docs/Trends-Scout.md)
 
 ---
 
@@ -119,22 +125,16 @@ A more detailed write-up lives in [`/app/docs/ARCHITECTURE.md`](docs/ARCHITECTUR
 │   ├── main.py             # FastAPI wrapper for SegFormer + BiRefNet
 │   └── Dockerfile          # RunPod/Lambda Labs GPU container setup
 │
-├── scripts/                # Development, i18n, and ML fine-tuning scripts
-│   ├── apply_all_translations.py # Batch locale processing
-│   └── build_eyes_*.py     # Notebook builders for model benchmarks
-│
-├── tests/                  # Integration and unit tests
-│
-├── deploy/                 # Production deploy kit
-│   ├── docker-compose.yml
-│   ├── Dockerfile.backend
-│   ├── Dockerfile.frontend
-│   ├── Caddyfile
-│   ├── nginx-frontend.conf
-│   └── DEPLOY.md           # Step-by-step VPS guide
-│
-└── docs/                   # Architecture + schema docs
+└── deploy/                 # Production deploy kit
+    ├── docker-compose.yml
+    ├── Dockerfile.backend
+    ├── Dockerfile.frontend
+    ├── Caddyfile
+    ├── nginx-frontend.conf
+    └── DEPLOY.md           # Step-by-step VPS guide
 ```
+
+*Note: Documentation (`docs/`), test suites (`tests/`), helper utility scripts (`scripts/`, `scratch/`), test iteration reports (`test_reports/`), quarantine handoffs (`quarantine/`), and local model weights (`Eyes_V4_local/`, `Eyes_V4_SH_local/`) have been moved/archived to the external Appendix directory at [D:\\ai\\Emergent\\Appendix](file:///D:/ai/Emergent/Appendix) to keep the active repository lightweight.*
 
 ---
 
@@ -167,6 +167,7 @@ For a fresh database, populate listings, professionals, trend cards and a demo u
 
 ```bash
 cd backend
+# Seed script resides in backend/scripts/seed_demo.py
 python -m scripts.seed_demo   # idempotent — re-running upserts
 ```
 
@@ -206,7 +207,7 @@ docker compose up -d --build
 2. Run lint before pushing:
    - Python — `ruff check backend/`
    - JS/TS — `cd frontend && yarn lint`
-3. Open a PR. CI runs the full test suite (FastAPI tests + Playwright smokes).
+3. Open a PR. CI runs the full test suite. (Pruned test scripts can be restored from the external Appendix [tests/](file:///D:/ai/Emergent/Appendix/tests/) directory for debugging).
 
 ---
 
