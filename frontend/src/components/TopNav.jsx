@@ -9,8 +9,9 @@ import {
 import { Home, Shirt, Sparkles, Store, LogOut, Settings, Receipt, Shield, UserRound, Megaphone, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { BrandLogo } from '@/components/BrandLogo';
+import HelpMenu from '@/components/HelpMenu';
 
 export const TopNav = () => {
   const { t } = useTranslation();
@@ -106,17 +107,8 @@ export const TopNav = () => {
         </div>
       </div>
       <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
-        <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-4">
-          <DialogHeader className="px-2">
-            <DialogTitle>DressApp Help Menu - User Manual</DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 w-full h-full overflow-hidden rounded-lg border border-border bg-muted/20 mt-2">
-            <iframe
-              src="/User-manual_easy.pdf"
-              className="w-full h-full border-none"
-              title="DressApp User Manual"
-            />
-          </div>
+        <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0 overflow-hidden">
+          <HelpMenu />
         </DialogContent>
       </Dialog>
     </header>

@@ -1,0 +1,401 @@
+import { useState } from 'react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  BookOpen, Info, ShieldAlert, Sparkles, User, BarChart4, 
+  MapPin, Phone, HelpCircle, AlertTriangle, Layers, Wallet, 
+  ShoppingBag, Search, ClipboardList, Camera, Mic
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+export default function HelpMenu() {
+  const [activeTab, setActiveTab] = useState('overview');
+
+  const SECTIONS = [
+    { id: 'overview', label: 'Overview', icon: BookOpen },
+    { id: 'prerequisites', label: 'What You Need', icon: ClipboardList },
+    { id: 'adding-clothes', label: 'Adding Clothes', icon: Camera },
+    { id: 'ai-stylist', label: 'AI Fashion Stylist', icon: Mic },
+    { id: 'profile-matters', label: 'Profile Options', icon: User },
+    { id: 'wardrobe-stats', label: 'Wardrobe Stats', icon: BarChart4 },
+    { id: 'dress-up', label: 'Dress-Up Canvas', icon: Layers },
+    { id: 'suitcase', label: 'Suitcase Assistant', icon: MapPin },
+    { id: 'marketplace', label: 'Swap & Sell Shop', icon: ShoppingBag },
+    { id: 'troubleshooting', label: 'Troubleshooting', icon: HelpCircle },
+  ];
+
+  return (
+    <div className="flex h-full w-full overflow-hidden text-foreground bg-background rounded-lg">
+      {/* Sidebar Navigation */}
+      <aside className="w-64 border-r border-border bg-secondary/10 flex flex-col shrink-0 hidden md:flex">
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center gap-2 font-semibold">
+            <BookOpen className="h-5 w-5 text-primary" />
+            <span>Table of Contents</span>
+          </div>
+        </div>
+        <ScrollArea className="flex-1 py-2">
+          <nav className="px-2 space-y-1">
+            {SECTIONS.map((sec) => {
+              const Icon = sec.icon;
+              const isActive = activeTab === sec.id;
+              return (
+                <button
+                  key={sec.id}
+                  onClick={() => setActiveTab(sec.id)}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left font-medium",
+                    isActive 
+                      ? "bg-primary/10 text-primary" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                  )}
+                >
+                  <Icon className={cn("h-4 w-4", isActive ? "text-primary" : "text-muted-foreground")} />
+                  {sec.label}
+                </button>
+              );
+            })}
+          </nav>
+        </ScrollArea>
+      </aside>
+
+      {/* Content Area */}
+      <main className="flex-1 flex flex-col min-w-0">
+        {/* Mobile quick tabs selection dropdown */}
+        <div className="md:hidden p-3 border-b border-border bg-secondary/15">
+          <select 
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value)}
+            className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {SECTIONS.map((sec) => (
+              <option key={sec.id} value={sec.id}>
+                {sec.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <ScrollArea className="flex-1 p-6">
+          <div className="max-w-2xl mx-auto space-y-6">
+            {activeTab === 'overview' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <BookOpen className="h-6 w-6" /> Overview
+                </h2>
+                <p className="text-base leading-relaxed text-muted-foreground">
+                  Welcome to <strong>DressApp</strong>! This is a fun app that lets you build your very own digital clothes closet.
+                </p>
+                <p className="text-base leading-relaxed text-muted-foreground">
+                  Imagine taking pictures of all your shirts, pants, skirts, and shoes, and putting them into a magical book. 
+                  Once they are inside, a friendly helper looks at your clothes, checks the weather outside, and helps you pick what to wear today!
+                </p>
+                <p className="text-base leading-relaxed text-muted-foreground">
+                  You can also dress up your own character (avatar), trade or share clothes with friends, and see how much your closet is worth.
+                </p>
+              </div>
+            )}
+
+            {activeTab === 'prerequisites' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <ClipboardList className="h-6 w-6" /> What You Need
+                </h2>
+                <p className="text-muted-foreground">To start playing with DressApp, you will need:</p>
+                <ul className="space-y-3 pl-1">
+                  <li className="flex items-start gap-3">
+                    <span className="h-6 w-6 shrink-0 rounded-full bg-secondary flex items-center justify-center text-xs font-semibold text-foreground">1</span>
+                    <span className="text-muted-foreground pt-0.5">A computer, tablet, or phone with a web browser.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="h-6 w-6 shrink-0 rounded-full bg-secondary flex items-center justify-center text-xs font-semibold text-foreground">2</span>
+                    <span className="text-muted-foreground pt-0.5">A camera on your device to snap photos of your clothes.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="h-6 w-6 shrink-0 rounded-full bg-secondary flex items-center justify-center text-xs font-semibold text-foreground">3</span>
+                    <span className="text-muted-foreground pt-0.5">A microphone on your device so you can talk to your helpful styling friend.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="h-6 w-6 shrink-0 rounded-full bg-secondary flex items-center justify-center text-xs font-semibold text-foreground">4</span>
+                    <span className="text-muted-foreground pt-0.5">An account created with the help of a parent or guardian.</span>
+                  </li>
+                </ul>
+              </div>
+            )}
+
+            {activeTab === 'adding-clothes' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <Camera className="h-6 w-6" /> Adding Clothes to Your Closet
+                </h2>
+                <p className="text-muted-foreground">Let's put your physical clothes into your digital game closet!</p>
+                <div className="space-y-3">
+                  {[
+                    "Open the app and click the **Add Item** button.",
+                    "Click **Take Photo** to take a picture of your garment, or click **Upload Photos** if you already have a picture saved.",
+                    "The app checks if you already added this item before. If you did, a pop-up window will ask if you want to skip it.",
+                    "If it's a new item, wait 5 seconds. The app will magically remove the background, crop the clothing item, and guess its color and fabric.",
+                    "Check if the app guessed right! You can choose the type of clothing (like shirt or pants). If the cutout shape looks wrong, changing the clothing type category will fix it.",
+                    "Click the **Save** button. Now the item is saved in your closet grid!"
+                  ].map((text, idx) => (
+                    <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
+                      <span className="font-bold text-primary text-lg">{idx + 1}</span>
+                      <p className="text-sm text-muted-foreground pt-0.5">
+                        {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-foreground font-semibold">{part}</strong> : part)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'ai-stylist' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <Mic className="h-6 w-6" /> Talking to Your AI Fashion Friend
+                </h2>
+                <p className="text-muted-foreground">You have a friendly AI helper who gives you advice on what to wear. You can talk to it just like a friend!</p>
+                <div className="space-y-3">
+                  {[
+                    "Go to the **AI Stylist** screen.",
+                    "Tap the **Microphone** button.",
+                    "Ask a question out loud, like: \"What matches my blue jeans for a rainy school day?\"",
+                    "You will see your words appear on the screen as you talk.",
+                    "If the voice typing doesn't work, the app will record your voice and send it to the smart helper.",
+                    "The helper will read the weather, check what clothes are in your closet, and suggest an outfit.",
+                    "The helper will speak back to you! Click **Play Reply** to hear the advice again."
+                  ].map((text, idx) => (
+                    <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
+                      <span className="font-bold text-primary text-lg">{idx + 1}</span>
+                      <p className="text-sm text-muted-foreground pt-0.5">
+                        {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-foreground font-semibold">{part}</strong> : part)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'profile-matters' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <User className="h-6 w-6" /> Managing Your Profile (Why it matters!)
+                </h2>
+                <p className="text-muted-foreground">Your Profile page has different settings sections. Here is why each section is important:</p>
+                
+                <div className="space-y-4">
+                  {[
+                    {
+                      title: "1. Photos & Avatar",
+                      desc: "This is where you put your profile photo. It lets the app draw your character avatar. The app automatically shrinks the images so they don't take up too much memory."
+                    },
+                    {
+                      title: "2. Style Profile (Your Preferences)",
+                      desc: "It tells the helper what kind of clothes you like to wear. If you prefer modest clothes, you can toggle that option. The helper will only suggest outfits that make you feel comfortable."
+                    },
+                    {
+                      title: "3. Details (Name & Phone)",
+                      desc: "This lets the app know who you are so it can greet you by name. The app uses your name in greeting alerts and emails. Your phone number is used to send push alerts."
+                    },
+                    {
+                      title: "4. Body & Measurements (Your Sizes)",
+                      desc: "It helps the app find clothes that fit you when you are looking at online shops. The shopping assistant reads size tables on websites and tells you which size fits best."
+                    },
+                    {
+                      title: "5. Lifestyle",
+                      desc: "It helps the helper understand what you do every day (like school or play) and customizes trend suggestions for kid-friendly views."
+                    },
+                    {
+                      title: "6. AI Configuration (The Smart Brain)",
+                      desc: "It configures how the smart helper thinks. You can run it offline on your phone or use custom keys to route queries."
+                    },
+                    {
+                      title: "7. Scheduler & Push (Morning Alerts)",
+                      desc: "It wakes up the app to give you outfit ideas every morning!"
+                    },
+                    {
+                      title: "8. Google Calendar",
+                      desc: "It matches your outfits to your daily activities, checking if you have soccer practice, music class, or school."
+                    },
+                    {
+                      title: "9. Location Services (Where You Are)",
+                      desc: "It makes sure the helper knows the weather where you live, so it won't suggest a thick coat on a hot summer day."
+                    },
+                    {
+                      title: "10. Voice & Language",
+                      desc: "It lets you pick how the helper speaks to you and changes the language."
+                    },
+                    {
+                      title: "11. Invite Friends",
+                      desc: "It lets you share the app with friends. For every friend who signs up using your link, you get +10 extra slots in your closet."
+                    }
+                  ].map((item, idx) => (
+                    <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/5 space-y-2">
+                      <h4 className="font-semibold text-foreground text-sm flex items-center gap-2">
+                        <Info className="h-4 w-4 text-primary shrink-0" />
+                        {item.title}
+                      </h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed pl-6">
+                        <strong className="text-primary/90 font-medium">Why it matters:</strong> {item.desc}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'wardrobe-stats' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <BarChart4 className="h-6 w-6" /> Checking Your Wardrobe Stats
+                </h2>
+                <p className="text-muted-foreground">See how much your closet is worth and which items are your favorites!</p>
+                <ul className="space-y-3 pl-1">
+                  <li className="flex items-start gap-3">
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-primary mt-2"></span>
+                    <span className="text-muted-foreground leading-relaxed">
+                      <strong>Closet Worth:</strong> How much money all your clothes cost together.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-primary mt-2"></span>
+                    <span className="text-muted-foreground leading-relaxed">
+                      <strong>Closet Utilization:</strong> The percentage of clothes you have worn at least once.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-primary mt-2"></span>
+                    <span className="text-muted-foreground leading-relaxed">
+                      <strong>Cost-per-Wear:</strong> How cheap or expensive a garment is based on how many times you wore it.
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            )}
+
+            {activeTab === 'dress-up' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <Layers className="h-6 w-6" /> Dress-Up Canvas
+                </h2>
+                <p className="text-muted-foreground">Play dress-up and layer your clothes on your character avatar.</p>
+                <div className="space-y-3">
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                    <h4 className="font-semibold text-sm">Layering (Dual Canvas)</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      If you are wearing a jacket over a shirt, the screen will show you two avatars side-by-side: one with the jacket on, and one with the jacket off so you can see the shirt underneath!
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                    <h4 className="font-semibold text-sm">Interactive Click</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Tap directly on any clothing item on your avatar's body. The app will immediately show you the details of that shirt or pants.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'suitcase' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <MapPin className="h-6 w-6" /> Travel Suitcase Assistant
+                </h2>
+                <p className="text-muted-foreground">Pack your bags for trips without forgetting your favorite things!</p>
+                <div className="space-y-3">
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                    <h4 className="font-semibold text-sm">Intelligent Curation</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Generates daily outfits and packing lists based on trip setup dates, duration, local weather, and calendar events.
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                    <h4 className="font-semibold text-sm">Refinement Chat</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Chat with the AI stylist to tweak the suitcase while preserving the rest of the curated list.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'marketplace' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <ShoppingBag className="h-6 w-6" /> The Swap & Sell Shop (Marketplace)
+                </h2>
+                <p className="text-muted-foreground">Share, donate, rent, or trade clothes with other kids in your neighborhood!</p>
+                <div className="space-y-3">
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                    <h4 className="font-semibold text-sm">Create a Listing</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Open an item's detail page, select **Edit Intent**, and choose For Sale (input price/currency), Rent (input daily rate), Swap (mark open for trade), or Donate (publish free).
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                    <h4 className="font-semibold text-sm">Try-On Sandbox</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Buyers can test-fit your listing against their own clothes on their avatar before deciding to swap or buy.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'troubleshooting' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <AlertTriangle className="h-6 w-6" /> Troubleshooting & Solutions
+                </h2>
+                
+                <div className="space-y-4">
+                  <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 space-y-2">
+                    <h4 className="font-semibold text-sm flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                      <ShieldAlert className="h-4 w-4 shrink-0" />
+                      Help! My closet is full and I can't add more clothes!
+                    </h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      <strong>Why it happens:</strong> Free accounts are limited to 150 items.
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      <strong>Easy fix:</strong>
+                      <ol className="list-decimal pl-5 space-y-1 mt-1">
+                        <li>Subscribe to the Pro plan, or share your invite link with a friend to get +10 extra spots.</li>
+                        <li>Get a free Gemini API key by logging into Google AI Studio with your Google account. Go to the "Get API key" section on the left sidebar, click Create API key, and copy your unique string. No credit card is required for the free tier.</li>
+                      </ol>
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-2">
+                    <h4 className="font-semibold text-sm flex items-center gap-2">
+                      <HelpCircle className="h-4 w-4 text-primary shrink-0" />
+                      My camera won't turn on!
+                    </h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      <strong>Why it happens:</strong> Your web browser doesn't have permission to use the camera.
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      <strong>Easy fix:</strong> Go to browser settings, allow camera access, and refresh the page.
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-2">
+                    <h4 className="font-semibold text-sm flex items-center gap-2">
+                      <HelpCircle className="h-4 w-4 text-primary shrink-0" />
+                      The app is running slow when I upload multiple pictures!
+                    </h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      <strong>Why it happens:</strong> Processing pictures takes a lot of computer work.
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      <strong>Easy fix:</strong> The app automatically processes them one by one. Just wait a minute!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </main>
+    </div>
+  );
+}
