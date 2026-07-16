@@ -1,3 +1,3 @@
 # Wiki: risoluzione dei problemi
 
-Guida dettagliata e riferimento per la risoluzione dei problemi del modulo DressApp. In costruzione.
+Guida dettagliata e riferimenti per la risoluzione dei problemi del modulo DressApp. In costruzione.

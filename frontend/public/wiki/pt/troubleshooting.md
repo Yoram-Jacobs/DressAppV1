@@ -1,3 +1,3 @@
-# Wiki: Solução de problemas
+# Wiki: solução de problemas
 
-Orientação detalhada e referência para solução de problemas do módulo DressApp. Em construção.
+Orientação detalhada e referência para a solução de problemas do módulo DressApp. Em construção.

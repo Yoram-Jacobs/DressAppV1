@@ -1,3 +1,3 @@
 # Wiki: Requisitos previos
 
-Guía detallada y referencia para los requisitos previos del módulo DressApp. Bajo construcción.
+Guía detallada y referencia para los requisitos previos del módulo DressApp. En construcción.

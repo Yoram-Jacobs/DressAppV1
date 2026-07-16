@@ -1,3 +1,3 @@
 # Wiki: Trendscout
 
-Ausführliche Anleitung und Referenz für das Trendscout-DressApp-Modul. Im Bau.
+Detaillierte Anleitung und Referenz für das Trend Scout DressApp-Modul. Im Bau.

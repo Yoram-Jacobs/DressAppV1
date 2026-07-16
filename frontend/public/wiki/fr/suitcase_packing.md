@@ -1,3 +1,3 @@
-# Wiki : Emballage de valise
+# Wiki : Emballage d'une valise
 
-Conseils détaillés et référence pour le module DressApp d'emballage de valise. En cours de construction.
+Conseils détaillés et référence pour le module DressApp d'emballage de valise. En construction.

@@ -1,3 +1,3 @@
-# Wiki: aggiungere vestiti
+# Wiki: aggiunta di vestiti
 
-Guida dettagliata e riferimento per il modulo DressApp per l'aggiunta di vestiti. In costruzione.
+Guida dettagliata e riferimenti per il modulo DressApp per l'aggiunta di vestiti. In costruzione.

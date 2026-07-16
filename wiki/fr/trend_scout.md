@@ -1,3 +1,3 @@
 # Wiki : Scout des tendances
 
-Conseils détaillés et référence pour le module Trend Scout DressApp. En cours de construction.
+Conseils détaillés et référence pour le module DressApp de recherche de tendances. En construction.

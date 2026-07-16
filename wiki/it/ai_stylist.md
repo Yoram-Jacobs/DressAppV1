@@ -1,3 +1,3 @@
-# Wiki: Stilista Ai
+# Wiki: Ai Stilista
 
-Guida dettagliata e riferimento per il modulo Ai Stilist DressApp. In costruzione.
+Guida dettagliata e riferimenti per il modulo ai stylist DressApp. In costruzione.

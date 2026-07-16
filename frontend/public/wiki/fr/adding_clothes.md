@@ -1,3 +1,3 @@
 # Wiki : Ajouter des vêtements
 
-Conseils détaillés et référence pour le module d'ajout de vêtements DressApp. En cours de construction.
+Conseils détaillés et référence pour le module DressApp d'ajout de vêtements. En construction.
