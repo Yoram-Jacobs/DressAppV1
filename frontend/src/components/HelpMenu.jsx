@@ -3,7 +3,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   BookOpen, Info, ShieldAlert, Sparkles, User, BarChart4, 
   MapPin, Phone, HelpCircle, AlertTriangle, Layers, Wallet, 
-  ShoppingBag, Search, ClipboardList, Camera, Mic
+  ShoppingBag, Search, ClipboardList, Camera, Mic, Grid, TrendingUp, UserRound
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -14,12 +14,15 @@ export default function HelpMenu() {
     { id: 'overview', label: 'Overview', icon: BookOpen },
     { id: 'prerequisites', label: 'What You Need', icon: ClipboardList },
     { id: 'adding-clothes', label: 'Adding Clothes', icon: Camera },
+    { id: 'closet-page', label: 'Your Closet', icon: Grid },
     { id: 'ai-stylist', label: 'AI Fashion Stylist', icon: Mic },
     { id: 'profile-matters', label: 'Profile Options', icon: User },
     { id: 'wardrobe-stats', label: 'Wardrobe Stats', icon: BarChart4 },
-    { id: 'dress-up', label: 'Dress-Up Canvas', icon: Layers },
+    { id: 'dress-up', label: 'Outfit Planner', icon: Layers },
     { id: 'suitcase', label: 'Suitcase Assistant', icon: MapPin },
     { id: 'marketplace', label: 'Swap & Sell Shop', icon: ShoppingBag },
+    { id: 'trend-scout', label: 'Trend Scout', icon: TrendingUp },
+    { id: 'experts', label: 'Ask a Professional', icon: UserRound },
     { id: 'troubleshooting', label: 'Troubleshooting', icon: HelpCircle },
   ];
 
@@ -83,11 +86,11 @@ export default function HelpMenu() {
                   <BookOpen className="h-6 w-6" /> Overview
                 </h2>
                 <p className="text-base leading-relaxed text-muted-foreground">
-                  Welcome to <strong>DressApp</strong>! This is a fun app that lets you build your very own digital clothes closet.
+                  Welcome to <strong>DressApp</strong>! This is a cutting-edge app that lets you build your very own digital clothes closet.
                 </p>
                 <p className="text-base leading-relaxed text-muted-foreground">
                   Imagine taking pictures of all your shirts, pants, skirts, and shoes, and putting them into a magical book. 
-                  Once they are inside, a friendly helper looks at your clothes, checks the weather outside, and helps you pick what to wear today!
+                  Once they are inside, a professional and experienced stylist looks at your clothes, checks the weather outside, and helps you pick what to wear for any occasion!
                 </p>
                 <p className="text-base leading-relaxed text-muted-foreground">
                   You can also dress up your own character (avatar), trade or share clothes with friends, and see how much your closet is worth.
@@ -100,7 +103,7 @@ export default function HelpMenu() {
                 <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
                   <ClipboardList className="h-6 w-6" /> What You Need
                 </h2>
-                <p className="text-muted-foreground">To start playing with DressApp, you will need:</p>
+                <p className="text-muted-foreground">To start working with DressApp, you will need:</p>
                 <ul className="space-y-3 pl-1">
                   <li className="flex items-start gap-3">
                     <span className="h-6 w-6 shrink-0 rounded-full bg-secondary flex items-center justify-center text-xs font-semibold text-foreground">1</span>
@@ -112,11 +115,13 @@ export default function HelpMenu() {
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="h-6 w-6 shrink-0 rounded-full bg-secondary flex items-center justify-center text-xs font-semibold text-foreground">3</span>
-                    <span className="text-muted-foreground pt-0.5">A microphone on your device so you can talk to your helpful styling friend.</span>
+                    <span className="text-muted-foreground pt-0.5">A microphone on your device so you can talk to your professional AI Stylist.</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="h-6 w-6 shrink-0 rounded-full bg-secondary flex items-center justify-center text-xs font-semibold text-foreground">4</span>
-                    <span className="text-muted-foreground pt-0.5">An account created with the help of a parent or guardian.</span>
+                    <span className="h-6 w-6 shrink-0 rounded-full bg-secondary flex items-center justify-center text-xs font-semibold text-foreground flex-col gap-1">4</span>
+                    <span className="text-muted-foreground pt-0.5">
+                      A Gemini API Key. Get it for free on <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">Google AI Studio</a>.
+                    </span>
                   </li>
                 </ul>
               </div>
@@ -127,14 +132,14 @@ export default function HelpMenu() {
                 <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
                   <Camera className="h-6 w-6" /> Adding Clothes to Your Closet
                 </h2>
-                <p className="text-muted-foreground">Let's put your physical clothes into your digital game closet!</p>
+                <p className="text-muted-foreground">Let's put your physical clothes into your digital closet!</p>
                 <div className="space-y-3">
                   {[
-                    "Open the app and click the **Add Item** button.",
-                    "Click **Take Photo** to take a picture of your garment, or click **Upload Photos** if you already have a picture saved.",
+                    "Open DressApp and click the **Add Item** button.",
+                    "Click **Take Photo** to take a picture of your garment, click **Upload Photos** if you already have a picture saved, click **Import URL** to grab a garment from an online shop link, or click **Upload Receipt** to parse a PDF or image receipt from your purchases.",
                     "The app checks if you already added this item before. If you did, a pop-up window will ask if you want to skip it.",
-                    "If it's a new item, wait 5 seconds. The app will magically remove the background, crop the clothing item, and guess its color and fabric.",
-                    "Check if the app guessed right! You can choose the type of clothing (like shirt or pants). If the cutout shape looks wrong, changing the clothing type category will fix it.",
+                    "If it's a new item, wait 5 seconds. The app will magically remove the background, crop the clothing item, and extract its attributes.",
+                    "Check the results! You can choose the type of clothing (like shirt or pants). If the cutout shape looks wrong, changing the clothing type category will fix it.",
                     "Click the **Save** button. Now the item is saved in your closet grid!"
                   ].map((text, idx) => (
                     <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
@@ -148,21 +153,56 @@ export default function HelpMenu() {
               </div>
             )}
 
+            {activeTab === 'closet-page' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <Grid className="h-6 w-6" /> Your Closet
+                </h2>
+                <p className="text-muted-foreground">The Closet page lets you view, search, and manage your digitized garments:</p>
+                <div className="space-y-3">
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                    <h4 className="font-semibold text-sm">View & Filter</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Browse all your registered shirts, pants, skirts, shoes, and outerwear in a grid. Filter by color, category, season, or material.
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                    <h4 className="font-semibold text-sm">Multi-Select & Delete</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Enable select mode to checkmark multiple clothing items and bulk delete them from your wardrobe database in a single action.
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                    <h4 className="font-semibold text-sm">Item Grouping (Single vs. Set)</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Combine individual garments into a synchronized Set (like a suit or matching dress sets) to ensure they are suggested together. You can ungroup sets back into single items anytime.
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                    <h4 className="font-semibold text-sm">Edit Pane (itemDetails)</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Fine-tune parsed parameters. Manually edit season compatibility, formality tags, primary/secondary colors, fabrics, and custom annotations inside the item's detail editor.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {activeTab === 'ai-stylist' && (
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <Mic className="h-6 w-6" /> Talking to Your AI Fashion Friend
+                  <Mic className="h-6 w-6" /> Talking to Your professional AI Stylist
                 </h2>
-                <p className="text-muted-foreground">You have a friendly AI helper who gives you advice on what to wear. You can talk to it just like a friend!</p>
+                <p className="text-muted-foreground">You have a professional AI stylist who gives you advice on what to wear. You can talk to it just like a friend!</p>
                 <div className="space-y-3">
                   {[
                     "Go to the **AI Stylist** screen.",
                     "Tap the **Microphone** button.",
                     "Ask a question out loud, like: \"What matches my blue jeans for a rainy school day?\"",
                     "You will see your words appear on the screen as you talk.",
-                    "If the voice typing doesn't work, the app will record your voice and send it to the smart helper.",
-                    "The helper will read the weather, check what clothes are in your closet, and suggest an outfit.",
-                    "The helper will speak back to you! Click **Play Reply** to hear the advice again."
+                    "If the voice typing doesn't work, the app will record your voice and send it to the Stylist.",
+                    "The Stylist will read the weather, check what clothes are in your closet, and suggest an outfit.",
+                    "The Stylist will speak back to you! Click **Play Reply** to hear the advice again."
                   ].map((text, idx) => (
                     <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
                       <span className="font-bold text-primary text-lg">{idx + 1}</span>
@@ -186,43 +226,43 @@ export default function HelpMenu() {
                   {[
                     {
                       title: "1. Photos & Avatar",
-                      desc: "This is where you put your profile photo. It lets the app draw your character avatar. The app automatically shrinks the images so they don't take up too much memory."
+                      desc: "This is where you put your profile photo. It lets DressApp draw your character avatar. You will see the outfits on your character avatar."
                     },
                     {
                       title: "2. Style Profile (Your Preferences)",
-                      desc: "It tells the helper what kind of clothes you like to wear. If you prefer modest clothes, you can toggle that option. The helper will only suggest outfits that make you feel comfortable."
+                      desc: "It tells the Stylist what kind of clothes you like to wear. If you prefer modest clothes, you can toggle that option. The Stylist will only suggest outfits that make you feel comfortable."
                     },
                     {
                       title: "3. Details (Name & Phone)",
-                      desc: "This lets the app know who you are so it can greet you by name. The app uses your name in greeting alerts and emails. Your phone number is used to send push alerts."
+                      desc: "This lets DressApp know who you are so it can greet you by name. The app uses your name in greeting alerts and emails. Your phone number is used to send push alerts."
                     },
                     {
                       title: "4. Body & Measurements (Your Sizes)",
-                      desc: "It helps the app find clothes that fit you when you are looking at online shops. The shopping assistant reads size tables on websites and tells you which size fits best."
+                      desc: "It helps DressApp find clothes that fit you when you are looking at online shops. The Shopping assistant reads size tables on websites and tells you which size fits best."
                     },
                     {
                       title: "5. Lifestyle",
-                      desc: "It helps the helper understand what you do every day (like school or play) and customizes trend suggestions for kid-friendly views."
+                      desc: "It helps the Stylist understand what you do every day (like a student, office worker, lawyer, or party) and customizes trend suggestions that suit you best."
                     },
                     {
                       title: "6. AI Configuration (The Smart Brain)",
-                      desc: "It configures how the smart helper thinks. You can run it offline on your phone or use custom keys to route queries."
+                      desc: "it's crucial to have a Gemini (or other model of your choice) API key. Without it, DressApp cannot perform its magic. You have to select a multi-modal AI model."
                     },
                     {
                       title: "7. Scheduler & Push (Morning Alerts)",
-                      desc: "It wakes up the app to give you outfit ideas every morning!"
+                      desc: "It will give you the perfect outfit for the next day based on your calendar, the weather, and your style. The Stylist will rotate your closet for a perfect outfit every day! Saving the frustration of standing in front of the closet and trying to figure out what to wear. It will help you use all of the items in your closet."
                     },
                     {
                       title: "8. Google Calendar",
-                      desc: "It matches your outfits to your daily activities, checking if you have soccer practice, music class, or school."
+                      desc: "It matches your outfits to your daily activities, checking if you have soccer practice, a date, or an important meeting."
                     },
                     {
                       title: "9. Location Services (Where You Are)",
-                      desc: "It makes sure the helper knows the weather where you live, so it won't suggest a thick coat on a hot summer day."
+                      desc: "It makes sure the Stylist knows the weather where you live, so it won't suggest a thick coat on a hot summer day."
                     },
                     {
                       title: "10. Voice & Language",
-                      desc: "It lets you pick how the helper speaks to you and changes the language."
+                      desc: "It lets you pick how the Stylist speaks to you and changes the language."
                     },
                     {
                       title: "11. Invite Friends",
@@ -268,6 +308,12 @@ export default function HelpMenu() {
                       <strong>Cost-per-Wear:</strong> How cheap or expensive a garment is based on how many times you wore it.
                     </span>
                   </li>
+                  <li className="flex items-start gap-3">
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-primary mt-2"></span>
+                    <span className="text-muted-foreground leading-relaxed">
+                      <strong>Color Palette Breakdown:</strong> Stats showing your wardrobe's colors, materials, and categories breakdown.
+                    </span>
+                  </li>
                 </ul>
               </div>
             )}
@@ -275,20 +321,32 @@ export default function HelpMenu() {
             {activeTab === 'dress-up' && (
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <Layers className="h-6 w-6" /> Dress-Up Canvas
+                  <Layers className="h-6 w-6" /> Outfit Planner
                 </h2>
-                <p className="text-muted-foreground">Play dress-up and layer your clothes on your character avatar.</p>
+                <p className="text-muted-foreground">The Outfit Planner helps you layer, arrange, and evaluate your styling selections:</p>
                 <div className="space-y-3">
                   <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
-                    <h4 className="font-semibold text-sm">Layering (Dual Canvas)</h4>
+                    <h4 className="font-semibold text-sm">Outfit Canvas</h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      If you are wearing a jacket over a shirt, the screen will show you two avatars side-by-side: one with the jacket on, and one with the jacket off so you can see the shirt underneath!
+                      Layer and combine clothes dynamically on your custom character avatar to build your outfit layout.
                     </p>
                   </div>
                   <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
-                    <h4 className="font-semibold text-sm">Interactive Click</h4>
+                    <h4 className="font-semibold text-sm">Dual Canvas (Layering)</h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      Tap directly on any clothing item on your avatar's body. The app will immediately show you the details of that shirt or pants.
+                      If you are wearing a jacket or outerwear over a shirt, the interface renders a side-by-side view (one avatar showing the outerwear, one without) so you can review both layers simultaneously.
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                    <h4 className="font-semibold text-sm">Interactive Body-Mapping</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Click directly on any clothing item on your avatar's body to open its dedicated details pane.
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                    <h4 className="font-semibold text-sm">Grading & Metrics</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Displays progress bars grading how well your outfit matches current weather alerts, formality rules, and color palette guidelines.
                     </p>
                   </div>
                 </div>
@@ -323,7 +381,7 @@ export default function HelpMenu() {
                 <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
                   <ShoppingBag className="h-6 w-6" /> The Swap & Sell Shop (Marketplace)
                 </h2>
-                <p className="text-muted-foreground">Share, donate, rent, or trade clothes with other kids in your neighborhood!</p>
+                <p className="text-muted-foreground">Share, donate, rent, or trade clothes with other users in your area!</p>
                 <div className="space-y-3">
                   <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
                     <h4 className="font-semibold text-sm">Create a Listing</h4>
@@ -335,6 +393,58 @@ export default function HelpMenu() {
                     <h4 className="font-semibold text-sm">Try-On Sandbox</h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       Buyers can test-fit your listing against their own clothes on their avatar before deciding to swap or buy.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'trend-scout' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <TrendingUp className="h-6 w-6" /> Trend Scout
+                </h2>
+                <p className="text-muted-foreground">Keep your fashion style ahead of the curve with our daily curated feed:</p>
+                <div className="space-y-3">
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                    <h4 className="font-semibold text-sm">Daily Fashion Feed</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Receives style suggestions, fashion trends, and articles tailored specifically to match your profile preferences.
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                    <h4 className="font-semibold text-sm">Trend Buckets</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Explore four curated categories: **SS26 Runway** (latest high-fashion), **News Flash** (breaking style reports), **Recycling** (sustainable fashion), and **Influencers** (social trendsetters).
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'experts' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <UserRound className="h-6 w-6" /> Ask a Professional
+                </h2>
+                <p className="text-muted-foreground">Connect with real-world fashion experts directly inside DressApp:</p>
+                <div className="space-y-3">
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                    <h4 className="font-semibold text-sm">Fashion Expert Directory</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Browse a registry of certified professional stylists, fashion advisors, and wardrobe consultants.
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                    <h4 className="font-semibold text-sm">Style Speciality Search</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Filter experts by region, country, or specific fashion specialties (e.g. corporate wear, sustainable style, formal event consults).
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                    <h4 className="font-semibold text-sm">Direct Contacts</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Reach out directly via phone, send direct emails, or visit their professional portfolios and websites.
                     </p>
                   </div>
                 </div>
