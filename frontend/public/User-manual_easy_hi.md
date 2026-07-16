@@ -1,158 +1,158 @@
-# DressApp: My DressApp Closet Book
-A Super Simple Guide to Managing Your Clothes & Outfits
+# ड्रेसऐप: माई ड्रेसऐप क्लोसेट बुक
+आपके कपड़े और पोशाकें प्रबंधित करने के लिए एक अत्यंत सरल मार्गदर्शिका
 
 ---
 
-## 1. Overview
-Welcome to DressApp! This is a cutting-edge app that lets you build your very own digital clothes closet.
+## 1. सिंहावलोकन
+ड्रेसऐप में आपका स्वागत है! यह एक अत्याधुनिक ऐप है जो आपको अपनी खुद की डिजिटल कपड़ों की अलमारी बनाने की सुविधा देता है।
 
-Imagine taking pictures of all your shirts, pants, skirts, and shoes, and putting them into a magical book. Once they are inside, a professional and experienced stylist looks at your clothes, checks the weather outside, and helps you pick what to wear for any occasion!
+अपनी सभी शर्ट, पैंट, स्कर्ट और जूतों की तस्वीरें लेने और उन्हें एक जादुई किताब में रखने की कल्पना करें। एक बार जब वे अंदर आ जाते हैं, तो एक पेशेवर और अनुभवी स्टाइलिस्ट आपके कपड़ों को देखता है, बाहर के मौसम की जाँच करता है, और आपको यह चुनने में मदद करता है कि किसी भी अवसर के लिए क्या पहनना है!
 
-You can also dress up your own character (avatar), trade or share clothes with friends, and see how much your closet is worth.
-
----
-
-## 2. What You Need
-To start working with DressApp, you will need:
-- A computer, tablet, or phone with a web browser.
-- A camera on your device to snap photos of your clothes.
-- A microphone on your device so you can talk to your professional AI Stylist.
-- A Gemini API Key. Get it for free on Google AI Studio (https://aistudio.google.com/).
+आप अपने खुद के चरित्र (अवतार) को भी तैयार कर सकते हैं, व्यापार कर सकते हैं या दोस्तों के साथ कपड़े साझा कर सकते हैं और देख सकते हैं कि आपकी अलमारी की कीमत कितनी है।
 
 ---
 
-## 3. Step-by-Step Instructions
-
-### 3.1 Adding Clothes to Your Closet
-Let's put your physical clothes into your digital closet!
-
-1. Open DressApp and click the Add Item button.
-2. Click Take Photo to take a picture of your garment, click Upload Photos if you already have a picture saved, click Import URL to grab a garment from an online shop link, or click Upload Receipt to parse a PDF or image receipt from your purchases.
-3. The app checks if you already added this item before. If you did, a pop-up window will ask if you want to skip it.
-4. If it's a new item, wait 5 seconds. The app will magically remove the background, crop the clothing item, and extract its attributes.
-5. Check the results! You can choose the type of clothing (like shirt or pants). If the cutout shape looks wrong, changing the clothing type category will fix it.
-6. Click the Save button. Now the item is saved in your closet grid!
+## 2. आपको क्या चाहिए
+ड्रेसऐप के साथ काम शुरू करने के लिए, आपको आवश्यकता होगी:
+- वेब ब्राउज़र वाला कंप्यूटर, टैबलेट या फ़ोन.
+- आपके कपड़ों की तस्वीरें खींचने के लिए आपके डिवाइस पर एक कैमरा।
+- आपके डिवाइस पर एक माइक्रोफ़ोन ताकि आप अपने पेशेवर एआई स्टाइलिस्ट से बात कर सकें।
+- एक जेमिनी एपीआई कुंजी। इसे Google AI स्टूडियो (https://aistudio.google.com/) पर निःशुल्क प्राप्त करें।
 
 ---
 
-### 3.2 Talking to Your professional AI Stylist
-You have a professional AI stylist who gives you advice on what to wear. You can talk to it just like a friend!
+## 3. चरण-दर-चरण निर्देश
 
-1. Go to the AI Stylist screen.
-2. Tap the Microphone button.
-3. Ask a question out loud, like: 'What matches my blue jeans for a rainy school day?'
-4. You will see your words appear on the screen as you talk.
-5. If the voice typing doesn't work, the app will record your voice and send it to the Stylist.
-6. The Stylist will read the weather, check what clothes are in your closet, and suggest an outfit.
-7. The Stylist will speak back to you! Click Play Reply to hear the advice again.
+### 3.1 अपनी अलमारी में कपड़े जोड़ना
+आइए आपके भौतिक कपड़ों को आपकी डिजिटल अलमारी में रखें!
 
----
-
-### 3.3 Managing Your Profile (Why it matters!)
-Your Profile page has different settings sections. Here is why each section is important:
-
-- **1. Photos & Avatar**: This is where you put your profile photo. It lets DressApp draw your character avatar. You will see the outfits on your character avatar.
-- **2. Style Profile (Your Preferences)**: It tells the Stylist what kind of clothes you like to wear. If you prefer modest clothes, you can toggle that option. The Stylist will only suggest outfits that make you feel comfortable.
-- **3. Details (Name & Phone)**: This lets DressApp know who you are so it can greet you by name. The app uses your name in greeting alerts and emails. Your phone number is used to send push alerts.
-- **4. Body & Measurements (Your Sizes)**: It helps DressApp find clothes that fit you when you are looking at online shops. The Shopping assistant reads size tables on websites and tells you which size fits best.
-- **5. Lifestyle**: It helps the Stylist understand what you do every day (like a student, office worker, lawyer, or party) and customizes trend suggestions that suit you best.
-- **6. AI Configuration (The Smart Brain)**: it's crucial to have a Gemini (or other model of your choice) API key. Without it, DressApp cannot perform its magic. You have to select a multi-modal AI model.
-- **7. Scheduler & Push (Morning Alerts)**: It will give you the perfect outfit for the next day based on your calendar, the weather, and your style. The Stylist will rotate your closet for a perfect outfit every day! Saving the frustration of standing in front of the closet and trying to figure out what to wear. It will help you use all of the items in your closet.
-- **8. Google Calendar**: It matches your outfits to your daily activities, checking if you have soccer practice, a date, or an important meeting.
-- **9. Location Services (Where You Are)**: It makes sure the Stylist knows the weather where you live, so it won't suggest a thick coat on a hot summer day.
-- **10. Voice & Language**: It lets you pick how the Stylist speaks to you and changes the language.
-- **11. Invite Friends**: It lets you share the app with friends. For every friend who signs up using your link, you get +10 extra slots in your closet.
+1. ड्रेसऐप खोलें और आइटम जोड़ें बटन पर क्लिक करें।
+2. अपने परिधान की तस्वीर लेने के लिए फोटो लें पर क्लिक करें, यदि आपके पास पहले से ही एक तस्वीर सहेजी हुई है तो तस्वीरें अपलोड करें पर क्लिक करें, किसी ऑनलाइन दुकान के लिंक से परिधान लेने के लिए यूआरएल आयात करें पर क्लिक करें, या अपनी खरीदारी से पीडीएफ या छवि रसीद को पार्स करने के लिए रसीद अपलोड करें पर क्लिक करें।
+3. ऐप जाँचता है कि क्या आपने यह आइटम पहले ही जोड़ा है। यदि आपने ऐसा किया है, तो एक पॉप-अप विंडो पूछेगी कि क्या आप इसे छोड़ना चाहते हैं।
+4. यदि यह कोई नया आइटम है, तो 5 सेकंड प्रतीक्षा करें। ऐप जादुई ढंग से पृष्ठभूमि को हटा देगा, कपड़ों की वस्तु को काट देगा, और उसकी विशेषताओं को निकाल देगा।
+5. परिणाम जांचें! आप कपड़ों का प्रकार (जैसे शर्ट या पैंट) चुन सकते हैं। यदि कटआउट का आकार गलत दिखता है, तो कपड़ों के प्रकार की श्रेणी बदलने से यह ठीक हो जाएगा।
+6. सेव बटन पर क्लिक करें. अब आइटम आपके कोठरी ग्रिड में सहेजा गया है!
 
 ---
 
-### 3.4 Checking Your Wardrobe Stats
-See how much your closet is worth and which items are your favorites!
+### 3.2 अपने पेशेवर एआई स्टाइलिस्ट से बात कर रहे हैं
+आपके पास एक पेशेवर एआई स्टाइलिस्ट है जो आपको सलाह देता है कि क्या पहनना है। आप इससे बिल्कुल एक दोस्त की तरह बात कर सकते हैं!
 
-- **Closet Worth: How much money all your clothes cost together.**
-- **Closet Utilization: The percentage of clothes you have worn at least once.**
-- **Cost-per-Wear: How cheap or expensive a garment is based on how many times you wore it.**
-- **Color Palette Breakdown: Stats showing your wardrobe's colors, materials, and categories breakdown.**
-
----
-
-### 3.5 Outfit Planner
-The Outfit Planner helps you layer, arrange, and evaluate your styling selections:
-
-- **Outfit Canvas**: Layer and combine clothes dynamically on your custom character avatar to build your outfit layout.
-- **Dual Canvas (Layering)**: If you are wearing a jacket or outerwear over a shirt, the interface renders a side-by-side view (one avatar showing the outerwear, one without) so you can review both layers simultaneously.
-- **Interactive Body-Mapping**: Click directly on any clothing item on your avatar's body to open its dedicated details pane.
-- **Grading & Metrics**: Displays progress bars grading how well your outfit matches current weather alerts, formality rules, and color palette guidelines.
+1. एआई स्टाइलिस्ट स्क्रीन पर जाएं।
+2. माइक्रोफ़ोन बटन टैप करें.
+3. एक प्रश्न ज़ोर से पूछें, जैसे: 'स्कूल के बरसात के दिन के लिए मेरी नीली जींस से क्या मेल खाता है?'
+4. जैसे ही आप बात करेंगे आपके शब्द स्क्रीन पर दिखाई देंगे।
+5. यदि वॉयस टाइपिंग काम नहीं करती है, तो ऐप आपकी आवाज रिकॉर्ड करेगा और स्टाइलिस्ट को भेज देगा।
+6. स्टाइलिस्ट मौसम को पढ़ेगा, जाँच करेगा कि आपकी अलमारी में कौन से कपड़े हैं, और एक पोशाक का सुझाव देगा।
+7. स्टाइलिस्ट आपसे वापस बात करेगा! सलाह दोबारा सुनने के लिए प्ले रिप्लाई पर क्लिक करें।
 
 ---
 
-### 3.6 Travel Suitcase Assistant
-1. Go to the Suitcase page and fill out your trip details (where you are going, when, and what you will do).
-2. The Stylist will show you a daily packing checklist.
-3. If the weather is going to rain, the Stylist will warn you if you forgot an umbrella or raincoat, and will suggest options.
-4. You can type in the chat to tell the Stylist to change things (e.g. 'Pack a casual outfit for day 2').
-5. Click Approve Suitcase to lock in your list!
+### 3.3 अपनी प्रोफ़ाइल प्रबंधित करना (यह क्यों मायने रखता है!)
+आपके प्रोफ़ाइल पृष्ठ में अलग-अलग सेटिंग अनुभाग हैं। यहाँ प्रत्येक अनुभाग महत्वपूर्ण क्यों है:
+
+- **1. तस्वीरें और अवतार**: यहीं पर आप अपनी प्रोफाइल फोटो लगाएं. यह ड्रेसऐप को आपके चरित्र का अवतार बनाने देता है। आप अपने चरित्र अवतार पर पोशाकें देखेंगे।
+- **2. स्टाइल प्रोफाइल (आपकी प्राथमिकताएँ)**: यह स्टाइलिस्ट को बताता है कि आप किस तरह के कपड़े पहनना पसंद करते हैं। यदि आप साधारण कपड़े पसंद करते हैं, तो आप उस विकल्प को टॉगल कर सकते हैं। स्टाइलिस्ट केवल वही पोशाकें सुझाएगा जो आपको आरामदायक महसूस कराएँ।
+- **3. विवरण (नाम और फ़ोन)**: इससे ड्रेसऐप को पता चल जाता है कि आप कौन हैं ताकि वह आपका नाम लेकर स्वागत कर सके। ऐप ग्रीटिंग अलर्ट और ईमेल में आपके नाम का उपयोग करता है। आपके फ़ोन नंबर का उपयोग पुश अलर्ट भेजने के लिए किया जाता है।
+- **4. शरीर और माप (आपका आकार)**: जब आप ऑनलाइन दुकानें देख रहे हों तो यह ड्रेसऐप को आपके लिए उपयुक्त कपड़े ढूंढने में मदद करता है। शॉपिंग सहायक वेबसाइटों पर आकार तालिकाएँ पढ़ता है और आपको बताता है कि कौन सा आकार सबसे उपयुक्त है।
+- **5. जीवनशैली**: यह स्टाइलिस्ट को यह समझने में मदद करता है कि आप हर दिन क्या करते हैं (जैसे एक छात्र, कार्यालय कार्यकर्ता, वकील, या पार्टी) और उन रुझान सुझावों को अनुकूलित करता है जो आपके लिए सबसे उपयुक्त हैं।
+- **6. एआई कॉन्फ़िगरेशन (स्मार्ट ब्रेन)**: जेमिनी (या अपनी पसंद का अन्य मॉडल) एपीआई कुंजी का होना महत्वपूर्ण है। इसके बिना, ड्रेसऐप अपना जादू नहीं दिखा सकता। आपको एक मल्टी-मॉडल AI मॉडल चुनना होगा।
+- **7. शेड्यूलर और पुश (सुबह अलर्ट)**: यह आपके कैलेंडर, मौसम और आपकी शैली के आधार पर आपको अगले दिन के लिए सही पोशाक देगा। स्टाइलिस्ट हर दिन एक आदर्श पोशाक के लिए आपकी अलमारी को घुमाएगा! कोठरी के सामने खड़े होने और यह पता लगाने की कोशिश करने की निराशा से बचना कि क्या पहनना है। यह आपकी अलमारी में मौजूद सभी वस्तुओं का उपयोग करने में आपकी सहायता करेगा।
+- **8. गूगल कैलेंडर**: यह आपके पहनावे को आपकी दैनिक गतिविधियों से मेल खाता है, यह जांचता है कि क्या आपके पास फ़ुटबॉल अभ्यास, कोई तारीख या कोई महत्वपूर्ण बैठक है।
+- **9. स्थान सेवाएँ (आप कहाँ हैं)**: यह सुनिश्चित करता है कि स्टाइलिस्ट को उस मौसम का पता है जहां आप रहते हैं, इसलिए वह गर्मी के दिनों में मोटा कोट पहनने का सुझाव नहीं देगा।
+- **10. आवाज़ और भाषा**: यह आपको यह चुनने देता है कि स्टाइलिस्ट आपसे कैसे बात करेगा और भाषा कैसे बदलेगा।
+- **11. मित्रों को आमंत्रित करें**: यह आपको दोस्तों के साथ ऐप साझा करने की सुविधा देता है। आपके लिंक का उपयोग करके साइन अप करने वाले प्रत्येक मित्र के लिए, आपको अपनी अलमारी में +10 अतिरिक्त स्लॉट मिलते हैं।
 
 ---
 
-### 3.7 The Swap & Sell Shop (Marketplace)
-Share, donate, rent, or trade clothes with other users in your area!
+### 3.4 अपनी अलमारी के आँकड़े जाँचना
+देखें कि आपकी अलमारी का मूल्य कितना है और कौन सी वस्तुएँ आपकी पसंदीदा हैं!
 
-1. Create a Listing: Open an item's detail page, select Edit Intent, and choose For Sale, Rent, Swap, or Donate.
-2. Try-On Sandbox: Buyers can test-fit your listing against their own clothes on their avatar before deciding to swap or buy.
-
----
-
-### 3.8 Your Closet
-The Closet page lets you view, search, and manage your digitized garments:
-
-- **View & Filter**: Browse all your registered shirts, pants, skirts, shoes, and outerwear in a grid. Filter by color, category, season, or material.
-- **Multi-Select & Delete**: Enable select mode to checkmark multiple clothing items and bulk delete them from your wardrobe database in a single action.
-- **Item Grouping (Single vs. Set)**: Combine individual garments into a synchronized Set (like a suit or matching dress sets) to ensure they are suggested together. You can ungroup sets back into single items anytime.
-- **Edit Pane (itemDetails)**: Fine-tune parsed parameters. Manually edit season compatibility, formality tags, primary/secondary colors, fabrics, and custom annotations inside the item's detail editor.
+- **कोठरी का मूल्य: आपके सभी कपड़ों की कीमत एक साथ कितने पैसे है।**
+- **कोठरी का उपयोग: आपके द्वारा कम से कम एक बार पहने गए कपड़ों का प्रतिशत।**
+- **लागत-प्रति-पहनना: कोई कपड़ा कितना सस्ता या महंगा है यह इस पर निर्भर करता है कि आपने उसे कितनी बार पहना है।**
+- **रंग पैलेट विश्लेषण: आपके अलमारी के रंग, सामग्री और श्रेणियों का विवरण दिखाने वाले आँकड़े।**
 
 ---
 
-### 3.9 Trend Scout
-Keep your fashion style ahead of the curve with our daily curated feed:
+### 3.5 पोशाक योजनाकार
+आउटफिट प्लानर आपके स्टाइल चयनों को स्तरित करने, व्यवस्थित करने और मूल्यांकन करने में आपकी सहायता करता है:
 
-- **Daily Fashion Feed**: Receives style suggestions, fashion trends, and articles tailored specifically to match your profile preferences.
-- **Trend Buckets**: Explore four curated categories: SS26 Runway (latest high-fashion), News Flash (breaking style reports), Recycling (sustainable fashion), and Influencers (social trendsetters).
-
----
-
-### 3.10 Ask a Professional
-Connect with real-world fashion experts directly inside DressApp:
-
-- **Fashion Expert Directory**: Browse a registry of certified professional stylists, fashion advisors, and wardrobe consultants.
-- **Style Speciality Search**: Filter experts by region, country, or specific fashion specialties.
-- **Direct Contacts**: Reach out directly via phone, send direct emails, or visit their professional portfolios and websites.
+- **पोशाक कैनवास**: अपने पहनावे का लेआउट बनाने के लिए अपने कस्टम चरित्र अवतार पर कपड़ों को गतिशील रूप से परतें और संयोजित करें।
+- **दोहरी कैनवास (लेयरिंग)**: यदि आप शर्ट के ऊपर जैकेट या बाहरी वस्त्र पहन रहे हैं, तो इंटरफ़ेस एक साइड-बाय-साइड दृश्य प्रस्तुत करता है (एक अवतार बाहरी वस्त्र दिखाता है, एक बिना) ताकि आप एक साथ दोनों परतों की समीक्षा कर सकें।
+- **इंटरएक्टिव बॉडी-मैपिंग**: अपने अवतार के समर्पित विवरण फलक को खोलने के लिए उसके शरीर पर किसी भी कपड़े की वस्तु पर सीधे क्लिक करें।
+- **ग्रेडिंग और मेट्रिक्स**: आपकी पोशाक वर्तमान मौसम अलर्ट, औपचारिकता नियमों और रंग दिशानिर्देशों से कितनी अच्छी तरह मेल खाती है, इसकी ग्रेडिंग करते हुए प्रगति पट्टियाँ प्रदर्शित करता है।
 
 ---
 
-## 4. Expected Results
-- Your clothes will appear in your digital closet as clean cutouts without backgrounds.
-- If your clothes were cut off in the photo, the AI will fill in the missing pieces (using Nano Banana reconstruction).
-- Scanned retail QR tags will show a green badge verifying materials.
-- Your avatar will display your layered clothes without any visual glitches.
+### 3.6 यात्रा सूटकेस सहायक
+1. सूटकेस पृष्ठ पर जाएं और अपनी यात्रा का विवरण भरें (आप कहां जा रहे हैं, कब और क्या करेंगे)।
+2. स्टाइलिस्ट आपको दैनिक पैकिंग चेकलिस्ट दिखाएगा।
+3. यदि मौसम में बारिश होने वाली है, तो यदि आप छाता या रेनकोट भूल गए हैं तो स्टाइलिस्ट आपको चेतावनी देगा और विकल्प सुझाएगा।
+4. आप स्टाइलिस्ट को चीज़ें बदलने के लिए कहने के लिए चैट में टाइप कर सकते हैं (उदाहरण के लिए 'दूसरे दिन के लिए एक कैज़ुअल पोशाक पैक करें')।
+5. अपनी सूची में लॉक करने के लिए सूटकेस स्वीकृत करें पर क्लिक करें!
 
 ---
 
-## 5. Troubleshooting (Easy Solutions!)
+### 3.7 अदला-बदली और बिक्री की दुकान (बाज़ार)
+अपने क्षेत्र के अन्य उपयोगकर्ताओं के साथ कपड़े साझा करें, दान करें, किराए पर लें या व्यापार करें!
 
-### Help! My closet is full and I can't add more clothes!
-- **Why it happens: Free accounts are limited to 150 items.**
-- **Easy fix: 1. Subscribe to the Pro plan, or share your invite link with a friend to get +10 extra spots. 2. Get a free Gemini API key by logging into Google AI Studio.**
-
-### My camera won't turn on!
-- **Why it happens: Your web browser doesn't have permission to use the camera.**
-- **Easy fix: Go to browser settings, allow camera access, and refresh the page.**
-
-### The app is running slow when I upload multiple pictures!
-- **Why it happens: Processing pictures takes a lot of computer work.**
-- **Easy fix: The app automatically processes them one by one. Just wait a minute!**
+1. एक सूची बनाएं: किसी आइटम का विवरण पृष्ठ खोलें, आशय संपादित करें चुनें और बिक्री, किराए, स्वैप या दान के लिए चुनें।
+2. ट्राई-ऑन सैंडबॉक्स: खरीदार अदला-बदली करने या खरीदने का निर्णय लेने से पहले अपनी सूची को अपने कपड़ों के साथ अपने अवतार में फिट कर सकते हैं।
 
 ---
 
-## 6. Limitations
-- Voice typing works best on Google Chrome or Apple Safari browsers.
-- Dark, blurry, or folded clothes might not be recognized correctly by the scanner. Try taking pictures in a bright room with the garment laid flat.
+### 3.8 आपकी अलमारी
+क्लोसेट पृष्ठ आपको अपने डिजीटल परिधानों को देखने, खोजने और प्रबंधित करने की सुविधा देता है:
+
+- **देखें और फ़िल्टर करें**: अपने सभी पंजीकृत शर्ट, पैंट, स्कर्ट, जूते और बाहरी कपड़ों को एक ग्रिड में ब्राउज़ करें। रंग, श्रेणी, मौसम या सामग्री के आधार पर फ़िल्टर करें।
+- **बहु-चयन एवं हटाएँ**: कई कपड़ों की वस्तुओं को चेकमार्क करने के लिए चयन मोड सक्षम करें और उन्हें एक ही कार्रवाई में अपने अलमारी डेटाबेस से थोक में हटा दें।
+- **आइटम ग्रुपिंग (एकल बनाम सेट)**: यह सुनिश्चित करने के लिए कि वे एक साथ सुझाए गए हैं, अलग-अलग कपड़ों को एक सिंक्रनाइज़ सेट (जैसे सूट या मैचिंग ड्रेस सेट) में मिलाएं। आप किसी भी समय सेट को वापस एकल आइटम में अनग्रुप कर सकते हैं।
+- **फलक संपादित करें (आइटम विवरण)**: पार्स किए गए पैरामीटर्स को फाइन-ट्यून करें। आइटम के विवरण संपादक के अंदर सीज़न अनुकूलता, औपचारिकता टैग, प्राथमिक/द्वितीयक रंग, कपड़े और कस्टम एनोटेशन को मैन्युअल रूप से संपादित करें।
+
+---
+
+### 3.9 ट्रेंड स्काउट
+हमारे दैनिक क्यूरेटेड फ़ीड के साथ अपनी फैशन शैली को सबसे आगे रखें:
+
+- **दैनिक फैशन फ़ीड**: आपकी प्रोफ़ाइल प्राथमिकताओं से मेल खाने के लिए विशेष रूप से तैयार किए गए स्टाइल सुझाव, फैशन रुझान और लेख प्राप्त होते हैं।
+- **ट्रेंड बकेट**: चार क्यूरेटेड श्रेणियों का अन्वेषण करें: एसएस26 रनवे (नवीनतम हाई-फैशन), न्यूज फ्लैश (ब्रेकिंग स्टाइल रिपोर्ट), रीसाइक्लिंग (टिकाऊ फैशन), और इन्फ्लुएंसर (सामाजिक ट्रेंडसेटर)।
+
+---
+
+### 3.10 किसी पेशेवर से पूछें
+वास्तविक दुनिया के फैशन विशेषज्ञों से सीधे ड्रेसऐप के अंदर जुड़ें:
+
+- **फैशन विशेषज्ञ निर्देशिका**: प्रमाणित पेशेवर स्टाइलिस्ट, फैशन सलाहकार और अलमारी सलाहकारों की एक रजिस्ट्री ब्राउज़ करें।
+- **शैली विशेषता खोज**: क्षेत्र, देश या विशिष्ट फैशन विशिष्टताओं के आधार पर विशेषज्ञों को फ़िल्टर करें।
+- **सीधा संपर्क**: फ़ोन के ज़रिए सीधे संपर्क करें, सीधे ईमेल भेजें, या उनके पेशेवर पोर्टफ़ोलियो और वेबसाइटों पर जाएँ।
+
+---
+
+## 4. अपेक्षित परिणाम
+- आपके कपड़े आपकी डिजिटल अलमारी में बिना पृष्ठभूमि के साफ कटआउट के रूप में दिखाई देंगे।
+- यदि फोटो में आपके कपड़े कटे हुए हैं, तो एआई गायब टुकड़ों को भर देगा (नैनो बनाना पुनर्निर्माण का उपयोग करके)।
+- स्कैन किए गए खुदरा क्यूआर टैग सामग्री की पुष्टि करने वाला एक हरा बैज दिखाएंगे।
+- आपका अवतार आपके स्तरित कपड़ों को बिना किसी दृश्य गड़बड़ी के प्रदर्शित करेगा।
+
+---
+
+## 5. समस्या निवारण (आसान समाधान!)
+
+### मदद करना! मेरी अलमारी भरी हुई है और मैं और कपड़े नहीं जोड़ सकता!
+- **ऐसा क्यों होता है: निःशुल्क खाते 150 वस्तुओं तक सीमित हैं।**
+- **आसान समाधान: 1. प्रो योजना की सदस्यता लें, या +10 अतिरिक्त स्थान प्राप्त करने के लिए किसी मित्र के साथ अपना आमंत्रण लिंक साझा करें। 2. Google AI स्टूडियो में लॉग इन करके निःशुल्क जेमिनी एपीआई कुंजी प्राप्त करें।**
+
+### मेरा कैमरा चालू नहीं होगा!
+- **ऐसा क्यों होता है: आपके वेब ब्राउज़र को कैमरे का उपयोग करने की अनुमति नहीं है।**
+- **आसान समाधान: ब्राउज़र सेटिंग्स पर जाएं, कैमरा एक्सेस की अनुमति दें और पेज को रीफ्रेश करें।**
+
+### जब मैं एकाधिक तस्वीरें अपलोड करता हूं तो ऐप धीमी गति से चल रहा है!
+- **ऐसा क्यों होता है: चित्रों को संसाधित करने में कंप्यूटर का बहुत सारा काम लगता है।**
+- **आसान समाधान: ऐप स्वचालित रूप से उन्हें एक-एक करके संसाधित करता है। बस एक मिनट इंतज़ार करो!**
+
+---
+
+## 6. सीमाएँ
+- वॉयस टाइपिंग Google Chrome या Apple Safari ब्राउज़र पर सबसे अच्छा काम करती है।
+- गहरे, धुंधले या मुड़े हुए कपड़ों को स्कैनर द्वारा सही ढंग से पहचाना नहीं जा सकता है। किसी उजले कमरे में कपड़े सपाट बिछाकर तस्वीरें लेने का प्रयास करें।

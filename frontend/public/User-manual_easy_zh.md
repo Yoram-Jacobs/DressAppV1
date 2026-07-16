@@ -1,158 +1,158 @@
-# DressApp: My DressApp Closet Book
-A Super Simple Guide to Managing Your Clothes & Outfits
+# DressApp：我的 DressApp 衣柜书
+管理你的衣服和套装的超级简单指南
 
 ---
 
-## 1. Overview
-Welcome to DressApp! This is a cutting-edge app that lets you build your very own digital clothes closet.
+## 1. 概述
+欢迎来到服饰应用！这是一款尖端的应用程序，可让您构建自己的数字衣柜。
 
-Imagine taking pictures of all your shirts, pants, skirts, and shoes, and putting them into a magical book. Once they are inside, a professional and experienced stylist looks at your clothes, checks the weather outside, and helps you pick what to wear for any occasion!
+想象一下，给你所有的衬衫、裤子、裙子和鞋子拍照，然后把它们放进一本神奇的书里。一旦他们进入室内，专业且经验丰富的造型师就会检查您的衣服，检查外面的天气，并帮助您选择适合任何场合的着装！
 
-You can also dress up your own character (avatar), trade or share clothes with friends, and see how much your closet is worth.
-
----
-
-## 2. What You Need
-To start working with DressApp, you will need:
-- A computer, tablet, or phone with a web browser.
-- A camera on your device to snap photos of your clothes.
-- A microphone on your device so you can talk to your professional AI Stylist.
-- A Gemini API Key. Get it for free on Google AI Studio (https://aistudio.google.com/).
+你还可以装扮自己的角色（头像），与朋友交易或分享衣服，看看你的衣柜值多少钱。
 
 ---
 
-## 3. Step-by-Step Instructions
-
-### 3.1 Adding Clothes to Your Closet
-Let's put your physical clothes into your digital closet!
-
-1. Open DressApp and click the Add Item button.
-2. Click Take Photo to take a picture of your garment, click Upload Photos if you already have a picture saved, click Import URL to grab a garment from an online shop link, or click Upload Receipt to parse a PDF or image receipt from your purchases.
-3. The app checks if you already added this item before. If you did, a pop-up window will ask if you want to skip it.
-4. If it's a new item, wait 5 seconds. The app will magically remove the background, crop the clothing item, and extract its attributes.
-5. Check the results! You can choose the type of clothing (like shirt or pants). If the cutout shape looks wrong, changing the clothing type category will fix it.
-6. Click the Save button. Now the item is saved in your closet grid!
+## 2. 你需要什么
+要开始使用 DressApp，您将需要：
+- 带有网络浏览器的计算机、平板电脑或手机。
+- 您设备上的相机可以拍摄您的衣服照片。
+- 您设备上的麦克风，以便您可以与专业的人工智能造型师交谈。
+- Gemini API 密钥。在 Google AI Studio (https://aistudio.google.com/) 上免费获取它。
 
 ---
 
-### 3.2 Talking to Your professional AI Stylist
-You have a professional AI stylist who gives you advice on what to wear. You can talk to it just like a friend!
+## 3. 分步说明
 
-1. Go to the AI Stylist screen.
-2. Tap the Microphone button.
-3. Ask a question out loud, like: 'What matches my blue jeans for a rainy school day?'
-4. You will see your words appear on the screen as you talk.
-5. If the voice typing doesn't work, the app will record your voice and send it to the Stylist.
-6. The Stylist will read the weather, check what clothes are in your closet, and suggest an outfit.
-7. The Stylist will speak back to you! Click Play Reply to hear the advice again.
+### 3.1 添加衣服到你的衣柜
+让我们把你的实体衣服放进你的数字衣橱吧！
 
----
-
-### 3.3 Managing Your Profile (Why it matters!)
-Your Profile page has different settings sections. Here is why each section is important:
-
-- **1. Photos & Avatar**: This is where you put your profile photo. It lets DressApp draw your character avatar. You will see the outfits on your character avatar.
-- **2. Style Profile (Your Preferences)**: It tells the Stylist what kind of clothes you like to wear. If you prefer modest clothes, you can toggle that option. The Stylist will only suggest outfits that make you feel comfortable.
-- **3. Details (Name & Phone)**: This lets DressApp know who you are so it can greet you by name. The app uses your name in greeting alerts and emails. Your phone number is used to send push alerts.
-- **4. Body & Measurements (Your Sizes)**: It helps DressApp find clothes that fit you when you are looking at online shops. The Shopping assistant reads size tables on websites and tells you which size fits best.
-- **5. Lifestyle**: It helps the Stylist understand what you do every day (like a student, office worker, lawyer, or party) and customizes trend suggestions that suit you best.
-- **6. AI Configuration (The Smart Brain)**: it's crucial to have a Gemini (or other model of your choice) API key. Without it, DressApp cannot perform its magic. You have to select a multi-modal AI model.
-- **7. Scheduler & Push (Morning Alerts)**: It will give you the perfect outfit for the next day based on your calendar, the weather, and your style. The Stylist will rotate your closet for a perfect outfit every day! Saving the frustration of standing in front of the closet and trying to figure out what to wear. It will help you use all of the items in your closet.
-- **8. Google Calendar**: It matches your outfits to your daily activities, checking if you have soccer practice, a date, or an important meeting.
-- **9. Location Services (Where You Are)**: It makes sure the Stylist knows the weather where you live, so it won't suggest a thick coat on a hot summer day.
-- **10. Voice & Language**: It lets you pick how the Stylist speaks to you and changes the language.
-- **11. Invite Friends**: It lets you share the app with friends. For every friend who signs up using your link, you get +10 extra slots in your closet.
+1. 打开 DressApp 并单击“添加项目”按钮。
+2. 单击“拍照”为您的服装拍照，如果您已保存图片，请单击“上传照片”，单击“导入 URL”以从在线商店链接获取服装，或单击“上传收据”以解析您购买的 PDF 或图像收据。
+3. 该应用程序会检查您之前是否已添加此项目。如果您这样做了，将会出现一个弹出窗口询问您是否要跳过它。
+4. 如果是新商品，请等待 5 秒钟。该应用程序将神奇地删除背景，裁剪服装项目并提取其属性。
+5. 检查结果！您可以选择衣服的类型（例如衬衫或裤子）。如果剪裁形状看起来不正确，更改服装类型类别即可解决问题。
+6. 单击“保存”按钮。现在该物品已保存在您的衣柜网格中！
 
 ---
 
-### 3.4 Checking Your Wardrobe Stats
-See how much your closet is worth and which items are your favorites!
+### 3.2 与您的专业人工智能造型师交谈
+你有一位专业的人工智能造型师，他会为你提供穿搭建议。您可以像朋友一样与它交谈！
 
-- **Closet Worth: How much money all your clothes cost together.**
-- **Closet Utilization: The percentage of clothes you have worn at least once.**
-- **Cost-per-Wear: How cheap or expensive a garment is based on how many times you wore it.**
-- **Color Palette Breakdown: Stats showing your wardrobe's colors, materials, and categories breakdown.**
-
----
-
-### 3.5 Outfit Planner
-The Outfit Planner helps you layer, arrange, and evaluate your styling selections:
-
-- **Outfit Canvas**: Layer and combine clothes dynamically on your custom character avatar to build your outfit layout.
-- **Dual Canvas (Layering)**: If you are wearing a jacket or outerwear over a shirt, the interface renders a side-by-side view (one avatar showing the outerwear, one without) so you can review both layers simultaneously.
-- **Interactive Body-Mapping**: Click directly on any clothing item on your avatar's body to open its dedicated details pane.
-- **Grading & Metrics**: Displays progress bars grading how well your outfit matches current weather alerts, formality rules, and color palette guidelines.
+1. 转到 AI 造型师屏幕。
+2. 点击麦克风按钮。
+3. 大声问一个问题，例如：“下雨天我的蓝色牛仔裤穿什么搭配？”
+4. 当您说话时，您会看到您的话出现在屏幕上。
+5. 如果语音输入不起作用，应用程序将录制您的语音并将其发送给造型师。
+6. 造型师会查看天气，检查你衣柜里有什么衣服，并推荐一套服装。
+7. 造型师会回复您！单击“播放回复”以再次听取建议。
 
 ---
 
-### 3.6 Travel Suitcase Assistant
-1. Go to the Suitcase page and fill out your trip details (where you are going, when, and what you will do).
-2. The Stylist will show you a daily packing checklist.
-3. If the weather is going to rain, the Stylist will warn you if you forgot an umbrella or raincoat, and will suggest options.
-4. You can type in the chat to tell the Stylist to change things (e.g. 'Pack a casual outfit for day 2').
-5. Click Approve Suitcase to lock in your list!
+### 3.3 管理您的个人资料（为什么重要！）
+您的个人资料页面有不同的设置部分。以下是每个部分都很重要的原因：
+
+- **1. 照片&头像**: 这是您放置个人资料照片的地方。它可以让 DressApp 绘制您的角色头像。您将在角色头像上看到服装。
+- **2. 风格简介（您的偏好）**: 它告诉造型师您喜欢穿什么样的衣服。如果您喜欢朴素的衣服，则可以切换该选项。造型师只会建议让您感觉舒适的服装。
+- **3. 详细信息（姓名和电话）**: 这可以让 DressApp 知道您是谁，以便它可以叫出您的名字来打招呼。该应用程序在问候提醒和电子邮件中使用您的名字。您的电话号码用于发送推送警报。
+- **4. 身材和尺寸（您的尺码）**: 当您浏览在线商店时，它可以帮助 DressApp 找到适合您的衣服。购物助理会阅读网站上的尺码表，并告诉您哪种尺码最合适。
+- **5. 生活方式**: 它可以帮助造型师了解您每天所做的事情（例如学生、上班族、律师或派对），并定制最适合您的流行趋势建议。
+- **6. AI配置（智能大脑）**: 拥有 Gemini（或您选择的其他型号）API 密钥至关重要。没有它，DressApp 就无法发挥其魔力。你必须选择一个多模式人工智能模型。
+- **7. 调度程序和推送（早晨提醒）**: 它会根据您的日历、天气和您的风格为您提供第二天的完美服装。造型师每天都会轮换您的衣橱，打造完美的着装！省去了站在衣柜前思考穿什么的烦恼。它将帮助您使用衣柜中的所有物品。
+- **8.谷歌日历**: 它将您的着装与您的日常活动相匹配，检查您是否有足球训练、约会或重要会议。
+- **9. 定位服务（你在哪里）**: 它可以确保造型师了解您居住地的天气，因此不会建议您在炎热的夏日穿厚外套。
+- **10. 语音和语言**: 它可以让您选择造型师与您交谈的方式并更改语言。
+- **11. 邀请朋友**: 它可以让您与朋友分享该应用程序。对于每一位使用您的链接注册的朋友，您的衣柜中都会获得 +10 个额外的插槽。
 
 ---
 
-### 3.7 The Swap & Sell Shop (Marketplace)
-Share, donate, rent, or trade clothes with other users in your area!
+### 3.4 检查你的衣柜统计数据
+看看您的衣柜值多少钱以及您最喜欢哪些单品！
 
-1. Create a Listing: Open an item's detail page, select Edit Intent, and choose For Sale, Rent, Swap, or Donate.
-2. Try-On Sandbox: Buyers can test-fit your listing against their own clothes on their avatar before deciding to swap or buy.
-
----
-
-### 3.8 Your Closet
-The Closet page lets you view, search, and manage your digitized garments:
-
-- **View & Filter**: Browse all your registered shirts, pants, skirts, shoes, and outerwear in a grid. Filter by color, category, season, or material.
-- **Multi-Select & Delete**: Enable select mode to checkmark multiple clothing items and bulk delete them from your wardrobe database in a single action.
-- **Item Grouping (Single vs. Set)**: Combine individual garments into a synchronized Set (like a suit or matching dress sets) to ensure they are suggested together. You can ungroup sets back into single items anytime.
-- **Edit Pane (itemDetails)**: Fine-tune parsed parameters. Manually edit season compatibility, formality tags, primary/secondary colors, fabrics, and custom annotations inside the item's detail editor.
+- **衣橱价值：你所有的衣服总共值多少钱。**
+- **衣橱利用率：您至少穿过一次的衣服的百分比。**
+- **每次穿着成本：一件衣服的便宜或昂贵取决于您穿着它的次数。**
+- **调色板细分：显示您衣柜的颜色、材质和类别细分的统计数据。**
 
 ---
 
-### 3.9 Trend Scout
-Keep your fashion style ahead of the curve with our daily curated feed:
+### 3.5 服装规划师
+服装规划器可帮助您分层、安排和评估您的造型选择：
 
-- **Daily Fashion Feed**: Receives style suggestions, fashion trends, and articles tailored specifically to match your profile preferences.
-- **Trend Buckets**: Explore four curated categories: SS26 Runway (latest high-fashion), News Flash (breaking style reports), Recycling (sustainable fashion), and Influencers (social trendsetters).
-
----
-
-### 3.10 Ask a Professional
-Connect with real-world fashion experts directly inside DressApp:
-
-- **Fashion Expert Directory**: Browse a registry of certified professional stylists, fashion advisors, and wardrobe consultants.
-- **Style Speciality Search**: Filter experts by region, country, or specific fashion specialties.
-- **Direct Contacts**: Reach out directly via phone, send direct emails, or visit their professional portfolios and websites.
+- **服装画布**: 在您的自定义角色头像上动态分层和组合衣服，以构建您的服装布局。
+- **双画布（分层）**: 如果您在衬衫外穿夹克或外套，界面会呈现并排视图（一个头像显示外套，一个头像不显示），以便您可以同时查看两层。
+- **交互式身体测绘**: 直接单击头像身上的任何服装即可打开其专用的详细信息窗格。
+- **评分与指标**: 显示进度条，对您的服装与当前天气警报、正式规则和颜色指南的匹配程度进行分级。
 
 ---
 
-## 4. Expected Results
-- Your clothes will appear in your digital closet as clean cutouts without backgrounds.
-- If your clothes were cut off in the photo, the AI will fill in the missing pieces (using Nano Banana reconstruction).
-- Scanned retail QR tags will show a green badge verifying materials.
-- Your avatar will display your layered clothes without any visual glitches.
+### 3.6 旅行箱助理
+1. 转到“手提箱”页面并填写您的旅行详细信息（您要去哪里、何时以及您将做什么）。
+2. 造型师将向您展示每日打包清单。
+3. 如果天气要下雨，如果您忘记带雨伞或雨衣，造型师会警告您，并建议选择。
+4. 您可以在聊天中输入内容，告诉造型师进行更改（例如“为第二天穿休闲装”）。
+5. 单击“批准手提箱”以锁定您的列表！
 
 ---
 
-## 5. Troubleshooting (Easy Solutions!)
+### 3.7 交换和销售商店（市场）
+与您所在地区的其他用户分享、捐赠、租赁或交易衣服！
 
-### Help! My closet is full and I can't add more clothes!
-- **Why it happens: Free accounts are limited to 150 items.**
-- **Easy fix: 1. Subscribe to the Pro plan, or share your invite link with a friend to get +10 extra spots. 2. Get a free Gemini API key by logging into Google AI Studio.**
-
-### My camera won't turn on!
-- **Why it happens: Your web browser doesn't have permission to use the camera.**
-- **Easy fix: Go to browser settings, allow camera access, and refresh the page.**
-
-### The app is running slow when I upload multiple pictures!
-- **Why it happens: Processing pictures takes a lot of computer work.**
-- **Easy fix: The app automatically processes them one by one. Just wait a minute!**
+1. 创建列表：打开项目的详细信息页面，选择编辑意图，然后选择出售、出租、交换或捐赠。
+2. 试穿沙盒：买家可以在决定交换或购买之前，将您的商品与他们自己的衣服放在自己的头像上进行测试。
 
 ---
 
-## 6. Limitations
-- Voice typing works best on Google Chrome or Apple Safari browsers.
-- Dark, blurry, or folded clothes might not be recognized correctly by the scanner. Try taking pictures in a bright room with the garment laid flat.
+### 3.8 你的衣橱
+通过衣柜页面，您可以查看、搜索和管理您的数字化服装：
+
+- **查看和过滤**: 在网格中浏览所有注册的衬衫、裤子、裙子、鞋子和外套。按颜色、类别、季节或材料过滤。
+- **多选和删除**: 启用选择模式以选中多个衣物，并通过一个操作将它们从衣柜数据库中批量删除。
+- **项目分组（单个与集合）**: 将单件服装组合成同步套装（例如套装或相配的礼服套装），以确保将它们放在一起推荐。您可以随时将集合取消组合成单个项目。
+- **编辑窗格（项目详细信息）**: 微调解析的参数。在商品的详细信息编辑器中手动编辑季节兼容性、正式标签、主要/次要颜色、面料和自定义注释。
+
+---
+
+### 3.9 趋势侦察
+通过我们每日精选的动态，让您的时尚风格保持领先地位：
+
+- **每日时尚动态**: 接收风格建议、时尚趋势以及专门根据您的个人资料偏好定制的文章。
+- **趋势桶**: 探索四个精选类别：SS26 Runway（最新高级时装）、News Flash（突破风格报道）、Recycling（可持续时尚）和 Influencers（社会潮流引领者）。
+
+---
+
+### 3.10 询问专业人士
+直接在 DressApp 内与现实世界的时尚专家联系：
+
+- **时尚专家名录**: 浏览经过认证的专业造型师、时尚顾问和衣柜顾问的注册信息。
+- **风格专业搜索**: 按地区、国家或特定时尚专业筛选专家。
+- **直接联系**: 通过电话直接联系、直接发送电子邮件或访问他们的专业作品集和网站。
+
+---
+
+## 4. 预期结果
+- 您的衣服将作为没有背景的干净剪裁出现在您的数字衣柜中。
+- 如果照片中你的衣服被剪掉，人工智能将填补缺失的部分（使用 Nano Banana 重建）。
+- 扫描的零售二维码标签将显示一个绿色徽章，用于验证材料。
+- 您的头像将显示您的分层衣服，没有任何视觉故障。
+
+---
+
+## 5. 故障排除（简单的解决方案！）
+
+### 帮助！我的衣柜已经满了，无法添加更多衣服！
+- **原因：免费帐户仅限 150 个项目。**
+- **简单修复： 1. 订阅 Pro 计划，或与朋友分享您的邀请链接，以获得 +10 个额外名额。 2. 登录 Google AI Studio 获取免费的 Gemini API 密钥。**
+
+### 我的相机打不开！
+- **发生原因：您的网络浏览器没有使用相机的权限。**
+- **简单修复：转到浏览器设置，允许相机访问，然后刷新页面。**
+
+### 当我上传多张图片时，应用程序运行缓慢！
+- **原因：处理图片需要大量的计算机工作。**
+- **轻松修复：应用程序会自动一一处理它们。请稍等！**
+
+---
+
+## 6. 局限性
+- 语音输入在 Google Chrome 或 Apple Safari 浏览器上效果最佳。
+- 扫描仪可能无法正确识别深色、模糊或折叠的衣服。尝试在明亮的房间里将衣服平放拍照。

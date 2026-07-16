@@ -81,7 +81,7 @@ The Outfit Planner helps you layer, arrange, and evaluate your styling selection
 - **Outfit Canvas**: Layer and combine clothes dynamically on your custom character avatar to build your outfit layout.
 - **Dual Canvas (Layering)**: If you are wearing a jacket or outerwear over a shirt, the interface renders a side-by-side view (one avatar showing the outerwear, one without) so you can review both layers simultaneously.
 - **Interactive Body-Mapping**: Click directly on any clothing item on your avatar's body to open its dedicated details pane.
-- **Grading & Metrics**: Displays progress bars grading how well your outfit matches current weather alerts, formality rules, and color palette guidelines.
+- **Grading & Metrics**: Displays progress bars grading how well your outfit matches current weather alerts, formality rules, and color guidelines.
 
 ---
 

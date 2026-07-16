@@ -1,158 +1,158 @@
-# DressApp: My DressApp Closet Book
-A Super Simple Guide to Managing Your Clothes & Outfits
+# DressApp: Моя гардеробная книга DressApp
+Супер простое руководство по управлению одеждой
 
 ---
 
-## 1. Overview
-Welcome to DressApp! This is a cutting-edge app that lets you build your very own digital clothes closet.
+## 1. Обзор
+Добро пожаловать в DressApp! Это передовое приложение, которое позволяет вам создать свой собственный цифровой шкаф для одежды.
 
-Imagine taking pictures of all your shirts, pants, skirts, and shoes, and putting them into a magical book. Once they are inside, a professional and experienced stylist looks at your clothes, checks the weather outside, and helps you pick what to wear for any occasion!
+Представьте, что вы сфотографировали все свои рубашки, брюки, юбки и туфли и поместили их в волшебную книгу. Как только они окажутся внутри, профессиональный и опытный стилист осмотрит вашу одежду, узнает погоду на улице и поможет выбрать, что надеть на любой случай!
 
-You can also dress up your own character (avatar), trade or share clothes with friends, and see how much your closet is worth.
-
----
-
-## 2. What You Need
-To start working with DressApp, you will need:
-- A computer, tablet, or phone with a web browser.
-- A camera on your device to snap photos of your clothes.
-- A microphone on your device so you can talk to your professional AI Stylist.
-- A Gemini API Key. Get it for free on Google AI Studio (https://aistudio.google.com/).
+Вы также можете нарядить своего персонажа (аватара), обменять или поделиться одеждой с друзьями и посмотреть, сколько стоит ваш гардероб.
 
 ---
 
-## 3. Step-by-Step Instructions
-
-### 3.1 Adding Clothes to Your Closet
-Let's put your physical clothes into your digital closet!
-
-1. Open DressApp and click the Add Item button.
-2. Click Take Photo to take a picture of your garment, click Upload Photos if you already have a picture saved, click Import URL to grab a garment from an online shop link, or click Upload Receipt to parse a PDF or image receipt from your purchases.
-3. The app checks if you already added this item before. If you did, a pop-up window will ask if you want to skip it.
-4. If it's a new item, wait 5 seconds. The app will magically remove the background, crop the clothing item, and extract its attributes.
-5. Check the results! You can choose the type of clothing (like shirt or pants). If the cutout shape looks wrong, changing the clothing type category will fix it.
-6. Click the Save button. Now the item is saved in your closet grid!
+## 2. Что вам нужно
+Чтобы начать работу с DressApp, вам потребуется:
+- Компьютер, планшет или телефон с веб-браузером.
+- Камера на вашем устройстве, чтобы фотографировать вашу одежду.
+- Микрофон на вашем устройстве, чтобы вы могли поговорить со своим профессиональным стилистом с искусственным интеллектом.
+- Ключ API Gemini. Получите его бесплатно в Google AI Studio (https://aistudio.google.com/).
 
 ---
 
-### 3.2 Talking to Your professional AI Stylist
-You have a professional AI stylist who gives you advice on what to wear. You can talk to it just like a friend!
+## 3. Пошаговые инструкции
 
-1. Go to the AI Stylist screen.
-2. Tap the Microphone button.
-3. Ask a question out loud, like: 'What matches my blue jeans for a rainy school day?'
-4. You will see your words appear on the screen as you talk.
-5. If the voice typing doesn't work, the app will record your voice and send it to the Stylist.
-6. The Stylist will read the weather, check what clothes are in your closet, and suggest an outfit.
-7. The Stylist will speak back to you! Click Play Reply to hear the advice again.
+### 3.1 Добавьте одежду в свой шкаф
+Давайте поместим вашу физическую одежду в ваш цифровой шкаф!
 
----
-
-### 3.3 Managing Your Profile (Why it matters!)
-Your Profile page has different settings sections. Here is why each section is important:
-
-- **1. Photos & Avatar**: This is where you put your profile photo. It lets DressApp draw your character avatar. You will see the outfits on your character avatar.
-- **2. Style Profile (Your Preferences)**: It tells the Stylist what kind of clothes you like to wear. If you prefer modest clothes, you can toggle that option. The Stylist will only suggest outfits that make you feel comfortable.
-- **3. Details (Name & Phone)**: This lets DressApp know who you are so it can greet you by name. The app uses your name in greeting alerts and emails. Your phone number is used to send push alerts.
-- **4. Body & Measurements (Your Sizes)**: It helps DressApp find clothes that fit you when you are looking at online shops. The Shopping assistant reads size tables on websites and tells you which size fits best.
-- **5. Lifestyle**: It helps the Stylist understand what you do every day (like a student, office worker, lawyer, or party) and customizes trend suggestions that suit you best.
-- **6. AI Configuration (The Smart Brain)**: it's crucial to have a Gemini (or other model of your choice) API key. Without it, DressApp cannot perform its magic. You have to select a multi-modal AI model.
-- **7. Scheduler & Push (Morning Alerts)**: It will give you the perfect outfit for the next day based on your calendar, the weather, and your style. The Stylist will rotate your closet for a perfect outfit every day! Saving the frustration of standing in front of the closet and trying to figure out what to wear. It will help you use all of the items in your closet.
-- **8. Google Calendar**: It matches your outfits to your daily activities, checking if you have soccer practice, a date, or an important meeting.
-- **9. Location Services (Where You Are)**: It makes sure the Stylist knows the weather where you live, so it won't suggest a thick coat on a hot summer day.
-- **10. Voice & Language**: It lets you pick how the Stylist speaks to you and changes the language.
-- **11. Invite Friends**: It lets you share the app with friends. For every friend who signs up using your link, you get +10 extra slots in your closet.
+1. Откройте DressApp и нажмите кнопку «Добавить элемент».
+2. Нажмите «Сфотографировать», чтобы сфотографировать свою одежду, нажмите «Загрузить фотографии», если у вас уже есть сохраненное изображение, нажмите «Импортировать URL-адрес», чтобы получить одежду по ссылке в интернет-магазине, или нажмите «Загрузить квитанцию», чтобы проанализировать квитанцию ​​в формате PDF или изображение о ваших покупках.
+3. Приложение проверит, добавляли ли вы этот элемент ранее. Если вы это сделали, всплывающее окно спросит, хотите ли вы пропустить это.
+4. Если это новый предмет, подождите 5 секунд. Приложение волшебным образом удалит фон, обрежет предмет одежды и извлечет его атрибуты.
+5. Проверьте результаты! Вы можете выбрать тип одежды (например, рубашка или брюки). Если форма выреза выглядит неправильно, это исправит смена категории типа одежды.
+6. Нажмите кнопку «Сохранить». Теперь предмет сохранен в сетке вашего шкафа!
 
 ---
 
-### 3.4 Checking Your Wardrobe Stats
-See how much your closet is worth and which items are your favorites!
+### 3.2 Разговор с вашим профессиональным стилистом по искусственному интеллекту
+У вас есть профессиональный стилист с искусственным интеллектом, который дает вам советы, что надеть. Вы можете поговорить с ним, как с другом!
 
-- **Closet Worth: How much money all your clothes cost together.**
-- **Closet Utilization: The percentage of clothes you have worn at least once.**
-- **Cost-per-Wear: How cheap or expensive a garment is based on how many times you wore it.**
-- **Color Palette Breakdown: Stats showing your wardrobe's colors, materials, and categories breakdown.**
-
----
-
-### 3.5 Outfit Planner
-The Outfit Planner helps you layer, arrange, and evaluate your styling selections:
-
-- **Outfit Canvas**: Layer and combine clothes dynamically on your custom character avatar to build your outfit layout.
-- **Dual Canvas (Layering)**: If you are wearing a jacket or outerwear over a shirt, the interface renders a side-by-side view (one avatar showing the outerwear, one without) so you can review both layers simultaneously.
-- **Interactive Body-Mapping**: Click directly on any clothing item on your avatar's body to open its dedicated details pane.
-- **Grading & Metrics**: Displays progress bars grading how well your outfit matches current weather alerts, formality rules, and color palette guidelines.
+1. Перейдите на экран AI Stylist.
+2. Нажмите кнопку «Микрофон».
+3. Задайте вопрос вслух, например: «Что подойдет к моим синим джинсам в дождливый школьный день?»
+4. Во время разговора вы увидите, как ваши слова появляются на экране.
+5. Если голосовой ввод не работает, приложение запишет ваш голос и отправит его стилисту.
+6. Стилист прочитает погоду, проверит, какая одежда есть в вашем шкафу, и предложит наряд.
+7. Стилист ответит вам! Нажмите «Воспроизвести ответ», чтобы услышать совет еще раз.
 
 ---
 
-### 3.6 Travel Suitcase Assistant
-1. Go to the Suitcase page and fill out your trip details (where you are going, when, and what you will do).
-2. The Stylist will show you a daily packing checklist.
-3. If the weather is going to rain, the Stylist will warn you if you forgot an umbrella or raincoat, and will suggest options.
-4. You can type in the chat to tell the Stylist to change things (e.g. 'Pack a casual outfit for day 2').
-5. Click Approve Suitcase to lock in your list!
+### 3.3 Управление своим профилем (почему это важно!)
+На странице вашего профиля есть различные разделы настроек. Вот почему важен каждый раздел:
+
+- **1. Фотографии и аватар**: Здесь вы помещаете свою фотографию профиля. Это позволяет DressApp нарисовать аватар вашего персонажа. На аватаре вашего персонажа вы увидите наряды.
+- **2. Профиль стиля (ваши предпочтения)**: Он сообщает стилисту, какую одежду вы предпочитаете носить. Если вы предпочитаете скромную одежду, вы можете включить эту опцию. Стилист предложит только те наряды, в которых вам будет комфортно.
+- **3. Подробности (имя и телефон)**: Это позволит DressApp узнать, кто вы, и поприветствовать вас по имени. Приложение использует ваше имя в приветствиях и электронных письмах. Ваш номер телефона используется для отправки push-уведомлений.
+- **4. Тело и размеры (ваши размеры)**: Это помогает DressApp находить одежду, которая вам подходит, когда вы просматриваете интернет-магазины. Помощник по покупкам читает таблицы размеров на веб-сайтах и ​​подсказывает, какой размер подходит лучше всего.
+- **5. Образ жизни**: Это помогает стилисту понять, чем вы занимаетесь каждый день (например, студент, офисный работник, юрист или вечеринка), и подбирает рекомендации по тенденциям, которые подходят вам лучше всего.
+- **6. Конфигурация ИИ (умный мозг)**: Крайне важно иметь ключ API Gemini (или другой модели по вашему выбору). Без этого DressApp не сможет творить чудеса. Вам необходимо выбрать мультимодальную модель ИИ.
+- **7. Планировщик и push-уведомления (утренние оповещения)**: Он подарит вам идеальный наряд на следующий день в зависимости от вашего календаря, погоды и вашего стиля. Стилист каждый день будет менять ваш гардероб, создавая идеальный наряд! Избавьтесь от разочарований, связанных с стоянием перед шкафом и попытками решить, что надеть. Это поможет вам использовать все предметы в вашем шкафу.
+- **8. Календарь Google**: Он подбирает вашу одежду в соответствии с вашими повседневными делами, проверяя, есть ли у вас тренировка по футболу, свидание или важная встреча.
+- **9. Службы определения местоположения (где вы находитесь)**: Он гарантирует, что стилист знает погоду в том месте, где вы живете, и не предложит толстое пальто в жаркий летний день.
+- **10. Голос и язык**: Он позволяет вам выбрать, как стилист будет с вами разговаривать, и меняет язык.
+- **11. Пригласите друзей**: Это позволяет вам поделиться приложением с друзьями. За каждого друга, который зарегистрируется по вашей ссылке, вы получаете +10 дополнительных мест в своем шкафу.
 
 ---
 
-### 3.7 The Swap & Sell Shop (Marketplace)
-Share, donate, rent, or trade clothes with other users in your area!
+### 3.4 Проверка статистики вашего гардероба
+Посмотрите, сколько стоит ваш гардероб и какие вещи вам нравятся больше всего!
 
-1. Create a Listing: Open an item's detail page, select Edit Intent, and choose For Sale, Rent, Swap, or Donate.
-2. Try-On Sandbox: Buyers can test-fit your listing against their own clothes on their avatar before deciding to swap or buy.
-
----
-
-### 3.8 Your Closet
-The Closet page lets you view, search, and manage your digitized garments:
-
-- **View & Filter**: Browse all your registered shirts, pants, skirts, shoes, and outerwear in a grid. Filter by color, category, season, or material.
-- **Multi-Select & Delete**: Enable select mode to checkmark multiple clothing items and bulk delete them from your wardrobe database in a single action.
-- **Item Grouping (Single vs. Set)**: Combine individual garments into a synchronized Set (like a suit or matching dress sets) to ensure they are suggested together. You can ungroup sets back into single items anytime.
-- **Edit Pane (itemDetails)**: Fine-tune parsed parameters. Manually edit season compatibility, formality tags, primary/secondary colors, fabrics, and custom annotations inside the item's detail editor.
+- **Стоимость гардероба: сколько денег стоит вся ваша одежда вместе взятая.**
+- **Использование гардероба: процент одежды, которую вы надевали хотя бы один раз.**
+- **Стоимость ношения: насколько дешева или дорога одежда зависит от того, сколько раз вы ее носили.**
+- **Разбивка цветовой палитры: статистика, показывающая разбивку по цветам, материалам и категориям вашего гардероба.**
 
 ---
 
-### 3.9 Trend Scout
-Keep your fashion style ahead of the curve with our daily curated feed:
+### 3.5 Планировщик нарядов
+Планировщик нарядов поможет вам наслаивать, упорядочивать и оценивать выбранные стили:
 
-- **Daily Fashion Feed**: Receives style suggestions, fashion trends, and articles tailored specifically to match your profile preferences.
-- **Trend Buckets**: Explore four curated categories: SS26 Runway (latest high-fashion), News Flash (breaking style reports), Recycling (sustainable fashion), and Influencers (social trendsetters).
-
----
-
-### 3.10 Ask a Professional
-Connect with real-world fashion experts directly inside DressApp:
-
-- **Fashion Expert Directory**: Browse a registry of certified professional stylists, fashion advisors, and wardrobe consultants.
-- **Style Speciality Search**: Filter experts by region, country, or specific fashion specialties.
-- **Direct Contacts**: Reach out directly via phone, send direct emails, or visit their professional portfolios and websites.
+- **Наряд из холста**: Накладывайте и комбинируйте одежду динамически на своем аватаре персонажа, чтобы создать макет своего наряда.
+- **Двойной холст (наслоение)**: Если вы носите куртку или верхнюю одежду поверх рубашки, интерфейс отображает изображение рядом друг с другом (один аватар показывает верхнюю одежду, другой — без), поэтому вы можете просматривать оба слоя одновременно.
+- **Интерактивное картирование тела**: Нажмите непосредственно на любой предмет одежды на теле вашего аватара, чтобы открыть специальную панель сведений о нем.
+- **Оценка и показатели**: Отображает индикаторы выполнения, позволяющие оценить, насколько ваш наряд соответствует текущим погодным предупреждениям, правилам формальности и рекомендациям по цвету.
 
 ---
 
-## 4. Expected Results
-- Your clothes will appear in your digital closet as clean cutouts without backgrounds.
-- If your clothes were cut off in the photo, the AI will fill in the missing pieces (using Nano Banana reconstruction).
-- Scanned retail QR tags will show a green badge verifying materials.
-- Your avatar will display your layered clothes without any visual glitches.
+### 3.6 Помощник по дорожному чемодану
+1. Перейдите на страницу «Чемодан» и заполните данные о поездке (куда вы собираетесь, когда и что будете делать).
+2. Стилист покажет вам ежедневный контрольный список вещей.
+3. Если на улице ожидается дождь, стилист предупредит вас, если вы забыли зонтик или плащ, и предложит варианты.
+4. Вы можете написать в чате сообщение стилисту, чтобы он что-то изменил (например, «Соберите повседневный наряд на второй день»).
+5. Нажмите «Одобрить чемодан», чтобы закрепить его в списке!
 
 ---
 
-## 5. Troubleshooting (Easy Solutions!)
+### 3.7 Магазин обмена и продажи (торговая площадка)
+Делитесь, жертвуйте, арендуйте или обменивайте одежду с другими пользователями в вашем районе!
 
-### Help! My closet is full and I can't add more clothes!
-- **Why it happens: Free accounts are limited to 150 items.**
-- **Easy fix: 1. Subscribe to the Pro plan, or share your invite link with a friend to get +10 extra spots. 2. Get a free Gemini API key by logging into Google AI Studio.**
-
-### My camera won't turn on!
-- **Why it happens: Your web browser doesn't have permission to use the camera.**
-- **Easy fix: Go to browser settings, allow camera access, and refresh the page.**
-
-### The app is running slow when I upload multiple pictures!
-- **Why it happens: Processing pictures takes a lot of computer work.**
-- **Easy fix: The app automatically processes them one by one. Just wait a minute!**
+1. Создайте объявление: откройте страницу сведений об объекте, выберите «Изменить намерение» и выберите «Продажа», «Аренда», «Обмен» или «Пожертвовать».
+2. Песочница для примерки: покупатели могут проверить соответствие вашего объявления своей одежде на своем аватаре, прежде чем принять решение об обмене или покупке.
 
 ---
 
-## 6. Limitations
-- Voice typing works best on Google Chrome or Apple Safari browsers.
-- Dark, blurry, or folded clothes might not be recognized correctly by the scanner. Try taking pictures in a bright room with the garment laid flat.
+### 3.8 Ваш шкаф
+Страница «Шкаф» позволяет просматривать, искать и управлять оцифрованной одеждой:
+
+- **Просмотр и фильтрация**: Просмотрите все зарегистрированные вами рубашки, брюки, юбки, обувь и верхнюю одежду в сетке. Фильтруйте по цвету, категории, сезону или материалу.
+- **Множественный выбор и удаление**: Включите режим выбора, чтобы отметить несколько предметов одежды и массово удалить их из базы данных гардероба одним действием.
+- **Группировка предметов (одиночный или набор)**: Объедините отдельные предметы одежды в синхронизированный комплект (например, костюм или подходящие комплекты платьев), чтобы они предлагались вместе. Вы можете в любое время разгруппировать наборы обратно на отдельные элементы.
+- **Панель редактирования (itemDetails)**: Точная настройка анализируемых параметров. Вручную редактируйте совместимость сезона, теги формальности, основные/вторичные цвета, ткани и пользовательские аннотации в редакторе деталей элемента.
+
+---
+
+### 3.9 Тренд-скаут
+Держите свой модный стиль на пике моды с помощью нашей ежедневной кураторской ленты:
+
+- **Ежедневная лента мод**: Получает предложения по стилю, модные тенденции и статьи, специально созданные с учетом предпочтений вашего профиля.
+- **Сегменты тренда**: Изучите четыре курируемые категории: «Подиум SS26» (последняя мода), «News Flash» (репортажи о стиле), «Переработка» (экологичная мода) и «Влиятельные лица» (законодатели социальных тенденций).
+
+---
+
+### 3.10 Спросите профессионала
+Общайтесь с реальными экспертами моды прямо в DressApp:
+
+- **Справочник экспертов моды**: Просмотрите реестр сертифицированных профессиональных стилистов, консультантов по моде и консультантов по гардеробу.
+- **Специализированный стиль Поиск**: Фильтруйте экспертов по региону, стране или конкретным модным специальностям.
+- **Прямые контакты**: Свяжитесь напрямую по телефону, отправьте электронное письмо или посетите их профессиональные портфолио и веб-сайты.
+
+---
+
+## 4. Ожидаемые результаты
+- Ваша одежда появится в вашем цифровом шкафу в виде чистых вырезов без фона.
+- Если на фотографии ваша одежда была отрезана, ИИ дополнит недостающие части (с помощью реконструкции Nano Banana).
+- На отсканированных розничных QR-тегах будет отображаться зеленый значок, подтверждающий материалы.
+- На вашем аватаре будет отображаться ваша многослойная одежда без каких-либо визуальных сбоев.
+
+---
+
+## 5. Устранение неполадок (простые решения!)
+
+### Помощь! Мой шкаф полон, и я не могу добавить больше одежды!
+- **Почему это происходит: Бесплатные аккаунты ограничены 150 предметами.**
+- **Легко исправить: 1. Подпишитесь на план Pro или поделитесь ссылкой для приглашения с другом, чтобы получить +10 дополнительных мест. 2. Получите бесплатный ключ Gemini API, войдя в Google AI Studio.**
+
+### Моя камера не включается!
+- **Почему это происходит: у вашего веб-браузера нет разрешения на использование камеры.**
+- **Простое решение: зайдите в настройки браузера, разрешите доступ к камере и обновите страницу.**
+
+### Приложение работает медленно, когда я загружаю несколько фотографий!
+- **Почему это происходит: Обработка изображений требует много компьютерной работы.**
+- **Легко исправить: приложение автоматически обрабатывает их один за другим. Просто подожди минутку!**
+
+---
+
+## 6. Ограничения
+- Голосовой ввод лучше всего работает в браузерах Google Chrome или Apple Safari.
+- Темная, размытая или сложенная одежда может распознаваться сканером неправильно. Попробуйте фотографировать в светлой комнате, разложив одежду ровно.

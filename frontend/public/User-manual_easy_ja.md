@@ -1,158 +1,158 @@
-# DressApp: My DressApp Closet Book
-A Super Simple Guide to Managing Your Clothes & Outfits
+# DressApp: 私の DressApp クローゼット ブック
+衣服と服装を管理するための超簡単なガイド
 
 ---
 
-## 1. Overview
-Welcome to DressApp! This is a cutting-edge app that lets you build your very own digital clothes closet.
+## 1. 概要
+DressApp へようこそ!これは、自分だけのデジタル洋服クローゼットを構築できる最先端のアプリです。
 
-Imagine taking pictures of all your shirts, pants, skirts, and shoes, and putting them into a magical book. Once they are inside, a professional and experienced stylist looks at your clothes, checks the weather outside, and helps you pick what to wear for any occasion!
+シャツ、パンツ、スカート、靴をすべて写真に撮り、魔法の本に収めることを想像してみてください。店内に入ると、プロの経験豊富なスタイリストがあなたの服を見て、外の天気をチェックし、あらゆる機会に何を着るか選ぶお手伝いをします。
 
-You can also dress up your own character (avatar), trade or share clothes with friends, and see how much your closet is worth.
-
----
-
-## 2. What You Need
-To start working with DressApp, you will need:
-- A computer, tablet, or phone with a web browser.
-- A camera on your device to snap photos of your clothes.
-- A microphone on your device so you can talk to your professional AI Stylist.
-- A Gemini API Key. Get it for free on Google AI Studio (https://aistudio.google.com/).
+自分のキャラクター (アバター) をドレスアップしたり、友達と服を交換したり共有したり、自分のクローゼットの価値を確認したりすることもできます。
 
 ---
 
-## 3. Step-by-Step Instructions
-
-### 3.1 Adding Clothes to Your Closet
-Let's put your physical clothes into your digital closet!
-
-1. Open DressApp and click the Add Item button.
-2. Click Take Photo to take a picture of your garment, click Upload Photos if you already have a picture saved, click Import URL to grab a garment from an online shop link, or click Upload Receipt to parse a PDF or image receipt from your purchases.
-3. The app checks if you already added this item before. If you did, a pop-up window will ask if you want to skip it.
-4. If it's a new item, wait 5 seconds. The app will magically remove the background, crop the clothing item, and extract its attributes.
-5. Check the results! You can choose the type of clothing (like shirt or pants). If the cutout shape looks wrong, changing the clothing type category will fix it.
-6. Click the Save button. Now the item is saved in your closet grid!
+## 2. 必要なもの
+DressApp の使用を開始するには、次のものが必要です。
+- Web ブラウザを備えたコンピュータ、タブレット、または携帯電話。
+- 衣服の写真を撮るためのデバイス上のカメラ。
+- デバイス上のマイクにより、プロの AI スタイリストと会話できます。
+- Gemini API キー。 Google AI Studio (https://aistudio.google.com/) から無料で入手できます。
 
 ---
 
-### 3.2 Talking to Your professional AI Stylist
-You have a professional AI stylist who gives you advice on what to wear. You can talk to it just like a friend!
+## 3. ステップバイステップの説明
 
-1. Go to the AI Stylist screen.
-2. Tap the Microphone button.
-3. Ask a question out loud, like: 'What matches my blue jeans for a rainy school day?'
-4. You will see your words appear on the screen as you talk.
-5. If the voice typing doesn't work, the app will record your voice and send it to the Stylist.
-6. The Stylist will read the weather, check what clothes are in your closet, and suggest an outfit.
-7. The Stylist will speak back to you! Click Play Reply to hear the advice again.
+### 3.1 クローゼットに服を追加する
+あなたの物理的な服をデジタルクローゼットに入れましょう!
 
----
-
-### 3.3 Managing Your Profile (Why it matters!)
-Your Profile page has different settings sections. Here is why each section is important:
-
-- **1. Photos & Avatar**: This is where you put your profile photo. It lets DressApp draw your character avatar. You will see the outfits on your character avatar.
-- **2. Style Profile (Your Preferences)**: It tells the Stylist what kind of clothes you like to wear. If you prefer modest clothes, you can toggle that option. The Stylist will only suggest outfits that make you feel comfortable.
-- **3. Details (Name & Phone)**: This lets DressApp know who you are so it can greet you by name. The app uses your name in greeting alerts and emails. Your phone number is used to send push alerts.
-- **4. Body & Measurements (Your Sizes)**: It helps DressApp find clothes that fit you when you are looking at online shops. The Shopping assistant reads size tables on websites and tells you which size fits best.
-- **5. Lifestyle**: It helps the Stylist understand what you do every day (like a student, office worker, lawyer, or party) and customizes trend suggestions that suit you best.
-- **6. AI Configuration (The Smart Brain)**: it's crucial to have a Gemini (or other model of your choice) API key. Without it, DressApp cannot perform its magic. You have to select a multi-modal AI model.
-- **7. Scheduler & Push (Morning Alerts)**: It will give you the perfect outfit for the next day based on your calendar, the weather, and your style. The Stylist will rotate your closet for a perfect outfit every day! Saving the frustration of standing in front of the closet and trying to figure out what to wear. It will help you use all of the items in your closet.
-- **8. Google Calendar**: It matches your outfits to your daily activities, checking if you have soccer practice, a date, or an important meeting.
-- **9. Location Services (Where You Are)**: It makes sure the Stylist knows the weather where you live, so it won't suggest a thick coat on a hot summer day.
-- **10. Voice & Language**: It lets you pick how the Stylist speaks to you and changes the language.
-- **11. Invite Friends**: It lets you share the app with friends. For every friend who signs up using your link, you get +10 extra slots in your closet.
+1. DressApp を開き、[アイテムの追加] ボタンをクリックします。
+2. [写真を撮る] をクリックして衣服の写真を撮り、既に写真を保存している場合は [写真をアップロード] をクリックし、オンライン ショップのリンクから衣服を取得するには [URL をインポート] をクリックし、購入した商品の PDF または画像の領収書を解析するには [領収書のアップロード] をクリックします。
+3. アプリは、この項目を以前にすでに追加したかどうかを確認します。スキップした場合は、スキップするかどうかを尋ねるポップアップ ウィンドウが表示されます。
+4. 新品の場合は5秒ほどお待ちください。アプリは魔法のように背景を削除し、衣料品をトリミングし、その属性を抽出します。
+5. 結果をチェックしてください！服装の種類（シャツやパンツなど）を選択できます。切り抜きの形状が間違っている場合は、服の種類のカテゴリを変更すると修正されます。
+6. 「保存」ボタンをクリックします。これで、アイテムがクローゼット グリッドに保存されました。
 
 ---
 
-### 3.4 Checking Your Wardrobe Stats
-See how much your closet is worth and which items are your favorites!
+### 3.2 プロの AI スタイリストに相談する
+プロの AI スタイリストが着るものについてアドバイスをくれます。まるで友達のように話せる！
 
-- **Closet Worth: How much money all your clothes cost together.**
-- **Closet Utilization: The percentage of clothes you have worn at least once.**
-- **Cost-per-Wear: How cheap or expensive a garment is based on how many times you wore it.**
-- **Color Palette Breakdown: Stats showing your wardrobe's colors, materials, and categories breakdown.**
-
----
-
-### 3.5 Outfit Planner
-The Outfit Planner helps you layer, arrange, and evaluate your styling selections:
-
-- **Outfit Canvas**: Layer and combine clothes dynamically on your custom character avatar to build your outfit layout.
-- **Dual Canvas (Layering)**: If you are wearing a jacket or outerwear over a shirt, the interface renders a side-by-side view (one avatar showing the outerwear, one without) so you can review both layers simultaneously.
-- **Interactive Body-Mapping**: Click directly on any clothing item on your avatar's body to open its dedicated details pane.
-- **Grading & Metrics**: Displays progress bars grading how well your outfit matches current weather alerts, formality rules, and color palette guidelines.
+1. AIスタイリスト画面に移動します。
+2. 「マイク」ボタンをタップします。
+3. 「雨の学校の日に私のブルー ジーンズに合うものは何ですか?」など、声に出して質問してください。
+4. 話していると、自分の言葉が画面に表示されるのがわかります。
+5. 音声入力が機能しない場合は、アプリがあなたの声を録音し、スタイリストに送信します。
+6. スタイリストが天気を読み、クローゼットの中にある服をチェックし、コーディネートを提案します。
+7. スタイリストが丁寧にご対応させていただきます！もう一度アドバイスを聞くには、[返信を再生] をクリックします。
 
 ---
 
-### 3.6 Travel Suitcase Assistant
-1. Go to the Suitcase page and fill out your trip details (where you are going, when, and what you will do).
-2. The Stylist will show you a daily packing checklist.
-3. If the weather is going to rain, the Stylist will warn you if you forgot an umbrella or raincoat, and will suggest options.
-4. You can type in the chat to tell the Stylist to change things (e.g. 'Pack a casual outfit for day 2').
-5. Click Approve Suitcase to lock in your list!
+### 3.3 プロフィールの管理 (なぜそれが重要なのか!)
+プロフィール ページにはさまざまな設定セクションがあります。各セクションが重要である理由は次のとおりです。
+
+- **1. 写真とアバター**: ここにプロフィール写真を置きます。 DressApp にキャラクターのアバターを描画させます。キャラクターのアバターの服装が表示されます。
+- **2. スタイルプロファイル (好み)**: あなたがどのような種類の服を着たいかをスタイリストに伝えます。控えめな服装がお好みの場合は、そのオプションを切り替えることができます。スタイリストはお客様が快適に過ごせるコーディネートのみをご提案させていただきます。
+- **3. 詳細（名前と電話番号）**: これにより、DressApp はあなたが誰であるかを認識できるため、名前で挨拶できるようになります。アプリは、挨拶アラートや電子メールにあなたの名前を使用します。電話番号はプッシュ アラートの送信に使用されます。
+- **4. 本体と寸法 (あなたのサイズ)**: DressApp がオンライン ショップを検索するときに、自分に合った服を見つけるのに役立ちます。ショッピング アシスタントはウェブサイトのサイズ表を読み取り、どのサイズが最適かを教えてくれます。
+- **5. ライフスタイル**: これは、スタイリストがあなたが毎日何をしているか (学生、会社員、弁護士、パーティーなど) を理解し、あなたに最適なトレンドの提案をカスタマイズするのに役立ちます。
+- **6. AI 構成 (賢い頭脳)**: Gemini (または選択した他のモデル) API キーを持っていることが重要です。これがなければ、DressApp は魔法を発揮できません。マルチモーダル AI モデルを選択する必要があります。
+- **7. スケジューラーとプッシュ (朝のアラート)**: カレンダー、天気、スタイルに基づいて、翌日に最適な服装を提供します。スタイリストがあなたのクローゼットをローテーションして、毎日完璧なコーディネートを提案します。クローゼットの前に立って何を着ようか悩むイライラを解消し​​ます。クローゼットの中のアイテムをすべて使いこなすのに役立ちます。
+- **8. Googleカレンダー**: あなたの服装を毎日の活動に合わせて、サッカーの練習、デート、または重要な会議があるかどうかを確認します。
+- **9. 位置情報サービス (現在地)**: スタイリストがあなたの住んでいる地域の天気を把握しているので、暑い夏の日に厚手のコートを勧められることはありません。
+- **10. 音声と言語**: スタイリストがどのように話しかけるかを選択し、言語を変更することができます。
+- **11. 友達を招待する**: アプリを友達と共有できます。リンクを使用してサインアップした友達ごとに、クローゼットに +10 個の追加スロットが追加されます。
 
 ---
 
-### 3.7 The Swap & Sell Shop (Marketplace)
-Share, donate, rent, or trade clothes with other users in your area!
+### 3.4 ワードローブの統計を確認する
+あなたのクローゼットの価値とお気に入りのアイテムを見てみましょう。
 
-1. Create a Listing: Open an item's detail page, select Edit Intent, and choose For Sale, Rent, Swap, or Donate.
-2. Try-On Sandbox: Buyers can test-fit your listing against their own clothes on their avatar before deciding to swap or buy.
-
----
-
-### 3.8 Your Closet
-The Closet page lets you view, search, and manage your digitized garments:
-
-- **View & Filter**: Browse all your registered shirts, pants, skirts, shoes, and outerwear in a grid. Filter by color, category, season, or material.
-- **Multi-Select & Delete**: Enable select mode to checkmark multiple clothing items and bulk delete them from your wardrobe database in a single action.
-- **Item Grouping (Single vs. Set)**: Combine individual garments into a synchronized Set (like a suit or matching dress sets) to ensure they are suggested together. You can ungroup sets back into single items anytime.
-- **Edit Pane (itemDetails)**: Fine-tune parsed parameters. Manually edit season compatibility, formality tags, primary/secondary colors, fabrics, and custom annotations inside the item's detail editor.
+- **クローゼットの価値: 洋服をすべて合わせるといくらかかりますか。**
+- **クローゼット使用率: 少なくとも 1 回は着た服の割合。**
+- **着用当たりのコスト: 衣服がどのくらい安いか高いかは、着用した回数に基づいて決まります。**
+- **カラーパレットの内訳: ワードローブの色、素材、カテゴリの内訳を示す統計。**
 
 ---
 
-### 3.9 Trend Scout
-Keep your fashion style ahead of the curve with our daily curated feed:
+### 3.5 衣装プランナー
+Outfit Planner は、選択したスタイリングを重ね合わせ、配置し、評価するのに役立ちます。
 
-- **Daily Fashion Feed**: Receives style suggestions, fashion trends, and articles tailored specifically to match your profile preferences.
-- **Trend Buckets**: Explore four curated categories: SS26 Runway (latest high-fashion), News Flash (breaking style reports), Recycling (sustainable fashion), and Influencers (social trendsetters).
-
----
-
-### 3.10 Ask a Professional
-Connect with real-world fashion experts directly inside DressApp:
-
-- **Fashion Expert Directory**: Browse a registry of certified professional stylists, fashion advisors, and wardrobe consultants.
-- **Style Speciality Search**: Filter experts by region, country, or specific fashion specialties.
-- **Direct Contacts**: Reach out directly via phone, send direct emails, or visit their professional portfolios and websites.
+- **衣装キャンバス**: カスタム キャラクター アバターに衣服を動的に重ねて組み合わせて、衣装のレイアウトを構築します。
+- **デュアルキャンバス（レイヤー化）**: シャツの上にジャケットやアウターを着ている場合、インターフェイスは並べて表示 (1 つのアバターはアウターを表示し、もう 1 つはアウターを表示していない) ので、両方のレイヤーを同時に確認できます。
+- **インタラクティブなボディマッピング**: アバターの体の衣服アイテムを直接クリックすると、専用の詳細ペインが開きます。
+- **グレーディングと指標**: 服装が現在の気象警報、形式ルール、および色のガイドラインにどの程度適合しているかを評価する進行状況バーが表示されます。
 
 ---
 
-## 4. Expected Results
-- Your clothes will appear in your digital closet as clean cutouts without backgrounds.
-- If your clothes were cut off in the photo, the AI will fill in the missing pieces (using Nano Banana reconstruction).
-- Scanned retail QR tags will show a green badge verifying materials.
-- Your avatar will display your layered clothes without any visual glitches.
+### 3.6 旅行スーツケースアシスタント
+1. スーツケースのページに移動し、旅行の詳細 (どこに行くか、いつ、何をするか) を入力します。
+2. スタイリストが毎日のパッキングチェックリストをご案内します。
+3. 雨が降りそうな天気の場合、スタイリストが傘やレインコートを忘れた場合に注意し、オプションを提案します。
+4. チャットに入力して、スタイリストに変更を指示することができます (例: 「2 日目はカジュアルな服を用意してください」)。
+5. [スーツケースを承認] をクリックしてリストをロックします。
 
 ---
 
-## 5. Troubleshooting (Easy Solutions!)
+### 3.7 スワップ＆セルショップ（マーケットプレイス）
+お住まいの地域の他のユーザーと衣服を共有、寄付、レンタル、交換しましょう!
 
-### Help! My closet is full and I can't add more clothes!
-- **Why it happens: Free accounts are limited to 150 items.**
-- **Easy fix: 1. Subscribe to the Pro plan, or share your invite link with a friend to get +10 extra spots. 2. Get a free Gemini API key by logging into Google AI Studio.**
-
-### My camera won't turn on!
-- **Why it happens: Your web browser doesn't have permission to use the camera.**
-- **Easy fix: Go to browser settings, allow camera access, and refresh the page.**
-
-### The app is running slow when I upload multiple pictures!
-- **Why it happens: Processing pictures takes a lot of computer work.**
-- **Easy fix: The app automatically processes them one by one. Just wait a minute!**
+1. 出品の作成: アイテムの詳細ページを開き、[目的の編集] を選択して、[販売]、[レンタル]、[交換]、または [寄付] を選択します。
+2. 試着サンドボックス: 購入者は、交換または購入を決定する前に、アバター上で出品商品を自分の服に合わせてテストできます。
 
 ---
 
-## 6. Limitations
-- Voice typing works best on Google Chrome or Apple Safari browsers.
-- Dark, blurry, or folded clothes might not be recognized correctly by the scanner. Try taking pictures in a bright room with the garment laid flat.
+### 3.8 あなたのクローゼット
+[クローゼット] ページでは、デジタル化された衣類を表示、検索、管理できます。
+
+- **表示とフィルター**: 登録したすべてのシャツ、パンツ、スカート、靴、アウターをグリッドで参照します。色、カテゴリー、季節、素材で絞り込みます。
+- **複数選択と削除**: 選択モードを有効にすると、複数の衣料品にチェックマークを付け、1 回の操作でワードローブ データベースから一括削除できます。
+- **アイテムのグループ化 (単一 vs セット)**: 個々の衣類を同期セット (スーツや一致するドレスのセットなど) に組み合わせて、一緒に提案されるようにします。いつでもセットのグループ化を解除して単一のアイテムに戻すことができます。
+- **編集ペイン (itemDetails)**: 解析されたパラメータを微調整します。アイテムの詳細エディター内で、季節の互換性、フォーマルタグ、原色/二次色、生地、カスタム注釈を手動で編集します。
+
+---
+
+### 3.9 トレンドスカウト
+毎日厳選されたフィードで、あなたのファッション スタイルを常に時代の先を行きましょう:
+
+- **毎日のファッションフィード**: スタイルの提案、ファッション トレンド、プロフィールの好みに合わせて特別に調整された記事を受け取ります。
+- **トレンドバケット**: SS26 ランウェイ (最新のハイ ファッション)、ニュース フラッシュ (最新のスタイル レポート)、リサイクル (持続可能なファッション)、およびインフルエンサー (社会的トレンドセッター) の 4 つの厳選されたカテゴリをご覧ください。
+
+---
+
+### 3.10 専門家に聞く
+DressApp 内で現実世界のファッション専門家と直接つながりましょう:
+
+- **ファッション専門家ディレクトリ**: 認定されたプロのスタイリスト、ファッション アドバイザー、ワードローブ コンサルタントの登録を参照してください。
+- **スタイル専門検索**: 地域、国、または特定のファッション専門分野ごとに専門家をフィルターします。
+- **直接の連絡先**: 電話で直接連絡するか、直接電子メールを送信するか、専門的なポートフォリオや Web サイトにアクセスしてください。
+
+---
+
+## 4. 期待される結果
+- あなたの服は、背景のないきれいな切り抜きとしてデジタル クローゼットに表示されます。
+- 写真で服が切り取られている場合、AI が欠けている部分を補完します (Nano Banana 再構築を使用)。
+- 小売店の QR タグをスキャンすると、素材を確認する緑色のバッジが表示されます。
+- あなたのアバターには、視覚的に何の問題もなく、重ね着した服が表示されます。
+
+---
+
+## 5. トラブルシューティング（簡単解決！）
+
+### ヘルプ！クローゼットがいっぱいでこれ以上服を増やせない！
+- **発生理由: 無料アカウントのアイテムは 150 個に制限されています。**
+- **簡単な解決策: 1. プロ プランに登録するか、招待リンクを友達と共有して、+10 の追加スポットを獲得します。 2. Google AI Studio にログインして、無料の Gemini API キーを取得します。**
+
+### カメラの電源が入りません!
+- **原因: Web ブラウザーにカメラを使用する権限がありません。**
+- **簡単な解決策: ブラウザ設定に移動し、カメラへのアクセスを許可し、ページを更新します。**
+
+### 複数の写真をアップロードするとアプリの動作が遅くなります。
+- **原因: 写真の処理には多くのコンピューター作業がかかります。**
+- **簡単な修正: アプリがそれらを 1 つずつ自動的に処理します。ちょっと待ってください！**
+
+---
+
+## 6. 制限事項
+- 音声入力は、Google Chrome または Apple Safari ブラウザで最適に機能します。
+- 濃い色の服、ぼやけた服、または折りたたまれている服は、スキャナーで正しく認識されない可能性があります。明るい部屋で平置きした状態で撮影してみてください。
