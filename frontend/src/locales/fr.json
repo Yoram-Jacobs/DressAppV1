@@ -2252,6 +2252,7 @@
     "trouble_slow_fix": "Correction facile : l'application les traite automatiquement un par un. Attendez une minute !",
     "limit_title": "Limitations",
     "limit_item1": "La saisie vocale fonctionne mieux sur les navigateurs Google Chrome ou Apple Safari.",
-    "limit_item2": "Les vêtements sombres, flous ou pliés peuvent ne pas être reconnus correctement par le scanner. Essayez de prendre des photos dans une pièce lumineuse avec le vêtement posé à plat."
+    "limit_item2": "Les vêtements sombres, flous ou pliés peuvent ne pas être reconnus correctement par le scanner. Essayez de prendre des photos dans une pièce lumineuse avec le vêtement posé à plat.",
+    "learnMore": "En savoir plus"
   }
 }

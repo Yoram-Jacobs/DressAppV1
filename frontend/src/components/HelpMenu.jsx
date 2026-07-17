@@ -446,7 +446,7 @@ export default function HelpMenu() {
                   rel="noopener noreferrer" 
                   className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
                 >
-                  {isRtl ? (i18n.language === 'he' ? 'קרא עוד בוויקי' : 'اقرأ المزيد في الويكي') : 'View more in Wiki'} &rarr;
+                  {t('help.learnMore', { defaultValue: 'Learn more' })} &rarr;
                 </a>
               </div>
             )}

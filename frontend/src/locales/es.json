@@ -2252,6 +2252,7 @@
     "trouble_slow_fix": "Solución fácil: la aplicación los procesa automáticamente uno por uno. ¡Espera un minuto!",
     "limit_title": "Limitaciones",
     "limit_item1": "La escritura por voz funciona mejor en los navegadores Google Chrome o Apple Safari.",
-    "limit_item2": "Es posible que el escáner no reconozca correctamente la ropa oscura, borrosa o doblada. Intente tomar fotografías en una habitación luminosa con la prenda extendida."
+    "limit_item2": "Es posible que el escáner no reconozca correctamente la ropa oscura, borrosa o doblada. Intente tomar fotografías en una habitación luminosa con la prenda extendida.",
+    "learnMore": "Más información"
   }
 }

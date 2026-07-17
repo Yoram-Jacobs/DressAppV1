@@ -2261,6 +2261,7 @@
     "trouble_slow_fix": "Einfache Lösung: Die App verarbeitet sie automatisch einzeln. Warten Sie einfach eine Minute!",
     "limit_title": "Einschränkungen",
     "limit_item1": "Spracheingabe funktioniert am besten in den Browsern Google Chrome oder Apple Safari.",
-    "limit_item2": "Dunkle, verschwommene oder gefaltete Kleidung wird vom Scanner möglicherweise nicht richtig erkannt. Versuchen Sie, in einem hellen Raum mit flach ausgelegtem Kleidungsstück zu fotografieren."
+    "limit_item2": "Dunkle, verschwommene oder gefaltete Kleidung wird vom Scanner möglicherweise nicht richtig erkannt. Versuchen Sie, in einem hellen Raum mit flach ausgelegtem Kleidungsstück zu fotografieren.",
+    "learnMore": "Mehr erfahren"
   }
 }

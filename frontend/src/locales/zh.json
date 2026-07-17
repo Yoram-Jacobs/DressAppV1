@@ -2252,6 +2252,7 @@
     "trouble_slow_fix": "简单修复：应用程序会自动一一处理它们。请稍等！",
     "limit_title": "限制",
     "limit_item1": "语音输入在 Google Chrome 或 Apple Safari 浏览器上效果最佳。",
-    "limit_item2": "扫描仪可能无法正确识别深色、模糊或折叠的衣服。尝试在明亮的房间里将衣服平放拍照。"
+    "limit_item2": "扫描仪可能无法正确识别深色、模糊或折叠的衣服。尝试在明亮的房间里将衣服平放拍照。",
+    "learnMore": "了解更多"
   }
 }
