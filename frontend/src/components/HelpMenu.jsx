@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   BookOpen, Info, ShieldAlert, Sparkles, User, BarChart4, 
   MapPin, Phone, HelpCircle, AlertTriangle, Layers, Wallet, 
-  ShoppingBag, Search, ClipboardList, Camera, Mic, Grid, TrendingUp, UserRound
+  ShoppingBag, Search, ClipboardList, Camera, Mic, Grid, TrendingUp, UserRound, Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +31,202 @@ export default function HelpMenu() {
   ];
 
   const activeSection = SECTIONS.find(s => s.id === activeTab);
+
+  const [viewingGuide, setViewingGuide] = useState(false);
+  const [guideContent, setGuideContent] = useState('');
+  const [loadingGuide, setLoadingGuide] = useState(false);
+
+  useEffect(() => {
+    setViewingGuide(false);
+    setGuideContent('');
+  }, [activeTab]);
+
+  const loadGuide = async () => {
+    if (!activeSection) return;
+    setLoadingGuide(true);
+    try {
+      const res = await fetch(`/wiki/${i18n.language || 'en'}/${activeSection.wiki}.md`);
+      if (res.ok) {
+        const text = await res.text();
+        setGuideContent(text);
+        setViewingGuide(true);
+      } else {
+        const fallbackRes = await fetch(`/wiki/en/${activeSection.wiki}.md`);
+        if (fallbackRes.ok) {
+          const text = await fallbackRes.text();
+          setGuideContent(text);
+          setViewingGuide(true);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load guide:", err);
+    } finally {
+      setLoadingGuide(false);
+    }
+  };
+
+  const parseMarkdown = (mdText) => {
+    if (!mdText) return null;
+    
+    const lines = mdText.split('\n');
+    const elements = [];
+    let listItems = [];
+    
+    const flushList = (key) => {
+      if (listItems.length > 0) {
+        elements.push(
+          <ul key={`list-${key}`} className="list-disc pl-5 space-y-1.5 my-3 text-muted-foreground text-sm">
+            {listItems.map((item, i) => <li key={i}>{parseInline(item)}</li>)}
+          </ul>
+        );
+        listItems = [];
+      }
+    };
+    
+    const parseInline = (text) => {
+      const parts = [];
+      const regex = /(\*\*.*?\*\*|`.*?`|\[.*?\]\(.*?\))/g;
+      let match;
+      let lastIndex = 0;
+      let keyIdx = 0;
+      
+      while ((match = regex.exec(text)) !== null) {
+        const matchText = match[0];
+        const matchIndex = match.index;
+        
+        if (matchIndex > lastIndex) {
+          parts.push(text.substring(lastIndex, matchIndex));
+        }
+        
+        if (matchText.startsWith('**') && matchText.endsWith('**')) {
+          parts.push(<strong key={keyIdx++} className="font-semibold text-foreground">{matchText.slice(2, -2)}</strong>);
+        } else if (matchText.startsWith('`') && matchText.endsWith('`')) {
+          parts.push(<code key={keyIdx++} className="px-1.5 py-0.5 rounded bg-secondary/50 text-xs font-mono">{matchText.slice(1, -1)}</code>);
+        } else if (matchText.startsWith('[') && matchText.includes('](')) {
+          const label = matchText.substring(1, matchText.indexOf(']'));
+          const href = matchText.substring(matchText.indexOf('](') + 2, matchText.length - 1);
+          parts.push(
+            <a key={keyIdx++} href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+              {label}
+            </a>
+          );
+        }
+        
+        lastIndex = regex.lastIndex;
+      }
+      
+      if (lastIndex < text.length) {
+        parts.push(text.substring(lastIndex));
+      }
+      
+      return parts.length > 0 ? parts : text;
+    };
+    
+    let inCode = false;
+    let codeLines = [];
+    
+    for (let idx = 0; idx < lines.length; idx++) {
+      const line = lines[idx].trim();
+      
+      if (line.startsWith('```')) {
+        if (inCode) {
+          elements.push(
+            <pre key={`code-${idx}`} className="p-4 rounded-lg bg-secondary/30 border border-border/40 font-mono text-xs overflow-x-auto my-4 text-foreground">
+              {codeLines.join('\n')}
+            </pre>
+          );
+          inCode = false;
+          codeLines = [];
+        } else {
+          inCode = true;
+        }
+        continue;
+      }
+      
+      if (inCode) {
+        codeLines.push(lines[idx]);
+        continue;
+      }
+      
+      if (line.startsWith('# ')) {
+        flushList(idx);
+        elements.push(
+          <h1 key={`h1-${idx}`} className="text-2xl font-bold text-primary mt-6 mb-3 pb-1 border-b border-border/50">
+            {parseInline(line.slice(2))}
+          </h1>
+        );
+        continue;
+      }
+      
+      if (line.startsWith('## ')) {
+        flushList(idx);
+        elements.push(
+          <h2 key={`h2-${idx}`} className="text-xl font-bold text-foreground mt-5 mb-2.5">
+            {parseInline(line.slice(3))}
+          </h2>
+        );
+        continue;
+      }
+      
+      if (line.startsWith('### ')) {
+        flushList(idx);
+        elements.push(
+          <h3 key={`h3-${idx}`} className="text-base font-semibold text-foreground mt-4 mb-2">
+            {parseInline(line.slice(4))}
+          </h3>
+        );
+        continue;
+      }
+      
+      if (line.startsWith('- ') || line.startsWith('* ')) {
+        listItems.push(line.slice(2));
+        continue;
+      }
+      
+      if (/^\d+\.\s/.test(line)) {
+        flushList(idx);
+        const match = line.match(/^\d+\.\s(.*)/);
+        elements.push(
+          <div key={`num-${idx}`} className="flex gap-3 my-2 text-sm text-muted-foreground">
+            <span className="font-bold text-primary shrink-0">{line.match(/^\d+/)[0]}.</span>
+            <p className="pt-0.5">{parseInline(match[1])}</p>
+          </div>
+        );
+        continue;
+      }
+      
+      if (line === '') {
+        flushList(idx);
+        continue;
+      }
+      
+      if (line === '---') {
+        flushList(idx);
+        elements.push(<hr key={`hr-${idx}`} className="my-6 border-border/50" />);
+        continue;
+      }
+      
+      if (line.startsWith('> ')) {
+        flushList(idx);
+        elements.push(
+          <blockquote key={`quote-${idx}`} className="pl-4 border-l-4 border-primary/50 text-muted-foreground text-sm italic my-4">
+            {parseInline(line.slice(2))}
+          </blockquote>
+        );
+        continue;
+      }
+      
+      flushList(idx);
+      elements.push(
+        <p key={`p-${idx}`} className="text-sm text-muted-foreground leading-relaxed my-3">
+          {parseInline(line)}
+        </p>
+      );
+    }
+    
+    flushList(lines.length);
+    return elements;
+  };
 
   return (
     <div 
@@ -99,7 +295,21 @@ export default function HelpMenu() {
         <ScrollArea className="flex-1 p-6">
           <div className="max-w-2xl mx-auto space-y-6">
             
-            {activeTab === 'overview' && (
+            {viewingGuide ? (
+              <div className="space-y-4">
+                <button
+                  onClick={() => setViewingGuide(false)}
+                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-medium mb-4 border border-border/40 px-3 py-1.5 rounded bg-secondary/15 transition-colors cursor-pointer"
+                >
+                  &larr; {isRtl ? 'חזרה לתקציר' : 'Back to Summary'}
+                </button>
+                <div className="space-y-4">
+                  {parseMarkdown(guideContent)}
+                </div>
+              </div>
+            ) : (
+              <>
+                {activeTab === 'overview' && (
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
                   <BookOpen className="h-6 w-6" /> {t('help.overview_title')}
@@ -440,15 +650,26 @@ export default function HelpMenu() {
             {/* Wiki Link Footer */}
             {activeSection && (
               <div className={cn("pt-4 mt-6 border-t border-border flex", isRtl ? "justify-start" : "justify-end")}>
-                <a 
-                  href={`https://github.com/Yoram-Jacobs/DressAppV1/blob/main/wiki/${i18n.language || 'en'}/${activeSection.wiki}.md`} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
+                <button 
+                  onClick={loadGuide}
+                  disabled={loadingGuide}
+                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-medium disabled:opacity-50 cursor-pointer bg-transparent border-0 p-0"
                 >
-                  {t('help.learnMore', { defaultValue: 'Learn more' })} &rarr;
-                </a>
+                  {loadingGuide ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      {isRtl ? 'טוען...' : 'Loading...'}
+                    </>
+                  ) : (
+                    <>
+                      {t('help.learnMore', { defaultValue: 'Learn more' })} &rarr;
+                    </>
+                  )}
+                </button>
               </div>
+            )}
+
+              </>
             )}
 
           </div>
