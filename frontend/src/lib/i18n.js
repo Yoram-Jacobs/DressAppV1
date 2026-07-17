@@ -13,6 +13,7 @@ import ru from '@/locales/ru.json';
 import zh from '@/locales/zh.json';
 import ja from '@/locales/ja.json';
 import hi from '@/locales/hi.json';
+import nl from '@/locales/nl.json';
 
 // Public metadata for the language selector (native names, RTL flag).
 // Keep this list in sync with the resources below.
@@ -29,6 +30,7 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'zh', nativeName: '中文（简体）', englishName: 'Chinese (Simplified)', dir: 'ltr' },
   { code: 'ja', nativeName: '日本語',      englishName: 'Japanese',   dir: 'ltr' },
   { code: 'hi', nativeName: 'हिन्दी',     englishName: 'Hindi',      dir: 'ltr' },
+  { code: 'nl', nativeName: 'Nederlands',   englishName: 'Dutch',      dir: 'ltr' },
 ];
 
 export const RTL_LANGUAGES = new Set(
@@ -50,6 +52,7 @@ const resources = {
   zh: { translation: zh },
   ja: { translation: ja },
   hi: { translation: hi },
+  nl: { translation: nl },
 };
 
 // Initial language pick order:

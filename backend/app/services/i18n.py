@@ -58,6 +58,7 @@ SUPPORTED_LANGUAGES: list[dict[str, str]] = [
     {"code": "zh", "native_name": "中文（简体）",       "english_name": "Chinese (Simplified)", "dir": "ltr"},
     {"code": "ja", "native_name": "日本語",            "english_name": "Japanese",             "dir": "ltr"},
     {"code": "hi", "native_name": "हिन्दी",           "english_name": "Hindi",                "dir": "ltr"},
+    {"code": "nl", "native_name": "Nederlands",       "english_name": "Dutch",                "dir": "ltr"},
 ]
 
 LANG_NAMES: dict[str, str] = {
