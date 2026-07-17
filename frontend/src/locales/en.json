@@ -2287,6 +2287,22 @@
     "limit_title": "Limitations",
     "limit_item1": "Voice typing works best on Google Chrome or Apple Safari browsers.",
     "limit_item2": "Dark, blurry, or folded clothes might not be recognized correctly by the scanner. Try taking pictures in a bright room with the garment laid flat.",
-    "learnMore": "Learn more"
+    "learnMore": "Learn more",
+    "shopping_assistant_title": "Shopping Assistant",
+    "shopping_assistant_p1": "Find the perfect clothing fit when shopping online on Zara, ASOS, and other partner stores.",
+    "shopping_assistant_step1": "Install the **DressApp Chrome Extension** from the Web Store.",
+    "shopping_assistant_step2": "Navigate to any garment details page on a partner site.",
+    "shopping_assistant_step3": "The assistant automatically reads the page size chart.",
+    "shopping_assistant_step4": "It checks your **body measurements** stored in your Profile details.",
+    "shopping_assistant_step5": "It recommends the best size for you, highlighting the fit comparison.",
+    "shopping_assistant_step6": "Click **Add to Closet** to import the item draft straight to your app.",
+    "scheduler_push_title": "Morning Schedule & Push Alerts",
+    "scheduler_push_p1": "Start your day with automatic, weather-appropriate style recommendations delivered directly to your device.",
+    "scheduler_push_step1": "Navigate to your **Profile settings**.",
+    "scheduler_push_step2": "Go to the **Scheduler & Push** section.",
+    "scheduler_push_step3": "Toggle **Enable Morning Alerts** and select your preferred notification time.",
+    "scheduler_push_step4": "Link your **Google Calendar** to let the scheduler check your daily event schedule.",
+    "scheduler_push_step5": "The system tracks weather forecasts and generates 3 custom outfit configurations.",
+    "scheduler_push_step6": "Tap the push notification on your device to accept and schedule a configuration."
   }
 }

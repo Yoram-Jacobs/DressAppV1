@@ -2253,6 +2253,22 @@
     "limit_title": "Limitaciones",
     "limit_item1": "La escritura por voz funciona mejor en los navegadores Google Chrome o Apple Safari.",
     "limit_item2": "Es posible que el escáner no reconozca correctamente la ropa oscura, borrosa o doblada. Intente tomar fotografías en una habitación luminosa con la prenda extendida.",
-    "learnMore": "Más información"
+    "learnMore": "Más información",
+    "shopping_assistant_title": "Asistente de compras",
+    "shopping_assistant_p1": "Encuentre la ropa perfecta cuando compre en línea en Zara, ASOS y otras tiendas asociadas.",
+    "shopping_assistant_step1": "Instale la **Extensión DressApp para Chrome** desde la tienda web.",
+    "shopping_assistant_step2": "Navegue a la página de detalles de cualquier prenda en un sitio asociado.",
+    "shopping_assistant_step3": "El asistente lee automáticamente la tabla de tamaños de página.",
+    "shopping_assistant_step4": "Comprueba tus **medidas corporales** almacenadas en los detalles de tu perfil.",
+    "shopping_assistant_step5": "Te recomienda la mejor talla para ti, destacando la comparación de ajuste.",
+    "shopping_assistant_step6": "Haz clic en **Agregar al armario** para importar el borrador del artículo directamente a tu aplicación.",
+    "scheduler_push_title": "Horario matutino y alertas automáticas",
+    "scheduler_push_p1": "Comience su día con recomendaciones de estilo automáticas y apropiadas para el clima enviadas directamente a su dispositivo.",
+    "scheduler_push_step1": "Navega hasta tu **Configuración de perfil**.",
+    "scheduler_push_step2": "Vaya a la sección **Programador y Push**.",
+    "scheduler_push_step3": "Active **Habilitar alertas matutinas** y seleccione su hora de notificación preferida.",
+    "scheduler_push_step4": "Vincula tu **Google Calendar** para permitir que el programador revise tu programación diaria de eventos.",
+    "scheduler_push_step5": "El sistema realiza un seguimiento de las previsiones meteorológicas y genera 3 configuraciones de vestimenta personalizadas.",
+    "scheduler_push_step6": "Toque la notificación push en su dispositivo para aceptar y programar una configuración."
   }
 }

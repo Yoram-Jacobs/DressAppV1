@@ -2253,6 +2253,22 @@
     "limit_title": "Limitazioni",
     "limit_item1": "La digitazione vocale funziona meglio sui browser Google Chrome o Apple Safari.",
     "limit_item2": "I vestiti scuri, sfocati o piegati potrebbero non essere riconosciuti correttamente dallo scanner. Prova a scattare foto in una stanza luminosa con l'indumento disteso.",
-    "learnMore": "Scopri di più"
+    "learnMore": "Scopri di più",
+    "shopping_assistant_title": "Assistente agli acquisti",
+    "shopping_assistant_p1": "Trova l'abbigliamento perfetto quando fai acquisti online su Zara, ASOS e altri negozi partner.",
+    "shopping_assistant_step1": "Installa l'**Estensione DressApp Chrome** dal Web Store.",
+    "shopping_assistant_step2": "Passare alla pagina dei dettagli dell'indumento su un sito partner.",
+    "shopping_assistant_step3": "L'assistente legge automaticamente la tabella delle dimensioni della pagina.",
+    "shopping_assistant_step4": "Controlla le tue **misure corporee** memorizzate nei dettagli del tuo profilo.",
+    "shopping_assistant_step5": "Ti consiglia la taglia migliore per te, evidenziando il confronto delle vestibilità.",
+    "shopping_assistant_step6": "Fai clic su **Aggiungi all'armadio** per importare la bozza dell'articolo direttamente nella tua app.",
+    "scheduler_push_title": "Programma mattutino e avvisi push",
+    "scheduler_push_p1": "Inizia la giornata con consigli di stile automatici e adatti al meteo consegnati direttamente sul tuo dispositivo.",
+    "scheduler_push_step1": "Vai alle **Impostazioni del profilo**.",
+    "scheduler_push_step2": "Vai alla sezione **Scheduler e Push**.",
+    "scheduler_push_step3": "Attiva **Abilita avvisi mattutini** e seleziona l'orario di notifica preferito.",
+    "scheduler_push_step4": "Collega il tuo **Google Calendar** per consentire allo scheduler di controllare il programma degli eventi giornalieri.",
+    "scheduler_push_step5": "Il sistema tiene traccia delle previsioni meteorologiche e genera 3 configurazioni di outfit personalizzate.",
+    "scheduler_push_step6": "Tocca la notifica push sul tuo dispositivo per accettare e pianificare una configurazione."
   }
 }

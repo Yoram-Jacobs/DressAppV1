@@ -2253,6 +2253,22 @@
     "limit_title": "Limitations",
     "limit_item1": "La saisie vocale fonctionne mieux sur les navigateurs Google Chrome ou Apple Safari.",
     "limit_item2": "Les vêtements sombres, flous ou pliés peuvent ne pas être reconnus correctement par le scanner. Essayez de prendre des photos dans une pièce lumineuse avec le vêtement posé à plat.",
-    "learnMore": "En savoir plus"
+    "learnMore": "En savoir plus",
+    "shopping_assistant_title": "Assistante d'achat",
+    "shopping_assistant_p1": "Trouvez la coupe idéale lors de vos achats en ligne sur Zara, ASOS et d'autres magasins partenaires.",
+    "shopping_assistant_step1": "Installez l'**extension Chrome DressApp** à partir du Web Store.",
+    "shopping_assistant_step2": "Accédez à n’importe quelle page de détails de vêtement sur un site partenaire.",
+    "shopping_assistant_step3": "L'assistant lit automatiquement le tableau des tailles de page.",
+    "shopping_assistant_step4": "Il vérifie vos **mesures corporelles** stockées dans les détails de votre profil.",
+    "shopping_assistant_step5": "Il vous recommande la meilleure taille, en mettant en évidence la comparaison des ajustements.",
+    "shopping_assistant_step6": "Cliquez sur **Ajouter au placard** pour importer le brouillon de l'article directement dans votre application.",
+    "scheduler_push_title": "Programme du matin et alertes push",
+    "scheduler_push_p1": "Commencez votre journée avec des recommandations de style automatiques et adaptées à la météo, envoyées directement sur votre appareil.",
+    "scheduler_push_step1": "Accédez à vos **Paramètres de profil**.",
+    "scheduler_push_step2": "Accédez à la section **Planificateur et Push**.",
+    "scheduler_push_step3": "Activez **Activer les alertes matinales** et sélectionnez votre heure de notification préférée.",
+    "scheduler_push_step4": "Associez votre **Google Agenda** pour permettre au planificateur de vérifier le calendrier quotidien de vos événements.",
+    "scheduler_push_step5": "Le système suit les prévisions météorologiques et génère 3 configurations de tenues personnalisées.",
+    "scheduler_push_step6": "Appuyez sur la notification push sur votre appareil pour accepter et planifier une configuration."
   }
 }

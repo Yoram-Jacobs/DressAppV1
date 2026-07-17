@@ -2253,6 +2253,22 @@
     "limit_title": "制限事項",
     "limit_item1": "音声入力は、Google Chrome または Apple Safari ブラウザで最適に機能します。",
     "limit_item2": "濃い色の服、ぼやけた服、または折りたたまれた服は、スキャナーで正しく認識されない可能性があります。明るい部屋で、衣服を平らに置いて写真を撮ってみてください。",
-    "learnMore": "詳細を見る"
+    "learnMore": "詳細を見る",
+    "shopping_assistant_title": "ショッピングアシスタント",
+    "shopping_assistant_p1": "ZARA、ASOS、その他のパートナー ストアでオンライン ショッピングをするときに、ぴったりの服を見つけてください。",
+    "shopping_assistant_step1": "Web ストアから **DressApp Chrome 拡張機能** をインストールします。",
+    "shopping_assistant_step2": "パートナー サイトの衣服の詳細ページに移動します。",
+    "shopping_assistant_step3": "アシスタントは自動的にページ サイズ表を読み取ります。",
+    "shopping_assistant_step4": "プロフィールの詳細に保存されている**身体測定値**をチェックします。",
+    "shopping_assistant_step5": "フィット感の比較を強調しながら、あなたに最適なサイズを推奨します。",
+    "shopping_assistant_step6": "[**クローゼットに追加**] をクリックして、アイテムの下書きをアプリに直接インポートします。",
+    "scheduler_push_title": "朝のスケジュールとプッシュアラート",
+    "scheduler_push_p1": "デバイスに直接配信される、天候に応じたスタイルの自動提案で 1 日を始めましょう。",
+    "scheduler_push_step1": "**プロフィール設定**に移動します。",
+    "scheduler_push_step2": "**スケジューラとプッシュ** セクションに移動します。",
+    "scheduler_push_step3": "[**朝のアラートを有効にする**] を切り替えて、希望の通知時間を選択します。",
+    "scheduler_push_step4": "**Google カレンダー**をリンクすると、スケジューラが毎日のイベント スケジュールを確認できるようになります。",
+    "scheduler_push_step5": "このシステムは天気予報を追跡し、3 つのカスタム服装構成を生成します。",
+    "scheduler_push_step6": "デバイス上のプッシュ通知をタップして、構成を受け入れてスケジュールを設定します。"
   }
 }

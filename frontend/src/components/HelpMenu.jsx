@@ -4,7 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   BookOpen, Info, ShieldAlert, Sparkles, User, BarChart4, 
   MapPin, Phone, HelpCircle, AlertTriangle, Layers, Wallet, 
-  ShoppingBag, Search, ClipboardList, Camera, Mic, Grid, TrendingUp, UserRound, Loader2
+  ShoppingBag, Search, ClipboardList, Camera, Mic, Grid, TrendingUp, UserRound, Loader2, Bell, Chrome
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -20,11 +20,13 @@ export default function HelpMenu() {
     { id: 'adding-clothes', label: t('help.add_clothes_title'), icon: Camera, wiki: 'adding_clothes' },
     { id: 'closet-page', label: t('help.closet_page_title'), icon: Grid, wiki: 'closet_management' },
     { id: 'ai-stylist', label: t('help.stylist_title'), icon: Mic, wiki: 'ai_stylist' },
+    { id: 'scheduler-push', label: t('help.scheduler_push_title'), icon: Bell, wiki: 'scheduler' },
     { id: 'profile-matters', label: t('help.profile_title'), icon: User, wiki: 'profile_management' },
     { id: 'wardrobe-stats', label: t('help.stats_title'), icon: BarChart4, wiki: 'wardrobe_insights' },
     { id: 'dress-up', label: t('help.planner_title'), icon: Layers, wiki: 'outfit_planner' },
     { id: 'suitcase', label: t('help.suitcase_title'), icon: MapPin, wiki: 'suitcase_packing' },
     { id: 'marketplace', label: t('help.market_title'), icon: ShoppingBag, wiki: 'marketplace_listing' },
+    { id: 'shopping-assistant', label: t('help.shopping_assistant_title'), icon: Chrome, wiki: 'chrome_extension' },
     { id: 'trend-scout', label: t('help.trend_scout_title'), icon: TrendingUp, wiki: 'trend_scout' },
     { id: 'experts', label: t('help.experts_title'), icon: UserRound, wiki: 'experts_registry' },
     { id: 'troubleshooting', label: t('help.trouble_title'), icon: HelpCircle, wiki: 'troubleshooting' },
@@ -428,6 +430,32 @@ export default function HelpMenu() {
               </div>
             )}
 
+            {activeTab === 'scheduler-push' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <Bell className="h-6 w-6" /> {t('help.scheduler_push_title')}
+                </h2>
+                <p className="text-muted-foreground">{t('help.scheduler_push_p1')}</p>
+                <div className="space-y-3">
+                  {[
+                    t('help.scheduler_push_step1'),
+                    t('help.scheduler_push_step2'),
+                    t('help.scheduler_push_step3'),
+                    t('help.scheduler_push_step4'),
+                    t('help.scheduler_push_step5'),
+                    t('help.scheduler_push_step6')
+                  ].map((text, idx) => (
+                    <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
+                      <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>
+                      <p className="text-sm text-muted-foreground pt-0.5">
+                        {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-foreground font-semibold">{part}</strong> : part)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {activeTab === 'profile-matters' && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
@@ -548,6 +576,32 @@ export default function HelpMenu() {
                       <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>
                       <p className="text-sm text-muted-foreground pt-0.5">
                         {text.split(':').map((part, i) => i === 0 ? <strong key={i} className="text-foreground font-semibold">{part}:</strong> : part)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'shopping-assistant' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <Chrome className="h-6 w-6" /> {t('help.shopping_assistant_title')}
+                </h2>
+                <p className="text-muted-foreground">{t('help.shopping_assistant_p1')}</p>
+                <div className="space-y-3">
+                  {[
+                    t('help.shopping_assistant_step1'),
+                    t('help.shopping_assistant_step2'),
+                    t('help.shopping_assistant_step3'),
+                    t('help.shopping_assistant_step4'),
+                    t('help.shopping_assistant_step5'),
+                    t('help.shopping_assistant_step6')
+                  ].map((text, idx) => (
+                    <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
+                      <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>
+                      <p className="text-sm text-muted-foreground pt-0.5">
+                        {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-foreground font-semibold">{part}</strong> : part)}
                       </p>
                     </div>
                   ))}

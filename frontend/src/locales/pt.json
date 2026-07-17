@@ -2253,6 +2253,22 @@
     "limit_title": "Limitações",
     "limit_item1": "A digitação por voz funciona melhor nos navegadores Google Chrome ou Apple Safari.",
     "limit_item2": "Roupas escuras, borradas ou dobradas podem não ser reconhecidas corretamente pelo scanner. Tente tirar fotos em uma sala iluminada com a roupa esticada.",
-    "learnMore": "Saber mais"
+    "learnMore": "Saber mais",
+    "shopping_assistant_title": "Assistente de compras",
+    "shopping_assistant_p1": "Encontre o ajuste perfeito para roupas ao fazer compras online na Zara, ASOS e outras lojas parceiras.",
+    "shopping_assistant_step1": "Instale a **Extensão DressApp Chrome** na Web Store.",
+    "shopping_assistant_step2": "Navegue até qualquer página de detalhes de vestuário em um site parceiro.",
+    "shopping_assistant_step3": "O assistente lê automaticamente a tabela de tamanhos de página.",
+    "shopping_assistant_step4": "Ele verifica suas **medidas corporais** armazenadas nos detalhes do seu perfil.",
+    "shopping_assistant_step5": "Ele recomenda o melhor tamanho para você, destacando a comparação de ajuste.",
+    "shopping_assistant_step6": "Clique em **Adicionar ao armário** para importar o rascunho do item diretamente para o seu aplicativo.",
+    "scheduler_push_title": "Programação matinal e alertas push",
+    "scheduler_push_p1": "Comece o dia com recomendações automáticas de estilo adequado ao clima, entregues diretamente no seu dispositivo.",
+    "scheduler_push_step1": "Navegue até suas **Configurações de perfil**.",
+    "scheduler_push_step2": "Vá para a seção **Agendador e Push**.",
+    "scheduler_push_step3": "Ative **Ativar alertas matinais** e selecione seu horário de notificação preferido.",
+    "scheduler_push_step4": "Vincule seu **Google Agenda** para permitir que o agendador verifique sua programação diária de eventos.",
+    "scheduler_push_step5": "O sistema rastreia as previsões meteorológicas e gera 3 configurações de roupas personalizadas.",
+    "scheduler_push_step6": "Toque na notificação push no seu dispositivo para aceitar e agendar uma configuração."
   }
 }

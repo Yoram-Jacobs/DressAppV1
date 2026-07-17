@@ -2253,6 +2253,22 @@
     "limit_title": "限制",
     "limit_item1": "语音输入在 Google Chrome 或 Apple Safari 浏览器上效果最佳。",
     "limit_item2": "扫描仪可能无法正确识别深色、模糊或折叠的衣服。尝试在明亮的房间里将衣服平放拍照。",
-    "learnMore": "了解更多"
+    "learnMore": "了解更多",
+    "shopping_assistant_title": "购物助理",
+    "shopping_assistant_p1": "在 Zara、ASOS 和其他合作商店网上购物时，找到最合身的服装。",
+    "shopping_assistant_step1": "从网上应用店安装 **DressApp Chrome 扩展**。",
+    "shopping_assistant_step2": "导航至合作伙伴网站上的任何服装详细信息页面。",
+    "shopping_assistant_step3": "助手自动读取页面尺寸表。",
+    "shopping_assistant_step4": "它会检查您的个人资料详细信息中存储的**身体测量数据**。",
+    "shopping_assistant_step5": "它会为您推荐最佳尺码，并突出显示合身比较。",
+    "shopping_assistant_step6": "单击 **添加到壁橱** 将项目草稿直接导入到您的应用程序中。",
+    "scheduler_push_title": "上午时间表和推送提醒",
+    "scheduler_push_p1": "通过直接发送到您的设备的自动、适合天气的风格推荐来开始新的一天。",
+    "scheduler_push_step1": "导航至您的**个人资料设置**。",
+    "scheduler_push_step2": "转到 **调度程序和推送** 部分。",
+    "scheduler_push_step3": "切换**启用早晨提醒**并选择您的首选通知时间。",
+    "scheduler_push_step4": "链接您的 **Google 日历**，让调度程序检查您的每日活动日程。",
+    "scheduler_push_step5": "该系统跟踪天气预报并生成 3 种定制服装配置。",
+    "scheduler_push_step6": "点击设备上的推送通知以接受并安排配置。"
   }
 }
