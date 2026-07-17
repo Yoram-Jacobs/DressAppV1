@@ -1,40 +1,28 @@
-# Scheduler & Push Reminder Service
+# Morgenplan und Push-Benachrichtigungen
 
-This document provides an overview of the Scheduler & Push Reminder system implemented in DressApp, describing its purpose, key features, technology stack, and bug fixes.
+Automatisieren Sie Ihre morgendliche Stilauswahl mit Cron-Outfit-Benachrichtigungen.
 
----
+## Übersicht
+Der Garderobenplaner liefert benutzerdefinierte Push-Benachrichtigungen am Morgen mit drei gestylten Outfit-Layouts. Es koordiniert Wetteraktualisierungen und Kalenderereignisse, um Ihren Look frisch zu halten und wiederholte Abnutzungsmuster zu verhindern.
 
-## 1. Purpose and Goals
-The **Scheduler & Push Reminder** system acts as an automated daily personal stylist. 
-* **Wardrobe Diary Engagement**: Sends daily push notifications reminding users of scheduled outfits or upcoming events.
-* **Smart Rotation**: Generates 3 styled outfit recommendations daily based on the user's styling preferences (e.g., Casual, Evening, Sport) and closet history.
-* **Reduce Wear Repetition**: The stylist automatically prioritizes least-worn closet items and avoids repeating recently worn combinations.
+## Voraussetzungen
+- Push-Benachrichtigungsberechtigungen in Ihrem Gerätebrowser zulässig.
+- Bewahren Sie Gegenstände in Ihrem Schrank auf (mindestens ein Oberteil, ein Unterteil und Schuhe).
+- Benutzerdefinierte Gemini-API-Schlüssel (empfohlen).
 
----
+## Schritt für Schritt
+1. **Benachrichtigungen aktivieren**: Gehen Sie zu Profildetails -> Planer & Push. Schalten Sie **Benachrichtigungen aktivieren** um.
+2. **Zeitpunkt festlegen**: Wählen Sie aus, wann Sie Ihre tägliche Benachrichtigung erhalten möchten (z. B. 07:30 Uhr).
+3. **Kalendersynchronisierung**: Verknüpfen Sie Google Kalender, damit das System Ihre täglichen Aktivitäten kennt.
+4. **Vorschlag erhalten**: Tippen Sie auf die Benachrichtigung, um die Outfit-Liste zu öffnen.
+5. **Tragen bestätigen**: Wählen Sie ein Layout aus, um es in Ihrem täglichen Tagebuch zu speichern.
 
-## 2. Technology Stack
-* **Job Scheduling (Backend)**: Powered by `APScheduler` (AsyncIOScheduler) running a recurring cron task inside the FastAPI server.
-* **Native Web Push Protocol**: Uses `pywebpush` to sign and transmit native browser notifications to the user's registered browser endpoints using **VAPID** keys (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and `VAPID_CLAIM_EMAIL`).
-* **Database**: MongoDB (via `Motor` driver) stores user settings, push subscriptions, and simulated notification logs.
-* **AI Recommendation Engine**: Integrates with the Google Gemini API (via `gemini-2.5-pro`) to dynamically generate contextually aware outfit selections based on closet assets.
-* **Frontend**: React components using `Dialog` (Radix UI) and custom canvas rendering to display recommendations and allow users to save them to their diary.
+## Erwartete Ergebnisse
+Eine Push-Benachrichtigung, die zu Ihrem geplanten Zeitpunkt eintrifft und optimierte Stiloptionen anzeigt.
 
----
+## Fehlerbehebung
+- **Es kommen keine Benachrichtigungen an**: Überprüfen Sie, ob Ihr Browser/Betriebssystem über stummgeschaltete Benachrichtigungsberechtigungen für DressApp verfügt.
+- **Vorgeschlagene Outfits wiederholen**: Füllen Sie Ihr Kleidungstagebuch im Kalender aus; Der Rotationsalgorithmus erfordert Verlaufsprotokolle, um Wiederholungen zu filtern.
 
-## 3. Key Points & Features
-* **Simulated & Native Web Push**: If the user has allowed native browser notifications, they receive a real device notification. Simultaneously, all notifications are logged in the simulated **Notification Center** on the web app for easy testing and debugging.
-* **On-Demand Dynamic Generation**: If an older notification log is clicked, the app dynamically triggers recommendations on the fly using the backend API.
-* **Robust Fail-Safe Fallback**: If the Gemini API hits rate limits or is offline, the backend falls back to a rule-based closet selection algorithm (`_generate_fallback_advice`). This compiles 3 outfits directly from the user's actual database closet rotation, guaranteeing notifications are never blank.
-* **Premium Loading States**: Clicking a notification opens a Dialog with a smooth spinner and helper messaging while proposals are generated.
-
----
-
-## 4. Key Bug Fixes & Refactorings
-Throughout the development cycle, we resolved several critical issues:
-1. **Cryptography Compatibility**: Patched `pywebpush`'s cryptography dependency by monkeypatching `ec.generate_private_key` to resolve elliptic curve parameter mismatches.
-2. **MongoDB Serialisation Error**: Excluded MongoDB `_id` fields from user preference queries to prevent JSON serialization errors during scheduler scans.
-3. **i18next/Localization Violations**: 
-   - Replaced all hardcoded Hebrew and English user-facing texts with `t('key', { defaultValue: '...' })` translation wrappers.
-   - Refactored the notification engine to parse and localize titles and bodies (e.g., converting styles like "casual" to translated labels like "יומיומי" dynamically in Hebrew mode).
-4. **Interactive Clickable Notifications**: Replaced a static logs display with clickable entries. Handled conditional payload parsing (supporting both pre-structured payload documents and text-based parsing of body lists).
-5. **API Robustness & Rate-Limit Shielding**: Caught Gemini API `429 RESOURCE_EXHAUSTED` exceptions in both the cron job and the `/proposal/scheduled` API endpoint, redirecting execution to our closet-based fallback generator.
+## Einschränkungen
+- Benachrichtigungen erfordern eine stabile Hintergrund-Internetverbindung auf dem Server.
