@@ -441,7 +441,7 @@ export default function HelpMenu() {
             {activeSection && (
               <div className={cn("pt-4 mt-6 border-t border-border flex", isRtl ? "justify-start" : "justify-end")}>
                 <a 
-                  href={`/wiki/${i18n.language || 'en'}/${activeSection.wiki}.md`} 
+                  href={`https://github.com/Yoram-Jacobs/DressAppV1/blob/main/wiki/${i18n.language || 'en'}/${activeSection.wiki}.md`} 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
