@@ -54,11 +54,11 @@ SUPPORTED_LANGUAGES: list[dict[str, str]] = [
     {"code": "de", "native_name": "Deutsch",          "english_name": "German",               "dir": "ltr"},
     {"code": "it", "native_name": "Italiano",         "english_name": "Italian",              "dir": "ltr"},
     {"code": "pt", "native_name": "Português",        "english_name": "Portuguese",           "dir": "ltr"},
+    {"code": "nl", "native_name": "Nederlands",       "english_name": "Dutch",                "dir": "ltr"},
     {"code": "ru", "native_name": "Русский",          "english_name": "Russian",              "dir": "ltr"},
     {"code": "zh", "native_name": "中文（简体）",       "english_name": "Chinese (Simplified)", "dir": "ltr"},
     {"code": "ja", "native_name": "日本語",            "english_name": "Japanese",             "dir": "ltr"},
     {"code": "hi", "native_name": "हिन्दी",           "english_name": "Hindi",                "dir": "ltr"},
-    {"code": "nl", "native_name": "Nederlands",       "english_name": "Dutch",                "dir": "ltr"},
 ]
 
 LANG_NAMES: dict[str, str] = {

@@ -26,11 +26,11 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'de', nativeName: 'Deutsch',     englishName: 'German',     dir: 'ltr' },
   { code: 'it', nativeName: 'Italiano',    englishName: 'Italian',    dir: 'ltr' },
   { code: 'pt', nativeName: 'Português',   englishName: 'Portuguese', dir: 'ltr' },
+  { code: 'nl', nativeName: 'Nederlands',   englishName: 'Dutch',      dir: 'ltr' },
   { code: 'ru', nativeName: 'Русский',     englishName: 'Russian',    dir: 'ltr' },
   { code: 'zh', nativeName: '中文（简体）', englishName: 'Chinese (Simplified)', dir: 'ltr' },
   { code: 'ja', nativeName: '日本語',      englishName: 'Japanese',   dir: 'ltr' },
   { code: 'hi', nativeName: 'हिन्दी',     englishName: 'Hindi',      dir: 'ltr' },
-  { code: 'nl', nativeName: 'Nederlands',   englishName: 'Dutch',      dir: 'ltr' },
 ];
 
 export const RTL_LANGUAGES = new Set(
