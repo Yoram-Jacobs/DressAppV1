@@ -1,22 +1,26 @@
-# DressApp Suitcase
+# Assistent beim Kofferpacken
 
-## Purpose
-The Suitcase feature is designed to solve the common travel problem of packing inappropriate or excessive clothing. It acts as an intelligent travel packing assistant that considers the duration of the trip, local weather, specific conditions (e.g., business trip, hotel vacation, safari, outdoor camping), as well as cultural and religious conventions. By doing so, it prevents overpacking under-usable garments and avoids the frustration of missing crucial items (like a bathing suit for the beach or a warm coat for cold weather), saving space, weight, and unnecessary local purchases.
+Packen Sie effizient für jedes Ziel mit KI-gesteuerter Wetter- und Kontextanalyse.
 
-## Goals
-1. **Intelligent Travel Solution**: Provide an AI-driven, context-aware packing companion.
-2. **Personalized Curation**: Select the most useful and appropriate items from the user's closet while maintaining their unique personality and style.
-3. **Gap Analysis & Recommendations**: Alert the user if crucial items are missing for the trip and recommend purchases from the marketplace (if a good match is found) or local stores.
-4. **Iterative Refinement**: Allow users to review and refine the suggested suitcase, requesting specific changes through natural language interactions.
+## Übersicht
+Planen Sie Reisen, erstellen Sie maßgeschneiderte tägliche Packlisten und verfeinern Sie den Gepäckinhalt über einen interaktiven Planungschat.
 
-## Key Points
-- **Context-Aware Generation**: Automatically generates daily outfits and a packing list based on trip details (destinations, dates) setup in the Trip form and calendar events, along with the user's existing wardrobe.
-- **State Retention**: Maintains the active suitcase state and history seamlessly, ensuring that the user's progress and refinement notes are not lost upon refreshing the page.
-- **Interactive Refinement**: Users can chat with the AI stylist to tweak the suitcase (e.g., swapping items, adjusting for specific events) while preserving the rest of the curated list.
-- **Approval & Execution**: Once the user is satisfied, they can approve the suitcase to finalize their packing plan.
+## Voraussetzungen
+- Reisezieldetails und Reisedaten.
+- Aktives Schrankinventar.
 
-## Technology
-- **Frontend**: React (Vite) UI with a custom state machine (`gathering`, `reviewing`, `active`) in `Suitcase.jsx`. It manages user inputs, displays the generated suitcase, and handles real-time refinement chat requests. State is autosaved to prevent data loss.
-- **Backend**: Python FastAPI (`suitcase.py`) exposes the `/pack` endpoint, handling both the initial suitcase generation and subsequent refinements.
-- **Database**: MongoDB stores the active suitcase state (`active_suitcase_id`), enabling cross-session persistence and preventing duplicate document creation on autosave.
-- **AI Integration**: Leverages LLMs to process the user's wardrobe, trip context, and natural language refinement notes. During refinement, the frontend passes the current state (`current_outfits`, `current_packing_list`) to the backend, ensuring the LLM maintains context and accurately updates only the requested items.
+## Schritt für Schritt
+1. **Reise erstellen**: Zielstadt, Daten und Zweck (Geschäftlich, Urlaub usw.) festlegen.
+2. **Liste erstellen**: Die KI prüft die Wettervorhersagen und Kalenderpläne des Reiseziels, um die Packcheckliste zu erstellen.
+3. **Chat verfeinern**: Verwenden Sie den Pack-Chat-Helfer, um nach Anpassungen zu fragen (z. B. „formelle Schuhe hinzufügen“).
+4. **Liste speichern**: Exportieren Sie die endgültige Liste in Ihren Koffermanager für einen optimalen Offline-Zugriff.
+
+## Erwartete Ergebnisse
+Eine stressfreie, wettergerechte Packcheckliste, die genau zeigt, was Sie aus Ihrem Kleiderschrank einpacken sollten.
+
+## Fehlerbehebung
+- **Keine Wetterdaten**: Stellen Sie sicher, dass die Schreibweise des Zielorts korrekt ist und Ihre Internetverbindung aktiv ist.
+- **Liste leer**: Stellen Sie sicher, dass Sie für das Wetter am Reiseziel geeignete Kleidungsstücke in Ihrem Kleiderschrankkatalog haben.
+
+## Einschränkungen
+- Derzeit werden Packlisten für einen Reisezeitraum von bis zu 14 Tagen erstellt.

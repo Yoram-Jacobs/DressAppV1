@@ -1,35 +1,26 @@
-# Wardrobe Insights: Cost-per-Wear Analytics Dashboard
+# Информация о гардеробе и статистика
 
-This document provides a summary of the **Wardrobe Insights** page (Cost-per-Wear Analytics Dashboard), detailing its purpose, core metrics, key features, and underlying technology stack.
+Анализируйте свои активы в области одежды, эффективность расходов и статистику использования.
 
-## 1. Overview
-The **Wardrobe Insights** dashboard (`WardrobeStats.jsx`) is a personal fashion analytics center designed to help users analyze their wardrobe value, track garment utilization, and cultivate conscious wear habits. By tracking how often garments are worn, the system computes the exact economic value and utility of each piece.
+## Обзор
+Рабочая область Insights отображает общую финансовую стоимость вашего гардероба, цветовые композиции и показатели стоимости за износ с помощью насыщенных графиков.
 
-## 2. Key Metrics & KPIs
-The dashboard features a primary grid of Key Performance Indicators (KPIs) calculated dynamically from the user's closet:
-- **Closet Worth (Total Value)**: The cumulative sum of the purchase prices (`price_cents` or `purchase_price_cents`) of all items currently saved in the closet.
-- **Closet Utilization**: The percentage of garments in the wardrobe that have been worn at least once (`wornItems / totalItems * 100`).
-- **Items Worn Ratio**: A fraction representation of worn items versus total closet capacity (e.g., `12 / 45 items`).
-- **Average Cost-per-Wear (CPW)**: The average efficiency score across all priced items. CPW is calculated as `Garment Price / Wear Count` (with wear count defaulting to 1 for items worn 0 times to prevent division errors).
+## Предварительные условия
+- Предметы гардероба с входными ценами.
+- Запланированная история экипировки в вашем календаре.
 
-## 3. Key Features
+## Шаг за шагом
+1. **Откройте статистику**. Выберите свой профиль и перейдите к разделу «Статистика гардероба».
+2. **Оцените ценность**: просмотрите совокупную финансовую стоимость вашего гардероба.
+3. **Проверьте цену за износ (CPW)**. Отслеживайте таблицу лидеров эффективности, показывающую, какие товары имеют самую низкую цену CPW (цена/износ).
+4. **Анализ цветов**. Просмотрите распределение цветового круга.
 
-### Dynamic Distribution Charts
-Users can toggle between three different breakdown views to visualize the composition of their wardrobe:
-1. **Color Palette Breakdown**: Displays a ring, pie, or bar chart representation of the dominant color palette of the closet, dynamically pulling mapped hex codes (e.g., navy, charcoal, terracota, burgundy).
-2. **Materials Breakdown**: Visualizes the fabric composition (e.g., cotton, denim, cashmere, wool, leather) by parsing percentages from weighted tags.
-3. **Subcategories Breakdown**: Categorizes items into specific dress/garment types (e.g., boots, trousers, sneakers, jackets, maxi dresses) to highlight closet distribution.
+## Ожидаемые результаты
+Четкие визуальные графики, иллюстрирующие недостаточно используемые предметы, помогают принимать решения о будущих покупках.
 
-### Efficiency Leaderboard (Top 5)
-- Displays the **Top 5 Most Efficient Items** based on the lowest Cost-per-Wear score. This rewards garments that represent high usage relative to their price.
+## Устранение неполадок
+- **Статистика нулевой стоимости**. Обязательно заполняйте поле «Цена покупки» при редактировании товаров.
+- **Неправильный подсчет износа**: записывайте ежедневные наряды в планировщик, чтобы обновлять частоту ношения.
 
----
-
-## 4. Technology Stack
-
-### Frontend Components & Library
-- **React & Zustand**: Uses React hooks for breakdown tab controls, layout toggles, and state syncing. Pulls closet item arrays globally from the Zustand-managed `useClosetStore`.
-- **Recharts**: A charting library used to build responsive charts (`ResponsiveContainer`, `PieChart`, `Pie`, `Cell`, `BarChart`, `Bar`, `XAxis`, `YAxis`, `Tooltip`).
-- **Lucide Icons**: Integrates Lucide SVG vector icons (`DollarSign`, `Percent`, `TrendingUp`, `Shirt`, `Award`, `Activity`, `ChevronDown`, `ChevronUp`) for high-fidelity KPI representation.
-- **Tailwind CSS**: Implements a clean, responsive layout utilizing border-borders, custom grid spacing, and rounded cards.
-- **i18next (Internationalization)**: Mapped with `react-i18next` for full multi-language translations.
+## Ограничения
+- Для правильного отображения графиков требуются активные точки данных; пустые шкафы будут отображать состояния заполнителей.

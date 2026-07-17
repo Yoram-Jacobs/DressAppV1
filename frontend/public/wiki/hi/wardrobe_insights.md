@@ -1,35 +1,26 @@
-# Wardrobe Insights: Cost-per-Wear Analytics Dashboard
+# अलमारी अंतर्दृष्टि और सांख्यिकी
 
-This document provides a summary of the **Wardrobe Insights** page (Cost-per-Wear Analytics Dashboard), detailing its purpose, core metrics, key features, and underlying technology stack.
+अपनी कपड़ों की संपत्ति, खर्च करने की क्षमता और उपयोग के आँकड़ों का विश्लेषण करें।
 
-## 1. Overview
-The **Wardrobe Insights** dashboard (`WardrobeStats.jsx`) is a personal fashion analytics center designed to help users analyze their wardrobe value, track garment utilization, and cultivate conscious wear habits. By tracking how often garments are worn, the system computes the exact economic value and utility of each piece.
+## सिंहावलोकन
+इनसाइट्स कार्यक्षेत्र समृद्ध ग्राफ़ का उपयोग करके आपके अलमारी के कुल वित्तीय मूल्य, रंग संरचना और लागत-प्रति-पहनने वाले मेट्रिक्स को प्रदर्शित करता है।
 
-## 2. Key Metrics & KPIs
-The dashboard features a primary grid of Key Performance Indicators (KPIs) calculated dynamically from the user's closet:
-- **Closet Worth (Total Value)**: The cumulative sum of the purchase prices (`price_cents` or `purchase_price_cents`) of all items currently saved in the closet.
-- **Closet Utilization**: The percentage of garments in the wardrobe that have been worn at least once (`wornItems / totalItems * 100`).
-- **Items Worn Ratio**: A fraction representation of worn items versus total closet capacity (e.g., `12 / 45 items`).
-- **Average Cost-per-Wear (CPW)**: The average efficiency score across all priced items. CPW is calculated as `Garment Price / Wear Count` (with wear count defaulting to 1 for items worn 0 times to prevent division errors).
+## पूर्वावश्यकताएँ
+- इनपुट कीमतों के साथ कोठरी आइटम।
+- आपके कैलेंडर में निर्धारित पोशाक इतिहास।
 
-## 3. Key Features
+## कदम दर कदम
+1. **ओपन इनसाइट्स**: अपनी प्रोफ़ाइल चुनें और वॉर्डरोब स्टैट्स पर नेविगेट करें।
+2. **मूल्य का मूल्यांकन करें**: अपनी अलमारी का कुल वित्तीय मूल्य देखें।
+3. **मूल्य-प्रति-पहनावा (सीपीडब्ल्यू) जांचें**: दक्षता लीडरबोर्ड की निगरानी करें जिसमें दिखाया गया हो कि किस आइटम का सीपीडब्ल्यू (मूल्य/पहनावा) सबसे कम है।
+4. **रंगों का विश्लेषण करें**: रंग चक्र वितरण की समीक्षा करें।
 
-### Dynamic Distribution Charts
-Users can toggle between three different breakdown views to visualize the composition of their wardrobe:
-1. **Color Palette Breakdown**: Displays a ring, pie, or bar chart representation of the dominant color palette of the closet, dynamically pulling mapped hex codes (e.g., navy, charcoal, terracota, burgundy).
-2. **Materials Breakdown**: Visualizes the fabric composition (e.g., cotton, denim, cashmere, wool, leather) by parsing percentages from weighted tags.
-3. **Subcategories Breakdown**: Categorizes items into specific dress/garment types (e.g., boots, trousers, sneakers, jackets, maxi dresses) to highlight closet distribution.
+## अपेक्षित परिणाम
+कम उपयोग की गई वस्तुओं को दर्शाने वाले स्पष्ट दृश्य ग्राफ़, भविष्य के खरीदारी निर्णयों का मार्गदर्शन करते हैं।
 
-### Efficiency Leaderboard (Top 5)
-- Displays the **Top 5 Most Efficient Items** based on the lowest Cost-per-Wear score. This rewards garments that represent high usage relative to their price.
+## समस्या निवारण
+- **शून्य मूल्य आँकड़े**: सुनिश्चित करें कि आइटम संपादित करते समय आप "खरीद मूल्य" फ़ील्ड भरें।
+- **गलत पहनने की गिनती**: पहनने की आवृत्तियों को अपडेट करने के लिए शेड्यूलर के अंदर दैनिक आउटफिट लॉग करें।
 
----
-
-## 4. Technology Stack
-
-### Frontend Components & Library
-- **React & Zustand**: Uses React hooks for breakdown tab controls, layout toggles, and state syncing. Pulls closet item arrays globally from the Zustand-managed `useClosetStore`.
-- **Recharts**: A charting library used to build responsive charts (`ResponsiveContainer`, `PieChart`, `Pie`, `Cell`, `BarChart`, `Bar`, `XAxis`, `YAxis`, `Tooltip`).
-- **Lucide Icons**: Integrates Lucide SVG vector icons (`DollarSign`, `Percent`, `TrendingUp`, `Shirt`, `Award`, `Activity`, `ChevronDown`, `ChevronUp`) for high-fidelity KPI representation.
-- **Tailwind CSS**: Implements a clean, responsive layout utilizing border-borders, custom grid spacing, and rounded cards.
-- **i18next (Internationalization)**: Mapped with `react-i18next` for full multi-language translations.
+## सीमाएँ
+- ग्राफ़ को सही ढंग से प्रस्तुत करने के लिए सक्रिय डेटा बिंदुओं की आवश्यकता होती है; खाली कोठरियाँ प्लेसहोल्डर स्थितियाँ प्रदर्शित करेंगी।

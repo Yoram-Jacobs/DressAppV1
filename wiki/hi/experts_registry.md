@@ -1,140 +1,25 @@
-# Certified Stylist Directory (Experts Registry)
+# प्रमाणित स्टाइलिस्ट निर्देशिका
 
-> **Module:** `frontend/src/pages/ExpertsDirectory.jsx`
-> **Backend:** `backend/app/api/v1/auth.py` (Profile toggle) · `backend/app/api/v1/experts.py` (Directory lookup)
-> **Store:** `lib/expertsStore.js`
-> **Model Schema:** `professional` nested model inside User Document
+जांचे-परखे फैशन पेशेवरों, दर्जियों और व्यक्तिगत डिजाइनरों के साथ सहयोग करें।
 
----
+## सिंहावलोकन
+स्टाइलिंग सलाहकारों को नियुक्त करने के लिए विशेषज्ञ निर्देशिका ब्राउज़ करें जो आपके डिजिटल क्लोज़ेट तक पहुंच सकते हैं, या क्लाइंट लीड प्राप्त करने के लिए अपनी स्वयं की सेवाओं को पंजीकृत कर सकते हैं।
 
-## 1. Executive Summary & Value Proposition
+## पूर्वावश्यकताएँ
+- एक विशेषज्ञ के रूप में पंजीकरण करते समय एक पेशेवर जीवनी और संपर्क विवरण।
 
-### Overview
-The **Experts Registry** (or Certified Stylist Directory) is DressApp’s public marketplace for fashion consulting. It connects standard app users with certified, professional stylists, personal shoppers, and wardrobe designers directly inside the app. 
+## कदम दर कदम
+1. **रजिस्ट्री ब्राउज़ करें**: विशेषज्ञ टैब खोलें और विशेषता, शहर या देश के आधार पर खोजें।
+2. **स्टाइलिस्टों से संपर्क करें**: पोर्टफोलियो देखें और ईमेल, फोन या वेबसाइट संपर्क के लिए सीधे लिंक पर क्लिक करें।
+3. **सेवाएं पंजीकृत करें**: प्रोफ़ाइल विवरण पर जाएं, "फ़ैशन प्रो" टॉगल करें, अपने व्यवसाय का नाम और जीवनी भरें, और सहेजें पर क्लिक करें।
+4. **स्थानीय रूप से रैंक करें**: ब्राउज़र जियोलोकेशन स्थानीय उपयोगकर्ताओं को आपको उनके क्षेत्र में सबसे पहले ढूंढने में मदद करता है।
 
-Users can browse, search, and contact local or global fashion consultants. Verified professionals can toggle their professional status on their profile, populate their public business card, and receive direct inquiries from prospective clients.
+## अपेक्षित परिणाम
+सुरक्षित संपर्क पथों के साथ फैशन विशेषज्ञों की एक विस्तृत, क्षेत्र-जागरूक निर्देशिका।
 
-### Architectural Flow
+## समस्या निवारण
+- **निर्देशिका में दिखाई नहीं दे रहा है**: सुनिश्चित करें कि आपकी प्रोफ़ाइल अनुमोदन स्थिति "स्वीकृत" है (रजिस्ट्री पर व्यवस्थापक समीक्षा लंबित है)।
+- **स्थानीय खोज गलत**: जांचें कि आपके शहर और देश के पैरामीटर सही ढंग से लिखे गए हैं।
 
-```mermaid
-graph TD
-    User([User / Buyer]) -->|Browse / Search| UI[ExpertsDirectory.jsx SPA]
-    
-    UI -->|useCachedList Subscription| Store[expertsStore.js Cache]
-    Store -->|Cache Hit < 5 min| Grid[Instant Paint Cards]
-    Store -->|Cache Miss / Apply| API[GET /api/v1/experts]
-    
-    subgraph Backend_Registry_Processor ["Backend — Registry Processor"]
-        API -->|Query by Filter| Mongo[(MongoDB)]
-        Mongo -->|Filter: is_professional=True & status='approved'| List[Filter Results]
-    end
-    
-    List -->|API Response| Store
-    
-    Pro([Professional Stylist]) -->|Toggle 'Fashion Pro'| Profile[ProfileDetailsCard.jsx]
-    Profile -->|PATCH /api/v1/auth/profile| UpdateDB[Update user.professional]
-```
-
-### User Value Proposition
-- **Direct Collaboration**: Connects users to actual human fashion specialists who can audit their digital closet and compile custom outfit planners.
-- **Double-State Filter Optimization**: Keeps draft filters separate from applied searches. A lookup request only fires upon manual submit, eliminating constant API querying as the user types.
-- **Location-Aware Suggestions**: Uses browser geo-location (city and country codes) to pre-seed search parameters, automatically highlighting nearby local consultants first.
-- **Instant Client Cache**: Uses `expertsStore` (caching entries for 5 minutes) to ensure that clicking between Home, Closet, and the Experts list renders instantly without loading screens.
-
----
-
-## 2. Comprehensive User Manual
-
-### 2.1 Visual Interface Topology
-
-The directory dashboard splits into a filter sidebar (left) and the professional list (right):
-
-```text
-+------------------------------------------------------------------------------------+
-|  <- Back                   [ REGISTER AS STYLIST ]                                 |
-+------------------------------------------------------------------------------------+
-|  Filters Sidebar:                     |  Experts List (N matched):                 |
-|  - Search Name / Bio [           ]    |  +---------------------------------------+ |
-|  - Specialty: [ All / Personal ]      |  | Professional Avatar                   | |
-|  - Country:   [ All / Israel   ]      |  | Sarah Jenkins · Personal Stylist      | |
-|  - City/Reg:  [ All / Tel Aviv ]      |  | "I help build sustainable wardrobes"  | |
-|                                       |  | Location: Tel Aviv, IL                | |
-|  [ APPLY FILTERS ]   [ CLEAR ]        |  | [Website]  [Email]  [Phone]           | |
-|                                       |  +---------------------------------------+ |
-+------------------------------------------------------------------------------------+
-```
-
-### 2.2 Operational Workflows
-
-#### A. Becoming a Listed Expert (Professional Self-Registration)
-1. Navigate to **Profile Details** (`ProfileDetailsCard.jsx`).
-2. Toggle the **Register as Stylist** checkbox.
-3. Fill out the professional profile parameters:
-   - **Business Name**: Brand or LLC.
-   - **Profession**: Specialty (e.g. *Personal Shopper*, *Color Consultant*).
-   - **Bio**: Styling philosophy.
-   - **Contact Links**: Phone number, support email, and website portfolio.
-   - **Service Location**: City and country codes.
-4. Click Save. The backend updates `professional.is_professional = True`.
-
-#### B. Searching and Filtering
-1. **Keystroke Buffering**: Entering a name or city updates the local React `draft` filter state.
-2. **Apply Search**: Clicking "Apply Filters" or pressing Enter copies `draft` -> `applied`, initiating a reload from the backend or cache.
-3. **Geo-Discovery**: If location coordinates are available via `LocationProvider`, the browser pre-seeds the city/country in the filters, suggesting local consultants.
-
----
-
-## 3. Technology Stack & API Reference
-
-### 3.1 Backend Schema Configuration
-Nested schema inside the MongoDB `users` collection:
-```json
-{
-  "professional": {
-    "is_professional": true,
-    "profession": "Wardrobe Consultant",
-    "business_name": "EcoFashion Inc",
-    "bio": "Specialized in minimalist wardrobe capsule design.",
-    "contact_email": "stylist@example.com",
-    "contact_phone": "+972-50-000-0000",
-    "website": "https://ecofashion.example.com",
-    "city": "Tel Aviv",
-    "country": "IL",
-    "approval_status": "approved"
-  }
-}
-```
-
-### 3.2 API Contracts
-
-#### `GET /api/v1/experts`
-Returns a list of self-certified professionals.
-**Parameters:**
-- `profession` (optional): Filter by professional role.
-- `country` (optional): Filter by country code.
-- `region` (optional): Filter by city.
-- `q` (optional): Full-text search across name, business name, and bio.
-
-**Response Schema:**
-```json
-{
-  "items": [
-    {
-      "id": "user_id_string",
-      "name": "Sarah Jenkins",
-      "avatar_url": "https://...",
-      "professional": {
-        "profession": "Personal Stylist",
-        "business_name": "Jenkins Styling",
-        "bio": "Transforming closets since 2021...",
-        "contact_email": "sarah@example.com",
-        "contact_phone": "+1-555-0199",
-        "website": "https://sarahjstyling.com",
-        "city": "New York",
-        "country": "US"
-      }
-    }
-  ],
-  "total": 1
-}
-```
+## सीमाएँ
+- स्टाइलिंग अनुबंध, शुल्क और सत्र सीधे आपके और विशेषज्ञ के बीच ड्रेसएप प्लेटफॉर्म के बाहर व्यवस्थित किए जाते हैं।

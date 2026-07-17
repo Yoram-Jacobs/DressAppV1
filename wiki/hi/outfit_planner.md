@@ -1,42 +1,25 @@
-# Outfit Planner: Visual 7-Day Outfit Calendar
+# पोशाक योजनाकार और कैनवास
 
-This document provides a summary of the **Outfit Planner** calendar component, detailing its features, interactions, and technology stack.
+समन्वित लेआउट लिखें, परत बनाएं और समीक्षा करें।
 
-## 1. Overview
-The **Outfit Planner** (integrated within `Stylist.jsx`) is a scheduling interface that allows users to plan what they wear over a rolling 7-day period. By integrating calendar scheduling with the saved outfits canvas, it logs daily usage history, coordinates styles for planned events, and updates clothing wear statistics.
+## सिंहावलोकन
+आउटफिट प्लानर टॉप, बॉटम्स, आउटरवियर और फुटवियर को गतिशील रूप से परत करने के लिए अवतार टेम्पलेट्स के साथ एक विज़ुअल कैनवास प्रदान करता है।
 
-## 2. Key Features
+## पूर्वावश्यकताएँ
+- संग्रहित कोठरी का सामान।
 
-### Visual 7-Day Timeline Grid
-- Displays a horizontal sliding or grid timeline of 7 cards representing a rolling week.
-- Each date card displays the day of the week, the calendar month, and day number.
-- Highlighting indicates the current calendar day (`TODAY`).
-- **Interactive Avatar Cards**: If an outfit is scheduled for a specific day, a mini scaled 2D model/avatar representation is drawn inside the card, showing the planned garments visually. Hovering over the card displays the outfit title and a quick edit affordance.
+## कदम दर कदम
+1. **कैनवास चुनें**: प्लानर खोलें और एक दिन या नए ड्राफ्ट पर क्लिक करें।
+2. **लेयर आइटम**: कपड़ों को 2डी अवतार पर खींचें। बाहरी वस्त्र स्वतः ही भीतरी शर्ट के ऊपर चिपक जाते हैं।
+3. **फिट का मूल्यांकन करें**: संगतता स्कोर और चेतावनियों की जांच करें (उदाहरण के लिए, रंग टकराव या मौसम अलर्ट)।
+4. **सहेजें**: एक शीर्षक सेट करें और अपनी अलमारी डायरी का लुक शेड्यूल करें।
 
-### Date Navigation
-- Jumps to the current calendar date (`Today` button).
-- Navigates back and forth day-by-day using previous and next Chevron arrow controls.
+## अपेक्षित परिणाम
+सुंदर स्तरित पोशाक रचनाएँ आपके कैलेंडर में सहेजी गईं और ग्रिड कार्ड पूर्वावलोकन के रूप में दिखाई दीं।
 
-### Outfit Assignment & Scheduler
-- Clicking any day on the timeline opens a sub-modal (`Dialog` card) allowing the user to manage that day's plan.
-- **Unschedule Outfit**: If an outfit is already scheduled, it provides a one-click button to remove/unschedule the outfit.
-- **Select Saved Outfit Grid**: Renders a thumbnail gallery of all the user's saved outfits with avatar previews. Selecting an outfit schedules it for that day.
-- **Automatic Stat Integration**: Scheduling an outfit automatically updates the wear counter (`use_count`) on the outfit record, keeping wear counts and Cost-per-Wear metrics in sync.
+## समस्या निवारण
+- **लेयर ऑर्डर गलत**: आइटम की श्रेणी को दोबारा सत्यापित करें; बाहरी वस्त्रों को सही ढंग से व्यवस्थित करने के लिए उन्हें "बाहरी वस्त्र" के रूप में वर्गीकृत किया जाना चाहिए।
+- **ओवरलैप अलर्ट**: यदि अवतार बार-बार पहनने की चेतावनी देता है, तो जांचें कि क्या आपने हाल ही में उसी स्थान पर वही पोशाक पहनी है।
 
----
-
-## 3. Technology Stack
-
-### Frontend & UI Components
-- **React**: Handles timeline date ranges, scheduling states, modals, and API data sync hooks.
-- **Radix UI & Shadcn**: Utilizes Radix Dialog primitives (`Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`) for standard transition-aware modals.
-- **OutfitAvatarViewer (Canvas)**: Integrates the 2D HTML5 canvas-based avatar renderer (`AvatarViewer`) to overlay and position transparency-mapped garment layers (tops, bottoms, shoes, outerwear) dynamically on a human figure.
-- **Tailwind CSS**: Custom layouts using CSS scrollbars (`scrollbar-thin`), grid alignments (`grid-cols-7`), and flex boxes.
-- **Lucide Icons**: Integrates vectors like `Plus`, `Trash2`, `ChevronLeft`, and `ChevronRight`.
-- **i18next**: Localizes month names, weekdays, and action button labels across 12 languages.
-
-### Backend API Endpoints
-- **REST Endpoints**: Connects to the `/outfits` API routes:
-  - `GET /outfits`: Pulls saved outfits to populate the selector grid.
-  - `PATCH /outfits/{id}`: Assigns or schedules the outfit to a new date.
-  - `DELETE /outfits/{id}`: Deletes or unschedules a saved entry.
+## सीमाएँ
+- श्रेणी टैग के आधार पर परतें स्वचालित रूप से प्रबंधित की जाती हैं; मैन्युअल z-इंडेक्स ओवरराइड समर्थित नहीं हैं।

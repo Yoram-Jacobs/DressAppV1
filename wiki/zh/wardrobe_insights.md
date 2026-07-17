@@ -1,35 +1,26 @@
-# Wardrobe Insights: Cost-per-Wear Analytics Dashboard
+# 衣柜洞察与统计
 
-This document provides a summary of the **Wardrobe Insights** page (Cost-per-Wear Analytics Dashboard), detailing its purpose, core metrics, key features, and underlying technology stack.
+分析您的服装资产、支出效率和使用统计数据。
 
-## 1. Overview
-The **Wardrobe Insights** dashboard (`WardrobeStats.jsx`) is a personal fashion analytics center designed to help users analyze their wardrobe value, track garment utilization, and cultivate conscious wear habits. By tracking how often garments are worn, the system computes the exact economic value and utility of each piece.
+## 概述
+Insights 工作区使用丰富的图表显示您衣橱的总财务价值、颜色构成和每次穿着成本指标。
 
-## 2. Key Metrics & KPIs
-The dashboard features a primary grid of Key Performance Indicators (KPIs) calculated dynamically from the user's closet:
-- **Closet Worth (Total Value)**: The cumulative sum of the purchase prices (`price_cents` or `purchase_price_cents`) of all items currently saved in the closet.
-- **Closet Utilization**: The percentage of garments in the wardrobe that have been worn at least once (`wornItems / totalItems * 100`).
-- **Items Worn Ratio**: A fraction representation of worn items versus total closet capacity (e.g., `12 / 45 items`).
-- **Average Cost-per-Wear (CPW)**: The average efficiency score across all priced items. CPW is calculated as `Garment Price / Wear Count` (with wear count defaulting to 1 for items worn 0 times to prevent division errors).
+## 先决条件
+- 带有输入价格的衣柜物品。
+- 在日历中安排服装历史记录。
 
-## 3. Key Features
+## 一步一步
+1. **打开 Insights**：选择您的个人资料并导航至衣柜统计信息。
+2. **评估价值**：查看您衣柜的总财务价值。
+3. **检查每次磨损成本 (CPW)**：监控效率排行榜，显示哪些商品具有最低 CPW（价格/磨损）。
+4. **分析颜色**：查看色轮分布。
 
-### Dynamic Distribution Charts
-Users can toggle between three different breakdown views to visualize the composition of their wardrobe:
-1. **Color Palette Breakdown**: Displays a ring, pie, or bar chart representation of the dominant color palette of the closet, dynamically pulling mapped hex codes (e.g., navy, charcoal, terracota, burgundy).
-2. **Materials Breakdown**: Visualizes the fabric composition (e.g., cotton, denim, cashmere, wool, leather) by parsing percentages from weighted tags.
-3. **Subcategories Breakdown**: Categorizes items into specific dress/garment types (e.g., boots, trousers, sneakers, jackets, maxi dresses) to highlight closet distribution.
+## 预期结果
+清晰的可视化图表说明未充分利用的物品，指导未来的购买决策。
 
-### Efficiency Leaderboard (Top 5)
-- Displays the **Top 5 Most Efficient Items** based on the lowest Cost-per-Wear score. This rewards garments that represent high usage relative to their price.
+## 故障排除
+- **零值统计**：确保在编辑商品时填写“购买价格”字段。
+- **不正确的穿着计数**：在调度程序中记录每日服装以更新穿着频率。
 
----
-
-## 4. Technology Stack
-
-### Frontend Components & Library
-- **React & Zustand**: Uses React hooks for breakdown tab controls, layout toggles, and state syncing. Pulls closet item arrays globally from the Zustand-managed `useClosetStore`.
-- **Recharts**: A charting library used to build responsive charts (`ResponsiveContainer`, `PieChart`, `Pie`, `Cell`, `BarChart`, `Bar`, `XAxis`, `YAxis`, `Tooltip`).
-- **Lucide Icons**: Integrates Lucide SVG vector icons (`DollarSign`, `Percent`, `TrendingUp`, `Shirt`, `Award`, `Activity`, `ChevronDown`, `ChevronUp`) for high-fidelity KPI representation.
-- **Tailwind CSS**: Implements a clean, responsive layout utilizing border-borders, custom grid spacing, and rounded cards.
-- **i18next (Internationalization)**: Mapped with `react-i18next` for full multi-language translations.
+## 局限性
+- 图表需要活动数据点才能正确呈现；空壁橱将显示占位符状态。

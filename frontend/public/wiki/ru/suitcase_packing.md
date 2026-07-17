@@ -1,22 +1,26 @@
-# DressApp Suitcase
+# Помощник по упаковке чемоданов
 
-## Purpose
-The Suitcase feature is designed to solve the common travel problem of packing inappropriate or excessive clothing. It acts as an intelligent travel packing assistant that considers the duration of the trip, local weather, specific conditions (e.g., business trip, hotel vacation, safari, outdoor camping), as well as cultural and religious conventions. By doing so, it prevents overpacking under-usable garments and avoids the frustration of missing crucial items (like a bathing suit for the beach or a warm coat for cold weather), saving space, weight, and unnecessary local purchases.
+Эффективно упаковывайте вещи в любой пункт назначения с помощью анализа погоды и контекста на основе искусственного интеллекта.
 
-## Goals
-1. **Intelligent Travel Solution**: Provide an AI-driven, context-aware packing companion.
-2. **Personalized Curation**: Select the most useful and appropriate items from the user's closet while maintaining their unique personality and style.
-3. **Gap Analysis & Recommendations**: Alert the user if crucial items are missing for the trip and recommend purchases from the marketplace (if a good match is found) or local stores.
-4. **Iterative Refinement**: Allow users to review and refine the suggested suitcase, requesting specific changes through natural language interactions.
+## Обзор
+Планируйте поездки, создавайте индивидуальные ежедневные списки вещей и уточняйте содержимое багажа с помощью интерактивного чата планирования.
 
-## Key Points
-- **Context-Aware Generation**: Automatically generates daily outfits and a packing list based on trip details (destinations, dates) setup in the Trip form and calendar events, along with the user's existing wardrobe.
-- **State Retention**: Maintains the active suitcase state and history seamlessly, ensuring that the user's progress and refinement notes are not lost upon refreshing the page.
-- **Interactive Refinement**: Users can chat with the AI stylist to tweak the suitcase (e.g., swapping items, adjusting for specific events) while preserving the rest of the curated list.
-- **Approval & Execution**: Once the user is satisfied, they can approve the suitcase to finalize their packing plan.
+## Предварительные условия
+- Детали пункта назначения и даты поездки.
+- Активный инвентарь в шкафу.
 
-## Technology
-- **Frontend**: React (Vite) UI with a custom state machine (`gathering`, `reviewing`, `active`) in `Suitcase.jsx`. It manages user inputs, displays the generated suitcase, and handles real-time refinement chat requests. State is autosaved to prevent data loss.
-- **Backend**: Python FastAPI (`suitcase.py`) exposes the `/pack` endpoint, handling both the initial suitcase generation and subsequent refinements.
-- **Database**: MongoDB stores the active suitcase state (`active_suitcase_id`), enabling cross-session persistence and preventing duplicate document creation on autosave.
-- **AI Integration**: Leverages LLMs to process the user's wardrobe, trip context, and natural language refinement notes. During refinement, the frontend passes the current state (`current_outfits`, `current_packing_list`) to the backend, ensuring the LLM maintains context and accurately updates only the requested items.
+## Шаг за шагом
+1. **Создать поездку**: укажите город назначения, даты и цель (деловая поездка, отпуск и т. д.).
+2. **Создать список**: ИИ проверяет прогноз погоды в пункте назначения и календарные расписания, чтобы составить контрольный список упаковки.
+3. **Уточнить чат**. Воспользуйтесь помощником по упаковке вещей в чате, чтобы попросить внести изменения (например, «добавить формальную обувь»).
+4. **Сохранить список**. Экспортируйте окончательный список в диспетчер чемоданов для оптимистичного доступа в автономном режиме.
+
+## Ожидаемые результаты
+Контрольный список вещей, не вызывающих стресса и соответствующих погодным условиям, показывающий, что именно взять с собой из шкафа.
+
+## Устранение неполадок
+- **Нет данных о погоде**: убедитесь, что название города назначения указано правильно, а подключение к Интернету активно.
+- **Список пуст**: убедитесь, что в каталоге вашего гардероба есть подходящие предметы одежды, соответствующие погоде места назначения.
+
+## Ограничения
+- В настоящее время упаковочные листы составляются на срок до 14 дней.

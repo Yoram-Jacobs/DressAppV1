@@ -1,22 +1,26 @@
-# DressApp Suitcase
+# 行李箱打包助理
 
-## Purpose
-The Suitcase feature is designed to solve the common travel problem of packing inappropriate or excessive clothing. It acts as an intelligent travel packing assistant that considers the duration of the trip, local weather, specific conditions (e.g., business trip, hotel vacation, safari, outdoor camping), as well as cultural and religious conventions. By doing so, it prevents overpacking under-usable garments and avoids the frustration of missing crucial items (like a bathing suit for the beach or a warm coat for cold weather), saving space, weight, and unnecessary local purchases.
+通过人工智能驱动的天气和情境分析，高效打包前往任何目的地。
 
-## Goals
-1. **Intelligent Travel Solution**: Provide an AI-driven, context-aware packing companion.
-2. **Personalized Curation**: Select the most useful and appropriate items from the user's closet while maintaining their unique personality and style.
-3. **Gap Analysis & Recommendations**: Alert the user if crucial items are missing for the trip and recommend purchases from the marketplace (if a good match is found) or local stores.
-4. **Iterative Refinement**: Allow users to review and refine the suggested suitcase, requesting specific changes through natural language interactions.
+## 概述
+通过交互式计划聊天来计划行程、生成定制的每日装箱单并优化行李内容。
 
-## Key Points
-- **Context-Aware Generation**: Automatically generates daily outfits and a packing list based on trip details (destinations, dates) setup in the Trip form and calendar events, along with the user's existing wardrobe.
-- **State Retention**: Maintains the active suitcase state and history seamlessly, ensuring that the user's progress and refinement notes are not lost upon refreshing the page.
-- **Interactive Refinement**: Users can chat with the AI stylist to tweak the suitcase (e.g., swapping items, adjusting for specific events) while preserving the rest of the curated list.
-- **Approval & Execution**: Once the user is satisfied, they can approve the suitcase to finalize their packing plan.
+## 先决条件
+- 目的地详细信息和旅行日期。
+- 活跃的衣柜库存。
 
-## Technology
-- **Frontend**: React (Vite) UI with a custom state machine (`gathering`, `reviewing`, `active`) in `Suitcase.jsx`. It manages user inputs, displays the generated suitcase, and handles real-time refinement chat requests. State is autosaved to prevent data loss.
-- **Backend**: Python FastAPI (`suitcase.py`) exposes the `/pack` endpoint, handling both the initial suitcase generation and subsequent refinements.
-- **Database**: MongoDB stores the active suitcase state (`active_suitcase_id`), enabling cross-session persistence and preventing duplicate document creation on autosave.
-- **AI Integration**: Leverages LLMs to process the user's wardrobe, trip context, and natural language refinement notes. During refinement, the frontend passes the current state (`current_outfits`, `current_packing_list`) to the backend, ensuring the LLM maintains context and accurately updates only the requested items.
+## 一步一步
+1. **创建行程**：设置目的地城市、日期和目的（商务、度假等）。
+2. **生成清单**：人工智能检查目的地天气预报和日历时间表以编制装箱清单。
+3. **优化聊天**：使用打包聊天助手来请求调整（例如“添加正式鞋子”）。
+4. **保存列表**：将最终列表导出到您的手提箱管理器，以便进行乐观的离线访问。
+
+## 预期结果
+零压力、适合天气的打包清单准确显示了您衣柜中需要打包的物品。
+
+## 故障排除
+- **无天气数据**：确保目的地城市拼写正确并且您的互联网连接处于活动状态。
+- **列表为空**：确保您的衣橱目录中有适合目的地天气的服装。
+
+## 局限性
+- 目前生成的装箱单最多适用于 14 天的旅行期限。

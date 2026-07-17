@@ -1,22 +1,26 @@
-# DressApp Suitcase
+# सूटकेस पैकिंग सहायक
 
-## Purpose
-The Suitcase feature is designed to solve the common travel problem of packing inappropriate or excessive clothing. It acts as an intelligent travel packing assistant that considers the duration of the trip, local weather, specific conditions (e.g., business trip, hotel vacation, safari, outdoor camping), as well as cultural and religious conventions. By doing so, it prevents overpacking under-usable garments and avoids the frustration of missing crucial items (like a bathing suit for the beach or a warm coat for cold weather), saving space, weight, and unnecessary local purchases.
+एआई-संचालित मौसम और संदर्भ विश्लेषण के साथ किसी भी गंतव्य के लिए कुशलतापूर्वक पैक करें।
 
-## Goals
-1. **Intelligent Travel Solution**: Provide an AI-driven, context-aware packing companion.
-2. **Personalized Curation**: Select the most useful and appropriate items from the user's closet while maintaining their unique personality and style.
-3. **Gap Analysis & Recommendations**: Alert the user if crucial items are missing for the trip and recommend purchases from the marketplace (if a good match is found) or local stores.
-4. **Iterative Refinement**: Allow users to review and refine the suggested suitcase, requesting specific changes through natural language interactions.
+## सिंहावलोकन
+यात्राओं की योजना बनाएं, दैनिक पैकिंग सूचियां तैयार करें और एक इंटरैक्टिव प्लानिंग चैट के माध्यम से सामान सामग्री को परिष्कृत करें।
 
-## Key Points
-- **Context-Aware Generation**: Automatically generates daily outfits and a packing list based on trip details (destinations, dates) setup in the Trip form and calendar events, along with the user's existing wardrobe.
-- **State Retention**: Maintains the active suitcase state and history seamlessly, ensuring that the user's progress and refinement notes are not lost upon refreshing the page.
-- **Interactive Refinement**: Users can chat with the AI stylist to tweak the suitcase (e.g., swapping items, adjusting for specific events) while preserving the rest of the curated list.
-- **Approval & Execution**: Once the user is satisfied, they can approve the suitcase to finalize their packing plan.
+## पूर्वावश्यकताएँ
+- गंतव्य विवरण और यात्रा की तारीखें।
+- सक्रिय कोठरी सूची।
 
-## Technology
-- **Frontend**: React (Vite) UI with a custom state machine (`gathering`, `reviewing`, `active`) in `Suitcase.jsx`. It manages user inputs, displays the generated suitcase, and handles real-time refinement chat requests. State is autosaved to prevent data loss.
-- **Backend**: Python FastAPI (`suitcase.py`) exposes the `/pack` endpoint, handling both the initial suitcase generation and subsequent refinements.
-- **Database**: MongoDB stores the active suitcase state (`active_suitcase_id`), enabling cross-session persistence and preventing duplicate document creation on autosave.
-- **AI Integration**: Leverages LLMs to process the user's wardrobe, trip context, and natural language refinement notes. During refinement, the frontend passes the current state (`current_outfits`, `current_packing_list`) to the backend, ensuring the LLM maintains context and accurately updates only the requested items.
+## कदम दर कदम
+1. **यात्रा बनाएं**: गंतव्य शहर, तिथियां और उद्देश्य (व्यवसाय, अवकाश, आदि) निर्धारित करें।
+2. **सूची तैयार करें**: एआई पैकिंग चेकलिस्ट संकलित करने के लिए गंतव्य मौसम पूर्वानुमान और कैलेंडर शेड्यूल की जांच करता है।
+3. **चैट को परिष्कृत करें**: समायोजन के लिए पूछने के लिए पैकिंग चैट सहायक का उपयोग करें (उदाहरण के लिए "औपचारिक जूते जोड़ें")।
+4. **सूची सहेजें**: आशावादी, ऑफ़लाइन पहुंच के लिए अंतिम सूची को अपने सूटकेस प्रबंधक को निर्यात करें।
+
+## अपेक्षित परिणाम
+एक शून्य-तनाव, मौसम-उपयुक्त पैकिंग चेकलिस्ट जो दिखाती है कि आपकी अलमारी से क्या पैक करना है।
+
+## समस्या निवारण
+- **कोई मौसम डेटा नहीं**: सुनिश्चित करें कि गंतव्य शहर की वर्तनी सही है और आपका इंटरनेट कनेक्शन सक्रिय है।
+- **सूची खाली**: सुनिश्चित करें कि आपके पास गंतव्य के मौसम के लिए आपकी अलमारी की सूची में उपयुक्त कपड़े हैं।
+
+## सीमाएँ
+- पैकिंग सूचियाँ वर्तमान में 14-दिवसीय यात्रा अवधि तक के लिए तैयार की जाती हैं।
