@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/lib/auth';
-import { campaignApi } from '@/lib/api';
+import { campaignApi, api } from '@/lib/api';
 import { toast } from 'sonner';
 
 export default function CampaignDetail() {
@@ -35,6 +35,7 @@ export default function CampaignDetail() {
   const [saved, setSaved] = useState(false);
   const [galleryIdx, setGalleryIdx] = useState(0);
   const [reporting, setReporting] = useState(false);
+  const [expert, setExpert] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -47,6 +48,14 @@ export default function CampaignDetail() {
           setSaved((data.saved_by || []).includes(user?.id));
           // Track view
           campaignApi.trackCampaignView(id).catch(() => {});
+
+          if (data.expert_id) {
+            api.getProfessional(data.expert_id)
+              .then((prof) => {
+                if (!cancelled) setExpert(prof);
+              })
+              .catch(() => {});
+          }
         }
       })
       .catch(() => !cancelled && navigate('/experts?tab=campaigns'))
@@ -182,11 +191,62 @@ export default function CampaignDetail() {
           <div className="min-w-0">
             <p className="caps-label text-muted-foreground">{business_name}</p>
             <h1 className="font-display text-2xl sm:text-3xl mt-1">{title}</h1>
-            {category && (
-              <Badge variant="outline" className="rounded-full mt-2 text-xs">
-                <Tag className="h-2.5 w-2.5 me-1" />{category}
-              </Badge>
-            )}
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              {category && (
+                <Badge variant="outline" className="rounded-full text-xs">
+                  <Tag className="h-2.5 w-2.5 me-1" />{category}
+                </Badge>
+              )}
+
+              {expert?.professional?.business?.phone && (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full text-xs h-7 px-3"
+                  data-testid="campaign-expert-phone"
+                >
+                  <a href={`tel:${expert.professional.business.phone}`}>
+                    <Phone className="h-3 w-3 me-1" />
+                    {t('experts.callNow', { defaultValue: 'Phone' })}
+                  </a>
+                </Button>
+              )}
+
+              {expert?.professional?.business?.email && (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full text-xs h-7 px-3"
+                  data-testid="campaign-expert-email"
+                >
+                  <a href={`mailto:${expert.professional.business.email}`}>
+                    <Mail className="h-3 w-3 me-1" />
+                    {t('experts.sendEmail', { defaultValue: 'Email' })}
+                  </a>
+                </Button>
+              )}
+
+              {expert?.professional?.business?.website && (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full text-xs h-7 px-3"
+                  data-testid="campaign-expert-website"
+                >
+                  <a
+                    href={expert.professional.business.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Globe className="h-3 w-3 me-1" />
+                    {t('experts.visitWebsite', { defaultValue: 'Website' })}
+                  </a>
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Action buttons */}
