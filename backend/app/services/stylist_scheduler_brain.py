@@ -226,7 +226,8 @@ async def generate_scheduled_proposals(
     prompt = (
         f"Generate EXACTLY 3 different outfit recommendations for tomorrow. "
         f"The user's preset preference is: {style_prompt}.\n\n"
-        f"You MUST prioritize selecting from these rotation-friendly closet items first to ensure the user rotates their wardrobe:\n"
+        f"You MUST select items ONLY from the user's closet list below. Under no circumstances should you recommend items that the user does not own or that have a null closet_item_id. Every recommended item must map to a valid closet item ID from the list below.\n\n"
+        f"User's Closet Items:\n"
         f"{closet_summary_str}\n\n"
         f"Output MUST be in JSON matching this TypeScript type:\n"
         f"{{\n"
@@ -235,8 +236,8 @@ async def generate_scheduled_proposals(
         f"    \"name\": string, // 3-6 words. Generates a highly descriptive, appealing, and creative style title (e.g., 'Casual Blue & White Summer Hangout', 'Classic Charcoal Streetwear', 'Sporty Emerald Workout') describing the vibe, season, and color combination. Avoid generic titles like 'The Look' or 'Outfit 1'.\n"
         f"    \"items\": Array<{{\n"
         f"      \"role\": \"top\"|\"bottom\"|\"outerwear\"|\"shoes\"|\"accessory\"|\"dress\",\n"
-        f"      \"description\": string,\n"
-        f"      \"closet_item_id\": string | null\n"
+        f"      \"description\": string, // Use the item's title/description from the list.\n"
+        f"      \"closet_item_id\": string // MUST be a valid ID from the closet list above. Cannot be null.\n"
         f"    }}>\n,"
         f"    \"why\": string,\n"
         f"    \"confidence\": number\n"
@@ -276,6 +277,7 @@ async def generate_scheduled_proposals(
     proposals = res_json.get("outfit_recommendations") or []
     
     # Resolve any truncated IDs returned by the LLM back to the full UUIDs in raw_closet
+    valid_ids = {x["id"] for x in raw_closet}
     for prop in proposals:
         for item in prop.get("items", []):
             cid = item.get("closet_item_id")
@@ -284,6 +286,10 @@ async def generate_scheduled_proposals(
                 if match:
                     item["closet_item_id"] = match
                     logger.info("Resolved truncated ID %s to full UUID %s", cid, match)
+            
+            # Validate that the item matches an actual item in the closet list
+            if not item.get("closet_item_id") or item["closet_item_id"] not in valid_ids:
+                raise ValueError(f"LLM suggested item not in closet list: {item}")
     
     # Track suggested items to update last_suggested_at
     suggested_ids = []

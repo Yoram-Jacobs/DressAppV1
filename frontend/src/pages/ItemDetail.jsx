@@ -630,7 +630,8 @@ export default function ItemDetail() {
       setItem(data);
       setForm(toFormState(data, user));
     } catch (err) {
-      toast.error(err?.response?.data?.detail || t('itemDetail.notFound'));
+      const is404 = err?.response?.status === 404;
+      toast.error(is404 ? t('itemDetail.notFound') : (err?.response?.data?.detail || t('common.error')));
       nav('/closet');
     } finally {
       setLoading(false);
