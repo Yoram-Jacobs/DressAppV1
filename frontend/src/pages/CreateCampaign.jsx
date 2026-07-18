@@ -119,7 +119,7 @@ export default function CreateCampaign() {
 
   useEffect(() => {
     if (editId) {
-      campaignApi.getCampaignDetail(editId).then((res) => {
+      campaignApi.getCampaign(editId).then((res) => {
         setForm({
           title: res.title || '',
           business_name: res.business_name || '',
