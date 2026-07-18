@@ -121,6 +121,16 @@
     "trouble_slow_fix": "Easy fix: The app automatically processes them one by one. Just wait a minute!",
     "limit_title": "Limitations",
     "limit_item1": "Voice typing works best on Google Chrome or Apple Safari browsers.",
-    "limit_item2": "Dark, blurry, or folded clothes might not be recognized correctly by the scanner. Try taking pictures in a bright room with the garment laid flat."
+    "limit_item2": "Dark, blurry, or folded clothes might not be recognized correctly by the scanner. Try taking pictures in a bright room with the garment laid flat.",
+    "profile_item12_title": "12. Notificaciones de Campaña",
+    "profile_item12_desc": "Te permite personalizar qué promociones de moda locales y actualizaciones de estilistas recibes. Puedes establecer la frecuencia y la distancia.",
+    "campaigns_help_title": "Campañas de Moda Locales",
+    "campaigns_help_p1": "Encuentra ventas exclusivas, eventos de estilistas y ofertas de moda local en tu área:",
+    "campaigns_feed_help_title": "Feed de Ofertas Locales",
+    "campaigns_feed_help_desc": "Explora una lista en vivo de campañas promocionales publicadas por expertos en moda verificados cerca de tu ciudad.",
+    "campaigns_maps_help_title": "Integración con Google Maps",
+    "campaigns_maps_help_desc": "Haz clic en cualquier oferta para ver su descripción, copiar códigos de descuento y localizar la boutique directamente en Google Maps.",
+    "campaigns_save_help_title": "Guardar y Compartir Ofertas",
+    "campaigns_save_help_desc": "Guarda tus ofertas locales favoritas para verlas más tarde o compártelas directamente con amigos."
   }
 }

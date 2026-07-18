@@ -65,6 +65,9 @@ Votre page de profil comporte différentes sections de paramètres. Voici pourqu
 
 ---
 
+
+-**12. Notifications de campagne** : elles vous permettent de personnaliser les promotions de mode locales, les ventes en magasin et les mises à jour des stylistes que vous recevez par e-mail ou par notifications push. Vous pouvez définir la fréquence et la distance afin de recevoir uniquement les offres à proximité qui correspondent à vos styles.
+
 ### 3.4 Vérification des statistiques de votre garde-robe
 Découvrez combien vaut votre garde-robe et quels articles sont vos favoris !
 
@@ -126,6 +129,15 @@ Connectez-vous avec de vrais experts de la mode directement dans DressApp :
 - **Annuaire d'experts en mode**: Parcourez un registre de stylistes professionnels certifiés, de conseillers en mode et de consultants en garde-robe.
 - **Recherche de spécialités de style**: Filtrer les experts par région, pays ou spécialités de mode spécifiques.
 - **Contacts directs**: Contactez-les directement par téléphone, envoyez des e-mails directs ou visitez leurs portfolios professionnels et leurs sites Web.
+
+---
+
+### 3.11 Campagnes de mode locales
+Trouvez des ventes exclusives, des événements de stylistes et des offres de mode locale dans votre région :
+
+- **Flux d'offres locales** : parcourez une liste en direct de campagnes promotionnelles publiées par des experts de la mode vérifiés à proximité de votre ville ou région.
+- **Intégration Google Maps** : cliquez sur n'importe quelle offre pour afficher sa description, copier les codes de réduction et localiser la boutique, le créateur ou le styliste directement sur Google Maps.
+- **Offres Enregistrer et partager** : ajoutez vos offres locales préférées à vos favoris pour les consulter plus tard, ou partagez-les directement avec vos amis.
 
 ---
 

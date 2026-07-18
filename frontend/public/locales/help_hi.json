@@ -121,6 +121,16 @@
     "trouble_slow_fix": "Easy fix: The app automatically processes them one by one. Just wait a minute!",
     "limit_title": "Limitations",
     "limit_item1": "Voice typing works best on Google Chrome or Apple Safari browsers.",
-    "limit_item2": "Dark, blurry, or folded clothes might not be recognized correctly by the scanner. Try taking pictures in a bright room with the garment laid flat."
+    "limit_item2": "Dark, blurry, or folded clothes might not be recognized correctly by the scanner. Try taking pictures in a bright room with the garment laid flat.",
+    "profile_item12_title": "12. अभियान सूचनाएँ",
+    "profile_item12_desc": "यह आपको यह अनुकूलित करने देता है कि आप ईमेल या पुश सूचनाओं के माध्यम से कौन से स्थानीय फैशन प्रचार, स्टोर बिक्री और स्टाइलिस्ट अपडेट प्राप्त करते हैं।",
+    "campaigns_help_title": "स्थानीय फैशन अभियान",
+    "campaigns_help_p1": "अपने क्षेत्र में विशेष बिक्री, स्टाइलिस्ट ईवेंट और स्थानीय फैशन ऑफ़र खोजें:",
+    "campaigns_feed_help_title": "स्थानीय ऑफ़र फ़ीड",
+    "campaigns_feed_help_desc": "अपने शहर या क्षेत्र के पास सत्यापित फैशन विशेषज्ञों द्वारा प्रकाशित प्रचार अभियानों की लाइव सूची ब्राउज़ करें।",
+    "campaigns_maps_help_title": "Google मैप्स एकीकरण",
+    "campaigns_maps_help_desc": "किसी भी ऑफ़र के विवरण देखने, छूट कोड कॉपी करने और सीधे Google मैप्स पर बुटीक या स्टाइलिस्ट का पता लगाने के लिए क्लिक करें।",
+    "campaigns_save_help_title": "ऑफ़र सहेजें और साझा करें",
+    "campaigns_save_help_desc": "बाद में देखने के लिए अपने पसंदीदा स्थानीय सौदों को बुकमार्क करें, या उन्हें सीधे दोस्तों के साथ साझा करें।"
   }
 }

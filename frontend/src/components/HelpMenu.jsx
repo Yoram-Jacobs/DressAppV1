@@ -4,7 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   BookOpen, Info, ShieldAlert, Sparkles, User, BarChart4, 
   MapPin, Phone, HelpCircle, AlertTriangle, Layers, Wallet, 
-  ShoppingBag, Search, ClipboardList, Camera, Mic, Grid, TrendingUp, UserRound, Loader2, Bell, Chrome
+  ShoppingBag, Search, ClipboardList, Camera, Mic, Grid, TrendingUp, UserRound, Loader2, Bell, Chrome, Megaphone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -29,6 +29,7 @@ export default function HelpMenu() {
     { id: 'shopping-assistant', label: t('help.shopping_assistant_title'), icon: Chrome, wiki: 'chrome_extension' },
     { id: 'trend-scout', label: t('help.trend_scout_title'), icon: TrendingUp, wiki: 'trend_scout' },
     { id: 'experts', label: t('help.experts_title'), icon: UserRound, wiki: 'experts_registry' },
+    { id: 'campaigns', label: t('help.campaigns_help_title'), icon: Megaphone, wiki: 'campaigns' },
     { id: 'troubleshooting', label: t('help.trouble_title'), icon: HelpCircle, wiki: 'troubleshooting' },
   ];
 
@@ -474,7 +475,8 @@ export default function HelpMenu() {
                     { title: t('help.profile_item8_title'), desc: t('help.profile_item8_desc') },
                     { title: t('help.profile_item9_title'), desc: t('help.profile_item9_desc') },
                     { title: t('help.profile_item10_title'), desc: t('help.profile_item10_desc') },
-                    { title: t('help.profile_item11_title'), desc: t('help.profile_item11_desc') }
+                    { title: t('help.profile_item11_title'), desc: t('help.profile_item11_desc') },
+                    { title: t('help.profile_item12_title'), desc: t('help.profile_item12_desc') }
                   ].map((item, idx) => (
                     <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/5 space-y-2">
                       <h4 className="font-semibold text-foreground text-sm flex items-center gap-2">
@@ -640,6 +642,27 @@ export default function HelpMenu() {
                     { title: t('help.experts_dir_title'), desc: t('help.experts_dir_desc') },
                     { title: t('help.experts_search_title'), desc: t('help.experts_search_desc') },
                     { title: t('help.experts_contact_title'), desc: t('help.experts_contact_desc') }
+                  ].map((item, idx) => (
+                    <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                      <h4 className="font-semibold text-sm">{item.title}</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'campaigns' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <Megaphone className="h-6 w-6" /> {t('help.campaigns_help_title')}
+                </h2>
+                <p className="text-muted-foreground">{t('help.campaigns_help_p1')}</p>
+                <div className="space-y-3">
+                  {[
+                    { title: t('help.campaigns_feed_help_title'), desc: t('help.campaigns_feed_help_desc') },
+                    { title: t('help.campaigns_maps_help_title'), desc: t('help.campaigns_maps_help_desc') },
+                    { title: t('help.campaigns_save_help_title'), desc: t('help.campaigns_save_help_desc') }
                   ].map((item, idx) => (
                     <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
                       <h4 className="font-semibold text-sm">{item.title}</h4>

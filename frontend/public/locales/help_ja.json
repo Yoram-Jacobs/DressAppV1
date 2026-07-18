@@ -121,6 +121,16 @@
     "trouble_slow_fix": "Easy fix: The app automatically processes them one by one. Just wait a minute!",
     "limit_title": "Limitations",
     "limit_item1": "Voice typing works best on Google Chrome or Apple Safari browsers.",
-    "limit_item2": "Dark, blurry, or folded clothes might not be recognized correctly by the scanner. Try taking pictures in a bright room with the garment laid flat."
+    "limit_item2": "Dark, blurry, or folded clothes might not be recognized correctly by the scanner. Try taking pictures in a bright room with the garment laid flat.",
+    "profile_item12_title": "12. キャンペーンのお知らせ",
+    "profile_item12_desc": "電子メールまたはプッシュ通知で受け取る地元のファッション プロモーション、店舗のセール、スタイリストの最新情報をカスタマイズできます。頻度と距離を設定できるので、自分のスタイルに合った近くのオファーのみを取得できます。",
+    "campaigns_help_title": "地元のファッション キャンペーン",
+    "campaigns_help_p1": "お住まいの地域の限定セール、スタイリスト イベント、地元のファッション オファーを見つけてください。",
+    "campaigns_feed_help_title": "ローカルオファーフィード",
+    "campaigns_feed_help_desc": "お住まいの都市または地域の近くの認定されたファッション専門家が公開したプロモーション キャンペーンのライブ リストを参照してください。",
+    "campaigns_maps_help_title": "Google マップの統合",
+    "campaigns_maps_help_desc": "いずれかのオファーをクリックすると、説明が表示され、割引コードがコピーされ、Google マップでブティック、デザイナー、スタイリストを直接見つけることができます。",
+    "campaigns_save_help_title": "オファーを保存して共有する",
+    "campaigns_save_help_desc": "お気に入りの地元のセールをブックマークして後で表示したり、友達と直接共有したりできます。"
   }
 }

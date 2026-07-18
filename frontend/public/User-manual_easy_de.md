@@ -65,6 +65,11 @@ Ihre Profilseite verfügt über verschiedene Einstellungsabschnitte. Deshalb ist
 
 ---
 
+
+- **12. Kampagnenbenachrichtigungen**: Sie können anpassen, welche lokalen Modeaktionen, Ladenverkäufe und Stylisten-Updates Sie per E-Mail oder Push-Benachrichtigungen erhalten. Sie können die Häufigkeit und Entfernung festlegen, sodass Sie nur Angebote in der Nähe erhalten, die zu Ihrem Stil passen.
+
+- **12. Kampagnen-Benachrichtigungen**: Hier können Sie anpassen, welche lokalen Modeaktionen, Verkäufe und Stylisten-Updates Sie per E-Mail oder Push erhalten. Sie können die Häufigkeit und Entfernung festlegen.
+
 ### 3.4 Überprüfen Sie Ihre Garderobenstatistiken
 Sehen Sie, wie viel Ihr Kleiderschrank wert ist und welche Artikel Ihre Favoriten sind!
 
@@ -126,6 +131,24 @@ Vernetzen Sie sich direkt in DressApp mit echten Modeexperten:
 - **Modeexpertenverzeichnis**: Durchsuchen Sie ein Verzeichnis zertifizierter professioneller Stylisten, Modeberater und Garderobenberater.
 - **Style Specialty Search**: Filtern Sie Experten nach Region, Land oder bestimmten Modespezialitäten.
 - **Direkte Kontakte**: Kontaktieren Sie uns direkt per Telefon, senden Sie direkte E-Mails oder besuchen Sie deren professionelle Portfolios und Websites.
+
+---
+
+### 3.11 Lokale Modekampagnen
+Finden Sie exklusive Sonderangebote, Stylisten-Events und lokale Modeangebote in Ihrer Nähe:
+
+- **Feed mit lokalen Angeboten**: Durchsuchen Sie eine Live-Liste mit Werbekampagnen, die von geprüften Modeexperten in der Nähe Ihrer Stadt oder Region veröffentlicht wurden.
+- **Google Maps-Integration**: Klicken Sie auf ein Angebot, um dessen Beschreibung anzuzeigen, Rabattcodes zu kopieren und die Boutique, den Designer oder den Stylisten direkt auf Google Maps zu finden.
+- **Angebote speichern und teilen**: Setzen Sie ein Lesezeichen für Ihre bevorzugten lokalen Angebote, um sie später anzuzeigen, oder teilen Sie sie direkt mit Freunden.
+
+---
+
+### 3.11 Lokale Modekampagnen
+Finden Sie exklusive Verkäufe, Stylisten-Events und lokale Modeangebote in Ihrer Nähe:
+
+- **Lokaler Angebots-Feed**: Durchsuchen Sie eine Live-Liste von Werbekampagnen, die von verifizierten Modeexperten in Ihrer Nähe veröffentlicht wurden.
+- **Google Maps Integration**: Klicken Sie auf ein Angebot, um die Beschreibung anzuzeigen, Rabattcodes zu kopieren und die Boutique direkt auf Google Maps zu finden.
+- **Angebote speichern & teilen**: Speichern Sie Ihre bevorzugten lokalen Angebote, um sie später anzusehen, oder teilen Sie sie mit Freunden.
 
 ---
 

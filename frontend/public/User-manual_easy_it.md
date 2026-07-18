@@ -65,6 +65,8 @@ La pagina del tuo profilo ha diverse sezioni di impostazioni. Ecco perché ogni 
 
 ---
 
+- **12. Notifiche delle Campagne**: Ti permette di personalizzare quali promozioni di moda locali, saldi e aggiornamenti degli stilisti ricevi via email o notifiche push.
+
 ### 3.4 Controlla le statistiche del tuo guardaroba
 Scopri quanto vale il tuo armadio e quali sono i tuoi capi preferiti!
 
@@ -126,6 +128,15 @@ Connettiti con esperti di moda del mondo reale direttamente all'interno di Dress
 - **Directory di esperti di moda**: Sfoglia un registro di stilisti professionisti certificati, consulenti di moda e consulenti di guardaroba.
 - **Ricerca specialità di stile**: Filtra gli esperti per regione, paese o specialità di moda specifiche.
 - **Contatti diretti**: Contattaci direttamente tramite telefono, invia e-mail dirette o visita i loro portfolio e siti Web professionali.
+
+---
+
+### 3.11 Campagne di Moda Locali
+Trova saldi esclusivi, eventi di stilisti e offerte di moda locali nella tua zona:
+
+- **Feed Offerte Locali**: Sfoglia un elenco in tempo reale di campagne promozionali pubblicate da esperti di moda verificati vicino alla tua città.
+- **Integrazione Google Maps**: Fai clic su qualsiasi offerta per visualizzare la descrizione, copiare i codici sconto e individuare la boutique direttamente su Google Maps.
+- **Salva e Condividi Offerte**: Aggiungi ai preferiti le tue offerte locali per visualizzarle in seguito o condividile direttamente con gli amici.
 
 ---
 

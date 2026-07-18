@@ -65,6 +65,8 @@ Sua página de perfil possui diferentes seções de configurações. Veja por qu
 
 ---
 
+- **12. Notificações de Campanha**: Permite personalizar quais promoções de moda locais, vendas nas lojas e atualizações de estilistas você recebe. Você pode definir a frequência e a distância.
+
 ### 3.4 Verificando as estatísticas do seu guarda-roupa
 Veja quanto vale o seu armário e quais itens são seus preferidos!
 
@@ -126,6 +128,15 @@ Conecte-se com especialistas em moda do mundo real diretamente no DressApp:
 - **Diretório de especialistas em moda**: Navegue por um registro de estilistas profissionais certificados, consultores de moda e consultores de guarda-roupa.
 - **Pesquisa de especialidade de estilo**: Filtre especialistas por região, país ou especialidades específicas da moda.
 - **Contatos diretos**: Entre em contato diretamente por telefone, envie e-mails diretos ou visite portfólios e sites profissionais.
+
+---
+
+### 3.11 Campanhas de Moda Locais
+Encontre vendas exclusivas, eventos de estilistas e ofertas de moda local na sua área:
+
+- **Feed de Ofertas Locais**: Navegue por uma lista ao vivo de campanhas promocionais publicadas por especialistas em moda verificados perto de sua cidade ou região.
+- **Integração com Google Maps**: Clique em qualquer oferta para ver a descrição, copiar códigos de desconto e localizar a boutique diretamente no Google Maps.
+- **Salvar e Compartilhar Ofertas**: Marque suas ofertas locais favoritas para ver mais tarde ou compartilhe-as com amigos.
 
 ---
 

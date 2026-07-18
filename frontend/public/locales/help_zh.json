@@ -121,6 +121,16 @@
     "trouble_slow_fix": "Easy fix: The app automatically processes them one by one. Just wait a minute!",
     "limit_title": "Limitations",
     "limit_item1": "Voice typing works best on Google Chrome or Apple Safari browsers.",
-    "limit_item2": "Dark, blurry, or folded clothes might not be recognized correctly by the scanner. Try taking pictures in a bright room with the garment laid flat."
+    "limit_item2": "Dark, blurry, or folded clothes might not be recognized correctly by the scanner. Try taking pictures in a bright room with the garment laid flat.",
+    "profile_item12_title": "12. 活动通知",
+    "profile_item12_desc": "它可以让您自定义通过电子邮件或推送通知收到的本地时尚促销、商店销售和造型师更新。您可以设置频率和距离，这样您就只能获得附近符合您风格的优惠。",
+    "campaigns_help_title": "本地时尚活动",
+    "campaigns_help_p1": "查找您所在地区的独家促销、造型师活动和当地时尚优惠：",
+    "campaigns_feed_help_title": "本地优惠信息源",
+    "campaigns_feed_help_desc": "浏览您所在城市或地区附近经过验证的时尚专家发布的促销活动的实时列表。",
+    "campaigns_maps_help_title": "谷歌地图集成",
+    "campaigns_maps_help_desc": "单击任何优惠即可查看其描述、复制折扣代码并直接在 Google 地图上找到精品店、设计师或造型师。",
+    "campaigns_save_help_title": "保存并分享优惠",
+    "campaigns_save_help_desc": "为您最喜欢的本地优惠添加书签以便稍后查看，或直接与朋友分享。"
   }
 }

@@ -121,6 +121,16 @@
     "trouble_slow_fix": "Easy fix: The app automatically processes them one by one. Just wait a minute!",
     "limit_title": "Limitations",
     "limit_item1": "Voice typing works best on Google Chrome or Apple Safari browsers.",
-    "limit_item2": "Dark, blurry, or folded clothes might not be recognized correctly by the scanner. Try taking pictures in a bright room with the garment laid flat."
+    "limit_item2": "Dark, blurry, or folded clothes might not be recognized correctly by the scanner. Try taking pictures in a bright room with the garment laid flat.",
+    "profile_item12_title": "12. Уведомления о кампании",
+    "profile_item12_desc": "Он позволяет вам настроить, какие местные модные акции, распродажи в магазинах и обновления от стилистов вы будете получать по электронной почте или посредством push-уведомлений. Вы можете установить частоту и расстояние, чтобы получать только ближайшие предложения, соответствующие вашему стилю.",
+    "campaigns_help_title": "Местные модные кампании",
+    "campaigns_help_p1": "Найдите эксклюзивные распродажи, мероприятия стилистов и предложения местной модной одежды в вашем регионе:",
+    "campaigns_feed_help_title": "Лента местных предложений",
+    "campaigns_feed_help_desc": "Просмотрите актуальный список рекламных кампаний, опубликованных проверенными экспертами моды недалеко от вашего города или региона.",
+    "campaigns_maps_help_title": "Интеграция с Google Картами",
+    "campaigns_maps_help_desc": "Нажмите на любое предложение, чтобы просмотреть его описание, скопировать коды скидок и найти бутик, дизайнера или стилиста прямо на Картах Google.",
+    "campaigns_save_help_title": "Сохранить и поделиться предложениями",
+    "campaigns_save_help_desc": "Добавьте в закладки свои любимые местные предложения, чтобы просмотреть их позже, или поделитесь ими с друзьями."
   }
 }

@@ -65,6 +65,11 @@ Su página de perfil tiene diferentes secciones de configuración. He aquí por 
 
 ---
 
+
+- **12. Notificaciones de campaña**: le permite personalizar qué promociones de moda locales, ventas en tiendas y actualizaciones de estilistas recibe por correo electrónico o notificaciones automáticas. Puede configurar la frecuencia y la distancia para que solo reciba ofertas cercanas que coincidan con sus estilos.
+
+- **12. Notificaciones de Campaña**: Te permite personalizar qué promociones de moda locales y actualizaciones de estilistas recibes. Puedes establecer la frecuencia y la distancia.
+
 ### 3.4 Comprobación de las estadísticas de tu guardarropa
 ¡Mira cuánto vale tu armario y qué prendas son tus favoritas!
 
@@ -126,6 +131,24 @@ Conéctate con expertos en moda del mundo real directamente dentro de DressApp:
 - **Directorio de expertos en moda**: Explore un registro de estilistas profesionales certificados, asesores de moda y asesores de vestuario.
 - **Búsqueda de especialidad de estilo**: Filtrar expertos por región, país o especialidades de moda específicas.
 - **Contactos directos**: Comuníquese directamente por teléfono, envíe correos electrónicos directos o visite sus portafolios profesionales y sitios web.
+
+---
+
+### 3.11 Campañas de moda local
+Encuentre ventas exclusivas, eventos de estilistas y ofertas de moda local en su área:
+
+- **Feed de ofertas locales**: explore una lista en vivo de campañas promocionales publicadas por expertos en moda verificados cerca de su ciudad o región.
+- **Integración de Google Maps**: haga clic en cualquier oferta para ver su descripción, copiar códigos de descuento y localizar la boutique, el diseñador o el estilista directamente en Google Maps.
+- **Guardar y compartir ofertas**: marque sus ofertas locales favoritas para verlas más tarde o compártalas directamente con amigos.
+
+---
+
+### 3.11 Campañas de Moda Locales
+Encuentra ventas exclusivas, eventos de estilistas y ofertas de moda local en tu área:
+
+- **Feed de Ofertas Locales**: Explora una lista en vivo de campañas promocionales publicadas por expertos en moda verificados cerca de tu ciudad.
+- **Integración con Google Maps**: Haz clic en cualquier oferta para ver su descripción, copiar códigos de descuento y localizar la boutique directamente en Google Maps.
+- **Guardar y Compartir Ofertas**: Guarda tus ofertas locales favoritas para verlas más tarde o compártelas directamente con amigos.
 
 ---
 

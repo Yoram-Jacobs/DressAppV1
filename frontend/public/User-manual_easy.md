@@ -62,6 +62,7 @@ Your Profile page has different settings sections. Here is why each section is i
 - **9. Location Services (Where You Are)**: It makes sure the Stylist knows the weather where you live, so it won't suggest a thick coat on a hot summer day.
 - **10. Voice & Language**: It lets you pick how the Stylist speaks to you and changes the language.
 - **11. Invite Friends**: It lets you share the app with friends. For every friend who signs up using your link, you get +10 extra slots in your closet.
+- **12. Campaign Notifications**: It lets you customize which local fashion promotions, store sales, and stylist updates you receive via email or push notifications. You can set the frequency and distance so you only get nearby offers that match your styles.
 
 ---
 
@@ -126,6 +127,15 @@ Connect with real-world fashion experts directly inside DressApp:
 - **Fashion Expert Directory**: Browse a registry of certified professional stylists, fashion advisors, and wardrobe consultants.
 - **Style Speciality Search**: Filter experts by region, country, or specific fashion specialties.
 - **Direct Contacts**: Reach out directly via phone, send direct emails, or visit their professional portfolios and websites.
+
+---
+
+### 3.11 Local Fashion Campaigns
+Find exclusive sales, stylist events, and local fashion offers in your area:
+
+- **Local Offers Feed**: Browse a live list of promotional campaigns published by verified fashion experts near your city or region.
+- **Google Maps Integration**: Click any offer to view its description, copy discount codes, and locate the boutique, designer, or stylist directly on Google Maps.
+- **Save & Share Offers**: Bookmark your favorite local deals to view later, or share them directly with friends.
 
 ---
 
