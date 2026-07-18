@@ -2343,5 +2343,243 @@
     "scheduler_push_step4": "קשר את **יומן Google** שלך כדי לאפשר למתזמן לבדוק את לוח הזמנים של האירועים היומי שלך.",
     "scheduler_push_step5": "המערכת עוקבת אחר תחזיות מזג האוויר ומייצרת 3 תצורות תלבושות מותאמות אישית.",
     "scheduler_push_step6": "הקש על הודעת הדחיפה במכשיר שלך כדי לקבל ולתזמן תצורה."
+  },
+  "campaigns": {
+    "status": {
+      "draft": "טיוטה",
+      "pendingApproval": "ממתין לאישור",
+      "approved": "אושר",
+      "active": "פעיל",
+      "rejected": "נדחה",
+      "expired": "פג תוקף",
+      "cancelled": "בוטל",
+      "paused": "מושהה"
+    },
+    "card": {
+      "off": "% הנחה",
+      "limitedTime": "זמן מוגבל",
+      "expiresInDays": "פג בעוד יום {{count}}",
+      "expiresInDays_other": "פג בעוד {{count}} ימים",
+      "expirestoday": "פג היום"
+    },
+    "feed": {
+      "title": "קמפיינים מקומיים",
+      "subtitle": "מבצעי אופנה בלעדיים ממומחים בסביבתך.",
+      "countLabel": "קמפיין פעיל {{count}}",
+      "countLabel_other": "{{count}} קמפיינים פעילים",
+      "sort": {
+        "newest": "החדש ביותר",
+        "nearest": "הקרוב ביותר",
+        "endingSoon": "מסתיימים בקרוב",
+        "highestDiscount": "ההנחה הגבוהה ביותר"
+      },
+      "empty": {
+        "title": "אין קמפיינים בסביבתך",
+        "body": "חזור בקרוב — מומחים מקומיים עשויים לפרסם מבצעים חדשים."
+      }
+    },
+    "detail": {
+      "save": "שמור קמפיין",
+      "unsave": "הסר משמורים",
+      "saved": "הקמפיין נשמר",
+      "unsaved": "הוסר משמורים",
+      "share": "שתף קמפיין",
+      "linkCopied": "הקישור הועתק!",
+      "report": "דווח על קמפיין זה",
+      "reported": "הקמפיין דווח. תודה לך.",
+      "coupon": "קוד קופון",
+      "from": "מ",
+      "until": "עד",
+      "mapTitle": "מפת מיקום הקמפיין",
+      "locationUnknown": "מיקום לא צוין",
+      "getDirections": "קבל מסלול",
+      "views": "צפיות",
+      "saves": "שמירות",
+      "shares": "שיתופים",
+      "galleryDot": "תמונת גלריה {{index}}"
+    },
+    "create": {
+      "title": "צור קמפיין",
+      "subtitle": "פלטפורמת קמפיינים למומחים",
+      "notExpert": "למומחים מאומתים בלבד",
+      "notExpertBody": "רק מקצועני אופנה מאומתים יכולים ליצור קמפיינים. הירשם כמומחה בפרופיל שלך.",
+      "goToProfile": "עבור לפרופיל",
+      "saveDraft": "שמור כטיוטה",
+      "submit": "שלח לאישור",
+      "submitForApproval": "שלח לאישור",
+      "draftSaved": "הקמפיין נשמר כטיוטה.",
+      "submitted": "הקמפיין נשלח לבדיקה!",
+      "submitSuccess": "הקמפיין נשלח לאישור!",
+      "saveError": "שמירת הקמפיין נכשלה.",
+      "submitError": "שליחת הקמפיין נכשלה.",
+      "steps": {
+        "basic": "בסיסי",
+        "promotion": "קידום",
+        "location": "מיקום",
+        "audience": "קהל",
+        "notifications": "התראות",
+        "review": "סקירה"
+      },
+      "basic": {
+        "title": "כותרת הקמפיין",
+        "titlePlaceholder": "סייל קיץ בבוטיק בלה",
+        "businessName": "שם העסק",
+        "businessNamePlaceholder": "שם העסק או החנות שלך",
+        "category": "קטגוריה",
+        "categoryPlaceholder": "בחר קטגוריית אופנה",
+        "shortDescription": "תיאור קצר",
+        "shortDescriptionPlaceholder": "משפט אחד שמושך תשומת לב",
+        "longDescription": "תיאור מלא",
+        "longDescriptionPlaceholder": "ספר ללקוחות עוד על המבצע",
+        "coverImageUrl": "כתובת תמונת נושא"
+      },
+      "promotion": {
+        "discountPct": "אחוז הנחה",
+        "couponCode": "קוד קופון",
+        "saleType": "סוג מבצע",
+        "limitedTimeOffer": "הצעה לזמן מוגבל",
+        "startDate": "תאריך התחלה",
+        "endDate": "תאריך סיום",
+        "saleTypes": {
+          "discount": "הנחה",
+          "service_promotion": "קידום שירות",
+          "product_promotion": "קידום מוצר",
+          "limited_time_offer": "הצעה לזמן מוגבל",
+          "flash_sale": "מבצע בזק",
+          "seasonal": "עונתי"
+        }
+      },
+      "location": {
+        "country": "מדינה",
+        "city": "עיר",
+        "lat": "קו רוחב (GPS)",
+        "lon": "קו אורך (GPS)",
+        "radiusKm": "רדיוס הגעה"
+      },
+      "audience": {
+        "targets": "קהל יעד",
+        "all": "כולם",
+        "women": "נשים",
+        "men": "גברים",
+        "kids": "ילדים",
+        "luxury": "יוקרה",
+        "casual": "קז'ואל",
+        "sustainableFashion": "אופנה בת קיימא",
+        "streetwear": "אופנת רחוב",
+        "ageMin": "גיל מינימלי",
+        "ageMax": "גיל מקסימלי"
+      },
+      "notifications": {
+        "masterSwitch": "הודע למשתמשים",
+        "masterSwitchBody": "שלח התראה כשהקמפיין יעלה לאוויר.",
+        "channels": "ערוצי התראה",
+        "channel_push": "הודעת פוש",
+        "channel_email": "התראת אימייל",
+        "timing": "תזמון שליחה",
+        "timing_immediately_after_approval": "מיד לאחר האישור",
+        "timing_on_start_date": "בתאריך תחילת הקמפיין",
+        "timing_custom": "תאריך ושעה מותאמים אישית",
+        "customDatetime": "תאריך ושעה מותאמים אישית"
+      },
+      "review": {
+        "title": "סקור ושלח",
+        "note": "הקמפיין שלך ייבדק על ידי מנהל DressApp לפני שיעלה לאוויר. תקבל הודעה על ההחלטה."
+      }
+    },
+    "mine": {
+      "title": "הקמפיינים שלי",
+      "createNew": "קמפיין חדש",
+      "createFirst": "צור את הקמפיין הראשון שלך",
+      "submit": "שלח",
+      "cancel": "בטל",
+      "submitSuccess": "הקמפיין נשלח לבדיקה!",
+      "submitError": "לא ניתן לשלוח את הקמפיין.",
+      "cancelSuccess": "הקמפיין בוטל.",
+      "cancelError": "לא ניתן לבטל את הקמפיין.",
+      "empty": {
+        "title": "אין קמפיינים עדיין",
+        "body": "צור את המבצע המקומי הראשון שלך כדי להגיע לחובבי אופנה בקרבת העסק שלך."
+      }
+    },
+    "billing": {
+      "feePerDay": "1.00$ ליום",
+      "totalFee": "עמלת קמפיין כוללת",
+      "days": "יום {{count}}",
+      "days_plural": "{{count}} ימים",
+      "paypalRequired": "דרוש חשבון PayPal",
+      "paypalRequiredBody": "DressApp גובה 1.00$ ליום לקידום הקמפיין שלך. אנא הוסף את האימייל של ה-PayPal שלך בפרופיל ← הגדרות תשלום כדי להמשיך.",
+      "connectPayPal": "חבר PayPal",
+      "feeNote": "חשבון ה-PayPal שלך יחויב ברגע שתאשר את התשלום למטה.",
+      "extensionFee": "עמלת הארכה",
+      "confirmPayment": "אשר ושלם"
+    },
+    "settings": {
+      "title": "הגדרות קמפיין",
+      "extend": "הארך קמפיין",
+      "extendAutoApproved": "הארכות מאושרות אוטומטית ומחויבות באופן מיידי.",
+      "newEndDate": "תאריך סיום חדש",
+      "extendFeePreview": "עמלת הארכה: {{fee}} עבור {{days}} ימים",
+      "extendPay": "המשך לתשלום ({{fee}})",
+      "extendSuccess": "הקמפיין הוארך בהצלחה",
+      "extendError": "הארכה נכשלה. אנא נסה שוב.",
+      "pause": "השהה קמפיין",
+      "pauseNote": "הקמפיין שלך יוסתר מהפיד. ימים מושהים יתווספו לתאריך הסיום שלך כשתחדש.",
+      "resume": "חדש קמפיין",
+      "resumeNote": "הקמפיין שלך יחזור להיות גלוי. תאריך הסיום שלך הוארך לתקופה המושהית.",
+      "pauseSuccess": "הקמפיין הושהה",
+      "pauseError": "השהיית הקמפיין נכשלה.",
+      "resumeSuccess": "הקמפיין חודש",
+      "resumeError": "חידוש הקמפיין נכשל.",
+      "delete": "מחק קמפיין",
+      "deleteConfirm": "האם אתה בטוח שברצונך למחוק קמפיין זה לצמיתות? לא ניתן לבטל זאת.",
+      "deleteWarning": "קמפיינים פעילים נמחקים מיד ללא החזר על ימים שלא נוצלו.",
+      "deleteSuccess": "הקמפיין נמחק",
+      "deleteError": "מחיקת הקמפיין נכשלה.",
+      "days": "ימים"
+    },
+    "notifications": {
+      "sectionTitle": "התראות קמפיין",
+      "sectionSubtitle": "שלוט כיצד תקבל מבצעי אופנה מקומיים.",
+      "localFashionPush": "מבצעי אופנה מקומיים (פוש)",
+      "localFashionEmail": "מבצעי אופנה מקומיים (אימייל)",
+      "saleAlerts": "התראות סייל",
+      "newExpertNearMe": "מומחה חדש בקרבתי",
+      "sustainableFashion": "מבצעי אופנה בת קיימא",
+      "luxuryPromos": "מבצעי יוקרה",
+      "personalstylist": "מבצעי סטייליסט אישי",
+      "frequency": "תדירות התראות",
+      "frequencyInstant": "מיידי",
+      "frequencyDaily": "תקציר יומי",
+      "frequencyWeekly": "תקציר שבועי",
+      "quietHours": "שעות שקטות (נא לא להפריע)",
+      "quietStart": "מ",
+      "quietEnd": "עד",
+      "maxDistance": "מרחק קמפיין מקסימלי"
+    },
+    "admin": {
+      "queueTitle": "תור לאישור קמפיינים",
+      "queueSubtitle": "סקור ואשר או דחה קמפיינים של מומחים ממתינים.",
+      "allCampaigns": "כל הקמפיינים",
+      "columns": {
+        "campaign": "קמפיין",
+        "business": "עסק",
+        "location": "מיקום",
+        "submitted": "נשלח",
+        "category": "קטגוריה",
+        "status": "סטטוס"
+      },
+      "actions": {
+        "approve": "אשר",
+        "reject": "דחה",
+        "preview": "תצוגה מקדימה",
+        "messageExpert": "שלח הודעה למומחה"
+      },
+      "approveSuccess": "הקמפיין אושר!",
+      "rejectSuccess": "הקמפיין נדחה.",
+      "rejectReason": "סיבת דחייה",
+      "rejectReasonPlaceholder": "הסבר מדוע הקמפיין נדחה...",
+      "rejectConfirm": "אשר דחייה",
+      "previewTitle": "תצוגה מקדימה של הקמפיין"
+    }
   }
 }

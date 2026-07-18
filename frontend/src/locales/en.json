@@ -2304,5 +2304,243 @@
     "scheduler_push_step4": "Link your **Google Calendar** to let the scheduler check your daily event schedule.",
     "scheduler_push_step5": "The system tracks weather forecasts and generates 3 custom outfit configurations.",
     "scheduler_push_step6": "Tap the push notification on your device to accept and schedule a configuration."
+  },
+  "campaigns": {
+    "status": {
+      "draft": "Draft",
+      "pendingApproval": "Pending Approval",
+      "approved": "Approved",
+      "active": "Active",
+      "rejected": "Rejected",
+      "expired": "Expired",
+      "cancelled": "Cancelled",
+      "paused": "Paused"
+    },
+    "card": {
+      "off": "% OFF",
+      "limitedTime": "Limited Time",
+      "expiresInDays": "Expires in {{count}} day",
+      "expiresInDays_other": "Expires in {{count}} days",
+      "expirestoday": "Expires today"
+    },
+    "feed": {
+      "title": "Local Campaigns",
+      "subtitle": "Exclusive fashion offers from experts near you.",
+      "countLabel": "{{count}} active campaign",
+      "countLabel_other": "{{count}} active campaigns",
+      "sort": {
+        "newest": "Newest",
+        "nearest": "Nearest",
+        "endingSoon": "Ending Soon",
+        "highestDiscount": "Highest Discount"
+      },
+      "empty": {
+        "title": "No Campaigns Near You",
+        "body": "Check back soon — local experts may be posting new offers."
+      }
+    },
+    "detail": {
+      "save": "Save campaign",
+      "unsave": "Remove from saved",
+      "saved": "Campaign saved",
+      "unsaved": "Removed from saved",
+      "share": "Share campaign",
+      "linkCopied": "Link copied!",
+      "report": "Report this campaign",
+      "reported": "Campaign reported. Thank you.",
+      "coupon": "Coupon code",
+      "from": "From",
+      "until": "Until",
+      "mapTitle": "Campaign location map",
+      "locationUnknown": "Location not specified",
+      "getDirections": "Get Directions",
+      "views": "views",
+      "saves": "saves",
+      "shares": "shares",
+      "galleryDot": "Gallery image {{index}}"
+    },
+    "create": {
+      "title": "Create Campaign",
+      "subtitle": "Experts Campaign Platform",
+      "notExpert": "Verified Experts Only",
+      "notExpertBody": "Only verified fashion professionals can create campaigns. Register as an Expert in your Profile.",
+      "goToProfile": "Go to Profile",
+      "saveDraft": "Save as Draft",
+      "submit": "Submit for Approval",
+      "submitForApproval": "Submit for Approval",
+      "draftSaved": "Campaign saved as draft.",
+      "submitted": "Campaign submitted for review!",
+      "submitSuccess": "Campaign submitted for approval!",
+      "saveError": "Failed to save campaign.",
+      "submitError": "Failed to submit campaign.",
+      "steps": {
+        "basic": "Basic",
+        "promotion": "Promotion",
+        "location": "Location",
+        "audience": "Audience",
+        "notifications": "Notifications",
+        "review": "Review"
+      },
+      "basic": {
+        "title": "Campaign Title",
+        "titlePlaceholder": "Summer Sale at Bella Boutique",
+        "businessName": "Business Name",
+        "businessNamePlaceholder": "Your business or store name",
+        "category": "Category",
+        "categoryPlaceholder": "Select a fashion category",
+        "shortDescription": "Short Description",
+        "shortDescriptionPlaceholder": "A one-liner that grabs attention",
+        "longDescription": "Full Description",
+        "longDescriptionPlaceholder": "Tell customers more about this offer",
+        "coverImageUrl": "Cover Image URL"
+      },
+      "promotion": {
+        "discountPct": "Discount %",
+        "couponCode": "Coupon Code",
+        "saleType": "Sale Type",
+        "limitedTimeOffer": "Limited Time Offer",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "saleTypes": {
+          "discount": "Discount",
+          "service_promotion": "Service Promotion",
+          "product_promotion": "Product Promotion",
+          "limited_time_offer": "Limited Time Offer",
+          "flash_sale": "Flash Sale",
+          "seasonal": "Seasonal"
+        }
+      },
+      "location": {
+        "country": "Country",
+        "city": "City",
+        "lat": "Latitude (GPS)",
+        "lon": "Longitude (GPS)",
+        "radiusKm": "Reach Radius"
+      },
+      "audience": {
+        "targets": "Target Audience",
+        "all": "Everyone",
+        "women": "Women",
+        "men": "Men",
+        "kids": "Kids",
+        "luxury": "Luxury",
+        "casual": "Casual",
+        "sustainableFashion": "Sustainable Fashion",
+        "streetwear": "Streetwear",
+        "ageMin": "Min Age",
+        "ageMax": "Max Age"
+      },
+      "notifications": {
+        "masterSwitch": "Notify Users",
+        "masterSwitchBody": "Send a notification when this campaign goes live.",
+        "channels": "Notification Channels",
+        "channel_push": "Push Notification",
+        "channel_email": "Email Notification",
+        "timing": "Send Timing",
+        "timing_immediately_after_approval": "Immediately After Approval",
+        "timing_on_start_date": "On Campaign Start Date",
+        "timing_custom": "Custom Date & Time",
+        "customDatetime": "Custom Date & Time"
+      },
+      "review": {
+        "title": "Review & Submit",
+        "note": "Your campaign will be reviewed by a DressApp administrator before going live. You will be notified of the decision."
+      }
+    },
+    "mine": {
+      "title": "My Campaigns",
+      "createNew": "New Campaign",
+      "createFirst": "Create Your First Campaign",
+      "submit": "Submit",
+      "cancel": "Cancel",
+      "submitSuccess": "Campaign submitted for review!",
+      "submitError": "Could not submit campaign.",
+      "cancelSuccess": "Campaign cancelled.",
+      "cancelError": "Could not cancel campaign.",
+      "empty": {
+        "title": "No Campaigns Yet",
+        "body": "Create your first local promotion to reach fashion enthusiasts near your business."
+      }
+    },
+    "billing": {
+      "feePerDay": "$1.00 / day",
+      "totalFee": "Total Campaign Fee",
+      "days": "{{count}} day",
+      "days_plural": "{{count}} days",
+      "paypalRequired": "PayPal Account Required",
+      "paypalRequiredBody": "DressApp charges $1.00 per day to promote your campaign. Please add your PayPal email in Profile → Payment Settings to continue.",
+      "connectPayPal": "Connect PayPal",
+      "feeNote": "Your PayPal account will be charged once you approve the payment below.",
+      "extensionFee": "Extension Fee",
+      "confirmPayment": "Confirm & Pay"
+    },
+    "settings": {
+      "title": "Campaign Settings",
+      "extend": "Extend Campaign",
+      "extendAutoApproved": "Extensions are auto-approved and billed immediately.",
+      "newEndDate": "New end date",
+      "extendFeePreview": "Extension fee: {{fee}} for {{days}} day(s)",
+      "extendPay": "Proceed to Payment ({{fee}})",
+      "extendSuccess": "Campaign extended successfully",
+      "extendError": "Extension failed. Please try again.",
+      "pause": "Pause Campaign",
+      "pauseNote": "Your campaign will be hidden from the feed. Paused days will be added back to your end date when you resume.",
+      "resume": "Resume Campaign",
+      "resumeNote": "Your campaign will be visible again. Your end date has been extended for the paused period.",
+      "pauseSuccess": "Campaign paused",
+      "pauseError": "Failed to pause campaign.",
+      "resumeSuccess": "Campaign resumed",
+      "resumeError": "Failed to resume campaign.",
+      "delete": "Delete Campaign",
+      "deleteConfirm": "Are you sure you want to permanently delete this campaign? This cannot be undone.",
+      "deleteWarning": "Active campaigns are deleted immediately with no refund for unused days.",
+      "deleteSuccess": "Campaign deleted",
+      "deleteError": "Failed to delete campaign.",
+      "days": "day(s)"
+    },
+    "notifications": {
+      "sectionTitle": "Campaign Notifications",
+      "sectionSubtitle": "Control how you receive local fashion offers.",
+      "localFashionPush": "Local Fashion Offers (Push)",
+      "localFashionEmail": "Local Fashion Offers (Email)",
+      "saleAlerts": "Sale Alerts",
+      "newExpertNearMe": "New Expert Near Me",
+      "sustainableFashion": "Sustainable Fashion Promotions",
+      "luxuryPromos": "Luxury Promotions",
+      "personalstylist": "Personal Stylist Promotions",
+      "frequency": "Notification Frequency",
+      "frequencyInstant": "Instant",
+      "frequencyDaily": "Daily Digest",
+      "frequencyWeekly": "Weekly Digest",
+      "quietHours": "Quiet Hours (Do Not Disturb)",
+      "quietStart": "From",
+      "quietEnd": "Until",
+      "maxDistance": "Maximum Campaign Distance"
+    },
+    "admin": {
+      "queueTitle": "Campaign Approval Queue",
+      "queueSubtitle": "Review and approve or reject pending expert campaigns.",
+      "allCampaigns": "All Campaigns",
+      "columns": {
+        "campaign": "Campaign",
+        "business": "Business",
+        "location": "Location",
+        "submitted": "Submitted",
+        "category": "Category",
+        "status": "Status"
+      },
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "preview": "Preview",
+        "messageExpert": "Message Expert"
+      },
+      "approveSuccess": "Campaign approved!",
+      "rejectSuccess": "Campaign rejected.",
+      "rejectReason": "Rejection Reason",
+      "rejectReasonPlaceholder": "Explain why this campaign was rejected...",
+      "rejectConfirm": "Confirm Rejection",
+      "previewTitle": "Campaign Preview"
+    }
   }
 }

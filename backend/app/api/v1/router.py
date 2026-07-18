@@ -6,6 +6,7 @@ from fastapi import APIRouter
 from app.api.v1 import (
     admin,
     ads,
+    campaigns,
     auth,
     avatar,
     closet,
@@ -44,6 +45,7 @@ api_v1_router.include_router(payments.paypal_router)
 api_v1_router.include_router(payments.credits_router)
 api_v1_router.include_router(payments.buy_router)
 api_v1_router.include_router(admin.router)
+api_v1_router.include_router(campaigns.router)
 
 
 @api_v1_router.get("/health")

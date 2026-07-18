@@ -2304,5 +2304,243 @@
     "scheduler_push_step4": "Koppel uw **Google Agenda** zodat de planner uw dagelijkse evenementenschema kan controleren.",
     "scheduler_push_step5": "Het systeem houdt de weersvoorspellingen bij en genereert 3 aangepaste outfitconfiguraties.",
     "scheduler_push_step6": "Tik op de pushmelding op uw apparaat om een ​​configuratie te accepteren en te plannen."
+  },
+  "campaigns": {
+    "status": {
+      "draft": "Concept",
+      "pendingApproval": "In afwachting van goedkeuring",
+      "approved": "Goedgekeurd",
+      "active": "Actief",
+      "rejected": "Afgewezen",
+      "expired": "Verlopen",
+      "cancelled": "Geannuleerd",
+      "paused": "Gepauzeerd"
+    },
+    "card": {
+      "off": "% KORTING",
+      "limitedTime": "Beperkte Tijd",
+      "expiresInDays": "Verloopt in {{count}} dag",
+      "expiresInDays_other": "Verloopt in {{count}} dagen",
+      "expirestoday": "Verloopt vandaag"
+    },
+    "feed": {
+      "title": "Lokale Campagnes",
+      "subtitle": "Exclusieve mode-aanbiedingen van experts bij jou in de buurt.",
+      "countLabel": "{{count}} actieve campagne",
+      "countLabel_other": "{{count}} actieve campagnes",
+      "sort": {
+        "newest": "Nieuwste",
+        "nearest": "Dichtstbijzijnde",
+        "endingSoon": "Eindigt Binnenkort",
+        "highestDiscount": "Hoogste Korting"
+      },
+      "empty": {
+        "title": "Geen campagnes bij jou in de buurt",
+        "body": "Kom snel terug — lokale experts posten mogelijk nieuwe aanbiedingen."
+      }
+    },
+    "detail": {
+      "save": "Campagne opslaan",
+      "unsave": "Verwijderen uit opgeslagen",
+      "saved": "Campagne opgeslagen",
+      "unsaved": "Verwijderd uit opgeslagen",
+      "share": "Campagne delen",
+      "linkCopied": "Link gekopieerd!",
+      "report": "Meld deze campagne",
+      "reported": "Campagne gemeld. Bedankt.",
+      "coupon": "Couponcode",
+      "from": "Van",
+      "until": "Tot",
+      "mapTitle": "Campagne locatie kaart",
+      "locationUnknown": "Locatie niet gespecificeerd",
+      "getDirections": "Routebeschrijving opvragen",
+      "views": "weergaven",
+      "saves": "bewaard",
+      "shares": "gedeeld",
+      "galleryDot": "Galerij afbeelding {{index}}"
+    },
+    "create": {
+      "title": "Campagne Aanmaken",
+      "subtitle": "Experts Campagne Platform",
+      "notExpert": "Alleen voor Geverifieerde Experts",
+      "notExpertBody": "Alleen geverifieerde modeprofessionals kunnen campagnes aanmaken. Registreer je als Expert in je Profiel.",
+      "goToProfile": "Ga naar Profiel",
+      "saveDraft": "Opslaan als Concept",
+      "submit": "Indienen voor Goedkeuring",
+      "submitForApproval": "Indienen voor Goedkeuring",
+      "draftSaved": "Campagne opgeslagen als concept.",
+      "submitted": "Campagne ingediend ter beoordeling!",
+      "submitSuccess": "Campagne ingediend voor goedkeuring!",
+      "saveError": "Kan campagne niet opslaan.",
+      "submitError": "Kan campagne niet indienen.",
+      "steps": {
+        "basic": "Basis",
+        "promotion": "Promotie",
+        "location": "Locatie",
+        "audience": "Doelgroep",
+        "notifications": "Meldingen",
+        "review": "Controleren"
+      },
+      "basic": {
+        "title": "Titel Campagne",
+        "titlePlaceholder": "Zomeruitverkoop bij Bella Boutique",
+        "businessName": "Bedrijfsnaam",
+        "businessNamePlaceholder": "Naam van je bedrijf of winkel",
+        "category": "Categorie",
+        "categoryPlaceholder": "Selecteer een modecategorie",
+        "shortDescription": "Korte Beschrijving",
+        "shortDescriptionPlaceholder": "Een oneliner die de aandacht trekt",
+        "longDescription": "Volledige Beschrijving",
+        "longDescriptionPlaceholder": "Vertel klanten meer over deze aanbieding",
+        "coverImageUrl": "URL van Omslagafbeelding"
+      },
+      "promotion": {
+        "discountPct": "Korting %",
+        "couponCode": "Couponcode",
+        "saleType": "Soort Uitverkoop",
+        "limitedTimeOffer": "Tijdelijke Aanbieding",
+        "startDate": "Startdatum",
+        "endDate": "Einddatum",
+        "saleTypes": {
+          "discount": "Korting",
+          "service_promotion": "Service Promotie",
+          "product_promotion": "Product Promotie",
+          "limited_time_offer": "Tijdelijke Aanbieding",
+          "flash_sale": "Flash Sale",
+          "seasonal": "Seizoensgebonden"
+        }
+      },
+      "location": {
+        "country": "Land",
+        "city": "Stad",
+        "lat": "Breedtegraad (GPS)",
+        "lon": "Lengtegraad (GPS)",
+        "radiusKm": "Bereik in km"
+      },
+      "audience": {
+        "targets": "Doelgroep",
+        "all": "Iedereen",
+        "women": "Dames",
+        "men": "Heren",
+        "kids": "Kinderen",
+        "luxury": "Luxe",
+        "casual": "Casual",
+        "sustainableFashion": "Duurzame Mode",
+        "streetwear": "Streetwear",
+        "ageMin": "Minimumleeftijd",
+        "ageMax": "Maximumleeftijd"
+      },
+      "notifications": {
+        "masterSwitch": "Gebruikers Informeren",
+        "masterSwitchBody": "Stuur een melding wanneer deze campagne live gaat.",
+        "channels": "Melding Kanalen",
+        "channel_push": "Pushmelding",
+        "channel_email": "E-mailmelding",
+        "timing": "Verzendmoment",
+        "timing_immediately_after_approval": "Direct Na Goedkeuring",
+        "timing_on_start_date": "Op Startdatum van Campagne",
+        "timing_custom": "Aangepaste Datum & Tijd",
+        "customDatetime": "Aangepaste Datum & Tijd"
+      },
+      "review": {
+        "title": "Beoordelen & Indienen",
+        "note": "Je campagne wordt beoordeeld door een beheerder van DressApp voordat deze live gaat. Je wordt op de hoogte gesteld van de beslissing."
+      }
+    },
+    "mine": {
+      "title": "Mijn Campagnes",
+      "createNew": "Nieuwe Campagne",
+      "createFirst": "Maak je eerste campagne aan",
+      "submit": "Indienen",
+      "cancel": "Annuleren",
+      "submitSuccess": "Campagne ingediend ter beoordeling!",
+      "submitError": "Kan campagne niet indienen.",
+      "cancelSuccess": "Campagne geannuleerd.",
+      "cancelError": "Kan campagne niet annuleren.",
+      "empty": {
+        "title": "Nog Geen Campagnes",
+        "body": "Maak je eerste lokale promotie aan om modeliefhebbers in de buurt van je bedrijf te bereiken."
+      }
+    },
+    "billing": {
+      "feePerDay": "$1.00 / dag",
+      "totalFee": "Totale Campagnekosten",
+      "days": "{{count}} dag",
+      "days_plural": "{{count}} dagen",
+      "paypalRequired": "PayPal-account Vereist",
+      "paypalRequiredBody": "DressApp brengt $1.00 per dag in rekening om je campagne te promoten. Voeg je PayPal e-mailadres toe in Profiel → Betalingsinstellingen om door te gaan.",
+      "connectPayPal": "Koppel PayPal",
+      "feeNote": "Je PayPal-account wordt belast zodra je de betaling hieronder goedkeurt.",
+      "extensionFee": "Verlengingskosten",
+      "confirmPayment": "Bevestigen & Betalen"
+    },
+    "settings": {
+      "title": "Campagne-instellingen",
+      "extend": "Campagne Verlengen",
+      "extendAutoApproved": "Verlengingen worden automatisch goedgekeurd en direct in rekening gebracht.",
+      "newEndDate": "Nieuwe einddatum",
+      "extendFeePreview": "Verlengingskosten: {{fee}} voor {{days}} dag(en)",
+      "extendPay": "Doorgaan naar Betaling ({{fee}})",
+      "extendSuccess": "Campagne succesvol verlengd",
+      "extendError": "Verlenging mislukt. Probeer het opnieuw.",
+      "pause": "Campagne Pauzeren",
+      "pauseNote": "Je campagne wordt verborgen uit de feed. Gepauzeerde dagen worden toegevoegd aan je einddatum wanneer je hervat.",
+      "resume": "Campagne Hervatten",
+      "resumeNote": "Je campagne zal weer zichtbaar zijn. Je einddatum is verlengd voor de gepauzeerde periode.",
+      "pauseSuccess": "Campagne gepauzeerd",
+      "pauseError": "Pauzeren van campagne mislukt.",
+      "resumeSuccess": "Campagne hervat",
+      "resumeError": "Hervatten van campagne mislukt.",
+      "delete": "Campagne Verwijderen",
+      "deleteConfirm": "Weet je zeker dat je deze campagne permanent wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
+      "deleteWarning": "Actieve campagnes worden onmiddellijk verwijderd zonder terugbetaling voor ongebruikte dagen.",
+      "deleteSuccess": "Campagne verwijderd",
+      "deleteError": "Verwijderen van campagne mislukt.",
+      "days": "dag(en)"
+    },
+    "notifications": {
+      "sectionTitle": "Campagnemeldingen",
+      "sectionSubtitle": "Bepaal hoe je lokale mode-aanbiedingen ontvangt.",
+      "localFashionPush": "Lokale Mode-aanbiedingen (Push)",
+      "localFashionEmail": "Lokale Mode-aanbiedingen (E-mail)",
+      "saleAlerts": "Uitverkoopwaarschuwingen",
+      "newExpertNearMe": "Nieuwe Expert bij mij in de buurt",
+      "sustainableFashion": "Duurzame Mode Promoties",
+      "luxuryPromos": "Luxe Promoties",
+      "personalstylist": "Persoonlijke Stylist Promoties",
+      "frequency": "Meldingsfrequentie",
+      "frequencyInstant": "Direct",
+      "frequencyDaily": "Dagelijks Overzicht",
+      "frequencyWeekly": "Wekelijks Overzicht",
+      "quietHours": "Stille Uren (Niet Storen)",
+      "quietStart": "Van",
+      "quietEnd": "Tot",
+      "maxDistance": "Maximale Campagne Afstand"
+    },
+    "admin": {
+      "queueTitle": "Campagne Goedkeuringswachtrij",
+      "queueSubtitle": "Bekijk en keur inkomende expertcampagnes goed of af.",
+      "allCampaigns": "Alle Campagnes",
+      "columns": {
+        "campaign": "Campagne",
+        "business": "Bedrijf",
+        "location": "Locatie",
+        "submitted": "Ingediend",
+        "category": "Categorie",
+        "status": "Status"
+      },
+      "actions": {
+        "approve": "Goedkeuren",
+        "reject": "Afwijzen",
+        "preview": "Voorbeeld",
+        "messageExpert": "Bericht Expert"
+      },
+      "approveSuccess": "Campagne goedgekeurd!",
+      "rejectSuccess": "Campagne afgewezen.",
+      "rejectReason": "Reden voor Afwijzing",
+      "rejectReasonPlaceholder": "Leg uit waarom deze campagne is afgewezen...",
+      "rejectConfirm": "Bevestig Afwijzing",
+      "previewTitle": "Campagne Voorbeeld"
+    }
   }
 }

@@ -2266,5 +2266,243 @@
     "scheduler_push_step4": "शेड्यूलर को आपके दैनिक ईवेंट शेड्यूल की जांच करने देने के लिए अपने **Google कैलेंडर** को लिंक करें।",
     "scheduler_push_step5": "सिस्टम मौसम के पूर्वानुमानों को ट्रैक करता है और 3 कस्टम आउटफिट कॉन्फ़िगरेशन उत्पन्न करता है।",
     "scheduler_push_step6": "कॉन्फ़िगरेशन को स्वीकार करने और शेड्यूल करने के लिए अपने डिवाइस पर पुश नोटिफिकेशन को टैप करें।"
+  },
+  "campaigns": {
+    "status": {
+      "draft": "ड्राफ्ट",
+      "pendingApproval": "मंजूरी का इंतजार",
+      "approved": "मंजूर",
+      "active": "सक्रिय",
+      "rejected": "अस्वीकृत",
+      "expired": "समाप्त",
+      "cancelled": "रद्द",
+      "paused": "रोका गया"
+    },
+    "card": {
+      "off": "% छूट",
+      "limitedTime": "सीमित समय",
+      "expiresInDays": "{{count}} दिन में समाप्त",
+      "expiresInDays_other": "{{count}} दिनों में समाप्त",
+      "expirestoday": "आज समाप्त"
+    },
+    "feed": {
+      "title": "स्थानीय अभियान",
+      "subtitle": "आपके आस-पास के विशेषज्ञों से विशेष फैशन ऑफर।",
+      "countLabel": "{{count}} सक्रिय अभियान",
+      "countLabel_other": "{{count}} सक्रिय अभियान",
+      "sort": {
+        "newest": "नवीनतम",
+        "nearest": "निकटतम",
+        "endingSoon": "जल्द समाप्त",
+        "highestDiscount": "उच्चतम छूट"
+      },
+      "empty": {
+        "title": "आपके पास कोई अभियान नहीं है",
+        "body": "जल्द ही वापस आएं — स्थानीय विशेषज्ञ नए ऑफर पोस्ट कर सकते हैं।"
+      }
+    },
+    "detail": {
+      "save": "अभियान सहेजें",
+      "unsave": "सहेजे गए से निकालें",
+      "saved": "अभियान सहेजा गया",
+      "unsaved": "सहेजे गए से निकाला गया",
+      "share": "अभियान साझा करें",
+      "linkCopied": "लिंक कॉपी किया गया!",
+      "report": "इस अभियान की रिपोर्ट करें",
+      "reported": "अभियान की रिपोर्ट की गई। धन्यवाद।",
+      "coupon": "कूपन कोड",
+      "from": "से",
+      "until": "तक",
+      "mapTitle": "अभियान स्थान का नक्शा",
+      "locationUnknown": "स्थान निर्दिष्ट नहीं है",
+      "getDirections": "दिशा-निर्देश प्राप्त करें",
+      "views": "दृश्य",
+      "saves": "सेव",
+      "shares": "शेयर",
+      "galleryDot": "गैलरी छवि {{index}}"
+    },
+    "create": {
+      "title": "अभियान बनाएं",
+      "subtitle": "विशेषज्ञों का अभियान प्लेटफ़ॉर्म",
+      "notExpert": "केवल सत्यापित विशेषज्ञ",
+      "notExpertBody": "केवल सत्यापित फैशन पेशेवर अभियान बना सकते हैं। अपने प्रोफ़ाइल में एक विशेषज्ञ के रूप में पंजीकरण करें।",
+      "goToProfile": "प्रोफ़ाइल पर जाएं",
+      "saveDraft": "ड्राफ्ट के रूप में सहेजें",
+      "submit": "मंजूरी के लिए सबमिट करें",
+      "submitForApproval": "मंजूरी के लिए सबमिट करें",
+      "draftSaved": "अभियान ड्राफ्ट के रूप में सहेजा गया।",
+      "submitted": "अभियान समीक्षा के लिए सबमिट किया गया!",
+      "submitSuccess": "अभियान मंजूरी के लिए सबमिट किया गया!",
+      "saveError": "अभियान सहेजने में विफल।",
+      "submitError": "अभियान सबमिट करने में विफल।",
+      "steps": {
+        "basic": "मूल",
+        "promotion": "प्रमोशन",
+        "location": "स्थान",
+        "audience": "दर्शक",
+        "notifications": "सूचनाएं",
+        "review": "समीक्षा"
+      },
+      "basic": {
+        "title": "अभियान का शीर्षक",
+        "titlePlaceholder": "बेला बुटीक में समर सेल",
+        "businessName": "व्यवसाय का नाम",
+        "businessNamePlaceholder": "आपके व्यवसाय या दुकान का नाम",
+        "category": "श्रेणी",
+        "categoryPlaceholder": "फैशन श्रेणी का चयन करें",
+        "shortDescription": "संक्षिप्त विवरण",
+        "shortDescriptionPlaceholder": "ध्यान खींचने वाली एक लाइन",
+        "longDescription": "पूरा विवरण",
+        "longDescriptionPlaceholder": "ग्राहकों को इस ऑफर के बारे में और बताएं",
+        "coverImageUrl": "कवर छवि URL"
+      },
+      "promotion": {
+        "discountPct": "छूट %",
+        "couponCode": "कूपन कोड",
+        "saleType": "बिक्री का प्रकार",
+        "limitedTimeOffer": "सीमित समय का ऑफर",
+        "startDate": "आरंभ तिथि",
+        "endDate": "समाप्ति तिथि",
+        "saleTypes": {
+          "discount": "छूट",
+          "service_promotion": "सेवा प्रोत्साहन",
+          "product_promotion": "उत्पाद प्रोत्साहन",
+          "limited_time_offer": "सीमित समय का ऑफर",
+          "flash_sale": "फ्लैश सेल",
+          "seasonal": "मौसमी"
+        }
+      },
+      "location": {
+        "country": "देश",
+        "city": "शहर",
+        "lat": "अक्षांश (GPS)",
+        "lon": "देशांतर (GPS)",
+        "radiusKm": "पहुंच का दायरा"
+      },
+      "audience": {
+        "targets": "लक्षित दर्शक",
+        "all": "सभी",
+        "women": "महिलाएं",
+        "men": "पुरुष",
+        "kids": "बच्चे",
+        "luxury": "लग्जरी",
+        "casual": "कैजुअल",
+        "sustainableFashion": "टिकाऊ फैशन",
+        "streetwear": "स्ट्रीटवियर",
+        "ageMin": "न्यूनतम आयु",
+        "ageMax": "अधिकतम आयु"
+      },
+      "notifications": {
+        "masterSwitch": "उपयोगकर्ताओं को सूचित करें",
+        "masterSwitchBody": "इस अभियान के लाइव होने पर अधिसूचना भेजें।",
+        "channels": "अधिसूचना चैनल",
+        "channel_push": "पुश सूचना",
+        "channel_email": "ईमेल सूचना",
+        "timing": "भेजने का समय",
+        "timing_immediately_after_approval": "मंजूरी के तुरंत बाद",
+        "timing_on_start_date": "अभियान शुरू होने की तिथि पर",
+        "timing_custom": "कस्टम दिनांक और समय",
+        "customDatetime": "कस्टम दिनांक और समय"
+      },
+      "review": {
+        "title": "समीक्षा और सबमिट करें",
+        "note": "आपके अभियान के लाइव होने से पहले DressApp व्यवस्थापक द्वारा इसकी समीक्षा की जाएगी। आपको निर्णय के बारे में सूचित किया जाएगा।"
+      }
+    },
+    "mine": {
+      "title": "मेरे अभियान",
+      "createNew": "नया अभियान",
+      "createFirst": "अपना पहला अभियान बनाएं",
+      "submit": "सबमिट करें",
+      "cancel": "रद्द करें",
+      "submitSuccess": "अभियान समीक्षा के लिए सबमिट किया गया!",
+      "submitError": "अभियान सबमिट नहीं कर सके।",
+      "cancelSuccess": "अभियान रद्द कर दिया गया।",
+      "cancelError": "अभियान रद्द नहीं कर सके।",
+      "empty": {
+        "title": "अभी कोई अभियान नहीं है",
+        "body": "अपने व्यवसाय के आस-पास के फैशन प्रेमियों तक पहुंचने के लिए अपना पहला स्थानीय प्रचार बनाएं।"
+      }
+    },
+    "billing": {
+      "feePerDay": "$1.00 / दिन",
+      "totalFee": "कुल अभियान शुल्क",
+      "days": "{{count}} दिन",
+      "days_plural": "{{count}} दिन",
+      "paypalRequired": "PayPal खाता आवश्यक है",
+      "paypalRequiredBody": "DressApp आपके अभियान को बढ़ावा देने के लिए $1.00 प्रति दिन शुल्क लेता है। कृपया जारी रखने के लिए प्रोफ़ाइल → भुगतान सेटिंग्स में अपना PayPal ईमेल जोड़ें।",
+      "connectPayPal": "PayPal से कनेक्ट करें",
+      "feeNote": "एक बार जब आप नीचे भुगतान स्वीकृत कर लेते हैं तो आपके PayPal खाते से शुल्क लिया जाएगा।",
+      "extensionFee": "विस्तार शुल्क",
+      "confirmPayment": "पुष्टि करें और भुगतान करें"
+    },
+    "settings": {
+      "title": "अभियान सेटिंग्स",
+      "extend": "अभियान का विस्तार करें",
+      "extendAutoApproved": "विस्तार स्वचालित रूप से स्वीकृत हो जाते हैं और तुरंत बिल किए जाते हैं।",
+      "newEndDate": "नई समाप्ति तिथि",
+      "extendFeePreview": "विस्तार शुल्क: {{days}} दिनों के लिए {{fee}}",
+      "extendPay": "भुगतान के लिए आगे बढ़ें ({{fee}})",
+      "extendSuccess": "अभियान सफलतापूर्वक बढ़ाया गया",
+      "extendError": "विस्तार विफल रहा। कृपया पुनः प्रयास करें।",
+      "pause": "अभियान रोकें",
+      "pauseNote": "आपका अभियान फ़ीड से छिपा दिया जाएगा। जब आप फिर से शुरू करेंगे तो रुके हुए दिन आपकी समाप्ति तिथि में जुड़ जाएंगे।",
+      "resume": "अभियान फिर से शुरू करें",
+      "resumeNote": "आपका अभियान फिर से दिखाई देगा। आपकी समाप्ति तिथि को रुके हुए समय के लिए बढ़ा दिया गया है।",
+      "pauseSuccess": "अभियान रोका गया",
+      "pauseError": "अभियान रोकने में विफल।",
+      "resumeSuccess": "अभियान फिर से शुरू किया गया",
+      "resumeError": "अभियान को फिर से शुरू करने में विफल।",
+      "delete": "अभियान हटाएं",
+      "deleteConfirm": "क्या आप वाकई इस अभियान को स्थायी रूप से हटाना चाहते हैं? इसे पूर्ववत नहीं किया जा सकता है।",
+      "deleteWarning": "सक्रिय अभियानों को तुरंत हटा दिया जाता है और अप्रयुक्त दिनों के लिए कोई रिफंड नहीं दिया जाता है।",
+      "deleteSuccess": "अभियान हटा दिया गया",
+      "deleteError": "अभियान को हटाने में विफल।",
+      "days": "दिन"
+    },
+    "notifications": {
+      "sectionTitle": "अभियान सूचनाएं",
+      "sectionSubtitle": "नियंत्रित करें कि आप स्थानीय फैशन ऑफ़र कैसे प्राप्त करते हैं।",
+      "localFashionPush": "स्थानीय फैशन ऑफ़र (पुश)",
+      "localFashionEmail": "स्थानीय फैशन ऑफ़र (ईमेल)",
+      "saleAlerts": "बिक्री अलर्ट",
+      "newExpertNearMe": "मेरे पास नया विशेषज्ञ",
+      "sustainableFashion": "टिकाऊ फैशन प्रचार",
+      "luxuryPromos": "लग्जरी प्रचार",
+      "personalstylist": "व्यक्तिगत स्टाइलिस्ट प्रचार",
+      "frequency": "अधिसूचना आवृत्ति",
+      "frequencyInstant": "तत्काल",
+      "frequencyDaily": "दैनिक सार",
+      "frequencyWeekly": "साप्ताहिक सार",
+      "quietHours": "शांत घंटे (परेशान न करें)",
+      "quietStart": "से",
+      "quietEnd": "तक",
+      "maxDistance": "अधिकतम अभियान दूरी"
+    },
+    "admin": {
+      "queueTitle": "अभियान अनुमोदन कतार",
+      "queueSubtitle": "लंबित विशेषज्ञ अभियानों की समीक्षा करें और स्वीकृत या अस्वीकृत करें।",
+      "allCampaigns": "सभी अभियान",
+      "columns": {
+        "campaign": "अभियान",
+        "business": "व्यवसाय",
+        "location": "स्थान",
+        "submitted": "सबमिट किया गया",
+        "category": "श्रेणी",
+        "status": "स्थिति"
+      },
+      "actions": {
+        "approve": "स्वीकृत करें",
+        "reject": "अस्वीकृत करें",
+        "preview": "पूर्वावलोकन",
+        "messageExpert": "विशेषज्ञ को संदेश दें"
+      },
+      "approveSuccess": "अभियान स्वीकृत!",
+      "rejectSuccess": "अभियान अस्वीकृत।",
+      "rejectReason": "अस्वीकृति का कारण",
+      "rejectReasonPlaceholder": "बताएं कि यह अभियान क्यों अस्वीकार कर दिया गया...",
+      "rejectConfirm": "अस्वीकृति की पुष्टि करें",
+      "previewTitle": "अभियान पूर्वावलोकन"
+    }
   }
 }

@@ -2270,5 +2270,243 @@
     "scheduler_push_step4": "链接您的 **Google 日历**，让调度程序检查您的每日活动日程。",
     "scheduler_push_step5": "该系统跟踪天气预报并生成 3 种定制服装配置。",
     "scheduler_push_step6": "点击设备上的推送通知以接受并安排配置。"
+  },
+  "campaigns": {
+    "status": {
+      "draft": "草稿",
+      "pendingApproval": "待审批",
+      "approved": "已批准",
+      "active": "进行中",
+      "rejected": "已拒绝",
+      "expired": "已过期",
+      "cancelled": "已取消",
+      "paused": "已暂停"
+    },
+    "card": {
+      "off": "折",
+      "limitedTime": "限时",
+      "expiresInDays": "{{count}} 天后过期",
+      "expiresInDays_other": "{{count}} 天后过期",
+      "expirestoday": "今天过期"
+    },
+    "feed": {
+      "title": "本地活动",
+      "subtitle": "您附近的专家提供的独家时尚优惠。",
+      "countLabel": "{{count}} 个活动进行中",
+      "countLabel_other": "{{count}} 个活动进行中",
+      "sort": {
+        "newest": "最新",
+        "nearest": "距离最近",
+        "endingSoon": "即将结束",
+        "highestDiscount": "最高折扣"
+      },
+      "empty": {
+        "title": "附近没有活动",
+        "body": "请稍后再来看看——本地专家可能会发布新优惠。"
+      }
+    },
+    "detail": {
+      "save": "收藏活动",
+      "unsave": "取消收藏",
+      "saved": "已收藏",
+      "unsaved": "已取消收藏",
+      "share": "分享活动",
+      "linkCopied": "链接已复制！",
+      "report": "举报此活动",
+      "reported": "已举报。感谢您的反馈。",
+      "coupon": "优惠码",
+      "from": "从",
+      "until": "至",
+      "mapTitle": "活动地点地图",
+      "locationUnknown": "未提供地点",
+      "getDirections": "获取路线",
+      "views": "浏览",
+      "saves": "收藏",
+      "shares": "分享",
+      "galleryDot": "图库图片 {{index}}"
+    },
+    "create": {
+      "title": "创建活动",
+      "subtitle": "专家活动平台",
+      "notExpert": "仅限认证专家",
+      "notExpertBody": "只有经过认证的时尚专业人士才能创建活动。请在您的个人资料中注册成为专家。",
+      "goToProfile": "前往个人资料",
+      "saveDraft": "保存为草稿",
+      "submit": "提交审批",
+      "submitForApproval": "提交审批",
+      "draftSaved": "已保存为草稿。",
+      "submitted": "活动已提交审核！",
+      "submitSuccess": "活动已提交审批！",
+      "saveError": "保存活动失败。",
+      "submitError": "提交活动失败。",
+      "steps": {
+        "basic": "基本信息",
+        "promotion": "促销信息",
+        "location": "地点",
+        "audience": "受众群体",
+        "notifications": "通知",
+        "review": "审查"
+      },
+      "basic": {
+        "title": "活动标题",
+        "titlePlaceholder": "Bella 精品店夏日特卖",
+        "businessName": "商家名称",
+        "businessNamePlaceholder": "您的店铺名称",
+        "category": "类别",
+        "categoryPlaceholder": "选择时尚类别",
+        "shortDescription": "简短描述",
+        "shortDescriptionPlaceholder": "吸引眼球的一句话",
+        "longDescription": "详细描述",
+        "longDescriptionPlaceholder": "告诉顾客更多关于此优惠的信息",
+        "coverImageUrl": "封面图片 URL"
+      },
+      "promotion": {
+        "discountPct": "折扣百分比 %",
+        "couponCode": "优惠码",
+        "saleType": "销售类型",
+        "limitedTimeOffer": "限时优惠",
+        "startDate": "开始日期",
+        "endDate": "结束日期",
+        "saleTypes": {
+          "discount": "折扣",
+          "service_promotion": "服务促销",
+          "product_promotion": "产品促销",
+          "limited_time_offer": "限时优惠",
+          "flash_sale": "闪购",
+          "seasonal": "季末促销"
+        }
+      },
+      "location": {
+        "country": "国家",
+        "city": "城市",
+        "lat": "纬度 (GPS)",
+        "lon": "经度 (GPS)",
+        "radiusKm": "覆盖半径"
+      },
+      "audience": {
+        "targets": "目标受众",
+        "all": "所有人",
+        "women": "女性",
+        "men": "男性",
+        "kids": "儿童",
+        "luxury": "奢侈品",
+        "casual": "休闲",
+        "sustainableFashion": "可持续时尚",
+        "streetwear": "街头服饰",
+        "ageMin": "最小年龄",
+        "ageMax": "最大年龄"
+      },
+      "notifications": {
+        "masterSwitch": "通知用户",
+        "masterSwitchBody": "在此活动上线时发送通知。",
+        "channels": "通知渠道",
+        "channel_push": "推送通知",
+        "channel_email": "电子邮件通知",
+        "timing": "发送时间",
+        "timing_immediately_after_approval": "批准后立即发送",
+        "timing_on_start_date": "活动开始日期",
+        "timing_custom": "自定义日期和时间",
+        "customDatetime": "自定义日期和时间"
+      },
+      "review": {
+        "title": "审核并提交",
+        "note": "您的活动在上线前将由 DressApp 管理员审核。您会收到关于结果的通知。"
+      }
+    },
+    "mine": {
+      "title": "我的活动",
+      "createNew": "创建新活动",
+      "createFirst": "创建您的第一个活动",
+      "submit": "提交",
+      "cancel": "取消",
+      "submitSuccess": "活动已提交审核！",
+      "submitError": "无法提交活动。",
+      "cancelSuccess": "活动已取消。",
+      "cancelError": "无法取消活动。",
+      "empty": {
+        "title": "暂无活动",
+        "body": "创建您的第一个本地促销，吸引您附近的时尚爱好者。"
+      }
+    },
+    "billing": {
+      "feePerDay": "$1.00 / 天",
+      "totalFee": "活动总费用",
+      "days": "{{count}} 天",
+      "days_plural": "{{count}} 天",
+      "paypalRequired": "需要 PayPal 账户",
+      "paypalRequiredBody": "DressApp 每天收取 $1.00 的活动推广费。请在“个人资料 → 支付设置”中添加您的 PayPal 邮箱以继续。",
+      "connectPayPal": "连接 PayPal",
+      "feeNote": "当您在下方批准付款后，将向您的 PayPal 账户收取费用。",
+      "extensionFee": "延期费用",
+      "confirmPayment": "确认并付款"
+    },
+    "settings": {
+      "title": "活动设置",
+      "extend": "延长活动",
+      "extendAutoApproved": "延期申请会自动获批并立即计费。",
+      "newEndDate": "新结束日期",
+      "extendFeePreview": "延期费用：{{days}} 天共 {{fee}}",
+      "extendPay": "前往付款 ({{fee}})",
+      "extendSuccess": "活动延长成功",
+      "extendError": "延长失败。请重试。",
+      "pause": "暂停活动",
+      "pauseNote": "您的活动将从动态中隐藏。恢复后，暂停的天数将加到您的结束日期中。",
+      "resume": "恢复活动",
+      "resumeNote": "您的活动将再次可见。您的结束日期已因暂停期间而延长。",
+      "pauseSuccess": "活动已暂停",
+      "pauseError": "暂停活动失败。",
+      "resumeSuccess": "活动已恢复",
+      "resumeError": "恢复活动失败。",
+      "delete": "删除活动",
+      "deleteConfirm": "您确定要永久删除此活动吗？此操作无法撤销。",
+      "deleteWarning": "进行中的活动会被立即删除，未使用的天数不予退款。",
+      "deleteSuccess": "活动已删除",
+      "deleteError": "删除活动失败。",
+      "days": "天"
+    },
+    "notifications": {
+      "sectionTitle": "活动通知",
+      "sectionSubtitle": "控制您接收本地时尚优惠的方式。",
+      "localFashionPush": "本地时尚优惠 (推送通知)",
+      "localFashionEmail": "本地时尚优惠 (电子邮件)",
+      "saleAlerts": "特卖提醒",
+      "newExpertNearMe": "附近的新专家",
+      "sustainableFashion": "可持续时尚促销",
+      "luxuryPromos": "奢侈品促销",
+      "personalstylist": "个人造型师促销",
+      "frequency": "通知频率",
+      "frequencyInstant": "即时",
+      "frequencyDaily": "每日摘要",
+      "frequencyWeekly": "每周摘要",
+      "quietHours": "免打扰时间",
+      "quietStart": "开始",
+      "quietEnd": "结束",
+      "maxDistance": "最大活动距离"
+    },
+    "admin": {
+      "queueTitle": "活动审批队列",
+      "queueSubtitle": "审核、批准或拒绝待处理的专家活动。",
+      "allCampaigns": "所有活动",
+      "columns": {
+        "campaign": "活动",
+        "business": "商家",
+        "location": "地点",
+        "submitted": "提交时间",
+        "category": "类别",
+        "status": "状态"
+      },
+      "actions": {
+        "approve": "批准",
+        "reject": "拒绝",
+        "preview": "预览",
+        "messageExpert": "联系专家"
+      },
+      "approveSuccess": "活动已批准！",
+      "rejectSuccess": "活动已拒绝。",
+      "rejectReason": "拒绝原因",
+      "rejectReasonPlaceholder": "说明拒绝此活动的原因...",
+      "rejectConfirm": "确认拒绝",
+      "previewTitle": "活动预览"
+    }
   }
 }

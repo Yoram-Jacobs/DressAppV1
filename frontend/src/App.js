@@ -33,6 +33,9 @@ import AdsManager from '@/pages/AdsManager';
 import ExtensionConnect from '@/pages/ExtensionConnect';
 import AvatarPage from '@/pages/AvatarPage';
 import TrendScout from '@/pages/TrendScout';
+import CampaignDetail from '@/pages/CampaignDetail';
+import CreateCampaign from '@/pages/CreateCampaign';
+import MyCampaigns from '@/pages/MyCampaigns';
 import Suitcase from '@/pages/Suitcase';
 import SharedOutfit from '@/pages/SharedOutfit';
 import DeleteAccount from '@/pages/DeleteAccount';
@@ -129,6 +132,9 @@ function App() {
               <Route path="/transactions/:id/landing" element={<TransactionLanding />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/experts" element={<ExpertsDirectory />} />
+              <Route path="/campaigns/create" element={<CreateCampaign />} />
+              <Route path="/campaigns/mine" element={<MyCampaigns />} />
+              <Route path="/campaigns/:id" element={<CampaignDetail />} />
               <Route path="/ads" element={<AdsManager />} />
               <Route path="/me" element={<Profile />} />
               <Route path="/delete-account" element={<DeleteAccount />} />

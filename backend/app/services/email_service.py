@@ -578,3 +578,61 @@ async def send_deletion_email(*, to: str, display_name: str) -> dict:
     return await _send(to, subject, _wrap(body, preheader="Your DressApp account has been successfully deleted."))
 
 
+async def campaign_submission_alert(
+    *,
+    campaign: dict,
+    expert_name: str,
+    expert_email: str,
+    fee_cents: int,
+) -> dict:
+    """Admin alert sent to dev@dressapp.co whenever an Expert submits a campaign for approval."""
+    cid = campaign.get("id", "")
+    title = campaign.get("title", "").replace("<", "&lt;")
+    business = campaign.get("business_name", "").replace("<", "&lt;")
+    category = campaign.get("category", "").replace("<", "&lt;")
+    loc = campaign.get("location") or {}
+    city = loc.get("city") or ""
+    country = loc.get("country") or ""
+    location_str = ", ".join(filter(None, [city, country])) or "—"
+    start_date = campaign.get("start_date") or "—"
+    end_date = campaign.get("end_date") or "—"
+    fee_usd = f"${fee_cents / 100:.2f}"
+    discount = campaign.get("discount_pct")
+    discount_str = f"{discount}% OFF" if discount else "—"
+    short_desc = (campaign.get("short_description") or "").replace("<", "&lt;")[:280]
+    admin_url = f"{_APP_URL}/admin?tab=campaigns"
+    review_url = f"{_APP_URL}/campaigns/{cid}"
+
+    body = f"""\
+<h1 style="margin:0 0 14px;font-size:22px;">🏷️ New Campaign Awaiting Approval</h1>
+<p>A verified Expert has submitted a campaign for review.</p>
+<table role="presentation" cellpadding="0" cellspacing="0"
+       style="border:1px solid #eee;border-radius:10px;padding:16px;width:100%;
+              background:#fafafa;font-size:14px;line-height:1.7;">
+  <tr><td style="color:#666;width:160px;padding-bottom:6px;">Campaign Title:</td>
+      <td style="font-weight:600;padding-bottom:6px;">{title}</td></tr>
+  <tr><td style="color:#666;padding-bottom:6px;">Business:</td>
+      <td style="padding-bottom:6px;">{business}</td></tr>
+  <tr><td style="color:#666;padding-bottom:6px;">Category:</td>
+      <td style="padding-bottom:6px;">{category}</td></tr>
+  <tr><td style="color:#666;padding-bottom:6px;">Location:</td>
+      <td style="padding-bottom:6px;">{location_str}</td></tr>
+  <tr><td style="color:#666;padding-bottom:6px;">Expert:</td>
+      <td style="padding-bottom:6px;">{expert_name} &lt;{expert_email}&gt;</td></tr>
+  <tr><td style="color:#666;padding-bottom:6px;">Run Dates:</td>
+      <td style="padding-bottom:6px;">{start_date} → {end_date}</td></tr>
+  <tr><td style="color:#666;padding-bottom:6px;">Discount:</td>
+      <td style="padding-bottom:6px;">{discount_str}</td></tr>
+  <tr><td style="color:#666;padding-bottom:6px;">Campaign Fee:</td>
+      <td style="font-weight:700;color:#1F6F6B;padding-bottom:6px;">{fee_usd} USD</td></tr>
+</table>
+<p style="margin-top:14px;font-size:13px;color:#555;">{short_desc}</p>
+{_btn("Review Campaign in Admin Panel", admin_url)}
+{_btn("Preview Campaign", review_url, color="#888")}
+"""
+    subject = f"[DressApp Admin] Campaign pending approval: {title}"
+    return await _send(
+        "dev@dressapp.co",
+        subject,
+        _wrap(body, preheader=f"New campaign from {expert_name} — {category} · {location_str}"),
+    )

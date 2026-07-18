@@ -2270,5 +2270,243 @@
     "scheduler_push_step4": "**Google カレンダー**をリンクすると、スケジューラが毎日のイベント スケジュールを確認できるようになります。",
     "scheduler_push_step5": "このシステムは天気予報を追跡し、3 つのカスタム服装構成を生成します。",
     "scheduler_push_step6": "デバイス上のプッシュ通知をタップして、構成を受け入れてスケジュールを設定します。"
+  },
+  "campaigns": {
+    "status": {
+      "draft": "下書き",
+      "pendingApproval": "承認待ち",
+      "approved": "承認済み",
+      "active": "進行中",
+      "rejected": "却下",
+      "expired": "期限切れ",
+      "cancelled": "キャンセル",
+      "paused": "一時停止"
+    },
+    "card": {
+      "off": "% オフ",
+      "limitedTime": "期間限定",
+      "expiresInDays": "あと {{count}} 日で終了",
+      "expiresInDays_other": "あと {{count}} 日で終了",
+      "expirestoday": "本日終了"
+    },
+    "feed": {
+      "title": "ローカルキャンペーン",
+      "subtitle": "お近くの専門家からの限定ファッションオファー。",
+      "countLabel": "{{count}} 件のキャンペーンが進行中",
+      "countLabel_other": "{{count}} 件のキャンペーンが進行中",
+      "sort": {
+        "newest": "新着",
+        "nearest": "最寄り",
+        "endingSoon": "まもなく終了",
+        "highestDiscount": "最高割引"
+      },
+      "empty": {
+        "title": "お近くにキャンペーンはありません",
+        "body": "後でまた確認してください。地元の専門家が新しいオファーを投稿するかもしれません。"
+      }
+    },
+    "detail": {
+      "save": "キャンペーンを保存",
+      "unsave": "保存を解除",
+      "saved": "保存しました",
+      "unsaved": "保存を解除しました",
+      "share": "キャンペーンを共有",
+      "linkCopied": "リンクをコピーしました！",
+      "report": "このキャンペーンを報告",
+      "reported": "報告しました。ありがとうございます。",
+      "coupon": "クーポンコード",
+      "from": "開始",
+      "until": "終了",
+      "mapTitle": "キャンペーン場所のマップ",
+      "locationUnknown": "場所が指定されていません",
+      "getDirections": "道順を取得",
+      "views": "閲覧数",
+      "saves": "保存数",
+      "shares": "共有数",
+      "galleryDot": "ギャラリー画像 {{index}}"
+    },
+    "create": {
+      "title": "キャンペーンを作成",
+      "subtitle": "専門家キャンペーンプラットフォーム",
+      "notExpert": "認証済み専門家のみ",
+      "notExpertBody": "認証済みのファッション専門家のみがキャンペーンを作成できます。プロフィールで専門家として登録してください。",
+      "goToProfile": "プロフィールに移動",
+      "saveDraft": "下書きとして保存",
+      "submit": "承認申請",
+      "submitForApproval": "承認を申請する",
+      "draftSaved": "下書きとして保存しました。",
+      "submitted": "審査に提出しました！",
+      "submitSuccess": "承認を申請しました！",
+      "saveError": "キャンペーンの保存に失敗しました。",
+      "submitError": "キャンペーンの提出に失敗しました。",
+      "steps": {
+        "basic": "基本",
+        "promotion": "プロモーション",
+        "location": "場所",
+        "audience": "オーディエンス",
+        "notifications": "通知",
+        "review": "確認"
+      },
+      "basic": {
+        "title": "キャンペーンのタイトル",
+        "titlePlaceholder": "ベラブティックのサマーセール",
+        "businessName": "ビジネス名",
+        "businessNamePlaceholder": "あなたのお店やビジネスの名前",
+        "category": "カテゴリ",
+        "categoryPlaceholder": "ファッションカテゴリを選択",
+        "shortDescription": "短い説明",
+        "shortDescriptionPlaceholder": "目を引く短いフレーズ",
+        "longDescription": "詳細な説明",
+        "longDescriptionPlaceholder": "このオファーについて詳しく教えてください",
+        "coverImageUrl": "カバー画像のURL"
+      },
+      "promotion": {
+        "discountPct": "割引 %",
+        "couponCode": "クーポンコード",
+        "saleType": "セールタイプ",
+        "limitedTimeOffer": "期間限定オファー",
+        "startDate": "開始日",
+        "endDate": "終了日",
+        "saleTypes": {
+          "discount": "割引",
+          "service_promotion": "サービスプロモーション",
+          "product_promotion": "商品プロモーション",
+          "limited_time_offer": "期間限定オファー",
+          "flash_sale": "フラッシュセール",
+          "seasonal": "季節限定"
+        }
+      },
+      "location": {
+        "country": "国",
+        "city": "都市",
+        "lat": "緯度 (GPS)",
+        "lon": "経度 (GPS)",
+        "radiusKm": "リーチ範囲 (km)"
+      },
+      "audience": {
+        "targets": "ターゲット層",
+        "all": "すべて",
+        "women": "女性",
+        "men": "男性",
+        "kids": "子供",
+        "luxury": "ラグジュアリー",
+        "casual": "カジュアル",
+        "sustainableFashion": "サステナブルファッション",
+        "streetwear": "ストリートウェア",
+        "ageMin": "最小年齢",
+        "ageMax": "最大年齢"
+      },
+      "notifications": {
+        "masterSwitch": "ユーザーに通知",
+        "masterSwitchBody": "このキャンペーンが公開されたときに通知を送信します。",
+        "channels": "通知チャネル",
+        "channel_push": "プッシュ通知",
+        "channel_email": "メール通知",
+        "timing": "送信タイミング",
+        "timing_immediately_after_approval": "承認後すぐ",
+        "timing_on_start_date": "キャンペーン開始日",
+        "timing_custom": "カスタム日時",
+        "customDatetime": "カスタム日時"
+      },
+      "review": {
+        "title": "確認して提出",
+        "note": "あなたのキャンペーンは公開前にDressApp管理者が審査します。結果については後ほど通知されます。"
+      }
+    },
+    "mine": {
+      "title": "マイキャンペーン",
+      "createNew": "新しいキャンペーン",
+      "createFirst": "最初のキャンペーンを作成",
+      "submit": "提出",
+      "cancel": "キャンセル",
+      "submitSuccess": "審査に提出しました！",
+      "submitError": "キャンペーンを提出できませんでした。",
+      "cancelSuccess": "キャンペーンをキャンセルしました。",
+      "cancelError": "キャンペーンをキャンセルできませんでした。",
+      "empty": {
+        "title": "まだキャンペーンはありません",
+        "body": "あなたのビジネスの近くのファッション愛好家に届く、最初のローカルプロモーションを作成しましょう。"
+      }
+    },
+    "billing": {
+      "feePerDay": "1.00 ドル / 日",
+      "totalFee": "キャンペーン合計料金",
+      "days": "{{count}} 日",
+      "days_plural": "{{count}} 日",
+      "paypalRequired": "PayPalアカウントが必要です",
+      "paypalRequiredBody": "DressAppではキャンペーンのプロモーションに1日あたり1.00ドルかかります。続けるには「プロフィール → 支払い設定」にPayPalのメールアドレスを追加してください。",
+      "connectPayPal": "PayPalを連携",
+      "feeNote": "以下の支払いを承認すると、PayPalアカウントに請求されます。",
+      "extensionFee": "延長料金",
+      "confirmPayment": "確認して支払う"
+    },
+    "settings": {
+      "title": "キャンペーン設定",
+      "extend": "キャンペーンを延長",
+      "extendAutoApproved": "延長は自動承認され、すぐに請求されます。",
+      "newEndDate": "新しい終了日",
+      "extendFeePreview": "延長料金: {{days}} 日間で {{fee}}",
+      "extendPay": "支払いに進む ({{fee}})",
+      "extendSuccess": "キャンペーンの延長に成功しました",
+      "extendError": "延長に失敗しました。もう一度お試しください。",
+      "pause": "キャンペーンを一時停止",
+      "pauseNote": "キャンペーンはフィードから非表示になります。再開時に、一時停止した日数が終了日に加算されます。",
+      "resume": "キャンペーンを再開",
+      "resumeNote": "キャンペーンが再び表示されます。終了日は一時停止期間分延長されました。",
+      "pauseSuccess": "一時停止しました",
+      "pauseError": "一時停止に失敗しました。",
+      "resumeSuccess": "再開しました",
+      "resumeError": "再開に失敗しました。",
+      "delete": "キャンペーンを削除",
+      "deleteConfirm": "このキャンペーンを完全に削除してもよろしいですか？元に戻すことはできません。",
+      "deleteWarning": "進行中のキャンペーンは即座に削除され、未使用日数の返金はありません。",
+      "deleteSuccess": "キャンペーンを削除しました",
+      "deleteError": "削除に失敗しました。",
+      "days": "日"
+    },
+    "notifications": {
+      "sectionTitle": "キャンペーン通知",
+      "sectionSubtitle": "ローカルファッションオファーの受け取り方法を管理します。",
+      "localFashionPush": "ローカルファッションオファー（プッシュ）",
+      "localFashionEmail": "ローカルファッションオファー（メール）",
+      "saleAlerts": "セールアラート",
+      "newExpertNearMe": "近くの新しい専門家",
+      "sustainableFashion": "サステナブルファッションのプロモ",
+      "luxuryPromos": "ラグジュアリープロモ",
+      "personalstylist": "パーソナルスタイリストのプロモ",
+      "frequency": "通知頻度",
+      "frequencyInstant": "即時",
+      "frequencyDaily": "日次ダイジェスト",
+      "frequencyWeekly": "週次ダイジェスト",
+      "quietHours": "おやすみモード（通知オフ）",
+      "quietStart": "開始",
+      "quietEnd": "終了",
+      "maxDistance": "キャンペーンの最大距離"
+    },
+    "admin": {
+      "queueTitle": "キャンペーン承認キュー",
+      "queueSubtitle": "保留中の専門家キャンペーンを審査し、承認または却下します。",
+      "allCampaigns": "すべてのキャンペーン",
+      "columns": {
+        "campaign": "キャンペーン",
+        "business": "ビジネス",
+        "location": "場所",
+        "submitted": "提出日",
+        "category": "カテゴリ",
+        "status": "ステータス"
+      },
+      "actions": {
+        "approve": "承認",
+        "reject": "却下",
+        "preview": "プレビュー",
+        "messageExpert": "専門家にメッセージを送信"
+      },
+      "approveSuccess": "キャンペーンを承認しました！",
+      "rejectSuccess": "キャンペーンを却下しました。",
+      "rejectReason": "却下の理由",
+      "rejectReasonPlaceholder": "このキャンペーンが却下された理由を説明してください...",
+      "rejectConfirm": "却下を確認",
+      "previewTitle": "キャンペーンプレビュー"
+    }
   }
 }

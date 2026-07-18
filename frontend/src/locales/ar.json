@@ -2270,5 +2270,243 @@
     "scheduler_push_step4": "قم بربط **تقويم Google** الخاص بك للسماح للمجدول بالتحقق من جدول الأحداث اليومي.",
     "scheduler_push_step5": "يتتبع النظام توقعات الطقس وينشئ 3 تكوينات مخصصة للزي.",
     "scheduler_push_step6": "اضغط على إشعار الدفع الموجود على جهازك لقبول التكوين وجدولته."
+  },
+  "campaigns": {
+    "status": {
+      "draft": "مسودة",
+      "pendingApproval": "قيد الموافقة",
+      "approved": "معتمد",
+      "active": "نشط",
+      "rejected": "مرفوض",
+      "expired": "منتهي",
+      "cancelled": "ملغى",
+      "paused": "متوقف مؤقتًا"
+    },
+    "card": {
+      "off": "خصم %",
+      "limitedTime": "وقت محدود",
+      "expiresInDays": "ينتهي في {{count}} يوم",
+      "expiresInDays_other": "ينتهي في {{count}} أيام",
+      "expirestoday": "ينتهي اليوم"
+    },
+    "feed": {
+      "title": "حملات محلية",
+      "subtitle": "عروض أزياء حصرية من خبراء بالقرب منك.",
+      "countLabel": "{{count}} حملة نشطة",
+      "countLabel_other": "{{count}} حملات نشطة",
+      "sort": {
+        "newest": "الأحدث",
+        "nearest": "الأقرب",
+        "endingSoon": "ينتهي قريباً",
+        "highestDiscount": "أعلى خصم"
+      },
+      "empty": {
+        "title": "لا توجد حملات بالقرب منك",
+        "body": "تحقق لاحقاً — قد ينشر الخبراء المحليون عروضاً جديدة."
+      }
+    },
+    "detail": {
+      "save": "حفظ الحملة",
+      "unsave": "إزالة من المحفوظات",
+      "saved": "تم حفظ الحملة",
+      "unsaved": "تمت الإزالة من المحفوظات",
+      "share": "مشاركة الحملة",
+      "linkCopied": "تم نسخ الرابط!",
+      "report": "الإبلاغ عن هذه الحملة",
+      "reported": "تم الإبلاغ عن الحملة. شكرًا لك.",
+      "coupon": "رمز الكوبون",
+      "from": "من",
+      "until": "حتى",
+      "mapTitle": "خريطة موقع الحملة",
+      "locationUnknown": "الموقع غير محدد",
+      "getDirections": "الحصول على الاتجاهات",
+      "views": "مشاهدات",
+      "saves": "حفظ",
+      "shares": "مشاركات",
+      "galleryDot": "صورة المعرض {{index}}"
+    },
+    "create": {
+      "title": "إنشاء حملة",
+      "subtitle": "منصة حملات الخبراء",
+      "notExpert": "الخبراء المعتمدين فقط",
+      "notExpertBody": "فقط محترفو الأزياء المعتمدين يمكنهم إنشاء حملات. سجل كخبير في ملفك الشخصي.",
+      "goToProfile": "الذهاب للملف الشخصي",
+      "saveDraft": "حفظ كمسودة",
+      "submit": "إرسال للموافقة",
+      "submitForApproval": "إرسال للموافقة",
+      "draftSaved": "تم حفظ الحملة كمسودة.",
+      "submitted": "تم إرسال الحملة للمراجعة!",
+      "submitSuccess": "تم إرسال الحملة للموافقة!",
+      "saveError": "فشل في حفظ الحملة.",
+      "submitError": "فشل في إرسال الحملة.",
+      "steps": {
+        "basic": "أساسي",
+        "promotion": "ترويج",
+        "location": "موقع",
+        "audience": "الجمهور",
+        "notifications": "إشعارات",
+        "review": "مراجعة"
+      },
+      "basic": {
+        "title": "عنوان الحملة",
+        "titlePlaceholder": "تخفيضات الصيف في بيلا بوتيك",
+        "businessName": "اسم العمل",
+        "businessNamePlaceholder": "اسم عملك أو متجرك",
+        "category": "الفئة",
+        "categoryPlaceholder": "اختر فئة أزياء",
+        "shortDescription": "وصف قصير",
+        "shortDescriptionPlaceholder": "جملة واحدة تجذب الانتباه",
+        "longDescription": "وصف كامل",
+        "longDescriptionPlaceholder": "أخبر العملاء المزيد عن هذا العرض",
+        "coverImageUrl": "رابط صورة الغلاف"
+      },
+      "promotion": {
+        "discountPct": "نسبة الخصم %",
+        "couponCode": "رمز الكوبون",
+        "saleType": "نوع البيع",
+        "limitedTimeOffer": "عرض لفترة محدودة",
+        "startDate": "تاريخ البدء",
+        "endDate": "تاريخ الانتهاء",
+        "saleTypes": {
+          "discount": "خصم",
+          "service_promotion": "ترويج خدمة",
+          "product_promotion": "ترويج منتج",
+          "limited_time_offer": "عرض لفترة محدودة",
+          "flash_sale": "بيع سريع",
+          "seasonal": "موسمي"
+        }
+      },
+      "location": {
+        "country": "البلد",
+        "city": "المدينة",
+        "lat": "خط العرض (GPS)",
+        "lon": "خط الطول (GPS)",
+        "radiusKm": "نطاق الوصول"
+      },
+      "audience": {
+        "targets": "الجمهور المستهدف",
+        "all": "الجميع",
+        "women": "نساء",
+        "men": "رجال",
+        "kids": "أطفال",
+        "luxury": "فاخر",
+        "casual": "كاجوال",
+        "sustainableFashion": "أزياء مستدامة",
+        "streetwear": "أزياء الشارع",
+        "ageMin": "الحد الأدنى للعمر",
+        "ageMax": "الحد الأقصى للعمر"
+      },
+      "notifications": {
+        "masterSwitch": "إشعار المستخدمين",
+        "masterSwitchBody": "أرسل إشعارًا عندما تصبح هذه الحملة نشطة.",
+        "channels": "قنوات الإشعار",
+        "channel_push": "إشعار دفع",
+        "channel_email": "إشعار بريد إلكتروني",
+        "timing": "توقيت الإرسال",
+        "timing_immediately_after_approval": "فوراً بعد الموافقة",
+        "timing_on_start_date": "في تاريخ بدء الحملة",
+        "timing_custom": "تاريخ ووقت مخصص",
+        "customDatetime": "تاريخ ووقت مخصص"
+      },
+      "review": {
+        "title": "مراجعة وإرسال",
+        "note": "سيتم مراجعة حملتك بواسطة مسؤول DressApp قبل نشرها. سيتم إشعارك بالقرار."
+      }
+    },
+    "mine": {
+      "title": "حملاتي",
+      "createNew": "حملة جديدة",
+      "createFirst": "أنشئ حملتك الأولى",
+      "submit": "إرسال",
+      "cancel": "إلغاء",
+      "submitSuccess": "تم إرسال الحملة للمراجعة!",
+      "submitError": "لا يمكن إرسال الحملة.",
+      "cancelSuccess": "تم إلغاء الحملة.",
+      "cancelError": "لا يمكن إلغاء الحملة.",
+      "empty": {
+        "title": "لا توجد حملات بعد",
+        "body": "أنشئ عرضك المحلي الأول للوصول إلى عشاق الأزياء بالقرب من عملك."
+      }
+    },
+    "billing": {
+      "feePerDay": "1.00 دولار / يوم",
+      "totalFee": "إجمالي رسوم الحملة",
+      "days": "{{count}} يوم",
+      "days_plural": "{{count}} أيام",
+      "paypalRequired": "مطلوب حساب PayPal",
+      "paypalRequiredBody": "يفرض DressApp رسوماً قدرها 1.00 دولار في اليوم للترويج لحملتك. يرجى إضافة بريد PayPal الخاص بك في الملف الشخصي ← إعدادات الدفع للمتابعة.",
+      "connectPayPal": "ربط PayPal",
+      "feeNote": "سيتم خصم المبلغ من حساب PayPal الخاص بك بمجرد موافقتك على الدفع أدناه.",
+      "extensionFee": "رسوم التمديد",
+      "confirmPayment": "تأكيد ودفع"
+    },
+    "settings": {
+      "title": "إعدادات الحملة",
+      "extend": "تمديد الحملة",
+      "extendAutoApproved": "يتم الموافقة على التمديدات تلقائيًا ويتم تحصيل الرسوم على الفور.",
+      "newEndDate": "تاريخ الانتهاء الجديد",
+      "extendFeePreview": "رسوم التمديد: {{fee}} لمدة {{days}} يوم",
+      "extendPay": "متابعة الدفع ({{fee}})",
+      "extendSuccess": "تم تمديد الحملة بنجاح",
+      "extendError": "فشل التمديد. يرجى المحاولة مرة أخرى.",
+      "pause": "إيقاف الحملة مؤقتًا",
+      "pauseNote": "سيتم إخفاء حملتك من الخلاصة. ستتم إضافة الأيام المتوقفة إلى تاريخ الانتهاء عند الاستئناف.",
+      "resume": "استئناف الحملة",
+      "resumeNote": "ستصبح حملتك مرئية مرة أخرى. تم تمديد تاريخ الانتهاء للفترة المتوقفة.",
+      "pauseSuccess": "تم إيقاف الحملة",
+      "pauseError": "فشل إيقاف الحملة.",
+      "resumeSuccess": "تم استئناف الحملة",
+      "resumeError": "فشل استئناف الحملة.",
+      "delete": "حذف الحملة",
+      "deleteConfirm": "هل أنت متأكد أنك تريد حذف هذه الحملة نهائيًا؟ لا يمكن التراجع عن هذا.",
+      "deleteWarning": "يتم حذف الحملات النشطة فورًا دون استرداد أموال للأيام غير المستخدمة.",
+      "deleteSuccess": "تم حذف الحملة",
+      "deleteError": "فشل حذف الحملة.",
+      "days": "يوم (أيام)"
+    },
+    "notifications": {
+      "sectionTitle": "إشعارات الحملة",
+      "sectionSubtitle": "تحكم في كيفية تلقيك لعروض الأزياء المحلية.",
+      "localFashionPush": "عروض الأزياء المحلية (دفع)",
+      "localFashionEmail": "عروض الأزياء المحلية (بريد إلكتروني)",
+      "saleAlerts": "تنبيهات التخفيضات",
+      "newExpertNearMe": "خبير جديد بالقرب مني",
+      "sustainableFashion": "عروض الأزياء المستدامة",
+      "luxuryPromos": "العروض الفاخرة",
+      "personalstylist": "عروض المصمم الشخصي",
+      "frequency": "تكرار الإشعارات",
+      "frequencyInstant": "فوري",
+      "frequencyDaily": "ملخص يومي",
+      "frequencyWeekly": "ملخص أسبوعي",
+      "quietHours": "ساعات الهدوء (عدم الإزعاج)",
+      "quietStart": "من",
+      "quietEnd": "حتى",
+      "maxDistance": "أقصى مسافة للحملة"
+    },
+    "admin": {
+      "queueTitle": "قائمة انتظار موافقات الحملات",
+      "queueSubtitle": "مراجعة والموافقة أو الرفض لحملات الخبراء المعلقة.",
+      "allCampaigns": "جميع الحملات",
+      "columns": {
+        "campaign": "الحملة",
+        "business": "العمل",
+        "location": "الموقع",
+        "submitted": "تم الإرسال",
+        "category": "الفئة",
+        "status": "الحالة"
+      },
+      "actions": {
+        "approve": "موافقة",
+        "reject": "رفض",
+        "preview": "معاينة",
+        "messageExpert": "مراسلة الخبير"
+      },
+      "approveSuccess": "تمت الموافقة على الحملة!",
+      "rejectSuccess": "تم رفض الحملة.",
+      "rejectReason": "سبب الرفض",
+      "rejectReasonPlaceholder": "اشرح سبب رفض هذه الحملة...",
+      "rejectConfirm": "تأكيد الرفض",
+      "previewTitle": "معاينة الحملة"
+    }
   }
 }

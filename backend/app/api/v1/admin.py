@@ -16,11 +16,13 @@ from __future__ import annotations
 
 import logging
 import os
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
 
 from app.config import settings
 from app.db.database import get_db
@@ -680,3 +682,221 @@ async def admin_enable_campaign(
     if not res.matched_count:
         raise HTTPException(404, "Campaign not found")
     return {"status": "ok", "id": campaign_id, "new_status": "active"}
+
+
+# ==================== Campaign Moderation (Experts Campaign Platform) ====================
+
+from app.services.campaign_service import notify_campaign_push, notify_campaign_email
+
+
+def _strip_campaign(doc: dict[str, Any]) -> dict[str, Any]:
+    doc = dict(doc)
+    doc.pop("_id", None)
+    return doc
+
+
+class CampaignAdminPatchIn(BaseModel):
+    title: str | None = None
+    short_description: str | None = None
+    long_description: str | None = None
+    cover_image_url: str | None = None
+    gallery_images: list[str] | None = None
+    start_date: str | None = None
+    end_date: str | None = None
+    location: dict[str, Any] | None = None
+
+
+class CampaignRejectIn(BaseModel):
+    reason: str = Field(min_length=5, max_length=500)
+
+
+@router.get("/campaigns")
+async def admin_list_campaigns(
+    status: str | None = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(30, ge=1, le=100),
+    _: dict = Depends(require_admin),
+) -> dict[str, Any]:
+    db = get_db()
+    flt: dict[str, Any] = {}
+    if status:
+        flt["status"] = status
+    else:
+        flt["status"] = "pending_approval"  # default: approval queue
+    total = await db.experts_campaigns.count_documents(flt)
+    cursor = (
+        db.experts_campaigns.find(flt, {"_id": 0})
+        .sort("submitted_at", -1)
+        .skip(skip)
+        .limit(limit)
+    )
+    items = [_strip_campaign(doc) async for doc in cursor]
+    return {"items": items, "total": total, "skip": skip, "limit": limit}
+
+
+@router.get("/campaigns/all")
+async def admin_list_all_campaigns(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    _: dict = Depends(require_admin),
+) -> dict[str, Any]:
+    db = get_db()
+    total = await db.experts_campaigns.count_documents({})
+    cursor = (
+        db.experts_campaigns.find({}, {"_id": 0})
+        .sort("created_at", -1)
+        .skip(skip)
+        .limit(limit)
+    )
+    items = [_strip_campaign(doc) async for doc in cursor]
+    return {"items": items, "total": total, "skip": skip, "limit": limit}
+
+
+@router.get("/campaigns/{campaign_id}")
+async def admin_get_campaign(
+    campaign_id: str,
+    _: dict = Depends(require_admin),
+) -> dict[str, Any]:
+    db = get_db()
+    doc = await db.experts_campaigns.find_one({"id": campaign_id})
+    if not doc:
+        raise HTTPException(404, "Campaign not found")
+    return _strip_campaign(doc)
+
+
+@router.post("/campaigns/{campaign_id}/approve")
+async def admin_approve_campaign(
+    campaign_id: str,
+    admin: dict = Depends(require_admin),
+) -> dict[str, Any]:
+    db = get_db()
+    doc = await db.experts_campaigns.find_one({"id": campaign_id})
+    if not doc:
+        raise HTTPException(404, "Campaign not found")
+    if doc.get("status") not in ("pending_approval", "draft"):
+        raise HTTPException(422, "Only Pending campaigns can be approved")
+
+    now = datetime.now(timezone.utc).isoformat()
+    now_date = datetime.now(timezone.utc).date().isoformat()
+    start_date = doc.get("start_date")
+    new_status = "active" if (not start_date or start_date <= now_date) else "approved"
+
+    billing = doc.get("billing", {})
+    payment_status = billing.get("payment_status", "unknown")
+    if payment_status != "paid":
+        logger.warning("Approving campaign %s that is not fully paid (status: %s)", campaign_id, payment_status)
+
+    await db.experts_campaigns.update_one(
+        {"id": campaign_id},
+        {"$set": {
+            "status": new_status,
+            "admin_approved": True,
+            "approved_at": now,
+            "approved_by": admin["id"],
+            "rejection_reason": None,
+            "activated_at": now if new_status == "active" else None,
+            "updated_at": now,
+        }},
+    )
+
+    # Log audit
+    await db.campaign_approvals.insert_one({
+        "id": str(uuid.uuid4()),
+        "campaign_id": campaign_id,
+        "admin_id": admin["id"],
+        "action": "approved",
+        "created_at": now,
+        "updated_at": now,
+    })
+
+    await db.campaign_billing_log.insert_one({
+        "id": str(uuid.uuid4()),
+        "campaign_id": campaign_id,
+        "admin_id": admin["id"],
+        "action": "approved",
+        "payment_status": payment_status,
+        "fee_cents": billing.get("total_fee_cents", 0),
+        "currency": billing.get("currency", "USD"),
+        "created_at": now,
+    })
+
+    # Fire notifications if campaign is now Active and timing=immediately
+    if new_status == "active":
+        notif = doc.get("notifications") or {}
+        timing = notif.get("timing", "immediately_after_approval")
+        if notif.get("master_enabled") and timing == "immediately_after_approval":
+            channels = notif.get("channels") or []
+            if "push" in channels:
+                try:
+                    await notify_campaign_push(campaign_id)
+                except Exception as exc:
+                    logger.error("Post-approval push failed: %s", exc)
+            if "email" in channels:
+                try:
+                    await notify_campaign_email(campaign_id)
+                except Exception as exc:
+                    logger.error("Post-approval email failed: %s", exc)
+
+    return {"status": new_status, "campaign_id": campaign_id}
+
+
+@router.post("/campaigns/{campaign_id}/reject")
+async def admin_reject_campaign(
+    campaign_id: str,
+    body: CampaignRejectIn,
+    admin: dict = Depends(require_admin),
+) -> dict[str, Any]:
+    db = get_db()
+    doc = await db.experts_campaigns.find_one({"id": campaign_id})
+    if not doc:
+        raise HTTPException(404, "Campaign not found")
+
+    now = datetime.now(timezone.utc).isoformat()
+    await db.experts_campaigns.update_one(
+        {"id": campaign_id},
+        {"$set": {
+            "status": "rejected",
+            "rejection_reason": body.reason,
+            "admin_approved": False,
+            "updated_at": now,
+        }},
+    )
+    await db.campaign_approvals.insert_one({
+        "id": str(__import__("uuid").uuid4()),
+        "campaign_id": campaign_id,
+        "admin_id": admin["id"],
+        "action": "rejected",
+        "reason": body.reason,
+        "created_at": now,
+        "updated_at": now,
+    })
+    return {"status": "rejected", "reason": body.reason}
+
+
+@router.patch("/campaigns/{campaign_id}")
+async def admin_edit_campaign(
+    campaign_id: str,
+    body: CampaignAdminPatchIn,
+    admin: dict = Depends(require_admin),
+) -> dict[str, Any]:
+    db = get_db()
+    doc = await db.experts_campaigns.find_one({"id": campaign_id})
+    if not doc:
+        raise HTTPException(404, "Campaign not found")
+
+    now = datetime.now(timezone.utc).isoformat()
+    updates: dict[str, Any] = {"updated_at": now}
+    for field, val in body.model_dump(exclude_none=True).items():
+        updates[field] = val
+
+    await db.experts_campaigns.update_one({"id": campaign_id}, {"$set": updates})
+    await db.campaign_approvals.insert_one({
+        "id": str(__import__("uuid").uuid4()),
+        "campaign_id": campaign_id,
+        "admin_id": admin["id"],
+        "action": "edited",
+        "created_at": now,
+        "updated_at": now,
+    })
+    doc = await db.experts_campaigns.find_one({"id": campaign_id}, {"_id": 0})
+    return _strip_campaign(doc)

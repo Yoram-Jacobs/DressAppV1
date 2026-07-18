@@ -2279,5 +2279,243 @@
     "scheduler_push_step4": "Verknüpfen Sie Ihren **Google Kalender**, damit der Planer Ihren täglichen Veranstaltungsplan überprüfen kann.",
     "scheduler_push_step5": "Das System verfolgt Wettervorhersagen und generiert drei individuelle Outfit-Konfigurationen.",
     "scheduler_push_step6": "Tippen Sie auf die Push-Benachrichtigung auf Ihrem Gerät, um eine Konfiguration zu akzeptieren und zu planen."
+  },
+  "campaigns": {
+    "status": {
+      "draft": "Entwurf",
+      "pendingApproval": "Ausstehende Genehmigung",
+      "approved": "Genehmigt",
+      "active": "Aktiv",
+      "rejected": "Abgelehnt",
+      "expired": "Abgelaufen",
+      "cancelled": "Storniert",
+      "paused": "Pausiert"
+    },
+    "card": {
+      "off": "% RABATT",
+      "limitedTime": "Begrenzte Zeit",
+      "expiresInDays": "Läuft in {{count}} Tag ab",
+      "expiresInDays_other": "Läuft in {{count}} Tagen ab",
+      "expirestoday": "Läuft heute ab"
+    },
+    "feed": {
+      "title": "Lokale Kampagnen",
+      "subtitle": "Exklusive Modeangebote von Experten in Ihrer Nähe.",
+      "countLabel": "{{count}} aktive Kampagne",
+      "countLabel_other": "{{count}} aktive Kampagnen",
+      "sort": {
+        "newest": "Neueste",
+        "nearest": "Nächste",
+        "endingSoon": "Bald endend",
+        "highestDiscount": "Höchster Rabatt"
+      },
+      "empty": {
+        "title": "Keine Kampagnen in Ihrer Nähe",
+        "body": "Schauen Sie bald wieder vorbei — lokale Experten könnten neue Angebote einstellen."
+      }
+    },
+    "detail": {
+      "save": "Kampagne speichern",
+      "unsave": "Aus Gespeicherten entfernen",
+      "saved": "Kampagne gespeichert",
+      "unsaved": "Aus Gespeicherten entfernt",
+      "share": "Kampagne teilen",
+      "linkCopied": "Link kopiert!",
+      "report": "Diese Kampagne melden",
+      "reported": "Kampagne gemeldet. Danke.",
+      "coupon": "Gutscheincode",
+      "from": "Von",
+      "until": "Bis",
+      "mapTitle": "Karte zum Kampagnenstandort",
+      "locationUnknown": "Standort nicht angegeben",
+      "getDirections": "Route berechnen",
+      "views": "Aufrufe",
+      "saves": "Speicherungen",
+      "shares": "Teilungen",
+      "galleryDot": "Galeriebild {{index}}"
+    },
+    "create": {
+      "title": "Kampagne erstellen",
+      "subtitle": "Experten-Kampagnenplattform",
+      "notExpert": "Nur für verifizierte Experten",
+      "notExpertBody": "Nur verifizierte Modeexperten können Kampagnen erstellen. Registrieren Sie sich als Experte in Ihrem Profil.",
+      "goToProfile": "Zum Profil",
+      "saveDraft": "Als Entwurf speichern",
+      "submit": "Zur Genehmigung einreichen",
+      "submitForApproval": "Zur Genehmigung einreichen",
+      "draftSaved": "Kampagne als Entwurf gespeichert.",
+      "submitted": "Kampagne zur Überprüfung eingereicht!",
+      "submitSuccess": "Kampagne zur Genehmigung eingereicht!",
+      "saveError": "Kampagne konnte nicht gespeichert werden.",
+      "submitError": "Kampagne konnte nicht eingereicht werden.",
+      "steps": {
+        "basic": "Grundtaten",
+        "promotion": "Aktion",
+        "location": "Standort",
+        "audience": "Zielgruppe",
+        "notifications": "Benachrichtigungen",
+        "review": "Überprüfen"
+      },
+      "basic": {
+        "title": "Kampagnentitel",
+        "titlePlaceholder": "Sommerschlussverkauf in der Bella Boutique",
+        "businessName": "Unternehmensname",
+        "businessNamePlaceholder": "Ihr Geschäfts- oder Shopname",
+        "category": "Kategorie",
+        "categoryPlaceholder": "Wählen Sie eine Mode-Kategorie",
+        "shortDescription": "Kurzbeschreibung",
+        "shortDescriptionPlaceholder": "Ein Einzeiler, der Aufmerksamkeit erregt",
+        "longDescription": "Vollständige Beschreibung",
+        "longDescriptionPlaceholder": "Erzählen Sie Kunden mehr über dieses Angebot",
+        "coverImageUrl": "Titelbild-URL"
+      },
+      "promotion": {
+        "discountPct": "Rabatt %",
+        "couponCode": "Gutscheincode",
+        "saleType": "Verkaufsart",
+        "limitedTimeOffer": "Zeitlich begrenztes Angebot",
+        "startDate": "Startdatum",
+        "endDate": "Enddatum",
+        "saleTypes": {
+          "discount": "Rabatt",
+          "service_promotion": "Dienstleistungsaktion",
+          "product_promotion": "Produktaktion",
+          "limited_time_offer": "Zeitlich begrenztes Angebot",
+          "flash_sale": "Blitzverkauf",
+          "seasonal": "Saisonal"
+        }
+      },
+      "location": {
+        "country": "Land",
+        "city": "Stadt",
+        "lat": "Breitengrad (GPS)",
+        "lon": "Längengrad (GPS)",
+        "radiusKm": "Reichweitenradius"
+      },
+      "audience": {
+        "targets": "Zielgruppe",
+        "all": "Alle",
+        "women": "Damen",
+        "men": "Herren",
+        "kids": "Kinder",
+        "luxury": "Luxus",
+        "casual": "Freizeit",
+        "sustainableFashion": "Nachhaltige Mode",
+        "streetwear": "Streetwear",
+        "ageMin": "Mindestalter",
+        "ageMax": "Höchstalter"
+      },
+      "notifications": {
+        "masterSwitch": "Nutzer benachrichtigen",
+        "masterSwitchBody": "Senden Sie eine Benachrichtigung, wenn diese Kampagne live geht.",
+        "channels": "Benachrichtigungskanäle",
+        "channel_push": "Push-Benachrichtigung",
+        "channel_email": "E-Mail-Benachrichtigung",
+        "timing": "Sendezeitpunkt",
+        "timing_immediately_after_approval": "Sofort nach Genehmigung",
+        "timing_on_start_date": "Am Startdatum der Kampagne",
+        "timing_custom": "Benutzerdefiniertes Datum & Uhrzeit",
+        "customDatetime": "Benutzerdefiniertes Datum & Uhrzeit"
+      },
+      "review": {
+        "title": "Überprüfen & Einreichen",
+        "note": "Ihre Kampagne wird von einem DressApp-Administrator überprüft, bevor sie live geht. Sie werden über die Entscheidung benachrichtigt."
+      }
+    },
+    "mine": {
+      "title": "Meine Kampagnen",
+      "createNew": "Neue Kampagne",
+      "createFirst": "Erstellen Sie Ihre erste Kampagne",
+      "submit": "Einreichen",
+      "cancel": "Abbrechen",
+      "submitSuccess": "Kampagne zur Überprüfung eingereicht!",
+      "submitError": "Kampagne konnte nicht eingereicht werden.",
+      "cancelSuccess": "Kampagne storniert.",
+      "cancelError": "Kampagne konnte nicht storniert werden.",
+      "empty": {
+        "title": "Noch keine Kampagnen",
+        "body": "Erstellen Sie Ihr erstes lokales Angebot, um Modeinteressierte in der Nähe Ihres Geschäfts zu erreichen."
+      }
+    },
+    "billing": {
+      "feePerDay": "1,00 $ / Tag",
+      "totalFee": "Gesamte Kampagnengebühr",
+      "days": "{{count}} Tag",
+      "days_plural": "{{count}} Tage",
+      "paypalRequired": "PayPal-Konto erforderlich",
+      "paypalRequiredBody": "DressApp berechnet 1,00 $ pro Tag für die Bewerbung Ihrer Kampagne. Bitte fügen Sie Ihre PayPal-E-Mail im Profil → Zahlungseinstellungen hinzu, um fortzufahren.",
+      "connectPayPal": "Mit PayPal verbinden",
+      "feeNote": "Ihr PayPal-Konto wird belastet, sobald Sie die Zahlung unten bestätigen.",
+      "extensionFee": "Verlängerungsgebühr",
+      "confirmPayment": "Bestätigen & Bezahlen"
+    },
+    "settings": {
+      "title": "Kampagneneinstellungen",
+      "extend": "Kampagne verlängern",
+      "extendAutoApproved": "Verlängerungen werden automatisch genehmigt und sofort in Rechnung gestellt.",
+      "newEndDate": "Neues Enddatum",
+      "extendFeePreview": "Verlängerungsgebühr: {{fee}} für {{days}} Tag(e)",
+      "extendPay": "Zur Zahlung ({{fee}})",
+      "extendSuccess": "Kampagne erfolgreich verlängert",
+      "extendError": "Verlängerung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "pause": "Kampagne pausieren",
+      "pauseNote": "Ihre Kampagne wird im Feed ausgeblendet. Pausierte Tage werden beim Fortsetzen wieder an Ihr Enddatum angehängt.",
+      "resume": "Kampagne fortsetzen",
+      "resumeNote": "Ihre Kampagne wird wieder sichtbar sein. Ihr Enddatum wurde um den pausierten Zeitraum verlängert.",
+      "pauseSuccess": "Kampagne pausiert",
+      "pauseError": "Kampagne konnte nicht pausiert werden.",
+      "resumeSuccess": "Kampagne fortgesetzt",
+      "resumeError": "Kampagne konnte nicht fortgesetzt werden.",
+      "delete": "Kampagne löschen",
+      "deleteConfirm": "Sind Sie sicher, dass Sie diese Kampagne dauerhaft löschen möchten? Dies kann nicht rückgängig gemacht werden.",
+      "deleteWarning": "Aktive Kampagnen werden sofort gelöscht, ohne Rückerstattung für ungenutzte Tage.",
+      "deleteSuccess": "Kampagne gelöscht",
+      "deleteError": "Kampagne konnte nicht gelöscht werden.",
+      "days": "Tag(e)"
+    },
+    "notifications": {
+      "sectionTitle": "Kampagnenbenachrichtigungen",
+      "sectionSubtitle": "Steuern Sie, wie Sie lokale Modeangebote erhalten.",
+      "localFashionPush": "Lokale Modeangebote (Push)",
+      "localFashionEmail": "Lokale Modeangebote (E-Mail)",
+      "saleAlerts": "Sale-Benachrichtigungen",
+      "newExpertNearMe": "Neuer Experte in meiner Nähe",
+      "sustainableFashion": "Nachhaltige Mode-Angebote",
+      "luxuryPromos": "Luxus-Angebote",
+      "personalstylist": "Angebote für Personal Stylists",
+      "frequency": "Benachrichtigungshäufigkeit",
+      "frequencyInstant": "Sofort",
+      "frequencyDaily": "Tägliche Zusammenfassung",
+      "frequencyWeekly": "Wöchentliche Zusammenfassung",
+      "quietHours": "Ruhezeiten (Bitte nicht stören)",
+      "quietStart": "Von",
+      "quietEnd": "Bis",
+      "maxDistance": "Maximale Kampagnenentfernung"
+    },
+    "admin": {
+      "queueTitle": "Warteschlange für Kampagnengenehmigungen",
+      "queueSubtitle": "Überprüfen und genehmigen oder ablehnen ausstehender Expertenkampagnen.",
+      "allCampaigns": "Alle Kampagnen",
+      "columns": {
+        "campaign": "Kampagne",
+        "business": "Unternehmen",
+        "location": "Standort",
+        "submitted": "Eingereicht",
+        "category": "Kategorie",
+        "status": "Status"
+      },
+      "actions": {
+        "approve": "Genehmigen",
+        "reject": "Ablehnen",
+        "preview": "Vorschau",
+        "messageExpert": "Experten benachrichtigen"
+      },
+      "approveSuccess": "Kampagne genehmigt!",
+      "rejectSuccess": "Kampagne abgelehnt.",
+      "rejectReason": "Ablehnungsgrund",
+      "rejectReasonPlaceholder": "Erklären Sie, warum diese Kampagne abgelehnt wurde...",
+      "rejectConfirm": "Ablehnung bestätigen",
+      "previewTitle": "Kampagnenvorschau"
+    }
   }
 }

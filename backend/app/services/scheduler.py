@@ -15,6 +15,7 @@ from app.services.trend_scout import run_trend_scout
 from app.services.push_service import send_push_notification
 from app.services.stylist_scheduler_brain import generate_scheduled_proposals
 from app.services.i18n import t
+from app.services.campaign_service import activate_scheduled_campaigns, expire_overdue_campaigns
 
 logger = logging.getLogger(__name__)
 
@@ -662,6 +663,24 @@ def start_scheduler() -> None:
         logger.info(
             "Trend-Scout daily scheduled (at %02d:%02d UTC)", hour, minute
         )
+
+    # --- Experts Campaign Platform ---
+    # Activate approved campaigns whose start_date has arrived (every 5 min)
+    _scheduler.add_job(
+        activate_scheduled_campaigns,
+        IntervalTrigger(minutes=5),
+        id="campaign_activate",
+        replace_existing=True,
+        max_instances=1,
+    )
+    # Expire overdue campaigns (every 15 min)
+    _scheduler.add_job(
+        expire_overdue_campaigns,
+        IntervalTrigger(minutes=15),
+        id="campaign_expire",
+        replace_existing=True,
+        max_instances=1,
+    )
 
     _scheduler.start()
     logger.info("DressApp Scheduler singleton started")

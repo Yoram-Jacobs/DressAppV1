@@ -751,3 +751,160 @@ class SuitcaseArchive(BaseDoc):
     outfits: list[dict[str, Any]] = Field(default_factory=list)
     local_fashion_stores: list[dict[str, Any]] = Field(default_factory=list)
     missing_items: list[dict[str, Any]] = Field(default_factory=list)
+
+
+# --------------------- Experts Campaign Platform ---------------------
+CampaignStatus = Literal[
+    "draft", "pending_approval", "approved", "active",
+    "rejected", "expired", "cancelled", "paused", "payment_failed"
+]
+CampaignSaleType = Literal[
+    "discount", "service_promotion", "product_promotion",
+    "limited_time_offer", "flash_sale", "seasonal"
+]
+CampaignAudienceTarget = Literal[
+    "women", "men", "kids", "luxury", "casual",
+    "sustainable_fashion", "streetwear", "all"
+]
+CampaignNotificationTiming = Literal[
+    "immediately_after_approval", "on_start_date", "custom"
+]
+CampaignNotificationStatus = Literal[
+    "scheduled", "sent", "delivered", "opened",
+    "clicked", "failed", "cancelled"
+]
+
+
+class CampaignLocation(BaseModel):
+    country: str | None = None
+    city: str | None = None
+    lat: float | None = None
+    lon: float | None = None
+    radius_km: float = 25.0
+
+
+class CampaignAudience(BaseModel):
+    targets: list[CampaignAudienceTarget] = Field(default_factory=lambda: ["all"])
+    age_min: int | None = None
+    age_max: int | None = None
+    interests: list[str] = Field(default_factory=list)
+
+
+class CampaignNotificationConfig(BaseModel):
+    master_enabled: bool = False
+    channels: list[str] = Field(default_factory=list)  # ["push", "email"]
+    timing: CampaignNotificationTiming = "immediately_after_approval"
+    custom_datetime: str | None = None  # ISO — only when timing=custom
+    push_sent: bool = False
+    email_sent: bool = False
+    push_sent_at: str | None = None
+    email_sent_at: str | None = None
+
+
+class CampaignAnalytics(BaseModel):
+    views: int = 0
+    clicks: int = 0
+    push_opens: int = 0
+    saves: int = 0
+    shares: int = 0
+    conversions: int = 0
+    unique_users_reached: int = 0
+
+
+class CampaignBilling(BaseModel):
+    """Financial metadata for a campaign: fee, PayPal order, payment status."""
+    fee_per_day_cents: int = 100          # USD, $1.00 per day
+    currency: str = "USD"
+    total_days: int = 0
+    total_fee_cents: int = 0
+    paypal_order_id: str | None = None    # set when expert submits + PayPal SDK completes
+    paypal_capture_id: str | None = None  # set after capture
+    payer_email: str | None = None
+    paid_at: str | None = None
+    payment_status: str = "unpaid"        # unpaid | pending | paid | failed | voided
+    extension_history: list[dict] = Field(default_factory=list)
+    # Paused time tracking
+    paused_periods: list[dict] = Field(default_factory=list)  # [{paused_at, resumed_at, days}]
+    total_paused_days: int = 0
+
+
+class ExpertCampaign(BaseDoc):
+    """Expert-owned local promotional campaign (Experts Campaign Platform)."""
+
+    # Identity
+    expert_id: str
+    business_name: str
+
+    # Basic
+    title: str
+    short_description: str
+    long_description: str | None = None
+    category: str  # e.g. "Boutique", "Tailor", "Stylist"
+    cover_image_url: str | None = None
+    gallery_images: list[str] = Field(default_factory=list)
+
+    # Promotion
+    discount_pct: int | None = Field(default=None, ge=0, le=100)
+    coupon_code: str | None = None
+    sale_type: CampaignSaleType = "discount"
+    limited_time_offer: bool = False
+
+    # Dates
+    start_date: str | None = None   # ISO date
+    end_date: str | None = None     # ISO date
+
+    # Location
+    location: CampaignLocation = Field(default_factory=CampaignLocation)
+
+    # Audience
+    audience: CampaignAudience = Field(default_factory=CampaignAudience)
+
+    # Workflow
+    status: CampaignStatus = "draft"
+    admin_approved: bool = False
+    rejection_reason: str | None = None
+    submitted_at: str | None = None
+    approved_at: str | None = None
+    approved_by: str | None = None  # admin user_id
+    activated_at: str | None = None
+    expired_at: str | None = None
+
+    # Notifications
+    notifications: CampaignNotificationConfig = Field(default_factory=CampaignNotificationConfig)
+
+    # Analytics
+    analytics: CampaignAnalytics = Field(default_factory=CampaignAnalytics)
+
+    # Saved by user list (user_ids)
+    saved_by: list[str] = Field(default_factory=list)
+
+    # Pause tracking
+    paused_at: str | None = None          # ISO timestamp of last pause
+
+    # Billing
+    billing: CampaignBilling = Field(default_factory=CampaignBilling)
+
+
+class CampaignApprovalLog(BaseDoc):
+    """Audit log entry for campaign approval/rejection actions."""
+
+    campaign_id: str
+    admin_id: str
+    action: Literal["approved", "rejected", "edited", "message_sent"]
+    reason: str | None = None
+    notes: str | None = None
+
+
+class CampaignNotificationRecord(BaseDoc):
+    """Per-user, per-channel delivery tracking record."""
+
+    campaign_id: str
+    user_id: str
+    channel: Literal["push", "email"]  # extensible to sms, whatsapp, in_app
+    scheduled_at: str | None = None
+    sent_at: str | None = None
+    status: CampaignNotificationStatus = "scheduled"
+    opened: bool = False
+    clicked: bool = False
+    failed: bool = False
+    failure_reason: str | None = None

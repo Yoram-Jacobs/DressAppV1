@@ -9,6 +9,17 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableHeader, TableHead, TableRow, TableBody, TableCell } from '@/components/ui/table';
+import { useEffect, useState } from 'react';
+import { Link, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Table, TableHeader, TableHead, TableRow, TableBody, TableCell } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   RefreshCcw, Users as UsersIcon, ShoppingBag, Receipt, Activity, Sparkles,
@@ -16,8 +27,9 @@ import {
   Play, Search,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { api } from '@/lib/api';
+import { api, campaignApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 const fmtCents = (cents, cur = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: cur || 'USD' }).format(
@@ -70,6 +82,7 @@ export default function Admin() {
           <TabsTrigger value="listings" data-testid="admin-tab-listings">{t('admin.listings')}</TabsTrigger>
           <TabsTrigger value="transactions" data-testid="admin-tab-transactions">{t('admin.transactions')}</TabsTrigger>
           <TabsTrigger value="system" data-testid="admin-tab-system">{t('admin.system')}</TabsTrigger>
+          <TabsTrigger value="campaigns" data-testid="admin-tab-campaigns">{t('campaigns.admin.queueTitle', { defaultValue: 'Campaign Queue' })}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-6"><OverviewSection /></TabsContent>
@@ -79,6 +92,7 @@ export default function Admin() {
         <TabsContent value="listings" className="mt-6"><ListingsSection /></TabsContent>
         <TabsContent value="transactions" className="mt-6"><TransactionsSection /></TabsContent>
         <TabsContent value="system" className="mt-6"><SystemSection /></TabsContent>
+        <TabsContent value="campaigns" className="mt-6"><CampaignQueueTab /></TabsContent>
       </Tabs>
     </div>
   );
@@ -744,6 +758,175 @@ function SystemSection() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+// -------------------- Campaign Queue --------------------
+function CampaignQueueTab() {
+  const { t } = useTranslation();
+  const [items, setItems] = useState(null);
+  const [status, setStatus] = useState('pending_approval');
+  const [rejectId, setRejectId] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [previewItem, setPreviewItem] = useState(null);
+
+  const refresh = async () => {
+    try {
+      setItems(null);
+      const res = await campaignApi.adminGetCampaignQueue({ status: status === 'all' ? undefined : status, limit: 100 });
+      setItems(res.items || []);
+    } catch { toast.error(t('campaigns.admin.loadFailed', { defaultValue: 'Failed to load campaigns' })); }
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { refresh(); }, [status]);
+
+  const approve = async (id) => {
+    try {
+      await campaignApi.adminApproveCampaign(id);
+      toast.success(t('campaigns.admin.approved', { defaultValue: 'Campaign approved' }));
+      refresh();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || t('common.error', { defaultValue: 'Error' }));
+    }
+  };
+
+  const reject = async () => {
+    if (!rejectId) return;
+    try {
+      await campaignApi.adminRejectCampaign(rejectId, rejectReason);
+      toast.success(t('campaigns.admin.rejected', { defaultValue: 'Campaign rejected' }));
+      setRejectId(null);
+      setRejectReason('');
+      refresh();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || t('common.error', { defaultValue: 'Error' }));
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        {['pending_approval', 'all'].map((s) => (
+          <Button
+            key={s}
+            size="sm"
+            variant={status === s ? 'default' : 'outline'}
+            onClick={() => setStatus(s)}
+            className="rounded-xl"
+            data-testid={`admin-campaigns-filter-${s}`}
+          >
+            {t(`campaigns.admin.filter_${s}`, { defaultValue: s })}
+          </Button>
+        ))}
+      </div>
+      <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table data-testid="admin-campaigns-table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('campaigns.admin.cover', { defaultValue: 'Cover' })}</TableHead>
+                  <TableHead>{t('campaigns.admin.details', { defaultValue: 'Details' })}</TableHead>
+                  <TableHead>{t('campaigns.admin.location', { defaultValue: 'Location' })}</TableHead>
+                  <TableHead>{t('campaigns.admin.category', { defaultValue: 'Category' })}</TableHead>
+                  <TableHead>{t('campaigns.admin.status', { defaultValue: 'Status' })}</TableHead>
+                  <TableHead>{t('campaigns.admin.submitted', { defaultValue: 'Submitted' })}</TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items === null ? (
+                  <TableRow><TableCell colSpan={7}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
+                ) : items.length === 0 ? (
+                  <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-6">{t('campaigns.admin.empty', { defaultValue: 'No campaigns found' })}</TableCell></TableRow>
+                ) : items.map((c) => (
+                  <TableRow key={c.id} data-testid="admin-campaigns-row">
+                    <TableCell>
+                      {c.cover_image_url ? (
+                        <img src={c.cover_image_url} alt="Cover" className="h-10 w-10 rounded-md object-cover" />
+                      ) : (
+                        <div className="h-10 w-10 rounded-md bg-secondary" />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-medium text-sm">{c.title}</div>
+                      <div className="text-xs text-muted-foreground">{c.business_name}</div>
+                    </TableCell>
+                    <TableCell className="text-sm">{c.location_name || '—'}</TableCell>
+                    <TableCell><Badge variant="outline" className="text-[11px]">{c.category}</Badge></TableCell>
+                    <TableCell><Badge variant="outline" className="capitalize text-[11px]">{c.status}</Badge></TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {c.created_at ? new Date(c.created_at).toLocaleDateString() : '—'}
+                    </TableCell>
+                    <TableCell className="text-end">
+                      <div className="flex justify-end gap-1">
+                        <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => setPreviewItem(c)} data-testid="admin-campaign-preview">
+                          {t('campaigns.admin.preview', { defaultValue: 'Preview' })}
+                        </Button>
+                        {c.status === 'pending_approval' && (
+                          <>
+                            <Button size="sm" variant="ghost" className="text-xs h-7 text-emerald-600" onClick={() => approve(c.id)} data-testid="admin-campaign-approve">
+                              {t('campaigns.admin.approve', { defaultValue: 'Approve' })}
+                            </Button>
+                            <Button size="sm" variant="ghost" className="text-xs h-7 text-rose-600" onClick={() => setRejectId(c.id)} data-testid="admin-campaign-reject">
+                              {t('campaigns.admin.reject', { defaultValue: 'Reject' })}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={!!rejectId} onOpenChange={(o) => !o && setRejectId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('campaigns.admin.rejectTitle', { defaultValue: 'Reject Campaign' })}</DialogTitle>
+            <DialogDescription>{t('campaigns.admin.rejectDesc', { defaultValue: 'Please provide a reason for rejecting this campaign.' })}</DialogDescription>
+          </DialogHeader>
+          <Input 
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder={t('campaigns.admin.reasonPlaceholder', { defaultValue: 'Reason...' })}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectId(null)}>{t('common.cancel', { defaultValue: 'Cancel' })}</Button>
+            <Button variant="destructive" onClick={reject} disabled={!rejectReason.trim()}>{t('campaigns.admin.confirmReject', { defaultValue: 'Reject' })}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!previewItem} onOpenChange={(o) => !o && setPreviewItem(null)}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>{t('campaigns.admin.previewTitle', { defaultValue: 'Campaign Preview' })}</DialogTitle>
+          </DialogHeader>
+          {previewItem && (
+            <div className="space-y-4">
+              {previewItem.cover_image_url && (
+                <img src={previewItem.cover_image_url} alt="Cover" className="w-full h-48 object-cover rounded-md" />
+              )}
+              <div>
+                <h3 className="font-display text-lg">{previewItem.title}</h3>
+                <p className="text-sm text-muted-foreground">{previewItem.business_name}</p>
+              </div>
+              <p className="text-sm">{previewItem.description}</p>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div><strong>{t('campaigns.admin.location', { defaultValue: 'Location' })}:</strong> {previewItem.location_name || '—'}</div>
+                <div><strong>{t('campaigns.admin.category', { defaultValue: 'Category' })}:</strong> {previewItem.category}</div>
+                <div><strong>{t('campaigns.admin.website', { defaultValue: 'Website' })}:</strong> {previewItem.website_url || '—'}</div>
+                <div><strong>{t('campaigns.admin.status', { defaultValue: 'Status' })}:</strong> {previewItem.status}</div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -2270,5 +2270,243 @@
     "scheduler_push_step4": "Vincula tu **Google Calendar** para permitir que el programador revise tu programación diaria de eventos.",
     "scheduler_push_step5": "El sistema realiza un seguimiento de las previsiones meteorológicas y genera 3 configuraciones de vestimenta personalizadas.",
     "scheduler_push_step6": "Toque la notificación push en su dispositivo para aceptar y programar una configuración."
+  },
+  "campaigns": {
+    "status": {
+      "draft": "Borrador",
+      "pendingApproval": "Pendiente de Aprobación",
+      "approved": "Aprobado",
+      "active": "Activa",
+      "rejected": "Rechazada",
+      "expired": "Caducada",
+      "cancelled": "Cancelada",
+      "paused": "Pausada"
+    },
+    "card": {
+      "off": "% DE DESCUENTO",
+      "limitedTime": "Tiempo Limitado",
+      "expiresInDays": "Caduca en {{count}} día",
+      "expiresInDays_other": "Caduca en {{count}} días",
+      "expirestoday": "Caduca hoy"
+    },
+    "feed": {
+      "title": "Campañas Locales",
+      "subtitle": "Ofertas de moda exclusivas de expertos cerca de ti.",
+      "countLabel": "{{count}} campaña activa",
+      "countLabel_other": "{{count}} campañas activas",
+      "sort": {
+        "newest": "Más recientes",
+        "nearest": "Más cercanas",
+        "endingSoon": "Termina pronto",
+        "highestDiscount": "Mayor Descuento"
+      },
+      "empty": {
+        "title": "No hay campañas cerca de ti",
+        "body": "Vuelve pronto — los expertos locales podrían publicar nuevas ofertas."
+      }
+    },
+    "detail": {
+      "save": "Guardar campaña",
+      "unsave": "Eliminar de guardados",
+      "saved": "Campaña guardada",
+      "unsaved": "Eliminada de guardados",
+      "share": "Compartir campaña",
+      "linkCopied": "¡Enlace copiado!",
+      "report": "Reportar esta campaña",
+      "reported": "Campaña reportada. Gracias.",
+      "coupon": "Código de cupón",
+      "from": "Desde",
+      "until": "Hasta",
+      "mapTitle": "Mapa de ubicación de la campaña",
+      "locationUnknown": "Ubicación no especificada",
+      "getDirections": "Cómo llegar",
+      "views": "vistas",
+      "saves": "guardados",
+      "shares": "compartidos",
+      "galleryDot": "Imagen de galería {{index}}"
+    },
+    "create": {
+      "title": "Crear Campaña",
+      "subtitle": "Plataforma de Campañas para Expertos",
+      "notExpert": "Solo para Expertos Verificados",
+      "notExpertBody": "Solo los profesionales de moda verificados pueden crear campañas. Regístrate como Experto en tu Perfil.",
+      "goToProfile": "Ir al Perfil",
+      "saveDraft": "Guardar como Borrador",
+      "submit": "Enviar para Aprobación",
+      "submitForApproval": "Enviar para Aprobación",
+      "draftSaved": "Campaña guardada como borrador.",
+      "submitted": "¡Campaña enviada para revisión!",
+      "submitSuccess": "¡Campaña enviada para aprobación!",
+      "saveError": "Error al guardar la campaña.",
+      "submitError": "Error al enviar la campaña.",
+      "steps": {
+        "basic": "Básico",
+        "promotion": "Promoción",
+        "location": "Ubicación",
+        "audience": "Audiencia",
+        "notifications": "Notificaciones",
+        "review": "Revisar"
+      },
+      "basic": {
+        "title": "Título de la Campaña",
+        "titlePlaceholder": "Rebajas de Verano en Bella Boutique",
+        "businessName": "Nombre del Negocio",
+        "businessNamePlaceholder": "Nombre de tu negocio o tienda",
+        "category": "Categoría",
+        "categoryPlaceholder": "Selecciona una categoría de moda",
+        "shortDescription": "Descripción Corta",
+        "shortDescriptionPlaceholder": "Una frase que llame la atención",
+        "longDescription": "Descripción Completa",
+        "longDescriptionPlaceholder": "Cuéntales a los clientes más sobre esta oferta",
+        "coverImageUrl": "URL de la Imagen de Portada"
+      },
+      "promotion": {
+        "discountPct": "% de Descuento",
+        "couponCode": "Código de Cupón",
+        "saleType": "Tipo de Venta",
+        "limitedTimeOffer": "Oferta por Tiempo Limitado",
+        "startDate": "Fecha de Inicio",
+        "endDate": "Fecha de Fin",
+        "saleTypes": {
+          "discount": "Descuento",
+          "service_promotion": "Promoción de Servicio",
+          "product_promotion": "Promoción de Producto",
+          "limited_time_offer": "Oferta por Tiempo Limitado",
+          "flash_sale": "Venta Flash",
+          "seasonal": "Estacional"
+        }
+      },
+      "location": {
+        "country": "País",
+        "city": "Ciudad",
+        "lat": "Latitud (GPS)",
+        "lon": "Longitud (GPS)",
+        "radiusKm": "Radio de Alcance"
+      },
+      "audience": {
+        "targets": "Audiencia Objetivo",
+        "all": "Todos",
+        "women": "Mujeres",
+        "men": "Hombres",
+        "kids": "Niños",
+        "luxury": "Lujo",
+        "casual": "Casual",
+        "sustainableFashion": "Moda Sostenible",
+        "streetwear": "Ropa de Calle",
+        "ageMin": "Edad Mínima",
+        "ageMax": "Edad Máxima"
+      },
+      "notifications": {
+        "masterSwitch": "Notificar a los Usuarios",
+        "masterSwitchBody": "Envía una notificación cuando esta campaña se active.",
+        "channels": "Canales de Notificación",
+        "channel_push": "Notificación Push",
+        "channel_email": "Notificación por Correo Electrónico",
+        "timing": "Momento de Envío",
+        "timing_immediately_after_approval": "Inmediatamente Después de la Aprobación",
+        "timing_on_start_date": "En la Fecha de Inicio de la Campaña",
+        "timing_custom": "Fecha y Hora Personalizada",
+        "customDatetime": "Fecha y Hora Personalizada"
+      },
+      "review": {
+        "title": "Revisar y Enviar",
+        "note": "Tu campaña será revisada por un administrador de DressApp antes de activarse. Serás notificado de la decisión."
+      }
+    },
+    "mine": {
+      "title": "Mis Campañas",
+      "createNew": "Nueva Campaña",
+      "createFirst": "Crea tu Primera Campaña",
+      "submit": "Enviar",
+      "cancel": "Cancelar",
+      "submitSuccess": "¡Campaña enviada para revisión!",
+      "submitError": "No se pudo enviar la campaña.",
+      "cancelSuccess": "Campaña cancelada.",
+      "cancelError": "No se pudo cancelar la campaña.",
+      "empty": {
+        "title": "Aún no hay campañas",
+        "body": "Crea tu primera promoción local para llegar a los entusiastas de la moda cerca de tu negocio."
+      }
+    },
+    "billing": {
+      "feePerDay": "$1.00 / día",
+      "totalFee": "Tarifa Total de la Campaña",
+      "days": "{{count}} día",
+      "days_plural": "{{count}} días",
+      "paypalRequired": "Se requiere cuenta de PayPal",
+      "paypalRequiredBody": "DressApp cobra $1.00 por día para promocionar tu campaña. Por favor, añade tu correo de PayPal en Perfil → Configuración de Pago para continuar.",
+      "connectPayPal": "Conectar PayPal",
+      "feeNote": "Tu cuenta de PayPal será cargada una vez que apruebes el pago a continuación.",
+      "extensionFee": "Tarifa de Extensión",
+      "confirmPayment": "Confirmar y Pagar"
+    },
+    "settings": {
+      "title": "Configuración de la Campaña",
+      "extend": "Extender Campaña",
+      "extendAutoApproved": "Las extensiones son aprobadas automáticamente y cobradas de inmediato.",
+      "newEndDate": "Nueva fecha de fin",
+      "extendFeePreview": "Tarifa de extensión: {{fee}} por {{days}} día(s)",
+      "extendPay": "Proceder al Pago ({{fee}})",
+      "extendSuccess": "Campaña extendida con éxito",
+      "extendError": "Error al extender. Por favor, inténtalo de nuevo.",
+      "pause": "Pausar Campaña",
+      "pauseNote": "Tu campaña se ocultará del feed. Los días pausados se añadirán a tu fecha de fin cuando la reanudes.",
+      "resume": "Reanudar Campaña",
+      "resumeNote": "Tu campaña será visible de nuevo. Tu fecha de fin se ha extendido por el período pausado.",
+      "pauseSuccess": "Campaña pausada",
+      "pauseError": "Error al pausar la campaña.",
+      "resumeSuccess": "Campaña reanudada",
+      "resumeError": "Error al reanudar la campaña.",
+      "delete": "Eliminar Campaña",
+      "deleteConfirm": "¿Estás seguro de que deseas eliminar esta campaña de forma permanente? Esto no se puede deshacer.",
+      "deleteWarning": "Las campañas activas se eliminan inmediatamente sin reembolso por los días no utilizados.",
+      "deleteSuccess": "Campaña eliminada",
+      "deleteError": "Error al eliminar la campaña.",
+      "days": "día(s)"
+    },
+    "notifications": {
+      "sectionTitle": "Notificaciones de Campañas",
+      "sectionSubtitle": "Controla cómo recibes las ofertas de moda locales.",
+      "localFashionPush": "Ofertas de Moda Locales (Push)",
+      "localFashionEmail": "Ofertas de Moda Locales (Email)",
+      "saleAlerts": "Alertas de Rebajas",
+      "newExpertNearMe": "Nuevo Experto Cerca de Mí",
+      "sustainableFashion": "Promociones de Moda Sostenible",
+      "luxuryPromos": "Promociones de Lujo",
+      "personalstylist": "Promociones de Estilista Personal",
+      "frequency": "Frecuencia de Notificaciones",
+      "frequencyInstant": "Al Instante",
+      "frequencyDaily": "Resumen Diario",
+      "frequencyWeekly": "Resumen Semanal",
+      "quietHours": "Horas de Silencio (No Molestar)",
+      "quietStart": "Desde",
+      "quietEnd": "Hasta",
+      "maxDistance": "Distancia Máxima de la Campaña"
+    },
+    "admin": {
+      "queueTitle": "Cola de Aprobación de Campañas",
+      "queueSubtitle": "Revisa y aprueba o rechaza las campañas de expertos pendientes.",
+      "allCampaigns": "Todas las Campañas",
+      "columns": {
+        "campaign": "Campaña",
+        "business": "Negocio",
+        "location": "Ubicación",
+        "submitted": "Enviado",
+        "category": "Categoría",
+        "status": "Estado"
+      },
+      "actions": {
+        "approve": "Aprobar",
+        "reject": "Rechazar",
+        "preview": "Vista Previa",
+        "messageExpert": "Mensaje al Experto"
+      },
+      "approveSuccess": "¡Campaña aprobada!",
+      "rejectSuccess": "Campaña rechazada.",
+      "rejectReason": "Razón del Rechazo",
+      "rejectReasonPlaceholder": "Explica por qué esta campaña fue rechazada...",
+      "rejectConfirm": "Confirmar Rechazo",
+      "previewTitle": "Vista Previa de la Campaña"
+    }
   }
 }

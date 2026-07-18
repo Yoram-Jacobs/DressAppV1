@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ExploreBackButton } from '@/components/ExploreBackButton';
 import {
   Search as SearchIcon,
@@ -10,6 +10,7 @@ import {
   MapPin,
   UserRound,
   Sparkles,
+  Megaphone,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,10 +24,14 @@ import { useAuth } from '@/lib/auth';
 import { expertsStore } from '@/lib/expertsStore';
 import { useCachedList } from '@/lib/createCachedStore';
 import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
+import { CampaignFeed } from '@/components/CampaignFeed';
+import { cn } from '@/lib/utils';
 
 /**
  * Experts directory — public-facing list of self-certified fashion pros.
  * Pre-filters by viewer's country when LocationProvider has coordinates.
+ *
+ * Tab bar: Experts | Campaigns
  */
 const INITIAL_FILTERS = {
   profession: '',
@@ -39,11 +44,17 @@ export default function ExpertsDirectory() {
   const { t } = useTranslation();
   const loc = useLocation?.();
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'experts';
+
+  const setTab = (tab) => {
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', tab);
+    setSearchParams(next, { replace: true });
+  };
+
   // Two-state filter pattern: ``draft`` is bound to the inputs (every
   // keystroke), ``applied`` is the snapshot the cached store fetches.
-  // We only promote ``draft -> applied`` when the user clicks Search,
-  // hits Enter, or clears. Initial ``applied`` is the empty filter
-  // set so we hit the same cache slot the AppLayout prewarm warmed.
   const [rawDraft, setDraft] = useLocalStorageSync('dressapp.experts.draftFilters', INITIAL_FILTERS);
   const draft = (rawDraft && typeof rawDraft === 'object' && !Array.isArray(rawDraft))
     ? { ...INITIAL_FILTERS, ...rawDraft }
@@ -54,10 +65,6 @@ export default function ExpertsDirectory() {
     ? { ...INITIAL_FILTERS, ...rawApplied }
     : INITIAL_FILTERS;
 
-  // Pre-seed country & region from device location on first mount.
-  // We seed only the *draft* — the user still has to apply it. This
-  // keeps the prewarmed default-view cache hit on first paint and
-  // gives the user an immediate hint of what filters might be useful.
   useEffect(() => {
     if (!loc) return;
     setDraft((f) => ({
@@ -92,8 +99,13 @@ export default function ExpertsDirectory() {
   }, [items]);
 
   const viewerIsPro = !!user?.professional?.is_professional;
-  // Show the skeleton only when we have nothing cached yet.
   const showSkeleton = loading && (!items || items.length === 0);
+
+  // Tab definitions
+  const TABS = [
+    { id: 'experts', label: t('experts.tab.experts'), Icon: UserRound },
+    { id: 'campaigns', label: t('experts.tab.campaigns'), Icon: Megaphone },
+  ];
 
   return (
     <div className="min-h-full">
@@ -105,167 +117,217 @@ export default function ExpertsDirectory() {
               className="font-display text-3xl sm:text-4xl mt-1"
               data-testid="experts-title"
             >
-              {t('experts.title')}
+              {activeTab === 'campaigns' ? t('campaigns.feed.title') : t('experts.title')}
             </h1>
             <p className="text-sm text-muted-foreground mt-2 max-w-xl">
-              {t('experts.subtitle')}
+              {activeTab === 'campaigns' ? t('campaigns.feed.subtitle') : t('experts.subtitle')}
             </p>
           </div>
-          <Badge
-            variant="outline"
-            className="rounded-full bg-card caps-label"
-            data-testid="experts-count-badge"
-          >
-            {t('experts.countLabel', { count: total })}
-          </Badge>
+          {activeTab === 'experts' && (
+            <Badge
+              variant="outline"
+              className="rounded-full bg-card caps-label"
+              data-testid="experts-count-badge"
+            >
+              {t('experts.countLabel', { count: total })}
+            </Badge>
+          )}
         </div>
 
-        {/* --- Filters --- */}
-        <Card
-          className="rounded-[calc(var(--radius)+6px)] shadow-editorial mb-6"
-          data-testid="experts-filter-card"
+        {/* Tab bar */}
+        <div
+          className="flex gap-1 mb-6 bg-secondary/50 rounded-xl p-1 w-fit"
+          role="tablist"
+          aria-label={t('experts.tabBar')}
         >
-          <CardContent className="p-5">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <div>
-                <Label className="caps-label text-muted-foreground">
-                  {t('experts.filters.search')}
-                </Label>
-                <div className="relative mt-1">
-                  <SearchIcon className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    value={draft.q}
-                    onChange={(e) => setDraft({ ...draft, q: e.target.value })}
-                    onKeyDown={(e) => e.key === 'Enter' && apply()}
-                    className="ps-9 rounded-xl"
-                    placeholder={t('experts.filters.search')}
-                    data-testid="experts-filter-search"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label className="caps-label text-muted-foreground">
-                  {t('experts.filters.profession')}
-                </Label>
-                <Input
-                  list="experts-profession-suggestions"
-                  value={draft.profession}
-                  onChange={(e) =>
-                    setDraft({ ...draft, profession: e.target.value })
-                  }
-                  onKeyDown={(e) => e.key === 'Enter' && apply()}
-                  className="mt-1 rounded-xl"
-                  placeholder={t('experts.filters.anyProfession')}
-                  data-testid="experts-filter-profession"
-                />
-                <datalist id="experts-profession-suggestions">
-                  {professions.map((p) => (
-                    <option key={p} value={p} />
-                  ))}
-                </datalist>
-              </div>
-              <div>
-                <Label className="caps-label text-muted-foreground">
-                  {t('experts.filters.country')}
-                </Label>
-                <Input
-                  value={draft.country}
-                  onChange={(e) =>
-                    setDraft({ ...draft, country: e.target.value })
-                  }
-                  onKeyDown={(e) => e.key === 'Enter' && apply()}
-                  className="mt-1 rounded-xl"
-                  placeholder={t('pages.expertsDirectory.il_us_fr')}
-                  data-testid="experts-filter-country"
-                />
-              </div>
-              <div>
-                <Label className="caps-label text-muted-foreground">
-                  {t('experts.filters.region')}
-                </Label>
-                <Input
-                  value={draft.region}
-                  onChange={(e) =>
-                    setDraft({ ...draft, region: e.target.value })
-                  }
-                  onKeyDown={(e) => e.key === 'Enter' && apply()}
-                  className="mt-1 rounded-xl"
-                  data-testid="experts-filter-region"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 mt-4">
-              <Button
-                onClick={apply}
-                disabled={loading}
-                className="rounded-xl"
-                data-testid="experts-apply-filters"
-              >
-                {t('common.search', { defaultValue: 'Search' })}
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={clear}
-                disabled={loading}
-                className="rounded-xl"
-                data-testid="experts-clear-filters"
-              >
-                {t('experts.filters.clear')}
-              </Button>
-              {!viewerIsPro && (
-                <Link
-                  to="/me"
-                  className="ms-auto text-xs text-[hsl(var(--accent))] self-center"
-                  data-testid="experts-become-pro-cta"
-                >
-                  <Sparkles className="inline h-3 w-3 me-1" />
-                  {t('experts.becomeExpertCta')}
-                </Link>
+          {TABS.map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              role="tab"
+              aria-selected={activeTab === id}
+              onClick={() => setTab(id)}
+              className={cn(
+                'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm transition-all font-medium',
+                activeTab === id
+                  ? 'bg-background shadow text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
               )}
-            </div>
-          </CardContent>
-        </Card>
+              data-testid={`experts-tab-${id}`}
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </button>
+          ))}
+        </div>
 
-        {/* --- Grid --- */}
-        {showSkeleton ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton
-                key={i}
-                className="h-48 w-full rounded-[calc(var(--radius)+6px)]"
-              />
-            ))}
-          </div>
-        ) : items.length === 0 ? (
-          <Card
-            className="rounded-[calc(var(--radius)+6px)] shadow-editorial"
-            data-testid="experts-empty"
-          >
-            <CardContent className="p-10 text-center">
-              <UserRound className="h-8 w-8 mx-auto text-muted-foreground" />
-              <h3 className="font-display text-xl mt-3">
-                {t('experts.emptyTitle')}
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
-                {t('experts.emptyBody')}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-            data-testid="experts-grid"
-          >
-            {items.map((p) => (
-              <ExpertCard key={p.id} expert={p} />
-            ))}
-          </div>
+        {/* ---- EXPERTS TAB ---- */}
+        {activeTab === 'experts' && (
+          <>
+            {/* Filters */}
+            <Card
+              className="rounded-[calc(var(--radius)+6px)] shadow-editorial mb-6"
+              data-testid="experts-filter-card"
+            >
+              <CardContent className="p-5">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div>
+                    <Label className="caps-label text-muted-foreground">
+                      {t('experts.filters.search')}
+                    </Label>
+                    <div className="relative mt-1">
+                      <SearchIcon className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        value={draft.q}
+                        onChange={(e) => setDraft({ ...draft, q: e.target.value })}
+                        onKeyDown={(e) => e.key === 'Enter' && apply()}
+                        className="ps-9 rounded-xl"
+                        placeholder={t('experts.filters.search')}
+                        data-testid="experts-filter-search"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="caps-label text-muted-foreground">
+                      {t('experts.filters.profession')}
+                    </Label>
+                    <Input
+                      list="experts-profession-suggestions"
+                      value={draft.profession}
+                      onChange={(e) =>
+                        setDraft({ ...draft, profession: e.target.value })
+                      }
+                      onKeyDown={(e) => e.key === 'Enter' && apply()}
+                      className="mt-1 rounded-xl"
+                      placeholder={t('experts.filters.anyProfession')}
+                      data-testid="experts-filter-profession"
+                    />
+                    <datalist id="experts-profession-suggestions">
+                      {professions.map((p) => (
+                        <option key={p} value={p} />
+                      ))}
+                    </datalist>
+                  </div>
+                  <div>
+                    <Label className="caps-label text-muted-foreground">
+                      {t('experts.filters.country')}
+                    </Label>
+                    <Input
+                      value={draft.country}
+                      onChange={(e) =>
+                        setDraft({ ...draft, country: e.target.value })
+                      }
+                      onKeyDown={(e) => e.key === 'Enter' && apply()}
+                      className="mt-1 rounded-xl"
+                      placeholder={t('pages.expertsDirectory.il_us_fr')}
+                      data-testid="experts-filter-country"
+                    />
+                  </div>
+                  <div>
+                    <Label className="caps-label text-muted-foreground">
+                      {t('experts.filters.region')}
+                    </Label>
+                    <Input
+                      value={draft.region}
+                      onChange={(e) =>
+                        setDraft({ ...draft, region: e.target.value })
+                      }
+                      onKeyDown={(e) => e.key === 'Enter' && apply()}
+                      className="mt-1 rounded-xl"
+                      data-testid="experts-filter-region"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    onClick={apply}
+                    disabled={loading}
+                    className="rounded-xl"
+                    data-testid="experts-apply-filters"
+                  >
+                    {t('common.search', { defaultValue: 'Search' })}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={clear}
+                    disabled={loading}
+                    className="rounded-xl"
+                    data-testid="experts-clear-filters"
+                  >
+                    {t('experts.filters.clear')}
+                  </Button>
+                  {!viewerIsPro && (
+                    <Link
+                      to="/me"
+                      className="ms-auto text-xs text-[hsl(var(--accent))] self-center"
+                      data-testid="experts-become-pro-cta"
+                    >
+                      <Sparkles className="inline h-3 w-3 me-1" />
+                      {t('experts.becomeExpertCta')}
+                    </Link>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Grid */}
+            {showSkeleton ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton
+                    key={i}
+                    className="h-48 w-full rounded-[calc(var(--radius)+6px)]"
+                  />
+                ))}
+              </div>
+            ) : items.length === 0 ? (
+              <Card
+                className="rounded-[calc(var(--radius)+6px)] shadow-editorial"
+                data-testid="experts-empty"
+              >
+                <CardContent className="p-10 text-center">
+                  <UserRound className="h-8 w-8 mx-auto text-muted-foreground" />
+                  <h3 className="font-display text-xl mt-3">
+                    {t('experts.emptyTitle')}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
+                    {t('experts.emptyBody')}
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+                data-testid="experts-grid"
+              >
+                {items.map((p) => (
+                  <ExpertCard key={p.id} expert={p} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ---- CAMPAIGNS TAB ---- */}
+        {activeTab === 'campaigns' && (
+          <>
+            {viewerIsPro && (
+              <div className="flex justify-end mb-4">
+                <Button asChild className="rounded-xl" data-testid="experts-campaigns-create-btn">
+                  <Link to="/campaigns/create">
+                    <Megaphone className="h-4 w-4 me-1" />
+                    {t('campaigns.mine.createNew')}
+                  </Link>
+                </Button>
+              </div>
+            )}
+            <CampaignFeed />
+          </>
         )}
 
         <div className="h-10" />
       </div>
 
-      {/* --- Regional ad ticker at the bottom of the directory --- */}
+      {/* Regional ad ticker at the bottom */}
       <AdTicker placement="experts" className="mt-6" />
       <ExploreBackButton />
     </div>
