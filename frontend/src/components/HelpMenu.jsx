@@ -7,12 +7,15 @@ import {
   ShoppingBag, Search, ClipboardList, Camera, Mic, Grid, TrendingUp, UserRound, Loader2, Bell, Chrome, Megaphone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
 
 export default function HelpMenu() {
   const { t, i18n } = useTranslation();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
 
   const isRtl = i18n.language === 'he' || i18n.language === 'ar';
+  const viewerIsPro = !!user?.professional?.is_professional;
 
   const SECTIONS = [
     { id: 'overview', label: t('help.overview_title'), icon: BookOpen, wiki: 'overview' },
@@ -29,7 +32,12 @@ export default function HelpMenu() {
     { id: 'shopping-assistant', label: t('help.shopping_assistant_title'), icon: Chrome, wiki: 'chrome_extension' },
     { id: 'trend-scout', label: t('help.trend_scout_title'), icon: TrendingUp, wiki: 'trend_scout' },
     { id: 'experts', label: t('help.experts_title'), icon: UserRound, wiki: 'experts_registry' },
-    { id: 'campaigns', label: t('help.campaigns_help_title'), icon: Megaphone, wiki: 'campaigns' },
+    ...(viewerIsPro ? [
+      { id: 'expert-campaigns', label: t('help.expert_campaigns_title', { defaultValue: 'My Campaigns (Expert)' }), icon: Megaphone, wiki: 'expert_campaigns' },
+      { id: 'create-campaign', label: t('help.create_campaign_title', { defaultValue: 'New Campaign (Expert)' }), icon: Sparkles, wiki: 'create_campaign' },
+    ] : [
+      { id: 'campaigns', label: t('help.campaigns_help_title'), icon: Megaphone, wiki: 'campaigns' },
+    ]),
     { id: 'troubleshooting', label: t('help.trouble_title'), icon: HelpCircle, wiki: 'troubleshooting' },
   ];
 
@@ -663,6 +671,50 @@ export default function HelpMenu() {
                     { title: t('help.campaigns_feed_help_title'), desc: t('help.campaigns_feed_help_desc') },
                     { title: t('help.campaigns_maps_help_title'), desc: t('help.campaigns_maps_help_desc') },
                     { title: t('help.campaigns_save_help_title'), desc: t('help.campaigns_save_help_desc') }
+                  ].map((item, idx) => (
+                    <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                      <h4 className="font-semibold text-sm">{item.title}</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'expert-campaigns' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <Megaphone className="h-6 w-6" /> {t('help.expert_campaigns_help_title')}
+                </h2>
+                <p className="text-muted-foreground">{t('help.expert_campaigns_help_p1')}</p>
+                <div className="space-y-3">
+                  {[
+                    { title: t('help.expert_campaigns_status_title'), desc: t('help.expert_campaigns_status_desc') },
+                    { title: t('help.expert_campaigns_extend_title'), desc: t('help.expert_campaigns_extend_desc') },
+                    { title: t('help.expert_campaigns_pause_title'), desc: t('help.expert_campaigns_pause_desc') },
+                    { title: t('help.expert_campaigns_delete_title'), desc: t('help.expert_campaigns_delete_desc') }
+                  ].map((item, idx) => (
+                    <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                      <h4 className="font-semibold text-sm">{item.title}</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'create-campaign' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <Sparkles className="h-6 w-6" /> {t('help.create_campaign_help_title')}
+                </h2>
+                <p className="text-muted-foreground">{t('help.create_campaign_help_p1')}</p>
+                <div className="space-y-3">
+                  {[
+                    { title: t('help.create_campaign_button_title'), desc: t('help.create_campaign_button_desc') },
+                    { title: t('help.create_campaign_step_title'), desc: t('help.create_campaign_step_desc') },
+                    { title: t('help.create_campaign_fee_title'), desc: t('help.create_campaign_fee_desc') },
+                    { title: t('help.create_campaign_submit_title'), desc: t('help.create_campaign_submit_desc') }
                   ].map((item, idx) => (
                     <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
                       <h4 className="font-semibold text-sm">{item.title}</h4>
