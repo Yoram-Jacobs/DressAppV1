@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -114,6 +114,30 @@ export default function CreateCampaign() {
   const [paypalOrder, setPaypalOrder] = useState(null);
   const [paypalRequired, setPaypalRequired] = useState(false);
   const [campaignId, setCampaignId] = useState(null);
+
+  useEffect(() => {
+    if (user?.professional?.is_professional) {
+      const biz = user.professional.business || {};
+      const prof = user.professional.profession || '';
+      const matchedCat = FASHION_CATEGORIES.find(
+        (cat) => cat.toLowerCase() === prof.toLowerCase()
+      ) || '';
+
+      setForm((prev) => ({
+        ...prev,
+        business_name: prev.business_name || biz.name || '',
+        short_description: prev.short_description || biz.description || '',
+        category: prev.category || matchedCat,
+        location: {
+          ...prev.location,
+          city: prev.location.city || user.address?.city || '',
+          country: prev.location.country || user.address?.country || '',
+          lat: prev.location.lat !== '' ? prev.location.lat : (user.address?.lat || ''),
+          lon: prev.location.lon !== '' ? prev.location.lon : (user.address?.lon || ''),
+        }
+      }));
+    }
+  }, [user]);
 
   const calcFee = (startDate, endDate) => {
     if (!startDate || !endDate) return { days: 1, feeDollars: '1.00' };
