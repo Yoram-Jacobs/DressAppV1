@@ -1507,6 +1507,8 @@
   },
   "experts": {
     "title": "咨询专业人士",
+    "tabExperts": "专家",
+    "tabCampaigns": "推广活动",
     "subtitle": "浏览您所在地区已认证的时尚专家——造型师、裁缝、理发师、设计师。",
     "filters": {
       "profession": "职业",

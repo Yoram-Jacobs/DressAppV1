@@ -103,8 +103,8 @@ export default function ExpertsDirectory() {
 
   // Tab definitions
   const TABS = [
-    { id: 'experts', label: t('experts.tab.experts'), Icon: UserRound },
-    { id: 'campaigns', label: t('experts.tab.campaigns'), Icon: Megaphone },
+    { id: 'experts', label: t('experts.tabExperts', { defaultValue: 'Experts' }), Icon: UserRound },
+    { id: 'campaigns', label: t('experts.tabCampaigns', { defaultValue: 'Campaigns' }), Icon: Megaphone },
   ];
 
   return (

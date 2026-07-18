@@ -1506,6 +1506,9 @@
     "switchingHint": "Isso geralmente leva alguns segundos."
   },
   "experts": {
+    "title": "Pergunte a um profissional",
+    "tabExperts": "Especialistas",
+    "tabCampaigns": "Campanhas",
     "filters": {
       "country": "País",
       "region": "Cidade ou região",
@@ -1526,7 +1529,6 @@
     "countLabel_other": "{{count}} especialistas",
     "becomeExpertCta": "É um profissional de moda? Ative esta opção no seu perfil.",
     "loadMore": "Carregar mais",
-    "title": "Pergunte a um profissional",
     "subtitle": "Navegue por especialistas de moda verificados — estilistas, alfaiates, barbeiros, designers — na sua região."
   },
   "ads": {

@@ -1533,6 +1533,8 @@
   },
   "experts": {
     "title": "Vraag het aan een professional",
+    "tabExperts": "Experts",
+    "tabCampaigns": "Campagnes",
     "subtitle": "Blader door geverifieerde mode-experts – stylisten, kleermakers, kappers, ontwerpers – in uw regio.",
     "filters": {
       "profession": "Beroep",

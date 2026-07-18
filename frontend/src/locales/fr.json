@@ -1507,6 +1507,8 @@
   },
   "experts": {
     "title": "Consultez un professionnel",
+    "tabExperts": "Experts",
+    "tabCampaigns": "Campagnes",
     "subtitle": "Parcourez les experts de la mode vérifiés — stylistes, tailleurs, barbiers, créateurs — dans votre région.",
     "filters": {
       "profession": "Profession",

@@ -1515,6 +1515,9 @@
     "switchingHint": "Das dauert in der Regel einige Sekunden."
   },
   "experts": {
+    "title": "Frag einen Experten",
+    "tabExperts": "Experten",
+    "tabCampaigns": "Kampagnen",
     "filters": {
       "country": "Land",
       "region": "Stadt oder Region",
@@ -1535,7 +1538,6 @@
     "countLabel_other": "{{count}} Experten",
     "becomeExpertCta": "Sie sind Modefachkraft? Aktivieren Sie es in Ihrem Profil.",
     "loadMore": "Mehr laden",
-    "title": "Frag einen Experten",
     "subtitle": "Entdecke verifizierte Modeexperten – Stylisten, Schneider, Barbiere, Designer – in deiner Region."
   },
   "ads": {

@@ -1507,6 +1507,8 @@
   },
   "experts": {
     "title": "専門家に相談",
+    "tabExperts": "専門家",
+    "tabCampaigns": "キャンペーン",
     "subtitle": "お住まいの地域の認証済みファッション専門家—スタイリスト、テーラー、理容師、デザイナー—をご覧ください。",
     "filters": {
       "profession": "職業",

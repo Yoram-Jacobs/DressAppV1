@@ -1533,6 +1533,8 @@
   },
   "experts": {
     "title": "Ask a professional",
+    "tabExperts": "Experts",
+    "tabCampaigns": "Campaigns",
     "subtitle": "Browse verified fashion experts — stylists, tailors, barbers, designers — in your region.",
     "filters": {
       "profession": "Profession",

@@ -1506,6 +1506,9 @@
     "switchingHint": "Di solito richiede qualche secondo."
   },
   "experts": {
+    "title": "Chiedi a un professionista",
+    "tabExperts": "Esperti",
+    "tabCampaigns": "Campagne",
     "filters": {
       "country": "Paese",
       "region": "Città o regione",
@@ -1526,7 +1529,6 @@
     "countLabel_other": "{{count}} esperti",
     "becomeExpertCta": "Sei un professionista della moda? Attivalo nel tuo profilo.",
     "loadMore": "Carica altri",
-    "title": "Chiedi a un professionista",
     "subtitle": "Sfoglia esperti di moda verificati — stylist, sarti, barbieri, designer — nella tua regione."
   },
   "ads": {
