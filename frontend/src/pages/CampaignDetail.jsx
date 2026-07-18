@@ -133,6 +133,12 @@ export default function CampaignDetail() {
   }
 
   const locationStr = [location.city, location.country].filter(Boolean).join(', ');
+  const expertPhone =
+    expert?.professional?.business?.phone && expert.professional.business.phone.trim().length > 3
+      ? expert.professional.business.phone.trim()
+      : expert?.phone
+      ? expert.phone.trim()
+      : null;
   const lat = location.lat;
   const lon = location.lon;
   // Google Maps: directions link + embed (no API key needed for basic embed)
@@ -198,7 +204,7 @@ export default function CampaignDetail() {
                 </Badge>
               )}
 
-              {expert?.professional?.business?.phone && (
+              {expertPhone && (
                 <Button
                   asChild
                   variant="outline"
@@ -206,7 +212,7 @@ export default function CampaignDetail() {
                   className="rounded-full text-xs h-7 px-3"
                   data-testid="campaign-expert-phone"
                 >
-                  <a href={`tel:${expert.professional.business.phone}`}>
+                  <a href={`tel:${expertPhone}`}>
                     <Phone className="h-3 w-3 me-1" />
                     {t('experts.callNow', { defaultValue: 'Phone' })}
                   </a>

@@ -351,6 +351,12 @@ function ExpertCard({ expert }) {
     expert.address?.country;
 
   const avatar = expert.face_photo_url || expert.avatar_url;
+  const expertPhone =
+    biz.phone && biz.phone.trim().length > 3
+      ? biz.phone.trim()
+      : expert.phone
+      ? expert.phone.trim()
+      : null;
 
   return (
     <Card
@@ -426,7 +432,7 @@ function ExpertCard({ expert }) {
               </a>
             </Button>
           )}
-          {biz.phone && (
+          {expertPhone && (
             <Button
               asChild
               size="sm"
@@ -434,7 +440,7 @@ function ExpertCard({ expert }) {
               className="rounded-full"
               data-testid={`expert-${expert.id}-phone`}
             >
-              <a href={`tel:${biz.phone}`}>
+              <a href={`tel:${expertPhone}`}>
                 <Phone className="h-3 w-3 me-1" />
                 {t('experts.callNow')}
               </a>

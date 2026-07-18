@@ -27,6 +27,7 @@ def _public_view(user: dict[str, Any]) -> dict[str, Any]:
         or "Fashion pro",
         "first_name": user.get("first_name"),
         "last_name": user.get("last_name"),
+        "phone": user.get("phone"),
         "avatar_url": user.get("avatar_url"),
         "face_photo_url": user.get("face_photo_url"),
         "locale": user.get("locale"),
