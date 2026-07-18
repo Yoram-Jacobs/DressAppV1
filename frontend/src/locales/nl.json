@@ -2506,7 +2506,19 @@
       "connectPayPal": "Koppel PayPal",
       "feeNote": "Je PayPal-account wordt belast zodra je de betaling hieronder goedkeurt.",
       "extensionFee": "Verlengingskosten",
-      "confirmPayment": "Bevestigen & Betalen"
+      "confirmPayment": "Bevestigen & Betalen",
+      "reportTitle": "Facturatieoverzicht",
+      "reportDesc": "Specificatie van kosten voor campagne",
+      "paymentStatus": "Betalingsstatus",
+      "totalCharged": "Totale Kosten",
+      "totalDays": "Totale Periode",
+      "daysCount": "{{count}} dag",
+      "daysCount_other": "{{count}} dagen",
+      "paidAt": "Betalingsdatum",
+      "captureId": "Capture-ID",
+      "payerEmail": "PayPal e-mailadres van betaler",
+      "extensions": "Verlengingstransacties",
+      "pausePeriods": "Pauzeergeschiedenis"
     },
     "settings": {
       "title": "Campagne-instellingen",

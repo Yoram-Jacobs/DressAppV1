@@ -2472,7 +2472,19 @@
       "connectPayPal": "Подключить PayPal",
       "feeNote": "Средства будут списаны с вашего счета PayPal после подтверждения платежа.",
       "extensionFee": "Стоимость продления",
-      "confirmPayment": "Подтвердить и Оплатить"
+      "confirmPayment": "Подтвердить и Оплатить",
+      "reportTitle": "Отчет об оплате",
+      "reportDesc": "Выписка расходов по кампании",
+      "paymentStatus": "Статус платежа",
+      "totalCharged": "Итоговая сумма",
+      "totalDays": "Общий период",
+      "daysCount": "{{count}} день",
+      "daysCount_other": "{{count}} дней",
+      "paidAt": "Дата оплаты",
+      "captureId": "Идентификатор Capture",
+      "payerEmail": "Email плательщика PayPal",
+      "extensions": "Операции продления",
+      "pausePeriods": "История приостановок"
     },
     "settings": {
       "title": "Настройки кампании",

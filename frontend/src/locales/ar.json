@@ -2472,7 +2472,19 @@
       "connectPayPal": "ربط PayPal",
       "feeNote": "سيتم خصم المبلغ من حساب PayPal الخاص بك بمجرد موافقتك على الدفع أدناه.",
       "extensionFee": "رسوم التمديد",
-      "confirmPayment": "تأكيد ودفع"
+      "confirmPayment": "تأكيد ودفع",
+      "reportTitle": "تقرير الفواتير",
+      "reportDesc": "كشف حساب رسوم الحملة",
+      "paymentStatus": "حالة الدفع",
+      "totalCharged": "إجمالي الرسوم",
+      "totalDays": "الفترة الإجمالية",
+      "daysCount": "{{count}} يوم",
+      "daysCount_other": "{{count}} أيام",
+      "paidAt": "تاريخ الدفع",
+      "captureId": "معرف الالتقاط",
+      "payerEmail": "البريد الإلكتروني للدافع على PayPal",
+      "extensions": "معاملات التمديد",
+      "pausePeriods": "سجل الإيقاف المؤقت"
     },
     "settings": {
       "title": "إعدادات الحملة",

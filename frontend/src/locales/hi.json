@@ -2468,7 +2468,19 @@
       "connectPayPal": "PayPal से कनेक्ट करें",
       "feeNote": "एक बार जब आप नीचे भुगतान स्वीकृत कर लेते हैं तो आपके PayPal खाते से शुल्क लिया जाएगा।",
       "extensionFee": "विस्तार शुल्क",
-      "confirmPayment": "पुष्टि करें और भुगतान करें"
+      "confirmPayment": "पुष्टि करें और भुगतान करें",
+      "reportTitle": "बिलिंग रिपोर्ट",
+      "reportDesc": "अभियान के शुल्कों का विवरण",
+      "paymentStatus": "भुगतान की स्थिति",
+      "totalCharged": "कुल शुल्क",
+      "totalDays": "कुल अवधि",
+      "daysCount": "{{count}} दिन",
+      "daysCount_other": "{{count}} दिन",
+      "paidAt": "भुगतान की तारीख",
+      "captureId": "कैप्चर आईडी",
+      "payerEmail": "भुगतानकर्ता का PayPal ईमेल",
+      "extensions": "विस्तार लेनदेन",
+      "pausePeriods": "विराम का इतिहास"
     },
     "settings": {
       "title": "अभियान सेटिंग्स",

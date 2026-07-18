@@ -2472,7 +2472,19 @@
       "connectPayPal": "Collega PayPal",
       "feeNote": "Il tuo account PayPal verrà addebitato una volta approvato il pagamento qui sotto.",
       "extensionFee": "Costo Estensione",
-      "confirmPayment": "Conferma e Paga"
+      "confirmPayment": "Conferma e Paga",
+      "reportTitle": "Rapporto di Fatturazione",
+      "reportDesc": "Dettaglio addebiti per la campagna",
+      "paymentStatus": "Stato del pagamento",
+      "totalCharged": "Costo Totale",
+      "totalDays": "Periodo Totale",
+      "daysCount": "{{count}} giorno",
+      "daysCount_other": "{{count}} giorni",
+      "paidAt": "Data di pagamento",
+      "captureId": "ID di cattura",
+      "payerEmail": "Email PayPal del pagatore",
+      "extensions": "Transazioni di estensione",
+      "pausePeriods": "Cronologia pause"
     },
     "settings": {
       "title": "Impostazioni Campagna",

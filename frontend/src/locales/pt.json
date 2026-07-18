@@ -2472,7 +2472,19 @@
       "connectPayPal": "Conectar PayPal",
       "feeNote": "A sua conta do PayPal será cobrada assim que você aprovar o pagamento abaixo.",
       "extensionFee": "Taxa de Extensão",
-      "confirmPayment": "Confirmar e Pagar"
+      "confirmPayment": "Confirmar e Pagar",
+      "reportTitle": "Relatório de Faturamento",
+      "reportDesc": "Demonstrativo de cobranças para a campanha",
+      "paymentStatus": "Status do pagamento",
+      "totalCharged": "Taxa Total",
+      "totalDays": "Período Total",
+      "daysCount": "{{count}} dia",
+      "daysCount_other": "{{count}} dias",
+      "paidAt": "Data de pagamento",
+      "captureId": "ID da captura",
+      "payerEmail": "E-mail do PayPal do pagador",
+      "extensions": "Transações de extensão",
+      "pausePeriods": "Histórico de pausas"
     },
     "settings": {
       "title": "Configurações da Campanha",

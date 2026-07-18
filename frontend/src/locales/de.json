@@ -2481,7 +2481,19 @@
       "connectPayPal": "Mit PayPal verbinden",
       "feeNote": "Ihr PayPal-Konto wird belastet, sobald Sie die Zahlung unten bestätigen.",
       "extensionFee": "Verlängerungsgebühr",
-      "confirmPayment": "Bestätigen & Bezahlen"
+      "confirmPayment": "Bestätigen & Bezahlen",
+      "reportTitle": "Abrechnungsbericht",
+      "reportDesc": "Aufstellung der Gebühren für die Kampagne",
+      "paymentStatus": "Zahlungsstatus",
+      "totalCharged": "Gesamtgebühr",
+      "totalDays": "Gesamtzeitraum",
+      "daysCount": "{{count}} Tag",
+      "daysCount_other": "{{count}} Tage",
+      "paidAt": "Zahlungsdatum",
+      "captureId": "Capture-ID",
+      "payerEmail": "PayPal-E-Mail des Zahlers",
+      "extensions": "Verlängerungstransaktionen",
+      "pausePeriods": "Pausenverlauf"
     },
     "settings": {
       "title": "Kampagneneinstellungen",

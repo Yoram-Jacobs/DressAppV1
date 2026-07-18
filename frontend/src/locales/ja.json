@@ -2472,7 +2472,19 @@
       "connectPayPal": "PayPalを連携",
       "feeNote": "以下の支払いを承認すると、PayPalアカウントに請求されます。",
       "extensionFee": "延長料金",
-      "confirmPayment": "確認して支払う"
+      "confirmPayment": "確認して支払う",
+      "reportTitle": "請求レポート",
+      "reportDesc": "キャンペーンの請求明細",
+      "paymentStatus": "支払い状況",
+      "totalCharged": "合計料金",
+      "totalDays": "合計期間",
+      "daysCount": "{{count}} 日",
+      "daysCount_other": "{{count}} 日",
+      "paidAt": "支払い日",
+      "captureId": "キャプチャID",
+      "payerEmail": "支払者のPayPalメールアドレス",
+      "extensions": "延長取引",
+      "pausePeriods": "一時停止履歴"
     },
     "settings": {
       "title": "キャンペーン設定",

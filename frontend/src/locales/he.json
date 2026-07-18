@@ -2545,7 +2545,19 @@
       "connectPayPal": "חבר PayPal",
       "feeNote": "חשבון ה-PayPal שלך יחויב ברגע שתאשר את התשלום למטה.",
       "extensionFee": "עמלת הארכה",
-      "confirmPayment": "אשר ושלם"
+      "confirmPayment": "אשר ושלם",
+      "reportTitle": "דוח חיובים",
+      "reportDesc": "פירוט חיובים עבור הקמפיין",
+      "paymentStatus": "מצב תשלום",
+      "totalCharged": "סה\"כ עמלה",
+      "totalDays": "תקופה כוללת",
+      "daysCount": "יום {{count}}",
+      "daysCount_other": "{{count}} ימים",
+      "paidAt": "תאריך תשלום",
+      "captureId": "מזהה לכידה",
+      "payerEmail": "אימייל PayPal של המשלם",
+      "extensions": "עסקאות הארכה",
+      "pausePeriods": "היסטוריית השהיות"
     },
     "settings": {
       "title": "הגדרות קמפיין",

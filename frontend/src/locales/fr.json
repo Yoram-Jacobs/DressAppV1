@@ -2472,7 +2472,19 @@
       "connectPayPal": "Connecter PayPal",
       "feeNote": "Votre compte PayPal sera débité une fois que vous aurez approuvé le paiement ci-dessous.",
       "extensionFee": "Frais de prolongation",
-      "confirmPayment": "Confirmer et Payer"
+      "confirmPayment": "Confirmer et Payer",
+      "reportTitle": "Rapport de Facturation",
+      "reportDesc": "Relevé des frais de la campagne",
+      "paymentStatus": "Statut du paiement",
+      "totalCharged": "Frais Totaux",
+      "totalDays": "Période Totale",
+      "daysCount": "{{count}} jour",
+      "daysCount_other": "{{count}} jours",
+      "paidAt": "Date de paiement",
+      "captureId": "Identifiant de capture",
+      "payerEmail": "E-mail PayPal du payeur",
+      "extensions": "Transactions de prolongation",
+      "pausePeriods": "Historique des pauses"
     },
     "settings": {
       "title": "Paramètres de la campagne",

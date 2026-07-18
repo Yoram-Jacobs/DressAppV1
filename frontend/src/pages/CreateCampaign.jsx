@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
@@ -106,6 +106,8 @@ export default function CreateCampaign() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit');
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(INITIAL_FORM);
   const [saving, setSaving] = useState(false);
@@ -113,9 +115,53 @@ export default function CreateCampaign() {
   const [submitPhase, setSubmitPhase] = useState('idle');
   const [paypalOrder, setPaypalOrder] = useState(null);
   const [paypalRequired, setPaypalRequired] = useState(false);
-  const [campaignId, setCampaignId] = useState(null);
+  const [campaignId, setCampaignId] = useState(editId || null);
 
   useEffect(() => {
+    if (editId) {
+      campaignApi.getCampaignDetail(editId).then((res) => {
+        setForm({
+          title: res.title || '',
+          business_name: res.business_name || '',
+          short_description: res.short_description || '',
+          long_description: res.long_description || '',
+          category: res.category || '',
+          cover_image_url: res.cover_image_url || '',
+          gallery_images: res.gallery_images || [],
+          discount_pct: res.discount_pct !== null && res.discount_pct !== undefined ? String(res.discount_pct) : '',
+          coupon_code: res.coupon_code || '',
+          sale_type: res.sale_type || 'discount',
+          limited_time_offer: res.limited_time_offer || false,
+          start_date: res.start_date || '',
+          end_date: res.end_date || '',
+          location: {
+            country: res.location?.country || '',
+            city: res.location?.city || '',
+            lat: res.location?.lat !== null && res.location?.lat !== undefined ? String(res.location?.lat) : '',
+            lon: res.location?.lon !== null && res.location?.lon !== undefined ? String(res.location?.lon) : '',
+            radius_km: res.location?.radius_km || 25,
+          },
+          audience: {
+            targets: res.audience?.targets || ['all'],
+            age_min: res.audience?.age_min !== null && res.audience?.age_min !== undefined ? String(res.audience?.age_min) : '',
+            age_max: res.audience?.age_max !== null && res.audience?.age_max !== undefined ? String(res.audience?.age_max) : '',
+            interests: res.audience?.interests || [],
+          },
+          notifications: {
+            master_enabled: res.notifications?.master_enabled || false,
+            channels: res.notifications?.channels || [],
+            timing: res.notifications?.timing || 'immediately_after_approval',
+            custom_datetime: res.notifications?.custom_datetime || '',
+          },
+        });
+      }).catch((err) => {
+        toast.error("Failed to load campaign details.");
+      });
+    }
+  }, [editId]);
+
+  useEffect(() => {
+    if (editId) return;
     if (user?.professional?.is_professional) {
       const biz = user.professional.business || {};
       const prof = user.professional.profession || '';
@@ -201,7 +247,11 @@ export default function CreateCampaign() {
     setSaving(true);
     try {
       const payload = buildPayload();
-      const res = await campaignApi.createCampaign(payload);
+      if (campaignId) {
+        await campaignApi.updateCampaign(campaignId, payload);
+      } else {
+        await campaignApi.createCampaign(payload);
+      }
       toast.success(t('campaigns.create.draftSaved'));
       navigate(`/campaigns/mine`);
     } catch (err) {
@@ -225,8 +275,10 @@ export default function CreateCampaign() {
     setSubmitPhase('creating_order');
     try {
       let cid = campaignId;
-      if (!cid) {
-        const payload = buildPayload();
+      const payload = buildPayload();
+      if (cid) {
+        await campaignApi.updateCampaign(cid, payload);
+      } else {
         const created = await campaignApi.createCampaign(payload);
         cid = created.id;
         setCampaignId(cid);

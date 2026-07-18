@@ -311,7 +311,12 @@ export default function ExpertsDirectory() {
         {activeTab === 'campaigns' && (
           <>
             {viewerIsPro && (
-              <div className="flex justify-end mb-4">
+              <div className="flex justify-end gap-2 mb-4">
+                <Button asChild variant="outline" className="rounded-xl" data-testid="experts-campaigns-manage-btn">
+                  <Link to="/campaigns/mine">
+                    {t('campaigns.mine.title', { defaultValue: 'My Campaigns' })}
+                  </Link>
+                </Button>
                 <Button asChild className="rounded-xl" data-testid="experts-campaigns-create-btn">
                   <Link to="/campaigns/create">
                     <Megaphone className="h-4 w-4 me-1" />

@@ -2506,7 +2506,19 @@
       "connectPayPal": "Connect PayPal",
       "feeNote": "Your PayPal account will be charged once you approve the payment below.",
       "extensionFee": "Extension Fee",
-      "confirmPayment": "Confirm & Pay"
+      "confirmPayment": "Confirm & Pay",
+      "reportTitle": "Billings Report",
+      "reportDesc": "Statement of charges for campaign",
+      "paymentStatus": "Payment Status",
+      "totalCharged": "Total Fee",
+      "totalDays": "Total Period",
+      "daysCount": "{{count}} day",
+      "daysCount_other": "{{count}} days",
+      "paidAt": "Payment Date",
+      "captureId": "Capture ID",
+      "payerEmail": "Payer PayPal Email",
+      "extensions": "Extension Transactions",
+      "pausePeriods": "Paused History"
     },
     "settings": {
       "title": "Campaign Settings",

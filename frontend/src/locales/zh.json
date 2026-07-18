@@ -2472,7 +2472,19 @@
       "connectPayPal": "连接 PayPal",
       "feeNote": "当您在下方批准付款后，将向您的 PayPal 账户收取费用。",
       "extensionFee": "延期费用",
-      "confirmPayment": "确认并付款"
+      "confirmPayment": "确认并付款",
+      "reportTitle": "账单报告",
+      "reportDesc": "活动费用明细",
+      "paymentStatus": "付款状态",
+      "totalCharged": "总费用",
+      "totalDays": "总期间",
+      "daysCount": "{{count}} 天",
+      "daysCount_other": "{{count}} 天",
+      "paidAt": "付款日期",
+      "captureId": "捕获 ID",
+      "payerEmail": "付款人 PayPal 邮箱",
+      "extensions": "延期交易",
+      "pausePeriods": "暂停记录"
     },
     "settings": {
       "title": "活动设置",
