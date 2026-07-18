@@ -129,6 +129,10 @@ The Profile page serves as the core control panel for DressApp. Configuration fi
     - **Why does it matter?**: It provides a viral loop for free closet expansion.
     - **Subsystem Dependencies**: Appends the referrer's MongoDB ID to the URL. New registrations dynamically query this ID and atomically increment the referrer's `closet_capacity_bonus` by +10 slots, modifying the limit guards in `closet.py`.
 
+12. **Campaign Notifications (Push / Email settings)**
+    - **Why does it matter?**: It gives you full control over how you receive local boutique sales, tailored stylist updates, and expert promotions.
+    - **Subsystem Dependencies**: Customizes `campaign_notification_prefs` inside user `scheduler_settings` in MongoDB. Downstream filters check these toggles (e.g. `local_fashion_push` or `local_fashion_email`), frequency selection (Instant / Daily / Weekly digest), and the maximum distance radius (5km to 50km) before triggering notification alerts.
+
 ---
 
 ### 3.4 Wardrobe Insights Dashboard
@@ -210,6 +214,41 @@ System liveness validation, financial bookkeeping, and user account management.
 3. **Providers**: Click **Verify Key** to send a direct ping to the Gemini API. Toggle the **Eyes Vision Override** switch to route image analysis between the default Gemini endpoint and a local Gemma container.
 4. **Users**: View active credits, roles, and lifetime payments. Use direct actions to Promote or Demote users.
 5. **Listings**: View listing states and toggle active flags to suspend fraudulent items.
+6. **Campaign Queue**: Moderate expert promotion campaigns. Audit basic campaign metadata, cover image preview, target audience criteria, location radius, and timing. Clicking **Approve** moves it to active. Clicking **Reject** opens a modal requiring a rejection reason (minimum 5 characters) that is shown to the Expert user.
+
+### 3.10 Experts Campaign Platform
+Verified Fashion Professionals can publish localized marketing campaigns targeted at nearby users.
+
+1. **Prerequisites**:
+   - The user must be a verified Fashion Expert (`is_professional=True`, and not hidden).
+   - A PayPal account must be connected via the **Profile → Payment Settings** to charge the daily campaign fee.
+2. **Accessing the Wizard**: Navigate to `/campaigns/create` or click **New Campaign** on the Expert tab.
+3. **Pre-population**: If creating a new campaign, your display name, business description, location coordinates, and category (matching your professional specialization) are automatically filled in from your Profile.
+4. **The 6-Step Wizard**:
+   - **Basic Details**: Enter title, business name, category, cover photo URL, and descriptions.
+   - **Promotion**: Specify discount % (optional), coupon code, and the campaign start and end dates.
+   - **Location**: Enter city/country and choose the geographic **Reach Radius** (5km to 100km).
+   - **Targeting**: Specify targeted gender cohorts and age brackets.
+   - **Notifications**: Enable push notifications or email alerts, configuring send timing (instant, start date, or custom).
+   - **Review**: Review the calculated campaign fee: a flat **$1.00 USD per day** of the run duration (minimum 1 day).
+5. **PayPal Checkout & Submission**: Click **Submit for Approval** to open the PayPal checkout dialog. Once payment is captured, the campaign moves to the **Pending Approval** queue, and a notification email is sent to the admin team.
+
+---
+
+### 3.11 Managing Your Campaigns (My Campaigns dashboard)
+Manage active, paused, and draft promotions in a central hub.
+
+1. Navigate to `/campaigns/mine` or click **My Campaigns** on the Experts page.
+2. **Tabbed Organization**: View campaigns categorized by state: Drafts, Active, Paused, Awaiting Moderation, Rejected, Expired.
+3. **Lifecycle Operations**:
+   - **Edit**: Edit Draft or Rejected campaigns. Submitting a rejected campaign re-authorizes payment and puts it back in the admin moderation queue.
+   - **Pause/Resume**: Pause live campaigns to hide them from the public feed. Resuming a paused campaign automatically shifts the end date out by the exact number of days it was paused to ensure you get your full paid duration.
+   - **Extend**: Select a new end date on active/paused campaigns, pay the incremental fee ($1.00 USD/day), and extend instantly without requiring admin re-approval.
+   - **Delete**: Permanently delete draft or active campaigns. Note that active campaigns are deleted immediately with no refunds for unused days.
+4. **Campaign Billings Report**: Click the **Billings** button on any campaign card to open a detailed ledger showing:
+   - Initial payment state, capture ID, payer email, and amount.
+   - Incremental transaction logs for campaign period extensions.
+   - Logging of pause/resume actions and total paused days.
 
 ---
 

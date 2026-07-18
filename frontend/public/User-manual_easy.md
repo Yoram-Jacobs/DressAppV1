@@ -137,6 +137,18 @@ Find exclusive sales, stylist events, and local fashion offers in your area:
 - **Google Maps Integration**: Click any offer to view its description, copy discount codes, and locate the boutique, designer, or stylist directly on Google Maps.
 - **Save & Share Offers**: Bookmark your favorite local deals to view later, or share them directly with friends.
 
+### 3.12 Creating & Managing Campaigns (For Experts only)
+Promote your boutique, tailoring shop, or stylist services to nearby users:
+
+- **Connect PayPal First**: Go to **Profile → Payment Settings** and add your PayPal email address. The app charges a flat fee of **$1.00 USD per day** for campaigns, and a connected PayPal account is required to submit.
+- **Create Your Promotion**: Go to the **Experts** page, switch to the **Campaigns** tab, and click **New Campaign** (or go to **Profile → My Campaigns → Create**). Follow the simple 6-step wizard. Your business details will be automatically pre-filled.
+- **Pay and Submit**: On the final step, click **Submit for Approval** and confirm the daily fee via the PayPal checkout box. Your campaign goes to the admin queue for quick review.
+- **Manage Your Offers**: Open the **My Campaigns** page next to New Campaign. You can:
+  - **Edit** drafts or rejected campaigns.
+  - **Pause** active campaigns to hide them (resuming later automatically extends your end date so you don't lose any paid days).
+  - **Extend** live campaigns by paying the incremental fee for additional days.
+  - **Billings**: Click the Billings button on any campaign card to review initial fees, extension payments, and pause action logs.
+
 ---
 
 ## 4. Expected Results
