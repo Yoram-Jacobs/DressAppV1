@@ -1,70 +1,46 @@
-# Getting Started with Create React App
+# DressApp — Frontend SPA (React 19)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is the Single Page Application (SPA) client interface for the DressApp personal digital wardrobe and styling ecosystem.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🛠️ Technology Stack & Styling
+* **Framework**: React 19 SPA bootstrapped with Create React App & Craco.
+* **Styling**: Tailwind CSS & Vanilla CSS custom design tokens, leveraging Shadcn UI components.
+* **Global Stores**: Zustand with IndexedDB local caching for zero-latency operations.
+* **Locales**: `react-i18next` with dictionary catalogs in 13 languages.
+* **Dpp Scanning**: HTML5-QR code reader for Digital Product Passports.
+* **Interactive Canvas**: Three.js / React Three Fiber for 2D/3D wardrobe layering representations.
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 🚀 Available Scripts
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+In the frontend directory, you can run:
 
-### `npm test`
+### `yarn start` / `npm start`
+Runs the app in development mode at [http://localhost:3000](http://localhost:3000). The page will hot-reload automatically when source code changes are detected.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### `yarn build` / `npm run build`
+Compiles static build assets to the `/build` folder, optimizing production bundles for fast page loads and small Gzip footprints.
 
-### `npm run build`
+### `yarn lint` / `npm run lint`
+Runs ESLint audits across JS/JSX source files.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 📂 Key Components & Modules
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+* **`src/components/ProfileDetailsCard.jsx`**: Controls demographic details, lifestyle status, Google Maps coordinates geolocation sync, refer-a-friend links, and the physical sizing profile:
+  * **Fresh Start Mode**: Displays only Height, Weight, Waist size, and Foot Length. Completing these fields queries the backend size regression endpoint to populate calculated measurements.
+  * **Edit Mode**: Displays all 10 physical body dimensions. Modifying any of the 4 basic parameters recalculates the other 6 immediately with a 400ms debounce.
+* **`src/pages/Profile.jsx`**: Handles SaaS AI billing preferences (Credits vs. Personal keys for Gemini, Claude, OpenAI), scheduler daily notification limits, and premium subscriptions integration via PayPal REST APIs.
+* **`src/locales/`**: Multi-language dictionaries supporting English, Hebrew, Arabic, Hindi, Spanish, French, German, Italian, Japanese, Portuguese, Russian, Dutch, and Chinese.
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 🌐 Localization Guidelines
+1. **No Hardcoded Strings**: All user-facing labels must be wrapped inside `t('key', { defaultValue: '...' })` hooks.
+2. **Options-Based Fallbacks**: Do not use positional fallbacks `t('key', 'default')`. Always use the options-based object format to ensure proper extraction during compilation.
+3. **RTL Support**: Design layout directions to dynamically mirror flex, grids, and alignment indicators when active language codes are Hebrew (`he`) or Arabic (`ar`).
+4. **Branding Standard**: Section tags referencing headers like CONTACT must remain clean of parenthesized English text (e.g. no `(CONTACT)` suffixes in translated files).

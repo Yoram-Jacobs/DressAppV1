@@ -99,7 +99,9 @@ The Profile page serves as the core control panel for DressApp. Configuration fi
 
 4. **Body & Measurements (Height, Weight, Shapes)**
    - **Why does it matter?**: It eliminates sizing guesswork, allowing external retail size comparison and accurate virtual layering.
-   - **Subsystem Dependencies**: Measurements are queried directly by the **Shopping Assistant** Chrome Extension content scripts to read size tables on partner websites (like Zara and Asos) and recommend sizes. They also adjust the rendering scale of clothing segments on the Outfit Canvas.
+   - **Subsystem Dependencies**: 
+     - **Fresh Start vs. Edit Modes**: Onboarding displays 4 basic parameters (Height, Weight, Waist, Foot Length). When filled, a debounced (400ms) call to `/api/v1/sizes/predict-measurements` returns predictions for the other 6 parameters. Edit mode displays all 10 fields and updates predictions dynamically as basic inputs change.
+     - **Integrations**: Measurements are queried directly by the **Shopping Assistant** Chrome Extension content scripts to read size tables on partner websites (like Zara and Asos) and recommend sizes. They also adjust the rendering scale of clothing segments on the Outfit Canvas.
 
 5. **Lifestyle (Status, Sex)**
    - **Why does it matter?**: It tailors default recommendations and scores content algorithms.
