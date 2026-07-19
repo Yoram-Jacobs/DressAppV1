@@ -1022,7 +1022,7 @@
     "everyOtherDay": "يوماً بعد يوم",
     "failedToTogglePushNotifications": "فشل تغيير وضع إشعارات الدفع.",
     "notificationFrequency": "تكرار الإشعارات",
-    "notificationTime": "وقت الإشعار (UTC)",
+    "notificationTime": "وقت الإشعار",
     "onWeekday": "في يوم محدد",
     "phoneWarningEnd": " لتوجيه تنبيهات الدفع المحاكاة بشكل صحيح.",
     "phoneWarningStart": "* تأكد من تهيئة رقم هاتفك في قسم ",

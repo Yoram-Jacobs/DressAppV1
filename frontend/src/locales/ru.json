@@ -1022,7 +1022,7 @@
     "everyOtherDay": "Через день",
     "failedToTogglePushNotifications": "Не удалось переключить push-уведомления.",
     "notificationFrequency": "Частота уведомлений",
-    "notificationTime": "Время уведомления (UTC)",
+    "notificationTime": "Время уведомления",
     "onWeekday": "В выбранный день",
     "phoneWarningEnd": " для правильной работы симуляции push-уведомлений.",
     "phoneWarningStart": "* Убедитесь, что ваш телефон настроен в разделе ",

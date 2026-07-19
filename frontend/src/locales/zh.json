@@ -1022,7 +1022,7 @@
     "everyOtherDay": "每隔一天",
     "failedToTogglePushNotifications": "切换推送通知状态失败。",
     "notificationFrequency": "通知频率",
-    "notificationTime": "通知时间 (UTC)",
+    "notificationTime": "通知时间",
     "onWeekday": "在特定工作日",
     "phoneWarningEnd": " 栏目下配置了您的电话号码，以便正常接收模拟推送通知。",
     "phoneWarningStart": "* 请确保在 ",

@@ -1022,7 +1022,7 @@
     "everyOtherDay": "Dia sim, dia não",
     "failedToTogglePushNotifications": "Falha ao alterar as notificações push.",
     "notificationFrequency": "Frecuencia de notificação",
-    "notificationTime": "Hora da notificação (UTC)",
+    "notificationTime": "Hora da notificação",
     "onWeekday": "Nos dias de semana",
     "phoneWarningEnd": " para receber os alertas push simulados.",
     "phoneWarningStart": "* Garanta que o seu número está configurado em ",

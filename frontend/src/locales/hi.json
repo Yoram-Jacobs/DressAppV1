@@ -1019,7 +1019,7 @@
     "everyOtherDay": "हर दूसरे दिन",
     "failedToTogglePushNotifications": "पुश नोटिफिकेशन चालू या बंद करने में विफल।",
     "notificationFrequency": "अधिसूचना आवृत्ति",
-    "notificationTime": "अधिसूचना समय (UTC)",
+    "notificationTime": "अधिसूचना समय",
     "onWeekday": "सप्ताह के दिन पर",
     "phoneWarningEnd": " सेक्शन के तहत कॉन्फ़िगर किया गया है ताकि सिम्युलेटेड पुश अलर्ट सफलतापूर्वक प्राप्त हो सकें।",
     "phoneWarningStart": "* सुनिश्चित करें कि आपका फ़ोन नंबर ",

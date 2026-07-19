@@ -1031,7 +1031,7 @@
     "everyOtherDay": "Jeden zweiten Tag",
     "failedToTogglePushNotifications": "Fehler beim Umschalten der Push-Benachrichtigungen.",
     "notificationFrequency": "Benachrichtigungshäufigkeit",
-    "notificationTime": "Benachrichtigungszeit (UTC)",
+    "notificationTime": "Benachrichtigungszeit",
     "onWeekday": "An Wochentagen",
     "phoneWarningEnd": " konfiguriert ist, um simulierte Push-Warnungen zu erhalten.",
     "phoneWarningStart": "* Stelle sicher, dass deine Telefonnummer unter ",

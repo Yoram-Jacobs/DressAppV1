@@ -1022,7 +1022,7 @@
     "everyOtherDay": "一日おき",
     "failedToTogglePushNotifications": "プッシュ通知の切り替えに失敗しました。",
     "notificationFrequency": "通知頻度",
-    "notificationTime": "通知時間 (UTC)",
+    "notificationTime": "通知時間",
     "onWeekday": "平日",
     "phoneWarningEnd": " セクションで電話番号を設定してください。",
     "phoneWarningStart": "* シミュレートされたプッシュ警告を受け取るには、必ず ",
