@@ -1032,7 +1032,7 @@
     "styleDressFor": "スタイル / 着こなし目的",
     "twiceAWeek": "週に2回",
     "everyday": "毎日",
-    "phoneWarning": "* シミュレートされたプッシュ警告を受け取るには、連絡先（Contact）で電話番号を設定してください。",
+    "phoneWarning": "* プッシュ警告を受け取るには、連絡先（CONTACT）で電話番号を設定してください。",
     "aiConfig": {
       "title": "AI設定",
       "subtitle": "AIサービスプロバイダーの管理、APIキーのカスタマイズ、またはエッジAIモデルへの切り替えを行います。",

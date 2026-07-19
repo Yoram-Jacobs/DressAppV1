@@ -1071,7 +1071,7 @@
     "failedToTogglePushNotifications": "Failed to toggle push notifications.",
     "aiStylistSchedulerSettingsUpdated": "AI Stylist Scheduler settings updated.",
     "everyday": "Everyday",
-    "phoneWarning": "* Configure phone number under Contact to receive simulated push alerts.",
+    "phoneWarning": "* Configure phone number under CONTACT to receive push alerts.",
     "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
     "schedulerDesc": "Daily outfit proposals, push alerts, and scheduling options",
     "aiConfig": {

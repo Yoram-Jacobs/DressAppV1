@@ -1032,7 +1032,7 @@
     "styleDressFor": "Style / S'habiller pour",
     "twiceAWeek": "Deux fois par semaine",
     "everyday": "Chaque jour",
-    "phoneWarning": "* Configurez le numéro de téléphone sous Contact pour recevoir des alertes push simulées.",
+    "phoneWarning": "* Configurez le numéro de téléphone sous CONTACT pour recevoir des alertes push.",
     "aiConfig": {
       "title": "Configuration IA",
       "subtitle": "Gérez vos fournisseurs IA, personnalisez vos clés API ou passez à des modèles IA locaux.",

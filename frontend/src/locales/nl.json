@@ -1071,7 +1071,7 @@
     "failedToTogglePushNotifications": "Kan pushmeldingen niet in- of uitschakelen.",
     "aiStylistSchedulerSettingsUpdated": "AI Stylist Scheduler-instellingen bijgewerkt.",
     "everyday": "Elke dag",
-    "phoneWarning": "* Configureer het telefoonnummer onder Contact om gesimuleerde pushmeldingen te ontvangen.",
+    "phoneWarning": "* Configureer het telefoonnummer onder CONTACT om pushmeldingen te ontvangen.",
     "voiceLanguageDesc": "Virtuele stem- en toegankelijkheidsinstellingen voor stylist",
     "schedulerDesc": "Dagelijkse outfitvoorstellen, pushmeldingen en planningsopties",
     "aiConfig": {
