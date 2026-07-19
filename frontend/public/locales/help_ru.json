@@ -37,9 +37,9 @@
     "profile_item2_title": "2. Style Profile (Your Preferences)",
     "profile_item2_desc": "It tells the Stylist what kind of clothes you like to wear. If you prefer modest clothes, you can toggle that option. The Stylist will only suggest outfits that make you feel comfortable.",
     "profile_item3_title": "3. Details (Name & Phone)",
-    "profile_item3_desc": "This lets DressApp know who you are so it can greet you by name. The app uses your name in greeting alerts and emails. Your phone number is used to send push alerts.",
+    "profile_item3_desc": "Это позволяет DressApp знать, кто вы, чтобы приветствовать вас по имени. Приложение использует ваше имя в приветственных уведомлениях и электронных письмах. Ваш номер телефона используется для отправки push-уведомлений. Настройте свой номер телефона в разделе CONTACT.",
     "profile_item4_title": "4. Body & Measurements (Your Sizes)",
-    "profile_item4_desc": "It helps DressApp find clothes that fit you when you are looking at online shops. The Shopping assistant reads size tables on websites and tells you which size fits best.",
+    "profile_item4_desc": "Это помогает DressApp подбирать одежду, которая вам подходит. Если вы здесь впервые, укажите свой рост, вес, обхват талии и длину стопы, и приложение спрогнозирует для вас оставшиеся 6 параметров. Если вы вернетесь для редактирования, любое изменение базовых 4 параметров мгновенно пересчитает остальные.",
     "profile_item5_title": "5. Lifestyle",
     "profile_item5_desc": "It helps the Stylist understand what you do every day (like a student, office worker, lawyer, or party) and customizes trend suggestions that suit you best.",
     "profile_item6_title": "6. AI Configuration (The Smart Brain)",
@@ -153,6 +153,7 @@
     "campaigns_maps_help_title": "Интеграция с Google Картами",
     "campaigns_maps_help_desc": "Нажмите на любое предложение, чтобы просмотреть его описание, скопировать коды скидок и найти бутик, дизайнера или стилиста прямо на Картах Google.",
     "campaigns_save_help_title": "Сохранить и поделиться предложениями",
-    "campaigns_save_help_desc": "Добавьте в закладки свои любимые местные предложения, чтобы просмотреть их позже, или поделитесь ими с друзьями."
+    "campaigns_save_help_desc": "Добавьте в закладки свои любимые местные предложения, чтобы просмотреть их позже, или поделитесь ими с друзьями.",
+    "learnMore": "Подробнее"
   }
 }

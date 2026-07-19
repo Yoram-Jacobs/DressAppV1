@@ -37,9 +37,9 @@
     "profile_item2_title": "2. Style Profile (Your Preferences)",
     "profile_item2_desc": "It tells the Stylist what kind of clothes you like to wear. If you prefer modest clothes, you can toggle that option. The Stylist will only suggest outfits that make you feel comfortable.",
     "profile_item3_title": "3. Details (Name & Phone)",
-    "profile_item3_desc": "This lets DressApp know who you are so it can greet you by name. The app uses your name in greeting alerts and emails. Your phone number is used to send push alerts.",
+    "profile_item3_desc": "这让 DressApp 知道您是谁，以便直呼您的名字。该应用在问候通知和电子邮件中使用您的名字。您的电话号码用于发送推送通知。请在 CONTACT 部分配置您的电话号码。",
     "profile_item4_title": "4. Body & Measurements (Your Sizes)",
-    "profile_item4_desc": "It helps DressApp find clothes that fit you when you are looking at online shops. The Shopping assistant reads size tables on websites and tells you which size fits best.",
+    "profile_item4_desc": "它有助于 DressApp 找到适合您的衣服。如果您是新用户，请填写您的身高、体重、腰围和脚长，应用将为您预测其余的 6 项测量值。如果您返回编辑，对基本 4 项的任何更改都会立即重新计算其余项。",
     "profile_item5_title": "5. Lifestyle",
     "profile_item5_desc": "It helps the Stylist understand what you do every day (like a student, office worker, lawyer, or party) and customizes trend suggestions that suit you best.",
     "profile_item6_title": "6. AI Configuration (The Smart Brain)",
@@ -153,6 +153,7 @@
     "campaigns_maps_help_title": "谷歌地图集成",
     "campaigns_maps_help_desc": "单击任何优惠即可查看其描述、复制折扣代码并直接在 Google 地图上找到精品店、设计师或造型师。",
     "campaigns_save_help_title": "保存并分享优惠",
-    "campaigns_save_help_desc": "为您最喜欢的本地优惠添加书签以便稍后查看，或直接与朋友分享。"
+    "campaigns_save_help_desc": "为您最喜欢的本地优惠添加书签以便稍后查看，或直接与朋友分享。",
+    "learnMore": "了解更多"
   }
 }

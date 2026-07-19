@@ -37,9 +37,9 @@
     "profile_item2_title": "2. Style Profile (Your Preferences)",
     "profile_item2_desc": "It tells the Stylist what kind of clothes you like to wear. If you prefer modest clothes, you can toggle that option. The Stylist will only suggest outfits that make you feel comfortable.",
     "profile_item3_title": "3. Details (Name & Phone)",
-    "profile_item3_desc": "This lets DressApp know who you are so it can greet you by name. The app uses your name in greeting alerts and emails. Your phone number is used to send push alerts.",
+    "profile_item3_desc": "This lets DressApp know who you are so it can greet you by name. The app uses your name in greeting alerts and emails. Your phone number is used to send push alerts. Configure your phone number under the CONTACT section.",
     "profile_item4_title": "4. Body & Measurements (Your Sizes)",
-    "profile_item4_desc": "It helps DressApp find clothes that fit you when you are looking at online shops. The Shopping assistant reads size tables on websites and tells you which size fits best.",
+    "profile_item4_desc": "It helps DressApp find clothes that fit you. If you are new, fill in your Height, Weight, Waist, and Foot Length, and the app will predict the remaining 6 measurements for you. If you return to edit, any change to the basic 4 instantly recalculates the rest.",
     "profile_item5_title": "5. Lifestyle",
     "profile_item5_desc": "It helps the Stylist understand what you do every day (like a student, office worker, lawyer, or party) and customizes trend suggestions that suit you best.",
     "profile_item6_title": "6. AI Configuration (The Smart Brain)",
@@ -153,6 +153,7 @@
     "trouble_slow_fix": "Easy fix: The app automatically processes them one by one. Just wait a minute!",
     "limit_title": "Limitations",
     "limit_item1": "Voice typing works best on Google Chrome or Apple Safari browsers.",
-    "limit_item2": "Dark, blurry, or folded clothes might not be recognized correctly by the scanner. Try taking pictures in a bright room with the garment laid flat."
+    "limit_item2": "Dark, blurry, or folded clothes might not be recognized correctly by the scanner. Try taking pictures in a bright room with the garment laid flat.",
+    "learnMore": "Learn more"
   }
 }

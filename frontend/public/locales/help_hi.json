@@ -37,9 +37,9 @@
     "profile_item2_title": "2. Style Profile (Your Preferences)",
     "profile_item2_desc": "It tells the Stylist what kind of clothes you like to wear. If you prefer modest clothes, you can toggle that option. The Stylist will only suggest outfits that make you feel comfortable.",
     "profile_item3_title": "3. Details (Name & Phone)",
-    "profile_item3_desc": "This lets DressApp know who you are so it can greet you by name. The app uses your name in greeting alerts and emails. Your phone number is used to send push alerts.",
+    "profile_item3_desc": "यह DressApp को जानने देता है कि आप कौन हैं ताकि यह आपको नाम से संबोधित कर सके। ऐप आपके नाम का उपयोग स्वागत अलर्ट और ईमेल में करता है। आपके फोन नंबर का उपयोग पुश अलर्ट भेजने के लिए किया जाता है। CONTACT अनुभाग के अंतर्गत अपना फोन नंबर कॉन्फ़िगर करें।",
     "profile_item4_title": "4. Body & Measurements (Your Sizes)",
-    "profile_item4_desc": "It helps DressApp find clothes that fit you when you are looking at online shops. The Shopping assistant reads size tables on websites and tells you which size fits best.",
+    "profile_item4_desc": "यह DressApp को ऐसे कपड़े ढूंढने में मदद करता है जो आपके फिट हों। यदि आप नए हैं, तो अपनी लंबाई, वजन, कमर और पैर की लंबाई दर्ज करें, और ऐप आपके लिए शेष 6 मापों का अनुमान लगा लेगा। यदि आप संपादित करने के लिए वापस आते हैं, तो बुनियादी 4 में कोई भी बदलाव तुरंत बाकी की गणना फिर से कर देगा।",
     "profile_item5_title": "5. Lifestyle",
     "profile_item5_desc": "It helps the Stylist understand what you do every day (like a student, office worker, lawyer, or party) and customizes trend suggestions that suit you best.",
     "profile_item6_title": "6. AI Configuration (The Smart Brain)",
@@ -153,6 +153,7 @@
     "campaigns_maps_help_title": "Google मैप्स एकीकरण",
     "campaigns_maps_help_desc": "किसी भी ऑफ़र के विवरण देखने, छूट कोड कॉपी करने और सीधे Google मैप्स पर बुटीक या स्टाइलिस्ट का पता लगाने के लिए क्लिक करें।",
     "campaigns_save_help_title": "ऑफ़र सहेजें और साझा करें",
-    "campaigns_save_help_desc": "बाद में देखने के लिए अपने पसंदीदा स्थानीय सौदों को बुकमार्क करें, या उन्हें सीधे दोस्तों के साथ साझा करें।"
+    "campaigns_save_help_desc": "बाद में देखने के लिए अपने पसंदीदा स्थानीय सौदों को बुकमार्क करें, या उन्हें सीधे दोस्तों के साथ साझा करें।",
+    "learnMore": "अधिक जानें"
   }
 }

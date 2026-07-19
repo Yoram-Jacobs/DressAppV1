@@ -37,9 +37,9 @@
     "profile_item2_title": "2. Style Profile (Your Preferences)",
     "profile_item2_desc": "It tells the Stylist what kind of clothes you like to wear. If you prefer modest clothes, you can toggle that option. The Stylist will only suggest outfits that make you feel comfortable.",
     "profile_item3_title": "3. Details (Name & Phone)",
-    "profile_item3_desc": "This lets DressApp know who you are so it can greet you by name. The app uses your name in greeting alerts and emails. Your phone number is used to send push alerts.",
+    "profile_item3_desc": "これにより、DressAppはあなたが誰であるかを認識し、名前で挨拶できるようになります。アプリは、挨拶のアラートやメールであなたの名前を使用します。電話番号はプッシュ通知の送信に使用されます。電話番号はCONTACTセクションで設定してください。",
     "profile_item4_title": "4. Body & Measurements (Your Sizes)",
-    "profile_item4_desc": "It helps DressApp find clothes that fit you when you are looking at online shops. The Shopping assistant reads size tables on websites and tells you which size fits best.",
+    "profile_item4_desc": "DressAppがあなたにぴったりの服を見つけるのに役立ちます。初めての方は、身長、体重、ウエスト、足の長さを入力すると、アプリが残りの6つの測定値を予測します。編集に戻った場合、基本の4つの項目を変更すると、残りの測定値が即座に再計算されます。",
     "profile_item5_title": "5. Lifestyle",
     "profile_item5_desc": "It helps the Stylist understand what you do every day (like a student, office worker, lawyer, or party) and customizes trend suggestions that suit you best.",
     "profile_item6_title": "6. AI Configuration (The Smart Brain)",
@@ -153,6 +153,7 @@
     "campaigns_maps_help_title": "Google マップの統合",
     "campaigns_maps_help_desc": "いずれかのオファーをクリックすると、説明が表示され、割引コードがコピーされ、Google マップでブティック、デザイナー、スタイリストを直接見つけることができます。",
     "campaigns_save_help_title": "オファーを保存して共有する",
-    "campaigns_save_help_desc": "お気に入りの地元のセールをブックマークして後で表示したり、友達と直接共有したりできます。"
+    "campaigns_save_help_desc": "お気に入りの地元のセールをブックマークして後で表示したり、友達と直接共有したりできます。",
+    "learnMore": "詳細を見る"
   }
 }

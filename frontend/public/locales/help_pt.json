@@ -37,9 +37,9 @@
     "profile_item2_title": "2. Style Profile (Your Preferences)",
     "profile_item2_desc": "It tells the Stylist what kind of clothes you like to wear. If you prefer modest clothes, you can toggle that option. The Stylist will only suggest outfits that make you feel comfortable.",
     "profile_item3_title": "3. Details (Name & Phone)",
-    "profile_item3_desc": "This lets DressApp know who you are so it can greet you by name. The app uses your name in greeting alerts and emails. Your phone number is used to send push alerts.",
+    "profile_item3_desc": "Isto permite ao DressApp saber quem você é para o saudar pelo nome. A aplicação utiliza o seu nome em alertas de saudação e e-mails. O seu número de telemóvel é utilizado para enviar alertas push. Configure o seu número de telemóvel na secção CONTACT.",
     "profile_item4_title": "4. Body & Measurements (Your Sizes)",
-    "profile_item4_desc": "It helps DressApp find clothes that fit you when you are looking at online shops. The Shopping assistant reads size tables on websites and tells you which size fits best.",
+    "profile_item4_desc": "Ajuda o DressApp a encontrar roupas que lhe sirvam. Se for novo, preencha a sua altura, peso, cintura e comprimento do pé, e a aplicação preverá as restantes 6 medidas para si. Si voltar para editar, qualquer alteração nas 4 básicas recalcula instantaneamente as restantes.",
     "profile_item5_title": "5. Lifestyle",
     "profile_item5_desc": "It helps the Stylist understand what you do every day (like a student, office worker, lawyer, or party) and customizes trend suggestions that suit you best.",
     "profile_item6_title": "6. AI Configuration (The Smart Brain)",
@@ -153,6 +153,7 @@
     "campaigns_maps_help_title": "Integração com Google Maps",
     "campaigns_maps_help_desc": "Clique em qualquer oferta para ver sua descrição, copiar códigos de desconto e localizar a boutique, designer ou estilista diretamente no Google Maps.",
     "campaigns_save_help_title": "Salvar e compartilhar ofertas",
-    "campaigns_save_help_desc": "Marque suas ofertas locais favoritas para ver mais tarde ou compartilhe-as diretamente com amigos."
+    "campaigns_save_help_desc": "Marque suas ofertas locais favoritas para ver mais tarde ou compartilhe-as diretamente com amigos.",
+    "learnMore": "Saber mais"
   }
 }

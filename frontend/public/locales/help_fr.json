@@ -37,9 +37,9 @@
     "profile_item2_title": "2. Style Profile (Your Preferences)",
     "profile_item2_desc": "It tells the Stylist what kind of clothes you like to wear. If you prefer modest clothes, you can toggle that option. The Stylist will only suggest outfits that make you feel comfortable.",
     "profile_item3_title": "3. Details (Name & Phone)",
-    "profile_item3_desc": "This lets DressApp know who you are so it can greet you by name. The app uses your name in greeting alerts and emails. Your phone number is used to send push alerts.",
+    "profile_item3_desc": "Cela permet à DressApp de savoir qui vous êtes afin de vous accueillir par votre nom. L'application utilise votre nom dans les alertes d'accueil et les e-mails. Votre numéro de téléphone est utilisé pour envoyer des alertes push. Configurez votre numéro de téléphone dans la section CONTACT.",
     "profile_item4_title": "4. Body & Measurements (Your Sizes)",
-    "profile_item4_desc": "It helps DressApp find clothes that fit you when you are looking at online shops. The Shopping assistant reads size tables on websites and tells you which size fits best.",
+    "profile_item4_desc": "Cela aide DressApp à trouver des vêtements qui vous vont. Si vous êtes nouveau, indiquez votre taille, votre poids, votre tour de taille et la longueur de votre pied, et l'application prédira les 6 mesures restantes pour vous. Si vous revenez pour modifier, tout changement apporté aux 4 mesures de base recalcule instantanément le reste.",
     "profile_item5_title": "5. Lifestyle",
     "profile_item5_desc": "It helps the Stylist understand what you do every day (like a student, office worker, lawyer, or party) and customizes trend suggestions that suit you best.",
     "profile_item6_title": "6. AI Configuration (The Smart Brain)",
@@ -153,6 +153,7 @@
     "campaigns_maps_help_title": "Intégration Google Maps",
     "campaigns_maps_help_desc": "Cliquez sur n'importe quelle offre pour afficher sa description, copier les codes de réduction et localiser la boutique sur Google Maps.",
     "campaigns_save_help_title": "Enregistrer et partager",
-    "campaigns_save_help_desc": "Enregistrez vos offres locales préférées pour les consulter plus tard ou partagez-les avec vos amis."
+    "campaigns_save_help_desc": "Enregistrez vos offres locales préférées pour les consulter plus tard ou partagez-les avec vos amis.",
+    "learnMore": "En savoir plus"
   }
 }
