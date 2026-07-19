@@ -805,6 +805,7 @@ export const api = {
   deleteSuitcaseArchives: (ids) => client.delete(`/suitcase/archive?ids=${ids.join(',')}`).then((r) => r.data),
   suitcaseChat: (body) => client.post('/suitcase/chat', body).then((r) => r.data),
   deleteAccount: (body) => client.post('/users/me/delete', body).then((r) => r.data),
+  predictMeasurements: (body) => client.post('/sizes/predict-measurements', body).then((r) => r.data),
 };
 
 // ============================================================

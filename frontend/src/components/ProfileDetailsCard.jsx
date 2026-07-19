@@ -270,6 +270,16 @@ export function ProfileDetailsCard() {
   const [form, setForm] = useState(initial);
   const [busy, setBusy] = useState(false);
 
+  const isFreshStartInitial = useMemo(() => {
+    const m = user?.body_measurements || {};
+    const hasCalculated = m.shoulders || m.chest || m.hip || m.sleeve || m.inseam || m.outseam;
+    return !hasCalculated;
+  }, [user]);
+
+  const [isFreshStart, setIsFreshStart] = useState(isFreshStartInitial);
+  const [predicting, setPredicting] = useState(false);
+  const [hasPredicted, setHasPredicted] = useState(false);
+
   // Baseline snapshot used to determine if the form is "dirty". We seed
   // it to `initial` on mount, and re-baseline it after every successful
   // save so the Save button drops back to its disabled state. JSON
@@ -304,6 +314,96 @@ export function ProfileDetailsCard() {
   const isFemale = form.sex === 'female';
   const wUnit = form.units.weight === 'lb' ? 'lb' : 'kg';
   const lUnit = form.units.length === 'in' ? 'in' : 'cm';
+
+  const handlePredictMeasurements = async (height, weight, waist, footLength, sex) => {
+    let h_cm = parseFloat(height);
+    let w_kg = parseFloat(weight);
+    let wa_cm = parseFloat(waist);
+    let fl_cm = parseFloat(footLength);
+
+    if (isNaN(h_cm) || isNaN(w_kg) || isNaN(wa_cm) || isNaN(fl_cm)) return;
+
+    if (lUnit === 'in') {
+      h_cm *= 2.54;
+      wa_cm *= 2.54;
+      fl_cm *= 2.54;
+    }
+    if (wUnit === 'lb') {
+      w_kg *= 0.45359237;
+    }
+
+    setPredicting(true);
+    try {
+      const res = await api.predictMeasurements({
+        height: h_cm,
+        weight: w_kg,
+        waist: wa_cm,
+        foot_length: fl_cm,
+        gender: sex === 'male' ? 'male' : 'female'
+      });
+
+      const convertVal = (val) => {
+        if (lUnit === 'in') {
+          return Math.round((val / 2.54) * 10) / 10;
+        }
+        return Math.round(val * 10) / 10;
+      };
+
+      setForm((prev) => ({
+        ...prev,
+        body_measurements: {
+          ...prev.body_measurements,
+          shoulders: convertVal(res.shoulders),
+          chest: convertVal(res.chest),
+          hip: convertVal(res.hip),
+          sleeve: convertVal(res.sleeve),
+          inseam: convertVal(res.inseam),
+          outseam: convertVal(res.outseam),
+        },
+      }));
+      setHasPredicted(true);
+    } catch (err) {
+      console.error("Prediction failed:", err);
+    } finally {
+      setPredicting(false);
+    }
+  };
+
+  const hasFilledBasic = !!(
+    form.body_measurements.height &&
+    form.body_measurements.weight &&
+    form.body_measurements.waist &&
+    form.body_measurements.foot_length
+  );
+
+  // Auto-trigger prediction when 4 basic inputs are filled (debounced)
+  const lastCallRef = useRef('');
+  useEffect(() => {
+    const { height, weight, waist, foot_length } = form.body_measurements;
+    const sex = form.sex || 'female';
+
+    if (!height || !weight || !waist || !foot_length) return;
+
+    // Check if values actually changed to avoid infinite loops or unnecessary requests
+    const callSig = `${height}_${weight}_${waist}_${foot_length}_${sex}_${lUnit}_${wUnit}`;
+    if (callSig === lastCallRef.current) return;
+
+    const timer = setTimeout(() => {
+      lastCallRef.current = callSig;
+      handlePredictMeasurements(height, weight, waist, foot_length, sex);
+    }, 400);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    form.body_measurements.height,
+    form.body_measurements.weight,
+    form.body_measurements.waist,
+    form.body_measurements.foot_length,
+    form.sex,
+    lUnit,
+    wUnit
+  ]);
   const autofilledFromGoogle =
     !!user?.google_connected &&
     (!!user?.first_name || !!user?.last_name || !!user?.avatar_url);
@@ -890,6 +990,10 @@ export function ProfileDetailsCard() {
                 wUnit={wUnit}
                 lUnit={lUnit}
                 isFemale={isFemale}
+                isFreshStart={isFreshStart}
+                hasFilledBasic={hasFilledBasic}
+                predicting={predicting}
+                hasPredicted={hasPredicted}
               />
             </AccordionContent>
           </AccordionItem>
@@ -1330,17 +1434,37 @@ export function ProfileDetailsCard() {
  * values like "17" or "1.6" are preserved verbatim. Number coercion
  * happens at save-time on the parent, never on each keystroke.
  */
-const MeasurementNumField = ({ field, label, value, onChange, testId }) => (
-  <Field label={label}>
-    <Input
-      type="text"
-      inputMode="decimal"
-      autoComplete="off"
-      value={value ?? ''}
-      onChange={(e) => onChange(field, e.target.value)}
-      className="rounded-xl bg-card"
-      data-testid={testId}
-    />
+const MeasurementNumField = ({ field, label, value, onChange, testId, isAi, predicting }) => (
+  <Field 
+    label={
+      <span className="flex items-center gap-1.5">
+        {label}
+        {isAi && (
+          <Badge variant="outline" className="text-[9px] bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border-purple-200/50 py-0 px-1 rounded flex items-center gap-0.5 normal-case font-normal">
+            <Sparkles className="h-2.5 w-2.5 text-purple-600 dark:text-purple-400" />
+            AI
+          </Badge>
+        )}
+      </span>
+    }
+  >
+    <div className="relative">
+      <Input
+        type="text"
+        inputMode="decimal"
+        autoComplete="off"
+        value={predicting ? '...' : (value ?? '')}
+        onChange={(e) => onChange(field, e.target.value)}
+        className={`rounded-xl bg-card transition-all duration-300 ${isAi ? 'border-purple-200/60 focus-visible:ring-purple-400 focus-visible:border-purple-400 dark:border-purple-900/40' : ''}`}
+        data-testid={testId}
+        disabled={predicting}
+      />
+      {predicting && (
+        <div className="absolute right-3 top-2.5 flex items-center">
+          <Loader2 className="h-4 w-4 animate-spin text-purple-600 dark:text-purple-400" />
+        </div>
+      )}
+    </div>
   </Field>
 );
 
@@ -1359,10 +1483,20 @@ const MeasurementTextField = ({ field, label, value, onChange, testId }) => (
 /**
  * Dedicated grid: swaps labelled units, adds female-only rows conditionally.
  */
-function MeasurementsGrid({ form, onChange, wUnit, lUnit, isFemale }) {
+function MeasurementsGrid({
+  form,
+  onChange,
+  wUnit,
+  lUnit,
+  isFemale,
+  isFreshStart,
+  hasFilledBasic,
+  predicting,
+  hasPredicted
+}) {
   const { t } = useTranslation();
   // Tiny helpers so the JSX below stays declarative.
-  const num = (field, label, unit = 'len') => (
+  const num = (field, label, unit = 'len', isAi = false) => (
     <MeasurementNumField
       key={field}
       field={field}
@@ -1370,6 +1504,8 @@ function MeasurementsGrid({ form, onChange, wUnit, lUnit, isFemale }) {
       value={form.body_measurements[field]}
       onChange={onChange}
       testId={`profile-measurement-${field}`}
+      isAi={isAi}
+      predicting={predicting && isAi}
     />
   );
   const txt = (field, label) => (
@@ -1382,25 +1518,61 @@ function MeasurementsGrid({ form, onChange, wUnit, lUnit, isFemale }) {
       testId={`profile-measurement-${field}`}
     />
   );
+
+  const showCalculatedAndOther = !isFreshStart || hasFilledBasic || hasPredicted;
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-      {num('height', t('profile.measurements.height'))}
-      {num('weight', t('profile.measurements.weight'), 'wt')}
-      {txt('shirt_size', t('profile.measurements.shirtSize'))}
-      {num('shoulders', t('profile.measurements.shoulders'))}
-      {num('chest', t('profile.measurements.chest'))}
-      {num('waist', t('profile.measurements.waist'))}
-      {num('hip', t('profile.measurements.hip'))}
-      {num('sleeve', t('profile.measurements.sleeve'))}
-      {txt('pants_size', t('profile.measurements.pantsSize'))}
-      {num('inseam', t('profile.measurements.inseam'))}
-      {num('outseam', t('profile.measurements.outseam'))}
-      {txt('shoe_size', t('profile.measurements.shoeSize'))}
-      {num('foot_length', t('profile.measurements.footLength'))}
-      {isFemale && (
+    <div className="space-y-4">
+      {predicting && (
+        <div className="flex items-center gap-2 text-xs text-purple-700 dark:text-purple-300 animate-pulse bg-purple-500/5 px-3 py-1.5 rounded-xl border border-purple-500/10">
+          <Sparkles className="h-3.5 w-3.5 animate-spin" />
+          <span>Calculating body shape measurements using AI...</span>
+        </div>
+      )}
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* 1. Core Basic Preferences */}
+        {num('height', t('profile.measurements.height'))}
+        {num('weight', t('profile.measurements.weight'), 'wt')}
+        {num('waist', t('profile.measurements.waist'))}
+        {num('foot_length', t('profile.measurements.footLength'))}
+      </div>
+
+      {showCalculatedAndOther && (
         <>
-          {txt('bra_size', t('profile.measurements.braSize'))}
-          {txt('dress_size', t('profile.measurements.dressSize'))}
+          <div className="border-t border-border/40 my-2 pt-2">
+            <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+              Calculated Body Dimensions (AI Generated)
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {/* 2. Calculated Preferences */}
+            {num('shoulders', t('profile.measurements.shoulders'), 'len', true)}
+            {num('chest', t('profile.measurements.chest'), 'len', true)}
+            {num('hip', t('profile.measurements.hip'), 'len', true)}
+            {num('sleeve', t('profile.measurements.sleeve'), 'len', true)}
+            {num('inseam', t('profile.measurements.inseam'), 'len', true)}
+            {num('outseam', t('profile.measurements.outseam'), 'len', true)}
+          </div>
+
+          <div className="border-t border-border/40 my-2 pt-2">
+            <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">
+              Garment & Footwear Sizes
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {/* 3. User-Entered Value Preferences */}
+            {txt('shirt_size', t('profile.measurements.shirtSize'))}
+            {txt('pants_size', t('profile.measurements.pantsSize'))}
+            {txt('shoe_size', t('profile.measurements.shoeSize'))}
+            {isFemale && (
+              <>
+                {txt('bra_size', t('profile.measurements.braSize'))}
+                {txt('dress_size', t('profile.measurements.dressSize'))}
+              </>
+            )}
+          </div>
         </>
       )}
     </div>
