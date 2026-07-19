@@ -898,7 +898,9 @@
       "avatarGenerationDesc": "根据下方您的身体尺寸生成。",
       "measurements": "身体尺寸",
       "hair": "发型",
-      "preferences": "偏好设置"
+      "preferences": "偏好设置",
+      "measurementsDesc": "服装尺码适合度（身高、胸围、腰围和内缝长）",
+      "hairDesc": "发长、发质、发型和颜色属性"
     },
     "firstName": "名",
     "lastName": "姓",
@@ -948,7 +950,10 @@
       "shoeSize": "鞋码",
       "footLength": "脚长",
       "braSize": "文胸尺码",
-      "dressSize": "连衣裙尺码"
+      "dressSize": "连衣裙尺码",
+      "calculatedSection": "计算出的身体尺寸 (AI 生成)",
+      "sizesSection": "服装与鞋码",
+      "calculating": "正在使用 AI 计算身体尺寸..."
     },
     "hairFields": {
       "length": "头发长度",
@@ -1084,7 +1089,8 @@
     "identityVerification": "Identity Verification",
     "verifyMessage": "For your security, please verify your identity before deleting your account.",
     "googleConnected": "Connected via Google",
-    "enterPasswordPlaceholder": "Enter your password"
+    "enterPasswordPlaceholder": "Enter your password",
+    "styleProfileDesc": "审美偏好、色板喜好、避讳及保守度"
   },
   "admin": {
     "title": "管理",

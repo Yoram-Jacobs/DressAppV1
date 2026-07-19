@@ -896,7 +896,9 @@
       "preferences": "Preferenze",
       "photosAvatar": "Foto e Avatar",
       "digitalAvatar": "Avatar digitale 3D",
-      "avatarGenerationDesc": "Generato dalle tue misurazioni corporee qui sotto."
+      "avatarGenerationDesc": "Generato dalle tue misurazioni corporee qui sotto.",
+      "measurementsDesc": "Vestibilità delle taglie (altezza, torace, vita e cucitura interna)",
+      "hairDesc": "Proprietà di lunghezza, tipo, stile e colore dei capelli"
     },
     "firstName": "Nome",
     "lastName": "Cognome",
@@ -946,7 +948,10 @@
       "shoeSize": "Taglia scarpe",
       "footLength": "Lunghezza piede",
       "braSize": "Taglia reggiseno",
-      "dressSize": "Taglia abito"
+      "dressSize": "Taglia abito",
+      "calculatedSection": "Dimensiones corporee calcolate (Generate da IA)",
+      "sizesSection": "Taglie di abbigliamento e calzature",
+      "calculating": "Calcolo delle misure del corpo con l'IA..."
     },
     "hairFields": {
       "length": "Lunghezza capelli",
@@ -1084,7 +1089,8 @@
     "identityVerification": "Identity Verification",
     "verifyMessage": "For your security, please verify your identity before deleting your account.",
     "googleConnected": "Connected via Google",
-    "enterPasswordPlaceholder": "Enter your password"
+    "enterPasswordPlaceholder": "Enter your password",
+    "styleProfileDesc": "Estetica, preferenze della tavolozza dei colori, cose da evitare e conservatorismo"
   },
   "admin": {
     "title": "Amministratore",

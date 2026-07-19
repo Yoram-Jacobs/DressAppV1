@@ -988,7 +988,10 @@
       "shoeSize": "מידת נעליים",
       "footLength": "אורך כף רגל",
       "braSize": "מידת חזייה",
-      "dressSize": "מידת שמלה"
+      "dressSize": "מידת שמלה",
+      "calculatedSection": "מידות גוף מחושבות (נוצר על ידי AI)",
+      "sizesSection": "מידות בגדים ונעליים",
+      "calculating": "מחשב מידות גוף באמצעות AI..."
     },
     "hairFields": {
       "length": "אורך שיער",

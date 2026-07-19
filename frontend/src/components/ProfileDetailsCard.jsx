@@ -1526,7 +1526,7 @@ function MeasurementsGrid({
       {predicting && (
         <div className="flex items-center gap-2 text-xs text-purple-700 dark:text-purple-300 animate-pulse bg-purple-500/5 px-3 py-1.5 rounded-xl border border-purple-500/10">
           <Sparkles className="h-3.5 w-3.5 animate-spin" />
-          <span>Calculating body shape measurements using AI...</span>
+          <span>{t('profile.measurements.calculating', { defaultValue: 'Calculating body shape measurements using AI...' })}</span>
         </div>
       )}
       
@@ -1543,7 +1543,7 @@ function MeasurementsGrid({
           <div className="border-t border-border/40 my-2 pt-2">
             <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider flex items-center gap-1.5">
               <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-              Calculated Body Dimensions (AI Generated)
+              {t('profile.measurements.calculatedSection', { defaultValue: 'Calculated Body Dimensions (AI Generated)' })}
             </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -1558,7 +1558,7 @@ function MeasurementsGrid({
 
           <div className="border-t border-border/40 my-2 pt-2">
             <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">
-              Garment & Footwear Sizes
+              {t('profile.measurements.sizesSection', { defaultValue: 'Garment & Footwear Sizes' })}
             </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

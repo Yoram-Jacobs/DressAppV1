@@ -896,7 +896,9 @@
       "preferences": "設定",
       "photosAvatar": "写真とアバター",
       "digitalAvatar": "3D デジタルアバター",
-      "avatarGenerationDesc": "以下の身体測定値から生成されます。"
+      "avatarGenerationDesc": "以下の身体測定値から生成されます。",
+      "measurementsDesc": "衣類のサイズフィット（身長、胸囲、ウエスト、股下）",
+      "hairDesc": "髪の長さ、タイプ、スタイル、色の特性"
     },
     "firstName": "名",
     "lastName": "姓",
@@ -946,7 +948,10 @@
       "shoeSize": "靴のサイズ",
       "footLength": "足の長さ",
       "braSize": "ブラサイズ",
-      "dressSize": "ドレスサイズ"
+      "dressSize": "ドレスサイズ",
+      "calculatedSection": "計算された体型寸法 (AI生成)",
+      "sizesSection": "衣類と靴のサイズ",
+      "calculating": "AIで体型寸法を計算中..."
     },
     "hairFields": {
       "length": "髪の長さ",
@@ -1084,7 +1089,8 @@
     "identityVerification": "Identity Verification",
     "verifyMessage": "For your security, please verify your identity before deleting your account.",
     "googleConnected": "Connected via Google",
-    "enterPasswordPlaceholder": "Enter your password"
+    "enterPasswordPlaceholder": "Enter your password",
+    "styleProfileDesc": "美学、カラーパレットの好み、避けるべきもの、保守性"
   },
   "admin": {
     "title": "管理",

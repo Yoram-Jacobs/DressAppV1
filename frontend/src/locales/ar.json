@@ -896,7 +896,9 @@
       "preferences": "التفضيلات",
       "photosAvatar": "الصور والأفاتار",
       "digitalAvatar": "أفاتار رقمي ثلاثي الأبعاد",
-      "avatarGenerationDesc": "تم إنشاؤه من قياسات جسمك أدناه."
+      "avatarGenerationDesc": "تم إنشاؤه من قياسات جسمك أدناه.",
+      "measurementsDesc": "مقاسات الملابس المناسبة (الارتفاع، الصدر، الخصر، والدرزات الداخلية)",
+      "hairDesc": "خصائص طول الشعر ونوعه وتسريحته ولونه"
     },
     "firstName": "الاسم الأول",
     "lastName": "اسم العائلة",
@@ -946,7 +948,10 @@
       "shoeSize": "مقاس الحذاء",
       "footLength": "طول القدم",
       "braSize": "مقاس حمالة الصدر",
-      "dressSize": "مقاس الفستان"
+      "dressSize": "مقاس الفستان",
+      "calculatedSection": "أبعاد الجسم المحسوبة (تم إنشاؤها بواسطة الذكاء الاصطناعي)",
+      "sizesSection": "مقاسات الملابس والأحذية",
+      "calculating": "جاري حساب قياسات الجسم باستخدام الذكاء الاصطناعي..."
     },
     "hairFields": {
       "length": "طول الشعر",
@@ -1084,7 +1089,8 @@
     "identityVerification": "Identity Verification",
     "verifyMessage": "For your security, please verify your identity before deleting your account.",
     "googleConnected": "Connected via Google",
-    "enterPasswordPlaceholder": "Enter your password"
+    "enterPasswordPlaceholder": "Enter your password",
+    "styleProfileDesc": "الجماليات، تفضيلات لوحة الألوان، الأشياء التي يجب تجنبها، والمحافظة"
   },
   "admin": {
     "title": "الإدارة",

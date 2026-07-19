@@ -1001,7 +1001,10 @@
       "shoeSize": "Schoenmaat",
       "footLength": "Voet lengte",
       "braSize": "BH maat",
-      "dressSize": "Jurk maat"
+      "dressSize": "Jurk maat",
+      "calculatedSection": "Berekende lichaamsafmetingen (AI gegenereerd)",
+      "sizesSection": "Kleding- & schoenmaten",
+      "calculating": "Lichaamsafmetingen berekenen met AI..."
     },
     "hairFields": {
       "length": "Haar lengte",

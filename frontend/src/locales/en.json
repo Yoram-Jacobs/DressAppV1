@@ -1001,7 +1001,10 @@
       "shoeSize": "Shoe size",
       "footLength": "Foot length",
       "braSize": "Bra size",
-      "dressSize": "Dress size"
+      "dressSize": "Dress size",
+      "calculatedSection": "Calculated Body Dimensions (AI Generated)",
+      "sizesSection": "Garment & Footwear Sizes",
+      "calculating": "Calculating body shape measurements using AI..."
     },
     "hairFields": {
       "length": "Hair length",

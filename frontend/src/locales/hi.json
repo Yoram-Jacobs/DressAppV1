@@ -893,7 +893,9 @@
       "preferences": "वरीयताएं",
       "photosAvatar": "फ़ोटो और अवतार",
       "digitalAvatar": "3D डिजिटल अवतार",
-      "avatarGenerationDesc": "नीचे आपके शरीर के मापों से उत्पन्न हुआ है।"
+      "avatarGenerationDesc": "नीचे आपके शरीर के मापों से उत्पन्न हुआ है।",
+      "measurementsDesc": "कपड़ों के आकार की फिटिंग (ऊंचाई, छाती, कमर और इनसीम)",
+      "hairDesc": "बालों की लंबाई, प्रकार, शैली और रंग के गुण"
     },
     "firstName": "पहला नाम",
     "lastName": "अंतिम नाम",
@@ -943,7 +945,10 @@
       "shoeSize": "जूते का आकार",
       "footLength": "पैर की लंबाई",
       "braSize": "ब्रा का आकार",
-      "dressSize": "ड्रेस का आकार"
+      "dressSize": "ड्रेस का आकार",
+      "calculatedSection": "परिकलित शारीरिक माप (एआई द्वारा जनरेट किया गया)",
+      "sizesSection": "कपड़े और जूते के आकार",
+      "calculating": "एआई का उपयोग करके शारीरिक माप की गणना की जा रही है..."
     },
     "hairFields": {
       "length": "बालों की लंबाई",
@@ -1081,7 +1086,8 @@
     "identityVerification": "Identity Verification",
     "verifyMessage": "For your security, please verify your identity before deleting your account.",
     "googleConnected": "Connected via Google",
-    "enterPasswordPlaceholder": "Enter your password"
+    "enterPasswordPlaceholder": "Enter your password",
+    "styleProfileDesc": "सौंदर्यशास्त्र, रंग पैलेट प्राथमिकताएं, बचने योग्य चीजें और रूढ़िवादिता"
   },
   "admin": {
     "title": "व्यवस्थापक",
