@@ -245,7 +245,7 @@ function SchedulerSettingsAccordionItem() {
         )}
 
         <div className="text-xs text-muted-foreground p-3 bg-secondary/20 rounded-xl border border-dashed border-border/80 text-start">
-          {t('profile.phoneWarning', { defaultValue: '* Configure phone number under Identity to receive simulated push alerts.' })}
+          {t('profile.phoneWarning', { defaultValue: '* Configure phone number under Contact to receive simulated push alerts.' })}
         </div>
 
         <div className="flex justify-end pt-2">

@@ -1041,7 +1041,7 @@
     "styleDressFor": "Stil / Kleiden für",
     "twiceAWeek": "Zweimal pro Woche",
     "everyday": "Täglich",
-    "phoneWarning": "* Konfiguriere die Telefonnummer unter Identität (Identity), um simulierte Push-Benachrichtigungen zu erhalten.",
+    "phoneWarning": "* Konfiguriere die Telefonnummer unter Kontakt (Contact), um simulierte Push-Benachrichtigungen zu erhalten.",
     "aiConfig": {
       "title": "KI-Konfiguration",
       "subtitle": "Verwalten Sie Ihre KI-Anbieter, passen Sie API-Schlüssel an oder wechseln Sie zu lokalen KI-Modellen.",

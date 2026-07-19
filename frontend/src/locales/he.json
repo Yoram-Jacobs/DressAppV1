@@ -1060,7 +1060,7 @@
     "exploreTitle": "גלה את DressApp",
     "statsTitle": "נתונים",
     "everyday": "כל יום",
-    "phoneWarning": "* הגדר מספר טלפון תחת זהות (Identity) כדי לקבל התראות פוש מדומות.",
+    "phoneWarning": "* הגדר מספר טלפון תחת פרטי קשר (Contact) כדי לקבל התראות פוש מדומות.",
     "schedulerDesc": "הצעות לבוש יומיות, התראות פוש ואפשרויות תזמון",
     "aiConfig": {
       "title": "הגדרות בינה מלאכותית",
