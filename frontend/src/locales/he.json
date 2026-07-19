@@ -2631,7 +2631,8 @@
       "freqInstant": "מיידי",
       "freqDaily": "יומי",
       "freqWeekly": "שבועי",
-      "distanceLabel": "מרחק מקסימלי"
+      "distanceLabel": "מרחק מקסימלי",
+      "distanceValue": "{{distance}} ק\"מ"
     },
     "admin": {
       "queueTitle": "תור לאישור קמפיינים",

@@ -2592,7 +2592,8 @@
       "freqInstant": "Direct",
       "freqDaily": "Dagelijks",
       "freqWeekly": "Wekelijks",
-      "distanceLabel": "Max. afstand"
+      "distanceLabel": "Max. afstand",
+      "distanceValue": "{{distance}} km"
     },
     "admin": {
       "queueTitle": "Campagne Goedkeuringswachtrij",

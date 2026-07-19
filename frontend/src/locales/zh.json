@@ -2581,7 +2581,8 @@
       "freqInstant": "实时",
       "freqDaily": "每日",
       "freqWeekly": "每周",
-      "distanceLabel": "最大距离"
+      "distanceLabel": "最大距离",
+      "distanceValue": "{{distance}} 公里"
     },
     "admin": {
       "queueTitle": "活动审批队列",

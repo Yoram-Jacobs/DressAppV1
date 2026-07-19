@@ -2581,7 +2581,8 @@
       "freqInstant": "Мгновенно",
       "freqDaily": "Ежедневно",
       "freqWeekly": "Еженедельно",
-      "distanceLabel": "Макс. расстояние"
+      "distanceLabel": "Макс. расстояние",
+      "distanceValue": "{{distance}} км"
     },
     "admin": {
       "queueTitle": "Очередь одобрения кампаний",

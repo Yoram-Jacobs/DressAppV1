@@ -2581,7 +2581,8 @@
       "freqInstant": "即時",
       "freqDaily": "毎日",
       "freqWeekly": "毎週",
-      "distanceLabel": "最大距離"
+      "distanceLabel": "最大距離",
+      "distanceValue": "{{distance}} km"
     },
     "admin": {
       "queueTitle": "キャンペーン承認キュー",

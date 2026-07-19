@@ -2581,7 +2581,8 @@
       "freqInstant": "Sofort",
       "freqDaily": "Täglich",
       "freqWeekly": "Wöchentlich",
-      "distanceLabel": "Max. Entfernung"
+      "distanceLabel": "Max. Entfernung",
+      "distanceValue": "{{distance}} km"
     },
     "admin": {
       "queueTitle": "Warteschlange für Kampagnengenehmigungen",

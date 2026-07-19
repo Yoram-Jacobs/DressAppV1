@@ -2581,7 +2581,8 @@
       "freqInstant": "فوري",
       "freqDaily": "يومي",
       "freqWeekly": "أسبوعي",
-      "distanceLabel": "المسافة القصوى"
+      "distanceLabel": "المسافة القصوى",
+      "distanceValue": "{{distance}} كم"
     },
     "admin": {
       "queueTitle": "قائمة انتظار موافقات الحملات",

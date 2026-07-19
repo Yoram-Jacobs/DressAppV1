@@ -2581,7 +2581,8 @@
       "freqInstant": "Instantáneo",
       "freqDaily": "Diario",
       "freqWeekly": "Semanal",
-      "distanceLabel": "Distancia máxima"
+      "distanceLabel": "Distancia máxima",
+      "distanceValue": "{{distance}} km"
     },
     "admin": {
       "queueTitle": "Cola de Aprobación de Campañas",

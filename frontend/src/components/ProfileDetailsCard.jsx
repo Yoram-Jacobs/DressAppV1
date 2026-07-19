@@ -1364,10 +1364,10 @@ export function ProfileDetailsCard() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="5">5 km</SelectItem>
-                        <SelectItem value="10">10 km</SelectItem>
-                        <SelectItem value="25">25 km</SelectItem>
-                        <SelectItem value="50">50 km</SelectItem>
+                        <SelectItem value="5">{t('campaigns.notifications.distanceValue', { defaultValue: '{{distance}} km', distance: 5 })}</SelectItem>
+                        <SelectItem value="10">{t('campaigns.notifications.distanceValue', { defaultValue: '{{distance}} km', distance: 10 })}</SelectItem>
+                        <SelectItem value="25">{t('campaigns.notifications.distanceValue', { defaultValue: '{{distance}} km', distance: 25 })}</SelectItem>
+                        <SelectItem value="50">{t('campaigns.notifications.distanceValue', { defaultValue: '{{distance}} km', distance: 50 })}</SelectItem>
                       </SelectContent>
                     </Select>
                   </Field>
@@ -1496,18 +1496,24 @@ function MeasurementsGrid({
 }) {
   const { t } = useTranslation();
   // Tiny helpers so the JSX below stays declarative.
-  const num = (field, label, unit = 'len', isAi = false) => (
-    <MeasurementNumField
-      key={field}
-      field={field}
-      label={`${label} (${unit === 'wt' ? wUnit : lUnit})`}
-      value={form.body_measurements[field]}
-      onChange={onChange}
-      testId={`profile-measurement-${field}`}
-      isAi={isAi}
-      predicting={predicting && isAi}
-    />
-  );
+  const num = (field, label, unit = 'len', isAi = false) => {
+    const unitKey = unit === 'wt'
+      ? `profile.unit${wUnit === 'lb' ? 'Lb' : 'Kg'}`
+      : `profile.unit${lUnit === 'in' ? 'In' : 'Cm'}`;
+    const translatedUnit = t(unitKey);
+    return (
+      <MeasurementNumField
+        key={field}
+        field={field}
+        label={`${label} (${translatedUnit})`}
+        value={form.body_measurements[field]}
+        onChange={onChange}
+        testId={`profile-measurement-${field}`}
+        isAi={isAi}
+        predicting={predicting && isAi}
+      />
+    );
+  };
   const txt = (field, label) => (
     <MeasurementTextField
       key={field}

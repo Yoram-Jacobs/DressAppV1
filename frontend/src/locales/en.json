@@ -2592,7 +2592,8 @@
       "freqInstant": "Instant",
       "freqDaily": "Daily",
       "freqWeekly": "Weekly",
-      "distanceLabel": "Max Distance"
+      "distanceLabel": "Max Distance",
+      "distanceValue": "{{distance}} km"
     },
     "admin": {
       "queueTitle": "Campaign Approval Queue",
