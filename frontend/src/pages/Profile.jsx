@@ -1056,8 +1056,8 @@ function SubscriptionSettingsAccordionItem() {
             </span>
             <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
               {isActive 
-                ? `Active: ${planType.toUpperCase()} plan (Expires: ${expiresAt})`
-                : `Free Plan: ${closetCount} / ${capacity} items used`
+                ? t('profile.subActiveSummary', { defaultValue: 'Active: {{plan}} plan (Expires: {{date}})', plan: planType.toUpperCase(), date: expiresAt })
+                : t('profile.subFreeSummary', { defaultValue: 'Free Plan: {{count}} / {{capacity}} items used', count: closetCount, capacity: capacity })
               }
             </span>
           </div>
@@ -1069,17 +1069,17 @@ function SubscriptionSettingsAccordionItem() {
             <div className="p-4 rounded-xl border border-[hsl(47_95%_80%)] bg-[hsl(47_95%_97%)] dark:bg-[hsl(47_30%_12%)] dark:border-[hsl(47_30%_25%)] flex items-center justify-between">
               <div>
                 <h4 className="font-semibold text-foreground flex items-center gap-1.5">
-                  <Crown className="h-4 w-4 text-[hsl(47_95%_50%)]" /> DressApp Pro ({planType.toUpperCase()})
+                  <Crown className="h-4 w-4 text-[hsl(47_95%_50%)]" /> {t('profile.proPlanTitle', { defaultValue: 'DressApp Pro ({{plan}})', plan: planType.toUpperCase() })}
                 </h4>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Renewal date: {expiresAt}
+                  {t('profile.renewalDate', { defaultValue: 'Renewal date: {{date}}', date: expiresAt })}
                 </p>
               </div>
-              <Badge className="bg-[hsl(47_95%_45%)] text-white dark:bg-[hsl(47_95%_35%)]">Active</Badge>
+              <Badge className="bg-[hsl(47_95%_45%)] text-white dark:bg-[hsl(47_95%_35%)]">{t('profile.statusActive', { defaultValue: 'Active' })}</Badge>
             </div>
             
             <p className="text-xs text-muted-foreground">
-              You have unlimited closet slots and fast GPU image segmentation enabled.
+              {t('profile.proPlanBenefits', { defaultValue: 'You have unlimited closet slots and fast GPU image segmentation enabled.' })}
             </p>
 
             <div className="pt-2 flex justify-end">
@@ -1091,7 +1091,7 @@ function SubscriptionSettingsAccordionItem() {
                 className="rounded-xl"
               >
                 {busy && <Loader2 className="h-4 w-4 animate-spin me-2" />}
-                Cancel Subscription
+                {t('profile.cancelSubBtn', { defaultValue: 'Cancel Subscription' })}
               </Button>
             </div>
           </div>
@@ -1099,8 +1099,8 @@ function SubscriptionSettingsAccordionItem() {
           <div className="space-y-4 text-start">
             <div className="space-y-1">
               <div className="flex justify-between text-xs text-foreground font-medium mb-1">
-                <span>Closet Capacity</span>
-                <span>{closetCount} / {capacity} items</span>
+                <span>{t('profile.closetCapacity', { defaultValue: 'Closet Capacity' })}</span>
+                <span>{t('profile.closetCapacityItems', { defaultValue: '{{count}} / {{capacity}} items', count: closetCount, capacity: capacity })}</span>
               </div>
               <div className="h-2 bg-border rounded-full overflow-hidden">
                 <div 
@@ -1110,7 +1110,7 @@ function SubscriptionSettingsAccordionItem() {
               </div>
               {closetCount >= capacity && (
                 <p className="text-xs text-destructive font-medium mt-1">
-                  You have reached your closet limit. Upgrade to add more garments!
+                  {t('profile.closetLimitWarning', { defaultValue: 'You have reached your closet limit. Upgrade to add more garments!' })}
                 </p>
               )}
             </div>
@@ -1120,13 +1120,13 @@ function SubscriptionSettingsAccordionItem() {
             <div className="grid sm:grid-cols-2 gap-4 pt-1">
               <div className="border border-border rounded-2xl p-4 bg-card flex flex-col justify-between hover:shadow-sm transition-shadow">
                 <div>
-                  <h4 className="font-bold text-sm text-foreground">Monthly Plan</h4>
+                  <h4 className="font-bold text-sm text-foreground">{t('profile.monthlyPlan', { defaultValue: 'Monthly Plan' })}</h4>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Flexible monthly cycle, cancel anytime.
+                    {t('profile.monthlyPlanDesc', { defaultValue: 'Flexible monthly cycle, cancel anytime.' })}
                   </p>
                   <div className="my-3">
                     <span className="text-2xl font-extrabold text-foreground">$4.99</span>
-                    <span className="text-xs text-muted-foreground"> / month</span>
+                    <span className="text-xs text-muted-foreground">{t('profile.perMonth', { defaultValue: ' / month' })}</span>
                   </div>
                 </div>
                 <Button 
@@ -1135,24 +1135,24 @@ function SubscriptionSettingsAccordionItem() {
                   className="rounded-xl w-full"
                 >
                   {busy && <Loader2 className="h-4 w-4 animate-spin me-2" />}
-                  Upgrade Monthly
+                  {t('profile.upgradeMonthlyBtn', { defaultValue: 'Upgrade Monthly' })}
                 </Button>
               </div>
 
               <div className="border border-[hsl(47_95%_60%)] rounded-2xl p-4 bg-card flex flex-col justify-between hover:shadow-sm transition-shadow relative overflow-hidden">
                 <div className="absolute top-0 right-0 bg-[hsl(47_95%_45%)] text-white text-[9px] font-bold uppercase tracking-wider py-1 px-3 rounded-bl-xl">
-                  Best Value
+                  {t('profile.bestValue', { defaultValue: 'Best Value' })}
                 </div>
                 <div>
                   <h4 className="font-bold text-sm text-foreground flex items-center gap-1">
-                    <Crown className="h-3.5 w-3.5 text-[hsl(47_95%_50%)]" /> Annual Plan
+                    <Crown className="h-3.5 w-3.5 text-[hsl(47_95%_50%)]" /> {t('profile.annualPlan', { defaultValue: 'Annual Plan' })}
                   </h4>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Save 50% compared to monthly billing.
+                    {t('profile.annualPlanDesc', { defaultValue: 'Save 50% compared to monthly billing.' })}
                   </p>
                   <div className="my-3">
                     <span className="text-2xl font-extrabold text-foreground">$29.99</span>
-                    <span className="text-xs text-muted-foreground"> / year</span>
+                    <span className="text-xs text-muted-foreground">{t('profile.perYear', { defaultValue: ' / year' })}</span>
                   </div>
                 </div>
                 <Button 
@@ -1161,7 +1161,7 @@ function SubscriptionSettingsAccordionItem() {
                   className="rounded-xl w-full bg-[hsl(47_95%_45%)] hover:bg-[hsl(47_95%_40%)] text-white"
                 >
                   {busy && <Loader2 className="h-4 w-4 animate-spin me-2" />}
-                  Upgrade Annual
+                  {t('profile.upgradeAnnualBtn', { defaultValue: 'Upgrade Annual' })}
                 </Button>
               </div>
             </div>

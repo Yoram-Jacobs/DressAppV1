@@ -59,7 +59,8 @@
     "remove": "Rimuovi",
     "share": "Condividi",
     "time": "Ora",
-    "unknownColor": "Altro"
+    "unknownColor": "Altro",
+    "saved": "Salvato"
   },
   "auth": {
     "welcomeBack": "Bentornato",
@@ -898,7 +899,13 @@
       "digitalAvatar": "Avatar digitale 3D",
       "avatarGenerationDesc": "Generato dalle tue misurazioni corporee qui sotto.",
       "measurementsDesc": "Vestibilità delle taglie (altezza, torace, vita e cucitura interna)",
-      "hairDesc": "Proprietà di lunghezza, tipo, stile e colore dei capelli"
+      "hairDesc": "Proprietà di lunghezza, tipo, stile e colore dei capelli",
+      "identityDesc": "Nome, indirizzo e-mail e data di nascita",
+      "contactDesc": "Numero di telefono, indirizzo di consegna e localizzazione",
+      "demographicsDesc": "Genere, background professionale e stato civile",
+      "preferencesDesc": "Scale di misurazione predefinite per taglie, lunghezze e pesi",
+      "photosAvatarDesc": "Foto di riferimento visivo del modello avatar e silhouette",
+      "settings": "Impostazioni e integrazioni"
     },
     "firstName": "Nome",
     "lastName": "Cognome",
@@ -990,13 +997,15 @@
       "businessDescription": "Breve descrizione",
       "visibilityNote": "Visibile nella directory Esperti su /experts.",
       "hiddenBadge": "Nascosto dal moderatore",
-      "save": "Salva dettagli professionali"
+      "save": "Salva dettagli professionali",
+      "sectionDesc": "Credenziali per l'attività professionale e inserimento nella directory"
     },
     "payouts": {
       "sectionTitle": "Pagamenti (PayPal)",
       "description": "Quando una delle tue inserzioni viene venduta, invieremo il tuo netto a questa email PayPal tramite PayPal Payouts. Lascia vuoto per disabilitare i pagamenti automatici.",
       "paypalEmail": "Email PayPal per pagamenti",
-      "linked": "Collegato"
+      "linked": "Collegato",
+      "sectionDesc": "Indirizzo di fatturazione PayPal collegato per designer e vendite"
     },
     "occupation": "Occupazione",
     "exploreTitle": "Esplora DressApp",
@@ -1090,7 +1099,37 @@
     "verifyMessage": "For your security, please verify your identity before deleting your account.",
     "googleConnected": "Connected via Google",
     "enterPasswordPlaceholder": "Enter your password",
-    "styleProfileDesc": "Estetica, preferenze della tavolozza dei colori, cose da evitare e conservatorismo"
+    "styleProfileDesc": "Estetica, preferenze della tavolozza dei colori, cose da evitare e conservatorismo",
+    "schedulerDesc": "Proposte giornaliere di outfit, notifiche push e opzioni di pianificazione",
+    "settingsTitle": "Preferenze di sistema",
+    "shoppingAssistant": "Assistente allo shopping",
+    "shoppingAssistantDesc": "Integra i consigli sulle taglie direttamente nel tuo browser per lo shopping",
+    "chromeStoreTitle": "Estensione di Chrome Web Store",
+    "chromeStoreDesc": "Ottieni l'estensione ufficiale del browser per la scelta automatica delle taglie sui negozi online supportati.",
+    "chromeStoreComingSoon": "Prossimamente su Chrome Web Store",
+    "bookmarkletTitle": "Bookmarklet universale",
+    "bookmarkletInstruction": "Trascina il pulsante in basso sulla barra dei preferiti. Su dispositivo mobile, aggiungilo ai preferiti e nominalo 'Assistente shopping DressApp'. Cliccaci sopra quando sei su una pagina prodotto.",
+    "bookmarkletBtn": "Per usare: Trascina questo pulsante sulla barra dei preferiti. Cliccaci sopra su qualsiasi pagina prodotto del negozio per ottenere consigli sulle taglie.",
+    "subscription": "Abbonamento e limiti",
+    "subActiveSummary": "Attivo: piano {{plan}} (Scade il: {{date}})",
+    "subFreeSummary": "Piano gratuito: {{count}} / {{capacity}} elementi utilizzati",
+    "proPlanTitle": "DressApp Pro ({{plan}})",
+    "renewalDate": "Data di rinnovo: {{date}}",
+    "statusActive": "Attivo",
+    "proPlanBenefits": "Hai slot guardaroba illimitati e la segmentazione rapida delle immagini GPU abilitata.",
+    "cancelSubBtn": "Annulla abbonamento",
+    "closetCapacity": "Capacità guardaroba",
+    "closetCapacityItems": "{{count}} / {{capacity}} elementi",
+    "closetLimitWarning": "Hai raggiunto il limite del guardaroba. Fai l'upgrade per aggiungere altri capi!",
+    "monthlyPlan": "Piano mensile",
+    "monthlyPlanDesc": "Ciclo mensile flessibile, annulla quando vuoi.",
+    "perMonth": " / mese",
+    "upgradeMonthlyBtn": "Upgrade mensile",
+    "bestValue": "Miglior valore",
+    "annualPlan": "Piano annuale",
+    "annualPlanDesc": "Risparmia il 50% rispetto alla fatturazione mensile.",
+    "perYear": " / anno",
+    "upgradeAnnualBtn": "Upgrade annuale"
   },
   "admin": {
     "title": "Amministratore",
@@ -1501,7 +1540,10 @@
     "cityLabel": "Città",
     "accuracyLabel": "Accuratezza",
     "metersShort": "m",
-    "kmShort": "km"
+    "kmShort": "km",
+    "description": "Utilizzato per consigli sull'outfit in base al meteo e sincronizzazione alba/tramonto",
+    "statusActive": "I dati meteo sono sincronizzati in base alle tue coordinate.",
+    "statusInactive": "La funzione meteo utilizza valori predefiniti offline."
   },
   "language": {
     "change": "Cambia lingua",
@@ -2532,7 +2574,12 @@
       "quietHours": "Ore di Silenzio (Non Disturbare)",
       "quietStart": "Da",
       "quietEnd": "A",
-      "maxDistance": "Distanza Massima Campagna"
+      "maxDistance": "Distanza Massima Campagna",
+      "frequencyLabel": "Frequenza",
+      "freqInstant": "Istantaneo",
+      "freqDaily": "Giornaliero",
+      "freqWeekly": "Settimanale",
+      "distanceLabel": "Distanza max"
     },
     "admin": {
       "queueTitle": "Coda Approvazione Campagne",

@@ -59,7 +59,8 @@
     "remove": "إزالة",
     "share": "مشاركة",
     "time": "الوقت",
-    "unknownColor": "آخر"
+    "unknownColor": "آخر",
+    "saved": "تم الحفظ"
   },
   "auth": {
     "welcomeBack": "مرحبًا بعودتك",
@@ -898,7 +899,13 @@
       "digitalAvatar": "أفاتار رقمي ثلاثي الأبعاد",
       "avatarGenerationDesc": "تم إنشاؤه من قياسات جسمك أدناه.",
       "measurementsDesc": "مقاسات الملابس المناسبة (الارتفاع، الصدر، الخصر، والدرزات الداخلية)",
-      "hairDesc": "خصائص طول الشعر ونوعه وتسريحته ولونه"
+      "hairDesc": "خصائص طول الشعر ونوعه وتسريحته ولونه",
+      "identityDesc": "اسمك وعنوان بريدك الإلكتروني وتاريخ ميلادك",
+      "contactDesc": "رقم الهاتف وعنوان التسليم والتوطين",
+      "demographicsDesc": "الجنس والخلفية المهنية والحالة الشخصية",
+      "preferencesDesc": "مقاييس القياس الافتراضية للمقاسات والأطوال والأوزان",
+      "photosAvatarDesc": "الصور المرجعية البصرية للأفاتار وشكل الجسم",
+      "settings": "الإعدادات وعمليات التكامل"
     },
     "firstName": "الاسم الأول",
     "lastName": "اسم العائلة",
@@ -984,13 +991,15 @@
       "businessDescription": "وصف مختصر",
       "visibilityNote": "يظهر في دليل الخبراء على /experts.",
       "hiddenBadge": "مخفي من قبل الإشراف",
-      "save": "حفظ تفاصيل المحترف"
+      "save": "حفظ تفاصيل المحترف",
+      "sectionDesc": "أوراق اعتماد الموافقة على العمل وقوائم الدليل المهني"
     },
     "payouts": {
       "sectionTitle": "المدفوعات (PayPal)",
       "description": "عند بيع أحد منتجاتك، سيتم تحويل صافي ربحك إلى بريد PayPal هذا عبر PayPal Payouts. اتركه فارغًا لتعطيل المدفوعات التلقائية.",
       "paypalEmail": "بريد PayPal لاستلام المدفوعات",
-      "linked": "مرتبط"
+      "linked": "مرتبط",
+      "sectionDesc": "عنوان دفع PayPal المرتبط بمبيعات المصممين والقوائم"
     },
     "addressLine1Placeholder": "ابدأ بكتابة شارعك…",
     "cityPlaceholder": "ابدأ بكتابة مدينتك…",
@@ -1090,7 +1099,37 @@
     "verifyMessage": "For your security, please verify your identity before deleting your account.",
     "googleConnected": "Connected via Google",
     "enterPasswordPlaceholder": "Enter your password",
-    "styleProfileDesc": "الجماليات، تفضيلات لوحة الألوان، الأشياء التي يجب تجنبها، والمحافظة"
+    "styleProfileDesc": "الجماليات، تفضيلات لوحة الألوان، الأشياء التي يجب تجنبها، والمحافظة",
+    "schedulerDesc": "مقترحات ملابس يومية، وتنبيهات الدفع، وخيارات الجدولة",
+    "settingsTitle": "تفضيلات النظام",
+    "shoppingAssistant": "مساعد التسوق",
+    "shoppingAssistantDesc": "دمج توصيات المقاس مباشرة في متصفح التسوق الخاص بك",
+    "chromeStoreTitle": "إضافة متجر كروم الإلكتروني",
+    "chromeStoreDesc": "احصل على إضافة المتصفح الرسمية لتحديد المقاسات تلقائيًا على المتاجر المدعومة عبر الإنترنت.",
+    "chromeStoreComingSoon": "قريبًا في متجر كروم الإلكتروني",
+    "bookmarkletTitle": "العلامة المرجعية الشاملة",
+    "bookmarkletInstruction": "اسحب الزر أدناه إلى شريط العلامات المرجعية. على الهاتف المحمول، أضفه إلى علاماتك المرجعية وسمه 'مساعد التسوق من DressApp'. انقر عليه عند تصفح أي صفحة منتج.",
+    "bookmarkletBtn": "للاستخدام: اسحب هذا الزر إلى شريط العلامات المرجعية الخاص بك. انقر فوقه في أي صفحة منتج للحصول على توصيات المقاس.",
+    "subscription": "الاشتراك والحدود",
+    "subActiveSummary": "نشط: خطة {{plan}} (تنتهي في: {{date}})",
+    "subFreeSummary": "الخطة المجانية: تم استخدام {{count}} / {{capacity}} من العناصر",
+    "proPlanTitle": "DressApp برو ({{plan}})",
+    "renewalDate": "تاريخ التجديد: {{date}}",
+    "statusActive": "نشط",
+    "proPlanBenefits": "لديك فتحات خزانة غير محدودة وتم تمكين تقسيم الصور السريع عبر وحدة معالجة الرسومات.",
+    "cancelSubBtn": "إلغاء الاشتراك",
+    "closetCapacity": "سعة الخزانة",
+    "closetCapacityItems": "{{count}} / {{capacity}} عناصر",
+    "closetLimitWarning": "لقد وصلت إلى حد الخزانة الخاص بك. قم بالترقية لإضافة المزيد من الملابس!",
+    "monthlyPlan": "خطة شهرية",
+    "monthlyPlanDesc": "دورة شهرية مرنة، إلغاء في أي وقت.",
+    "perMonth": " / شهر",
+    "upgradeMonthlyBtn": "ترقية شهرية",
+    "bestValue": "أفضل قيمة",
+    "annualPlan": "خطة سنوية",
+    "annualPlanDesc": "وفر 50% مقارنة بالفوترة الشهرية.",
+    "perYear": " / سنة",
+    "upgradeAnnualBtn": "ترقية سنوية"
   },
   "admin": {
     "title": "الإدارة",
@@ -1501,7 +1540,10 @@
     "cityLabel": "المدينة",
     "accuracyLabel": "الدقة",
     "metersShort": "م",
-    "kmShort": "كم"
+    "kmShort": "كم",
+    "description": "تستخدم لتوصيات الملابس المتوافقة مع الطقس ومزامنة شروق الشمس وغروبها",
+    "statusActive": "تتم مزامنة بيانات الطقس بناءً على إحداثياتك.",
+    "statusInactive": "ميزة الطقس تستخدم القيم الافتراضية دون اتصال بالإنترنت."
   },
   "experts": {
     "title": "اسأل محترفًا",
@@ -2532,7 +2574,12 @@
       "quietHours": "ساعات الهدوء (عدم الإزعاج)",
       "quietStart": "من",
       "quietEnd": "حتى",
-      "maxDistance": "أقصى مسافة للحملة"
+      "maxDistance": "أقصى مسافة للحملة",
+      "frequencyLabel": "التكرار",
+      "freqInstant": "فوري",
+      "freqDaily": "يومي",
+      "freqWeekly": "أسبوعي",
+      "distanceLabel": "المسافة القصوى"
     },
     "admin": {
       "queueTitle": "قائمة انتظار موافقات الحملات",

@@ -58,7 +58,8 @@
     "remove": "हटाएं",
     "share": "साझा करें",
     "time": "समय",
-    "unknownColor": "अन्य"
+    "unknownColor": "अन्य",
+    "saved": "सहेज लिया गया"
   },
   "auth": {
     "welcomeBack": "वापसी पर स्वागत है",
@@ -895,7 +896,13 @@
       "digitalAvatar": "3D डिजिटल अवतार",
       "avatarGenerationDesc": "नीचे आपके शरीर के मापों से उत्पन्न हुआ है।",
       "measurementsDesc": "कपड़ों के आकार की फिटिंग (ऊंचाई, छाती, कमर और इनसीम)",
-      "hairDesc": "बालों की लंबाई, प्रकार, शैली और रंग के गुण"
+      "hairDesc": "बालों की लंबाई, प्रकार, शैली और रंग के गुण",
+      "identityDesc": "आपका नाम, ईमेल पता और जन्म तिथि",
+      "contactDesc": "फ़ोन नंबर, वितरण पता और स्थानीयकरण",
+      "demographicsDesc": "लिंग, व्यावसायिक पृष्ठभूमि और व्यक्तिगत स्थिति",
+      "preferencesDesc": "आकार, लंबाई और वजन के लिए डिफ़ॉल्ट माप पैमाने",
+      "photosAvatarDesc": "अवतार मॉडल संदर्भ तस्वीरें और शरीर का आकार",
+      "settings": "सेटिंग्स और एकीकरण"
     },
     "firstName": "पहला नाम",
     "lastName": "अंतिम नाम",
@@ -987,13 +994,15 @@
       "businessDescription": "संक्षिप्त विवरण",
       "visibilityNote": "Experts निर्देशिका में /experts पर दिखाई देगा।",
       "hiddenBadge": "मॉडरेटर द्वारा छिपाया गया",
-      "save": "पेशेवर विवरण सहेजें"
+      "save": "पेशेवर विवरण सहेजें",
+      "sectionDesc": "व्यवसाय अनुमोदन क्रेडेंशियल्स और व्यावसायिक निर्देशिका लिस्टिंग"
     },
     "payouts": {
       "sectionTitle": "पेआउट (PayPal)",
       "description": "जब आपकी कोई लिस्टिंग बिकती है, तो हम आपकी शुद्ध राशि PayPal Payouts के ज़रिए इस PayPal ईमेल पर भेजेंगे। स्वचालित पेआउट निष्क्रिय करने के लिए खाली छोड़ें।",
       "paypalEmail": "भुगतान के लिए PayPal ईमेल",
-      "linked": "लिंक किया गया"
+      "linked": "लिंक किया गया",
+      "sectionDesc": "डिजाइनर और लिस्टिंग बिक्री के लिए जुड़ा हुआ पेपैल बिलिंग पता"
     },
     "occupation": "व्यवसाय",
     "exploreTitle": "DressApp एक्सप्लोर करें",
@@ -1087,7 +1096,37 @@
     "verifyMessage": "For your security, please verify your identity before deleting your account.",
     "googleConnected": "Connected via Google",
     "enterPasswordPlaceholder": "Enter your password",
-    "styleProfileDesc": "सौंदर्यशास्त्र, रंग पैलेट प्राथमिकताएं, बचने योग्य चीजें और रूढ़िवादिता"
+    "styleProfileDesc": "सौंदर्यशास्त्र, रंग पैलेट प्राथमिकताएं, बचने योग्य चीजें और रूढ़िवादिता",
+    "schedulerDesc": "दैनिक पहनावा प्रस्ताव, पुश अलर्ट और शेड्यूलिंग विकल्प",
+    "settingsTitle": "सिस्टम प्राथमिकताएं",
+    "shoppingAssistant": "शॉपिंग असिस्टेंट",
+    "shoppingAssistantDesc": "अपने शॉपिंग ब्राउज़र में सीधे आकार की सिफारिशों को एकीकृत करें",
+    "chromeStoreTitle": "क्रोम वेब स्टोर एक्सटेंशन",
+    "chromeStoreDesc": "समर्थित ऑनलाइन स्टोर पर स्वचालित आकार निर्धारण के लिए आधिकारिक ब्राउज़र एक्सटेंशन प्राप्त करें।",
+    "chromeStoreComingSoon": "क्रोम वेब स्टोर पर जल्द ही आ रहा है",
+    "bookmarkletTitle": "यूनिवर्सल बुकमार्कलेट",
+    "bookmarkletInstruction": "नीचे दिए गए बटन को अपने बुकमार्क बार पर खींचें। मोबाइल पर, इसे अपने बुकमार्क में जोड़ें और इसे 'DressApp शॉपिंग असिस्टेंट' नाम दें। किसी भी उत्पाद पृष्ठ पर होने पर इस पर क्लिक करें।",
+    "bookmarkletBtn": "उपयोग करने के लिए: इस बटन को अपने बुकमार्क बार में खींचें। आकार अनुशंसाएँ प्राप्त करने के लिए इसे किसी भी स्टोर उत्पाद पृष्ठ पर क्लिक करें।",
+    "subscription": "सदस्यता और सीमाएं",
+    "subActiveSummary": "सक्रिय: {{plan}} योजना (समाप्ति तिथि: {{date}})",
+    "subFreeSummary": "निःशुल्क योजना: {{count}} / {{capacity}} आइटम प्रयुक्त",
+    "proPlanTitle": "DressApp प्रो ({{plan}})",
+    "renewalDate": "नवीनीकरण तिथि: {{date}}",
+    "statusActive": "सक्रिय",
+    "proPlanBenefits": "आपके पास असीमित कोठरी स्लॉट और तेज़ GPU छवि विभाजन सक्षम है।",
+    "cancelSubBtn": "सदस्यता रद्द करें",
+    "closetCapacity": "अलमारी की क्षमता",
+    "closetCapacityItems": "{{count}} / {{capacity}} आइटम",
+    "closetLimitWarning": "आप अपनी अलमारी की सीमा पर पहुँच चुके हैं। अधिक कपड़े जोड़ने के लिए अपग्रेड करें!",
+    "monthlyPlan": "मासिक योजना",
+    "monthlyPlanDesc": "लचीला मासिक चक्र, कभी भी रद्द करें।",
+    "perMonth": " / माह",
+    "upgradeMonthlyBtn": "मासिक अपग्रेड करें",
+    "bestValue": "सर्वोत्तम मूल्य",
+    "annualPlan": "वार्षिक योजना",
+    "annualPlanDesc": "मासिक बिलिंग की तुलना में 50% बचत करें।",
+    "perYear": " / वर्ष",
+    "upgradeAnnualBtn": "वार्षिक अपग्रेड करें"
   },
   "admin": {
     "title": "व्यवस्थापक",
@@ -1497,7 +1536,10 @@
     "cityLabel": "शहर",
     "accuracyLabel": "सटीकता",
     "metersShort": "मी",
-    "kmShort": "किमी"
+    "kmShort": "किमी",
+    "description": "मौसम-सटीक पहनावा अनुशंसाओं और सूर्योदय/सूर्यास्त सिंक के लिए उपयोग किया जाता है",
+    "statusActive": "स्थान के आधार पर मौसम का डेटा सिंक किया गया है।",
+    "statusInactive": "मौसम सुविधा ऑफ़लाइन डिफ़ॉल्ट मानों का उपयोग कर रही है।"
   },
   "language": {
     "change": "भाषा बदलें",
@@ -2528,7 +2570,12 @@
       "quietHours": "शांत घंटे (परेशान न करें)",
       "quietStart": "से",
       "quietEnd": "तक",
-      "maxDistance": "अधिकतम अभियान दूरी"
+      "maxDistance": "अधिकतम अभियान दूरी",
+      "frequencyLabel": "आवृत्ति",
+      "freqInstant": "तुरंत",
+      "freqDaily": "दैनिक",
+      "freqWeekly": "साप्ताहिक",
+      "distanceLabel": "अधिकतम दूरी"
     },
     "admin": {
       "queueTitle": "अभियान अनुमोदन कतार",

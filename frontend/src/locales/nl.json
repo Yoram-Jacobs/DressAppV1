@@ -59,7 +59,8 @@
     "remove": "Verwijderen",
     "share": "Deel",
     "time": "Tijd",
-    "unknownColor": "Ander"
+    "unknownColor": "Ander",
+    "saved": "Opgeslagen"
   },
   "auth": {
     "welcomeBack": "Welkom terug",
@@ -888,14 +889,14 @@
     "conservHigh": "Hoog",
     "voiceLanguage": "Stem & taal",
     "shoppingAssistant": "Winkelassistent",
-    "shoppingAssistantDesc": "Integreer maataanbevelingen rechtstreeks in uw winkelbrowser",
+    "shoppingAssistantDesc": "Integreer maataanbevelingen rechtstreeks in je browser",
     "chromeStoreTitle": "Chrome Web Store-extensie",
-    "chromeStoreDesc": "Download de officiële browserextensie voor automatische dimensionering in ondersteunde online winkels.",
-    "chromeStoreComingSoon": "Binnenkort verkrijgbaar in de Chrome Web Store",
-    "bookmarkletTitle": "Universele bladwijzer",
+    "chromeStoreDesc": "Download de officiële browserextensie voor automatische maatinformatie op ondersteunde webshops.",
+    "chromeStoreComingSoon": "Binnenkort beschikbaar in de Chrome Web Store",
+    "bookmarkletTitle": "Universele Bookmarklet",
     "bookmarkletDesc": "Sleep de onderstaande knop naar uw bladwijzerbalk. Op mobiel voegt u het toe aan uw bladwijzers en noemt u het 'DressApp Shopping Assistant'. Klik erop wanneer u zich op een productpagina bevindt.",
-    "bookmarkletBtn": "DressApp-assistent",
-    "bookmarkletInstruction": "Te gebruiken: Sleep deze knop naar uw bladwijzerbalk. Klik erop op een productpagina van een winkel om maataanbevelingen te krijgen.",
+    "bookmarkletBtn": "Gebruik: Sleep deze knop naar je bladwijzerbalk. Klik erop op een productpagina om maataanbevelingen te krijgen.",
+    "bookmarkletInstruction": "Sleep de knop hieronder naar je bladwijzerbalk. Voeg hem op mobiel toe aan je bladwijzers en noem hem 'DressApp Winkelassistent'. Klik erop op een productpagina.",
     "language": "Taal",
     "voice": "Stem (Piper offline)",
     "saveChanges": "Wijzigingen opslaan",
@@ -929,14 +930,14 @@
     "settingsTitle": "Systeemvoorkeuren",
     "sections": {
       "identity": "Identiteit",
-      "identityDesc": "Uw naam, e-mailadres en geboortedatum",
+      "identityDesc": "Je naam, e-mailadres en geboortedatum",
       "contact": "Contact",
       "contactDesc": "Telefoonnummer, afleveradres en lokalisatie",
       "demographics": "Demografie",
-      "demographicsDesc": "Geslacht, beroepsachtergrond en persoonlijke status",
+      "demographicsDesc": "Geslacht, professionele achtergrond en persoonlijke status",
       "photos": "Foto's",
       "photosAvatar": "Foto's en avatar",
-      "photosAvatarDesc": "Avatar-model visuele referentiefoto's en lichaamsvorm",
+      "photosAvatarDesc": "Visuele referentiefoto's van avatar en vorm van het lichaam",
       "digitalAvatar": "3D digitale avatar",
       "avatarGenerationDesc": "Gegenereerd op basis van uw lichaamsafmetingen hieronder.",
       "measurements": "Lichaamsafmetingen",
@@ -945,7 +946,7 @@
       "hairDesc": "Haarlengte, type, stijl en kleureigenschappen",
       "preferences": "Voorkeuren",
       "preferencesDesc": "Standaard meetschalen voor maten, lengtes en gewichten",
-      "settings": "Instellingen en integraties"
+      "settings": "Instellingen & Integraties"
     },
     "firstName": "Voornaam",
     "lastName": "Achternaam",
@@ -1024,7 +1025,7 @@
     "autofilledFromGoogle": "Automatisch ingevuld door Google: bewerk het op elk gewenst moment.",
     "professional": {
       "sectionTitle": "Professioneel mode-expert",
-      "sectionDesc": "Bedrijfsgoedkeuringsreferenties en professionele directoryvermeldingen",
+      "sectionDesc": "Bedrijfskwalificaties en professionele directoryvermeldingen",
       "checkboxLabel": "Ik ben een professionele mode-expert",
       "checkboxHint": "Verschijn in de Experts-directory en voer regionale advertenties uit.",
       "profession": "Beroep",
@@ -1044,7 +1045,8 @@
       "sectionTitle": "Uitbetalingen (PayPal)",
       "description": "Wanneer een van uw aanbiedingen wordt verkocht, sturen we uw nettobedrag naar dit PayPal-e-mailadres via PayPal-uitbetalingen. Laat dit veld leeg om automatische uitbetalingen uit te schakelen.",
       "paypalEmail": "PayPal-e-mail voor uitbetalingen",
-      "linked": "Gekoppeld"
+      "linked": "Gekoppeld",
+      "sectionDesc": "Gekoppeld PayPal-facturatieadres voor ontwerpers- en verkooptransacties"
     },
     "occupation": "Bezigheid",
     "aiStylist": "AI-stylist",
@@ -1119,7 +1121,27 @@
       "edgeNotice": "Lokale Gemma4-E2B offline uitvoeren. De gebruiksstatistieken van de uitvoering worden lokaal gecontroleerd en teruggestort via Google Nano Banana.",
       "appFeeLabel": "Opgebouwde app-kosten",
       "appFeeDescription": "Onbetaalde platformkosten die voortvloeien uit het gebruik van tegoed."
-    }
+    },
+    "subscription": "Abonnement & Limieten",
+    "subActiveSummary": "Actief: {{plan}} plan (Verloopt op: {{date}})",
+    "subFreeSummary": "Gratis plan: {{count}} / {{capacity}} items gebruikt",
+    "proPlanTitle": "DressApp Pro ({{plan}})",
+    "renewalDate": "Verlengingsdatum: {{date}}",
+    "statusActive": "Actief",
+    "proPlanBenefits": "Je hebt onbeperkte kledingkast slots en snelle GPU-afbeeldingssegmentatie ingeschakeld.",
+    "cancelSubBtn": "Abonnement opzeggen",
+    "closetCapacity": "Kledingkast capaciteit",
+    "closetCapacityItems": "{{count}} / {{capacity}} items",
+    "closetLimitWarning": "Je hebt je limiet bereikt. Upgrade om meer kledingstukken toe te voegen!",
+    "monthlyPlan": "Maandelijks plan",
+    "monthlyPlanDesc": "Flexibele maandelijkse cyclus, annuleer wanneer je wilt.",
+    "perMonth": " / maand",
+    "upgradeMonthlyBtn": "Upgrade maandelijks",
+    "bestValue": "Beste deal",
+    "annualPlan": "Jaarlijks plan",
+    "annualPlanDesc": "Bespaar 50% in vergelijking met maandelijkse facturering.",
+    "perYear": " / jaar",
+    "upgradeAnnualBtn": "Upgrade jaarlijks"
   },
   "admin": {
     "title": "Beheerder",
@@ -1515,7 +1537,7 @@
   },
   "location": {
     "title": "Uw locatie gebruiken?",
-    "description": "Wordt gebruikt voor weersnauwkeurige outfitaanbevelingen en synchronisatie van zonsopgang en zonsondergang",
+    "description": "Gebruikt voor weersafhankelijke kledingadviezen en zonsopgang/zonsondergang synchronisatie",
     "rationale": "Locatie zorgt voor een weersbewuste styling, winkels in de buurt, resultaten op de lokale markt en regionale modetrends. Wij sturen uw coördinaten alleen naar de Stylist en delen deze nooit met andere gebruikers.",
     "allow": "Gebruik mijn locatie",
     "notNow": "Niet nu",
@@ -1531,7 +1553,9 @@
     "cityLabel": "Stad",
     "accuracyLabel": "Nauwkeurigheid",
     "metersShort": "M",
-    "kmShort": "km"
+    "kmShort": "km",
+    "statusActive": "Weergegevens zijn gesynchroniseerd op basis van je coördinaten.",
+    "statusInactive": "Weerfunctie gebruikt offline standaardwaarden."
   },
   "experts": {
     "title": "Vraag het aan een professional",
@@ -2563,7 +2587,12 @@
       "quietHours": "Stille Uren (Niet Storen)",
       "quietStart": "Van",
       "quietEnd": "Tot",
-      "maxDistance": "Maximale Campagne Afstand"
+      "maxDistance": "Maximale Campagne Afstand",
+      "frequencyLabel": "Frequentie",
+      "freqInstant": "Direct",
+      "freqDaily": "Dagelijks",
+      "freqWeekly": "Wekelijks",
+      "distanceLabel": "Max. afstand"
     },
     "admin": {
       "queueTitle": "Campagne Goedkeuringswachtrij",

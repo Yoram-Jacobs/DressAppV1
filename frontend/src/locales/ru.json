@@ -59,7 +59,8 @@
     "remove": "Удалить",
     "share": "Поделиться",
     "time": "Время",
-    "unknownColor": "Другое"
+    "unknownColor": "Другое",
+    "saved": "Сохранено"
   },
   "auth": {
     "welcomeBack": "С возвращением",
@@ -898,7 +899,13 @@
       "digitalAvatar": "3D цифровой аватар",
       "avatarGenerationDesc": "Создано на основе ваших размеров тела, указанных ниже.",
       "measurementsDesc": "Соответствие размеров одежды (рост, обхват груди, талии и внутренний шов)",
-      "hairDesc": "Свойства длины, типа, стиля и цвета волос"
+      "hairDesc": "Свойства длины, типа, стиля и цвета волос",
+      "identityDesc": "Ваше имя, адрес электронной почты и дата рождения",
+      "contactDesc": "Номер телефона, адрес доставки и локализация",
+      "demographicsDesc": "Пол, род занятий и семейное положение",
+      "preferencesDesc": "Единицы измерения по умолчанию для размеров, длины и веса",
+      "photosAvatarDesc": "Фотографии аватара для визуальной сверки и тип телосложения",
+      "settings": "Настройки и интеграции"
     },
     "firstName": "Имя",
     "lastName": "Фамилия",
@@ -990,13 +997,15 @@
       "businessDescription": "Краткое описание",
       "visibilityNote": "Отображается в каталоге экспертов по адресу /experts.",
       "hiddenBadge": "Скрыто модератором",
-      "save": "Сохранить профессиональные данные"
+      "save": "Сохранить профессиональные данные",
+      "sectionDesc": "Документы подтверждения бизнеса и профессиональные контакты"
     },
     "payouts": {
       "sectionTitle": "Выплаты (PayPal)",
       "description": "Когда ваше объявление продаётся, мы отправим вашу чистую выручку на этот PayPal email через PayPal Payouts. Оставьте пустым, чтобы отключить автоматические выплаты.",
       "paypalEmail": "Email PayPal для выплат",
-      "linked": "Привязан"
+      "linked": "Привязан",
+      "sectionDesc": "Связанный платежный адрес PayPal для дизайнерских и торговых продаж"
     },
     "occupation": "Род деятельности",
     "exploreTitle": "Исследовать DressApp",
@@ -1090,7 +1099,37 @@
     "verifyMessage": "For your security, please verify your identity before deleting your account.",
     "googleConnected": "Connected via Google",
     "enterPasswordPlaceholder": "Enter your password",
-    "styleProfileDesc": "Эстетика, предпочтения по цветовой палитре, избегаемые вещи и консервативность"
+    "styleProfileDesc": "Эстетика, предпочтения по цветовой палитре, избегаемые вещи и консервативность",
+    "schedulerDesc": "Ежедневные предложения образов, пуш-уведомления и планирование",
+    "settingsTitle": "Системные настройки",
+    "shoppingAssistant": "Помощник по покупкам",
+    "shoppingAssistantDesc": "Интегрируйте рекомендации по подбору размеров прямо в ваш браузер",
+    "chromeStoreTitle": "Расширение для интернет-магазина Chrome",
+    "chromeStoreDesc": "Установите официальное расширение для автоподбора размеров на поддерживаемых сайтах магазинов.",
+    "chromeStoreComingSoon": "Скоро в интернет-магазине Chrome",
+    "bookmarkletTitle": "Универсальный букмарклет",
+    "bookmarkletInstruction": "Перетащите кнопку ниже на панель закладок. На мобильном телефоне добавьте её в закладки и назовите 'Помощник DressApp'. Нажимайте на неё на страницах товаров.",
+    "bookmarkletBtn": "Для использования: Перетащите эту кнопку на панель закладок. Нажмите её на странице товара для автоподбора размера.",
+    "subscription": "Подписка и лимиты",
+    "subActiveSummary": "Активен: тариф {{plan}} (Истекает: {{date}})",
+    "subFreeSummary": "Бесплатный тариф: использовано {{count}} / {{capacity}} вещей",
+    "proPlanTitle": "DressApp Pro ({{plan}})",
+    "renewalDate": "Дата продления: {{date}}",
+    "statusActive": "Активен",
+    "proPlanBenefits": "У вас неограниченное количество мест в гардеробе и включена быстрая сегментация изображений на GPU.",
+    "cancelSubBtn": "Отменить подписку",
+    "closetCapacity": "Вместимость гардероба",
+    "closetCapacityItems": "{{count}} / {{capacity}} вещей",
+    "closetLimitWarning": "Вы достигли лимита вещей в гардеробе. Обновите тариф, чтобы добавить больше одежды!",
+    "monthlyPlan": "Месячный тариф",
+    "monthlyPlanDesc": "Гибкий ежемесячный цикл, отмена в любое время.",
+    "perMonth": " / мес.",
+    "upgradeMonthlyBtn": "Обновить помесячно",
+    "bestValue": "Выгодное предложение",
+    "annualPlan": "Годовой тариф",
+    "annualPlanDesc": "Сэкономьте 50% по сравнению с помесячной оплатой.",
+    "perYear": " / год",
+    "upgradeAnnualBtn": "Обновить на год"
   },
   "admin": {
     "title": "Админ",
@@ -1501,7 +1540,10 @@
     "cityLabel": "Город",
     "accuracyLabel": "Точность",
     "metersShort": "m",
-    "kmShort": "km"
+    "kmShort": "km",
+    "description": "Используется для рекомендаций одежды по погоде и синхронизации восхода/заката",
+    "statusActive": "Данные о погоде синхронизированы на основе ваших координат.",
+    "statusInactive": "Погодная функция использует автономные значения по умолчанию."
   },
   "language": {
     "change": "Изменить язык",
@@ -2532,7 +2574,12 @@
       "quietHours": "Тихие часы",
       "quietStart": "С",
       "quietEnd": "До",
-      "maxDistance": "Максимальный радиус"
+      "maxDistance": "Максимальный радиус",
+      "frequencyLabel": "Частота",
+      "freqInstant": "Мгновенно",
+      "freqDaily": "Ежедневно",
+      "freqWeekly": "Еженедельно",
+      "distanceLabel": "Макс. расстояние"
     },
     "admin": {
       "queueTitle": "Очередь одобрения кампаний",

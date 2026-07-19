@@ -59,7 +59,8 @@
     "remove": "移除",
     "share": "分享",
     "time": "时间",
-    "unknownColor": "其他"
+    "unknownColor": "其他",
+    "saved": "已保存"
   },
   "auth": {
     "welcomeBack": "欢迎回来",
@@ -900,7 +901,13 @@
       "hair": "发型",
       "preferences": "偏好设置",
       "measurementsDesc": "服装尺码适合度（身高、胸围、腰围和内缝长）",
-      "hairDesc": "发长、发质、发型和颜色属性"
+      "hairDesc": "发长、发质、发型和颜色属性",
+      "identityDesc": "您的姓名、电子邮件地址和出生日期",
+      "contactDesc": "电话号码、收货地址和本地化设置",
+      "demographicsDesc": "性别、职业背景及个人状况",
+      "preferencesDesc": "尺码、长度和重量的默认度量单位",
+      "photosAvatarDesc": "真人照片模特视觉参考和身体模型形状",
+      "settings": "系统设置与外部集成"
     },
     "firstName": "名",
     "lastName": "姓",
@@ -992,13 +999,15 @@
       "businessDescription": "简短描述",
       "visibilityNote": "将在 /experts 的专家目录中显示。",
       "hiddenBadge": "已被管理员隐藏",
-      "save": "保存专业详情"
+      "save": "保存专业详情",
+      "sectionDesc": "企业商家认证资质及专家目录详情"
     },
     "payouts": {
       "sectionTitle": "收款 (PayPal)",
       "description": "当您的商品售出时,我们将通过 PayPal Payouts 将您的净收益发送到此 PayPal 邮箱。留空则禁用自动收款。",
       "paypalEmail": "用于收款的 PayPal 邮箱",
-      "linked": "已链接"
+      "linked": "已链接",
+      "sectionDesc": "绑定用于设计师和商品销售收益提取的的 PayPal 账单地址"
     },
     "occupation": "职业",
     "aiStylist": "AI造型师",
@@ -1090,7 +1099,37 @@
     "verifyMessage": "For your security, please verify your identity before deleting your account.",
     "googleConnected": "Connected via Google",
     "enterPasswordPlaceholder": "Enter your password",
-    "styleProfileDesc": "审美偏好、色板喜好、避讳及保守度"
+    "styleProfileDesc": "审美偏好、色板喜好、避讳及保守度",
+    "schedulerDesc": "每日搭配建议、推送警报和日程安排选项",
+    "settingsTitle": "系统偏好设置",
+    "shoppingAssistant": "购物尺码助手",
+    "shoppingAssistantDesc": "将尺码智能推荐功能直接集成到您的购物浏览器中",
+    "chromeStoreTitle": "Chrome 网上应用店扩展程序",
+    "chromeStoreDesc": "获取官方浏览器扩展程序，以便在支持的在线商店上自动匹对服装尺码。",
+    "chromeStoreComingSoon": "即将上架 Chrome 网上应用店",
+    "bookmarkletTitle": "通用浏览器书签",
+    "bookmarkletInstruction": "将下方按钮拖拽至书签栏。在移动端上，将其加入书签并命名为 'DressApp 购物助手'。浏览任何商品详情页时点击此书签即可使用。",
+    "bookmarkletBtn": "使用方法：将该按钮拖动到您的书签栏中。在商店的任意产品页面点击它以获取尺码推荐。",
+    "subscription": "会员订阅与额度",
+    "subActiveSummary": "已激活：{{plan}}计划（过期时间：{{date}}）",
+    "subFreeSummary": "免费版计划：已使用 {{count}} / {{capacity}} 个衣橱额度",
+    "proPlanTitle": "DressApp 专业版 ({{plan}})",
+    "renewalDate": "续费日期：{{date}}",
+    "statusActive": "已激活",
+    "proPlanBenefits": "您拥有无限衣橱槽位，且已启用 GPU 快速图像分割。",
+    "cancelSubBtn": "取消订阅",
+    "closetCapacity": "衣橱总额度",
+    "closetCapacityItems": "{{count}} / {{capacity}} 件衣物",
+    "closetLimitWarning": "您的衣橱额度已满。请升级以添加更多衣服！",
+    "monthlyPlan": "按月订阅",
+    "monthlyPlanDesc": "灵活的按月周期，随时可取消。",
+    "perMonth": " / 月",
+    "upgradeMonthlyBtn": "升级月度版",
+    "bestValue": "最划算",
+    "annualPlan": "按年订阅",
+    "annualPlanDesc": "相比按月订阅可节省 50% 费用。",
+    "perYear": " / 年",
+    "upgradeAnnualBtn": "升级年度版"
   },
   "admin": {
     "title": "管理",
@@ -1501,7 +1540,10 @@
     "cityLabel": "城市",
     "accuracyLabel": "精度",
     "metersShort": "米",
-    "kmShort": "公里"
+    "kmShort": "公里",
+    "description": "用于天气自适应的穿搭推荐及日出日落时间的同步",
+    "statusActive": "天气数据已根据您的地理坐标进行同步。",
+    "statusInactive": "天气功能正使用离线默认值。"
   },
   "language": {
     "change": "更改语言",
@@ -2532,7 +2574,12 @@
       "quietHours": "免打扰时间",
       "quietStart": "开始",
       "quietEnd": "结束",
-      "maxDistance": "最大活动距离"
+      "maxDistance": "最大活动距离",
+      "frequencyLabel": "接收频率",
+      "freqInstant": "实时",
+      "freqDaily": "每日",
+      "freqWeekly": "每周",
+      "distanceLabel": "最大距离"
     },
     "admin": {
       "queueTitle": "活动审批队列",

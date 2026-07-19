@@ -59,7 +59,8 @@
     "remove": "Remove",
     "share": "Share",
     "time": "Time",
-    "unknownColor": "Other"
+    "unknownColor": "Other",
+    "saved": "Saved"
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -894,8 +895,8 @@
     "chromeStoreComingSoon": "Coming Soon to the Chrome Web Store",
     "bookmarkletTitle": "Universal Bookmarklet",
     "bookmarkletDesc": "Drag the button below to your bookmarks bar. On mobile, add it to your bookmarks and name it 'DressApp Shopping Assistant'. Click it when on any product page.",
-    "bookmarkletBtn": "DressApp Assistant",
-    "bookmarkletInstruction": "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations.",
+    "bookmarkletBtn": "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations.",
+    "bookmarkletInstruction": "Drag the button below to your bookmarks bar. On mobile, add it to your bookmarks and name it 'DressApp Shopping Assistant'. Click it when on any product page.",
     "language": "Language",
     "voice": "Voice (Piper Offline)",
     "saveChanges": "Save changes",
@@ -1044,7 +1045,8 @@
       "sectionTitle": "Payouts (PayPal)",
       "description": "When one of your listings sells, we'll send your net to this PayPal email via PayPal Payouts. Leave blank to disable automatic payouts.",
       "paypalEmail": "PayPal email for payouts",
-      "linked": "Linked"
+      "linked": "Linked",
+      "sectionDesc": "Linked PayPal billing address for designer and listing sales"
     },
     "occupation": "Occupation",
     "aiStylist": "AI Stylist",
@@ -1119,7 +1121,27 @@
       "edgeNotice": "Running local Gemma4-E2B offline. Execution usage metrics are monitored locally and credited back via Google Nano Banana.",
       "appFeeLabel": "Accrued App Fee",
       "appFeeDescription": "Unpaid platform fee accrued from credit usage."
-    }
+    },
+    "subscription": "Subscription & Limits",
+    "subActiveSummary": "Active: {{plan}} plan (Expires: {{date}})",
+    "subFreeSummary": "Free Plan: {{count}} / {{capacity}} items used",
+    "proPlanTitle": "DressApp Pro ({{plan}})",
+    "renewalDate": "Renewal date: {{date}}",
+    "statusActive": "Active",
+    "proPlanBenefits": "You have unlimited closet slots and fast GPU image segmentation enabled.",
+    "cancelSubBtn": "Cancel Subscription",
+    "closetCapacity": "Closet Capacity",
+    "closetCapacityItems": "{{count}} / {{capacity}} items",
+    "closetLimitWarning": "You have reached your closet limit. Upgrade to add more garments!",
+    "monthlyPlan": "Monthly Plan",
+    "monthlyPlanDesc": "Flexible monthly cycle, cancel anytime.",
+    "perMonth": " / month",
+    "upgradeMonthlyBtn": "Upgrade Monthly",
+    "bestValue": "Best Value",
+    "annualPlan": "Annual Plan",
+    "annualPlanDesc": "Save 50% compared to monthly billing.",
+    "perYear": " / year",
+    "upgradeAnnualBtn": "Upgrade Annual"
   },
   "admin": {
     "title": "Admin",
@@ -1531,7 +1553,9 @@
     "cityLabel": "City",
     "accuracyLabel": "Accuracy",
     "metersShort": "m",
-    "kmShort": "km"
+    "kmShort": "km",
+    "statusActive": "Weather data is synced based on your coordinates.",
+    "statusInactive": "Weather feature is using offline default values."
   },
   "experts": {
     "title": "Ask a professional",
@@ -2563,7 +2587,12 @@
       "quietHours": "Quiet Hours (Do Not Disturb)",
       "quietStart": "From",
       "quietEnd": "Until",
-      "maxDistance": "Maximum Campaign Distance"
+      "maxDistance": "Maximum Campaign Distance",
+      "frequencyLabel": "Frequency",
+      "freqInstant": "Instant",
+      "freqDaily": "Daily",
+      "freqWeekly": "Weekly",
+      "distanceLabel": "Max Distance"
     },
     "admin": {
       "queueTitle": "Campaign Approval Queue",

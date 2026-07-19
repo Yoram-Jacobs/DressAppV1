@@ -59,7 +59,8 @@
     "remove": "Entfernen",
     "share": "Teilen",
     "time": "Uhrzeit",
-    "unknownColor": "Andere"
+    "unknownColor": "Andere",
+    "saved": "Gespeichert"
   },
   "auth": {
     "welcomeBack": "Willkommen zurück",
@@ -875,15 +876,15 @@
     "conservModerate": "Moderat",
     "conservHigh": "Streng",
     "voiceLanguage": "Stimme & Sprache",
-    "shoppingAssistant": "Einkaufsassistent",
-    "shoppingAssistantDesc": "Integrieren Sie Größenempfehlungen direkt in Ihren Shopping-Browser",
+    "shoppingAssistant": "Einkaufs-Assistent",
+    "shoppingAssistantDesc": "Größenempfehlungen direkt in Ihren Shopping-Browser integrieren",
     "chromeStoreTitle": "Chrome Web Store Erweiterung",
-    "chromeStoreDesc": "Holen Sie sich die offizielle Browser-Erweiterung für automatische Größenempfehlungen in unterstützten Online-Shops.",
-    "chromeStoreComingSoon": "Demnächst im Chrome Web Store verfügbar",
+    "chromeStoreDesc": "Holen Sie sich die offizielle Browser-Erweiterung für automatische Größenermittlung in unterstützten Online-Shops.",
+    "chromeStoreComingSoon": "Demnächst im Chrome Web Store",
     "bookmarkletTitle": "Universelles Bookmarklet",
     "bookmarkletDesc": "Ziehen Sie die Schaltfläche unten in Ihre Lesezeichenleiste. Fügen Sie sie auf Mobilgeräten zu Ihren Lesezeichen hinzu und nennen Sie sie 'DressApp Shopping Assistant'. Klicken Sie auf einer Produktseite darauf.",
-    "bookmarkletBtn": "DressApp Assistent",
-    "bookmarkletInstruction": "Verwendung: Ziehen Sie diese Schaltfläche in Ihre Lesezeichenleiste. Klicken Sie auf einer Produktseite darauf, um Größenempfehlungen zu erhalten.",
+    "bookmarkletBtn": "Verwendung: Ziehen Sie diese Schaltfläche in Ihre Lesezeichenleiste. Klicken Sie auf einer Produktseite darauf, um Größenempfehlungen zu erhalten.",
+    "bookmarkletInstruction": "Ziehen Sie die Schaltfläche unten in Ihre Lesezeichenleiste. Fügen Sie sie auf Mobilgeräten zu Ihren Lesezeichen hinzu und nennen Sie sie 'DressApp Einkaufs-Assistent'. Klicken Sie darauf, wenn Sie sich auf einer Produktseite befinden.",
     "language": "Sprache",
     "voice": "Stimme (Piper Offline)",
     "saveChanges": "Änderungen speichern",
@@ -907,7 +908,13 @@
       "digitalAvatar": "3D-Digital-Avatar",
       "avatarGenerationDesc": "Generiert aus deinen Körpermaßen unten.",
       "measurementsDesc": "Passformen für Kleidungsgrößen (Größe, Brust, Taille und Innennähte)",
-      "hairDesc": "Haarlänge, -typ, -stil und Farbeigenschaften"
+      "hairDesc": "Haarlänge, -typ, -stil und Farbeigenschaften",
+      "identityDesc": "Ihr Name, Ihre E-Mail-Adresse und Ihr Geburtsdatum",
+      "contactDesc": "Telefonnummer, Lieferadresse und Lokalisierung",
+      "demographicsDesc": "Geschlecht, beruflicher Hintergrund und persönlicher Status",
+      "preferencesDesc": "Standard-Maßstäbe für Größen, Längen und Gewichte",
+      "photosAvatarDesc": "Visuelle Referenzfotos für den Avatar und die Körperform",
+      "settings": "Einstellungen & Integrationen"
     },
     "firstName": "Vorname",
     "lastName": "Nachname",
@@ -999,13 +1006,15 @@
       "businessDescription": "Kurze Beschreibung",
       "visibilityNote": "Sichtbar im Experten-Verzeichnis unter /experts.",
       "hiddenBadge": "Vom Moderator ausgeblendet",
-      "save": "Professionelle Details speichern"
+      "save": "Professionelle Details speichern",
+      "sectionDesc": "Nachweise zur geschäftlichen Zulassung und Einträge im Branchenbuch"
     },
     "payouts": {
       "sectionTitle": "Auszahlungen (PayPal)",
       "description": "Wenn eine deiner Anzeigen verkauft wird, senden wir deinen Nettobetrag an diese PayPal-E-Mail-Adresse per PayPal-Auszahlung. Lasse das Feld leer, um automatische Auszahlungen zu deaktivieren.",
       "paypalEmail": "PayPal-E-Mail für Auszahlungen",
-      "linked": "Verknüpft"
+      "linked": "Verknüpft",
+      "sectionDesc": "Verknüpftes PayPal-Konto für Designer- und Angebotsverkäufe"
     },
     "occupation": "Beruf",
     "exploreTitle": "DressApp entdecken",
@@ -1099,7 +1108,29 @@
     "verifyMessage": "For your security, please verify your identity before deleting your account.",
     "googleConnected": "Connected via Google",
     "enterPasswordPlaceholder": "Enter your password",
-    "styleProfileDesc": "Ästhetik, Farbpaletten-Präferenzen, zu vermeidende Dinge und Konservativität"
+    "styleProfileDesc": "Ästhetik, Farbpaletten-Präferenzen, zu vermeidende Dinge und Konservativität",
+    "schedulerDesc": "Tägliche Outfit-Vorschläge, Push-Benachrichtigungen und Planungsoptionen",
+    "settingsTitle": "Systemeinstellungen",
+    "subscription": "Abonnement & Limits",
+    "subActiveSummary": "Aktiv: {{plan}}-Plan (Läuft ab am: {{date}})",
+    "subFreeSummary": "Kostenloser Plan: {{count}} / {{capacity}} Artikel verwendet",
+    "proPlanTitle": "DressApp Pro ({{plan}})",
+    "renewalDate": "Verlängerungsdatum: {{date}}",
+    "statusActive": "Aktiv",
+    "proPlanBenefits": "Sie haben unbegrenzte Kleiderschrank-Plätze und schnelle GPU-Bildsegmentierung aktiviert.",
+    "cancelSubBtn": "Abonnement kündigen",
+    "closetCapacity": "Schrankkapazität",
+    "closetCapacityItems": "{{count}} / {{capacity}} Artikel",
+    "closetLimitWarning": "Sie haben Ihr Kleiderschranklimit erreicht. Upgrade durchführen, um mehr Kleidung hinzuzufügen!",
+    "monthlyPlan": "Monatlicher Plan",
+    "monthlyPlanDesc": "Flexibler monatlicher Zyklus, jederzeit kündbar.",
+    "perMonth": " / Monat",
+    "upgradeMonthlyBtn": "Monatlich upgraden",
+    "bestValue": "Bestes Angebot",
+    "annualPlan": "Jährlicher Plan",
+    "annualPlanDesc": "Sparen Sie 50 % im Vergleich zur monatlichen Abrechnung.",
+    "perYear": " / Jahr",
+    "upgradeAnnualBtn": "Jährlich upgraden"
   },
   "admin": {
     "title": "Admin",
@@ -1510,7 +1541,10 @@
     "cityLabel": "Stadt",
     "accuracyLabel": "Genauigkeit",
     "metersShort": "m",
-    "kmShort": "km"
+    "kmShort": "km",
+    "description": "Wird für wettergenaue Outfit-Empfehlungen und Sonnenaufgang/Sonnenuntergang-Synchronisierung verwendet",
+    "statusActive": "Wetterdaten werden basierend auf Ihren Koordinaten synchronisiert.",
+    "statusInactive": "Die Wetterfunktion verwendet Offline-Standardwerte."
   },
   "language": {
     "change": "Sprache ändern",
@@ -2541,7 +2575,12 @@
       "quietHours": "Ruhezeiten (Bitte nicht stören)",
       "quietStart": "Von",
       "quietEnd": "Bis",
-      "maxDistance": "Maximale Kampagnenentfernung"
+      "maxDistance": "Maximale Kampagnenentfernung",
+      "frequencyLabel": "Häufigkeit",
+      "freqInstant": "Sofort",
+      "freqDaily": "Täglich",
+      "freqWeekly": "Wöchentlich",
+      "distanceLabel": "Max. Entfernung"
     },
     "admin": {
       "queueTitle": "Warteschlange für Kampagnengenehmigungen",

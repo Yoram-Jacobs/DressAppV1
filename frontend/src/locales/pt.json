@@ -59,7 +59,8 @@
     "remove": "Remover",
     "share": "Partilhar",
     "time": "Hora",
-    "unknownColor": "Outro"
+    "unknownColor": "Outro",
+    "saved": "Salvo"
   },
   "auth": {
     "welcomeBack": "Bem-vindo de volta",
@@ -898,7 +899,13 @@
       "digitalAvatar": "Avatar digital 3D",
       "avatarGenerationDesc": "Gerado a partir das suas medidas corporais abaixo.",
       "measurementsDesc": "Ajustes de tamanhos de roupas (altura, peito, cintura e costura interna)",
-      "hairDesc": "Propriedades de comprimento, tipo, estilo e cor do cabelo"
+      "hairDesc": "Propriedades de comprimento, tipo, estilo e cor do cabelo",
+      "identityDesc": "Seu nome, endereço de e-mail e data de nascimento",
+      "contactDesc": "Número de telefone, endereço de entrega e localização",
+      "demographicsDesc": "Gênero, histórico profissional e estado civil",
+      "preferencesDesc": "Unidades de medida padrão para tamanhos, comprimentos e pesos",
+      "photosAvatarDesc": "Fotos de referência visual do modelo de avatar e formato do corpo",
+      "settings": "Configurações e integrações"
     },
     "firstName": "Primeiro nome",
     "lastName": "Sobrenome",
@@ -990,13 +997,15 @@
       "businessDescription": "Breve descrição",
       "visibilityNote": "Visível no diretório de Especialistas em /experts.",
       "hiddenBadge": "Oculto pelo moderador",
-      "save": "Guardar dados profissionais"
+      "save": "Guardar dados profissionais",
+      "sectionDesc": "Credenciais de aprovação comercial e listagem no diretório de profissionais"
     },
     "payouts": {
       "sectionTitle": "Pagamentos (PayPal)",
       "description": "Quando um dos seus anúncios for vendido, enviaremos o valor líquido para este email PayPal através do PayPal Payouts. Deixe em branco para desativar pagamentos automáticos.",
       "paypalEmail": "Email PayPal para pagamentos",
-      "linked": "Associado"
+      "linked": "Associado",
+      "sectionDesc": "Endereço de cobrança do PayPal associado para vendas de designers e itens"
     },
     "occupation": "Profissão",
     "exploreTitle": "Explorar DressApp",
@@ -1090,7 +1099,37 @@
     "verifyMessage": "For your security, please verify your identity before deleting your account.",
     "googleConnected": "Connected via Google",
     "enterPasswordPlaceholder": "Enter your password",
-    "styleProfileDesc": "Estética, preferências de paleta de cores, coisas a evitar e conservadorismo"
+    "styleProfileDesc": "Estética, preferências de paleta de cores, coisas a evitar e conservadorismo",
+    "schedulerDesc": "Propostas diárias de looks, notificações push e opções de agendamento",
+    "settingsTitle": "Preferências do sistema",
+    "shoppingAssistant": "Assistente de compras",
+    "shoppingAssistantDesc": "Integre recomendações de tamanhos diretamente no seu navegador de compras",
+    "chromeStoreTitle": "Extensão da Chrome Web Store",
+    "chromeStoreDesc": "Obtenha a extensão oficial do navegador para dimensionamento automático nas lojas online suportadas.",
+    "chromeStoreComingSoon": "Em breve na Chrome Web Store",
+    "bookmarkletTitle": "Marcador universal",
+    "bookmarkletInstruction": "Arraste o botão abaixo para a sua barra de favoritos. No celular, adicione-o aos favoritos e nomeie-o como 'Assistente de compras DressApp'. Clique nele em qualquer página de produto.",
+    "bookmarkletBtn": "Para usar: Arraste este botão para a sua barra de favoritos. Clique nele em qualquer página de produto para obter recomendações.",
+    "subscription": "Assinatura e limites",
+    "subActiveSummary": "Ativo: plano {{plan}} (Expira em: {{date}})",
+    "subFreeSummary": "Plano gratuito: {{count}} / {{capacity}} itens usados",
+    "proPlanTitle": "DressApp Pro ({{plan}})",
+    "renewalDate": "Data de renovação: {{date}}",
+    "statusActive": "Ativo",
+    "proPlanBenefits": "Você tem vagas ilimitadas no guarda-roupa e segmentação rápida de imagens por GPU ativada.",
+    "cancelSubBtn": "Cancelar assinatura",
+    "closetCapacity": "Capacidade do guarda-roupa",
+    "closetCapacityItems": "{{count}} / {{capacity}} itens",
+    "closetLimitWarning": "Você atingiu o limite do guarda-roupa. Faça upgrade para adicionar mais peças!",
+    "monthlyPlan": "Plano mensal",
+    "monthlyPlanDesc": "Ciclo mensal flexível, cancele a qualquer momento.",
+    "perMonth": " / mês",
+    "upgradeMonthlyBtn": "Upgrade mensal",
+    "bestValue": "Melhor oferta",
+    "annualPlan": "Plano anual",
+    "annualPlanDesc": "Economize 50% em comparação com o faturamento mensal.",
+    "perYear": " / ano",
+    "upgradeAnnualBtn": "Upgrade anual"
   },
   "admin": {
     "title": "Administrador",
@@ -1501,7 +1540,10 @@
     "cityLabel": "Cidade",
     "accuracyLabel": "Precisão",
     "metersShort": "m",
-    "kmShort": "km"
+    "kmShort": "km",
+    "description": "Usado para recomendações de roupas adequadas ao clima e sincronização de nascer/pôr do sol",
+    "statusActive": "Os dados meteorológicos são sincronizados com base nas suas coordenadas.",
+    "statusInactive": "O recurso de clima está usando valores padrão offline."
   },
   "language": {
     "change": "Alterar idioma",
@@ -2532,7 +2574,12 @@
       "quietHours": "Horas Silenciosas (Não Perturbe)",
       "quietStart": "De",
       "quietEnd": "Até",
-      "maxDistance": "Distância Máxima da Campanha"
+      "maxDistance": "Distância Máxima da Campanha",
+      "frequencyLabel": "Frequência",
+      "freqInstant": "Instantâneo",
+      "freqDaily": "Diário",
+      "freqWeekly": "Semanal",
+      "distanceLabel": "Distância máx"
     },
     "admin": {
       "queueTitle": "Fila de Aprovação de Campanhas",

@@ -59,7 +59,8 @@
     "remove": "削除",
     "share": "共有",
     "time": "時間",
-    "unknownColor": "その他"
+    "unknownColor": "その他",
+    "saved": "保存されました"
   },
   "auth": {
     "welcomeBack": "おかえりなさい",
@@ -898,7 +899,13 @@
       "digitalAvatar": "3D デジタルアバター",
       "avatarGenerationDesc": "以下の身体測定値から生成されます。",
       "measurementsDesc": "衣類のサイズフィット（身長、胸囲、ウエスト、股下）",
-      "hairDesc": "髪の長さ、タイプ、スタイル、色の特性"
+      "hairDesc": "髪の長さ、タイプ、スタイル、色の特性",
+      "identityDesc": "名前、メールアドレス、生年月日",
+      "contactDesc": "電話番号、配送先住所、ローカリゼーション",
+      "demographicsDesc": "性別、職業、個人ステータス",
+      "preferencesDesc": "サイズ、長さ、重量のデフォルト測定単位",
+      "photosAvatarDesc": "アバターモデルの視覚的参照写真と体型シルエット",
+      "settings": "設定と連携"
     },
     "firstName": "名",
     "lastName": "姓",
@@ -990,13 +997,15 @@
       "businessDescription": "簡単な説明",
       "visibilityNote": "/expertsのエキスパートディレクトリに表示されます。",
       "hiddenBadge": "モデレーターにより非表示",
-      "save": "専門家情報を保存"
+      "save": "専門家情報を保存",
+      "sectionDesc": "ビジネス承認資格と専門家ディレクトリの掲載"
     },
     "payouts": {
       "sectionTitle": "支払い（PayPal）",
       "description": "出品が売れた際、PayPal Payoutsを通じてこのPayPalメールアドレスに純受取額を送金します。自動支払いを無効にする場合は空白のままにしてください。",
       "paypalEmail": "支払い用PayPalメールアドレス",
-      "linked": "連携済み"
+      "linked": "連携済み",
+      "sectionDesc": "デザイナーおよび出品販売用のリンクされたPayPal請求先住所"
     },
     "occupation": "職業",
     "exploreTitle": "DressApp を探索",
@@ -1090,7 +1099,37 @@
     "verifyMessage": "For your security, please verify your identity before deleting your account.",
     "googleConnected": "Connected via Google",
     "enterPasswordPlaceholder": "Enter your password",
-    "styleProfileDesc": "美学、カラーパレットの好み、避けるべきもの、保守性"
+    "styleProfileDesc": "美学、カラーパレットの好み、避けるべきもの、保守性",
+    "schedulerDesc": "毎日のコーディネート提案、プッシュ通知、スケジュール設定オプション",
+    "settingsTitle": "システム設定",
+    "shoppingAssistant": "ショッピングアシスタント",
+    "shoppingAssistantDesc": "ショッピングブラウザにサイズ推奨機能を直接統合します",
+    "chromeStoreTitle": "Chromeウェブストア拡張機能",
+    "chromeStoreDesc": "対応オンラインストアで自動サイズ選定を行う公式ブラウザ拡張機能を入手します。",
+    "chromeStoreComingSoon": "Chromeウェブストアで近日公開予定",
+    "bookmarkletTitle": "ユニバーサルブックマークレット",
+    "bookmarkletInstruction": "下のボタンをブックマークバーにドラッグします。モバイルの場合は、ブックマークに追加し、「DressAppショッピングアシスタント」と名前を付けます。商品ページを表示中にクリックします。",
+    "bookmarkletBtn": "使用方法: このボタンをブックマークバーにドラッグします。ストアの商品ページでクリックすると、サイズ推奨値が表示されます。",
+    "subscription": "サブスクリプションと制限",
+    "subActiveSummary": "有効: {{plan}}プラン (有効期限: {{date}})",
+    "subFreeSummary": "無料プラン: {{count}} / {{capacity}} アイテム使用中",
+    "proPlanTitle": "DressApp Pro ({{plan}})",
+    "renewalDate": "更新日: {{date}}",
+    "statusActive": "有効",
+    "proPlanBenefits": "クローゼットの登録数が無制限になり、高速なGPU画像セグメンテーションが有効になります。",
+    "cancelSubBtn": "サブスクリプションをキャンセル",
+    "closetCapacity": "クローゼット容量",
+    "closetCapacityItems": "{{count}} / {{capacity}} アイテム",
+    "closetLimitWarning": "クローゼットの上限に達しました。衣服を追加するにはアップグレードしてください！",
+    "monthlyPlan": "月間プラン",
+    "monthlyPlanDesc": "柔軟な月次サイクルで、いつでもキャンセル可能。",
+    "perMonth": " / 月",
+    "upgradeMonthlyBtn": "月間プランへ移行",
+    "bestValue": "お得なプラン",
+    "annualPlan": "年間プラン",
+    "annualPlanDesc": "月間プランに比べて50%お得になります。",
+    "perYear": " / 年",
+    "upgradeAnnualBtn": "年間プランへ移行"
   },
   "admin": {
     "title": "管理",
@@ -1501,7 +1540,10 @@
     "cityLabel": "都市",
     "accuracyLabel": "精度",
     "metersShort": "m",
-    "kmShort": "km"
+    "kmShort": "km",
+    "description": "天気に合わせたコーディネート提案や日の出・日の入り同期に使用されます",
+    "statusActive": "位置情報に基づいて天気データが同期されています。",
+    "statusInactive": "天気機能はオフラインのデフォルト値を使用しています。"
   },
   "language": {
     "change": "言語を変更",
@@ -2532,7 +2574,12 @@
       "quietHours": "おやすみモード（通知オフ）",
       "quietStart": "開始",
       "quietEnd": "終了",
-      "maxDistance": "キャンペーンの最大距離"
+      "maxDistance": "キャンペーンの最大距離",
+      "frequencyLabel": "頻度",
+      "freqInstant": "即時",
+      "freqDaily": "毎日",
+      "freqWeekly": "毎週",
+      "distanceLabel": "最大距離"
     },
     "admin": {
       "queueTitle": "キャンペーン承認キュー",
@@ -2559,5 +2606,6 @@
       "rejectConfirm": "却下を確認",
       "previewTitle": "キャンペーンプレビュー"
     }
-  }
+  },
+  "styleProfileDesc": "美学、カラーパレットの好み、避けるべきもの、保守性"
 }

@@ -62,7 +62,8 @@
     "unknownColor": "אחר",
     "confirming": "מאשר...",
     "untitled": "ללא שם",
-    "currencyFormat": "₪{{val}}"
+    "currencyFormat": "₪{{val}}",
+    "saved": "נשמר"
   },
   "auth": {
     "welcomeBack": "ברוך שובך",
@@ -893,13 +894,13 @@
     "voiceLanguage": "קול ושפה",
     "shoppingAssistant": "עוזר קניות",
     "shoppingAssistantDesc": "שלב המלצות מידה ישירות בדפדפן הקניות שלך",
-    "chromeStoreTitle": "תוסף לחנות האינטרנט של כרום",
-    "chromeStoreDesc": "קבל את התוסף הרשמי לדפדפן עבור המלצות מידה אוטומטיות בחנויות מקוונות נתמכות.",
+    "chromeStoreTitle": "תוסף חנות האינטרנט של כרום",
+    "chromeStoreDesc": "קבל את התוסף הרשמי לדפדפן להתאמת מידות אוטומטית בחנויות מקוונות נתמכות.",
     "chromeStoreComingSoon": "בקרוב בחנות האינטרנט של כרום",
-    "bookmarkletTitle": "סימניה אוניברסלית (Bookmarklet)",
+    "bookmarkletTitle": "בוקמרקלט אוניברסלי",
     "bookmarkletDesc": "גרור את הכפתור למטה לסרגל הסימניות שלך. בנייד, שמור אותו בסימניות וקרא לו 'DressApp Shopping Assistant'. לחץ עליו בכל עמוד מוצר בחנות.",
-    "bookmarkletBtn": "עוזר DressApp",
-    "bookmarkletInstruction": "אופן השימוש: גרור כפתור זה לסרגל הסימניות שלך. לחץ עליו בכל עמוד מוצר בחנות כדי לקבל המלצות מידה.",
+    "bookmarkletBtn": "לשימוש: גרור כפתור זה לסרגל הסימניות שלך. לחץ עליו בכל דף מוצר בחנות לקבלת המלצות מידה.",
+    "bookmarkletInstruction": "גרור את הכפתור למטה לסרגל הסימניות שלך. בנייד, הוסף אותו לסימניות שלך וקרא לו 'עוזר קניות של DressApp'. לחץ עליו כשאתה בדף מוצר כלשהו.",
     "voiceLanguageDesc": "הגדרות קול של הסטייליסט הווירטואלי והגדרות נגישות",
     "language": "שפה",
     "voice": "קול (Piper Offline)",
@@ -916,23 +917,23 @@
     "settingsTitle": "העדפות מערכת",
     "sections": {
       "identity": "זהות",
-      "identityDesc": "שמך, כתובת האימייל ותאריך הלידה שלך",
+      "identityDesc": "השם שלך, כתובת האימייל ותאריך הלידה",
       "contact": "יצירת קשר",
-      "contactDesc": "מספר טלפון, כתובת למשלוח והגדרות מיקום",
+      "contactDesc": "מספר טלפון, כתובת למשלוח ומיקום",
       "demographics": "פרטים דמוגרפיים",
-      "demographicsDesc": "מגדר, רקע תעסוקתי ומצב משפחתי",
+      "demographicsDesc": "מגדר, רקע תעסוקתי ומצב אישי",
       "photos": "תמונות",
       "measurements": "מידות גוף",
       "measurementsDesc": "מידות התאמת הבגד (גובה, חזה, מותניים ופנים הרגל)",
       "hair": "שיער",
       "hairDesc": "מאפייני אורך שיער, סוג, סגנון וצבע",
       "preferences": "העדפות",
-      "preferencesDesc": "יחידות מידה מוגדרות כברירת מחדל עבור גדלים, אורכים ומשקלים",
+      "preferencesDesc": "ברירת מחדל של קני מידה למידות, אורך ומשקל",
       "photosAvatar": "תמונות ואוואטר",
-      "photosAvatarDesc": "תמונות התייחסות חזותיות עבור מודל האוואטר ועיצוב הגוף",
+      "photosAvatarDesc": "תמונות ייחוס ויזואליות של דגם האוואטר וצורת הגוף",
       "digitalAvatar": "אוואטר דיגיטלי תלת-ממדי",
       "avatarGenerationDesc": "נוצר ממידות הגוף שלך למטה.",
-      "settings": "הגדרות וחיבורים"
+      "settings": "הגדרות ואינטגרציות"
     },
     "firstName": "שם פרטי",
     "lastName": "שם משפחה",
@@ -1011,7 +1012,7 @@
     "autofilledFromGoogle": "מולא אוטומטית מ-Google — ניתן לערוך בכל עת.",
     "professional": {
       "sectionTitle": "מומחה אופנה מקצועי",
-      "sectionDesc": "אישורי אישור עסקיים ורישומים באינדקס המקצועי",
+      "sectionDesc": "אישורי עסק ורישומי מדריך מקצועיים",
       "checkboxLabel": "אני מומחה/ית אופנה מקצועי/ת",
       "checkboxHint": "להופיע בספריית המומחים ולהפעיל מודעות איזוריות.",
       "profession": "מקצוע",
@@ -1031,7 +1032,8 @@
       "sectionTitle": "תשלומים (PayPal)",
       "description": "כשמישהו קונה פריט שלך, שלם את חלקך יועבר לכתובת PayPal זו דרך PayPal Payouts. השאר ריק להשבתת תשלומים אוטומטיים.",
       "paypalEmail": "אימייל PayPal לקבלת תשלומים",
-      "linked": "מקושר"
+      "linked": "מקושר",
+      "sectionDesc": "כתובת PayPal מקושרת לקבלת תשלומים עבור מכירות מעצבים ופריטים"
     },
     "occupation": "עיסוק",
     "aiStylist": "סטייליסט AI",
@@ -1125,7 +1127,27 @@
     "identityVerification": "Identity Verification",
     "verifyMessage": "For your security, please verify your identity before deleting your account.",
     "googleConnected": "Connected via Google",
-    "enterPasswordPlaceholder": "Enter your password"
+    "enterPasswordPlaceholder": "Enter your password",
+    "subscription": "מנוי ומגבלות",
+    "subActiveSummary": "פעיל: תוכנית {{plan}} (פג תוקף: {{date}})",
+    "subFreeSummary": "תוכנית חינמית: {{count}} / {{capacity}} פריטים בשימוש",
+    "proPlanTitle": "DressApp Pro ({{plan}})",
+    "renewalDate": "תאריך חידוש: {{date}}",
+    "statusActive": "פעיל",
+    "proPlanBenefits": "יש לך מספר בלתי מוגבל של מקומות בארון ופילוח תמונות מהיר ב-GPU מופעל.",
+    "cancelSubBtn": "בטל מנוי",
+    "closetCapacity": "קיבולת הארון",
+    "closetCapacityItems": "{{count}} / {{capacity}} פריטים",
+    "closetLimitWarning": "הגעת למגבלת הארון שלך. שדרג כדי להוסיף עוד בגדים!",
+    "monthlyPlan": "תוכנית חودשית",
+    "monthlyPlanDesc": "מחזור חודשי גמיש, בטל בכל עת.",
+    "perMonth": " / חודש",
+    "upgradeMonthlyBtn": "שדרג חודשי",
+    "bestValue": "הערך הטוב ביותר",
+    "annualPlan": "תוכנית שנתית",
+    "annualPlanDesc": "חסוך 50% בהשוואה לחיוב חודשי.",
+    "perYear": " / שנה",
+    "upgradeAnnualBtn": "שדרג שנתי"
   },
   "admin": {
     "title": "ניהול",
@@ -1539,7 +1561,9 @@
     "cityLabel": "עיר",
     "accuracyLabel": "דיוק",
     "metersShort": "מ׳",
-    "kmShort": "ק״מ"
+    "kmShort": "ק״מ",
+    "statusActive": "נתוני מזג האוויר מסונכרנים על סמך הקואורדינטות שלך.",
+    "statusInactive": "תכונת מזג האוויר משתמשת בערכי ברירת מחדל לא מקוונים."
   },
   "experts": {
     "title": "שאל מומחה",
@@ -2602,7 +2626,12 @@
       "quietHours": "שעות שקטות (נא לא להפריע)",
       "quietStart": "מ",
       "quietEnd": "עד",
-      "maxDistance": "מרחק קמפיין מקסימלי"
+      "maxDistance": "מרחק קמפיין מקסימלי",
+      "frequencyLabel": "תדירות",
+      "freqInstant": "מיידי",
+      "freqDaily": "יומי",
+      "freqWeekly": "שבועי",
+      "distanceLabel": "מרחק מקסימלי"
     },
     "admin": {
       "queueTitle": "תור לאישור קמפיינים",
