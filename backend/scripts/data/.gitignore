@@ -1,0 +1,3 @@
+# ANSUR II training data — downloaded by train_body_model.py on demand.
+# Do not commit these ~3 MB CSVs to the repo.
+*.csv

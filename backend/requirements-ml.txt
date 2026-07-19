@@ -44,3 +44,7 @@ onnxruntime==1.19.2
 # trend_scout, and api/v1/sizes. Pinned identically to requirements.txt
 # so ML-deploy and lightweight-deploy stay in lockstep.
 google-genai==2.4.0
+
+# Body-measurement predictor (body_predictor.py, train_body_model.py)
+scikit-learn==1.6.1
+joblib==1.5.1

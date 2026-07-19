@@ -214,7 +214,6 @@ export function ProfileDetailsCard() {
         weight: user?.body_measurements?.weight || '',
         shirt_size: user?.body_measurements?.shirt_size || '',
         shoulders: user?.body_measurements?.shoulders || '',
-        arm_length: user?.body_measurements?.arm_length || '',
         chest: user?.body_measurements?.chest || '',
         waist: user?.body_measurements?.waist || '',
         hip: user?.body_measurements?.hip || '',
@@ -1389,7 +1388,6 @@ function MeasurementsGrid({ form, onChange, wUnit, lUnit, isFemale }) {
       {num('weight', t('profile.measurements.weight'), 'wt')}
       {txt('shirt_size', t('profile.measurements.shirtSize'))}
       {num('shoulders', t('profile.measurements.shoulders'))}
-      {num('arm_length', t('profile.measurements.armLength'))}
       {num('chest', t('profile.measurements.chest'))}
       {num('waist', t('profile.measurements.waist'))}
       {num('hip', t('profile.measurements.hip'))}

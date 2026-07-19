@@ -162,7 +162,7 @@ WHAT TO DO
    * **CIRCUMFERENCE columns** (Bust / Chest / Waist / Hip / Bottom / Shoulder Width / Neck / Thigh) — the garment must be at least as wide as the user.
        - Range cell "lo-hi": user value must satisfy ``lo <= v <= hi``.
        - Single-number cell (a garment dimension): user value must be ``<=`` the cell value.
-   * **LENGTH columns** (Length / Body Length / Sleeve Length / Inseam / Outseam / Total Length / Arm Length) — the user value is treated as their **full-size MAX** (full-arm length, full-leg length, full-torso length). A garment that is **shorter** than this max is perfectly fine — it just means the garment is short-sleeved / cropped / mini-length / etc. So:
+   * **LENGTH columns** (Length / Body Length / Sleeve Length / Inseam / Outseam / Total Length) — the user value is treated as their **full-size MAX** (full-arm length, full-leg length, full-torso length). A garment that is **shorter** than this max is perfectly fine — it just means the garment is short-sleeved / cropped / mini-length / etc. So:
        - Range cell "lo-hi": user value must satisfy ``v >= lo`` only (no upper bound — short garments are fine).
        - Single-number cell: the garment's value must be ``<=`` the user's value (i.e. the garment is not LONGER than the user's body part). If the garment is dramatically shorter (e.g. 19 cm sleeve vs user's 46 cm full-arm length), it's a deliberately short-sleeved garment, **NOT** a misfit and **NOT** an anomaly. Note this in ``reasoning`` ("this is a short-sleeve top") but do not flag it.
 
@@ -175,7 +175,7 @@ ANOMALY DETECTION (always run before picking the size)
 --------------------------------------------------------
 Users sometimes mistype their measurements. Before applying the body-circumference rule, compare each provided body **circumference** value to the corresponding chart column's range:
 
-- **ONLY check circumference columns** (chest, bust, waist, hip, shoulders, neck, thigh). Length columns (sleeve, inseam, outseam, length, arm_length) ARE NEVER ANOMALY-FLAGGED for being "too high" — the user's stored sleeve / inseam / outseam represent their full-body MAX (full arm / full leg / full torso length) and are *expected* to exceed any short-sleeve, cropped, or mini garment. Only flag a length value if it is implausibly **low** (e.g. ``sleeve: 2 cm`` — clearly a typo).
+- **ONLY check circumference columns** (chest, bust, waist, hip, shoulders, neck, thigh). Length columns (sleeve, inseam, outseam, length) ARE NEVER ANOMALY-FLAGGED for being "too high" — the user's stored sleeve / inseam / outseam represent their full-body MAX (full arm / full leg / full torso length) and are *expected* to exceed any short-sleeve, cropped, or mini garment. Only flag a length value if it is implausibly **low** (e.g. ``sleeve: 2 cm`` — clearly a typo).
 - For circumferences: trigger a flag in EITHER of these cases:
     (a) the user's value exceeds the chart's column **maximum** AT ALL (even a small margin) — no size in this chart can actually accommodate them, so the value is suspect; OR
     (b) the user's value is below the chart's column minimum by more than **15%** (clearly far smaller than any size offered).
@@ -1050,4 +1050,69 @@ async def analyze_chart(
         source=source,
         elapsed_ms=int((time.time() - t0) * 1000),
         has_measurements=has_measurements,
+    )
+
+
+# =====================================================================
+#  POST /sizes/predict-measurements  —  ML body-measurement predictor
+# =====================================================================
+
+class PredictMeasurementsIn(BaseModel):
+    """Core biometrics the user enters on the profile page."""
+    height: float = Field(..., gt=0, description="Height in cm")
+    weight: float = Field(..., gt=0, description="Weight in kg")
+    waist: float = Field(..., gt=0, description="Waist circumference in cm")
+    foot_length: float = Field(..., gt=0, description="Foot length in cm")
+    gender: str = Field(..., pattern="^(male|female)$", description="'male' or 'female'")
+
+
+class PredictMeasurementsOut(BaseModel):
+    """Predicted measurements matching the frontend body_measurements keys."""
+    shoulders: float
+    chest: float
+    hip: float
+    sleeve: float
+    inseam: float
+    outseam: float
+    model_version: str
+    units: str = "cm"
+
+
+@router.post(
+    "/predict-measurements",
+    response_model=PredictMeasurementsOut,
+    summary="Predict body measurements from core biometrics",
+)
+async def predict_measurements(payload: PredictMeasurementsIn):
+    """Predict 6 body measurements from 4 core inputs + gender.
+
+    Uses a GradientBoostingRegressor trained on the public-domain
+    ANSUR II dataset (~6 000 subjects).  Stateless, no auth required —
+    can be called during onboarding before the user has an account.
+    """
+    try:
+        from app.services.body_predictor import get_predictor
+    except ImportError:
+        raise HTTPException(
+            status_code=501,
+            detail="ML prediction model not available (scikit-learn not installed).",
+        )
+
+    predictor = get_predictor()
+    try:
+        result = predictor.predict(
+            height_cm=payload.height,
+            weight_kg=payload.weight,
+            waist_cm=payload.waist,
+            foot_length_cm=payload.foot_length,
+            gender=payload.gender,
+        )
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    return PredictMeasurementsOut(
+        **result,
+        model_version=predictor.model_version,
     )
