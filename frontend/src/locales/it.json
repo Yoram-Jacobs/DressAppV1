@@ -1129,7 +1129,9 @@
     "annualPlan": "Piano annuale",
     "annualPlanDesc": "Risparmia il 50% rispetto alla fatturazione mensile.",
     "perYear": " / anno",
-    "upgradeAnnualBtn": "Upgrade annuale"
+    "upgradeAnnualBtn": "Upgrade annuale",
+    "inviteDesc": "Condividi DressApp con i tuoi amici e familiari",
+    "bookmarkletDesc": "Trascina il pulsante in basso sulla barra dei preferiti. Su dispositivo mobile, aggiungilo ai preferiti e nominalo 'Assistente shopping DressApp'. Cliccaci sopra quando sei su una pagina prodotto."
   },
   "admin": {
     "title": "Amministratore",

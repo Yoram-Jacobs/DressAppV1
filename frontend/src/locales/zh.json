@@ -1129,7 +1129,9 @@
     "annualPlan": "按年订阅",
     "annualPlanDesc": "相比按月订阅可节省 50% 费用。",
     "perYear": " / 年",
-    "upgradeAnnualBtn": "升级年度版"
+    "upgradeAnnualBtn": "升级年度版",
+    "inviteDesc": "与您的朋友和家人分享 DressApp",
+    "bookmarkletDesc": "将下方按钮拖拽至书签栏。在移动端上，将其加入书签并命名为 'DressApp 购物助手'。浏览任何商品详情页时点击此书签即可使用。"
   },
   "admin": {
     "title": "管理",

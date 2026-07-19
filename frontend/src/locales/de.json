@@ -882,7 +882,7 @@
     "chromeStoreDesc": "Holen Sie sich die offizielle Browser-Erweiterung für automatische Größenermittlung in unterstützten Online-Shops.",
     "chromeStoreComingSoon": "Demnächst im Chrome Web Store",
     "bookmarkletTitle": "Universelles Bookmarklet",
-    "bookmarkletDesc": "Ziehen Sie die Schaltfläche unten in Ihre Lesezeichenleiste. Fügen Sie sie auf Mobilgeräten zu Ihren Lesezeichen hinzu und nennen Sie sie 'DressApp Shopping Assistant'. Klicken Sie auf einer Produktseite darauf.",
+    "bookmarkletDesc": "Ziehen Sie die Schaltfläche unten in Ihre Lesezeichenleiste. Fügen Sie sie auf Mobilgeräten zu Ihren Lesezeichen hinzu und nennen Sie sie 'DressApp Einkaufs-Assistent'. Klicken Sie darauf, wenn Sie sich auf einer Produktseite befinden.",
     "bookmarkletBtn": "Verwendung: Ziehen Sie diese Schaltfläche in Ihre Lesezeichenleiste. Klicken Sie auf einer Produktseite darauf, um Größenempfehlungen zu erhalten.",
     "bookmarkletInstruction": "Ziehen Sie die Schaltfläche unten in Ihre Lesezeichenleiste. Fügen Sie sie auf Mobilgeräten zu Ihren Lesezeichen hinzu und nennen Sie sie 'DressApp Einkaufs-Assistent'. Klicken Sie darauf, wenn Sie sich auf einer Produktseite befinden.",
     "language": "Sprache",
@@ -1130,7 +1130,8 @@
     "annualPlan": "Jährlicher Plan",
     "annualPlanDesc": "Sparen Sie 50 % im Vergleich zur monatlichen Abrechnung.",
     "perYear": " / Jahr",
-    "upgradeAnnualBtn": "Jährlich upgraden"
+    "upgradeAnnualBtn": "Jährlich upgraden",
+    "inviteDesc": "Teilen Sie DressApp mit Ihren Freunden und Ihrer Familie"
   },
   "admin": {
     "title": "Admin",
