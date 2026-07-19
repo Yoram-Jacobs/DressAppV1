@@ -1031,8 +1031,8 @@
     "schedulerPushReminders": "Планировщик и Push-напоминания",
     "styleDressFor": "Стиль одежды",
     "twiceAWeek": "Дважды в неделю",
-    "everyday": "Everyday",
-    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts.",
+    "everyday": "Каждый день",
+    "phoneWarning": "* Настройте номер телефона в разделе «Личность» (Identity) для получения симулированных пуш-уведомлений.",
     "aiConfig": {
       "title": "Настройка ИИ",
       "subtitle": "Управляйте провайдерами ИИ, настраивайте API-ключи или переключайтесь на локальные модели на устройстве.",

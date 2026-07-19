@@ -1028,8 +1028,8 @@
     "schedulerPushReminders": "शेड्यूलर और पुश रिमाइंडर्स",
     "styleDressFor": "शैली / किस लिए तैयार होना है",
     "twiceAWeek": "सप्ताह में दो बार",
-    "everyday": "Everyday",
-    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts.",
+    "everyday": "हर दिन",
+    "phoneWarning": "* सिम्युलेटेड पुश अलर्ट प्राप्त करने के लिए पहचान (Identity) के अंतर्गत फ़ोन नंबर कॉन्फ़िगर करें।",
     "aiConfig": {
       "title": "एआई कॉन्फ़िगरेशन",
       "subtitle": "अपने एआई प्रदाताओं को प्रबंधित करें, एपीआई कुंजी कस्टमाइज़ करें, या ऑन-डिवाइस स्थानीय एआई मॉडल पर स्विच करें।",

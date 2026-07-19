@@ -1031,8 +1031,8 @@
     "schedulerPushReminders": "スケジューラ＆プッシュ通知リマインダー",
     "styleDressFor": "スタイル / 着こなし目的",
     "twiceAWeek": "週に2回",
-    "everyday": "Everyday",
-    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts.",
+    "everyday": "毎日",
+    "phoneWarning": "* シミュレートされたプッシュ警告を受け取るには、ID（Identity）で電話番号を設定してください。",
     "aiConfig": {
       "title": "AI設定",
       "subtitle": "AIサービスプロバイダーの管理、APIキーのカスタマイズ、またはエッジAIモデルへの切り替えを行います。",

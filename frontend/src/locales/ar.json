@@ -1031,8 +1031,8 @@
     "schedulerPushReminders": "الجدولة وتذكيرات الإشعارات",
     "styleDressFor": "نمط اللباس لـ",
     "twiceAWeek": "مرتين في الأسبوع",
-    "everyday": "Everyday",
-    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts.",
+    "everyday": "كل يوم",
+    "phoneWarning": "* قم بتهيئة رقم الهاتف ضمن الهوية (Identity) لتلقي تنبيهات الدفع المحاكاة.",
     "aiConfig": {
       "title": "إعدادات الذكاء الاصطناعي",
       "subtitle": "إدارة مزودي خدمة الذكاء الاصطناعي، وتخصيص مفاتيح API، أو التبديل إلى نماذج الذكاء الاصطناعي المحلية.",

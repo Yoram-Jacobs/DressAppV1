@@ -1031,8 +1031,8 @@
     "schedulerPushReminders": "日程规划与推送提醒",
     "styleDressFor": "搭配风格",
     "twiceAWeek": "每周两次",
-    "everyday": "Everyday",
-    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts.",
+    "everyday": "每天",
+    "phoneWarning": "* 请在“身份”(Identity) 栏目下配置您的电话号码，以便接收模拟的推送通知。",
     "aiConfig": {
       "title": "人工智能配置",
       "subtitle": "管理您的 AI 服务提供商、自定义 API 密钥，或切换到边缘 AI 模型。",

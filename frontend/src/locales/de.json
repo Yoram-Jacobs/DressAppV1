@@ -1040,8 +1040,8 @@
     "schedulerPushReminders": "Planer & Push-Erinnerungen",
     "styleDressFor": "Stil / Kleiden für",
     "twiceAWeek": "Zweimal pro Woche",
-    "everyday": "Everyday",
-    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts.",
+    "everyday": "Täglich",
+    "phoneWarning": "* Konfiguriere die Telefonnummer unter Identität (Identity), um simulierte Push-Benachrichtigungen zu erhalten.",
     "aiConfig": {
       "title": "KI-Konfiguration",
       "subtitle": "Verwalten Sie Ihre KI-Anbieter, passen Sie API-Schlüssel an oder wechseln Sie zu lokalen KI-Modellen.",

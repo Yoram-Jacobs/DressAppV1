@@ -1031,8 +1031,8 @@
     "schedulerPushReminders": "Planificador y recordatorios push",
     "styleDressFor": "Estilo / Vestir para",
     "twiceAWeek": "Dos veces por semana",
-    "everyday": "Everyday",
-    "phoneWarning": "* Configure phone number under Identity to receive simulated push alerts.",
+    "everyday": "Todos los días",
+    "phoneWarning": "* Configura el número de teléfono en Identidad (Identity) para recibir alertas push simuladas.",
     "aiConfig": {
       "title": "Configuración de IA",
       "subtitle": "Administre sus proveedores de IA, personalice las claves API o cambie a modelos de IA locales.",
