@@ -472,33 +472,26 @@ export default function HelpMenu() {
                 </h2>
                 <p className="text-muted-foreground">{t('help.profile_p1')}</p>
                 <div className="space-y-4">
-                  {[
-                    { title: t('help.profile_item1_title'), desc: t('help.profile_item1_desc') },
-                    { title: t('help.profile_item2_title'), desc: t('help.profile_item2_desc') },
-                    { title: t('help.profile_item3_title'), desc: t('help.profile_item3_desc') },
-                    { title: t('help.profile_item4_title'), desc: t('help.profile_item4_desc') },
-                    { title: t('help.profile_item5_title'), desc: t('help.profile_item5_desc') },
-                    { title: t('help.profile_item6_title'), desc: t('help.profile_item6_desc') },
-                    { title: t('help.profile_item7_title'), desc: t('help.profile_item7_desc') },
-                    { title: t('help.profile_item8_title'), desc: t('help.profile_item8_desc') },
-                    { title: t('help.profile_item9_title'), desc: t('help.profile_item9_desc') },
-                    { title: t('help.profile_item10_title'), desc: t('help.profile_item10_desc') },
-                    { title: t('help.profile_item11_title'), desc: t('help.profile_item11_desc') },
-                    { title: t('help.profile_item12_title'), desc: t('help.profile_item12_desc') }
-                  ].map((item, idx) => (
-                    <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/5 space-y-2">
-                      <h4 className="font-semibold text-foreground text-sm flex items-center gap-2">
-                        <Info className="h-4 w-4 text-primary shrink-0" />
-                        {item.title}
-                      </h4>
-                      <p className={cn("text-xs text-muted-foreground leading-relaxed", isRtl ? "pr-6" : "pl-6")}>
-                        <strong className="text-primary/90 font-medium">
-                          {isRtl ? (i18n.language === 'he' ? 'למה זה משנה:' : 'لماذا يهم:') : 'Why it matters:'}
-                        </strong>{' '}
-                        {item.desc}
-                      </p>
-                    </div>
-                  ))}
+                  {Array.from({ length: 16 }, (_, i) => i + 1)
+                    .map((num) => ({
+                      title: t(`help.profile_item${num}_title`, { defaultValue: '' }),
+                      desc: t(`help.profile_item${num}_desc`, { defaultValue: '' }),
+                    }))
+                    .filter((item) => item.title && item.desc)
+                    .map((item, idx) => (
+                      <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/5 space-y-2">
+                        <h4 className="font-semibold text-foreground text-sm flex items-center gap-2">
+                          <Info className="h-4 w-4 text-primary shrink-0" />
+                          {item.title}
+                        </h4>
+                        <p className={cn("text-xs text-muted-foreground leading-relaxed", isRtl ? "pr-6" : "pl-6")}>
+                          <strong className="text-primary/90 font-medium">
+                            {isRtl ? (i18n.language === 'he' ? 'למה זה משנה:' : 'لماذا يهم:') : 'Why it matters:'}
+                          </strong>{' '}
+                          {item.desc}
+                        </p>
+                      </div>
+                    ))}
                 </div>
               </div>
             )}
