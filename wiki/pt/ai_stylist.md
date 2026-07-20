@@ -1,27 +1,28 @@
-# Estilista de IA conversacional
+# Estilista de IA Conversacional
 
-Envolva-se com um estilista pessoal inteligente que conhece seu armário, clima e programação.
+Interaja com um estilista pessoal inteligente que conhece o seu guarda-roupa, o tempo e a sua agenda.
 
-## Visão geral
-O AI Stylist lida com consultas de estilo de voz ou texto em linguagem natural, integrando automaticamente condições climáticas e eventos de calendário.
+## Visão Geral
+O Estilista de IA processa consultas de estilo por voz ou texto em linguagem natural, integrando automaticamente condições meteorológicas, eventos do calendário e notificações push através de stores personalizados `useSyncExternalStore` seguros para threads (`stylistStore` e `dailySuggestionsStore`) com cache de 15 minutos e eliminação de pedidos duplicados em curso.
 
 ## Pré-requisitos
 - Uma chave API Gemini (ou créditos padrão do sistema).
-- Eventos de calendário conectados.
+- Eventos de calendário ligados.
 
-## Passo a passo
-1. **Iniciar sessão**: Abra a guia Estilista e selecione Bate-papo, Aleatório ou Combinar.
-2. **Entrada de voz**: toque no microfone, fale sua consulta (por exemplo, "Sugerir uma roupa para um dia chuvoso") e toque para enviar.
-3. **Reprodução de áudio**: ouça a lógica de estilo gerada por meio do reprodutor de fala de alta fidelidade.
-4. **Shuffle**: Clique no botão Sparkles para girar a máquina caça-níqueis; a IA alinha automaticamente os itens correspondentes em foco.
+## Passo a Passo
+1. **Iniciar Sessão**: Abra o separador Stylist e selecione Chat, Shuffle ou Match.
+2. **Entrada de Voz**: Toque no microfone, fale a sua consulta (ex.: "Sugere um conjunto para um dia de chuva") e toque para enviar.
+3. **Reprodução de Áudio**: Ouça a explicação de estilo gerada através do reprodutor de voz de alta fidelidade.
+4. **Misturar (Shuffle)**: Clique no botão Sparkles para rodar a máquina; a IA alinha automaticamente os itens correspondentes em foco.
+5. **Navegação sem Espera**: A navegação entre o Stylist e outros separadores utiliza preferências em memória sem acionar ciclos de pedidos GET à base de dados.
 
-## Resultados esperados
-Layouts de roupas personalizados de acordo com suas preferências pessoais, restrições sazonais e programação.
+## Resultados Esperados
+Esquemas de conjuntos personalizados criados em torno das suas preferências pessoais, restrições sazonais e agenda.
 
-## Solução de problemas
-- **O áudio é reproduzido muito lentamente**: alterne entre o Gemini TTS e o substituto da Web Speech API nas configurações do perfil.
-- **Sugestões repetidas**: certifique-se de que o histórico do seu calendário de roupas esteja atualizado para que o algoritmo de rotação possa bloquear usos repetidos.
+## Resolução de Problemas
+- **Áudio reproduz demasiado devagar**: Alterne entre o Gemini TTS e o recurso Web Speech API nas definições de Profile.
+- **Sugestões repetidas**: Certifique-se de que o seu histórico do calendário de conjuntos está atualizado para que o algoritmo de rotação possa bloquear o uso repetido de peças.
 
 ## Limitações
-- As recomendações exigem pelo menos uma peça de cima, uma de baixo e um calçado no armário para completar o look.
-- A transcrição de voz pode recorrer à digitação de texto padrão em dispositivos edge não suportados.
+- As recomendações requerem pelo menos uma peça superior, uma peça inferior e um par de sapatos no guarda-roupa para completar um look.
+- A transcrição de voz pode recorrer à introdução de texto padrão em dispositivos não suportados.

@@ -1,25 +1,25 @@
-# Planificador de ropa y lienzo
+# Planificador de Conjuntos y Lienzo
 
-Redacte, superponga y revise diseños coordinados.
+Componga, superponga y revise diseños coordinados.
 
 ## Descripción general
-Outfit Planner proporciona un lienzo visual con plantillas de avatar para superponer capas superiores, inferiores, prendas exteriores y calzado de forma dinámica.
+El Planificador de Conjuntos proporciona un lienzo visual de avatar 2D (compatible con recortes de fotos reales del cuerpo del usuario y maniquíes vectoriales dinámicos SVG) con desplazamientos de puntos de referencia calibrados (`top-[14.5%]` de cuello a escote y `top-[36.5%]` de pretina a cintura) para superponer prendas superiores, inferiores, abrigos y calzado al ras de los límites del cuerpo.
 
 ## Requisitos previos
-- Artículos de armario almacenados.
+- Prendas guardadas en el armario.
 
 ## Paso a paso
-1. **Seleccione Lienzo**: abra el Planificador y haga clic en un día o en un nuevo borrador.
-2. **Elementos de capa**: arrastra prendas al avatar 2D. La ropa exterior se apila automáticamente encima de las camisetas interiores.
-3. **Evaluar ajuste**: verifique las puntuaciones de compatibilidad y las advertencias (por ejemplo, choques de colores o alertas meteorológicas).
-4. **Guardar**: establece un título y programa el look en tu diario de guardarropa.
+1. **Seleccionar lienzo**: Abra el Planificador y haga clic en un día o nuevo borrador.
+2. **Superponer prendas**: Arrastre las prendas sobre el avatar 2D. Los abrigos se superponen automáticamente sobre las camisetas interiores.
+3. **Evaluar ajuste**: Verifique las puntuaciones de compatibilidad y advertencias (p. ej., conflictos de color o alertas meteorológicas).
+4. **Guardar**: Asigne un título y programe el look en su diario de armario. Las actualizaciones se transmiten de forma segura mediante `useOutfitStore`.
 
 ## Resultados esperados
-Bellas composiciones de atuendos en capas guardadas en tu calendario y visibles como vistas previas de tarjetas de cuadrícula.
+Composiciones de prendas superpuestas elegantemente guardadas en su calendario y visibles como vistas previas en tarjetas de cuadrícula sin bucles de sondeo de solicitudes de red en segundo plano.
 
 ## Solución de problemas
-- **Orden de capas incorrecto**: vuelva a verificar la categoría del artículo; la ropa exterior debe clasificarse como "Ropa exterior" para apilarse correctamente.
-- **Alertas de superposición**: si el avatar advierte sobre usos repetidos, verifica si usaste el mismo atuendo en el mismo lugar recientemente.
+- **Orden de capas incorrecto**: Vuelva a verificar la categoría del elemento; la ropa de abrigo debe clasificarse como "Outerwear" para apilarse correctamente.
+- **Alertas de superposición**: Si el avatar advierte sobre prendas repetidas, verifique si usó el mismo conjunto en la misma ubicación recientemente.
 
 ## Limitaciones
-- Las capas se gestionan automáticamente en función de las etiquetas de categoría; No se admiten anulaciones manuales del índice z.
+- Las capas se gestionan automáticamente según las etiquetas de categoría; no se admiten anulaciones manuales de z-index.
