@@ -38,6 +38,7 @@ class UpdateUserIn(BaseModel):
     units: dict[str, Any] | None = None
     face_photo_url: str | None = None
     body_photo_url: str | None = None
+    skin_tone: str | None = None
     body_measurements: dict[str, Any] | None = None
     hair: dict[str, Any] | None = None
 
