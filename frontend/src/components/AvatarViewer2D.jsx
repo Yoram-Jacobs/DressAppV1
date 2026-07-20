@@ -205,8 +205,8 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
               renderGarment('dress', t('taxonomy.categories.dress', { defaultValue: 'Dress' }), 'top-[17.5%] left-1/2 w-[82%] h-[68%] z-20 drop-shadow-lg', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'object-top', 'contain')
             ) : (
               <>
-                {renderGarment('top', t('taxonomy.categories.top', { defaultValue: 'Top' }), 'top-[17.5%] left-1/2 w-[82%] h-[38%] z-20', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'object-top', 'contain')}
-                {renderGarment('bottom', t('taxonomy.categories.bottom', { defaultValue: 'Bottom' }), 'top-[38.5%] left-1/2 w-[62%] h-[50%] z-10', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'object-top', 'contain')}
+                {renderGarment('top', t('taxonomy.categories.top', { defaultValue: 'Top' }), 'top-[17.5%] left-1/2 w-[82%] h-[38%] z-20', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width }, 'object-top', 'contain')}
+                {renderGarment('bottom', t('taxonomy.categories.bottom', { defaultValue: 'Bottom' }), 'top-[38.5%] left-1/2 w-[62%] h-[50%] z-10', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width }, 'object-top', 'contain')}
               </>
             )}
             {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[38.5%] left-1/2 w-[62%] h-[5%] z-21', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-center', 'contain')}
@@ -236,8 +236,8 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
               renderGarment('dress', t('taxonomy.categories.dress', { defaultValue: 'Dress' }), 'top-[17.5%] left-1/2 w-[82%] h-[68%] z-20 drop-shadow-lg', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'object-top', 'contain')
             ) : (
               <>
-                {renderGarment('top', t('taxonomy.categories.top', { defaultValue: 'Top' }), 'top-[17.5%] left-1/2 w-[82%] h-[38%] z-20', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'object-top', 'contain')}
-                {renderGarment('bottom', t('taxonomy.categories.bottom', { defaultValue: 'Bottom' }), 'top-[38.5%] left-1/2 w-[62%] h-[50%] z-10', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'object-top', 'contain')}
+                {renderGarment('top', t('taxonomy.categories.top', { defaultValue: 'Top' }), 'top-[17.5%] left-1/2 w-[82%] h-[38%] z-20', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width }, 'object-top', 'contain')}
+                {renderGarment('bottom', t('taxonomy.categories.bottom', { defaultValue: 'Bottom' }), 'top-[38.5%] left-1/2 w-[62%] h-[50%] z-10', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width }, 'object-top', 'contain')}
               </>
             )}
 
