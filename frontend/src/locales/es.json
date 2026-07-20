@@ -535,7 +535,15 @@
       "tagPlaceholder": "añadir etiqueta",
       "culturalTags": "Etiquetas culturales",
       "culturalTagPlaceholder": "añadir etiqueta cultural",
-      "notes": "Notas"
+      "notes": "Notas",
+      "sectionIdentityDesc": "Item title, name, brand, and description details",
+      "sectionTaxonomyDesc": "Category, item type, gender, and aesthetic styles",
+      "sectionCompositionDesc": "Garment size, colors, patterns, and fabric materials",
+      "sectionQualityDesc": "Garment state, wear condition, and repair advice",
+      "sectionPricingDesc": "Item purchase or retail pricing and transaction intent",
+      "sectionOrganizationDesc": "Outfit formality level, tags, and cultural styling notes",
+      "sectionCleanBgDesc": "Remove background using non-generative matting models",
+      "sectionReanalyseDesc": "Re-run analysis to extract details from the image"
     },
     "group": {
       "front": "Frente",
@@ -553,7 +561,8 @@
       "label": "Wardrobe Insights",
       "timesWorn": "Times Worn",
       "costPerWear": "Cost per Wear"
-    }
+    },
+    "generateVariantDesc": "Create new variations of this item using Generative AI"
   },
   "stylist": {
     "title": "Tu estilista",
@@ -1131,7 +1140,8 @@
     "perYear": " / año",
     "upgradeAnnualBtn": "Actualizar anualmente",
     "inviteDesc": "Comparte DressApp con tus amigos y familiares",
-    "bookmarkletDesc": "Arrastre el botón de abajo a su barra de marcadores. En el móvil, añádalo a sus marcadores y llámelo 'Asistente de compras DressApp'. Haga clic en él cuando esté en cualquier página de producto."
+    "bookmarkletDesc": "Arrastre el botón de abajo a su barra de marcadores. En el móvil, añádalo a sus marcadores y llámelo 'Asistente de compras DressApp'. Haga clic en él cuando esté en cualquier página de producto.",
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings"
   },
   "admin": {
     "title": "Administrador",
@@ -1968,7 +1978,8 @@
     "reshootRejected": "Se rechazó la foto restaurada — se conserva la original.",
     "reshootError": "No se pudo restaurar la foto. Inténtalo de nuevo.",
     "wearsCount": "{{count}} wears",
-    "timesWorn": "Worn {{count}} times"
+    "timesWorn": "Worn {{count}} times",
+    "wearsCount_plural": "{{count}} wears"
   },
   "outfits": {
     "viewDescription": "Ver los outfits que has creado y programado. Tu Estilista de IA se asegura de que utilices todas las prendas de tu armario y te advierte si repites en las mismas ocasiones.",

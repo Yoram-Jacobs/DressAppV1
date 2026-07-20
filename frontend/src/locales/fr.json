@@ -535,7 +535,15 @@
       "tagPlaceholder": "ajouter une étiquette",
       "culturalTags": "Étiquettes culturelles",
       "culturalTagPlaceholder": "ajouter une étiquette culturelle",
-      "notes": "Notes"
+      "notes": "Notes",
+      "sectionIdentityDesc": "Item title, name, brand, and description details",
+      "sectionTaxonomyDesc": "Category, item type, gender, and aesthetic styles",
+      "sectionCompositionDesc": "Garment size, colors, patterns, and fabric materials",
+      "sectionQualityDesc": "Garment state, wear condition, and repair advice",
+      "sectionPricingDesc": "Item purchase or retail pricing and transaction intent",
+      "sectionOrganizationDesc": "Outfit formality level, tags, and cultural styling notes",
+      "sectionCleanBgDesc": "Remove background using non-generative matting models",
+      "sectionReanalyseDesc": "Re-run analysis to extract details from the image"
     },
     "group": {
       "front": "Devant",
@@ -553,7 +561,8 @@
       "label": "Wardrobe Insights",
       "timesWorn": "Times Worn",
       "costPerWear": "Cost per Wear"
-    }
+    },
+    "generateVariantDesc": "Create new variations of this item using Generative AI"
   },
   "stylist": {
     "title": "Votre styliste",
@@ -1131,7 +1140,8 @@
     "perYear": " / an",
     "upgradeAnnualBtn": "Passer à l'annuel",
     "inviteDesc": "Partagez DressApp avec vos amis et votre famille",
-    "bookmarkletDesc": "Faites glisser le bouton ci-dessous vers votre barre de favoris. Sur mobile, ajoutez-le à vos favoris et nommez-le 'Assistant shopping DressApp'. Cliquez dessus sur n'importe quelle page produit."
+    "bookmarkletDesc": "Faites glisser le bouton ci-dessous vers votre barre de favoris. Sur mobile, ajoutez-le à vos favoris et nommez-le 'Assistant shopping DressApp'. Cliquez dessus sur n'importe quelle page produit.",
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings"
   },
   "admin": {
     "title": "Admin",
@@ -1968,7 +1978,8 @@
     "reshootRejected": "La photo restaurée a été refusée — nous gardons l'originale.",
     "reshootError": "Impossible de restaurer la photo. Réessayez.",
     "wearsCount": "{{count}} wears",
-    "timesWorn": "Worn {{count}} times"
+    "timesWorn": "Worn {{count}} times",
+    "wearsCount_plural": "{{count}} wears"
   },
   "outfits": {
     "viewDescription": "Consultez les tenues que vous avez composées et programmées. Votre Styliste IA s'assure que vous utilisez toutes les pièces de votre garde-robe et vous avertit en cas de répétition pour des occasions similaires.",

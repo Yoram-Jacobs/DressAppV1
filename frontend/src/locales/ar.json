@@ -535,7 +535,15 @@
       "tagPlaceholder": "أضف وسماً",
       "culturalTags": "الوسوم الثقافية",
       "culturalTagPlaceholder": "أضف وسماً ثقافياً",
-      "notes": "ملاحظات"
+      "notes": "ملاحظات",
+      "sectionIdentityDesc": "Item title, name, brand, and description details",
+      "sectionTaxonomyDesc": "Category, item type, gender, and aesthetic styles",
+      "sectionCompositionDesc": "Garment size, colors, patterns, and fabric materials",
+      "sectionQualityDesc": "Garment state, wear condition, and repair advice",
+      "sectionPricingDesc": "Item purchase or retail pricing and transaction intent",
+      "sectionOrganizationDesc": "Outfit formality level, tags, and cultural styling notes",
+      "sectionCleanBgDesc": "Remove background using non-generative matting models",
+      "sectionReanalyseDesc": "Re-run analysis to extract details from the image"
     },
     "group": {
       "front": "أمام",
@@ -553,7 +561,8 @@
       "label": "إحصائيات الخزانة",
       "timesWorn": "مرات الارتداء",
       "costPerWear": "التكلفة لكل ارتداء"
-    }
+    },
+    "generateVariantDesc": "Create new variations of this item using Generative AI"
   },
   "stylist": {
     "title": "مصمّمك",
@@ -1131,7 +1140,8 @@
     "perYear": " / سنة",
     "upgradeAnnualBtn": "ترقية سنوية",
     "inviteDesc": "شارك DressApp مع أصدقائك وعائلتك",
-    "bookmarkletDesc": "اسحب الزر أدناه إلى شريط العلامات المرجعية. على الهاتف المحمول، أضفه إلى علاماتك المرجعية وسمه 'مساعد التسوق من DressApp'. انقر عليه عند تصفح أي صفحة منتج."
+    "bookmarkletDesc": "اسحب الزر أدناه إلى شريط العلامات المرجعية. على الهاتف المحمول، أضفه إلى علاماتك المرجعية وسمه 'مساعد التسوق من DressApp'. انقر عليه عند تصفح أي صفحة منتج.",
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings"
   },
   "admin": {
     "title": "الإدارة",
@@ -1968,7 +1978,8 @@
     "reshootRejected": "تمّ رفض الصورة المرمّمة — تم الإبقاء على الأصليّة.",
     "reshootError": "تعذّرت استعادة الصورة. حاول مرّة أخرى.",
     "wearsCount": "{{count}} ارتداء",
-    "timesWorn": "تم ارتداؤه {{count}} مرات"
+    "timesWorn": "تم ارتداؤه {{count}} مرات",
+    "wearsCount_plural": "{{count}} wears"
   },
   "outfits": {
     "viewDescription": "عرض التنسيقات التي قمت بتكوينها وجدولتها. يضمن منسق الملابس الذكي الاستفادة من جميع قطع الخزانة ويحذرك من تكرار ارتداء الملابس في المناسبات السابقة.",
