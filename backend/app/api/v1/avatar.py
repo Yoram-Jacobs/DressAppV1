@@ -52,6 +52,8 @@ async def get_avatar_params(user: dict = Depends(get_current_user)) -> dict[str,
         "shape_params": shape_params,
         "measurements": merged_measurements,
         "gender": sex,
-        "skin_tone": full_user.get("skin_tone") or None
+        "skin_tone": full_user.get("skin_tone") or None,
+        "body_photo_url": full_user.get("body_photo_url") or None
     }
+
 
