@@ -870,22 +870,34 @@ export function ProfileDetailsCard() {
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <PhotoSlot
-                  label={t('profile.facePhoto')}
+                  label={t('profile.facePhoto', { defaultValue: 'Face Photo' })}
                   value={form.face_photo_url}
                   onChange={(v) => setField('face_photo_url', v)}
                   testid="face"
                 />
+                <PhotoSlot
+                  label={t('profile.bodyPhoto', { defaultValue: 'Full-body Photo' })}
+                  value={form.body_photo_url}
+                  onChange={(v) => setField('body_photo_url', v)}
+                  testid="body"
+                />
                 <div className="rounded-2xl border border-border p-3 bg-card flex flex-col shadow-inner">
                   <div className="caps-label text-muted-foreground mb-2">
-                    {t('profile.sections.digitalAvatar', { defaultValue: '3D Digital Avatar' })}
+                    {t('profile.sections.digitalAvatar', { defaultValue: 'Digital Avatar' })}
                   </div>
                   <div className="flex-1 w-full rounded-xl overflow-hidden bg-background border border-border min-h-[200px]">
-                    <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={form.sex || 'female'} />
+                    <AvatarViewer
+                      shapeParams={user?.avatar_shape_params || {}}
+                      measurements={form.body_measurements}
+                      sex={form.sex || 'female'}
+                      bodyPhotoUrl={form.body_photo_url}
+                      skinColor={form.skin_tone}
+                    />
                   </div>
                   <div className="text-xs text-muted-foreground mt-2">
-                    {t('profile.sections.avatarGenerationDesc', { defaultValue: 'Generated from your body measurements below.' })}
+                    {t('profile.sections.avatarGenerationDesc', { defaultValue: 'Adapts automatically to your measurements.' })}
                   </div>
                 </div>
               </div>

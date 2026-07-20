@@ -6,7 +6,7 @@ import { closetStore } from '@/lib/closetStore';
 import ImageWithPlaceholder from '@/components/ImageWithPlaceholder';
 import DynamicAvatar from '@/components/DynamicAvatar';
 
-export default function AvatarViewer2D({ shapeParams = {}, measurements: providedMeasurements, skinColor = '#9CA3AF', sex = 'female', outfitItems = {}, onItemClick }) {
+export default function AvatarViewer2D({ shapeParams = {}, measurements: providedMeasurements, skinColor = '#9CA3AF', sex = 'female', outfitItems = {}, onItemClick, bodyPhotoUrl }) {
   const { t } = useTranslation();
 
   // Normalize params between 0 and 1
@@ -21,9 +21,6 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
 
   // Derive cm measurements for DynamicAvatar
   const computedMeasurements = useMemo(() => {
-    if (providedMeasurements && providedMeasurements.height) {
-      return providedMeasurements;
-    }
     const isMale = String(sex).toLowerCase() === 'male';
     const baseH = isMale ? 178 : 168;
     const baseSh = isMale ? 44 : 38;
@@ -36,14 +33,16 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
     const heavy = params.heavy || 0;
     const thin = params.thin || 0;
 
+    const pm = providedMeasurements || {};
+
     return {
-      height: baseH + (tall * 15) - (short * 15),
-      shoulders: baseSh + (heavy * 4) - (thin * 3),
-      chest: baseCh + ((params.busty || 0) * 10) + (heavy * 8) - (thin * 6),
-      waist: baseW + ((params.waist_thick || 0) * 10) - ((params.waist_thin || 0) * 8) + (heavy * 6),
-      hip: baseHip + ((params.hips_wide || 0) * 10) - ((params.hips_narrow || 0) * 8) + (heavy * 6),
-      armLength: (isMale ? 64 : 58) + (tall * 5) - (short * 5),
-      inseam: (isMale ? 82 : 76) + (tall * 8) - (short * 8),
+      height: Number(pm.height || pm.length) || (baseH + (tall * 15) - (short * 15)),
+      shoulders: Number(pm.shoulders || pm.shoulder) || (baseSh + (heavy * 4) - (thin * 3)),
+      chest: Number(pm.chest || pm.bust) || (baseCh + ((params.busty || 0) * 10) + (heavy * 8) - (thin * 6)),
+      waist: Number(pm.waist) || (baseW + ((params.waist_thick || 0) * 10) - ((params.waist_thin || 0) * 8) + (heavy * 6)),
+      hip: Number(pm.hips || pm.hip) || (baseHip + ((params.hips_wide || 0) * 10) - ((params.hips_narrow || 0) * 8) + (heavy * 6)),
+      armLength: Number(pm.arm_length || pm.armLength) || ((isMale ? 64 : 58) + (tall * 5) - (short * 5)),
+      inseam: Number(pm.inseam || pm.leg_length) || ((isMale ? 82 : 76) + (tall * 8) - (short * 8)),
       gender: isMale ? 'male' : 'female'
     };
   }, [providedMeasurements, params, sex]);
@@ -190,76 +189,86 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
       {/* Dynamic Background Sparkle */}
       <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/30 via-transparent to-transparent" />
       
-      {/* 2D Dynamic Bezier SVG Avatar Container */}
+      {/* 2D Dynamic Bezier SVG Avatar or Real Body Photo Container */}
       <div 
         className="relative h-full aspect-[1/2] flex items-center justify-center transition-all duration-500"
       >
-        <DynamicAvatar
-          height={computedMeasurements.height}
-          shoulders={computedMeasurements.shoulders}
-          chest={computedMeasurements.chest}
-          waist={computedMeasurements.waist}
-          hip={computedMeasurements.hip || computedMeasurements.hips}
-          armLength={computedMeasurements.armLength || computedMeasurements.arm_length}
-          inseam={computedMeasurements.inseam}
-          gender={computedMeasurements.gender || sex}
-          skinColor={skinColor}
-          showGuideLines={false}
-          className="w-full h-full"
-        >
-          {/* ─── Layered Clothes (Segmented transparent PNG overlays) ─── */}
+        {bodyPhotoUrl ? (
+          <div className="relative w-full h-full flex items-center justify-center">
+            <img
+              src={bodyPhotoUrl}
+              alt={t('profile.bodyPhoto', { defaultValue: 'Full-body photo' })}
+              className="w-full h-full object-contain rounded-xl drop-shadow-md"
+            />
+            {/* Render Try-On Garments on top of real body photo */}
+            {renderGarment('headwear', 'Headwear', 'top-0 left-1/2 w-[40%] aspect-square z-30', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
+            {renderGarment('glasses', 'Glasses', 'top-[11.5%] left-1/2 w-[18%] h-[4.5%] z-28', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
+            {renderGarment('accessory', 'Accessory', 'top-[14%] left-1/2 w-[35%] aspect-square z-25', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
+            {garments.dress && garments.dress.url ? (
+              renderGarment('dress', 'Dress', 'top-[16%] left-1/2 w-[75%] h-[60%] z-20 drop-shadow-lg', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })
+            ) : (
+              <>
+                {renderGarment('top', 'Top', 'top-[17%] left-1/2 w-[78%] h-[38%] z-20', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width })}
+                {renderGarment('bottom', 'Bottom', 'top-[42%] left-1/2 w-[72%] h-[48%] z-10', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width })}
+              </>
+            )}
+            {renderGarment('belt', 'Belt', 'top-[42%] left-1/2 w-[72%] h-[5%] z-21', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
+            {renderGarment('outerwear', 'Outerwear', 'top-[16%] left-1/2 w-[85%] h-[45%] z-22 drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })}
+            {renderGarment('shoes', 'Shoes', 'bottom-0 left-1/2 w-[50%] h-[15%] z-15', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
+          </div>
+        ) : (
+          <DynamicAvatar
+            height={computedMeasurements.height}
+            shoulders={computedMeasurements.shoulders}
+            chest={computedMeasurements.chest}
+            waist={computedMeasurements.waist}
+            hip={computedMeasurements.hip || computedMeasurements.hips}
+            armLength={computedMeasurements.armLength || computedMeasurements.arm_length}
+            inseam={computedMeasurements.inseam}
+            gender={computedMeasurements.gender || sex}
+            skinColor={skinColor}
+            showGuideLines={false}
+            className="w-full h-full"
+          >
+            {/* ─── Layered Clothes (Segmented transparent PNG overlays) ─── */}
+            {renderGarment('headwear', 'Headwear', 'top-0 left-1/2 w-[40%] aspect-square z-30', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
+            {renderGarment('glasses', 'Glasses', 'top-[11.5%] left-1/2 w-[18%] h-[4.5%] z-28', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
+            {renderGarment('accessory', 'Accessory', 'top-[14%] left-1/2 w-[35%] aspect-square z-25', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
 
-          {/* 1. Headwear */}
-          {renderGarment('headwear', 'Headwear', 'top-0 left-1/2 w-[40%] aspect-square z-30', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
+            {garments.dress && garments.dress.url ? (
+              renderGarment('dress', 'Dress', 'top-[16%] left-1/2 w-[75%] h-[60%] z-20 drop-shadow-lg', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })
+            ) : (
+              <>
+                {renderGarment('top', 'Top', 'top-[17%] left-1/2 w-[78%] h-[38%] z-20', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width })}
+                {renderGarment('bottom', 'Bottom', 'top-[42%] left-1/2 w-[72%] h-[48%] z-10', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width })}
+              </>
+            )}
 
-          {/* 1.5. Glasses */}
-          {renderGarment('glasses', 'Glasses', 'top-[11.5%] left-1/2 w-[18%] h-[4.5%] z-28', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
+            {renderGarment('belt', 'Belt', 'top-[42%] left-1/2 w-[72%] h-[5%] z-21', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
+            {renderGarment('outerwear', 'Outerwear', 'top-[16%] left-1/2 w-[85%] h-[45%] z-22 drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })}
+            {renderGarment('shoes', 'Shoes', 'bottom-0 left-1/2 w-[50%] h-[15%] z-15', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
 
-          {/* 2. Accessories / Neckwear */}
-          {renderGarment('accessory', 'Accessory', 'top-[14%] left-1/2 w-[35%] aspect-square z-25', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
-
-          {/* 3. Dress (Overrides top/bottom layout) */}
-          {garments.dress && garments.dress.url ? (
-            renderGarment('dress', 'Dress', 'top-[16%] left-1/2 w-[75%] h-[60%] z-20 drop-shadow-lg', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })
-          ) : (
-            <>
-              {/* Top (Shirt, Sweater, etc.) */}
-              {renderGarment('top', 'Top', 'top-[17%] left-1/2 w-[78%] h-[38%] z-20', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width })}
-
-              {/* Bottom (Pants, Skirt, Jeans) */}
-              {renderGarment('bottom', 'Bottom', 'top-[42%] left-1/2 w-[72%] h-[48%] z-10', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width })}
-            </>
-          )}
-
-          {/* 3.5. Belt */}
-          {renderGarment('belt', 'Belt', 'top-[42%] left-1/2 w-[72%] h-[5%] z-21', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
-
-          {/* 4. Outerwear (Jacket, Coat) - Layered on top of top/dress */}
-          {renderGarment('outerwear', 'Outerwear', 'top-[16%] left-1/2 w-[85%] h-[45%] z-22 drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })}
-
-          {/* 5. Shoes */}
-          {renderGarment('shoes', 'Shoes', 'bottom-0 left-1/2 w-[50%] h-[15%] z-15', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
-
-          {/* 6. Bag */}
-          {garments.bag && garments.bag.url && (
-            <motion.div
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              className={`absolute top-[40%] right-[-5%] w-[40%] h-[30%] z-25 drop-shadow-md ${onItemClick && garments.bag.id ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'pointer-events-none'}`}
-              onClick={onItemClick && garments.bag.id ? (e) => { e.stopPropagation(); onItemClick(garments.bag.id); } : undefined}
-            >
-              <ImageWithPlaceholder
-                src={garments.bag.url}
-                placeholder={garments.bag.placeholder}
-                alt={t('taxonomy.sub_category.bag', { defaultValue: 'Bag' })}
-                objectFit="contain"
-                className="w-full h-full"
-              />
-            </motion.div>
-          )}
-        </DynamicAvatar>
+            {garments.bag && garments.bag.url && (
+              <motion.div
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className={`absolute top-[40%] right-[-5%] w-[40%] h-[30%] z-25 drop-shadow-md ${onItemClick && garments.bag.id ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'pointer-events-none'}`}
+                onClick={onItemClick && garments.bag.id ? (e) => { e.stopPropagation(); onItemClick(garments.bag.id); } : undefined}
+              >
+                <ImageWithPlaceholder
+                  src={garments.bag.url}
+                  placeholder={garments.bag.placeholder}
+                  alt={t('taxonomy.sub_category.bag', { defaultValue: 'Bag' })}
+                  objectFit="contain"
+                  className="w-full h-full"
+                />
+              </motion.div>
+            )}
+          </DynamicAvatar>
+        )}
       </div>
     </div>
   );
 }
+
 
