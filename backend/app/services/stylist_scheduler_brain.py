@@ -15,12 +15,16 @@ logger = logging.getLogger(__name__)
 
 
 async def get_rotation_prioritized_closet(user_id: str, limit: int = 40) -> list[dict[str, Any]]:
-    """Fetch closet items prioritized for rotation.
+    """Fetch closet items prioritized for rotation with balanced category representation.
 
-    Filters out duplicates (`is_duplicate=True`) and sorts items:
-    1. Items never suggested or suggested longest ago (`last_suggested_at` is null, then ascending).
-    2. Items never worn or worn longest ago (`last_worn_at` is null, then ascending).
+    Filters out duplicates (`is_duplicate=True`) and partitions items into category buckets
+    (top, bottom, footwear, dress, outerwear, accessory). Each bucket is sorted by rotation:
+    1. Items never suggested or suggested longest ago (`last_suggested_at` null, then ascending).
+    2. Items never worn or worn longest ago (`last_worn_at` null, then ascending).
     3. Wear count ascending (`wear_count` ascending).
+
+    Items are gathered proportionally across categories so that one large category
+    (e.g., 40 tops) never starves other categories (e.g., shorts, shoes).
     """
     db = get_db()
     cursor = db.closet_items.find(
@@ -36,6 +40,20 @@ async def get_rotation_prioritized_closet(user_id: str, limit: int = 40) -> list
     for item in items:
         if "_id" in item:
             item.pop("_id")
+
+    def norm_category(cat: Any) -> str:
+        s = str(cat or "").strip().lower().replace(" ", "_")
+        if s in ("top", "tops", "shirt", "t-shirt", "t_shirt", "polo", "sweater", "blouse"):
+            return "top"
+        if s in ("bottom", "bottoms", "pants", "shorts", "jeans", "skirt", "trousers"):
+            return "bottom"
+        if s in ("footwear", "shoes", "sneakers", "boots", "sandals", "shoe"):
+            return "footwear"
+        if s in ("dress", "dresses", "jumpsuit", "suit", "full_body", "full_body_suit"):
+            return "dress"
+        if s in ("outerwear", "jacket", "coat"):
+            return "outerwear"
+        return "accessory"
 
     # Hydrate group members if they are part of a set
     group_ids = [r["group_id"] for r in items if r.get("group_id")]
@@ -54,14 +72,6 @@ async def get_rotation_prioritized_closet(user_id: str, limit: int = 40) -> list
                 m.pop("_id")
             members_by_group[m["group_id"]].append(m)
             
-        def norm_category(cat):
-            s = str(cat or "").strip().lower().replace(" ", "_")
-            if s in ("top", "tops"): return "top"
-            if s in ("bottom", "bottoms"): return "bottom"
-            if s in ("footwear", "shoes"): return "footwear"
-            if s in ("accessory", "accessories"): return "accessories"
-            return s
-            
         final_items = []
         for item in items:
             final_items.append(item)
@@ -73,20 +83,78 @@ async def get_rotation_prioritized_closet(user_id: str, limit: int = 40) -> list
                     final_items.extend(g_members)
         items = final_items
 
-    # Define sort key
+    # Rotation sort key: un-suggested/un-worn first, then oldest suggested, then lowest wear count
     def sort_key(item: dict[str, Any]) -> tuple:
         last_sug = item.get("last_suggested_at") or ""
         last_worn = item.get("last_worn_at") or ""
         wear_count = item.get("wear_count") or 0
         
-        # We want empty dates to sort FIRST (since they are never worn / never suggested)
         sug_val = last_sug if last_sug else "0000-00-00"
         worn_val = last_worn if last_worn else "0000-00-00"
         
         return (sug_val, worn_val, wear_count)
 
-    items.sort(key=sort_key)
-    return items[:limit]
+    # Partition items into category buckets
+    buckets: dict[str, list[dict[str, Any]]] = {
+        "top": [],
+        "bottom": [],
+        "footwear": [],
+        "dress": [],
+        "outerwear": [],
+        "accessory": [],
+    }
+
+    for item in items:
+        cat_key = norm_category(item.get("category"))
+        buckets[cat_key].append(item)
+
+    # Sort each bucket by rotation key
+    for cat_key in buckets:
+        buckets[cat_key].sort(key=sort_key)
+
+    # Target distribution ratios for a balanced candidate pool
+    target_ratios = {
+        "top": 0.35,
+        "bottom": 0.35,
+        "footwear": 0.15,
+        "dress": 0.05,
+        "outerwear": 0.05,
+        "accessory": 0.05,
+    }
+
+    quotas = {cat: max(1, int(limit * ratio)) for cat, ratio in target_ratios.items()}
+
+    # Selected items list
+    selected_ids = set()
+    result_items = []
+
+    # First pass: take up to quota from each category bucket
+    leftover_budget = 0
+    for cat_key, bucket in buckets.items():
+        q = quotas[cat_key]
+        taken = bucket[:q]
+        for item in taken:
+            if item["id"] not in selected_ids:
+                selected_ids.add(item["id"])
+                result_items.append(item)
+        if len(taken) < q:
+            leftover_budget += (q - len(taken))
+
+    # Second pass: redistribute leftover budget to categories with remaining items
+    if leftover_budget > 0:
+        for cat_key in ["top", "bottom", "footwear", "dress", "outerwear", "accessory"]:
+            bucket = buckets[cat_key]
+            q = quotas[cat_key]
+            remaining_in_bucket = bucket[q:]
+            for item in remaining_in_bucket:
+                if leftover_budget <= 0:
+                    break
+                if item["id"] not in selected_ids:
+                    selected_ids.add(item["id"])
+                    result_items.append(item)
+                    leftover_budget -= 1
+
+    return result_items[:limit]
 
 
 async def update_suggested_timestamps(closet_item_ids: list[str]) -> None:
@@ -168,6 +236,7 @@ async def check_event_similarities(
                     why = prop.get("why") or ""
                     if note not in why:
                         prop["why"] = (why + f" Note: {note}").strip()
+
 def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any]]) -> None:
     """Ensure proposal contains top/dress, bottom, and shoes if available in closet."""
     items = prop.get("items") or []
@@ -175,10 +244,10 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
     
     def norm_cat(cat):
         s = str(cat or "").strip().lower().replace(" ", "_")
-        if s in ("top", "tops"): return "top"
-        if s in ("bottom", "bottoms"): return "bottom"
-        if s in ("footwear", "shoes"): return "shoes"
-        if s in ("dress", "dresses"): return "dress"
+        if s in ("top", "tops", "shirt", "t-shirt", "t_shirt", "polo", "sweater", "blouse"): return "top"
+        if s in ("bottom", "bottoms", "pants", "shorts", "jeans", "skirt", "trousers"): return "bottom"
+        if s in ("footwear", "shoes", "sneakers", "boots", "sandals", "shoe"): return "shoes"
+        if s in ("dress", "dresses", "jumpsuit", "suit", "full_body", "full_body_suit"): return "dress"
         return s
 
     has_dress = "dress" in roles

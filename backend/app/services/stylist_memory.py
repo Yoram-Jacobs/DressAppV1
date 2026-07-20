@@ -197,9 +197,10 @@ async def closet_summary_for(user_id: str, limit: int = 40) -> list[dict[str, An
 
     def norm_category(cat):
         s = str(cat or "").strip().lower().replace(" ", "_")
-        if s in ("top", "tops"): return "top"
-        if s in ("bottom", "bottoms"): return "bottom"
-        if s in ("footwear", "shoes"): return "footwear"
+        if s in ("top", "tops", "shirt", "t-shirt", "t_shirt", "polo", "sweater", "blouse"): return "top"
+        if s in ("bottom", "bottoms", "pants", "shorts", "jeans", "skirt", "trousers"): return "bottom"
+        if s in ("footwear", "shoes", "sneakers", "boots", "sandals", "shoe"): return "footwear"
+        if s in ("dress", "dresses", "jumpsuit", "suit", "full_body", "full_body_suit"): return "dress"
         if s in ("accessory", "accessories"): return "accessories"
         return s
 

@@ -568,9 +568,10 @@ async def planner_scout_endpoint(
             
         def norm_category(cat):
             s = str(cat or "").strip().lower().replace(" ", "_")
-            if s in ("top", "tops"): return "top"
-            if s in ("bottom", "bottoms"): return "bottom"
-            if s in ("footwear", "shoes"): return "footwear"
+            if s in ("top", "tops", "shirt", "t-shirt", "t_shirt", "polo", "sweater", "blouse", "outerwear", "full_body", "jacket", "coat"): return "top"
+            if s in ("bottom", "bottoms", "pants", "shorts", "jeans", "skirt", "trousers"): return "bottom"
+            if s in ("footwear", "shoes", "sneakers", "boots", "sandals", "shoe"): return "footwear"
+            if s in ("dress", "dresses", "jumpsuit", "suit", "full_body_suit"): return "dress"
             if s in ("accessory", "accessories"): return "accessories"
             return s
             
@@ -599,16 +600,16 @@ async def planner_scout_endpoint(
     if not filtered:
         raise HTTPException(status_code=400, detail="No matching garments found in your closet for these filters.")
 
-    tops = [g for g in filtered if g.get("category") in ["Top", "Outerwear", "Full Body"]]
-    bottoms = [g for g in filtered if g.get("category") == "Bottom"]
-    shoes = [g for g in filtered if g.get("category") == "Footwear"]
+    tops = [g for g in filtered if norm_category(g.get("category")) in ("top", "dress")]
+    bottoms = [g for g in filtered if norm_category(g.get("category")) == "bottom"]
+    shoes = [g for g in filtered if norm_category(g.get("category")) == "footwear"]
 
     if not tops:
-        tops = [g for g in garments if g.get("category") in ["Top", "Outerwear", "Full Body"]]
+        tops = [g for g in garments if norm_category(g.get("category")) in ("top", "dress")]
     if not bottoms:
-        bottoms = [g for g in garments if g.get("category") == "Bottom"]
+        bottoms = [g for g in garments if norm_category(g.get("category")) == "bottom"]
     if not shoes:
-        shoes = [g for g in garments if g.get("category") == "Footwear"]
+        shoes = [g for g in garments if norm_category(g.get("category")) == "footwear"]
 
     if not tops or not bottoms or not shoes:
         raise HTTPException(status_code=400, detail="Ensure your closet has at least one Top/Outerwear, one Bottom, and one pair of shoes.")
