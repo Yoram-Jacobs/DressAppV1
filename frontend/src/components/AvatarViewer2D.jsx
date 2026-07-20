@@ -94,7 +94,6 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
       if (s === 'belt') s = 'belt';
       if (s === 'glasses' || s === 'sunglasses' || s === 'eyewear') s = 'glasses';
 
-      // Force hats/caps categorized as accessory to headwear slot
       const name = String(itemObj?.name || itemObj?.title || dbItem?.name || dbItem?.title || '').toLowerCase();
       const isHat = name.includes('hat') || 
                     name.includes('cap') || 
@@ -110,13 +109,11 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
         return 'headwear';
       }
 
-      // Force belts categorized as accessory to belt slot
       const isBelt = name.includes('belt');
       if (isBelt) {
         return 'belt';
       }
 
-      // Force glasses/sunglasses categorized as accessory to glasses slot
       const isGlasses = name.includes('glasses') || 
                         name.includes('spectacles') || 
                         name.includes('sunglasses') || 
@@ -130,20 +127,16 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
 
     Object.entries(outfitItems || {}).forEach(([role, item]) => {
       if (item) {
-        // Resolve item from closetStore to see if it is part of a set
         const itemId = item.closet_item_id || item.id;
         const closetItem = allClosetItems.find(it => it && it.id === itemId);
         
         let slot = resolveSlot(role, item, closetItem);
 
         if (closetItem && closetItem.group_id) {
-          // Find all items in this group
           const groupItems = allClosetItems.filter(it => it && it.group_id === closetItem.group_id);
-          // Check if it's a set (multiple categories)
           const categories = new Set(groupItems.map(it => String(it.category || '').toLowerCase().trim()));
           
           if (categories.size > 1) {
-            // It's a set! Map each group item to its correct category
             groupItems.forEach(gItem => {
               const gSlot = resolveSlot(gItem.category, gItem, gItem);
               res[gSlot] = {
@@ -152,11 +145,10 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
                 id: gItem.id
               };
             });
-            return; // Skip the default mapping since we mapped the whole set
+            return;
           }
         }
  
-        // Default mapping if not a set (or if we are just mapping the single item)
         res[slot] = {
            url: bestImageUrl(item) || item.image_data_url || item.segmented_image_url || item.image_url || item.original_image_url || item.url,
            placeholder: item.placeholder_data_url || item.placeholder || null,
@@ -183,7 +175,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
           placeholder={garment.placeholder}
           alt={altText}
           objectFit="contain"
-          className="w-full h-full"
+          className="w-full h-full object-top"
         />
       </motion.div>
     );
@@ -206,20 +198,20 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
               className="w-full h-full object-contain rounded-xl drop-shadow-md"
             />
             {/* Render Try-On Garments on top of real body photo */}
-            {renderGarment('headwear', t('taxonomy.categories.headwear', { defaultValue: 'Headwear' }), 'top-0 left-1/2 w-[40%] aspect-square z-30', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
+            {renderGarment('headwear', t('taxonomy.categories.headwear', { defaultValue: 'Headwear' }), 'top-[1%] left-1/2 w-[34%] aspect-square z-30', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
             {renderGarment('glasses', t('taxonomy.categories.glasses', { defaultValue: 'Glasses' }), 'top-[11.5%] left-1/2 w-[18%] h-[4.5%] z-28', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
-            {renderGarment('accessory', t('taxonomy.categories.accessory', { defaultValue: 'Accessory' }), 'top-[14%] left-1/2 w-[35%] aspect-square z-25', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
+            {renderGarment('accessory', t('taxonomy.categories.accessory', { defaultValue: 'Accessory' }), 'top-[14%] left-1/2 w-[30%] aspect-square z-25', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
             {garments.dress && garments.dress.url ? (
-              renderGarment('dress', t('taxonomy.categories.dress', { defaultValue: 'Dress' }), 'top-[16%] left-1/2 w-[75%] h-[60%] z-20 drop-shadow-lg', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })
+              renderGarment('dress', t('taxonomy.categories.dress', { defaultValue: 'Dress' }), 'top-[15.5%] left-1/2 w-[65%] h-[65%] z-20 drop-shadow-lg', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })
             ) : (
               <>
-                {renderGarment('top', t('taxonomy.categories.top', { defaultValue: 'Top' }), 'top-[17%] left-1/2 w-[78%] h-[38%] z-20', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width })}
-                {renderGarment('bottom', t('taxonomy.categories.bottom', { defaultValue: 'Bottom' }), 'top-[42%] left-1/2 w-[72%] h-[48%] z-10', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width })}
+                {renderGarment('top', t('taxonomy.categories.top', { defaultValue: 'Top' }), 'top-[15.5%] left-1/2 w-[64%] h-[30%] z-20', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width })}
+                {renderGarment('bottom', t('taxonomy.categories.bottom', { defaultValue: 'Bottom' }), 'top-[40%] left-1/2 w-[60%] h-[45%] z-10', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width })}
               </>
             )}
-            {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[42%] left-1/2 w-[72%] h-[5%] z-21', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
-            {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), 'top-[16%] left-1/2 w-[85%] h-[45%] z-22 drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })}
-            {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), 'bottom-0 left-1/2 w-[50%] h-[15%] z-15', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
+            {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[40%] left-1/2 w-[60%] h-[4%] z-21', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
+            {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), 'top-[15.5%] left-1/2 w-[72%] h-[40%] z-22 drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })}
+            {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), 'bottom-[2%] left-1/2 w-[44%] h-[12%] z-15', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
           </div>
         ) : (
           <DynamicAvatar
@@ -236,22 +228,22 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
             className="w-full h-full"
           >
             {/* ─── Layered Clothes (Segmented transparent PNG overlays) ─── */}
-            {renderGarment('headwear', t('taxonomy.categories.headwear', { defaultValue: 'Headwear' }), 'top-0 left-1/2 w-[40%] aspect-square z-30', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
+            {renderGarment('headwear', t('taxonomy.categories.headwear', { defaultValue: 'Headwear' }), 'top-[1%] left-1/2 w-[34%] aspect-square z-30', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
             {renderGarment('glasses', t('taxonomy.categories.glasses', { defaultValue: 'Glasses' }), 'top-[11.5%] left-1/2 w-[18%] h-[4.5%] z-28', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
-            {renderGarment('accessory', t('taxonomy.categories.accessory', { defaultValue: 'Accessory' }), 'top-[14%] left-1/2 w-[35%] aspect-square z-25', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
+            {renderGarment('accessory', t('taxonomy.categories.accessory', { defaultValue: 'Accessory' }), 'top-[14%] left-1/2 w-[30%] aspect-square z-25', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
 
             {garments.dress && garments.dress.url ? (
-              renderGarment('dress', t('taxonomy.categories.dress', { defaultValue: 'Dress' }), 'top-[16%] left-1/2 w-[75%] h-[60%] z-20 drop-shadow-lg', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })
+              renderGarment('dress', t('taxonomy.categories.dress', { defaultValue: 'Dress' }), 'top-[15.5%] left-1/2 w-[65%] h-[65%] z-20 drop-shadow-lg', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })
             ) : (
               <>
-                {renderGarment('top', t('taxonomy.categories.top', { defaultValue: 'Top' }), 'top-[17%] left-1/2 w-[78%] h-[38%] z-20', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width })}
-                {renderGarment('bottom', t('taxonomy.categories.bottom', { defaultValue: 'Bottom' }), 'top-[42%] left-1/2 w-[72%] h-[48%] z-10', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width })}
+                {renderGarment('top', t('taxonomy.categories.top', { defaultValue: 'Top' }), 'top-[15.5%] left-1/2 w-[64%] h-[30%] z-20', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width })}
+                {renderGarment('bottom', t('taxonomy.categories.bottom', { defaultValue: 'Bottom' }), 'top-[40%] left-1/2 w-[60%] h-[45%] z-10', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width })}
               </>
             )}
 
-            {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[42%] left-1/2 w-[72%] h-[5%] z-21', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
-            {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), 'top-[16%] left-1/2 w-[85%] h-[45%] z-22 drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })}
-            {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), 'bottom-0 left-1/2 w-[50%] h-[15%] z-15', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
+            {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[40%] left-1/2 w-[60%] h-[4%] z-21', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
+            {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), 'top-[15.5%] left-1/2 w-[72%] h-[40%] z-22 drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })}
+            {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), 'bottom-[2%] left-1/2 w-[44%] h-[12%] z-15', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
 
             {garments.bag && garments.bag.url && (
               <motion.div

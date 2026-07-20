@@ -168,8 +168,67 @@ async def check_event_similarities(
                     why = prop.get("why") or ""
                     if note not in why:
                         prop["why"] = (why + f" Note: {note}").strip()
-                    break
+def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any]]) -> None:
+    """Ensure proposal contains top/dress, bottom, and shoes if available in closet."""
+    items = prop.get("items") or []
+    roles = {str(i.get("role")).lower() for i in items}
+    
+    def norm_cat(cat):
+        s = str(cat or "").strip().lower().replace(" ", "_")
+        if s in ("top", "tops"): return "top"
+        if s in ("bottom", "bottoms"): return "bottom"
+        if s in ("footwear", "shoes"): return "shoes"
+        if s in ("dress", "dresses"): return "dress"
+        return s
 
+    has_dress = "dress" in roles
+    has_bottom = "bottom" in roles or has_dress
+    has_shoes = "shoes" in roles
+
+    closet_by_role = {}
+    for c_item in raw_closet:
+        role = norm_cat(c_item.get("category"))
+        if role not in closet_by_role:
+            closet_by_role[role] = []
+        closet_by_role[role].append(c_item)
+
+    missing_notes = []
+
+    # Hydrate bottom if missing and available
+    if not has_bottom:
+        bottoms = closet_by_role.get("bottom") or []
+        if bottoms:
+            b = bottoms[0]
+            items.append({
+                "role": "bottom",
+                "description": b.get("title") or b.get("name") or "Bottoms",
+                "closet_item_id": b["id"]
+            })
+            logger.info("Hydrated missing bottom %s into proposal", b["id"])
+        else:
+            missing_notes.append("pants/shorts")
+
+    # Hydrate shoes if missing and available
+    if not has_shoes:
+        shoes_list = closet_by_role.get("shoes") or []
+        if shoes_list:
+            sh = shoes_list[0]
+            items.append({
+                "role": "shoes",
+                "description": sh.get("title") or sh.get("name") or "Shoes",
+                "closet_item_id": sh["id"]
+            })
+            logger.info("Hydrated missing shoes %s into proposal", sh["id"])
+        else:
+            missing_notes.append("shoes")
+
+    prop["items"] = items
+
+    if missing_notes:
+        note_str = f"Note: Please add {' and '.join(missing_notes)} to your closet for a complete outfit suggestion."
+        why = prop.get("why") or ""
+        if note_str not in why:
+            prop["why"] = (why + f" {note_str}").strip()
 
 
 def _get_scheduler_stylist_service(user: dict[str, Any]):
@@ -226,6 +285,7 @@ async def generate_scheduled_proposals(
     prompt = (
         f"Generate EXACTLY 3 different outfit recommendations for tomorrow. "
         f"The user's preset preference is: {style_prompt}.\n\n"
+        f"CRITICAL REQUIREMENT: Every outfit recommendation MUST be a COMPLETE outfit consisting of: 1) Either (a 'top' AND a 'bottom') OR a 'dress', and 2) 'shoes' (footwear). NEVER recommend an outfit consisting of only a single T-shirt, top, or bottom without shoes and pants, unless the closet literally lacks those categories.\n\n"
         f"You MUST select items ONLY from the user's closet list below. Under no circumstances should you recommend items that the user does not own or that have a null closet_item_id. Every recommended item must map to a valid closet item ID from the list below.\n\n"
         f"User's Closet Items:\n"
         f"{closet_summary_str}\n\n"
@@ -290,6 +350,9 @@ async def generate_scheduled_proposals(
             # Validate that the item matches an actual item in the closet list
             if not item.get("closet_item_id") or item["closet_item_id"] not in valid_ids:
                 raise ValueError(f"LLM suggested item not in closet list: {item}")
+        
+        # Guarantee complete outfit (Top + Bottom + Shoes or Dress + Shoes)
+        _ensure_complete_outfit(prop, raw_closet)
     
     # Track suggested items to update last_suggested_at
     suggested_ids = []

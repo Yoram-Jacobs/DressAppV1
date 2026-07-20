@@ -466,10 +466,7 @@ export function ProfileDetailsCard() {
       // nav('/home') below is a UX choice, not a guarantee).
       baselineRef.current = JSON.stringify(form);
       toast.success(t('profile.savedProfile'));
-      // Per UX spec: after saving Settings/Profile details, take the
-      // user back to Home. The auth context has already been updated
-      // via `updateUserLocal`, so Home will reflect the new values.
-      nav('/home');
+      // Stay on current profile page so user can fluently review and continue editing fields.
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('profile.saveFailed'));
     } finally {
