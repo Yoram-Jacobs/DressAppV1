@@ -72,16 +72,37 @@ export const TopNav = () => {
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" aria-label={t('nav.openUserMenu')} className="rounded-full h-10 w-10 p-0" data-testid="topnav-avatar-button">
-                <span className="h-9 w-9 inline-flex items-center justify-center rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] font-medium">
-                  {initials}
-                </span>
+              <Button variant="ghost" aria-label={t('nav.openUserMenu')} className="rounded-full h-10 w-10 p-0 overflow-hidden" data-testid="topnav-avatar-button">
+                {(user?.face_photo_url || user?.avatar_url) ? (
+                  <img
+                    src={user.face_photo_url || user.avatar_url}
+                    alt={user?.display_name || 'User'}
+                    className="h-9 w-9 rounded-full object-cover border border-border/80 shadow-sm"
+                  />
+                ) : (
+                  <span className="h-9 w-9 inline-flex items-center justify-center rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] font-medium">
+                    {initials}
+                  </span>
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <div className="px-2 py-1.5 text-sm">
-                <div className="font-medium truncate">{user?.display_name || t('nav.guest')}</div>
-                <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
+              <div className="px-2 py-2 text-sm flex items-center gap-3">
+                {(user?.face_photo_url || user?.avatar_url) ? (
+                  <img
+                    src={user.face_photo_url || user.avatar_url}
+                    alt={user?.display_name || 'User'}
+                    className="h-9 w-9 rounded-full object-cover border border-border/80 shadow-sm shrink-0"
+                  />
+                ) : (
+                  <span className="h-9 w-9 inline-flex items-center justify-center rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] font-medium shrink-0">
+                    {initials}
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium truncate">{user?.display_name || t('nav.guest')}</div>
+                  <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
+                </div>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => nav('/transactions')} data-testid="topnav-menu-transactions">

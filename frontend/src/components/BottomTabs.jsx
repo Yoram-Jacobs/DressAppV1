@@ -3,9 +3,12 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Shirt, Sparkles, Store, User, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
 
 export const BottomTabs = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const userPhoto = user?.face_photo_url || user?.avatar_url;
 
   return (
     <nav
@@ -152,7 +155,15 @@ export const BottomTabs = () => {
                 whileTap={{ scale: 0.92 }}
                 className="flex flex-col items-center gap-0.5"
               >
-                <User className={cn('h-5 w-5', isActive && 'stroke-[2.2]')} />
+                {userPhoto ? (
+                  <img
+                    src={userPhoto}
+                    alt={t('nav.me')}
+                    className={cn('h-5 w-5 rounded-full object-cover border border-border/80', isActive && 'ring-2 ring-[hsl(var(--accent))]')}
+                  />
+                ) : (
+                  <User className={cn('h-5 w-5', isActive && 'stroke-[2.2]')} />
+                )}
                 <span className="text-[10px] tracking-wide">{t('nav.me')}</span>
                 {isActive && (
                   <motion.span
