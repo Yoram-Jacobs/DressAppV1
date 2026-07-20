@@ -302,20 +302,19 @@ export default function Stylist() {
   const [editOutfitName, setEditOutfitName] = useStoreState(stylistUIStore, 'editOutfitName');
   const [editOutfitDescription, setEditOutfitDescription] = useStoreState(stylistUIStore, 'editOutfitDescription');
 
-  const loadOutfitsAndNotifications = useCallback(async () => {
-
-    try {
-      const res = await api.listSimulatedNotifications();
-      setNotifications(res.notifications || []);
-    } catch (err) {
-      console.error("Failed to load notifications:", err);
-    }
-  }, []);
-
   useEffect(() => {
-    loadOutfitsAndNotifications();
-    incrementalSync();
-  }, [loadOutfitsAndNotifications, incrementalSync]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.listSimulatedNotifications();
+        if (!cancelled) setNotifications(res.notifications || []);
+      } catch (err) {
+        console.error("Failed to load notifications:", err);
+      }
+      incrementalSync();
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const [hasAutoSelected, setHasAutoSelected] = useStoreState(stylistUIStore, 'hasAutoSelected');
 

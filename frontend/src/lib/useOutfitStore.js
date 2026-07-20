@@ -6,6 +6,13 @@ const _subscribe = outfitStore.subscribe.bind(outfitStore);
 const _getSnapshot = outfitStore.getSnapshot.bind(outfitStore);
 const _getItemsSnapshot = outfitStore.getItemsSnapshot.bind(outfitStore);
 
+export const prewarmOutfits = outfitStore.prewarm.bind(outfitStore);
+export const incrementalSyncOutfits = outfitStore.incrementalSync.bind(outfitStore);
+export const upsertOutfit = outfitStore.upsert.bind(outfitStore);
+export const removeOutfit = outfitStore.remove.bind(outfitStore);
+export const replaceAllOutfits = outfitStore.replaceAll.bind(outfitStore);
+export const resetOutfitStore = outfitStore.reset.bind(outfitStore);
+
 export function useOutfitStore({ prewarm = false } = {}) {
   const snap = useSyncExternalStore(
     _subscribe,
@@ -16,7 +23,7 @@ export function useOutfitStore({ prewarm = false } = {}) {
 
   useEffect(() => {
     if (!prewarm || !user) return;
-    outfitStore.prewarm().catch(() => {});
+    prewarmOutfits().catch(() => {});
   }, [prewarm, user]);
 
   return {
@@ -26,12 +33,12 @@ export function useOutfitStore({ prewarm = false } = {}) {
     error: snap.error,
     lastFullSync: snap.lastFullSync,
     lastIncSync: snap.lastIncSync,
-    prewarm: outfitStore.prewarm.bind(outfitStore),
-    incrementalSync: outfitStore.incrementalSync.bind(outfitStore),
-    upsert: outfitStore.upsert.bind(outfitStore),
-    remove: outfitStore.remove.bind(outfitStore),
-    replaceAll: outfitStore.replaceAll.bind(outfitStore),
-    reset: outfitStore.reset.bind(outfitStore),
+    prewarm: prewarmOutfits,
+    incrementalSync: incrementalSyncOutfits,
+    upsert: upsertOutfit,
+    remove: removeOutfit,
+    replaceAll: replaceAllOutfits,
+    reset: resetOutfitStore,
   };
 }
 
