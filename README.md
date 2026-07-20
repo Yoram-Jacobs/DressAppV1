@@ -26,8 +26,9 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
 | **Shopping Assistant** | Chrome extension that reads size charts on partner stores (Zara, Asos, etc.) and recommends sizes based on your stored measurements. |
 | **Suitcase** | Intelligent travel packing assistant that generates daily outfits and a packing list based on trip context, weather, and calendar events, with an interactive refinement chat. |
 | **Group Tagging** | Bulk categorize multiple closet garments instantly to speed up wardrobe organization and improve AI Stylist reasoning. |
-| **Outfit Canvas** | Adaptive dual-canvas interactive avatar that accurately layers outerwear over tops, allowing direct clicks on garments to view details. |
+| **Outfit Canvas & 2D Avatar** | Adaptive dual-canvas interactive avatar (real-body photo cutout or dynamic SVG vector mannequin) with calibrated landmark positioning (`top-[14.5%]` collar-to-neckline and `top-[36.5%]` waistband-to-waistline), proportional scaling, and interactive layer click details. |
 | **Wardrobe Scheduler** | Automated daily push notifications with 3 styled outfit recommendations generated from your closet history, preventing wear repetition. |
+| **State & Network Optimization** | `useSyncExternalStore` thread-safe state architecture across Stylist, Daily Suggestions, Closet, and Marketplace, with in-flight deduplication, 15-min caching, and `visibilitychange` tab revalidation (0 idle background GET requests). |
 | **Monetization & Limits**| Gated closet space (150-item baseline limit for Free users) with a paid Pro upgrade path via PayPal Subscriptions REST API (mock-testing supported) or free expansion (+10 slots) via invite referral loops. |
 
 ---
@@ -36,7 +37,7 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
 
 **Backend** — FastAPI (Python 3.11) · Motor async MongoDB driver · Pydantic v2
 
-**Frontend** — React 19 · React Router · Tailwind · Shadcn/UI · `react-i18next` (12 locales) · Sonner toasts · Lucide icons
+**Frontend** — React 19 · `useSyncExternalStore` custom stores · React Router · Tailwind · Shadcn/UI · `react-i18next` (12 locales) · Sonner toasts · Lucide icons
 
 **Vision pipeline** — full stack:
 * **Hetzner / dev**: `rembg` (U2-Net) for matting · HuggingFace SegFormer-b2-clothes for clothing parsing · Fashion-CLIP for embeddings — all CPU-local. See `requirements-ml.txt` and the auto-detection in `app/config.py`.
