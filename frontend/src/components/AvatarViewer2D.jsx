@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { ImageOff, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { bestImageUrl } from '@/lib/itemImage';
 import { closetStore } from '@/lib/closetStore';
 import ImageWithPlaceholder from '@/components/ImageWithPlaceholder';
+import DynamicAvatar from '@/components/DynamicAvatar';
 
-export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfitItems = {}, onItemClick }) {
+export default function AvatarViewer2D({ shapeParams = {}, measurements: providedMeasurements, skinColor = '#9CA3AF', sex = 'female', outfitItems = {}, onItemClick }) {
   const { t } = useTranslation();
 
   // Normalize params between 0 and 1
@@ -18,6 +18,35 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
     };
     return { ...defaultParams, ...shapeParams };
   }, [shapeParams]);
+
+  // Derive cm measurements for DynamicAvatar
+  const computedMeasurements = useMemo(() => {
+    if (providedMeasurements && providedMeasurements.height) {
+      return providedMeasurements;
+    }
+    const isMale = String(sex).toLowerCase() === 'male';
+    const baseH = isMale ? 178 : 168;
+    const baseSh = isMale ? 44 : 38;
+    const baseCh = isMale ? 98 : 88;
+    const baseW = isMale ? 82 : 68;
+    const baseHip = isMale ? 96 : 94;
+
+    const tall = params.tall || 0;
+    const short = params.short || 0;
+    const heavy = params.heavy || 0;
+    const thin = params.thin || 0;
+
+    return {
+      height: baseH + (tall * 15) - (short * 15),
+      shoulders: baseSh + (heavy * 4) - (thin * 3),
+      chest: baseCh + ((params.busty || 0) * 10) + (heavy * 8) - (thin * 6),
+      waist: baseW + ((params.waist_thick || 0) * 10) - ((params.waist_thin || 0) * 8) + (heavy * 6),
+      hip: baseHip + ((params.hips_wide || 0) * 10) - ((params.hips_narrow || 0) * 8) + (heavy * 6),
+      armLength: (isMale ? 64 : 58) + (tall * 5) - (short * 5),
+      inseam: (isMale ? 82 : 76) + (tall * 8) - (short * 8),
+      gender: isMale ? 'male' : 'female'
+    };
+  }, [providedMeasurements, params, sex]);
 
   // Derive scales based on user shape parameters
   const scales = useMemo(() => {
@@ -161,85 +190,76 @@ export default function AvatarViewer2D({ shapeParams = {}, sex = 'female', outfi
       {/* Dynamic Background Sparkle */}
       <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/30 via-transparent to-transparent" />
       
-      {/* 2D Vector Avatar Container */}
+      {/* 2D Dynamic Bezier SVG Avatar Container */}
       <div 
         className="relative h-full aspect-[1/2] flex items-center justify-center transition-all duration-500"
-        style={{
-          transform: `scale(${scales.width}, ${scales.height})`,
-          transformOrigin: 'bottom center'
-        }}
       >
-        {/* Silhouette SVG */}
-        <svg
-          viewBox="0 0 100 200"
-          className="w-full h-full text-muted-foreground/20 fill-current drop-shadow-md select-none pointer-events-none"
+        <DynamicAvatar
+          height={computedMeasurements.height}
+          shoulders={computedMeasurements.shoulders}
+          chest={computedMeasurements.chest}
+          waist={computedMeasurements.waist}
+          hip={computedMeasurements.hip || computedMeasurements.hips}
+          armLength={computedMeasurements.armLength || computedMeasurements.arm_length}
+          inseam={computedMeasurements.inseam}
+          gender={computedMeasurements.gender || sex}
+          skinColor={skinColor}
+          showGuideLines={false}
+          className="w-full h-full"
         >
-          {sex === 'male' ? (
-            // Male silhouette
-            <path d="M50,15 A8,8 0 1,0 50,31 A8,8 0 1,0 50,15 M36,33 C39,33 42,35 50,35 C58,35 61,33 64,33 C70,33 72,38 72,45 C72,55 70,70 68,90 C67,95 64,98 60,98 C58,98 57,94 50,94 C43,94 42,98 40,98 C36,98 33,95 32,90 C30,70 28,55 28,45 C28,38 30,33 36,33 Z M38,98 L37,175 C37,185 34,188 44,188 L46,188 L46,106 L50,106 L54,106 L54,188 L56,188 C66,188 63,185 63,175 L62,98 Z" />
+          {/* ─── Layered Clothes (Segmented transparent PNG overlays) ─── */}
+
+          {/* 1. Headwear */}
+          {renderGarment('headwear', 'Headwear', 'top-0 left-1/2 w-[40%] aspect-square z-30', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
+
+          {/* 1.5. Glasses */}
+          {renderGarment('glasses', 'Glasses', 'top-[11.5%] left-1/2 w-[18%] h-[4.5%] z-28', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
+
+          {/* 2. Accessories / Neckwear */}
+          {renderGarment('accessory', 'Accessory', 'top-[14%] left-1/2 w-[35%] aspect-square z-25', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
+
+          {/* 3. Dress (Overrides top/bottom layout) */}
+          {garments.dress && garments.dress.url ? (
+            renderGarment('dress', 'Dress', 'top-[16%] left-1/2 w-[75%] h-[60%] z-20 drop-shadow-lg', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })
           ) : (
-            // Female silhouette with waist indentation and hip curves
-            <path d="M50,18 A7.5,7.5 0 1,0 50,33 A7.5,7.5 0 1,0 50,18 M37,35 C41,35 44,37 50,37 C56,37 59,35 63,35 C68,35 70,39 70,45 C70,53 69,63 67,82 C65,90 61,96 58,96 C56,96 55,92 50,92 C45,92 44,96 42,96 C39,96 35,90 33,82 C31,63 30,53 30,45 C30,39 32,35 37,35 Z M38,96 L36,172 C36,182 33,185 43,185 L45,185 L46,104 L50,104 L54,104 L55,185 L57,185 C67,185 64,182 64,172 L62,96 Z" />
+            <>
+              {/* Top (Shirt, Sweater, etc.) */}
+              {renderGarment('top', 'Top', 'top-[17%] left-1/2 w-[78%] h-[38%] z-20', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width })}
+
+              {/* Bottom (Pants, Skirt, Jeans) */}
+              {renderGarment('bottom', 'Bottom', 'top-[42%] left-1/2 w-[72%] h-[48%] z-10', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width })}
+            </>
           )}
 
-          {/* Guidelines / visual targets */}
-          <line x1="15" y1="45" x2="85" y2="45" stroke="currentColor" strokeWidth="0.1" strokeDasharray="1,2" opacity="0.3" />
-          <line x1="15" y1="95" x2="85" y2="95" stroke="currentColor" strokeWidth="0.1" strokeDasharray="1,2" opacity="0.3" />
-          <line x1="15" y1="175" x2="85" y2="175" stroke="currentColor" strokeWidth="0.1" strokeDasharray="1,2" opacity="0.3" />
-        </svg>
+          {/* 3.5. Belt */}
+          {renderGarment('belt', 'Belt', 'top-[42%] left-1/2 w-[72%] h-[5%] z-21', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
 
-        {/* ─── Layered Clothes (Segmented transparent PNG overlays) ─── */}
+          {/* 4. Outerwear (Jacket, Coat) - Layered on top of top/dress */}
+          {renderGarment('outerwear', 'Outerwear', 'top-[16%] left-1/2 w-[85%] h-[45%] z-22 drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })}
 
-        {/* 1. Headwear */}
-        {renderGarment('headwear', 'Headwear', 'top-0 left-1/2 w-[40%] aspect-square z-30', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
+          {/* 5. Shoes */}
+          {renderGarment('shoes', 'Shoes', 'bottom-0 left-1/2 w-[50%] h-[15%] z-15', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
 
-        {/* 1.5. Glasses */}
-        {renderGarment('glasses', 'Glasses', 'top-[11.5%] left-1/2 w-[18%] h-[4.5%] z-28', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
-
-        {/* 2. Accessories / Neckwear */}
-        {renderGarment('accessory', 'Accessory', 'top-[14%] left-1/2 w-[35%] aspect-square z-25', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" })}
-
-        {/* 3. Dress (Overrides top/bottom layout) */}
-        {garments.dress && garments.dress.url ? (
-          renderGarment('dress', 'Dress', 'top-[16%] left-1/2 w-[75%] h-[60%] z-20 drop-shadow-lg', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })
-        ) : (
-          <>
-            {/* Top (Shirt, Sweater, etc.) */}
-            {renderGarment('top', 'Top', 'top-[17%] left-1/2 w-[78%] h-[38%] z-20', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width })}
-
-            {/* Bottom (Pants, Skirt, Jeans) */}
-            {renderGarment('bottom', 'Bottom', 'top-[42%] left-1/2 w-[72%] h-[48%] z-10', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width })}
-          </>
-        )}
-
-        {/* 3.5. Belt */}
-        {renderGarment('belt', 'Belt', 'top-[42%] left-1/2 w-[72%] h-[5%] z-21', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
-
-        {/* 4. Outerwear (Jacket, Coat) - Layered on top of top/dress */}
-        {renderGarment('outerwear', 'Outerwear', 'top-[16%] left-1/2 w-[85%] h-[45%] z-22 drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" })}
-
-        {/* 5. Shoes */}
-        {renderGarment('shoes', 'Shoes', 'bottom-0 left-1/2 w-[50%] h-[15%] z-15', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" })}
-
-        {/* 6. Bag */}
-        {garments.bag && garments.bag.url && (
-          <motion.div
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            className={`absolute top-[40%] right-[-5%] w-[40%] h-[30%] z-25 drop-shadow-md ${onItemClick && garments.bag.id ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'pointer-events-none'}`}
-            onClick={onItemClick && garments.bag.id ? (e) => { e.stopPropagation(); onItemClick(garments.bag.id); } : undefined}
-          >
-            <ImageWithPlaceholder
-              src={garments.bag.url}
-              placeholder={garments.bag.placeholder}
-              alt={t('taxonomy.sub_category.bag', { defaultValue: 'Bag' })}
-              objectFit="contain"
-              className="w-full h-full"
-            />
-          </motion.div>
-        )}
+          {/* 6. Bag */}
+          {garments.bag && garments.bag.url && (
+            <motion.div
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className={`absolute top-[40%] right-[-5%] w-[40%] h-[30%] z-25 drop-shadow-md ${onItemClick && garments.bag.id ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'pointer-events-none'}`}
+              onClick={onItemClick && garments.bag.id ? (e) => { e.stopPropagation(); onItemClick(garments.bag.id); } : undefined}
+            >
+              <ImageWithPlaceholder
+                src={garments.bag.url}
+                placeholder={garments.bag.placeholder}
+                alt={t('taxonomy.sub_category.bag', { defaultValue: 'Bag' })}
+                objectFit="contain"
+                className="w-full h-full"
+              />
+            </motion.div>
+          )}
+        </DynamicAvatar>
       </div>
-
     </div>
   );
 }
+

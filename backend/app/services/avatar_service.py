@@ -2,35 +2,50 @@
 from typing import Any, Dict
 
 
-def calculate_shape_parameters(measurements: Dict[str, Any]) -> Dict[str, float]:
+def get_default_measurements(gender: str = "female") -> Dict[str, Any]:
+    """Get anatomical baseline measurements in cm for male or female."""
+    if gender == "male":
+        return {
+            "height": 178.0,
+            "shoulders": 44.0,
+            "chest": 98.0,
+            "waist": 82.0,
+            "hips": 96.0,
+            "arm_length": 64.0,
+            "inseam": 82.0,
+            "gender": "male"
+        }
+    return {
+        "height": 168.0,
+        "shoulders": 38.0,
+        "chest": 88.0,
+        "waist": 68.0,
+        "hips": 94.0,
+        "arm_length": 58.0,
+        "inseam": 76.0,
+        "gender": "female"
+    }
+
+
+def calculate_shape_parameters(measurements: Dict[str, Any], sex: str = "female") -> Dict[str, float]:
     """
     Calculate 3D morph target weights from body measurements.
-    
-    This is a simplified mapping function. In a production scenario with SMPL or MakeHuman,
-    this would involve a learned regressor or a more complex statistical mapping.
-    
-    Expected measurements (in cm / kg):
-    - height: float
-    - weight: float
-    - chest: float
-    - waist: float
-    - hips: float
     """
     if not measurements:
-        return {}
+        measurements = {}
 
-    # Basic baseline values for an "average" reference model
-    baseline_height = 170.0
+    defaults = get_default_measurements(sex)
+    height = float(measurements.get("height", defaults["height"]))
+    weight = float(measurements.get("weight", 65.0))
+    chest = float(measurements.get("chest", defaults["chest"]))
+    waist = float(measurements.get("waist", defaults["waist"]))
+    hips = float(measurements.get("hips", defaults["hips"]))
+
+    baseline_height = defaults["height"]
     baseline_weight = 65.0
-    baseline_chest = 90.0
-    baseline_waist = 75.0
-    baseline_hips = 95.0
-
-    height = float(measurements.get("height", baseline_height))
-    weight = float(measurements.get("weight", baseline_weight))
-    chest = float(measurements.get("chest", baseline_chest))
-    waist = float(measurements.get("waist", baseline_waist))
-    hips = float(measurements.get("hips", baseline_hips))
+    baseline_chest = defaults["chest"]
+    baseline_waist = defaults["waist"]
+    baseline_hips = defaults["hips"]
 
     # Calculate differences from baseline
     height_diff = (height - baseline_height) / 20.0  # normalize
@@ -54,3 +69,4 @@ def calculate_shape_parameters(measurements: Dict[str, Any]) -> Dict[str, float]
         shape_params[k] = min(1.0, max(0.0, v))
 
     return shape_params
+
