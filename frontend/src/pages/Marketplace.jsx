@@ -104,6 +104,12 @@ export default function Marketplace() {
   // more card.
   const { browse: browseProgress, streamBrowse } = useMarketplaceProgress();
   useEffect(() => {
+    // Keep existing listings on frontend if browseStore already holds fresh items
+    const existing = browseStore.get(browseParams);
+    if (existing && browseStore.isFresh(existing) && existing.items && existing.items.length > 0) {
+      return;
+    }
+
     let cancelled = false;
     const ac = new AbortController();
     (async () => {

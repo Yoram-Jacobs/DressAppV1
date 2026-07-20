@@ -78,6 +78,8 @@ import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { useOutfitStore } from '@/lib/useOutfitStore';
 import { useLocation as useAppLocation } from '@/lib/location';
+import { stylistStore, useStylistStore } from '@/lib/stylistStore';
+import { dailySuggestionsStore, useDailySuggestionsStore } from '@/lib/dailySuggestionsStore';
 import {
   isSTTSupported,
   isTTSSupported,
@@ -781,74 +783,61 @@ export default function Stylist() {
     scrollToBottom();
   }, [scrollToBottom, busy, interim]);
 
-  /* ---------- Load sessions + pick active ---------- */
-  const loadSessions = useCallback(async () => {
-    try {
-      const { sessions: rows } = await api.stylistSessions();
-      setSessions(rows || []);
-      return rows || [];
-    } catch (err) {
-      console.debug('[Stylist] loadSessions failed:', err?.message || err);
-      return [];
-    } finally {
+  /* ---------- Load sessions + pick active via external store ---------- */
+  const {
+    sessions: storeSessions,
+    activeSessionId: storeActiveId,
+    activeMessages: storeMessages,
+    prewarm: prewarmStylistStore,
+    loadMessages: storeLoadMessages,
+    setActiveSession: setStoreActiveSession,
+  } = useStylistStore();
+
+  const { calendarConnected: storeCalConnected, prewarm: prewarmDailyStore } = useDailySuggestionsStore();
+
+  useEffect(() => {
+    prewarmStylistStore().catch(() => {});
+    prewarmDailyStore().catch(() => {});
+  }, [prewarmStylistStore, prewarmDailyStore]);
+
+  useEffect(() => {
+    if (storeSessions && storeSessions.length > 0) {
+      setSessions(storeSessions);
       setSessionsLoading(false);
     }
-  }, []);
+  }, [storeSessions]);
+
+  useEffect(() => {
+    if (storeActiveId) {
+      setActiveSessionId(storeActiveId);
+    }
+  }, [storeActiveId]);
+
+  useEffect(() => {
+    if (storeMessages) {
+      setMessages(storeMessages);
+      setMessagesLoading(false);
+    }
+  }, [storeMessages]);
+
+  useEffect(() => {
+    setCalendarConnected(storeCalConnected);
+  }, [storeCalConnected]);
+
+  const loadSessions = useCallback(async () => {
+    const res = await prewarmStylistStore({ force: true });
+    return res?.sessions || [];
+  }, [prewarmStylistStore]);
 
   const loadMessagesFor = useCallback(async (sessionId) => {
     setMessagesLoading(true);
     try {
-      const h = await api.stylistHistory(sessionId, 200);
-      const hydrated = (h.messages || []).map((m) => ({
-        id: m.id,
-        role: m.role,
-        transcript: m.transcript,
-        payload: m.assistant_payload,
-        // Phase R: hydrate the outfit canvas if this message is one
-        // produced by the multi-image composer endpoint.
-        outfit_canvas: m.assistant_payload?.outfit_canvas || null,
-      }));
-      setMessages(hydrated);
-    } catch (err) {
-      console.debug('[Stylist] loadMessagesFor failed:', err?.message || err);
-      setMessages([]);
+      const msgs = await storeLoadMessages(sessionId, { force: true });
+      setMessages(msgs);
     } finally {
       setMessagesLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    (async () => {
-      const rows = await loadSessions();
-      if (rows.length > 0) {
-        // Newest first — list_sessions returns sorted by last_active_at desc.
-        const first = rows[0];
-        setActiveSessionId(first.id);
-        await loadMessagesFor(first.id);
-      }
-      try {
-        const s = await api.calendarStatus();
-        setCalendarConnected(!!s?.connected);
-      } catch (err) {
-        // Non-fatal: calendar status is a hint UI, never required for chat.
-        console.debug('[Stylist] calendarStatus failed:', err?.message || err);
-      }
-    })();
-    if (ttsSupportedRef.current) {
-      ensureVoicesLoaded().catch((err) => {
-        console.debug('[Stylist] voices load failed:', err?.message || err);
-      });
-    }
-    return () => {
-      cancelSpeak();
-      try {
-        recognitionRef.current?.abort?.();
-      } catch (err) {
-        // SpeechRecognition abort throws on some browsers after it's already stopped.
-        console.debug('[Stylist] recognition abort:', err?.message || err);
-      }
-    };
-  }, [loadSessions, loadMessagesFor]);
+  }, [storeLoadMessages]);
 
   useEffect(() => {
     if (threadRef.current) {
