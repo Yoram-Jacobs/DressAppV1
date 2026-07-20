@@ -974,6 +974,8 @@
     "uploadPhoto": "העלה תמונה",
     "replacePhoto": "החלף",
     "removePhoto": "הסר",
+    "skinTone": "גוון עור",
+    "skinToneSelect": "בחירת גוון עור",
     "measurements": {
       "height": "גובה",
       "weight": "משקל",

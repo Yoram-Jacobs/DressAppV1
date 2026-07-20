@@ -949,6 +949,8 @@
     "uploadPhoto": "ارفع صورة",
     "replacePhoto": "استبدل",
     "removePhoto": "إزالة",
+    "skinTone": "لون البشرة",
+    "skinToneSelect": "اختر لون البشرة",
     "measurements": {
       "height": "الطول",
       "weight": "الوزن",

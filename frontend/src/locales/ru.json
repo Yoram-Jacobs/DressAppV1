@@ -949,6 +949,8 @@
     "uploadPhoto": "Загрузить фото",
     "replacePhoto": "Заменить",
     "removePhoto": "Удалить",
+    "skinTone": "Тон кожи",
+    "skinToneSelect": "Выбрать тон кожи",
     "measurements": {
       "height": "Рост",
       "weight": "Вес",

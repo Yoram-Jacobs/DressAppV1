@@ -949,6 +949,8 @@
     "uploadPhoto": "फोटो अपलोड करें",
     "replacePhoto": "बदलें",
     "removePhoto": "हटाएं",
+    "skinTone": "त्वचा का रंग",
+    "skinToneSelect": "त्वचा का रंग चुनें",
     "measurements": {
       "height": "ऊंचाई",
       "weight": "वजन",

@@ -987,6 +987,8 @@
     "uploadPhoto": "Foto uploaden",
     "replacePhoto": "Vervangen",
     "removePhoto": "Verwijderen",
+    "skinTone": "Huidtoon",
+    "skinToneSelect": "Huidtoon selecteren",
     "measurements": {
       "height": "Hoogte",
       "weight": "Gewicht",

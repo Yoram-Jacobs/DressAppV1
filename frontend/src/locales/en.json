@@ -987,6 +987,8 @@
     "uploadPhoto": "Upload photo",
     "replacePhoto": "Replace",
     "removePhoto": "Remove",
+    "skinTone": "Skin Tone",
+    "skinToneSelect": "Select Skin Tone",
     "measurements": {
       "height": "Height",
       "weight": "Weight",

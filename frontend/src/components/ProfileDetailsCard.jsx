@@ -896,7 +896,7 @@ export function ProfileDetailsCard() {
                     {/* Skin Tone Selector directly next to / above the figure */}
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-muted-foreground font-medium">
-                        {t('profile.skinTone', { defaultValue: 'Skin Tone:' })}
+                        {t('profile.skinTone', { defaultValue: 'Skin Tone' })}
                       </span>
                       <SkinTonePicker
                         value={form.skin_tone || '#9CA3AF'}

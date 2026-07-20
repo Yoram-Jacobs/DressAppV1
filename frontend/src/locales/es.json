@@ -949,6 +949,8 @@
     "uploadPhoto": "Subir foto",
     "replacePhoto": "Reemplazar",
     "removePhoto": "Eliminar",
+    "skinTone": "Tono de piel",
+    "skinToneSelect": "Seleccionar tono de piel",
     "measurements": {
       "height": "Altura",
       "weight": "Peso",

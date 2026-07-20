@@ -949,6 +949,8 @@
     "uploadPhoto": "写真をアップロード",
     "replacePhoto": "変更",
     "removePhoto": "削除",
+    "skinTone": "肌のトーン",
+    "skinToneSelect": "肌のトーンを選択",
     "measurements": {
       "height": "身長",
       "weight": "体重",
