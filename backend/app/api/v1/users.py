@@ -171,6 +171,13 @@ async def update_me(
         else:
             set_ops[k] = v
 
+    # Explicitly handle cleared photo & text fields (Remove button sets field = None / "")
+    for clearable in ("body_photo_url", "face_photo_url", "avatar_url", "skin_tone"):
+        if clearable in payload.model_fields_set:
+            val = getattr(payload, clearable, None)
+            if val is None or val == "":
+                set_ops[clearable] = None
+
     # Automatic background cutout processing for face & body photos
     if "face_photo_url" in patch and patch["face_photo_url"] and isinstance(patch["face_photo_url"], str) and patch["face_photo_url"].startswith("data:image"):
         try:
