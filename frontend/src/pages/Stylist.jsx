@@ -302,6 +302,8 @@ export default function Stylist() {
   const [editOutfitName, setEditOutfitName] = useStoreState(stylistUIStore, 'editOutfitName');
   const [editOutfitDescription, setEditOutfitDescription] = useStoreState(stylistUIStore, 'editOutfitDescription');
 
+  const { notifications: cachedNotifications, prewarm: prewarmDaily } = useDailySuggestionsStore();
+
   const handleSaveOutfitSuccess = useCallback(async () => {
     prewarmOutfits({ force: true }).catch(() => {});
     try {
@@ -313,18 +315,14 @@ export default function Stylist() {
   }, [setNotifications]);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await api.listSimulatedNotifications();
-        if (!cancelled) setNotifications(res.notifications || []);
-      } catch (err) {
-        console.error("Failed to load notifications:", err);
-      }
-      incrementalSync();
-    })();
-    return () => { cancelled = true; };
-  }, []);
+    if (cachedNotifications && cachedNotifications.length > 0) {
+      setNotifications(cachedNotifications);
+    } else {
+      prewarmDaily().then(snap => {
+        setNotifications(snap.notifications || []);
+      }).catch(() => {});
+    }
+  }, [cachedNotifications, setNotifications, prewarmDaily]);
 
   const [hasAutoSelected, setHasAutoSelected] = useStoreState(stylistUIStore, 'hasAutoSelected');
 

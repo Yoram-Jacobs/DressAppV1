@@ -19,12 +19,15 @@ import { ItemFloater } from '@/components/stylist/ItemFloater';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { useDailySuggestionsStore } from '@/lib/dailySuggestionsStore';
+
 const DRESS_CODE_OPTIONS = ['all', 'casual', 'smart-casual', 'business', 'formal', 'athletic', 'loungewear'];
 
 export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
   const { t, i18n } = useTranslation();
   const rawItems = useClosetItems({ prewarm: true });
   const items = (rawItems || []).filter(Boolean);
+  const { calendarEvents: cachedCalendarEvents, prewarm: prewarmDaily } = useDailySuggestionsStore();
 
   const [selectedStyle, setSelectedStyle] = useStoreState(shufflerUIStore, 'selectedStyle');
   const [tagInput, setTagInput] = useStoreState(shufflerUIStore, 'tagInput');
@@ -33,37 +36,40 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
 
   // New States for Weather, Location, Calendar, Rationale
   const [coords, setCoords] = useStoreState(shufflerUIStore, 'coords');
-  const [weatherSummary, setWeatherSummary] = useStoreState(shufflerUIStore, 'weatherSummary');
+  const [weather, setWeather] = useStoreState(shufflerUIStore, 'weather');
+  const [includeWeather, setIncludeWeather] = useStoreState(shufflerUIStore, 'includeWeather');
   const [includeCalendar, setIncludeCalendar] = useStoreState(shufflerUIStore, 'includeCalendar');
   const [calendarEvents, setCalendarEvents] = useStoreState(shufflerUIStore, 'calendarEvents');
   const [calendarLoading, setCalendarLoading] = useStoreState(shufflerUIStore, 'calendarLoading');
   const [aiRationale, setAiRationale] = useStoreState(shufflerUIStore, 'aiRationale');
 
-
-
-  // Switchable Calendar Events Sync
+  // Switchable Calendar Events Sync (Uses cached store)
   useEffect(() => {
     if (includeCalendar) {
-      setCalendarLoading(true);
-      api.calendarUpcoming(24)
-        .then((res) => {
+      if (cachedCalendarEvents && cachedCalendarEvents.length > 0) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const todayEvents = cachedCalendarEvents.filter(e => {
+          const start = e.start?.dateTime || e.start?.date || '';
+          return start.startsWith(todayStr);
+        });
+        setCalendarEvents(todayEvents);
+      } else {
+        setCalendarLoading(true);
+        prewarmDaily().then(snap => {
           const todayStr = new Date().toISOString().split('T')[0];
-          const todayEvents = (res.events || []).filter(e => {
+          const todayEvents = (snap.calendarEvents || []).filter(e => {
             const start = e.start?.dateTime || e.start?.date || '';
             return start.startsWith(todayStr);
           });
           setCalendarEvents(todayEvents);
-        })
-        .catch((err) => {
-          console.warn('Failed to load events:', err);
-        })
-        .finally(() => {
+        }).finally(() => {
           setCalendarLoading(false);
         });
+      }
     } else {
       setCalendarEvents([]);
     }
-  }, [includeCalendar]);
+  }, [includeCalendar, cachedCalendarEvents, prewarmDaily, setCalendarEvents, setCalendarLoading]);
 
   // Extract all unique tags
   const allUniqueTags = Array.from(
