@@ -78,7 +78,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { useOutfitStore } from '@/lib/useOutfitStore';
 import { useLocation as useAppLocation } from '@/lib/location';
-import { stylistStore, useStylistStore } from '@/lib/stylistStore';
+import { prewarmStylist, loadStylistMessages, setStylistActiveSession, addStylistMessage } from '@/lib/stylistStore';
 import { dailySuggestionsStore, useDailySuggestionsStore } from '@/lib/dailySuggestionsStore';
 import {
   isSTTSupported,
@@ -783,61 +783,59 @@ export default function Stylist() {
     scrollToBottom();
   }, [scrollToBottom, busy, interim]);
 
-  /* ---------- Load sessions + pick active via external store ---------- */
-  const {
-    sessions: storeSessions,
-    activeSessionId: storeActiveId,
-    activeMessages: storeMessages,
-    prewarm: prewarmStylistStore,
-    loadMessages: storeLoadMessages,
-    setActiveSession: setStoreActiveSession,
-  } = useStylistStore();
-
-  const { calendarConnected: storeCalConnected, prewarm: prewarmDailyStore } = useDailySuggestionsStore();
-
+  /* ---------- Load sessions + pick active safely ---------- */
   useEffect(() => {
-    prewarmStylistStore().catch(() => {});
-    prewarmDailyStore().catch(() => {});
-  }, [prewarmStylistStore, prewarmDailyStore]);
+    let cancelled = false;
+    (async () => {
+      setSessionsLoading(true);
+      try {
+        const snap = await prewarmStylist();
+        if (cancelled) return;
+        const rows = snap?.sessions || [];
+        setSessions(rows);
+        if (rows.length > 0) {
+          const activeId = snap.activeSessionId || rows[0].id;
+          setActiveSessionId(activeId);
+          const msgs = await loadStylistMessages(activeId);
+          if (!cancelled) setMessages(msgs || []);
+        }
+      } catch (err) {
+        console.debug('[Stylist] prewarm failed:', err);
+      } finally {
+        if (!cancelled) {
+          setSessionsLoading(false);
+          setMessagesLoading(false);
+        }
+      }
 
-  useEffect(() => {
-    if (storeSessions && storeSessions.length > 0) {
-      setSessions(storeSessions);
-      setSessionsLoading(false);
-    }
-  }, [storeSessions]);
-
-  useEffect(() => {
-    if (storeActiveId) {
-      setActiveSessionId(storeActiveId);
-    }
-  }, [storeActiveId]);
-
-  useEffect(() => {
-    if (storeMessages) {
-      setMessages(storeMessages);
-      setMessagesLoading(false);
-    }
-  }, [storeMessages]);
-
-  useEffect(() => {
-    setCalendarConnected(storeCalConnected);
-  }, [storeCalConnected]);
+      try {
+        const s = await api.calendarStatus();
+        if (!cancelled) setCalendarConnected(!!s?.connected);
+      } catch (err) {
+        console.debug('[Stylist] calendarStatus failed:', err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const loadSessions = useCallback(async () => {
-    const res = await prewarmStylistStore({ force: true });
-    return res?.sessions || [];
-  }, [prewarmStylistStore]);
+    const snap = await prewarmStylist({ force: true });
+    const rows = snap?.sessions || [];
+    setSessions(rows);
+    return rows;
+  }, []);
 
   const loadMessagesFor = useCallback(async (sessionId) => {
     setMessagesLoading(true);
     try {
-      const msgs = await storeLoadMessages(sessionId, { force: true });
-      setMessages(msgs);
+      const msgs = await loadStylistMessages(sessionId);
+      setMessages(msgs || []);
     } finally {
       setMessagesLoading(false);
     }
-  }, [storeLoadMessages]);
+  }, []);
 
   useEffect(() => {
     if (threadRef.current) {

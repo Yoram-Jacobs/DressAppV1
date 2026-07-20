@@ -19,6 +19,9 @@ let _state = {
   error: null,
 };
 
+let _inflightPrewarm = null;
+const _inflightMessages = new Map();
+
 const _listeners = new Set();
 
 function _notify() {
@@ -46,30 +49,39 @@ export const stylistStore = {
     if (!force && _state.sessions.length > 0 && Date.now() - _state.lastSync < FRESH_MS) {
       return _state;
     }
-    _set({ loading: true, error: null });
-    try {
-      const { sessions } = await api.stylistSessions();
-      const rows = sessions || [];
-      let activeId = _state.activeSessionId;
-      if (rows.length > 0 && !activeId) {
-        activeId = rows[0].id;
-      }
-      _set({
-        sessions: rows,
-        activeSessionId: activeId,
-        lastSync: Date.now(),
-      });
-
-      if (activeId && !_state.messagesBySession[activeId]) {
-        await this.loadMessages(activeId);
-      }
-      return _state;
-    } catch (err) {
-      _set({ error: err });
-      return _state;
-    } finally {
-      _set({ loading: false });
+    if (!force && _inflightPrewarm) {
+      return _inflightPrewarm;
     }
+
+    _inflightPrewarm = (async () => {
+      _set({ loading: true, error: null });
+      try {
+        const { sessions } = await api.stylistSessions();
+        const rows = sessions || [];
+        let activeId = _state.activeSessionId;
+        if (rows.length > 0 && (!activeId || !rows.some(s => s.id === activeId))) {
+          activeId = rows[0].id;
+        }
+        _set({
+          sessions: rows,
+          activeSessionId: activeId,
+          lastSync: Date.now(),
+        });
+
+        if (activeId && !_state.messagesBySession[activeId]) {
+          await this.loadMessages(activeId);
+        }
+        return _state;
+      } catch (err) {
+        _set({ error: err });
+        return _state;
+      } finally {
+        _set({ loading: false });
+        _inflightPrewarm = null;
+      }
+    })();
+
+    return _inflightPrewarm;
   },
 
   async loadMessages(sessionId, { force = false } = {}) {
@@ -77,30 +89,42 @@ export const stylistStore = {
     if (!force && _state.messagesBySession[sessionId]) {
       return _state.messagesBySession[sessionId];
     }
-    try {
-      const h = await api.stylistHistory(sessionId, 200);
-      const hydrated = (h.messages || []).map((m) => ({
-        id: m.id,
-        role: m.role,
-        transcript: m.transcript,
-        payload: m.assistant_payload,
-        outfit_canvas: m.assistant_payload?.outfit_canvas || null,
-      }));
-
-      _set({
-        messagesBySession: {
-          ..._state.messagesBySession,
-          [sessionId]: hydrated,
-        },
-      });
-      return hydrated;
-    } catch (err) {
-      console.debug('[stylistStore] loadMessages failed:', err);
-      return [];
+    if (!force && _inflightMessages.has(sessionId)) {
+      return _inflightMessages.get(sessionId);
     }
+
+    const inflight = (async () => {
+      try {
+        const h = await api.stylistHistory(sessionId, 200);
+        const hydrated = (h.messages || []).map((m) => ({
+          id: m.id,
+          role: m.role,
+          transcript: m.transcript,
+          payload: m.assistant_payload,
+          outfit_canvas: m.assistant_payload?.outfit_canvas || null,
+        }));
+
+        _set({
+          messagesBySession: {
+            ..._state.messagesBySession,
+            [sessionId]: hydrated,
+          },
+        });
+        return hydrated;
+      } catch (err) {
+        console.debug('[stylistStore] loadMessages failed:', err);
+        return [];
+      } finally {
+        _inflightMessages.delete(sessionId);
+      }
+    })();
+
+    _inflightMessages.set(sessionId, inflight);
+    return inflight;
   },
 
   setActiveSession(sessionId) {
+    if (_state.activeSessionId === sessionId) return;
     _set({ activeSessionId: sessionId });
     if (sessionId && !_state.messagesBySession[sessionId]) {
       this.loadMessages(sessionId).catch(() => {});
@@ -118,6 +142,16 @@ export const stylistStore = {
     });
   },
 
+  setMessages(sessionId, messages) {
+    if (!sessionId) return;
+    _set({
+      messagesBySession: {
+        ..._state.messagesBySession,
+        [sessionId]: messages,
+      },
+    });
+  },
+
   setSessions(sessions) {
     _set({ sessions });
   },
@@ -131,24 +165,23 @@ export const stylistStore = {
       loading: false,
       error: null,
     };
+    _inflightPrewarm = null;
+    _inflightMessages.clear();
     _notify();
   },
 };
 
+export const prewarmStylist = stylistStore.prewarm.bind(stylistStore);
+export const loadStylistMessages = stylistStore.loadMessages.bind(stylistStore);
+export const setStylistActiveSession = stylistStore.setActiveSession.bind(stylistStore);
+export const addStylistMessage = stylistStore.addMessage.bind(stylistStore);
+export const setStylistMessages = stylistStore.setMessages.bind(stylistStore);
+export const setStylistSessions = stylistStore.setSessions.bind(stylistStore);
+
 export function useStylistStore() {
-  const snap = useSyncExternalStore(
+  return useSyncExternalStore(
     stylistStore.subscribe,
     stylistStore.getSnapshot,
     stylistStore.getSnapshot,
   );
-
-  return {
-    ...snap,
-    activeMessages: snap.activeSessionId ? (snap.messagesBySession[snap.activeSessionId] || []) : [],
-    prewarm: stylistStore.prewarm.bind(stylistStore),
-    loadMessages: stylistStore.loadMessages.bind(stylistStore),
-    setActiveSession: stylistStore.setActiveSession.bind(stylistStore),
-    addMessage: stylistStore.addMessage.bind(stylistStore),
-    setSessions: stylistStore.setSessions.bind(stylistStore),
-  };
 }
