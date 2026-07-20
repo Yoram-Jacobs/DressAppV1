@@ -302,6 +302,16 @@ export default function Stylist() {
   const [editOutfitName, setEditOutfitName] = useStoreState(stylistUIStore, 'editOutfitName');
   const [editOutfitDescription, setEditOutfitDescription] = useStoreState(stylistUIStore, 'editOutfitDescription');
 
+  const handleSaveOutfitSuccess = useCallback(async () => {
+    prewarmOutfits({ force: true }).catch(() => {});
+    try {
+      const res = await api.listSimulatedNotifications();
+      setNotifications(res.notifications || []);
+    } catch (err) {
+      console.error("Failed to refresh notifications:", err);
+    }
+  }, [setNotifications]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -2185,7 +2195,7 @@ export default function Stylist() {
             >
 
               <DressMeShuffler 
-                onSaveSuccess={loadOutfitsAndNotifications} 
+                onSaveSuccess={handleSaveOutfitSuccess} 
                 onOpenCalendar={() => setCalendarModalOpen(true)} 
               />
 
