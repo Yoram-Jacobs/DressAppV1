@@ -1,44 +1,44 @@
-# DressApp — Arquitectura del Sistema de Posicionamiento y Prueba en Avatar 2D (`Avatar.md`)
+# DressApp — Arquitectura del Sistema de Avatar 2D y Posicionamiento de Prueba (`Avatar.md`)
 
 > **Versión del Documento:** 2.0  
-> **Subsistema Objetivo:** Maniquí 2D Frontend, Recortes de Foto Corporal Real y Motor de Superposición de Prendas  
+> **Subsistema Objetivo:** Maniquí 2D Frontend, Recortes de Fotos del Cuerpo Real y Motor de Superposición de Prendas  
 > **Archivos Principales:** `AvatarViewer2D.jsx`, `DynamicAvatar.jsx`, `OutfitCanvas.jsx`, `Profile.jsx`  
-> **Estado:** Implementado en Producción y Calibrado  
+> **Estado:** Desplegado en Producción y Calibrado  
 
 ---
 
 ## 1. Resumen Ejecutivo y Propuesta de Valor
 
-### 1.1 Descripción General de Alto Nivel
-El **Sistema de Posicionamiento y Prueba en Avatar 2D de DressApp** proporciona un entorno de prueba visual adaptativo en tiempo real. Permite a los usuarios previsualizar prendas digitalizadas de su armario superpuestas sin problemas sobre una **fotografía de cuerpo entero segmentada** o sobre un **maniquí vectorial SVG 2D con curvas Bezier deformables**.
+### 1.1 Visión General de Alto Nivel
+El **Sistema de Avatar 2D y Posicionamiento de Prueba de DressApp** ofrece un entorno visual adaptativo de prueba en tiempo real. Permite a los usuarios previsualizar prendas digitalizadas de su armario superpuestas a la perfección sobre una **fotografía segmentada del cuerpo real** o sobre un **maniquí vectorial SVG 2D con curvas Bézier dinámicas**.
 
-Para lograr una alta precisión visual en diversos estilos de prendas (camisetas de compresión, cuellos polo, cuellos redondos, vaqueros de tiro bajo, pantalones cortos cargo y vestidos formales), el motor utiliza calibración de puntos de referencia anatómicos, escalado proporcional de proporciones y contenedores de superposición sin distorsión.
+Para ofrecer una alta precisión visual en diversos estilos de prendas (camisetas de compresión, polos, cuellos redondos, vaqueros de tiro bajo, bermudas cargo y vestidos de gala), el motor utiliza calibración por puntos de referencia anatómicos, escalado de proporciones y contenedores de superposición de imágenes sin distorsión.
 
 ```mermaid
 flowchart TD
     subgraph UserProfile["Perfil de Usuario y Medidas"]
-        U_Photo["Carga de Foto Corporal Real"]
+        U_Photo["Carga de Foto de Cuerpo Real"]
         U_Tone["Selección de Paleta de Tono de Piel"]
-        U_Params["Parámetros de Forma (Alto/Bajo, Robusto/Delgado, Busto, Cintura, Caderas)"]
-        U_Sizing["Predictor ANSUR II (Altura, Peso, Cintura, Pie -> 10 Métricas Corporal)"]
+        U_Params["Parámetros de Forma (Alto/Bajo, Corpulento/Delgado, Busto, Cintura, Caderas)"]
+        U_Sizing["Predictor de Tallas ANSUR II (Altura, Peso, Cintura, Pie -> 10 Métricas Corporal)"]
     end
 
     subgraph BackendIngest["Procesamiento Backend y Recorte"]
-        Rembg["Recorte / Segmentación U2-Net Local"]
-        Mongo["Sincronización de Perfil MongoDB Atlas"]
+        Rembg["Recorte / Segmentación Local U2-Net"]
+        Mongo["Sincronización de Perfil con MongoDB Atlas"]
     end
 
-    subgraph AvatarEngine["Motor de Renderizado de Avatar Frontend (AvatarViewer2D.jsx)"]
-        ModeCheck{"¿Existe Foto Corporal Activa?"}
+    subgraph AvatarEngine["Motor de Renderizado del Avatar Frontend (AvatarViewer2D.jsx)"]
+        ModeCheck{"¿Foto de cuerpo activa?"}
         PhotoView["Capa de Recorte de Cuerpo Real"]
         MannequinView["Maniquí Vectorial SVG Dinámico (DynamicAvatar.jsx)"]
         
-        GarmentResolver["Resolutor de Categoría y Ranuras de Prenda"]
-        LandmarkCalc["Motor de Posicionamiento por Referencias Anatómicas"]
+        GarmentResolver["Resolutor de Categorías de Prendas y Ranuras"]
+        LandmarkCalc["Motor de Posicionamiento por Puntos Anatómicos"]
     end
 
-    subgraph OverlayGeometry["Geometría de Capas de Prenda"]
-        TopLayer["Capa Superior / Abrigo (top-[14.5%], w-[82%], h-[38%])"]
+    subgraph OverlayGeometry["Geometría de Capas de Prendas"]
+        TopLayer["Capa Superior / Ropa Exterior (top-[14.5%], w-[82%], h-[38%])"]
         BottomLayer["Capa Inferior / Cinturón (top-[36.5%], w-[62%], h-[50%])"]
         ShoesLayer["Capa de Calzado (bottom-[2%], w-[46%], h-[12%])"]
         AccessoryLayers["Sombreros / Gafas / Accesorios / Bolsos"]
@@ -57,63 +57,63 @@ flowchart TD
 ```
 
 ### 1.2 Propuesta de Valor para el Usuario
-* **Precisión de Alineación Anatómica**: Ajusta los cuellos de las camisas al ras de la línea del cuello del avatar (`top-[14.5%]`) y las pretinas de pantalones/cortos al ras de la cintura natural (`top-[36.5%]`), eliminando superposiciones faciales y huecos antiestéticos.
-* **Flexibilidad de Doble Avatar**: Cambie al instante entre una foto real de cuerpo entero y un maniquí vectorial SVG 2D construido con medidas antropométricas exactas.
-* **Preservación Proporcional del Aspecto**: Aplica escalado de ancho en pecho y caderas ($scaleX$) manteniendo la relación de aspecto original de la imagen (`object-fit: contain`), evitando estiramientos no deseados.
-* **Jerarquía de Capas Interactiva**: Apile abrigos sobre camisetas y vestidos permitiendo clics directos en las prendas individuales para abrir sus detalles.
+* **Precisión de Alineación Anatómica**: Ajusta los cuellos de las camisas a la línea del cuello del avatar (`top-[14.5%]`) y las cinturillas de pantalones/shorts a la cintura natural del avatar (`top-[36.5%]`), eliminando la oclusión del rostro o huecos desalineados.
+* **Flexibilidad de Avatar Doble**: Cambie instantáneamente entre una foto personal segmentada de cuerpo entero y un maniquí vectorial SVG 2D dinámico ajustado a medidas antropométricas exactas.
+* **Preservación Proporcional de Aspecto**: Aplica escalado de ancho de pecho y cadera ($scaleX$) manteniendo la relación de aspecto original de las imágenes de prendas (`object-fit: contain`), evitando estiramientos o deformaciones indebidas.
+* **Jerarquía de Capas Interactiva**: Superponga prendas de abrigo sobre camisetas interiores y vestidos, permitiendo al mismo tiempo hacer clic/tocar directamente en las capas de prendas individuales para ver detalles.
 
 ---
 
-## 2. Manual de Usuario Completo y Topología de Interfaz
+## 2. Manual de Usuario Detallado y Topología de Interfaz
 
 ### 2.1 Topología Visual de la Interfaz
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                   Lienzo de Prueba en Avatar 2D                  │
+│                   Lienzo de Prueba 2D de Avatar                  │
 ├──────────────────────────────────────────────────────────────────┤
 │                                                                  │
-│                        [ Sombreros    (top: 1%) ]                │
-│                        [ Gafas        (top: 11%) ]               │
-│                        [ Línea Cuello (top: 14.5%) ] ◄─ Cuello    │
+│                        [ Sombreros (top: 1%) ]                   │
+│                        [ Gafas     (top: 11%) ]                  │
+│                        [ Escote    (top: 14.5%) ] ◄─ Cuello      │
 │                     ┌──────────────────────────┐                 │
-│                     │  Prendas Superiores/Ropa │                 │
-│                     │       (altura: 38%)      │                 │
+│                     │   Parte Superior / Abrigo│                 │
+│                     │       (height: 38%)      │                 │
 │                     └──────────────────────────┘                 │
-│                        [ Cintura     (top: 36.5%) ] ◄─ Pretina   │
+│                        [ Cintura   (top: 36.5%) ] ◄─ Pretina     │
 │                     ┌──────────────────────────┐                 │
-│                     │  Prendas Inferiores/Pant │                 │
-│                     │       (altura: 50%)      │                 │
+│                     │  Parte Inferior / Shorts │                 │
+│                     │       (height: 50%)      │                 │
 │                     │                          │                 │
 │                     └──────────────────────────┘                 │
-│                        [ Pies        (bottom: 2%) ] ◄─── Calzado │
-│                        [ Calzado      (altura: 12%) ]            │
+│                        [ Pies    (bottom: 2%) ] ◄─── Calzado     │
+│                        [ Zapatos   (height: 12%) ]               │
 │                                                                  │
 ├──────────────────────────────────────────────────────────────────┤
-│  [ Cambiar Modo ]  [ Selector Tono Piel ]  [ Editar Medidas ]    │
+│ [ Cambiar Avatar ]  [ Selector de Tono de Piel ]  [ Editar Medidas ] │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-### 2.2 Flujos de Trabajo y Modos
+### 2.2 Guías de Modo y Flujos de Trabajo
 
-#### Modo 1: Capa de Recorte de Foto Corporal Real
-1. Abra la **Configuración del Perfil** (`/me`).
-2. Cargue una fotografía de cuerpo entero. El servidor ejecuta la segmentación del fondo mediante `rembg` (U2-Net).
-3. La URL de la foto procesada (`body_photo_url`) actualiza el perfil del usuario en MongoDB y se muestra dentro del contenedor `AvatarViewer2D`.
-4. Para volver al maniquí vectorial, haga clic en **Eliminar foto**. La interfaz se actualiza al instante sin recargar la página.
+#### Modo 1: Capa de Recorte de Foto de Cuerpo Real
+1. Abra los **Ajustes de Perfil** (`/me`).
+2. Suba una fotografía de cuerpo entero. El backend ejecuta la segmentación de fondo mediante `rembg` (U2-Net) para eliminar elementos innecesarios.
+3. La URL de la imagen recortada (`body_photo_url`) actualiza el perfil del usuario en MongoDB y se renderiza dentro del contenedor `AvatarViewer2D`.
+4. Para volver al maniquí vectorial, haga clic en **Eliminar Foto** en la página de perfil. La interfaz se actualiza al instante sin recargar la página.
 
 #### Modo 2: Maniquí Vectorial SVG Dinámico
-1. Cuando no hay foto corporal activa, `AvatarViewer2D` muestra `DynamicAvatar.jsx`.
-2. El maniquí genera curvas Bezier cúbicas continuas (comandos $C$ y $S$) dentro de un viewBox fijo de `0 0 200 450`.
-3. El ajuste de parámetros físicos (Altura, Peso, Cintura, Pecho, Hombros, Caderas) o la selección del tono de piel modifica la silueta en tiempo real.
+1. Cuando no hay foto de cuerpo disponible, `AvatarViewer2D` renderiza `DynamicAvatar.jsx`.
+2. El maniquí genera curvas Bézier cúbicas continuas (comandos $C$ y $S$) dentro de un `viewBox` SVG fijo de `0 0 200 450`.
+3. Al ajustar los parámetros corporales (altura, peso, cintura, pecho, hombros, caderas) o seleccionar un tono de piel, la silueta del maniquí cambia dinámicamente en tiempo real.
 
 ---
 
-## 3. Arquitectura Tecnológica y Análisis Profundo
+## 3. Arquitectura Tecnológica y Análisis en Profundidad
 
-### 3.1 Divisor Anatómico de Elipse y Generador Bezier del Maniquí
+### 3.1 Divisor de Elipse Anatómica y Generador de Maniquí Bézier
 
-`DynamicAvatar.jsx` calcula los anchos de proyección planar 2D a partir de circunferencias anatómicas 3D utilizando un **Divisor Anatómico de Elipse** ($\text{DIVISOR} = 2.65$):
+`DynamicAvatar.jsx` calcula los anchos de proyección planar 2D a partir de circunferencias anatómicas 3D utilizando un **Divisor de Elipse Anatómica** ($\text{DIVISOR} = 2.65$):
 
 $$\begin{aligned}
 w_{\text{shoulders}} &= (\text{shoulders} \times 1.1) \times (1.05 \text{ if male else } 0.95) \\
@@ -122,7 +122,7 @@ w_{\text{waist}} &= \left(\frac{\text{waist}}{2.65} \times 1.0\right) \times (0.
 w_{\text{hip}} &= \left(\frac{\text{hip}}{2.65} \times 1.05\right) \times (0.93 \text{ if male else } 1.05)
 \end{aligned}$$
 
-La silueta corporal se construye mediante comandos de ruta SVG mapeando puntos de control Bezier cúbicos:
+La silueta del cuerpo se construye mediante comandos de ruta SVG que mapean puntos de control de Bézier cúbicos:
 
 ```javascript
 // Bezier contour snippet from DynamicAvatar.jsx
@@ -136,26 +136,26 @@ const bodyPath = [
 ].join(' ');
 ```
 
-### 3.2 Posicionamiento Calibrado por Referencias y Ratios CSS
+### 3.2 Posicionamiento Calibrado de Puntos de Referencia y Ratios CSS
 
-Para garantizar que las prendas se ajusten sin solaparse con el rostro ni dejar huecos en el cuerpo, los contenedores en `AvatarViewer2D.jsx` están vinculados a ratios de posición CSS precisos:
+Para garantizar que las prendas se asienten perfectamente sin solapar rasgos faciales ni dejar espacios corporales, los contenedores de superposición en `AvatarViewer2D.jsx` están vinculados a proporciones posicionales CSS precisas:
 
-| Categoría de Prenda | Clase de Posición CSS | z-Index | Punto de Referencia |
+| Categoría de Prenda | Clase de Posición CSS | z-Index | Punto Anatómico de Alineación |
 | --- | --- | --- | --- |
 | **Sombreros / Gorros** | `top-[1%] left-1/2 w-[34%] aspect-square` | `z-30` | Coronilla de la cabeza |
 | **Gafas** | `top-[11%] left-1/2 w-[18%] h-[4.5%]` | `z-28` | Plano de los ojos |
-| **Accesorio / Collar** | `top-[14.5%] left-1/2 w-[30%] aspect-square` | `z-25` | Base del cuello |
-| **Prenda Superior (Top)** | `top-[14.5%] left-1/2 w-[82%] h-[38%]` | `z-20` | Cuello al escote |
-| **Abrigos / Chaquetas** | `top-[14.5%] left-1/2 w-[86%] h-[42%]` | `z-22` | Superposición sobre hombros |
-| **Vestidos** | `top-[14.5%] left-1/2 w-[82%] h-[68%]` | `z-20` | Largo completo superior a rodilla |
-| **Cinturón** | `top-[36.5%] left-1/2 w-[62%] h-[5%]` | `z-21` | Trabilla de la cintura |
-| **Prenda Inferior (Pantalón)** | `top-[36.5%] left-1/2 w-[62%] h-[50%]` | `z-10` | Pretina a la cintura natural |
-| **Calzado** | `bottom-[2%] left-1/2 w-[46%] h-[12%]` | `z-15` | Tobillo a plano del pie |
+| **Accesorios / Collares** | `top-[14.5%] left-1/2 w-[30%] aspect-square` | `z-25` | Base del cuello |
+| **Parte Superior (Top)** | `top-[14.5%] left-1/2 w-[82%] h-[38%]` | `z-20` | Cuello a línea del escote |
+| **Abrigos / Chaquetas** | `top-[14.5%] left-1/2 w-[86%] h-[42%]` | `z-22` | Capa sobre hombros |
+| **Vestidos** | `top-[14.5%] left-1/2 w-[82%] h-[68%]` | `z-20` | Largo completo de escote a rodilla |
+| **Cinturón** | `top-[36.5%] left-1/2 w-[62%] h-[5%]` | `z-21` | Trabilla de cintura |
+| **Parte Inferior (Pantalones/Shorts)** | `top-[36.5%] left-1/2 w-[62%] h-[50%]` | `z-10` | Cinturilla a línea de cintura |
+| **Calzado / Zapatos** | `bottom-[2%] left-1/2 w-[46%] h-[12%]` | `z-15` | Tobillo a plano del pie |
 | **Bolso de Mano** | `top-[40%] right-[-5%] w-[40%] h-[30%]` | `z-25` | Caída del brazo |
 
-### 3.3 Escalado Proporcional de Ancho de Prenda
+### 3.3 Escalado Proporcional del Ancho de las Prendas
 
-Además del posicionamiento, las prendas se escalan horizontalmente ($scaleX$) según los parámetros corporales del usuario:
+Además del posicionamiento espacial, las prendas se escalan horizontalmente ($scaleX$) de forma dinámica según los parámetros del cuerpo del usuario (pecho pronunciado, corpulento, delgado, cintura ancha, caderas anchas):
 
 ```javascript
 // Derivation of garment container scale factors in AvatarViewer2D.jsx
@@ -176,14 +176,15 @@ const scales = useMemo(() => {
 
 ---
 
-## 4. Matriz de Resumen de Ajustes de Posición y Proporción
+## 4. Matriz de Resumen de Correcciones de Posición y Proporción
 
-| Problema Identificado | Causa | Solución Aplicada | Resultado |
+| Problema Identificado | Causa | Corrección Aplicada | Resultado |
 | --- | --- | --- | --- |
-| **Cuello de camiseta tapando el rostro** | Posición demasiado alta (`top-[8.3%]` o `top-[12.8%]`) | Ajustar posición superior a `top-[14.5%]` | El cuello queda perfectamente alineado en el cuello del avatar. |
-| **Pantalones bajos o solapados** | Posición demasiado baja (`top-[38.5%]`) | Ajustar posición inferior a `top-[36.5%]` | La pretina queda alineada en la cintura natural del avatar. |
-| **Relación de aspecto distorsionada** | Estiramiento sin restricciones | Aplicar `object-fit: contain` con ajuste `scaleX` | Mantiene la relación de aspecto sin distorsión horizontal. |
-| **Retraso al eliminar foto** | Recarga de estado de la página | Sincronización local instantánea en `Profile.jsx` | La vista previa se actualiza al instante sin retraso. |
+| **Cuello de Camisa Solapa la Cara** | Desplazamiento posicionado demasiado alto (`top-[8.3%]` o `top-[12.8%]`) | Ajustado el desplazamiento superior a `top-[14.5%]` | El cuello de la camisa descansa justo en la línea del cuello del avatar. |
+| **Pantalones/Shorts Bajos o Solapando Dobladillo** | Desplazamiento posicionado demasiado bajo (`top-[38.5%]`) | Ajustado el desplazamiento inferior a `top-[36.5%]` | La pretina del pantalón descansa alineada con la cintura natural. |
+| **Relación de Aspecto de Prendas Deformada** | Estiramiento sin restricciones del contenedor | Aplicado `object-fit: contain` con ajuste proporcional de `scaleX` | Conserva la relación de aspecto original de la imagen sin deformaciones. |
+| **Retraso al Eliminar Foto** | Recuperación necesaria del estado de la página | Sincronización instantánea de estado local en `Profile.jsx` | La foto se elimina al instante sin retrasos ni inconsistencias en la interfaz. |
 
 ---
-*Documento compilado automáticamente por Narrator para DressApp.*
+
+*Document compiled automatically by Narrator for DressApp.*

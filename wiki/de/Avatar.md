@@ -1,47 +1,47 @@
-# DressApp — 2D-Avatar & Anprobe-Positionierungssystem Architektur (`Avatar.md`)
+# DressApp — Architektur des 2D-Avatar- & Anprobedienst-Positionierungssystems (`Avatar.md`)
 
 > **Dokumentversion:** 2.0  
-> **Ziel-Subsystem:** Frontend 2D-Mannequin, Echtkörper-Foto-Ausschnitte & Kleidungs-Overlay-Engine  
-> **Kern-Dateien:** `AvatarViewer2D.jsx`, `DynamicAvatar.jsx`, `OutfitCanvas.jsx`, `Profile.jsx`  
-> **Status:** Production Shipped & Kalibriert  
+> **Ziel-Subsystem:** Frontend 2D-Mannequin, Echtdaten-Freisteller & Bekleidungs-Overlay-Engine  
+> **Kerndateien:** `AvatarViewer2D.jsx`, `DynamicAvatar.jsx`, `OutfitCanvas.jsx`, `Profile.jsx`  
+> **Status:** Produktion ausgeliefert & kalibriert  
 
 ---
 
-## 1. Zusammenfassung & Wertversprechen
+## 1. Executive Summary & Wertversprechen
 
-### 1.1 High-Level Übersicht
-Das **DressApp 2D-Avatar & Anprobe-Positionierungssystem** bietet eine adaptive visueller Anprobe-Umgebung in Echtzeit. Es ermöglicht Benutzern, digitalisierte Kleidung aus dem Schrank nahtlos über ein **segmentiertes Echtkörper-Foto** oder ein **dynamisch gemorphtes 2D-Bezier-Vektor-SVG-Mannequin** zu legen.
+### 1.1 Überblick auf hoher Ebene
+Das **DressApp 2D-Avatar- & Anprobedienst-Positionierungssystem** bietet eine adaptive Echtzeit-Visualisierungsumgebung. Es ermöglicht Benutzern, digitalisierte Kleidungsstücke nahtlos über einem **segmentierten Foto des eigenen Körpers** oder einem **dynamisch morphenden 2D-Bezier-Vektor-SVG-Mannequin** anzuprobieren.
 
-Um eine hohe visuelle Genauigkeit über verschiedene Kleidungsstile hinweg zu gewährleisten (Kompressionsshirts, Polokragen, Rundhalsausschnitte, Hüfthosen, Cargo-Shorts und formelle Kleider), nutzt die Engine anatomische Orientierungspunkt-Kalibrierung, proportionale Verhältnisskalierung und nicht verzerrende Bild-Overlay-Container.
+Um eine hohe visuelle Genauigkeit über verschiedene Kleidungsstile (Kompressionsshirts, Polokragen, Rundhalsausschnitte, Low-Rise-Jeans, Cargo-Shorts und formelle Kleider) zu gewährleisten, nutzt die Engine eine anatomische Landmarken-Kalibrierung, proportionale Verhältnisskalierung und verzerrungsfreie Bild-Overlay-Container.
 
 ```mermaid
 flowchart TD
-    subgraph UserProfile["Benutzerprofil & Maße"]
+    subgraph UserProfile["Benutzerprofil & Körpermaße"]
         U_Photo["Echtkörper-Foto-Upload"]
-        U_Tone["Hautton-Palettenauswahl"]
-        U_Params["Form-Parameter (Groß/Klein, Schwer/Dünn, Oberweite, Taille, Hüfte)"]
-        U_Sizing["ANSUR II Größenvorhersage (Größe, Gewicht, Taille, Fuß -> 10 Körpermaße)"]
+        U_Tone["Hautton-Palettensauswahl"]
+        U_Params["Formparameter (Groß/Klein, Kräftig/Schlank, Oberweite, Taille, Hüfte)"]
+        U_Sizing["ANSUR II Größen-Prädiktor (Höhe, Gewicht, Taille, Fuß -> 10 Körpermetriken)"]
     end
 
-    subgraph BackendIngest["Backend-Verarbeitung & Freistellung"]
-        Rembg["Lokales U2-Net Matting / Segmentierung"]
-        Mongo["MongoDB Atlas Profil-Sync"]
+    subgraph BackendIngest["Backend-Verarbeitung & Segmentierung"]
+        Rembg["Lokale U2-Net Segmentierung / Freistellung"]
+        Mongo["MongoDB Atlas Profil-Synchronisation"]
     end
 
     subgraph AvatarEngine["Frontend Avatar Rendering Engine (AvatarViewer2D.jsx)"]
         ModeCheck{"Aktives Körperfoto vorhanden?"}
-        PhotoView["Echtkörper-Ausschnitt-Ebene"]
-        MannequinView["Dynamisches SVG-Vektormannequin (DynamicAvatar.jsx)"]
+        PhotoView["Echtkörper-Freisteller-Ebene"]
+        MannequinView["Dynamisches SVG-Vektor-Mannequin (DynamicAvatar.jsx)"]
         
-        GarmentResolver["Bekleidungskategorie & Slot-Resolver"]
-        LandmarkCalc["Anatomische Orientierungspunkt-Positionierungs-Engine"]
+        GarmentResolver["Bekleidungskategorie- & Slot-Resolver"]
+        LandmarkCalc["Anatomisches Landmarken-Positionierungssystem"]
     end
 
     subgraph OverlayGeometry["Bekleidungsebenen-Geometrie"]
-        TopLayer["Oberteil / Oberbekleidungs-Ebene (top-[14.5%], w-[82%], h-[38%])"]
-        BottomLayer["Unterteil / Gürtel-Ebene (top-[36.5%], w-[62%], h-[50%])"]
-        ShoesLayer["Schuh-Ebene (bottom-[2%], w-[46%], h-[12%])"]
-        AccessoryLayers["Kopfbedeckung / Brillen / Accessoires / Taschen"]
+        TopLayer["Oberteil / Oberbekleidungsebene (top-[14.5%], w-[82%], h-[38%])"]
+        BottomLayer["Hosen / Gütelebene (top-[36.5%], w-[62%], h-[50%])"]
+        ShoesLayer["Schuhebene (bottom-[2%], w-[46%], h-[12%])"]
+        AccessoryLayers["Kopfbedeckung / Brillen / Accessoires / Tasche"]
     end
 
     U_Photo --> Rembg --> Mongo
@@ -56,64 +56,64 @@ flowchart TD
     TopLayer & BottomLayer & ShoesLayer & AccessoryLayers --> PhotoView & MannequinView
 ```
 
-### 1.2 Benutzer-Wertversprechen
-* **Präzision der anatomischen Ausrichtung**: Richtet Hemdkragen bündig am Ausschnitt des Avatars aus (`top-[14.5%]`) und Hosen-/Shorts-Bünde bündig an der natürlichen Taillenlinie des Avatars (`top-[36.5%]`), wodurch Gesichtsverdeckungen und störende Lücken vermieden werden.
-* **Duale Avatar-Flexibilität**: Wechseln Sie sofort zwischen einem persönlichen, freigestellten Ganzkörperfoto und einem dynamischen 2D-Vektor-SVG-Mannequin, das auf exakten anthropometrischen Maßen basiert.
-* **Proportionale Aspekt-Erhaltung**: Wendet Brust- und Hüftbreitenskalierung ($scaleX$) an, während das ursprüngliche Bildseitenverhältnis des Kleidungsstücks beibehalten wird (`object-fit: contain`).
-* **Interaktive Ebenenhierarchie**: Stapeln Sie Oberbekleidung über Tops und Kleider und ermöglichen Sie gleichzeitig direkte Klicks auf einzelne Bekleidungsebenen, um Artikeldetails zu öffnen.
+### 1.2 Mehrwert für Benutzer
+* **Präzision der anatomischen Ausrichtung**: Passt Hemdkragen bündig an die Ausschnittlinie des Avatars (`top-[14.5%]`) und Hosen-/Shorts-Bünde bündig an die natürliche Taillenlinie (`top-[36.5%]`) an, wodurch Gesichtsüberlappungen und unschöne Lücken vermieden werden.
+* **Flexibilität durch dualen Avatar**: Wechseln Sie augenblicklich zwischen einem persönlichen segmentierten Ganzkörperfoto und einem dynamischen 2D-Vektor-SVG-Mannequin, das exakt nach anthropometrischen Maßen erstellt wird.
+* **Erhaltung des proportionalen Seitenverhältnisses**: Wendet Skalierungen der Brust- und Hüftbreite ($scaleX$) an, während das ursprüngliche Seitenverhältnis der Bilddateien beibehalten wird (`object-fit: contain`), um unerwünschtes Verzerrung oder Stauchen zu verhindern.
+* **Interaktive Ebenenhierarchie**: Stapelt Oberbekleidung über Hemden und Kleidern und ermöglicht gleichzeitig das direkte Tippen/Klicken auf einzelne Bekleidungsebenen, um Produktdetails zu öffnen.
 
 ---
 
-## 2. Umfassendes Benutzerhandbuch & Schnittstellen-Topologie
+## 2. Umfassendes Benutzerhandbuch & Schnittstellentopologie
 
-### 2.1 Visuelle Schnittstellen-Topologie
+### 2.1 Topologie der visuellen Benutzeroberfläche
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                     2D-Avatar-Anprobe-Canvas                     │
+│                      2D Avatar Try-On Canvas                     │
 ├──────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │                        [ Kopfbedeckung (top: 1%) ]               │
-│                        [ Brillen       (top: 11%) ]              │
-│                        [ Halsausschnitt(top: 14.5%) ] ◄─ Kragen   │
+│                        [ Brille        (top: 11%) ]              │
+│                        [ Ausschnitt    (top: 14.5%) ] ◄─ Kragen  │
 │                     ┌──────────────────────────┐                 │
-│                     │   Oberteile / Mäntel     │                 │
-│                     │       (Höhe: 38%)        │                 │
+│                     │  Oberteile / Jacken      │                 │
+│                     │       (height: 38%)      │                 │
 │                     └──────────────────────────┘                 │
-│                        [ Taillenlinie  (top: 36.5%) ] ◄─ Bund    │
+│                        [ Taillenlinie  (top: 36.5%) ] ◄─ Hosenbund│
 │                     ┌──────────────────────────┐                 │
-│                     │    Unterteile / Shorts   │                 │
-│                     │       (Höhe: 50%)        │                 │
+│                     │     Hosen / Shorts       │                 │
+│                     │       (height: 50%)      │                 │
 │                     │                          │                 │
 │                     └──────────────────────────┘                 │
-│                        [ Füße        (bottom: 2%) ] ◄─── Schuhe  │
-│                        [ Schuhe        (Höhe: 12%) ]             │
+│                        [ Füße   (bottom: 2%) ] ◄─── Schuhe       │
+│                        [ Schuhe   (height: 12%) ]                │
 │                                                                  │
 ├──────────────────────────────────────────────────────────────────┤
-│ [ Avatar-Modus wechseln ] [ Hautton-Auswahl ] [ Maße bearbeiten ]│
+│ [ Modus wechseln ]    [ Hautton währen ]    [ Körpermaße anpassen ]│
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-### 2.2 Modi- & Workflow-Anleitungen
+### 2.2 Modi & Schritt-für-Schritt-Anleitungen
 
-#### Modus 1: Echtkörper-Foto-Ausschnitt-Ebene
+#### Modus 1: Echtkörper-Foto-Freisteller-Ebene
 1. Öffnen Sie die **Profileinstellungen** (`/me`).
-2. Laden Sie ein Ganzkörperfoto hoch. Das Backend führt eine Hintergrundsegmentierung über `rembg` (U2-Net) aus.
-3. Die verarbeitete Ausschnitt-URL (`body_photo_url`) aktualisiert das Benutzerprofil in MongoDB und wird im `AvatarViewer2D`-Container gerendert.
-4. Um zum Vektormannequin zurückzukehren, klicken Sie auf der Profilseite auf **Foto entfernen**. Die Benutzeroberfläche wird sofort und ohne Neuladen der Seite aktualisiert.
+2. Laden Sie ein Ganzkörperfoto hoch. Das Backend führt eine Hintergrundsegmentierung über `rembg` (U2-Net) durch, um störende Hintergründe zu entfernen.
+3. Die verarbeitete Freisteller-URL (`body_photo_url`) aktualisiert das Benutzerprofil in MongoDB und wird im `AvatarViewer2D`-Container gerendert.
+4. Um zum Vektor-Mannequin zurückzukehren, klicken Sie auf der Profilseite auf **Foto entfernen**. Die Benutzeroberfläche aktualisiert sich sofort ohne Neuladen der Seite.
 
 #### Modus 2: Dynamisches Vektor-SVG-Mannequin
-1. Wenn kein Körperfoto vorhanden ist, rendert `AvatarViewer2D` die Datei `DynamicAvatar.jsx`.
-2. Das Mannequin erzeugt kontinuierliche kubische Bezier-Kurven ($C$- und $S$-Befehle) innerhalb einer festen viewBox von `0 0 200 450`.
-3. Das Anpassen von Körperparametern (Größe, Gewicht, Taille, Brust, Schultern, Hüften) oder das Auswählen eines Hauttons verändere die Silhouette in Echtzeit.
+1. Wenn kein Körperfoto vorhanden ist, rendert `AvatarViewer2D` die Komponente `DynamicAvatar.jsx`.
+2. Das Mannequin erzeugt kontinuierliche kubische Bezier-Kurven ($C$- und $S$-Befehle) in einer festen SVG-ViewBox `0 0 200 450`.
+3. Das Anpassen der Körperparameter (Größe, Gewicht, Taille, Brust, Schultern, Hüfte) oder das Auswählen eines Hauttons verändert die Silhouette des Mannequins dynamisch in Echtzeit.
 
 ---
 
-## 3. Technologie-Stack & Tiefeneinblick in die Funktionen
+## 3. Technologie-Stack & Tiefe Funktionsanalyse
 
 ### 3.1 Anatomischer Ellipsen-Divisor & Bezier-Mannequin-Generator
 
-`DynamicAvatar.jsx` berechnet planare 2D-Projektionsbreiten aus 3D-anatomischen Umfängen unter Verwendung eines **anatomischen Ellipsen-Divisors** ($\text{DIVISOR} = 2.65$):
+`DynamicAvatar.jsx` berechnet 2D-Projektionsbreiten aus 3D-Anatomieumfängen mithilfe eines **Anatomischen Ellipsen-Divisors** ($\text{DIVISOR} = 2.65$):
 
 $$\begin{aligned}
 w_{\text{shoulders}} &= (\text{shoulders} \times 1.1) \times (1.05 \text{ if male else } 0.95) \\
@@ -122,7 +122,7 @@ w_{\text{waist}} &= \left(\frac{\text{waist}}{2.65} \times 1.0\right) \times (0.
 w_{\text{hip}} &= \left(\frac{\text{hip}}{2.65} \times 1.05\right) \times (0.93 \text{ if male else } 1.05)
 \end{aligned}$$
 
-Die Körpersilhouette wird über SVG-Pfadbefehle konstruiert, die kubische Bezier-Steuerpunkte zuordnen:
+Die Körpersilhouette wird über SVG-Pfadbefehle konstruiert, die kubische Bezier-Kontrollpunkte abbilden:
 
 ```javascript
 // Bezier contour snippet from DynamicAvatar.jsx
@@ -136,26 +136,26 @@ const bodyPath = [
 ].join(' ');
 ```
 
-### 3.2 Kalibrierte Orientierungspunkt-Positionierung & Container-CSS-Verhältnisse
+### 3.2 Kalibrierte Landmarken-Positionierung & Container-CSS-Verhältnisse
 
-Um zu garantieren, dass Kleidungsstücke bündig sitzen, ohne Gesichtszüge zu überlappen oder Körperlücken zu hinterlassen, sind Overlay-Container in `AvatarViewer2D.jsx` an präzise CSS-Positionsverhältnisse gebunden:
+Um zu garantieren, dass Kleidungsstücke bündig sitzen, ohne Gesichtszüge zu verdecken oder Lücken am Körper zu hinterlassen, sind Overlay-Container in `AvatarViewer2D.jsx` an präzise CSS-Positionierungsverhältnisse gebunden:
 
-| Bekleidungskategorie | CSS-Positionsklasse | z-Index | Ausrichtungs-Orientierungspunkt |
+| Bekleidungskategorie | CSS-Positionsklasse | z-Index | Ausrichtungs-Landmarke |
 | --- | --- | --- | --- |
-| **Kopfbedeckung** | `top-[1%] left-1/2 w-[34%] aspect-square` | `z-30` | Scheitelpunkt des Kopfes |
-| **Brillen** | `top-[11%] left-1/2 w-[18%] h-[4.5%]` | `z-28` | Augen-Ebene |
-| **Accessoire / Halskette** | `top-[14.5%] left-1/2 w-[30%] aspect-square` | `z-25` | Halsansatz |
-| **Oberteil (Top)** | `top-[14.5%] left-1/2 w-[82%] h-[38%]` | `z-20` | Kragen zu Halsausschnitt |
-| **Oberbekleidung** | `top-[14.5%] left-1/2 w-[86%] h-[42%]` | `z-22` | Mantel-Schulter-Schichtung |
-| **Kleid** | `top-[14.5%] left-1/2 w-[82%] h-[68%]` | `z-20` | Volle Länge von Oben bis Knie |
+| **Kopfbedeckung** | `top-[1%] left-1/2 w-[34%] aspect-square` | `z-30` | Scheitelpunkt |
+| **Brille** | `top-[11%] left-1/2 w-[18%] h-[4.5%]` | `z-28` | Augenlinie |
+| **Accessoire / Kette** | `top-[14.5%] left-1/2 w-[30%] aspect-square` | `z-25` | Halsansatz |
+| **Oberteil (Top)** | `top-[14.5%] left-1/2 w-[82%] h-[38%]` | `z-20` | Kragen zu Ausschnittlinie |
+| **Oberbekleidung** | `top-[14.5%] left-1/2 w-[86%] h-[42%]` | `z-22` | Mantel-Layering über Schultern |
+| **Kleid** | `top-[14.5%] left-1/2 w-[82%] h-[68%]` | `z-20` | Gesamtlänge von Schulter bis Knie |
 | **Gürtel** | `top-[36.5%] left-1/2 w-[62%] h-[5%]` | `z-21` | Taillengürtelschlaufe |
-| **Unterteil (Hosen/Shorts)** | `top-[36.5%] left-1/2 w-[62%] h-[50%]` | `z-10` | Hosenbund zu Taillenlinie |
-| **Schuhe / Fußbekleidung** | `bottom-[2%] left-1/2 w-[46%] h-[12%]` | `z-15` | Knöchel- zu Fuß-Ebene |
-| **Handtasche** | `top-[40%] right-[-5%] w-[40%] h-[30%]` | `z-25` | Arm-Hänge-Ebene |
+| **Unterteil (Hosen/Shorts)** | `top-[36.5%] left-1/2 w-[62%] h-[50%]` | `z-10` | Hosenbund zur Taillenlinie |
+| **Schuhe / Fußbekleidung** | `bottom-[2%] left-1/2 w-[46%] h-[12%]` | `z-15` | Knöchel- zu Fußebene |
+| **Handtasche** | `top-[40%] right-[-5%] w-[40%] h-[30%]` | `z-25` | Armhöhe |
 
-### 3.3 Proportionale Breite der Kleidungsstücke
+### 3.3 Proportionale Breitenskalierung von Kleidungsstücken
 
-Zusätzlich zur Positionierung skalieren Kleidungsstücke dynamisch horizontal ($scaleX$) basierend auf den vom Benutzer gewählten Körperparametern:
+Zusätzlich zur Positionierung werden Kleidungsstücke basierend auf den vom Benutzer gewählten Körperparametern (brustreich, kräftig, schlank, breite Taille, breite Hüften) dynamisch horizontal ($scaleX$) skalierte:
 
 ```javascript
 // Derivation of garment container scale factors in AvatarViewer2D.jsx
@@ -176,14 +176,15 @@ const scales = useMemo(() => {
 
 ---
 
-## 4. Zusammenfassende Matrix der Positions- und Proportionskorrekturen
+## 4. Zusammenfassende Matrix der Positions- & Proportionskorrekturen
 
 | Identifiziertes Problem | Ursache | Angewandte Korrektur | Ergebnis |
 | --- | --- | --- | --- |
-| **Hemdkragen überlappt Gesicht** | Offset zu hoch positioniert (`top-[8.3%]` oder `top-[12.8%]`) | Oberen Container-Offset auf `top-[14.5%]` gesetzt | Hemdkragen sitzt bündig am Halsausschnitt des Avatars. |
-| **Hose/Shorts zu niedrig oder überlappend** | Offset zu tief positioniert (`top-[38.5%]`) | Unteren Container-Offset auf `top-[36.5%]` gesetzt | Hosenbund sitzt bündig an der Taillenlinie des Avatars. |
-| **Verzerrte Bildseitenverhältnisse** | Unbegrenzte Container-Streckung | `object-fit: contain` mit proportionaler `scaleX`-Anpassung angewendet | Behält das ursprüngliche Seitenverhältnis des Bildes ohne horizontale Verzerrungen bei. |
-| **Verzögerung beim Entfernen von Fotos** | Erneutes Abrufen des Seitenstatus erforderlich | Sofortige lokale Benutzerstatus-Synchronisierung in `Profile.jsx` implementiert | Die Fotoentfernung wird sofort ohne UI-Verzögerung angezeigt. |
+| **Hemdkragen verdeckt das Gesicht** | Container-Offset zu hoch positioniert (`top-[8.3%]` oder `top-[12.8%]`) | Oberer Container-Offset auf `top-[14.5%]` gesetzt | Hemdkragen liegt bündig an der Ausschnittlinie des Avatars an. |
+| **Hosen/Shorts zu tief oder überlappen Saum** | Container-Offset zu tief positioniert (`top-[38.5%]`) | Unterer Container-Offset auf `top-[36.5%]` gesetzt | Hosenbund sitzt bündig an der natürlichen Taillenlinie des Avatars. |
+| **Verzerrte Seitenverhältnisse der Kleidung** | Unbegrenzte Container-Stauchung/-Dehnung | `object-fit: contain` mit proportionaler `scaleX`-Anpassung angewendet | Behält das originale Seitenverhältnis der Kleidungsbilder ohne horizontale Verzerrung bei. |
+| **Verzögerung beim Entfernen des Fotos** | Erneutes Abrufen des Seitenstatus erforderlich | Sofortige lokale Benutzerstatus-Synchronisation in `Profile.jsx` implementiert | Entfernen des Fotos wird ohne Benutzeroberflächen-Verzögerung oder fehlerhaften Status angezeigt. |
 
 ---
-*Dokument automatisch von Narrator für DressApp zusammengestellt.*
+
+*Document compiled automatically by Narrator for DressApp.*
