@@ -58,17 +58,19 @@ export const AppLayout = () => {
     }
   }, [user, loading]);
 
-  // Background polling to keep devices in sync (Closet, Suitcase, and User Listings)
+  // Tab visibility revalidation to keep devices in sync (Closet, Suitcase, and User Listings)
   useEffect(() => {
     if (loading || !user) return;
 
-    const intervalId = setInterval(() => {
-      closetStore.incrementalSync().catch(() => {});
-      prewarmSuitcase({ force: true }).catch(() => {});
-      myListingsStore.ensure({ seller_id: user.id }, { force: true }).catch(() => {});
-    }, 30 * 1000); // sync every 30 seconds
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        closetStore.incrementalSync().catch(() => {});
+        prewarmSuitcase().catch(() => {});
+      }
+    };
 
-    return () => clearInterval(intervalId);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [user, loading]);
 
   // Web Push device synchronization logic
