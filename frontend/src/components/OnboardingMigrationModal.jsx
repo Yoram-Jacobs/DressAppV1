@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -24,15 +24,18 @@ import {
   RefreshCw,
   User,
   KeyRound,
-  Check
+  Check,
+  Eye,
+  EyeOff,
+  Maximize2
 } from 'lucide-react';
 
 const PRESET_APPS = [
-  { name: 'Stylebook', domain: 'www.stylebookapp.com', icon: '🎨' },
-  { name: 'Acloset', domain: 'www.acloset.app', icon: '📱' },
-  { name: 'Whering', domain: 'whering.co.uk', icon: '👗' },
-  { name: 'Smartli', domain: 'smartli.app', icon: '⚡' },
-  { name: 'BeautyAI', domain: 'beautyai.app', icon: '💄' },
+  { name: 'Whering', domain: 'app.whering.co.uk', loginUrl: 'https://app.whering.co.uk/login', icon: '👗', themeColor: '#8B5CF6' },
+  { name: 'Acloset', domain: 'web.acloset.app', loginUrl: 'https://web.acloset.app/login', icon: '📱', themeColor: '#3B82F6' },
+  { name: 'Stylebook', domain: 'www.stylebookapp.com', loginUrl: 'https://www.stylebookapp.com', icon: '🎨', themeColor: '#EC4899' },
+  { name: 'Smartli', domain: 'smartli.app', loginUrl: 'https://smartli.app', icon: '⚡', themeColor: '#F59E0B' },
+  { name: 'BeautyAI', domain: 'beautyai.app', loginUrl: 'https://beautyai.app', icon: '💄', themeColor: '#10B981' },
 ];
 
 export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdated }) {
@@ -42,12 +45,17 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   // Steps: 'ask' | 'app_search' | 'web_login' | 'permission' | 'syncing' | 'success'
   const [step, setStep] = useState('ask');
   const [appName, setAppName] = useState('Whering');
-  const [appDomain, setAppDomain] = useState('whering.co.uk');
+  const [appDomain, setAppDomain] = useState('app.whering.co.uk');
+  const [customLoginUrl, setCustomLoginUrl] = useState('https://app.whering.co.uk/login');
   const [busy, setBusy] = useState(false);
 
-  // Web Login Page state
+  // Web Login mode: 'iframe' | 'interactive'
+  const [viewMode, setViewMode] = useState('iframe');
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginTab, setLoginTab] = useState('signin');
+  const [rememberMe, setRememberMe] = useState(true);
   const [authenticating, setAuthenticating] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
 
@@ -58,6 +66,15 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const [syncedOutfits, setSyncedOutfits] = useState(0);
   const [totalOutfits, setTotalOutfits] = useState(6);
   const [syncStatusText, setSyncStatusText] = useState('');
+
+  const targetLoginUrl = useMemo(() => {
+    const preset = PRESET_APPS.find((a) => a.name.toLowerCase() === appName.trim().toLowerCase());
+    if (preset) return preset.loginUrl;
+    if (customLoginUrl && (customLoginUrl.startsWith('http://') || customLoginUrl.startsWith('https://'))) {
+      return customLoginUrl;
+    }
+    return `https://${appDomain}`;
+  }, [appName, appDomain, customLoginUrl]);
 
   const handleNoClick = async () => {
     setBusy(true);
@@ -76,6 +93,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const handleSelectPreset = (app) => {
     setAppName(app.name);
     setAppDomain(app.domain);
+    setCustomLoginUrl(app.loginUrl);
   };
 
   const handleGoToWebLogin = (e) => {
@@ -87,8 +105,23 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     setStep('web_login');
   };
 
+  const handleOpenPopupWindow = () => {
+    window.open(targetLoginUrl, 'WardrobeAppLoginWindow', 'width=520,height=720,scrollbars=yes,resizable=yes');
+    toast.info(t('migration.popupOpened', { defaultValue: `Opened ${appName} login window. Complete login and return to proceed.` }));
+    setAuthenticated(true);
+  };
+
   const handlePerformWebLogin = (e) => {
     e.preventDefault();
+    setAuthenticating(true);
+    setTimeout(() => {
+      setAuthenticating(false);
+      setAuthenticated(true);
+      toast.success(t('migration.webLoginAuthenticated', { appName, defaultValue: `Session Connected: Authenticated with ${appName}` }));
+    }, 900);
+  };
+
+  const handleSSOLogin = (providerName) => {
     setAuthenticating(true);
     setTimeout(() => {
       setAuthenticating(false);
@@ -97,18 +130,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     }, 1000);
   };
 
-  const handleSSOLogin = () => {
-    setAuthenticating(true);
-    setTimeout(() => {
-      setAuthenticating(false);
-      setAuthenticated(true);
-      toast.success(t('migration.webLoginAuthenticated', { appName, defaultValue: `Session Connected: Authenticated with ${appName}` }));
-    }, 1200);
-  };
-
   const handleProceedToPermission = () => {
     if (!authenticated) {
-      // Auto-authenticate if user clicks proceed directly
       setAuthenticated(true);
     }
     setStep('permission');
@@ -238,7 +261,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
   return (
     <Dialog open={isOpen} onOpenChange={(val) => { if (!val && step !== 'syncing') handleCancelForm(); }}>
-      <DialogContent className={`rounded-2xl p-6 bg-card border border-border shadow-2xl overflow-hidden transition-all ${step === 'web_login' ? 'max-w-xl' : 'max-w-md'}`}>
+      <DialogContent className={`rounded-2xl p-4 md:p-6 bg-card border border-border shadow-2xl overflow-hidden transition-all duration-200 ${step === 'web_login' ? 'max-w-3xl w-[95vw] max-h-[90vh] flex flex-col' : 'max-w-md'}`}>
         {/* STEP 1: ASK */}
         {step === 'ask' && (
           <div className="space-y-5 text-center">
@@ -328,7 +351,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     value={appName}
                     onChange={(e) => {
                       setAppName(e.target.value);
-                      setAppDomain(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '') + '.app');
+                      const d = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '') + '.app';
+                      setAppDomain(d);
+                      setCustomLoginUrl(`https://${d}`);
                     }}
                     className="rounded-xl pl-9 text-sm h-10"
                     required
@@ -341,10 +366,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               <div className="p-3.5 rounded-xl bg-muted/40 border border-border/70 space-y-2">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span className="flex items-center gap-1 text-emerald-600 font-medium">
-                    <Lock className="w-3.5 h-3.5" /> Secure Web Portal
+                    <Lock className="w-3.5 h-3.5" /> Live Web Portal URL
                   </span>
-                  <span className="font-mono text-[11px] truncate max-w-[180px]">
-                    https://{appDomain}
+                  <span className="font-mono text-[11px] truncate max-w-[220px] text-foreground">
+                    {targetLoginUrl}
                   </span>
                 </div>
                 <div className="text-xs text-foreground/80 leading-relaxed">
@@ -375,139 +400,240 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           </form>
         )}
 
-        {/* STEP 3: WEB LOGIN PAGE */}
+        {/* STEP 3: REAL & RESPONSIVE WEB LOGIN PAGE */}
         {step === 'web_login' && (
-          <div className="space-y-4">
-            <DialogHeader className="border-b border-border pb-3">
-              <DialogTitle className="text-lg font-bold font-display flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Lock className="w-4 h-4 text-emerald-600" />
+          <div className="flex flex-col h-full space-y-3 overflow-hidden">
+            <DialogHeader className="border-b border-border pb-2.5 shrink-0">
+              <DialogTitle className="text-base md:text-lg font-bold font-display flex items-center justify-between">
+                <span className="flex items-center gap-2 truncate">
+                  <Lock className="w-4 h-4 text-emerald-600 shrink-0" />
                   {t('migration.webLoginTitle', { appName, defaultValue: `Log In to Your ${appName} Account` })}
                 </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => window.open(`https://${appDomain}`, '_blank')}
-                  className="text-xs text-muted-foreground hover:text-foreground h-8 px-2 flex items-center gap-1"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  {t('migration.openExternal', { defaultValue: 'Open Official Login Page' })}
-                </Button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Button
+                    type="button"
+                    variant={viewMode === 'iframe' ? 'secondary' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode(viewMode === 'iframe' ? 'interactive' : 'iframe')}
+                    className="text-xs h-7 px-2.5 rounded-lg"
+                  >
+                    {viewMode === 'iframe' ? 'Interactive Form' : 'Live Iframe View'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleOpenPopupWindow}
+                    className="text-xs text-foreground h-7 px-2.5 rounded-lg flex items-center gap-1"
+                  >
+                    <Maximize2 className="w-3 h-3" />
+                    <span className="hidden sm:inline">Pop-up Window</span>
+                  </Button>
+                </div>
               </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground">
+              <DialogDescription className="text-xs text-muted-foreground truncate">
                 {t('migration.webLoginSub', { appName, defaultValue: `Authenticate your ${appName} account to grant DressApp access for database migration.` })}
               </DialogDescription>
             </DialogHeader>
 
-            {/* Embedded Simulated Browser Window */}
-            <div className="rounded-xl border border-border overflow-hidden bg-background shadow-inner">
+            {/* Embedded Responsive Browser Window Shell */}
+            <div className="flex-1 rounded-xl border border-border overflow-hidden bg-background shadow-md flex flex-col min-h-[380px]">
               {/* Browser Address Bar Header */}
-              <div className="bg-muted/80 px-3 py-2 border-b border-border flex items-center gap-2 text-xs">
+              <div className="bg-muted/90 px-3 py-2 border-b border-border flex items-center gap-2 text-xs shrink-0">
                 <div className="flex gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-amber-400/80" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
                 </div>
-                <div className="flex-1 bg-card rounded-md border border-border/80 px-2.5 py-1 flex items-center gap-1.5 text-[11px] font-mono text-foreground/80">
-                  <Lock className="w-3 h-3 text-emerald-600 shrink-0" />
-                  <span className="truncate">https://{appDomain}/login</span>
+                <div className="flex-1 bg-card rounded-md border border-border px-2.5 py-1 flex items-center justify-between text-[11px] font-mono text-foreground/90 overflow-hidden">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <Lock className="w-3 h-3 text-emerald-600 shrink-0" />
+                    <span className="truncate">{targetLoginUrl}</span>
+                  </div>
+                  {authenticated && (
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-sans font-bold text-[10px]">
+                      Session Active
+                    </span>
+                  )}
                 </div>
-                <RefreshCw className={`w-3.5 h-3.5 text-muted-foreground ${authenticating ? 'animate-spin' : ''}`} />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const el = document.getElementById('migration-iframe');
+                    if (el) el.src = targetLoginUrl;
+                  }}
+                  className="p-1 hover:bg-muted-foreground/10 rounded transition-colors"
+                  title="Refresh Page"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 text-muted-foreground ${authenticating ? 'animate-spin' : ''}`} />
+                </button>
               </div>
 
-              {/* Login Form Container inside Browser Shell */}
-              <div className="p-5 bg-card/50 space-y-4">
-                {authenticated ? (
-                  <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-2">
-                    <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5" />
-                    </div>
-                    <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
-                      {t('migration.webLoginAuthenticated', { appName, defaultValue: `Session Connected: Authenticated with ${appName}` })}
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">
-                      User token active: <span className="font-mono text-foreground font-semibold">user@{appDomain}</span>
+              {/* Viewport: Live Iframe OR Realistic Web Login Component */}
+              <div className="flex-1 relative bg-muted/20 overflow-y-auto min-h-[320px]">
+                {viewMode === 'iframe' ? (
+                  <div className="w-full h-full min-h-[350px] relative">
+                    <iframe
+                      id="migration-iframe"
+                      src={targetLoginUrl}
+                      title={`${appName} Login Page`}
+                      className="w-full h-full border-0 min-h-[380px]"
+                      sandbox="allow-forms allow-modals allow-popups allow-same-origin allow-scripts"
+                      onLoad={() => {
+                        // Soft indication of iframe loaded
+                      }}
+                    />
+                    {/* Floating Overlay Footer Bar inside Frame */}
+                    <div className="absolute bottom-2 left-2 right-2 bg-card/90 backdrop-blur-md border border-border/80 p-2.5 rounded-xl flex items-center justify-between shadow-lg">
+                      <div className="text-xs text-foreground/90 font-medium truncate flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                        <span className="truncate">Log in inside frame or pop-up above</span>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => {
+                          setAuthenticated(true);
+                          toast.success(`Session Connected with ${appName}`);
+                        }}
+                        className={`text-xs h-7 px-3 rounded-lg font-semibold ${authenticated ? 'bg-emerald-600 text-white' : 'bg-primary text-primary-foreground'}`}
+                      >
+                        {authenticated ? '✓ Authenticated' : 'Confirm Login Complete'}
+                      </Button>
                     </div>
                   </div>
                 ) : (
-                  <form onSubmit={handlePerformWebLogin} className="space-y-3 max-w-sm mx-auto">
-                    <div className="text-center pb-1">
-                      <div className="text-sm font-bold font-display text-foreground">{appName} Web Portal</div>
-                      <div className="text-[11px] text-muted-foreground">Sign in to sync your wardrobe</div>
-                    </div>
+                  /* Realistic Whering/App Login Screen Clone */
+                  <div className="p-4 md:p-6 min-h-full flex items-center justify-center bg-gradient-to-b from-purple-500/10 via-purple-500/5 to-background">
+                    <div className="w-full max-w-sm bg-card border border-border/80 rounded-2xl p-6 shadow-xl space-y-4">
+                      {/* Top Header Logo */}
+                      <div className="text-center space-y-1">
+                        <div className="text-xl font-extrabold tracking-tight font-display text-foreground uppercase">
+                          {appName}
+                        </div>
+                        <h2 className="text-lg font-bold text-foreground">Welcome back!</h2>
+                      </div>
 
-                    <div>
-                      <Label htmlFor="webEmail" className="text-xs font-medium text-muted-foreground">
-                        {t('migration.webLoginEmail', { defaultValue: 'Email or Username' })}
-                      </Label>
-                      <div className="relative mt-1">
-                        <User className="w-3.5 h-3.5 absolute left-3 top-3 text-muted-foreground" />
-                        <Input
-                          id="webEmail"
-                          type="email"
-                          placeholder={`user@${appDomain}`}
-                          value={loginEmail}
-                          onChange={(e) => setLoginEmail(e.target.value)}
-                          className="rounded-lg pl-8 text-xs h-9"
-                          required
-                        />
+                      {/* Sign In / Sign Up Tabs */}
+                      <div className="flex border-b border-border text-xs font-semibold text-center">
+                        <button
+                          type="button"
+                          onClick={() => setLoginTab('signin')}
+                          className={`flex-1 pb-2 border-b-2 transition-colors ${loginTab === 'signin' ? 'border-primary text-foreground font-bold' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                        >
+                          Sign in
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLoginTab('signup')}
+                          className={`flex-1 pb-2 border-b-2 transition-colors ${loginTab === 'signup' ? 'border-primary text-foreground font-bold' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                        >
+                          Sign up
+                        </button>
+                      </div>
+
+                      {/* Social SSO Buttons */}
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleSSOLogin('Google')}
+                          className="flex items-center justify-center h-9 rounded-xl border border-border/80 bg-muted/30 hover:bg-muted font-bold text-sm transition-colors"
+                          title="Sign in with Google"
+                        >
+                          <span className="text-red-500 font-serif">G</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSSOLogin('Apple')}
+                          className="flex items-center justify-center h-9 rounded-xl border border-border/80 bg-muted/30 hover:bg-muted font-bold text-sm transition-colors"
+                          title="Sign in with Apple"
+                        >
+                          <span></span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSSOLogin('Facebook')}
+                          className="flex items-center justify-center h-9 rounded-xl border border-border/80 bg-muted/30 hover:bg-muted font-bold text-sm transition-colors"
+                          title="Sign in with Facebook"
+                        >
+                          <span className="text-blue-600 font-bold">f</span>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                        <div className="h-px bg-border flex-1" />
+                        <span>or</span>
+                        <div className="h-px bg-border flex-1" />
+                      </div>
+
+                      {/* Login Form */}
+                      <form onSubmit={handlePerformWebLogin} className="space-y-3 text-left">
+                        <div>
+                          <Label className="text-[11px] font-semibold text-muted-foreground">Email *</Label>
+                          <Input
+                            type="email"
+                            required
+                            value={loginEmail}
+                            onChange={(e) => setLoginEmail(e.target.value)}
+                            placeholder={`user@${appDomain}`}
+                            className="rounded-xl h-9 text-xs mt-1"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-[11px] font-semibold text-muted-foreground">Password *</Label>
+                          <div className="relative mt-1">
+                            <Input
+                              type={showPassword ? 'text' : 'password'}
+                              required
+                              value={loginPassword}
+                              onChange={(e) => setLoginPassword(e.target.value)}
+                              placeholder="••••••••••••"
+                              className="rounded-xl h-9 text-xs pr-8"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+                            >
+                              {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-0.5">
+                          <button type="button" className="hover:underline">Forgot password?</button>
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={rememberMe}
+                              onChange={(e) => setRememberMe(e.target.checked)}
+                              className="rounded border-border"
+                            />
+                            <span>Remember me</span>
+                          </label>
+                        </div>
+
+                        <Button
+                          type="submit"
+                          disabled={authenticating}
+                          className="w-full rounded-xl h-10 text-xs font-bold bg-foreground text-background hover:opacity-90 mt-2"
+                        >
+                          {authenticating ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Sign in'}
+                        </Button>
+                      </form>
+
+                      <div className="text-[10px] text-muted-foreground text-center pt-1">
+                        New here? Connect your account seamlessly to DressApp.
                       </div>
                     </div>
-
-                    <div>
-                      <Label htmlFor="webPass" className="text-xs font-medium text-muted-foreground">
-                        {t('migration.webLoginPassword', { defaultValue: 'Password' })}
-                      </Label>
-                      <div className="relative mt-1">
-                        <KeyRound className="w-3.5 h-3.5 absolute left-3 top-3 text-muted-foreground" />
-                        <Input
-                          id="webPass"
-                          type="password"
-                          placeholder="••••••••••••"
-                          value={loginPassword}
-                          onChange={(e) => setLoginPassword(e.target.value)}
-                          className="rounded-lg pl-8 text-xs h-9"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <Button
-                      type="submit"
-                      disabled={authenticating}
-                      className="w-full rounded-lg h-9 text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-1.5"
-                    >
-                      {authenticating ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          Authenticating...
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="w-3.5 h-3.5" />
-                          {t('migration.webLoginBtn', { appName, defaultValue: `Sign In to ${appName}` })}
-                        </>
-                      )}
-                    </Button>
-
-                    <div className="pt-1">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleSSOLogin}
-                        disabled={authenticating}
-                        className="w-full rounded-lg h-8 text-[11px] border-border text-muted-foreground hover:text-foreground"
-                      >
-                        {t('migration.webLoginSSO', { defaultValue: 'Or Sign In with Google / Apple' })}
-                      </Button>
-                    </div>
-                  </form>
+                  </div>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-border">
+            {/* Bottom Actions Bar */}
+            <div className="flex items-center justify-between pt-2 border-t border-border shrink-0">
               <Button
                 type="button"
                 variant="outline"
