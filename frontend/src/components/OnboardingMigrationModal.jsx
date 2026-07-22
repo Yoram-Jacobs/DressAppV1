@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { closetStore } from '@/lib/closetStore';
+import { outfitStore } from '@/lib/outfitStore';
 import {
   Loader2,
   ArrowRight,
@@ -136,7 +137,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     }, 900);
   };
 
-  // Helper to generate dynamic items & outfits based on requested counts for ANY app
+  // Helper to generate dynamic items & outfits WITH HIGH-QUALITY FASHION IMAGES based on requested counts
   const generateImportPayload = (nameOfApp, targetItemsCount, targetOutfitsCount) => {
     const numItems = Math.max(1, parseInt(targetItemsCount, 10) || 95);
     const numOutfits = Math.max(0, parseInt(targetOutfitsCount, 10) || 2);
@@ -145,17 +146,59 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     const colors = ['Black', 'White', 'Blue', 'Beige', 'Navy', 'Grey', 'Brown', 'Red', 'Pink', 'Green', 'Yellow', 'Olive'];
     const brands = ['Zara', 'Nike', 'Uniqlo', 'COS', 'Levi\'s', 'H&M', 'Mango', 'Burberry', 'Massimo Dutti', 'Clarks', 'Converse', 'Adidas', 'Puma', 'Gap', 'Fossil'];
 
+    const categoryImages = {
+      Top: [
+        'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=600&q=80',
+      ],
+      Bottom: [
+        'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1582142306909-195724d33ffc?auto=format&fit=crop&w=600&q=80',
+      ],
+      Footwear: [
+        'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1560343776-97e7d202ff0e?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=600&q=80',
+      ],
+      Outerwear: [
+        'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=600&q=80',
+      ],
+      Dress: [
+        'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=600&q=80',
+      ],
+      Accessory: [
+        'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80',
+      ],
+    };
+
     const items = [];
     for (let i = 1; i <= numItems; i++) {
       const cat = categories[i % categories.length];
       const col = colors[i % colors.length];
       const br = brands[i % brands.length];
+      const imgs = categoryImages[cat] || categoryImages.Top;
+      const imgUrl = imgs[i % imgs.length];
+
       items.push({
         id: `appA_${i}`,
         title: `${col} ${cat} ${i}`,
         category: cat,
         color: col,
         brand: br,
+        image_url: imgUrl,
+        photo_url: imgUrl,
+        cutout_url: imgUrl,
         wear_count: (i * 3) % 22,
       });
     }
@@ -169,9 +212,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         name: `${nameOfApp} Favorite Look ${j}`,
         description: `Saved outfit combination from ${nameOfApp}`,
         garments: [
-          { item_id: topItem.id, role: 'Top', title: topItem.title },
-          { item_id: bottomItem.id, role: 'Bottom', title: bottomItem.title },
-          { item_id: shoeItem.id, role: 'Footwear', title: shoeItem.title }
+          { item_id: topItem.id, role: 'Top', title: topItem.title, image_url: topItem.image_url },
+          { item_id: bottomItem.id, role: 'Bottom', title: bottomItem.title, image_url: bottomItem.image_url },
+          { item_id: shoeItem.id, role: 'Footwear', title: shoeItem.title, image_url: shoeItem.image_url }
         ]
       });
     }
@@ -234,6 +277,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         outfits: dynamicOutfits,
       });
 
+      // Prewarm stores immediately after backend write
+      await closetStore.prewarm({ force: true }).catch(() => {});
+      await outfitStore.prewarm({ force: true }).catch(() => {});
+
       setProgressPct(100);
       setSyncComplete(true);
       await new Promise((r) => setTimeout(r, 200));
@@ -248,6 +295,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     setBusy(true);
     try {
       await closetStore.prewarm({ force: true });
+      await outfitStore.prewarm({ force: true });
       if (onFlagUpdated) onFlagUpdated('Migrate');
       onClose();
       nav('/closet');

@@ -2739,6 +2739,7 @@ async def import_competitor_closet(
     if docs:
         await repos.insert_many(db.closet_items, docs)
 
+    doc_map = {doc["id"]: doc for doc in docs}
     outfit_docs = []
     for outfit in raw_outfits:
         o_id = str(uuid.uuid4())
@@ -2748,11 +2749,13 @@ async def import_competitor_closet(
             g_dict = g if isinstance(g, dict) else {}
             old_item_id = str(g_dict.get("closet_item_id") or g_dict.get("item_id") or g_dict.get("id") or "")
             mapped_item_id = item_id_map.get(old_item_id) or (old_item_id if old_item_id.startswith("item_") else None)
+            matched_doc = doc_map.get(mapped_item_id, {})
+            img = g_dict.get("image_url") or g_dict.get("photo_url") or matched_doc.get("image_url") or matched_doc.get("cutout_url")
             garments.append({
                 "closet_item_id": mapped_item_id,
-                "role": g_dict.get("role") or g_dict.get("category") or "Garment",
-                "title": g_dict.get("title") or g_dict.get("name") or "Garment",
-                "image_url": g_dict.get("image_url") or g_dict.get("photo_url"),
+                "role": g_dict.get("role") or g_dict.get("category") or matched_doc.get("category") or "Garment",
+                "title": g_dict.get("title") or g_dict.get("name") or matched_doc.get("title") or "Garment",
+                "image_url": img,
             })
 
         o_doc = {
