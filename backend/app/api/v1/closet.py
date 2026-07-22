@@ -3066,39 +3066,22 @@ async def import_competitor_closet_stream(
                             b64_orig = base64.b64encode(img_bytes).decode("utf-8")
                             orig_data_url = f"data:image/jpeg;base64,{b64_orig}"
 
-                            bg_task = asyncio.create_task(background_matting.remove_background(img_bytes))
-                            cp_task = asyncio.create_task(_cp.parse_garments(img_bytes))
-                            gv_task = asyncio.create_task(garment_vision_service.analyze(img_bytes)) if garment_vision_service else None
+                            # Run fast local SegFormer and Background Matting concurrently with a 3s timeout
+                            try:
+                                bg_task = asyncio.create_task(background_matting.remove_background(img_bytes))
+                                cp_task = asyncio.create_task(_cp.parse_garments(img_bytes))
+                                await asyncio.wait_for(asyncio.gather(bg_task, cp_task, return_exceptions=True), timeout=3.0)
 
-                            tasks = [bg_task, cp_task]
-                            if gv_task:
-                                tasks.append(gv_task)
-                            await asyncio.gather(*tasks, return_exceptions=True)
+                                bg_res = bg_task.result() if bg_task.done() and not bg_task.exception() else {}
+                                garments = cp_task.result() if cp_task.done() and not cp_task.exception() else []
 
-                            bg_res = bg_task.result() if not bg_task.exception() else {}
-                            garments = cp_task.result() if not cp_task.exception() else []
-                            gv_analysis = gv_task.result() if gv_task and not gv_task.exception() else {}
+                                png_bytes = bg_res.get("png_bytes") or bg_res.get("image_png")
+                                if png_bytes:
+                                    b64_png = base64.b64encode(png_bytes).decode("utf-8")
+                                    cutout_url = f"data:image/png;base64,{b64_png}"
+                                else:
+                                    cutout_url = orig_data_url
 
-                            png_bytes = bg_res.get("png_bytes") or bg_res.get("image_png")
-                            if png_bytes:
-                                b64_png = base64.b64encode(png_bytes).decode("utf-8")
-                                cutout_url = f"data:image/png;base64,{b64_png}"
-                            else:
-                                cutout_url = orig_data_url
-
-                            if isinstance(gv_analysis, dict) and gv_analysis.get("category"):
-                                category = gv_analysis.get("category") or category
-                                sub_category = gv_analysis.get("sub_category") or category
-                                color = gv_analysis.get("primary_color") or gv_analysis.get("color") or "Neutral"
-                                pattern = gv_analysis.get("pattern")
-                                material = gv_analysis.get("material")
-                                brand = gv_analysis.get("brand") or brand
-                                title = gv_analysis.get("title") or f"{color} {category}"
-                                quality = gv_analysis.get("quality")
-                                condition = gv_analysis.get("condition")
-                                state = gv_analysis.get("state")
-                                repair_advice = gv_analysis.get("repair_advice")
-                            else:
                                 if garments:
                                     top_g = garments[0]
                                     det_label = str(top_g.get("label") or top_g.get("kind") or "").lower()
@@ -3114,9 +3097,14 @@ async def import_competitor_closet_stream(
                                         category = "Outerwear"
                                     elif any(k in det_label for k in ["belt", "bag", "accessory", "hat", "watch"]):
                                         category = "Accessory"
-                                sub_category = category
-                                if not title or title.startswith("Pasted Garment") or title.startswith("Garment"):
-                                    title = f"{color} {category}"
+                            except Exception as loc_err:
+                                logger.warning("Stream local processing timeout: %s", loc_err)
+                                cutout_url = orig_data_url
+
+                            color = _determine_color(pil_img)
+                            sub_category = category
+                            if not title or title.startswith("Pasted Garment") or title.startswith("Garment"):
+                                title = f"{color} {category}"
                 except Exception as e:
                     logger.warning("Stream garment processing err: %s", e)
 
