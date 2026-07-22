@@ -11,6 +11,7 @@ import base64
 import json
 import logging
 import os
+import uuid
 from datetime import datetime, timezone
 from typing import Any, Literal
 
