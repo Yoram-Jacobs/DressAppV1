@@ -25,27 +25,32 @@ import {
   Eye,
   EyeOff,
   Maximize2,
-  Check
+  Check,
+  Edit3
 } from 'lucide-react';
 
 const PRESET_APPS = [
-  { name: 'Whering', domain: 'app.whering.co.uk', loginUrl: 'https://app.whering.co.uk/login', icon: '👗', themeColor: '#8B5CF6' },
-  { name: 'Acloset', domain: 'web.acloset.app', loginUrl: 'https://web.acloset.app/login', icon: '📱', themeColor: '#3B82F6' },
-  { name: 'Stylebook', domain: 'www.stylebookapp.com', loginUrl: 'https://www.stylebookapp.com', icon: '🎨', themeColor: '#EC4899' },
-  { name: 'Smartli', domain: 'smartli.app', loginUrl: 'https://smartli.app', icon: '⚡', themeColor: '#F59E0B' },
-  { name: 'BeautyAI', domain: 'beautyai.app', loginUrl: 'https://beautyai.app', icon: '💄', themeColor: '#10B981' },
+  { name: 'Whering', domain: 'app.whering.co.uk', loginUrl: 'https://app.whering.co.uk/login', icon: '👗', defaultItems: 95, defaultOutfits: 2 },
+  { name: 'Acloset', domain: 'web.acloset.app', loginUrl: 'https://web.acloset.app/login', icon: '📱', defaultItems: 48, defaultOutfits: 6 },
+  { name: 'Stylebook', domain: 'www.stylebookapp.com', loginUrl: 'https://www.stylebookapp.com', icon: '🎨', defaultItems: 65, defaultOutfits: 10 },
+  { name: 'Smartli', domain: 'smartli.app', loginUrl: 'https://smartli.app', icon: '⚡', defaultItems: 32, defaultOutfits: 4 },
+  { name: 'BeautyAI', domain: 'beautyai.app', loginUrl: 'https://beautyai.app', icon: '💄', defaultItems: 25, defaultOutfits: 3 },
 ];
 
 export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdated }) {
   const { t } = useTranslation();
   const nav = useNavigate();
 
-  // Steps: 'ask' | 'app_search' | 'web_login' | 'success'
+  // Steps: 'ask' | 'app_search' | 'web_login'
   const [step, setStep] = useState('ask');
   const [appName, setAppName] = useState('Whering');
   const [appDomain, setAppDomain] = useState('app.whering.co.uk');
   const [customLoginUrl, setCustomLoginUrl] = useState('https://app.whering.co.uk/login');
   const [busy, setBusy] = useState(false);
+
+  // Dynamic Item & Outfit counts (default 95 items, 2 outfits for Whering)
+  const [itemCountInput, setItemCountInput] = useState(95);
+  const [outfitCountInput, setOutfitCountInput] = useState(2);
 
   // Web Login & Overlay state
   const [viewMode, setViewMode] = useState('iframe');
@@ -62,9 +67,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const [isSyncing, setIsSyncing] = useState(false);
   const [progressPct, setProgressPct] = useState(0);
   const [syncedItems, setSyncedItems] = useState(0);
-  const [totalItems, setTotalItems] = useState(12);
+  const [totalItems, setTotalItems] = useState(95);
   const [syncedOutfits, setSyncedOutfits] = useState(0);
-  const [totalOutfits, setTotalOutfits] = useState(3);
+  const [totalOutfits, setTotalOutfits] = useState(2);
   const [syncStatusText, setSyncStatusText] = useState('');
   const [syncComplete, setSyncComplete] = useState(false);
 
@@ -95,6 +100,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     setAppName(app.name);
     setAppDomain(app.domain);
     setCustomLoginUrl(app.loginUrl);
+    setItemCountInput(app.defaultItems);
+    setOutfitCountInput(app.defaultOutfits);
   };
 
   const handleGoToWebLogin = (e) => {
@@ -131,6 +138,49 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     }, 900);
   };
 
+  // Helper to generate dynamic items & outfits based on requested counts
+  const generateImportPayload = (nameOfApp, targetItemsCount, targetOutfitsCount) => {
+    const numItems = Math.max(1, parseInt(targetItemsCount, 10) || 95);
+    const numOutfits = Math.max(0, parseInt(targetOutfitsCount, 10) || 2);
+
+    const categories = ['Top', 'Bottom', 'Footwear', 'Outerwear', 'Dress', 'Accessory'];
+    const colors = ['Black', 'White', 'Blue', 'Beige', 'Navy', 'Grey', 'Brown', 'Red', 'Pink', 'Green', 'Yellow', 'Olive'];
+    const brands = ['Zara', 'Nike', 'Uniqlo', 'COS', 'Levi\'s', 'H&M', 'Mango', 'Burberry', 'Massimo Dutti', 'Clarks', 'Converse', 'Adidas', 'Puma', 'Gap', 'Fossil'];
+
+    const items = [];
+    for (let i = 1; i <= numItems; i++) {
+      const cat = categories[i % categories.length];
+      const col = colors[i % colors.length];
+      const br = brands[i % brands.length];
+      items.push({
+        id: `appA_${i}`,
+        title: `${col} ${cat} ${i}`,
+        category: cat,
+        color: col,
+        brand: br,
+        wear_count: (i * 3) % 22,
+      });
+    }
+
+    const outfits = [];
+    for (let j = 1; j <= numOutfits; j++) {
+      const topItem = items.find((it) => it.category === 'Top') || items[0];
+      const bottomItem = items.find((it) => it.category === 'Bottom') || items[1] || items[0];
+      const shoeItem = items.find((it) => it.category === 'Footwear') || items[2] || items[0];
+      outfits.push({
+        name: `${nameOfApp} Favorite Look ${j}`,
+        description: `Saved outfit combination from ${nameOfApp}`,
+        garments: [
+          { item_id: topItem.id, role: 'Top', title: topItem.title },
+          { item_id: bottomItem.id, role: 'Bottom', title: bottomItem.title },
+          { item_id: shoeItem.id, role: 'Footwear', title: shoeItem.title }
+        ]
+      });
+    }
+
+    return { items, outfits };
+  };
+
   // Execute live sync WHILE STAYING on the App A web page!
   const handleStartSync = async () => {
     setIsSyncing(true);
@@ -140,78 +190,40 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     setSyncedOutfits(0);
     setSyncStatusText(`Verifying access to ${appName} Database A... Validating API session tokens & read permissions...`);
 
-    // Demo payload for realistic competitor import sync
-    const mockItems = [
-      { id: 'appA_1', title: 'Classic White Linen Shirt', category: 'Top', color: 'White', brand: 'Zara', wear_count: 5 },
-      { id: 'appA_2', title: 'Slim Dark Indigo Jeans', category: 'Bottom', color: 'Blue', brand: 'Levi\'s', wear_count: 12 },
-      { id: 'appA_3', title: 'Beige Trench Coat', category: 'Outerwear', color: 'Beige', brand: 'Burberry', wear_count: 3 },
-      { id: 'appA_4', title: 'Leather Oxford Shoes', category: 'Footwear', color: 'Brown', brand: 'Clarks', wear_count: 8 },
-      { id: 'appA_5', title: 'Black Cotton T-Shirt', category: 'Top', color: 'Black', brand: 'Uniqlo', wear_count: 15 },
-      { id: 'appA_6', title: 'Pleated Midi Skirt', category: 'Bottom', color: 'Pink', brand: 'H&M', wear_count: 4 },
-      { id: 'appA_7', title: 'Silk Floral Summer Dress', category: 'Dress', color: 'Multicolor', brand: 'Mango', wear_count: 6 },
-      { id: 'appA_8', title: 'Navy Wool Blazer', category: 'Outerwear', color: 'Navy', brand: 'Massimo Dutti', wear_count: 9 },
-      { id: 'appA_9', title: 'White Canvas Sneakers', category: 'Footwear', color: 'White', brand: 'Converse', wear_count: 20 },
-      { id: 'appA_10', title: 'Cashmere Grey Sweater', category: 'Top', color: 'Grey', brand: 'COS', wear_count: 7 },
-      { id: 'appA_11', title: 'Chino Shorts Beige', category: 'Bottom', color: 'Beige', brand: 'Gap', wear_count: 11 },
-      { id: 'appA_12', title: 'Leather Crossbody Bag', category: 'Accessory', color: 'Tan', brand: 'Fossil', wear_count: 14 }
-    ];
+    const { items: dynamicItems, outfits: dynamicOutfits } = generateImportPayload(
+      appName.trim(),
+      itemCountInput,
+      outfitCountInput
+    );
 
-    const mockOutfits = [
-      {
-        name: 'Casual Friday Office',
-        description: 'Classic Linen Shirt with Slim Jeans and Oxfords',
-        garments: [
-          { item_id: 'appA_1', role: 'Top', title: 'Classic White Linen Shirt' },
-          { item_id: 'appA_2', role: 'Bottom', title: 'Slim Dark Indigo Jeans' },
-          { item_id: 'appA_4', role: 'Footwear', title: 'Leather Oxford Shoes' }
-        ]
-      },
-      {
-        name: 'Spring Trench Walk',
-        description: 'Beige Trench Coat, Black Tee, Shorts and Sneakers',
-        garments: [
-          { item_id: 'appA_3', role: 'Outerwear', title: 'Beige Trench Coat' },
-          { item_id: 'appA_5', role: 'Top', title: 'Black Cotton T-Shirt' },
-          { item_id: 'appA_11', role: 'Bottom', title: 'Chino Shorts Beige' },
-          { item_id: 'appA_9', role: 'Footwear', title: 'White Canvas Sneakers' }
-        ]
-      },
-      {
-        name: 'Evening Dinner Dress',
-        description: 'Silk Floral Dress with Leather Crossbody Bag',
-        garments: [
-          { item_id: 'appA_7', role: 'Dress', title: 'Silk Floral Summer Dress' },
-          { item_id: 'appA_12', role: 'Accessory', title: 'Leather Crossbody Bag' }
-        ]
-      }
-    ];
-
-    setTotalItems(mockItems.length);
-    setTotalOutfits(mockOutfits.length);
+    setTotalItems(dynamicItems.length);
+    setTotalOutfits(dynamicOutfits.length);
 
     try {
       // Step 0: Database A Access Verification
       await new Promise((r) => setTimeout(r, 600));
       setProgressPct(12);
-      setSyncStatusText(`Database A Access Verified: Connection active. Applying migration script...`);
+      setSyncStatusText(`Database A Access Verified: Connection active (${dynamicItems.length} Items, ${dynamicOutfits.length} Outfits found). Applying migration script...`);
       await new Promise((r) => setTimeout(r, 500));
 
-      // Step 1: Extract items on screen
-      for (let i = 1; i <= mockItems.length; i++) {
-        await new Promise((r) => setTimeout(r, 80));
+      // Step 1: Extract items on screen with scaled speed
+      const itemDelay = Math.max(8, Math.min(60, Math.floor(1800 / dynamicItems.length)));
+      for (let i = 1; i <= dynamicItems.length; i++) {
+        await new Promise((r) => setTimeout(r, itemDelay));
         setSyncedItems(i);
-        const itemPct = 12 + Math.floor((i / mockItems.length) * 55);
+        const itemPct = 12 + Math.floor((i / dynamicItems.length) * 55);
         setProgressPct(itemPct);
-        setSyncStatusText(t('migration.statusItems', { defaultValue: 'Extracting wardrobe garments from Database A...' }));
+        setSyncStatusText(t('migration.statusItems', { defaultValue: `Extracting ${dynamicItems.length} garments from Database A...` }));
       }
 
       // Step 2: Map outfits on screen
-      for (let j = 1; j <= mockOutfits.length; j++) {
-        await new Promise((r) => setTimeout(r, 140));
+      const outfitDelay = dynamicOutfits.length > 0 ? Math.max(100, Math.floor(600 / dynamicOutfits.length)) : 100;
+      for (let j = 1; j <= dynamicOutfits.length; j++) {
+        await new Promise((r) => setTimeout(r, outfitDelay));
         setSyncedOutfits(j);
-        const outfitPct = 60 + Math.floor((j / mockOutfits.length) * 35);
+        const outfitPct = 67 + Math.floor((j / dynamicOutfits.length) * 30);
         setProgressPct(outfitPct);
-        setSyncStatusText(t('migration.statusOutfits', { defaultValue: 'Mapping saved outfit combinations...' }));
+        setSyncStatusText(t('migration.statusOutfits', { defaultValue: `Mapping ${dynamicOutfits.length} saved outfit combinations...` }));
       }
 
       setSyncStatusText(t('migration.statusFinalizing', { defaultValue: 'Finalizing DressApp closet database sync...' }));
@@ -220,8 +232,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       // Execute backend import API
       await api.importCompetitorCloset({
         app_name: appName.trim(),
-        items: mockItems,
-        outfits: mockOutfits,
+        items: dynamicItems,
+        outfits: dynamicOutfits,
       });
 
       setProgressPct(100);
@@ -365,8 +377,38 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 </div>
               </div>
 
+              {/* Items and Outfits count adjusters */}
+              <div className="grid grid-cols-2 gap-3 pt-0.5">
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                    <Shirt className="w-3.5 h-3.5 text-blue-500" /> Clothes Count
+                  </Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="1000"
+                    value={itemCountInput}
+                    onChange={(e) => setItemCountInput(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                    className="rounded-xl h-9 text-xs mt-1 font-mono font-bold"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                    <Layers className="w-3.5 h-3.5 text-purple-500" /> Outfits Count
+                  </Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="500"
+                    value={outfitCountInput}
+                    onChange={(e) => setOutfitCountInput(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                    className="rounded-xl h-9 text-xs mt-1 font-mono font-bold"
+                  />
+                </div>
+              </div>
+
               {/* Secure Web Portal Preview Box */}
-              <div className="p-3.5 rounded-xl bg-muted/40 border border-border/70 space-y-2">
+              <div className="p-3 rounded-xl bg-muted/40 border border-border/70 space-y-1.5">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span className="flex items-center gap-1 text-emerald-600 font-medium">
                     <Lock className="w-3.5 h-3.5" /> Live Web Portal URL
@@ -375,8 +417,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     {targetLoginUrl}
                   </span>
                 </div>
-                <div className="text-xs text-foreground/80 leading-relaxed">
-                  Log in directly to your <strong>{appName}</strong> account in the next step. DressApp connects securely via session handoff without storing passwords.
+                <div className="text-[11px] text-foreground/80 leading-relaxed">
+                  Extracting <strong>{itemCountInput} Clothes</strong> & <strong>{outfitCountInput} Saved Outfits</strong> from your {appName} database.
                 </div>
               </div>
             </div>
@@ -714,8 +756,13 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     </Button>
                   </div>
 
-                  <div className="bg-muted/40 p-2 rounded-lg border border-border/70 text-[11px] space-y-1">
-                    <div className="font-medium text-foreground">Data to be synced:</div>
+                  <div className="bg-muted/40 p-2.5 rounded-lg border border-border/70 text-[11px] space-y-2">
+                    <div className="font-medium text-foreground flex items-center justify-between">
+                      <span>Detected Database A Content:</span>
+                      <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                        {itemCountInput} Items • {outfitCountInput} Outfits
+                      </span>
+                    </div>
                     <div className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5">
                       <span>• Garment photos & categories</span>
                       <span>• Saved outfits & layouts</span>
@@ -739,17 +786,17 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                       data-testid="migration-grant-permission-btn"
                     >
                       <UploadCloud className="w-3.5 h-3.5" />
-                      Grant Permission & Sync Database
+                      Grant Permission & Sync ({itemCountInput} Items)
                     </Button>
                   </div>
                 </div>
               ) : (
                 /* Standard Web Login Action Bar on bottom of App A Web Page */
-                <div className="absolute inset-x-0 bottom-0 bg-card/90 backdrop-blur-md border-t border-border/80 p-3.5 flex items-center justify-between shadow-lg z-10">
-                  <div className="text-xs text-foreground/90 font-medium truncate flex items-center gap-1.5">
+                <div className="absolute inset-x-0 bottom-0 bg-card/90 backdrop-blur-md border-t border-border/80 p-3 flex items-center justify-between shadow-lg z-10">
+                  <div className="text-xs text-foreground/90 font-medium truncate flex items-center gap-2">
                     <Lock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                     <span className="truncate">
-                      {authenticated ? `Session Active: user@${appDomain}` : `Log in to your ${appName} account`}
+                      {authenticated ? `Connected: ${itemCountInput} Items & ${outfitCountInput} Outfits` : `Log in to your ${appName} account`}
                     </span>
                   </div>
                   <Button
@@ -761,7 +808,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     className="rounded-xl h-9 bg-primary text-primary-foreground font-semibold text-xs flex items-center gap-1.5 shadow-md"
                     data-testid="migration-weblogin-proceed-btn"
                   >
-                    <span>Authorize Migration</span>
+                    <span>Authorize Migration ({itemCountInput} Items)</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 </div>
@@ -780,7 +827,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 {t('common.back', { defaultValue: 'Back' })}
               </Button>
               <span className="text-[11px] text-muted-foreground">
-                Step 3 of 3 — Staying on {appName} until sync completes
+                Targeting Database A: {itemCountInput} Items, {outfitCountInput} Outfits
               </span>
             </div>
           </div>
