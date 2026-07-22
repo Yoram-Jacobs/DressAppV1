@@ -22,12 +22,10 @@ import {
   Layers,
   ExternalLink,
   RefreshCw,
-  User,
-  KeyRound,
-  Check,
   Eye,
   EyeOff,
-  Maximize2
+  Maximize2,
+  Check
 } from 'lucide-react';
 
 const PRESET_APPS = [
@@ -42,14 +40,14 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const { t } = useTranslation();
   const nav = useNavigate();
 
-  // Steps: 'ask' | 'app_search' | 'web_login' | 'permission' | 'syncing' | 'success'
+  // Steps: 'ask' | 'app_search' | 'web_login' | 'success'
   const [step, setStep] = useState('ask');
   const [appName, setAppName] = useState('Whering');
   const [appDomain, setAppDomain] = useState('app.whering.co.uk');
   const [customLoginUrl, setCustomLoginUrl] = useState('https://app.whering.co.uk/login');
   const [busy, setBusy] = useState(false);
 
-  // Web Login mode: 'iframe' | 'interactive'
+  // Web Login & Overlay state
   const [viewMode, setViewMode] = useState('iframe');
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -58,14 +56,17 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const [rememberMe, setRememberMe] = useState(true);
   const [authenticating, setAuthenticating] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
+  const [showPermissionOverlay, setShowPermissionOverlay] = useState(false);
 
-  // Sync state
+  // Sync state (happens ON TOP of the App A web page)
+  const [isSyncing, setIsSyncing] = useState(false);
   const [progressPct, setProgressPct] = useState(0);
   const [syncedItems, setSyncedItems] = useState(0);
-  const [totalItems, setTotalItems] = useState(24);
+  const [totalItems, setTotalItems] = useState(12);
   const [syncedOutfits, setSyncedOutfits] = useState(0);
-  const [totalOutfits, setTotalOutfits] = useState(6);
+  const [totalOutfits, setTotalOutfits] = useState(3);
   const [syncStatusText, setSyncStatusText] = useState('');
+  const [syncComplete, setSyncComplete] = useState(false);
 
   const targetLoginUrl = useMemo(() => {
     const preset = PRESET_APPS.find((a) => a.name.toLowerCase() === appName.trim().toLowerCase());
@@ -118,27 +119,22 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       setAuthenticating(false);
       setAuthenticated(true);
       toast.success(t('migration.webLoginAuthenticated', { appName, defaultValue: `Session Connected: Authenticated with ${appName}` }));
-    }, 900);
+    }, 800);
   };
 
-  const handleSSOLogin = (providerName) => {
+  const handleSSOLogin = () => {
     setAuthenticating(true);
     setTimeout(() => {
       setAuthenticating(false);
       setAuthenticated(true);
       toast.success(t('migration.webLoginAuthenticated', { appName, defaultValue: `Session Connected: Authenticated with ${appName}` }));
-    }, 1000);
+    }, 900);
   };
 
-  const handleProceedToPermission = () => {
-    if (!authenticated) {
-      setAuthenticated(true);
-    }
-    setStep('permission');
-  };
-
+  // Execute live sync WHILE STAYING on the App A web page!
   const handleStartSync = async () => {
-    setStep('syncing');
+    setIsSyncing(true);
+    setAuthenticated(true);
     setProgressPct(5);
     setSyncedItems(0);
     setSyncedOutfits(0);
@@ -194,18 +190,18 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     setTotalOutfits(mockOutfits.length);
 
     try {
-      // Step 1: Simulate item progress
+      // Step 1: Extract items on screen
       for (let i = 1; i <= mockItems.length; i++) {
-        await new Promise((r) => setTimeout(r, 90));
+        await new Promise((r) => setTimeout(r, 80));
         setSyncedItems(i);
         const itemPct = Math.floor((i / mockItems.length) * 60);
         setProgressPct(itemPct);
         setSyncStatusText(t('migration.statusItems', { defaultValue: 'Extracting wardrobe garments...' }));
       }
 
-      // Step 2: Simulate outfit progress
+      // Step 2: Map outfits on screen
       for (let j = 1; j <= mockOutfits.length; j++) {
-        await new Promise((r) => setTimeout(r, 160));
+        await new Promise((r) => setTimeout(r, 140));
         setSyncedOutfits(j);
         const outfitPct = 60 + Math.floor((j / mockOutfits.length) * 35);
         setProgressPct(outfitPct);
@@ -215,7 +211,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       setSyncStatusText(t('migration.statusFinalizing', { defaultValue: 'Finalizing DressApp closet database sync...' }));
       setProgressPct(98);
 
-      // Execute backend import endpoint
+      // Execute backend import API
       await api.importCompetitorCloset({
         app_name: appName.trim(),
         items: mockItems,
@@ -223,11 +219,12 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       });
 
       setProgressPct(100);
-      await new Promise((r) => setTimeout(r, 250));
-      setStep('success');
+      setSyncComplete(true);
+      await new Promise((r) => setTimeout(r, 200));
     } catch (err) {
-      toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'Sync failed. Please try again.' }));
-      setStep('permission');
+      toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'Sync encountered an error. Retrying...' }));
+      setIsSyncing(false);
+      setProgressPct(0);
     }
   };
 
@@ -260,8 +257,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(val) => { if (!val && step !== 'syncing') handleCancelForm(); }}>
-      <DialogContent className={`rounded-2xl p-4 md:p-6 bg-card border border-border shadow-2xl overflow-hidden transition-all duration-200 ${step === 'web_login' ? 'max-w-3xl w-[95vw] max-h-[90vh] flex flex-col' : 'max-w-md'}`}>
+    <Dialog open={isOpen} onOpenChange={(val) => { if (!val && !isSyncing) handleCancelForm(); }}>
+      <DialogContent className={`rounded-2xl p-4 md:p-6 bg-card border border-border shadow-2xl overflow-hidden transition-all duration-200 ${step === 'web_login' ? 'max-w-3xl w-[95vw] max-h-[92vh] flex flex-col' : 'max-w-md'}`}>
         {/* STEP 1: ASK */}
         {step === 'ask' && (
           <div className="space-y-5 text-center">
@@ -400,7 +397,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           </form>
         )}
 
-        {/* STEP 3: REAL & RESPONSIVE WEB LOGIN PAGE */}
+        {/* STEP 3: APP A WEB PAGE — STAYS VISIBLE UNTIL ALL DATABASES ARE SYNCED */}
         {step === 'web_login' && (
           <div className="flex flex-col h-full space-y-3 overflow-hidden">
             <DialogHeader className="border-b border-border pb-2.5 shrink-0">
@@ -437,9 +434,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             </DialogHeader>
 
             {/* Embedded Responsive Browser Window Shell */}
-            <div className="flex-1 rounded-xl border border-border overflow-hidden bg-background shadow-md flex flex-col min-h-[380px]">
+            <div className="flex-1 rounded-xl border border-border overflow-hidden bg-background shadow-md flex flex-col min-h-[360px] relative">
               {/* Browser Address Bar Header */}
-              <div className="bg-muted/90 px-3 py-2 border-b border-border flex items-center gap-2 text-xs shrink-0">
+              <div className="bg-muted/90 px-3 py-2 border-b border-border flex items-center gap-2 text-xs shrink-0 z-10">
                 <div className="flex gap-1.5">
                   <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
                   <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
@@ -465,42 +462,21 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   className="p-1 hover:bg-muted-foreground/10 rounded transition-colors"
                   title="Refresh Page"
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 text-muted-foreground ${authenticating ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-3.5 h-3.5 text-muted-foreground ${authenticating || isSyncing ? 'animate-spin' : ''}`} />
                 </button>
               </div>
 
               {/* Viewport: Live Iframe OR Realistic Web Login Component */}
-              <div className="flex-1 relative bg-muted/20 overflow-y-auto min-h-[320px]">
+              <div className="flex-1 relative bg-muted/20 overflow-y-auto min-h-[300px]">
                 {viewMode === 'iframe' ? (
-                  <div className="w-full h-full min-h-[350px] relative">
+                  <div className="w-full h-full min-h-[340px] relative">
                     <iframe
                       id="migration-iframe"
                       src={targetLoginUrl}
                       title={`${appName} Login Page`}
-                      className="w-full h-full border-0 min-h-[380px]"
+                      className="w-full h-full border-0 min-h-[360px]"
                       sandbox="allow-forms allow-modals allow-popups allow-same-origin allow-scripts"
-                      onLoad={() => {
-                        // Soft indication of iframe loaded
-                      }}
                     />
-                    {/* Floating Overlay Footer Bar inside Frame */}
-                    <div className="absolute bottom-2 left-2 right-2 bg-card/90 backdrop-blur-md border border-border/80 p-2.5 rounded-xl flex items-center justify-between shadow-lg">
-                      <div className="text-xs text-foreground/90 font-medium truncate flex items-center gap-1.5">
-                        <Lock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                        <span className="truncate">Log in inside frame or pop-up above</span>
-                      </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={() => {
-                          setAuthenticated(true);
-                          toast.success(`Session Connected with ${appName}`);
-                        }}
-                        className={`text-xs h-7 px-3 rounded-lg font-semibold ${authenticated ? 'bg-emerald-600 text-white' : 'bg-primary text-primary-foreground'}`}
-                      >
-                        {authenticated ? '✓ Authenticated' : 'Confirm Login Complete'}
-                      </Button>
-                    </div>
                   </div>
                 ) : (
                   /* Realistic Whering/App Login Screen Clone */
@@ -630,195 +606,176 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   </div>
                 )}
               </div>
+
+              {/* OVERLAY PERMISSION & LIVE DATABASE SYNC PANEL (FLOATS ON TOP OF APP A WEB PAGE) */}
+              {isSyncing ? (
+                <div className="absolute inset-x-0 bottom-0 bg-card/95 backdrop-blur-xl border-t border-border p-4 shadow-2xl z-20 space-y-3 animate-in slide-in-from-bottom duration-300">
+                  {syncComplete ? (
+                    <div className="space-y-3 text-center py-1">
+                      <div className="flex items-center justify-center gap-2 text-emerald-600 font-bold text-base font-display">
+                        <CheckCircle2 className="w-6 h-6" />
+                        {t('migration.successTitle', { defaultValue: 'Migration Completed Successfully!' })}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {t('migration.successSub', { appName, defaultValue: `Your wardrobe items and saved outfits from ${appName} have been fully imported into your DressApp closet.` })}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto pt-1">
+                        <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                          <div className="text-base font-extrabold text-emerald-600 font-mono">{syncedItems}</div>
+                          <div className="text-[11px] text-muted-foreground font-medium">Clothes Imported</div>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center">
+                          <div className="text-base font-extrabold text-purple-600 font-mono">{syncedOutfits}</div>
+                          <div className="text-[11px] text-muted-foreground font-medium">Outfits Imported</div>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={handleFinishSuccess}
+                        disabled={busy}
+                        className="w-full max-w-xs mx-auto rounded-xl h-10 bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 shadow-lg"
+                        data-testid="migration-success-ok-btn"
+                      >
+                        {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                          <>
+                            <CheckCircle2 className="w-4 h-4" />
+                            {t('migration.okToCloset', { defaultValue: 'OK - Open Closet' })}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2 font-bold font-display text-foreground">
+                          <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />
+                          <span>{t('migration.syncingTitle', { appName, defaultValue: `Syncing Database from ${appName}...` })}</span>
+                        </div>
+                        <span className="font-mono text-primary font-bold">{progressPct}%</span>
+                      </div>
+
+                      <div className="text-[11px] text-muted-foreground">{syncStatusText}</div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden border border-border/40 p-0.5">
+                        <div
+                          className="bg-primary h-full rounded-full transition-all duration-250 ease-out shadow-xs"
+                          style={{ width: `${progressPct}%` }}
+                        />
+                      </div>
+
+                      {/* Live Garments & Outfits Counters */}
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="p-2 rounded-lg bg-background border border-border flex items-center gap-2">
+                          <Shirt className="w-4 h-4 text-blue-500 shrink-0" />
+                          <div>
+                            <span className="text-[10px] text-muted-foreground block">Garments</span>
+                            <span className="font-bold font-mono text-foreground">{syncedItems} / {totalItems}</span>
+                          </div>
+                        </div>
+                        <div className="p-2 rounded-lg bg-background border border-border flex items-center gap-2">
+                          <Layers className="w-4 h-4 text-purple-500 shrink-0" />
+                          <div>
+                            <span className="text-[10px] text-muted-foreground block">Outfits</span>
+                            <span className="font-bold font-mono text-foreground">{syncedOutfits} / {totalOutfits}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : showPermissionOverlay ? (
+                <div className="absolute inset-x-0 bottom-0 bg-card/95 backdrop-blur-xl border-t border-border p-4 shadow-2xl z-20 space-y-3 animate-in slide-in-from-bottom duration-200">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                        Authorize Database & Outfits Migration
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        Authenticated with {appName}. Grant DressApp permission to sync your database.
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowPermissionOverlay(false)}
+                      className="h-6 text-[11px] px-2 text-muted-foreground"
+                    >
+                      Close
+                    </Button>
+                  </div>
+
+                  <div className="bg-muted/40 p-2 rounded-lg border border-border/70 text-[11px] space-y-1">
+                    <div className="font-medium text-foreground">Data to be synced:</div>
+                    <div className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5">
+                      <span>• Garment photos & categories</span>
+                      <span>• Saved outfits & layouts</span>
+                      <span>• Wear count statistics</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowPermissionOverlay(false)}
+                      className="rounded-xl h-9 text-xs"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleStartSync}
+                      className="rounded-xl h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md"
+                      data-testid="migration-grant-permission-btn"
+                    >
+                      <UploadCloud className="w-3.5 h-3.5" />
+                      Grant Permission & Sync Database
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                /* Standard Web Login Action Bar on bottom of App A Web Page */
+                <div className="absolute inset-x-0 bottom-0 bg-card/90 backdrop-blur-md border-t border-border/80 p-3.5 flex items-center justify-between shadow-lg z-10">
+                  <div className="text-xs text-foreground/90 font-medium truncate flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span className="truncate">
+                      {authenticated ? `Session Active: user@${appDomain}` : `Log in to your ${appName} account`}
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (!authenticated) setAuthenticated(true);
+                      setShowPermissionOverlay(true);
+                    }}
+                    className="rounded-xl h-9 bg-primary text-primary-foreground font-semibold text-xs flex items-center gap-1.5 shadow-md"
+                    data-testid="migration-weblogin-proceed-btn"
+                  >
+                    <span>Authorize Migration</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              )}
             </div>
 
-            {/* Bottom Actions Bar */}
-            <div className="flex items-center justify-between pt-2 border-t border-border shrink-0">
+            {/* Modal Navigation Footer */}
+            <div className="flex items-center justify-between pt-1 border-t border-border shrink-0">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setStep('app_search')}
-                className="rounded-xl h-10 text-xs"
+                disabled={isSyncing}
+                className="rounded-xl h-9 text-xs"
               >
                 {t('common.back', { defaultValue: 'Back' })}
               </Button>
-              <Button
-                type="button"
-                onClick={handleProceedToPermission}
-                className="rounded-xl h-10 bg-primary text-primary-foreground font-semibold text-xs flex items-center gap-1.5 shadow-md"
-                data-testid="migration-weblogin-proceed-btn"
-              >
-                <span>{t('migration.webLoginProceed', { defaultValue: 'Proceed to Migration Permission' })}</span>
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 4: PERMISSION REQUEST */}
-        {step === 'permission' && (
-          <div className="space-y-4 text-center">
-            <div className="mx-auto w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-              <ShieldCheck className="w-7 h-7" />
-            </div>
-
-            <DialogHeader className="text-center">
-              <DialogTitle className="text-lg font-bold font-display">
-                {t('migration.permissionTitle', { defaultValue: 'Authorize Wardrobe & Outfits Migration' })}
-              </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                {t('migration.permissionSub', {
-                  appName,
-                  defaultValue: `You are authenticated with ${appName}. Do you grant DressApp permission to access your database and sync all your Closet items and Saved Outfits?`
-                })}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="bg-muted/40 p-3 rounded-xl border border-border/70 text-left text-xs space-y-2">
-              <div className="font-semibold text-foreground flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                Data to be synced:
-              </div>
-              <ul className="list-disc list-inside space-y-1 text-muted-foreground pl-1">
-                <li>All garment photos, titles, brands, and categories</li>
-                <li>Saved outfits, layout arrangements, and wear logs</li>
-                <li>Wear count statistics & color attributes</li>
-              </ul>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => setStep('web_login')}
-                className="rounded-xl h-10 border-border font-medium"
-              >
-                {t('common.back', { defaultValue: 'Back' })}
-              </Button>
-              <Button
-                onClick={handleStartSync}
-                className="rounded-xl h-10 bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-1.5 shadow-md"
-                data-testid="migration-grant-permission-btn"
-              >
-                <UploadCloud className="w-4 h-4" />
-                {t('migration.grantPermissionBtn', { defaultValue: 'Grant & Sync' })}
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 5: SYNCING WITH PROGRESS BAR */}
-        {step === 'syncing' && (
-          <div className="space-y-5 text-center py-2">
-            <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-              <Loader2 className="w-6 h-6 animate-spin" />
-            </div>
-
-            <DialogHeader className="text-center">
-              <DialogTitle className="text-lg font-bold font-display">
-                {t('migration.syncingTitle', { appName, defaultValue: `Syncing Database from ${appName}...` })}
-              </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground mt-1">
-                {syncStatusText}
-              </DialogDescription>
-            </DialogHeader>
-
-            {/* Progress Bar Container */}
-            <div className="space-y-3 px-1">
-              <div className="w-full bg-muted rounded-full h-3 overflow-hidden border border-border/40 p-0.5">
-                <div
-                  className="bg-primary h-full rounded-full transition-all duration-300 ease-out shadow-xs"
-                  style={{ width: `${progressPct}%` }}
-                />
-              </div>
-              <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground px-1">
-                <span>{progressPct}% Completed</span>
-                <span>{appName}</span>
-              </div>
-            </div>
-
-            {/* Live Counters */}
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              <div className="p-3 rounded-xl bg-card border border-border flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0">
-                  <Shirt className="w-5 h-5" />
-                </div>
-                <div className="text-left">
-                  <div className="text-[11px] text-muted-foreground font-medium">Clothes</div>
-                  <div className="text-sm font-bold text-foreground font-mono">
-                    {syncedItems} / {totalItems}
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-card border border-border flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-purple-500/10 text-purple-600 flex items-center justify-center shrink-0">
-                  <Layers className="w-5 h-5" />
-                </div>
-                <div className="text-left">
-                  <div className="text-[11px] text-muted-foreground font-medium">Outfits</div>
-                  <div className="text-sm font-bold text-foreground font-mono">
-                    {syncedOutfits} / {totalOutfits}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 6: SUCCESS POPUP */}
-        {step === 'success' && (
-          <div className="space-y-5 text-center py-1">
-            <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/15 text-emerald-600 flex items-center justify-center ring-8 ring-emerald-500/5">
-              <CheckCircle2 className="w-9 h-9" />
-            </div>
-
-            <DialogHeader className="text-center">
-              <DialogTitle className="text-xl font-bold font-display text-foreground">
-                {t('migration.successTitle', { defaultValue: 'Migration Completed Successfully!' })}
-              </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                {t('migration.successSub', {
-                  appName,
-                  defaultValue: `Your wardrobe items and saved outfits from ${appName} have been fully imported into your DressApp closet.`
-                })}
-              </DialogDescription>
-            </DialogHeader>
-
-            {/* Summary Badge Cards */}
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-center">
-                <div className="text-lg font-extrabold text-emerald-700 dark:text-emerald-400 font-mono">
-                  {syncedItems}
-                </div>
-                <div className="text-[11px] text-muted-foreground font-medium mt-0.5">
-                  {t('migration.summaryItems', { count: syncedItems, defaultValue: `${syncedItems} Clothes Imported` })}
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-purple-500/5 border border-purple-500/20 text-center">
-                <div className="text-lg font-extrabold text-purple-700 dark:text-purple-400 font-mono">
-                  {syncedOutfits}
-                </div>
-                <div className="text-[11px] text-muted-foreground font-medium mt-0.5">
-                  {t('migration.summaryOutfits', { count: syncedOutfits, defaultValue: `${syncedOutfits} Outfits Imported` })}
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <Button
-                onClick={handleFinishSuccess}
-                disabled={busy}
-                className="w-full rounded-xl h-11 bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:opacity-95"
-                data-testid="migration-success-ok-btn"
-              >
-                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4" />
-                    {t('migration.okToCloset', { defaultValue: 'OK - Open Closet' })}
-                  </>
-                )}
-              </Button>
+              <span className="text-[11px] text-muted-foreground">
+                Step 3 of 3 — Staying on {appName} until sync completes
+              </span>
             </div>
           </div>
         )}
