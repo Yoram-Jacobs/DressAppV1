@@ -3021,56 +3021,61 @@ async def import_competitor_closet_stream(
 
         now = datetime.now(timezone.utc).isoformat()
         item_id_map = {}
-        processed_count = 0
 
-        for idx, item in enumerate(raw_items):
-            img_url = item.get("image_url") or item.get("photo_url") or ""
-            if not img_url or any(bad in img_url.lower() for bad in [".svg", "data:image/svg", "bookmark", "logo", "avatar", "icon", "badge", "button", "grid"]):
-                continue
+        # Shared httpx client & semaphore for fast parallel processing (10 concurrent downloads)
+        sem = asyncio.Semaphore(10)
+        async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as http_client:
+            async def _process_single(idx: int, item: dict[str, Any]) -> dict[str, Any] | None:
+                async with sem:
+                    try:
+                        img_url = item.get("image_url") or item.get("photo_url") or ""
+                        if not img_url or any(bad in img_url.lower() for bad in [".svg", "data:image/svg", "bookmark", "logo", "avatar", "icon", "badge", "button", "grid"]):
+                            return None
 
-            c_id = f"item_{uuid.uuid4().hex[:12]}"
-            orig_id = item.get("id") or item.get("item_id")
-            if orig_id:
-                item_id_map[str(orig_id)] = c_id
+                        c_id = f"item_{uuid.uuid4().hex[:12]}"
+                        orig_id = item.get("id") or item.get("item_id")
+                        if orig_id:
+                            item_id_map[str(orig_id)] = c_id
 
-            title = item.get("title") or item.get("name") or ""
-            category = "Top"
-            sub_category = "Top"
-            color = item.get("color") or "Neutral"
-            pattern = None
-            material = None
-            brand = item.get("brand") or item.get("label") or "Imported"
-            quality = None
-            condition = None
-            state = None
-            repair_advice = None
-            orig_data_url = img_url
-            cutout_url = img_url
+                        title = item.get("title") or item.get("name") or ""
+                        category = "Top"
+                        sub_category = "Top"
+                        color = item.get("color") or "Neutral"
+                        pattern = None
+                        material = None
+                        brand = item.get("brand") or item.get("label") or "Imported"
+                        quality = None
+                        condition = None
+                        state = None
+                        repair_advice = None
+                        orig_data_url = img_url
+                        cutout_url = img_url
 
-            if img_url.startswith(("http://", "https://", "data:image/")):
-                try:
-                    img_bytes = None
-                    if img_url.startswith("data:image/"):
-                        header, encoded = img_url.split(",", 1)
-                        img_bytes = base64.b64decode(encoded)
-                    else:
-                        async with httpx.AsyncClient(timeout=12.0, follow_redirects=True) as client:
-                            resp = await client.get(img_url)
-                            if resp.status_code == 200:
-                                img_bytes = resp.content
-
-                    if img_bytes:
-                        pil_img = Image.open(io.BytesIO(img_bytes))
-                        w, h = pil_img.size
-                        if w >= 80 and h >= 80:
-                            b64_orig = base64.b64encode(img_bytes).decode("utf-8")
-                            orig_data_url = f"data:image/jpeg;base64,{b64_orig}"
-
-                            # Run fast local SegFormer and Background Matting concurrently with a 3s timeout
+                        img_bytes = None
+                        if img_url.startswith("data:image/"):
+                            header, encoded = img_url.split(",", 1)
+                            img_bytes = base64.b64decode(encoded)
+                        elif img_url.startswith(("http://", "https://")):
                             try:
+                                resp = await http_client.get(img_url)
+                                if resp.status_code == 200:
+                                    img_bytes = resp.content
+                            except Exception:
+                                pass
+
+                        if img_bytes:
+                            try:
+                                pil_img = Image.open(io.BytesIO(img_bytes))
+                                w, h = pil_img.size
+                                if w < 60 or h < 60:
+                                    return None
+
+                                b64_orig = base64.b64encode(img_bytes).decode("utf-8")
+                                orig_data_url = f"data:image/jpeg;base64,{b64_orig}"
+
                                 bg_task = asyncio.create_task(background_matting.remove_background(img_bytes))
                                 cp_task = asyncio.create_task(_cp.parse_garments(img_bytes))
-                                await asyncio.wait_for(asyncio.gather(bg_task, cp_task, return_exceptions=True), timeout=3.0)
+                                await asyncio.wait_for(asyncio.gather(bg_task, cp_task, return_exceptions=True), timeout=2.5)
 
                                 bg_res = bg_task.result() if bg_task.done() and not bg_task.exception() else {}
                                 garments = cp_task.result() if cp_task.done() and not cp_task.exception() else []
@@ -3097,56 +3102,67 @@ async def import_competitor_closet_stream(
                                         category = "Outerwear"
                                     elif any(k in det_label for k in ["belt", "bag", "accessory", "hat", "watch"]):
                                         category = "Accessory"
-                            except Exception as loc_err:
-                                logger.warning("Stream local processing timeout: %s", loc_err)
+
+                                color = _determine_color(pil_img)
+                                sub_category = category
+                                if not title or title.startswith("Pasted Garment") or title.startswith("Garment"):
+                                    title = f"{color} {category}"
+                            except Exception as proc_err:
+                                logger.warning("Item %d image parsing skip: %s", idx, proc_err)
                                 cutout_url = orig_data_url
 
-                            color = _determine_color(pil_img)
-                            sub_category = category
-                            if not title or title.startswith("Pasted Garment") or title.startswith("Garment"):
-                                title = f"{color} {category}"
-                except Exception as e:
-                    logger.warning("Stream garment processing err: %s", e)
+                        doc = {
+                            "id": c_id,
+                            "user_id": user["id"],
+                            "schemaVersion": 1,
+                            "source": "Private",
+                            "title": title,
+                            "name": title,
+                            "category": category,
+                            "sub_category": sub_category or category,
+                            "color": color,
+                            "colors": [color],
+                            "pattern": pattern,
+                            "material": material,
+                            "brand": brand or "Imported",
+                            "quality": quality,
+                            "condition": condition,
+                            "state": state,
+                            "repair_advice": repair_advice,
+                            "image_url": orig_data_url,
+                            "original_image_url": orig_data_url,
+                            "clean_image_url": cutout_url,
+                            "segmented_image_url": cutout_url,
+                            "cutout_url": cutout_url,
+                            "wear_count": int(item.get("wear_count") or item.get("times_worn") or 0),
+                            "is_duplicate": False,
+                            "group_role": None,
+                            "created_at": item.get("created_at") or now,
+                            "updated_at": now,
+                            "migrated_from": payload.app_name or "Competitor App",
+                        }
+                        await repos.insert_one(db.closet_items, doc)
+                        return doc
+                    except Exception as err:
+                        logger.warning("Item %d creation error: %s", idx, err)
+                        return None
 
-            doc = {
-                "id": c_id,
-                "user_id": user["id"],
-                "schemaVersion": 1,
-                "source": "Private",
-                "title": title,
-                "name": title,
-                "category": category,
-                "sub_category": sub_category or category,
-                "color": color,
-                "colors": [color],
-                "pattern": pattern,
-                "material": material,
-                "brand": brand or "Imported",
-                "quality": quality,
-                "condition": condition,
-                "state": state,
-                "repair_advice": repair_advice,
-                "image_url": orig_data_url,
-                "original_image_url": orig_data_url,
-                "clean_image_url": cutout_url,
-                "segmented_image_url": cutout_url,
-                "cutout_url": cutout_url,
-                "wear_count": int(item.get("wear_count") or item.get("times_worn") or 0),
-                "is_duplicate": False,
-                "group_role": None,
-                "created_at": item.get("created_at") or now,
-                "updated_at": now,
-                "migrated_from": payload.app_name or "Competitor App",
-            }
-            await repos.insert_one(db.closet_items, doc)
-            processed_count += 1
-
-            yield json.dumps({
-                "event": "item",
-                "processed": processed_count,
-                "total": total,
-                "item": doc,
-            }, ensure_ascii=False) + "\n"
+            # Stream results as tasks complete in parallel batches
+            processed_count = 0
+            tasks = [asyncio.create_task(_process_single(idx, item)) for idx, item in enumerate(raw_items)]
+            for completed_task in asyncio.as_completed(tasks):
+                try:
+                    res_doc = await completed_task
+                    if res_doc:
+                        processed_count += 1
+                        yield json.dumps({
+                            "event": "item",
+                            "processed": processed_count,
+                            "total": total,
+                            "item": res_doc,
+                        }, ensure_ascii=False) + "\n"
+                except Exception as stream_err:
+                    logger.warning("Stream task exception: %s", stream_err)
 
         yield json.dumps({"event": "done", "total": processed_count}, ensure_ascii=False) + "\n"
 
@@ -3156,6 +3172,7 @@ async def import_competitor_closet_stream(
         headers={
             "X-Accel-Buffering": "no",
             "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
         },
     )
 
