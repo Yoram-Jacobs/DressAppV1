@@ -2781,137 +2781,142 @@ async def import_competitor_closet(
             pass
         return "Neutral"
 
-    for idx, item in enumerate(raw_items):
-        img_url = item.get("image_url") or item.get("photo_url") or ""
-        
-        # Filter out UI icons, SVGs, buttons, and bookmark images
-        if not img_url:
-            continue
-        if any(bad in img_url.lower() for bad in [".svg", "data:image/svg", "bookmark", "logo", "avatar", "icon", "badge", "button", "grid"]):
-            continue
+    docs = []
+    item_id_map = {}
+    now = datetime.now(timezone.utc).isoformat()
 
-        c_id = f"item_{uuid.uuid4().hex[:12]}"
-        orig_id = item.get("id") or item.get("item_id")
-        if orig_id:
-            item_id_map[str(orig_id)] = c_id
+    sem = asyncio.Semaphore(10)
+    async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as http_client:
+        async def _process_batch_item(idx: int, item: dict[str, Any]) -> dict[str, Any] | None:
+            async with sem:
+                try:
+                    img_url = item.get("image_url") or item.get("photo_url") or ""
+                    if not img_url or any(bad in img_url.lower() for bad in [".svg", "data:image/svg", "bookmark", "logo", "avatar", "icon", "badge", "button", "grid"]):
+                        return None
 
-        # Defaults
-        title = item.get("title") or item.get("name") or ""
-        category = "Top"
-        sub_category = "Top"
-        color = item.get("color") or "Neutral"
-        pattern = None
-        material = None
-        brand = item.get("brand") or item.get("label") or "Imported"
-        quality = None
-        condition = None
-        state = None
-        repair_advice = None
-        orig_data_url = img_url
-        cutout_url = img_url
+                    c_id = f"item_{uuid.uuid4().hex[:12]}"
+                    orig_id = item.get("id") or item.get("item_id")
+                    if orig_id:
+                        item_id_map[str(orig_id)] = c_id
 
-        # GarmentVision AI Pipeline Execution
-        if img_url.startswith(("http://", "https://", "data:image/")):
-            try:
-                img_bytes = None
-                if img_url.startswith("data:image/"):
-                    header, encoded = img_url.split(",", 1)
-                    img_bytes = base64.b64decode(encoded)
-                else:
-                    async with httpx.AsyncClient(timeout=12.0, follow_redirects=True) as client:
-                        resp = await client.get(img_url)
-                        if resp.status_code == 200:
-                            img_bytes = resp.content
+                    title = item.get("title") or item.get("name") or ""
+                    category = "Top"
+                    sub_category = "Top"
+                    color = item.get("color") or "Neutral"
+                    pattern = None
+                    material = None
+                    brand = item.get("brand") or item.get("label") or "Imported"
+                    quality = None
+                    condition = None
+                    state = None
+                    repair_advice = None
+                    orig_data_url = img_url
+                    cutout_url = img_url
 
-                if img_bytes:
-                    pil_img = Image.open(io.BytesIO(img_bytes))
-                    w, h = pil_img.size
-                    
-                    # Ignore tiny UI elements (<80x80)
-                    if w < 80 or h < 80:
-                        continue
+                    img_bytes = None
+                    if img_url.startswith("data:image/"):
+                        header, encoded = img_url.split(",", 1)
+                        img_bytes = base64.b64decode(encoded)
+                    elif img_url.startswith(("http://", "https://")):
+                        try:
+                            resp = await http_client.get(img_url)
+                            if resp.status_code == 200:
+                                img_bytes = resp.content
+                        except Exception:
+                            pass
 
-                    # Store original image as Data URL for robust re-analysis
-                    b64_orig = base64.b64encode(img_bytes).decode("utf-8")
-                    orig_data_url = f"data:image/jpeg;base64,{b64_orig}"
+                    if img_bytes:
+                        try:
+                            pil_img = Image.open(io.BytesIO(img_bytes))
+                            w, h = pil_img.size
+                            if w < 60 or h < 60:
+                                return None
 
-                    # Run fast local SegFormer and Background Matting concurrently with a 4s max timeout
-                    try:
-                        bg_task = asyncio.create_task(background_matting.remove_background(img_bytes))
-                        cp_task = asyncio.create_task(_cp.parse_garments(img_bytes))
-                        await asyncio.wait_for(asyncio.gather(bg_task, cp_task, return_exceptions=True), timeout=4.0)
+                            b64_orig = base64.b64encode(img_bytes).decode("utf-8")
+                            orig_data_url = f"data:image/jpeg;base64,{b64_orig}"
 
-                        bg_res = bg_task.result() if bg_task.done() and not bg_task.exception() else {}
-                        garments = cp_task.result() if cp_task.done() and not cp_task.exception() else []
+                            try:
+                                bg_task = asyncio.create_task(background_matting.remove_background(img_bytes))
+                                cp_task = asyncio.create_task(_cp.parse_garments(img_bytes))
+                                await asyncio.wait_for(asyncio.gather(bg_task, cp_task, return_exceptions=True), timeout=2.5)
 
-                        # 1. Matting PNG Cutout
-                        png_bytes = bg_res.get("png_bytes") or bg_res.get("image_png")
-                        if png_bytes:
-                            b64_png = base64.b64encode(png_bytes).decode("utf-8")
-                            cutout_url = f"data:image/png;base64,{b64_png}"
-                        else:
-                            cutout_url = orig_data_url
+                                bg_res = bg_task.result() if bg_task.done() and not bg_task.exception() else {}
+                                garments = cp_task.result() if cp_task.done() and not cp_task.exception() else []
 
-                        # 2. Local SegFormer Classification
-                        if garments:
-                            top_g = garments[0]
-                            det_label = str(top_g.get("label") or top_g.get("kind") or "").lower()
-                            if any(k in det_label for k in ["top", "shirt", "blouse", "tee", "sweat", "upper"]):
-                                category = "Top"
-                            elif any(k in det_label for k in ["pant", "bottom", "skirt", "jean", "short", "trouser"]):
-                                category = "Bottom"
-                            elif any(k in det_label for k in ["shoe", "footwear", "boot", "sneaker", "sandal"]):
-                                category = "Footwear"
-                            elif any(k in det_label for k in ["dress", "gown"]):
-                                category = "Dress"
-                            elif any(k in det_label for k in ["coat", "jacket", "outerwear"]):
-                                category = "Outerwear"
-                            elif any(k in det_label for k in ["belt", "bag", "accessory", "hat", "watch"]):
-                                category = "Accessory"
-                    except Exception as loc_err:
-                        logger.warning("Local SegFormer/Matting timeout or skip: %s", loc_err)
-                        cutout_url = orig_data_url
+                                png_bytes = bg_res.get("png_bytes") or bg_res.get("image_png")
+                                if png_bytes:
+                                    b64_png = base64.b64encode(png_bytes).decode("utf-8")
+                                    cutout_url = f"data:image/png;base64,{b64_png}"
+                                else:
+                                    cutout_url = orig_data_url
 
-                    color = _determine_color(pil_img)
-                    sub_category = category
-                    if not title or title.startswith("Pasted Garment") or title.startswith("Garment"):
-                        title = f"{color} {category}"
+                                if garments:
+                                    top_g = garments[0]
+                                    det_label = str(top_g.get("label") or top_g.get("kind") or "").lower()
+                                    if any(k in det_label for k in ["top", "shirt", "blouse", "tee", "sweat", "upper"]):
+                                        category = "Top"
+                                    elif any(k in det_label for k in ["pant", "bottom", "skirt", "jean", "short", "trouser"]):
+                                        category = "Bottom"
+                                    elif any(k in det_label for k in ["shoe", "footwear", "boot", "sneaker", "sandal"]):
+                                        category = "Footwear"
+                                    elif any(k in det_label for k in ["dress", "gown"]):
+                                        category = "Dress"
+                                    elif any(k in det_label for k in ["coat", "jacket", "outerwear"]):
+                                        category = "Outerwear"
+                                    elif any(k in det_label for k in ["belt", "bag", "accessory", "hat", "watch"]):
+                                        category = "Accessory"
 
-            except Exception as gv_err:
-                logger.warning("GarmentVision pipeline analysis skipped for item %s: %s", title, gv_err)
-                logger.warning("GarmentVision pipeline analysis skipped for item %s: %s", title, gv_err)
+                                color = _determine_color(pil_img)
+                                sub_category = category
+                                if not title or title.startswith("Pasted Garment") or title.startswith("Garment"):
+                                    title = f"{color} {category}"
+                            except Exception as proc_err:
+                                logger.warning("Item %d image parsing skip: %s", idx, proc_err)
+                                cutout_url = orig_data_url
 
-        doc = {
-            "id": c_id,
-            "user_id": user["id"],
-            "schemaVersion": 1,
-            "source": "Private",
-            "title": title,
-            "name": title,
-            "category": category,
-            "sub_category": sub_category or category,
-            "color": color,
-            "colors": [color],
-            "pattern": pattern,
-            "material": material,
-            "brand": brand or "Imported",
-            "quality": quality,
-            "condition": condition,
-            "state": state,
-            "repair_advice": repair_advice,
-            "image_url": orig_data_url,
-            "original_image_url": orig_data_url,
-            "clean_image_url": cutout_url,
-            "segmented_image_url": cutout_url,
-            "cutout_url": cutout_url,
-            "wear_count": int(item.get("wear_count") or item.get("times_worn") or 0),
-            "is_duplicate": False,
-            "group_role": None,
-            "created_at": item.get("created_at") or now,
-            "updated_at": now,
-            "migrated_from": payload.app_name or "Competitor App",
-        }
-        docs.append(doc)
+                        except Exception as img_err:
+                            logger.warning("Item %d image decode skip: %s", idx, img_err)
+
+                    doc = {
+                        "id": c_id,
+                        "user_id": user["id"],
+                        "schemaVersion": 1,
+                        "source": "Private",
+                        "title": title,
+                        "name": title,
+                        "category": category,
+                        "sub_category": sub_category or category,
+                        "color": color,
+                        "colors": [color],
+                        "pattern": pattern,
+                        "material": material,
+                        "brand": brand or "Imported",
+                        "quality": quality,
+                        "condition": condition,
+                        "state": state,
+                        "repair_advice": repair_advice,
+                        "image_url": orig_data_url,
+                        "original_image_url": orig_data_url,
+                        "clean_image_url": cutout_url,
+                        "segmented_image_url": cutout_url,
+                        "cutout_url": cutout_url,
+                        "wear_count": int(item.get("wear_count") or item.get("times_worn") or 0),
+                        "is_duplicate": False,
+                        "group_role": None,
+                        "created_at": item.get("created_at") or now,
+                        "updated_at": now,
+                        "migrated_from": payload.app_name or "Competitor App",
+                    }
+                    return doc
+                except Exception as err:
+                    logger.warning("Batch item %d creation error: %s", idx, err)
+                    return None
+
+        tasks = [asyncio.create_task(_process_batch_item(idx, item)) for idx, item in enumerate(raw_items)]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for r in results:
+            if isinstance(r, dict) and r.get("id"):
+                docs.append(r)
 
     if docs:
         await repos.insert_many(db.closet_items, docs)

@@ -213,39 +213,27 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     // 3. Close the modal immediately so the user can navigate freely
     onClose();
 
-    // 4. Run silent streaming background process
+    // 4. Run silent batch background process using standard POST
     (async () => {
-      let processedCount = 0;
-      let totalCount = realPayloadItems.length || 0;
-
       try {
-        await api.importCompetitorClosetStream({
-          body: {
-            app_name: appName.trim(),
-            target_url: targetLoginUrl,
-            items: realPayloadItems,
-            outfits: [],
-          },
-          onFrame: (frame) => {
-            if (frame.event === 'start') {
-              totalCount = frame.total || totalCount;
-              workStore.updateAnalyze(jobId, { items: 0, total: totalCount });
-            } else if (frame.event === 'item' && frame.item) {
-              processedCount++;
-              workStore.updateAnalyze(jobId, { items: processedCount, total: totalCount || frame.total || processedCount });
-              // Live stream directly into Closet store grid!
-              closetStore.upsert(frame.item);
-            } else if (frame.event === 'done') {
-              workStore.completeAnalyze(jobId);
-              toast.success(`GarmentVision AI import complete! ${processedCount} items added to your Closet.`);
-              closetStore.prewarm({ force: true }).catch(() => {});
-            }
-          },
+        workStore.updateAnalyze(jobId, { items: 1, total: realPayloadItems.length || 1 });
+
+        const res = await api.importCompetitorCloset({
+          app_name: appName.trim(),
+          target_url: targetLoginUrl,
+          items: realPayloadItems,
+          outfits: [],
         });
+
+        workStore.updateAnalyze(jobId, { items: res?.imported_count || realPayloadItems.length, total: res?.imported_count || realPayloadItems.length });
+        workStore.completeAnalyze(jobId);
+        
+        await closetStore.prewarm({ force: true }).catch(() => {});
+        toast.success(`GarmentVision AI import complete! ${res?.imported_count || realPayloadItems.length} items added to your Closet.`);
       } catch (err) {
         console.error('Silent import error:', err);
         workStore.completeAnalyze(jobId);
-        toast.error('Import process error occurred.');
+        toast.error(err?.response?.data?.detail || 'Import process failed. Please check your image links.');
       }
     })();
   };
