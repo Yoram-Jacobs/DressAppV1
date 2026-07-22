@@ -2653,6 +2653,7 @@ async def import_dpp(
 
 class ImportCompetitorIn(BaseModel):
     app_name: str | None = "Competitor App"
+    target_url: str | None = None
     items: list[dict[str, Any]] | None = Field(default_factory=list)
     outfits: list[dict[str, Any]] | None = Field(default_factory=list)
 
@@ -2665,6 +2666,12 @@ async def import_competitor_closet(
     db = get_db()
     raw_items = payload.items if payload.items is not None else []
     raw_outfits = payload.outfits if payload.outfits is not None else []
+
+    if payload.target_url and not raw_items:
+        from app.services.wardrobe_scraper import scrape_wardrobe_url
+        scraped = await scrape_wardrobe_url(payload.target_url)
+        if scraped:
+            raw_items = scraped
     
     # Fallback mock items if caller sends empty payload
     if not raw_items and not raw_outfits:
