@@ -2797,7 +2797,16 @@ async def import_competitor_closet(
         # Defaults
         title = item.get("title") or item.get("name") or ""
         category = "Top"
+        sub_category = "Top"
         color = item.get("color") or "Neutral"
+        pattern = None
+        material = None
+        brand = item.get("brand") or item.get("label") or "Imported"
+        quality = None
+        condition = None
+        state = None
+        repair_advice = None
+        orig_data_url = img_url
         cutout_url = img_url
 
         # GarmentVision AI Pipeline Execution
@@ -2821,43 +2830,66 @@ async def import_competitor_closet(
                     if w < 80 or h < 80:
                         continue
 
-                    # Run GarmentVision SegFormer & Matting concurrently
+                    # Store original image as Data URL for robust re-analysis
+                    b64_orig = base64.b64encode(img_bytes).decode("utf-8")
+                    orig_data_url = f"data:image/jpeg;base64,{b64_orig}"
+
+                    # Run GarmentVision SegFormer, Background Matting, and Vision Analyzer concurrently
                     bg_task = asyncio.create_task(background_matting.remove_background(img_bytes))
                     cp_task = asyncio.create_task(_cp.parse_garments(img_bytes))
-                    await asyncio.gather(bg_task, cp_task, return_exceptions=True)
+                    gv_task = asyncio.create_task(garment_vision_service.analyze(img_bytes)) if garment_vision_service else None
+
+                    tasks = [bg_task, cp_task]
+                    if gv_task:
+                        tasks.append(gv_task)
+                    await asyncio.gather(*tasks, return_exceptions=True)
 
                     bg_res = bg_task.result() if not bg_task.exception() else {}
                     garments = cp_task.result() if not cp_task.exception() else []
+                    gv_analysis = gv_task.result() if gv_task and not gv_task.exception() else {}
 
-                    # 1. Matting PNG
+                    # 1. Matting PNG Cutout
                     png_bytes = bg_res.get("png_bytes") or bg_res.get("image_png")
                     if png_bytes:
                         b64_png = base64.b64encode(png_bytes).decode("utf-8")
                         cutout_url = f"data:image/png;base64,{b64_png}"
+                    else:
+                        cutout_url = orig_data_url
 
-                    # 2. SegFormer Classification
-                    if garments:
-                        top_g = garments[0]
-                        det_label = str(top_g.get("label") or top_g.get("kind") or "").lower()
-                        if any(k in det_label for k in ["top", "shirt", "blouse", "tee", "sweat", "upper"]):
-                            category = "Top"
-                        elif any(k in det_label for k in ["pant", "bottom", "skirt", "jean", "short", "trouser"]):
-                            category = "Bottom"
-                        elif any(k in det_label for k in ["shoe", "footwear", "boot", "sneaker", "sandal"]):
-                            category = "Footwear"
-                        elif any(k in det_label for k in ["dress", "gown"]):
-                            category = "Dress"
-                        elif any(k in det_label for k in ["coat", "jacket", "outerwear"]):
-                            category = "Outerwear"
-                        elif any(k in det_label for k in ["belt", "bag", "accessory", "hat", "watch"]):
-                            category = "Accessory"
-
-                    # 3. Dominant Color Calculation
-                    color = _determine_color(pil_img)
-
-                    # Dynamic Title Generation if default title is generic
-                    if not title or title.startswith("Pasted Garment") or title.startswith("Garment"):
-                        title = f"{color} {category}"
+                    # 2. Extract Category, Sub-Category, Color, Pattern, Material, Brand, Title from GarmentVision
+                    if isinstance(gv_analysis, dict) and gv_analysis.get("category"):
+                        category = gv_analysis.get("category") or category
+                        sub_category = gv_analysis.get("sub_category") or category
+                        color = gv_analysis.get("primary_color") or gv_analysis.get("color") or _determine_color(pil_img)
+                        pattern = gv_analysis.get("pattern")
+                        material = gv_analysis.get("material")
+                        brand = gv_analysis.get("brand") or item.get("brand") or "Imported"
+                        title = gv_analysis.get("title") or f"{color} {category}"
+                        quality = gv_analysis.get("quality")
+                        condition = gv_analysis.get("condition")
+                        state = gv_analysis.get("state")
+                        repair_advice = gv_analysis.get("repair_advice")
+                    else:
+                        # Fallback to SegFormer detection
+                        if garments:
+                            top_g = garments[0]
+                            det_label = str(top_g.get("label") or top_g.get("kind") or "").lower()
+                            if any(k in det_label for k in ["top", "shirt", "blouse", "tee", "sweat", "upper"]):
+                                category = "Top"
+                            elif any(k in det_label for k in ["pant", "bottom", "skirt", "jean", "short", "trouser"]):
+                                category = "Bottom"
+                            elif any(k in det_label for k in ["shoe", "footwear", "boot", "sneaker", "sandal"]):
+                                category = "Footwear"
+                            elif any(k in det_label for k in ["dress", "gown"]):
+                                category = "Dress"
+                            elif any(k in det_label for k in ["coat", "jacket", "outerwear"]):
+                                category = "Outerwear"
+                            elif any(k in det_label for k in ["belt", "bag", "accessory", "hat", "watch"]):
+                                category = "Accessory"
+                        color = _determine_color(pil_img)
+                        sub_category = category
+                        if not title or title.startswith("Pasted Garment") or title.startswith("Garment"):
+                            title = f"{color} {category}"
 
             except Exception as gv_err:
                 logger.warning("GarmentVision pipeline analysis skipped for item %s: %s", title, gv_err)
@@ -2870,13 +2902,20 @@ async def import_competitor_closet(
             "title": title,
             "name": title,
             "category": category,
-            "sub_category": item.get("sub_category") or item.get("subtype") or category,
+            "sub_category": sub_category or category,
             "color": color,
             "colors": [color],
-            "brand": item.get("brand") or item.get("label") or "Imported",
-            "image_url": img_url,
-            "original_image_url": img_url,
+            "pattern": pattern,
+            "material": material,
+            "brand": brand or "Imported",
+            "quality": quality,
+            "condition": condition,
+            "state": state,
+            "repair_advice": repair_advice,
+            "image_url": orig_data_url,
+            "original_image_url": orig_data_url,
             "clean_image_url": cutout_url,
+            "segmented_image_url": cutout_url,
             "cutout_url": cutout_url,
             "wear_count": int(item.get("wear_count") or item.get("times_worn") or 0),
             "is_duplicate": False,
@@ -4968,20 +5007,34 @@ async def reanalyze_item(
     # dress?"). Fall back to the original upload otherwise.
     image_url: str | None = (
         item.get("segmented_image_url")
+        or item.get("cutout_url")
+        or item.get("clean_image_url")
         or item.get("reconstructed_image_url")
         or item.get("original_image_url")
+        or item.get("image_url")
     )
-    if not image_url or not image_url.startswith("data:"):
+    if not image_url:
         raise HTTPException(
             400,
             "Item has no stored image to re-analyse. "
             "Replace the photo first.",
         )
-    try:
-        b64_part = image_url.split(",", 1)[1]
-        raw = base64.b64decode(b64_part, validate=False)
-    except Exception as exc:  # noqa: BLE001
-        raise HTTPException(400, f"Invalid stored image: {exc}") from exc
+    raw = None
+    if image_url.startswith("data:"):
+        try:
+            b64_part = image_url.split(",", 1)[1]
+            raw = base64.b64decode(b64_part, validate=False)
+        except Exception as exc:  # noqa: BLE001
+            raise HTTPException(400, f"Invalid stored image: {exc}") from exc
+    elif image_url.startswith(("http://", "https://")):
+        try:
+            async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+                resp = await client.get(image_url)
+                if resp.status_code == 200:
+                    raw = resp.content
+        except Exception as exc:  # noqa: BLE001
+            raise HTTPException(400, f"Failed downloading image for re-analysis: {exc}") from exc
+
     if not raw:
         raise HTTPException(400, "Stored image is empty")
 
