@@ -2687,17 +2687,57 @@ async def import_competitor_closet(
         ]
 
 
+    # Remove previous migrated items and outfits for this user to prevent duplication (e.g. 95 + 95 = 190)
+    await db.closet_items.delete_many({"user_id": user["id"], "migrated_from": {"$exists": True}})
+    await db.outfits.delete_many({"user_id": user["id"], "migrated_from": {"$exists": True}})
+
+    category_images = {
+        "Top": [
+            "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=600&q=80",
+        ],
+        "Bottom": [
+            "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1582142306909-195724d33ffc?auto=format&fit=crop&w=600&q=80",
+        ],
+        "Footwear": [
+            "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1560343776-97e7d202ff0e?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=600&q=80",
+        ],
+        "Outerwear": [
+            "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=600&q=80",
+        ],
+        "Dress": [
+            "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=600&q=80",
+        ],
+        "Accessory": [
+            "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80",
+        ],
+    }
+
     docs = []
     now = datetime.now(timezone.utc).isoformat()
     item_id_map = {}
 
-    for item in raw_items:
+    for idx, item in enumerate(raw_items):
         c_id = f"item_{uuid.uuid4().hex[:12]}"
         orig_id = item.get("id") or item.get("item_id")
         if orig_id:
             item_id_map[str(orig_id)] = c_id
 
-        title = item.get("title") or item.get("name") or item.get("item_name") or "Garment"
+        title = item.get("title") or item.get("name") or item.get("item_name") or f"Garment {idx + 1}"
         cat_raw = str(item.get("category") or item.get("type") or "Top").strip()
         cat_lower = cat_raw.lower()
         if any(k in cat_lower for k in ["top", "shirt", "blouse", "tee", "polo", "sweater"]):
@@ -2713,6 +2753,11 @@ async def import_competitor_closet(
         else:
             category = "Accessory"
 
+        cat_imgs = category_images.get(category, category_images["Top"])
+        fallback_img = cat_imgs[idx % len(cat_imgs)]
+        img_url = item.get("image_url") or item.get("photo_url") or fallback_img
+        cutout_url = item.get("cutout_url") or item.get("no_bg_url") or fallback_img
+
         doc = {
             "id": c_id,
             "user_id": user["id"],
@@ -2725,8 +2770,8 @@ async def import_competitor_closet(
             "color": item.get("color") or item.get("primary_color") or "Neutral",
             "colors": item.get("colors") or [item.get("color") or "Neutral"],
             "brand": item.get("brand") or item.get("label"),
-            "image_url": item.get("image_url") or item.get("photo_url"),
-            "cutout_url": item.get("cutout_url") or item.get("no_bg_url"),
+            "image_url": img_url,
+            "cutout_url": cutout_url,
             "wear_count": int(item.get("wear_count") or item.get("times_worn") or 0),
             "is_duplicate": False,
             "group_role": None,
