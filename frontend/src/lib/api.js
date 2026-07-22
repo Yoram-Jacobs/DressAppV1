@@ -203,6 +203,12 @@ export const api = {
   patchMe: (body) => client.patch('/users/me', body).then((r) => r.data),
   updateMigrationFlag: (body) => client.patch('/users/migration-flag', body).then((r) => r.data),
   importCompetitorCloset: (body) => client.post('/closet/import-competitor', body).then((r) => r.data),
+  importCompetitorClosetStream: ({ body, onFrame, signal } = {}) =>
+    streamNdjson('/closet/import-competitor-stream', {
+      body,
+      onFrame,
+      signal,
+    }),
 
   // closet
   listCloset: (params = {}) =>

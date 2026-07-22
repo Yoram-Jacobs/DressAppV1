@@ -2979,6 +2979,199 @@ async def import_competitor_closet(
     }
 
 
+@router.post("/import-competitor-stream")
+async def import_competitor_closet_stream(
+    payload: ImportCompetitorIn,
+    user: dict[str, Any] = Depends(get_current_user),
+    db: Any = Depends(get_db),
+) -> StreamingResponse:
+    """Streams imported items chunk-by-chunk via NDJSON, running GarmentVision AI analysis and emitting live progress."""
+    async def _event_stream():
+        raw_items = payload.raw_items or []
+        raw_outfits = payload.raw_outfits or []
+
+        if payload.target_url and not raw_items:
+            try:
+                from app.services.wardrobe_scraper import scrape_wardrobe_url
+                scraped_urls = await scrape_wardrobe_url(payload.target_url)
+                if scraped_urls:
+                    raw_items = [{"image_url": u, "title": f"Garment {idx+1}"} for idx, u in enumerate(scraped_urls)]
+            except Exception as s_err:
+                logger.warning("Scraper exception in stream: %s", s_err)
+
+        if not raw_items and not raw_outfits and not payload.target_url:
+            raw_items = [
+                {"id": "appA_1", "title": "Classic White Linen Shirt", "category": "Top", "color": "White", "brand": "Zara", "wear_count": 5},
+                {"id": "appA_2", "title": "Slim Dark Indigo Jeans", "category": "Bottom", "color": "Blue", "brand": "Levi's", "wear_count": 12},
+                {"id": "appA_3", "title": "Beige Trench Coat", "category": "Outerwear", "color": "Beige", "brand": "Burberry", "wear_count": 3},
+                {"id": "appA_4", "title": "Leather Oxford Shoes", "category": "Footwear", "color": "Brown", "brand": "Clarks", "wear_count": 8},
+            ]
+
+        # Purge previous migrated data
+        await db.closet_items.delete_many({"user_id": user["id"], "migrated_from": {"$exists": True}})
+        await db.outfits.delete_many({"user_id": user["id"], "migrated_from": {"$exists": True}})
+
+        total = len(raw_items)
+        yield json.dumps({"event": "start", "total": total}, ensure_ascii=False) + "\n"
+
+        from app.services import background_matting
+        from app.services import clothing_parser as _cp
+        from PIL import Image
+        import io
+
+        now = datetime.now(timezone.utc).isoformat()
+        item_id_map = {}
+        processed_count = 0
+
+        for idx, item in enumerate(raw_items):
+            img_url = item.get("image_url") or item.get("photo_url") or ""
+            if not img_url or any(bad in img_url.lower() for bad in [".svg", "data:image/svg", "bookmark", "logo", "avatar", "icon", "badge", "button", "grid"]):
+                continue
+
+            c_id = f"item_{uuid.uuid4().hex[:12]}"
+            orig_id = item.get("id") or item.get("item_id")
+            if orig_id:
+                item_id_map[str(orig_id)] = c_id
+
+            title = item.get("title") or item.get("name") or ""
+            category = "Top"
+            sub_category = "Top"
+            color = item.get("color") or "Neutral"
+            pattern = None
+            material = None
+            brand = item.get("brand") or item.get("label") or "Imported"
+            quality = None
+            condition = None
+            state = None
+            repair_advice = None
+            orig_data_url = img_url
+            cutout_url = img_url
+
+            if img_url.startswith(("http://", "https://", "data:image/")):
+                try:
+                    img_bytes = None
+                    if img_url.startswith("data:image/"):
+                        header, encoded = img_url.split(",", 1)
+                        img_bytes = base64.b64decode(encoded)
+                    else:
+                        async with httpx.AsyncClient(timeout=12.0, follow_redirects=True) as client:
+                            resp = await client.get(img_url)
+                            if resp.status_code == 200:
+                                img_bytes = resp.content
+
+                    if img_bytes:
+                        pil_img = Image.open(io.BytesIO(img_bytes))
+                        w, h = pil_img.size
+                        if w >= 80 and h >= 80:
+                            b64_orig = base64.b64encode(img_bytes).decode("utf-8")
+                            orig_data_url = f"data:image/jpeg;base64,{b64_orig}"
+
+                            bg_task = asyncio.create_task(background_matting.remove_background(img_bytes))
+                            cp_task = asyncio.create_task(_cp.parse_garments(img_bytes))
+                            gv_task = asyncio.create_task(garment_vision_service.analyze(img_bytes)) if garment_vision_service else None
+
+                            tasks = [bg_task, cp_task]
+                            if gv_task:
+                                tasks.append(gv_task)
+                            await asyncio.gather(*tasks, return_exceptions=True)
+
+                            bg_res = bg_task.result() if not bg_task.exception() else {}
+                            garments = cp_task.result() if not cp_task.exception() else []
+                            gv_analysis = gv_task.result() if gv_task and not gv_task.exception() else {}
+
+                            png_bytes = bg_res.get("png_bytes") or bg_res.get("image_png")
+                            if png_bytes:
+                                b64_png = base64.b64encode(png_bytes).decode("utf-8")
+                                cutout_url = f"data:image/png;base64,{b64_png}"
+                            else:
+                                cutout_url = orig_data_url
+
+                            if isinstance(gv_analysis, dict) and gv_analysis.get("category"):
+                                category = gv_analysis.get("category") or category
+                                sub_category = gv_analysis.get("sub_category") or category
+                                color = gv_analysis.get("primary_color") or gv_analysis.get("color") or "Neutral"
+                                pattern = gv_analysis.get("pattern")
+                                material = gv_analysis.get("material")
+                                brand = gv_analysis.get("brand") or brand
+                                title = gv_analysis.get("title") or f"{color} {category}"
+                                quality = gv_analysis.get("quality")
+                                condition = gv_analysis.get("condition")
+                                state = gv_analysis.get("state")
+                                repair_advice = gv_analysis.get("repair_advice")
+                            else:
+                                if garments:
+                                    top_g = garments[0]
+                                    det_label = str(top_g.get("label") or top_g.get("kind") or "").lower()
+                                    if any(k in det_label for k in ["top", "shirt", "blouse", "tee", "sweat", "upper"]):
+                                        category = "Top"
+                                    elif any(k in det_label for k in ["pant", "bottom", "skirt", "jean", "short", "trouser"]):
+                                        category = "Bottom"
+                                    elif any(k in det_label for k in ["shoe", "footwear", "boot", "sneaker", "sandal"]):
+                                        category = "Footwear"
+                                    elif any(k in det_label for k in ["dress", "gown"]):
+                                        category = "Dress"
+                                    elif any(k in det_label for k in ["coat", "jacket", "outerwear"]):
+                                        category = "Outerwear"
+                                    elif any(k in det_label for k in ["belt", "bag", "accessory", "hat", "watch"]):
+                                        category = "Accessory"
+                                sub_category = category
+                                if not title or title.startswith("Pasted Garment") or title.startswith("Garment"):
+                                    title = f"{color} {category}"
+                except Exception as e:
+                    logger.warning("Stream garment processing err: %s", e)
+
+            doc = {
+                "id": c_id,
+                "user_id": user["id"],
+                "schemaVersion": 1,
+                "source": "Private",
+                "title": title,
+                "name": title,
+                "category": category,
+                "sub_category": sub_category or category,
+                "color": color,
+                "colors": [color],
+                "pattern": pattern,
+                "material": material,
+                "brand": brand or "Imported",
+                "quality": quality,
+                "condition": condition,
+                "state": state,
+                "repair_advice": repair_advice,
+                "image_url": orig_data_url,
+                "original_image_url": orig_data_url,
+                "clean_image_url": cutout_url,
+                "segmented_image_url": cutout_url,
+                "cutout_url": cutout_url,
+                "wear_count": int(item.get("wear_count") or item.get("times_worn") or 0),
+                "is_duplicate": False,
+                "group_role": None,
+                "created_at": item.get("created_at") or now,
+                "updated_at": now,
+                "migrated_from": payload.app_name or "Competitor App",
+            }
+            await repos.insert_one(db.closet_items, doc)
+            processed_count += 1
+
+            yield json.dumps({
+                "event": "item",
+                "processed": processed_count,
+                "total": total,
+                "item": doc,
+            }, ensure_ascii=False) + "\n"
+
+        yield json.dumps({"event": "done", "total": processed_count}, ensure_ascii=False) + "\n"
+
+    return StreamingResponse(
+        _event_stream(),
+        media_type="application/x-ndjson",
+        headers={
+            "X-Accel-Buffering": "no",
+            "Cache-Control": "no-cache",
+        },
+    )
+
+
 
 
 @router.get("")

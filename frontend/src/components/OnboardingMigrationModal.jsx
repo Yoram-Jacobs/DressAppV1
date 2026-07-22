@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { closetStore } from '@/lib/closetStore';
+import { workStore } from '@/lib/workStore';
 import { outfitStore } from '@/lib/outfitStore';
 import {
   Loader2,
@@ -154,14 +155,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     });
   };
 
-  // Stage 1: Import Wardrobe Items (Real photos sent to GarmentVision)
+  // Stage 1: Silent Background Import Wardrobe Items (Real photos streamed to GarmentVision)
   const handleStartItemImport = async () => {
-    setIsSyncing(true);
-    setShowPermissionOverlay(false);
-    setProgressPct(5);
-    setSyncedItems(0);
-    setSyncStatusText(t('migration.statusScrapingItems', { appName, defaultValue: `Passing real garment photos through GarmentVision AI matting pipeline...` }));
-
     let realPayloadItems = [];
 
     // Mode 1: User uploaded real photo files
@@ -196,49 +191,63 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         }
       } catch {
         toast.error('Could not parse pasted URLs. Please ensure they are valid image HTTP links or JSON array.');
-        setIsSyncing(false);
         return;
       }
     }
 
     // Fallback: If no real items provided yet, prompt user
-    if (realPayloadItems.length === 0) {
+    if (realPayloadItems.length === 0 && !targetLoginUrl) {
       toast.info('Please select real garment photos or paste your image URLs above to run through GarmentVision!');
-      setIsSyncing(false);
       return;
     }
 
-    setTotalItems(realPayloadItems.length);
+    const jobId = `mig_${Date.now()}`;
+    const label = `Importing ${appName || 'Competitor'} Wardrobe`;
 
-    try {
-      // Step 1: Processing animation
-      const itemDelay = Math.max(10, Math.min(50, Math.floor(1800 / realPayloadItems.length)));
-      for (let i = 1; i <= realPayloadItems.length; i++) {
-        await new Promise((r) => setTimeout(r, itemDelay));
-        setSyncedItems(i);
-        const itemPct = 5 + Math.floor((i / realPayloadItems.length) * 85);
-        setProgressPct(itemPct);
+    // 1. Register job in global workStore -> Triggers WorkProgressFloater pill
+    workStore.registerAnalyze(jobId, label);
+
+    // 2. Toast notification
+    toast.info(`Started GarmentVision AI import for ${realPayloadItems.length || 'wardrobe'} items. You can continue browsing!`);
+
+    // 3. Close the modal immediately so the user can navigate freely
+    onClose();
+
+    // 4. Run silent streaming background process
+    (async () => {
+      let processedCount = 0;
+      let totalCount = realPayloadItems.length || 0;
+
+      try {
+        await api.importCompetitorClosetStream({
+          body: {
+            app_name: appName.trim(),
+            target_url: targetLoginUrl,
+            items: realPayloadItems,
+            outfits: [],
+          },
+          onFrame: (frame) => {
+            if (frame.event === 'start') {
+              totalCount = frame.total || totalCount;
+              workStore.updateAnalyze(jobId, { items: 0, total: totalCount });
+            } else if (frame.event === 'item' && frame.item) {
+              processedCount++;
+              workStore.updateAnalyze(jobId, { items: processedCount, total: totalCount || frame.total || processedCount });
+              // Live stream directly into Closet store grid!
+              closetStore.upsert(frame.item);
+            } else if (frame.event === 'done') {
+              workStore.completeAnalyze(jobId);
+              toast.success(`GarmentVision AI import complete! ${processedCount} items added to your Closet.`);
+              closetStore.prewarm({ force: true }).catch(() => {});
+            }
+          },
+        });
+      } catch (err) {
+        console.error('Silent import error:', err);
+        workStore.completeAnalyze(jobId);
+        toast.error('Import process error occurred.');
       }
-
-      setSyncStatusText('GarmentVision AI matting complete! Saving clean cutouts to DressApp Closet...');
-      setProgressPct(95);
-
-      // Save imported real clothes to backend (backend runs GarmentVision u2net matting)
-      await api.importCompetitorCloset({
-        app_name: appName.trim(),
-        target_url: targetLoginUrl,
-        items: realPayloadItems,
-        outfits: [],
-      });
-
-      await closetStore.prewarm({ force: true }).catch(() => {});
-      setProgressPct(100);
-      setIsSyncing(false);
-      setMigrationStage('outfits_prompt');
-    } catch (err) {
-      toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'An error occurred during GarmentVision processing.' }));
-      setIsSyncing(false);
-    }
+    })();
   };
 
   // Stage 2: Import Outfits
