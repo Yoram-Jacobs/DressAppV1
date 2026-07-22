@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -295,11 +295,36 @@ function Stepper({ cards, saving, bgBatch }) {
 export default function AddItem() {
   const { t, i18n } = useTranslation();
   const nav = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const isSuitcase = searchParams.get('from') === 'suitcase';
   const [cards, setCards] = useState([]); // [{id,file,previewUrl,base64,status,progress,fields,error,dppData?}]
   const [saving, setSaving] = useState(false);
+
+  // Auto-run bulk import workflow if navigated from OnboardingMigrationModal with location.state.importedItems
+  useEffect(() => {
+    if (location.state?.importedItems?.length) {
+      const items = location.state.importedItems;
+      nav(location.pathname, { replace: true, state: {} });
+
+      const fingerprints = items.map((item, idx) => {
+        const imgUrl = item.image_url || item.photo_url || '';
+        return {
+          file: { name: item.title || `Garment ${idx + 1}`, size: 1024, type: 'image/jpeg' },
+          _b64: imgUrl.startsWith('data:image/') ? imgUrl.split(',', 1)[1] : null,
+          imgUrl: imgUrl.startsWith('data:image/') ? null : imgUrl,
+          sha256: null,
+          phash: null,
+          color_sig: null,
+        };
+      }).filter(fp => fp._b64 || fp.imgUrl);
+
+      if (fingerprints.length > 0) {
+        handleBatchBackground(fingerprints, 0);
+      }
+    }
+  }, [location.state]);
   const [quickConfirm, setQuickConfirm] = useState(false);
   // Phase R — receipt ingest animation overlay state.
   // ``ingestPhase``: null | 'saving' | 'syncing'
@@ -1515,10 +1540,17 @@ export default function AddItem() {
       analyzeFailed: 0,
     });
 
-    const requestLang = (i18n.language || '').split('-')[0] || 'en';
     const b64List = [];
     for (const fp of fingerprints) {
-      b64List.push(fp._b64 || await fileToBase64(fp.file));
+      if (fp._b64) {
+        b64List.push(fp._b64);
+      } else if (fp.imgUrl) {
+        b64List.push(fp.imgUrl);
+      } else if (fp.file) {
+        b64List.push(await fileToBase64(fp.file));
+      } else {
+        b64List.push('');
+      }
     }
     
     let detectMetas = [];

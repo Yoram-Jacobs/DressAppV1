@@ -201,55 +201,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       return;
     }
 
-    const jobId = `mig_${Date.now()}`;
-    const label = `Importing ${appName || 'Competitor'} Wardrobe`;
-
-    // 1. Register job in global workStore -> Triggers WorkProgressFloater pill
-    workStore.registerAnalyze(jobId, label);
-
-    // 2. Toast notification
-    toast.info(`Started GarmentVision AI import for ${realPayloadItems.length || 'wardrobe'} items. You can continue browsing!`);
-
-    // 3. Close the modal immediately so the user can navigate freely
+    // Close modal and pass imported images to AddItem native bulk upload workflow
     onClose();
-
-    // 4. Run silent async import background job with poller loop
-    (async () => {
-      try {
-        const res = await api.importCompetitorCloset({
-          app_name: appName.trim(),
-          target_url: targetLoginUrl,
-          items: realPayloadItems,
-          outfits: [],
-        });
-
-        const activeJobId = res.job_id;
-        const totalItems = res.total || realPayloadItems.length || 1;
-        workStore.updateAnalyze(jobId, { items: 0, total: totalItems });
-
-        // Poll /import-job-status/{activeJobId} every 3 seconds
-        const interval = setInterval(async () => {
-          try {
-            const statusRes = await api.getImportJobStatus(activeJobId);
-            const processed = statusRes.processed || 0;
-            workStore.updateAnalyze(jobId, { items: processed, total: totalItems });
-            closetStore.prewarm({ force: true }).catch(() => {});
-
-            if (statusRes.status === 'completed' || processed >= totalItems) {
-              clearInterval(interval);
-              workStore.completeAnalyze(jobId);
-              toast.success(`GarmentVision AI import complete! ${processed} items added to your Closet.`);
-            }
-          } catch (pErr) {
-            console.warn('Import status poll warning:', pErr);
-          }
-        }, 3000);
-      } catch (err) {
-        console.error('Silent import error:', err);
-        workStore.completeAnalyze(jobId);
-        toast.error(err?.response?.data?.detail || 'Import process failed. Please check your image links.');
-      }
-    })();
+    toast.info(`Passing ${realPayloadItems.length} wardrobe items to GarmentVision AI bulk upload pipeline!`);
+    navigate('/add', { state: { importedItems: realPayloadItems } });
   };
 
   // Stage 2: Import Outfits
