@@ -2738,7 +2738,7 @@ export default function Stylist() {
               className="rounded-xl text-xs h-9 font-semibold w-full"
               onClick={() => {
                 setKeyErrorOpen(false);
-                navigate('/profile', { state: { scrollTo: 'ai-configuration-section' } });
+                navigate('/profile?open=ai-config', { state: { scrollTo: 'ai-configuration-section' } });
               }}
             >
               {t('stylist.goToSettings', { defaultValue: 'Configure in Settings' })}

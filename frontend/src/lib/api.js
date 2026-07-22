@@ -45,6 +45,10 @@ client.interceptors.response.use(
       if (typeof detail === 'object') {
         err.response.data.detail = detail.message || JSON.stringify(detail);
       }
+      const detailStr = String(err.response.data.detail || '');
+      if (detailStr.includes('GEMINI_API_KEY') || detailStr.includes('Gemini vision unavailable') || detailStr.includes('No GEMINI_API_KEY')) {
+        import('./aiNotice').then(({ showAiKeyWarningToast }) => showAiKeyWarningToast());
+      }
     }
     return Promise.reject(err);
   }

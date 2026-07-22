@@ -680,7 +680,7 @@ export default function Profile() {
         document.getElementById('scheduler-settings-section')?.scrollIntoView({ behavior: 'smooth' });
       }, 150);
     }
-    if (location.hash === '#ai-configuration-section' || location.state?.scrollTo === 'ai-configuration-section') {
+    if (searchParams.get('open') === 'ai-config' || searchParams.get('tab') === 'ai-config' || location.hash === '#ai-configuration-section' || location.state?.scrollTo === 'ai-configuration-section') {
       items.push('ai-config');
       setTimeout(() => {
         document.getElementById('ai-configuration-section')?.scrollIntoView({ behavior: 'smooth' });
