@@ -24,9 +24,7 @@ import {
   RefreshCw,
   Eye,
   EyeOff,
-  Maximize2,
-  Check,
-  Edit3
+  Maximize2
 } from 'lucide-react';
 
 const PRESET_APPS = [
@@ -48,7 +46,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const [customLoginUrl, setCustomLoginUrl] = useState('https://app.whering.co.uk/login');
   const [busy, setBusy] = useState(false);
 
-  // Dynamic Item & Outfit counts (default 95 items, 2 outfits for Whering)
+  // Dynamic Item & Outfit counts
   const [itemCountInput, setItemCountInput] = useState(95);
   const [outfitCountInput, setOutfitCountInput] = useState(2);
 
@@ -115,7 +113,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
   const handleOpenPopupWindow = () => {
     window.open(targetLoginUrl, 'WardrobeAppLoginWindow', 'width=520,height=720,scrollbars=yes,resizable=yes');
-    toast.info(t('migration.popupOpened', { defaultValue: `Opened ${appName} login window. Complete login and return to proceed.` }));
+    toast.info(t('migration.popupOpened', { appName, defaultValue: `Opened ${appName} login window. Complete login and return to proceed.` }));
     setAuthenticated(true);
   };
 
@@ -138,7 +136,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     }, 900);
   };
 
-  // Helper to generate dynamic items & outfits based on requested counts
+  // Helper to generate dynamic items & outfits based on requested counts for ANY app
   const generateImportPayload = (nameOfApp, targetItemsCount, targetOutfitsCount) => {
     const numItems = Math.max(1, parseInt(targetItemsCount, 10) || 95);
     const numOutfits = Math.max(0, parseInt(targetOutfitsCount, 10) || 2);
@@ -188,7 +186,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     setProgressPct(5);
     setSyncedItems(0);
     setSyncedOutfits(0);
-    setSyncStatusText(`Verifying access to ${appName} Database A... Validating API session tokens & read permissions...`);
+    setSyncStatusText(t('migration.statusVerifying', { appName, defaultValue: `Verifying access to ${appName} Database A... Validating API session tokens & read permissions...` }));
 
     const { items: dynamicItems, outfits: dynamicOutfits } = generateImportPayload(
       appName.trim(),
@@ -203,7 +201,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       // Step 0: Database A Access Verification
       await new Promise((r) => setTimeout(r, 600));
       setProgressPct(12);
-      setSyncStatusText(`Database A Access Verified: Connection active (${dynamicItems.length} Items, ${dynamicOutfits.length} Outfits found). Applying migration script...`);
+      setSyncStatusText(t('migration.statusVerified', { items: dynamicItems.length, outfits: dynamicOutfits.length, defaultValue: `Database A Access Verified: Connection active (${dynamicItems.length} Items, ${dynamicOutfits.length} Outfits found). Applying migration script...` }));
       await new Promise((r) => setTimeout(r, 500));
 
       // Step 1: Extract items on screen with scaled speed
@@ -213,7 +211,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         setSyncedItems(i);
         const itemPct = 12 + Math.floor((i / dynamicItems.length) * 55);
         setProgressPct(itemPct);
-        setSyncStatusText(t('migration.statusItems', { defaultValue: `Extracting ${dynamicItems.length} garments from Database A...` }));
+        setSyncStatusText(t('migration.statusItems', { count: dynamicItems.length, defaultValue: `Extracting ${dynamicItems.length} garments from Database A...` }));
       }
 
       // Step 2: Map outfits on screen
@@ -223,7 +221,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         setSyncedOutfits(j);
         const outfitPct = 67 + Math.floor((j / dynamicOutfits.length) * 30);
         setProgressPct(outfitPct);
-        setSyncStatusText(t('migration.statusOutfits', { defaultValue: `Mapping ${dynamicOutfits.length} saved outfit combinations...` }));
+        setSyncStatusText(t('migration.statusOutfits', { count: dynamicOutfits.length, defaultValue: `Mapping ${dynamicOutfits.length} saved outfit combinations...` }));
       }
 
       setSyncStatusText(t('migration.statusFinalizing', { defaultValue: 'Finalizing DressApp closet database sync...' }));
@@ -381,7 +379,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               <div className="grid grid-cols-2 gap-3 pt-0.5">
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                    <Shirt className="w-3.5 h-3.5 text-blue-500" /> Clothes Count
+                    <Shirt className="w-3.5 h-3.5 text-blue-500" />
+                    {t('migration.clothesCountLabel', { defaultValue: 'Clothes Count' })}
                   </Label>
                   <Input
                     type="number"
@@ -394,7 +393,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 </div>
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                    <Layers className="w-3.5 h-3.5 text-purple-500" /> Outfits Count
+                    <Layers className="w-3.5 h-3.5 text-purple-500" />
+                    {t('migration.outfitsCountLabel', { defaultValue: 'Outfits Count' })}
                   </Label>
                   <Input
                     type="number"
@@ -593,7 +593,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                       {/* Login Form */}
                       <form onSubmit={handlePerformWebLogin} className="space-y-3 text-left">
                         <div>
-                          <Label className="text-[11px] font-semibold text-muted-foreground">Email *</Label>
+                          <Label className="text-[11px] font-semibold text-muted-foreground">
+                            {t('migration.webLoginEmail', { defaultValue: 'Email or Username' })} *
+                          </Label>
                           <Input
                             type="email"
                             required
@@ -605,7 +607,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                         </div>
 
                         <div>
-                          <Label className="text-[11px] font-semibold text-muted-foreground">Password *</Label>
+                          <Label className="text-[11px] font-semibold text-muted-foreground">
+                            {t('migration.webLoginPassword', { defaultValue: 'Password' })} *
+                          </Label>
                           <div className="relative mt-1">
                             <Input
                               type={showPassword ? 'text' : 'password'}
@@ -643,13 +647,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                           disabled={authenticating}
                           className="w-full rounded-xl h-10 text-xs font-bold bg-foreground text-background hover:opacity-90 mt-2"
                         >
-                          {authenticating ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Sign in'}
+                          {authenticating ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : t('migration.webLoginBtn', { appName, defaultValue: `Sign In to ${appName}` })}
                         </Button>
                       </form>
-
-                      <div className="text-[10px] text-muted-foreground text-center pt-1">
-                        New here? Connect your account seamlessly to DressApp.
-                      </div>
                     </div>
                   </div>
                 )}
@@ -671,11 +671,15 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                       <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto pt-1">
                         <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
                           <div className="text-base font-extrabold text-emerald-600 font-mono">{syncedItems}</div>
-                          <div className="text-[11px] text-muted-foreground font-medium">Clothes Imported</div>
+                          <div className="text-[11px] text-muted-foreground font-medium">
+                            {t('migration.summaryItems', { count: syncedItems, defaultValue: `${syncedItems} Clothes Imported` })}
+                          </div>
                         </div>
                         <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center">
                           <div className="text-base font-extrabold text-purple-600 font-mono">{syncedOutfits}</div>
-                          <div className="text-[11px] text-muted-foreground font-medium">Outfits Imported</div>
+                          <div className="text-[11px] text-muted-foreground font-medium">
+                            {t('migration.summaryOutfits', { count: syncedOutfits, defaultValue: `${syncedOutfits} Outfits Imported` })}
+                          </div>
                         </div>
                       </div>
 
@@ -718,14 +722,14 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                         <div className="p-2 rounded-lg bg-background border border-border flex items-center gap-2">
                           <Shirt className="w-4 h-4 text-blue-500 shrink-0" />
                           <div>
-                            <span className="text-[10px] text-muted-foreground block">Garments</span>
+                            <span className="text-[10px] text-muted-foreground block">{t('migration.clothesCountLabel', { defaultValue: 'Garments' })}</span>
                             <span className="font-bold font-mono text-foreground">{syncedItems} / {totalItems}</span>
                           </div>
                         </div>
                         <div className="p-2 rounded-lg bg-background border border-border flex items-center gap-2">
                           <Layers className="w-4 h-4 text-purple-500 shrink-0" />
                           <div>
-                            <span className="text-[10px] text-muted-foreground block">Outfits</span>
+                            <span className="text-[10px] text-muted-foreground block">{t('migration.outfitsCountLabel', { defaultValue: 'Outfits' })}</span>
                             <span className="font-bold font-mono text-foreground">{syncedOutfits} / {totalOutfits}</span>
                           </div>
                         </div>
@@ -739,10 +743,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     <div className="space-y-0.5">
                       <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
                         <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                        Authorize Database & Outfits Migration
+                        {t('migration.authorizeTitle', { defaultValue: 'Authorize Database & Outfits Migration' })}
                       </div>
                       <div className="text-[11px] text-muted-foreground">
-                        Authenticated with {appName}. Grant DressApp permission to sync your database.
+                        {t('migration.authorizeSub', { appName, defaultValue: `Authenticated with ${appName}. Grant DressApp permission to sync your database.` })}
                       </div>
                     </div>
                     <Button
@@ -752,21 +756,21 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                       onClick={() => setShowPermissionOverlay(false)}
                       className="h-6 text-[11px] px-2 text-muted-foreground"
                     >
-                      Close
+                      {t('common.close', { defaultValue: 'Close' })}
                     </Button>
                   </div>
 
                   <div className="bg-muted/40 p-2.5 rounded-lg border border-border/70 text-[11px] space-y-2">
                     <div className="font-medium text-foreground flex items-center justify-between">
-                      <span>Detected Database A Content:</span>
+                      <span>{t('migration.detectedContent', { defaultValue: 'Detected Database A Content:' })}</span>
                       <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">
                         {itemCountInput} Items • {outfitCountInput} Outfits
                       </span>
                     </div>
                     <div className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5">
-                      <span>• Garment photos & categories</span>
-                      <span>• Saved outfits & layouts</span>
-                      <span>• Wear count statistics</span>
+                      <span>• {t('migration.dataSyncedItems', { defaultValue: 'Garment photos & categories' })}</span>
+                      <span>• {t('migration.dataSyncedOutfits', { defaultValue: 'Saved outfits & layouts' })}</span>
+                      <span>• {t('migration.dataSyncedStats', { defaultValue: 'Wear count statistics' })}</span>
                     </div>
                   </div>
 
@@ -777,7 +781,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                       onClick={() => setShowPermissionOverlay(false)}
                       className="rounded-xl h-9 text-xs"
                     >
-                      Cancel
+                      {t('common.cancel', { defaultValue: 'Cancel' })}
                     </Button>
                     <Button
                       type="button"
@@ -786,7 +790,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                       data-testid="migration-grant-permission-btn"
                     >
                       <UploadCloud className="w-3.5 h-3.5" />
-                      Grant Permission & Sync ({itemCountInput} Items)
+                      {t('migration.grantPermissionWithCount', { count: itemCountInput, defaultValue: `Grant Permission & Sync (${itemCountInput} Items)` })}
                     </Button>
                   </div>
                 </div>
@@ -796,7 +800,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   <div className="text-xs text-foreground/90 font-medium truncate flex items-center gap-2">
                     <Lock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                     <span className="truncate">
-                      {authenticated ? `Connected: ${itemCountInput} Items & ${outfitCountInput} Outfits` : `Log in to your ${appName} account`}
+                      {authenticated
+                        ? t('migration.sessionConnectedWithCount', { items: itemCountInput, outfits: outfitCountInput, defaultValue: `Connected: ${itemCountInput} Items & ${outfitCountInput} Outfits` })
+                        : t('migration.webLoginTitle', { appName, defaultValue: `Log in to your ${appName} account` })}
                     </span>
                   </div>
                   <Button
@@ -808,7 +814,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     className="rounded-xl h-9 bg-primary text-primary-foreground font-semibold text-xs flex items-center gap-1.5 shadow-md"
                     data-testid="migration-weblogin-proceed-btn"
                   >
-                    <span>Authorize Migration ({itemCountInput} Items)</span>
+                    <span>{t('migration.authorizeMigrationWithCount', { count: itemCountInput, defaultValue: `Authorize Migration (${itemCountInput} Items)` })}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 </div>
@@ -827,7 +833,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 {t('common.back', { defaultValue: 'Back' })}
               </Button>
               <span className="text-[11px] text-muted-foreground">
-                Targeting Database A: {itemCountInput} Items, {outfitCountInput} Outfits
+                {t('migration.stepProgress', { appName, defaultValue: `Step 3 of 3 — Staying on ${appName} until sync completes` })}
               </span>
             </div>
           </div>
