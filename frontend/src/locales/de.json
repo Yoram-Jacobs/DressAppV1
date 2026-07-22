@@ -2662,7 +2662,16 @@
     "successSub": "Ihre Kleidungsstücke und gespeicherten Outfits aus {{appName}} wurden vollständig in Ihren DressApp-Kleiderschrank importiert.",
     "summaryItems": "{{count}} Kleidungsstücke Importiert",
     "summaryOutfits": "{{count}} Outfits Importiert",
-    "okToCloset": "OK - Kleiderschrank Öffnen"
+    "okToCloset": "OK - Kleiderschrank Öffnen",
+    "webLoginTitle": "Bei Ihrem {{appName}}-Konto anmelden",
+    "webLoginSub": "Authentifizieren Sie Ihr {{appName}}-Konto, um DressApp Zugriff für die Datenmigration zu gewähren.",
+    "webLoginEmail": "E-Mail oder Benutzername",
+    "webLoginPassword": "Passwort",
+    "webLoginBtn": "Bei {{appName}} anmelden",
+    "webLoginSSO": "Oder mit Google / Apple anmelden",
+    "webLoginAuthenticated": "Sitzung verbunden: Authentifiziert bei {{appName}}",
+    "webLoginProceed": "Weiter zur Migrationsberechtigung",
+    "openExternal": "Offizielle Anmeldeseite öffnen"
   },
   "login_reminder": {
     "newTitle": "Ihr Kleiderschrank ist leer — Fügen Sie Ihr erstes Kleidungsstück hinzu!",

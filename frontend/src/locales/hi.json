@@ -2662,7 +2662,16 @@
     "successSub": "{{appName}} से आपके कपड़े और सेव किए गए आउटफिट्स पूरी तरह से आपकी DressApp अलमारी में इम्पोर्ट कर लिए गए हैं।",
     "summaryItems": "{{count}} कपड़े इम्पोर्ट किए गए",
     "summaryOutfits": "{{count}} आउटफिट्स इम्पोर्ट किए गए",
-    "okToCloset": "ओके - अलमारी खोलें"
+    "okToCloset": "ओके - अलमारी खोलें",
+    "webLoginTitle": "अपने {{appName}} खाते में लॉगिन करें",
+    "webLoginSub": "डेटा माइग्रेशन के लिए DressApp को अनुमति देने हेतु अपना {{appName}} खाता प्रमाणित करें।",
+    "webLoginEmail": "ईमेल या उपयोगकर्ता नाम",
+    "webLoginPassword": "पासवर्ड",
+    "webLoginBtn": "{{appName}} में लॉगिन करें",
+    "webLoginSSO": "या Google / Apple के साथ साइन इन करें",
+    "webLoginAuthenticated": "सत्र कनेक्टेड: {{appName}} के साथ प्रमाणित",
+    "webLoginProceed": "माइग्रेशन अनुमति पर आगे बढ़ें",
+    "openExternal": "आधिकारिक लॉगिन पृष्ठ खोलें"
   },
   "login_reminder": {
     "newTitle": "आपकी अलमारी खाली है — अपना पहला कपड़ा जोड़ें!",

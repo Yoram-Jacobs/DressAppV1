@@ -2702,7 +2702,16 @@
     "successSub": "פריטי הלבוש והתלבושות השמורות מ-{{appName}} יובאו במלואם לארון DressApp שלך.",
     "summaryItems": "{{count}} פריטי לבוש יובאו",
     "summaryOutfits": "{{count}} תלבושות יובאו",
-    "okToCloset": "אישור - פתח ארון"
+    "okToCloset": "אישור - פתח ארון",
+    "webLoginTitle": "התחברות לחשבון {{appName}} שלך",
+    "webLoginSub": "אימות חשבון ה-{{appName}} שלך כדי להעניק ל-DressApp הרשאת גישה להעברת המלתחה.",
+    "webLoginEmail": "אימייל או שם משתמש",
+    "webLoginPassword": "סיסמה",
+    "webLoginBtn": "התחברות ל-{{appName}}",
+    "webLoginSSO": "או התחברות באמצעות Google / Apple",
+    "webLoginAuthenticated": "הפעלת התחברות הושלמה: מאומת מול {{appName}}",
+    "webLoginProceed": "המשך לאישור העברת הנתונים",
+    "openExternal": "פתיחת דף ההתחברות הרשמי"
   },
   "login_reminder": {
     "newTitle": "הארון שלך ריק — בוא/י נוסיף פריט ראשון!",

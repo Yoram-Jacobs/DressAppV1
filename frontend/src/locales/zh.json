@@ -2662,7 +2662,16 @@
     "successSub": "您来自 {{appName}} 的所有衣物与已保存搭配已完整导入您的 DressApp 衣橱。",
     "summaryItems": "已导入 {{count}} 件衣物",
     "summaryOutfits": "已导入 {{count}} 套搭配",
-    "okToCloset": "确定 - 打开衣橱"
+    "okToCloset": "确定 - 打开衣橱",
+    "webLoginTitle": "登录您的 {{appName}} 账户",
+    "webLoginSub": "验证您的 {{appName}} 账户，以向 DressApp 授予数据库迁移权限。",
+    "webLoginEmail": "电子邮件或用户名",
+    "webLoginPassword": "密码",
+    "webLoginBtn": "登录到 {{appName}}",
+    "webLoginSSO": "或使用 Google / Apple 登录",
+    "webLoginAuthenticated": "会话已连接：已通过 {{appName}} 身份验证",
+    "webLoginProceed": "继续进行迁移授权",
+    "openExternal": "打开官方登录页面"
   },
   "login_reminder": {
     "newTitle": "您的衣橱还是空的 — 添加您的第一件衣服吧！",

@@ -2662,7 +2662,16 @@
     "successSub": "تم استيراد ملابسك وتنسيقاتك المحفوظة من {{appName}} بنجاح إلى خزانة DressApp.",
     "summaryItems": "تم استيراد {{count}} قطعة ملابس",
     "summaryOutfits": "تم استيراد {{count}} إطلالة",
-    "okToCloset": "موافق - فتح الخزانة"
+    "okToCloset": "موافق - فتح الخزانة",
+    "webLoginTitle": "تسجيل الدخول إلى حسابك في {{appName}}",
+    "webLoginSub": "قم بتوثيق حسابك في {{appName}} لمنح DressApp صلاحية الوصول لنقل بيانات خزانة ملابسك.",
+    "webLoginEmail": "البريد الإلكتروني أو اسم المستخدم",
+    "webLoginPassword": "كلمة المرور",
+    "webLoginBtn": "تسجيل الدخول إلى {{appName}}",
+    "webLoginSSO": "أو تسجيل الدخول عبر Google / Apple",
+    "webLoginAuthenticated": "تم الاتصال بالجلسة: تم التوثيق بنجاح مع {{appName}}",
+    "webLoginProceed": "المتابعة لإذن نقل البيانات",
+    "openExternal": "فتح صفحة تسجيل الدخول الرسمية"
   },
   "login_reminder": {
     "newTitle": "خزانتك فارغة — فلنضف عنصرك الأول!",

@@ -2662,7 +2662,16 @@
     "successSub": "Your wardrobe items and saved outfits from {{appName}} have been fully imported into your DressApp closet.",
     "summaryItems": "{{count}} Clothes Imported",
     "summaryOutfits": "{{count}} Outfits Imported",
-    "okToCloset": "OK - Open Closet"
+    "okToCloset": "OK - Open Closet",
+    "webLoginTitle": "Log In to Your {{appName}} Account",
+    "webLoginSub": "Authenticate your {{appName}} account to grant DressApp access for database migration.",
+    "webLoginEmail": "Email or Username",
+    "webLoginPassword": "Password",
+    "webLoginBtn": "Sign In to {{appName}}",
+    "webLoginSSO": "Or Sign In with Google / Apple",
+    "webLoginAuthenticated": "Session Connected: Authenticated with {{appName}}",
+    "webLoginProceed": "Proceed to Migration Permission",
+    "openExternal": "Open Official Login Page"
   },
   "login_reminder": {
     "newTitle": "Your Closet is Empty — Let's Add Your First Item!",

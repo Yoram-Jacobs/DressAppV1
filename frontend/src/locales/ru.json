@@ -2662,7 +2662,16 @@
     "successSub": "Ваша одежда и сохраненные образы из {{appName}} полностью импортированы в ваш гардероб DressApp.",
     "summaryItems": "Импортировано одежды: {{count}}",
     "summaryOutfits": "Импортировано образов: {{count}}",
-    "okToCloset": "ОК - Открыть Гардероб"
+    "okToCloset": "ОК - Открыть Гардероб",
+    "webLoginTitle": "Войдите в свой аккаунт {{appName}}",
+    "webLoginSub": "Подтвердите свой аккаунт {{appName}}, чтобы предоставить DressApp доступ к миграции.",
+    "webLoginEmail": "Эл. почта или имя пользователя",
+    "webLoginPassword": "Пароль",
+    "webLoginBtn": "Войти в {{appName}}",
+    "webLoginSSO": "Или войти через Google / Apple",
+    "webLoginAuthenticated": "Сеанс подключен: Авторизован в {{appName}}",
+    "webLoginProceed": "Перейти к разрешению на миграцию",
+    "openExternal": "Открыть официальную страницу входа"
   },
   "login_reminder": {
     "newTitle": "Ваш гардероб пуст — Добавьте первую вещь!",

@@ -2662,7 +2662,16 @@
     "successSub": "Tus prendas y conjuntos guardados de {{appName}} se han importado completamente en tu armario de DressApp.",
     "summaryItems": "{{count}} Prendas Importadas",
     "summaryOutfits": "{{count}} Conjuntos Importados",
-    "okToCloset": "Aceptar - Abrir Armario"
+    "okToCloset": "Aceptar - Abrir Armario",
+    "webLoginTitle": "Iniciar sesión en su cuenta de {{appName}}",
+    "webLoginSub": "Autentique su cuenta de {{appName}} para otorgar acceso a DressApp para la migración.",
+    "webLoginEmail": "Correo electrónico o usuario",
+    "webLoginPassword": "Contraseña",
+    "webLoginBtn": "Iniciar sesión en {{appName}}",
+    "webLoginSSO": "O iniciar sesión con Google / Apple",
+    "webLoginAuthenticated": "Sesión conectada: Autenticado con {{appName}}",
+    "webLoginProceed": "Continuar a permisos de migración",
+    "openExternal": "Abrir página oficial de inicio de sesión"
   },
   "login_reminder": {
     "newTitle": "Tu armario está vacío — ¡Añade tu primera prenda!",

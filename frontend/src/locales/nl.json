@@ -2644,7 +2644,16 @@
     "appUrlLabel": "Account URL of website (Optioneel)",
     "appUrlPlaceholder": "https://acloset.app/user/alex",
     "credentialsLabel": "Inloggegevens / Back-uplink (Optioneel)",
-    "credentialsPlaceholder": "Export API-token, gebruikersnaam of back-uplink"
+    "credentialsPlaceholder": "Export API-token, gebruikersnaam of back-uplink",
+    "webLoginTitle": "Inloggen op uw {{appName}}-account",
+    "webLoginSub": "Authenticeer uw {{appName}}-account om DressApp toegang te verlenen voor gegevensmigratie.",
+    "webLoginEmail": "E-mailadres of gebruikersnaam",
+    "webLoginPassword": "Wachtwoord",
+    "webLoginBtn": "Inloggen bij {{appName}}",
+    "webLoginSSO": "Of inloggen met Google / Apple",
+    "webLoginAuthenticated": "Sessie verbonden: Geauthenticeerd met {{appName}}",
+    "webLoginProceed": "Doorgaan naar migratiemachtiging",
+    "openExternal": "Officiële inlogpagina openen"
   },
   "login_reminder": {
     "newTitle": "Je kledingkast is leeg — Voeg je eerste kledingstuk toe!",

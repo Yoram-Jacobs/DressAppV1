@@ -20,7 +20,11 @@ import {
   Lock,
   Shirt,
   Layers,
-  ExternalLink
+  ExternalLink,
+  RefreshCw,
+  User,
+  KeyRound,
+  Check
 } from 'lucide-react';
 
 const PRESET_APPS = [
@@ -35,12 +39,17 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const { t } = useTranslation();
   const nav = useNavigate();
 
-  // Steps: 'ask' | 'app_search' | 'permission' | 'syncing' | 'success'
+  // Steps: 'ask' | 'app_search' | 'web_login' | 'permission' | 'syncing' | 'success'
   const [step, setStep] = useState('ask');
-  const [appName, setAppName] = useState('Acloset');
-  const [appDomain, setAppDomain] = useState('www.acloset.app');
+  const [appName, setAppName] = useState('Whering');
+  const [appDomain, setAppDomain] = useState('whering.co.uk');
   const [busy, setBusy] = useState(false);
-  const [webSearching, setWebSearching] = useState(false);
+
+  // Web Login Page state
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [authenticating, setAuthenticating] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
 
   // Sync state
   const [progressPct, setProgressPct] = useState(0);
@@ -69,17 +78,40 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     setAppDomain(app.domain);
   };
 
-  const handleSearchLogin = (e) => {
+  const handleGoToWebLogin = (e) => {
     e.preventDefault();
     if (!appName.trim()) {
       toast.error(t('migration.appNameRequired', { defaultValue: 'Please enter your previous wardrobe app name.' }));
       return;
     }
-    setWebSearching(true);
+    setStep('web_login');
+  };
+
+  const handlePerformWebLogin = (e) => {
+    e.preventDefault();
+    setAuthenticating(true);
     setTimeout(() => {
-      setWebSearching(false);
-      setStep('permission');
+      setAuthenticating(false);
+      setAuthenticated(true);
+      toast.success(t('migration.webLoginAuthenticated', { appName, defaultValue: `Session Connected: Authenticated with ${appName}` }));
+    }, 1000);
+  };
+
+  const handleSSOLogin = () => {
+    setAuthenticating(true);
+    setTimeout(() => {
+      setAuthenticating(false);
+      setAuthenticated(true);
+      toast.success(t('migration.webLoginAuthenticated', { appName, defaultValue: `Session Connected: Authenticated with ${appName}` }));
     }, 1200);
+  };
+
+  const handleProceedToPermission = () => {
+    if (!authenticated) {
+      // Auto-authenticate if user clicks proceed directly
+      setAuthenticated(true);
+    }
+    setStep('permission');
   };
 
   const handleStartSync = async () => {
@@ -89,7 +121,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     setSyncedOutfits(0);
     setSyncStatusText(t('migration.statusConnecting', { appName, defaultValue: `Connecting to ${appName} database...` }));
 
-    // Prepare demo payload for realistic competitor import sync
+    // Demo payload for realistic competitor import sync
     const mockItems = [
       { id: 'appA_1', title: 'Classic White Linen Shirt', category: 'Top', color: 'White', brand: 'Zara', wear_count: 5 },
       { id: 'appA_2', title: 'Slim Dark Indigo Jeans', category: 'Bottom', color: 'Blue', brand: 'Levi\'s', wear_count: 12 },
@@ -141,7 +173,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     try {
       // Step 1: Simulate item progress
       for (let i = 1; i <= mockItems.length; i++) {
-        await new Promise((r) => setTimeout(r, 100));
+        await new Promise((r) => setTimeout(r, 90));
         setSyncedItems(i);
         const itemPct = Math.floor((i / mockItems.length) * 60);
         setProgressPct(itemPct);
@@ -150,7 +182,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
       // Step 2: Simulate outfit progress
       for (let j = 1; j <= mockOutfits.length; j++) {
-        await new Promise((r) => setTimeout(r, 180));
+        await new Promise((r) => setTimeout(r, 160));
         setSyncedOutfits(j);
         const outfitPct = 60 + Math.floor((j / mockOutfits.length) * 35);
         setProgressPct(outfitPct);
@@ -168,18 +200,17 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       });
 
       setProgressPct(100);
-      await new Promise((r) => setTimeout(r, 300));
+      await new Promise((r) => setTimeout(r, 250));
       setStep('success');
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'Sync failed. Please try again.' }));
-      setStep('app_search');
+      setStep('permission');
     }
   };
 
   const handleFinishSuccess = async () => {
     setBusy(true);
     try {
-      // Force refresh closet store
       await closetStore.prewarm({ force: true });
       if (onFlagUpdated) onFlagUpdated('Migrate');
       onClose();
@@ -207,7 +238,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
   return (
     <Dialog open={isOpen} onOpenChange={(val) => { if (!val && step !== 'syncing') handleCancelForm(); }}>
-      <DialogContent className="max-w-md rounded-2xl p-6 bg-card border border-border shadow-2xl overflow-hidden">
+      <DialogContent className={`rounded-2xl p-6 bg-card border border-border shadow-2xl overflow-hidden transition-all ${step === 'web_login' ? 'max-w-xl' : 'max-w-md'}`}>
         {/* STEP 1: ASK */}
         {step === 'ask' && (
           <div className="space-y-5 text-center">
@@ -246,16 +277,16 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           </div>
         )}
 
-        {/* STEP 2: APP SEARCH & SEAMLESS LOGIN */}
+        {/* STEP 2: APP SEARCH & SELECTION */}
         {step === 'app_search' && (
-          <form onSubmit={handleSearchLogin} className="space-y-4">
+          <form onSubmit={handleGoToWebLogin} className="space-y-4">
             <DialogHeader>
               <DialogTitle className="text-lg font-bold font-display flex items-center gap-2">
                 <Globe className="w-5 h-5 text-primary" />
                 {t('migration.seamlessTitle', { defaultValue: 'Connect & Log In to Previous App' })}
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                {t('migration.seamlessSub', { defaultValue: 'Select or enter your previous app. DressApp will open the secure login portal to connect your account.' })}
+                {t('migration.seamlessSub', { defaultValue: 'Select or enter your previous app. DressApp will open the secure web login portal to connect your account.' })}
               </DialogDescription>
             </DialogHeader>
 
@@ -287,7 +318,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             <div className="space-y-3 pt-1">
               <div>
                 <Label htmlFor="appNameInput" className="text-xs font-semibold">
-                  {t('migration.appNameLabel', { defaultValue: 'App Name *' })}
+                  {t('migration.appNameLabel', { defaultValue: 'Previous App Name / Platform *' })}
                 </Label>
                 <div className="relative mt-1">
                   <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
@@ -306,7 +337,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 </div>
               </div>
 
-              {/* Simulated Seamless Web Login Portal Preview */}
+              {/* Secure Web Portal Preview Box */}
               <div className="p-3.5 rounded-xl bg-muted/40 border border-border/70 space-y-2">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span className="flex items-center gap-1 text-emerald-600 font-medium">
@@ -317,7 +348,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   </span>
                 </div>
                 <div className="text-xs text-foreground/80 leading-relaxed">
-                  Log in directly to your <strong>{appName}</strong> account. No password sharing required — DressApp connects securely via session handoff.
+                  Log in directly to your <strong>{appName}</strong> account in the next step. DressApp connects securely via session handoff without storing passwords.
                 </div>
               </div>
             </div>
@@ -327,7 +358,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 type="button"
                 variant="outline"
                 onClick={handleCancelForm}
-                disabled={webSearching}
                 className="rounded-xl h-10"
                 data-testid="migration-form-cancel-btn"
               >
@@ -335,27 +365,171 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               </Button>
               <Button
                 type="submit"
-                disabled={webSearching}
                 className="rounded-xl h-10 bg-primary text-primary-foreground font-medium flex items-center gap-1.5"
                 data-testid="migration-form-login-btn"
               >
-                {webSearching ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    {t('common.loading', { defaultValue: 'Connecting...' })}
-                  </>
-                ) : (
-                  <>
-                    <ExternalLink className="w-4 h-4" />
-                    {t('migration.loginToAppBtn', { appName, defaultValue: `Log in to ${appName} & Connect` })}
-                  </>
-                )}
+                <ExternalLink className="w-4 h-4" />
+                {t('migration.loginToAppBtn', { appName, defaultValue: `Log in to ${appName} & Connect` })}
               </Button>
             </div>
           </form>
         )}
 
-        {/* STEP 3: PERMISSION REQUEST */}
+        {/* STEP 3: WEB LOGIN PAGE */}
+        {step === 'web_login' && (
+          <div className="space-y-4">
+            <DialogHeader className="border-b border-border pb-3">
+              <DialogTitle className="text-lg font-bold font-display flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-emerald-600" />
+                  {t('migration.webLoginTitle', { appName, defaultValue: `Log In to Your ${appName} Account` })}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => window.open(`https://${appDomain}`, '_blank')}
+                  className="text-xs text-muted-foreground hover:text-foreground h-8 px-2 flex items-center gap-1"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  {t('migration.openExternal', { defaultValue: 'Open Official Login Page' })}
+                </Button>
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                {t('migration.webLoginSub', { appName, defaultValue: `Authenticate your ${appName} account to grant DressApp access for database migration.` })}
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* Embedded Simulated Browser Window */}
+            <div className="rounded-xl border border-border overflow-hidden bg-background shadow-inner">
+              {/* Browser Address Bar Header */}
+              <div className="bg-muted/80 px-3 py-2 border-b border-border flex items-center gap-2 text-xs">
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-400/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400/80" />
+                </div>
+                <div className="flex-1 bg-card rounded-md border border-border/80 px-2.5 py-1 flex items-center gap-1.5 text-[11px] font-mono text-foreground/80">
+                  <Lock className="w-3 h-3 text-emerald-600 shrink-0" />
+                  <span className="truncate">https://{appDomain}/login</span>
+                </div>
+                <RefreshCw className={`w-3.5 h-3.5 text-muted-foreground ${authenticating ? 'animate-spin' : ''}`} />
+              </div>
+
+              {/* Login Form Container inside Browser Shell */}
+              <div className="p-5 bg-card/50 space-y-4">
+                {authenticated ? (
+                  <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-2">
+                    <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center mx-auto">
+                      <Check className="w-5 h-5" />
+                    </div>
+                    <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                      {t('migration.webLoginAuthenticated', { appName, defaultValue: `Session Connected: Authenticated with ${appName}` })}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                      User token active: <span className="font-mono text-foreground font-semibold">user@{appDomain}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <form onSubmit={handlePerformWebLogin} className="space-y-3 max-w-sm mx-auto">
+                    <div className="text-center pb-1">
+                      <div className="text-sm font-bold font-display text-foreground">{appName} Web Portal</div>
+                      <div className="text-[11px] text-muted-foreground">Sign in to sync your wardrobe</div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="webEmail" className="text-xs font-medium text-muted-foreground">
+                        {t('migration.webLoginEmail', { defaultValue: 'Email or Username' })}
+                      </Label>
+                      <div className="relative mt-1">
+                        <User className="w-3.5 h-3.5 absolute left-3 top-3 text-muted-foreground" />
+                        <Input
+                          id="webEmail"
+                          type="email"
+                          placeholder={`user@${appDomain}`}
+                          value={loginEmail}
+                          onChange={(e) => setLoginEmail(e.target.value)}
+                          className="rounded-lg pl-8 text-xs h-9"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="webPass" className="text-xs font-medium text-muted-foreground">
+                        {t('migration.webLoginPassword', { defaultValue: 'Password' })}
+                      </Label>
+                      <div className="relative mt-1">
+                        <KeyRound className="w-3.5 h-3.5 absolute left-3 top-3 text-muted-foreground" />
+                        <Input
+                          id="webPass"
+                          type="password"
+                          placeholder="••••••••••••"
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          className="rounded-lg pl-8 text-xs h-9"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      disabled={authenticating}
+                      className="w-full rounded-lg h-9 text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-1.5"
+                    >
+                      {authenticating ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          Authenticating...
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="w-3.5 h-3.5" />
+                          {t('migration.webLoginBtn', { appName, defaultValue: `Sign In to ${appName}` })}
+                        </>
+                      )}
+                    </Button>
+
+                    <div className="pt-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleSSOLogin}
+                        disabled={authenticating}
+                        className="w-full rounded-lg h-8 text-[11px] border-border text-muted-foreground hover:text-foreground"
+                      >
+                        {t('migration.webLoginSSO', { defaultValue: 'Or Sign In with Google / Apple' })}
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-border">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStep('app_search')}
+                className="rounded-xl h-10 text-xs"
+              >
+                {t('common.back', { defaultValue: 'Back' })}
+              </Button>
+              <Button
+                type="button"
+                onClick={handleProceedToPermission}
+                className="rounded-xl h-10 bg-primary text-primary-foreground font-semibold text-xs flex items-center gap-1.5 shadow-md"
+                data-testid="migration-weblogin-proceed-btn"
+              >
+                <span>{t('migration.webLoginProceed', { defaultValue: 'Proceed to Migration Permission' })}</span>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 4: PERMISSION REQUEST */}
         {step === 'permission' && (
           <div className="space-y-4 text-center">
             <div className="mx-auto w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
@@ -389,10 +563,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             <div className="grid grid-cols-2 gap-3 pt-2">
               <Button
                 variant="outline"
-                onClick={() => setStep('app_search')}
+                onClick={() => setStep('web_login')}
                 className="rounded-xl h-10 border-border font-medium"
               >
-                {t('common.cancel', { defaultValue: 'Cancel' })}
+                {t('common.back', { defaultValue: 'Back' })}
               </Button>
               <Button
                 onClick={handleStartSync}
@@ -406,7 +580,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           </div>
         )}
 
-        {/* STEP 4: SYNCING WITH PROGRESS BAR */}
+        {/* STEP 5: SYNCING WITH PROGRESS BAR */}
         {step === 'syncing' && (
           <div className="space-y-5 text-center py-2">
             <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center">
@@ -465,7 +639,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           </div>
         )}
 
-        {/* STEP 5: SUCCESS POPUP */}
+        {/* STEP 6: SUCCESS POPUP */}
         {step === 'success' && (
           <div className="space-y-5 text-center py-1">
             <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/15 text-emerald-600 flex items-center justify-center ring-8 ring-emerald-500/5">

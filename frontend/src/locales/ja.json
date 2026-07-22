@@ -2663,7 +2663,16 @@
     "successSub": "{{appName}} の服と保存されたコーディネートがDressAppクローゼットに正常にインポートされました。",
     "summaryItems": "インポートした服: {{count}}着",
     "summaryOutfits": "インポートしたコーデ: {{count}}件",
-    "okToCloset": "OK - クローゼットを開く"
+    "okToCloset": "OK - クローゼットを開く",
+    "webLoginTitle": "{{appName}} アカウントにログイン",
+    "webLoginSub": "DressAppにデータベース移行アクセス許可を与えるため、{{appName}} アカウントを認証してください。",
+    "webLoginEmail": "メールアドレスまたはユーザー名",
+    "webLoginPassword": "パスワード",
+    "webLoginBtn": "{{appName}} にログイン",
+    "webLoginSSO": "または Google / Apple でサインイン",
+    "webLoginAuthenticated": "セッション接続済み: {{appName}} で認証完了",
+    "webLoginProceed": "移行の権限確認に進む",
+    "openExternal": "公式ログインページを開く"
   },
   "login_reminder": {
     "newTitle": "クローゼットが空です — 最初の服を追加しましょう！",
