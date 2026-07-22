@@ -2672,9 +2672,11 @@ async def import_competitor_closet(
         scraped = await scrape_wardrobe_url(payload.target_url)
         if scraped:
             raw_items = scraped
-    
-    # Fallback mock items if caller sends empty payload
-    if not raw_items and not raw_outfits:
+        else:
+            logger.warning("Wardrobe scraper returned no items for target_url=%s; proceeding without auto-generated mock items.", payload.target_url)
+
+    # Only generate mock items if caller sent a fully empty payload (no target_url scrape attempt)
+    if not raw_items and not raw_outfits and not payload.target_url:
         raw_items = [
             {"id": "appA_1", "title": "Classic White Linen Shirt", "category": "Top", "color": "White", "brand": "Zara", "wear_count": 5},
             {"id": "appA_2", "title": "Slim Dark Indigo Jeans", "category": "Bottom", "color": "Blue", "brand": "Levi's", "wear_count": 12},
@@ -2761,6 +2763,7 @@ async def import_competitor_closet(
             category = "Accessory"
 
         cat_imgs = category_images.get(category, category_images["Top"])
+        fallback_img = cat_imgs[0] if cat_imgs else None
         img_url = item.get("image_url") or item.get("photo_url") or fallback_img
         cutout_url = item.get("cutout_url") or item.get("no_bg_url") or img_url
 
