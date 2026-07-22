@@ -2761,9 +2761,31 @@ async def import_competitor_closet(
             category = "Accessory"
 
         cat_imgs = category_images.get(category, category_images["Top"])
-        fallback_img = cat_imgs[idx % len(cat_imgs)]
         img_url = item.get("image_url") or item.get("photo_url") or fallback_img
-        cutout_url = item.get("cutout_url") or item.get("no_bg_url") or fallback_img
+        cutout_url = item.get("cutout_url") or item.get("no_bg_url") or img_url
+
+        # GarmentVision AI Pipeline: Process real photo through background matting if real image is provided
+        if img_url and img_url.startswith(("http://", "https://", "data:image/")):
+            try:
+                from app.services import background_matting
+                img_bytes = None
+
+                if img_url.startswith("data:image/"):
+                    header, encoded = img_url.split(",", 1)
+                    img_bytes = base64.b64decode(encoded)
+                else:
+                    async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+                        resp = await client.get(img_url)
+                        if resp.status_code == 200:
+                            img_bytes = resp.content
+
+                if img_bytes:
+                    res = await background_matting.remove_background(img_bytes)
+                    if res.get("png_bytes"):
+                        b64_png = base64.b64encode(res["png_bytes"]).decode("utf-8")
+                        cutout_url = f"data:image/png;base64,{b64_png}"
+            except Exception as gv_err:
+                logger.warning("GarmentVision pipeline matting skipped for item %s: %s", title, gv_err)
 
         doc = {
             "id": c_id,
@@ -2779,7 +2801,7 @@ async def import_competitor_closet(
             "brand": item.get("brand") or item.get("label"),
             "image_url": img_url,
             "original_image_url": img_url,
-            "clean_image_url": img_url,
+            "clean_image_url": cutout_url,
             "cutout_url": cutout_url,
             "wear_count": int(item.get("wear_count") or item.get("times_worn") or 0),
             "is_duplicate": False,
