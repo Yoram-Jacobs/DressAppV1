@@ -74,6 +74,7 @@ class MigrationFlagIn(BaseModel):
 async def get_me(user: dict = Depends(get_current_user)) -> dict[str, Any]:
     safe = {k: v for k, v in user.items() if k not in {"password_hash", "google_oauth"}}
     safe["google_connected"] = bool(user.get("google_oauth"))
+    safe["has_password"] = bool(user.get("password_hash"))
     
     # Mask API keys to keep them secured
     if "ai_configuration" in safe:

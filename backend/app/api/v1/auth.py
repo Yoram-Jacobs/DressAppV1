@@ -47,6 +47,7 @@ class TokenOut(BaseModel):
 def _public_user(user: dict[str, Any]) -> dict[str, Any]:
     out = {k: v for k, v in user.items() if k not in {"password_hash", "google_oauth"}}
     out["google_connected"] = bool(user.get("google_oauth"))
+    out["has_password"] = bool(user.get("password_hash"))
     return out
 
 

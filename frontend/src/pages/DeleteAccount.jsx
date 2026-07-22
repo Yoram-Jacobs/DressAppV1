@@ -21,7 +21,7 @@ export default function DeleteAccount() {
   const [oauthVerified, setOauthVerified] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const googleConnected = user?.google_connected ?? false;
+  const isOAuthUser = user?.has_password === false;
   const userEmail = user?.email ?? '';
 
   const handleOAuthVerify = () => {
@@ -53,7 +53,7 @@ export default function DeleteAccount() {
     setBusy(true);
     try {
       const payload = {};
-      if (googleConnected) {
+      if (isOAuthUser) {
         payload.oauth_provider = 'google';
       } else {
         payload.password = password;
@@ -66,7 +66,7 @@ export default function DeleteAccount() {
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('profile.deleteFailed', { defaultValue: 'Failed to delete account. Please verify your credentials and try again.' }));
       // Rollback to verification stage if password was wrong
-      if (!googleConnected) {
+      if (!isOAuthUser) {
         setStage(2);
       }
     } finally {
@@ -147,7 +147,7 @@ export default function DeleteAccount() {
                 </div>
               </div>
 
-              {googleConnected ? (
+              {isOAuthUser ? (
                 // Google OAuth user
                 <div className="space-y-4 text-center py-4">
                   <div className="p-4 rounded-xl border border-dashed border-border/80 bg-card max-w-xs mx-auto">
