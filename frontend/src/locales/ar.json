@@ -2630,5 +2630,47 @@
       "rejectConfirm": "تأكيد الرفض",
       "previewTitle": "معاينة الحملة"
     }
+  },
+  "migration": {
+    "askTitle": "هل لديك حساب خزانة ملابس رقمية سابق؟",
+    "askSub": "هل تستخدم بالفعل تطبيق خزانة آخر مثل Stylebook أو Acloset أو Whering؟ يمكننا استيراد ملابسك حتى لا تضطر لإعادة رفعها!",
+    "flaggedNew": "مرحبًا بك في DressApp! تم إعداد حسابك.",
+    "flaggedMigrate": "تم حفظ طلب النقل! سنقوم باستيراد عناصر خزانك.",
+    "appNameRequired": "يرجى إدخال اسم تطبيق الخزانة السابق.",
+    "formTitle": "نقل خزانك إلى DressApp",
+    "formSub": "قدّم تفاصيل تطبيقك السابق حتى يتمكن محرك الاستيراد الخاص بنا من جلب ملابسك تلقائيًا.",
+    "appNameLabel": "اسم التطبيق أو المنصة السابقة *",
+    "appNamePlaceholder": "مثال: Acloset, Stylebook, Whering",
+    "appUrlLabel": "رابط الحساب أو الموقع (اختياري)",
+    "appUrlPlaceholder": "https://acloset.app/user/alex",
+    "credentialsLabel": "بيانات الاعتماد / رابط ملف النسخ الاحتياطي (اختياري)",
+    "credentialsPlaceholder": "رمز API أو اسم المستخدم أو رابط النسخ الاحتياطي",
+    "seamlessTitle": "الاتصال وتسجيل الدخول إلى التطبيق السابق",
+    "seamlessSub": "اختر تطبيق الخزانة الرقمية السابق. سيفتح DressApp بوابة تسجيل الدخول الآمنة.",
+    "searchAppLabel": "الخزانات الرقمية الشائعة:",
+    "searchAppPlaceholder": "مثل Acloset, Stylebook, Whering, Smartli, BeautyAI",
+    "loginToAppBtn": "تسجيل الدخول إلى {{appName}} والاتصال",
+    "permissionTitle": "الترخيص بنقل الملابس والتنسيقات",
+    "permissionSub": "لقد تم التحقق من حسابك في {{appName}}. هل تمنح DressApp الإذن للوصول إلى قاعدة البيانات ومزامنة الملابس والتنسيقات؟",
+    "grantPermissionBtn": "منح الإذن والمزامنة",
+    "syncingTitle": "جاري مزامنة قاعدة البيانات من {{appName}}...",
+    "statusConnecting": "جاري الاتصال بقاعدة بيانات {{appName}}...",
+    "statusItems": "جاري استخراج قطع الملابس...",
+    "statusOutfits": "جاري تعيين تنسيقات الملابس المحفوظة...",
+    "statusFinalizing": "جاري إنهاء مزامنة خزانة DressApp...",
+    "successTitle": "تمت عملية النقل بنجاح!",
+    "successSub": "تم استيراد ملابسك وتنسيقاتك المحفوظة من {{appName}} بنجاح إلى خزانة DressApp.",
+    "summaryItems": "تم استيراد {{count}} قطعة ملابس",
+    "summaryOutfits": "تم استيراد {{count}} إطلالة",
+    "okToCloset": "موافق - فتح الخزانة"
+  },
+  "login_reminder": {
+    "newTitle": "خزانتك فارغة — فلنضف عنصرك الأول!",
+    "newSub": "تضم خزانتك حاليًا 0 عناصر. يتيح إضافة ملابسك لـ AI Stylist إنشاء توصيات يومية وتنسيقات تناسب الطقس.",
+    "migrateTitle": "استورد خزانتك لبدء التنسيق!",
+    "migrateSub": "إضافة ملابسك أمر ضروري لعمل AI Stylist وتنسيقات الملابس بشكل صحيح. أكمل النقل أو أضف ملابسك يدويًا.",
+    "helpDocLink": "تعرف على كيفية إضافة الملابس في DressApp",
+    "letsStart": "فلنبدأ",
+    "migrateBtn": "نقل"
   }
 }

@@ -2650,6 +2650,131 @@ async def import_dpp(
     }
 
 
+class ImportCompetitorIn(BaseModel):
+    app_name: str | None = "Competitor App"
+    items: list[dict[str, Any]] = []
+    outfits: list[dict[str, Any]] = []
+
+
+@router.post("/import-competitor", status_code=201)
+async def import_competitor_closet(
+    payload: ImportCompetitorIn, user: dict = Depends(get_current_user)
+) -> dict[str, Any]:
+    """Import closet items and saved outfits exported from another digital wardrobe app (App A -> App B DressApp)."""
+    db = get_db()
+    if not payload.items and not payload.outfits:
+        raise HTTPException(400, "No closet items or outfits provided in import payload.")
+
+    docs = []
+    now = datetime.now(timezone.utc).isoformat()
+    item_id_map = {}
+
+    for item in payload.items:
+        c_id = f"item_{uuid.uuid4().hex[:12]}"
+        orig_id = item.get("id") or item.get("item_id")
+        if orig_id:
+            item_id_map[str(orig_id)] = c_id
+
+        title = item.get("title") or item.get("name") or item.get("item_name") or "Garment"
+        cat_raw = str(item.get("category") or item.get("type") or "Top").strip()
+        cat_lower = cat_raw.lower()
+        if any(k in cat_lower for k in ["top", "shirt", "blouse", "tee", "polo", "sweater"]):
+            category = "Top"
+        elif any(k in cat_lower for k in ["bottom", "pant", "short", "skirt", "jean", "trouser"]):
+            category = "Bottom"
+        elif any(k in cat_lower for k in ["shoe", "footwear", "boot", "sneaker", "sandal"]):
+            category = "Footwear"
+        elif any(k in cat_lower for k in ["dress", "jumpsuit", "suit"]):
+            category = "Dress"
+        elif any(k in cat_lower for k in ["jacket", "coat", "outerwear"]):
+            category = "Outerwear"
+        else:
+            category = "Accessory"
+
+        doc = {
+            "id": c_id,
+            "user_id": user["id"],
+            "schemaVersion": 1,
+            "source": "Private",
+            "title": title,
+            "name": title,
+            "category": category,
+            "sub_category": item.get("sub_category") or item.get("subtype") or category,
+            "color": item.get("color") or item.get("primary_color") or "Neutral",
+            "colors": item.get("colors") or [item.get("color") or "Neutral"],
+            "brand": item.get("brand") or item.get("label"),
+            "image_url": item.get("image_url") or item.get("photo_url"),
+            "cutout_url": item.get("cutout_url") or item.get("no_bg_url"),
+            "wear_count": int(item.get("wear_count") or item.get("times_worn") or 0),
+            "is_duplicate": False,
+            "group_role": None,
+            "created_at": item.get("created_at") or now,
+            "updated_at": now,
+            "migrated_from": payload.app_name or "Competitor App",
+        }
+        docs.append(doc)
+
+    if docs:
+        await repos.insert_many(db.closet_items, docs)
+
+    outfit_docs = []
+    for outfit in payload.outfits:
+        o_id = str(uuid.uuid4())
+        garments = []
+        raw_garments = outfit.get("garments") or outfit.get("items") or []
+        for g in raw_garments:
+            g_dict = g if isinstance(g, dict) else {}
+            old_item_id = str(g_dict.get("closet_item_id") or g_dict.get("item_id") or g_dict.get("id") or "")
+            mapped_item_id = item_id_map.get(old_item_id) or (old_item_id if old_item_id.startswith("item_") else None)
+            garments.append({
+                "closet_item_id": mapped_item_id,
+                "role": g_dict.get("role") or g_dict.get("category") or "Garment",
+                "title": g_dict.get("title") or g_dict.get("name") or "Garment",
+                "image_url": g_dict.get("image_url") or g_dict.get("photo_url"),
+            })
+
+        o_doc = {
+            "id": o_id,
+            "user_id": user["id"],
+            "name": outfit.get("name") or outfit.get("title") or "Migrated Outfit",
+            "description": outfit.get("description") or f"Migrated from {payload.app_name or 'Competitor App'}",
+            "source_workflow": "Competitor Migration",
+            "prompt": outfit.get("prompt"),
+            "garments": garments,
+            "usage": outfit.get("usage") or {"date": None, "time": None, "location": None, "event_name": None},
+            "use_count": int(outfit.get("use_count") or outfit.get("wear_count") or 0),
+            "created_at": outfit.get("created_at") or now,
+            "updated_at": now,
+            "is_fallback": False,
+            "migrated_from": payload.app_name or "Competitor App",
+        }
+        outfit_docs.append(o_doc)
+
+    if outfit_docs:
+        await repos.insert_many(db.outfits, outfit_docs)
+
+    # Update user's migration flag and details
+    await db.users.update_one(
+        {"id": user["id"]},
+        {
+            "$set": {
+                "migration_flag": "Migrate",
+                "migration_details.app_name": payload.app_name or "Competitor App",
+                "migration_details.imported_count": len(docs),
+                "migration_details.imported_outfits_count": len(outfit_docs),
+                "migration_details.migrated_at": now,
+                "updated_at": now,
+            }
+        }
+    )
+
+    return {
+        "imported_count": len(docs),
+        "imported_outfits_count": len(outfit_docs),
+        "status": "success",
+    }
+
+
 
 
 @router.get("")

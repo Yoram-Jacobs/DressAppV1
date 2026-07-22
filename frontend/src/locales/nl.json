@@ -2630,5 +2630,29 @@
       "rejectConfirm": "Bevestig Afwijzing",
       "previewTitle": "Campagne Voorbeeld"
     }
+  },
+  "migration": {
+    "askTitle": "Heb je al een account bij een andere kledingkast-app?",
+    "askSub": "Gebruik je al een app zoals Stylebook, Acloset of Whering? We kunnen je kleding importeren zodat je ze niet opnieuw hoeft te uploaden!",
+    "flaggedNew": "Welkom bij DressApp! Je account is ingesteld.",
+    "flaggedMigrate": "Migratieverzoek opgeslagen! We gaan je kleding importeren.",
+    "appNameRequired": "Voer de naam van je vorige kledingkast-app in.",
+    "formTitle": "Migreer je kledingkast naar DressApp",
+    "formSub": "Vul de gegevens van je vorige app in zodat onze importengine je kleding automatisch kan laden.",
+    "appNameLabel": "Naam vorige app / Platform *",
+    "appNamePlaceholder": "bijv. Acloset, Stylebook, Whering",
+    "appUrlLabel": "Account URL of website (Optioneel)",
+    "appUrlPlaceholder": "https://acloset.app/user/alex",
+    "credentialsLabel": "Inloggegevens / Back-uplink (Optioneel)",
+    "credentialsPlaceholder": "Export API-token, gebruikersnaam of back-uplink"
+  },
+  "login_reminder": {
+    "newTitle": "Je kledingkast is leeg — Voeg je eerste kledingstuk toe!",
+    "newSub": "Je kledingkast bevat nu 0 artikelen. Door kleding toe te voegen kan de AI Stylist dagelijkse outfitaanbevelingen maken.",
+    "migrateTitle": "Importeer je kledingkast om te beginnen!",
+    "migrateSub": "Het toevoegen van je kleding is essentieel voor een goede werking van de AI Stylist. Voltooi je migratie of voeg handmatig kleding toe.",
+    "helpDocLink": "Lees hoe je kleding toevoegt in DressApp",
+    "letsStart": "Aan de slag",
+    "migrateBtn": "Migreren"
   }
 }

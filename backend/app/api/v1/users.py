@@ -51,11 +51,23 @@ class UpdateUserIn(BaseModel):
     # --- Phase TS-2 (Trend-Scout personalization) ---
     occupation: str | None = None
 
+    # --- Migration & Competitor Onboarding ---
+    migration_flag: str | None = None
+    migration_details: dict[str, Any] | None = None
+
     # --- AI Stylist Scheduler Settings (Phase Scheduler) ---
     scheduler_settings: dict[str, Any] | None = None
 
     # --- AI Settings (F3 pay-as-you-go) ---
     ai_configuration: dict[str, Any] | None = None
+
+
+class MigrationFlagIn(BaseModel):
+    migration_flag: str  # "New" | "Migrate"
+    app_name: str | None = None
+    app_url: str | None = None
+    credentials: str | None = None
+    notes: str | None = None
 
 
 @router.get("/me")
@@ -77,6 +89,29 @@ async def get_me(user: dict = Depends(get_current_user)) -> dict[str, Any]:
         safe["ai_configuration"] = ai_config
         
     return safe
+
+
+@router.patch("/migration-flag")
+async def update_migration_flag(
+    payload: MigrationFlagIn, user: dict = Depends(get_current_user)
+) -> dict[str, Any]:
+    """Set migration_flag ('New' or 'Migrate') and store competitor details."""
+    db = get_db()
+    flag = "Migrate" if payload.migration_flag.lower() == "migrate" else "New"
+    update_data: dict[str, Any] = {
+        "migration_flag": flag,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    if flag == "Migrate":
+        update_data["migration_details"] = {
+            "app_name": payload.app_name or "Competitor App",
+            "app_url": payload.app_url,
+            "credentials": payload.credentials,
+            "notes": payload.notes,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+    await db.users.update_one({"id": user["id"]}, {"$set": update_data})
+    return {"status": "ok", "migration_flag": flag}
 
 
 @router.patch("/me")

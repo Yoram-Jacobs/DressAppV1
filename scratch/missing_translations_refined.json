@@ -1,0 +1,212 @@
+{
+  "ar.json": [
+    {
+      "key": "location.description",
+      "default": "Used for weather-accurate outfit recommendations and sunrise/sunset sync"
+    },
+    {
+      "key": "location.statusActive",
+      "default": "Weather data is synced based on your coordinates."
+    },
+    {
+      "key": "location.statusInactive",
+      "default": "Weather feature is using offline default values."
+    },
+    {
+      "key": "profile.inviteDesc",
+      "default": "Share DressApp with your friends and family"
+    }
+  ],
+  "de.json": [
+    {
+      "key": "location.description",
+      "default": "Used for weather-accurate outfit recommendations and sunrise/sunset sync"
+    },
+    {
+      "key": "location.statusActive",
+      "default": "Weather data is synced based on your coordinates."
+    },
+    {
+      "key": "location.statusInactive",
+      "default": "Weather feature is using offline default values."
+    },
+    {
+      "key": "profile.inviteDesc",
+      "default": "Share DressApp with your friends and family"
+    }
+  ],
+  "en.json": [
+    {
+      "key": "location.statusActive",
+      "default": "Weather data is synced based on your coordinates."
+    },
+    {
+      "key": "location.statusInactive",
+      "default": "Weather feature is using offline default values."
+    }
+  ],
+  "es.json": [
+    {
+      "key": "location.description",
+      "default": "Used for weather-accurate outfit recommendations and sunrise/sunset sync"
+    },
+    {
+      "key": "location.statusActive",
+      "default": "Weather data is synced based on your coordinates."
+    },
+    {
+      "key": "location.statusInactive",
+      "default": "Weather feature is using offline default values."
+    },
+    {
+      "key": "profile.inviteDesc",
+      "default": "Share DressApp with your friends and family"
+    }
+  ],
+  "fr.json": [
+    {
+      "key": "location.description",
+      "default": "Used for weather-accurate outfit recommendations and sunrise/sunset sync"
+    },
+    {
+      "key": "location.statusActive",
+      "default": "Weather data is synced based on your coordinates."
+    },
+    {
+      "key": "location.statusInactive",
+      "default": "Weather feature is using offline default values."
+    },
+    {
+      "key": "profile.inviteDesc",
+      "default": "Share DressApp with your friends and family"
+    }
+  ],
+  "he.json": [
+    {
+      "key": "location.statusActive",
+      "default": "Weather data is synced based on your coordinates."
+    },
+    {
+      "key": "location.statusInactive",
+      "default": "Weather feature is using offline default values."
+    }
+  ],
+  "hi.json": [
+    {
+      "key": "location.description",
+      "default": "Used for weather-accurate outfit recommendations and sunrise/sunset sync"
+    },
+    {
+      "key": "location.statusActive",
+      "default": "Weather data is synced based on your coordinates."
+    },
+    {
+      "key": "location.statusInactive",
+      "default": "Weather feature is using offline default values."
+    },
+    {
+      "key": "profile.inviteDesc",
+      "default": "Share DressApp with your friends and family"
+    }
+  ],
+  "it.json": [
+    {
+      "key": "location.description",
+      "default": "Used for weather-accurate outfit recommendations and sunrise/sunset sync"
+    },
+    {
+      "key": "location.statusActive",
+      "default": "Weather data is synced based on your coordinates."
+    },
+    {
+      "key": "location.statusInactive",
+      "default": "Weather feature is using offline default values."
+    },
+    {
+      "key": "profile.inviteDesc",
+      "default": "Share DressApp with your friends and family"
+    }
+  ],
+  "ja.json": [
+    {
+      "key": "location.description",
+      "default": "Used for weather-accurate outfit recommendations and sunrise/sunset sync"
+    },
+    {
+      "key": "location.statusActive",
+      "default": "Weather data is synced based on your coordinates."
+    },
+    {
+      "key": "location.statusInactive",
+      "default": "Weather feature is using offline default values."
+    },
+    {
+      "key": "profile.inviteDesc",
+      "default": "Share DressApp with your friends and family"
+    }
+  ],
+  "nl.json": [
+    {
+      "key": "location.statusActive",
+      "default": "Weather data is synced based on your coordinates."
+    },
+    {
+      "key": "location.statusInactive",
+      "default": "Weather feature is using offline default values."
+    }
+  ],
+  "pt.json": [
+    {
+      "key": "location.description",
+      "default": "Used for weather-accurate outfit recommendations and sunrise/sunset sync"
+    },
+    {
+      "key": "location.statusActive",
+      "default": "Weather data is synced based on your coordinates."
+    },
+    {
+      "key": "location.statusInactive",
+      "default": "Weather feature is using offline default values."
+    },
+    {
+      "key": "profile.inviteDesc",
+      "default": "Share DressApp with your friends and family"
+    }
+  ],
+  "ru.json": [
+    {
+      "key": "location.description",
+      "default": "Used for weather-accurate outfit recommendations and sunrise/sunset sync"
+    },
+    {
+      "key": "location.statusActive",
+      "default": "Weather data is synced based on your coordinates."
+    },
+    {
+      "key": "location.statusInactive",
+      "default": "Weather feature is using offline default values."
+    },
+    {
+      "key": "profile.inviteDesc",
+      "default": "Share DressApp with your friends and family"
+    }
+  ],
+  "zh.json": [
+    {
+      "key": "location.description",
+      "default": "Used for weather-accurate outfit recommendations and sunrise/sunset sync"
+    },
+    {
+      "key": "location.statusActive",
+      "default": "Weather data is synced based on your coordinates."
+    },
+    {
+      "key": "location.statusInactive",
+      "default": "Weather feature is using offline default values."
+    },
+    {
+      "key": "profile.inviteDesc",
+      "default": "Share DressApp with your friends and family"
+    }
+  ]
+}

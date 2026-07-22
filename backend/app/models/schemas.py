@@ -165,6 +165,10 @@ class User(BaseDoc):
     # (unless approval_status='hidden' by admin moderation).
     professional: dict[str, Any] | None = None
 
+    # --- Migration & Competitor Onboarding ---
+    migration_flag: Literal["New", "Migrate"] | None = None
+    migration_details: dict[str, Any] | None = None
+
     # --- AI Stylist Scheduler Settings (Phase Scheduler) ---
     scheduler_settings: dict[str, Any] | None = None
     web_push_subscriptions: list[dict] = Field(default_factory=list)
@@ -182,6 +186,7 @@ class RetailMetadata(BaseModel):
 
 class ClosetItem(BaseDoc):
     user_id: str
+    schemaVersion: int = 1
     source: Source = "Private"
     in_suitcase: bool = False
     # Grouping

@@ -201,6 +201,8 @@ export const api = {
   // users
   getMe: () => client.get('/users/me').then((r) => r.data),
   patchMe: (body) => client.patch('/users/me', body).then((r) => r.data),
+  updateMigrationFlag: (body) => client.patch('/users/migration-flag', body).then((r) => r.data),
+  importCompetitorCloset: (body) => client.post('/closet/import-competitor', body).then((r) => r.data),
 
   // closet
   listCloset: (params = {}) =>

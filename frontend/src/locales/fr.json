@@ -2630,5 +2630,47 @@
       "rejectConfirm": "Confirmer le rejet",
       "previewTitle": "Aperçu de la campagne"
     }
+  },
+  "migration": {
+    "askTitle": "Avez-vous déjà un compte sur une autre application de garde-robe ?",
+    "askSub": "Vous utilisez déjà une application comme Stylebook, Acloset ou Whering ? Nous pouvons importer vos vêtements automatiquement !",
+    "flaggedNew": "Bienvenue sur DressApp ! Votre compte est prêt.",
+    "flaggedMigrate": "Demande de migration enregistrée ! Nous allons importer vos vêtements.",
+    "appNameRequired": "Veuillez saisir le nom de votre ancienne application.",
+    "formTitle": "Migrer votre garde-robe vers DressApp",
+    "formSub": "Fournissez les détails de votre ancienne application pour que notre moteur d'importation charge vos vêtements.",
+    "appNameLabel": "Nom de l'ancienne application / Plateforme *",
+    "appNamePlaceholder": "ex. Acloset, Stylebook, Whering",
+    "appUrlLabel": "URL du compte ou site web (Optionnel)",
+    "appUrlPlaceholder": "https://acloset.app/user/alex",
+    "credentialsLabel": "Identifiants / Lien de sauvegarde (Optionnel)",
+    "credentialsPlaceholder": "Jeton d'API, nom d'utilisateur ou lien de sauvegarde",
+    "seamlessTitle": "Se Connecter à l'Ancienne Application",
+    "seamlessSub": "Sélectionnez votre ancienne application de garde-robe. DressApp ouvrira le portail de connexion sécurisé.",
+    "searchAppLabel": "Garde-robes Numériques Populaires:",
+    "searchAppPlaceholder": "ex. Acloset, Stylebook, Whering, Smartli, BeautyAI",
+    "loginToAppBtn": "Se connecter à {{appName}} et Connecter",
+    "permissionTitle": "Autoriser la Migration de la Garde-robe et des Tenues",
+    "permissionSub": "Vous êtes authentifié avec {{appName}}. Autorisez-vous DressApp à accéder à votre base de données et à synchroniser vos vêtements et tenues?",
+    "grantPermissionBtn": "Autoriser et Synchroniser",
+    "syncingTitle": "Synchronisation de la Base de Données depuis {{appName}}...",
+    "statusConnecting": "Connexion à la base de données {{appName}}...",
+    "statusItems": "Extraction des vêtements...",
+    "statusOutfits": "Cartographie des combinaisons de tenues enregistrées...",
+    "statusFinalizing": "Finalisation de la synchronisation de la garde-robe DressApp...",
+    "successTitle": "Migration Terminée avec Succès!",
+    "successSub": "Vos vêtements et tenues sauvegardées de {{appName}} ont été entièrement importés dans votre dressing DressApp.",
+    "summaryItems": "{{count}} Vêtements Importés",
+    "summaryOutfits": "{{count}} Tenues Importées",
+    "okToCloset": "OK - Ouvrir le Dressing"
+  },
+  "login_reminder": {
+    "newTitle": "Votre garde-robe est vide — Ajoutez votre premier vêtement !",
+    "newSub": "Votre garde-robe contient 0 article. Ajouter vos vêtements permet à l'AI Stylist de générer des tenues adaptées.",
+    "migrateTitle": "Importez votre garde-robe pour commencer !",
+    "migrateSub": "Ajouter vos vêtements est essentiel pour le bon fonctionnement de l'AI Stylist. Complétez votre migration ou ajoutez vos articles manuellement.",
+    "helpDocLink": "Découvrez comment ajouter des vêtements dans DressApp",
+    "letsStart": "C'est parti",
+    "migrateBtn": "Migrer"
   }
 }

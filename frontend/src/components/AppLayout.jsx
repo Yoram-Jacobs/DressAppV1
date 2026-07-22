@@ -26,20 +26,20 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
+import OnboardingMigrationModal from '@/components/OnboardingMigrationModal';
+import LoginClosetReminderModal from '@/components/LoginClosetReminderModal';
+import { useClosetStore } from '@/lib/useClosetStore';
+import { useState } from 'react';
+
 export const AppLayout = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, refresh } = useAuth();
+  const { items } = useClosetStore();
+  const [dismissedLoginReminder, setDismissedLoginReminder] = useState(() => {
+    return sessionStorage.getItem('dressapp_dismissed_login_reminder') === 'true';
+  });
 
   // Eager warm-up for closet, marketplace browse + my-listings,
   // experts directory, and traveling suitcase.
-  //
-  // We fire these the moment auth resolves, **before** the user
-  // navigates anywhere. By the time they tap any of those tabs the
-  // store is already hydrated and the page paints instantly. All
-  // prewarms are idempotent + best-effort — failures don't surface
-  // to the UI, the page-driven ``ensure`` call retries.
-  //
-  // We also reset every store on logout so a different user's data
-  // never leaks across sessions on the same browser.
   useEffect(() => {
     if (loading) return;
     if (user) {
@@ -54,7 +54,6 @@ export const AppLayout = () => {
       resetExperts();
       resetSuitcase();
       outfitStore.reset();
-      resetNavigation();
     }
   }, [user, loading]);
 
@@ -91,13 +90,11 @@ export const AppLayout = () => {
           };
 
           if (sub) {
-            // Already subscribed on this device, ensure it's registered on the server
             await registerSub(sub);
           } else if (
             Notification.permission === 'granted' || 
             (user?.scheduler_settings?.enabled && Notification.permission === 'default')
           ) {
-            // Either already granted permission, OR scheduler is enabled and permission is default (prompt).
             if (Notification.permission === 'default') {
               const permission = await Notification.requestPermission();
               if (permission !== 'granted') return;
@@ -126,6 +123,9 @@ export const AppLayout = () => {
   }
   if (!user) return <Navigate to="/login" replace />;
 
+  const showOnboardingMigration = user && !user.migration_flag;
+  const showLoginReminder = user && user.migration_flag && items.length === 0 && !dismissedLoginReminder && !showOnboardingMigration;
+
   return (
     <div className="page-shell">
       <LanguageSync />
@@ -135,6 +135,27 @@ export const AppLayout = () => {
         <Outlet />
       </main>
       <BottomTabs />
+
+      {/* Onboarding Migration Question Modal */}
+      {showOnboardingMigration && (
+        <OnboardingMigrationModal
+          isOpen={true}
+          onClose={() => { refresh().catch(() => {}); }}
+          onFlagUpdated={() => { refresh().catch(() => {}); }}
+        />
+      )}
+
+      {/* Login 0-Item Closet Reminder Modal */}
+      {showLoginReminder && (
+        <LoginClosetReminderModal
+          isOpen={true}
+          user={user}
+          onClose={() => {
+            setDismissedLoginReminder(true);
+            sessionStorage.setItem('dressapp_dismissed_login_reminder', 'true');
+          }}
+        />
+      )}
     </div>
   );
 };

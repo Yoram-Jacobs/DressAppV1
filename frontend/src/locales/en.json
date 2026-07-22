@@ -2630,5 +2630,47 @@
       "rejectConfirm": "Confirm Rejection",
       "previewTitle": "Campaign Preview"
     }
+  },
+  "migration": {
+    "askTitle": "Do you have an existing digital wardrobe account?",
+    "askSub": "Already using another closet app like Stylebook, Acloset, or Whering? We can import your clothes so you don't have to re-upload!",
+    "flaggedNew": "Welcome to DressApp! Your account is set up.",
+    "flaggedMigrate": "Migration request saved! We will import your closet items.",
+    "appNameRequired": "Please enter your previous wardrobe app name.",
+    "formTitle": "Migrate Your Closet to DressApp",
+    "formSub": "Provide your previous app details so our import engine can ingest your clothes automatically.",
+    "appNameLabel": "Previous App Name / Platform *",
+    "appNamePlaceholder": "e.g. Acloset, Stylebook, Whering",
+    "appUrlLabel": "Account URL or Website (Optional)",
+    "appUrlPlaceholder": "https://acloset.app/user/alex",
+    "credentialsLabel": "Credentials / Backup File Link / Notes (Optional)",
+    "credentialsPlaceholder": "Export API token, username, or cloud backup link",
+    "seamlessTitle": "Connect & Log In to Previous App",
+    "seamlessSub": "Select or enter your previous app. DressApp will open the secure login portal to connect your account.",
+    "searchAppLabel": "Popular Digital Wardrobes:",
+    "searchAppPlaceholder": "e.g. Acloset, Stylebook, Whering, Smartli, BeautyAI",
+    "loginToAppBtn": "Log in to {{appName}} & Connect",
+    "permissionTitle": "Authorize Wardrobe & Outfits Migration",
+    "permissionSub": "You are authenticated with {{appName}}. Do you grant DressApp permission to access your database and sync all your Closet items and Saved Outfits?",
+    "grantPermissionBtn": "Grant & Sync",
+    "syncingTitle": "Syncing Database from {{appName}}...",
+    "statusConnecting": "Connecting to {{appName}} database...",
+    "statusItems": "Extracting wardrobe garments...",
+    "statusOutfits": "Mapping saved outfit combinations...",
+    "statusFinalizing": "Finalizing DressApp closet database sync...",
+    "successTitle": "Migration Completed Successfully!",
+    "successSub": "Your wardrobe items and saved outfits from {{appName}} have been fully imported into your DressApp closet.",
+    "summaryItems": "{{count}} Clothes Imported",
+    "summaryOutfits": "{{count}} Outfits Imported",
+    "okToCloset": "OK - Open Closet"
+  },
+  "login_reminder": {
+    "newTitle": "Your Closet is Empty — Let's Add Your First Item!",
+    "newSub": "Your closet currently has 0 items. Adding your garments allows the AI Stylist to generate tailored daily recommendations, packing lists, and weather outfits.",
+    "migrateTitle": "Import Your Closet to Start Styling!",
+    "migrateSub": "Adding your garments is essential for the AI Stylist, Outfit Canvas, and Recommendations to perform properly. Complete your migration or add items manually.",
+    "helpDocLink": "Learn how adding clothes works in DressApp",
+    "letsStart": "Let's start",
+    "migrateBtn": "Migrate"
   }
 }

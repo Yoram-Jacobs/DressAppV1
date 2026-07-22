@@ -2630,5 +2630,47 @@
       "rejectConfirm": "确认拒绝",
       "previewTitle": "活动预览"
     }
+  },
+  "migration": {
+    "askTitle": "您是否拥有其他数字衣橱应用的的账号？",
+    "askSub": "您在使用 Stylebook、Acloset 或 Whering 等应用吗？我们可以直接导入您的衣服，无需重新上传！",
+    "flaggedNew": "欢迎来到 DressApp！您的账号已就绪。",
+    "flaggedMigrate": "迁移申请已保存！我们将为您导入衣橱商品。",
+    "appNameRequired": "请输入您之前使用的衣橱应用名称。",
+    "formTitle": "将衣橱迁移至 DressApp",
+    "formSub": "提供您之前应用的信息，以便我们的导入引擎自动导入您的衣服。",
+    "appNameLabel": "原应用名称 / 平台 *",
+    "appNamePlaceholder": "例如 Acloset, Stylebook, Whering",
+    "appUrlLabel": "账号 URL 或网站（可选）",
+    "appUrlPlaceholder": "https://acloset.app/user/alex",
+    "credentialsLabel": "凭据 / 备份文件链接（可选）",
+    "credentialsPlaceholder": "导出 API Token、用户名或云端备份链接",
+    "seamlessTitle": "无缝连接并登录原衣橱应用",
+    "seamlessSub": "选择或输入您之前使用的数字衣橱应用，DressApp 将打开安全登录入口连接您的账户。",
+    "searchAppLabel": "热门数字衣橱:",
+    "searchAppPlaceholder": "例如 Acloset, Stylebook, Whering, Smartli, BeautyAI",
+    "loginToAppBtn": "登录 {{appName}} 并连接",
+    "permissionTitle": "授权衣橱与搭配数据库迁移",
+    "permissionSub": "您已成功验证 {{appName}} 身份。是否授权 DressApp 访问该数据库并同步所有衣物及已保存搭配？",
+    "grantPermissionBtn": "授权并开始同步",
+    "syncingTitle": "正在从 {{appName}} 同步数据库...",
+    "statusConnecting": "正在连接 {{appName}} 数据库...",
+    "statusItems": "正在提取衣物数据...",
+    "statusOutfits": "正在匹配已保存搭配组合...",
+    "statusFinalizing": "正在完成 DressApp 衣橱数据库同步...",
+    "successTitle": "迁移成功完成！",
+    "successSub": "您来自 {{appName}} 的所有衣物与已保存搭配已完整导入您的 DressApp 衣橱。",
+    "summaryItems": "已导入 {{count}} 件衣物",
+    "summaryOutfits": "已导入 {{count}} 套搭配",
+    "okToCloset": "确定 - 打开衣橱"
+  },
+  "login_reminder": {
+    "newTitle": "您的衣橱还是空的 — 添加您的第一件衣服吧！",
+    "newSub": "您当前衣橱有 0 件物品。添加衣服可让 AI Stylist 为您生成个性化的每日穿搭建议。",
+    "migrateTitle": "导入您的衣橱以开始造型！",
+    "migrateSub": "添加衣服是 AI Stylist 和穿搭建议正常运行的关键。请完成迁移或手动添加衣服。",
+    "helpDocLink": "了解如何在 DressApp 中添加衣服",
+    "letsStart": "开始使用",
+    "migrateBtn": "迁移"
   }
 }

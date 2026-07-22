@@ -2630,5 +2630,47 @@
       "rejectConfirm": "अस्वीकृति की पुष्टि करें",
       "previewTitle": "अभियान पूर्वावलोकन"
     }
+  },
+  "migration": {
+    "askTitle": "क्या आपके पास किसी अन्य डिजिटल वार्डरोब ऐप का खाता है?",
+    "askSub": "क्या आप पहले से Stylebook, Acloset या Whering का उपयोग कर रहे हैं? हम आपके कपड़े इम्पोर्ट कर सकते हैं!",
+    "flaggedNew": "DressApp में आपका स्वागत है! आपका खाता सेट हो गया है।",
+    "flaggedMigrate": "माइग्रेशन अनुरोध सहेजा गया! हम आपके कपड़े इम्पोर्ट करेंगे।",
+    "appNameRequired": "कृपया अपने पिछले वार्डरोब ऐप का नाम दर्ज करें।",
+    "formTitle": "अपने वार्डरोब को DressApp में माइग्रेट करें",
+    "formSub": "अपने पिछले ऐप का विवरण दर्ज करें ताकि हमारा इंजन स्वचालित रूप से कपड़े ला सके।",
+    "appNameLabel": "पिछले ऐप का नाम / प्लेटफॉर्म *",
+    "appNamePlaceholder": "जैसे Acloset, Stylebook, Whering",
+    "appUrlLabel": "अकाउंट यूआरएल या वेबसाइट (वैकल्पिक)",
+    "appUrlPlaceholder": "https://acloset.app/user/alex",
+    "credentialsLabel": "क्रेडेंशियल / बैकअप लिंक (वैकल्पिक)",
+    "credentialsPlaceholder": "API टोकन, यूज़रनेम या बैकअप लिंक",
+    "seamlessTitle": "पिछले ऐप से कनेक्ट और लॉगिन करें",
+    "seamlessSub": "अपना पिछला अलमारी ऐप चुनें। DressApp आपका अकाउंट कनेक्ट करने के लिए सुरक्षित लॉगिन पोर्टल खोलेगा।",
+    "searchAppLabel": "लोकप्रिय डिजिटल अलमारियां:",
+    "searchAppPlaceholder": "जैसे Acloset, Stylebook, Whering, Smartli, BeautyAI",
+    "loginToAppBtn": "{{appName}} में लॉगिन करें और कनेक्ट करें",
+    "permissionTitle": "कपड़ों और आउटफिट्स माइग्रेशन को अधिकृत करें",
+    "permissionSub": "आप {{appName}} के साथ प्रमाणित हैं। क्या आप DressApp को अपने डेटाबेस तक पहुँचने और कपड़ों तथा आउटफिट्स को सिंक करने की अनुमति देते हैं?",
+    "grantPermissionBtn": "अनुमति दें और सिंक करें",
+    "syncingTitle": "{{appName}} से डेटाबेस सिंक हो रहा है...",
+    "statusConnecting": "{{appName}} डेटाबेस से कनेक्ट हो रहा है...",
+    "statusItems": "कपड़े निकाले जा रहे हैं...",
+    "statusOutfits": "सेव किए गए आउटफिट्स मैप किए जा रहे हैं...",
+    "statusFinalizing": "DressApp अलमारी डेटाबेस सिंक पूरा किया जा रहा है...",
+    "successTitle": "माइग्रेशन सफलतापूर्वक पूरा हुआ!",
+    "successSub": "{{appName}} से आपके कपड़े और सेव किए गए आउटफिट्स पूरी तरह से आपकी DressApp अलमारी में इम्पोर्ट कर लिए गए हैं।",
+    "summaryItems": "{{count}} कपड़े इम्पोर्ट किए गए",
+    "summaryOutfits": "{{count}} आउटफिट्स इम्पोर्ट किए गए",
+    "okToCloset": "ओके - अलमारी खोलें"
+  },
+  "login_reminder": {
+    "newTitle": "आपकी अलमारी खाली है — अपना पहला कपड़ा जोड़ें!",
+    "newSub": "आपकी अलमारी में अभी 0 आइटम हैं। कपड़े जोड़ने से AI Stylist दैनिक सिफारिशें बना सकता है।",
+    "migrateTitle": "स्टाइलिंग शुरू करने के लिए अलमारी इम्पोर्ट करें!",
+    "migrateSub": "AI Stylist के सही काम करने के लिए कपड़े जोड़ना आवश्यक है। माइग्रेशन पूरा करें या मैन्युअल रूप से जोड़ें।",
+    "helpDocLink": "जानें कि DressApp में कपड़े कैसे जोड़ें",
+    "letsStart": "शुरू करें",
+    "migrateBtn": "माइग्रेट करें"
   }
 }

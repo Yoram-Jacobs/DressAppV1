@@ -2630,5 +2630,47 @@
       "rejectConfirm": "Ablehnung bestätigen",
       "previewTitle": "Kampagnenvorschau"
     }
+  },
+  "migration": {
+    "askTitle": "Haben Sie bereits ein Konto in einer anderen Kleiderschrank-App?",
+    "askSub": "Nutzen Sie bereits eine App wie Stylebook, Acloset oder Whering? Wir können Ihre Kleidung importieren, damit Sie sie nicht neu hochladen müssen!",
+    "flaggedNew": "Willkommen bei DressApp! Ihr Konto ist eingerichtet.",
+    "flaggedMigrate": "Migrationsanfrage gespeichert! Wir importieren Ihre Kleidung.",
+    "appNameRequired": "Bitte geben Sie den Namen Ihrer bisherigen App ein.",
+    "formTitle": "Kleiderschrank zu DressApp migrieren",
+    "formSub": "Geben Sie die Details Ihrer vorherigen App ein, damit unsere Import-Engine Ihre Kleidung automatisch übernehmen kann.",
+    "appNameLabel": "Name der bisherigen App / Plattform *",
+    "appNamePlaceholder": "z.B. Acloset, Stylebook, Whering",
+    "appUrlLabel": "Konto-URL oder Webseite (Optional)",
+    "appUrlPlaceholder": "https://acloset.app/user/alex",
+    "credentialsLabel": "Anmeldedaten / Backup-Link / Notizen (Optional)",
+    "credentialsPlaceholder": "Export-API-Token, Benutzername oder Backup-Link",
+    "seamlessTitle": "Mit Vorheriger App Verbinden & Anmelden",
+    "seamlessSub": "Wählen Sie Ihre vorherige Kleiderschrank-App aus. DressApp öffnet das sichere Anmeldeportal.",
+    "searchAppLabel": "Beliebte Digitale Kleiderschränke:",
+    "searchAppPlaceholder": "z.B. Acloset, Stylebook, Whering, Smartli, BeautyAI",
+    "loginToAppBtn": "Bei {{appName}} Anmelden & Verbinden",
+    "permissionTitle": "Migration von Kleiderschrank & Outfits Autorisieren",
+    "permissionSub": "Sie sind bei {{appName}} angemeldet. Erteilen Sie DressApp die Berechtigung, auf Ihre Datenbank zuzugreifen und Kleidung & Outfits zu synchronisieren?",
+    "grantPermissionBtn": "Genehmigen & Synchronisieren",
+    "syncingTitle": "Datenbank wird von {{appName}} Synchronisiert...",
+    "statusConnecting": "Verbindung zur {{appName}}-Datenbank wird hergestellt...",
+    "statusItems": "Kleidungsstücke werden extrahiert...",
+    "statusOutfits": "Gespeicherte Outfit-Kombinationen werden zugeordnet...",
+    "statusFinalizing": "DressApp Kleiderschrank-Synchronisation wird abgeschlossen...",
+    "successTitle": "Migration Erfolgreich Abgeschlossen!",
+    "successSub": "Ihre Kleidungsstücke und gespeicherten Outfits aus {{appName}} wurden vollständig in Ihren DressApp-Kleiderschrank importiert.",
+    "summaryItems": "{{count}} Kleidungsstücke Importiert",
+    "summaryOutfits": "{{count}} Outfits Importiert",
+    "okToCloset": "OK - Kleiderschrank Öffnen"
+  },
+  "login_reminder": {
+    "newTitle": "Ihr Kleiderschrank ist leer — Fügen Sie Ihr erstes Kleidungsstück hinzu!",
+    "newSub": "Ihr Kleiderschrank enthält derzeit 0 Artikel. Das Hinzufügen von Kleidung ermöglicht dem AI Stylist, maßgeschneiderte Outfits zu erstellen.",
+    "migrateTitle": "Importieren Sie Ihren Kleiderschrank!",
+    "migrateSub": "Das Hinzufügen Ihrer Kleidung ist wichtig, damit der AI Stylist optimal funktioniert. Schließen Sie Ihre Migration ab oder fügen Sie Artikel manuell hinzu.",
+    "helpDocLink": "Erfahren Sie, wie das Hinzufügen von Kleidung in DressApp funktioniert",
+    "letsStart": "Los geht's",
+    "migrateBtn": "Migrieren"
   }
 }

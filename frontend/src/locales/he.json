@@ -2670,5 +2670,47 @@
       "rejectConfirm": "אשר דחייה",
       "previewTitle": "תצוגה מקדימה של הקמפיין"
     }
+  },
+  "migration": {
+    "askTitle": "האם יש לך חשבון באפליקציית ארון דיגיטלי אחרת?",
+    "askSub": "משתמש/ת כבר באפליקציה כמו Stylebook, Acloset או Whering? נשמח לייבא את הבגדים שלך כדי שלא תצטרך/י להעלות מחדש!",
+    "flaggedNew": "ברוכים הבאים ל-DressApp! החשבון שלך מוכן.",
+    "flaggedMigrate": "בקשת ההעברה נשמרה! נייבא את פריטי הארון שלך.",
+    "appNameRequired": "נא להזין את שם האפליקציה הקודמת שלך.",
+    "formTitle": "העברת הארון שלך ל-DressApp",
+    "formSub": "ספק/י את פרטי האפליקציה הקודמת כדי שמנגנון הייבוא שלנו יעלה את הבגדים שלך באופן אוטומטי.",
+    "appNameLabel": "שם האפליקציה הקודמת / פלטפורמה *",
+    "appNamePlaceholder": "למשל Acloset, Stylebook, Whering",
+    "appUrlLabel": "קישור לחשבון או אתר (רשות)",
+    "appUrlPlaceholder": "https://acloset.app/user/alex",
+    "credentialsLabel": "פרטי התחברות / קישור לגיבוי (רשות)",
+    "credentialsPlaceholder": "אסימון API, שם משתמש או קישור לקובץ גיבוי",
+    "seamlessTitle": "התחברות וחיבור לאפליקציה הקודמת",
+    "seamlessSub": "בחר את אפליקציית הארון הקודמת שלך. DressApp תפתח פורטל התחברות מאובטח.",
+    "searchAppLabel": "ארונות דיגיטליים פופולריים:",
+    "searchAppPlaceholder": "למשל Acloset, Stylebook, Whering, Smartli, BeautyAI",
+    "loginToAppBtn": "התחבר ל-{{appName}} והתחבר",
+    "permissionTitle": "אישור העברת ארון ותלבושות",
+    "permissionSub": "אומתת בהצלחה ב-{{appName}}. האם אתה מעניק ל-DressApp הרשאה לגשת למסד הנתונים ולסנכרן בגדים ותלבושות שמורות?",
+    "grantPermissionBtn": "אשר וסנכרן",
+    "syncingTitle": "מסנכרן מסד נתונים מ-{{appName}}...",
+    "statusConnecting": "מתחבר למסד הנתונים של {{appName}}...",
+    "statusItems": "מחלץ פריטי לבוש...",
+    "statusOutfits": "ממפה שילובי תלבושות שמורות...",
+    "statusFinalizing": "משלים סנכרון ארון DressApp...",
+    "successTitle": "ההעברה הושלמה בהצלחה!",
+    "successSub": "פריטי הלבוש והתלבושות השמורות מ-{{appName}} יובאו במלואם לארון DressApp שלך.",
+    "summaryItems": "{{count}} פריטי לבוש יובאו",
+    "summaryOutfits": "{{count}} תלבושות יובאו",
+    "okToCloset": "אישור - פתח ארון"
+  },
+  "login_reminder": {
+    "newTitle": "הארון שלך ריק — בוא/י נוסיף פריט ראשון!",
+    "newSub": "כעת יש בארון שלך 0 פריטים. הוספת בגדים מאפשרת ל-AI Stylist ליצור המלצות לבוש יומיות בהתאמה אישית.",
+    "migrateTitle": "ייבא/י את הארון שלך כדי להתחיל!",
+    "migrateSub": "הוספת הבגדים שלך חיונית לפעילות תקינה של סטייליסט ה-AI. השלם/י את ההעברה או הוסף/י פריטים ידנית.",
+    "helpDocLink": "למד/י איך להוסיף בגדים ב-DressApp",
+    "letsStart": "בוא/י נתחיל",
+    "migrateBtn": "העברה"
   }
 }

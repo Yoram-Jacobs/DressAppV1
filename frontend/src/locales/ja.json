@@ -2631,5 +2631,47 @@
       "previewTitle": "キャンペーンプレビュー"
     }
   },
-  "styleProfileDesc": "美学、カラーパレットの好み、避けるべきもの、保守性"
+  "styleProfileDesc": "美学、カラーパレットの好み、避けるべきもの、保守性",
+  "migration": {
+    "askTitle": "他のデジタルクローゼットアプリのアカウントをお持ちですか？",
+    "askSub": "Stylebook、Acloset、Wheringなどのアプリをお使いですか？服を自動的にインポートできます！",
+    "flaggedNew": "DressAppへようこそ！アカウントの設定が完了しました。",
+    "flaggedMigrate": "移行リクエストを保存しました！クローゼットの服をインポートします。",
+    "appNameRequired": "以前使用していたアプリ名を入力してください。",
+    "formTitle": "クローゼットをDressAppに移行",
+    "formSub": "以前のアプリの詳細を入力すると、インポートエンジンが自動的に服を取り込みます。",
+    "appNameLabel": "以前のアプリ名 / プラットフォーム *",
+    "appNamePlaceholder": "例: Acloset, Stylebook, Whering",
+    "appUrlLabel": "アカウントURLまたはウェブサイト（任意）",
+    "appUrlPlaceholder": "https://acloset.app/user/alex",
+    "credentialsLabel": "ログイン情報 / バックアップリンク（任意）",
+    "credentialsPlaceholder": "APIトークン、ユーザー名、またはバックアップURL",
+    "seamlessTitle": "以前のアプリに接続＆ログイン",
+    "seamlessSub": "以前使用していたクローゼットアプリを選択してください。DressAppが安全なログインポータルを開きます。",
+    "searchAppLabel": "人気のデジタルクローゼット:",
+    "searchAppPlaceholder": "例: Acloset, Stylebook, Whering, Smartli, BeautyAI",
+    "loginToAppBtn": "{{appName}} にログインして接続",
+    "permissionTitle": "クローゼット＆コーディネート移行の承認",
+    "permissionSub": "{{appName}} で認証されました。DressAppがデータベースにアクセスし、服とコーディネートを同期することを許可しますか？",
+    "grantPermissionBtn": "許可して同期開始",
+    "syncingTitle": "{{appName}} からデータベースを同期中...",
+    "statusConnecting": "{{appName}} データベースに接続中...",
+    "statusItems": "衣类データを抽出中...",
+    "statusOutfits": "保存されたコーディネートをマッピング中...",
+    "statusFinalizing": "DressAppクローゼットの同期を完了中...",
+    "successTitle": "移行が正常に完了しました！",
+    "successSub": "{{appName}} の服と保存されたコーディネートがDressAppクローゼットに正常にインポートされました。",
+    "summaryItems": "インポートした服: {{count}}着",
+    "summaryOutfits": "インポートしたコーデ: {{count}}件",
+    "okToCloset": "OK - クローゼットを開く"
+  },
+  "login_reminder": {
+    "newTitle": "クローゼットが空です — 最初の服を追加しましょう！",
+    "newSub": "現在の登録アイテムは0点です。服を追加すると、AI Stylistが最適な提案を作成できます。",
+    "migrateTitle": "クローゼットをインポートして始めましょう！",
+    "migrateSub": "AI Stylistを正常に動作させるには服の登録が必要です。移行を完了するか手動で追加してください。",
+    "helpDocLink": "DressAppでの服の追加方法を見る",
+    "letsStart": "始める",
+    "migrateBtn": "移行する"
+  }
 }
