@@ -2771,6 +2771,8 @@ async def import_competitor_closet(
             "colors": item.get("colors") or [item.get("color") or "Neutral"],
             "brand": item.get("brand") or item.get("label"),
             "image_url": img_url,
+            "original_image_url": img_url,
+            "clean_image_url": img_url,
             "cutout_url": cutout_url,
             "wear_count": int(item.get("wear_count") or item.get("times_worn") or 0),
             "is_duplicate": False,
@@ -2985,6 +2987,13 @@ async def list_items(
         "dpp_data",
     )
     for it in items:
+        # Normalize fallback image URLs so frontends always find a valid photo
+        fallback_photo = it.get("image_url") or it.get("photo_url") or it.get("cutout_url") or it.get("clean_image_url")
+        if fallback_photo and not it.get("original_image_url"):
+            it["original_image_url"] = fallback_photo
+        if fallback_photo and not it.get("image_url"):
+            it["image_url"] = fallback_photo
+
         for k in _HEAVY_FIELDS:
             it.pop(k, None)
         recon = it.get("reconstruction")

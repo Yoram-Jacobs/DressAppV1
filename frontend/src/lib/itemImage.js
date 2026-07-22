@@ -1,24 +1,16 @@
 /**
  * Centralised "best image" resolver for a ClosetItem document.
  *
- * Five image fields can exist on a single item, in priority order:
- *
- *   1. ``thumbnail_data_url``    \u2014 user-uploaded explicit thumbnail (Phase Q).
- *   2. ``reconstructed_image_url`` \u2014 Nano-Banana studio reshoot (user-initiated).
- *   3. ``clean_image_url``       \u2014 Phase O.6 background-rembg PNG cutout.
- *   4. ``segmented_image_url``   \u2014 legacy synchronous SegFormer JPG.
- *   5. ``original_image_url``    \u2014 the raw upload.
- *
- * Every closet thumbnail, listing card, swap picker, stylist outfit card and
- * marketplace cover used to inline this chain in slightly different orders,
- * which made it impossible to land a new field (like ``clean_image_url``)
- * without sweeping ~6 files. This helper centralises the policy so the
- * chain is one edit away from changing in lock-step everywhere.
- *
- * ``opts.skipReconstruction``  \u2014 set to ``true`` on screens that want to
- * ``opts.skipReconstruction``  — set to ``true`` on screens that want to
- * show the original ("flat", non-reshoot) version, e.g. the "Show original"
- * toggle on ItemDetail. Bypasses fields #1-#2 only.
+ * Checks all possible image fields in priority order:
+ *   1. thumbnail_data_url
+ *   2. reconstructed_image_url
+ *   3. clean_image_url
+ *   4. cutout_url
+ *   5. segmented_image_url
+ *   6. image_variants
+ *   7. original_image_url
+ *   8. image_url
+ *   9. photo_url
  */
 export function bestImageUrl(item, opts = {}) {
   if (!item) return null;
@@ -28,9 +20,10 @@ export function bestImageUrl(item, opts = {}) {
   }
 
   if (item.clean_image_url) return item.clean_image_url;
+  if (item.cutout_url) return item.cutout_url;
   if (item.segmented_image_url) return item.segmented_image_url;
 
-  // NEW: Dynamic Transcoding Variants (AVIF/WebP)
+  // Dynamic Transcoding Variants (AVIF/WebP)
   if (item.image_variants) {
     if (item.image_variants.avif?.medium) return item.image_variants.avif.medium;
     if (item.image_variants.webp?.medium) return item.image_variants.webp.medium;
@@ -38,16 +31,13 @@ export function bestImageUrl(item, opts = {}) {
   }
 
   if (item.original_image_url) return item.original_image_url;
+  if (item.image_url) return item.image_url;
+  if (item.photo_url) return item.photo_url;
   return null;
 }
 
 /**
- * Returns ``true`` when the backend is still running its
- * fire-and-forget rembg matte for a Phase-O.6 single-pass item.
- *
- * The closet card uses this to overlay a subtle "polishing photo…"
- * shimmer on the thumbnail until the alpha PNG arrives — typically
- * 4-8 s after ``POST /closet`` returns.
+ * Returns true when the backend is still running its rembg matte.
  */
 export function isCleanImagePending(item) {
   return !!(item && item.clean_image_status === 'pending');
