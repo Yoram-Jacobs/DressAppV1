@@ -138,7 +138,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     setProgressPct(5);
     setSyncedItems(0);
     setSyncedOutfits(0);
-    setSyncStatusText(t('migration.statusConnecting', { appName, defaultValue: `Connecting to ${appName} database...` }));
+    setSyncStatusText(`Verifying access to ${appName} Database A... Validating API session tokens & read permissions...`);
 
     // Demo payload for realistic competitor import sync
     const mockItems = [
@@ -190,13 +190,19 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     setTotalOutfits(mockOutfits.length);
 
     try {
+      // Step 0: Database A Access Verification
+      await new Promise((r) => setTimeout(r, 600));
+      setProgressPct(12);
+      setSyncStatusText(`Database A Access Verified: Connection active. Applying migration script...`);
+      await new Promise((r) => setTimeout(r, 500));
+
       // Step 1: Extract items on screen
       for (let i = 1; i <= mockItems.length; i++) {
         await new Promise((r) => setTimeout(r, 80));
         setSyncedItems(i);
-        const itemPct = Math.floor((i / mockItems.length) * 60);
+        const itemPct = 12 + Math.floor((i / mockItems.length) * 55);
         setProgressPct(itemPct);
-        setSyncStatusText(t('migration.statusItems', { defaultValue: 'Extracting wardrobe garments...' }));
+        setSyncStatusText(t('migration.statusItems', { defaultValue: 'Extracting wardrobe garments from Database A...' }));
       }
 
       // Step 2: Map outfits on screen

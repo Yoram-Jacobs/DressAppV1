@@ -2781,10 +2781,12 @@ async def import_competitor_closet(
         {
             "$set": {
                 "migration_flag": "Migrate",
-                "migration_details.app_name": payload.app_name or "Competitor App",
-                "migration_details.imported_count": len(docs),
-                "migration_details.imported_outfits_count": len(outfit_docs),
-                "migration_details.migrated_at": now,
+                "migration_details": {
+                    "app_name": payload.app_name or "Competitor App",
+                    "imported_count": len(docs),
+                    "imported_outfits_count": len(outfit_docs),
+                    "migrated_at": now,
+                },
                 "updated_at": now,
             }
         }
