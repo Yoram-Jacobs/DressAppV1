@@ -22,6 +22,17 @@ async def insert(coll: AsyncIOMotorCollection, doc: dict[str, Any]) -> dict[str,
     return strip_id(dict(doc))  # type: ignore[return-value]
 
 
+async def insert_many(
+    coll: AsyncIOMotorCollection, docs: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    if not docs:
+        return []
+    to_insert = [{**d} for d in docs]
+    await coll.insert_many(to_insert)
+    return [strip_id(d) for d in to_insert]
+
+
+
 async def find_one(
     coll: AsyncIOMotorCollection,
     query: dict[str, Any],
