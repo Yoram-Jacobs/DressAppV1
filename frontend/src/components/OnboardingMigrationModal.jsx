@@ -213,11 +213,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     // 3. Close the modal immediately so the user can navigate freely
     onClose();
 
-    // 4. Run silent batch background process using standard POST
+    // 4. Run silent async import background job with poller loop
     (async () => {
       try {
-        workStore.updateAnalyze(jobId, { items: 1, total: realPayloadItems.length || 1 });
-
         const res = await api.importCompetitorCloset({
           app_name: appName.trim(),
           target_url: targetLoginUrl,
@@ -225,11 +223,27 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           outfits: [],
         });
 
-        workStore.updateAnalyze(jobId, { items: res?.imported_count || realPayloadItems.length, total: res?.imported_count || realPayloadItems.length });
-        workStore.completeAnalyze(jobId);
-        
-        await closetStore.prewarm({ force: true }).catch(() => {});
-        toast.success(`GarmentVision AI import complete! ${res?.imported_count || realPayloadItems.length} items added to your Closet.`);
+        const activeJobId = res.job_id;
+        const totalItems = res.total || realPayloadItems.length || 1;
+        workStore.updateAnalyze(jobId, { items: 0, total: totalItems });
+
+        // Poll /import-job-status/{activeJobId} every 3 seconds
+        const interval = setInterval(async () => {
+          try {
+            const statusRes = await api.getImportJobStatus(activeJobId);
+            const processed = statusRes.processed || 0;
+            workStore.updateAnalyze(jobId, { items: processed, total: totalItems });
+            closetStore.prewarm({ force: true }).catch(() => {});
+
+            if (statusRes.status === 'completed' || processed >= totalItems) {
+              clearInterval(interval);
+              workStore.completeAnalyze(jobId);
+              toast.success(`GarmentVision AI import complete! ${processed} items added to your Closet.`);
+            }
+          } catch (pErr) {
+            console.warn('Import status poll warning:', pErr);
+          }
+        }, 3000);
       } catch (err) {
         console.error('Silent import error:', err);
         workStore.completeAnalyze(jobId);

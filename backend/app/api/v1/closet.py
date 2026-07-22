@@ -2781,15 +2781,20 @@ async def import_competitor_closet(
             pass
         return "Neutral"
 
+async def _run_serial_import_worker(job_id: str, user_id: str, app_name: str | None, raw_items: list[dict[str, Any]], raw_outfits: list[dict[str, Any]]):
+    """Background worker executing serial GarmentVision AI Gemini vision analysis item-by-item."""
+    db = get_db()
     docs = []
     item_id_map = {}
     now = datetime.now(timezone.utc).isoformat()
+    total = len(raw_items)
 
     async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as http_client:
         for idx, item in enumerate(raw_items):
             try:
                 img_url = item.get("image_url") or item.get("photo_url") or ""
                 if not img_url or any(bad in img_url.lower() for bad in [".svg", "data:image/svg", "bookmark", "logo", "avatar", "icon", "badge", "button", "grid"]):
+                    await db.import_jobs.update_one({"job_id": job_id}, {"$set": {"processed": idx + 1}})
                     continue
 
                 c_id = f"item_{uuid.uuid4().hex[:12]}"
@@ -2827,77 +2832,74 @@ async def import_competitor_closet(
                     try:
                         pil_img = Image.open(io.BytesIO(img_bytes))
                         w, h = pil_img.size
-                        if w < 60 or h < 60:
-                            continue
+                        if w >= 60 and h >= 60:
+                            b64_orig = base64.b64encode(img_bytes).decode("utf-8")
+                            orig_data_url = f"data:image/jpeg;base64,{b64_orig}"
 
-                        b64_orig = base64.b64encode(img_bytes).decode("utf-8")
-                        orig_data_url = f"data:image/jpeg;base64,{b64_orig}"
+                            try:
+                                bg_task = asyncio.create_task(background_matting.remove_background(img_bytes))
+                                cp_task = asyncio.create_task(_cp.parse_garments(img_bytes))
+                                gv_task = asyncio.create_task(garment_vision_service.analyze(img_bytes)) if garment_vision_service else None
 
-                        try:
-                            bg_task = asyncio.create_task(background_matting.remove_background(img_bytes))
-                            cp_task = asyncio.create_task(_cp.parse_garments(img_bytes))
-                            gv_task = asyncio.create_task(garment_vision_service.analyze(img_bytes)) if garment_vision_service else None
+                                tasks = [bg_task, cp_task]
+                                if gv_task:
+                                    tasks.append(gv_task)
 
-                            tasks = [bg_task, cp_task]
-                            if gv_task:
-                                tasks.append(gv_task)
+                                # Full serial GarmentVision AI Gemini vision analysis without artificial timeouts
+                                await asyncio.gather(*tasks, return_exceptions=True)
 
-                            # Zero artificial timeout — let GarmentVision AI Gemini take as long as needed per item
-                            await asyncio.gather(*tasks, return_exceptions=True)
+                                bg_res = bg_task.result() if bg_task.done() and not bg_task.exception() else {}
+                                garments = cp_task.result() if cp_task.done() and not cp_task.exception() else []
+                                gv_analysis = gv_task.result() if gv_task and gv_task.done() and not gv_task.exception() else {}
 
-                            bg_res = bg_task.result() if bg_task.done() and not bg_task.exception() else {}
-                            garments = cp_task.result() if cp_task.done() and not cp_task.exception() else []
-                            gv_analysis = gv_task.result() if gv_task and gv_task.done() and not gv_task.exception() else {}
+                                png_bytes = bg_res.get("png_bytes") or bg_res.get("image_png")
+                                if png_bytes:
+                                    b64_png = base64.b64encode(png_bytes).decode("utf-8")
+                                    cutout_url = f"data:image/png;base64,{b64_png}"
+                                else:
+                                    cutout_url = orig_data_url
 
-                            png_bytes = bg_res.get("png_bytes") or bg_res.get("image_png")
-                            if png_bytes:
-                                b64_png = base64.b64encode(png_bytes).decode("utf-8")
-                                cutout_url = f"data:image/png;base64,{b64_png}"
-                            else:
+                                if isinstance(gv_analysis, dict) and gv_analysis.get("category"):
+                                    category = gv_analysis.get("category") or category
+                                    sub_category = gv_analysis.get("sub_category") or category
+                                    color = gv_analysis.get("primary_color") or gv_analysis.get("color") or color
+                                    pattern = gv_analysis.get("pattern")
+                                    material = gv_analysis.get("material")
+                                    brand = gv_analysis.get("brand") or brand
+                                    title = gv_analysis.get("friendly_name") or gv_analysis.get("title") or f"{color} {category}"
+                                    quality = gv_analysis.get("quality")
+                                    condition = gv_analysis.get("condition")
+                                    state = gv_analysis.get("state")
+                                    repair_advice = gv_analysis.get("repair_advice")
+                                else:
+                                    if garments:
+                                        top_g = garments[0]
+                                        det_label = str(top_g.get("label") or top_g.get("kind") or "").lower()
+                                        if any(k in det_label for k in ["top", "shirt", "blouse", "tee", "sweat", "upper"]):
+                                            category = "Top"
+                                        elif any(k in det_label for k in ["pant", "bottom", "skirt", "jean", "short", "trouser"]):
+                                            category = "Bottom"
+                                        elif any(k in det_label for k in ["shoe", "footwear", "boot", "sneaker", "sandal"]):
+                                            category = "Footwear"
+                                        elif any(k in det_label for k in ["dress", "gown"]):
+                                            category = "Dress"
+                                        elif any(k in det_label for k in ["coat", "jacket", "outerwear"]):
+                                            category = "Outerwear"
+                                        elif any(k in det_label for k in ["belt", "bag", "accessory", "hat", "watch"]):
+                                            category = "Accessory"
+                                    color = _determine_color(pil_img)
+                                    sub_category = category
+                                    if not title or title.startswith("Pasted Garment") or title.startswith("Garment"):
+                                        title = f"{color} {category}"
+                            except Exception as proc_err:
+                                logger.warning("Item %d image parsing error: %s", idx, proc_err)
                                 cutout_url = orig_data_url
-
-                            if isinstance(gv_analysis, dict) and gv_analysis.get("category"):
-                                category = gv_analysis.get("category") or category
-                                sub_category = gv_analysis.get("sub_category") or category
-                                color = gv_analysis.get("primary_color") or gv_analysis.get("color") or color
-                                pattern = gv_analysis.get("pattern")
-                                material = gv_analysis.get("material")
-                                brand = gv_analysis.get("brand") or brand
-                                title = gv_analysis.get("friendly_name") or gv_analysis.get("title") or f"{color} {category}"
-                                quality = gv_analysis.get("quality")
-                                condition = gv_analysis.get("condition")
-                                state = gv_analysis.get("state")
-                                repair_advice = gv_analysis.get("repair_advice")
-                            else:
-                                if garments:
-                                    top_g = garments[0]
-                                    det_label = str(top_g.get("label") or top_g.get("kind") or "").lower()
-                                    if any(k in det_label for k in ["top", "shirt", "blouse", "tee", "sweat", "upper"]):
-                                        category = "Top"
-                                    elif any(k in det_label for k in ["pant", "bottom", "skirt", "jean", "short", "trouser"]):
-                                        category = "Bottom"
-                                    elif any(k in det_label for k in ["shoe", "footwear", "boot", "sneaker", "sandal"]):
-                                        category = "Footwear"
-                                    elif any(k in det_label for k in ["dress", "gown"]):
-                                        category = "Dress"
-                                    elif any(k in det_label for k in ["coat", "jacket", "outerwear"]):
-                                        category = "Outerwear"
-                                    elif any(k in det_label for k in ["belt", "bag", "accessory", "hat", "watch"]):
-                                        category = "Accessory"
-                                color = _determine_color(pil_img)
-                                sub_category = category
-                                if not title or title.startswith("Pasted Garment") or title.startswith("Garment"):
-                                    title = f"{color} {category}"
-                        except Exception as proc_err:
-                            logger.warning("Item %d image parsing error: %s", idx, proc_err)
-                            cutout_url = orig_data_url
-
                     except Exception as img_err:
                         logger.warning("Item %d image decode error: %s", idx, img_err)
 
                 doc = {
                     "id": c_id,
-                    "user_id": user["id"],
+                    "user_id": user_id,
                     "schemaVersion": 1,
                     "source": "Private",
                     "title": title,
@@ -2923,18 +2925,17 @@ async def import_competitor_closet(
                     "group_role": None,
                     "created_at": item.get("created_at") or now,
                     "updated_at": now,
-                    "migrated_from": payload.app_name or "Competitor App",
+                    "migrated_from": app_name or "Competitor App",
                 }
                 await repos.insert_one(db.closet_items, doc)
                 docs.append(doc)
             except Exception as err:
-                logger.warning("Serial item %d creation error: %s", idx, err)
+                logger.warning("Serial worker item %d creation error: %s", idx, err)
+            finally:
+                await db.import_jobs.update_one({"job_id": job_id}, {"$set": {"processed": idx + 1}})
 
-    if docs:
-        await repos.insert_many(db.closet_items, docs)
-
+    # Process outfits
     doc_map = {doc["id"]: doc for doc in docs}
-    outfit_docs = []
     for outfit in raw_outfits:
         o_id = str(uuid.uuid4())
         garments = []
@@ -2954,46 +2955,85 @@ async def import_competitor_closet(
 
         o_doc = {
             "id": o_id,
-            "user_id": user["id"],
+            "user_id": user_id,
             "name": outfit.get("name") or outfit.get("title") or "Migrated Outfit",
-            "description": outfit.get("description") or f"Migrated from {payload.app_name or 'Competitor App'}",
+            "description": outfit.get("description") or f"Migrated from {app_name or 'Competitor App'}",
             "source_workflow": "Competitor Migration",
-            "prompt": outfit.get("prompt"),
             "garments": garments,
-            "usage": outfit.get("usage") or {"date": None, "time": None, "location": None, "event_name": None},
-            "use_count": int(outfit.get("use_count") or outfit.get("wear_count") or 0),
+            "items": garments,
+            "migrated_from": app_name or "Competitor App",
             "created_at": outfit.get("created_at") or now,
             "updated_at": now,
-            "is_fallback": False,
-            "migrated_from": payload.app_name or "Competitor App",
         }
-        outfit_docs.append(o_doc)
+        await repos.insert_one(db.outfits, o_doc)
 
-    if outfit_docs:
-        await repos.insert_many(db.outfits, outfit_docs)
+    await db.import_jobs.update_one({"job_id": job_id}, {"$set": {"status": "completed", "processed": total}})
 
-    # Update user's migration flag and details
-    await db.users.update_one(
-        {"id": user["id"]},
-        {
-            "$set": {
-                "migration_flag": "Migrate",
-                "migration_details": {
-                    "app_name": payload.app_name or "Competitor App",
-                    "imported_count": len(docs),
-                    "imported_outfits_count": len(outfit_docs),
-                    "migrated_at": now,
-                },
-                "updated_at": now,
-            }
-        }
+
+@router.post("/import-competitor", status_code=202)
+async def import_competitor_closet(
+    payload: ImportCompetitorIn,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(get_current_user)
+) -> dict[str, Any]:
+    """Imports wardrobe items serially in a non-blocking background task with full GarmentVision AI Gemini vision analysis."""
+    db = get_db()
+    raw_items = payload.items if payload.items is not None else []
+    raw_outfits = payload.outfits if payload.outfits is not None else []
+
+    if payload.target_url and not raw_items:
+        from app.services.wardrobe_scraper import scrape_wardrobe_url
+        scraped = await scrape_wardrobe_url(payload.target_url)
+        if scraped:
+            raw_items = scraped
+
+    if not raw_items and not raw_outfits and not payload.target_url:
+        raw_items = [
+            {"id": "appA_1", "title": "Classic White Linen Shirt", "category": "Top", "color": "White", "brand": "Zara", "wear_count": 5},
+            {"id": "appA_2", "title": "Slim Dark Indigo Jeans", "category": "Bottom", "color": "Blue", "brand": "Levi's", "wear_count": 12},
+            {"id": "appA_3", "title": "Beige Trench Coat", "category": "Outerwear", "color": "Beige", "brand": "Burberry", "wear_count": 3},
+            {"id": "appA_4", "title": "Leather Oxford Shoes", "category": "Footwear", "color": "Brown", "brand": "Clarks", "wear_count": 8},
+        ]
+
+    # Remove previous migrated items and outfits for this user
+    await db.closet_items.delete_many({"user_id": user["id"], "migrated_from": {"$exists": True}})
+    await db.outfits.delete_many({"user_id": user["id"], "migrated_from": {"$exists": True}})
+
+    job_id = f"import_{uuid.uuid4().hex[:10]}"
+    await db.import_jobs.insert_one({
+        "job_id": job_id,
+        "user_id": user["id"],
+        "status": "processing",
+        "processed": 0,
+        "total": len(raw_items),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+
+    background_tasks.add_task(
+        _run_serial_import_worker,
+        job_id,
+        user["id"],
+        payload.app_name,
+        raw_items,
+        raw_outfits,
     )
 
     return {
-        "imported_count": len(docs),
-        "imported_outfits_count": len(outfit_docs),
-        "status": "success",
+        "status": "accepted",
+        "job_id": job_id,
+        "total": len(raw_items),
+        "imported_count": len(raw_items),
     }
+
+
+@router.get("/import-job-status/{job_id}")
+async def get_import_job_status(job_id: str, user: dict = Depends(get_current_user)) -> dict[str, Any]:
+    """Returns real-time progress status of a running background wardrobe import job."""
+    db = get_db()
+    job = await db.import_jobs.find_one({"job_id": job_id, "user_id": user["id"]}, {"_id": 0})
+    if not job:
+        return {"status": "completed", "processed": 0, "total": 0}
+    return job
 
 
 @router.post("/import-competitor-stream")
