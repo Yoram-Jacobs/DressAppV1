@@ -2688,7 +2688,16 @@
     "dataSyncedOutfits": "Saved outfits & layouts",
     "dataSyncedStats": "Wear count statistics",
     "popupOpened": "Opened {{appName}} login window. Complete login and return to proceed.",
-    "migrateBtn": "Migrate"
+    "migrateBtn": "Migrate",
+    "importBtn": "Import",
+    "importOutfitsBtn": "Yes, Import Outfits",
+    "skipOutfitsBtn": "Skip Outfits",
+    "navigateToWardrobe": "Please navigate to your wardrobe/closet page in {{appName}}, then click Import.",
+    "navigateToOutfits": "Please navigate to your outfits page in {{appName}}, then click Import.",
+    "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
+    "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
+    "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
   },
   "login_reminder": {
     "newTitle": "您的衣橱还是空的 — 添加您的第一件衣服吧！",

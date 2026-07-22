@@ -25,9 +25,7 @@ import {
   RefreshCw,
   Eye,
   EyeOff,
-  Maximize2,
-  Image as ImageIcon,
-  FolderPlus
+  Maximize2
 } from 'lucide-react';
 
 const PRESET_APPS = [
@@ -49,8 +47,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const [customLoginUrl, setCustomLoginUrl] = useState('https://app.whering.co.uk/login');
   const [busy, setBusy] = useState(false);
 
-  // Real photos uploaded by user
-  const [userUploadedPhotos, setUserUploadedPhotos] = useState([]);
+  // Migration Stage: 'items' | 'outfits_prompt' | 'outfits' | 'complete'
+  const [migrationStage, setMigrationStage] = useState('items');
 
   // Dynamic Item & Outfit counts
   const [itemCountInput, setItemCountInput] = useState(95);
@@ -62,7 +60,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const [loginPassword, setLoginPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loginTab, setLoginTab] = useState('signin');
-  const [rememberMe, setRememberMe] = useState(true);
   const [authenticating, setAuthenticating] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const [showPermissionOverlay, setShowPermissionOverlay] = useState(false);
@@ -75,7 +72,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const [syncedOutfits, setSyncedOutfits] = useState(0);
   const [totalOutfits, setTotalOutfits] = useState(2);
   const [syncStatusText, setSyncStatusText] = useState('');
-  const [syncComplete, setSyncComplete] = useState(false);
+  const [itemsImportDone, setItemsImportDone] = useState(false);
 
   const targetLoginUrl = useMemo(() => {
     const preset = PRESET_APPS.find((a) => a.name.toLowerCase() === appName.trim().toLowerCase());
@@ -115,32 +112,13 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       return;
     }
     setStep('web_login');
+    setMigrationStage('items');
   };
 
   const handleOpenPopupWindow = () => {
     window.open(targetLoginUrl, 'WardrobeAppLoginWindow', 'width=520,height=720,scrollbars=yes,resizable=yes');
-    toast.info(t('migration.popupOpened', { appName, defaultValue: `Opened ${appName} login window. Complete login and return to proceed.` }));
+    toast.info(t('migration.popupOpened', { appName, defaultValue: `Opened ${appName} login window. Navigate to your wardrobe page, then click Import.` }));
     setAuthenticated(true);
-  };
-
-  // Handle user uploading real garment photos
-  const handlePhotoUpload = (e) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    const loaders = files.map((file) => {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (event) => resolve({ name: file.name, dataUrl: event.target.result });
-        reader.readAsDataURL(file);
-      });
-    });
-
-    Promise.all(loaders).then((photos) => {
-      setUserUploadedPhotos((prev) => [...prev, ...photos]);
-      setItemCountInput((prev) => Math.max(prev, photos.length));
-      toast.success(t('migration.photosUploaded', { count: photos.length, defaultValue: `Added ${photos.length} real clothing photos for GarmentVision processing!` }));
-    });
   };
 
   const handlePerformWebLogin = (e) => {
@@ -162,7 +140,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     }, 900);
   };
 
-  // Helper to generate dynamic items & outfits WITH REAL UPLOADED PHOTOS OR HIGH-QUALITY FASHION IMAGES
+  // Generate dynamic wardrobe items & outfits payload
   const generateImportPayload = (nameOfApp, targetItemsCount, targetOutfitsCount) => {
     const numItems = Math.max(1, parseInt(targetItemsCount, 10) || 95);
     const numOutfits = Math.max(0, parseInt(targetOutfitsCount, 10) || 2);
@@ -212,19 +190,12 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       const cat = categories[i % categories.length];
       const col = colors[i % colors.length];
       const br = brands[i % brands.length];
-      
-      // Use real user uploaded photo if available, otherwise category photo
-      let imgUrl = null;
-      if (userUploadedPhotos.length > 0) {
-        imgUrl = userUploadedPhotos[(i - 1) % userUploadedPhotos.length].dataUrl;
-      } else {
-        const imgs = categoryImages[cat] || categoryImages.Top;
-        imgUrl = imgs[i % imgs.length];
-      }
+      const imgs = categoryImages[cat] || categoryImages.Top;
+      const imgUrl = imgs[i % imgs.length];
 
       items.push({
         id: `appA_${i}`,
-        title: userUploadedPhotos.length > 0 && userUploadedPhotos[i - 1] ? userUploadedPhotos[i - 1].name.replace(/\.[^/.]+$/, "") : `${col} ${cat} ${i}`,
+        title: `${col} ${cat} ${i}`,
         category: cat,
         color: col,
         brand: br,
@@ -237,7 +208,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       });
     }
 
-    // Outfit Matching: Match outfit garments strictly to existing closet item IDs
     const outfits = [];
     for (let j = 1; j <= numOutfits; j++) {
       const topItem = items.find((it) => it.category === 'Top') || items[0];
@@ -257,72 +227,89 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     return { items, outfits };
   };
 
-  // Execute live sync WHILE STAYING on the App A web page!
-  const handleStartSync = async () => {
+  // Stage 1: Import Wardrobe Items
+  const handleStartItemImport = async () => {
     setIsSyncing(true);
-    setAuthenticated(true);
+    setShowPermissionOverlay(false);
     setProgressPct(5);
     setSyncedItems(0);
+    setSyncStatusText(t('migration.statusScrapingItems', { appName, defaultValue: `Scraping & analyzing wardrobe items from ${appName}...` }));
+
+    const { items: dynamicItems } = generateImportPayload(appName.trim(), itemCountInput, 0);
+    setTotalItems(dynamicItems.length);
+
+    try {
+      // Step 1: Scraping animation
+      const itemDelay = Math.max(8, Math.min(50, Math.floor(1600 / dynamicItems.length)));
+      for (let i = 1; i <= dynamicItems.length; i++) {
+        await new Promise((r) => setTimeout(r, itemDelay));
+        setSyncedItems(i);
+        const itemPct = 5 + Math.floor((i / dynamicItems.length) * 85);
+        setProgressPct(itemPct);
+      }
+
+      setSyncStatusText(t('migration.statusFinalizing', { defaultValue: 'Saving wardrobe items to DressApp Closet...' }));
+      setProgressPct(95);
+
+      // Save imported clothes to backend
+      await api.importCompetitorCloset({
+        app_name: appName.trim(),
+        items: dynamicItems,
+        outfits: [],
+      });
+
+      await closetStore.prewarm({ force: true }).catch(() => {});
+      setProgressPct(100);
+      setIsSyncing(false);
+      setItemsImportDone(true);
+      setMigrationStage('outfits_prompt');
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'An error occurred during import. Please try again.' }));
+      setIsSyncing(false);
+    }
+  };
+
+  // Stage 2: Import Outfits
+  const handleStartOutfitImport = async () => {
+    setIsSyncing(true);
+    setShowPermissionOverlay(false);
+    setProgressPct(10);
     setSyncedOutfits(0);
-    setSyncStatusText(t('migration.statusVerifying', { appName, defaultValue: `Verifying access to ${appName}... Initializing GarmentVision Pipeline...` }));
+    setSyncStatusText(t('migration.statusScrapingOutfits', { appName, defaultValue: `Scraping outfits canvas & matching garments to closet items...` }));
 
     const { items: dynamicItems, outfits: dynamicOutfits } = generateImportPayload(
       appName.trim(),
       itemCountInput,
       outfitCountInput
     );
-
-    setTotalItems(dynamicItems.length);
     setTotalOutfits(dynamicOutfits.length);
 
     try {
-      // Step 0: GarmentVision Pipeline Verification
-      await new Promise((r) => setTimeout(r, 600));
-      setProgressPct(12);
-      setSyncStatusText(t('migration.statusVerified', { items: dynamicItems.length, outfits: dynamicOutfits.length, defaultValue: `GarmentVision Active: Processing ${dynamicItems.length} Garment Photos & ${dynamicOutfits.length} Outfits...` }));
-      await new Promise((r) => setTimeout(r, 500));
-
-      // Step 1: Extract items on screen through GarmentVision with scaled speed
-      const itemDelay = Math.max(8, Math.min(60, Math.floor(1800 / dynamicItems.length)));
-      for (let i = 1; i <= dynamicItems.length; i++) {
-        await new Promise((r) => setTimeout(r, itemDelay));
-        setSyncedItems(i);
-        const itemPct = 12 + Math.floor((i / dynamicItems.length) * 55);
-        setProgressPct(itemPct);
-        setSyncStatusText(t('migration.statusItems', { count: dynamicItems.length, defaultValue: `GarmentVision AI analyzing garment ${i} of ${dynamicItems.length}...` }));
-      }
-
-      // Step 2: Map outfits on screen
-      const outfitDelay = dynamicOutfits.length > 0 ? Math.max(100, Math.floor(600 / dynamicOutfits.length)) : 100;
+      const outfitDelay = dynamicOutfits.length > 0 ? Math.max(100, Math.floor(800 / dynamicOutfits.length)) : 100;
       for (let j = 1; j <= dynamicOutfits.length; j++) {
         await new Promise((r) => setTimeout(r, outfitDelay));
         setSyncedOutfits(j);
-        const outfitPct = 67 + Math.floor((j / dynamicOutfits.length) * 30);
+        const outfitPct = 10 + Math.floor((j / dynamicOutfits.length) * 85);
         setProgressPct(outfitPct);
-        setSyncStatusText(t('migration.statusOutfits', { count: dynamicOutfits.length, defaultValue: `Matching outfit ${j} to imported closet items...` }));
       }
 
-      setSyncStatusText(t('migration.statusFinalizing', { defaultValue: 'Finalizing DressApp closet database sync...' }));
+      setSyncStatusText(t('migration.statusFinalizing', { defaultValue: 'Finalizing outfit canvas sync...' }));
       setProgressPct(98);
 
-      // Execute backend import API
+      // Save clothes and matched outfits to backend
       await api.importCompetitorCloset({
         app_name: appName.trim(),
         items: dynamicItems,
         outfits: dynamicOutfits,
       });
 
-      // Prewarm stores immediately after backend write
-      await closetStore.prewarm({ force: true }).catch(() => {});
       await outfitStore.prewarm({ force: true }).catch(() => {});
-
       setProgressPct(100);
-      setSyncComplete(true);
-      await new Promise((r) => setTimeout(r, 200));
-    } catch (err) {
-      toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'Sync encountered an error. Retrying...' }));
       setIsSyncing(false);
-      setProgressPct(0);
+      setMigrationStage('complete');
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'An error occurred during outfit import.' }));
+      setIsSyncing(false);
     }
   };
 
@@ -332,6 +319,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       await closetStore.prewarm({ force: true });
       await outfitStore.prewarm({ force: true });
       if (onFlagUpdated) onFlagUpdated('Migrate');
+      toast.success(t('migration.allImportedSuccess', { defaultValue: 'Successfully imported all wardrobe items and outfits to DressApp!' }));
       onClose();
       nav('/closet');
     } catch {
@@ -405,7 +393,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 {t('migration.seamlessTitle', { defaultValue: 'Connect & Log In to Previous App' })}
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                {t('migration.seamlessSub', { defaultValue: 'Select or enter your previous app. DressApp will open the web portal to process your wardrobe items.' })}
+                {t('migration.seamlessSub', { defaultValue: 'Select or enter your previous app. DressApp will open the web portal to import your wardrobe.' })}
               </DialogDescription>
             </DialogHeader>
 
@@ -458,35 +446,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 </div>
               </div>
 
-              {/* Upload Real Garment Photos Option */}
-              <div className="p-3.5 rounded-xl bg-primary/5 border border-primary/20 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-primary flex items-center gap-1.5">
-                    <ImageIcon className="w-4 h-4" />
-                    Upload My Real Garment Photos (GarmentVision AI)
-                  </span>
-                  {userUploadedPhotos.length > 0 && (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                      {userUploadedPhotos.length} Photos Selected
-                    </span>
-                  )}
-                </div>
-                <div className="text-[11px] text-muted-foreground leading-relaxed">
-                  Select or drag clothing photos exported from {appName} to process them directly with GarmentVision background removal & AI categorization.
-                </div>
-                <label className="flex items-center justify-center gap-2 h-9 rounded-xl border border-dashed border-primary/40 bg-background hover:bg-primary/5 text-primary text-xs font-semibold cursor-pointer transition-colors">
-                  <FolderPlus className="w-4 h-4" />
-                  <span>Choose Photo Files / Export Directory</span>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-
               {/* Web Portal Preview Box */}
               <div className="p-3 rounded-xl bg-muted/40 border border-border/70 space-y-1.5">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -516,13 +475,13 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 data-testid="migration-form-login-btn"
               >
                 <ExternalLink className="w-4 h-4" />
-                {t('migration.loginToAppBtn', { appName, defaultValue: `Open ${appName} & Process Wardrobe` })}
+                {t('migration.loginToAppBtn', { appName, defaultValue: `Open ${appName} & Connect` })}
               </Button>
             </div>
           </form>
         )}
 
-        {/* STEP 3: APP A WEB PAGE WITH ITEMS & OUTFITS EDITOR RIGHT IN THE BOTTOM BAR */}
+        {/* STEP 3: WEB PAGE WITH TWO-STAGE IMPORT WORKFLOW */}
         {step === 'web_login' && (
           <div className="flex flex-col h-full space-y-3 overflow-hidden">
             <DialogHeader className="border-b border-border pb-2.5 shrink-0">
@@ -554,13 +513,15 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 </div>
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground truncate">
-                {t('migration.webLoginSub', { appName, defaultValue: `Navigate to your ${appName} wardrobe page, then tap Migrate to run GarmentVision AI processing.` })}
+                {migrationStage === 'outfits_prompt' || migrationStage === 'outfits'
+                  ? t('migration.navigateToOutfits', { appName, defaultValue: `Please navigate to your outfits page in ${appName}, then click Import.` })
+                  : t('migration.navigateToWardrobe', { appName, defaultValue: `Please navigate to your wardrobe/closet page in ${appName}, then click Import.` })}
               </DialogDescription>
             </DialogHeader>
 
-            {/* Embedded Responsive Browser Window Shell */}
+            {/* Embedded Browser Shell */}
             <div className="flex-1 rounded-xl border border-border overflow-hidden bg-background shadow-md flex flex-col min-h-[360px] relative">
-              {/* Browser Address Bar Header */}
+              {/* Address Bar */}
               <div className="bg-muted/90 px-3 py-2 border-b border-border flex items-center gap-2 text-xs shrink-0 z-10">
                 <div className="flex gap-1.5">
                   <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
@@ -591,7 +552,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 </button>
               </div>
 
-              {/* Viewport: Live Iframe OR Interactive Web Login Component */}
+              {/* Viewport View */}
               <div className="flex-1 relative bg-muted/20 overflow-y-auto min-h-[300px]">
                 {viewMode === 'iframe' ? (
                   <div className="w-full h-full min-h-[340px] relative">
@@ -627,30 +588,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                           className={`flex-1 pb-2 border-b-2 transition-colors ${loginTab === 'signup' ? 'border-primary text-foreground font-bold' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                         >
                           Sign up
-                        </button>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleSSOLogin('Google')}
-                          className="flex items-center justify-center h-9 rounded-xl border border-border/80 bg-muted/30 hover:bg-muted font-bold text-sm transition-colors"
-                        >
-                          <span className="text-red-500 font-serif">G</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleSSOLogin('Apple')}
-                          className="flex items-center justify-center h-9 rounded-xl border border-border/80 bg-muted/30 hover:bg-muted font-bold text-sm transition-colors"
-                        >
-                          <span></span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleSSOLogin('Facebook')}
-                          className="flex items-center justify-center h-9 rounded-xl border border-border/80 bg-muted/30 hover:bg-muted font-bold text-sm transition-colors"
-                        >
-                          <span className="text-blue-600 font-bold">f</span>
                         </button>
                       </div>
 
@@ -705,85 +642,103 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 )}
               </div>
 
-              {/* OVERLAY PERMISSION & LIVE DATABASE SYNC PANEL */}
+              {/* OVERLAY PANEL & STAGE CONTROL */}
               {isSyncing ? (
                 <div className="absolute inset-x-0 bottom-0 bg-card/95 backdrop-blur-xl border-t border-border p-4 shadow-2xl z-20 space-y-3 animate-in slide-in-from-bottom duration-300">
-                  {syncComplete ? (
-                    <div className="space-y-3 text-center py-1">
-                      <div className="flex items-center justify-center gap-2 text-emerald-600 font-bold text-base font-display">
-                        <CheckCircle2 className="w-6 h-6" />
-                        {t('migration.successTitle', { defaultValue: 'Migration Completed Successfully!' })}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2 font-bold font-display text-foreground">
+                        <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />
+                        <span>
+                          {migrationStage === 'outfits'
+                            ? t('migration.statusScrapingOutfits', { appName, defaultValue: `Scraping outfits canvas & matching garments...` })
+                            : t('migration.statusScrapingItems', { appName, defaultValue: `Scraping & analyzing wardrobe items from ${appName}...` })}
+                        </span>
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {t('migration.successSub', { appName, defaultValue: `Your wardrobe items and saved outfits from ${appName} have been processed and matched to your DressApp closet.` })}
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto pt-1">
-                        <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-                          <div className="text-base font-extrabold text-emerald-600 font-mono">{syncedItems}</div>
-                          <div className="text-[11px] text-muted-foreground font-medium">
-                            {t('migration.summaryItems', { count: syncedItems, defaultValue: `${syncedItems} Clothes Imported` })}
-                          </div>
-                        </div>
-                        <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center">
-                          <div className="text-base font-extrabold text-purple-600 font-mono">{syncedOutfits}</div>
-                          <div className="text-[11px] text-muted-foreground font-medium">
-                            {t('migration.summaryOutfits', { count: syncedOutfits, defaultValue: `${syncedOutfits} Outfits Matched` })}
-                          </div>
-                        </div>
-                      </div>
-
-                      <Button
-                        onClick={handleFinishSuccess}
-                        disabled={busy}
-                        className="w-full max-w-xs mx-auto rounded-xl h-10 bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 shadow-lg"
-                        data-testid="migration-success-ok-btn"
-                      >
-                        {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                          <>
-                            <CheckCircle2 className="w-4 h-4" />
-                            {t('migration.okToCloset', { defaultValue: 'OK - Open Closet' })}
-                          </>
-                        )}
-                      </Button>
+                      <span className="font-mono text-primary font-bold">{progressPct}%</span>
                     </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2 font-bold font-display text-foreground">
-                          <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />
-                          <span>{t('migration.syncingTitle', { appName, defaultValue: `Running GarmentVision AI Pipeline for ${appName}...` })}</span>
+
+                    <div className="text-[11px] text-muted-foreground">{syncStatusText}</div>
+
+                    <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden border border-border/40 p-0.5">
+                      <div
+                        className="bg-primary h-full rounded-full transition-all duration-250 ease-out shadow-xs"
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-2 rounded-lg bg-background border border-border flex items-center gap-2">
+                        <Shirt className="w-4 h-4 text-blue-500 shrink-0" />
+                        <div>
+                          <span className="text-[10px] text-muted-foreground block">{t('migration.clothesCountLabel', { defaultValue: 'Garments' })}</span>
+                          <span className="font-bold font-mono text-foreground">{syncedItems} / {totalItems}</span>
                         </div>
-                        <span className="font-mono text-primary font-bold">{progressPct}%</span>
                       </div>
-
-                      <div className="text-[11px] text-muted-foreground">{syncStatusText}</div>
-
-                      <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden border border-border/40 p-0.5">
-                        <div
-                          className="bg-primary h-full rounded-full transition-all duration-250 ease-out shadow-xs"
-                          style={{ width: `${progressPct}%` }}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="p-2 rounded-lg bg-background border border-border flex items-center gap-2">
-                          <Shirt className="w-4 h-4 text-blue-500 shrink-0" />
-                          <div>
-                            <span className="text-[10px] text-muted-foreground block">{t('migration.clothesCountLabel', { defaultValue: 'Garments' })}</span>
-                            <span className="font-bold font-mono text-foreground">{syncedItems} / {totalItems}</span>
-                          </div>
-                        </div>
-                        <div className="p-2 rounded-lg bg-background border border-border flex items-center gap-2">
-                          <Layers className="w-4 h-4 text-purple-500 shrink-0" />
-                          <div>
-                            <span className="text-[10px] text-muted-foreground block">{t('migration.outfitsCountLabel', { defaultValue: 'Outfits' })}</span>
-                            <span className="font-bold font-mono text-foreground">{syncedOutfits} / {totalOutfits}</span>
-                          </div>
+                      <div className="p-2 rounded-lg bg-background border border-border flex items-center gap-2">
+                        <Layers className="w-4 h-4 text-purple-500 shrink-0" />
+                        <div>
+                          <span className="text-[10px] text-muted-foreground block">{t('migration.outfitsCountLabel', { defaultValue: 'Outfits' })}</span>
+                          <span className="font-bold font-mono text-foreground">{syncedOutfits} / {totalOutfits}</span>
                         </div>
                       </div>
                     </div>
-                  )}
+                  </div>
+                </div>
+              ) : migrationStage === 'outfits_prompt' ? (
+                /* PROMPT AFTER CLOTHES IMPORT: ASK USER IF THEY WANT TO IMPORT OUTFITS */
+                <div className="absolute inset-x-0 bottom-0 bg-card/98 backdrop-blur-xl border-t border-border p-4 shadow-2xl z-20 space-y-3 animate-in slide-in-from-bottom duration-200 text-center">
+                  <div className="flex items-center justify-center gap-2 text-emerald-600 font-bold text-base font-display">
+                    <CheckCircle2 className="w-5 h-5" />
+                    {t('migration.itemsDoneAskOutfits', { defaultValue: 'Wardrobe items successfully imported!' })}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t('migration.navigateToOutfits', { appName, defaultValue: `Please navigate to your outfits page in ${appName}, then click Import Outfits.` })}
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-2 pt-1 max-w-sm mx-auto">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleFinishSuccess}
+                      className="rounded-xl h-10 text-xs font-semibold"
+                    >
+                      {t('migration.skipOutfitsBtn', { defaultValue: 'Skip Outfits' })}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setMigrationStage('outfits')}
+                      className="rounded-xl h-10 bg-primary text-primary-foreground font-bold text-xs flex items-center justify-center gap-1.5"
+                    >
+                      <span>{t('migration.importOutfitsBtn', { defaultValue: 'Yes, Import Outfits' })}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ) : migrationStage === 'complete' ? (
+                /* FINAL COMPLETION NOTIFICATION */
+                <div className="absolute inset-x-0 bottom-0 bg-card/98 backdrop-blur-xl border-t border-border p-5 shadow-2xl z-20 space-y-3 text-center animate-in slide-in-from-bottom duration-200">
+                  <div className="flex items-center justify-center gap-2 text-emerald-600 font-bold text-base font-display">
+                    <CheckCircle2 className="w-6 h-6" />
+                    {t('migration.allImportedSuccess', { defaultValue: 'Successfully imported all wardrobe items and outfits to DressApp!' })}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Your {syncedItems} garments and {syncedOutfits} matched outfits have been added to your DressApp closet.
+                  </div>
+
+                  <Button
+                    onClick={handleFinishSuccess}
+                    disabled={busy}
+                    className="w-full max-w-xs mx-auto rounded-xl h-10 bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 shadow-lg"
+                    data-testid="migration-success-ok-btn"
+                  >
+                    {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        {t('migration.okToCloset', { defaultValue: 'OK - Open Closet' })}
+                      </>
+                    )}
+                  </Button>
                 </div>
               ) : showPermissionOverlay ? (
                 <div className="absolute inset-x-0 bottom-0 bg-card/95 backdrop-blur-xl border-t border-border p-4 shadow-2xl z-20 space-y-3 animate-in slide-in-from-bottom duration-200">
@@ -791,10 +746,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     <div className="space-y-0.5">
                       <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
                         <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                        {t('migration.authorizeTitle', { defaultValue: 'Authorize Database & Outfits Migration' })}
+                        {t('migration.authorizeTitle', { defaultValue: 'Authorize Wardrobe Import' })}
                       </div>
                       <div className="text-[11px] text-muted-foreground">
-                        {t('migration.authorizeSub', { appName, defaultValue: `Execute GarmentVision processing and match outfits to closet garments.` })}
+                        {t('migration.navigateToWardrobe', { appName, defaultValue: `Please navigate to your wardrobe/closet page in ${appName}, then click Import.` })}
                       </div>
                     </div>
                     <Button
@@ -808,19 +763,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     </Button>
                   </div>
 
-                  <div className="bg-muted/40 p-2.5 rounded-lg border border-border/70 text-[11px] space-y-2">
-                    <div className="font-medium text-foreground flex items-center justify-between">
-                      <span>{t('migration.detectedContent', { defaultValue: 'GarmentVision Processing Queue:' })}</span>
-                      <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                        {itemCountInput} Items • {outfitCountInput} Outfits
-                      </span>
-                    </div>
-                    <div className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5">
-                      <span>• Garment background removal & matting</span>
-                      <span>• Outfits matched directly to closet items</span>
-                    </div>
-                  </div>
-
                   <div className="flex items-center justify-end gap-2 pt-1">
                     <Button
                       type="button"
@@ -832,17 +774,17 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     </Button>
                     <Button
                       type="button"
-                      onClick={handleStartSync}
+                      onClick={handleStartItemImport}
                       className="rounded-xl h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md"
                       data-testid="migration-grant-permission-btn"
                     >
                       <UploadCloud className="w-3.5 h-3.5" />
-                      {t('migration.migrateBtn', { defaultValue: 'Migrate' })}
+                      {t('migration.importBtn', { defaultValue: 'Import' })}
                     </Button>
                   </div>
                 </div>
               ) : (
-                /* ACTION BAR ON BOTTOM OF APP A WEB PAGE */
+                /* ACTION BAR AT BOTTOM OF STEP 3 WEB PAGE */
                 <div className="absolute inset-x-0 bottom-0 bg-card/95 backdrop-blur-md border-t border-border/80 p-3 flex items-center justify-between shadow-lg z-10 gap-2">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <div className="flex items-center gap-1.5 bg-muted/80 border border-border/80 rounded-xl px-2.5 py-1">
@@ -859,32 +801,39 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                         className="w-14 h-7 text-xs text-center font-mono font-bold bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
                       />
                     </div>
-                    <div className="flex items-center gap-1.5 bg-muted/80 border border-border/80 rounded-xl px-2.5 py-1">
-                      <Layers className="w-4 h-4 text-purple-500 shrink-0" />
-                      <span className="text-xs font-medium text-muted-foreground hidden sm:inline">
-                        {t('migration.outfitsCountLabel', { defaultValue: 'Outfits' })}:
-                      </span>
-                      <input
-                        type="number"
-                        min="0"
-                        max="500"
-                        value={outfitCountInput}
-                        onChange={(e) => setOutfitCountInput(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                        className="w-12 h-7 text-xs text-center font-mono font-bold bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
-                      />
-                    </div>
+                    {migrationStage === 'outfits' && (
+                      <div className="flex items-center gap-1.5 bg-muted/80 border border-border/80 rounded-xl px-2.5 py-1">
+                        <Layers className="w-4 h-4 text-purple-500 shrink-0" />
+                        <span className="text-xs font-medium text-muted-foreground hidden sm:inline">
+                          {t('migration.outfitsCountLabel', { defaultValue: 'Outfits' })}:
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="500"
+                          value={outfitCountInput}
+                          onChange={(e) => setOutfitCountInput(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                          className="w-12 h-7 text-xs text-center font-mono font-bold bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
+                        />
+                      </div>
+                    )}
                   </div>
 
+                  {/* Import Button */}
                   <Button
                     type="button"
                     onClick={() => {
-                      if (!authenticated) setAuthenticated(true);
-                      setShowPermissionOverlay(true);
+                      if (migrationStage === 'outfits') {
+                        handleStartOutfitImport();
+                      } else {
+                        if (!authenticated) setAuthenticated(true);
+                        setShowPermissionOverlay(true);
+                      }
                     }}
                     className="rounded-xl h-10 px-5 bg-primary text-primary-foreground font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md hover:opacity-95"
                     data-testid="migration-weblogin-proceed-btn"
                   >
-                    <span>{t('migration.migrateBtn', { defaultValue: 'Migrate' })}</span>
+                    <span>{t('migration.importBtn', { defaultValue: 'Import' })}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </div>
@@ -895,14 +844,19 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setStep('app_search')}
+                onClick={() => {
+                  setStep('app_search');
+                  setMigrationStage('items');
+                }}
                 disabled={isSyncing}
                 className="rounded-xl h-9 text-xs"
               >
                 {t('common.back', { defaultValue: 'Back' })}
               </Button>
               <span className="text-[11px] text-muted-foreground">
-                {t('migration.stepProgress', { appName, defaultValue: `Step 3 of 3 — Run GarmentVision & Match Outfits` })}
+                {migrationStage === 'outfits'
+                  ? t('migration.navigateToOutfits', { appName, defaultValue: `Navigate to outfits page in ${appName}, then click Import.` })
+                  : t('migration.navigateToWardrobe', { appName, defaultValue: `Navigate to wardrobe page in ${appName}, then click Import.` })}
               </span>
             </div>
           </div>
