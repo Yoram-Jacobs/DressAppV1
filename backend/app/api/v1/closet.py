@@ -2740,55 +2740,127 @@ async def import_competitor_closet(
     now = datetime.now(timezone.utc).isoformat()
     item_id_map = {}
 
+    from app.services import background_matting
+    from app.services import clothing_parser as _cp
+    from PIL import Image
+    import io
+
+    def _determine_color(pil_img: Image.Image) -> str:
+        try:
+            img = pil_img.convert("RGB").resize((40, 40))
+            colors = img.getcolors(maxcolors=2000)
+            if not colors:
+                return "Neutral"
+            sorted_colors = sorted(colors, key=lambda t: t[0], reverse=True)
+            for count, (r, g, b) in sorted_colors:
+                # Filter out pure white/near-white backgrounds
+                if r > 242 and g > 242 and b > 242:
+                    continue
+                # Filter out pure black/near-black backgrounds
+                if r < 12 and g < 12 and b < 12:
+                    continue
+                if r > 175 and g < 75 and b < 75:
+                    return "Red"
+                if r < 75 and g > 165 and b < 85:
+                    return "Green"
+                if r < 75 and g < 85 and b > 165:
+                    return "Blue"
+                if r > 180 and g > 180 and b < 75:
+                    return "Yellow"
+                if r > 150 and g > 100 and b < 50:
+                    return "Brown"
+                if r < 65 and g < 65 and b < 65:
+                    return "Black"
+                if r > 200 and g > 200 and b > 200:
+                    return "White"
+                if abs(r - g) < 25 and abs(g - b) < 25:
+                    return "Grey"
+                return "Neutral"
+        except Exception:
+            pass
+        return "Neutral"
+
     for idx, item in enumerate(raw_items):
+        img_url = item.get("image_url") or item.get("photo_url") or ""
+        
+        # Filter out UI icons, SVGs, buttons, and bookmark images
+        if not img_url:
+            continue
+        if any(bad in img_url.lower() for bad in [".svg", "data:image/svg", "bookmark", "logo", "avatar", "icon", "badge", "button", "grid"]):
+            continue
+
         c_id = f"item_{uuid.uuid4().hex[:12]}"
         orig_id = item.get("id") or item.get("item_id")
         if orig_id:
             item_id_map[str(orig_id)] = c_id
 
-        title = item.get("title") or item.get("name") or item.get("item_name") or f"Garment {idx + 1}"
-        cat_raw = str(item.get("category") or item.get("type") or "Top").strip()
-        cat_lower = cat_raw.lower()
-        if any(k in cat_lower for k in ["top", "shirt", "blouse", "tee", "polo", "sweater"]):
-            category = "Top"
-        elif any(k in cat_lower for k in ["bottom", "pant", "short", "skirt", "jean", "trouser"]):
-            category = "Bottom"
-        elif any(k in cat_lower for k in ["shoe", "footwear", "boot", "sneaker", "sandal"]):
-            category = "Footwear"
-        elif any(k in cat_lower for k in ["dress", "jumpsuit", "suit"]):
-            category = "Dress"
-        elif any(k in cat_lower for k in ["jacket", "coat", "outerwear"]):
-            category = "Outerwear"
-        else:
-            category = "Accessory"
+        # Defaults
+        title = item.get("title") or item.get("name") or ""
+        category = "Top"
+        color = item.get("color") or "Neutral"
+        cutout_url = img_url
 
-        cat_imgs = category_images.get(category, category_images["Top"])
-        fallback_img = cat_imgs[0] if cat_imgs else None
-        img_url = item.get("image_url") or item.get("photo_url") or fallback_img
-        cutout_url = item.get("cutout_url") or item.get("no_bg_url") or img_url
-
-        # GarmentVision AI Pipeline: Process real photo through background matting if real image is provided
-        if img_url and img_url.startswith(("http://", "https://", "data:image/")):
+        # GarmentVision AI Pipeline Execution
+        if img_url.startswith(("http://", "https://", "data:image/")):
             try:
-                from app.services import background_matting
                 img_bytes = None
-
                 if img_url.startswith("data:image/"):
                     header, encoded = img_url.split(",", 1)
                     img_bytes = base64.b64decode(encoded)
                 else:
-                    async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+                    async with httpx.AsyncClient(timeout=12.0, follow_redirects=True) as client:
                         resp = await client.get(img_url)
                         if resp.status_code == 200:
                             img_bytes = resp.content
 
                 if img_bytes:
-                    res = await background_matting.remove_background(img_bytes)
-                    if res.get("png_bytes"):
-                        b64_png = base64.b64encode(res["png_bytes"]).decode("utf-8")
+                    pil_img = Image.open(io.BytesIO(img_bytes))
+                    w, h = pil_img.size
+                    
+                    # Ignore tiny UI elements (<80x80)
+                    if w < 80 or h < 80:
+                        continue
+
+                    # Run GarmentVision SegFormer & Matting concurrently
+                    bg_task = asyncio.create_task(background_matting.remove_background(img_bytes))
+                    cp_task = asyncio.create_task(_cp.parse_garments(img_bytes))
+                    await asyncio.gather(bg_task, cp_task, return_exceptions=True)
+
+                    bg_res = bg_task.result() if not bg_task.exception() else {}
+                    garments = cp_task.result() if not cp_task.exception() else []
+
+                    # 1. Matting PNG
+                    png_bytes = bg_res.get("png_bytes") or bg_res.get("image_png")
+                    if png_bytes:
+                        b64_png = base64.b64encode(png_bytes).decode("utf-8")
                         cutout_url = f"data:image/png;base64,{b64_png}"
+
+                    # 2. SegFormer Classification
+                    if garments:
+                        top_g = garments[0]
+                        det_label = str(top_g.get("label") or top_g.get("kind") or "").lower()
+                        if any(k in det_label for k in ["top", "shirt", "blouse", "tee", "sweat", "upper"]):
+                            category = "Top"
+                        elif any(k in det_label for k in ["pant", "bottom", "skirt", "jean", "short", "trouser"]):
+                            category = "Bottom"
+                        elif any(k in det_label for k in ["shoe", "footwear", "boot", "sneaker", "sandal"]):
+                            category = "Footwear"
+                        elif any(k in det_label for k in ["dress", "gown"]):
+                            category = "Dress"
+                        elif any(k in det_label for k in ["coat", "jacket", "outerwear"]):
+                            category = "Outerwear"
+                        elif any(k in det_label for k in ["belt", "bag", "accessory", "hat", "watch"]):
+                            category = "Accessory"
+
+                    # 3. Dominant Color Calculation
+                    color = _determine_color(pil_img)
+
+                    # Dynamic Title Generation if default title is generic
+                    if not title or title.startswith("Pasted Garment") or title.startswith("Garment"):
+                        title = f"{color} {category}"
+
             except Exception as gv_err:
-                logger.warning("GarmentVision pipeline matting skipped for item %s: %s", title, gv_err)
+                logger.warning("GarmentVision pipeline analysis skipped for item %s: %s", title, gv_err)
 
         doc = {
             "id": c_id,
@@ -2799,9 +2871,9 @@ async def import_competitor_closet(
             "name": title,
             "category": category,
             "sub_category": item.get("sub_category") or item.get("subtype") or category,
-            "color": item.get("color") or item.get("primary_color") or "Neutral",
-            "colors": item.get("colors") or [item.get("color") or "Neutral"],
-            "brand": item.get("brand") or item.get("label"),
+            "color": color,
+            "colors": [color],
+            "brand": item.get("brand") or item.get("label") or "Imported",
             "image_url": img_url,
             "original_image_url": img_url,
             "clean_image_url": cutout_url,

@@ -84,7 +84,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     return `https://${appDomain}`;
   }, [appName, appDomain, customLoginUrl]);
 
-  const harvesterBookmarkletCode = `copy(Array.from(document.querySelectorAll('img')).map(i=>i.src).filter(s=>s&&s.startsWith('http')&&!s.includes('logo')&&!s.includes('avatar'))); alert('Done! Copied real garment URLs to your clipboard. Now paste into DressApp.');`;
+  const harvesterBookmarkletCode = `copy(Array.from(document.querySelectorAll('img')).filter(i=>{const s=i.src||'';const w=i.naturalWidth||i.width||0;const h=i.naturalHeight||i.height||0;if(!s.startsWith('http'))return false;if(s.includes('.svg')||s.includes('bookmark')||s.includes('logo')||s.includes('avatar')||s.includes('icon')||s.includes('badge')||s.includes('button')||s.includes('grid'))return false;if(w>0&&w<90)return false;if(h>0&&h<90)return false;return true;}).map(i=>i.src)); alert('Done! Filtered out UI icons and copied real garment image URLs to your clipboard. Now paste into DressApp.');`;
 
   const handleNoClick = async () => {
     setBusy(true);
