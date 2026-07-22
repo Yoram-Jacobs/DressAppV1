@@ -41,7 +41,7 @@ const PRESET_APPS = [
 
 export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdated }) {
   const { t } = useTranslation();
-  const nav = useNavigate();
+  const navigate = useNavigate();
 
   // Steps: 'ask' | 'app_search' | 'web_login'
   const [step, setStep] = useState('ask');
