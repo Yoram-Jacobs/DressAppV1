@@ -2781,12 +2781,9 @@ async def import_competitor_closet(
             pass
         return "Neutral"
 
-    docs = []
-    item_id_map = {}
-    now = datetime.now(timezone.utc).isoformat()
-
-    sem = asyncio.Semaphore(10)
-    async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as http_client:
+    # Shared httpx client & semaphore (max 2 concurrent Gemini Vision API calls)
+    sem = asyncio.Semaphore(2)
+    async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as http_client:
         async def _process_batch_item(idx: int, item: dict[str, Any]) -> dict[str, Any] | None:
             async with sem:
                 try:
@@ -2844,7 +2841,8 @@ async def import_competitor_closet(
                                 if gv_task:
                                     tasks.append(gv_task)
 
-                                await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=7.0)
+                                # Generous 25s timeout so Gemini Vision API finishes processing full attributes
+                                await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=25.0)
 
                                 bg_res = bg_task.result() if bg_task.done() and not bg_task.exception() else {}
                                 garments = cp_task.result() if cp_task.done() and not cp_task.exception() else []
