@@ -46,7 +46,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const [customLoginUrl, setCustomLoginUrl] = useState('https://app.whering.co.uk/login');
   const [busy, setBusy] = useState(false);
 
-  // Dynamic Item & Outfit counts
+  // Dynamic Item & Outfit counts (edited directly on Step 3)
   const [itemCountInput, setItemCountInput] = useState(95);
   const [outfitCountInput, setOutfitCountInput] = useState(2);
 
@@ -313,7 +313,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           </div>
         )}
 
-        {/* STEP 2: APP SEARCH & SELECTION */}
+        {/* STEP 2: APP SEARCH & SELECTION (Clean & Streamlined) */}
         {step === 'app_search' && (
           <form onSubmit={handleGoToWebLogin} className="space-y-4">
             <DialogHeader>
@@ -350,7 +350,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               </div>
             </div>
 
-            {/* Inputs */}
+            {/* App Name Input */}
             <div className="space-y-3 pt-1">
               <div>
                 <Label htmlFor="appNameInput" className="text-xs font-semibold">
@@ -375,38 +375,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 </div>
               </div>
 
-              {/* Items and Outfits count adjusters */}
-              <div className="grid grid-cols-2 gap-3 pt-0.5">
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                    <Shirt className="w-3.5 h-3.5 text-blue-500" />
-                    {t('migration.clothesCountLabel', { defaultValue: 'Clothes Count' })}
-                  </Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    max="1000"
-                    value={itemCountInput}
-                    onChange={(e) => setItemCountInput(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                    className="rounded-xl h-9 text-xs mt-1 font-mono font-bold"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                    <Layers className="w-3.5 h-3.5 text-purple-500" />
-                    {t('migration.outfitsCountLabel', { defaultValue: 'Outfits Count' })}
-                  </Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="500"
-                    value={outfitCountInput}
-                    onChange={(e) => setOutfitCountInput(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                    className="rounded-xl h-9 text-xs mt-1 font-mono font-bold"
-                  />
-                </div>
-              </div>
-
               {/* Secure Web Portal Preview Box */}
               <div className="p-3 rounded-xl bg-muted/40 border border-border/70 space-y-1.5">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -418,7 +386,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   </span>
                 </div>
                 <div className="text-[11px] text-foreground/80 leading-relaxed">
-                  Extracting <strong>{itemCountInput} Clothes</strong> & <strong>{outfitCountInput} Saved Outfits</strong> from your {appName} database.
+                  Log in to your {appName} account to view your wardrobe and migrate to DressApp.
                 </div>
               </div>
             </div>
@@ -445,7 +413,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           </form>
         )}
 
-        {/* STEP 3: APP A WEB PAGE — STAYS VISIBLE UNTIL ALL DATABASES ARE SYNCED */}
+        {/* STEP 3: APP A WEB PAGE WITH ITEMS & OUTFITS EDITOR RIGHT IN THE BOTTOM BAR */}
         {step === 'web_login' && (
           <div className="flex flex-col h-full space-y-3 overflow-hidden">
             <DialogHeader className="border-b border-border pb-2.5 shrink-0">
@@ -790,32 +758,57 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                       data-testid="migration-grant-permission-btn"
                     >
                       <UploadCloud className="w-3.5 h-3.5" />
-                      {t('migration.grantPermissionWithCount', { count: itemCountInput, defaultValue: `Grant Permission & Sync (${itemCountInput} Items)` })}
+                      {t('migration.migrateBtn', { defaultValue: 'Migrate' })}
                     </Button>
                   </div>
                 </div>
               ) : (
-                /* Standard Web Login Action Bar on bottom of App A Web Page */
-                <div className="absolute inset-x-0 bottom-0 bg-card/90 backdrop-blur-md border-t border-border/80 p-3 flex items-center justify-between shadow-lg z-10">
-                  <div className="text-xs text-foreground/90 font-medium truncate flex items-center gap-2">
-                    <Lock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    <span className="truncate">
-                      {authenticated
-                        ? t('migration.sessionConnectedWithCount', { items: itemCountInput, outfits: outfitCountInput, defaultValue: `Connected: ${itemCountInput} Items & ${outfitCountInput} Outfits` })
-                        : t('migration.webLoginTitle', { appName, defaultValue: `Log in to your ${appName} account` })}
-                    </span>
+                /* ACTION BAR ON BOTTOM OF APP A WEB PAGE — EVACUATED REAL ESTATE FOR STEP 3 ITEMS & OUTFITS EDITOR */
+                <div className="absolute inset-x-0 bottom-0 bg-card/95 backdrop-blur-md border-t border-border/80 p-3 flex items-center justify-between shadow-lg z-10 gap-2">
+                  {/* Step 3 Items and Outfits Count Editor in the bottom bar */}
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="flex items-center gap-1.5 bg-muted/80 border border-border/80 rounded-xl px-2.5 py-1">
+                      <Shirt className="w-4 h-4 text-blue-500 shrink-0" />
+                      <span className="text-xs font-medium text-muted-foreground hidden sm:inline">
+                        {t('migration.clothesCountLabel', { defaultValue: 'Clothes' })}:
+                      </span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="1000"
+                        value={itemCountInput}
+                        onChange={(e) => setItemCountInput(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                        className="w-14 h-7 text-xs text-center font-mono font-bold bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1.5 bg-muted/80 border border-border/80 rounded-xl px-2.5 py-1">
+                      <Layers className="w-4 h-4 text-purple-500 shrink-0" />
+                      <span className="text-xs font-medium text-muted-foreground hidden sm:inline">
+                        {t('migration.outfitsCountLabel', { defaultValue: 'Outfits' })}:
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="500"
+                        value={outfitCountInput}
+                        onChange={(e) => setOutfitCountInput(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                        className="w-12 h-7 text-xs text-center font-mono font-bold bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
+                      />
+                    </div>
                   </div>
+
+                  {/* Migrate Action Button */}
                   <Button
                     type="button"
                     onClick={() => {
                       if (!authenticated) setAuthenticated(true);
                       setShowPermissionOverlay(true);
                     }}
-                    className="rounded-xl h-9 bg-primary text-primary-foreground font-semibold text-xs flex items-center gap-1.5 shadow-md"
+                    className="rounded-xl h-10 px-5 bg-primary text-primary-foreground font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md hover:opacity-95"
                     data-testid="migration-weblogin-proceed-btn"
                   >
-                    <span>{t('migration.authorizeMigrationWithCount', { count: itemCountInput, defaultValue: `Authorize Migration (${itemCountInput} Items)` })}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <span>{t('migration.migrateBtn', { defaultValue: 'Migrate' })}</span>
+                    <ArrowRight className="w-4 h-4" />
                   </Button>
                 </div>
               )}

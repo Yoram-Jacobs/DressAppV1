@@ -2688,7 +2688,8 @@
     "dataSyncedItems": "Garment photos & categories",
     "dataSyncedOutfits": "Saved outfits & layouts",
     "dataSyncedStats": "Wear count statistics",
-    "popupOpened": "Opened {{appName}} login window. Complete login and return to proceed."
+    "popupOpened": "Opened {{appName}} login window. Complete login and return to proceed.",
+    "migrateBtn": "Migrate"
   },
   "login_reminder": {
     "newTitle": "クローゼットが空です — 最初の服を追加しましょう！",

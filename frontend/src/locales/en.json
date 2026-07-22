@@ -2653,6 +2653,7 @@
     "permissionTitle": "Authorize Wardrobe & Outfits Migration",
     "permissionSub": "You are authenticated with {{appName}}. Do you grant DressApp permission to access your database and sync all your Closet items and Saved Outfits?",
     "grantPermissionBtn": "Grant & Sync",
+    "migrateBtn": "Migrate",
     "grantPermissionWithCount": "Grant Permission & Sync ({{count}} Items)",
     "authorizeMigrationWithCount": "Authorize Migration ({{count}} Items)",
     "sessionConnectedWithCount": "Connected: {{items}} Items & {{outfits}} Outfits",

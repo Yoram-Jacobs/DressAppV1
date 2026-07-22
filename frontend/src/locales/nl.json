@@ -2687,7 +2687,8 @@
     "summaryItems": "{{count}} Clothes Imported",
     "summaryOutfits": "{{count}} Outfits Imported",
     "okToCloset": "OK - Open Closet",
-    "popupOpened": "Opened {{appName}} login window. Complete login and return to proceed."
+    "popupOpened": "Opened {{appName}} login window. Complete login and return to proceed.",
+    "migrateBtn": "Migrate"
   },
   "login_reminder": {
     "newTitle": "Je kledingkast is leeg — Voeg je eerste kledingstuk toe!",
