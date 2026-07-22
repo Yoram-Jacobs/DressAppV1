@@ -2983,12 +2983,12 @@ async def import_competitor_closet(
 async def import_competitor_closet_stream(
     payload: ImportCompetitorIn,
     user: dict[str, Any] = Depends(get_current_user),
-    db: Any = Depends(get_db),
 ) -> StreamingResponse:
     """Streams imported items chunk-by-chunk via NDJSON, running GarmentVision AI analysis and emitting live progress."""
     async def _event_stream():
-        raw_items = payload.raw_items or []
-        raw_outfits = payload.raw_outfits or []
+        db = get_db()
+        raw_items = payload.items or []
+        raw_outfits = payload.outfits or []
 
         if payload.target_url and not raw_items:
             try:
