@@ -83,9 +83,6 @@ function _syncClosetPolishTerminal(id, status) {
 
 async function _pollOnce() {
   const pendingIds = Array.from(_state.polishPendingIds);
-  // #region agent log
-  fetch('http://127.0.0.1:7938/ingest/6b654633-da7f-4c98-bcca-fdab5f578abc',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8ced3d'},body:JSON.stringify({sessionId:'8ced3d',hypothesisId:'H5',location:'workStore.js:_pollOnce:entry',message:'poll tick',data:{pendingCount:pendingIds.length,pendingIds:pendingIds.slice(0,5),pollerActive:_pollerHandle!=null,batchTotal:_state.polishBatchTotal,batchDone:_state.polishBatchCompleted},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   if (pendingIds.length === 0) {
     _maybeStopPoller();
     return;
@@ -100,9 +97,6 @@ async function _pollOnce() {
     (id) => now - (_state._polishStartedAt[id] || now) > ITEM_POLL_TIMEOUT_MS,
   );
   if (timedOut.length) {
-    // #region agent log
-    fetch('http://127.0.0.1:7938/ingest/6b654633-da7f-4c98-bcca-fdab5f578abc',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8ced3d'},body:JSON.stringify({sessionId:'8ced3d',hypothesisId:'H3',location:'workStore.js:_pollOnce:timeout',message:'polish items timed out',data:{timedOut},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     const next = new Set(_state.polishPendingIds);
     const nextStartedAt = { ..._state._polishStartedAt };
     for (const id of timedOut) {
@@ -125,10 +119,6 @@ async function _pollOnce() {
   const results = await Promise.all(
     pendingIds.map((id) => api.getItem(id).catch(() => null)),
   );
-
-  // #region agent log
-  fetch('http://127.0.0.1:7938/ingest/6b654633-da7f-4c98-bcca-fdab5f578abc',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8ced3d'},body:JSON.stringify({sessionId:'8ced3d',hypothesisId:'H2,H3',location:'workStore.js:_pollOnce:afterGet',message:'getItem results',data:{requested:pendingIds.length,nullCount:results.filter((r)=>!r||!r.id).length,statuses:results.filter(Boolean).map((it)=>({id:it.id,status:it.clean_image_status,hasCleanUrl:!!it.clean_image_url}))},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
 
   let drained = false;
   const nextSet = new Set(_state.polishPendingIds);
@@ -169,9 +159,6 @@ async function _pollOnce() {
       polishBatchCompleted: _state.polishBatchCompleted + newlyCompleted,
     });
   }
-  // #region agent log
-  fetch('http://127.0.0.1:7938/ingest/6b654633-da7f-4c98-bcca-fdab5f578abc',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8ced3d'},body:JSON.stringify({sessionId:'8ced3d',hypothesisId:'H3,H4',location:'workStore.js:_pollOnce:exit',message:'poll outcome',data:{newlyCompleted,remaining:nextSet.size,drained,stateNotified:newlyCompleted>0},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   if (drained) _onBatchDrained();
   _maybeStopPoller();
 }
@@ -195,9 +182,6 @@ function _onBatchDrained() {
 
 function _ensurePollerRunning() {
   if (_pollerHandle != null) return;
-  // #region agent log
-  fetch('http://127.0.0.1:7938/ingest/6b654633-da7f-4c98-bcca-fdab5f578abc',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8ced3d'},body:JSON.stringify({sessionId:'8ced3d',hypothesisId:'H5',location:'workStore.js:_ensurePollerRunning',message:'poller started',data:{pendingCount:_state.polishPendingIds.size},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   _pollerHandle = setInterval(() => {
     _pollOnce().catch(() => { /* swallow */ });
   }, POLL_INTERVAL_MS);
@@ -296,9 +280,6 @@ export const workStore = {
         added += 1;
       }
     }
-    // #region agent log
-    fetch('http://127.0.0.1:7938/ingest/6b654633-da7f-4c98-bcca-fdab5f578abc',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'8ced3d'},body:JSON.stringify({sessionId:'8ced3d',hypothesisId:'H1,H5',location:'workStore.js:registerPolishItems',message:'register polish',data:{inputCount:ids.length,added,alreadyTracked:ids.length-added,pollerActive:_pollerHandle!=null,ids:ids.slice(0,5)},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     if (added > 0) {
       _set({
         polishPendingIds: nextSet,
