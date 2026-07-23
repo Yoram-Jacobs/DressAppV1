@@ -198,12 +198,18 @@ async def update_me(
         if k == "ai_configuration":
             continue
         if k in _MERGEABLE_DICT_FIELDS and isinstance(v, dict):
-            # Mongo dot-notation: ``$set: {"body_measurements.chest": 92}``
-            # leaves every other ``body_measurements.*`` field untouched.
-            for sub_k, sub_v in v.items():
-                if sub_v is None:
-                    continue
-                set_ops[f"{k}.{sub_k}"] = sub_v
+            # Check if parent is not a dictionary in database (e.g. null or missing)
+            db_val = user.get(k)
+            if not isinstance(db_val, dict):
+                # Write direct subfield values without dot notation to prevent WriteError 28
+                set_ops[k] = {sub_k: sub_v for sub_k, sub_v in v.items() if sub_v is not None}
+            else:
+                # Mongo dot-notation: ``$set: {"body_measurements.chest": 92}``
+                # leaves every other ``body_measurements.*`` field untouched.
+                for sub_k, sub_v in v.items():
+                    if sub_v is None:
+                        continue
+                    set_ops[f"{k}.{sub_k}"] = sub_v
         else:
             set_ops[k] = v
 
