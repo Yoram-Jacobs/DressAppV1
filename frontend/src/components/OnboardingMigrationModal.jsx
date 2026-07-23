@@ -629,148 +629,146 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 </div>
               )}
 
-              {/* OVERLAY PANEL & STAGE CONTROL */}
-              {isSyncing ? (
-                <div className="absolute inset-x-0 bottom-0 bg-card/95 backdrop-blur-xl border-t border-border p-4 shadow-2xl z-20 space-y-3 animate-in slide-in-from-bottom duration-300">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2 font-bold font-display text-foreground">
-                        <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />
-                        <span>{syncStatusText}</span>
-                      </div>
-                      <span className="font-mono text-primary font-bold">{progressPct}%</span>
-                    </div>
+            {/* Actions & Status Panel (Normal flow) */}
+            {isSyncing ? (
+              <div className="bg-card border border-border rounded-xl p-3 space-y-2.5 shrink-0 animate-in slide-in-from-bottom duration-300">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 font-bold font-display text-foreground">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />
+                    <span>{syncStatusText}</span>
+                  </div>
+                  <span className="font-mono text-primary font-bold">{progressPct}%</span>
+                </div>
 
-                    <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden border border-border/40 p-0.5">
-                      <div
-                        className="bg-primary h-full rounded-full transition-all duration-250 ease-out shadow-xs"
-                        style={{ width: `${progressPct}%` }}
-                      />
-                    </div>
+                <div className="w-full bg-muted rounded-full h-2 overflow-hidden border border-border/40 p-0.5">
+                  <div
+                    className="bg-primary h-full rounded-full transition-all duration-250 ease-out"
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="p-2 rounded-lg bg-background border border-border flex items-center gap-2">
-                        <Shirt className="w-4 h-4 text-blue-500 shrink-0" />
-                        <div>
-                          <span className="text-[10px] text-muted-foreground block">{t('migration.processedGarments', { defaultValue: 'Processed Garments' })}</span>
-                          <span className="font-bold font-mono text-foreground">{syncedItems} / {totalItems}</span>
-                        </div>
-                      </div>
-                      <div className="p-2 rounded-lg bg-background border border-border flex items-center gap-2">
-                        <Layers className="w-4 h-4 text-purple-500 shrink-0" />
-                        <div>
-                          <span className="text-[10px] text-muted-foreground block">{t('migration.outfits', { defaultValue: 'Outfits' })}</span>
-                          <span className="font-bold font-mono text-foreground">{syncedOutfits} / {totalOutfits}</span>
-                        </div>
-                      </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-1.5 rounded-lg bg-background border border-border flex items-center gap-2">
+                    <Shirt className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                    <div>
+                      <span className="text-[9px] text-muted-foreground block">{t('migration.processedGarments', { defaultValue: 'Garments' })}</span>
+                      <span className="font-bold font-mono text-foreground text-xs">{syncedItems} / {totalItems}</span>
+                    </div>
+                  </div>
+                  <div className="p-1.5 rounded-lg bg-background border border-border flex items-center gap-2">
+                    <Layers className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                    <div>
+                      <span className="text-[9px] text-muted-foreground block">{t('migration.outfits', { defaultValue: 'Outfits' })}</span>
+                      <span className="font-bold font-mono text-foreground text-xs">{syncedOutfits} / {totalOutfits}</span>
                     </div>
                   </div>
                 </div>
-              ) : migrationStage === 'outfits_prompt' ? (
-                <div className="absolute inset-x-0 bottom-0 bg-card/98 backdrop-blur-xl border-t border-border p-4 shadow-2xl z-20 space-y-3 animate-in slide-in-from-bottom duration-200 text-center">
-                  <div className="flex items-center justify-center gap-2 text-emerald-600 font-bold text-base font-display">
-                    <CheckCircle2 className="w-5 h-5" />
-                    {t('migration.garmentsProcessedSuccess', { defaultValue: 'Screenshot Pipeline Completed & Garments Saved!' })}
-                  </div>
-                  {pipelineResult && (
-                    <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground font-mono bg-muted/40 p-1.5 rounded-lg max-w-sm mx-auto">
-                      <span>Viewports: {pipelineResult.viewports_captured}</span>
-                      <span>•</span>
-                      <span>Extracted: {pipelineResult.tiles_extracted}</span>
-                      <span>•</span>
-                      <span>Unique: {pipelineResult.unique_assets}</span>
-                    </div>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    {t('migration.importOutfitsPrompt', { defaultValue: 'Would you like to import your saved outfits canvas as well?' })}
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-2 pt-1 max-w-sm mx-auto">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleFinishSuccess}
-                      className="rounded-xl h-10 text-xs font-semibold"
-                    >
-                      {t('migration.skipOutfitsBtn', { defaultValue: 'Skip Outfits' })}
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => setMigrationStage('outfits')}
-                      className="rounded-xl h-10 bg-primary text-primary-foreground font-bold text-xs flex items-center justify-center gap-1.5"
-                    >
-                      <span>{t('migration.importOutfitsBtn', { defaultValue: 'Yes, Import Outfits' })}</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  </div>
+              </div>
+            ) : migrationStage === 'outfits_prompt' ? (
+              <div className="bg-card border border-border rounded-xl p-3 space-y-2.5 text-center shrink-0 animate-in slide-in-from-bottom duration-200">
+                <div className="flex items-center justify-center gap-1.5 text-emerald-600 font-bold text-xs sm:text-sm font-display">
+                  <CheckCircle2 className="w-4 h-4" />
+                  {t('migration.garmentsProcessedSuccess', { defaultValue: 'Garments Imported Successfully!' })}
                 </div>
-              ) : migrationStage === 'complete' ? (
-                <div className="absolute inset-x-0 bottom-0 bg-card/98 backdrop-blur-xl border-t border-border p-5 shadow-2xl z-20 space-y-3 text-center animate-in slide-in-from-bottom duration-200">
-                  <div className="flex items-center justify-center gap-2 text-emerald-600 font-bold text-base font-display">
-                    <CheckCircle2 className="w-6 h-6" />
-                    {t('migration.allSuccessTitle', { defaultValue: 'Successfully imported all real garments and outfits!' })}
+                {pipelineResult && (
+                  <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground font-mono bg-muted/40 p-1 rounded-lg max-w-sm mx-auto">
+                    <span>Views: {pipelineResult.viewports_captured}</span>
+                    <span>•</span>
+                    <span>Extracted: {pipelineResult.tiles_extracted}</span>
+                    <span>•</span>
+                    <span>Unique: {pipelineResult.unique_assets}</span>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {t('migration.allSuccessSub', { defaultValue: 'Your real garment cutouts have been processed by GarmentVision AI and added to your Closet.' })}
-                  </div>
+                )}
+                <p className="text-[11px] text-muted-foreground">
+                  {t('migration.importOutfitsPrompt', { defaultValue: 'Would you like to import outfits as well?' })}
+                </p>
 
+                <div className="grid grid-cols-2 gap-2 pt-1 max-w-sm mx-auto">
                   <Button
+                    type="button"
+                    variant="outline"
                     onClick={handleFinishSuccess}
-                    disabled={busy}
-                    className="w-full max-w-xs mx-auto rounded-xl h-10 bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 shadow-lg"
-                    data-testid="migration-success-ok-btn"
+                    className="rounded-xl h-8 text-xs font-semibold"
                   >
-                    {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                      <>
-                        <CheckCircle2 className="w-4 h-4" />
-                        {t('migration.openClosetBtn', { defaultValue: 'OK - Open Closet' })}
-                      </>
-                    )}
+                    {t('migration.skipOutfitsBtn', { defaultValue: 'Skip Outfits' })}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => setMigrationStage('outfits')}
+                    className="rounded-xl h-8 bg-primary text-primary-foreground font-bold text-xs flex items-center justify-center gap-1"
+                  >
+                    <span>{t('migration.importOutfitsBtn', { defaultValue: 'Yes, Import' })}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 </div>
-              ) : (
-                <div className="absolute inset-x-0 bottom-0 bg-card/95 backdrop-blur-md border-t border-border/80 p-3 flex items-center justify-between shadow-lg z-10 gap-2">
-                  <div className="flex items-center gap-2">
-                    <Shirt className="w-4 h-4 text-primary shrink-0" />
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {t('migration.garmentVisionReady', { defaultValue: 'GarmentVision Pipeline Ready' })}
-                    </span>
-                  </div>
-
-                  {importMode === 'screenshot_scroll' && !popupOpened ? (
-                    <a
-                      href={targetLoginUrl}
-                      target="_blank"
-                      rel="opener"
-                      onClick={() => setPopupOpened(true)}
-                      className="rounded-xl h-10 px-5 bg-primary text-primary-foreground font-bold text-xs sm:text-sm inline-flex items-center justify-center gap-2 shadow-md hover:opacity-95"
-                      data-testid="migration-weblogin-proceed-btn"
-                    >
-                      <span>
-                        {t('migration.importWardrobeBtn', { defaultValue: 'Import wardrobe' })}
-                      </span>
-                      <ArrowRight className="w-4 h-4" />
-                    </a>
-                  ) : (
-                    <Button
-                      type="button"
-                      onClick={handleStartItemImport}
-                      className="rounded-xl h-10 px-5 bg-primary text-primary-foreground font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md hover:opacity-95"
-                      data-testid="migration-weblogin-proceed-btn"
-                    >
-                      <span>
-                        {importMode === 'screenshot_scroll'
-                          ? t('migration.importBtn', { defaultValue: 'Import' })
-                          : t('migration.importRealPhotosBtn', { defaultValue: 'Import Real Photos' })}
-                      </span>
-                      <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  )}
+              </div>
+            ) : migrationStage === 'complete' ? (
+              <div className="bg-card border border-border rounded-xl p-3 space-y-2.5 text-center shrink-0 animate-in slide-in-from-bottom duration-200">
+                <div className="flex items-center justify-center gap-1.5 text-emerald-600 font-bold text-xs sm:text-sm font-display">
+                  <CheckCircle2 className="w-4 h-4" />
+                  {t('migration.allSuccessTitle', { defaultValue: 'Import Completed Successfully!' })}
                 </div>
-              )}
-            </div>
+                <div className="text-[11px] text-muted-foreground">
+                  {t('migration.allSuccessSub', { defaultValue: 'Garment cutouts have been processed by GarmentVision AI.' })}
+                </div>
 
-            <div className="flex items-center justify-between pt-1 border-t border-border shrink-0">
+                <Button
+                  onClick={handleFinishSuccess}
+                  disabled={busy}
+                  className="w-full max-w-xs mx-auto rounded-xl h-8 bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-1.5 shadow-sm"
+                  data-testid="migration-success-ok-btn"
+                >
+                  {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (
+                    <>
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      {t('migration.openClosetBtn', { defaultValue: 'OK - Open Closet' })}
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <div className="bg-card border border-border rounded-xl p-3 flex items-center justify-between shrink-0 gap-2">
+                <div className="flex items-center gap-2">
+                  <Shirt className="w-4 h-4 text-primary shrink-0" />
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    {t('migration.garmentVisionReady', { defaultValue: 'GarmentVision Ready' })}
+                  </span>
+                </div>
+
+                {importMode === 'screenshot_scroll' && !popupOpened ? (
+                  <a
+                    href={targetLoginUrl}
+                    target="_blank"
+                    rel="opener"
+                    onClick={() => setPopupOpened(true)}
+                    className="rounded-xl h-8 px-4 bg-primary text-primary-foreground font-bold text-xs inline-flex items-center justify-center gap-1 shadow-sm hover:opacity-95"
+                    data-testid="migration-weblogin-proceed-btn"
+                  >
+                    <span>
+                      {t('migration.importWardrobeBtn', { defaultValue: 'Import wardrobe' })}
+                    </span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={handleStartItemImport}
+                    className="rounded-xl h-8 px-4 bg-primary text-primary-foreground font-bold text-xs flex items-center gap-1 shadow-sm hover:opacity-95"
+                    data-testid="migration-weblogin-proceed-btn"
+                  >
+                    <span>
+                      {importMode === 'screenshot_scroll'
+                        ? t('migration.importBtn', { defaultValue: 'Import' })
+                        : t('migration.importRealPhotosBtn', { defaultValue: 'Import Real Photos' })}
+                    </span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Bottom Navigation */}
+            <div className="flex items-center justify-between pt-1.5 border-t border-border shrink-0">
               <Button
                 type="button"
                 variant="outline"
@@ -780,12 +778,12 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   setPopupOpened(false);
                 }}
                 disabled={isSyncing}
-                className="rounded-xl h-9 text-xs"
+                className="rounded-xl h-8 text-xs"
               >
                 {t('common.back', { defaultValue: 'Back' })}
               </Button>
-              <span className="text-[11px] text-muted-foreground">
-                {t('migration.mattingNotice', { defaultValue: 'All photos & screenshots will pass through GarmentVision AI matting automatically.' })}
+              <span className="text-[10px] text-muted-foreground">
+                {t('migration.mattingNotice', { defaultValue: 'All assets matting is handled by GarmentVision.' })}
               </span>
             </div>
           </div>
