@@ -88,34 +88,67 @@ function initImporter() {
     btn.disabled = true;
     status.innerText = 'Starting automated screenshot scroller...';
 
+    const getScrollEl = () => {
+      const common = ["main", "[class*=scroll]", "[class*=content]", "#root", ".app-container"];
+      for (const sel of common) {
+        const el = document.querySelector(sel);
+        if (el && el.scrollHeight > el.clientHeight) {
+          const style = window.getComputedStyle(el);
+          if (style.overflowY === "auto" || style.overflowY === "scroll") return el;
+        }
+      }
+      const all = document.querySelectorAll("*");
+      let best = null, maxScroll = 0;
+      for (const el of all) {
+        const style = window.getComputedStyle(el);
+        if (style.overflowY === "auto" || style.overflowY === "scroll") {
+          const dist = el.scrollHeight - el.clientHeight;
+          if (dist > maxScroll) { maxScroll = dist; best = el; }
+        }
+      }
+      return best || document.scrollingElement || document.documentElement || document.body;
+    };
+
+    const scrollEl = getScrollEl();
     let screenshots = [];
     let maxScrolls = 35;
     let scrollStep = 350;
     let prevScrollY = -1;
 
     for (let i = 0; i < maxScrolls; i++) {
-      window.scrollTo(0, i * scrollStep);
+      if (scrollEl === window || scrollEl === document.body || scrollEl === document.documentElement) {
+        window.scrollTo(0, i * scrollStep);
+      } else {
+        scrollEl.scrollTop = i * scrollStep;
+      }
       await new Promise(r => setTimeout(r, 1000));
 
-      if (window.scrollY === prevScrollY) {
+      const currentScroll = (scrollEl === window || scrollEl === document.body || scrollEl === document.documentElement) ? window.scrollY : scrollEl.scrollTop;
+      if (currentScroll === prevScrollY) {
         break;
       }
-      prevScrollY = window.scrollY;
+      prevScrollY = currentScroll;
 
       status.innerText = `Capturing view ${i + 1}...`;
+      
+      // Hide widget before capturing visible tab to keep screenshots clean
+      widget.style.display = 'none';
+      await new Promise(r => setTimeout(r, 100)); // wait brief frame for layout repaint
+      
       try {
-        // Request background service worker to capture the visible tab
         const res = await new Promise((resolve) => {
           chrome.runtime.sendMessage({ type: 'CAPTURE_VISIBLE_TAB' }, resolve);
         });
         if (res && res.ok && res.image_b64) {
-          // Re-attach data prefix
           screenshots.push(`data:image/jpeg;base64,${res.image_b64}`);
         } else {
           console.error('Capture failed:', res?.error);
         }
       } catch (e) {
         console.error('Capture message failed:', e);
+      } finally {
+        // Restore widget
+        widget.style.display = 'flex';
       }
     }
 
