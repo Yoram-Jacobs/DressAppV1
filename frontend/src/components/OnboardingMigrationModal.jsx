@@ -53,7 +53,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const [screenshotFiles, setScreenshotFiles] = useState([]);
   const [popupOpened, setPopupOpened] = useState(false);
 
-  const harvesterBookmarkletCode = 'javascript:(async()=>{if(typeof html2canvas==="undefined"){const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";document.head.appendChild(s);await new Promise(r=>s.onload=r)}const o=document.createElement("div");o.style.cssText="position:fixed;top:20px;left:20px;z-index:999999;background:rgba(0,0,0,0.85);color:white;padding:15px;border-radius:10px;font-family:sans-serif;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,0.5);width:260px;line-height:1.4;";o.innerHTML="<div style=\'font-weight:bold;margin-bottom:8px;\'>\uD83D\uDC57 DressApp Importer</div><div id=\'da-status\'>Initializing...</div>";document.body.appendChild(o);const st=document.getElementById("da-status");let sc=[];let max=35;let step=350;let prev=-1;for(let i=0;i<max;i++){window.scrollTo(0,i*step);await new Promise(r=>setTimeout(r,1000));if(window.scrollY===prev){st.innerText="Bottom reached.";break}prev=window.scrollY;st.innerText="Capturing screen "+(i+1)+"...";try{const c=await html2canvas(document.body,{logging:false,useCORS:true,allowTaint:true,x:window.scrollX,y:window.scrollY,width:window.innerWidth,height:window.innerHeight});sc.push(c.toDataURL("image/jpeg",0.75))}catch(e){st.innerText="Error: "+e.message}}st.innerText="Sending "+sc.length+" screens...";if(window.opener){window.opener.postMessage({type:"DRESSAPP_MIGRATION_SCREENSHOTS",screenshots:sc},"*");st.innerHTML="<span style=\'color:#10b981;font-weight:bold;\'>\u2713 Done!</span> Return to DressApp.";setTimeout(()=>o.remove(),4000)}else{st.innerHTML="<span style=\'color:#ef4444;font-weight:bold;\'>Error:</span> DressApp opener not found."}})();';
+  const harvesterBookmarkletCode = 'javascript:(async()=>{if(typeof html2canvas==="undefined"){const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";document.head.appendChild(s);await new Promise(r=>s.onload=r)}const o=document.createElement("div");o.style.cssText="position:fixed;top:20px;left:20px;z-index:999999;background:rgba(15,23,42,0.95);color:white;padding:16px;border-radius:12px;font-family:sans-serif;font-size:13px;box-shadow:0 10px 25px rgba(0,0,0,0.3);width:260px;line-height:1.4;border:1px solid rgba(255,255,255,0.1);";o.innerHTML="<div style=\'font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;display:flex;align-items:center;gap:6px;\'>👗 DressApp Importer</div><div id=\'da-status\' style=\'color:#94a3b8;font-size:11px;\'>Initializing...</div>";document.body.appendChild(o);const st=document.getElementById("da-status");let sc=[];let max=35;let step=350;let prev=-1;for(let i=0;i<max;i++){window.scrollTo(0,i*step);await new Promise(r=>setTimeout(r,1000));if(window.scrollY===prev){st.innerText="Bottom reached.";break}prev=window.scrollY;st.innerText="Capturing screen "+(i+1)+"...";try{const c=await html2canvas(document.body,{logging:false,useCORS:true,allowTaint:true,x:window.scrollX,y:window.scrollY,width:window.innerWidth,height:window.innerHeight});sc.push(c.toDataURL("image/jpeg",0.75))}catch(e){st.innerText="Error: "+e.message}}st.innerText="Sending "+sc.length+" screens...";document.dispatchEvent(new CustomEvent("DRESSAPP_BOOKMARKLET_SCREENSHOTS",{detail:{screenshots:sc}}));let sent=false;if(window.opener){try{window.opener.postMessage({type:"DRESSAPP_MIGRATION_SCREENSHOTS",screenshots:sc},"*");st.innerHTML="<span style=\'color:#34d399;font-weight:bold;\'>✓ Done!</span> Return to DressApp.";sent=true;setTimeout(()=>o.remove(),4000)}catch(e){}}if(!sent){st.innerHTML="<div style=\'margin-bottom:8px;color:#f87171;\'>Opener lost. Click copy below, go back to DressApp and press Ctrl+V to import.</div><button id=\'da-copy-btn\' style=\'background:#6366f1;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:11px;width:100%;\'>Copy Import Data</button>";const cb=document.getElementById("da-copy-btn");if(cb){cb.onclick=()=>{navigator.clipboard.writeText(JSON.stringify({type:"DRESSAPP_MIGRATION_SCREENSHOTS",screenshots:sc}));cb.innerText="Copied! Press Ctrl+V in DressApp";cb.style.background="#10b981"}}}})(window,document);';
 
   useEffect(() => {
     const handleMessage = (event) => {
@@ -66,8 +66,27 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       }
     };
 
+    const handlePaste = (e) => {
+      try {
+        const text = e.clipboardData.getData('text');
+        if (text) {
+          const parsed = JSON.parse(text);
+          if (parsed && parsed.type === 'DRESSAPP_MIGRATION_SCREENSHOTS' && Array.isArray(parsed.screenshots)) {
+            setScreenshotFiles(parsed.screenshots);
+            toast.success(t('migration.pastedSuccess', { count: parsed.screenshots.length, defaultValue: `Imported ${parsed.screenshots.length} screenshots from clipboard!` }));
+          }
+        }
+      } catch (err) {
+        // Ignore if pasted text is not a valid DressApp screenshots payload
+      }
+    };
+
     window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    window.addEventListener('paste', handlePaste);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      window.removeEventListener('paste', handlePaste);
+    };
   }, [t]);
 
   const bookmarkletRef = useRef(null);
@@ -550,8 +569,12 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     <div className="flex flex-col items-center justify-center p-3 bg-card border border-border rounded-xl gap-2">
                       <a
                         ref={bookmarkletRef}
-                        onClick={(e) => e.preventDefault()} // prevent clicking directly in DressApp
-                        className="px-4 py-2 bg-primary text-primary-foreground font-bold rounded-lg cursor-move shadow-sm select-none hover:opacity-90 flex items-center gap-1.5"
+                        draggable="true"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          toast.info(t('migration.bookmarkletClickTip', { defaultValue: 'Drag this button to your bookmarks bar. Do not click it directly!' }));
+                        }}
+                        className="px-4 py-2 bg-primary text-primary-foreground font-bold rounded-lg cursor-move shadow-sm hover:opacity-90 flex items-center gap-1.5"
                       >
                         <Shirt className="w-4 h-4" />
                         {t('migration.bookmarkletBtn', { defaultValue: '👗 DressApp Importer' })}

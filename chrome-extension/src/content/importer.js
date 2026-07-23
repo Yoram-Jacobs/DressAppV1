@@ -145,3 +145,25 @@ const urlObserver = new MutationObserver(() => {
 });
 urlObserver.observe(document.documentElement, { subtree: true, childList: true });
 initImporter();
+
+// Listen to custom event dispatched by bookmarklet to bypass opener nullification
+document.addEventListener('DRESSAPP_BOOKMARKLET_SCREENSHOTS', async (e) => {
+  const screenshots = e.detail?.screenshots || [];
+  console.log('👗 Importer received bookmarklet screenshots:', screenshots.length);
+  try {
+    const res = await new Promise((resolve) => {
+      chrome.runtime.sendMessage({
+        type: 'SEND_SCREENSHOTS_TO_DRESSAPP',
+        screenshots
+      }, resolve);
+    });
+    if (res && res.ok) {
+      console.log('👗 Successfully routed bookmarklet screenshots via extension to DressApp');
+    } else {
+      console.error('Failed to route screenshots:', res?.error);
+    }
+  } catch (err) {
+    console.error('Error routing screenshots:', err);
+  }
+});
+
