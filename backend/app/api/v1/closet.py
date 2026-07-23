@@ -2768,7 +2768,7 @@ class ImportCompetitorIn(BaseModel):
     outfits: list[dict[str, Any]] | None = Field(default_factory=list)
 
 
-@router.post("/import-competitor", status_code=201)
+@router.post("/import-competitor", status_code=201, deprecated=True)
 async def import_competitor_closet(
     payload: ImportCompetitorIn, user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
@@ -3071,7 +3071,7 @@ async def _run_serial_import_worker(job_id: str, user_id: str, app_name: str | N
     await db.import_jobs.update_one({"job_id": job_id}, {"$set": {"status": "completed", "processed": total}})
 
 
-@router.post("/import-competitor", status_code=202)
+@router.post("/import-competitor", status_code=202, deprecated=True)
 async def import_competitor_closet(
     payload: ImportCompetitorIn,
     background_tasks: BackgroundTasks,
@@ -3131,7 +3131,7 @@ async def get_import_job_status(job_id: str, user: dict = Depends(get_current_us
     return job
 
 
-@router.post("/import-competitor-stream")
+@router.post("/import-competitor-stream", deprecated=True)
 async def import_competitor_closet_stream(
     payload: ImportCompetitorIn,
     user: dict[str, Any] = Depends(get_current_user),
