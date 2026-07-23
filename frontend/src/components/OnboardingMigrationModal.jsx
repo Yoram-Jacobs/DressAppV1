@@ -518,7 +518,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             </div>
 
             {/* Viewport View / Mode Content */}
-            <div className="flex-1 relative bg-muted/20 rounded-xl border border-border overflow-y-auto p-4 min-h-[300px]">
+            <div className="flex-1 relative bg-muted/20 rounded-xl border border-border overflow-y-auto p-4 pb-16 min-h-[280px]">
               {importMode === 'screenshot_scroll' && !popupOpened && (
                 <div className="flex flex-col text-left space-y-4 py-2">
                   <div className="flex items-center gap-2 border-b border-border pb-2 shrink-0">
@@ -557,24 +557,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                         {t('migration.bookmarkletBtn', { defaultValue: '👗 DressApp Importer' })}
                       </a>
                       <span className="text-[10px] text-muted-foreground">{t('migration.dragTip', { defaultValue: 'Drag this button to your browser Bookmarks Bar' })}</span>
-                    </div>
-
-                    <p className="text-[11px]">
-                      {t('migration.bookmarkletAlternative', { defaultValue: 'Alternative: Copy the script below, open DevTools Console (F12) on your competitor page, paste it and run.' })}
-                    </p>
-
-                    <div className="relative">
-                      <pre className="p-2 rounded-xl bg-background border border-border text-[10px] font-mono text-foreground overflow-x-auto whitespace-pre-wrap max-h-24">
-                        {harvesterBookmarkletCode}
-                      </pre>
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={handleCopyHarvesterCode}
-                        className="absolute right-2 top-2 h-6 text-[10px] bg-primary text-primary-foreground font-bold rounded-md"
-                      >
-                        {t('migration.copyScriptBtn', { defaultValue: 'Copy Script' })}
-                      </Button>
                     </div>
 
                     <p>

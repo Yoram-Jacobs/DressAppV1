@@ -27,6 +27,15 @@ def get_default_measurements(gender: str = "female") -> Dict[str, Any]:
     }
 
 
+def _safe_float(val: Any, fallback: float) -> float:
+    if val is None or val == "":
+        return fallback
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return fallback
+
+
 def calculate_shape_parameters(measurements: Dict[str, Any], sex: str = "female") -> Dict[str, float]:
     """
     Calculate 3D morph target weights from body measurements.
@@ -35,11 +44,11 @@ def calculate_shape_parameters(measurements: Dict[str, Any], sex: str = "female"
         measurements = {}
 
     defaults = get_default_measurements(sex)
-    height = float(measurements.get("height", defaults["height"]))
-    weight = float(measurements.get("weight", 65.0))
-    chest = float(measurements.get("chest", defaults["chest"]))
-    waist = float(measurements.get("waist", defaults["waist"]))
-    hips = float(measurements.get("hips", defaults["hips"]))
+    height = _safe_float(measurements.get("height"), defaults["height"])
+    weight = _safe_float(measurements.get("weight"), 65.0)
+    chest = _safe_float(measurements.get("chest"), defaults["chest"])
+    waist = _safe_float(measurements.get("waist"), defaults["waist"])
+    hips = _safe_float(measurements.get("hips"), defaults["hips"])
 
     baseline_height = defaults["height"]
     baseline_weight = 65.0

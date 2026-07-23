@@ -865,15 +865,16 @@ export default function Profile() {
               </Button>
             </div>
 
-            <div className="flex pt-2 justify-center items-center gap-4">
+            <div className="flex pt-2 justify-center items-center gap-3">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={() => setIsMigrationModalOpen(true)}
-                className="text-xs font-bold border border-primary/20 bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground hover:bg-primary/20 px-3 py-1 rounded-full transition-all duration-200 mt-2 animate-pulse h-8"
+                className="text-xs font-semibold bg-slate-900 text-slate-100 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 px-3.5 py-1.5 rounded-full transition-all duration-200 shadow-sm inline-flex items-center gap-1.5 h-8 mt-2"
                 data-testid="profile-import-wardrobe-pill"
               >
-                ✨ {t('profile.importWardrobePill', { defaultValue: 'Import Wardrobe' })}
+                <Shirt className="w-3.5 h-3.5" />
+                <span>{t('profile.importWardrobePill', { defaultValue: 'Import Wardrobe' })}</span>
               </Button>
 
               <Link
