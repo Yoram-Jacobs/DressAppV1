@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -69,6 +69,14 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [t]);
+
+  const bookmarkletRef = useRef(null);
+
+  useEffect(() => {
+    if (bookmarkletRef.current) {
+      bookmarkletRef.current.setAttribute('href', harvesterBookmarkletCode);
+    }
+  });
 
   const handleCopyHarvesterCode = () => {
     navigator.clipboard.writeText(harvesterBookmarkletCode);
@@ -528,7 +536,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     {/* Drag bookmarklet */}
                     <div className="flex flex-col items-center justify-center p-3 bg-card border border-border rounded-xl gap-2">
                       <a
-                        href={harvesterBookmarkletCode}
+                        ref={bookmarkletRef}
                         onClick={(e) => e.preventDefault()} // prevent clicking directly in DressApp
                         className="px-4 py-2 bg-primary text-primary-foreground font-bold rounded-lg cursor-move shadow-sm select-none hover:opacity-90 flex items-center gap-1.5"
                       >
