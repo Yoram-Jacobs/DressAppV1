@@ -244,12 +244,16 @@ async def update_me(
     set_ops["updated_at"] = datetime.now(timezone.utc).isoformat()
     if set_ops:
         if any(k.startswith("body_measurements.") for k in set_ops):
-            current_measurements = dict(user.get("body_measurements", {}))
+            raw_bm = user.get("body_measurements")
+            current_measurements = dict(raw_bm) if isinstance(raw_bm, dict) else {}
             for k, v in set_ops.items():
                 if k.startswith("body_measurements."):
                     sub_k = k.split(".", 1)[1]
                     current_measurements[sub_k] = v
-            set_ops["avatar_shape_params"] = calculate_shape_parameters(current_measurements)
+            try:
+                set_ops["avatar_shape_params"] = calculate_shape_parameters(current_measurements)
+            except Exception:
+                pass
             
         await db.users.update_one({"id": user["id"]}, {"$set": set_ops})
 
