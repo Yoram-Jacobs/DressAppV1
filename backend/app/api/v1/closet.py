@@ -4938,9 +4938,10 @@ async def clean_item_background(
 
     crop_url = (
         item.get("segmented_image_url")
+        or (item.get("image_variants") or {}).get("webp", {}).get("large")
+        or (item.get("image_variants") or {}).get("webp", {}).get("medium")
         or item.get("original_image_url")
         or (item.get("image_variants") or {}).get("original")
-        or (item.get("image_variants") or {}).get("webp", {}).get("large")
     )
     if not crop_url:
         raise HTTPException(
@@ -5267,12 +5268,12 @@ async def reanalyze_item(
         item.get("segmented_image_url")
         or item.get("cutout_url")
         or item.get("clean_image_url")
+        or (variants.get("webp") or {}).get("large")
+        or (variants.get("webp") or {}).get("medium")
         or item.get("reconstructed_image_url")
+        or variants.get("original")
         or item.get("original_image_url")
         or item.get("image_url")
-        or variants.get("original")
-        or (variants.get("webp") or {}).get("lg")
-        or (variants.get("webp") or {}).get("md")
     )
     if not image_url:
         raise HTTPException(
@@ -5428,9 +5429,10 @@ async def repair_item_image(
     # original crop or an empty byte string (text-to-image path).
     crop_url = (
         item.get("segmented_image_url")
+        or (item.get("image_variants") or {}).get("webp", {}).get("large")
+        or (item.get("image_variants") or {}).get("webp", {}).get("medium")
         or item.get("original_image_url")
         or (item.get("image_variants") or {}).get("original")
-        or (item.get("image_variants") or {}).get("webp", {}).get("large")
     )
     crop_bytes = await _read_image_bytes_from_url(crop_url) if crop_url else b""
 
@@ -6803,10 +6805,10 @@ async def edit_item_image(
     variants = item.get("image_variants") or {}
     source_url = (
         item.get("segmented_image_url")
+        or (variants.get("webp") or {}).get("large")
+        or (variants.get("webp") or {}).get("medium")
         or item.get("original_image_url")
         or variants.get("original")
-        or (variants.get("webp") or {}).get("lg")
-        or (variants.get("webp") or {}).get("md")
     )
     if not source_url:
         raise HTTPException(400, "No source image on this item")
