@@ -2668,6 +2668,99 @@ async def import_dpp(
     }
 
 
+class ScreenshotMigrationIn(BaseModel):
+    app_name: str = "Competitor Import"
+    screenshots: list[str] = Field(default_factory=list)  # Base64 data URLs or image URLs
+    region: tuple[int, int, int, int] | None = None  # (x, y, w, h)
+    scroll_amount: int | None = 300
+    hamming_threshold: int | None = 5
+
+
+@router.post("/import-competitor-screenshot-scroll", status_code=200)
+async def import_competitor_screenshot_scroll(
+    payload: ScreenshotMigrationIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """
+    Executes automated Screenshot-Scroller & Deduplication Pipeline on competitor wardrobe captures:
+    Step A: ScrollerEngine viewport frame comparison & stabilization (ImageChops.difference)
+    Step B: GridSlicer dynamic contour bounding box extraction (cv2.findContours / grid layout)
+    Step C: DedupEngine perceptual hashing deduplication (imagehash / Hamming distance <= 5)
+    Step D: GarmentVisionAdapter ingestion (background matting, vision classification, Mongo DB persistence)
+    """
+    import base64
+    import io
+    from PIL import Image
+    from app.services.migration import ScrollerEngine, GridSlicer, DedupEngine, GarmentVisionAdapter
+
+    if not payload.screenshots:
+        return {
+            "status": "error",
+            "message": "No screenshot frames provided.",
+            "items": [],
+        }
+
+    # Decode incoming base64 / URL screenshot frames into PIL Images
+    pil_frames: list[Image.Image] = []
+    for sc in payload.screenshots:
+        try:
+            if sc.startswith("data:image/"):
+                _, b64data = sc.split(",", 1)
+                raw_bytes = base64.b64decode(b64data)
+                img = Image.open(io.BytesIO(raw_bytes))
+            else:
+                raw_bytes = base64.b64decode(sc)
+                img = Image.open(io.BytesIO(raw_bytes))
+            if img.mode != "RGB":
+                img = img.convert("RGB")
+            pil_frames.append(img)
+        except Exception as exc:
+            logger.warning("Failed to decode screenshot frame: %s", exc)
+
+    if not pil_frames:
+        return {
+            "status": "error",
+            "message": "Could not decode provided screenshot images.",
+            "items": [],
+        }
+
+    # Step A: ScrollerEngine
+    scroller = ScrollerEngine(scroll_amount=payload.scroll_amount or 300)
+    scroll_res = scroller.process_frame_sequence(pil_frames, region=payload.region)
+    captured_viewports = scroll_res["captured_frames"]
+
+    # Step B: GridSlicer
+    slicer = GridSlicer()
+    raw_tiles = slicer.slice_viewport_frames(captured_viewports)
+
+    # Step C: DedupEngine
+    dedup = DedupEngine(threshold=payload.hamming_threshold or 5)
+    unique_tiles = dedup.deduplicate_tiles(raw_tiles)
+
+    # Step D: GarmentVisionAdapter
+    adapter = GarmentVisionAdapter(user_id=user["id"], app_name=payload.app_name)
+    persisted_items = await adapter.process_and_persist_tiles(unique_tiles)
+
+    return {
+        "status": "completed",
+        "app_name": payload.app_name,
+        "viewports_captured": len(captured_viewports),
+        "tiles_extracted": len(raw_tiles),
+        "unique_assets": len(unique_tiles),
+        "items_persisted_count": len(persisted_items),
+        "items": [
+            {
+                "id": doc.get("id"),
+                "title": doc.get("title"),
+                "category": doc.get("category"),
+                "color": doc.get("color"),
+                "segmented_image_url": doc.get("segmented_image_url"),
+            }
+            for doc in persisted_items
+        ],
+    }
+
+
 class ImportCompetitorIn(BaseModel):
     app_name: str | None = "Competitor App"
     target_url: str | None = None
@@ -2684,15 +2777,7 @@ async def import_competitor_closet(
     raw_items = payload.items if payload.items is not None else []
     raw_outfits = payload.outfits if payload.outfits is not None else []
 
-    if payload.target_url and not raw_items:
-        from app.services.wardrobe_scraper import scrape_wardrobe_url
-        scraped = await scrape_wardrobe_url(payload.target_url)
-        if scraped:
-            raw_items = scraped
-        else:
-            logger.warning("Wardrobe scraper returned no items for target_url=%s; proceeding without auto-generated mock items.", payload.target_url)
-
-    # Only generate mock items if caller sent a fully empty payload (no target_url scrape attempt)
+    # Only generate mock items if caller sent a fully empty payload
     if not raw_items and not raw_outfits and not payload.target_url:
         raw_items = [
             {"id": "appA_1", "title": "Classic White Linen Shirt", "category": "Top", "color": "White", "brand": "Zara", "wear_count": 5},
@@ -2997,12 +3082,6 @@ async def import_competitor_closet(
     raw_items = payload.items if payload.items is not None else []
     raw_outfits = payload.outfits if payload.outfits is not None else []
 
-    if payload.target_url and not raw_items:
-        from app.services.wardrobe_scraper import scrape_wardrobe_url
-        scraped = await scrape_wardrobe_url(payload.target_url)
-        if scraped:
-            raw_items = scraped
-
     if not raw_items and not raw_outfits and not payload.target_url:
         raw_items = [
             {"id": "appA_1", "title": "Classic White Linen Shirt", "category": "Top", "color": "White", "brand": "Zara", "wear_count": 5},
@@ -3062,15 +3141,6 @@ async def import_competitor_closet_stream(
         db = get_db()
         raw_items = payload.items or []
         raw_outfits = payload.outfits or []
-
-        if payload.target_url and not raw_items:
-            try:
-                from app.services.wardrobe_scraper import scrape_wardrobe_url
-                scraped_urls = await scrape_wardrobe_url(payload.target_url)
-                if scraped_urls:
-                    raw_items = [{"image_url": u, "title": f"Garment {idx+1}"} for idx, u in enumerate(scraped_urls)]
-            except Exception as s_err:
-                logger.warning("Scraper exception in stream: %s", s_err)
 
         if not raw_items and not raw_outfits and not payload.target_url:
             raw_items = [
