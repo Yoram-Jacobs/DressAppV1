@@ -108,13 +108,21 @@ class GarmentVisionAdapter:
                     bg_task = asyncio.create_task(background_matting.remove_background(jpeg_bytes))
                     cp_task = asyncio.create_task(_cp.parse_garments(jpeg_bytes))
 
-                    await asyncio.wait_for(
-                        asyncio.gather(bg_task, cp_task, return_exceptions=True),
-                        timeout=3.5,
-                    )
-
-                    bg_res = bg_task.result() if bg_task.done() and not bg_task.exception() else {}
-                    garments = cp_task.result() if cp_task.done() and not cp_task.exception() else []
+                    bg_res = {}
+                    garments = []
+                    try:
+                        await asyncio.wait_for(
+                            asyncio.gather(bg_task, cp_task, return_exceptions=True),
+                            timeout=15.0,
+                        )
+                        bg_res = bg_task.result() if bg_task.done() and not bg_task.exception() else {}
+                        garments = cp_task.result() if cp_task.done() and not cp_task.exception() else []
+                    except asyncio.TimeoutError:
+                        logger.warning("GarmentVisionAdapter tile %d processing timed out (15s limit). Using fallback.", idx)
+                        bg_task.cancel()
+                        cp_task.cancel()
+                    except Exception as gather_err:
+                        logger.warning("GarmentVisionAdapter tile %d processing gather error: %s", idx, gather_err)
 
                     png_bytes = bg_res.get("png_bytes") or bg_res.get("image_png") if isinstance(bg_res, dict) else None
                     if png_bytes:
