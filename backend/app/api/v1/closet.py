@@ -5369,12 +5369,10 @@ async def reanalyze_item(
             if not fill_empty_only or ("material" not in locked and not item.get("material")):
                 update_doc["material"] = first_material["name"]
 
-    await db.closet_items.update_one(
-        {"id": item_id, "user_id": user["id"]},
-        {"$set": update_doc},
-    )
-    item = await repos.find_one(db.closet_items, {"id": item_id}) or item
-    return {"item": item, "analysis": analysis}
+    # Construct updated item in memory so the frontend can preview/save it, but do NOT write to database automatically.
+    # This ensures the user must explicitly click the Save icon on the frontend to persist re-analysis edits.
+    updated_item = {**item, **update_doc}
+    return {"item": updated_item, "analysis": analysis}
 
 
 

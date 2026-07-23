@@ -1059,9 +1059,8 @@ export default function ItemDetail() {
         item?.from_receipt ||
         (Array.isArray(item?.receipt_locked_fields) && item.receipt_locked_fields.length > 0);
       const res = await api.reanalyzeItem(id, { fill_empty_only: isReceiptItem });
-      setItem(res.item);
       setForm(toFormState(res.item, user));
-      toast.success(t('itemDetail.reanalyze.success'));
+      toast.success(t('itemDetail.reanalyze.success') + " · Press Save to keep changes.");
     } catch (err) {
       toast.error(
         err?.response?.data?.detail || t('itemDetail.reanalyze.error'),
