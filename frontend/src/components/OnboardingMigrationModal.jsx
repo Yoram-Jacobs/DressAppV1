@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { closetStore } from '@/lib/closetStore';
-import { workStore } from '@/lib/workStore';
 import { outfitStore } from '@/lib/outfitStore';
 import {
   Loader2,
@@ -17,18 +16,16 @@ import {
   UploadCloud,
   CheckCircle2,
   Sparkles,
-  ShieldCheck,
   Globe,
   Search,
-  Lock,
   Shirt,
   Layers,
   ExternalLink,
-  RefreshCw,
-  Copy,
   Image as ImageIcon,
   FileCode2,
-  Maximize2
+  Maximize2,
+  Scissors,
+  Filter
 } from 'lucide-react';
 
 const PRESET_APPS = [
@@ -50,10 +47,13 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const [customLoginUrl, setCustomLoginUrl] = useState('https://app.whering.co.uk/login');
   const [busy, setBusy] = useState(false);
 
-  // Import mode: 'direct_photos' | 'paste_urls' | 'harvester_script'
-  const [importMode, setImportMode] = useState('direct_photos');
+  // Import mode: 'screenshot_scroll' | 'direct_photos' | 'paste_urls'
+  const [importMode, setImportMode] = useState('screenshot_scroll');
   const [pastedUrlsText, setPastedUrlsText] = useState('');
-  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [screenshotFiles, setScreenshotFiles] = useState([]);
+
+  // Pipeline Status State
+  const [pipelineResult, setPipelineResult] = useState(null);
 
   // Migration Stage: 'items' | 'outfits_prompt' | 'outfits' | 'complete'
   const [migrationStage, setMigrationStage] = useState('items');
@@ -61,11 +61,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   // Dynamic Item & Outfit counts
   const [itemCountInput, setItemCountInput] = useState(95);
   const [outfitCountInput, setOutfitCountInput] = useState(2);
-
-  // Web View state
-  const [viewMode, setViewMode] = useState('iframe');
-  const [authenticated, setAuthenticated] = useState(false);
-  const [showPermissionOverlay, setShowPermissionOverlay] = useState(false);
 
   // Sync state
   const [isSyncing, setIsSyncing] = useState(false);
@@ -84,8 +79,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     }
     return `https://${appDomain}`;
   }, [appName, appDomain, customLoginUrl]);
-
-  const harvesterBookmarkletCode = `copy(Array.from(document.querySelectorAll('img')).filter(i=>{const s=i.src||'';const w=i.naturalWidth||i.width||0;const h=i.naturalHeight||i.height||0;if(!s.startsWith('http'))return false;if(s.includes('.svg')||s.includes('bookmark')||s.includes('logo')||s.includes('avatar')||s.includes('icon')||s.includes('badge')||s.includes('button')||s.includes('grid'))return false;if(w>0&&w<90)return false;if(h>0&&h<90)return false;return true;}).map(i=>i.src)); alert('Done! Filtered out UI icons and copied real garment image URLs to your clipboard. Now paste into DressApp.');`;
 
   const handleNoClick = async () => {
     setBusy(true);
@@ -121,17 +114,11 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
   const handleOpenPopupWindow = () => {
     window.open(targetLoginUrl, 'WardrobeAppLoginWindow', 'width=520,height=720,scrollbars=yes,resizable=yes');
-    toast.info(t('migration.popupOpened', { appName, defaultValue: `Opened ${appName} login window. Log in & navigate to your wardrobe page, then click Import.` }));
-    setAuthenticated(true);
+    toast.info(t('migration.popupOpened', { appName, defaultValue: `Opened ${appName} login window. Log in & screenshot your wardrobe feed, then click Import.` }));
   };
 
-  const handleCopyHarvesterCode = () => {
-    navigator.clipboard.writeText(harvesterBookmarkletCode);
-    toast.success('Copied Harvester Script to clipboard! Run it in your logged-in Whering tab to extract your real photos.');
-  };
-
-  // Convert uploaded image files to Base64
-  const handleFileSelection = (e) => {
+  // Convert uploaded screenshot frames to Base64
+  const handleScreenshotSelection = (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
@@ -139,38 +126,74 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = (evt) => {
-          resolve({
-            title: file.name.replace(/\.[^/.]+$/, ''),
-            image_url: evt.target.result,
-            category: 'Top',
-          });
+          resolve(evt.target.result);
         };
         reader.readAsDataURL(file);
       });
     });
 
-    Promise.all(readers).then((parsedItems) => {
-      setUploadedFiles((prev) => [...prev, ...parsedItems]);
-      toast.success(`Loaded ${parsedItems.length} real garment photos for GarmentVision AI processing!`);
+    Promise.all(readers).then((b64Screenshots) => {
+      setScreenshotFiles((prev) => [...prev, ...b64Screenshots]);
+      toast.success(t('migration.screenshotsLoaded', { count: b64Screenshots.length, defaultValue: `Loaded ${b64Screenshots.length} viewport screenshots for Screenshot-Scroller & Deduplication pipeline!` }));
     });
   };
 
-  // Stage 1: Silent Background Import Wardrobe Items (Real photos streamed to GarmentVision)
-  const handleStartItemImport = async () => {
-    let realPayloadItems = [];
+  // Run Screenshot-Scroller & Deduplication Pipeline (Backend Step A -> B -> C -> D)
+  const handleRunScreenshotPipeline = async () => {
+    if (!screenshotFiles.length) {
+      toast.error(t('migration.noScreenshotsError', { defaultValue: 'Please select or capture at least one screenshot frame.' }));
+      return;
+    }
 
-    // Mode 1: User uploaded real photo files
-    if (importMode === 'direct_photos' && uploadedFiles.length > 0) {
-      realPayloadItems = uploadedFiles.map((fileItem, idx) => ({
-        id: `real_file_${idx + 1}`,
-        title: fileItem.title || `Real Garment ${idx + 1}`,
-        category: fileItem.category || 'Top',
-        image_url: fileItem.image_url,
-        photo_url: fileItem.image_url,
-      }));
-    } 
-    // Mode 2: User pasted real image URLs / JSON
-    else if (pastedUrlsText.trim()) {
+    setIsSyncing(true);
+    setProgressPct(15);
+    setSyncStatusText(t('migration.stepA_Scroller', { defaultValue: 'Step A: Scroll & Capture stabilization (ImageChops.difference)...' }));
+
+    try {
+      setTimeout(() => {
+        setProgressPct(40);
+        setSyncStatusText(t('migration.stepB_GridSlicer', { defaultValue: 'Step B: Bounding box slicing & region extraction (OpenCV contours)...' }));
+      }, 700);
+
+      setTimeout(() => {
+        setProgressPct(70);
+        setSyncStatusText(t('migration.stepC_Dedup', { defaultValue: 'Step C: Item-level perceptual deduplication (Hamming distance <= 5)...' }));
+      }, 1400);
+
+      const res = await api.importCompetitorScreenshotScroll({
+        app_name: appName.trim(),
+        screenshots: screenshotFiles,
+        scroll_amount: 300,
+        hamming_threshold: 5,
+      });
+
+      setProgressPct(95);
+      setSyncStatusText(t('migration.stepD_GarmentVision', { defaultValue: 'Step D: Ingesting into GarmentVision AI (background matting & DB)...' }));
+
+      setTimeout(() => {
+        setProgressPct(100);
+        setIsSyncing(false);
+        setPipelineResult(res);
+        setSyncedItems(res.items_persisted_count || 0);
+        setTotalItems(res.items_persisted_count || 0);
+        setMigrationStage('outfits_prompt');
+        toast.success(t('migration.pipelineSuccess', { count: res.items_persisted_count, defaultValue: `Successfully extracted and saved ${res.items_persisted_count} unique garments!` }));
+      }, 2000);
+    } catch (err) {
+      setIsSyncing(false);
+      toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'An error occurred during screenshot pipeline execution.' }));
+    }
+  };
+
+  // Stage 1: Silent Background Import Wardrobe Items
+  const handleStartItemImport = async () => {
+    if (importMode === 'screenshot_scroll') {
+      await handleRunScreenshotPipeline();
+      return;
+    }
+
+    let realPayloadItems = [];
+    if (pastedUrlsText.trim()) {
       try {
         if (pastedUrlsText.trim().startsWith('[')) {
           const parsed = JSON.parse(pastedUrlsText.trim());
@@ -190,27 +213,24 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           }));
         }
       } catch {
-        toast.error('Could not parse pasted URLs. Please ensure they are valid image HTTP links or JSON array.');
+        toast.error(t('migration.invalidPastedUrls', { defaultValue: 'Could not parse pasted URLs. Please ensure they are valid image HTTP links or JSON array.' }));
         return;
       }
     }
 
-    // Fallback: If no real items provided yet, prompt user
-    if (realPayloadItems.length === 0 && !targetLoginUrl) {
-      toast.info('Please select real garment photos or paste your image URLs above to run through GarmentVision!');
+    if (realPayloadItems.length === 0) {
+      toast.info(t('migration.selectPhotosPrompt', { defaultValue: 'Please select real garment photos or screenshots to run through GarmentVision!' }));
       return;
     }
 
-    // Close modal and pass imported images to AddItem native bulk upload workflow
     onClose();
-    toast.info(`Passing ${realPayloadItems.length} wardrobe items to GarmentVision AI bulk upload pipeline!`);
+    toast.info(t('migration.passingToGarmentVision', { count: realPayloadItems.length, defaultValue: `Passing ${realPayloadItems.length} wardrobe items to GarmentVision AI bulk upload pipeline!` }));
     navigate('/add', { state: { importedItems: realPayloadItems } });
   };
 
   // Stage 2: Import Outfits
   const handleStartOutfitImport = async () => {
     setIsSyncing(true);
-    setShowPermissionOverlay(false);
     setProgressPct(10);
     setSyncedOutfits(0);
     setSyncStatusText(t('migration.statusScrapingOutfits', { appName, defaultValue: `Matching outfits canvas garments to imported closet items...` }));
@@ -237,7 +257,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         setProgressPct(outfitPct);
       }
 
-      setSyncStatusText('Finalizing outfit canvas sync...');
+      setSyncStatusText(t('migration.finalizingOutfits', { defaultValue: 'Finalizing outfit canvas sync...' }));
       setProgressPct(98);
 
       await api.importCompetitorCloset({
@@ -264,10 +284,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       if (onFlagUpdated) onFlagUpdated('Migrate');
       toast.success(t('migration.allImportedSuccess', { defaultValue: 'Successfully imported all wardrobe items and outfits to DressApp!' }));
       onClose();
-      nav('/closet');
+      navigate('/closet');
     } catch {
       onClose();
-      nav('/closet');
+      navigate('/closet');
     } finally {
       setBusy(false);
     }
@@ -412,14 +432,14 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           </form>
         )}
 
-        {/* STEP 3: REAL GARMENT PHOTOS & GARMENTVISION AI PIPELINE */}
+        {/* STEP 3: SCREENSHOT-SCROLLER & GARMENTVISION AI PIPELINE */}
         {step === 'web_login' && (
           <div className="flex flex-col h-full space-y-3 overflow-hidden">
             <DialogHeader className="border-b border-border pb-2.5 shrink-0">
               <DialogTitle className="text-base md:text-lg font-bold font-display flex items-center justify-between">
                 <span className="flex items-center gap-2 truncate">
                   <Sparkles className="w-4 h-4 text-primary shrink-0" />
-                  Import Real Garment Photos (GarmentVision AI)
+                  {t('migration.screenshotPipelineTitle', { defaultValue: 'Screenshot-Scroller & GarmentVision AI Pipeline' })}
                 </span>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <Button
@@ -430,12 +450,12 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     className="text-xs text-foreground h-7 px-2.5 rounded-lg flex items-center gap-1"
                   >
                     <Maximize2 className="w-3 h-3" />
-                    <span>Open {appName}</span>
+                    <span>{t('migration.openAppBtn', { appName, defaultValue: `Open ${appName}` })}</span>
                   </Button>
                 </div>
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground truncate">
-                Select your real garment photos or paste image links. GarmentVision AI will automatically remove backgrounds and populate your Closet.
+                {t('migration.screenshotPipelineSub', { defaultValue: 'Screenshot your competitor wardrobe feeds. Perceptual hashing will deduplicate tiles and GarmentVision AI will extract clean assets.' })}
               </DialogDescription>
             </DialogHeader>
 
@@ -443,13 +463,13 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl shrink-0 text-xs font-semibold">
               <button
                 type="button"
-                onClick={() => setImportMode('direct_photos')}
+                onClick={() => setImportMode('screenshot_scroll')}
                 className={`flex-1 py-1.5 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                  importMode === 'direct_photos' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
+                  importMode === 'screenshot_scroll' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <ImageIcon className="w-3.5 h-3.5" />
-                <span>Upload Photos</span>
+                <Scissors className="w-3.5 h-3.5" />
+                <span>{t('migration.modeScreenshotScroll', { defaultValue: 'Screenshot Scroller' })}</span>
               </button>
               <button
                 type="button"
@@ -459,50 +479,42 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 }`}
               >
                 <FileCode2 className="w-3.5 h-3.5" />
-                <span>Paste Links/JSON</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setImportMode('harvester_script')}
-                className={`flex-1 py-1.5 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                  importMode === 'harvester_script' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Copy className="w-3.5 h-3.5" />
-                <span>Harvester Script</span>
+                <span>{t('migration.modePasteLinks', { defaultValue: 'Paste Links/JSON' })}</span>
               </button>
             </div>
 
             {/* Viewport View / Mode Content */}
             <div className="flex-1 relative bg-muted/20 rounded-xl border border-border overflow-y-auto p-4 min-h-[300px]">
-              {importMode === 'direct_photos' && (
+              {importMode === 'screenshot_scroll' && (
                 <div className="space-y-4 text-center">
                   <div className="border-2 border-dashed border-primary/40 rounded-2xl p-6 bg-background/80 hover:bg-background transition-colors cursor-pointer relative group">
                     <input
                       type="file"
                       multiple
                       accept="image/*"
-                      onChange={handleFileSelection}
+                      onChange={handleScreenshotSelection}
                       className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
                     />
                     <UploadCloud className="w-10 h-10 mx-auto text-primary mb-2 group-hover:scale-110 transition-transform" />
-                    <h3 className="text-sm font-bold text-foreground">Select or Drop Your Real Garment Photos</h3>
+                    <h3 className="text-sm font-bold text-foreground">
+                      {t('migration.dropScreenshotsTitle', { defaultValue: 'Select or Drop Wardrobe Viewport Screenshots' })}
+                    </h3>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Upload photos exported from {appName} or your camera roll. GarmentVision will perform background matting automatically.
+                      {t('migration.dropScreenshotsSub', { appName, defaultValue: `Upload feed screenshots from ${appName}. The engine will slice tiles, apply perceptual hash deduplication (<=5), and strip backgrounds.` })}
                     </p>
-                    {uploadedFiles.length > 0 && (
+                    {screenshotFiles.length > 0 && (
                       <div className="mt-3 inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-600 px-3 py-1 rounded-full text-xs font-bold">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        {uploadedFiles.length} Real Garment Photos Ready
+                        {t('migration.screenshotsReady', { count: screenshotFiles.length, defaultValue: `${screenshotFiles.length} Viewport Screenshot Frames Ready` })}
                       </div>
                     )}
                   </div>
 
-                  {uploadedFiles.length > 0 && (
+                  {screenshotFiles.length > 0 && (
                     <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-40 overflow-y-auto p-2 bg-card rounded-xl border border-border">
-                      {uploadedFiles.map((f, idx) => (
+                      {screenshotFiles.map((f, idx) => (
                         <div key={idx} className="aspect-square rounded-lg border border-border overflow-hidden relative bg-muted">
-                          <img src={f.image_url} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                          <img src={f} alt={`Screenshot ${idx + 1}`} className="w-full h-full object-cover" />
                         </div>
                       ))}
                     </div>
@@ -512,7 +524,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
               {importMode === 'paste_urls' && (
                 <div className="space-y-3 text-left">
-                  <Label className="text-xs font-semibold">Paste Image HTTP Links or JSON Array</Label>
+                  <Label className="text-xs font-semibold">
+                    {t('migration.pasteUrlsLabel', { defaultValue: 'Paste Image HTTP Links or JSON Array' })}
+                  </Label>
                   <Textarea
                     rows={8}
                     value={pastedUrlsText}
@@ -521,36 +535,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     className="rounded-xl font-mono text-xs p-3 bg-background border-border"
                   />
                   <p className="text-[11px] text-muted-foreground">
-                    Paste image links separated by lines or a JSON array. Each link will be downloaded and processed via GarmentVision AI.
+                    {t('migration.pasteUrlsSub', { defaultValue: 'Paste image links separated by lines or a JSON array. Each link will be downloaded and processed via GarmentVision AI.' })}
                   </p>
-                </div>
-              )}
-
-              {importMode === 'harvester_script' && (
-                <div className="space-y-3 text-left">
-                  <div className="p-3 rounded-xl bg-card border border-border space-y-2">
-                    <h4 className="text-xs font-bold flex items-center gap-1.5 text-foreground">
-                      <Copy className="w-4 h-4 text-primary" />
-                      1-Click DOM Harvester Script
-                    </h4>
-                    <p className="text-xs text-muted-foreground">
-                      Log into your {appName} account in another browser tab, open Developer Console (F12), paste this snippet, and hit Enter. It will copy all your real garment photos to your clipboard!
-                    </p>
-                  </div>
-
-                  <div className="relative">
-                    <pre className="p-3 rounded-xl bg-background border border-border text-[11px] font-mono text-foreground overflow-x-auto whitespace-pre-wrap">
-                      {harvesterBookmarkletCode}
-                    </pre>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={handleCopyHarvesterCode}
-                      className="absolute right-2 top-2 h-7 text-xs bg-primary text-primary-foreground font-bold rounded-lg"
-                    >
-                      Copy Script
-                    </Button>
-                  </div>
                 </div>
               )}
 
@@ -577,14 +563,14 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                       <div className="p-2 rounded-lg bg-background border border-border flex items-center gap-2">
                         <Shirt className="w-4 h-4 text-blue-500 shrink-0" />
                         <div>
-                          <span className="text-[10px] text-muted-foreground block">Processed Cutouts</span>
+                          <span className="text-[10px] text-muted-foreground block">{t('migration.processedGarments', { defaultValue: 'Processed Garments' })}</span>
                           <span className="font-bold font-mono text-foreground">{syncedItems} / {totalItems}</span>
                         </div>
                       </div>
                       <div className="p-2 rounded-lg bg-background border border-border flex items-center gap-2">
                         <Layers className="w-4 h-4 text-purple-500 shrink-0" />
                         <div>
-                          <span className="text-[10px] text-muted-foreground block">Outfits</span>
+                          <span className="text-[10px] text-muted-foreground block">{t('migration.outfits', { defaultValue: 'Outfits' })}</span>
                           <span className="font-bold font-mono text-foreground">{syncedOutfits} / {totalOutfits}</span>
                         </div>
                       </div>
@@ -595,10 +581,19 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 <div className="absolute inset-x-0 bottom-0 bg-card/98 backdrop-blur-xl border-t border-border p-4 shadow-2xl z-20 space-y-3 animate-in slide-in-from-bottom duration-200 text-center">
                   <div className="flex items-center justify-center gap-2 text-emerald-600 font-bold text-base font-display">
                     <CheckCircle2 className="w-5 h-5" />
-                    Real Garments Processed & Saved!
+                    {t('migration.garmentsProcessedSuccess', { defaultValue: 'Screenshot Pipeline Completed & Garments Saved!' })}
                   </div>
+                  {pipelineResult && (
+                    <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground font-mono bg-muted/40 p-1.5 rounded-lg max-w-sm mx-auto">
+                      <span>Viewports: {pipelineResult.viewports_captured}</span>
+                      <span>•</span>
+                      <span>Extracted: {pipelineResult.tiles_extracted}</span>
+                      <span>•</span>
+                      <span>Unique: {pipelineResult.unique_assets}</span>
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground">
-                    Would you like to import your saved outfits as well?
+                    {t('migration.importOutfitsPrompt', { defaultValue: 'Would you like to import your saved outfits canvas as well?' })}
                   </p>
 
                   <div className="grid grid-cols-2 gap-2 pt-1 max-w-sm mx-auto">
@@ -608,14 +603,14 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                       onClick={handleFinishSuccess}
                       className="rounded-xl h-10 text-xs font-semibold"
                     >
-                      Skip Outfits
+                      {t('migration.skipOutfitsBtn', { defaultValue: 'Skip Outfits' })}
                     </Button>
                     <Button
                       type="button"
                       onClick={() => setMigrationStage('outfits')}
                       className="rounded-xl h-10 bg-primary text-primary-foreground font-bold text-xs flex items-center justify-center gap-1.5"
                     >
-                      <span>Yes, Import Outfits</span>
+                      <span>{t('migration.importOutfitsBtn', { defaultValue: 'Yes, Import Outfits' })}</span>
                       <ArrowRight className="w-4 h-4" />
                     </Button>
                   </div>
@@ -624,10 +619,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 <div className="absolute inset-x-0 bottom-0 bg-card/98 backdrop-blur-xl border-t border-border p-5 shadow-2xl z-20 space-y-3 text-center animate-in slide-in-from-bottom duration-200">
                   <div className="flex items-center justify-center gap-2 text-emerald-600 font-bold text-base font-display">
                     <CheckCircle2 className="w-6 h-6" />
-                    Successfully imported all real garments and outfits!
+                    {t('migration.allSuccessTitle', { defaultValue: 'Successfully imported all real garments and outfits!' })}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Your real garment cutouts have been processed by GarmentVision AI and added to your Closet.
+                    {t('migration.allSuccessSub', { defaultValue: 'Your real garment cutouts have been processed by GarmentVision AI and added to your Closet.' })}
                   </div>
 
                   <Button
@@ -639,7 +634,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                       <>
                         <CheckCircle2 className="w-4 h-4" />
-                        OK - Open Closet
+                        {t('migration.openClosetBtn', { defaultValue: 'OK - Open Closet' })}
                       </>
                     )}
                   </Button>
@@ -649,7 +644,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   <div className="flex items-center gap-2">
                     <Shirt className="w-4 h-4 text-primary shrink-0" />
                     <span className="text-xs font-medium text-muted-foreground">
-                      GarmentVision Ready
+                      {t('migration.garmentVisionReady', { defaultValue: 'GarmentVision Pipeline Ready' })}
                     </span>
                   </div>
 
@@ -659,7 +654,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     className="rounded-xl h-10 px-5 bg-primary text-primary-foreground font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md hover:opacity-95"
                     data-testid="migration-weblogin-proceed-btn"
                   >
-                    <span>Import Real Photos</span>
+                    <span>{importMode === 'screenshot_scroll' ? t('migration.runPipelineBtn', { defaultValue: 'Run Screenshot Pipeline' }) : t('migration.importRealPhotosBtn', { defaultValue: 'Import Real Photos' })}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </div>
@@ -680,7 +675,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 {t('common.back', { defaultValue: 'Back' })}
               </Button>
               <span className="text-[11px] text-muted-foreground">
-                All uploaded photos will pass through GarmentVision AI matting automatically.
+                {t('migration.mattingNotice', { defaultValue: 'All photos & screenshots will pass through GarmentVision AI matting automatically.' })}
               </span>
             </div>
           </div>
