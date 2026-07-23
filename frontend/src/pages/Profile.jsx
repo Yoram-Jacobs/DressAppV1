@@ -23,6 +23,7 @@ import { labelForDressCode } from '@/lib/taxonomy';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useClosetStore } from '@/lib/useClosetStore';
+import OnboardingMigrationModal from '@/components/OnboardingMigrationModal';
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -659,6 +660,7 @@ export default function Profile() {
   const [busy, setBusy] = useState(false);
   const [langBusy, setLangBusy] = useState(false);
   const [expandedItems, setExpandedItems] = useState([]);
+  const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
 
   const isDirty = useMemo(() => {
     if (!user) return false;
@@ -863,7 +865,17 @@ export default function Profile() {
               </Button>
             </div>
 
-            <div className="flex pt-2 justify-center">
+            <div className="flex pt-2 justify-center items-center gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsMigrationModalOpen(true)}
+                className="text-xs font-bold border border-primary/20 bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground hover:bg-primary/20 px-3 py-1 rounded-full transition-all duration-200 mt-2 animate-pulse h-8"
+                data-testid="profile-import-wardrobe-pill"
+              >
+                ✨ {t('profile.importWardrobePill', { defaultValue: 'Import Wardrobe' })}
+              </Button>
+
               <Link
                 to="/delete-account"
                 className="text-xs text-muted-foreground hover:text-destructive transition-colors duration-200 mt-2"
@@ -879,6 +891,11 @@ export default function Profile() {
           </CardContent>
         </Card>
       </div>
+
+      <OnboardingMigrationModal
+        isOpen={isMigrationModalOpen}
+        onClose={() => setIsMigrationModalOpen(false)}
+      />
     </div>
   );
 }
