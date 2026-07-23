@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -52,6 +52,28 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const [pastedUrlsText, setPastedUrlsText] = useState('');
   const [screenshotFiles, setScreenshotFiles] = useState([]);
   const [popupOpened, setPopupOpened] = useState(false);
+
+  const harvesterBookmarkletCode = 'javascript:(async()=>{if(typeof html2canvas==="undefined"){const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";document.head.appendChild(s);await new Promise(r=>s.onload=r)}const o=document.createElement("div");o.style.cssText="position:fixed;top:20px;left:20px;z-index:999999;background:rgba(0,0,0,0.85);color:white;padding:15px;border-radius:10px;font-family:sans-serif;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,0.5);width:260px;line-height:1.4;";o.innerHTML="<div style=\'font-weight:bold;margin-bottom:8px;\'>\uD83D\uDC57 DressApp Importer</div><div id=\'da-status\'>Initializing...</div>";document.body.appendChild(o);const st=document.getElementById("da-status");let sc=[];let max=35;let step=350;let prev=-1;for(let i=0;i<max;i++){window.scrollTo(0,i*step);await new Promise(r=>setTimeout(r,1000));if(window.scrollY===prev){st.innerText="Bottom reached.";break}prev=window.scrollY;st.innerText="Capturing screen "+(i+1)+"...";try{const c=await html2canvas(document.body,{logging:false,useCORS:true,allowTaint:true,x:window.scrollX,y:window.scrollY,width:window.innerWidth,height:window.innerHeight});sc.push(c.toDataURL("image/jpeg",0.75))}catch(e){st.innerText="Error: "+e.message}}st.innerText="Sending "+sc.length+" screens...";if(window.opener){window.opener.postMessage({type:"DRESSAPP_MIGRATION_SCREENSHOTS",screenshots:sc},"*");st.innerHTML="<span style=\'color:#10b981;font-weight:bold;\'>\u2713 Done!</span> Return to DressApp.";setTimeout(()=>o.remove(),4000)}else{st.innerHTML="<span style=\'color:#ef4444;font-weight:bold;\'>Error:</span> DressApp opener not found."}})();';
+
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data && event.data.type === 'DRESSAPP_MIGRATION_SCREENSHOTS') {
+        const screens = event.data.screenshots || [];
+        if (screens.length > 0) {
+          setScreenshotFiles(screens);
+          toast.success(t('migration.screenshotsCaptured', { count: screens.length, defaultValue: `Automatically captured ${screens.length} screenshots from your closet!` }));
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [t]);
+
+  const handleCopyHarvesterCode = () => {
+    navigator.clipboard.writeText(harvesterBookmarkletCode);
+    toast.success(t('migration.bookmarkletCopied', { defaultValue: 'Copied Importer Script to clipboard! Paste it into Whering tab Console.' }));
+  };
 
   // Pipeline Status State
   const [pipelineResult, setPipelineResult] = useState(null);
@@ -490,16 +512,52 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             {/* Viewport View / Mode Content */}
             <div className="flex-1 relative bg-muted/20 rounded-xl border border-border overflow-y-auto p-4 min-h-[300px]">
               {importMode === 'screenshot_scroll' && !popupOpened && (
-                <div className="flex flex-col items-center justify-center text-center space-y-4 py-8 h-full">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <Globe className="w-8 h-8" />
-                  </div>
-                  <div className="space-y-2">
+                <div className="flex flex-col text-left space-y-4 py-2">
+                  <div className="flex items-center gap-2 border-b border-border pb-2 shrink-0">
+                    <Globe className="w-5 h-5 text-primary" />
                     <h3 className="text-sm font-bold text-foreground">
                       {t('migration.connectToAppTitle', { appName, defaultValue: `Connect to ${appName}` })}
                     </h3>
-                    <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-                      {t('migration.connectToAppSub', { appName, defaultValue: `We will open your ${appName} account. Please log in, navigate to your wardrobe grid, and take screenshots of your items to import.` })}
+                  </div>
+
+                  <div className="space-y-3 text-xs text-muted-foreground">
+                    <p>
+                      {t('migration.bookmarkletInstallInstructions', { appName, defaultValue: `To import your wardrobe automatically, drag the bookmarklet button below to your browser Bookmarks Bar (Ctrl+Shift+B to show the bar):` })}
+                    </p>
+                    
+                    {/* Drag bookmarklet */}
+                    <div className="flex flex-col items-center justify-center p-3 bg-card border border-border rounded-xl gap-2">
+                      <a
+                        href={harvesterBookmarkletCode}
+                        onClick={(e) => e.preventDefault()} // prevent clicking directly in DressApp
+                        className="px-4 py-2 bg-primary text-primary-foreground font-bold rounded-lg cursor-move shadow-sm select-none hover:opacity-90 flex items-center gap-1.5"
+                      >
+                        <Shirt className="w-4 h-4" />
+                        {t('migration.bookmarkletBtn', { defaultValue: '👗 DressApp Importer' })}
+                      </a>
+                      <span className="text-[10px] text-muted-foreground">{t('migration.dragTip', { defaultValue: 'Drag this button to your browser Bookmarks Bar' })}</span>
+                    </div>
+
+                    <p className="text-[11px]">
+                      {t('migration.bookmarkletAlternative', { defaultValue: 'Alternative: Copy the script below, open DevTools Console (F12) on your competitor page, paste it and run.' })}
+                    </p>
+
+                    <div className="relative">
+                      <pre className="p-2 rounded-xl bg-background border border-border text-[10px] font-mono text-foreground overflow-x-auto whitespace-pre-wrap max-h-24">
+                        {harvesterBookmarkletCode}
+                      </pre>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleCopyHarvesterCode}
+                        className="absolute right-2 top-2 h-6 text-[10px] bg-primary text-primary-foreground font-bold rounded-md"
+                      >
+                        {t('migration.copyScriptBtn', { defaultValue: 'Copy Script' })}
+                      </Button>
+                    </div>
+
+                    <p>
+                      {t('migration.bookmarkletUsageInstructions', { appName, defaultValue: `After installing, click "Import wardrobe" below. Log in to Whering, go to your closet page, then click the "DressApp Importer" bookmarklet.` })}
                     </p>
                   </div>
                 </div>
@@ -516,17 +574,25 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                       className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
                     />
                     <UploadCloud className="w-10 h-10 mx-auto text-primary mb-2 group-hover:scale-110 transition-transform" />
-                    <h3 className="text-sm font-bold text-foreground">
-                      {t('migration.dropScreenshotsTitle', { defaultValue: 'Select or Drop Wardrobe Viewport Screenshots' })}
-                    </h3>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {t('migration.dropScreenshotsSub', { appName, defaultValue: `Upload feed screenshots from ${appName}. The engine will slice tiles, apply perceptual hash deduplication (<=5), and strip backgrounds.` })}
-                    </p>
-                    {screenshotFiles.length > 0 && (
-                      <div className="mt-3 inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-600 px-3 py-1 rounded-full text-xs font-bold">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        {t('migration.screenshotsReady', { count: screenshotFiles.length, defaultValue: `${screenshotFiles.length} Viewport Screenshot Frames Ready` })}
-                      </div>
+                    {screenshotFiles.length === 0 ? (
+                      <>
+                        <h3 className="text-sm font-bold text-foreground">
+                          {t('migration.waitingForScreenshotsTitle', { defaultValue: 'Waiting for Automated Screenshots' })}
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {t('migration.waitingForScreenshotsSub', { appName, defaultValue: `Click the "DressApp Importer" bookmarklet on your Whering tab to send screens here automatically, or select files manually.` })}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <h3 className="text-sm font-bold text-foreground">
+                          {t('migration.screenshotsReadyTitle', { defaultValue: 'Screenshots Captured & Ready' })}
+                        </h3>
+                        <div className="mt-3 inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-600 px-3 py-1 rounded-full text-xs font-bold">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          {t('migration.screenshotsReady', { count: screenshotFiles.length, defaultValue: `${screenshotFiles.length} Viewport Screenshot Frames Ready` })}
+                        </div>
+                      </>
                     )}
                   </div>
 
