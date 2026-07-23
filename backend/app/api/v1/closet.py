@@ -5280,22 +5280,7 @@ async def reanalyze_item(
             "Item has no stored image to re-analyse. "
             "Replace the photo first.",
         )
-    raw = None
-    if image_url.startswith("data:"):
-        try:
-            b64_part = image_url.split(",", 1)[1]
-            raw = base64.b64decode(b64_part, validate=False)
-        except Exception as exc:  # noqa: BLE001
-            raise HTTPException(400, f"Invalid stored image: {exc}") from exc
-    elif image_url.startswith(("http://", "https://")):
-        try:
-            async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
-                resp = await client.get(image_url)
-                if resp.status_code == 200:
-                    raw = resp.content
-        except Exception as exc:  # noqa: BLE001
-            raise HTTPException(400, f"Failed downloading image for re-analysis: {exc}") from exc
-
+    raw = await _read_image_bytes_from_url(image_url)
     if not raw:
         raise HTTPException(400, "Stored image is empty")
 
@@ -6827,6 +6812,9 @@ async def edit_item_image(
     )
     if not source_url:
         raise HTTPException(400, "No source image on this item")
+    source_bytes = await _read_image_bytes_from_url(source_url)
+    if not source_bytes:
+        raise HTTPException(400, "Failed to retrieve source image bytes")
     if gemini_image_service is None:
         # Nano Banana (gemini-2.5-flash-image) requires a direct
         # GEMINI_API_KEY. The legacy HF FLUX fallback was retired in May
@@ -6838,7 +6826,7 @@ async def edit_item_image(
         await deduct_user_credits(db, user, cost=1)
 
         edit = await gemini_image_service.edit(
-            source_url,
+            source_bytes,
             prompt,
             garment_metadata={
                 "title": item.get("title"),
