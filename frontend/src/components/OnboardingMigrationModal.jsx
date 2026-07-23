@@ -89,13 +89,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     };
   }, [t]);
 
-  const bookmarkletRef = useRef(null);
 
-  useEffect(() => {
-    if (bookmarkletRef.current) {
-      bookmarkletRef.current.setAttribute('href', harvesterBookmarkletCode);
-    }
-  });
 
   const handleCopyHarvesterCode = () => {
     navigator.clipboard.writeText(harvesterBookmarkletCode);
@@ -568,7 +562,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     {/* Drag bookmarklet */}
                     <div className="flex flex-col items-center justify-center p-3 bg-card border border-border rounded-xl gap-2">
                       <a
-                        ref={bookmarkletRef}
+                        href={harvesterBookmarkletCode}
                         draggable="true"
                         onClick={(e) => {
                           e.preventDefault();
