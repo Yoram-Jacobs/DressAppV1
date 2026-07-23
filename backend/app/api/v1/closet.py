@@ -5261,8 +5261,8 @@ async def reanalyze_item(
 
     # Prefer the matted/segmented crop because that's what's visible to
     # the user in the closet — analysing the same pixels they're
-    # looking at avoids surprises ("why did The Eyes call my shirt a
-    # dress?"). Fall back to the original upload otherwise.
+    # looking at avoids surprises. Fall back to original or transcoded variants.
+    variants = item.get("image_variants") or {}
     image_url: str | None = (
         item.get("segmented_image_url")
         or item.get("cutout_url")
@@ -5270,6 +5270,9 @@ async def reanalyze_item(
         or item.get("reconstructed_image_url")
         or item.get("original_image_url")
         or item.get("image_url")
+        or variants.get("original")
+        or (variants.get("webp") or {}).get("lg")
+        or (variants.get("webp") or {}).get("md")
     )
     if not image_url:
         raise HTTPException(
@@ -6814,7 +6817,14 @@ async def edit_item_image(
     )
     if not item:
         raise HTTPException(404, "Item not found")
-    source_url = item.get("segmented_image_url") or item.get("original_image_url")
+    variants = item.get("image_variants") or {}
+    source_url = (
+        item.get("segmented_image_url")
+        or item.get("original_image_url")
+        or variants.get("original")
+        or (variants.get("webp") or {}).get("lg")
+        or (variants.get("webp") or {}).get("md")
+    )
     if not source_url:
         raise HTTPException(400, "No source image on this item")
     if gemini_image_service is None:
