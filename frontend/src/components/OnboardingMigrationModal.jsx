@@ -51,6 +51,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const [importMode, setImportMode] = useState('screenshot_scroll');
   const [pastedUrlsText, setPastedUrlsText] = useState('');
   const [screenshotFiles, setScreenshotFiles] = useState([]);
+  const [popupOpened, setPopupOpened] = useState(false);
 
   // Pipeline Status State
   const [pipelineResult, setPipelineResult] = useState(null);
@@ -115,6 +116,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const handleOpenPopupWindow = () => {
     window.open(targetLoginUrl, 'WardrobeAppLoginWindow', 'width=520,height=720,scrollbars=yes,resizable=yes');
     toast.info(t('migration.popupOpened', { appName, defaultValue: `Opened ${appName} login window. Log in & screenshot your wardrobe feed, then click Import.` }));
+    setPopupOpened(true);
   };
 
   // Convert uploaded screenshot frames to Base64
@@ -298,8 +300,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     try {
       await api.updateMigrationFlag({ migration_flag: 'New' });
       if (onFlagUpdated) onFlagUpdated('New');
+      setPopupOpened(false);
       onClose();
     } catch {
+      setPopupOpened(false);
       onClose();
     } finally {
       setBusy(false);
@@ -485,7 +489,23 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
             {/* Viewport View / Mode Content */}
             <div className="flex-1 relative bg-muted/20 rounded-xl border border-border overflow-y-auto p-4 min-h-[300px]">
-              {importMode === 'screenshot_scroll' && (
+              {importMode === 'screenshot_scroll' && !popupOpened && (
+                <div className="flex flex-col items-center justify-center text-center space-y-4 py-8 h-full">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <Globe className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-bold text-foreground">
+                      {t('migration.connectToAppTitle', { appName, defaultValue: `Connect to ${appName}` })}
+                    </h3>
+                    <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                      {t('migration.connectToAppSub', { appName, defaultValue: `We will open your ${appName} account. Please log in, navigate to your wardrobe grid, and take screenshots of your items to import.` })}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {importMode === 'screenshot_scroll' && popupOpened && (
                 <div className="space-y-4 text-center">
                   <div className="border-2 border-dashed border-primary/40 rounded-2xl p-6 bg-background/80 hover:bg-background transition-colors cursor-pointer relative group">
                     <input
@@ -650,11 +670,21 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
                   <Button
                     type="button"
-                    onClick={handleStartItemImport}
+                    onClick={
+                      importMode === 'screenshot_scroll' && !popupOpened
+                        ? handleOpenPopupWindow
+                        : handleStartItemImport
+                    }
                     className="rounded-xl h-10 px-5 bg-primary text-primary-foreground font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md hover:opacity-95"
                     data-testid="migration-weblogin-proceed-btn"
                   >
-                    <span>{importMode === 'screenshot_scroll' ? t('migration.runPipelineBtn', { defaultValue: 'Run Screenshot Pipeline' }) : t('migration.importRealPhotosBtn', { defaultValue: 'Import Real Photos' })}</span>
+                    <span>
+                      {importMode === 'screenshot_scroll'
+                        ? !popupOpened
+                          ? t('migration.importWardrobeBtn', { defaultValue: 'Import wardrobe' })
+                          : t('migration.importBtn', { defaultValue: 'Import' })
+                        : t('migration.importRealPhotosBtn', { defaultValue: 'Import Real Photos' })}
+                    </span>
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </div>
@@ -668,6 +698,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 onClick={() => {
                   setStep('app_search');
                   setMigrationStage('items');
+                  setPopupOpened(false);
                 }}
                 disabled={isSyncing}
                 className="rounded-xl h-9 text-xs"
