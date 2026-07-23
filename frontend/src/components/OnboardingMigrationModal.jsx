@@ -529,8 +529,21 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   </div>
 
                   <div className="space-y-3 text-xs text-muted-foreground">
+                    {/* Extension Notice */}
+                    <div className="p-3 bg-indigo-500/15 border border-indigo-500/30 text-indigo-600 dark:text-indigo-300 rounded-xl flex items-start gap-2">
+                      <Sparkles className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5 animate-pulse" />
+                      <div>
+                        <span className="font-bold text-foreground block mb-0.5">
+                          {t('migration.extInstalledTitle', { defaultValue: 'Using our Chrome Extension? (Recommended)' })}
+                        </span>
+                        <span>
+                          {t('migration.extInstalledSub', { appName, defaultValue: `No bookmarklet needed! Just click "Import wardrobe" below, go to your closet on ${appName}, and click the floating "Import Wardrobe" widget.` })}
+                        </span>
+                      </div>
+                    </div>
+
                     <p>
-                      {t('migration.bookmarkletInstallInstructions', { appName, defaultValue: `To import your wardrobe automatically, drag the bookmarklet button below to your browser Bookmarks Bar (Ctrl+Shift+B to show the bar):` })}
+                      {t('migration.bookmarkletInstallInstructions', { appName, defaultValue: `Otherwise, drag the bookmarklet button below to your browser Bookmarks Bar (Ctrl+Shift+B to show the bar):` })}
                     </p>
                     
                     {/* Drag bookmarklet */}

@@ -51,6 +51,28 @@
       ],
       "js": ["src/content/auth-bridge.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://app.whering.co.uk/*",
+        "https://web.acloset.app/*",
+        "https://stylebookapp.com/*",
+        "https://*.stylebookapp.com/*",
+        "https://smartcloset.me/*",
+        "https://*.smartcloset.me/*"
+      ],
+      "js": ["src/content/importer.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "http://localhost/*",
+        "http://127.0.0.1/*",
+        "https://dressapp.co/*",
+        "https://*.dressapp.co/*"
+      ],
+      "js": ["src/content/dressapp-bridge.js"],
+      "run_at": "document_idle"
     }
   ],
   "permissions": [
@@ -65,7 +87,9 @@
   "externally_connectable": {
     "matches": [
       "https://dressapp.co/*",
-      "https://*.dressapp.co/*"
+      "https://*.dressapp.co/*",
+      "http://localhost/*",
+      "http://127.0.0.1/*"
     ]
   },
   "web_accessible_resources": [

@@ -43,6 +43,28 @@ async function handleCaptureVisibleTab(sender) {
   }
 }
 
+async function handleSendScreenshotsToDressApp(msg) {
+  try {
+    const tabs = await chrome.tabs.query({ url: [
+      '*://localhost/*',
+      '*://127.0.0.1/*',
+      '*://dressapp.co/*',
+      '*://*.dressapp.co/*'
+    ] });
+    if (tabs.length === 0) {
+      return { ok: false, error: 'DressApp tab not open' };
+    }
+    const screenshots = msg.screenshots || [];
+    await chrome.tabs.sendMessage(tabs[0].id, {
+      type: 'DRESSAPP_MIGRATION_SCREENSHOTS',
+      screenshots: screenshots
+    });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e?.message || 'Failed to send screenshots' };
+  }
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   const handlers = {
     [messages.RECEIVE_HANDOFF]:     () => widgetCore.handleHandoff(chromeStorage, msg.payload || msg),
@@ -51,6 +73,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     [messages.FETCH_ME]:            () => widgetCore.handleFetchMe(chromeStorage),
     [messages.ANALYZE_CHART]:       () => widgetCore.handleAnalyze(chromeStorage, msg.payload),
     [messages.CAPTURE_VISIBLE_TAB]: () => handleCaptureVisibleTab(sender),
+    [messages.SEND_SCREENSHOTS_TO_DRESSAPP]: () => handleSendScreenshotsToDressApp(msg),
   };
   const handler = handlers[msg?.type];
   if (!handler) {

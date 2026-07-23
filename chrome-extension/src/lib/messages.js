@@ -8,6 +8,7 @@ export const messages = {
   FETCH_ME:             'FETCH_ME',
   ANALYZE_CHART:        'ANALYZE_CHART',
   CAPTURE_VISIBLE_TAB:  'CAPTURE_VISIBLE_TAB',
+  SEND_SCREENSHOTS_TO_DRESSAPP: 'SEND_SCREENSHOTS_TO_DRESSAPP',
 };
 
 /** Promise-wrapper around chrome.runtime.sendMessage so callers can
