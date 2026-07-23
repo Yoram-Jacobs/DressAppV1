@@ -1750,11 +1750,27 @@ async def analyze_item_image(
 
     raw_list: list[bytes] = []
     if payload.images_base64:
-        for b64 in payload.images_base64:
-            try:
-                raw_list.append(base64.b64decode(b64, validate=True))
-            except Exception as exc:
-                raise HTTPException(400, f"Invalid image_base64 in array: {exc}") from exc
+        import httpx
+        for b64_or_url in payload.images_base64:
+            if b64_or_url.startswith(("http://", "https://")):
+                try:
+                    async with httpx.AsyncClient(timeout=30.0) as c:
+                        resp = await c.get(b64_or_url, follow_redirects=True)
+                        resp.raise_for_status()
+                        raw_list.append(resp.content)
+                except Exception as exc:
+                    raise HTTPException(400, f"Failed to download image URL in array: {exc}") from exc
+            elif b64_or_url.startswith("data:image/"):
+                try:
+                    header, encoded = b64_or_url.split(",", 1)
+                    raw_list.append(base64.b64decode(encoded))
+                except Exception as exc:
+                    raise HTTPException(400, f"Invalid data URL in array: {exc}") from exc
+            else:
+                try:
+                    raw_list.append(base64.b64decode(b64_or_url, validate=True))
+                except Exception as exc:
+                    raise HTTPException(400, f"Invalid image_base64 in array: {exc}") from exc
     elif payload.image_base64:
         try:
             raw_list.append(base64.b64decode(payload.image_base64, validate=True))

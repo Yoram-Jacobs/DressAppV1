@@ -1528,7 +1528,7 @@ export default function AddItem() {
   // time, items 2..N actually get analysed instead of silently
   // falling through to the "save raw image" branch.
   // ------------------------------------------------------------------
-    const handleBatchBackground = async (fingerprints, skippedDuplicates = 0) => {
+    async function handleBatchBackground(fingerprints, skippedDuplicates = 0) {
     setBgBatch({
       total: fingerprints.length,
       processed: 0,
@@ -1540,6 +1540,7 @@ export default function AddItem() {
       analyzeFailed: 0,
     });
 
+    const requestLang = (i18n.language || '').split('-')[0] || 'en';
     const b64List = [];
     for (const fp of fingerprints) {
       if (fp._b64) {
