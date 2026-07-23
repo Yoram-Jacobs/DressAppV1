@@ -628,6 +628,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   </p>
                 </div>
               )}
+            </div>
 
             {/* Actions & Status Panel (Normal flow) */}
             {isSyncing ? (
