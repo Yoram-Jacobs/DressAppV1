@@ -476,16 +476,16 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   {t('migration.screenshotPipelineTitle', { defaultValue: 'Screenshot-Scroller & GarmentVision AI Pipeline' })}
                 </span>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleOpenPopupWindow}
-                    className="text-xs text-foreground h-7 px-2.5 rounded-lg flex items-center gap-1"
+                  <a
+                    href={targetLoginUrl}
+                    target="_blank"
+                    rel="opener"
+                    onClick={() => setPopupOpened(true)}
+                    className="text-xs text-foreground h-7 px-2.5 rounded-lg border border-border bg-background hover:bg-accent hover:text-accent-foreground font-semibold inline-flex items-center gap-1"
                   >
                     <Maximize2 className="w-3 h-3" />
                     <span>{t('migration.openAppBtn', { appName, defaultValue: `Open ${appName}` })}</span>
-                  </Button>
+                  </a>
                 </div>
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground truncate">
@@ -755,25 +755,35 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     </span>
                   </div>
 
-                  <Button
-                    type="button"
-                    onClick={
-                      importMode === 'screenshot_scroll' && !popupOpened
-                        ? handleOpenPopupWindow
-                        : handleStartItemImport
-                    }
-                    className="rounded-xl h-10 px-5 bg-primary text-primary-foreground font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md hover:opacity-95"
-                    data-testid="migration-weblogin-proceed-btn"
-                  >
-                    <span>
-                      {importMode === 'screenshot_scroll'
-                        ? !popupOpened
-                          ? t('migration.importWardrobeBtn', { defaultValue: 'Import wardrobe' })
-                          : t('migration.importBtn', { defaultValue: 'Import' })
-                        : t('migration.importRealPhotosBtn', { defaultValue: 'Import Real Photos' })}
-                    </span>
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
+                  {importMode === 'screenshot_scroll' && !popupOpened ? (
+                    <a
+                      href={targetLoginUrl}
+                      target="_blank"
+                      rel="opener"
+                      onClick={() => setPopupOpened(true)}
+                      className="rounded-xl h-10 px-5 bg-primary text-primary-foreground font-bold text-xs sm:text-sm inline-flex items-center justify-center gap-2 shadow-md hover:opacity-95"
+                      data-testid="migration-weblogin-proceed-btn"
+                    >
+                      <span>
+                        {t('migration.importWardrobeBtn', { defaultValue: 'Import wardrobe' })}
+                      </span>
+                      <ArrowRight className="w-4 h-4" />
+                    </a>
+                  ) : (
+                    <Button
+                      type="button"
+                      onClick={handleStartItemImport}
+                      className="rounded-xl h-10 px-5 bg-primary text-primary-foreground font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md hover:opacity-95"
+                      data-testid="migration-weblogin-proceed-btn"
+                    >
+                      <span>
+                        {importMode === 'screenshot_scroll'
+                          ? t('migration.importBtn', { defaultValue: 'Import' })
+                          : t('migration.importRealPhotosBtn', { defaultValue: 'Import Real Photos' })}
+                      </span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               )}
             </div>

@@ -1,3 +1,5 @@
+console.log('👗 DressApp Importer content script loaded on', location.href);
+
 // Style injection for importer
 const style = document.createElement('style');
 style.textContent = `
@@ -61,10 +63,14 @@ document.head.appendChild(style);
 
 function initImporter() {
   const isClosetPage = /pieces|closet|wardrobe|clothes/i.test(location.href);
+  console.log('👗 DressApp Importer check - isClosetPage:', isClosetPage, 'body:', !!document.body);
   if (!isClosetPage) return;
+
+  if (!document.body) return;
 
   if (document.getElementById('dressapp-importer-widget')) return;
 
+  console.log('👗 Injecting DressApp Importer widget...');
   const widget = document.createElement('div');
   widget.id = 'dressapp-importer-widget';
   widget.className = 'dressapp-importer-widget';
