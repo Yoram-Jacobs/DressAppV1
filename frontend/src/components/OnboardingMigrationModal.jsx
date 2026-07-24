@@ -124,18 +124,39 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         let noChangeCount = 0;
 
         const getVisibleGarmentRects = () => {
+          const scrollRect = (scrollEl && scrollEl !== window && scrollEl !== document.documentElement && scrollEl !== document.body)
+            ? scrollEl.getBoundingClientRect()
+            : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+
           const rects = [];
           const imgs = Array.from(document.querySelectorAll('img'));
-          const w = window.innerWidth;
-          const h = window.innerHeight;
           
           for (const img of imgs) {
             const imgRect = img.getBoundingClientRect();
-            if (imgRect.width < 40 || imgRect.height < 40) continue;
-            if (imgRect.top < 0 || imgRect.bottom > h + 10) continue;
+            // Product images should be reasonably sized
+            if (imgRect.width < 60 || imgRect.height < 60) continue;
+            // Must be within scroll viewport boundaries
+            if (imgRect.top < scrollRect.top || imgRect.bottom > scrollRect.bottom + 10) continue;
             
             const src = img.src.toLowerCase();
             if (src.includes('logo') || src.includes('avatar') || src.includes('icon') || src.includes('profile')) continue;
+
+            // Prevent picking up elements inside nav headers, menus, footers
+            let insideNavOrHeader = false;
+            let temp = img;
+            while (temp && temp !== document.body) {
+              const tagName = temp.tagName.toLowerCase();
+              const cls = (temp.className || '').toString().toLowerCase();
+              const id = (temp.id || '').toLowerCase();
+              if (tagName === 'header' || tagName === 'nav' || tagName === 'footer' ||
+                  cls.includes('header') || cls.includes('nav') || cls.includes('menu') || cls.includes('footer') ||
+                  id.includes('header') || id.includes('nav') || id.includes('menu') || id.includes('footer')) {
+                insideNavOrHeader = true;
+                break;
+              }
+              temp = temp.parentElement;
+            }
+            if (insideNavOrHeader) continue;
 
             // Walk up to find the closest grid card element container
             let cardEl = null;
@@ -154,24 +175,24 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
             if (cardEl) {
               const r = cardEl.getBoundingClientRect();
-              // Exclude cards that are cut off at the viewport boundaries
-              if (r.top >= -5 && r.bottom <= h + 10) {
+              // Exclude cards that are cut off at the scroll boundaries
+              if (r.top >= scrollRect.top - 5 && r.bottom <= scrollRect.bottom + 10) {
                 rects.push({
-                  left: r.left,
-                  top: r.top,
+                  left: r.left - scrollRect.left,
+                  top: r.top - scrollRect.top,
                   width: r.width,
                   height: r.height
                 });
               }
             } else {
-              // Fallback: center a vertically-oriented box around the image center
+              // Fallback: center a vertically-oriented box relative to the scrollRect
               const cardW = imgRect.width * 1.15;
               const cardH = cardW * 1.35;
               const cx = imgRect.left + imgRect.width / 2;
               const cy = imgRect.top + imgRect.height / 2;
               rects.push({
-                left: Math.max(0, cx - cardW / 2),
-                top: Math.max(0, cy - cardH / 2),
+                left: Math.max(0, cx - cardW / 2 - scrollRect.left),
+                top: Math.max(0, cy - cardH / 2 - scrollRect.top),
                 width: cardW,
                 height: cardH
               });
@@ -278,8 +299,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               window.opener.postMessage({
                 type: 'DRESSAPP_AGENT_FRAME',
                 screenshot: b64,
-                viewport_width: window.innerWidth,
-                viewport_height: window.innerHeight,
+                viewport_width: rect.width,
+                viewport_height: rect.height,
                 reached_bottom: finalReachedBottom,
                 card_rects: cardRects
               }, '*');

@@ -4,24 +4,7 @@ console.log('👗 DressApp Importer content script loaded on', location.href);
 const style = document.createElement('style');
 style.textContent = `
   .dressapp-importer-widget {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    z-index: 9999999;
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
-    padding: 16px;
-    border-radius: 16px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    font-size: 13px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
-    width: 240px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    transition: all 0.3s ease;
+    display: none !important;
   }
   .dressapp-importer-title {
     font-weight: 700;

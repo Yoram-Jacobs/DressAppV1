@@ -59,7 +59,7 @@ async def test_agentic_migration_with_card_rects():
     img = Image.new("RGB", (300, 600), color="white")
 
     # Mock GeminiClient.vision call response text for single item classification
-    mock_response = '{"category": "Top", "color": "Blue", "label": "blue logo top"}'
+    mock_response = '{"category": "Top", "color": "Blue", "label": "blue crewneck top"}'
 
     agent = WardrobeMigrationAgent(api_key="mock_key")
     agent.client.vision = AsyncMock(return_value=mock_response)
@@ -95,7 +95,7 @@ async def test_agentic_migration_with_card_rects():
         assert result["status"] == "completed"
         assert result["action"] == "done"
         assert len(result["new_items_found"]) == 1
-        assert result["new_items_found"][0]["title"] == "blue logo top"
+        assert result["new_items_found"][0]["title"] == "blue crewneck top"
         assert result["new_items_found"][0]["category"] == "Top"
         assert result["new_items_found"][0]["color"] == "Blue"
 

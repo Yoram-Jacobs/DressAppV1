@@ -250,6 +250,19 @@ class WardrobeMigrationAgent:
                     color = garment.get("color") or "Neutral"
                     label = garment.get("label") or "Imported Clothing Item"
 
+                # Gatekeeper check to drop noise, icons, page headers, etc.
+                label_lower = label.lower()
+                category_lower = category.lower()
+                GIVE_UP = [
+                    "no clothing", "no garment", "cannot identify", "unidentifiable",
+                    "unknown", "icon", "button", "logo", "header", "menu", "page",
+                    "website", "text", "background", "noise", "tact us", "works",
+                    "whering", "not applicable", "n/a", "no identifiable", "heart icon"
+                ]
+                if any(w in label_lower for w in GIVE_UP) or any(w in category_lower for w in GIVE_UP):
+                    logger.info("Gatekeeper: skipping noise crop with label='%s', category='%s'", label, category)
+                    continue
+
                 if is_model_fit_pic:
                     # Apply GarmentVision's multi-item pipeline
                     logger.info("Fit pic detected. Triggering GarmentVision multi-item pipeline.")
@@ -260,6 +273,11 @@ class WardrobeMigrationAgent:
 
                         for gv_item in gv_results:
                             g_label = gv_item.get("label") or "Clothing Item"
+                            g_label_lower = g_label.lower()
+                            if any(w in g_label_lower for w in GIVE_UP):
+                                logger.info("Gatekeeper: skipping GarmentVision noise item with label: %s", g_label)
+                                continue
+
                             g_crop_b64 = gv_item.get("crop_base64")
                             if not g_crop_b64:
                                 continue
