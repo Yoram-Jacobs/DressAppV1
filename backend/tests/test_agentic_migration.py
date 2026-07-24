@@ -126,6 +126,7 @@ async def test_agentic_migration_with_fit_pic_tight_crop():
             "parsed_hashes": []
         })
         mock_db.migration_sessions.update_one = AsyncMock()
+        mock_db.closet_items.find_one = AsyncMock(return_value=None)
         mock_db.closet_items.insert_one = AsyncMock()
         mock_get_db.return_value = mock_db
 
