@@ -128,18 +128,15 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             ? scrollEl.getBoundingClientRect()
             : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
 
-          const rects = [];
-          const imgs = Array.from(document.querySelectorAll('img'));
-          
-          for (const img of imgs) {
+          const validImgs = Array.from(document.querySelectorAll('img')).filter(img => {
             const imgRect = img.getBoundingClientRect();
             // Product images should be reasonably sized
-            if (imgRect.width < 60 || imgRect.height < 60) continue;
+            if (imgRect.width < 50 || imgRect.height < 50) return false;
             // Must be within scroll viewport boundaries
-            if (imgRect.top < scrollRect.top || imgRect.bottom > scrollRect.bottom + 10) continue;
+            if (imgRect.top < scrollRect.top || imgRect.bottom > scrollRect.bottom + 10) return false;
             
             const src = img.src.toLowerCase();
-            if (src.includes('logo') || src.includes('avatar') || src.includes('icon') || src.includes('profile')) continue;
+            if (src.includes('logo') || src.includes('avatar') || src.includes('icon') || src.includes('profile')) return false;
 
             // Prevent picking up elements inside nav headers, menus, footers
             let insideNavOrHeader = false;
@@ -156,57 +153,104 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               }
               temp = temp.parentElement;
             }
-            if (insideNavOrHeader) continue;
+            if (insideNavOrHeader) return false;
+            return true;
+          });
 
-            // Walk up to find the closest grid card element container
-            let cardEl = null;
-            let p = img.parentElement;
-            while (p && p !== document.body) {
-              const r = p.getBoundingClientRect();
-              if (r.width >= 100 && r.width <= 450 && r.height >= 120 && r.height <= 650) {
-                const ratio = r.height / r.width;
-                if (ratio >= 0.9 && ratio <= 2.2) {
-                  cardEl = p;
-                  break;
-                }
+          if (validImgs.length === 0) return [];
+
+          // 1. Extract center coordinates
+          const centers = validImgs.map(img => {
+            const r = img.getBoundingClientRect();
+            return {
+              cx: r.left + r.width / 2,
+              cy: r.top + r.height / 2
+            };
+          });
+
+          // 2. Cluster X centers to find static column grid lines
+          const cxSorted = centers.map(c => c.cx).sort((a, b) => a - b);
+          const cols = [];
+          if (cxSorted.length > 0) {
+            let currentGroup = [cxSorted[0]];
+            for (let i = 1; i < cxSorted.length; i++) {
+              if (cxSorted[i] - cxSorted[i - 1] < 45) {
+                currentGroup.push(cxSorted[i]);
+              } else {
+                cols.push(currentGroup.reduce((a, b) => a + b, 0) / currentGroup.length);
+                currentGroup = [cxSorted[i]];
               }
-              p = p.parentElement;
+            }
+            cols.push(currentGroup.reduce((a, b) => a + b, 0) / currentGroup.length);
+          }
+
+          // 3. Cluster Y centers to find static row grid lines
+          const cySorted = centers.map(c => c.cy).sort((a, b) => a - b);
+          const rows = [];
+          if (cySorted.length > 0) {
+            let currentGroup = [cySorted[0]];
+            for (let i = 1; i < cySorted.length; i++) {
+              if (cySorted[i] - cySorted[i - 1] < 55) {
+                currentGroup.push(cySorted[i]);
+              } else {
+                rows.push(currentGroup.reduce((a, b) => a + b, 0) / currentGroup.length);
+                currentGroup = [cySorted[i]];
+              }
+            }
+            rows.push(currentGroup.reduce((a, b) => a + b, 0) / currentGroup.length);
+          }
+
+          // 4. Calculate static card dimensions
+          let cardW = 180;
+          if (cols.length > 1) {
+            const spacings = [];
+            for (let i = 1; i < cols.length; i++) {
+              spacings.push(cols[i] - cols[i - 1]);
+            }
+            const avgSpacing = spacings.reduce((a, b) => a + b, 0) / spacings.length;
+            cardW = avgSpacing - 12; // Card width is slightly less than column spacing
+          }
+          const cardH = cardW * 1.45; // Standard grid aspect ratio
+
+          // 5. Map each garment center to its closest column and row center
+          const rects = [];
+          for (const c of centers) {
+            let bestCol = cols[0];
+            let minDistX = Math.abs(c.cx - cols[0]);
+            for (const col of cols) {
+              const d = Math.abs(c.cx - col);
+              if (d < minDistX) { minDistX = d; bestCol = col; }
             }
 
-            if (cardEl) {
-              const r = cardEl.getBoundingClientRect();
-              // Exclude cards that are cut off at the scroll boundaries
-              if (r.top >= scrollRect.top - 5 && r.bottom <= scrollRect.bottom + 10) {
-                rects.push({
-                  left: r.left - scrollRect.left,
-                  top: r.top - scrollRect.top,
-                  width: r.width,
-                  height: r.height
-                });
-              }
-            } else {
-              // Fallback: center a vertically-oriented box relative to the scrollRect
-              const cardW = imgRect.width * 1.15;
-              const cardH = cardW * 1.35;
-              const cx = imgRect.left + imgRect.width / 2;
-              const cy = imgRect.top + imgRect.height / 2;
+            let bestRow = rows[0];
+            let minDistY = Math.abs(c.cy - rows[0]);
+            for (const row of rows) {
+              const d = Math.abs(c.cy - row);
+              if (d < minDistY) { minDistY = d; bestRow = row; }
+            }
+
+            const left = bestCol - cardW / 2;
+            const top = bestRow - cardH / 2;
+
+            // Only crop cards that are fully visible inside the scroll viewport (skip cut-offs)
+            const relTop = top - scrollRect.top;
+            const relBottom = relTop + cardH;
+            if (relTop >= -5 && relBottom <= scrollRect.height + 10) {
               rects.push({
-                left: Math.max(0, cx - cardW / 2 - scrollRect.left),
-                top: Math.max(0, cy - cardH / 2 - scrollRect.top),
+                left: left - scrollRect.left,
+                top: relTop,
                 width: cardW,
                 height: cardH
               });
             }
           }
-          
-          // Remove duplicate rects (in case multiple images/logos resolve to the same card)
+
+          // 6. Deduplicate overlapping card rects (ensuring exactly one crop per grid cell)
           const uniqueRects = [];
           for (const r of rects) {
             const isDup = uniqueRects.some(u => 
-              Math.abs(u.left - r.left) < 5 && 
-              Math.abs(u.top - r.top) < 5 && 
-              Math.abs(u.width - r.width) < 5 && 
-              Math.abs(u.height - r.height) < 5
+              Math.abs(u.left - r.left) < 10 && 
+              Math.abs(u.top - r.top) < 10
             );
             if (!isDup) {
               uniqueRects.push(r);
