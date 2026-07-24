@@ -174,10 +174,10 @@ function initImporter() {
 
 // Observe route changes for SPA navigation
 const urlObserver = new MutationObserver(() => {
-  initImporter();
+  // initImporter();
 });
 urlObserver.observe(document.documentElement, { subtree: true, childList: true });
-initImporter();
+// initImporter();
 
 // Listen to custom event dispatched by bookmarklet to bypass opener nullification
 document.addEventListener('DRESSAPP_BOOKMARKLET_SCREENSHOTS', async (e) => {

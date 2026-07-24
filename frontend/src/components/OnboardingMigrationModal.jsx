@@ -124,67 +124,75 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         let noChangeCount = 0;
 
         const getVisibleGarmentRects = () => {
-          const imgs = Array.from(document.querySelectorAll('img')).filter(img => {
-            const r = img.getBoundingClientRect();
-            if (r.width < 50 || r.height < 50) return false;
-            if (r.top < 0 || r.bottom > window.innerHeight + 10) return false;
-            const src = img.src.toLowerCase();
-            if (src.includes('logo') || src.includes('avatar') || src.includes('icon') || src.includes('profile')) return false;
-            return true;
-          });
-
-          if (imgs.length === 0) return [];
-
-          const xCenters = imgs.map(img => {
-            const r = img.getBoundingClientRect();
-            return r.left + r.width / 2;
-          }).sort((a, b) => a - b);
-
-          const cols = [];
-          for (const x of xCenters) {
-            if (cols.length === 0 || x - cols[cols.length - 1] > 40) {
-              cols.push(x);
-            }
-          }
-
-          const yCenters = imgs.map(img => {
-            const r = img.getBoundingClientRect();
-            return r.top + r.height / 2;
-          }).sort((a, b) => a - b);
-
-          const rows = [];
-          for (const y of yCenters) {
-            if (rows.length === 0 || y - rows[rows.length - 1] > 40) {
-              rows.push(y);
-            }
-          }
-
           const rects = [];
+          const imgs = Array.from(document.querySelectorAll('img'));
+          const w = window.innerWidth;
+          const h = window.innerHeight;
+          
           for (const img of imgs) {
-            const r = img.getBoundingClientRect();
-            const cx = r.left + r.width / 2;
-            const cy = r.top + r.height / 2;
+            const imgRect = img.getBoundingClientRect();
+            if (imgRect.width < 40 || imgRect.height < 40) continue;
+            if (imgRect.top < 0 || imgRect.bottom > h + 10) continue;
+            
+            const src = img.src.toLowerCase();
+            if (src.includes('logo') || src.includes('avatar') || src.includes('icon') || src.includes('profile')) continue;
 
-            const colIdx = cols.findIndex(x => Math.abs(x - cx) <= 40);
-            const rowIdx = rows.findIndex(y => Math.abs(y - cy) <= 40);
+            // Walk up to find the closest grid card element container
+            let cardEl = null;
+            let p = img.parentElement;
+            while (p && p !== document.body) {
+              const r = p.getBoundingClientRect();
+              if (r.width >= 100 && r.width <= 450 && r.height >= 120 && r.height <= 650) {
+                const ratio = r.height / r.width;
+                if (ratio >= 0.9 && ratio <= 2.2) {
+                  cardEl = p;
+                  break;
+                }
+              }
+              p = p.parentElement;
+            }
 
-            if (colIdx !== -1 && rowIdx !== -1) {
-              // Ensure we crop a balanced vertical container representing the card
-              const cardW = r.width * 1.15;
+            if (cardEl) {
+              const r = cardEl.getBoundingClientRect();
+              // Exclude cards that are cut off at the viewport boundaries
+              if (r.top >= -5 && r.bottom <= h + 10) {
+                rects.push({
+                  left: r.left,
+                  top: r.top,
+                  width: r.width,
+                  height: r.height
+                });
+              }
+            } else {
+              // Fallback: center a vertically-oriented box around the image center
+              const cardW = imgRect.width * 1.15;
               const cardH = cardW * 1.35;
-              
-              const left = cx - cardW / 2;
-              const top = cy - cardH / 2;
-
+              const cx = imgRect.left + imgRect.width / 2;
+              const cy = imgRect.top + imgRect.height / 2;
               rects.push({
-                left: Math.max(0, left),
-                top: Math.max(0, top),
+                left: Math.max(0, cx - cardW / 2),
+                top: Math.max(0, cy - cardH / 2),
                 width: cardW,
                 height: cardH
               });
             }
           }
-          return rects;
+          
+          // Remove duplicate rects (in case multiple images/logos resolve to the same card)
+          const uniqueRects = [];
+          for (const r of rects) {
+            const isDup = uniqueRects.some(u => 
+              Math.abs(u.left - r.left) < 5 && 
+              Math.abs(u.top - r.top) < 5 && 
+              Math.abs(u.width - r.width) < 5 && 
+              Math.abs(u.height - r.height) < 5
+            );
+            if (!isDup) {
+              uniqueRects.push(r);
+            }
+          }
+          
+          return uniqueRects;
         };
 
         const getScrollState = () => {
@@ -217,7 +225,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 noChangeCount++;
                 if (noChangeCount < 3) {
                   st.innerText = 'Waiting for lazy load (attempt ' + noChangeCount + '/3)...';
-                  scrollPos += 150; // Extra nudge down
+                  scrollPos += 150;
                   window.scrollTo(0, scrollPos);
                   if (scrollEl && scrollEl !== window) scrollEl.scrollTop = scrollPos;
                   await new Promise(r => setTimeout(r, 2000));
