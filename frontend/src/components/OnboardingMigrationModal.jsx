@@ -183,45 +183,34 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             };
           });
 
-          // 2. Cluster X centers to find static column grid lines
-          const cxSorted = centers.map(c => c.cx).sort((a, b) => a - b);
-          const cols = [];
-          if (cxSorted.length > 0) {
-            let currentGroup = [cxSorted[0]];
-            for (let i = 1; i < cxSorted.length; i++) {
-              if (cxSorted[i] - cxSorted[i - 1] < 45) {
-                currentGroup.push(cxSorted[i]);
+          // 2. Group items into rows to calculate column spacing
+          const sortedImgs = [...centers].sort((a, b) => a.cy - b.cy);
+          const rowsList = [];
+          if (sortedImgs.length > 0) {
+            let currentRow = [sortedImgs[0]];
+            for (let i = 1; i < sortedImgs.length; i++) {
+              if (sortedImgs[i].cy - sortedImgs[i-1].cy < 50) {
+                currentRow.push(sortedImgs[i]);
               } else {
-                cols.push(currentGroup.reduce((a, b) => a + b, 0) / currentGroup.length);
-                currentGroup = [cxSorted[i]];
+                rowsList.push(currentRow);
+                currentRow = [sortedImgs[i]];
               }
             }
-            cols.push(currentGroup.reduce((a, b) => a + b, 0) / currentGroup.length);
+            rowsList.push(currentRow);
           }
 
-          // 3. Cluster Y centers to find static row grid lines
-          const cySorted = centers.map(c => c.cy).sort((a, b) => a - b);
-          const rows = [];
-          if (cySorted.length > 0) {
-            let currentGroup = [cySorted[0]];
-            for (let i = 1; i < cySorted.length; i++) {
-              if (cySorted[i] - cySorted[i - 1] < 55) {
-                currentGroup.push(cySorted[i]);
-              } else {
-                rows.push(currentGroup.reduce((a, b) => a + b, 0) / currentGroup.length);
-                currentGroup = [cySorted[i]];
-              }
+          // 3. Calculate horizontal spacings between adjacent items in each row
+          const spacings = [];
+          for (const row of rowsList) {
+            row.sort((a, b) => a.cx - b.cx);
+            for (let i = 1; i < row.length; i++) {
+              spacings.push(row[i].cx - row[i-1].cx);
             }
-            rows.push(currentGroup.reduce((a, b) => a + b, 0) / currentGroup.length);
           }
 
           // 4. Calculate static card dimensions
           let cardW = 180;
-          if (cols.length > 1) {
-            const spacings = [];
-            for (let i = 1; i < cols.length; i++) {
-              spacings.push(cols[i] - cols[i - 1]);
-            }
+          if (spacings.length > 0) {
             const avgSpacing = spacings.reduce((a, b) => a + b, 0) / spacings.length;
             cardW = avgSpacing - 12; // Card width is slightly less than column spacing
           } else if (validImgs.length > 0) {
@@ -230,25 +219,11 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           }
           const cardH = cardW * 1.45; // Standard grid aspect ratio
 
-          // 5. Map each garment center to its closest column and row center
+          // 5. Establish card crop boundaries around each item's own center point (Option 1)
           const rects = [];
           for (const c of centers) {
-            let bestCol = cols[0];
-            let minDistX = Math.abs(c.cx - cols[0]);
-            for (const col of cols) {
-              const d = Math.abs(c.cx - col);
-              if (d < minDistX) { minDistX = d; bestCol = col; }
-            }
-
-            let bestRow = rows[0];
-            let minDistY = Math.abs(c.cy - rows[0]);
-            for (const row of rows) {
-              const d = Math.abs(c.cy - row);
-              if (d < minDistY) { minDistY = d; bestRow = row; }
-            }
-
-            const left = bestCol - cardW / 2;
-            const top = bestRow - cardH / 2;
+            const left = c.cx - cardW / 2;
+            const top = c.cy - cardH / 2;
 
             // Only crop cards that are fully visible inside the scroll viewport (skip cut-offs)
             const relTop = top - scrollRect.top;
