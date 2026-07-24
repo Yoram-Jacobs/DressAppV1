@@ -987,6 +987,9 @@
     "saveProfile": "حفظ التغييرات",
     "savedProfile": "تم حفظ الملف الشخصي",
     "autofilledFromGoogle": "تم التعبئة تلقائيًا من Google — يمكنك التعديل في أي وقت.",
+    "syncGoogle": "مزامنة ملف تعريف Google",
+    "googleSyncSuccess": "تمت مزامنة الملف الشخصي بنجاح.",
+    "googleSyncFailed": "فشلت المزامنة.",
     "professional": {
       "sectionTitle": "خبير أزياء محترف",
       "checkboxLabel": "أنا خبير أزياء محترف",

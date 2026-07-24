@@ -648,6 +648,8 @@ export const api = {
   googleOAuthStart: () => client.get('/auth/google/start').then((r) => r.data),
   googleOAuthDisconnect: () =>
     client.post('/auth/google/disconnect').then((r) => r.data),
+  googleSyncProfile: () =>
+    client.post('/auth/google/sync-profile').then((r) => r.data),
 
   // trend-scout
   trendsLatest: (perBucket = 1) =>

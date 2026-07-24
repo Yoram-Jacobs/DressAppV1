@@ -398,6 +398,13 @@ async def _handle_login_callback(
         logger.exception("Google sign-in userinfo fetch failed")
         return _login_error_redirect(origin, "userinfo_failed")
 
+    # Fetch extended profile (optional/non-blocking)
+    extended_profile = {}
+    try:
+        extended_profile = await calendar_service.fetch_people_profile(access_token)
+    except Exception as e:
+        logger.warning("Google sign-in People API fetch failed: %s", e)
+
     email = (userinfo.get("email") or "").lower()
     if not email:
         return _login_error_redirect(origin, "no_email")
@@ -426,6 +433,15 @@ async def _handle_login_callback(
             patch["avatar_url"] = userinfo["picture"]
         if userinfo.get("locale") and not user_doc.get("locale"):
             patch["locale"] = userinfo["locale"]
+            
+        # Autofill extended contact info from Google People API if empty
+        if extended_profile.get("date_of_birth") and not user_doc.get("date_of_birth"):
+            patch["date_of_birth"] = extended_profile["date_of_birth"]
+        if extended_profile.get("phone") and not user_doc.get("phone"):
+            patch["phone"] = extended_profile["phone"]
+        if extended_profile.get("address") and not user_doc.get("address"):
+            patch["address"] = extended_profile["address"]
+
         # Re-apply admin allow-list on every Google login — same idempotent
         # behaviour as email/password login.
         new_roles = apply_admin_role(user_doc.get("roles"), email)
@@ -447,6 +463,9 @@ async def _handle_login_callback(
             first_name=userinfo.get("given_name"),
             last_name=userinfo.get("family_name"),
             locale=userinfo.get("locale") or "en-US",
+            date_of_birth=extended_profile.get("date_of_birth"),
+            phone=extended_profile.get("phone"),
+            address=extended_profile.get("address"),
         )
         user_doc = new_user.model_dump()
         user_doc["roles"] = apply_admin_role(user_doc.get("roles"), email)
@@ -503,3 +522,76 @@ async def calendar_upcoming(
 ) -> dict[str, Any]:
     events = await calendar_service.get_events_for_user(user, hours_ahead=hours_ahead)
     return {"events": events, "count": len(events)}
+
+
+@auth_router.post("/sync-profile")
+async def sync_profile_from_google(
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Retrieve user's extended profile details (birthday, phone, address) from Google People API."""
+    tokens = user.get("google_calendar_tokens") or {}
+    if not tokens.get("access_token"):
+        raise HTTPException(status_code=400, detail="Google account not connected.")
+        
+    try:
+        from google.auth.transport.requests import Request as GoogleAuthRequest
+        from google.oauth2.credentials import Credentials
+        from app.services.calendar_service import GOOGLE_TOKEN_URL
+        
+        creds = Credentials(
+            token=tokens.get("access_token"),
+            refresh_token=tokens.get("refresh_token"),
+            token_uri=GOOGLE_TOKEN_URL,
+            client_id=calendar_service.client_id,
+            client_secret=calendar_service.client_secret,
+            scopes=SCOPES,
+        )
+        if not creds.valid and creds.refresh_token:
+            creds.refresh(GoogleAuthRequest())
+            db = get_db()
+            await db.users.update_one(
+                {"id": user["id"]},
+                {
+                    "$set": {
+                        "google_calendar_tokens.access_token": creds.token,
+                        "google_calendar_tokens.expires_at": (
+                            datetime.now(timezone.utc) + timedelta(minutes=50)
+                        ).isoformat(),
+                    }
+                },
+            )
+        access_token = creds.token
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Failed to refresh Google credentials: {exc}")
+        
+    extended_profile = await calendar_service.fetch_people_profile(access_token)
+    if not extended_profile:
+        raise HTTPException(status_code=400, detail="No profile details could be retrieved from Google.")
+        
+    db = get_db()
+    patch = {}
+    if extended_profile.get("date_of_birth"):
+        patch["date_of_birth"] = extended_profile["date_of_birth"]
+    if extended_profile.get("phone"):
+        patch["phone"] = extended_profile["phone"]
+    if extended_profile.get("address"):
+        addr = extended_profile["address"]
+        patch["address"] = {
+            "line1": addr.get("line1") or "",
+            "line2": addr.get("line2") or "",
+            "city": addr.get("city") or "",
+            "region": addr.get("region") or "",
+            "postal_code": addr.get("postal_code") or "",
+            "country": addr.get("country") or "",
+        }
+        
+    if patch:
+        patch["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db.users.update_one({"id": user["id"]}, {"$set": patch})
+        
+    return {
+        "success": True,
+        "date_of_birth": patch.get("date_of_birth"),
+        "phone": patch.get("phone"),
+        "address": patch.get("address"),
+    }

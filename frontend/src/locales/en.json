@@ -1025,6 +1025,9 @@
     "saveProfile": "Save changes",
     "savedProfile": "Profile saved",
     "autofilledFromGoogle": "Auto-filled from Google — edit anytime.",
+    "syncGoogle": "Sync Google Profile",
+    "googleSyncSuccess": "Profile synced with Google successfully!",
+    "googleSyncFailed": "Failed to sync with Google.",
     "professional": {
       "sectionTitle": "Professional fashion expert",
       "sectionDesc": "Business approval credentials and professional directory listings",

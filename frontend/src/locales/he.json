@@ -1012,6 +1012,9 @@
     "saveProfile": "שמור שינויים",
     "savedProfile": "הפרופיל נשמר",
     "autofilledFromGoogle": "מולא אוטומטית מ-Google — ניתן לערוך בכל עת.",
+    "syncGoogle": "סנכרון פרופיל Google",
+    "googleSyncSuccess": "הפרופיל סונכרן בהצלחה.",
+    "googleSyncFailed": "הסנכרון נכשל.",
     "professional": {
       "sectionTitle": "מומחה אופנה מקצועי",
       "sectionDesc": "אישורי עסק ורישומי מדריך מקצועיים",

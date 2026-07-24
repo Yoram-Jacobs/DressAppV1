@@ -1025,6 +1025,9 @@
     "saveProfile": "Wijzigingen opslaan",
     "savedProfile": "Profiel opgeslagen",
     "autofilledFromGoogle": "Automatisch ingevuld door Google: bewerk het op elk gewenst moment.",
+    "syncGoogle": "Google-profiel synchroniseren",
+    "googleSyncSuccess": "Profiel succesvol gesynchroniseerd.",
+    "googleSyncFailed": "Synchronisatie mislukt.",
     "professional": {
       "sectionTitle": "Professioneel mode-expert",
       "sectionDesc": "Bedrijfskwalificaties en professionele directoryvermeldingen",

@@ -42,13 +42,23 @@ SCOPES = [
     "email",
     "profile",
     "https://www.googleapis.com/auth/calendar.readonly",
+    "https://www.googleapis.com/auth/user.birthday.read",
+    "https://www.googleapis.com/auth/user.phonenumbers.read",
+    "https://www.googleapis.com/auth/user.addresses.read",
 ]
 
 # Lean scope set used by the new "Sign in with Google" flow when the user
 # does NOT tick the "Also connect my calendar" checkbox. Keeping calendar
 # off this set makes the consent screen friendlier and avoids surprising
 # users with calendar access on a plain login.
-LOGIN_SCOPES = ["openid", "email", "profile"]
+LOGIN_SCOPES = [
+    "openid",
+    "email",
+    "profile",
+    "https://www.googleapis.com/auth/user.birthday.read",
+    "https://www.googleapis.com/auth/user.phonenumbers.read",
+    "https://www.googleapis.com/auth/user.addresses.read",
+]
 
 
 def _public_base_url(request: Any) -> str | None:
@@ -230,6 +240,50 @@ class CalendarService:
             )
         resp.raise_for_status()
         return resp.json()
+
+    async def fetch_people_profile(self, access_token: str) -> dict[str, Any]:
+        """Fetch extended profile details (birthday, phone, address) from Google People API."""
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                "https://people.googleapis.com/v1/people/me?personFields=birthdays,phoneNumbers,addresses",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+        if resp.status_code != 200:
+            logger.warning("Google People API request failed status=%d body=%s", resp.status_code, resp.text[:200])
+            return {}
+        
+        data = resp.json()
+        profile = {}
+        
+        # 1. Parse Birthday (yyyy-MM-dd)
+        birthdays = data.get("birthdays", [])
+        if birthdays:
+            b_date = birthdays[0].get("date", {})
+            year = b_date.get("year") or 1990
+            month = b_date.get("month")
+            day = b_date.get("day")
+            if month and day:
+                profile["date_of_birth"] = f"{year:04d}-{month:02d}-{day:02d}"
+        
+        # 2. Parse Phone Number
+        phones = data.get("phoneNumbers", [])
+        if phones:
+            profile["phone"] = phones[0].get("value")
+            
+        # 3. Parse Address
+        addresses = data.get("addresses", [])
+        if addresses:
+            addr = addresses[0]
+            profile["address"] = {
+                "line1": addr.get("streetAddress") or "",
+                "line2": addr.get("extendedAddress") or "",
+                "city": addr.get("city") or addr.get("locality") or "",
+                "region": addr.get("region") or "",
+                "postal_code": addr.get("postalCode") or "",
+                "country": addr.get("country") or "",
+            }
+            
+        return profile
 
     # -------------------- persistence helpers --------------------
     @staticmethod

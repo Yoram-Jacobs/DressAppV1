@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  Camera, Image as ImgIcon, Save, Trash2, Loader2, Sparkles,
+  Camera, Image as ImgIcon, Save, Trash2, Loader2, Sparkles, RefreshCw,
   User, MapPin, Fingerprint, Sliders, Ruler, Scissors, Briefcase, CreditCard, Palette, Bell
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -312,6 +312,36 @@ export function ProfileDetailsCard() {
         },
       },
     }));
+    
+  const [syncingGoogle, setSyncingGoogle] = useState(false);
+
+  const syncGoogleProfile = async () => {
+    setSyncingGoogle(true);
+    try {
+      const res = await api.googleSyncProfile();
+      if (res.success) {
+        setForm((prev) => ({
+          ...prev,
+          phone: res.phone || prev.phone,
+          date_of_birth: res.date_of_birth || prev.date_of_birth,
+          address: {
+            ...prev.address,
+            line1: res.address?.line1 || prev.address.line1,
+            line2: res.address?.line2 || prev.address.line2,
+            city: res.address?.city || prev.address.city,
+            region: res.address?.region || prev.address.region,
+            postal_code: res.address?.postal_code || prev.address.postal_code,
+            country: res.address?.country || prev.address.country,
+          }
+        }));
+        toast.success(t('profile.googleSyncSuccess', { defaultValue: 'Profile synced with Google successfully!' }));
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || t('profile.googleSyncFailed', { defaultValue: 'Failed to sync with Google.' }));
+    } finally {
+      setSyncingGoogle(false);
+    }
+  };
 
   const isFemale = form.sex === 'female';
   const wUnit = form.units.weight === 'lb' ? 'lb' : 'kg';
@@ -507,16 +537,34 @@ export function ProfileDetailsCard() {
             </div>
             <h3 className="font-display text-xl mt-0.5">{t('profile.title')}</h3>
           </div>
-          {autofilledFromGoogle && (
-            <Badge
-              variant="outline"
-              className="text-[11px] bg-card rounded-full"
-              data-testid="profile-google-autofill-badge"
-            >
-              <Sparkles className="h-3 w-3 me-1 text-[hsl(var(--accent))]" />
-              {t('profile.autofilledFromGoogle')}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {user?.google_connected && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5 rounded-full border-[hsl(var(--accent)/40)] hover:bg-[hsl(var(--accent)/5)]"
+                onClick={syncGoogleProfile}
+                disabled={syncingGoogle}
+              >
+                {syncingGoogle ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-3 w-3" />
+                )}
+                {t('profile.syncGoogle', { defaultValue: 'Sync Google Profile' })}
+              </Button>
+            )}
+            {autofilledFromGoogle && (
+              <Badge
+                variant="outline"
+                className="text-[11px] bg-card rounded-full"
+                data-testid="profile-google-autofill-badge"
+              >
+                <Sparkles className="h-3 w-3 me-1 text-[hsl(var(--accent))]" />
+                {t('profile.autofilledFromGoogle')}
+              </Badge>
+            )}
+          </div>
         </div>
 
         <Accordion
