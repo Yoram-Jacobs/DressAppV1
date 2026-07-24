@@ -42,24 +42,28 @@ def extract_tiles_opencv(
 
         img_h, img_w = bgr_arr.shape[:2]
         total_area = img_h * img_w
-        max_area = total_area * max_area_ratio
+
+        # Dynamic area limits based on total viewport size: 1.5% to 25% of viewport
+        min_card_area = int(total_area * 0.015)
+        max_card_area = int(total_area * 0.25)
 
         # Grayscale & Gaussian blur
         gray = cv2.cvtColor(bgr_arr, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
         # Morphological gradient / Canny edge + Adaptive Threshold
-        edges = cv2.Canny(blurred, 30, 150)
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+        edges = cv2.Canny(blurred, 50, 150)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (9, 9))
         dilated = cv2.dilate(edges, kernel, iterations=2)
 
-        contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Query all nested contours using RETR_LIST to bypass wrapper div blockages
+        contours, _ = cv2.findContours(dilated, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
-        bounding_boxes: List[Tuple[int, int, int, int]] = []
+        candidates: List[Tuple[int, int, int, int, float]] = []
 
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area < min_area or area > max_area:
+            if area < min_card_area or area > max_card_area:
                 continue
 
             x, y, w, h = cv2.boundingRect(cnt)
@@ -68,14 +72,46 @@ def extract_tiles_opencv(
             if aspect_ratio < aspect_ratio_range[0] or aspect_ratio > aspect_ratio_range[1]:
                 continue
 
-            bounding_boxes.append((x, y, w, h))
+            candidates.append((x, y, w, h, area))
 
-        # Sort bounding boxes top-to-bottom, left-to-right
-        bounding_boxes.sort(key=lambda b: (b[1] // 50, b[0]))
+        # Non-Maximum Suppression (NMS) for overlapping card regions
+        # Sort by area descending so we process larger card boxes first
+        candidates.sort(key=lambda b: b[4], reverse=True)
+        kept_boxes: List[Tuple[int, int, int, int, float]] = []
+
+        for x, y, w, h, area in candidates:
+            overlap = False
+            for kx, ky, kw, kh, karea in kept_boxes:
+                # Compute intersection rect
+                ix = max(x, kx)
+                iy = max(y, ky)
+                iw = min(x + w, kx + kw) - ix
+                ih = min(y + h, ky + kh) - iy
+                if iw > 0 and ih > 0:
+                    intersection = iw * ih
+                    smaller_area = min(w * h, kw * kh)
+                    # If overlapping > 60% of the smaller area, it is duplicate/nested
+                    if intersection / float(smaller_area) > 0.6:
+                        overlap = True
+                        break
+            if not overlap:
+                kept_boxes.append((x, y, w, h, area))
+
+        # Sort remaining boxes top-to-bottom, left-to-right
+        kept_boxes.sort(key=lambda b: (b[1] // 40, b[0]))
 
         tiles: List[Image.Image] = []
-        for x, y, w, h in bounding_boxes:
-            crop_tile = pil_img.crop((x, y, x + w, y + h))
+        for x, y, w, h, _ in kept_boxes:
+            # Crop card with a tiny padding margin to ensure we don't truncate garment boundary
+            pad_w = int(w * 0.02)
+            pad_h = int(h * 0.02)
+            crop_box = (
+                max(0, x - pad_w),
+                max(0, y - pad_h),
+                min(img_w, x + w + pad_w),
+                min(img_h, y + h + pad_h),
+            )
+            crop_tile = pil_img.crop(crop_box)
             tiles.append(crop_tile)
 
         return tiles
@@ -86,13 +122,23 @@ def extract_tiles_opencv(
 
 def extract_tiles_grid_geometry(
     pil_img: Image.Image,
-    columns: int = config.GRID_SLICER_COLUMNS,
+    columns: int = None,
     rows: int = 3,
 ) -> List[Image.Image]:
     """
     Fallback grid geometry slicer. Splits a viewport screenshot frame into a uniform grid layout.
     """
     img_w, img_h = pil_img.size
+    
+    # Calculate grid columns dynamically based on standard web responsive widths
+    if columns is None:
+        if img_w >= 1200:
+            columns = 4
+        elif img_w >= 768:
+            columns = 3
+        else:
+            columns = 2
+
     cell_w = img_w // columns
     cell_h = img_h // rows
 
