@@ -202,52 +202,76 @@ class WardrobeMigrationAgent:
                     logger.info("Deduplication: skipped duplicate crop with hash %s", p_hash)
                     continue
 
-                # For high-precision precropped tiles, run Gemini classifier on the cropped tile
-                if garment.get("is_precropped"):
-                    crop_byte_arr = io.BytesIO()
-                    crop_tile.save(crop_byte_arr, format="JPEG", quality=90)
-                    crop_bytes = crop_byte_arr.getvalue()
+                # Classify unique crop via Gemini
+                crop_byte_arr = io.BytesIO()
+                crop_tile.save(crop_byte_arr, format="JPEG", quality=90)
+                crop_bytes = crop_byte_arr.getvalue()
 
-                    class_prompt = (
-                        "You are DressApp's Wardrobe Ingestion Agent. Analyze this cropped clothing item.\n"
-                        "Provide its category (one of: Top, Bottom, Accessory, Footwear, Outerwear, Dress), primary color family, and a short visual label description."
+                class_prompt = (
+                    "You are DressApp's Wardrobe Ingestion Agent. Analyze this cropped clothing item.\n"
+                    "1. Identify the category (one of: Top, Bottom, Accessory, Footwear, Outerwear, Dress), primary color family, and a short visual label description.\n"
+                    "2. Check if a person (model) is wearing the clothing item in this image.\n"
+                    "3. If a person is wearing it, return `is_model_fit_pic: true` and the tight bounding box [ymin, xmin, ymax, xmax] (on a 0-1000 scale) of ONLY the clothing item itself (excluding the person's face, neck, skin, arms, legs, hair, and background).\n"
+                    "4. If no person is wearing it (e.g. it is a clean cutout or a flat lay product image), return `is_model_fit_pic: false` and leave `clothing_box_2d` empty."
+                )
+                class_schema = {
+                    "type": "OBJECT",
+                    "properties": {
+                        "category": {"type": "STRING", "description": "Top, Bottom, Accessory, Footwear, Outerwear, or Dress"},
+                        "color": {"type": "STRING", "description": "Primary color family"},
+                        "label": {"type": "STRING", "description": "Short visual description label"},
+                        "is_model_fit_pic": {"type": "BOOLEAN", "description": "True if a person is wearing the clothing item in the photo"},
+                        "clothing_box_2d": {
+                            "type": "ARRAY",
+                            "items": {"type": "INTEGER"},
+                            "description": "Strict tight bounding box [ymin, xmin, ymax, xmax] from 0 to 1000 of the clothing item itself. Omit or leave empty if not a person fit pic."
+                        }
+                    },
+                    "required": ["category", "color", "label", "is_model_fit_pic"]
+                }
+
+                try:
+                    class_resp = await self.client.vision(
+                        user_parts=[crop_bytes],
+                        system=class_prompt,
+                        model="gemini-2.5-flash",
+                        response_mime_type="application/json",
+                        response_schema=class_schema,
                     )
-                    class_schema = {
-                        "type": "OBJECT",
-                        "properties": {
-                            "category": {"type": "STRING", "description": "Top, Bottom, Accessory, Footwear, Outerwear, or Dress"},
-                            "color": {"type": "STRING", "description": "Primary color family"},
-                            "label": {"type": "STRING", "description": "Short visual description label"},
-                        },
-                        "required": ["category", "color", "label"]
-                    }
+                    class_result = json.loads(class_resp)
+                    category = class_result.get("category", "Top")
+                    color = class_result.get("color", "Neutral")
+                    label = class_result.get("label", "Clothing Item")
 
-                    try:
-                        class_resp = await self.client.vision(
-                            user_parts=[crop_bytes],
-                            system=class_prompt,
-                            model="gemini-2.5-flash",
-                            response_mime_type="application/json",
-                            response_schema=class_schema,
-                        )
-                        class_result = json.loads(class_resp)
-                        garment["category"] = class_result.get("category", "Top")
-                        garment["color"] = class_result.get("color", "Neutral")
-                        garment["label"] = class_result.get("label", "Clothing Item")
-                    except Exception as class_err:
-                        logger.warning("Gemini classification failed for crop: %s", class_err)
-                        garment["category"] = "Top"
-                        garment["color"] = "Neutral"
-                        garment["label"] = "Imported Clothing Item"
+                    # If it is a model fit pic, crop tightly to the clothing item first
+                    if class_result.get("is_model_fit_pic") and class_result.get("clothing_box_2d"):
+                        cbox = class_result["clothing_box_2d"]
+                        if len(cbox) == 4:
+                            c_ymin_pct, c_xmin_pct, c_ymax_pct, c_xmax_pct = cbox
+                            tile_w, tile_h = crop_tile.size
+
+                            c_ymin = int(c_ymin_pct * tile_h / 1000.0)
+                            c_xmin = int(c_xmin_pct * tile_w / 1000.0)
+                            c_ymax = int(c_ymax_pct * tile_h / 1000.0)
+                            c_xmax = int(c_xmax_pct * tile_w / 1000.0)
+
+                            if c_ymax > c_ymin and c_xmax > c_xmin and c_ymin >= 0 and c_xmin >= 0:
+                                logger.info("Cropping model fit pic tightly to clothing item: %s", cbox)
+                                crop_tile = crop_tile.crop((c_xmin, c_ymin, c_xmax, c_ymax))
+                                
+                                # Re-save crop to bytes for subsequent processing/matting
+                                crop_byte_arr = io.BytesIO()
+                                crop_tile.save(crop_byte_arr, format="JPEG", quality=90)
+                                crop_bytes = crop_byte_arr.getvalue()
+                except Exception as class_err:
+                    logger.warning("Gemini classification failed for crop: %s", class_err)
+                    category = garment.get("category") or "Top"
+                    color = garment.get("color") or "Neutral"
+                    label = garment.get("label") or "Imported Clothing Item"
 
                 # Unique item: Ingest
                 try:
-                    # Save crop to JPEG bytes
-                    crop_byte_arr = io.BytesIO()
-                    crop_tile.save(crop_byte_arr, format="JPEG", quality=90)
-                    crop_bytes = crop_byte_arr.getvalue()
-
-                    # Run background removal
+                    # Run background removal on the cropped tile (or tight garment crop)
                     cutout_bytes = None
                     try:
                         cutout_bytes = await background_matting.matte_crop(crop_bytes)
@@ -263,12 +287,12 @@ class WardrobeMigrationAgent:
                     else:
                         cutout_url = orig_data_url
 
-                    category = garment.get("category", "Top").capitalize()
+                    category = category.capitalize()
                     if category not in ["Top", "Bottom", "Accessory", "Footwear", "Outerwear", "Dress"]:
                         category = "Top"
 
-                    color = garment.get("color", "Neutral").capitalize()
-                    title = garment.get("label") or f"{color} {category}"
+                    color = color.capitalize()
+                    title = label or f"{color} {category}"
 
                     c_id = f"item_{uuid.uuid4().hex[:12]}"
                     now_iso = datetime.now(timezone.utc).isoformat()
