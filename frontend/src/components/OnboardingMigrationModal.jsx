@@ -174,82 +174,78 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
           if (validImgs.length === 0) return [];
 
-          // 1. Extract center coordinates
-          const centers = validImgs.map(img => {
-            const r = img.getBoundingClientRect();
-            return {
-              cx: r.left + r.width / 2,
-              cy: r.top + r.height / 2
-            };
-          });
+          const rects = [];
+          
+          for (const img of validImgs) {
+            const imgRect = img.getBoundingClientRect();
+            
+            // 1. Walk up DOM tree to find exact card container element
+            let cardEl = null;
+            let p = img.parentElement;
+            while (p && p !== document.body) {
+              const r = p.getBoundingClientRect();
+              if (r.width >= 100 && r.width <= 450 && r.height >= 120 && r.height <= 650) {
+                const ratio = r.height / r.width;
+                if (ratio >= 0.85 && ratio <= 2.3) {
+                  cardEl = p;
+                  break;
+                }
+              }
+              p = p.parentElement;
+            }
 
-          // 2. Group items into rows to calculate column spacing
-          const sortedImgs = [...centers].sort((a, b) => a.cy - b.cy);
-          const rowsList = [];
-          if (sortedImgs.length > 0) {
-            let currentRow = [sortedImgs[0]];
-            for (let i = 1; i < sortedImgs.length; i++) {
-              if (sortedImgs[i].cy - sortedImgs[i-1].cy < 50) {
-                currentRow.push(sortedImgs[i]);
-              } else {
-                rowsList.push(currentRow);
-                currentRow = [sortedImgs[i]];
+            if (cardEl) {
+              const r = cardEl.getBoundingClientRect();
+              const relTop = r.top - scrollRect.top;
+              const relBottom = relTop + r.height;
+
+              const headerHeight = 110;
+              const footerHeight = 60;
+              const viewportMinY = headerHeight - 10;
+              const viewportMaxY = scrollRect.height - footerHeight + 10;
+
+              if (relTop >= viewportMinY && relBottom <= viewportMaxY) {
+                rects.push({
+                  left: r.left - scrollRect.left,
+                  top: relTop,
+                  width: r.width,
+                  height: r.height
+                });
+              }
+            } else {
+              // Fallback: item-centered card box
+              const cx = imgRect.left + imgRect.width / 2;
+              const cy = imgRect.top + imgRect.height / 2;
+              const cardW = imgRect.width * 1.2;
+              const cardH = cardW * 1.45;
+
+              const left = cx - cardW / 2;
+              const top = cy - cardH / 2;
+              const relTop = top - scrollRect.top;
+              const relBottom = relTop + cardH;
+
+              const headerHeight = 110;
+              const footerHeight = 60;
+              const viewportMinY = headerHeight - 10;
+              const viewportMaxY = scrollRect.height - footerHeight + 10;
+
+              if (relTop >= viewportMinY && relBottom <= viewportMaxY) {
+                rects.push({
+                  left: left - scrollRect.left,
+                  top: relTop,
+                  width: cardW,
+                  height: cardH
+                });
               }
             }
-            rowsList.push(currentRow);
           }
 
-          // 3. Calculate horizontal spacings between adjacent items in each row
-          const spacings = [];
-          for (const row of rowsList) {
-            row.sort((a, b) => a.cx - b.cx);
-            for (let i = 1; i < row.length; i++) {
-              spacings.push(row[i].cx - row[i-1].cx);
-            }
-          }
-
-          // 4. Calculate static card dimensions
-          let cardW = 180;
-          if (spacings.length > 0) {
-            const avgSpacing = spacings.reduce((a, b) => a + b, 0) / spacings.length;
-            cardW = avgSpacing - 12; // Card width is slightly less than column spacing
-          } else if (validImgs.length > 0) {
-            const avgImgW = validImgs.reduce((sum, img) => sum + img.getBoundingClientRect().width, 0) / validImgs.length;
-            cardW = avgImgW * 1.15;
-          }
-          const cardH = cardW * 1.45; // Standard grid aspect ratio
-
-          // 5. Establish card crop boundaries around each item's own center point (Option 1)
-          const rects = [];
-          for (const c of centers) {
-            const left = c.cx - cardW / 2;
-            const top = c.cy - cardH / 2;
-
-            // Only crop cards that are fully visible inside the scroll viewport (skip cut-offs)
-            const relTop = top - scrollRect.top;
-            const relBottom = relTop + cardH;
-
-            const headerHeight = 110;
-            const footerHeight = 60;
-            const viewportMinY = headerHeight - 10;
-            const viewportMaxY = scrollRect.height - footerHeight + 10;
-
-            if (relTop >= viewportMinY && relBottom <= viewportMaxY) {
-              rects.push({
-                left: left - scrollRect.left,
-                top: relTop,
-                width: cardW,
-                height: cardH
-              });
-            }
-          }
-
-          // 6. Deduplicate overlapping card rects (ensuring exactly one crop per grid cell)
+          // Deduplicate overlapping card rects (ensuring exactly one crop per grid cell)
           const uniqueRects = [];
           for (const r of rects) {
             const isDup = uniqueRects.some(u => 
-              Math.abs(u.left - r.left) < 15 && 
-              Math.abs(u.top - r.top) < 15
+              Math.abs(u.left - r.left) < 20 && 
+              Math.abs(u.top - r.top) < 20
             );
             if (!isDup) {
               uniqueRects.push(r);
