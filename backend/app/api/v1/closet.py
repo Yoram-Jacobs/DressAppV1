@@ -2769,6 +2769,10 @@ class MigrationSessionStepIn(BaseModel):
     session_id: str
     app_name: str
     screenshot: str
+    viewport_width: float
+    viewport_height: float
+    reached_bottom: bool = False
+    card_rects: list[dict[str, Any]] | None = None
 
 
 @router.post("/migration/session/start")
@@ -2826,6 +2830,10 @@ async def step_migration_session(
         user_id=user["id"],
         app_name=payload.app_name,
         pil_img=img,
+        viewport_width=payload.viewport_width,
+        viewport_height=payload.viewport_height,
+        reached_bottom=payload.reached_bottom,
+        card_rects=payload.card_rects,
     )
     return result
 

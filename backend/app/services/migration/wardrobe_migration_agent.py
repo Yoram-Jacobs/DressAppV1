@@ -12,6 +12,7 @@ import logging
 import json
 from datetime import datetime, timezone
 from PIL import Image
+from typing import Any
 
 from app.services.gemini_client import GeminiClient
 from app.services.migration.dedup_engine import compute_perceptual_hash
@@ -36,6 +37,10 @@ class WardrobeMigrationAgent:
         user_id: str,
         app_name: str,
         pil_img: Image.Image,
+        viewport_width: float | None = None,
+        viewport_height: float | None = None,
+        reached_bottom: bool = False,
+        card_rects: list[dict[str, Any]] | None = None,
     ) -> dict:
         """
         Processes a single screenshot frame from the competitor closet viewport.
@@ -58,67 +63,99 @@ class WardrobeMigrationAgent:
         # Get dimensions of screenshot
         img_w, img_h = pil_img.size
 
-        # Convert image to JPEG bytes for Gemini
-        img_byte_arr = io.BytesIO()
-        pil_img.save(img_byte_arr, format="JPEG", quality=90)
-        jpeg_bytes = img_byte_arr.getvalue()
-
-        # Gemini 2.5 Flash Bounding Box Detection prompt
-        system_prompt = (
-            "You are DressApp's Wardrobe Migration Agent. Your goal is to migrate competitor wardrobe closets.\n"
-            "Analyze the screenshot of the competitor's closet app. Identify the grid layout (columns and rows of clothing cards) on the page.\n"
-            "You MUST follow these rules:\n"
-            "1. DETECT ENTIRE CARD: Return the bounding box of the ENTIRE rectangular card container (including borders, padding, and background card canvas), NOT a tight box around just the colored clothing item pixels itself. This centers the item and avoids cropping sleeves or parts off.\n"
-            "2. IGNORE BOUNDARY CUT-OFFS: If any card is partially cut off at the top (ymin touches 0) or bottom (ymax touches 1000) of the viewport, DO NOT return its bounding box. It will be fully captured in the next scroll iteration.\n"
-            "3. PREVENT HALF-CROPS: Never split a card or a garment in half. Each bounding box must encompass a single complete card from the grid.\n\n"
-            "Return the bounding box coordinates [ymin, xmin, ymax, xmax] of each complete garment card on a 0-1000 normalized scale.\n"
-            "Also provide category (one of: Top, Bottom, Accessory, Footwear, Outerwear, Dress), color, and a short visual description label."
-        )
-
-        response_schema = {
-            "type": "OBJECT",
-            "properties": {
-                "garments": {
-                    "type": "ARRAY",
-                    "items": {
-                        "type": "OBJECT",
-                        "properties": {
-                            "box_2d": {
-                                "type": "ARRAY",
-                                "items": {"type": "INTEGER"},
-                                "description": "Normalized integer bounding box [ymin, xmin, ymax, xmax] from 0 to 1000.",
-                            },
-                            "label": {"type": "STRING", "description": "Short visual label description"},
-                            "category": {"type": "STRING", "description": "Top, Bottom, Accessory, Footwear, Outerwear, or Dress"},
-                            "color": {"type": "STRING", "description": "Primary color family"},
-                        },
-                        "required": ["box_2d", "label", "category", "color"],
-                    },
-                },
-                "should_scroll": {
-                    "type": "BOOLEAN",
-                    "description": "True if there are visible items partially below or more items remaining further down.",
-                },
-            },
-            "required": ["garments", "should_scroll"],
-        }
-
         new_items = []
         try:
-            # Call Gemini 2.5 Flash using direct vision wrapper
-            response_text = await self.client.vision(
-                user_parts=[jpeg_bytes],
-                system=system_prompt,
-                model="gemini-2.5-flash",
-                response_mime_type="application/json",
-                response_schema=response_schema,
-            )
+            detected_garments = []
+            should_scroll = True
 
-            result = json.loads(response_text)
-            detected_garments = result.get("garments", [])
-            should_scroll = result.get("should_scroll", False)
+            # Hybrid approach: Use high-precision DOM card coordinates if provided by client
+            if card_rects and viewport_width and viewport_height:
+                scale_x = img_w / viewport_width
+                scale_y = img_h / viewport_height
+                for r in card_rects:
+                    left = r.get("left", 0)
+                    top = r.get("top", 0)
+                    width = r.get("width", 0)
+                    height = r.get("height", 0)
 
-            logger.info("WardrobeMigrationAgent detected %d garment bounding boxes.", len(detected_garments))
+                    # Scale coordinates to screenshot pixels
+                    xmin = int(left * scale_x)
+                    ymin = int(top * scale_y)
+                    xmax = int((left + width) * scale_x)
+                    ymax = int((top + height) * scale_y)
+
+                    # Convert back to 0-1000 scale so it passes the common boundary and validation checks
+                    ymin_pct = int(ymin * 1000.0 / img_h)
+                    xmin_pct = int(xmin * 1000.0 / img_w)
+                    ymax_pct = int(ymax * 1000.0 / img_h)
+                    xmax_pct = int(xmax * 1000.0 / img_w)
+
+                    detected_garments.append({
+                        "box_2d": [ymin_pct, xmin_pct, ymax_pct, xmax_pct],
+                        "is_precropped": True
+                    })
+                should_scroll = not reached_bottom
+                logger.info("Using %d DOM card rects for high-precision cropping.", len(detected_garments))
+
+            else:
+                # Convert image to JPEG bytes for Gemini fallback
+                img_byte_arr = io.BytesIO()
+                pil_img.save(img_byte_arr, format="JPEG", quality=90)
+                jpeg_bytes = img_byte_arr.getvalue()
+
+                # Gemini 2.5 Flash Bounding Box Detection prompt
+                system_prompt = (
+                    "You are DressApp's Wardrobe Migration Agent. Your goal is to migrate competitor wardrobe closets.\n"
+                    "Analyze the screenshot of the competitor's closet app. Identify the grid layout (columns and rows of clothing cards) on the page.\n"
+                    "You MUST follow these rules:\n"
+                    "1. DETECT ENTIRE CARD: Return the bounding box of the ENTIRE rectangular card container (including borders, padding, and background card canvas), NOT a tight box around just the colored clothing item pixels itself. This centers the item and avoids cropping sleeves or parts off.\n"
+                    "2. IGNORE BOUNDARY CUT-OFFS: If any card is partially cut off at the top (ymin touches 0) or bottom (ymax touches 1000) of the viewport, DO NOT return its bounding box. It will be fully captured in the next scroll iteration.\n"
+                    "3. PREVENT HALF-CROPS: Never split a card or a garment in half. Each bounding box must encompass a single complete card from the grid.\n\n"
+                    "Return the bounding box coordinates [ymin, xmin, ymax, xmax] of each complete garment card on a 0-1000 normalized scale.\n"
+                    "Also provide category (one of: Top, Bottom, Accessory, Footwear, Outerwear, Dress), color, and a short visual description label."
+                )
+
+                response_schema = {
+                    "type": "OBJECT",
+                    "properties": {
+                        "garments": {
+                            "type": "ARRAY",
+                            "items": {
+                                "type": "OBJECT",
+                                "properties": {
+                                    "box_2d": {
+                                        "type": "ARRAY",
+                                        "items": {"type": "INTEGER"},
+                                        "description": "Normalized integer bounding box [ymin, xmin, ymax, xmax] from 0 to 1000.",
+                                    },
+                                    "label": {"type": "STRING", "description": "Short visual label description"},
+                                    "category": {"type": "STRING", "description": "Top, Bottom, Accessory, Footwear, Outerwear, or Dress"},
+                                    "color": {"type": "STRING", "description": "Primary color family"},
+                                },
+                                "required": ["box_2d", "label", "category", "color"],
+                            },
+                        },
+                        "should_scroll": {
+                            "type": "BOOLEAN",
+                            "description": "True if there are visible items partially below or more items remaining further down.",
+                        },
+                    },
+                    "required": ["garments", "should_scroll"],
+                }
+
+                # Call Gemini 2.5 Flash using direct vision wrapper
+                response_text = await self.client.vision(
+                    user_parts=[jpeg_bytes],
+                    system=system_prompt,
+                    model="gemini-2.5-flash",
+                    response_mime_type="application/json",
+                    response_schema=response_schema,
+                )
+
+                result = json.loads(response_text)
+                detected_garments = result.get("garments", [])
+                should_scroll = result.get("should_scroll", False)
+                logger.info("Fallback: Gemini detected %d garment bounding boxes.", len(detected_garments))
 
             # Retrieve previously parsed hashes for deduplication
             parsed_hashes = session.get("parsed_hashes", [])
@@ -162,8 +199,46 @@ class WardrobeMigrationAgent:
                         break
 
                 if is_dup:
-                      logger.info("Deduplication: skipped duplicate crop with hash %s", p_hash)
-                      continue
+                    logger.info("Deduplication: skipped duplicate crop with hash %s", p_hash)
+                    continue
+
+                # For high-precision precropped tiles, run Gemini classifier on the cropped tile
+                if garment.get("is_precropped"):
+                    crop_byte_arr = io.BytesIO()
+                    crop_tile.save(crop_byte_arr, format="JPEG", quality=90)
+                    crop_bytes = crop_byte_arr.getvalue()
+
+                    class_prompt = (
+                        "You are DressApp's Wardrobe Ingestion Agent. Analyze this cropped clothing item.\n"
+                        "Provide its category (one of: Top, Bottom, Accessory, Footwear, Outerwear, Dress), primary color family, and a short visual label description."
+                    )
+                    class_schema = {
+                        "type": "OBJECT",
+                        "properties": {
+                            "category": {"type": "STRING", "description": "Top, Bottom, Accessory, Footwear, Outerwear, or Dress"},
+                            "color": {"type": "STRING", "description": "Primary color family"},
+                            "label": {"type": "STRING", "description": "Short visual description label"},
+                        },
+                        "required": ["category", "color", "label"]
+                    }
+
+                    try:
+                        class_resp = await self.client.vision(
+                            user_parts=[crop_bytes],
+                            system=class_prompt,
+                            model="gemini-2.5-flash",
+                            response_mime_type="application/json",
+                            response_schema=class_schema,
+                        )
+                        class_result = json.loads(class_resp)
+                        garment["category"] = class_result.get("category", "Top")
+                        garment["color"] = class_result.get("color", "Neutral")
+                        garment["label"] = class_result.get("label", "Clothing Item")
+                    except Exception as class_err:
+                        logger.warning("Gemini classification failed for crop: %s", class_err)
+                        garment["category"] = "Top"
+                        garment["color"] = "Neutral"
+                        garment["label"] = "Imported Clothing Item"
 
                 # Unique item: Ingest
                 try:

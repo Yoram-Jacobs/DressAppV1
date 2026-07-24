@@ -122,10 +122,39 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         const scrollEl = getScrollEl();
         let scrollPos = 0;
 
+        const getVisibleGarmentRects = () => {
+          const rects = [];
+          const imgs = Array.from(document.querySelectorAll('img'));
+          const w = window.innerWidth;
+          const h = window.innerHeight;
+          for (const img of imgs) {
+            const r = img.getBoundingClientRect();
+            // Must be fully visible inside the viewport
+            if (r.width > 60 && r.height > 60 && r.top >= 0 && r.bottom <= h + 10 && r.left >= 0 && r.right <= w) {
+              const src = img.src.toLowerCase();
+              if (src.includes('logo') || src.includes('avatar') || src.includes('icon') || src.includes('profile')) continue;
+              if (r.width < 400 && r.height < 600) {
+                rects.push({ left: r.left, top: r.top, width: r.width, height: r.height });
+              }
+            }
+          }
+          return rects;
+        };
+
+        const getScrollState = () => {
+          return {
+            window: window.scrollY || window.pageYOffset,
+            doc: document.documentElement.scrollTop,
+            body: document.body.scrollTop,
+            el: (scrollEl && scrollEl !== window) ? scrollEl.scrollTop : 0
+          };
+        };
+
         window.addEventListener('message', async (e) => {
           if (e.data && e.data.type === 'DRESSAPP_AGENT_ACTION') {
             const { action, scroll_amount } = e.data;
             if (action === 'scroll') {
+              const s1 = getScrollState();
               scrollPos += scroll_amount;
               if (scrollEl && scrollEl !== window && scrollEl !== document.body && scrollEl !== document.documentElement) {
                 scrollEl.scrollTop = scrollPos;
@@ -135,7 +164,11 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               document.body.scrollTop = scrollPos;
 
               await new Promise(r => setTimeout(r, 1200));
-              captureAndSend();
+              const s2 = getScrollState();
+              const changed = (s2.window !== s1.window) || (s2.doc !== s1.doc) || (s2.body !== s1.body) || (s2.el !== s1.el);
+              
+              // If the scroll container did not move, we reached the bottom!
+              captureAndSend(!changed);
             } else if (action === 'done') {
               st.innerHTML = '<span style="color:#34d399;font-weight:bold;">✓ Done!</span> Return to DressApp.';
               stream.getTracks().forEach(t => t.stop());
@@ -145,7 +178,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           }
         });
 
-        const captureAndSend = async () => {
+        const captureAndSend = async (reachedBottom = false) => {
           st.innerText = 'Agent analyzing viewport...';
           o.style.display = 'none';
           await new Promise(r => setTimeout(r, 180));
@@ -164,8 +197,20 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
             const b64 = canvas.toDataURL('image/png');
             o.style.display = 'block';
+
+            const cardRects = getVisibleGarmentRects();
+            const isShort = scrollEl ? (scrollEl.scrollHeight <= scrollEl.clientHeight + 10) : true;
+            const finalReachedBottom = reachedBottom || isShort;
+
             if (window.opener) {
-              window.opener.postMessage({ type: 'DRESSAPP_AGENT_FRAME', screenshot: b64 }, '*');
+              window.opener.postMessage({
+                type: 'DRESSAPP_AGENT_FRAME',
+                screenshot: b64,
+                viewport_width: window.innerWidth,
+                viewport_height: window.innerHeight,
+                reached_bottom: finalReachedBottom,
+                card_rects: cardRects
+              }, '*');
             } else {
               st.innerHTML = '<div style="color:#f87171;">Connection lost. Reopen modal.</div>';
             }
@@ -184,7 +229,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   useEffect(() => {
     const handleMessage = async (event) => {
       if (event.data && event.data.type === 'DRESSAPP_AGENT_FRAME') {
-        const sc = event.data.screenshot;
+        const { screenshot, viewport_width, viewport_height, reached_bottom, card_rects } = event.data;
         setIsSyncing(true);
         setSyncStatusText(t('migration.agentProcessing', { defaultValue: 'Wardrobe Migration Agent analyzing viewport screenshot...' }));
         
@@ -199,7 +244,11 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           const res = await api.stepMigrationSession({
             session_id: sessId,
             app_name: appName.trim(),
-            screenshot: sc
+            screenshot: screenshot,
+            viewport_width: viewport_width,
+            viewport_height: viewport_height,
+            reached_bottom: reached_bottom,
+            card_rects: card_rects
           });
 
           if (res.new_items_found && res.new_items_found.length > 0) {
