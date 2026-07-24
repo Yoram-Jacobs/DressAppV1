@@ -69,7 +69,7 @@ class WardrobeMigrationAgent:
             should_scroll = True
 
             # Hybrid approach: Use high-precision DOM card coordinates if provided by client
-            if card_rects is not None and viewport_width and viewport_height:
+            if card_rects and len(card_rects) > 0 and viewport_width and viewport_height:
                 scale_x = img_w / viewport_width
                 scale_y = img_h / viewport_height
                 for r in card_rects:
@@ -168,8 +168,9 @@ class WardrobeMigrationAgent:
                 # Map normalized coordinates [ymin, xmin, ymax, xmax] to actual pixels
                 ymin_pct, xmin_pct, ymax_pct, xmax_pct = box
 
-                # Skip cards touching boundaries to prevent cut-off/partial items
-                if ymin_pct <= 5 or ymax_pct >= 995:
+                # Skip cards touching boundaries to prevent cut-off/partial items (unless precropped by DOM rects)
+                is_precropped = garment.get("is_precropped", False)
+                if not is_precropped and (ymin_pct <= 5 or ymax_pct >= 995):
                     logger.info("Skipping boundary box to prevent cut-offs: %s", box)
                     continue
 
