@@ -69,7 +69,7 @@ class WardrobeMigrationAgent:
             should_scroll = True
 
             # Hybrid approach: Use high-precision DOM card coordinates if provided by client
-            if card_rects and viewport_width and viewport_height:
+            if card_rects is not None and viewport_width and viewport_height:
                 scale_x = img_w / viewport_width
                 scale_y = img_h / viewport_height
                 for r in card_rects:
