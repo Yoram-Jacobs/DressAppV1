@@ -66,8 +66,12 @@ class WardrobeMigrationAgent:
         # Gemini 2.5 Flash Bounding Box Detection prompt
         system_prompt = (
             "You are DressApp's Wardrobe Migration Agent. Your goal is to migrate competitor wardrobe closets.\n"
-            "Analyze the screenshot of the competitor's closet app. Identify all individual clothing item cards in the grid.\n"
-            "Return the bounding box coordinates [ymin, xmin, ymax, xmax] of each garment card on a 0-1000 normalized scale.\n"
+            "Analyze the screenshot of the competitor's closet app. Identify the grid layout (columns and rows of clothing cards) on the page.\n"
+            "You MUST follow these rules:\n"
+            "1. DETECT ENTIRE CARD: Return the bounding box of the ENTIRE rectangular card container (including borders, padding, and background card canvas), NOT a tight box around just the colored clothing item pixels itself. This centers the item and avoids cropping sleeves or parts off.\n"
+            "2. IGNORE BOUNDARY CUT-OFFS: If any card is partially cut off at the top (ymin touches 0) or bottom (ymax touches 1000) of the viewport, DO NOT return its bounding box. It will be fully captured in the next scroll iteration.\n"
+            "3. PREVENT HALF-CROPS: Never split a card or a garment in half. Each bounding box must encompass a single complete card from the grid.\n\n"
+            "Return the bounding box coordinates [ymin, xmin, ymax, xmax] of each complete garment card on a 0-1000 normalized scale.\n"
             "Also provide category (one of: Top, Bottom, Accessory, Footwear, Outerwear, Dress), color, and a short visual description label."
         )
 
@@ -126,6 +130,12 @@ class WardrobeMigrationAgent:
 
                 # Map normalized coordinates [ymin, xmin, ymax, xmax] to actual pixels
                 ymin_pct, xmin_pct, ymax_pct, xmax_pct = box
+
+                # Skip cards touching boundaries to prevent cut-off/partial items
+                if ymin_pct <= 5 or ymax_pct >= 995:
+                    logger.info("Skipping boundary box to prevent cut-offs: %s", box)
+                    continue
+
                 ymin = int(ymin_pct * img_h / 1000.0)
                 xmin = int(xmin_pct * img_w / 1000.0)
                 ymax = int(ymax_pct * img_h / 1000.0)
