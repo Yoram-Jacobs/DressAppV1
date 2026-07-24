@@ -502,8 +502,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       const sessRes = await api.startMigrationSession({ app_name: appName.trim() });
       setActiveSessionId(sessRes.session_id);
       
-      // Open in a new browser window with a toolbar/menu to prevent background sleep/throttling when navigating away
-      const win = window.open(targetLoginUrl, '_blank', 'width=1200,height=800,location=yes,menubar=yes,status=yes,toolbar=yes');
+      // Open in a standard browser tab to preserve Bookmarks Bar
+      const win = window.open(targetLoginUrl, '_blank');
       if (win) {
         win.opener = window;
       }
@@ -841,8 +841,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     <p>
                       {t('migration.bookmarkletUsageInstructions', { appName, defaultValue: `After installing, click "Import wardrobe" below to initialize. Log in to Whering, go to your closet page, then click the "DressApp Agent" bookmarklet.` })}
                     </p>
-                    <div className="mt-2.5 p-3 bg-amber-500/10 text-amber-600 rounded-xl border border-amber-500/20 text-[11px] leading-normal font-medium">
-                      ⚠️ <b>Window Focus Alert:</b> Leave the new competitor browser window open. If you switch tabs in that window, Chrome will sleep/throttle the scroller. You can keep working in other windows, just do not minimize or tab-switch away inside the competitor window itself.
+                    <div className="mt-2.5 p-3 bg-amber-500/10 text-amber-600 rounded-xl border border-amber-500/20 text-[11px] leading-normal font-medium space-y-1">
+                      <div>⚠️ <b>Tab Sleep Alert:</b> Do not switch tabs inside the competitor window while importing (Chrome will sleep/throttle the scroller).</div>
+                      <div>💡 <b>Pro-Tip:</b> Drag the competitor tab out of your browser window into its own window to keep it running in focus while you multitask!</div>
                     </div>
                   </div>
                 </div>
