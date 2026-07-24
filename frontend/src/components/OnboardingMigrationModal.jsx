@@ -53,7 +53,133 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [syncedItemsList, setSyncedItemsList] = useState([]);
 
-  const harvesterBookmarkletCode = `javascript:void((async()=>{const o=document.createElement('div');o.id='dressapp-importer-widget';o.style.cssText='position:fixed;top:20px;left:20px;z-index:999999;background:rgba(15,23,42,0.95);color:white;padding:16px;border-radius:12px;font-family:sans-serif;font-size:13px;box-shadow:0 10px 25px rgba(0,0,0,0.3);width:260px;line-height:1.4;border:1px solid rgba(255,255,255,0.1);';o.innerHTML='<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;">👗 DressApp Agent</div><div id="da-status" style="color:#94a3b8;font-size:11px;"><div style="margin-bottom:8px;color:#cbd5e1;">Choose <b>THIS TAB</b> in the sharing prompt to start.</div><button id="da-start-btn" style="background:#6366f1;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:11px;width:100%;">Share & Start Agent</button></div>';document.body.appendChild(o);const st=document.getElementById('da-status');const btn=document.getElementById('da-start-btn');btn.onclick=async()=>{btn.disabled=true;btn.innerText='Requesting stream...';let stream;try{stream=await navigator.mediaDevices.getDisplayMedia({video:{displaySurface:'browser'},preferCurrentTab:true})}catch(e){try{stream=await navigator.mediaDevices.getDisplayMedia({video:true,preferCurrentTab:true})}catch(err){st.innerHTML='<span style="color:#f87171;">Permission denied: '+err.message+'</span>';setTimeout(()=>o.remove(),4000);return}}const track=stream.getVideoTracks()[0];const settings=track?track.getSettings():{};if(settings.displaySurface&&settings.displaySurface!=='browser'){st.innerHTML='<span style="color:#f87171;">Error: You must select <b>THIS TAB</b> in the sharing prompt. Window or Screen share is not supported as coordinates will not align. Please reload page & try again.</span>';if(track)track.stop();return}st.innerText='Connecting stream...';const video=document.createElement('video');video.style.cssText='position:absolute;left:-9999px;top:-9999px;width:100px;height:100px;opacity:0.01;pointer-events:none;z-index:-1;';video.srcObject=stream;video.playsInline=true;video.muted=true;document.body.appendChild(video);await video.play();await new Promise(r=>{if(video.readyState>=3)r();else video.oncanplay=r});await new Promise(r=>setTimeout(r,1000));const getScrollEl=()=>{const common=['main','[class*=scroll]','[class*=content]','#root','.app-container'];for(const sel of common){const el=document.querySelector(sel);if(el&&el.scrollHeight>el.clientHeight){const style=window.getComputedStyle(el);if(style.overflowY==='auto'||style.overflowY==='scroll')return el}}return document.scrollingElement||document.documentElement||document.body};const scrollEl=getScrollEl();let scrollPos=0;window.addEventListener('message',async(e)=>{if(e.data&&e.data.type==='DRESSAPP_AGENT_ACTION'){const{action,scroll_amount}=e.data;if(action==='scroll'){scrollPos+=scroll_amount;if(scrollEl&&scrollEl!==window&&scrollEl!==document.body&&scrollEl!==document.documentElement){scrollEl.scrollTop=scrollPos}window.scrollTo(0,scrollPos);document.documentElement.scrollTop=scrollPos;document.body.scrollTop=scrollPos;await new Promise(r=>setTimeout(r,1200));captureAndSend()}else if(action==='done'){st.innerHTML='<span style="color:#34d399;font-weight:bold;">✓ Done!</span> Return to DressApp.';stream.getTracks().forEach(t=>t.stop());video.remove();setTimeout(()=>o.remove(),4000)}}});const captureAndSend=async()=>{st.innerText='Agent analyzing viewport...';o.style.display='none';await new Promise(r=>setTimeout(r,180));try{const rect=(scrollEl&&scrollEl!==window&&scrollEl!==document.documentElement&&scrollEl!==document.body)?scrollEl.getBoundingClientRect():{left:0,top:0,width:window.innerWidth,height:window.innerHeight};const scaleX=video.videoWidth/window.innerWidth;const scaleY=video.videoHeight/window.innerHeight;const cropX=rect.left*scaleX;const cropY=rect.top*scaleY;const cropW=rect.width*scaleX;const cropH=rect.height*scaleY;const canvas=document.createElement('canvas');canvas.width=cropW;canvas.height=cropH;const ctx=canvas.getContext('2d');ctx.drawImage(video,cropX,cropY,cropW,cropH,0,0,cropW,cropH);const b64=canvas.toDataURL('image/png');o.style.display='block';if(window.opener){window.opener.postMessage({type:'DRESSAPP_AGENT_FRAME',screenshot:b64},'*')}else{st.innerHTML='<div style="color:#f87171;">Connection lost. Reopen modal.</div>'}}catch(err){o.style.display='block';st.innerText='Error: '+err.message}};captureAndSend()}};})());`;
+  // Use URL-encoded bookmarklet to prevent syntax and drag issues across all browsers
+  const harvesterBookmarkletCode = useMemo(() => {
+    const rawJS = `(async () => {
+      // Clean up any existing widgets to prevent duplicates
+      const ex1 = document.getElementById('dressapp-importer-widget');
+      if (ex1) ex1.remove();
+      const ex2 = document.getElementById('dressapp-widget-root');
+      if (ex2) ex2.remove();
+
+      const o = document.createElement('div');
+      o.id = 'dressapp-importer-widget';
+      o.style.cssText = 'position:fixed;top:20px;left:20px;z-index:999999;background:rgba(15,23,42,0.95);color:white;padding:16px;border-radius:12px;font-family:sans-serif;font-size:13px;box-shadow:0 10px 25px rgba(0,0,0,0.3);width:260px;line-height:1.4;border:1px solid rgba(255,255,255,0.1);';
+      o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;">👗 DressApp Agent</div><div id="da-status" style="color:#94a3b8;font-size:11px;"><div style="margin-bottom:8px;color:#cbd5e1;">Choose <b>THIS TAB</b> in the sharing prompt to start.</div><button id="da-start-btn" style="background:#6366f1;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:11px;width:100%;">Share & Start Agent</button></div>';
+      document.body.appendChild(o);
+
+      const st = document.getElementById('da-status');
+      const btn = document.getElementById('da-start-btn');
+
+      btn.onclick = async () => {
+        btn.disabled = true;
+        btn.innerText = 'Requesting stream...';
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getDisplayMedia({ video: { displaySurface: 'browser' }, preferCurrentTab: true });
+        } catch (e) {
+          try {
+            stream = await navigator.mediaDevices.getDisplayMedia({ video: true, preferCurrentTab: true });
+          } catch (err) {
+            st.innerHTML = '<span style="color:#f87171;">Permission denied: ' + err.message + '</span>';
+            setTimeout(() => o.remove(), 4000);
+            return;
+          }
+        }
+
+        const track = stream.getVideoTracks()[0];
+        const settings = track ? track.getSettings() : {};
+        if (settings.displaySurface && settings.displaySurface !== 'browser') {
+          st.innerHTML = '<span style="color:#f87171;">Error: You must select <b>THIS TAB</b> in the sharing prompt. Window or Screen share is not supported as coordinates will not align. Please reload page & try again.</span>';
+          if (track) track.stop();
+          return;
+        }
+
+        st.innerText = 'Connecting stream...';
+        const video = document.createElement('video');
+        video.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:100px;height:100px;opacity:0.01;pointer-events:none;z-index:-1;';
+        video.srcObject = stream;
+        video.playsInline = true;
+        video.muted = true;
+        document.body.appendChild(video);
+        await video.play();
+
+        await new Promise(r => { if (video.readyState >= 3) r(); else video.oncanplay = r; });
+        await new Promise(r => setTimeout(r, 1000));
+
+        const getScrollEl = () => {
+          const common = ['main', '[class*=scroll]', '[class*=content]', '#root', '.app-container'];
+          for (const sel of common) {
+            const el = document.querySelector(sel);
+            if (el && el.scrollHeight > el.clientHeight) {
+              const style = window.getComputedStyle(el);
+              if (style.overflowY === 'auto' || style.overflowY === 'scroll') return el;
+            }
+          }
+          return document.scrollingElement || document.documentElement || document.body;
+        };
+
+        const scrollEl = getScrollEl();
+        let scrollPos = 0;
+
+        window.addEventListener('message', async (e) => {
+          if (e.data && e.data.type === 'DRESSAPP_AGENT_ACTION') {
+            const { action, scroll_amount } = e.data;
+            if (action === 'scroll') {
+              scrollPos += scroll_amount;
+              if (scrollEl && scrollEl !== window && scrollEl !== document.body && scrollEl !== document.documentElement) {
+                scrollEl.scrollTop = scrollPos;
+              }
+              window.scrollTo(0, scrollPos);
+              document.documentElement.scrollTop = scrollPos;
+              document.body.scrollTop = scrollPos;
+
+              await new Promise(r => setTimeout(r, 1200));
+              captureAndSend();
+            } else if (action === 'done') {
+              st.innerHTML = '<span style="color:#34d399;font-weight:bold;">✓ Done!</span> Return to DressApp.';
+              stream.getTracks().forEach(t => t.stop());
+              video.remove();
+              setTimeout(() => o.remove(), 4000);
+            }
+          }
+        });
+
+        const captureAndSend = async () => {
+          st.innerText = 'Agent analyzing viewport...';
+          o.style.display = 'none';
+          await new Promise(r => setTimeout(r, 180));
+          try {
+            const rect = (scrollEl && scrollEl !== window && scrollEl !== document.documentElement && scrollEl !== document.body) ? scrollEl.getBoundingClientRect() : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+            const scaleX = video.videoWidth / window.innerWidth;
+            const scaleY = video.videoHeight / window.innerHeight;
+            const cropX = rect.left * scaleX;
+            const cropY = rect.top * scaleY;
+            const cropW = rect.width * scaleX;
+            const cropH = rect.height * scaleY;
+            const canvas = document.createElement('canvas');
+            canvas.width = cropW;
+            canvas.height = cropH;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+            const b64 = canvas.toDataURL('image/png');
+            o.style.display = 'block';
+            if (window.opener) {
+              window.opener.postMessage({ type: 'DRESSAPP_AGENT_FRAME', screenshot: b64 }, '*');
+            } else {
+              st.innerHTML = '<div style="color:#f87171;">Connection lost. Reopen modal.</div>';
+            }
+          } catch (err) {
+            o.style.display = 'block';
+            st.innerText = 'Error: ' + err.message;
+          }
+        };
+
+        captureAndSend();
+      };
+    })();`;
+    return 'javascript:' + encodeURIComponent(rawJS);
+  }, []);
 
   useEffect(() => {
     const handleMessage = async (event) => {
@@ -667,7 +793,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   {t('migration.allSuccessTitle', { defaultValue: 'Import Completed Successfully!' })}
                 </div>
                 <div className="text-[11px] text-muted-foreground">
-                  {t('migration.allSuccessSub', { defaultValue: 'Garment cutouts have been processed by GarmentVision AI.' })}
+                  {t('migration.allSuccessSub', { defaultValue: 'Garment cutouts have been processed by GarmentVision.' })}
                 </div>
 
                 <Button
