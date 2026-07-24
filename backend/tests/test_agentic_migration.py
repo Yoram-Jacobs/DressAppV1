@@ -104,19 +104,21 @@ async def test_agentic_migration_with_card_rects():
 
 @pytest.mark.anyio
 async def test_agentic_migration_with_fit_pic_tight_crop():
+    import base64
     img = Image.new("RGB", (300, 600), color="white")
 
-    # Mock GeminiClient.vision classification response indicating a fit pic with tight bounding box coordinates
+    # Mock GeminiClient.vision classification response indicating a fit pic
     mock_response = (
         '{"category": "Top", "color": "Yellow", "label": "yellow fit pic top", '
-        '"is_model_fit_pic": true, "clothing_box_2d": [100, 100, 900, 900]}'
+        '"is_model_fit_pic": true}'
     )
 
     agent = WardrobeMigrationAgent(api_key="mock_key")
     agent.client.vision = AsyncMock(return_value=mock_response)
 
     with patch("app.services.migration.wardrobe_migration_agent.get_db") as mock_get_db, \
-         patch("app.services.background_matting.matte_crop", new_callable=AsyncMock) as mock_matte:
+         patch("app.services.background_matting.matte_crop", new_callable=AsyncMock) as mock_matte, \
+         patch("app.services.vision.GarmentVisionService") as mock_gv_service_class:
 
         mock_db = AsyncMock()
         mock_db.migration_sessions.find_one = AsyncMock(return_value={
@@ -128,6 +130,24 @@ async def test_agentic_migration_with_fit_pic_tight_crop():
         mock_get_db.return_value = mock_db
 
         mock_matte.return_value = b"fake_png_bytes"
+
+        # Save a real 10x10 mock image to JPEG bytes
+        import io
+        mock_tile = Image.new("RGB", (10, 10), color="yellow")
+        buf = io.BytesIO()
+        mock_tile.save(buf, format="JPEG")
+        real_mock_bytes = buf.getvalue()
+
+        # Mock the GarmentVisionService analyze_outfit output
+        mock_gv_service = AsyncMock()
+        mock_gv_service.analyze_outfit = AsyncMock(return_value=[
+            {
+                "label": "yellow fit pic top",
+                "crop_base64": base64.b64encode(real_mock_bytes).decode("utf-8"),
+                "analysis": {"category": "Top", "color": "Yellow", "pattern": "Solid", "material": "Cotton"}
+            }
+        ])
+        mock_gv_service_class.return_value = mock_gv_service
 
         # Execute process_step
         result = await agent.process_step(
@@ -146,10 +166,11 @@ async def test_agentic_migration_with_fit_pic_tight_crop():
         assert result["status"] == "completed"
         assert result["action"] == "done"
         assert len(result["new_items_found"]) == 1
-        assert result["new_items_found"][0]["title"] == "yellow fit pic top"
+        assert result["new_items_found"][0]["title"] == "Yellow fit pic top"
         assert result["new_items_found"][0]["color"] == "Yellow"
 
-        # Verify background matting was called (which runs on the secondary tight crop)
+        # Verify background matting was called
         mock_matte.assert_called_once()
+
 
 

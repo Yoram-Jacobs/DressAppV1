@@ -230,6 +230,7 @@ class WardrobeMigrationAgent:
                     "required": ["category", "color", "label", "is_model_fit_pic"]
                 }
 
+                is_model_fit_pic = False
                 try:
                     class_resp = await self.client.vision(
                         user_parts=[crop_bytes],
@@ -242,32 +243,105 @@ class WardrobeMigrationAgent:
                     category = class_result.get("category", "Top")
                     color = class_result.get("color", "Neutral")
                     label = class_result.get("label", "Clothing Item")
-
-                    # If it is a model fit pic, crop tightly to the clothing item first
-                    if class_result.get("is_model_fit_pic") and class_result.get("clothing_box_2d"):
-                        cbox = class_result["clothing_box_2d"]
-                        if len(cbox) == 4:
-                            c_ymin_pct, c_xmin_pct, c_ymax_pct, c_xmax_pct = cbox
-                            tile_w, tile_h = crop_tile.size
-
-                            c_ymin = int(c_ymin_pct * tile_h / 1000.0)
-                            c_xmin = int(c_xmin_pct * tile_w / 1000.0)
-                            c_ymax = int(c_ymax_pct * tile_h / 1000.0)
-                            c_xmax = int(c_xmax_pct * tile_w / 1000.0)
-
-                            if c_ymax > c_ymin and c_xmax > c_xmin and c_ymin >= 0 and c_xmin >= 0:
-                                logger.info("Cropping model fit pic tightly to clothing item: %s", cbox)
-                                crop_tile = crop_tile.crop((c_xmin, c_ymin, c_xmax, c_ymax))
-                                
-                                # Re-save crop to bytes for subsequent processing/matting
-                                crop_byte_arr = io.BytesIO()
-                                crop_tile.save(crop_byte_arr, format="JPEG", quality=90)
-                                crop_bytes = crop_byte_arr.getvalue()
+                    is_model_fit_pic = class_result.get("is_model_fit_pic", False)
                 except Exception as class_err:
                     logger.warning("Gemini classification failed for crop: %s", class_err)
                     category = garment.get("category") or "Top"
                     color = garment.get("color") or "Neutral"
                     label = garment.get("label") or "Imported Clothing Item"
+
+                if is_model_fit_pic:
+                    # Apply GarmentVision's multi-item pipeline
+                    logger.info("Fit pic detected. Triggering GarmentVision multi-item pipeline.")
+                    try:
+                        from app.services.vision import GarmentVisionService
+                        gv_service = GarmentVisionService()
+                        gv_results = await gv_service.analyze_outfit(crop_bytes)
+
+                        for gv_item in gv_results:
+                            g_label = gv_item.get("label") or "Clothing Item"
+                            g_crop_b64 = gv_item.get("crop_base64")
+                            if not g_crop_b64:
+                                continue
+
+                            g_bytes = base64.b64decode(g_crop_b64)
+                            g_tile = Image.open(io.BytesIO(g_bytes))
+                            g_hash = compute_perceptual_hash(g_tile)
+                            if not g_hash:
+                                continue
+
+                            g_dup = False
+                            for registered_hash in parsed_hashes:
+                                dist = hamming_distance(g_hash, registered_hash)
+                                if dist <= 5:
+                                    g_dup = True
+                                    break
+                            if g_dup:
+                                logger.info("Deduplication: skipped duplicate crop in GarmentVision result")
+                                continue
+
+                            # Run background removal for clean cutout
+                            g_cutout = None
+                            try:
+                                g_cutout = await background_matting.matte_crop(g_bytes)
+                            except Exception as bg_err:
+                                logger.warning("Background matting failed for GarmentVision crop: %s", bg_err)
+
+                            g_orig_url = f"data:image/jpeg;base64,{g_crop_b64}"
+                            if g_cutout:
+                                g_png_b64 = base64.b64encode(g_cutout).decode("utf-8")
+                                g_cutout_url = f"data:image/png;base64,{g_png_b64}"
+                            else:
+                                g_cutout_url = g_orig_url
+
+                            g_analysis = gv_item.get("analysis") or {}
+                            g_category = (g_analysis.get("category") or "Top").capitalize()
+                            g_color = (g_analysis.get("color") or "Neutral").capitalize()
+                            g_title = g_label.capitalize()
+
+                            c_id = f"item_{uuid.uuid4().hex[:12]}"
+                            now_iso = datetime.now(timezone.utc).isoformat()
+
+                            doc = {
+                                "id": c_id,
+                                "user_id": user_id,
+                                "schemaVersion": 1,
+                                "source": "Private",
+                                "title": g_title,
+                                "name": g_title,
+                                "category": g_category,
+                                "sub_category": g_category,
+                                "color": g_color,
+                                "colors": [g_color],
+                                "pattern": g_analysis.get("pattern", "Solid").capitalize(),
+                                "material": g_analysis.get("material", "Mixed").capitalize(),
+                                "brand": f"Imported ({app_name})",
+                                "quality": "Good",
+                                "condition": "Excellent",
+                                "state": "Active",
+                                "wear_count": 0,
+                                "original_image_url": g_orig_url,
+                                "segmented_image_url": g_cutout_url,
+                                "thumbnail_data_url": g_cutout_url,
+                                "perceptual_hash": g_hash,
+                                "migrated_from": app_name,
+                                "created_at": now_iso,
+                                "updated_at": now_iso,
+                            }
+                            await db.closet_items.insert_one(doc)
+                            parsed_hashes.append(g_hash)
+                            new_items.append({
+                                "id": c_id,
+                                "title": g_title,
+                                "category": g_category,
+                                "color": g_color,
+                                "segmented_image_url": g_cutout_url,
+                            })
+                            logger.info("Persisted unique GarmentVision item %s (%s)", c_id, g_title)
+                    except Exception as gv_err:
+                        logger.warning("GarmentVision pipeline execution failed: %s", gv_err)
+
+                    continue
 
                 # Unique item: Ingest
                 try:
