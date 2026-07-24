@@ -68,9 +68,10 @@ Personalize your virtual avatar and style preferences:
    - Upload a full-body photo for realistic try-ons, or use the dynamic 2D vector mannequin.
    - Select your exact **Skin Tone** from the interactive color palette.
    - Click **Remove Photo** anytime to instantly revert to the vector mannequin.
-4. **Automatic Body Measurement Predictor**:
+4. **Automatic Body Measurement & Sizing Predictor**:
    - Enter just 4 basic numbers: **Height**, **Weight**, **Waist**, and **Foot Length**.
-   - DressApp automatically predicts your shoulders, chest, hip, sleeve, and inseam measurements to save you time!
+   - DressApp automatically predicts your shoulders, chest, hip, sleeve, and inseam measurements.
+   - It also translates these metrics into recommended retail standard sizes: **Shirt Size**, **Pants Size**, **Shoe Size**, and **Dress/Bra Size** (for women), automatically pre-filling them in your profile.
 5. **Style Profile**: Set your favorite aesthetics, preferred color palettes, and modesty preferences (*Casual/Relaxed*, *Moderate*, *Conservative*).
 
 ---

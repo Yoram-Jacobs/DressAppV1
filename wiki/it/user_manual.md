@@ -1,256 +1,259 @@
-# Manuale Utente Tecnico Completo di DressApp
+# Manuale utente tecnico completo di DressApp
 
-Manuale utente completo e guida di riferimento tecnica per l'ecosistema di guardaroba personale DressApp, motore di styling, marketplace circolare e pannelli di amministrazione.
+Manuale utente completo e guida di riferimento tecnico per l'ecosistema di guardaroba personale DressApp, il motore di styling, il marketplace circolare e i pannelli di amministrazione.
 
 ---
 
-## 1. Panoramica e Architettura Tecnologica
+## 1. Panoramica & Stack tecnologico
 
-DressApp è un gestore di guardaroba personale guidato dall'IA, consulente di stile e marketplace circolare. Aiuta gli utenti a gestire i capi in modo digitale, a scontornarli e taggarli automaticamente, a ricevere consigli sugli outfit basati sul meteo e sul calendario, a scansionare i Passaporti Digitali dei Prodotti (DPP) dell'UE e a scambiare abiti.
+DressApp è un gestore del guardaroba personale, consulente di stile e marketplace circolare basato sull'intelligenza artificiale. Aiuta gli utenti a gestire i capi di abbigliamento in modo digitale, a ritagliarli e taggarli automaticamente, a ricevere consigli sugli outfit adattati al meteo e al calendario, a scansionare i Passaporti Digitali dei Prodotti (DPP) dell'UE e a scambiare capi.
 
-### Proposta di Valore Principale
-- **Acquisizione Guardaroba Digitale**: Elaborazione di foto scattate o caricate con rimozione automatica dello sfondo, categorizzazione degli abiti e generazione di tag di attributo.
-- **Stylist Virtuale IA**: Un agente conversazionale che esamina in contesto il tuo guardaroba, gli eventi di Google Calendar e le previsioni meteo locali per suggerire outfit giornalieri.
-- **Marketplace Circolare**: Compravendita, scambio e noleggio sicuro tra privati di abiti per ridurre gli sprechi della fast fashion.
-- **Analisi del Costo per Utilizzo (CPW)**: Informazioni dettagliate sul valore di capitalizzazione del guardaroba, sui tassi di utilizzo e sull'ottimizzazione dell'uso.
+### Proposta di valore principale
+- **Inserimento digitale del guardaroba**: Elaborazione di foto scattate o caricate con rimozione automatica dello sfondo, categorizzazione degli abiti e generazione di tag per le caratteristiche del capo.
+- **Stilista virtuale AI**: Un agente conversazionale che analizza contestualmente il tuo guardaroba, gli eventi di Google Calendar e le previsioni meteo locali per suggerire outfit quotidiani.
+- **Marketplace circolare**: Acquisto, vendita, scambio e noleggio sicuri di vestiti tra utenti (peer-to-peer) per ridurre i rifiuti della moda veloce (fast fashion).
+- **Analisi del costo per utilizzo (CPW)**: Informazioni sul valore totale del guardaroba, tassi di utilizzo e ottimizzazione dell'uso.
 
-### Architettura Tecnologica
+### Architettura tecnologica
 - **Backend Edge**: Python 3.11 con FastAPI, utilizzando driver asincroni Motor collegati a un cluster MongoDB Atlas.
-- **Frontend SPA**: Single-Page Application in React 19 che utilizza store personalizzati `useSyncExternalStore` (`stylistStore`, `dailySuggestionsStore`, `useOutfitStore`, `useClosetStore`, `useSuitcaseStore`), Tailwind CSS, primitive Shadcn/UI e `react-i18next` con supporto per 12 lingue.
-- **Ottimizzazione di Stato e Rete**: Deduplicazione delle richieste in corso, caching degli store per 15 minuti e rivalidazione della scheda al cambio di `visibilitychange`, generando zero richieste GET in background a riposo.
-- **Machine Learning Locale e Taglie**: Scontornamento dello sfondo su CPU locale tramite U2-Net (`rembg`), analisi degli abiti con SegFormer-b2, embedding Fashion-CLIP e modello di regressione delle misurazioni corporee ANSUR II (`body_predictor.py`). Instradamento opzionale verso container GPU self-hosted (SegFormer-b3 + BiRefNet) per operazioni rapide.
-- **STT/TTS Conversazionale**: Fallback di riconoscimento vocale Web Speech lato client in tempo reale, modulazioni multimodali Gemini 2.5 Flash lato server e motori offline Piper/Sherpa-ONNX sul dispositivo.
-- **Servizi di Integrazione Esterna**: API OpenWeatherMap per il meteo, Google Calendar OAuth per l'esportazione degli impegni giornalieri, completamento automatico indirizzi OpenStreetMap (Nominatim) e API REST PayPal Subscriptions/Checkout.
+- **Frontend SPA**: Applicazione a pagina singola React 19 che utilizza store personalizzati `useSyncExternalStore` (`stylistStore`, `dailySuggestionsStore`, `useOutfitStore`, `useClosetStore`, `useSuitcaseStore`), Tailwind CSS, primitive Shadcn/UI e `react-i18next` con supporto per 12 lingue.
+- **Ottimizzazione dello stato e della rete**: Deduplicazione delle richieste attive, memorizzazione nella cache dello store per 15 minuti e convalida al cambio di scheda (`visibilitychange`), con conseguente assenza di richieste GET in background quando inattivo.
+- **Machine Learning locale & Taglie**: Elaborazione locale su CPU tramite U2-Net (`rembg`) per la rimozione dello sfondo, segmentazione degli abiti SegFormer-b2, embedding Fashion-CLIP e modello di regressione delle misure corporee fisiche ANSUR II (`body_predictor.py`). Facoltativamente, reindirizza a contenitori GPU self-hosted (SegFormer-b3 + BiRefNet) per operazioni rapide.
+- **STT/TTS conversazionale**: Riconoscimento vocale lato client (Web Speech API) come fallback, elaborazione audio multimodale sul server con Gemini 2.5 Flash, e motori Piper/Sherpa-ONNX offline integrati sul dispositivo.
+- **Servizi di integrazione esterna**: API OpenWeatherMap per il meteo, Google Calendar OAuth per l'esportazione degli impegni giornalieri, OpenStreetMap (Nominatim) per il completamento automatico degli indirizzi e API REST di PayPal per abbonamenti e pagamenti.
 
 ---
 
-## 2. Requisiti Preliminari
+## 2. Prerequisiti
 
-### Requisiti dell'Ambiente Host
-- **Hardware**: VPS con almeno 4 GB di RAM (ad es. Hetzner VPS che ospita l'ambiente di produzione `dressapp.co`).
-- **Dipendenze**: Stack Docker & Docker Compose (inclusi backend, frontend e terminazione TLS Caddy).
-- **Variabili di Ambiente**: Configurazione delle chiavi API (`GEMINI_API_KEY`, `DEEPGRAM_API_KEY`, `OPENWEATHER_API_KEY`, `PAYPAL_LIVE_CLIENT_ID/SECRET` e token OAuth di Google Calendar).
+### Requisiti dell'ambiente host (Server)
+- **Hardware**: Server virtuale (VPS) con un minimo di 4 GB di RAM (ad esempio, il VPS Hetzner che ospita l'ambiente di produzione `dressapp.co`).
+- **Dipendenze**: Container Docker e Docker Compose (inclusi backend, frontend e terminazione TLS di Caddy).
+- **Variables d'ambiente**: Configurazione delle chiavi API (`GEMINI_API_KEY`, `DEEPGRAM_API_KEY`, `OPENWEATHER_API_KEY`, `PAYPAL_LIVE_CLIENT_ID/SECRET` e token OAuth di Google Calendar).
 
-### Requisiti dell'App Utente
-- **Browser Web**: Google Chrome o Apple Safari (necessari per la piena compatibilità con le funzionalità vocali).
-- **Autorizzazioni**: Concedere l'autorizzazione per la Fotocamera (per foto dei capi e scansioni QR) e per il Microfono (per conversazioni vocali).
-- **Rete**: Connessione attiva per l'elaborazione LLM, con caching IndexedDB che consente la navigazione del catalogo offline.
-
----
-
-## 3. Istruzioni Passo dopo Passo
-
-### 3.1 Inserimento Capi (Aggiunta Articoli)
-PARADIGMI DI INSERIMENTO: Fotografia, Passaporti Digitali dei Prodotti dell'UE e Ricevute Digitali.
-
-#### A. Fotocamera Interattiva e Caricamento File
-1. Navigare alla schermata **Aggiungi articolo**.
-2. Selezionare **Scatta foto** (avvia la fotocamera nativa del dispositivo) o fare clic su **Carica foto** (apre il selettore di file del sistema operativo).
-3. Il client calcola l'hash SHA-256 e l'hash di differenza orizzontale (dHash) dell'immagine nel browser (~100-180 ms) per verificare l'eventuale presenza nel guardaroba esistente.
-4. Se viene trovata una corrispondenza, si apre la finestra **Pre-verifica Duplicati** mostrando le anteprime corrispondenti. Selezionare **Ignora** o **Aggiungi comunque**.
-5. Una volta accettato, il server avvia uno stream NDJSON. Un riquadro di anteprima segnaposto viene visualizzato entro 5-7 secondi, consentendo di modificare immediatamente i dettagli dell'articolo mentre il backend completa la taggatura.
-6. Verificare i tag rilevati automaticamente (colore, tessuto, vestibilità, fantasia, occasione). Se la forma dello scontornamento è errata, modificare il menu a tendina **Categoria**; questo attiva SegFormer per ritagliare automaticamente il capo.
-7. Fare clic su **Salva** per mostrare ottimisticamente l'articolo nella griglia dell'armadio all'istante (~16 ms) mentre la generazione delle miniature WebP si conclude in background.
-
-#### B. Scansione dei Passaporti Digitali dei Prodotti (DPP) dell'UE
-1. Toccare il pulsante **Scansiona QR (DPP)** nella pagina Aggiungi articolo.
-2. Concedere le autorizzazioni per la fotocamera e inquadrare il codice QR stampato sull'etichetta del capo, oppure caricare uno screenshot salvato del codice QR.
-3. Il backend risolve l'URL ed esegue i controlli di sicurezza SSRF (bloccando gli intervalli IP privati).
-4. Il sistema analizza gli schemi JSON-LD per estrarre marca, composizione dei materiali, tracciabilità della catena di fornitura, impronta di carbonio e istruzioni di lavaggio.
-5. Verificare i dati estratti mostrati nel pannello a fisarmonica verde **Dati DPP Verificati** e fare clic su **Salva**.
-
-#### C. Importazione di Ricevute Digitali
-1. Aprire la scheda **Importazione Digitale**.
-2. Scegliere una modalità secondaria: **Incolla testo**, **Carica immagine**, **Carica PDF** o inserire un **Link Web**.
-3. Il backend utilizza modelli visivi multimodali per estrarre i dati della transazione (marca, prezzo, taglia, categoria).
-4. I campi analizzati vengono bloccati in base alla ricevuta per proteggerli da future ri-analisi visive. Fare clic su **Salva** per confermare.
+### Requisiti dell'applicazione utente
+- **Browser Web**: Google Chrome o Apple Safari (necessari per la compatibilità completa delle funzionalità vocali).
+- **Permessi**: Concedere l'accesso alla fotocamera (per le foto dei vestiti e la scansione dei codici QR) e al microfono (per la conversazione vocale).
+- **Rete**: Connessione attiva per l'elaborazione del LLM, con memorizzazione IndexedDB per consentire la navigazione del catalogo offline.
 
 ---
 
-### 3.2 Stylist Virtuale IA Conversazionale
-Descrivi i tuoi dubbi di stile e ricevi consigli sull'outfit a voce senza usare le mani.
+## 3. Istruzioni passo-passo
 
-1. Navigare alla schermata **Stylist IA**.
-2. Fare clic sull'icona del microfono `[Microphone]` nella barra di input della chat.
-3. Pronunciare la richiesta (ad es. "Quale maglia si abbina ai miei pantaloni beige per un pranzo all'aperto sotto la pioggia?").
-4. Se Web Speech è supportato, la voce viene trascritta in tempo reale nella casella di input. In caso contrario, l'app registra un file WebM e lo carica.
-5. Il backend instrada la richiesta vocale al container locale Gemma4 (con fallback sulla trascrizione Gemini 2.5 Flash in caso di assenza di connessione).
-6. Lo stylist elabora la cronologia del guardaroba, le previsioni meteo locali e gli eventi del calendario per formulare una proposta di stile.
-7. Lo stylist pronuncia la risposta utilizzando profili vocali preselezionati (`puck`, `aoede` o `charon`).
-8. Toccare **Riproduci risposta** (o **Riascolta** in modalità ebraica) sulla scheda per riascoltare l'audio.
+### 3.1 Inserimento dei capi (Aggiungere articoli)
+MODALITÀ DI INSERIMENTO: Fotografia, Passaporti Digitali dei Prodotti e ricevute di acquisto digitali.
+
+#### A. Fotocamera interattiva e caricamento dei file
+1. Vai alla schermata **Aggiungi articolo** (Add Item).
+2. Seleziona **Scatta foto** (Take Photo) (avvia la fotocamera nativa del dispositivo mobile) o fai clic su **Carica foto** (Upload Photos) (apre il selettore di file del sistema operativo).
+3. Il client calcola nel browser il valore SHA-256 e il dHash (horizontal difference-hash) dell'immagine (~100-180 ms) per verificare la presenza di duplicati nel tuo armadio.
+4. Se viene trovata una corrispondenza, si apre la **Finestra di dialogo per la verifica dei duplicati** che mostra le anteprime degli articoli corrispondenti. Seleziona **Salta** (Skip) o **Aggiungi comunque** (Add anyway).
+5. Una volta accettato, il server avvia un flusso NDJSON. Verrà visualizzata un'anteprima temporanea entro 5-7 secondi, consentendo di modificare i dettagli dell'articolo immediatamente mentre il backend completa il tagging.
+6. Verifica i tag rilevati automaticamente (colore, tessuto, vestibilità, motivo, occasione). Se il ritaglio è errato, cambia la **Categoria** dal menu a discesa; questo attiva SegFormer per ritagliare automaticamente il capo.
+7. Fai clic su **Salva** (Save) per aggiungere immediatamente l'articolo alla griglia dell'armadio (~16 ms) mentre la generazione della miniatura WebP si conclude in background.
+
+#### B. Scansione dei codici QR del Passaporto Digitale del Prodotto (DPP) dell'UE
+1. Tocca il pulsante **Scansiona QR (DPP)** nella pagina Aggiungi articolo.
+2. Concedi i permessi della fotocamera e allinea il codice QR stampato sull'etichetta del capo, oppure carica uno screenshot di un codice QR salvato.
+3. Il backend risolve l'URL ed esegue controlli di sicurezza SSRF (bloccando intervalli di IP privati).
+4. Il sistema analizza gli schemi JSON-LD per estrarre brand, composizione del materiale, tracciabilità della catena di fornitura, impronta di carbonio e linee guida per la cura del capo.
+5. Controlla i dati estratti mostrati nel pannello verde **Verified DPP Data** e fai clic su **Salva**.
+
+#### C. Importazione di ricevute di acquisto digitali
+1. Apri la scheda **Importazione digitale** (Digital Import).
+2. Scegli una modalità: **Incolla testo**, **Carica immagine**, **Carica PDF** o inserisci un **Collegamento web**.
+3. Il backend utilizza modelli di visione multimodali per estrarre i dati della transazione (marca, prezzo, taglia, categoria).
+4. I campi analizzati vengono bloccati per proteggerli da future analisi visive automatiche. Fai clic su **Salva** per confermare.
 
 ---
 
-### 3.3 Profilo, Preferenze e Dipendenze dei Sottosistemi
-La pagina Profilo funge da pannello di controllo centrale per DressApp. I campi di configurazione influiscono direttamente su prestazioni, instradamento e comportamento dei moduli a valle.
+### 3.2 Stilista virtuale interattivo AI
+Descrivi le tue esigenze di stile e ricevi consigli sugli outfit a voce e a mani libere.
 
-##### Dipendenze e Motivazioni delle Sezioni a Fisarmonica
+1. Vai alla schermata **AI Stylist**.
+2. Fai clic sull'icona del microfono `[Microphone]` nella barra di digitazione del chat.
+3. Fai la tua richiesta a voce (ad esempio: *"Quale maglia si abbina ai miei pantaloni beige per un pranzo all'aperto sotto la pioggia?"*).
+4. Se la tecnologia Web Speech è supportata, la tua voce verrà trascritta in tempo reale nel campo di testo. In caso contrario, l'app registra un file WebM e lo carica sul server.
+5. Il backend indirizza la query vocale al contenitore locale di Gemma (utilizzando come alternativa la trascrizione di Gemini 2.5 Flash se offline).
+6. Lo stilista analizza la cronologia del tuo guardaroba, le previsioni meteo locali e gli eventi del calendario per formulare una proposta di outfit.
+7. Lo stilista legge la risposta ad alta voce utilizzando profili vocali predefiniti (`puck`, `aoede` o `charon`).
+8. Tocca **Riproduci risposta** (o **Replay** in modalità ebraica) sulla scheda per riascoltare l'audio della risposta.
 
-1. **Stage Foto & Avatar Digitale (`AvatarViewer2D` e `DynamicAvatar`)**
-   - **Perché è importante?**: Renderizza la tua identità visiva su tutte le tele di prova utilizzando uno stage a doppia modalità (ritaglio foto del corpo reale segmentato vs manichino vettoriale Bezier 2D dinamico).
-   - **Dipendenze del sottosistema**: I ritagli foto vengono scontornati tramite U2-Net (`rembg`) locale e ridimensionati nel browser a un massimo di 1280px con qualità all'82% per rientrare nel limite di 16 MB dei documenti MongoDB. Lo stage applica punti di riferimento calibrati (`top-[14.5%]` da colletto a scollatura, `top-[36.5%]` da cintura a vita, `bottom-[2%]` piano calzature) e un ridimensionamento proporzionale petto/fianchi ($scaleX$). Fare clic su *Rimuovi foto* per tornare all'istante al manichino vettoriale 2D SVG.
+---
 
-2. **Profilo di Stile (Regole di modestia, Dress code)**
-   - **Perché è importante?**: Stabilisce i limiti personali per gli outfit consigliati, impedendo all'IA di generare suggerimenti non appropriati.
-   - **Dipendenze del sottosistema**: I parametri selezionati (ad es. vincoli di abbigliamento modesto) vengono inseriti direttamente nei prompt di styling per Gemini 2.5 Flash, filtrando i risultati del guardaroba prima che vengano mostrati.
+### 3.3 Profilo, preferenze e dipendenze dei subsistemi
+La pagina del profilo funge da pannello di controllo centrale per DressApp. I campi di configurazione influiscono direttamente sulle prestazioni, sull'instradamento e sul comportamento dei moduli derivati.
 
-3. **Dettagli (Nome, Telefono, Occupazione)**
-   - **Perché è importante?**: Personalizza il tono di comunicazione e instrada gli avvisi di notifica.
-   - **Dipendenze del sottosistema**: Il nome dell'utente viene inserito dinamicamente nelle e-mail e nelle notifiche push di sistema. Il numero di telefono serve come registro di riserva per gli avvisi programmati. Il parametro occupazione viene passato al LLM dello stylist e al ranker di personalizzazione Trend Scout per adattare le proposte.
+##### Dipendenze e logica delle sezioni dell'accordino
 
-4. **Misurazioni Corporee e Taglie (Modello di Regressione ANSUR II)**
-   - **Perché è importante?**: Elimina le incertezze sulle taglie, consentendo il confronto delle taglie con i dettaglianti esterni e una sovrapposizione virtuale precisa.
-   - **Dipendenze del sottosistema**: L'inserimento di 4 parametri base (**Altezza**, **Peso**, **Vita**, **Lunghezza piede**) attiva il modello di regressione ANSUR II di scikit-learn (`body_predictor.py`) per stimare automaticamente 6 dimensioni strutturali (*Spalle*, *Torace*, *Fianchi*, *Manica*, *Cavallo*, *Lunghezza esterna*). Le misurazioni vengono interrogate direttamente dagli script di contenuto dell'estensione Chrome **Assistente Acquisti** per leggere le tabelle taglie sui siti partner (Zara, Asos) e consigliare la taglia adatta.
+1. **Sezione Foto & Avatar Digitale (`AvatarViewer2D` e `DynamicAvatar`)**
+   - **Perché è importante?**: Mostra la tua identità visiva su tutti i canevas di prova utilizzando un sistema a modalità doppia (ritaglio della foto del corpo reale vs manichino dinamico vettoriale SVG 2D).
+   - **Dipendenze del subsistema**: Le foto del corpo vengono ritagliate tramite U2-Net locale (`rembg`) e ridotte nel browser a un massimo di 1280px con un 82% di qualità per rientrare nel limite di 16 MB dei documenti di MongoDB. Il canevas applica punti di riferimento calibrati (`top-[14.5%]` dal colletto alla scollatura, `top-[36.5%]` dalla cintura alla vita, e `bottom-[2%]` sul piano delle calzature) e un ridimensionamento proporzionale di petto e fianchi ($scaleX$). Fai clic su *Rimuovi foto* per tornare immediatamente al manichino vettoriale 2D.
 
-5. **Stile di Vita (Stato, Sesso)**
-   - **Perché è importante?**: Adatta i consigli predefiniti e valuta gli algoritmi dei contenuti.
-   - **Dipendenze del sottosistema**: La selezione del sesso influisce direttamente sulla logica di classificazione delle schede giornaliere Trend Scout. Se la categoria di una scheda notizie non corrisponde al sesso dell'utente, l'algoritmo applica una penalità di -2.0 punti, declassandola nel feed.
+2. **Profilo di stile (Regole di pudore, codice di abbigliamento)**
+   - **Perché è importante?**: Imposta limiti personali per gli outfit consigliati, evitando che l'IA generi suggerimenti di stile inappropriati.
+   - **Dipendenze del subsistema**: I parametri selezionati (ad esempio, limitazioni di abbigliamento modesto) vengono inviati direttamente nelle istruzioni di styling per Gemini 2.5 Flash, filtrando i risultati del guardaroba prima che vengano visualizzati.
 
-6. **Configurazione IA (Chiavi SaaS, modalità edge, crediti)**
-   - **Perché è importante?**: Determina l'instradamento della fatturazione, le prestazioni operative e lo stato di rete offline.
-   - **Dipendenze del sottosistema**: Instrada le richieste di generazione di testo/audio. Le impostazioni standard consumano i crediti di sistema DressApp. L'inserimento di chiavi API personali (Google AI Studio, Anthropic, OpenAI) reindirizza gli addebiti sui conti di fatturazione sviluppatore dell'utente. La selezione della modalità edge locale instrada le richieste al container offline Gemma.
+3. **Dettagli (Nome, telefono, occupazione)**
+   - **Perché è importante?**: Personalizza il tono della comunicazione e instrada gli avvisi delle notifiche.
+   - **Dipendenze del subsistema**: Il nome dell'utente viene inserito dinamicamente nelle e-mail e nelle notifiche push del sistema. Il numero di telefono serve come registro di riserva per gli avvisi pianificati. Il parametro dell'occupazione viene inviato al LLM dello stilista e al classificatore di personalizzazione Trend Scout per personalizzare le proposte.
 
-7. **Programmatore & Push (Frequenza, sveglia giornaliera, tema di stile)**
-   - **Perché è importante?**: Gestisce gli avvisi giornalieri automatici sullo stile.
-   - **Dipendenze del sottosistema**: Attiva i processi cron di `APScheduler` sul backend FastAPI. Ogni mattina, invia notifiche push tramite `pywebpush` utilizzando le chiavi VAPID del client, in base ai parametri del tema di stile selezionati.
+4. **Misure corporee e taglie (Modello di regressione ANSUR II e predittore di taglia)**
+   - **Perché è importante?**: Evita di dover indovinare le taglie, consentendo il calcolo automatico delle taglie commerciali, il confronto delle taglie esterne e la superposizione virtuale esatta dei capi.
+   - **Dipendenze del subsistema**: L'inserimento di 4 parametri di base (**Altezza**, **Peso**, **Girovita** e **Lunghezza del piede**) attiva il modello di regressione ANSUR II di scikit-learn (`body_predictor.py`) per stimare automaticamente 6 dimensioni strutturali (*Spalle*, *Petto*, *Fianchi*, *Manica*, *Interno gamba*, *Cucitura esterna*).
+     - **Traduzione deterministica delle taglie**: Una volta ottenute le misure stimate, il motore del backend le converte in taglie commerciali: **Taglia camicia** (XS-XXL in base al petto), **Taglia pantaloni** (Girovita in pollici), **Taglia scarpe** (standard US Uomini/Donne e standard UE in base a lunghezza del piede e sesso), **Taglia vestito** (US 0-14+ in base a petto, vita e fianchi) e **Taglia reggiseno** (Sottoseno + Coppa in base al petto e al sottoseno stimato).
+     - **Autocompilazione**: Queste taglie raccomandate vengono inserite automaticamente nei campi della *Modalità di modifica dettagliata* nel pannello del profilo.
+     - **Integrazioni**: Gli script della Chrome Extension **Shopping Assistant** leggono queste misure per analizzare le tabelle delle taglie sui siti web dei partner (Zara, Asos) e consigliare la taglia ottimale.
+
+5. **Stile di vita (Stato, Sesso)**
+   - **Perché è importante?**: Personalizza le raccomandazioni predefinite e influenza gli algoritmi di contenuto.
+   - **Dipendenze del subsistema**: La selezione del sesso influisce direttamente sulla logica di posizionamento delle schede giornaliere di Trend Scout. Se una categoria non corrisponde al sesso dell'utente, l'algoritmo applica una penalizzazione di -2.0 punti al punteggio, retrocedendola nel feed.
+
+6. **Configurazione AI (Chiavi SaaS, modalità edge, crediti)**
+   - **Perché è importante?**: Determina l'addebito delle query, le prestazioni di risposta e lo stato offline della rete.
+   - **Dipendenze del subsistema**: Reindirizza le query di generazione di testo e audio. La configurazione standard consuma crediti del sistema DressApp. L'inserimento di chiavi API personali (Google AI Studio, Anthropic, OpenAI) reindirizza i costi direttamente ai conti sviluppatori dell'utente. Selezionare la modalità edge locale reindirizza le query al contenitore Gemma offline.
+
+7. **Pianificatore e notifiche push (Frequenza, sveglia giornaliera, tema di stile)**
+   - **Perché è importante?**: Gestisce l'invio automatico delle proposte di stile giornaliere.
+   - **Dipendenze del subsistema**: Attiva le attività cron di `APScheduler` sul backend di FastAPI. Ogni mattina, invia notifiche push tramite `pywebpush` utilizzando le chiavi VAPID del browser del client, in linea con il tema di stile selezionato.
 
 8. **Google Calendar (Sincronizzazione OAuth, regole di esportazione)**
-   - **Perché è importante?**: Collega direttamente il tuo guardaroba con i tuoi impegni reali nel calendario.
-   - **Dipendenze del sottosistema**: Autentica tramite Google OAuth. Il programmatore interroga il tuo calendario per identificare gli eventi, formattare gli outfit e inviare gli impegni direttamente sulla tua agenda di Google Calendar.
+   - **Perché è importante?**: Collega il tuo guardaroba direttamente ai tuoi eventi reali in calendario.
+   - **Dipendenze del subsistema**: Autenticazione tramite Google OAuth. Il pianificatore controlla il tuo calendario per identificare gli eventi, compone gli outfit e inserisce gli eventi direttamente nella tua agenda di Google Calendar.
 
-9. **Servizi di Localizzazione (Tracciamento GPS, precisione meteo)**
-   - **Perché è importante?**: Coordina suggerimenti adatti al meteo e filtri per il raggio delle transazioni locali.
-   - **Dipendenze del sottosistema**: Attiva la geocodifica inversa di `navigator.geolocation`. Le coordinate vengono inviate all'API OpenWeatherMap per adeguare i consigli dello stylist (ad es. abbigliamento da pioggia in caso di rovesci). Calcola anche le distanze per gli annunci del Marketplace locale e gli esperti (ad es. verifiche del raggio a Lisbona).
+9. **Servizi di localizzazione (Tracciamento GPS, precisione meteo)**
+   - **Perché è importante?**: Coordina le proposte adatte al meteo e calcola i filtri di distanza per le transazioni locali.
+   - **Dipendenze del subsistema**: Attiva la geolocalizzazione inversa di `navigator.geolocation`. Le coordinate vengono inviate all'API di OpenWeatherMap per regolare le raccomandazioni dello stilista (ad esempio, impermeabili in caso di forti piogge). Calcola anche le distanze per gli annunci del mercato locale ed esperti (ad esempio, controlli del raggio a Lisbona).
 
-10. **Voce e Lingua (Selezione della voce dello stylist virtuale)**
-    - **Perché è importante?**: Stabilisce i dizionari di testo locali e le modulazioni vocali.
-    - **Dipendenze del sottosistema**: Controlla la lingua attiva per le traduzioni tramite `react-i18next`. La selezione della voce associa i codici BCP-47 (ad es. `he-IL` o `ar-JO`) alle voci di sintesi Web Speech del client o ai modelli Piper TTS offline.
+10. **Voce e lingua (Selezione della voce dello stilista)**
+    - **Perché è importante?**: Configura i file di traduzione e le voci di riproduzione audio.
+    - **Dipendenze del subsistema**: Controlla la lingua attiva per le traduzioni tramite `react-i18next`. La selezione della voce assegna i codici BCP-47 (come `he-IL` o `ar-JO`) alle voci di sintesi vocale del browser o a modelli Piper TTS offline.
 
-11. **Invita Amici (API di payload di condivisione)**
-    - **Perché è importante?**: Fornisce un ciclo virale per l'espansione gratuita dell'armadio.
-    - **Dipendenze del sottosistema**: Aggiunge l'ID MongoDB del referente all'URL. Le nuove registrazioni interrogano dinamicamente questo ID e incrementano in modo atomico il `closet_capacity_bonus` del referente di +10 spazi, modificando i limiti in `closet.py`.
-
----
-
-## 3.4 Dashboard Analisi Guardaroba
-Analizza il valore di capitalizzazione del guardaroba, traccia l'utilizzo dei capi e i parametri del costo per utilizzo.
-
-1. Navigare a **Analisi Guardaroba**.
-2. **Esaminare le Metriche**:
-   - *Valore del Guardaroba*: Somma dinamica dei prezzi di acquisto.
-   - *Utilizzo del Guardaroba*: Percentuale di capi indossati almeno una volta.
-   - *Costo Medio per Utilizzo (CPW)*: Calcolato come `Price / Wear Count`.
-3. **Grafici di Distribuzione**: Cambiare scheda per visualizzare i grafici Recharts:
-   - *Tavolozza Colori*: Distribuzione dei codici esadecimali associati.
-   - *Materiali*: Percentuali delle composizioni dei tessuti.
-   - *Sottocategorie*: Sottocategorie assegnate.
-4. **Classifica di Efficienza**: Visualizza i 5 capi con il punteggio Costo per Utilizzo più basso.
+11. **Invita amici (API di referral)**
+    - **Perché è importante?**: Offre una via virale per ottenere spazio extra gratis nell'armadio.
+    - **Dipendenze del subsistema**: Aggiunge l'ID MongoDB dell'utente mittente all'URL. Le nuove registrazioni leggono questo ID e incrementano automaticamente il valore `closet_capacity_bonus` del mittente di +10 slot, modificando i limiti di capacità in `closet.py`.
 
 ---
 
-## 3.5 Tela Outfit & Pianificatore
-Crea, sovrapponi ed esamina le proposte di outfit su una tela avatar 2D interattiva.
+### 3.4 Pannello di analisi del guardaroba
+Analizza il valore totale del guardaroba, traccia la percentuale di utilizzo e il costo per uso dei vestiti.
 
-1. Aprire il pianificatore **Tela Outfit**.
-2. **Sovrapposizione Capi Spalla (Doppia Tela)**: Se l'outfit include un capo spalla (ad es. una giacca) sopra una maglia, la pagina mostra due moduli tela verticali: "Con Capospalla" (con la giacca sovrapposta) e "Senza Capospalla" (che rivela la maglia sottostante).
-3. **Elementi 2D Interattivi**: Toccare direttamente qualsiasi capo sul corpo dell'avatar. L'app ti reindirizza direttamente alla schermata di dettaglio di quel capo.
-4. **Scheda Esamina Metriche**: Fare clic sul pulsante dettagli e scegliere la scheda **Metriche** per visualizzare le barre di avanzamento dei criteri di compatibilità:
-   - *Armonia Colori* (armonia neutra)
-   - *Compatibilità Fantasie* (prevenzione contrasto fantasie)
-   - *Vestibilità Corporea* (corrispondenza taglia)
-   - *Abbinamento Meteo* (idoneità stagionale)
-   - *Abbinamento Evento* (idoneità all'attività)
-   - *Abbinamento Luogo* (verifiche regole di modestia)
-5. **Rinomina/Descrivi**: Fare clic sull'icona a forma di Matita per modificare nomi e descrizioni degli outfit.
-
----
-
-## 3.6 Assistente Valigia
-Organizza le tue esigenze di bagaglio per i viaggi senza portare cose superflue.
-
-1. Vai alla pagina **Valigia** e compila il modulo Contesto del Viaggio (destinazione, date inizio/fine, categoria viaggio, eventi in calendario).
-2. L'IA genera una lista bagaglio personalizzata e outfit giornalieri in base alla durata del viaggio e alle previsioni meteo.
-3. Esamina l'avanzamento dei preparativi. Se manca un articolo importante (ad es. ombrello per la pioggia, costume da bagno per il mare), il sistema ti avvisa e suggerisce abbinamenti dal marketplace o da negozi locali.
-4. Usa la casella di chat integrata per perfezionare i suggerimenti (ad es. "Cambia il giorno 2 in abbigliamento informale da sera"). L'assistente modifica la valigia mantenendo invariato il resto della lista.
-5. Toccare **Approva Valigia** per finalizzare il piano.
+1. Vai a **Wardrobe Insights**.
+2. **Esaminare le metriche**:
+   - *Valore del guardaroba (Closet Worth)*: Somma dinamica dei prezzi d'acquisto.
+   - *Utilizzo del guardaroba (Closet Utilization)*: Percentuale di vestiti indossati almeno una volta.
+   - *Costo medio per uso (CPW)*: Calcolato come `Prezzo / Numero di utilizzi`.
+3. **Grafici di distribuzione**: Cambia scheda per vedere le visualizzazioni di Recharts:
+   - *Tavolozza colori*: Distribuzione dei codici esadecimali rilevati.
+   - *Materiali*: Distribuzione delle percentuali di tessuto.
+   - *Sottocategorie*: Distribuzione per sottocategoria.
+4. **Classifica dell'efficienza**: Visualizza i 5 vestiti con il costo per uso (CPW) più basso.
 
 ---
 
-## 3.7 Programmatore e Promemoria Push
-Imposta avvisi di stile giornalieri per ricevere automaticamente consigli sugli outfit.
+### 3.5 Canevas degli outfit & Pianificatore
+Crea, stratifica e rivedi gli outfit su un canevas di avatar interattivo in 2D.
 
-1. Aprire **Profilo** e andare su **Programmatore & Push**.
-2. Attivare le notifiche, impostare l'orario della notifica giornaliera, la frequenza nei giorni feriali e il tema del focus di stile.
-3. Ogni mattina, il processo cron in background (`APScheduler`) controlla le previsioni meteo e invia una notifica push.
-4. Toccare la notifica sul dispositivo (o consultare il Centro Notifiche dell'app web) per aprire una finestra di dialogo che mostra 3 suggerimenti di stile.
-5. Salvare un suggerimento direttamente nel tuo **Diario del Guardaroba**.
-
----
-
-## 3.8 Marketplace (Rivendita, Noleggio, Scambio, Donazione)
-Partecipa al marketplace di moda circolare tra privati.
-
-- **Creare un Annuncio**: Aprire la pagina di dettaglio di un articolo, selezionare **Modifica Intenzione** e scegliere un'intenzione non privata:
-  - *In vendita*: Inserire il prezzo di listino e la valuta (rileva la valuta predefinita in base alle preferenze regionali).
-  - *Noleggio*: Impostare la tariffa di noleggio giornaliera e le condizioni di prestito.
-  - *Scambio*: Contrassegnare l'articolo come disponibile per lo scambio.
-  - *Donazione*: Pubblicare l'articolo gratuitamente.
-- **Sincronizzazione di Stato**: Gli annunci si propagano automaticamente nel feed. Il client utilizza `useSyncExternalStore` e il caching IndexedDB per caricare i parametri di ricerca senza latenza.
-- **Sandbox di Prova**: Noleggiatori e acquirenti possono testare l'abbinamento di un annuncio con i capi del proprio armadio privato prima di procedere al pagamento.
-- **Procedura di Pagamento**:
-  - *Acquisto/Noleggio*: Completare la transazione tramite i pulsanti PayPal integrati. I webhook catturati avvisano il venditore, modificano lo stato dell'annuncio in venduto/noleggiato e registrano le transacciones nel registro detraendo la commissione della piattaforma del 7%.
-  - *Baratto (Scambio)*: I potenziali scambiatori propongono offerte. L'inserzionista riceve e-mail di conferma per accettare o rifiutare.
+1. Apri il pianificatore **Outfit Canvas**.
+2. **Capati capispalla (Canevas doppio)**: Se il tuo outfit include un capospalla (ad esempio, una giacca) sopra un capo superiore, la pagina mostra due moduli di canevas verticale: "Con capospalla" (mostrando la giacca sovrapposta) e "Senza capospalla" (mostrando il capo inferiore).
+3. **Elementi 2D interattivi**: Tocca direttamente un capo sul corpo dell'avatar. L'app ti reindirizzerà allo schermo dei dettagli di quel capo.
+4. **Scheda compatibilità**: Fai clic sul pulsante dei dettagli e seleziona la scheda **Metrics** per visualizzare i punteggi di compatibilità:
+   - *Armonia cromatica* (abbinamento di colori neutri)
+   - *Compatibilità motivi* (prevenzione dell'accoppiamento eccessivo di stampe)
+   - *Vestibilità corporea* (taglie compatibili)
+   - *Abbinamento meteo* (adeguatezza alla stagione)
+   - *Adeguatezza evento* (appropriato per l'attività)
+   - *Adeguatezza luogo* (controlli sulle regole di pudore)
+5. **Rinomina/Descrivi**: Fai clic sull'icona della matita per modificare i nomi e le descrizioni degli outfit.
 
 ---
 
-## 3.9 Dashboard Pannello di Amministrazione
-Validazione dello stato del sistema, contabilità finanziaria e gestione degli account utente.
+### 3.6 Assistente valigia
+Organizza la tua valigia per i viaggi senza caricare pesi inutili.
 
-1. Navigare a `/admin` (disponibile per ruoli di amministratore).
-2. **Panoramica**: Verificare i volumi lordi e i riepiloghi dei ricavi dalle commissioni della piattaforma. Ispezionare la **Tabella Attività Fornitori** per visualizzare le statistiche di operatività (API Gemini, latenza del servizio meteo e tassi di errore).
-3. **Fornitori**: Fare clic su **Verifica Chiave** per inviare un ping diretto all'API Gemini. Attivare l'interruttore **Eyes Vision Override** per instradare l'analisi dell'immagine tra l'endpoint Gemini predefinito e un container locale Gemma.
-4. **Utenti**: Visualizzare crediti attivi, ruoli e pagamenti complessivi. Utilizzare azioni dirette per Promuovere o Retrocedere gli utenti.
-5. **Annunci**: Visualizzare lo stato degli annunci e attivare/disattivare gli indicatori di attività per sospendere articoli fraudolenti.
-
----
-
-## 4. Risultati Attesi
-
-- **Acquisizione**: I capi compaiono immediatamente nella griglia dell'armadio (~16 ms). Lo Scontornamento in background restituisce immagini PNG trasparenti e pulite.
-- **Badge DPP Verificato**: La scansione di passaporti validi mostra la scheda informativa verde con i dettagli di sostenibilità.
-- **Capospalla su Avatar**: I capi spalla vengono visualizzati correttamente sovrapposti sulle maglie nella tela avatar 2D senza coprire cappelli o scarpe.
-- **Risposta Vocale**: Gli output di testo dello Stylist Virtuale riproducono l'audio parlato automaticamente con un indicatore di forma d'onda visibile.
-- **Abbonamenti**: L'attivazione di Pro rimuove immediatamente l'avviso per il limite di 150 articoli.
+1. Vai alla pagina **Suitcase** e compila il modulo di contesto del viaggio (destinazione, date, tipo di viaggio, eventi di calendario).
+2. L'IA genera una lista di cose da portare personalizzata e una pianificazione degli outfit giornalieri in base al meteo della destinazione.
+3. Controlla il progresso della valigia. Se manca un articolo importante (ad esempio, ombrello per pioggia, costume da bagno per mare), il sistema ti avvisa e suggerisce alternative dal mercato o negozi locali.
+4. Usa la chat integrata per richiedere modifiche (ad esempio, *"Aggiungi un abito da sera formale per la sera 2"*). L'assistente modifica la valigia mantenendo il resto della lista.
+5. Tocca **Approva valigia** (Approve Suitcase) per salvare la lista dei bagagli del tuo viaggio.
 
 ---
 
-## 5. Risoluzione dei Problemi
+### 3.7 Pianificatore e promemoria push
+Imposta avvisi quotidiani di stile per ricevere consigli sugli outfit in modo automatico.
+
+1. Apri **Profile** e vai su **Scheduler & Push**.
+2. Attiva le notifiche, imposta un orario quotidiano, la frequenza settimanale e il tema di stile.
+3. Ogni mattina, un'attività cron in background (`APScheduler`) controlla il meteo e invia una notifica push.
+4. Tocca la notifica sul tuo dispositivo (o visualizza il Centro notifiche del sito web) per aprire una finestra che mostra 3 proposte di stile.
+5. Salva una proposta direttamente nel tuo **Diario del guardaroba** (Wardrobe Diary).
+
+---
+
+## 3.8 Mercato (Vendita, Noleggio, Scambio, Donazione)
+Partecipa al mercato circolare di moda tra utenti.
+
+- **Creare un annuncio**: Apri la pagina dei dettagli di un capo, seleziona **Modifica intento** (Edit Intent) e scegli un'opzione pubblica:
+  - *In vendita (For Sale)*: Inserisci il prezzo e la valuta (rileva la tua valuta predefinita tramite le impostazioni regionali).
+  - *Noleggio (Rent)*: Stabilisci la tariffa giornaliera e le condizioni di prestito.
+  - *Scambio (Swap)*: Contrassegna l'articolo come disponibile per lo scambio.
+  - *Donare (Donate)*: Pubblica l'articolo gratuitamente.
+- **Sincronizzazione in tempo reale**: Gli annunci si propagano sul feed istantaneamente. Il browser utilizza `useSyncExternalStore` e la cache di IndexedDB per eseguire ricerche senza ritardi.
+- **Camerino virtuale sandbox**: Gli acquirenti e locatari possono provare l'articolo dell'annuncio sul proprio avatar in combinazione con i propri vestiti prima di pagare.
+- **Processo di pagamento**:
+  - *Acquistare/Noleggiare*: Completa la transazione in modo sicuro con i pulsanti integrati di PayPal. I webhook aggiornano il venditore, modificano lo stato dell'annuncio in venduto/noleggiato e registrano la transazione nel registro al netto della commissione del 7% della piattaforma.
+  - *Baratto (Scambio)*: Gli interessati propongono scambi. Il proprietario riceve e-mail di conferma per accettare o rifiutare l'offerta.
+
+---
+
+### 3.9 Pannello di amministrazione
+Monitoraggio della disponibilità del sistema, contabilità finanziaria e gestione dei conti utente.
+
+1. Vai a `/admin` (disponibile solo per ruoli amministratore).
+2. **Panoramica**: Controlla i volumi lordi e i resoconti delle commissioni della piattaforma. Ispeziona la **Tabella dell'attività dei fornitori** per vedere lo stato delle API (Gemini, latenza del servizio meteo e percentuali di errore).
+3. **Fornitori**: Fai clic su **Verifica chiave** (Verify Key) per inviare una richiesta ping all'API di Gemini. Attiva l'interruttore **Eyes Vision Override** per alternare l'analisi delle immagini tra l'endpoint predefinito di Gemini e un contenitore locale di Gemma.
+4. **Utenti**: Visualizza crediti attivi, ruoli e totale pagamenti degli utenti. Utilizza azioni dirette per promuovere o declassare gli utenti.
+5. **Annunci**: Controlla lo stato delle inserzioni del mercato e disattiva articoli fraudolenti.
+
+---
+
+## 4. Risultati attesi
+
+- **Inserimento capi**: I vestiti compaiono immediatamente nella griglia del tuo armadio (~16 ms). La rimozione dello sfondo fornisce file PNG trasparenti e puliti.
+- **Badge DPP Verificato**: La scansione di passaporti di prodotti validi mostra una scheda informativa verde con i dettagli ecologici.
+- **Capispalla sull'avatar**: I cappotti e le giacche si mostrano sovrapposti correttamente sopra le maglie nel canevas 2D senza coprire cappelli o scarpe.
+- **Risposta vocale**: I testi generati dallo stilista virtuale vengono riprodotti in audio in modo automatico con un indicatore visivo di onda sonora.
+- **Abbonamenti**: L'attivazione dell'account Pro rimuove immediatamente l'avviso di limite di 150 articoli.
+
+---
+
+## 5. Risoluzione dei problemi
 
 ### HTTP 402 Payment Required
-- **Problema**: Acquisizione bloccata. È stato raggiunto il limite massimo di base di 150 articoli nel guardaroba.
-- **Soluzione**: Andare su Profilo -> Abbonamento e passare a Pro, oppure condividere il link di invito per ottenere +10 spazi per ogni registrazione.
+- **Problema**: Caricamento capi bloccato. Hai raggiunto il limite di memorizzazione di 150 abiti per l'account gratuito.
+- **Soluzione**: Vai a Profilo -> Abbonamento e passa a Pro, oppure condividi il tuo link di invito per ottenere +10 spazi extra per ogni registrazione completata.
 
-### SSRF Bloccato / Errore DNS su DPP
-- **Problema**: L'URL del codice QR del passaporto scansionato non viene analizzato.
-- **Soluzione**: Il parser blocca gli indirizzi IP privati (ad es. `127.0.0.1`, `192.168.x.x`) per proteggere i server interni. Assicurarsi che i codici QR puntino a domini pubblici.
+### SSRF bloccato / Errore DNS su DPP
+- **Problema**: Errore nell'analisi dell'URL del codice QR del passaporto di prodotto.
+- **Soluzione**: Il sistema blocca indirizzi IP privati (ad esempio, `127.0.0.1`, `192.168.x.x`) per proteggere la rete interna. Assicurati che i codici QR puntino a domini pubblici.
 
-### Autorizzazione Fotocamera / Microfono Negata
-- **Problema**: L'area di acquisizione/scansione mostra una schermata di errore 'X', o la digitazione vocale non funziona.
-- **Soluzione**: Aprire le autorizzazioni del browser, abilitare l'accesso a Fotocamera e Microfono per il dominio e ricaricare la pagina.
+### Permesso fotocamera o microfono negato
+- **Problema**: La schermata di scatto/scansione mostra un errore con una 'X', o la digitazione vocale non funziona.
+- **Soluzione**: Apri i permessi del browser, abilita l'accesso alla fotocamera e al microfono per il dominio e ricarica la pagina.
 
-### Errore Chat Stylist / Limiti di Frequenza
+### Errore nella chat dello stilista / Limiti delle chiamate API
 - **Problema**: La chat mostra errori o si blocca.
-- **Soluzione**: Il server gestisce i limiti di frequenza `429` di Gemini e ricade su un algoritmo di selezione del guardaroba basato su regole. Verificare la connessione Internet.
+- **Soluzione**: Il server intercetta i limiti delle chiamate di Gemini (`429`) e passa a un algoritmo alternativo basato su regole per selezionare i vestiti. Verifica la tua connessione Internet.
 
-### Memoria Esaurita (OOM) Picchi VPS
-- **Problema**: Picchi di CPU/RAM durante i processi di caricamento.
-- **Soluzione**: L'acquisizione utilizza blocchi di coda sequenziali per lotti superiori a 5 articoli. Assicurarsi che il server disponga di almeno 4 GB di RAM.
+### VPS saturo (Out of Memory - OOM)
+- **Problema**: Picchi di utilizzo di CPU o RAM durante il caricamento delle foto.
+- **Soluzione**: L'inserimento dei capi utilizza code sequenziali per batch superiori a 5 articoli. Assicurati che il server disponga di almeno 4 GB di RAM.
 
 ---
 
 ## 6. Limitazioni
 
-- **API Web Speech del Browser**: La conversione vocale nativa da voce a testo è limitata a Chrome e Safari; altri browser utilizzano l'inserimento di testo standard.
-- **Modulazioni Client Offline**: La sintesi vocale mobile offline Piper ONNX utilizza meno profili vocali rispetto al modello audio Gemini lato server.
-- **Vincoli Dimensioni Immagine**: I caricamenti di avatar e profilo vengono compressi localmente nel browser all'82% di qualità per rientrare nel limite dei documenti MongoDB di 16 MB.
-- **Ambito Analisi Ricevute**: Ricevute molto sfocate, distorte o scritte a mano potrebbero non consentire l'estrazione dei dati.
+- **APIs Web Speech dei browser**: La sintesi vocale nativa è limitata a Google Chrome e Apple Safari; in altri browser l'app utilizza l'input di testo classico.
+- **Sintesi vocale offline**: Il modulo mobile offline Piper ONNX dispone di meno profili di voce rispetto al trattamento audio Gemini del server.
+- **Limiti dimensionali delle immagini**: Le immagini del profilo e dell'avatar vengono compresse localmente nel browser a un 82% di qualità per non superare il limite di 16 MB dei documenti in MongoDB.
+- **Lettura delle ricevute d'acquisto**: Le ricevute molto sfocate, stropicciate o scritte a mano possono fallire nell'estrazione dei dati.

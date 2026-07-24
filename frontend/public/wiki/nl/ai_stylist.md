@@ -1,27 +1,28 @@
-# Conversationele AI-stylist
+# Interactieve AI-Stylist
 
-Ga in zee met een intelligente persoonlijke stylist die uw kast, het weer en uw planning kent.
+Ga het gesprek aan met een intelligente persoonlijke stylist die uw kledingkast, het weer en uw agenda kent.
 
 ## Overzicht
-De AI Stylist verwerkt stem- of tekststijlvragen in natuurlijke taal, waarbij weersomstandigheden en agenda-evenementen automatisch worden geïntegreerd.
+De AI-Stylist verwerkt natuurlijke taal spraak- of tekststylingvragen en integreert automatisch weersomstandigheden, kalendergebeurtenissen en pushmeldingen via thread-safe `useSyncExternalStore` custom stores (`stylistStore` en `dailySuggestionsStore`) met 15 minuten caching en in-flight verzoekontdubbeling.
 
 ## Vereisten
-- Een Gemini API-sleutel (of standaard systeemcredits).
-- Verbonden agenda-evenementen.
+- Een Gemini API-sleutel (of standaard systeemtegoeden).
+- Gekoppelde kalendergebeurtenissen.
 
-## Stap voor stap
-1. **Startsessie**: Open het tabblad Stylist en selecteer Chat, Shuffle of Match.
-2. **Spraakinvoer**: tik op de microfoon, spreek uw vraag in (bijvoorbeeld 'Stel een outfit voor een regenachtige dag voor') en tik om te verzenden.
-3. **Audio afspelen**: luister naar de gegenereerde stylingredenen via de hifi-spraakspeler.
-4. **Shuffle**: klik op de Sparkles-knop om de gokautomaat te laten draaien; de AI lijnt overeenkomende items automatisch in focus uit.
+## Stap-voor-stap
+1. **Start sessie**: Open het tabblad Stylist en selecteer Chat, Shuffle of Match.
+2. **Spraakinvoer**: Tik op de microfoon, spreek uw vraag in (bijv. "Stel een outfit voor voor een regenachtige dag") en tik om te verzenden.
+3. **Audio-afspelen**: Luister naar de gegenereerde stylingonderbouwing via de high-fidelity spraakspeler.
+4. **Shuffle**: Klik op de knop Sparkles om de fruitautomaat te laten draaien; de AI lijnt automatisch overeenkomende items in focus uit.
+5. **Zero-Idle-navigatie**: Navigeren tussen Stylist en andere tabbladen gebruikt in-memory gecachte voorkeuren zonder database GET-verzoeklussen te activeren.
 
 ## Verwachte resultaten
-Aangepaste outfitindelingen, afgestemd op uw persoonlijke voorkeuren, seizoensbeperkingen en planning.
+Aangepaste outfit-layouts gestyled rond uw persoonlijke voorkeuren, seizoensgebonden beperkingen en agenda.
 
-## Problemen oplossen
-- **Audio speelt te langzaam**: schakel tussen Gemini TTS en de terugval van de Web Speech API in Profielinstellingen.
-- **Herhaalde suggesties**: zorg ervoor dat de geschiedenis van je outfitkalender wordt bijgewerkt, zodat het rotatie-algoritme herhaaldelijk dragen kan blokkeren.
+## Probleemoplossing
+- **Audio speelt te langzaam af**: Schakel tussen Gemini TTS en de Web Speech API fallback in Profile-instellingen.
+- **Herhaalde suggesties**: Zorg ervoor dat uw outfitkalendergeschiedenis is bijgewerkt zodat het rotatie-algoritme herhaald dragen kan blokkeren.
 
 ## Beperkingen
-- Aanbevelingen vereisen dat er minstens één bovenstuk, één broekje en één schoenenitem in de kast aanwezig zijn om de look compleet te maken.
-- Spraaktranscriptie kan terugvallen op standaardteksttypen op niet-ondersteunde edge-apparaten.
+- Aanbevelingen vereisen minstens één bovenstuk, één onderstuk en één paar schoenen in de kledingkast om een look te voltooien.
+- Spraaktranscriptie kan terugvallen op standaard tekstinvoer op niet-ondersteunde edge-apparaten.

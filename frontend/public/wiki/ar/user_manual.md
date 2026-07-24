@@ -1,255 +1,259 @@
-# DressApp Complete Technical User Manual
+# دليل مستخدم DressApp الفني الكامل
 
-Comprehensive user manual and technical reference guide for the DressApp personal wardrobe ecosystem, styling engine, circular marketplace, and administration panels.
-
----
-
-## 1. Overview & Technology Stack
-
-DressApp is an AI-driven personal wardrobe manager, styling advisor, and circular marketplace. It helps users manage clothing items digitally, auto-crop and tag them, receive weather- and calendar-aware outfit recommendations, scan EU Digital Product Passports (DPP), and trade garments.
-
-### Core Value Proposition
-- **Digital Wardrobe Ingestion**: Snapshot or upload photo processing with automated background removal, clothing categorization, and attribute tag generation.
-- **AI Virtual Stylist**: A conversational agent that contextually reviews your wardrobe, Google Calendar events, and local weather forecasts to suggest daily outfits.
-- **Circular Marketplace**: Secure peer-to-peer buying, selling, swapping, and renting of clothes to reduce fast fashion waste.
-- **Cost-Per-Wear (CPW) Analytics**: Insights into wardrobe capitalization value, utilization rates, and usage optimization.
-
-### Technology Architecture
-- **Backend Edge**: Python 3.11 with FastAPI, using asynchronous Motor drivers connected to a MongoDB Atlas cluster.
-- **Frontend SPA**: React 19 single-page application utilizing Tailwind CSS, Shadcn/UI primitives, Zustand global stores, IndexedDB local caching, and `react-i18next` supporting 12 locales.
-- **Local Machine Learning**: CPU-local U2-Net (`rembg`) background matting, SegFormer-b2 clothing parsing, and Fashion-CLIP embeddings. Optionally routes to self-hosted GPU containers (SegFormer-b3 + BiRefNet) for fast operations.
-- **Conversational STT/TTS**: Real-time client-side Web Speech recognition fallback, multimodal server-side Gemini 2.5 Flash modulations, and on-device offline Piper/Sherpa-ONNX engines.
-- **External Integration Services**: OpenWeatherMap API for weather fetching, Google Calendar OAuth for daily schedule exports, and PayPal Subscriptions/Checkout REST APIs.
+دليل مستخدم شامل ودليل مرجعي فني لمنظومة خزانة الملابس الشخصية DressApp، محرك التنسيق، السوق الدائري، ولوحات الإدارة.
 
 ---
 
-## 2. Prerequisites
+## 1. نظرة عامة ومجموعة التقنيات
 
-### Host Environment Requirements
-- **Hardware**: Minimum 4 GB RAM VPS (e.g., Hetzner VPS hosting the production `dressapp.co`).
-- **Dependencies**: Docker & Docker Compose stack (including backend, frontend, and Caddy TLS termination).
-- **Environment Variables**: API keys configuration (`GEMINI_API_KEY`, `DEEPGRAM_API_KEY`, `OPENWEATHER_API_KEY`, `PAYPAL_LIVE_CLIENT_ID/SECRET`, and Google Calendar OAuth tokens).
+DressApp هو مدير خزانة ملابس شخصي مدعوم بالذكاء الاصطناعي، ومستشار تنسيق ملابس، وسوق دائري. يساعد المستخدمين على إدارة قطع الملابس رقميًا، وقصها وتصنيفها تلقائيًا، وتلقي توصيات تنسيق ملابس متوافقة مع الطقس والتقويم، ومسح جوازات سفر المنتجات الرقمية للاتحاد الأوروبي (DPP)، وتداول الملابس.
 
-### User App Requirements
-- **Web Browser**: Google Chrome or Apple Safari (required for full voice feature compatibility).
-- **Permissions**: Grant Camera permission (for clothing snapshots and QR scans) and Microphone permission (for voice conversation).
-- **Network**: Active connection for LLM processing, with IndexedDB caching providing offline catalog browsing.
+### قيمة العرض الأساسية
+- **استيعاب خزانة الملابس الرقمية**: معالجة الصور الملتقطة أو المحملة مع إزالة الخلفية تلقائيًا، وتصنيف الملابس، وإنشاء علامات الخصائص.
+- **منسق أزياء افتراضي بالذكاء الاصطناعي**: وكيل محادثة يراجع خزانة ملابسك بشكل سياقي، وأحداث تقويم Google، وتوقعات الطقس المحلية لاقتراح ملابس يومية.
+- **سوق دائري**: شراء آمن، وبيع، ومبادلة، واستئجار الملابس بين الأقران لتقليل نفايات الأزياء السريعة.
+- **تحليلات التكلفة لكل ارتداء (CPW)**: رؤى حول قيمة خزانة الملابس، ومعدلات الاستخدام، وتحسين الاستخدام.
 
----
-
-## 3. Step-by-Step Instructions
-
-### 3.1 Ingesting Garments (Adding Items)
-INGESTION PARADIGMS: Photography, EU Product Passports, and Digital Commerce Receipts.
-
-#### A. Interactive Camera and File Upload
-1. Navigate to the **Add Item** screen.
-2. Select **Take Photo** (launches native mobile camera) or click **Upload Photos** (opens OS file chooser).
-3. The client computes the image's SHA-256 and horizontal difference-hash (dHash) in-browser (~100-180ms) to check against your existing closet.
-4. If a match is found, the **Duplicate Preflight Dialog** opens showing matching previews. Select **Skip** or **Add anyway**.
-5. Once accepted, the server starts an NDJSON stream. A placeholders preview frame displays within 5-7 seconds, allowing you to edit the item details immediately while the backend completes tagging.
-6. Verify auto-detected tags (color, fabric, fit, pattern, occasion). If the cutout shape is incorrect, change the **Category** dropdown; this triggers SegFormer to automatically re-crop the garment.
-7. Click **Save** to optimistically paint the item in the closet grid immediately (~16ms) while background WebP thumbnail generation concludes.
-
-#### B. Scanning EU Digital Product Passports (DPP)
-1. Tap the **Scan QR (DPP)** button on the Add Item page.
-2. Grant camera permissions and align the QR code printed on the garment's retail label, or upload a saved QR screenshot.
-3. The backend resolves the URL and executes SSRF safety checks (blocking private IP ranges).
-4. The system scrapes the JSON-LD schemas to extract brand, materials composition, supply-chain trace, carbon footprint, and care guidelines.
-5. Review the extracted data displayed in the green **Verified DPP Data** accordion panel and click **Save**.
-
-#### C. Importing Digital Commerce Receipts
-1. Open the **Digital Import** tab.
-2. Choose a sub-mode: **Paste Text**, **Upload Image**, **Upload PDF**, or input a **Web Link**.
-3. The backend uses multimodal vision models to extract transaction facts (brand, price, size, category).
-4. Parsed fields are receipt-locked to protect them from future visual re-analysis. Click **Save** to confirm.
+### البنية التكنولوجية
+- **حافة الخلفية (Backend Edge)**: Python 3.11 مع FastAPI، باستخدام برامج تشغيل Motor غير المتزامنة المتصلة بمجموعة MongoDB Atlas.
+- **الواجهة الأمامية (Frontend SPA)**: تطبيق React 19 وحيد الصفحة يستفيد من مخازن مخصصة لـ `useSyncExternalStore` (`stylistStore`, `dailySuggestionsStore`, `useOutfitStore`, `useClosetStore`, `useSuitcaseStore`)، وTailwind CSS، وعناصر Shadcn/UI، ومكتبة `react-i18next` التي تدعم 12 لغة محلية.
+- **تحسين الحالة والشبكة**: إلغاء تكرار الطلبات قيد التشغيل، والتخزين المؤقت للمخزن لمدة 15 دقيقة، وإعادة التحقق من تبويب `visibilitychange` مما يؤدي إلى عدم وجود طلبات GET في الخلفية عند الخمول.
+- **تعلم الآلة المحلي والقياس**: معالجة خلفية U2-Net (`rembg`) المحلية على المعالج، وتحليل الملابس SegFormer-b2، وتضمينات Fashion-CLIP، ونموذج انحدار قياس الجسم البشري ANSUR II (`body_predictor.py`). يوجه اختياريًا إلى حاويات بطاقة الرسومات المستضافة ذاتيًا (SegFormer-b3 + BiRefNet) للعمليات السريعة.
+- **التعرف على الصوت (STT/TTS)**: التعرف على الكلام عبر الويب من جانب العميل في الوقت الفعلي، وتعديلات Gemini 2.5 Flash من جانب الخادم متعدد الوسائط، ومحركات Piper/Sherpa-ONNX المحلية دون اتصال بالإنترنت.
+- **خدمات التكامل الخارجي**: واجهة برمجة تطبيقات OpenWeatherMap لجلب الطقس، ومصادقة Google Calendar OAuth لتصدير الجدول اليومي، ومكمل العنوان التلقائي OpenStreetMap (Nominatim)، وواجهات برمجة تطبيقات PayPal للمشتريات والاشتراكات.
 
 ---
 
-### 3.2 Conversational AI Virtual Stylist
-Describe styling dilemmas and receive hands-free spoken outfit advice.
+## 2. المتطلبات الأساسية
 
-1. Navigate to the **AI Stylist** screen.
-2. Click the microphone icon `[Microphone]` in the chat input bar.
-3. Speak your request (e.g., "What top matches my beige trousers for a rainy outdoor lunch?").
-4. If Web Speech is supported, your voice transcribes live in the input box. If not, the app records a WebM file and uploads it.
-5. The backend routes the voice query to the local Gemma4 container (falling back to Gemini 2.5 Flash transcription if offline).
-6. The stylist processes your wardrobe history, local weather forecasts, and calendar events to formulate a styling proposal.
-7. The stylist speaks the response using preselected voice profiles (`puck`, `aoede`, or `charon`).
-8. Tap **Play reply** (or **Replay** in Hebrew mode) on the card to replay the voice audio.
+### متطلبات بيئة المضيف
+- **الأجهزة**: خادم افتراضي خاص (VPS) بسعة لا تقل عن 4 جيجابايت من ذاكرة الوصول العشوائي (RAM) (على سبيل المثال، Hetzner VPS الذي يستضيف النسخة الإنتاجية `dressapp.co`).
+- **التبعيات**: حاويات Docker و Docker Compose (بما في ذلك الواجهة الخلفية والواجهة الأمامية وإنهاء Caddy TLS).
+- **متغيرات البيئة**: تكوين مفاتيح واجهة برمجة التطبيقات (`GEMINI_API_KEY`, `DEEPGRAM_API_KEY`, `OPENWEATHER_API_KEY`, `PAYPAL_LIVE_CLIENT_ID/SECRET` ورموز Google Calendar OAuth).
 
----
-
-### 3.3 Profile, Preferences, and Subsystem Dependencies
-The Profile page serves as the core control panel for DressApp. Configuration fields directly impact the performance, routing, and behavior of downstream modules.
-
-#### Accordion Section Dependencies & Rationale
-
-1. **Photos & Avatar**
-   - **Why does it matter?**: It provides the visual identity for personalized styling rendering and canvas overlays.
-   - **Subsystem Dependencies**: Avatars and reference photos populate the `AvatarViewer2D` and `OutfitAvatarViewer`. To prevent database upload failures (MongoDB's 16MB document boundary) and conserve bandwidth, photos are compressed in-browser to a maximum of 1280px at 82% quality.
-
-2. **Style Profile (Modest rules, Dress code)**
-   - **Why does it matter?**: It establishes personal boundaries for recommended outfits, preventing the AI from generating inappropriate style suggestions.
-   - **Subsystem Dependencies**: The selected parameters (e.g., Modest clothing constraints) are fed directly into the styling prompts for Gemini 2.5 Flash, filtering matching wardrobe outputs before they are shown.
-
-3. **Details (Name, Phone, Occupation)**
-   - **Why does it matter?**: It customizes the communication tone and routes notification alerts.
-   - **Subsystem Dependencies**: The user's name is dynamically parsed into emails and system-level pushes. The phone number serves as a fallback registry for scheduled alerts. The occupation parameter is fed to the stylist LLM to customize proposals (e.g., corporate office vs. remote work templates).
-
-4. **Body & Measurements (Height, Weight, Shapes)**
-   - **Why does it matter?**: It eliminates sizing guesswork, allowing external retail size comparison and accurate virtual layering.
-   - **Subsystem Dependencies**: Measurements are queried directly by the **Shopping Assistant** Chrome Extension content scripts to read size tables on partner websites (like Zara and Asos) and recommend sizes. They also adjust the rendering scale of clothing segments on the Outfit Canvas.
-
-5. **Lifestyle (Status, Sex)**
-   - **Why does it matter?**: It tailors default recommendations and scores content algorithms.
-   - **Subsystem Dependencies**: The sex selection directly affects the ranking logic of daily Trend Scout cards. If a news card category mismatches the user's sex, the algorithm applies a -2.0 score penalty, demoting it in the feed.
-
-6. **AI Configuration (SaaS keys, edge mode, credits)**
-   - **Why does it matter?**: It determines billing routing, operational performance, and network offline status.
-   - **Subsystem Dependencies**: Routes text/audio generation queries. Standard setups consume DressApp system credits. Inputting personal API keys (Google AI Studio, Anthropic, OpenAI) redirects charges to the user's developer billing accounts. Selecting edge local mode routes queries to the offline Gemma container.
-
-7. **Scheduler & Push (Frequency, daily alarm, style focus)**
-   - **Why does it matter?**: It manages automatic daily style pushes.
-   - **Subsystem Dependencies**: Activates `APScheduler` cron jobs on the FastAPI backend. Every morning, it triggers push notifications via `pywebpush` using the client's VAPID keys, matching the selected style focus parameters.
-
-8. **Google Calendar (OAuth sync, export rules)**
-   - **Why does it matter?**: It bridges your wardrobe directly with your real-world calendar events.
-   - **Subsystem Dependencies**: Authenticates via Google OAuth. The scheduler queries your calendar to identify events, formats outfits, and pushes calendar events straight to your Google Calendar agenda.
-
-9. **Location Services (GPS tracking, weather accuracy)**
-   - **Why does it matter?**: It coordinates weather-appropriate suggestions and local transaction radius filters.
-   - **Subsystem Dependencies**: Triggers `navigator.geolocation` reverse-geocoding. Coordinates are sent to OpenWeatherMap API to adjust the stylist recommendations (e.g., rainwear for downpours). It also calculates distances for local Marketplace listings and experts (e.g.,Lisbon radius checks).
-
-10. **Voice & Language (Virtual stylist voice selection)**
-    - **Why does it matter?**: It establishes text dictionary locales and voice modulations.
-    - **Subsystem Dependencies**: Controls the active language for translations via `react-i18next`. The voice selection maps BCP-47 voice codes (e.g., `he-IL` or `ar-JO`) to client Web Speech synthesis voices or offline Piper TTS models.
-
-11. **Invite Friends (Share payload API)**
-    - **Why does it matter?**: It provides a viral loop for free closet expansion.
-    - **Subsystem Dependencies**: Appends the referrer's MongoDB ID to the URL. New registrations dynamically query this ID and atomically increment the referrer's `closet_capacity_bonus` by +10 slots, modifying the limit guards in `closet.py`.
+### متطلبات تطبيق المستخدم
+- **متصفح الويب**: Google Chrome أو Apple Safari (مطلوب للتوافق الكامل مع ميزات الصوت).
+- **الأذونات**: منح إذن الكاميرا (لالتقاط صور الملابس ومسح رموز QR) وإذن الميكروفون (للمحادثة الصوتية).
+- **الشبكة**: اتصال نشط لمعالجة نموذج اللغة الكبير (LLM)، مع تخزين IndexedDB المؤقت الذي يتيح تصفح الكتالوج دون اتصال بالإنترنت.
 
 ---
 
-### 3.4 Wardrobe Insights Dashboard
-Analyze wardrobe capitalization value, tracking garment utilization, and cost-per-wear parameters.
+## 3. تعليمات خطوة بخطوة
 
-1. Navigate to **Wardrobe Insights**.
-2. **Review Metrics**:
-   - *Closet Worth*: Dynamic summation of purchase prices.
-   - *Closet Utilization*: Percentage of closet garments worn at least once.
-   - *Average Cost-per-Wear (CPW)*: Computed as `Price / Wear Count`.
-3. **Distribution Graphs**: Toggle tabs to view Recharts visualizations:
-   - *Color Palette*: Mapped hex codes distribution.
-   - *Materials*: Fabric percentages distribution.
-   - *Subcategories*: Mapped subcategories.
-4. **Efficiency Leaderboard**: View the top 5 garments showing the lowest Cost-per-Wear scores.
+### 3.1 استيعاب الملابس (إضافة العناصر)
+نماذج الاستيعاب: التصوير الفوتوغرافي، جوازات سفر المنتجات الأوروبية، وإيصالات التجارة الرقمية.
 
----
+#### أ. الكاميرا التفاعلية وتحميل الملفات
+1. انتقل إلى شاشة **إضافة عنصر** (Add Item).
+2. اختر **التقاط صورة** (Take Photo) (يطلق كاميرا الهاتف المحمول الأصلية) أو انقر فوق **تحميل الصور** (Upload Photos) (يفتح اختيار ملفات نظام التشغيل).
+3. يحسب العميل قيمة SHA-256 وتجزئة الفرق الأفقي (dHash) للصورة داخل المتصفح (~100-180 مللي ثانية) للتحقق منها مقارنة بخزانتك الحالية.
+4. إذا تم العثور على مطابقة، يتم فتح **مربع حوار الفحص المسبق للتكرار** لعرض المعاينات المطابقة. حدد **تخطي** أو **إضافة على أي حال**.
+5. بمجرد القبول، يبدأ الخادم دفق NDJSON. يظهر إطار معاينة العناصر النائبة في غضون 5-7 ثوانٍ، مما يتيح لك تعديل تفاصيل العنصر فورًا أثناء إكمال الخلفية لعملية التصنيف.
+6. تحقق من العلامات المكتشفة تلقائيًا (اللون، النسيج، المقاس، النمط، المناسبة). إذا كان شكل القص غير صحيح، فغيّر القائمة المنسدلة **الفئة**؛ هذا يحفز SegFormer لإعادة قص قطعة الملابس تلقائيًا.
+7. انقر فوق **حفظ** لرسم العنصر بشكل متفائل في شبكة الخزانة على الفور (~16 مللي ثانية) أثناء اكتمال إنشاء الصورة المصغرة بتنسيق WebP في الخلفية.
 
-### 3.5 Outfit Canvas & Planner
-Build, layer, and review outfit proposals on an interactive 2D avatar canvas.
+#### ب. مسح جوازات سفر المنتجات الرقمية للاتحاد الأوروبي (DPP)
+1. اضغط على زر **مسح رمز QR (DPP)** في صفحة إضافة عنصر.
+2. امنح أذونات الكاميرا وقم بمحاذاة رمز QR المطبوع على ملصق التجزئة الخاص بقطعة الملابس، أو حمّل لقطة شاشة لرمز QR محفوظ.
+3. تحل الواجهة الخلفية عنوان URL وتنفذ فحوصات أمان SSRF (حظر نطاقات IP الخاصة).
+4. يقوم النظام بكشط مخططات JSON-LD لاستخراج العلامة التجارية وتكوين المواد وتتبع سلسلة التوريد والبصمة الكربونية وإرشادات العناية.
+5. راجع البيانات المستخرجة المعروضة في لوحة الأكورديون الخضراء **Verified DPP Data** وانقر فوق **حفظ**.
 
-1. Open the **Outfit Canvas** planner.
-2. **Outerwear Layering (Dual Canvas)**: If your outfit includes outerwear (e.g., a jacket) over a top, the page renders two vertical canvas modules: "With Outerwear" (showing the jacket layered) and "Without Outerwear" (revealing the top underneath).
-3. **Interactive 2D Elements**: Tap directly on any clothing piece on the avatar's body. The app routes you straight to that garment's detail screen.
-4. **Review Metrics Tab**: Click the details button and choose the **Metrics** tab to view progress bars for compatibility criteria:
-   - *Color Harmony* (neutral harmony)
-   - *Pattern Compatibility* (pattern clashing prevention)
-   - *Body Fitting* (size matching)
-   - *Weather Match* (season suitability)
-   - *Event Match* (activity appropriateness)
-   - *Location Match* (modest rules checks)
-5. **Rename/Describe**: Click the Pencil icon to edit outfit names and descriptions.
+#### ج. استيراد إيصالات التجارة الرقمية
+1. افتح علامة التبويب **استيراد رقمي** (Digital Import).
+2. اختر وضعًا فرعيًا: **لصق النص**، **تحميل الصورة**، **تحميل PDF**، أو إدخال **رابط ويب**.
+3. تستخدم الواجهة الخلفية نماذج رؤية متعددة الوسائط لاستخراج معلومات المعاملة (العلامة التجارية، السعر، المقاس، الفئة).
+4. يتم قفل الحقول التي تم تحليلها وحمايتها من إعادة التحليل البصري المستقبلي. انقر فوق **حفظ** للتأكيد.
 
 ---
 
-### 3.6 Suitcase Assistant
-Organize your packing requirements for trips without overpacking.
+### 3.2 منسق الأزياء الافتراضي بالذكاء الاصطناعي التفاعلي
+صف مشكلات التنسيق الخاصة بك وتلقى نصائح ملابس منطوقة دون استخدام اليدين.
 
-1. Go to the **Suitcase** page and fill out the Trip Context form (destination, start/end dates, trip category, calendar events).
-2. The AI generates a customized packing list and daily outfits based on trip duration and weather forecasts.
-3. Review the packing progress. If an important item is missing (e.g., umbrella for rain, swimwear for beach), the system alerts you and suggests matches from the marketplace or local stores.
-4. Use the integrated chat box to refine suggestions (e.g., "Change day 2 to casual evening wear"). The assistant edits the suitcase while preserving the rest of the list.
-5. Tap **Approve Suitcase** to finalize your plan.
-
----
-
-### 3.7 Scheduler & Push Reminders
-Set daily styling alerts to receive outfit recommendations automatically.
-
-1. Open **Profile** and go to **Scheduler & Push**.
-2. Toggle notifications, set a daily notification time, weekday frequency, and styling focus theme.
-3. Every morning, the background cron task (`APScheduler`) checks weather forecasts and sends a push notification.
-4. Tap the notification on your device (or view the web app's Notification Center) to open a proposal dialog displaying 3 styled suggestions.
-5. Save a suggestion directly to your **Wardrobe Diary**.
+1. انتقل إلى شاشة **AI Stylist**.
+2. انقر فوق أيقونة الميكروفون `[Microphone]` في شريط إدخال الدردشة.
+3. تحدث بطلبك (على سبيل المثال، "ما هو القميص الذي يطابق بنطالي البيج لتناول غداء خارجي ممطر؟").
+4. إذا كان التعرف على الكلام عبر الويب مدعومًا، فسيتم نسخ صوتك مباشرة في صندوق الإدخال. إذا لم يكن كذلك، يسجل التطبيق ملف WebM ويقوم بتحميله.
+5. توجّه الواجهة الخلفية استعلام الصوت إلى حاوية Gemma4 المحلية (وتتراجع إلى كتابة Gemini 2.5 Flash إذا كان غير متصل بالإنترنت).
+6. يعالج المنسق سجل خزانة ملابسك وتوقعات الطقس المحلية وأحداث التقويم لصياغة اقتراح تنسيق.
+7. يتحدث المنسق بالاستجابة باستخدام ملفات تعريف الصوت المحددة مسبقًا (`puck` أو `aoede` أو `charon`).
+8. اضغط على **تشغيل الرد** (أو **إعادة التشغيل** في الوضع العبري) على البطاقة لإعادة تشغيل الصوت.
 
 ---
 
-### 3.8 Marketplace (Resale, Renting, Swapping, Gifting)
-Engage in the peer-to-peer circular fashion marketplace.
+### 3.3 ملف التعريف، والتفضيلات، وتبعيات النظام الفرعي
+تعمل صفحة ملف التعريف كلوحة تحكم أساسية لـ DressApp. تؤثر حقول التكوين مباشرة على أداء وتوجيه وسلوك الوحدات الناتجة.
 
-- **Create a Listing**: Open an item's detail page, select **Edit Intent**, and choose a non-private intent:
-  - *For Sale*: Input list price and currency (detects your default currency via regional locale preferences).
-  - *Rent*: Set daily rental tariff and borrowing conditions.
-  - *Swap*: Mark item open for trade.
-  - *Donate*: Publish item for free.
-- **State Synchronization**: Listings propagate to the feed automatically. The client uses `useSyncExternalStore` and IndexedDB caching to load search parameters with zero-latency.
-- **Try-On Sandbox**: Renters/buyers can test-fit a listing against items in their private closet before checking out.
-- **Transactional Checkout**:
-  - *Purchasing/Renting*: Complete transaction via integrated PayPal buttons. Captured webhooks notify the seller, flip listing state to sold/rented, and log transactions in the ledger minus the 7% platform fee.
-  - *Bartering (Swapping)*: Prospective swappers propose trades. Lister receives confirmation emails to accept or decline.
+##### تبعيات أقسام الأكورديون والمنطق الفني
 
----
+1. **مرحلة الصور والصورة الرمزية الرقمية (`AvatarViewer2D` و `DynamicAvatar`)**
+   - **لماذا هي مهمة؟**: تعرض هويتك البصرية عبر جميع لوحات القياس باستخدام مرحلة ثنائية الوضع (قصة صورة الجسد الحقيقي المقسمة مقابل مانيكان SVG الموجه ثنائي الأبعاد الديناميكي).
+   - **تبعيات النظام الفرعي**: يتم عزل الصور عن الخلفية عبر U2-Net محلي (`rembg`) وتقليص حجمها داخل المتصفح إلى حد أقصى يبلغ 1280 بكسل بجودة 82% لتناسب سقف مستند MongoDB البالغ 16 ميجابايت. تطبق المرحلة نقاطًا مرجعية للمواقع المعايرة (`top-[14.5%]` من الياقة إلى خط الرقبة، و `top-[36.5%]` من حزام الخصر إلى خط الخصر، و `bottom-[2%]` لمستوى الأحذية) وتكبيرًا متناسبًا للصدر/الورك ($scaleX$). انقر فوق *إزالة الصورة* للتبديل فورًا إلى مانيكان SVG ثنائي الأبعاد.
 
-### 3.9 Admin Panel Dashboard
-System liveness validation, financial bookkeeping, and user account management.
+2. **ملف أسلوب اللبس (قواعد الحشمة، كود اللباس)**
+   - **لماذا هي مهمة؟**: تضع حدودًا شخصية للملابس الموصى بها، مما يمنع الذكاء الاصطناعي من توليد اقتراحات أسلوب غير مناسبة.
+   - **تبعيات النظام الفرعي**: يتم تغذية المعاملات المحددة (مثل قيود الملابس المحتشمة) مباشرة في مطالبات التنسيق لـ Gemini 2.5 Flash، لتصفية مخرجات خزانة الملابس المطابقة قبل عرضها.
 
-1. Navigate to `/admin` (available to administrator roles).
-2. **Overview**: Audit Gross Volumes and Platform Fee income summaries. Inspect the **Provider Activity Table** to view downstream liveness statistics (Gemini API, weather service latency, and error rates).
-3. **Providers**: Click **Verify Key** to send a direct ping to the Gemini API. Toggle the **Eyes Vision Override** switch to route image analysis between the default Gemini endpoint and a local Gemma container.
-4. **Users**: View active credits, roles, and lifetime payments. Use direct actions to Promote or Demote users.
-5. **Listings**: View listing states and toggle active flags to suspend fraudulent items.
+3. **التفاصيل (الاسم، الهاتف، المهنة)**
+   - **لماذا هي مهمة؟**: تخصص نبرة التواصل وتوجه تنبيهات الإشعارات.
+   - **تبعيات النظام الفرعي**: يتم تحليل اسم المستخدم ديناميكيًا في رسائل البريد الإلكتروني والإشعارات الفورية للنظام. يعمل رقم الهاتف ك سجل احتياطي للتنبيهات المجدولة. يتم تغذية معامل المهنة إلى نموذج اللغة الكبير للمنسق ومصنف تخصيص Trend Scout لتخصيص الاقتراحات.
 
----
+4. **قياسات الجسم وحجم المقاسات (نموذج انحدار ANSUR II ومتنبئ المقاسات)**
+   - **لماذا هي مهمة؟**: تقضي على تخمين المقاسات، مما يسمح بحساب حجم التجزئة التلقائي ومقارنة الحجم الخارجي والطبقات الافتراضية الدقيقة.
+   - **تبعيات النظام الفرعي**: يؤدي إدخال 4 معاملات أساسية (**الطول**، **الوزن**، **الخصر**، **طول القدم**) إلى تشغيل نموذج انحدار ANSUR II لمكتبة scikit-learn (`body_predictor.py`) للتنبؤ تلقائيًا بـ 6 أبعاد هيكلية (*الكتفين*، *الصدر*، *الورك*، *الكم*، *الدرز الداخلي*، *الدرز الخارجي*).
+     - **ترجمة المقاس المحددة**: بمجرد التنبؤ بالقياسات المستمرة، يقوم محرك المقاسات الخلفي بتحويلها ديناميكيًا إلى مقاسات ملابس التجزئة: **مقاس القميص** (XS-XXL بناءً على الصدر)، **مقاس البنطال** (الخصر بالبوصة)، **مقاس الحذاء** (المعايير الأمريكية للرجال/النساء والمعايير الأوروبية بناءً على طول القدم والجنس)، **مقاس الفستان** (الأمريكي 0-14+ بناءً على الصدر والخصر والأوراك)، و**مقاس حمالة الصدر** (الحزام + الكوب بناءً على الصدر وتحت الصدر المقدر).
+     - **الملء التلقائي**: يتم ملء مقاسات التجزئة الموصى بها تلقائيًا في حقول *وضع التعديل المفصل* داخل لوحة معلومات ملف التعريف.
+     - **التكاملات**: يتم الاستعلام عن القياسات مباشرة بواسطة البرامج النصية لإضافة **Shopping Assistant** لمتصفح Chrome لقراءة جداول المقاسات على مواقع الشركاء (Zara, Asos) والتوصية بالمقاسات المناسبة.
 
-## 4. Expected Results
+5. **نمط الحياة (الحالة، الجنس)**
+   - **لماذا هي مهمة؟**: تخصص التوصيات الافتراضية وتوجه خوارزميات المحتوى.
+   - **تبعيات النظام الفرعي**: يؤثر اختيار الجنس مباشرة على منطق تصنيف بطاقات Trend Scout اليومية. إذا كانت فئة بطاقة الأخبار لا تتطابق مع جنس المستخدم، تطبق الخوارزمية عقوبة نقاط بقيمة -2.0، مما يؤدي إلى خفض ترتيبها في الخلاصة.
 
-- **Ingestion**: Items immediately populate the closet grid (~16ms). Background cutouts render clean, transparent PNG results.
-- **DPP Verified Badge**: Scanning valid passports displays the green information card with sustainability details.
-- **Avatar Outerwear**: Outerwear displays correctly layered over tops on the 2D avatar canvas without clipping headwear/shoes.
-- **Voice Response**: Virtual Stylist text outputs play spoken audio automatically with a visible waveform indicator.
-- **Subscriptions**: Activating Pro immediately removes the 150-item limit warning.
+6. **تكوين الذكاء الاصطناعي (مفاتيح SaaS، وضع الحافة، النقاط المتاحة)**
+   - **لماذا هي مهمة؟**: تحدد توجيه الفواتير، الأداء التشغيلي، وحالة الاتصال بالشبكة.
+   - **تبعيات النظام الفرعي**: توجه استعلامات توليد النصوص/الصوت. تستهلك الإعدادات القياسية نقاط نظام DressApp. يؤدي إدخال مفاتيح واجهة برمجة التطبيقات الشخصية (Google AI Studio, Anthropic, OpenAI) إلى إعادة توجيه الرسوم إلى حسابات الفواتير الخاصة بالمطور للمستخدم. يوجه اختيار وضع الحافة المحلي الاستعلامات إلى حاوية Gemma المحلية دون اتصال بالإنترنت.
 
----
+7. **المجدول والإشعارات الفورية (التردد، المنبه اليومي، تركيز الأسلوب)**
+   - **لماذا هي مهمة؟**: تدير الإشعارات الفورية التلقائية للأسلوب اليومي.
+   - **تبعيات النظام الفرعي**: تنشط وظائف APScheduler cron على واجهة FastAPI الخلفية. كل صباح، تطلق إشعارات دفع عبر `pywebpush` باستخدام مفاتيح VAPID الخاصة بالعميل، مطابقة لمعاملات تركيز الأسلوب المحددة.
 
-## 5. Troubleshooting
+8. **تقويم Google (مزامنة OAuth، قواعد التصدير)**
+   - **لماذا هي مهمة؟**: تربط خزانة ملابسك مباشرة بأحداث التقويم الحقيقية الخاصة بك.
+   - **تبعيات النظام الفرعي**: تصادق عبر Google OAuth. يستعلم المجدول تقويمك لتحديد الأحداث، وتنسيق الملابس، ودفع أحداث التقويم مباشرة إلى جدول أعمال تقويم Google الخاص بك.
 
-### HTTP 402 Payment Required
-- **Problem**: Ingestion blocked. You have reached the maximum baseline limit of 150 closet items.
-- **Solution**: Go to Profile -> Subscription and upgrade to Pro, or share your invite link to get +10 slots per registration.
+9. **خدمات الموقع (تتبع GPS، دقة الطقس)**
+   - **لماذا هي مهمة**: تنسق الاقتراحات المناسبة للطقس وفلاتر النطاق الجغرافي للمعاملات المحلية.
+   - **تبعيات النظام الفرعي**: تطلق التشفير الجغرافي العكسي لـ `navigator.geolocation`. يتم إرسال الإحداثيات إلى واجهة برمجة تطبيقات OpenWeatherMap لضبط توصيات المنسق (مثل ملابس المطر للعواصف). كما تحسب المسافات لقوائم السوق المحلية والخبراء (مثل فحوصات نطاق لشبونة).
 
-### SSRF Blocked / DNS Error on DPP
-- **Problem**: Scanned QR passport URL fails to parse.
-- **Solution**: The parser blocks private IP addresses (e.g. `127.0.0.1`, `192.168.x.x`) to protect internal servers. Ensure QR codes point to public domains.
+10. **الصوت واللغة (اختيار صوت المنسق الافتراضي)**
+    - **لماذا هي مهمة؟**: تحدد لغات قاموس النصوص وتعديلات الصوت.
+    - **تبعيات النظام الفرعي**: تتحكم في اللغة النشطة للترجمات عبر `react-i18next`. يربط اختيار الصوت رموز الصوت BCP-47 (مثل `he-IL` أو `ar-JO`) بأصوات توليف الكلام على العميل أو نماذج Piper TTS دون اتصال بالإنترنت.
 
-### Camera / Microphone Permission Denied
-- **Problem**: Capture/scan viewport displays an 'X' error screen, or voice typing fails.
-- **Solution**: Open browser permissions, enable Camera and Microphone access for the domain, and reload.
-
-### Stylist Chat Failure / Rate Limits
-- **Problem**: Chat shows errors or freezes.
-- **Solution**: The server catches Gemini `429` rate limits and falls back to a rule-based closet selection algorithm. Verify your internet connection.
-
-### Out of Memory (OOM) VPS Spikes
-- **Problem**: CPU/RAM peaks during upload processes.
-- **Solution**: Ingestion utilizes sequential queue locks for batches >5 items. Ensure the server has at least 4 GB RAM.
+11. **دعوة الأصدقاء (واجهة برمجة تطبيقات مشاركة البيانات)**
+    - **لماذا هي مهمة؟**: توفر حلقة انتشار فيروسية لتوسيع الخزانة مجانًا.
+    - **تبعيات النظام الفرعي**: تلحق معرف المرجع في MongoDB بعلامة URL. تستعلم التسجيلات الجديدة ديناميكيًا عن هذا المعرف وتزيد بشكل تراكمي من `closet_capacity_bonus` للمرجع بمقدار +10 خانات، معدلة حواجز الحدود في `closet.py`.
 
 ---
 
-## 6. Limitations
+### 3.4 لوحة معلومات تحليلات خزانة الملابس
+حلل قيمة خزانة الملابس التراكمية، وتتبع استخدام الملابس، ومعاملات التكلفة لكل ارتداء.
 
-- **Browser Web Speech APIs**: Native Speech-to-Text translation is restricted to Chrome and Safari; other browsers fall back to standard text input.
-- **Offline Client Modulations**: Mobile offline Piper ONNX speech synthesis uses fewer voice profiles than the server-side Gemini audio modal.
-- **Image Size Constraints**: Avatar and profile uploads are compressed locally in the browser to 82% quality to fit within the 16MB MongoDB document boundary.
-- **Receipt Parsing Scope**: Highly blurred, distorted, or handwritten receipts may fail data extraction.
+1. انتقل إلى **Wardrobe Insights**.
+2. **مراجعة المقاييس**:
+   - *قيمة خزانة الملابس (Closet Worth)*: المجموع الديناميكي لأسعار الشراء.
+   - *معدل استخدام خزانة الملابس (Closet Utilization)*: النسبة المئوية للملابس التي تم ارتداؤها مرة واحدة على الأقل.
+   - *متوسط التكلفة لكل ارتداء (CPW)*: تحسب كـ `السعر / عدد مرات الارتداء`.
+3. **رسومات التوزيع**: بدّل علامات التبويب لعرض رسومات Recharts التوضيحية:
+   - *لوحة الألوان*: توزيع رموز الست عشرية المحددة.
+   - *المواد*: توزيع النسب المئوية للأقمشة.
+   - *الفئات الفرعية*: الفئات الفرعية المحددة.
+4. **لوحة صدارة الكفاءة**: اعرض أفضل 5 قطع ملابس تحقق أقل تكلفة لكل ارتداء (CPW).
+
+---
+
+### 3.5 لوحة التنسيق والمخطط
+قم ببناء وتصفيف ومراجعة مقترحات التنسيق على لوحة مجسم افتراضي تفاعلية ثنائية الأبعاد.
+
+1. افتح مخطط **Outfit Canvas**.
+2. **طبقات الملابس الخارجية (لوحة مزدوجة)**: إذا كان تنسيقك يتضمن ملابس خارجية (مثل سترة) فوق قميص، فإن الصفحة تعرض وحدتي لوحة رأسية: "مع سترة خارجية" (تظهر السترة مطبقة) و"بدون سترة خارجية" (تكشف القميص تحتها).
+3. **عناصر تفاعلية ثنائية الأبعاد**: اضغط مباشرة على أي قطعة ملابس على جسم المجسم الافتراضي. يوجهك التطبيق مباشرة إلى شاشة تفاصيل قطعة الملابس تلك.
+4. **علامة تبويب مراجعة المقاييس**: انقر فوق زر التفاصيل واختر علامة التبويب **Metrics** لعرض أشرطة التقدم لمعايير التوافق:
+   - *تناغم الألوان* (التناغم المحايد)
+   - *توافق الأنماط* (منع تعارض الأنماط)
+   - *ملاءمة الجسم* (مطابقة القياس)
+   - *مطابقة الطقس* (ملاءمة الموسم)
+   - *مطابقة الحدث* (ملاءمة النشاط)
+   - *مطابقة الموقع* (فحوصات قواعد الحشمة)
+5. **إعادة التسمية/الوصف**: انقر فوق أيقونة القلم لتعديل أسماء التنسيقات وأوصافها.
+
+---
+
+### 3.6 مساعد حقيبة السفر
+نظم متطلبات التعبئة الخاصة بك للرحلات دون زيادة في التعبئة.
+
+1. انتقل إلى صفحة **Suitcase** واملأ نموذج سياق الرحلة (الوجهة، تواريخ البدء/الانتهاء، فئة الرحلة، أحداث التقويم).
+2. يقوم الذكاء الاصطناعي بإنشاء قائمة تعبئة مخصصة وملابس يومية بناءً على مدة الرحلة وتوقعات الطقس.
+3. راجع تقدم التعبئة. إذا كان هناك عنصر مهم مفقود (مثل مظلة للمطر، ملابس سباحة للشاطئ)، ينبهك النظام ويقترح عناصر مطابقة من السوق أو المتاجر المحلية.
+4. استخدم صندوق الدردشة المتكامل لتعديل الاقتراحات (مثل، "غيّر اليوم 2 إلى ملابس سهرة مريحة"). يقوم المساعد بتعديل الحقيبة مع الحفاظ على باقي القائمة.
+5. اضغط على **اعتماد الحقيبة** لإنهاء خطتك.
+
+---
+
+### 3.7 المجدول والتنبيهات الفورية
+اضبط تنبيهات التنسيق اليومية لتلقي توصيات الملابس تلقائيًا.
+
+1. افتح **Profile** وانتقل إلى **Scheduler & Push**.
+2. قم بتفعيل الإشعارات، وحدد وقت التنبيه اليومي، وتكرار أيام الأسبوع، ونمط تركيز التنسيق.
+3. كل صباح، تتحقق المهمة المجدولة في الخلفية (`APScheduler`) من توقعات الطقس وترسل إشعارًا فوريًا.
+4. اضغط على الإشعار على جهازك (أو اعرض مركز إشعارات تطبيق الويب) لفتح مربع حوار الاقتراح الذي يعرض 3 توصيات منسقة.
+5. احفظ الاقتراح مباشرة في **Wardrobe Diary**.
+
+---
+
+## 3.8 السوق (إعادة البيع، الإيجار، المبادلة، الإهداء)
+شارك في سوق الموضة الدائري بين الأقران.
+
+- **إنشاء قائمة**: افتح صفحة تفاصيل قطعة الملابس، وحدد **تعديل النية** (Edit Intent)، واختر نية غير خاصة:
+  - *للبيع (For Sale)*: أدخل السعر والعملة (يكتشف عملتك الافتراضية عبر تفضيلات اللغة الإقليمية).
+  - *للإيجار (Rent)*: حدد تعريفة الإيجار اليومية وشروط الاستعارة.
+  - *المبادلة (Swap)*: ضع علامة على العنصر كمفتوح للمبادلة.
+  - *التبرع (Donate)*: انشر قطعة الملابس مجانًا.
+- **مزامنة الحالة**: تنتشر القوائم إلى الخلاصة تلقائيًا. يستخدم العميل `useSyncExternalStore` وتخزين IndexedDB المؤقت لتحميل معاملات البحث دون تأخير.
+- **صندوق تجربة الملابس**: يمكن للمستأجرين/المشترين اختبار ملاءمة قائمة معينة مع العناصر الموجودة في خزانة ملابسهم الخاصة قبل إتمام المعاملة.
+- **إتمام المعاملات**:
+  - *الشراء/الإيجار*: أكمل المعاملة عبر أزرار PayPal المتكاملة. تنبه خطافات الويب (Webhooks) الملتقطة البائع، وتقلّب حالة القائمة إلى مباعة/مؤجرة، وتسجل المعاملات في الدفتر مطروحًا منها رسوم المنصة البالغة 7%.
+  - *المقايضة (المبادلة)*: يقترح المبادرون المهتمون صفقات تبادل. يتلقى صاحب القائمة رسائل بريد إلكتروني للتأكيد للقبول أو الرفض.
+
+---
+
+### 3.9 لوحة معلومات الإدارة
+التحقق من حيوية النظام، المحاسبة المالية، وإدارة حسابات المستخدمين.
+
+1. انتقل إلى `/admin` (متاحة لأدوار الإداريين).
+2. **نظرة عامة**: تدقيق إجمالي الأحجام وملخصات دخل رسوم المنصة. تفقد **جدول نشاط المزودين** لمشاهدة إحصائيات الحالة الحيوية (واجهة برمجة تطبيقات Gemini، زمن انتقال خدمة الطقس، ومعدلات الخطأ).
+3. **المزودون**: انقر فوق **التحقق من المفتاح** (Verify Key) لإرسال اختبار اتصال مباشر إلى واجهة برمجة تطبيقات Gemini. قم بتبديل مفتاح **Eyes Vision Override** لتوجيه تحليل الصور بين نقطة نهاية Gemini الافتراضية وحاوية Gemma المحلية.
+4. **المستخدمون**: عرض النقاط النشطة والأدوار وإجمالي الدفعات مدى الحياة. استخدم الإجراءات المباشرة لترقية المستخدمين أو خفض رتبهم.
+5. **القوائم**: عرض حالات القوائم وتبديل العلامات النشطة لإيقاف العناصر الاحتيالية.
+
+---
+
+## 4. النتائج المتوقعة
+
+- **الاستيعاب**: تعبأ العناصر على الفور في شبكة الخزانة (~16 مللي ثانية). تظهر قصاصات الخلفية بنتائج PNG نظيفة وشفافة.
+- **شارة التحقق من جواز السفر (DPP)**: يظهر فحص جوازات السفر الصالحة بطاقة معلومات خضراء مع تفاصيل الاستدامة.
+- **الملابس الخارجية للمجسم**: تظهر الملابس الخارجية مطبقة بشكل صحيح فوق القمصان على لوحة المجسم ثنائية الأبعاد دون تداخل مع غطاء الرأس/الأحذية.
+- **الاستجابة الصوتية**: تشغل مخرجات نصوص المنسق الافتراضي الصوت تلقائيًا مع مؤشر رسم موجي مرئي.
+- **الاشتراكات**: يؤدي تفعيل باقة Pro إلى إزالة تحذير حد 150 عنصرًا على الفور.
+
+---
+
+## 5. حلول المشاكل
+
+### طلب الدفع HTTP 402 Payment Required
+- **المشكلة**: توقف استيعاب العناصر. لقد وصلت إلى الحد الأساسي الأقصى البالغ 150 عنصرًا في الخزانة.
+- **الحل**: انتقل إلى Profile -> Subscription وقم بالترقية إلى Pro، أو شارك رابط الدعوة الخاص بك للحصول على +10 خانات إضافية لكل تسجيل جديد.
+
+### حظر SSRF / خطأ DNS في جواز سفر المنتج (DPP)
+- **المشكلة**: فشل تحليل عنوان URL لجواز سفر رمز QR الممسوح.
+- **الحل**: يحظر المحلل عناوين IP الخاصة (مثل `127.0.0.1` و `192.168.x.x`) لحماية الخوادم الداخلية. تأكد من أن رموز QR تشير إلى نطاقات عامة.
+
+### تم رفض إذن الكاميرا / الميكروفون
+- **المشكلة**: تعرض شاشة التقاط/مسح شاشة خطأ تحتوي على علامة 'X'، أو تفشل الكتابة الصوتية.
+- **الحل**: افتح أذونات المتصفح، وقم بتمكين الكاميرا والميكروفون للنطاق، وأعد التحميل.
+
+### فشل دردشة المنسق / حدود معدل الطلبات
+- **المشكلة**: تظهر الدردشة أخطاءً أو تتجمد.
+- **الحل**: يلتقط الخادم حدود معدل Gemini `429` ويتراجع إلى خوارزمية اختيار خزانة قائمة على القواعد. تحقق من اتصالك بالإنترنت.
+
+### زيادة استهلاك ذاكرة الخادم (OOM) VPS
+- **المشكلة**: بلوغ المعالج/الذاكرة ذروته أثناء عمليات تحميل الصور.
+- **الحل**: يستخدم استيعاب الصور أقفال انتظار متسلسلة للدفعات التي تزيد عن 5 عناصر. تأكد من أن الخادم يحتوي على 4 جيجابايت من ذاكرة الوصول العشوائي على الأقل.
+
+---
+
+## 6. القيود
+
+- **واجهات برمجة تطبيقات الكلام في المتصفح**: تقتصر ترجمة الصوت الأصلية من كلام إلى نص على متصفحي Chrome و Safari؛ وتتراجع المتصفحات الأخرى إلى الإدخال النصي القياسي.
+- **تعديلات العميل دون اتصال**: يستعين Piper ONNX للمحمول بأصوات توليف كلام أقل مقارنة بملف صوت Gemini على الخادم.
+- **قيود حجم الصور**: يتم ضغط تحميلات المجسم والملف الشخصي محليًا في المتصفح إلى جودة 82% لتناسب حدود مستند MongoDB البالغة 16 ميجابايت.
+- **نطاق تحليل الإيصالات**: قد تفشل عملية استخراج البيانات من الإيصالات غير الواضحة للغاية أو المشوهة أو المكتوبة بخط اليد.
