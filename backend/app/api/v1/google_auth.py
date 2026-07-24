@@ -434,15 +434,29 @@ async def _handle_login_callback(
         if userinfo.get("locale") and not user_doc.get("locale"):
             patch["locale"] = userinfo["locale"]
             
-        # Autofill extended contact info from Google People API if empty
-        if extended_profile.get("date_of_birth") and not user_doc.get("date_of_birth"):
+        # Autofill extended contact info from Google People API if empty or missing
+        if extended_profile.get("date_of_birth") and (not user_doc.get("date_of_birth") or user_doc.get("date_of_birth") == ""):
             patch["date_of_birth"] = extended_profile["date_of_birth"]
-        if extended_profile.get("phone") and not user_doc.get("phone"):
+        if extended_profile.get("phone") and (not user_doc.get("phone") or user_doc.get("phone") == ""):
             patch["phone"] = extended_profile["phone"]
-        if extended_profile.get("address") and not user_doc.get("address"):
-            patch["address"] = extended_profile["address"]
-        if extended_profile.get("sex") and not user_doc.get("sex"):
+        if extended_profile.get("sex") and (not user_doc.get("sex") or user_doc.get("sex") == ""):
             patch["sex"] = extended_profile["sex"]
+
+        if extended_profile.get("address"):
+            google_addr = extended_profile["address"]
+            existing_addr = user_doc.get("address") or {}
+            
+            addr_patch = {}
+            for sub_k in ["line1", "line2", "city", "region", "postal_code", "country"]:
+                g_val = google_addr.get(sub_k)
+                e_val = existing_addr.get(sub_k)
+                if g_val and (not e_val or e_val == ""):
+                    addr_patch[sub_k] = g_val
+            
+            if addr_patch:
+                merged_addr = dict(existing_addr)
+                merged_addr.update(addr_patch)
+                patch["address"] = merged_addr
 
         # Re-apply admin allow-list on every Google login — same idempotent
         # behaviour as email/password login.
@@ -475,15 +489,12 @@ async def _handle_login_callback(
         await repos.insert(db.users, user_doc)
         logger.info("google sign-in: created new user email=%s id=%s", email, new_user.id)
 
-    # 4) Optionally persist calendar tokens (only if the user opted in).
-    if with_calendar:
-        try:
-            await calendar_service.persist_tokens_for_user(user_doc["id"], tokens)
-        except Exception:  # noqa: BLE001
-            # Don't fail the whole sign-in if calendar persistence trips —
-            # surface a soft warning via the URL hash so the frontend can
-            # show a toast.
-            logger.exception("Calendar token persist failed during sign-in")
+    # 4) Persist tokens for the user to mark as Google-connected and enable profile sync.
+    try:
+        await calendar_service.persist_tokens_for_user(user_doc["id"], tokens)
+    except Exception:  # noqa: BLE001
+        logger.exception("Google token persist failed during sign-in")
+        if with_calendar:
             jwt_token = create_access_token(
                 user_doc["id"], {"email": user_doc["email"]}
             )
@@ -573,31 +584,46 @@ async def sync_profile_from_google(
         
     db = get_db()
     patch = {}
-    if extended_profile.get("date_of_birth"):
-        patch["date_of_birth"] = extended_profile["date_of_birth"]
-    if extended_profile.get("phone"):
-        patch["phone"] = extended_profile["phone"]
+    
+    # Merge Date of Birth
+    dob = extended_profile.get("date_of_birth")
+    if dob:
+        patch["date_of_birth"] = dob
+        
+    # Merge Phone
+    phone = extended_profile.get("phone")
+    if phone:
+        patch["phone"] = phone
+        
+    # Merge Gender
+    sex = extended_profile.get("sex")
+    if sex:
+        patch["sex"] = sex
+        
+    # Merge Address fields defensively
     if extended_profile.get("address"):
-        addr = extended_profile["address"]
-        patch["address"] = {
-            "line1": addr.get("line1") or "",
-            "line2": addr.get("line2") or "",
-            "city": addr.get("city") or "",
-            "region": addr.get("region") or "",
-            "postal_code": addr.get("postal_code") or "",
-            "country": addr.get("country") or "",
-        }
-    if extended_profile.get("sex"):
-        patch["sex"] = extended_profile["sex"]
+        google_addr = extended_profile["address"]
+        existing_addr = user.get("address") or {}
+        
+        # Build merged address dict
+        merged_addr = {}
+        for sub_k in ["line1", "line2", "city", "region", "postal_code", "country"]:
+            # Google value takes precedence if present, otherwise keep existing
+            merged_addr[sub_k] = google_addr.get(sub_k) or existing_addr.get(sub_k) or ""
+            
+        patch["address"] = merged_addr
         
     if patch:
         patch["updated_at"] = datetime.now(timezone.utc).isoformat()
         await db.users.update_one({"id": user["id"]}, {"$set": patch})
         
+    # Retrieve final merged values to return to frontend
+    updated_user = await db.users.find_one({"id": user["id"]}, {"_id": 0}) or {}
+    
     return {
         "success": True,
-        "date_of_birth": patch.get("date_of_birth"),
-        "phone": patch.get("phone"),
-        "address": patch.get("address"),
-        "sex": patch.get("sex"),
+        "date_of_birth": updated_user.get("date_of_birth") or dob,
+        "phone": updated_user.get("phone") or phone,
+        "address": updated_user.get("address") or extended_profile.get("address"),
+        "sex": updated_user.get("sex") or sex,
     }

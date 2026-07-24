@@ -320,21 +320,40 @@ export function ProfileDetailsCard() {
     try {
       const res = await api.googleSyncProfile();
       if (res.success) {
-        setForm((prev) => ({
-          ...prev,
-          sex: res.sex || prev.sex,
-          phone: res.phone || prev.phone,
-          date_of_birth: res.date_of_birth || prev.date_of_birth,
+        const newForm = {
+          ...form,
+          sex: res.sex || form.sex,
+          phone: res.phone || form.phone,
+          date_of_birth: res.date_of_birth || form.date_of_birth,
           address: {
-            ...prev.address,
-            line1: res.address?.line1 || prev.address.line1,
-            line2: res.address?.line2 || prev.address.line2,
-            city: res.address?.city || prev.address.city,
-            region: res.address?.region || prev.address.region,
-            postal_code: res.address?.postal_code || prev.address.postal_code,
-            country: res.address?.country || prev.address.country,
+            ...form.address,
+            line1: res.address?.line1 || form.address.line1,
+            line2: res.address?.line2 || form.address.line2,
+            city: res.address?.city || form.address.city,
+            region: res.address?.region || form.address.region,
+            postal_code: res.address?.postal_code || form.address.postal_code,
+            country: res.address?.country || form.address.country,
           }
-        }));
+        };
+        setForm(newForm);
+
+        // Auto-save the synchronized details to the database
+        const prune = (obj) =>
+          Object.fromEntries(
+            Object.entries(obj).filter(
+              ([, v]) => v !== '' && v !== null && v !== undefined,
+            ),
+          );
+        const payload = {
+          phone: newForm.phone || null,
+          date_of_birth: newForm.date_of_birth || null,
+          sex: newForm.sex || null,
+          address: prune(newForm.address),
+        };
+        const updated = await api.patchMe(payload);
+        updateUserLocal?.(updated);
+        baselineRef.current = JSON.stringify(newForm);
+
         toast.success(t('profile.googleSyncSuccess', { defaultValue: 'Profile synced with Google successfully!' }));
       }
     } catch (err) {
