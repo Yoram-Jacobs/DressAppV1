@@ -213,11 +213,11 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 });
               }
             } else {
-              // Fallback: item-centered card box
+              // Fallback: item-centered card box (respecting image height for tall garments like pants/dresses)
               const cx = imgRect.left + imgRect.width / 2;
               const cy = imgRect.top + imgRect.height / 2;
-              const cardW = imgRect.width * 1.2;
-              const cardH = cardW * 1.45;
+              const cardW = Math.max(imgRect.width * 1.18, 150);
+              const cardH = Math.max(imgRect.height * 1.18, cardW * 1.35);
 
               const left = cx - cardW / 2;
               const top = cy - cardH / 2;

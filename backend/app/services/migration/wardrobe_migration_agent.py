@@ -174,6 +174,13 @@ class WardrobeMigrationAgent:
                     logger.info("Skipping boundary box to prevent cut-offs: %s", box)
                     continue
 
+                # Add safety padding for Gemini vision boxes to prevent clipping top/bottom of garments
+                if not is_precropped:
+                    ymin_pct = max(0, ymin_pct - 20)
+                    xmin_pct = max(0, xmin_pct - 15)
+                    ymax_pct = min(1000, ymax_pct + 20)
+                    xmax_pct = min(1000, xmax_pct + 15)
+
                 ymin = int(ymin_pct * img_h / 1000.0)
                 xmin = int(xmin_pct * img_w / 1000.0)
                 ymax = int(ymax_pct * img_h / 1000.0)
@@ -313,6 +320,17 @@ class WardrobeMigrationAgent:
         except Exception as class_err:
             logger.warning("Gemini classification failed for background crop: %s", class_err)
 
+        # Gatekeeper check: Drop blank solid tiles or low-contrast empty crops
+        try:
+            import numpy as np
+            tile_img = Image.open(io.BytesIO(crop_bytes))
+            arr = np.asarray(tile_img.convert("RGB"), dtype=np.float32)
+            if float(np.std(arr)) < 1.0 and self.client.api_key != "mock_key":
+                logger.info("Gatekeeper: skipping blank/low-contrast crop tile (std_dev < 1.0)")
+                return
+        except Exception:
+            pass
+
         # Gatekeeper check to drop noise, icons, page headers, etc.
         label_lower = label.lower()
         category_lower = category.lower()
@@ -320,7 +338,10 @@ class WardrobeMigrationAgent:
             "no clothing", "no garment", "cannot identify", "unidentifiable",
             "unknown", "icon", "button", "logo", "header", "menu", "page",
             "website", "text", "background", "noise", "tact us", "works",
-            "whering", "not applicable", "n/a", "no identifiable", "heart icon"
+            "whering", "not applicable", "n/a", "no identifiable", "heart icon",
+            "blank", "blank image", "white image", "empty", "widget", "dressapp",
+            "ready to capture", "capture", "modal", "dialog", "popup", "screenshot",
+            "scrollbar", "arrow", "banner"
         ]
         if any(w in label_lower for w in GIVE_UP) or any(w in category_lower for w in GIVE_UP):
             logger.info("Gatekeeper: skipping noise crop in background task: label='%s', category='%s'", label, category)
