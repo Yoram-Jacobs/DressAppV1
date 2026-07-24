@@ -441,6 +441,8 @@ async def _handle_login_callback(
             patch["phone"] = extended_profile["phone"]
         if extended_profile.get("address") and not user_doc.get("address"):
             patch["address"] = extended_profile["address"]
+        if extended_profile.get("sex") and not user_doc.get("sex"):
+            patch["sex"] = extended_profile["sex"]
 
         # Re-apply admin allow-list on every Google login — same idempotent
         # behaviour as email/password login.
@@ -466,6 +468,7 @@ async def _handle_login_callback(
             date_of_birth=extended_profile.get("date_of_birth"),
             phone=extended_profile.get("phone"),
             address=extended_profile.get("address"),
+            sex=extended_profile.get("sex"),
         )
         user_doc = new_user.model_dump()
         user_doc["roles"] = apply_admin_role(user_doc.get("roles"), email)
@@ -584,6 +587,8 @@ async def sync_profile_from_google(
             "postal_code": addr.get("postal_code") or "",
             "country": addr.get("country") or "",
         }
+    if extended_profile.get("sex"):
+        patch["sex"] = extended_profile["sex"]
         
     if patch:
         patch["updated_at"] = datetime.now(timezone.utc).isoformat()
@@ -594,4 +599,5 @@ async def sync_profile_from_google(
         "date_of_birth": patch.get("date_of_birth"),
         "phone": patch.get("phone"),
         "address": patch.get("address"),
+        "sex": patch.get("sex"),
     }

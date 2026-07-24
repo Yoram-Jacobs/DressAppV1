@@ -45,6 +45,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/user.birthday.read",
     "https://www.googleapis.com/auth/user.phonenumbers.read",
     "https://www.googleapis.com/auth/user.addresses.read",
+    "https://www.googleapis.com/auth/user.gender.read",
 ]
 
 # Lean scope set used by the new "Sign in with Google" flow when the user
@@ -58,6 +59,7 @@ LOGIN_SCOPES = [
     "https://www.googleapis.com/auth/user.birthday.read",
     "https://www.googleapis.com/auth/user.phonenumbers.read",
     "https://www.googleapis.com/auth/user.addresses.read",
+    "https://www.googleapis.com/auth/user.gender.read",
 ]
 
 
@@ -242,10 +244,10 @@ class CalendarService:
         return resp.json()
 
     async def fetch_people_profile(self, access_token: str) -> dict[str, Any]:
-        """Fetch extended profile details (birthday, phone, address) from Google People API."""
+        """Fetch extended profile details (birthday, phone, address, gender) from Google People API."""
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(
-                "https://people.googleapis.com/v1/people/me?personFields=birthdays,phoneNumbers,addresses",
+                "https://people.googleapis.com/v1/people/me?personFields=birthdays,phoneNumbers,addresses,genders",
                 headers={"Authorization": f"Bearer {access_token}"},
             )
         if resp.status_code != 200:
@@ -282,6 +284,13 @@ class CalendarService:
                 "postal_code": addr.get("postalCode") or "",
                 "country": addr.get("country") or "",
             }
+
+        # 4. Parse Gender ("male" or "female")
+        genders = data.get("genders", [])
+        if genders:
+            val = (genders[0].get("value") or "").lower()
+            if val in {"male", "female"}:
+                profile["sex"] = val
             
         return profile
 

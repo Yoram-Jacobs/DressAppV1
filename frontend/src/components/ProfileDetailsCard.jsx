@@ -322,6 +322,7 @@ export function ProfileDetailsCard() {
       if (res.success) {
         setForm((prev) => ({
           ...prev,
+          sex: res.sex || prev.sex,
           phone: res.phone || prev.phone,
           date_of_birth: res.date_of_birth || prev.date_of_birth,
           address: {
