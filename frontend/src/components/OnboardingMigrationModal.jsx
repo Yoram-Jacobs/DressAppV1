@@ -107,19 +107,29 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         await new Promise(r => setTimeout(r, 1000));
 
         const getScrollEl = () => {
+          if (window.pageYOffset > 0) return window;
+          window.scrollTo(0, 1);
+          if (window.pageYOffset > 0) {
+            window.scrollTo(0, 0);
+            return window;
+          }
           const common = ['main', '[class*=scroll]', '[class*=content]', '#root', '.app-container'];
           for (const sel of common) {
             const el = document.querySelector(sel);
             if (el && el.scrollHeight > el.clientHeight) {
-              const style = window.getComputedStyle(el);
-              if (style.overflowY === 'auto' || style.overflowY === 'scroll') return el;
+              if (el.scrollTop > 0) return el;
+              el.scrollTop = 1;
+              if (el.scrollTop > 0) {
+                el.scrollTop = 0;
+                return el;
+              }
             }
           }
           return document.scrollingElement || document.documentElement || document.body;
         };
 
         const scrollEl = getScrollEl();
-        let scrollPos = 0;
+        let scrollPos = (scrollEl && scrollEl !== window) ? scrollEl.scrollTop : (window.scrollY || window.pageYOffset || document.documentElement.scrollTop);
         let noChangeCount = 0;
 
         const getVisibleGarmentRects = () => {
