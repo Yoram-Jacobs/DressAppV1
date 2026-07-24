@@ -56,16 +56,15 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   // Use URL-encoded bookmarklet to prevent syntax and drag issues across all browsers
   const harvesterBookmarkletCode = useMemo(() => {
     const rawJS = `(async () => {
-      // Clean up any existing widgets to prevent duplicates
-      const ex1 = document.getElementById('dressapp-importer-widget');
-      if (ex1) ex1.remove();
-      const ex2 = document.getElementById('dressapp-widget-root');
-      if (ex2) ex2.remove();
+      // Inject heartbeat animation style
+      const s = document.createElement('style');
+      s.innerHTML = '@keyframes da-hb { 0% { transform: scale(1); } 14% { transform: scale(1.08); } 28% { transform: scale(1); } 42% { transform: scale(1.12); } 70% { transform: scale(1); } } .da-pulse-badge { animation: da-hb 1.5s infinite ease-in-out; display: inline-block; }';
+      document.head.appendChild(s);
 
       const o = document.createElement('div');
       o.id = 'dressapp-importer-widget';
       o.style.cssText = 'position:fixed;top:20px;left:20px;z-index:999999;background:rgba(15,23,42,0.95);color:white;padding:16px;border-radius:12px;font-family:sans-serif;font-size:13px;box-shadow:0 10px 25px rgba(0,0,0,0.3);width:260px;line-height:1.4;border:1px solid rgba(255,255,255,0.1);';
-      o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;">👗 DressApp Agent</div><div id="da-status" style="color:#94a3b8;font-size:11px;"><div style="margin-bottom:8px;color:#cbd5e1;">Choose <b>THIS TAB</b> in the sharing prompt to start.</div><button id="da-start-btn" style="background:#6366f1;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:11px;width:100%;">Share & Start Agent</button></div>';
+      o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;"><span class="da-pulse-badge">👗</span> DressApp Agent</div><div id="da-status" style="color:#94a3b8;font-size:11px;"><div style="margin-bottom:8px;color:#cbd5e1;">Choose <b>THIS TAB</b> in the sharing prompt to start.</div><button id="da-start-btn" style="background:#6366f1;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:11px;width:100%;">Share & Start Agent</button></div>';
       document.body.appendChild(o);
 
       const st = document.getElementById('da-status');
@@ -307,10 +306,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               const reachedBottom = (!changed && noChangeCount >= 3);
               captureAndSend(reachedBottom);
             } else if (action === 'done') {
-              st.innerHTML = '<span style="color:#34d399;font-weight:bold;">✓ Done!</span> Return to DressApp.';
+              st.innerHTML = '<div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">✓ Migration Completed!</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">The closet import has successfully completed.<br>You can now safely close this window and return to the main DressApp screen.</div>';
               stream.getTracks().forEach(t => t.stop());
               video.remove();
-              setTimeout(() => o.remove(), 4000);
             }
           }
         });
@@ -504,8 +502,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       const sessRes = await api.startMigrationSession({ app_name: appName.trim() });
       setActiveSessionId(sessRes.session_id);
       
-      // Open in a standard browser tab instead of a popup window
-      const win = window.open(targetLoginUrl, '_blank');
+      // Open in a new browser window with a toolbar/menu to prevent background sleep/throttling when navigating away
+      const win = window.open(targetLoginUrl, '_blank', 'width=1200,height=800,location=yes,menubar=yes,status=yes,toolbar=yes');
       if (win) {
         win.opener = window;
       }
@@ -843,6 +841,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     <p>
                       {t('migration.bookmarkletUsageInstructions', { appName, defaultValue: `After installing, click "Import wardrobe" below to initialize. Log in to Whering, go to your closet page, then click the "DressApp Agent" bookmarklet.` })}
                     </p>
+                    <div className="mt-2.5 p-3 bg-amber-500/10 text-amber-600 rounded-xl border border-amber-500/20 text-[11px] leading-normal font-medium">
+                      ⚠️ <b>Window Focus Alert:</b> Leave the new competitor browser window open. If you switch tabs in that window, Chrome will sleep/throttle the scroller. You can keep working in other windows, just do not minimize or tab-switch away inside the competitor window itself.
+                    </div>
                   </div>
                 </div>
               )}
