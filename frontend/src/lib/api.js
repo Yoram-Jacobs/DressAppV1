@@ -208,6 +208,8 @@ export const api = {
   updateMigrationFlag: (body) => client.patch('/users/migration-flag', body).then((r) => r.data),
   importCompetitorCloset: (body) => client.post('/closet/import-competitor', body).then((r) => r.data),
   importCompetitorScreenshotScroll: (body) => client.post('/closet/import-competitor-screenshot-scroll', body).then((r) => r.data),
+  startMigrationSession: (body) => client.post('/closet/migration/session/start', body).then((r) => r.data),
+  stepMigrationSession: (body) => client.post('/closet/migration/session/step', body).then((r) => r.data),
   getImportJobStatus: (jobId) => client.get(`/closet/import-job-status/${jobId}`).then((r) => r.data),
   importCompetitorClosetStream: ({ body, onFrame, signal } = {}) =>
     streamNdjson('/closet/import-competitor-stream', {

@@ -17,6 +17,7 @@ from app.services.migration.scroller_engine import ScrollerEngine, compute_frame
 from app.services.migration.grid_slicer import GridSlicer, extract_tiles_opencv, extract_tiles_grid_geometry
 from app.services.migration.dedup_engine import DedupEngine, compute_perceptual_hash, is_duplicate
 from app.services.migration.garmentvision_adapter import GarmentVisionAdapter
+from app.services.migration.wardrobe_migration_agent import WardrobeMigrationAgent
 
 __all__ = [
     "SCROLL_AMOUNT",
@@ -35,4 +36,5 @@ __all__ = [
     "compute_perceptual_hash",
     "is_duplicate",
     "GarmentVisionAdapter",
+    "WardrobeMigrationAgent",
 ]

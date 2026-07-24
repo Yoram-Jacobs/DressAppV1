@@ -21,11 +21,10 @@ import {
   Shirt,
   Layers,
   ExternalLink,
-  Image as ImageIcon,
+  ImageIcon,
   FileCode2,
   Maximize2,
-  Scissors,
-  Filter
+  Scissors
 } from 'lucide-react';
 
 const PRESET_APPS = [
@@ -50,45 +49,70 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   // Import mode: 'screenshot_scroll' | 'direct_photos' | 'paste_urls'
   const [importMode, setImportMode] = useState('screenshot_scroll');
   const [pastedUrlsText, setPastedUrlsText] = useState('');
-  const [screenshotFiles, setScreenshotFiles] = useState([]);
   const [popupOpened, setPopupOpened] = useState(false);
+  const [activeSessionId, setActiveSessionId] = useState(null);
+  const [syncedItemsList, setSyncedItemsList] = useState([]);
 
-  const harvesterBookmarkletCode = `javascript:void((async()=>{const o=document.createElement(\"div\");o.id=\"dressapp-importer-widget\";o.style.cssText=\"position:fixed;top:20px;left:20px;z-index:999999;background:rgba(15,23,42,0.95);color:white;padding:16px;border-radius:12px;font-family:sans-serif;font-size:13px;box-shadow:0 10px 25px rgba(0,0,0,0.3);width:260px;line-height:1.4;border:1px solid rgba(255,255,255,0.1);\";o.innerHTML=\"<div style='font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;display:flex;align-items:center;gap:6px;'>👗 DressApp Importer</div><div id='da-status' style='color:#94a3b8;font-size:11px;'><div style='margin-bottom:8px;color:#cbd5e1;'>Choose <b>THIS TAB</b> (the Whering tab) in the sharing prompt to capture closet items.</div><button id='da-start-btn' style='background:#6366f1;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:11px;width:100%;box-shadow:0 2px 4px rgba(0,0,0,0.2);'>Share & Start</button></div>\";document.body.appendChild(o);const st=document.getElementById(\"da-status\");const btn=document.getElementById(\"da-start-btn\");btn.onclick=async()=>{btn.disabled=true;btn.innerText=\"Requesting stream...\";let stream;try{stream=await navigator.mediaDevices.getDisplayMedia({video:{displaySurface:\"browser\"},preferCurrentTab:true})}catch(e){try{stream=await navigator.mediaDevices.getDisplayMedia({video:true,preferCurrentTab:true})}catch(err){st.innerHTML=\"<span style='color:#f87171;'>Permission denied: \"+err.message+\"</span>\";setTimeout(()=>o.remove(),4000);return}}const track=stream.getVideoTracks()[0];const settings=track?track.getSettings():{};if(settings.displaySurface&&settings.displaySurface!==\"browser\"){st.innerHTML=\"<span style='color:#f87171;'>Error: You must select <b>THIS TAB</b> in the sharing prompt. Window or Screen share is not supported as coordinates will not align. Please reload page & try again.</span>\";if(track)track.stop();return}st.innerText=\"Connecting stream...\";const video=document.createElement(\"video\");video.style.cssText=\"position:absolute;left:-9999px;top:-9999px;width:100px;height:100px;opacity:0.01;pointer-events:none;z-index:-1;\";video.srcObject=stream;video.playsInline=true;video.muted=true;document.body.appendChild(video);await video.play();await new Promise(r=>{if(video.readyState>=3)r();else video.oncanplay=r});await new Promise(r=>setTimeout(r,1000));const getScrollEl=()=>{const common=[\"main\",\"[class*=scroll]\",\"[class*=content]\",\"#root\",\".app-container\"];for(const sel of common){const el=document.querySelector(sel);if(el&&el.scrollHeight>el.clientHeight){const style=window.getComputedStyle(el);if(style.overflowY===\"auto\"||style.overflowY===\"scroll\")return el}}const all=document.querySelectorAll(\"*\");let best=null,maxScroll=0;for(const el of all){const style=window.getComputedStyle(el);if(style.overflowY===\"auto\"||style.overflowY===\"scroll\"){const dist=el.scrollHeight-el.clientHeight;if(dist>maxScroll){maxScroll=dist;best=el}}}return best||document.scrollingElement||document.documentElement||document.body};const scrollEl=getScrollEl();let sc=[];let max=35;let step=350;const getScrollState=()=>{return{window:window.scrollY||window.pageYOffset,doc:document.documentElement.scrollTop,body:document.body.scrollTop,el:(scrollEl&&scrollEl!==window)?scrollEl.scrollTop:0}};for(let i=0;i<max;i++){const s1=getScrollState();if(scrollEl&&scrollEl!==window&&scrollEl!==document.body&&scrollEl!==document.documentElement){scrollEl.scrollTop=i*step}window.scrollTo(0,i*step);document.documentElement.scrollTop=i*step;document.body.scrollTop=i*step;await new Promise(r=>setTimeout(r,1200));const s2=getScrollState();const changed=(s2.window!==s1.window)||(s2.doc!==s1.doc)||(s2.body!==s1.body)||(s2.el!==s1.el);if(i>0&&!changed){st.innerText=\"Bottom reached.\";break}st.innerText=\"Capturing screen \"+(i+1)+\" (pos: \"+(i*step)+\")...\";o.style.display=\"none\";const extWidget=document.getElementById(\"dressapp-importer-widget\");if(extWidget)extWidget.style.display=\"none\";await new Promise(r=>setTimeout(r,180));try{const rect=(scrollEl&&scrollEl!==window&&scrollEl!==document.documentElement&&scrollEl!==document.body)?scrollEl.getBoundingClientRect():{left:0,top:0,width:window.innerWidth,height:window.innerHeight};const scaleX=video.videoWidth/window.innerWidth;const scaleY=video.videoHeight/window.innerHeight;const cropX=rect.left*scaleX;const cropY=rect.top*scaleY;const cropW=rect.width*scaleX;const cropH=rect.height*scaleY;const canvas=document.createElement(\"canvas\");canvas.width=cropW;canvas.height=cropH;const ctx=canvas.getContext(\"2d\");ctx.drawImage(video,cropX,cropY,cropW,cropH,0,0,cropW,cropH);sc.push(canvas.toDataURL(\"image/png\"))}catch(e){st.innerText=\"Error: \"+e.message}o.style.display=\"block\";if(extWidget)extWidget.style.display=\"flex\"}stream.getTracks().forEach(track=>track.stop());video.remove();st.innerText=\"Sending \"+sc.length+\" screens...\";document.dispatchEvent(new CustomEvent(\"DRESSAPP_BOOKMARKLET_SCREENSHOTS\",{detail:{screenshots:sc}}));let sent=false;if(window.opener){try{window.opener.postMessage({type:\"DRESSAPP_MIGRATION_SCREENSHOTS\",screenshots:sc},\"*\");st.innerHTML=\"<span style='color:#34d399;font-weight:bold;'>✓ Done!</span> Return to DressApp.\";sent=true;setTimeout(()=>o.remove(),4000)}catch(e){}}if(!sent){st.innerHTML=\"<div style='margin-bottom:8px;color:#f87171;'>Opener lost. Click copy below, go back to DressApp and press Ctrl+V to import.</div><button id='da-copy-btn' style='background:#6366f1;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:11px;width:100%;'>Copy Import Data</button>\";const cb=document.getElementById(\"da-copy-btn\");if(cb){cb.onclick=()=>{navigator.clipboard.writeText(JSON.stringify({type:\"DRESSAPP_MIGRATION_SCREENSHOTS\",screenshots:sc}));cb.innerText=\"Copied! Press Ctrl+V in DressApp\";cb.style.background=\"#10b981\"}}}};})());`;
+  const harvesterBookmarkletCode = `javascript:void((async()=>{const o=document.createElement(\"div\");o.id=\"dressapp-importer-widget\";o.style.cssText=\"position:fixed;top:20px;left:20px;z-index:999999;background:rgba(15,23,42,0.95);color:white;padding:16px;border-radius:12px;font-family:sans-serif;font-size:13px;box-shadow:0 10px 25px rgba(0,0,0,0.3);width:260px;line-height:1.4;border:1px solid rgba(255,255,255,0.1);\";o.innerHTML=\"<div style='font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;'>👗 DressApp Agent</div><div id='da-status' style='color:#94a3b8;font-size:11px;'><div style='margin-bottom:8px;color:#cbd5e1;'>Choose <b>THIS TAB</b> in the sharing prompt to start.</div><button id='da-start-btn' style='background:#6366f1;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:11px;width:100%;'>Share & Start Agent</button></div>\";document.body.appendChild(o);const st=document.getElementById(\"da-status\");const btn=document.getElementById(\"da-start-btn\");btn.onclick=async()=>{btn.disabled=true;btn.innerText=\"Requesting stream...\";let stream;try{stream=await navigator.mediaDevices.getDisplayMedia({video:{displaySurface:\"browser\"},preferCurrentTab:true})}catch(e){try{stream=await navigator.mediaDevices.getDisplayMedia({video:true,preferCurrentTab:true})}catch(err){st.innerHTML=\"<span style='color:#f87171;'>Permission denied: \"+err.message+\"</span>\";setTimeout(()=>o.remove(),4000);return}}const track=stream.getVideoTracks()[0];const settings=track?track.getSettings():{};if(settings.displaySurface&&settings.displaySurface!==\"browser\"){st.innerHTML=\"<span style='color:#f87171;'>Error: You must select <b>THIS TAB</b> in the sharing prompt. Window or Screen share is not supported as coordinates will not align. Please reload page & try again.</span>\";if(track)track.stop();return}st.innerText=\"Connecting stream...\";const video=document.createElement(\"video\");video.style.cssText=\"position:absolute;left:-9999px;top:-9999px;width:100px;height:100px;opacity:0.01;pointer-events:none;z-index:-1;\";video.srcObject=stream;video.playsInline=true;video.muted=true;document.body.appendChild(video);await video.play();await new Promise(r=>{if(video.readyState>=3)r();else video.oncanplay=r});await new Promise(r=>setTimeout(r,1000));const getScrollEl=()=>{const common=[\"main\",\"[class*=scroll]\",\"[class*=content]\",\"#root\",\".app-container\"];for(const sel of common){const el=document.querySelector(sel);if(el&&el.scrollHeight>el.clientHeight){const style=window.getComputedStyle(el);if(style.overflowY===\"auto\"||style.overflowY===\"scroll\")return el}}return document.scrollingElement||document.documentElement||document.body};const scrollEl=getScrollEl();let scrollPos=0;window.addEventListener(\"message\",async(e)=>{if(e.data&&e.data.type===\"DRESSAPP_AGENT_ACTION\"){const{action,scroll_amount}=e.data;if(action===\"scroll\"){scrollPos+=scroll_amount;if(scrollEl&&scrollEl!==window&&scrollEl!==document.body&&scrollEl!==document.documentElement){scrollEl.scrollTop=scrollPos}window.scrollTo(0,scrollPos);document.documentElement.scrollTop=scrollPos;document.body.scrollTop=scrollPos;await new Promise(r=>setTimeout(r,1200));captureAndSend()}else if(action===\"done\"){st.innerHTML=\"<span style='color:#34d399;font-weight:bold;'>✓ Done!</span> Return to DressApp.\";stream.getTracks().forEach(t=>t.stop());video.remove();setTimeout(()=>o.remove(),4000)}}});const captureAndSend=async()=>{st.innerText=\"Agent analyzing viewport...\";o.style.display=\"none\";await new Promise(r=>setTimeout(r,180));try{const rect=(scrollEl&&scrollEl!==window&&scrollEl!==document.documentElement&&scrollEl!==document.body)?scrollEl.getBoundingClientRect():{left:0,top:0,width:window.innerWidth,height:window.innerHeight};const scaleX=video.videoWidth/window.innerWidth;const scaleY=video.videoHeight/window.innerHeight;const cropX=rect.left*scaleX;const cropY=rect.top*scaleY;const cropW=rect.width*scaleX;const cropH=rect.height*scaleY;const canvas=document.createElement(\"canvas\");canvas.width=cropW;canvas.height=cropH;const ctx=canvas.getContext(\"2d\");ctx.drawImage(video,cropX,cropY,cropW,cropH,0,0,cropW,cropH);const b64=canvas.toDataURL(\"image/png\");o.style.display=\"block\";if(window.opener){window.opener.postMessage({type:\"DRESSAPP_AGENT_FRAME\",screenshot:b64},\"*\")}else{st.innerHTML=\"<div style='color:#f87171;'>Connection lost. Reopen modal.</div>\"}}catch(err){o.style.display=\"block\";st.innerText=\"Error: \"+err.message}};captureAndSend()}};})());`;
+
   useEffect(() => {
-    const handleMessage = (event) => {
-      if (event.data && event.data.type === 'DRESSAPP_MIGRATION_SCREENSHOTS') {
-        const screens = event.data.screenshots || [];
-        if (screens.length > 0) {
-          setScreenshotFiles(screens);
-          toast.success(t('migration.screenshotsCaptured', { count: screens.length, defaultValue: `Automatically captured ${screens.length} screenshots from your closet!` }));
-        }
-      }
-    };
-
-    const handlePaste = (e) => {
-      try {
-        const text = e.clipboardData.getData('text');
-        if (text) {
-          const parsed = JSON.parse(text);
-          if (parsed && parsed.type === 'DRESSAPP_MIGRATION_SCREENSHOTS' && Array.isArray(parsed.screenshots)) {
-            setScreenshotFiles(parsed.screenshots);
-            toast.success(t('migration.pastedSuccess', { count: parsed.screenshots.length, defaultValue: `Imported ${parsed.screenshots.length} screenshots from clipboard!` }));
+    const handleMessage = async (event) => {
+      if (event.data && event.data.type === 'DRESSAPP_AGENT_FRAME') {
+        const sc = event.data.screenshot;
+        setIsSyncing(true);
+        setSyncStatusText(t('migration.agentProcessing', { defaultValue: 'Wardrobe Migration Agent analyzing viewport screenshot...' }));
+        
+        try {
+          let sessId = activeSessionId;
+          if (!sessId) {
+            const sessRes = await api.startMigrationSession({ app_name: appName.trim() });
+            sessId = sessRes.session_id;
+            setActiveSessionId(sessId);
           }
+
+          const res = await api.stepMigrationSession({
+            session_id: sessId,
+            app_name: appName.trim(),
+            screenshot: sc
+          });
+
+          if (res.new_items_found && res.new_items_found.length > 0) {
+            setSyncedItemsList((prev) => [...prev, ...res.new_items_found]);
+            setSyncedItems((prev) => prev + res.new_items_found.length);
+            toast.success(t('migration.itemsFound', { count: res.new_items_found.length, defaultValue: `Agent discovered ${res.new_items_found.length} new items!` }));
+          }
+
+          if (res.action === 'scroll') {
+            setProgressPct((prev) => Math.min(90, prev + 5));
+          }
+
+          // Reply back to the bookmarklet window
+          if (event.source) {
+            event.source.postMessage({
+              type: 'DRESSAPP_AGENT_ACTION',
+              action: res.action,
+              scroll_amount: res.scroll_amount || 350
+            }, '*');
+          }
+
+          if (res.action === 'done') {
+            setIsSyncing(false);
+            setProgressPct(100);
+            setMigrationStage('outfits_prompt');
+            toast.success(t('migration.agentCompleted', { defaultValue: 'Wardrobe Migration Agent successfully completed closet import!' }));
+          }
+        } catch (err) {
+          setIsSyncing(false);
+          toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'Agent error during step processing.' }));
         }
-      } catch (err) {
-        // Ignore if pasted text is not a valid DressApp screenshots payload
       }
     };
 
     window.addEventListener('message', handleMessage);
-    window.addEventListener('paste', handlePaste);
     return () => {
       window.removeEventListener('message', handleMessage);
-      window.removeEventListener('paste', handlePaste);
     };
-  }, [t]);
-
-
+  }, [t, activeSessionId, appName]);
 
   const bookmarkletRef = useRef(null);
 
@@ -163,87 +187,20 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     setMigrationStage('items');
   };
 
-  const handleOpenPopupWindow = () => {
-    window.open(targetLoginUrl, 'WardrobeAppLoginWindow', 'width=520,height=720,scrollbars=yes,resizable=yes');
-    toast.info(t('migration.popupOpened', { appName, defaultValue: `Opened ${appName} login window. Log in & screenshot your wardrobe feed, then click Import.` }));
-    setPopupOpened(true);
-  };
-
-  // Convert uploaded screenshot frames to Base64
-  const handleScreenshotSelection = (e) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-
-    const readers = files.map((file) => {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          resolve(evt.target.result);
-        };
-        reader.readAsDataURL(file);
-      });
-    });
-
-    Promise.all(readers).then((b64Screenshots) => {
-      setScreenshotFiles((prev) => [...prev, ...b64Screenshots]);
-      toast.success(t('migration.screenshotsLoaded', { count: b64Screenshots.length, defaultValue: `Loaded ${b64Screenshots.length} viewport screenshots for Screenshot-Scroller & Deduplication pipeline!` }));
-    });
-  };
-
-  // Run Screenshot-Scroller & Deduplication Pipeline (Backend Step A -> B -> C -> D)
-  const handleRunScreenshotPipeline = async () => {
-    if (!screenshotFiles.length) {
-      toast.error(t('migration.noScreenshotsError', { defaultValue: 'Please select or capture at least one screenshot frame.' }));
-      return;
-    }
-
-    setIsSyncing(true);
-    setProgressPct(15);
-    setSyncStatusText(t('migration.stepA_Scroller', { defaultValue: 'Step A: Scroll & Capture stabilization (ImageChops.difference)...' }));
-
+  const handleOpenPopupWindow = async () => {
     try {
-      setTimeout(() => {
-        setProgressPct(40);
-        setSyncStatusText(t('migration.stepB_GridSlicer', { defaultValue: 'Step B: Bounding box slicing & region extraction (OpenCV contours)...' }));
-      }, 700);
-
-      setTimeout(() => {
-        setProgressPct(70);
-        setSyncStatusText(t('migration.stepC_Dedup', { defaultValue: 'Step C: Item-level perceptual deduplication (Hamming distance <= 5)...' }));
-      }, 1400);
-
-      const res = await api.importCompetitorScreenshotScroll({
-        app_name: appName.trim(),
-        screenshots: screenshotFiles,
-        scroll_amount: 300,
-        hamming_threshold: 5,
-      });
-
-      setProgressPct(95);
-      setSyncStatusText(t('migration.stepD_GarmentVision', { defaultValue: 'Step D: Ingesting into GarmentVision AI (background matting & DB)...' }));
-
-      setTimeout(() => {
-        setProgressPct(100);
-        setIsSyncing(false);
-        setPipelineResult(res);
-        setSyncedItems(res.items_persisted_count || 0);
-        setTotalItems(res.items_persisted_count || 0);
-        setMigrationStage('outfits_prompt');
-        toast.success(t('migration.pipelineSuccess', { count: res.items_persisted_count, defaultValue: `Successfully extracted and saved ${res.items_persisted_count} unique garments!` }));
-      }, 2000);
+      const sessRes = await api.startMigrationSession({ app_name: appName.trim() });
+      setActiveSessionId(sessRes.session_id);
+      window.open(targetLoginUrl, 'WardrobeAppLoginWindow', 'width=520,height=720,scrollbars=yes,resizable=yes');
+      toast.info(t('migration.popupOpened', { appName, defaultValue: `Opened ${appName} login window. Log in & screenshot your wardrobe feed, then click Import.` }));
+      setPopupOpened(true);
     } catch (err) {
-      setIsSyncing(false);
-      toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'An error occurred during screenshot pipeline execution.' }));
+      toast.error(t('migration.sessionStartError', { defaultValue: 'Could not initialize migration session. Please try again.' }));
     }
   };
 
   // Stage 1: Silent Background Import Wardrobe Items
   const handleStartItemImport = async () => {
-    if (importMode === 'screenshot_scroll') {
-      await handleRunScreenshotPipeline();
-      return;
-    }
-
     let realPayloadItems = [];
     if (pastedUrlsText.trim()) {
       try {
@@ -298,173 +255,170 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         ]
       });
     }
-    setTotalOutfits(dynamicOutfits.length);
 
-    try {
-      const outfitDelay = dynamicOutfits.length > 0 ? Math.max(100, Math.floor(800 / dynamicOutfits.length)) : 100;
-      for (let j = 1; j <= dynamicOutfits.length; j++) {
-        await new Promise((r) => setTimeout(r, outfitDelay));
-        setSyncedOutfits(j);
-        const outfitPct = 10 + Math.floor((j / dynamicOutfits.length) * 85);
-        setProgressPct(outfitPct);
+    setTimeout(async () => {
+      try {
+        db_persist_outfits(dynamicOutfits);
+        setSyncedOutfits(outfitCountInput);
+        setProgressPct(100);
+        setIsSyncing(false);
+        setMigrationStage('complete');
+        toast.success(t('migration.outfitsImportSuccess', { count: outfitCountInput, defaultValue: `Successfully imported ${outfitCountInput} outfits combinations!` }));
+      } catch (err) {
+        setIsSyncing(false);
+        toast.error(t('migration.outfitImportError', { defaultValue: 'Failed to ingest outfits mappings.' }));
       }
+    }, 1800);
+  };
 
-      setSyncStatusText(t('migration.finalizingOutfits', { defaultValue: 'Finalizing outfit canvas sync...' }));
-      setProgressPct(98);
-
-      await api.importCompetitorCloset({
-        app_name: appName.trim(),
-        items: [],
-        outfits: dynamicOutfits,
+  const db_persist_outfits = (outfitsList) => {
+    for (const out of outfitsList) {
+      outfitStore.addOutfit({
+        id: `outfit_${uuid_short()}`,
+        name: out.name,
+        description: out.description,
+        garments: out.garments,
+        created_at: new Date().toISOString(),
       });
-
-      await outfitStore.prewarm({ force: true }).catch(() => {});
-      setProgressPct(100);
-      setIsSyncing(false);
-      setMigrationStage('complete');
-    } catch (err) {
-      toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'An error occurred during outfit import.' }));
-      setIsSyncing(false);
     }
+  };
+
+  const uuid_short = () => {
+    return Math.random().toString(36).substring(2, 9);
   };
 
   const handleFinishSuccess = async () => {
     setBusy(true);
     try {
-      await closetStore.prewarm({ force: true });
-      await outfitStore.prewarm({ force: true });
-      if (onFlagUpdated) onFlagUpdated('Migrate');
-      toast.success(t('migration.allImportedSuccess', { defaultValue: 'Successfully imported all wardrobe items and outfits to DressApp!' }));
+      await api.updateMigrationFlag({ migration_flag: 'Done' });
+      toast.success(t('migration.flaggedDone', { defaultValue: 'Account updated successfully!' }));
+      if (onFlagUpdated) onFlagUpdated('Done');
       onClose();
       navigate('/closet');
-    } catch {
-      onClose();
-      navigate('/closet');
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'An error occurred.' }));
     } finally {
       setBusy(false);
     }
   };
 
-  const handleCancelForm = async () => {
-    setBusy(true);
-    try {
-      await api.updateMigrationFlag({ migration_flag: 'New' });
-      if (onFlagUpdated) onFlagUpdated('New');
-      setPopupOpened(false);
-      onClose();
-    } catch {
-      setPopupOpened(false);
-      onClose();
-    } finally {
-      setBusy(false);
-    }
+  const handleCancelForm = () => {
+    setStep('ask');
+    setMigrationStage('items');
+    setPopupOpened(false);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(val) => { if (!val && !isSyncing) handleCancelForm(); }}>
-      <DialogContent className={`rounded-2xl p-4 md:p-6 bg-card border border-border shadow-2xl overflow-hidden transition-all duration-200 ${step === 'web_login' ? 'max-w-3xl w-[95vw] max-h-[92vh] flex flex-col' : 'max-w-md'}`}>
-        {/* STEP 1: ASK */}
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md w-full bg-background border-border rounded-2xl shadow-xl flex flex-col max-h-[90vh] overflow-hidden p-6 gap-4 animate-in fade-in zoom-in-95 duration-200">
+        
+        {/* STEP 1: INITIAL CONTEXT QUESTION */}
         {step === 'ask' && (
-          <div className="space-y-5 text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-              <Sparkles className="w-6 h-6" />
-            </div>
-            <DialogHeader className="text-center">
-              <DialogTitle className="text-xl font-bold font-display">
-                {t('migration.askTitle', { defaultValue: 'Do you have an existing digital wardrobe account?' })}
+          <div className="space-y-4 text-center shrink-0">
+            <DialogHeader>
+              <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2 animate-bounce">
+                <Shirt className="w-6 h-6 text-primary" />
+              </div>
+              <DialogTitle className="text-lg md:text-xl font-bold font-display text-foreground text-center">
+                {t('migration.welcomeTitle', { defaultValue: 'New to DressApp?' })}
               </DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground mt-2">
-                {t('migration.askSub', { defaultValue: 'Already using another closet app like Stylebook, Acloset, or Whering? Import your real clothes into DressApp using GarmentVision AI!' })}
+              <DialogDescription className="text-xs text-muted-foreground text-center">
+                {t('migration.welcomeSub', { defaultValue: 'Would you like to import your wardrobe details and clothes from another platform?' })}
               </DialogDescription>
             </DialogHeader>
 
             <div className="grid grid-cols-2 gap-3 pt-2">
               <Button
+                type="button"
                 variant="outline"
                 onClick={handleNoClick}
                 disabled={busy}
-                className="rounded-xl h-11 border-border hover:bg-muted font-medium"
-                data-testid="migration-modal-no-btn"
+                className="rounded-xl h-10 font-semibold"
+                data-testid="migration-ask-no-btn"
               >
-                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : t('common.no', { defaultValue: 'No' })}
+                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : t('migration.noStartFresh', { defaultValue: 'No, Start Fresh' })}
               </Button>
               <Button
+                type="button"
                 onClick={() => setStep('app_search')}
-                disabled={busy}
-                className="rounded-xl h-11 font-medium bg-primary text-primary-foreground hover:opacity-90 flex items-center justify-center gap-2"
-                data-testid="migration-modal-yes-btn"
+                className="rounded-xl h-10 bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-1 shadow-sm hover:opacity-95"
+                data-testid="migration-ask-yes-btn"
               >
-                {t('common.yes', { defaultValue: 'Yes' })}
+                <span>{t('migration.yesImportBtn', { defaultValue: 'Yes, Import Closet' })}</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
         )}
 
-        {/* STEP 2: APP SELECTION & IMPORT METHOD */}
+        {/* STEP 2: SEARCH PLATFORM & LOGIN PRESETS */}
         {step === 'app_search' && (
-          <form onSubmit={handleGoToWebLogin} className="space-y-4">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-bold font-display flex items-center gap-2">
-                <Globe className="w-5 h-5 text-primary" />
-                {t('migration.seamlessTitle', { defaultValue: 'Connect & Import Previous Closet' })}
+          <form onSubmit={handleGoToWebLogin} className="space-y-4 text-left flex flex-col overflow-hidden shrink-0">
+            <DialogHeader className="shrink-0">
+              <DialogTitle className="text-base md:text-lg font-bold font-display text-foreground">
+                {t('migration.selectAppTitle', { defaultValue: 'Select Previous Platform' })}
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                {t('migration.seamlessSub', { defaultValue: 'Select your previous wardrobe app to import your real garment photos into DressApp.' })}
+                {t('migration.selectAppSub', { defaultValue: 'Pick an application to import your wardrobe structure, items list, and layouts.' })}
               </DialogDescription>
             </DialogHeader>
 
-            {/* Presets */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">
-                {t('migration.searchAppLabel', { defaultValue: 'Popular Digital Wardrobes:' })}
-              </Label>
-              <div className="flex flex-wrap gap-1.5">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[300px]">
+              {/* Presets List */}
+              <div className="grid grid-cols-1 gap-2">
                 {PRESET_APPS.map((app) => (
                   <button
                     key={app.name}
                     type="button"
                     onClick={() => handleSelectPreset(app)}
-                    className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all flex items-center gap-1 ${
+                    className={`flex items-center justify-between p-3 rounded-xl border transition-all text-left ${
                       appName === app.name
-                        ? 'bg-primary/10 border-primary text-primary shadow-xs'
-                        : 'bg-muted/50 border-border text-foreground hover:bg-muted'
+                        ? 'border-primary bg-primary/5 text-primary'
+                        : 'border-border bg-card text-card-foreground hover:bg-accent/40'
                     }`}
                   >
-                    <span>{app.icon}</span>
-                    <span>{app.name}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">{app.icon}</span>
+                      <div>
+                        <span className="font-bold text-sm block text-foreground">{app.name}</span>
+                        <span className="text-[10px] text-muted-foreground block">{app.domain}</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] bg-muted px-2.5 py-1 rounded-full font-mono font-bold text-foreground">
+                      ~{app.defaultItems} items
+                    </span>
                   </button>
                 ))}
               </div>
-            </div>
 
-            {/* App Name Input */}
-            <div className="space-y-3 pt-1">
-              <div>
-                <Label htmlFor="appNameInput" className="text-xs font-semibold">
-                  {t('migration.appNameLabel', { defaultValue: 'Previous App Name / Platform *' })}
-                </Label>
-                <div className="relative mt-1">
-                  <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
-                  <Input
-                    id="appNameInput"
-                    placeholder={t('migration.searchAppPlaceholder', { defaultValue: 'e.g. Acloset, Stylebook, Whering, Smartli, BeautyAI' })}
-                    value={appName}
-                    onChange={(e) => {
-                      setAppName(e.target.value);
-                      const d = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '') + '.app';
-                      setAppDomain(d);
-                      setCustomLoginUrl(`https://${d}`);
-                    }}
-                    className="rounded-xl pl-9 text-sm h-10"
-                    required
-                    data-testid="migration-form-appname-input"
-                  />
+              {/* App Name Input */}
+              <div className="space-y-3 pt-1">
+                <div>
+                  <Label htmlFor="appNameInput" className="text-xs font-semibold">
+                    {t('migration.appNameLabel', { defaultValue: 'Previous App Name / Platform *' })}
+                  </Label>
+                  <div className="relative mt-1">
+                    <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
+                    <Input
+                      id="appNameInput"
+                      placeholder={t('migration.searchAppPlaceholder', { defaultValue: 'e.g. Acloset, Stylebook, Whering, Smartli, BeautyAI' })}
+                      value={appName}
+                      onChange={(e) => {
+                        setAppName(e.target.value);
+                        const d = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '') + '.app';
+                        setAppDomain(d);
+                        setCustomLoginUrl(`https://${d}`);
+                      }}
+                      className="rounded-xl pl-9 text-sm h-10"
+                      required
+                      data-testid="migration-form-appname-input"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/50">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/50 shrink-0">
               <Button
                 type="button"
                 variant="outline"
@@ -492,15 +446,15 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             <DialogHeader className="border-b border-border pb-2.5 shrink-0">
               <DialogTitle className="text-base md:text-lg font-bold font-display flex items-center justify-between">
                 <span className="flex items-center gap-2 truncate">
-                  <Sparkles className="w-4 h-4 text-primary shrink-0" />
-                  {t('migration.screenshotPipelineTitle', { defaultValue: 'Screenshot-Scroller & GarmentVision AI Pipeline' })}
+                  <Sparkles className="w-4 h-4 text-primary shrink-0 animate-pulse" />
+                  {t('migration.screenshotPipelineTitle', { defaultValue: 'Wardrobe Migration Agent' })}
                 </span>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <a
                     href={targetLoginUrl}
                     target="_blank"
                     rel="opener"
-                    onClick={() => setPopupOpened(true)}
+                    onClick={handleOpenPopupWindow}
                     className="text-xs text-foreground h-7 px-2.5 rounded-lg border border-border bg-background hover:bg-accent hover:text-accent-foreground font-semibold inline-flex items-center gap-1"
                   >
                     <Maximize2 className="w-3 h-3" />
@@ -509,7 +463,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 </div>
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground truncate">
-                {t('migration.screenshotPipelineSub', { defaultValue: 'Screenshot your competitor wardrobe feeds. Perceptual hashing will deduplicate tiles and GarmentVision AI will extract clean assets.' })}
+                {t('migration.screenshotPipelineSub', { defaultValue: 'Agentic closet importer powered by Gemini 2.5 Flash.' })}
               </DialogDescription>
             </DialogHeader>
 
@@ -523,7 +477,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 }`}
               >
                 <Scissors className="w-3.5 h-3.5" />
-                <span>{t('migration.modeScreenshotScroll', { defaultValue: 'Screenshot Scroller' })}</span>
+                <span>{t('migration.modeScreenshotScroll', { defaultValue: 'Agent Scroller' })}</span>
               </button>
               <button
                 type="button"
@@ -549,21 +503,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   </div>
 
                   <div className="space-y-3 text-xs text-muted-foreground">
-                    {/* Extension Notice */}
-                    <div className="p-3 bg-indigo-500/15 border border-indigo-500/30 text-indigo-600 dark:text-indigo-300 rounded-xl flex items-start gap-2">
-                      <Sparkles className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5 animate-pulse" />
-                      <div>
-                        <span className="font-bold text-foreground block mb-0.5">
-                          {t('migration.extInstalledTitle', { defaultValue: 'Using our Chrome Extension? (Recommended)' })}
-                        </span>
-                        <span>
-                          {t('migration.extInstalledSub', { appName, defaultValue: `No bookmarklet needed! Just click "Import wardrobe" below, go to your closet on ${appName}, and click the floating "Import Wardrobe" widget.` })}
-                        </span>
-                      </div>
-                    </div>
-
                     <p>
-                      {t('migration.bookmarkletInstallInstructions', { appName, defaultValue: `Otherwise, drag the bookmarklet button below to your browser Bookmarks Bar (Ctrl+Shift+B to show the bar):` })}
+                      {t('migration.bookmarkletInstallInstructions', { appName, defaultValue: `Drag the agent bookmarklet button below to your browser Bookmarks Bar (Ctrl+Shift+B to show the bar):` })}
                     </p>
                     
                     {/* Drag bookmarklet */}
@@ -579,13 +520,13 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                         className="px-4 py-2 bg-primary text-primary-foreground font-bold rounded-lg cursor-move shadow-sm hover:opacity-90 flex items-center gap-1.5"
                       >
                         <Shirt className="w-4 h-4" />
-                        {t('migration.bookmarkletBtn', { defaultValue: '👗 DressApp Importer' })}
+                        {t('migration.bookmarkletBtn', { defaultValue: '👗 DressApp Agent' })}
                       </a>
                       <span className="text-[10px] text-muted-foreground">{t('migration.dragTip', { defaultValue: 'Drag this button to your browser Bookmarks Bar' })}</span>
                     </div>
 
                     <p>
-                      {t('migration.bookmarkletUsageInstructions', { appName, defaultValue: `After installing, click "Import wardrobe" below. Log in to Whering, go to your closet page, then click the "DressApp Importer" bookmarklet.` })}
+                      {t('migration.bookmarkletUsageInstructions', { appName, defaultValue: `After installing, click "Import wardrobe" below to initialize. Log in to Whering, go to your closet page, then click the "DressApp Agent" bookmarklet.` })}
                     </p>
                   </div>
                 </div>
@@ -594,41 +535,35 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               {importMode === 'screenshot_scroll' && popupOpened && (
                 <div className="space-y-4 text-center">
                   <div className="border-2 border-dashed border-primary/40 rounded-2xl p-6 bg-background/80 hover:bg-background transition-colors cursor-pointer relative group">
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleScreenshotSelection}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
-                    />
                     <UploadCloud className="w-10 h-10 mx-auto text-primary mb-2 group-hover:scale-110 transition-transform" />
-                    {screenshotFiles.length === 0 ? (
+                    {syncedItemsList.length === 0 ? (
                       <>
                         <h3 className="text-sm font-bold text-foreground">
-                          {t('migration.waitingForScreenshotsTitle', { defaultValue: 'Waiting for Automated Screenshots' })}
+                          {t('migration.waitingForAgentTitle', { defaultValue: 'Waiting for Migration Agent' })}
                         </h3>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {t('migration.waitingForScreenshotsSub', { appName, defaultValue: `Click the "DressApp Importer" bookmarklet on your Whering tab to send screens here automatically, or select files manually.` })}
+                          {t('migration.waitingForAgentSub', { appName, defaultValue: `Click the "DressApp Agent" bookmarklet on your Whering tab to start the agent import.` })}
                         </p>
                       </>
                     ) : (
                       <>
                         <h3 className="text-sm font-bold text-foreground">
-                          {t('migration.screenshotsReadyTitle', { defaultValue: 'Screenshots Captured & Ready' })}
+                          {t('migration.agentIngestingTitle', { defaultValue: 'Agent Ingesting Garments...' })}
                         </h3>
                         <div className="mt-3 inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-600 px-3 py-1 rounded-full text-xs font-bold">
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          {t('migration.screenshotsReady', { count: screenshotFiles.length, defaultValue: `${screenshotFiles.length} Viewport Screenshot Frames Ready` })}
+                          {t('migration.garmentsImportedCount', { count: syncedItemsList.length, defaultValue: `${syncedItemsList.length} clothes imported` })}
                         </div>
                       </>
                     )}
                   </div>
 
-                  {screenshotFiles.length > 0 && (
+                  {syncedItemsList.length > 0 && (
                     <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-40 overflow-y-auto p-2 bg-card rounded-xl border border-border">
-                      {screenshotFiles.map((f, idx) => (
-                        <div key={idx} className="aspect-square rounded-lg border border-border overflow-hidden relative bg-muted">
-                          <img src={f} alt={`Screenshot ${idx + 1}`} className="w-full h-full object-cover" />
+                      {syncedItemsList.map((item, idx) => (
+                        <div key={idx} className="aspect-square rounded-lg border border-border overflow-hidden relative bg-muted flex flex-col justify-between">
+                          <img src={item.segmented_image_url || item.original_image_url} alt={item.title} className="w-full h-full object-cover" />
+                          <div className="absolute bottom-0 left-0 right-0 bg-background/80 text-[8px] truncate px-1 text-center font-bold">{item.title}</div>
                         </div>
                       ))}
                     </div>
@@ -678,7 +613,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     <Shirt className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                     <div>
                       <span className="text-[9px] text-muted-foreground block">{t('migration.processedGarments', { defaultValue: 'Garments' })}</span>
-                      <span className="font-bold font-mono text-foreground text-xs">{syncedItems} / {totalItems}</span>
+                      <span className="font-bold font-mono text-foreground text-xs">{syncedItems}</span>
                     </div>
                   </div>
                   <div className="p-1.5 rounded-lg bg-background border border-border flex items-center gap-2">
@@ -696,17 +631,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   <CheckCircle2 className="w-4 h-4" />
                   {t('migration.garmentsProcessedSuccess', { defaultValue: 'Garments Imported Successfully!' })}
                 </div>
-                {pipelineResult && (
-                  <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground font-mono bg-muted/40 p-1 rounded-lg max-w-sm mx-auto">
-                    <span>Views: {pipelineResult.viewports_captured}</span>
-                    <span>•</span>
-                    <span>Extracted: {pipelineResult.tiles_extracted}</span>
-                    <span>•</span>
-                    <span>Unique: {pipelineResult.unique_assets}</span>
-                    <span>•</span>
-                    <span>Saved: {pipelineResult.items_persisted_count ?? 0}</span>
-                  </div>
-                )}
+                <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground font-mono bg-muted/40 p-1 rounded-lg max-w-sm mx-auto">
+                  <span>Imported: {syncedItemsList.length} items</span>
+                </div>
                 <p className="text-[11px] text-muted-foreground">
                   {t('migration.importOutfitsPrompt', { defaultValue: 'Would you like to import outfits as well?' })}
                 </p>
@@ -759,16 +686,14 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 <div className="flex items-center gap-2">
                   <Shirt className="w-4 h-4 text-primary shrink-0" />
                   <span className="text-xs font-semibold text-muted-foreground">
-                    {t('migration.garmentVisionReady', { defaultValue: 'GarmentVision Ready' })}
+                    {t('migration.garmentVisionReady', { defaultValue: 'Agentic Ingestion Ready' })}
                   </span>
                 </div>
 
                 {importMode === 'screenshot_scroll' && !popupOpened ? (
-                  <a
-                    href={targetLoginUrl}
-                    target="_blank"
-                    rel="opener"
-                    onClick={() => setPopupOpened(true)}
+                  <Button
+                    type="button"
+                    onClick={handleOpenPopupWindow}
                     className="rounded-xl h-8 px-4 bg-primary text-primary-foreground font-bold text-xs inline-flex items-center justify-center gap-1 shadow-sm hover:opacity-95"
                     data-testid="migration-weblogin-proceed-btn"
                   >
@@ -776,7 +701,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                       {t('migration.importWardrobeBtn', { defaultValue: 'Import wardrobe' })}
                     </span>
                     <ArrowRight className="w-3.5 h-3.5" />
-                  </a>
+                  </Button>
                 ) : (
                   <Button
                     type="button"

@@ -2761,6 +2761,75 @@ async def import_competitor_screenshot_scroll(
     }
 
 
+class MigrationSessionStartIn(BaseModel):
+    app_name: str = "Whering"
+
+
+class MigrationSessionStepIn(BaseModel):
+    session_id: str
+    app_name: str
+    screenshot: str
+
+
+@router.post("/migration/session/start")
+async def start_migration_session(
+    payload: MigrationSessionStartIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    import uuid
+    from datetime import datetime, timezone
+    db = get_db()
+
+    session_id = f"mig_sess_{uuid.uuid4().hex[:12]}"
+    session = {
+        "id": session_id,
+        "user_id": user["id"],
+        "app_name": payload.app_name,
+        "parsed_hashes": [],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.migration_sessions.insert_one(session)
+    return {
+        "session_id": session_id,
+        "app_name": payload.app_name,
+    }
+
+
+@router.post("/migration/session/step")
+async def step_migration_session(
+    payload: MigrationSessionStepIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    import base64
+    import io
+    from PIL import Image
+    from fastapi import HTTPException
+    from app.services.migration.wardrobe_migration_agent import WardrobeMigrationAgent
+
+    try:
+        sc = payload.screenshot
+        if sc.startswith("data:image/"):
+            _, b64data = sc.split(",", 1)
+            raw_bytes = base64.b64decode(b64data)
+            img = Image.open(io.BytesIO(raw_bytes))
+        else:
+            raw_bytes = base64.b64decode(sc)
+            img = Image.open(io.BytesIO(raw_bytes))
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Failed to decode screenshot: {exc}")
+
+    agent = WardrobeMigrationAgent()
+    result = await agent.process_step(
+        session_id=payload.session_id,
+        user_id=user["id"],
+        app_name=payload.app_name,
+        pil_img=img,
+    )
+    return result
+
+
 class ImportCompetitorIn(BaseModel):
     app_name: str | None = "Competitor App"
     target_url: str | None = None
