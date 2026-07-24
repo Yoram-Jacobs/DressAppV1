@@ -436,10 +436,11 @@ class WardrobeMigrationAgent:
             )
 
             action = "scroll" if should_scroll else "done"
+            scroll_amt = int(viewport_height * 0.7) if (viewport_height and viewport_height > 100) else 650
             return {
                 "status": "active" if should_scroll else "completed",
                 "action": action,
-                "scroll_amount": 350,
+                "scroll_amount": scroll_amt,
                 "new_items_found": new_items,
             }
 
@@ -448,7 +449,7 @@ class WardrobeMigrationAgent:
             return {
                 "status": "active",
                 "action": "scroll",
-                "scroll_amount": 350,
+                "scroll_amount": 650,
                 "new_items_found": [],
                 "error": str(exc),
             }

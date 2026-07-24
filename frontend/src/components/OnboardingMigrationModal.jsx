@@ -132,6 +132,16 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         let scrollPos = (scrollEl && scrollEl !== window) ? scrollEl.scrollTop : (window.scrollY || window.pageYOffset || document.documentElement.scrollTop);
         let noChangeCount = 0;
 
+        const isAtBottom = () => {
+          if (scrollEl && scrollEl !== window && scrollEl !== document.documentElement && scrollEl !== document.body) {
+            return scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 15;
+          }
+          const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
+          const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+          const clientHeight = window.innerHeight || document.documentElement.clientHeight;
+          return scrollY + clientHeight >= scrollHeight - 65;
+        };
+
         const getVisibleGarmentRects = () => {
           const scrollRect = (scrollEl && scrollEl !== window && scrollEl !== document.documentElement && scrollEl !== document.body)
             ? scrollEl.getBoundingClientRect()
@@ -140,9 +150,15 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           const validImgs = Array.from(document.querySelectorAll('img')).filter(img => {
             const imgRect = img.getBoundingClientRect();
             // Product images should be reasonably sized
-            if (imgRect.width < 50 || imgRect.height < 50) return false;
-            // Must be within scroll viewport boundaries
-            if (imgRect.top < scrollRect.top || imgRect.bottom > scrollRect.bottom + 10) return false;
+            if (imgRect.width < 35 || imgRect.height < 35) return false;
+            
+            // Must be within scroll viewport boundaries, below top header offset and above footer
+            const headerHeight = 110;
+            const footerHeight = 60;
+            const viewportMinY = scrollRect.top + headerHeight;
+            const viewportMaxY = scrollRect.bottom - footerHeight;
+
+            if (imgRect.top < viewportMinY || imgRect.bottom > viewportMaxY) return false;
             
             const src = img.src.toLowerCase();
             if (src.includes('logo') || src.includes('avatar') || src.includes('icon') || src.includes('profile')) return false;
@@ -168,98 +184,34 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
           if (validImgs.length === 0) return [];
 
-          // 1. Extract center coordinates
-          const centers = validImgs.map(img => {
-            const r = img.getBoundingClientRect();
-            return {
-              cx: r.left + r.width / 2,
-              cy: r.top + r.height / 2
-            };
-          });
-
-          // 2. Cluster X centers to find static column grid lines
-          const cxSorted = centers.map(c => c.cx).sort((a, b) => a - b);
-          const cols = [];
-          if (cxSorted.length > 0) {
-            let currentGroup = [cxSorted[0]];
-            for (let i = 1; i < cxSorted.length; i++) {
-              if (cxSorted[i] - cxSorted[i - 1] < 45) {
-                currentGroup.push(cxSorted[i]);
-              } else {
-                cols.push(currentGroup.reduce((a, b) => a + b, 0) / currentGroup.length);
-                currentGroup = [cxSorted[i]];
-              }
-            }
-            cols.push(currentGroup.reduce((a, b) => a + b, 0) / currentGroup.length);
-          }
-
-          // 3. Cluster Y centers to find static row grid lines
-          const cySorted = centers.map(c => c.cy).sort((a, b) => a - b);
-          const rows = [];
-          if (cySorted.length > 0) {
-            let currentGroup = [cySorted[0]];
-            for (let i = 1; i < cySorted.length; i++) {
-              if (cySorted[i] - cySorted[i - 1] < 55) {
-                currentGroup.push(cySorted[i]);
-              } else {
-                rows.push(currentGroup.reduce((a, b) => a + b, 0) / currentGroup.length);
-                currentGroup = [cySorted[i]];
-              }
-            }
-            rows.push(currentGroup.reduce((a, b) => a + b, 0) / currentGroup.length);
-          }
-
-          // 4. Calculate static card dimensions
-          let cardW = 180;
-          if (cols.length > 1) {
-            const spacings = [];
-            for (let i = 1; i < cols.length; i++) {
-              spacings.push(cols[i] - cols[i - 1]);
-            }
-            const avgSpacing = spacings.reduce((a, b) => a + b, 0) / spacings.length;
-            cardW = avgSpacing - 12; // Card width is slightly less than column spacing
-          }
-          const cardH = cardW * 1.45; // Standard grid aspect ratio
-
-          // 5. Map each garment center to its closest column and row center
+          // Map each garment img element directly to a padded bounding box relative to scrollRect
           const rects = [];
-          for (const c of centers) {
-            let bestCol = cols[0];
-            let minDistX = Math.abs(c.cx - cols[0]);
-            for (const col of cols) {
-              const d = Math.abs(c.cx - col);
-              if (d < minDistX) { minDistX = d; bestCol = col; }
-            }
+          for (const img of validImgs) {
+            const r = img.getBoundingClientRect();
+            // Add a small safety padding to ensure the full item is captured
+            const paddingW = r.width * 0.08;
+            const paddingH = r.height * 0.08;
 
-            let bestRow = rows[0];
-            let minDistY = Math.abs(c.cy - rows[0]);
-            for (const row of rows) {
-              const d = Math.abs(c.cy - row);
-              if (d < minDistY) { minDistY = d; bestRow = row; }
-            }
+            const left = r.left - paddingW;
+            const top = r.top - paddingH;
+            const width = r.width + paddingW * 2;
+            const height = r.height + paddingH * 2;
 
-            const left = bestCol - cardW / 2;
-            const top = bestRow - cardH / 2;
-
-            // Only crop cards that are fully visible inside the scroll viewport (skip cut-offs)
-            const relTop = top - scrollRect.top;
-            const relBottom = relTop + cardH;
-            if (relTop >= -5 && relBottom <= scrollRect.height + 10) {
-              rects.push({
-                left: left - scrollRect.left,
-                top: relTop,
-                width: cardW,
-                height: cardH
-              });
-            }
+            rects.push({
+              left: left - scrollRect.left,
+              top: top - scrollRect.top,
+              width: width,
+              height: height
+            });
           }
 
-          // 6. Deduplicate overlapping card rects (ensuring exactly one crop per grid cell)
+          // Deduplicate overlapping bounding boxes (prevent harvesting same coordinates twice)
           const uniqueRects = [];
           for (const r of rects) {
             const isDup = uniqueRects.some(u => 
-              Math.abs(u.left - r.left) < 10 && 
-              Math.abs(u.top - r.top) < 10
+              Math.abs(u.left - r.left) < 15 && 
+              Math.abs(u.top - r.top) < 15 &&
+              Math.abs(u.width - r.width) < 15
             );
             if (!isDup) {
               uniqueRects.push(r);
@@ -282,8 +234,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           if (e.data && e.data.type === 'DRESSAPP_AGENT_ACTION') {
             const { action, scroll_amount } = e.data;
             if (action === 'scroll') {
-              const s1 = getScrollState();
-              scrollPos += scroll_amount;
+              const activeScrollAmount = scroll_amount || 600;
+              scrollPos += activeScrollAmount;
               if (scrollEl && scrollEl !== window && scrollEl !== document.body && scrollEl !== document.documentElement) {
                 scrollEl.scrollTop = scrollPos;
               }
@@ -291,29 +243,19 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               document.documentElement.scrollTop = scrollPos;
               document.body.scrollTop = scrollPos;
 
-              await new Promise(r => setTimeout(r, 1200));
-              let s2 = getScrollState();
-              let changed = (s2.window !== s1.window) || (s2.doc !== s1.doc) || (s2.body !== s1.body) || (s2.el !== s1.el);
+              await new Promise(r => setTimeout(r, 1500));
               
-              if (!changed) {
+              if (isAtBottom()) {
                 noChangeCount++;
                 if (noChangeCount < 3) {
                   st.innerText = 'Waiting for lazy load (attempt ' + noChangeCount + '/3)...';
-                  scrollPos += 150;
-                  window.scrollTo(0, scrollPos);
-                  if (scrollEl && scrollEl !== window) scrollEl.scrollTop = scrollPos;
                   await new Promise(r => setTimeout(r, 2000));
-                  
-                  s2 = getScrollState();
-                  changed = (s2.window !== s1.window) || (s2.doc !== s1.doc) || (s2.body !== s1.body) || (s2.el !== s1.el);
                 }
-              }
-
-              if (changed) {
+              } else {
                 noChangeCount = 0;
               }
 
-              const reachedBottom = (!changed && noChangeCount >= 3);
+              const reachedBottom = isAtBottom() && (noChangeCount >= 3);
               captureAndSend(reachedBottom);
             } else if (action === 'done') {
               st.innerHTML = '<div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">✓ Migration Completed!</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">The closet import has successfully completed.<br>You can now safely close this window and return to the main DressApp screen.</div>';
@@ -344,7 +286,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             o.style.display = 'block';
 
             const cardRects = getVisibleGarmentRects();
-            const isShort = scrollEl ? (scrollEl.scrollHeight <= scrollEl.clientHeight + 10) : true;
+            const isShort = (scrollEl && scrollEl !== window && scrollEl !== document.documentElement && scrollEl !== document.body)
+              ? (scrollEl.scrollHeight <= scrollEl.clientHeight + 15)
+              : (document.documentElement.scrollHeight <= window.innerHeight + 65);
             const finalReachedBottom = reachedBottom || isShort;
 
             if (window.opener) {
