@@ -1057,6 +1057,111 @@ async def analyze_chart(
 #  POST /sizes/predict-measurements  —  ML body-measurement predictor
 # =====================================================================
 
+# Sizing calculations deterministic lookup / rule-based helpers
+def get_mens_shirt_size(chest_cm: float) -> str:
+    if chest_cm < 88: return 'XS'
+    elif chest_cm < 95: return 'S'   # ~89–94 cm
+    elif chest_cm < 103: return 'M'  # ~96–102 cm
+    elif chest_cm < 111: return 'L'  # ~104–109 cm
+    elif chest_cm < 118: return 'XL' # ~112–117 cm
+    else: return 'XXL'
+
+def get_pants_size(waist_cm: float) -> str:
+    waist_inches = waist_cm / 2.54
+    # Round to closest standard pant waist size
+    return str(round(waist_inches))
+
+def get_shoe_size_us_mens(foot_len_cm: float) -> float:
+    # Standard formula: US Men's size ≈ (3 * foot length in inches) - 22
+    foot_inches = foot_len_cm / 2.54
+    size = (3 * foot_inches) - 22
+    return round(size * 2) / 2  # Rounds to nearest 0.5 size
+
+def get_shoe_size_us_womens(foot_len_cm: float) -> float:
+    # US Women's size is typically US Men's size + 1.5
+    foot_inches = foot_len_cm / 2.54
+    size = (3 * foot_inches) - 20.5
+    return round(size * 2) / 2
+
+def get_shoe_size_eu(foot_len_cm: float) -> int:
+    # EU Size formula ≈ (foot length in cm + 1.5) * 1.5
+    return round((foot_len_cm + 1.5) * 1.5)
+
+def get_womens_dress_size_us(bust_cm: float, waist_cm: float, hip_cm: float) -> str:
+    # US Alpha & Numeric Mapping based on standard ASTM standards
+    # Example scale using Waist as primary anchor:
+    if waist_cm < 64: return '0 / XS'
+    elif waist_cm < 68: return '2 / S'
+    elif waist_cm < 72: return '4 / S'
+    elif waist_cm < 76: return '6 / M'
+    elif waist_cm < 80: return '8 / M'
+    elif waist_cm < 85: return '10 / L'
+    elif waist_cm < 90: return '12 / L'
+    else: return '14+ / XL'
+
+def get_bra_size(bust_cm: float, underbust_cm: float) -> str:
+    # Convert to inches
+    bust_in = bust_cm / 2.54
+    underbust_in = underbust_cm / 2.54
+    
+    # 1. Calculate Band Size (Round underbust to nearest even integer)
+    band_size = round(underbust_in)
+    if band_size % 2 != 0:
+        band_size += 1  # Standard sizing rounds up odd underbust inches to even band sizes
+        
+    # 2. Calculate Cup Size (Bust - Band Difference)
+    diff = round(bust_in - band_size)
+    
+    cups = {0: 'AA', 1: 'A', 2: 'B', 3: 'C', 4: 'D', 5: 'DD/E', 6: 'DDD/F'}
+    cup_size = cups.get(diff, 'G+')
+    
+    return f"{band_size}{cup_size}"
+
+def compute_recommended_sizes(
+    gender: str,
+    chest_cm: float,
+    waist_cm: float,
+    hip_cm: float,
+    foot_length_cm: float,
+) -> dict[str, str]:
+    gender_lower = gender.lower().strip()
+    
+    # Estimate underbust for bra size (typically underbust is roughly 88% of bust/chest for women)
+    underbust_cm = chest_cm * 0.88
+    
+    # Shirt size:
+    shirt = get_mens_shirt_size(chest_cm)
+    
+    # Pants size:
+    pants = get_pants_size(waist_cm)
+    
+    # Shoe size:
+    if gender_lower == "male":
+        shoe_us = str(get_shoe_size_us_mens(foot_length_cm))
+    else:
+        shoe_us = str(get_shoe_size_us_womens(foot_length_cm))
+        
+    # Dress size (woman only):
+    if gender_lower == "female":
+        dress = get_womens_dress_size_us(chest_cm, waist_cm, hip_cm)
+    else:
+        dress = "N/A"
+        
+    # Bra size (woman only):
+    if gender_lower == "female":
+        bra = get_bra_size(chest_cm, underbust_cm)
+    else:
+        bra = "N/A"
+        
+    return {
+        "shirt_size": shirt,
+        "pants_size": pants,
+        "shoe_size_us": shoe_us,
+        "dress_size": dress,
+        "bra_size": bra,
+    }
+
+
 class PredictMeasurementsIn(BaseModel):
     """Core biometrics the user enters on the profile page."""
     height: float | None = Field(default=170.0, description="Height in cm")
@@ -1076,6 +1181,8 @@ class PredictMeasurementsOut(BaseModel):
     outseam: float
     model_version: str
     units: str = "cm"
+    measurements: dict[str, float] | None = None
+    recommended_sizes: dict[str, str] | None = None
 
 
 @router.post(
@@ -1129,7 +1236,31 @@ async def predict_measurements(payload: PredictMeasurementsIn):
             "outseam": round(h * 0.6, 1),
         }
 
+    # Calculate recommended sizes and measurements dict
+    rec_sizes = compute_recommended_sizes(
+        gender=g_str,
+        chest_cm=result["chest"],
+        waist_cm=wa,
+        hip_cm=result["hip"],
+        foot_length_cm=fl,
+    )
+    
+    measurements_dict = {
+        "height_cm": h,
+        "weight_kg": w,
+        "waist_cm": wa,
+        "foot_length_cm": fl,
+        "shoulders_cm": result["shoulders"],
+        "chest_cm": result["chest"],
+        "hip_cm": result["hip"],
+        "sleeve_cm": result["sleeve"],
+        "inseam_cm": result["inseam"],
+        "outseam_cm": result["outseam"],
+    }
+
     return PredictMeasurementsOut(
         **result,
         model_version=getattr(predictor, "model_version", "v1.0-fallback"),
+        measurements=measurements_dict,
+        recommended_sizes=rec_sizes,
     )

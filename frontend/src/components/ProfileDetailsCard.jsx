@@ -351,9 +351,8 @@ export function ProfileDetailsCard() {
         return Math.round(val * 10) / 10;
       };
 
-      setForm((prev) => ({
-        ...prev,
-        body_measurements: {
+      setForm((prev) => {
+        const nextMeasurements = {
           ...prev.body_measurements,
           shoulders: convertVal(res.shoulders),
           chest: convertVal(res.chest),
@@ -361,8 +360,29 @@ export function ProfileDetailsCard() {
           sleeve: convertVal(res.sleeve),
           inseam: convertVal(res.inseam),
           outseam: convertVal(res.outseam),
-        },
-      }));
+        };
+        if (res.recommended_sizes) {
+          if (res.recommended_sizes.shirt_size) {
+            nextMeasurements.shirt_size = res.recommended_sizes.shirt_size;
+          }
+          if (res.recommended_sizes.pants_size) {
+            nextMeasurements.pants_size = res.recommended_sizes.pants_size;
+          }
+          if (res.recommended_sizes.shoe_size_us) {
+            nextMeasurements.shoe_size = res.recommended_sizes.shoe_size_us;
+          }
+          if (res.recommended_sizes.dress_size && res.recommended_sizes.dress_size !== 'N/A') {
+            nextMeasurements.dress_size = res.recommended_sizes.dress_size;
+          }
+          if (res.recommended_sizes.bra_size && res.recommended_sizes.bra_size !== 'N/A') {
+            nextMeasurements.bra_size = res.recommended_sizes.bra_size;
+          }
+        }
+        return {
+          ...prev,
+          body_measurements: nextMeasurements,
+        };
+      });
       setHasPredicted(true);
     } catch (err) {
       console.error("Prediction failed:", err);
