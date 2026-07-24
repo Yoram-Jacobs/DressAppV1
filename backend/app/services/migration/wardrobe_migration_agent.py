@@ -210,34 +210,13 @@ class WardrobeMigrationAgent:
                 # Add hash to parsed_hashes list to avoid duplicate queueing
                 parsed_hashes.append(p_hash)
 
-                is_testing = (self.client.api_key == "mock_key")
-                if is_testing:
-                    # In testing mode, run synchronously to satisfy pytest assertions
-                    await self.process_crop_in_background(
-                        user_id=user_id,
-                        app_name=app_name,
-                        crop_bytes=crop_bytes,
-                        p_hash=p_hash,
-                        new_items_out=new_items,
-                    )
-                else:
-                    # In production, run asynchronously in background!
-                    import asyncio
-                    asyncio.create_task(
-                        self.process_crop_in_background(
-                            user_id=user_id,
-                            app_name=app_name,
-                            crop_bytes=crop_bytes,
-                            p_hash=p_hash,
-                        )
-                    )
-                    new_items.append({
-                        "id": f"temp_{uuid.uuid4().hex[:8]}",
-                        "title": "Ingested card - processing in background",
-                        "category": "Processing",
-                        "color": "Pending",
-                        "segmented_image_url": f"data:image/jpeg;base64,{base64.b64encode(crop_bytes).decode('utf-8')}",
-                    })
+                await self.process_crop_in_background(
+                    user_id=user_id,
+                    app_name=app_name,
+                    crop_bytes=crop_bytes,
+                    p_hash=p_hash,
+                    new_items_out=new_items,
+                )
 
             # Update the session's parsed hashes
             await db.migration_sessions.update_one(
