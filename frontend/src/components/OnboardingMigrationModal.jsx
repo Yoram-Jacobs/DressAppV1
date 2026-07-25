@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { closetStore } from '@/lib/closetStore';
 import { outfitStore } from '@/lib/outfitStore';
+import { workStore } from '@/lib/workStore';
 import {
   Loader2,
   ArrowRight,
@@ -56,15 +57,16 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   // Use URL-encoded bookmarklet to prevent syntax and drag issues across all browsers
   const harvesterBookmarkletCode = useMemo(() => {
     const rawJS = `(async () => {
-      // Clean up any leftover widget from the Chrome extension
-      const oldExtWidget = document.querySelector('.dressapp-importer-widget');
-      if (oldExtWidget) oldExtWidget.remove();
-      const oldExtBtn = document.getElementById('dai-btn');
-      if (oldExtBtn) oldExtBtn.closest('[class*="dressapp-importer"]')?.remove();
-      // Remove any style that forces display:none on our widget
+      // Clean up Chrome extension widgets that conflict with migration
+      document.querySelectorAll('.dressapp-importer-widget, #dressapp-fab, .dressapp-fab, .dressapp-anchor-btn').forEach(el => el.remove());
+      document.querySelectorAll('[data-testid="dressapp-fab"], [data-testid="dressapp-anchor-btn"]').forEach(el => el.remove());
+      // Remove any extension-injected styles
       document.querySelectorAll('style').forEach(st => {
-        if (st.textContent.includes('dressapp-importer-widget')) st.remove();
+        const txt = st.textContent || '';
+        if (txt.includes('dressapp-importer-widget') || txt.includes('dressapp-fab') || txt.includes('dressapp-anchor')) st.remove();
       });
+      // Tell the extension to suppress its widget while we scan
+      window.postMessage({ type: 'DRESSAPP_WIDGET_TOGGLE', enabled: false }, '*');
 
       // Inject heartbeat animation style
       const s = document.createElement('style');
@@ -250,14 +252,11 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         // PHASE 1: Scan-All-First — autonomous scroll + crop loop
         // ======================================================================
         const harvestedCards = [];
-        const MAX_CROP_W = 400;
-        const MAX_CROP_H = 580;
         let noChangeCount = 0;
         let reachedBottom = false;
 
         const cropCardFromStream = (rect) => {
           try {
-            // Verify video has valid frames before attempting crop
             if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return null;
 
             const vW = video.videoWidth;
@@ -265,13 +264,11 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             const scaleX = vW / window.innerWidth;
             const scaleY = vH / window.innerHeight;
 
-            // Map viewport coordinates to video pixel coordinates
             let srcX = rect.left * scaleX;
             let srcY = rect.top * scaleY;
             let srcW = rect.width * scaleX;
             let srcH = rect.height * scaleY;
 
-            // Clamp bounds to video dimensions
             if (srcX < 0) { srcW += srcX; srcX = 0; }
             if (srcY < 0) { srcH += srcY; srcY = 0; }
             if (srcX + srcW > vW) { srcW = vW - srcX; }
@@ -279,12 +276,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
             if (srcW <= 10 || srcH <= 10) return null;
 
-            // Limit output size
-            let outW = Math.min(Math.round(rect.width), MAX_CROP_W);
-            let outH = Math.min(Math.round(rect.height), MAX_CROP_H);
-            const aspect = rect.width / rect.height;
-            if (outW / outH > aspect) { outW = Math.round(outH * aspect); }
-            else { outH = Math.round(outW / aspect); }
+            const outW = Math.round(srcW);
+            const outH = Math.round(srcH);
 
             if (outW <= 10 || outH <= 10) return null;
 
@@ -294,7 +287,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             const ctx = cvs.getContext('2d');
             ctx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, outW, outH);
 
-            // Client-side blank tile rejection: sample across FULL canvas
             try {
               const imgData = ctx.getImageData(0, 0, outW, outH).data;
               let sumR = 0, sumG = 0, sumB = 0, n = 0;
@@ -308,14 +300,13 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   variance += (imgData[i] - avgR) ** 2 + (imgData[i+1] - avgG) ** 2 + (imgData[i+2] - avgB) ** 2;
                 }
                 variance = Math.sqrt(variance / (n * 3));
-                if (variance < 2) return null; // Reject solid single-color tiles
+                if (variance < 2) return null;
               }
             } catch (_) {}
 
-            // Reject extreme aspect ratios (banners, scrollbars)
             if (rect.width > rect.height * 5 || rect.height > rect.width * 5) return null;
 
-            return cvs.toDataURL('image/jpeg', 0.8).split(',')[1];
+            return cvs.toDataURL('image/jpeg', 0.85).split(',')[1];
           } catch (_) {
             return null;
           }
@@ -345,9 +336,12 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             const b64 = cropCardFromStream(rect);
             if (b64) {
               harvestedCards.push({ crop_base64: b64, cx, cy });
-              // Stream new cards to backend immediately to free browser memory
               if (harvestedCards.length % 15 === 0 && window.opener) {
                 window.opener.postMessage({ type: 'DRESSAPP_MIGRATION_STREAM', cards: harvestedCards.slice(-15).map(c => ({ crop_base64: c.crop_base64 })) }, '*');
+                // Free browser memory — base64 already sent to backend
+                for (let i = Math.max(0, harvestedCards.length - 15); i < harvestedCards.length; i++) {
+                  harvestedCards[i].crop_base64 = '';
+                }
               }
             }
           }
@@ -429,18 +423,17 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         st.innerText = 'Scan complete! ' + harvestedCards.length + ' cards captured. Sending to DressApp...';
 
         if (window.opener) {
-          // Send any remaining cards (last batch that wasn't a multiple of 15)
           const remainder = harvestedCards.length % 15;
           if (remainder > 0) {
             window.opener.postMessage({ type: 'DRESSAPP_MIGRATION_STREAM', cards: harvestedCards.slice(-remainder).map(c => ({ crop_base64: c.crop_base64 })) }, '*');
           }
-          // Signal completion
           window.opener.postMessage({
             type: 'DRESSAPP_MIGRATION_COMPLETE',
             total_cards: harvestedCards.length,
             app_name: document.title || 'Competitor App'
           }, '*');
         }
+        harvestedCards.length = 0;
 
         // Show green completion badge
         o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;">👗 DressApp Agent</div><div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">✓ Scan Complete!</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">' + harvestedCards.length + ' cards captured and sent to DressApp for processing.<br>You can now safely close this window and return to DressApp.</div>';
@@ -450,50 +443,12 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   }, []);
 
   useEffect(() => {
-    let activeJobId = null;
-    let pollTimer = null;
-
-    const pollStatus = async (jobId) => {
-      try {
-        const st = await api.getMigrationStatus(jobId);
-        if (st.status === 'done') {
-          clearInterval(pollTimer);
-          if (st.items && st.items.length > 0) {
-            setSyncedItemsList(st.items);
-            setSyncedItems(st.imported || st.items.length);
-            toast.success(t('migration.batchImportSuccess', {
-              imported: st.imported,
-              skipped: st.skipped,
-              defaultValue: `Successfully imported ${st.imported} items (${st.skipped} duplicates skipped).`
-            }));
-          } else {
-            toast.info(t('migration.noCardsImported', { defaultValue: 'Processing complete but no items were imported.' }));
-          }
-          setIsSyncing(false);
-          setProgressPct(100);
-          setMigrationStage('outfits_prompt');
-          toast.success(t('migration.agentCompleted', { defaultValue: 'Wardrobe Migration Agent successfully completed closet import!' }));
-        } else if (st.status === 'error') {
-          clearInterval(pollTimer);
-          setIsSyncing(false);
-          toast.error(st.error || 'Migration processing failed.');
-        } else if (st.status === 'processing') {
-          // Update progress based on imported count
-          const imported = st.imported || 0;
-          if (imported > 0) {
-            setSyncedItems(imported);
-            setProgressPct(Math.min(90, Math.round((imported / (imported + st.skipped + 10)) * 90)));
-            setSyncStatusText(t('migration.processingProgress', { imported, defaultValue: `Processing... ${imported} items imported so far` }));
-          }
-        }
-      } catch (_) {}
-    };
+    let eventSource = null;
 
     const handleMessage = async (event) => {
       const msg = event.data;
       if (!msg || !msg.type) return;
 
-      // Stream: forward card batches to backend immediately
       if (msg.type === 'DRESSAPP_MIGRATION_STREAM') {
         const { cards } = msg;
         if (!cards || cards.length === 0) return;
@@ -505,7 +460,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         return;
       }
 
-      // Complete: trigger async processing + start polling
       if (msg.type === 'DRESSAPP_MIGRATION_COMPLETE') {
         const { total_cards, app_name } = msg;
         if (!total_cards || total_cards === 0) {
@@ -527,12 +481,64 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             toast.error('No cards were queued for processing.');
             return;
           }
-          activeJobId = res.job_id;
-          setProgressPct(10);
-          setSyncStatusText(t('migration.processingStarted', { defaultValue: 'Processing started. You can safely close this tab.' }));
 
-          // Start polling every 3 seconds
-          pollTimer = setInterval(() => pollStatus(activeJobId), 3000);
+          workStore.startMigration(res.job_id, total_cards);
+
+          const sseUrl = api.streamMigrationProgress(res.job_id);
+          eventSource = new EventSource(sseUrl);
+
+          eventSource.onmessage = (e) => {
+            try {
+              const data = JSON.parse(e.data);
+              if (data.type === 'item_processed') {
+                workStore.updateMigration({
+                  imported: data.imported,
+                  skipped: data.skipped,
+                  items: data.items || [],
+                });
+                setSyncedItems(data.imported);
+                const pct = Math.min(95, Math.round(((data.imported + data.skipped) / data.total) * 95));
+                setProgressPct(pct);
+                setSyncStatusText(t('migration.processingProgress', {
+                  imported: data.imported,
+                  total: data.total,
+                  defaultValue: `Processing... ${data.imported}/${data.total} items imported`
+                }));
+              } else if (data.type === 'done') {
+                eventSource.close();
+                eventSource = null;
+                workStore.completeMigration();
+                if (data.items && data.items.length > 0) {
+                  setSyncedItemsList(data.items);
+                  setSyncedItems(data.imported || data.items.length);
+                  toast.success(t('migration.batchImportSuccess', {
+                    imported: data.imported,
+                    skipped: data.skipped,
+                    defaultValue: `Successfully imported ${data.imported} items (${data.skipped} duplicates skipped).`
+                  }));
+                } else {
+                  toast.info(t('migration.noCardsImported', { defaultValue: 'Processing complete but no items were imported.' }));
+                }
+                setIsSyncing(false);
+                setProgressPct(100);
+                setMigrationStage('outfits_prompt');
+                toast.success(t('migration.agentCompleted', { defaultValue: 'Wardrobe Migration Agent successfully completed closet import!' }));
+              } else if (data.type === 'error') {
+                eventSource.close();
+                eventSource = null;
+                workStore.updateMigration({ status: 'error' });
+                setIsSyncing(false);
+                toast.error(data.error || 'Migration processing failed.');
+              }
+            } catch (_) {}
+          };
+
+          eventSource.onerror = () => {
+            if (eventSource) {
+              eventSource.close();
+              eventSource = null;
+            }
+          };
         } catch (err) {
           setIsSyncing(false);
           toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'Failed to start migration processing.' }));
@@ -544,7 +550,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);
-      if (pollTimer) clearInterval(pollTimer);
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
     };
   }, [t, appName]);
 

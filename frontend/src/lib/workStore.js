@@ -32,27 +32,14 @@ const ITEM_POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 const _listeners = new Set();
 let _state = {
-  // Active /analyze upload jobs keyed by frontend card id. Each value
-  // is `{ id, label, startedAt, items, total }` where `items` ramps
-  // from 0 → `total` as ``onItem`` frames arrive on the NDJSON stream.
   analyzeJobs: {},
-  // Set of item ids whose matte / reconstruction BackgroundTask is
-  // still pending in the backend. We poll each until ``clean_image_status``
-  // flips out of "pending" or the timeout elapses.
   polishPendingIds: new Set(),
-  // Snapshot of the latest "batch": when ``registerPolishItems``
-  // is called, we stash how many items the user just saved so the
-  // floater can show "Polishing 3 / 8 photos" cleanly. Resets to
-  // 0 / 0 once the batch drains.
   polishBatchTotal: 0,
   polishBatchCompleted: 0,
-  // Per-item registration timestamp so we can stop polling stalled
-  // items after ITEM_POLL_TIMEOUT_MS.
   _polishStartedAt: {},
-  // Callback fired exactly once per batch drain — used by App.jsx to
-  // pop the "You have news in your closet" toast. The store doesn't
-  // own toast UI; it just emits the signal.
   _onBatchDoneSubscribers: new Set(),
+  // Migration job tracking
+  migrationJob: null, // { jobId, imported, skipped, total, status, items }
 };
 
 function _notify() {
@@ -322,8 +309,33 @@ export const workStore = {
       polishBatchCompleted: 0,
       _polishStartedAt: {},
       _onBatchDoneSubscribers: _state._onBatchDoneSubscribers,
+      migrationJob: null,
     };
     _notify();
+  },
+
+  // ─── Migration job tracking ───
+  startMigration(jobId, total) {
+    _set({
+      migrationJob: { jobId, imported: 0, skipped: 0, total, status: 'processing', items: [] },
+    });
+  },
+
+  updateMigration(patch) {
+    if (!_state.migrationJob) return;
+    _set({
+      migrationJob: { ..._state.migrationJob, ...patch },
+    });
+  },
+
+  completeMigration() {
+    const job = _state.migrationJob;
+    if (!job) return;
+    _set({ migrationJob: { ...job, status: 'done' } });
+    // Clear after a delay so the floater can show "done" briefly
+    setTimeout(() => {
+      _set({ migrationJob: null });
+    }, 3000);
   },
 
   // Internal — exposed for testing the polling loop directly.

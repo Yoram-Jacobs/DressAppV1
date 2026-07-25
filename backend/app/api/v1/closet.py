@@ -2862,10 +2862,9 @@ async def batch_migration_import(
 
 
 # ─── Temporary storage for streaming migration cards ───
-# Cards are buffered here as the bookmarklet streams them,
-# then processed asynchronously when the scan completes.
-_migration_cards: dict[str, list[dict[str, Any]]] = {}   # user_id → cards
-_migration_status: dict[str, dict[str, Any]] = {}         # job_id → status
+_migration_cards: dict[str, list[dict[str, Any]]] = {}
+_migration_status: dict[str, dict[str, Any]] = {}
+_migration_queues: dict[str, asyncio.Queue] = {}  # job_id → event queue
 
 
 class MigrationCardsIn(BaseModel):
@@ -2905,24 +2904,63 @@ async def start_migration_processing(
 
     job_id = f"migration_{uuid.uuid4().hex[:12]}"
     _migration_status[job_id] = {"status": "processing", "imported": 0, "skipped": 0, "items": []}
+    event_queue: asyncio.Queue = asyncio.Queue()
+    _migration_queues[job_id] = event_queue
 
     async def _run():
         try:
             agent = WardrobeMigrationAgent()
-            result = await agent.process_batch(
-                user_id=uid,
-                app_name=payload.app_name,
-                cards=cards,
-            )
-            _migration_status[job_id] = {
+            imported = 0
+            skipped = 0
+            all_items = []
+            total = len(cards)
+
+            for i, card in enumerate(cards):
+                try:
+                    result = await agent.process_batch(
+                        user_id=uid,
+                        app_name=payload.app_name,
+                        cards=[card],
+                    )
+                    item_imported = result.get("items_imported", 0)
+                    item_skipped = result.get("items_skipped", 0)
+                    imported += item_imported
+                    skipped += item_skipped
+                    all_items.extend(result.get("items", []))
+
+                    event = {
+                        "type": "item_processed",
+                        "index": i + 1,
+                        "total": total,
+                        "imported": imported,
+                        "skipped": skipped,
+                        "items": result.get("items", []),
+                    }
+                    await event_queue.put(event)
+                except Exception as e:
+                    logger.warning("Error processing card %d: %s", i, e)
+                    skipped += 1
+                    await event_queue.put({
+                        "type": "item_processed",
+                        "index": i + 1,
+                        "total": total,
+                        "imported": imported,
+                        "skipped": skipped,
+                        "items": [],
+                    })
+
+            final = {
                 "status": "done",
-                "imported": result.get("items_imported", 0),
-                "skipped": result.get("items_skipped", 0),
-                "items": result.get("items", []),
+                "imported": imported,
+                "skipped": skipped,
+                "items": all_items,
             }
+            _migration_status[job_id] = final
+            await event_queue.put({"type": "done", **final})
         except Exception as e:
             logger.error("Migration processing failed for job %s: %s", job_id, e)
             _migration_status[job_id] = {"status": "error", "error": str(e), "imported": 0, "skipped": 0, "items": []}
+            await event_queue.put({"type": "error", "error": str(e)})
 
     asyncio.create_task(_run())
     return {"job_id": job_id, "cards_queued": len(cards)}
@@ -2938,6 +2976,41 @@ async def get_migration_status(
     if not status:
         raise HTTPException(status_code=404, detail="Job not found")
     return status
+
+
+@router.get("/migration/stream/{job_id}")
+async def stream_migration_progress(
+    job_id: str,
+    user: dict = Depends(get_current_user),
+):
+    """SSE stream that emits per-item processing events as they complete."""
+    from fastapi.responses import StreamingResponse
+
+    queue = _migration_queues.get(job_id)
+    if not queue:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    async def event_generator():
+        try:
+            while True:
+                event = await asyncio.wait_for(queue.get(), timeout=300)
+                yield f"data: {json.dumps(event)}\n\n"
+                if event.get("type") in ("done", "error"):
+                    _migration_queues.pop(job_id, None)
+                    break
+        except asyncio.TimeoutError:
+            yield f"data: {json.dumps({'type': 'timeout'})}\n\n"
+            _migration_queues.pop(job_id, None)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 class ImportCompetitorIn(BaseModel):
