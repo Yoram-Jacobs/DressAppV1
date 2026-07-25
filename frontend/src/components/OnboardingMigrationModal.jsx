@@ -445,23 +445,24 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         // ======================================================================
         // PHASE 1 COMPLETE — Stream remaining cards + signal done
         // ======================================================================
-        st.innerText = 'Scan complete! ' + harvestedCards.length + ' cards captured. Sending to DressApp...';
+        const totalCaptured = harvestedCards.length;
+        st.innerText = 'Scan complete! ' + totalCaptured + ' cards captured. Sending to DressApp...';
 
         if (window.opener) {
-          const remainder = harvestedCards.length % 15;
+          const remainder = totalCaptured % 15;
           if (remainder > 0) {
             window.opener.postMessage({ type: 'DRESSAPP_MIGRATION_STREAM', cards: harvestedCards.slice(-remainder).map(c => ({ crop_base64: c.crop_base64 })) }, '*');
           }
           window.opener.postMessage({
             type: 'DRESSAPP_MIGRATION_COMPLETE',
-            total_cards: harvestedCards.length,
+            total_cards: totalCaptured,
             app_name: document.title || 'Competitor App'
           }, '*');
         }
         harvestedCards.length = 0;
 
         // Show green completion badge
-        o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;">👗 DressApp Agent</div><div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">✓ Scan Complete!</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">' + harvestedCards.length + ' cards captured and sent to DressApp for processing.<br>You can now safely close this window and return to DressApp.</div>';
+        o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;">👗 DressApp Agent</div><div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">✓ Scan Complete!</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">' + totalCaptured + ' cards captured and sent to DressApp for processing.<br>You can now safely close this window and return to DressApp.</div>';
       };
     })();`;
     return 'javascript:' + encodeURIComponent(rawJS);
