@@ -2928,6 +2928,14 @@ async def start_migration_processing(
                     skipped += item_skipped
                     all_items.extend(result.get("items", []))
 
+                    _migration_status[job_id] = {
+                        "status": "processing",
+                        "imported": imported,
+                        "skipped": skipped,
+                        "total": total,
+                        "items": all_items,
+                    }
+
                     event = {
                         "type": "item_processed",
                         "index": i + 1,
@@ -2940,6 +2948,13 @@ async def start_migration_processing(
                 except Exception as e:
                     logger.warning("Error processing card %d: %s", i, e)
                     skipped += 1
+                    _migration_status[job_id] = {
+                        "status": "processing",
+                        "imported": imported,
+                        "skipped": skipped,
+                        "total": total,
+                        "items": all_items,
+                    }
                     await event_queue.put({
                         "type": "item_processed",
                         "index": i + 1,

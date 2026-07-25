@@ -470,18 +470,14 @@ class WardrobeMigrationAgent:
                 "required": ["pattern", "material", "style", "dress_code", "gender", "season", "item_type", "sub_category"]
             }
 
-            stylist_result = {}
-            try:
-                class_resp = await self.client.vision(
-                    user_parts=[crop_bytes],
-                    system=stylist_prompt,
-                    model="gemini-2.5-flash",
-                    response_mime_type="application/json",
-                    response_schema=stylist_schema,
-                )
-                stylist_result = json.loads(class_resp)
-            except Exception as stylist_err:
-                logger.warning("Stylist analysis failed for migration crop: %s", stylist_err)
+            class_resp = await self.client.vision(
+                user_parts=[crop_bytes],
+                system=stylist_prompt,
+                model="gemini-2.5-flash",
+                response_mime_type="application/json",
+                response_schema=stylist_schema,
+            )
+            stylist_result = json.loads(class_resp)
 
             cutout_bytes = None
             try:
@@ -558,7 +554,8 @@ class WardrobeMigrationAgent:
                     "segmented_image_url": cutout_url,
                 })
         except Exception as ingest_err:
-            logger.warning("Agent ingestion failed for background crop: %s", ingest_err)
+            logger.exception("Agent ingestion failed for background crop: %s", ingest_err)
+            raise
 
     async def process_batch(
         self,
