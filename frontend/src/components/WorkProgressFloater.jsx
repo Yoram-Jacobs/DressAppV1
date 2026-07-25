@@ -69,7 +69,7 @@ export function WorkProgressFloater() {
   return (
     <div
       data-testid="work-progress-floater"
-      className="fixed bottom-4 end-4 z-50 pointer-events-none"
+      className="fixed bottom-4 start-4 z-50 pointer-events-none"
     >
       <div
         className={

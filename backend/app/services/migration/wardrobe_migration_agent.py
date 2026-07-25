@@ -442,6 +442,47 @@ class WardrobeMigrationAgent:
 
         # Unique single item: Ingest
         try:
+            # ── Stylist analysis: get detailed garment attributes from Gemini ──
+            stylist_prompt = (
+                "You are DressApp's Wardrobe Stylist. Analyze this clothing item image and return detailed attributes.\n"
+                "Return a JSON object with these fields:\n"
+                '- "pattern": one of "Solid", "Striped", "Plaid", "Floral", "Polka Dot", "Geometric", "Abstract", "Camouflage", "Animal Print", "Other"\n'
+                '- "material": one of "Cotton", "Polyester", "Denim", "Leather", "Silk", "Wool", "Linen", "Nylon", "Spandex", "Mixed", "Other"\n'
+                '- "style": one of "Casual", "Formal", "Sporty", "Bohemian", "Classic", "Streetwear", "Vintage", "Minimalist", "Preppy", "Other"\n'
+                '- "dress_code": one of "Casual", "Business Casual", "Business", "Formal", "Sporty", "Loungewear", "Other"\n'
+                '- "gender": one of "Women", "Men", "Unisex"\n'
+                '- "season": array of "Spring", "Summer", "Fall", "Winter"\n'
+                '- "item_type": a specific short description like "t-shirt", "jeans", "sneakers", etc.\n'
+                '- "sub_category": more specific than the main category, e.g. for "Top" use "T-shirt" or "Blouse"'
+            )
+            stylist_schema = {
+                "type": "OBJECT",
+                "properties": {
+                    "pattern": {"type": "STRING"},
+                    "material": {"type": "STRING"},
+                    "style": {"type": "STRING"},
+                    "dress_code": {"type": "STRING"},
+                    "gender": {"type": "STRING"},
+                    "season": {"type": "ARRAY", "items": {"type": "STRING"}},
+                    "item_type": {"type": "STRING"},
+                    "sub_category": {"type": "STRING"},
+                },
+                "required": ["pattern", "material", "style", "dress_code", "gender", "season", "item_type", "sub_category"]
+            }
+
+            stylist_result = {}
+            try:
+                class_resp = await self.client.vision(
+                    user_parts=[crop_bytes],
+                    system=stylist_prompt,
+                    model="gemini-2.5-flash",
+                    response_mime_type="application/json",
+                    response_schema=stylist_schema,
+                )
+                stylist_result = json.loads(class_resp)
+            except Exception as stylist_err:
+                logger.warning("Stylist analysis failed for migration crop: %s", stylist_err)
+
             cutout_bytes = None
             try:
                 cutout_bytes = await background_matting.matte_crop(crop_bytes)
@@ -463,6 +504,8 @@ class WardrobeMigrationAgent:
 
             color = color.capitalize()
             title = label or f"{color} {category}"
+            sub_category = stylist_result.get("sub_category", category) or category
+            item_type = stylist_result.get("item_type", "") or ""
 
             c_id = f"item_{uuid.uuid4().hex[:12]}"
             now_iso = datetime.now(timezone.utc).isoformat()
@@ -475,11 +518,16 @@ class WardrobeMigrationAgent:
                 "title": title,
                 "name": title,
                 "category": category,
-                "sub_category": category,
+                "sub_category": sub_category,
+                "item_type": item_type,
                 "color": color,
                 "colors": [color],
-                "pattern": "Solid",
-                "material": "Mixed",
+                "pattern": stylist_result.get("pattern", "Solid") or "Solid",
+                "material": stylist_result.get("material", "Mixed") or "Mixed",
+                "style": stylist_result.get("style", "Casual") or "Casual",
+                "dress_code": stylist_result.get("dress_code", "Casual") or "Casual",
+                "gender": stylist_result.get("gender", "Unisex") or "Unisex",
+                "season": stylist_result.get("season", ["Spring", "Summer", "Fall", "Winter"]) or ["Spring", "Summer", "Fall", "Winter"],
                 "brand": f"Imported ({app_name})",
                 "quality": "Good",
                 "condition": "Excellent",
@@ -501,7 +549,12 @@ class WardrobeMigrationAgent:
                     "id": c_id,
                     "title": title,
                     "category": category,
+                    "sub_category": sub_category,
+                    "item_type": item_type,
                     "color": color,
+                    "pattern": stylist_result.get("pattern", "Solid"),
+                    "material": stylist_result.get("material", "Mixed"),
+                    "style": stylist_result.get("style", "Casual"),
                     "segmented_image_url": cutout_url,
                 })
         except Exception as ingest_err:

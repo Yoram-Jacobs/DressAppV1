@@ -203,10 +203,14 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
             if (cardEl) {
               const r = cardEl.getBoundingClientRect();
+              // Reject images smaller than half the card dimensions (banners, icons)
+              if (imgRect.width < r.width / 2 || imgRect.height < r.height / 2) continue;
               rects.push({ left: r.left, top: r.top, width: r.width, height: r.height });
             } else {
               const cardW = Math.max(imgRect.width * 1.18, 150);
               const cardH = Math.max(imgRect.height * 1.18, cardW * 1.35);
+              // Reject if image is smaller than half the synthetic card dimensions
+              if (imgRect.width < cardW / 2 || imgRect.height < cardH / 2) continue;
               const cx = imgRect.left + imgRect.width / 2;
               const cy = imgRect.top + imgRect.height / 2;
               rects.push({ left: cx - cardW / 2, top: cy - cardH / 2, width: cardW, height: cardH });
@@ -469,7 +473,56 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   }, []);
 
   useEffect(() => {
-    let eventSource = null;
+    let pollTimer = null;
+
+    const pollStatus = async (jobId, totalCards) => {
+      try {
+        const st = await api.getMigrationStatus(jobId);
+        if (st.status === 'done') {
+          clearInterval(pollTimer);
+          workStore.updateMigration({
+            imported: st.imported,
+            skipped: st.skipped,
+            items: st.items || [],
+            status: 'done',
+          });
+          workStore.completeMigration();
+          if (st.items && st.items.length > 0) {
+            setSyncedItemsList(st.items);
+            setSyncedItems(st.imported || st.items.length);
+            toast.success(t('migration.batchImportSuccess', {
+              imported: st.imported,
+              skipped: st.skipped,
+              defaultValue: `Successfully imported ${st.imported} items (${st.skipped} duplicates skipped).`
+            }));
+          } else {
+            toast.info(t('migration.noCardsImported', { defaultValue: 'Processing complete but no items were imported.' }));
+          }
+          setIsSyncing(false);
+          setProgressPct(100);
+          setMigrationStage('outfits_prompt');
+          toast.success(t('migration.agentCompleted', { defaultValue: 'Wardrobe Migration Agent successfully completed closet import!' }));
+        } else if (st.status === 'error') {
+          clearInterval(pollTimer);
+          workStore.updateMigration({ status: 'error' });
+          setIsSyncing(false);
+          toast.error(st.error || 'Migration processing failed.');
+        } else if (st.status === 'processing') {
+          const imported = st.imported || 0;
+          const skipped = st.skipped || 0;
+          workStore.updateMigration({ imported, skipped });
+          setSyncedItems(imported);
+          if (totalCards > 0) {
+            const pct = Math.min(95, Math.round(((imported + skipped) / totalCards) * 95));
+            setProgressPct(pct);
+            setSyncStatusText(t('migration.processingProgress', {
+              imported, total: totalCards,
+              defaultValue: `Processing... ${imported}/${totalCards} items imported`
+            }));
+          }
+        }
+      } catch (_) {}
+    };
 
     const handleMessage = async (event) => {
       const msg = event.data;
@@ -509,62 +562,12 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           }
 
           workStore.startMigration(res.job_id, total_cards);
+          setProgressPct(10);
 
-          const sseUrl = api.streamMigrationProgress(res.job_id);
-          eventSource = new EventSource(sseUrl);
-
-          eventSource.onmessage = (e) => {
-            try {
-              const data = JSON.parse(e.data);
-              if (data.type === 'item_processed') {
-                workStore.updateMigration({
-                  imported: data.imported,
-                  skipped: data.skipped,
-                  items: data.items || [],
-                });
-                setSyncedItems(data.imported);
-                const pct = Math.min(95, Math.round(((data.imported + data.skipped) / data.total) * 95));
-                setProgressPct(pct);
-                setSyncStatusText(t('migration.processingProgress', {
-                  imported: data.imported,
-                  total: data.total,
-                  defaultValue: `Processing... ${data.imported}/${data.total} items imported`
-                }));
-              } else if (data.type === 'done') {
-                eventSource.close();
-                eventSource = null;
-                workStore.completeMigration();
-                if (data.items && data.items.length > 0) {
-                  setSyncedItemsList(data.items);
-                  setSyncedItems(data.imported || data.items.length);
-                  toast.success(t('migration.batchImportSuccess', {
-                    imported: data.imported,
-                    skipped: data.skipped,
-                    defaultValue: `Successfully imported ${data.imported} items (${data.skipped} duplicates skipped).`
-                  }));
-                } else {
-                  toast.info(t('migration.noCardsImported', { defaultValue: 'Processing complete but no items were imported.' }));
-                }
-                setIsSyncing(false);
-                setProgressPct(100);
-                setMigrationStage('outfits_prompt');
-                toast.success(t('migration.agentCompleted', { defaultValue: 'Wardrobe Migration Agent successfully completed closet import!' }));
-              } else if (data.type === 'error') {
-                eventSource.close();
-                eventSource = null;
-                workStore.updateMigration({ status: 'error' });
-                setIsSyncing(false);
-                toast.error(data.error || 'Migration processing failed.');
-              }
-            } catch (_) {}
-          };
-
-          eventSource.onerror = () => {
-            if (eventSource) {
-              eventSource.close();
-              eventSource = null;
-            }
-          };
+          // Poll every 2 seconds — works with Bearer token auth
+          pollTimer = setInterval(() => pollStatus(res.job_id, total_cards), 2000);
+          // First poll immediately
+          pollStatus(res.job_id, total_cards);
         } catch (err) {
           setIsSyncing(false);
           toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'Failed to start migration processing.' }));
@@ -576,10 +579,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);
-      if (eventSource) {
-        eventSource.close();
-        eventSource = null;
-      }
+      if (pollTimer) clearInterval(pollTimer);
     };
   }, [t, appName]);
 
