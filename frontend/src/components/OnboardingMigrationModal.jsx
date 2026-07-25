@@ -345,6 +345,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             const b64 = cropCardFromStream(rect);
             if (b64) {
               harvestedCards.push({ crop_base64: b64, cx, cy });
+              // Stream new cards to backend immediately to free browser memory
+              if (harvestedCards.length % 15 === 0 && window.opener) {
+                window.opener.postMessage({ type: 'DRESSAPP_MIGRATION_STREAM', cards: harvestedCards.slice(-15).map(c => ({ crop_base64: c.crop_base64 })) }, '*');
+              }
             }
           }
 
@@ -420,76 +424,127 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         video.remove();
 
         // ======================================================================
-        // PHASE 1 COMPLETE — Send batch to DressApp window
+        // PHASE 1 COMPLETE — Stream remaining cards + signal done
         // ======================================================================
         st.innerText = 'Scan complete! ' + harvestedCards.length + ' cards captured. Sending to DressApp...';
 
-        const batch = harvestedCards.map(c => ({ crop_base64: c.crop_base64 }));
-
         if (window.opener) {
+          // Send any remaining cards (last batch that wasn't a multiple of 15)
+          const remainder = harvestedCards.length % 15;
+          if (remainder > 0) {
+            window.opener.postMessage({ type: 'DRESSAPP_MIGRATION_STREAM', cards: harvestedCards.slice(-remainder).map(c => ({ crop_base64: c.crop_base64 })) }, '*');
+          }
+          // Signal completion
           window.opener.postMessage({
-            type: 'DRESSAPP_MIGRATION_BATCH',
-            cards: batch,
-            app_name: document.title || 'Competitor App',
-            total_cards: batch.length,
-            total_scrolled: scrollPos
+            type: 'DRESSAPP_MIGRATION_COMPLETE',
+            total_cards: harvestedCards.length,
+            app_name: document.title || 'Competitor App'
           }, '*');
         }
 
         // Show green completion badge
-        o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;">👗 DressApp Agent</div><div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">✓ Scan Complete!</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">' + batch.length + ' cards captured and sent to DressApp for processing.<br>You can now safely close this window and return to DressApp.</div>';
+        o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;">👗 DressApp Agent</div><div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">✓ Scan Complete!</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">' + harvestedCards.length + ' cards captured and sent to DressApp for processing.<br>You can now safely close this window and return to DressApp.</div>';
       };
     })();`;
     return 'javascript:' + encodeURIComponent(rawJS);
   }, []);
 
   useEffect(() => {
+    let activeJobId = null;
+    let pollTimer = null;
+
+    const pollStatus = async (jobId) => {
+      try {
+        const st = await api.getMigrationStatus(jobId);
+        if (st.status === 'done') {
+          clearInterval(pollTimer);
+          if (st.items && st.items.length > 0) {
+            setSyncedItemsList(st.items);
+            setSyncedItems(st.imported || st.items.length);
+            toast.success(t('migration.batchImportSuccess', {
+              imported: st.imported,
+              skipped: st.skipped,
+              defaultValue: `Successfully imported ${st.imported} items (${st.skipped} duplicates skipped).`
+            }));
+          } else {
+            toast.info(t('migration.noCardsImported', { defaultValue: 'Processing complete but no items were imported.' }));
+          }
+          setIsSyncing(false);
+          setProgressPct(100);
+          setMigrationStage('outfits_prompt');
+          toast.success(t('migration.agentCompleted', { defaultValue: 'Wardrobe Migration Agent successfully completed closet import!' }));
+        } else if (st.status === 'error') {
+          clearInterval(pollTimer);
+          setIsSyncing(false);
+          toast.error(st.error || 'Migration processing failed.');
+        } else if (st.status === 'processing') {
+          // Update progress based on imported count
+          const imported = st.imported || 0;
+          if (imported > 0) {
+            setSyncedItems(imported);
+            setProgressPct(Math.min(90, Math.round((imported / (imported + st.skipped + 10)) * 90)));
+            setSyncStatusText(t('migration.processingProgress', { imported, defaultValue: `Processing... ${imported} items imported so far` }));
+          }
+        }
+      } catch (_) {}
+    };
+
     const handleMessage = async (event) => {
-      // Phase 2: Receive the full batch of pre-cropped cards from the bookmarklet
-      if (event.data && event.data.type === 'DRESSAPP_MIGRATION_BATCH') {
-        const { cards, total_cards } = event.data;
-        if (!cards || cards.length === 0) {
+      const msg = event.data;
+      if (!msg || !msg.type) return;
+
+      // Stream: forward card batches to backend immediately
+      if (msg.type === 'DRESSAPP_MIGRATION_STREAM') {
+        const { cards } = msg;
+        if (!cards || cards.length === 0) return;
+        try {
+          await api.sendMigrationCards({ app_name: appName.trim(), cards });
+        } catch (err) {
+          console.error('Failed to stream cards to backend:', err);
+        }
+        return;
+      }
+
+      // Complete: trigger async processing + start polling
+      if (msg.type === 'DRESSAPP_MIGRATION_COMPLETE') {
+        const { total_cards, app_name } = msg;
+        if (!total_cards || total_cards === 0) {
           toast.error(t('migration.noCardsScanned', { defaultValue: 'No clothing cards were detected on the competitor page.' }));
           return;
         }
 
         setIsSyncing(true);
-        setProgressPct(10);
+        setProgressPct(5);
         setSyncStatusText(t('migration.batchProcessing', {
-          count: total_cards || cards.length,
-          defaultValue: `Processing ${total_cards || cards.length} scanned cards through GarmentVision...`
+          count: total_cards,
+          defaultValue: `Processing ${total_cards} scanned cards through GarmentVision...`
         }));
 
         try {
-          const res = await api.batchMigrationImport({
-            app_name: appName.trim(),
-            cards: cards,
-          });
-
-          if (res.items && res.items.length > 0) {
-            setSyncedItemsList(res.items);
-            setSyncedItems(res.items_imported || res.items.length);
-            toast.success(t('migration.batchImportSuccess', {
-              imported: res.items_imported,
-              skipped: res.items_skipped,
-              defaultValue: `Successfully imported ${res.items_imported} items (${res.items_skipped} duplicates skipped).`
-            }));
+          const res = await api.startMigrationProcessing({ app_name: app_name || appName.trim() });
+          if (!res.job_id) {
+            setIsSyncing(false);
+            toast.error('No cards were queued for processing.');
+            return;
           }
+          activeJobId = res.job_id;
+          setProgressPct(10);
+          setSyncStatusText(t('migration.processingStarted', { defaultValue: 'Processing started. You can safely close this tab.' }));
 
-          setIsSyncing(false);
-          setProgressPct(100);
-          setMigrationStage('outfits_prompt');
-          toast.success(t('migration.agentCompleted', { defaultValue: 'Wardrobe Migration Agent successfully completed closet import!' }));
+          // Start polling every 3 seconds
+          pollTimer = setInterval(() => pollStatus(activeJobId), 3000);
         } catch (err) {
           setIsSyncing(false);
-          toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'Agent error during batch processing.' }));
+          toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'Failed to start migration processing.' }));
         }
+        return;
       }
     };
 
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);
+      if (pollTimer) clearInterval(pollTimer);
     };
   }, [t, appName]);
 

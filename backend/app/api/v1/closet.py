@@ -2861,6 +2861,85 @@ async def batch_migration_import(
     return result
 
 
+# ─── Temporary storage for streaming migration cards ───
+# Cards are buffered here as the bookmarklet streams them,
+# then processed asynchronously when the scan completes.
+_migration_cards: dict[str, list[dict[str, Any]]] = {}   # user_id → cards
+_migration_status: dict[str, dict[str, Any]] = {}         # job_id → status
+
+
+class MigrationCardsIn(BaseModel):
+    app_name: str = "Competitor App"
+    cards: list[dict[str, Any]] = Field(default_factory=list)
+
+
+@router.post("/migration/cards")
+async def receive_migration_cards(
+    payload: MigrationCardsIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Receive streaming cards from the bookmarklet and buffer them server-side."""
+    uid = user["id"]
+    if uid not in _migration_cards:
+        _migration_cards[uid] = []
+    _migration_cards[uid].extend(payload.cards)
+    return {"received": len(payload.cards), "total_buffered": len(_migration_cards[uid])}
+
+
+class MigrationProcessIn(BaseModel):
+    app_name: str = "Competitor App"
+
+
+@router.post("/migration/process")
+async def start_migration_processing(
+    payload: MigrationProcessIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Start async processing of all buffered cards. Returns immediately."""
+    from app.services.migration.wardrobe_migration_agent import WardrobeMigrationAgent
+
+    uid = user["id"]
+    cards = _migration_cards.pop(uid, [])
+    if not cards:
+        return {"job_id": None, "message": "No cards buffered"}
+
+    job_id = f"migration_{uuid.uuid4().hex[:12]}"
+    _migration_status[job_id] = {"status": "processing", "imported": 0, "skipped": 0, "items": []}
+
+    async def _run():
+        try:
+            agent = WardrobeMigrationAgent()
+            result = await agent.process_batch(
+                user_id=uid,
+                app_name=payload.app_name,
+                cards=cards,
+            )
+            _migration_status[job_id] = {
+                "status": "done",
+                "imported": result.get("items_imported", 0),
+                "skipped": result.get("items_skipped", 0),
+                "items": result.get("items", []),
+            }
+        except Exception as e:
+            logger.error("Migration processing failed for job %s: %s", job_id, e)
+            _migration_status[job_id] = {"status": "error", "error": str(e), "imported": 0, "skipped": 0, "items": []}
+
+    asyncio.create_task(_run())
+    return {"job_id": job_id, "cards_queued": len(cards)}
+
+
+@router.get("/migration/status/{job_id}")
+async def get_migration_status(
+    job_id: str,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Poll migration processing status."""
+    status = _migration_status.get(job_id)
+    if not status:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return status
+
+
 class ImportCompetitorIn(BaseModel):
     app_name: str | None = "Competitor App"
     target_url: str | None = None
