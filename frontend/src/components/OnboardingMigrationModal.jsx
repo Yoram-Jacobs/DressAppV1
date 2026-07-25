@@ -63,7 +63,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
       const o = document.createElement('div');
       o.id = 'dressapp-importer-widget';
-      o.style.cssText = 'position:fixed;top:20px;left:20px;z-index:999999;background:rgba(15,23,42,0.95);color:white;padding:16px;border-radius:12px;font-family:sans-serif;font-size:13px;box-shadow:0 10px 25px rgba(0,0,0,0.3);width:260px;line-height:1.4;border:1px solid rgba(255,255,255,0.1);';
+      o.style.cssText = 'position:fixed;top:20px;left:20px;z-index:999999;background:rgba(15,23,42,0.95);color:white;padding:16px;border-radius:12px;font-family:sans-serif;font-size:13px;box-shadow:0 10px 25px rgba(0,0,0,0.3);width:280px;line-height:1.4;border:1px solid rgba(255,255,255,0.1);';
       o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;"><span class="da-pulse-badge">👗</span> DressApp Agent</div><div id="da-status" style="color:#94a3b8;font-size:11px;"><div style="margin-bottom:8px;color:#cbd5e1;">Choose <b>THIS TAB</b> in the sharing prompt to start.</div><button id="da-start-btn" style="background:#6366f1;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:11px;width:100%;">Share & Start Agent</button></div>';
       document.body.appendChild(o);
 
@@ -106,6 +106,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         await new Promise(r => { if (video.readyState >= 3) r(); else video.oncanplay = r; });
         await new Promise(r => setTimeout(r, 1000));
 
+        // --- Scroll element detection ---
         const getScrollEl = () => {
           if (window.pageYOffset > 0) return window;
           window.scrollTo(0, 1);
@@ -130,30 +131,27 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
         const scrollEl = getScrollEl();
         let scrollPos = (scrollEl && scrollEl !== window) ? scrollEl.scrollTop : (window.scrollY || window.pageYOffset || document.documentElement.scrollTop);
-        let noChangeCount = 0;
 
+        // --- Card detection function ---
         const getVisibleGarmentRects = () => {
           const scrollRect = (scrollEl && scrollEl !== window && scrollEl !== document.documentElement && scrollEl !== document.body)
             ? scrollEl.getBoundingClientRect()
-            : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+            : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight, bottom: window.innerHeight };
 
           const validImgs = Array.from(document.querySelectorAll('img')).filter(img => {
             const imgRect = img.getBoundingClientRect();
-            // Product images should be reasonably sized
             if (imgRect.width < 50 || imgRect.height < 50) return false;
-            
-            // Must be within scroll viewport boundaries, below top header offset and above footer
+
             const headerHeight = 110;
             const footerHeight = 60;
             const viewportMinY = scrollRect.top + headerHeight;
             const viewportMaxY = scrollRect.bottom - footerHeight;
 
             if (imgRect.top < viewportMinY || imgRect.bottom > viewportMaxY) return false;
-            
+
             const src = img.src.toLowerCase();
             if (src.includes('logo') || src.includes('avatar') || src.includes('icon') || src.includes('profile')) return false;
 
-            // Prevent picking up elements inside nav headers, menus, footers
             let insideNavOrHeader = false;
             let temp = img;
             while (temp && temp !== document.body) {
@@ -175,11 +173,11 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           if (validImgs.length === 0) return [];
 
           const rects = [];
-          
+
           for (const img of validImgs) {
             const imgRect = img.getBoundingClientRect();
-            
-            // 1. Walk up DOM tree to find exact card container element
+
+            // Walk up DOM tree to find the card container element via getBoundingClientRect()
             let cardEl = null;
             let p = img.parentElement;
             while (p && p !== document.body) {
@@ -196,65 +194,33 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
             if (cardEl) {
               const r = cardEl.getBoundingClientRect();
-              const relTop = r.top - scrollRect.top;
-              const relBottom = relTop + r.height;
-
-              const headerHeight = 110;
-              const footerHeight = 60;
-              const viewportMinY = headerHeight - 10;
-              const viewportMaxY = scrollRect.height - footerHeight + 10;
-
-              if (relTop >= viewportMinY && relBottom <= viewportMaxY) {
-                rects.push({
-                  left: r.left - scrollRect.left,
-                  top: relTop,
-                  width: r.width,
-                  height: r.height
-                });
-              }
+              rects.push({ left: r.left, top: r.top, width: r.width, height: r.height });
             } else {
-              // Fallback: item-centered card box (respecting image height for tall garments like pants/dresses)
-              const cx = imgRect.left + imgRect.width / 2;
-              const cy = imgRect.top + imgRect.height / 2;
+              // Fallback: use image rect with padding (respecting actual image height for tall garments)
               const cardW = Math.max(imgRect.width * 1.18, 150);
               const cardH = Math.max(imgRect.height * 1.18, cardW * 1.35);
-
-              const left = cx - cardW / 2;
-              const top = cy - cardH / 2;
-              const relTop = top - scrollRect.top;
-              const relBottom = relTop + cardH;
-
-              const headerHeight = 110;
-              const footerHeight = 60;
-              const viewportMinY = headerHeight - 10;
-              const viewportMaxY = scrollRect.height - footerHeight + 10;
-
-              if (relTop >= viewportMinY && relBottom <= viewportMaxY) {
-                rects.push({
-                  left: left - scrollRect.left,
-                  top: relTop,
-                  width: cardW,
-                  height: cardH
-                });
-              }
+              const cx = imgRect.left + imgRect.width / 2;
+              const cy = imgRect.top + imgRect.height / 2;
+              rects.push({ left: cx - cardW / 2, top: cy - cardH / 2, width: cardW, height: cardH });
             }
           }
 
-          // Deduplicate overlapping card rects (ensuring exactly one crop per grid cell)
+          // Coordinate-based near-duplicate rejection
           const uniqueRects = [];
           for (const r of rects) {
-            const isDup = uniqueRects.some(u => 
-              Math.abs(u.left - r.left) < 20 && 
+            const isDup = uniqueRects.some(u =>
+              Math.abs(u.left - r.left) < 20 &&
               Math.abs(u.top - r.top) < 20
             );
             if (!isDup) {
               uniqueRects.push(r);
             }
           }
-          
+
           return uniqueRects;
         };
 
+        // --- Scroll state helpers ---
         const getScrollState = () => {
           return {
             window: window.scrollY || window.pageYOffset,
@@ -264,95 +230,156 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           };
         };
 
-        window.addEventListener('message', async (e) => {
-          if (e.data && e.data.type === 'DRESSAPP_AGENT_ACTION') {
-            const { action, scroll_amount } = e.data;
-            if (action === 'scroll') {
-              const s1 = getScrollState();
-              const activeScrollAmount = scroll_amount || 600;
-              scrollPos += activeScrollAmount;
-              if (scrollEl && scrollEl !== window && scrollEl !== document.body && scrollEl !== document.documentElement) {
-                scrollEl.scrollTop = scrollPos;
-              }
-              window.scrollTo(0, scrollPos);
-              document.documentElement.scrollTop = scrollPos;
-              document.body.scrollTop = scrollPos;
+        // ======================================================================
+        // PHASE 1: Scan-All-First — autonomous scroll + crop loop
+        // ======================================================================
+        const harvestedCards = [];
+        const MAX_CROP_W = 400;
+        const MAX_CROP_H = 580;
+        let noChangeCount = 0;
+        let reachedBottom = false;
+        const scaleX = video.videoWidth / window.innerWidth;
+        const scaleY = video.videoHeight / window.innerHeight;
 
-              await new Promise(r => setTimeout(r, 1500));
-              let s2 = getScrollState();
-              let changed = (s2.window !== s1.window) || (s2.doc !== s1.doc) || (s2.body !== s1.body) || (s2.el !== s1.el);
-              
-              if (!changed) {
-                noChangeCount++;
-                if (noChangeCount < 3) {
-                  st.innerText = 'Waiting for lazy load (attempt ' + noChangeCount + '/3)...';
-                  scrollPos += 150;
-                  window.scrollTo(0, scrollPos);
-                  if (scrollEl && scrollEl !== window) scrollEl.scrollTop = scrollPos;
-                  await new Promise(r => setTimeout(r, 2000));
-                  
-                  s2 = getScrollState();
-                  changed = (s2.window !== s1.window) || (s2.doc !== s1.doc) || (s2.body !== s1.body) || (s2.el !== s1.el);
-                }
-              }
-
-              if (changed) {
-                noChangeCount = 0;
-              }
-
-              const reachedBottom = (!changed && noChangeCount >= 3);
-              captureAndSend(reachedBottom);
-            } else if (action === 'done') {
-              st.innerHTML = '<div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">✓ Migration Completed!</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">The closet import has successfully completed.<br>You can now safely close this window and return to the main DressApp screen.</div>';
-              stream.getTracks().forEach(t => t.stop());
-              video.remove();
-            }
-          }
-        });
-
-        const captureAndSend = async (reachedBottom = false) => {
-          st.innerText = 'Agent analyzing viewport...';
-          o.style.display = 'none';
-          await new Promise(r => setTimeout(r, 180));
+        const cropCardFromStream = (rect) => {
           try {
-            const rect = (scrollEl && scrollEl !== window && scrollEl !== document.documentElement && scrollEl !== document.body) ? scrollEl.getBoundingClientRect() : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
-            const scaleX = video.videoWidth / window.innerWidth;
-            const scaleY = video.videoHeight / window.innerHeight;
-            const cropX = rect.left * scaleX;
-            const cropY = rect.top * scaleY;
-            const cropW = rect.width * scaleX;
-            const cropH = rect.height * scaleY;
-            const canvas = document.createElement('canvas');
-            canvas.width = cropW;
-            canvas.height = cropH;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
-            const b64 = canvas.toDataURL('image/png');
-            o.style.display = 'block';
+            // Map viewport coordinates to video pixel coordinates
+            const srcX = rect.left * scaleX;
+            const srcY = rect.top * scaleY;
+            const srcW = rect.width * scaleX;
+            const srcH = rect.height * scaleY;
 
-            const cardRects = getVisibleGarmentRects();
-            const isShort = scrollEl ? (scrollEl.scrollHeight <= scrollEl.clientHeight + 15) : true;
-            const finalReachedBottom = reachedBottom || isShort;
+            // Limit output size
+            let outW = Math.min(Math.round(rect.width), MAX_CROP_W);
+            let outH = Math.min(Math.round(rect.height), MAX_CROP_H);
+            // Maintain aspect ratio
+            const aspect = rect.width / rect.height;
+            if (outW / outH > aspect) { outW = Math.round(outH * aspect); }
+            else { outH = Math.round(outW / aspect); }
 
-            if (window.opener) {
-              window.opener.postMessage({
-                type: 'DRESSAPP_AGENT_FRAME',
-                screenshot: b64,
-                viewport_width: rect.width,
-                viewport_height: rect.height,
-                reached_bottom: finalReachedBottom,
-                card_rects: cardRects
-              }, '*');
-            } else {
-              st.innerHTML = '<div style="color:#f87171;">Connection lost. Reopen modal.</div>';
-            }
-          } catch (err) {
-            o.style.display = 'block';
-            st.innerText = 'Error: ' + err.message;
+            const cvs = document.createElement('canvas');
+            cvs.width = outW;
+            cvs.height = outH;
+            const ctx = cvs.getContext('2d');
+            ctx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, outW, outH);
+
+            // Client-side blank tile rejection: check pixel variance
+            try {
+              const px = ctx.getImageData(0, 0, Math.min(outW, 50), Math.min(outH, 50)).data;
+              let sumR = 0, sumG = 0, sumB = 0, n = 0;
+              for (let i = 0; i < px.length; i += 4) { sumR += px[i]; sumG += px[i+1]; sumB += px[i+2]; n++; }
+              const avgR = sumR / n, avgG = sumG / n, avgB = sumB / n;
+              let variance = 0;
+              for (let i = 0; i < px.length; i += 4) {
+                variance += (px[i] - avgR) ** 2 + (px[i+1] - avgG) ** 2 + (px[i+2] - avgB) ** 2;
+              }
+              variance = Math.sqrt(variance / (n * 3));
+              if (variance < 5) return null; // solid/blank tile
+            } catch (_) {}
+
+            // Reject extreme aspect ratios (banners, scrollbars)
+            if (rect.width > rect.height * 5 || rect.height > rect.width * 5) return null;
+
+            return cvs.toDataURL('image/jpeg', 0.8).split(',')[1]; // Return base64 without prefix
+          } catch (_) {
+            return null;
           }
         };
 
-        captureAndSend();
+        st.innerText = 'Scanning closet page...';
+
+        while (!reachedBottom) {
+          // Hide widget for clean capture
+          o.style.display = 'none';
+          await new Promise(r => setTimeout(r, 200));
+
+          // Detect visible cards and crop each one
+          const cardRects = getVisibleGarmentRects();
+          let newCardsThisStep = 0;
+
+          for (const rect of cardRects) {
+            // Check if this card center was already harvested (cross-scroll dedup)
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.width / 2 + scrollPos; // Absolute Y = viewport Y + scroll offset
+            const alreadyHarvested = harvestedCards.some(c =>
+              Math.abs(c.cx - cx) < 20 && Math.abs(c.cy - cy) < 20
+            );
+            if (alreadyHarvested) continue;
+
+            const b64 = cropCardFromStream(rect);
+            if (b64) {
+              harvestedCards.push({ crop_base64: b64, cx, cy });
+              newCardsThisStep++;
+            }
+          }
+
+          o.style.display = 'block';
+          st.innerText = 'Scanning... ' + harvestedCards.length + ' cards found';
+
+          // Scroll down
+          const s1 = getScrollState();
+          const scrollAmount = Math.round((scrollEl && scrollEl !== window && scrollEl.clientHeight) ? scrollEl.clientHeight * 0.7 : window.innerHeight * 0.7);
+          scrollPos += scrollAmount;
+          if (scrollEl && scrollEl !== window && scrollEl !== document.body && scrollEl !== document.documentElement) {
+            scrollEl.scrollTop = scrollPos;
+          }
+          window.scrollTo(0, scrollPos);
+          document.documentElement.scrollTop = scrollPos;
+          document.body.scrollTop = scrollPos;
+
+          // Wait for lazy-load rendering
+          await new Promise(r => setTimeout(r, 1500));
+
+          // Check if scroll position actually changed
+          let s2 = getScrollState();
+          let changed = (s2.window !== s1.window) || (s2.doc !== s1.doc) || (s2.body !== s1.body) || (s2.el !== s1.el);
+
+          if (!changed) {
+            noChangeCount++;
+            if (noChangeCount < 3) {
+              st.innerText = 'Waiting for lazy load (attempt ' + noChangeCount + '/3)... ' + harvestedCards.length + ' cards';
+              scrollPos += 150;
+              window.scrollTo(0, scrollPos);
+              if (scrollEl && scrollEl !== window) scrollEl.scrollTop = scrollPos;
+              await new Promise(r => setTimeout(r, 2000));
+
+              s2 = getScrollState();
+              changed = (s2.window !== s1.window) || (s2.doc !== s1.doc) || (s2.body !== s1.body) || (s2.el !== s1.el);
+            }
+          }
+
+          if (changed) {
+            noChangeCount = 0;
+          }
+
+          const isShort = scrollEl ? (scrollEl.scrollHeight <= scrollEl.clientHeight + 15) : true;
+          reachedBottom = (!changed && noChangeCount >= 3) || isShort;
+        }
+
+        // Stop the media stream
+        stream.getTracks().forEach(t => t.stop());
+        video.remove();
+
+        // ======================================================================
+        // PHASE 1 COMPLETE — Send batch to DressApp window
+        // ======================================================================
+        st.innerText = 'Scan complete! ' + harvestedCards.length + ' cards captured. Sending to DressApp...';
+
+        // Strip cx/cy metadata before sending (backend only needs crop_base64)
+        const batch = harvestedCards.map(c => ({ crop_base64: c.crop_base64 }));
+
+        if (window.opener) {
+          window.opener.postMessage({
+            type: 'DRESSAPP_MIGRATION_BATCH',
+            cards: batch,
+            app_name: document.title || 'Competitor App',
+            total_cards: batch.length,
+            total_scrolled: scrollPos
+          }, '*');
+        }
+
+        // Show green completion badge (static, no pulsing)
+        o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;">👗 DressApp Agent</div><div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">✓ Scan Complete!</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">' + batch.length + ' cards captured and sent to DressApp for processing.<br>You can now safely close this window and return to DressApp.</div>';
       };
     })();`;
     return 'javascript:' + encodeURIComponent(rawJS);
@@ -360,57 +387,44 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
   useEffect(() => {
     const handleMessage = async (event) => {
-      if (event.data && event.data.type === 'DRESSAPP_AGENT_FRAME') {
-        const { screenshot, viewport_width, viewport_height, reached_bottom, card_rects } = event.data;
-        setIsSyncing(true);
-        setSyncStatusText(t('migration.agentProcessing', { defaultValue: 'Wardrobe Migration Agent analyzing viewport screenshot...' }));
-        
-        try {
-          let sessId = activeSessionId;
-          if (!sessId) {
-            const sessRes = await api.startMigrationSession({ app_name: appName.trim() });
-            sessId = sessRes.session_id;
-            setActiveSessionId(sessId);
-          }
+      // Phase 2: Receive the full batch of pre-cropped cards from the bookmarklet
+      if (event.data && event.data.type === 'DRESSAPP_MIGRATION_BATCH') {
+        const { cards, total_cards } = event.data;
+        if (!cards || cards.length === 0) {
+          toast.error(t('migration.noCardsScanned', { defaultValue: 'No clothing cards were detected on the competitor page.' }));
+          return;
+        }
 
-          const res = await api.stepMigrationSession({
-            session_id: sessId,
+        setIsSyncing(true);
+        setProgressPct(10);
+        setSyncStatusText(t('migration.batchProcessing', {
+          count: total_cards || cards.length,
+          defaultValue: `Processing ${total_cards || cards.length} scanned cards through GarmentVision...`
+        }));
+
+        try {
+          const res = await api.batchMigrationImport({
             app_name: appName.trim(),
-            screenshot: screenshot,
-            viewport_width: viewport_width,
-            viewport_height: viewport_height,
-            reached_bottom: reached_bottom,
-            card_rects: card_rects
+            cards: cards,
           });
 
-          if (res.new_items_found && res.new_items_found.length > 0) {
-            setSyncedItemsList((prev) => [...prev, ...res.new_items_found]);
-            setSyncedItems((prev) => prev + res.new_items_found.length);
-            toast.success(t('migration.itemsFound', { count: res.new_items_found.length, defaultValue: `Agent discovered ${res.new_items_found.length} new items!` }));
+          if (res.items && res.items.length > 0) {
+            setSyncedItemsList(res.items);
+            setSyncedItems(res.items_imported || res.items.length);
+            toast.success(t('migration.batchImportSuccess', {
+              imported: res.items_imported,
+              skipped: res.items_skipped,
+              defaultValue: `Successfully imported ${res.items_imported} items (${res.items_skipped} duplicates skipped).`
+            }));
           }
 
-          if (res.action === 'scroll') {
-            setProgressPct((prev) => Math.min(90, prev + 5));
-          }
-
-          // Reply back to the bookmarklet window
-          if (event.source) {
-            event.source.postMessage({
-              type: 'DRESSAPP_AGENT_ACTION',
-              action: res.action,
-              scroll_amount: res.scroll_amount || 350
-            }, '*');
-          }
-
-          if (res.action === 'done') {
-            setIsSyncing(false);
-            setProgressPct(100);
-            setMigrationStage('outfits_prompt');
-            toast.success(t('migration.agentCompleted', { defaultValue: 'Wardrobe Migration Agent successfully completed closet import!' }));
-          }
+          setIsSyncing(false);
+          setProgressPct(100);
+          setMigrationStage('outfits_prompt');
+          toast.success(t('migration.agentCompleted', { defaultValue: 'Wardrobe Migration Agent successfully completed closet import!' }));
         } catch (err) {
           setIsSyncing(false);
-          toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'Agent error during step processing.' }));
+          toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'Agent error during batch processing.' }));
         }
       }
     };
@@ -419,7 +433,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-  }, [t, activeSessionId, appName]);
+  }, [t, appName]);
 
   const bookmarkletRef = useRef(null);
 

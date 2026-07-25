@@ -506,3 +506,72 @@ class WardrobeMigrationAgent:
                 })
         except Exception as ingest_err:
             logger.warning("Agent ingestion failed for background crop: %s", ingest_err)
+
+    async def process_batch(
+        self,
+        user_id: str,
+        app_name: str,
+        cards: list[dict],
+    ) -> dict:
+        """
+        Process a batch of pre-cropped card images sent from the client harvester.
+        Each card dict has: { "crop_base64": str }
+        Runs dedup, Gemini classification, Gatekeeper noise filter, background matting, and DB persistence synchronously.
+        Returns { "items_imported": N, "items_skipped": M, "items": [...] }
+        """
+        db = get_db()
+        parsed_hashes = []
+        new_items = []
+        items_skipped = 0
+
+        for card in cards:
+            b64_str = card.get("crop_base64")
+            if not b64_str:
+                items_skipped += 1
+                continue
+            
+            try:
+                if b64_str.startswith("data:image/"):
+                    _, b64data = b64_str.split(",", 1)
+                    raw_bytes = base64.b64decode(b64data)
+                else:
+                    raw_bytes = base64.b64decode(b64_str)
+                
+                img = Image.open(io.BytesIO(raw_bytes))
+                if img.mode != "RGB":
+                    img = img.convert("RGB")
+                
+                p_hash = compute_perceptual_hash(img)
+                
+                is_duplicate = False
+                for h in parsed_hashes:
+                    if hamming_distance(p_hash, h) <= 5:
+                        is_duplicate = True
+                        break
+                
+                if is_duplicate:
+                    items_skipped += 1
+                    continue
+                
+                parsed_hashes.append(p_hash)
+                
+                buf = io.BytesIO()
+                img.save(buf, format="JPEG", quality=90)
+                crop_bytes = buf.getvalue()
+                
+                await self.process_crop_in_background(
+                    user_id=user_id,
+                    app_name=app_name,
+                    crop_bytes=crop_bytes,
+                    p_hash=p_hash,
+                    new_items_out=new_items,
+                )
+            except Exception as e:
+                logger.warning("Error processing batch card: %s", e)
+                items_skipped += 1
+
+        return {
+            "items_imported": len(new_items),
+            "items_skipped": items_skipped,
+            "items": new_items
+        }

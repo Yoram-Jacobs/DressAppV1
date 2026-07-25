@@ -210,6 +210,7 @@ export const api = {
   importCompetitorScreenshotScroll: (body) => client.post('/closet/import-competitor-screenshot-scroll', body).then((r) => r.data),
   startMigrationSession: (body) => client.post('/closet/migration/session/start', body).then((r) => r.data),
   stepMigrationSession: (body) => client.post('/closet/migration/session/step', body).then((r) => r.data),
+  batchMigrationImport: (body) => client.post('/closet/migration/batch', body).then((r) => r.data),
   getImportJobStatus: (jobId) => client.get(`/closet/import-job-status/${jobId}`).then((r) => r.data),
   importCompetitorClosetStream: ({ body, onFrame, signal } = {}) =>
     streamNdjson('/closet/import-competitor-stream', {

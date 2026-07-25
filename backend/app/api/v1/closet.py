@@ -2838,6 +2838,29 @@ async def step_migration_session(
     return result
 
 
+class MigrationBatchIn(BaseModel):
+    app_name: str = "Competitor App"
+    cards: list[dict[str, Any]] = Field(default_factory=list)
+
+@router.post("/migration/batch")
+async def batch_migration_import(
+    payload: MigrationBatchIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    from app.services.migration.wardrobe_migration_agent import WardrobeMigrationAgent
+
+    if not payload.cards:
+        return {"items_imported": 0, "items_skipped": 0, "items": []}
+
+    agent = WardrobeMigrationAgent()
+    result = await agent.process_batch(
+        user_id=user["id"],
+        app_name=payload.app_name,
+        cards=payload.cards,
+    )
+    return result
+
+
 class ImportCompetitorIn(BaseModel):
     app_name: str | None = "Competitor App"
     target_url: str | None = None

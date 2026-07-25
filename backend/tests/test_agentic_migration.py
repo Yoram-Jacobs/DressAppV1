@@ -173,5 +173,57 @@ async def test_agentic_migration_with_fit_pic_tight_crop():
         # Verify background matting was called
         mock_matte.assert_called_once()
 
+@pytest.mark.anyio
+async def test_agentic_migration_batch():
+    import io
+    import base64
 
+    # 1. Create two visually distinct test images with patterns (not solid colors,
+    # because solid color images produce nearly identical perceptual hashes)
+    import numpy as np
+    arr1 = np.zeros((50, 50, 3), dtype=np.uint8)
+    arr1[:25, :, 0] = 255  # Top half red
+    arr1[25:, :, 1] = 255  # Bottom half green
+    img1 = Image.fromarray(arr1)
+    buf1 = io.BytesIO()
+    img1.save(buf1, format="JPEG")
+    b64_img1 = base64.b64encode(buf1.getvalue()).decode("utf-8")
 
+    arr2 = np.zeros((50, 50, 3), dtype=np.uint8)
+    arr2[:, :25, 2] = 255  # Left half blue
+    arr2[:, 25:, 0] = 200; arr2[:, 25:, 1] = 200  # Right half yellow
+    img2 = Image.fromarray(arr2)
+    buf2 = io.BytesIO()
+    img2.save(buf2, format="JPEG")
+    b64_img2 = base64.b64encode(buf2.getvalue()).decode("utf-8")
+
+    # 3. Create 3 cards: 2 identical (should dedup to 1) + 1 unique
+    cards = [
+        {"crop_base64": b64_img1},
+        {"crop_base64": b64_img1},  # Duplicate
+        {"crop_base64": b64_img2}
+    ]
+
+    # 4. Mocks
+    agent = WardrobeMigrationAgent(api_key="mock_key")
+    mock_classify1 = '{"category": "Top", "color": "Red", "label": "test red top", "is_model_fit_pic": false}'
+    mock_classify2 = '{"category": "Top", "color": "Blue", "label": "test blue top", "is_model_fit_pic": false}'
+    agent.client.vision = AsyncMock(side_effect=[mock_classify1, mock_classify2])
+
+    with patch("app.services.migration.wardrobe_migration_agent.get_db") as mock_get_db, \
+         patch("app.services.background_matting.matte_crop", new_callable=AsyncMock) as mock_matte:
+
+        mock_db = AsyncMock()
+        mock_get_db.return_value = mock_db
+        mock_matte.return_value = b"fake_png_bytes"
+
+        # 5. Call process_batch
+        result = await agent.process_batch(
+            user_id="test_user",
+            app_name="Whering",
+            cards=cards
+        )
+
+        # 6. Asserts
+        assert result["items_imported"] == 2
+        assert result["items_skipped"] >= 1
