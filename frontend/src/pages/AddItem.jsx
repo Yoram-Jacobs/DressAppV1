@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useMemo, useSyncExternalStore } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -302,29 +302,32 @@ export default function AddItem() {
   const [cards, setCards] = useState([]); // [{id,file,previewUrl,base64,status,progress,fields,error,dppData?}]
   const [saving, setSaving] = useState(false);
 
-  // Auto-run bulk import workflow if navigated from OnboardingMigrationModal with location.state.importedItems
+  // Auto-run bulk import workflow when pending migration cards arrive
+  // from the bookmarklet (stored in workStore by MigrationMessageListener).
+  // Uses useSyncExternalStore to react when cards are set after mount.
+  const migrationPending = useSyncExternalStore(
+    workStore.subscribe,
+    () => workStore.getSnapshot().pendingMigrationCards,
+    () => workStore.getSnapshot().pendingMigrationCards,
+  );
+
   useEffect(() => {
-    if (location.state?.importedItems?.length) {
-      const items = location.state.importedItems;
-      nav(location.pathname, { replace: true, state: {} });
+    if (!migrationPending || migrationPending.length === 0) return;
 
-      const fingerprints = items.map((item, idx) => {
-        const imgUrl = item.image_url || item.photo_url || '';
-        return {
-          file: { name: item.title || `Garment ${idx + 1}`, size: 1024, type: 'image/jpeg' },
-          _b64: imgUrl.startsWith('data:image/') ? imgUrl.split(',', 1)[1] : null,
-          imgUrl: imgUrl.startsWith('data:image/') ? null : imgUrl,
-          sha256: null,
-          phash: null,
-          color_sig: null,
-        };
-      }).filter(fp => fp._b64 || fp.imgUrl);
+    const migrationCards = workStore.consumePendingMigrationCards();
+    if (!migrationCards || migrationCards.length === 0) return;
 
-      if (fingerprints.length > 0) {
-        handleBatchBackground(fingerprints, 0);
-      }
-    }
-  }, [location.state]);
+    const fingerprints = migrationCards.map((c, idx) => ({
+      file: { name: c.title || `Imported Garment ${idx + 1}`, size: 1024, type: 'image/jpeg' },
+      _b64: c.crop_base64,
+      sha256: null,
+      phash: null,
+      color_sig: null,
+    }));
+
+    handleBatchBackground(fingerprints, 0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [migrationPending]);
   const [quickConfirm, setQuickConfirm] = useState(false);
   // Phase R — receipt ingest animation overlay state.
   // ``ingestPhase``: null | 'saving' | 'syncing'

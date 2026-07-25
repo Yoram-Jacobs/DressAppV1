@@ -41,23 +41,20 @@ import SharedOutfit from '@/pages/SharedOutfit';
 import DeleteAccount from '@/pages/DeleteAccount';
 
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { useTranslation } from 'react-i18next';
 import { isRtl } from '@/lib/i18n';
+import { workStore } from '@/lib/workStore';
 
 /** Global listener for migration postMessage events from the bookmarklet popup.
- *  Collects streamed cards and on DRESSAPP_MIGRATION_COMPLETE navigates to /add
- *  so the AddItem Upload-photos workflow can analyse + persist them. */
+ *  Collects streamed cards and on DRESSAPP_MIGRATION_COMPLETE stores them
+ *  in workStore so AddItem.jsx can pick them up and run handleBatchBackground. */
 function MigrationMessageListener() {
-  const navigate = useNavigate();
-  const location = useLocation();
-
   useEffect(() => {
     const collectedCards = [];
 
-    const handleMessage = async (event) => {
+    const handleMessage = (event) => {
       const msg = event.data;
       if (!msg || !msg.type) return;
 
@@ -73,22 +70,15 @@ function MigrationMessageListener() {
         const { total_cards } = msg;
         if (!total_cards || total_cards === 0) return;
 
-        // Convert collected migration cards to the importedItems format
-        // that AddItem.jsx handleBatchBackground expects
-        const importedItems = collectedCards
-          .filter(c => c.crop_base64)
-          .map((c, idx) => ({
-            title: `Imported Garment ${idx + 1}`,
-            image_url: `data:image/jpeg;base64,${c.crop_base64}`,
-          }));
-
+        // Filter to cards that have crop_base64 (the actual garment image)
+        const cardsWithImages = collectedCards.filter(c => c.crop_base64);
         collectedCards.length = 0;
 
-        if (importedItems.length > 0) {
-          // Navigate to /add with the collected cards — AddItem's
-          // useEffect on location.state.importedItems picks them up
-          // and runs handleBatchBackground automatically.
-          navigate('/closet/add', { state: { importedItems } });
+        if (cardsWithImages.length > 0) {
+          // Store in workStore — AddItem.jsx reads this on mount
+          // and feeds it into handleBatchBackground (the native
+          // GarmentVision batch pipeline).
+          workStore.setPendingMigrationCards(cardsWithImages);
         }
         return;
       }
@@ -96,7 +86,7 @@ function MigrationMessageListener() {
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [navigate, location.pathname]);
+  }, []);
 
   return null;
 }
