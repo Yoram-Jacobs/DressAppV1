@@ -128,7 +128,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           await new Promise(r => setTimeout(r, 2000));
         }
 
-        // --- Scroll element detection ---
+        // Scroll to top of page before starting scan
         const getScrollEl = () => {
           if (window.pageYOffset > 0) return window;
           window.scrollTo(0, 1);
@@ -152,7 +152,15 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         };
 
         const scrollEl = getScrollEl();
-        let scrollPos = (scrollEl && scrollEl !== window) ? scrollEl.scrollTop : (window.scrollY || window.pageYOffset || document.documentElement.scrollTop);
+        // Always start scanning from the top of the page
+        if (scrollEl && scrollEl !== window && scrollEl !== document.body && scrollEl !== document.documentElement) {
+          scrollEl.scrollTop = 0;
+        }
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        await new Promise(r => setTimeout(r, 500));
+        let scrollPos = 0;
 
         // --- Card detection function ---
         const getVisibleGarmentRects = () => {
@@ -352,18 +360,21 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           // Count rects before scroll to detect new lazy-loaded images
           const prevRectCount = cardRects.length;
 
-          // Capture scroll state BEFORE scrolling
+          // Capture actual scroll position BEFORE scrolling
           const s1 = getScrollState();
+          const prevScrollPos = (scrollEl && scrollEl !== window && scrollEl !== document.documentElement && scrollEl !== document.body)
+            ? scrollEl.scrollTop
+            : (window.scrollY || window.pageYOffset || document.documentElement.scrollTop);
 
           // Scroll down
           const scrollAmount = Math.round((scrollEl && scrollEl !== window && scrollEl.clientHeight) ? scrollEl.clientHeight * 0.7 : window.innerHeight * 0.7);
-          scrollPos += scrollAmount;
+          const targetScroll = prevScrollPos + scrollAmount;
           if (scrollEl && scrollEl !== window && scrollEl !== document.body && scrollEl !== document.documentElement) {
-            scrollEl.scrollTop = scrollPos;
+            scrollEl.scrollTop = targetScroll;
           }
-          window.scrollTo(0, scrollPos);
-          document.documentElement.scrollTop = scrollPos;
-          document.body.scrollTop = scrollPos;
+          window.scrollTo(0, targetScroll);
+          document.documentElement.scrollTop = targetScroll;
+          document.body.scrollTop = targetScroll;
 
           // Adaptive wait: poll for new visible card rects (lazy-loaded images)
           st.innerText = 'Waiting for lazy images... ' + harvestedCards.length + ' cards';
@@ -381,30 +392,44 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             }
           }
 
-          // Check if scroll position actually changed
+          // Check actual scroll position AFTER scrolling
           let s2 = getScrollState();
           let changed = (s2.window !== s1.window) || (s2.doc !== s1.doc) || (s2.body !== s1.body) || (s2.el !== s1.el);
+          const actualScrollPos = (scrollEl && scrollEl !== window && scrollEl !== document.documentElement && scrollEl !== document.body)
+            ? scrollEl.scrollTop
+            : (window.scrollY || window.pageYOffset || document.documentElement.scrollTop);
+          // Update scrollPos to reflect where we actually are
+          scrollPos = actualScrollPos;
 
           if (!newRectsFound && !changed) {
             noChangeCount++;
-            if (noChangeCount < 3) {
-              st.innerText = 'No new images (attempt ' + noChangeCount + '/3)... ' + harvestedCards.length + ' cards';
-              scrollPos += 200;
-              window.scrollTo(0, scrollPos);
-              if (scrollEl && scrollEl !== window) scrollEl.scrollTop = scrollPos;
-              // Poll again after extra scroll
-              const retryStart = Date.now();
-              while (Date.now() - retryStart < 5000) {
-                await new Promise(r => setTimeout(r, 600));
-                const freshRects = getVisibleGarmentRects();
-                if (freshRects.length > prevRectCount) {
-                  newRectsFound = true;
-                  break;
-                }
-              }
-              s2 = getScrollState();
-              changed = (s2.window !== s1.window) || (s2.doc !== s1.doc) || (s2.body !== s1.body) || (s2.el !== s1.el);
+            if (noChangeCount >= 3) {
+              // Truly at the bottom — stop
+              break;
             }
+            st.innerText = 'No new images (attempt ' + noChangeCount + '/3)... ' + harvestedCards.length + ' cards';
+            // Try a small extra scroll
+            const retryTarget = actualScrollPos + 200;
+            if (scrollEl && scrollEl !== window) scrollEl.scrollTop = retryTarget;
+            window.scrollTo(0, retryTarget);
+            document.documentElement.scrollTop = retryTarget;
+            document.body.scrollTop = retryTarget;
+            // Poll again after extra scroll
+            const retryStart = Date.now();
+            while (Date.now() - retryStart < 5000) {
+              await new Promise(r => setTimeout(r, 600));
+              const freshRects = getVisibleGarmentRects();
+              if (freshRects.length > prevRectCount) {
+                newRectsFound = true;
+                break;
+              }
+            }
+            s2 = getScrollState();
+            changed = (s2.window !== s1.window) || (s2.doc !== s1.doc) || (s2.body !== s1.body) || (s2.el !== s1.el);
+            const retryScrollPos = (scrollEl && scrollEl !== window && scrollEl !== document.documentElement && scrollEl !== document.body)
+              ? scrollEl.scrollTop
+              : (window.scrollY || window.pageYOffset || document.documentElement.scrollTop);
+            scrollPos = retryScrollPos;
           }
 
           noChangeCount = newRectsFound ? 0 : noChangeCount;
