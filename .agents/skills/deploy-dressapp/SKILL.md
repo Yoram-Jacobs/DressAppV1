@@ -21,7 +21,7 @@ deployment, server setup, Docker configuration, and production troubleshooting.
 
 ## Quick Reference
 
-**Target**: Single VPS (Hetzner CX22 or larger), docker-compose, Caddy for automatic HTTPS, MongoDB Atlas M0 tier.
+**Target**: Single VPS (Hetzner CX32), docker-compose, Caddy for automatic HTTPS, MongoDB Atlas M0 tier.
 
 **Architecture**:
 ```
@@ -41,7 +41,7 @@ dressapp.co (port 443)
 ## Deployment Steps
 
 ### 1. Server Setup
-- Create Ubuntu 24.04 server (Hetzner CX22 recommended: 2 vCPU / 4 GB RAM / 40 GB NVMe)
+- Create Ubuntu 24.04 server (Hetzner CX32 4vCPU / 8 GB RAM / 160 GB NVMe)
 - SSH in: `ssh root@<IP>`
 
 ### 2. Install Docker
@@ -118,14 +118,6 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d
 
 ---
 
-## Scaling
-
-- Single CX22 supports ~20 concurrent users
-- For more: duplicate backend service + Caddy load balancing
-- Or upgrade to CX32 (4 vCPU / 8 GB)
-- Or deploy inference server on separate GPU box
-
----
 
 ## Troubleshooting
 
@@ -133,7 +125,7 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d
 |---------|-----|
 | Caddy certificate_obtain_failed | DNS not propagated, or ports 80/443 blocked |
 | Backend OOM | Add swap, upgrade, or disable vision models (`USE_LOCAL_CLOTHING_PARSER=false`) |
-| analyze 500s | Check `.env` for missing EMERGENT_LLM_KEY or MONGO_URL |
+| analyze 500s | Check `.env` for missing MONGO_URL |
 | pymongo InvalidURI | Fix trailing `&appName` in MONGO_URL |
 | pymongo bad auth | Reset Atlas user password |
 | Mongo timeout | Add VPS IP to Atlas Network Access |

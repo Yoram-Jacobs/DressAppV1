@@ -56,6 +56,16 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   // Use URL-encoded bookmarklet to prevent syntax and drag issues across all browsers
   const harvesterBookmarkletCode = useMemo(() => {
     const rawJS = `(async () => {
+      // Clean up any leftover widget from the Chrome extension
+      const oldExtWidget = document.querySelector('.dressapp-importer-widget');
+      if (oldExtWidget) oldExtWidget.remove();
+      const oldExtBtn = document.getElementById('dai-btn');
+      if (oldExtBtn) oldExtBtn.closest('[class*="dressapp-importer"]')?.remove();
+      // Remove any style that forces display:none on our widget
+      document.querySelectorAll('style').forEach(st => {
+        if (st.textContent.includes('dressapp-importer-widget')) st.remove();
+      });
+
       // Inject heartbeat animation style
       const s = document.createElement('style');
       s.innerHTML = '@keyframes da-hb { 0% { transform: scale(1); } 14% { transform: scale(1.08); } 28% { transform: scale(1); } 42% { transform: scale(1.12); } 70% { transform: scale(1); } } .da-pulse-badge { animation: da-hb 1.5s infinite ease-in-out; display: inline-block; }';
@@ -148,42 +158,25 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             ? scrollEl.getBoundingClientRect()
             : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight, bottom: window.innerHeight };
 
-          const validImgs = Array.from(document.querySelectorAll('img')).filter(img => {
+          // Strategy 1: Find <img> elements that look like garment cards
+          const rects = [];
+
+          const imgCandidates = Array.from(document.querySelectorAll('img')).filter(img => {
             const imgRect = img.getBoundingClientRect();
             if (imgRect.width < 40 || imgRect.height < 40) return false;
-
-            // Must overlap visible page content
             if (imgRect.bottom < 40 || imgRect.top > window.innerHeight - 20) return false;
-
-            const src = (img.src || '').toLowerCase();
-            if (src.includes('logo') || src.includes('avatar') || src.includes('icon') || src.includes('profile')) return false;
-
-            let insideNavOrHeader = false;
-            let temp = img;
-            while (temp && temp !== document.body) {
-              const tagName = temp.tagName.toLowerCase();
-              const cls = (temp.className || '').toString().toLowerCase();
-              const id = (temp.id || '').toLowerCase();
-              if (tagName === 'header' || tagName === 'nav' || tagName === 'footer' ||
-                  cls.includes('header') || cls.includes('nav') || cls.includes('menu') || cls.includes('footer') ||
-                  id.includes('header') || id.includes('nav') || id.includes('menu') || id.includes('footer')) {
-                insideNavOrHeader = true;
-                break;
-              }
-              temp = temp.parentElement;
+            // Only reject if INSIDE a <header>, <nav>, or <footer> tag
+            let p = img.parentElement;
+            while (p && p !== document.body) {
+              const tag = p.tagName.toLowerCase();
+              if (tag === 'header' || tag === 'nav' || tag === 'footer') return false;
+              p = p.parentElement;
             }
-            if (insideNavOrHeader) return false;
             return true;
           });
 
-          if (validImgs.length === 0) return [];
-
-          const rects = [];
-
-          for (const img of validImgs) {
+          for (const img of imgCandidates) {
             const imgRect = img.getBoundingClientRect();
-
-            // Walk up DOM tree to find the card container element via getBoundingClientRect()
             let cardEl = null;
             let p = img.parentElement;
             while (p && p !== document.body) {
@@ -202,12 +195,29 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               const r = cardEl.getBoundingClientRect();
               rects.push({ left: r.left, top: r.top, width: r.width, height: r.height });
             } else {
-              // Fallback: use image rect with padding (respecting actual image height for tall garments)
               const cardW = Math.max(imgRect.width * 1.18, 150);
               const cardH = Math.max(imgRect.height * 1.18, cardW * 1.35);
               const cx = imgRect.left + imgRect.width / 2;
               const cy = imgRect.top + imgRect.height / 2;
               rects.push({ left: cx - cardW / 2, top: cy - cardH / 2, width: cardW, height: cardH });
+            }
+          }
+
+          // Strategy 2: If no <img> cards found, look for card-shaped <div> elements with background images
+          if (rects.length === 0) {
+            const allEls = document.querySelectorAll('div, li, a, section');
+            for (const el of allEls) {
+              const r = el.getBoundingClientRect();
+              if (r.width < 80 || r.width > 600 || r.height < 80 || r.height > 800) continue;
+              if (r.bottom < 40 || r.top > window.innerHeight - 20) continue;
+              const ratio = r.height / r.width;
+              if (ratio < 0.7 || ratio > 2.5) continue;
+              // Has background image or contains an image
+              const bg = window.getComputedStyle(el).backgroundImage;
+              const hasBg = bg && bg !== 'none' && !bg.includes('linear-gradient') && !bg.includes('radial-gradient');
+              const hasImg = el.querySelector('img');
+              if (!hasBg && !hasImg) continue;
+              rects.push({ left: r.left, top: r.top, width: r.width, height: r.height });
             }
           }
 
