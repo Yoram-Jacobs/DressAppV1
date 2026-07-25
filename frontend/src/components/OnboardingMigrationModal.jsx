@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ const PRESET_APPS = [
 
 export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdated }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const location = useLocation();
 
   // Kill modal (not process) when user navigates to Closet page
@@ -573,9 +574,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       }
       
       toast.info(t('migration.popupOpened', { appName, defaultValue: `Opened ${appName} login tab. Log in & go to your closet page, then click the "DressApp Agent" bookmarklet.` }));
-      // Kill modal — the global MigrationMessageListener in App.jsx
-      // will collect cards and navigate to /add when the bookmarklet finishes.
+      // Kill modal and navigate to AddItem — it will pick up cards
+      // from workStore when the bookmarklet finishes streaming.
       onClose();
+      navigate('/closet/add');
     } catch {
       toast.error(t('migration.sessionStartError', { defaultValue: 'Could not initialize migration session. Please try again.' }));
     }
