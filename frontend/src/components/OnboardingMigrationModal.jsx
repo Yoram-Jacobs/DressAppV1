@@ -163,19 +163,17 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         let scrollPos = 0;
 
         // --- Card detection function ---
+        // Returns only cards that are FULLY visible in the viewport (no clipping at edges)
         const getVisibleGarmentRects = () => {
-          const scrollRect = (scrollEl && scrollEl !== window && scrollEl !== document.documentElement && scrollEl !== document.body)
-            ? scrollEl.getBoundingClientRect()
-            : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight, bottom: window.innerHeight };
+          const vpTop = 0;
+          const vpBottom = window.innerHeight;
 
-          // Strategy 1: Find <img> elements that look like garment cards
           const rects = [];
 
           const imgCandidates = Array.from(document.querySelectorAll('img')).filter(img => {
             const imgRect = img.getBoundingClientRect();
             if (imgRect.width < 40 || imgRect.height < 40) return false;
             if (imgRect.bottom < 40 || imgRect.top > window.innerHeight - 20) return false;
-            // Only reject if INSIDE a <header>, <nav>, or <footer> tag
             let p = img.parentElement;
             while (p && p !== document.body) {
               const tag = p.tagName.toLowerCase();
@@ -203,30 +201,34 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
             if (cardEl) {
               const r = cardEl.getBoundingClientRect();
-              // Reject images smaller than half the card dimensions (banners, icons)
               if (imgRect.width < r.width / 2 || imgRect.height < r.height / 2) continue;
+              // Only accept fully visible cards (entire card within viewport)
+              if (r.top < vpTop || r.bottom > vpBottom) continue;
               rects.push({ left: r.left, top: r.top, width: r.width, height: r.height });
             } else {
               const cardW = Math.max(imgRect.width * 1.18, 150);
               const cardH = Math.max(imgRect.height * 1.18, cardW * 1.35);
-              // Reject if image is smaller than half the synthetic card dimensions
               if (imgRect.width < cardW / 2 || imgRect.height < cardH / 2) continue;
               const cx = imgRect.left + imgRect.width / 2;
               const cy = imgRect.top + imgRect.height / 2;
-              rects.push({ left: cx - cardW / 2, top: cy - cardH / 2, width: cardW, height: cardH });
+              const cardRect = { left: cx - cardW / 2, top: cy - cardH / 2, width: cardW, height: cardH };
+              // Only accept fully visible cards
+              if (cardRect.top < vpTop || cardRect.top + cardRect.height > vpBottom) continue;
+              rects.push(cardRect);
             }
           }
 
-          // Strategy 2: If no <img> cards found, look for card-shaped <div> elements with background images
+          // Strategy 2: If no <img> cards found, look for card-shaped <div> elements
           if (rects.length === 0) {
             const allEls = document.querySelectorAll('div, li, a, section');
             for (const el of allEls) {
               const r = el.getBoundingClientRect();
               if (r.width < 80 || r.width > 600 || r.height < 80 || r.height > 800) continue;
               if (r.bottom < 40 || r.top > window.innerHeight - 20) continue;
+              // Only accept fully visible cards
+              if (r.top < vpTop || r.bottom > vpBottom) continue;
               const ratio = r.height / r.width;
               if (ratio < 0.7 || ratio > 2.5) continue;
-              // Has background image or contains an image
               const bg = window.getComputedStyle(el).backgroundImage;
               const hasBg = bg && bg !== 'none' && !bg.includes('linear-gradient') && !bg.includes('radial-gradient');
               const hasImg = el.querySelector('img');
@@ -248,6 +250,27 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           }
 
           return uniqueRects;
+        };
+
+        // Group cards into rows by Y position (within 30px tolerance)
+        const groupIntoRows = (cardRects) => {
+          if (cardRects.length === 0) return [];
+          const sorted = [...cardRects].sort((a, b) => a.top - b.top);
+          const rows = [];
+          let currentRow = [sorted[0]];
+          for (let i = 1; i < sorted.length; i++) {
+            const card = sorted[i];
+            const rowCenter = currentRow.reduce((s, c) => s + c.top + c.height / 2, 0) / currentRow.length;
+            const cardCenter = card.top + card.height / 2;
+            if (Math.abs(cardCenter - rowCenter) < 30) {
+              currentRow.push(card);
+            } else {
+              rows.push(currentRow);
+              currentRow = [card];
+            }
+          }
+          rows.push(currentRow);
+          return rows;
         };
 
         // --- Scroll state helpers ---
@@ -330,16 +353,14 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           // Hide widget for clean capture
           o.style.display = 'none';
           await new Promise(r => setTimeout(r, 300));
-          // Ensure layout repaint completes before capture
           await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-          // Detect visible cards and crop each one
+          // Detect fully visible cards and crop each one
           const cardRects = getVisibleGarmentRects();
 
           for (const rect of cardRects) {
-            // Check if this card center was already harvested (cross-scroll dedup)
             const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.height / 2 + scrollPos; // Absolute Y
+            const cy = rect.top + rect.height / 2 + scrollPos;
             const alreadyHarvested = harvestedCards.some(c =>
               Math.abs(c.cx - cx) < 20 && Math.abs(c.cy - cy) < 20
             );
@@ -350,7 +371,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               harvestedCards.push({ crop_base64: b64, cx, cy });
               if (harvestedCards.length % 15 === 0 && window.opener) {
                 window.opener.postMessage({ type: 'DRESSAPP_MIGRATION_STREAM', cards: harvestedCards.slice(-15).map(c => ({ crop_base64: c.crop_base64 })) }, '*');
-                // Free browser memory — base64 already sent to backend
                 for (let i = Math.max(0, harvestedCards.length - 15); i < harvestedCards.length; i++) {
                   harvestedCards[i].crop_base64 = '';
                 }
@@ -361,17 +381,28 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           o.style.display = 'block';
           st.innerText = 'Scanning... ' + harvestedCards.length + ' cards found';
 
-          // Count rects before scroll to detect new lazy-loaded images
           const prevRectCount = cardRects.length;
-
-          // Capture actual scroll position BEFORE scrolling
           const s1 = getScrollState();
           const prevScrollPos = (scrollEl && scrollEl !== window && scrollEl !== document.documentElement && scrollEl !== document.body)
             ? scrollEl.scrollTop
             : (window.scrollY || window.pageYOffset || document.documentElement.scrollTop);
 
-          // Scroll down
-          const scrollAmount = Math.round((scrollEl && scrollEl !== window && scrollEl.clientHeight) ? scrollEl.clientHeight * 0.7 : window.innerHeight * 0.7);
+          // Calculate scroll: detect rows, scroll to center the next row
+          const rows = groupIntoRows(cardRects);
+          let scrollAmount;
+          if (rows.length >= 2) {
+            // We have at least 2 rows visible — scroll by the height of one row
+            const rowHeight = rows[0].reduce((s, c) => s + c.height, 0) / rows[0].length;
+            scrollAmount = Math.round(rowHeight);
+          } else if (rows.length === 1) {
+            // Only one row visible — scroll by the row height + gap
+            const rowHeight = rows[0].reduce((s, c) => s + c.height, 0) / rows[0].length;
+            scrollAmount = Math.round(rowHeight * 1.2);
+          } else {
+            // Fallback: scroll by 60% of viewport
+            scrollAmount = Math.round((scrollEl && scrollEl !== window && scrollEl.clientHeight) ? scrollEl.clientHeight * 0.6 : window.innerHeight * 0.6);
+          }
+
           const targetScroll = prevScrollPos + scrollAmount;
           if (scrollEl && scrollEl !== window && scrollEl !== document.body && scrollEl !== document.documentElement) {
             scrollEl.scrollTop = targetScroll;
@@ -380,7 +411,36 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           document.documentElement.scrollTop = targetScroll;
           document.body.scrollTop = targetScroll;
 
-          // Adaptive wait: poll for new visible card rects (lazy-loaded images)
+          // Wait for layout to settle
+          await new Promise(r => setTimeout(r, 400));
+          await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+          // Center the visible row on screen if possible
+          const freshCards = getVisibleGarmentRects();
+          const freshRows = groupIntoRows(freshCards);
+          if (freshRows.length > 0) {
+            const centerRow = freshRows[Math.floor(freshRows.length / 2)];
+            const rowTop = Math.min(...centerRow.map(c => c.top));
+            const rowBottom = Math.max(...centerRow.map(c => c.top + c.height));
+            const rowCenter = (rowTop + rowBottom) / 2;
+            const vpCenter = window.innerHeight / 2;
+            const centerDelta = Math.round(rowCenter - vpCenter);
+            if (Math.abs(centerDelta) > 10) {
+              const actualPos = (scrollEl && scrollEl !== window && scrollEl !== document.documentElement && scrollEl !== document.body)
+                ? scrollEl.scrollTop
+                : (window.scrollY || window.pageYOffset || document.documentElement.scrollTop);
+              const centeredScroll = actualPos + centerDelta;
+              if (scrollEl && scrollEl !== window && scrollEl !== document.body && scrollEl !== document.documentElement) {
+                scrollEl.scrollTop = centeredScroll;
+              }
+              window.scrollTo(0, centeredScroll);
+              document.documentElement.scrollTop = centeredScroll;
+              document.body.scrollTop = centeredScroll;
+              await new Promise(r => setTimeout(r, 300));
+            }
+          }
+
+          // Adaptive wait for lazy images
           st.innerText = 'Waiting for lazy images... ' + harvestedCards.length + ' cards';
           const pollStart = Date.now();
           const POLL_TIMEOUT = 12000;
@@ -396,29 +456,24 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             }
           }
 
-          // Check actual scroll position AFTER scrolling
           let s2 = getScrollState();
           let changed = (s2.window !== s1.window) || (s2.doc !== s1.doc) || (s2.body !== s1.body) || (s2.el !== s1.el);
           const actualScrollPos = (scrollEl && scrollEl !== window && scrollEl !== document.documentElement && scrollEl !== document.body)
             ? scrollEl.scrollTop
             : (window.scrollY || window.pageYOffset || document.documentElement.scrollTop);
-          // Update scrollPos to reflect where we actually are
           scrollPos = actualScrollPos;
 
           if (!newRectsFound && !changed) {
             noChangeCount++;
             if (noChangeCount >= 3) {
-              // Truly at the bottom — stop
               break;
             }
             st.innerText = 'No new images (attempt ' + noChangeCount + '/3)... ' + harvestedCards.length + ' cards';
-            // Try a small extra scroll
             const retryTarget = actualScrollPos + 200;
             if (scrollEl && scrollEl !== window) scrollEl.scrollTop = retryTarget;
             window.scrollTo(0, retryTarget);
             document.documentElement.scrollTop = retryTarget;
             document.body.scrollTop = retryTarget;
-            // Poll again after extra scroll
             const retryStart = Date.now();
             while (Date.now() - retryStart < 5000) {
               await new Promise(r => setTimeout(r, 600));
