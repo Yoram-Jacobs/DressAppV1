@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,6 @@ const PRESET_APPS = [
 
 export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdated }) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const location = useLocation();
 
   // Kill modal (not process) when user navigates to Closet page
@@ -361,9 +360,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               harvestedCards.push({ crop_base64: b64, cx, cy });
               if (harvestedCards.length % 15 === 0 && window.opener) {
                 window.opener.postMessage({ type: 'DRESSAPP_MIGRATION_STREAM', cards: harvestedCards.slice(-15).map(c => ({ crop_base64: c.crop_base64 })) }, '*');
-                for (let i = Math.max(0, harvestedCards.length - 15); i < harvestedCards.length; i++) {
-                  harvestedCards[i].crop_base64 = '';
-                }
               }
             }
           }
@@ -574,10 +570,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       }
       
       toast.info(t('migration.popupOpened', { appName, defaultValue: `Opened ${appName} login tab. Log in & go to your closet page, then click the "DressApp Agent" bookmarklet.` }));
-      // Kill modal and navigate to AddItem — it will pick up cards
-      // from workStore when the bookmarklet finishes streaming.
+      // Kill modal — the global MigrationMessageListener in App.jsx
+      // will collect cards and navigate to /add when the bookmarklet finishes.
       onClose();
-      navigate('/closet/add');
     } catch {
       toast.error(t('migration.sessionStartError', { defaultValue: 'Could not initialize migration session. Please try again.' }));
     }
