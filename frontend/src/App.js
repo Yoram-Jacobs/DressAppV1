@@ -41,10 +41,65 @@ import SharedOutfit from '@/pages/SharedOutfit';
 import DeleteAccount from '@/pages/DeleteAccount';
 
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { useTranslation } from 'react-i18next';
 import { isRtl } from '@/lib/i18n';
+
+/** Global listener for migration postMessage events from the bookmarklet popup.
+ *  Collects streamed cards and on DRESSAPP_MIGRATION_COMPLETE navigates to /add
+ *  so the AddItem Upload-photos workflow can analyse + persist them. */
+function MigrationMessageListener() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const collectedCards = [];
+
+    const handleMessage = async (event) => {
+      const msg = event.data;
+      if (!msg || !msg.type) return;
+
+      if (msg.type === 'DRESSAPP_MIGRATION_STREAM') {
+        const { cards } = msg;
+        if (cards && cards.length > 0) {
+          collectedCards.push(...cards);
+        }
+        return;
+      }
+
+      if (msg.type === 'DRESSAPP_MIGRATION_COMPLETE') {
+        const { total_cards } = msg;
+        if (!total_cards || total_cards === 0) return;
+
+        // Convert collected migration cards to the importedItems format
+        // that AddItem.jsx handleBatchBackground expects
+        const importedItems = collectedCards
+          .filter(c => c.crop_base64)
+          .map((c, idx) => ({
+            title: `Imported Garment ${idx + 1}`,
+            image_url: `data:image/jpeg;base64,${c.crop_base64}`,
+          }));
+
+        collectedCards.length = 0;
+
+        if (importedItems.length > 0) {
+          // Navigate to /add with the collected cards — AddItem's
+          // useEffect on location.state.importedItems picks them up
+          // and runs handleBatchBackground automatically.
+          navigate('/closet/add', { state: { importedItems } });
+        }
+        return;
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [navigate, location.pathname]);
+
+  return null;
+}
 function GlobalScrollListener() {
   useEffect(() => {
     const handleScroll = () => {
@@ -92,6 +147,7 @@ function App() {
             <BrowserRouter>
               <ReferrerTracker />
               <GlobalScrollListener />
+              <MigrationMessageListener />
               <SeoBase />
               <LanguageSwitchOverlay />
           <a

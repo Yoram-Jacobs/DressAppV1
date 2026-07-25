@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,11 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
-import { workStore } from '@/lib/workStore';
 import {
   Loader2,
   ArrowRight,
-  CheckCircle2,
   Sparkles,
   Globe,
   Search,
@@ -29,7 +27,6 @@ const PRESET_APPS = [
 
 export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdated }) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const location = useLocation();
 
   // Kill modal (not process) when user navigates to Closet page
@@ -45,9 +42,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const [appDomain, setAppDomain] = useState('app.whering.co.uk');
   const [customLoginUrl, setCustomLoginUrl] = useState('https://app.whering.co.uk/login');
   const [busy, setBusy] = useState(false);
-
-  const [popupOpened, setPopupOpened] = useState(false);
-  const [syncedItemsList, setSyncedItemsList] = useState([]);
 
   // Use URL-encoded bookmarklet to prevent syntax and drag issues across all browsers
   const harvesterBookmarkletCode = useMemo(() => {
@@ -522,117 +516,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     return 'javascript:' + encodeURIComponent(rawJS);
   }, []);
 
-  useEffect(() => {
-    let pollTimer = null;
-
-    const pollStatus = async (jobId, totalCards) => {
-      try {
-        const st = await api.getMigrationStatus(jobId);
-        if (st.status === 'done') {
-          clearInterval(pollTimer);
-          workStore.updateMigration({
-            imported: st.imported,
-            skipped: st.skipped,
-            items: st.items || [],
-            status: 'done',
-          });
-          workStore.completeMigration();
-          if (st.items && st.items.length > 0) {
-            setSyncedItemsList(st.items);
-            setSyncedItems(st.imported || st.items.length);
-            toast.success(t('migration.batchImportSuccess', {
-              imported: st.imported,
-              skipped: st.skipped,
-              defaultValue: `Successfully imported ${st.imported} items (${st.skipped} duplicates skipped).`
-            }));
-          } else {
-            toast.info(t('migration.noCardsImported', { defaultValue: 'Processing complete but no items were imported.' }));
-          }
-          setIsSyncing(false);
-          setProgressPct(100);
-          setMigrationStage('complete');
-          toast.success(t('migration.agentCompleted', { defaultValue: 'Wardrobe Migration Agent successfully completed closet import!' }));
-        } else if (st.status === 'error') {
-          clearInterval(pollTimer);
-          workStore.updateMigration({ status: 'error' });
-          setIsSyncing(false);
-          toast.error(st.error || 'Migration processing failed.');
-        } else if (st.status === 'processing') {
-          const imported = st.imported || 0;
-          const skipped = st.skipped || 0;
-          workStore.updateMigration({ imported, skipped });
-          setSyncedItems(imported);
-          if (totalCards > 0) {
-            const pct = Math.min(95, Math.round(((imported + skipped) / totalCards) * 95));
-            setProgressPct(pct);
-            setSyncStatusText(t('migration.processingProgress', {
-              imported, total: totalCards,
-              defaultValue: `Processing... ${imported}/${totalCards} items imported`
-            }));
-          }
-        }
-      } catch { /* swallow */ }
-    };
-
-    const handleMessage = async (event) => {
-      const msg = event.data;
-      if (!msg || !msg.type) return;
-
-      if (msg.type === 'DRESSAPP_MIGRATION_STREAM') {
-        const { cards } = msg;
-        if (!cards || cards.length === 0) return;
-        try {
-          await api.sendMigrationCards({ app_name: appName.trim(), cards });
-        } catch (err) {
-          console.error('Failed to stream cards to backend:', err);
-        }
-        return;
-      }
-
-      if (msg.type === 'DRESSAPP_MIGRATION_COMPLETE') {
-        const { total_cards, app_name } = msg;
-        if (!total_cards || total_cards === 0) {
-          toast.error(t('migration.noCardsScanned', { defaultValue: 'No clothing cards were detected on the competitor page.' }));
-          return;
-        }
-
-        setIsSyncing(true);
-        setProgressPct(5);
-        setSyncStatusText(t('migration.batchProcessing', {
-          count: total_cards,
-          defaultValue: `Processing ${total_cards} scanned cards through GarmentVision...`
-        }));
-
-        try {
-          const res = await api.startMigrationProcessing({ app_name: app_name || appName.trim() });
-          if (!res.job_id) {
-            setIsSyncing(false);
-            toast.error('No cards were queued for processing.');
-            return;
-          }
-
-          workStore.startMigration(res.job_id, total_cards);
-          setProgressPct(10);
-
-          // Poll every 2 seconds — works with Bearer token auth
-          pollTimer = setInterval(() => pollStatus(res.job_id, total_cards), 2000);
-          // First poll immediately
-          pollStatus(res.job_id, total_cards);
-        } catch (err) {
-          setIsSyncing(false);
-          toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'Failed to start migration processing.' }));
-        }
-        return;
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => {
-      window.removeEventListener('message', handleMessage);
-      if (pollTimer) clearInterval(pollTimer);
-    };
-  }, [t, appName]);
-
   const bookmarkletRef = useRef(null);
 
   useEffect(() => {
@@ -640,15 +523,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       bookmarkletRef.current.setAttribute('href', harvesterBookmarkletCode);
     }
   });
-
-  // Migration Stage: 'items' | 'complete'
-  const [migrationStage, setMigrationStage] = useState('items');
-
-  // Sync state
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [progressPct, setProgressPct] = useState(0);
-  const [syncedItems, setSyncedItems] = useState(0);
-  const [syncStatusText, setSyncStatusText] = useState('');
 
   const targetLoginUrl = useMemo(() => {
     const preset = PRESET_APPS.find((a) => a.name.toLowerCase() === appName.trim().toLowerCase());
@@ -686,7 +560,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       return;
     }
     setStep('web_login');
-    setMigrationStage('items');
   };
 
   const handleOpenPopupWindow = async () => {
@@ -700,31 +573,16 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       }
       
       toast.info(t('migration.popupOpened', { appName, defaultValue: `Opened ${appName} login tab. Log in & go to your closet page, then click the "DressApp Agent" bookmarklet.` }));
-      setPopupOpened(true);
-    } catch { /* swallow */
-      toast.error(t('migration.sessionStartError', { defaultValue: 'Could not initialize migration session. Please try again.' }));
-    }
-  };
-
-  const handleFinishSuccess = async () => {
-    setBusy(true);
-    try {
-      await api.updateMigrationFlag({ migration_flag: 'Done' });
-      toast.success(t('migration.flaggedDone', { defaultValue: 'Account updated successfully!' }));
-      if (onFlagUpdated) onFlagUpdated('Done');
+      // Kill modal — the global MigrationMessageListener in App.jsx
+      // will collect cards and navigate to /add when the bookmarklet finishes.
       onClose();
-      navigate('/closet');
-    } catch (err) {
-      toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'An error occurred.' }));
-    } finally {
-      setBusy(false);
+    } catch {
+      toast.error(t('migration.sessionStartError', { defaultValue: 'Could not initialize migration session. Please try again.' }));
     }
   };
 
   const handleCancelForm = () => {
     setStep('ask');
-    setMigrationStage('items');
-    setPopupOpened(false);
   };
 
   return (
@@ -874,168 +732,75 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
             {/* Content area */}
             <div className="flex-1 relative bg-muted/20 rounded-xl border border-border overflow-y-auto p-4 min-h-[200px]">
-              {!popupOpened ? (
-                <div className="flex flex-col text-left space-y-4 py-2">
-                  <div className="flex items-center gap-2 border-b border-border pb-2 shrink-0">
-                    <Globe className="w-5 h-5 text-primary" />
-                    <h3 className="text-sm font-bold text-foreground">
-                      {t('migration.connectToAppTitle', { appName, defaultValue: `Connect to ${appName}` })}
-                    </h3>
+              <div className="flex flex-col text-left space-y-4 py-2">
+                <div className="flex items-center gap-2 border-b border-border pb-2 shrink-0">
+                  <Globe className="w-5 h-5 text-primary" />
+                  <h3 className="text-sm font-bold text-foreground">
+                    {t('migration.connectToAppTitle', { appName, defaultValue: `Connect to ${appName}` })}
+                  </h3>
+                </div>
+
+                <div className="space-y-3 text-xs text-muted-foreground">
+                  <p>
+                    {t('migration.bookmarkletInstallInstructions', { appName, defaultValue: `Drag the agent bookmarklet button below to your browser Bookmarks Bar (Ctrl+Shift+B to show the bar):` })}
+                  </p>
+                  
+                  <div className="flex flex-col items-center justify-center p-3 bg-card border border-border rounded-xl gap-2">
+                    <a
+                      ref={bookmarkletRef}
+                      href="#"
+                      draggable="true"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toast.info(t('migration.bookmarkletClickTip', { defaultValue: 'Drag this button to your bookmarks bar. Do not click it directly!' }));
+                      }}
+                      className="px-4 py-2 bg-primary text-primary-foreground font-bold rounded-lg cursor-move shadow-sm hover:opacity-90 flex items-center gap-1.5"
+                    >
+                      <Shirt className="w-4 h-4" />
+                      {t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}
+                    </a>
+                    <span className="text-[10px] text-muted-foreground">{t('migration.dragTip', { defaultValue: 'Drag this button to your browser Bookmarks Bar' })}</span>
                   </div>
 
-                  <div className="space-y-3 text-xs text-muted-foreground">
-                    <p>
-                      {t('migration.bookmarkletInstallInstructions', { appName, defaultValue: `Drag the agent bookmarklet button below to your browser Bookmarks Bar (Ctrl+Shift+B to show the bar):` })}
-                    </p>
-                    
-                    <div className="flex flex-col items-center justify-center p-3 bg-card border border-border rounded-xl gap-2">
-                      <a
-                        ref={bookmarkletRef}
-                        href="#"
-                        draggable="true"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          toast.info(t('migration.bookmarkletClickTip', { defaultValue: 'Drag this button to your bookmarks bar. Do not click it directly!' }));
-                        }}
-                        className="px-4 py-2 bg-primary text-primary-foreground font-bold rounded-lg cursor-move shadow-sm hover:opacity-90 flex items-center gap-1.5"
-                      >
-                        <Shirt className="w-4 h-4" />
-                        {t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}
-                      </a>
-                      <span className="text-[10px] text-muted-foreground">{t('migration.dragTip', { defaultValue: 'Drag this button to your browser Bookmarks Bar' })}</span>
-                    </div>
-
-                    <p>
-                      {t('migration.bookmarkletUsageInstructions', { appName, defaultValue: `After installing, click "Import wardrobe" below to initialize. Log in to Whering, go to your closet page, then click the "DressApp Agent" bookmarklet.` })}
-                    </p>
-                    <div className="mt-2.5 p-3 bg-amber-500/10 text-amber-600 rounded-xl border border-amber-500/20 text-[11px] leading-normal font-medium space-y-1">
-                      <div>Tab Sleep Alert: Do not switch tabs inside the competitor window while importing (Chrome will sleep/throttle the scroller).</div>
-                      <div>Pro-Tip: Drag the competitor tab out of your browser window into its own window to keep it running in focus while you multitask!</div>
-                    </div>
+                  <p>
+                    {t('migration.bookmarkletUsageInstructions', { appName, defaultValue: `After installing, click "Import wardrobe" below to initialize. Log in to Whering, go to your closet page, then click the "DressApp Agent" bookmarklet.` })}
+                  </p>
+                  <div className="mt-2.5 p-3 bg-amber-500/10 text-amber-600 rounded-xl border border-amber-500/20 text-[11px] leading-normal font-medium space-y-1">
+                    <div>Tab Sleep Alert: Do not switch tabs inside the competitor window while importing (Chrome will sleep/throttle the scroller).</div>
+                    <div>Pro-Tip: Drag the competitor tab out of your browser window into its own window to keep it running in focus while you multitask!</div>
                   </div>
                 </div>
-              ) : (
-                <div className="space-y-4 text-center">
-                  {syncedItemsList.length === 0 ? (
-                    <div className="py-8">
-                      <Loader2 className="w-8 h-8 mx-auto text-primary mb-3 animate-spin" />
-                      <h3 className="text-sm font-bold text-foreground">
-                        {t('migration.waitingForAgentTitle', { defaultValue: 'Waiting for Migration Agent' })}
-                      </h3>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t('migration.waitingForAgentSub', { appName, defaultValue: `Click the "DressApp Agent" bookmarklet on your Whering tab to start the agent import.` })}
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <h3 className="text-sm font-bold text-foreground">
-                        {t('migration.agentIngestingTitle', { defaultValue: 'Agent Ingesting Garments...' })}
-                      </h3>
-                      <div className="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-600 px-3 py-1 rounded-full text-xs font-bold">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        {t('migration.garmentsImportedCount', { count: syncedItemsList.length, defaultValue: `${syncedItemsList.length} clothes imported` })}
-                      </div>
-                    </>
-                  )}
-
-                  {syncedItemsList.length > 0 && (
-                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-40 overflow-y-auto p-2 bg-card rounded-xl border border-border">
-                      {syncedItemsList.map((item, idx) => (
-                        <div key={idx} className="aspect-square rounded-lg border border-border overflow-hidden relative bg-muted flex flex-col justify-between">
-                          <img src={item.segmented_image_url || item.original_image_url} alt={item.title} className="w-full h-full object-cover" />
-                          <div className="absolute bottom-0 left-0 right-0 bg-background/80 text-[8px] truncate px-1 text-center font-bold">{item.title}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+              </div>
             </div>
 
-            {/* Actions & Status Panel */}
-            {isSyncing ? (
-              <div className="bg-card border border-border rounded-xl p-3 space-y-2.5 shrink-0 animate-in slide-in-from-bottom duration-300">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 font-bold font-display text-foreground">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />
-                    <span>{syncStatusText}</span>
-                  </div>
-                  <span className="font-mono text-primary font-bold">{progressPct}%</span>
-                </div>
-
-                <div className="w-full bg-muted rounded-full h-2 overflow-hidden border border-border/40 p-0.5">
-                  <div
-                    className="bg-primary h-full rounded-full transition-all duration-250 ease-out"
-                    style={{ width: `${progressPct}%` }}
-                  />
-                </div>
-
-                <div className="flex items-center gap-2 text-xs p-1.5 rounded-lg bg-background border border-border">
-                  <Shirt className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                  <div>
-                    <span className="text-[9px] text-muted-foreground block">{t('migration.processedGarments', { defaultValue: 'Garments' })}</span>
-                    <span className="font-bold font-mono text-foreground text-xs">{syncedItems}</span>
-                  </div>
-                </div>
+            {/* Actions */}
+            <div className="bg-card border border-border rounded-xl p-3 flex items-center justify-between shrink-0 gap-2">
+              <div className="flex items-center gap-2">
+                <Shirt className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-xs font-semibold text-muted-foreground">
+                  {t('migration.garmentVisionReady', { defaultValue: 'Agentic Ingestion Ready' })}
+                </span>
               </div>
-            ) : migrationStage === 'complete' ? (
-              <div className="bg-card border border-border rounded-xl p-3 space-y-2.5 text-center shrink-0 animate-in slide-in-from-bottom duration-200">
-                <div className="flex items-center justify-center gap-1.5 text-emerald-600 font-bold text-xs sm:text-sm font-display">
-                  <CheckCircle2 className="w-4 h-4" />
-                  {t('migration.allSuccessTitle', { defaultValue: 'Import Completed Successfully!' })}
-                </div>
-                <div className="text-[11px] text-muted-foreground">
-                  {t('migration.allSuccessSub', { defaultValue: 'Garment cutouts have been processed by GarmentVision.' })}
-                </div>
 
-                <Button
-                  onClick={handleFinishSuccess}
-                  disabled={busy}
-                  className="w-full max-w-xs mx-auto rounded-xl h-8 bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-1.5 shadow-sm"
-                  data-testid="migration-success-ok-btn"
-                >
-                  {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (
-                    <>
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      {t('migration.openClosetBtn', { defaultValue: 'OK - Open Closet' })}
-                    </>
-                  )}
-                </Button>
-              </div>
-            ) : (
-              <div className="bg-card border border-border rounded-xl p-3 flex items-center justify-between shrink-0 gap-2">
-                <div className="flex items-center gap-2">
-                  <Shirt className="w-4 h-4 text-primary shrink-0" />
-                  <span className="text-xs font-semibold text-muted-foreground">
-                    {t('migration.garmentVisionReady', { defaultValue: 'Agentic Ingestion Ready' })}
-                  </span>
-                </div>
-
-                <Button
-                  type="button"
-                  onClick={handleOpenPopupWindow}
-                  className="rounded-xl h-8 px-4 bg-primary text-primary-foreground font-bold text-xs inline-flex items-center justify-center gap-1 shadow-sm hover:opacity-95"
-                  data-testid="migration-weblogin-proceed-btn"
-                >
-                  <span>
-                    {t('migration.importWardrobeBtn', { defaultValue: 'Import wardrobe' })}
-                  </span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            )}
+              <Button
+                type="button"
+                onClick={handleOpenPopupWindow}
+                className="rounded-xl h-8 px-4 bg-primary text-primary-foreground font-bold text-xs inline-flex items-center justify-center gap-1 shadow-sm hover:opacity-95"
+                data-testid="migration-weblogin-proceed-btn"
+              >
+                <span>
+                  {t('migration.importWardrobeBtn', { defaultValue: 'Import wardrobe' })}
+                </span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            </div>
 
             {/* Bottom Navigation */}
             <div className="flex items-center justify-between pt-1.5 border-t border-border shrink-0">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
-                  setStep('app_search');
-                  setMigrationStage('items');
-                  setPopupOpened(false);
-                }}
-                disabled={isSyncing}
+                onClick={() => setStep('app_search')}
                 className="rounded-xl h-8 text-xs"
               >
                 {t('common.back', { defaultValue: 'Back' })}

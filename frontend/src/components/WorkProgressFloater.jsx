@@ -8,7 +8,7 @@
  * gets a visible "done" beat without it lingering forever.
  */
 
-import { useSyncExternalStore, useEffect, useState } from 'react';
+import { useSyncExternalStore, useEffect, useState, useRef, useCallback } from 'react';
 import { Sparkles, Shirt } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -35,6 +35,32 @@ export function WorkProgressFloater() {
     const handle = setTimeout(() => setLinger(false), 1200);
     return () => clearTimeout(handle);
   }, [active]);
+
+  // Draggable state
+  const [pos, setPos] = useState(null); // null = default position
+  const dragging = useRef(false);
+  const dragOffset = useRef({ x: 0, y: 0 });
+  const boxRef = useRef(null);
+
+  const handlePointerDown = useCallback((e) => {
+    if (!boxRef.current) return;
+    const rect = boxRef.current.getBoundingClientRect();
+    dragOffset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    dragging.current = true;
+    boxRef.current.setPointerCapture(e.pointerId);
+  }, []);
+
+  const handlePointerMove = useCallback((e) => {
+    if (!dragging.current || !boxRef.current) return;
+    const parentRect = boxRef.current.parentElement.getBoundingClientRect();
+    const x = e.clientX - parentRect.left - dragOffset.current.x;
+    const y = e.clientY - parentRect.top - dragOffset.current.y;
+    setPos({ x: Math.max(0, Math.min(x, parentRect.width - boxRef.current.offsetWidth)), y: Math.max(0, Math.min(y, parentRect.height - boxRef.current.offsetHeight)) });
+  }, []);
+
+  const handlePointerUp = useCallback(() => {
+    dragging.current = false;
+  }, []);
 
   if (!active && !linger) return null;
 
@@ -69,13 +95,18 @@ export function WorkProgressFloater() {
   return (
     <div
       data-testid="work-progress-floater"
-      className="fixed bottom-4 start-4 z-50 pointer-events-none"
+      className="fixed z-50 pointer-events-none bottom-20 start-4 md:bottom-4"
     >
       <div
+        ref={boxRef}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        style={pos ? { transform: `translate(${pos.x - (boxRef.current?.offsetLeft || 0)}px, ${pos.y - (boxRef.current?.offsetTop || 0)}px)` } : undefined}
         className={
           'pointer-events-auto rounded-2xl border border-border bg-card/95 ' +
           'shadow-lg backdrop-blur-xl px-4 py-3 min-w-[220px] max-w-[calc(100vw-2rem)] sm:max-w-[320px] ' +
-          'transition-opacity duration-300 ' +
+          'transition-opacity duration-300 touch-none select-none cursor-grab active:cursor-grabbing ' +
           (active ? 'opacity-100' : 'opacity-70')
         }
       >
