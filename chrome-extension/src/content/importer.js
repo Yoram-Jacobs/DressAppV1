@@ -1,48 +1,6 @@
 console.log('👗 DressApp Importer content script loaded on', location.href);
 
-// Style injection for importer
-const style = document.createElement('style');
-style.textContent = `
-  .dressapp-importer-widget {
-    display: none !important;
-  }
-  .dressapp-importer-title {
-    font-weight: 700;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #f1f5f9;
-  }
-  .dressapp-importer-btn {
-    background: #6366f1;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-  }
-  .dressapp-importer-btn:hover:not(:disabled) {
-    background: #4f46e5;
-  }
-  .dressapp-importer-btn:disabled {
-    background: #475569;
-    cursor: not-allowed;
-    opacity: 0.8;
-  }
-  .dressapp-importer-status {
-    color: #94a3b8;
-    font-size: 11px;
-    line-height: 1.4;
-  }
-`;
-document.head.appendChild(style);
+// Style injection removed — bookmarklet handles all migration UI
 
 function initImporter() {
   // Floating widget injection disabled — bookmarklet handles migration widget

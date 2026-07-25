@@ -298,7 +298,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   variance += (imgData[i] - avgR) ** 2 + (imgData[i+1] - avgG) ** 2 + (imgData[i+2] - avgB) ** 2;
                 }
                 variance = Math.sqrt(variance / (n * 3));
-                if (variance < 3) return null; // Reject solid single-color tiles
+                if (variance < 2) return null; // Reject solid single-color tiles
               }
             } catch (_) {}
 
@@ -341,8 +341,13 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           o.style.display = 'block';
           st.innerText = 'Scanning... ' + harvestedCards.length + ' cards found';
 
-          // Scroll down
+          // Count rects before scroll to detect new lazy-loaded images
+          const prevRectCount = cardRects.length;
+
+          // Capture scroll state BEFORE scrolling
           const s1 = getScrollState();
+
+          // Scroll down
           const scrollAmount = Math.round((scrollEl && scrollEl !== window && scrollEl.clientHeight) ? scrollEl.clientHeight * 0.7 : window.innerHeight * 0.7);
           scrollPos += scrollAmount;
           if (scrollEl && scrollEl !== window && scrollEl !== document.body && scrollEl !== document.documentElement) {
@@ -352,33 +357,52 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           document.documentElement.scrollTop = scrollPos;
           document.body.scrollTop = scrollPos;
 
-          // Wait for lazy-load rendering (2500ms for slow-loading images)
-          await new Promise(r => setTimeout(r, 2500));
+          // Adaptive wait: poll for new visible card rects (lazy-loaded images)
+          st.innerText = 'Waiting for lazy images... ' + harvestedCards.length + ' cards';
+          const pollStart = Date.now();
+          const POLL_TIMEOUT = 12000;
+          const POLL_INTERVAL = 600;
+          let newRectsFound = false;
+          while (Date.now() - pollStart < POLL_TIMEOUT) {
+            await new Promise(r => setTimeout(r, POLL_INTERVAL));
+            const freshRects = getVisibleGarmentRects();
+            if (freshRects.length > prevRectCount) {
+              newRectsFound = true;
+              st.innerText = 'New images loaded (' + freshRects.length + ' cards visible)... ' + harvestedCards.length + ' captured';
+              break;
+            }
+          }
 
           // Check if scroll position actually changed
           let s2 = getScrollState();
           let changed = (s2.window !== s1.window) || (s2.doc !== s1.doc) || (s2.body !== s1.body) || (s2.el !== s1.el);
 
-          if (!changed) {
+          if (!newRectsFound && !changed) {
             noChangeCount++;
             if (noChangeCount < 3) {
-              st.innerText = 'Waiting for lazy load (attempt ' + noChangeCount + '/3)... ' + harvestedCards.length + ' cards';
+              st.innerText = 'No new images (attempt ' + noChangeCount + '/3)... ' + harvestedCards.length + ' cards';
               scrollPos += 200;
               window.scrollTo(0, scrollPos);
               if (scrollEl && scrollEl !== window) scrollEl.scrollTop = scrollPos;
-              await new Promise(r => setTimeout(r, 3000));
-
+              // Poll again after extra scroll
+              const retryStart = Date.now();
+              while (Date.now() - retryStart < 5000) {
+                await new Promise(r => setTimeout(r, 600));
+                const freshRects = getVisibleGarmentRects();
+                if (freshRects.length > prevRectCount) {
+                  newRectsFound = true;
+                  break;
+                }
+              }
               s2 = getScrollState();
               changed = (s2.window !== s1.window) || (s2.doc !== s1.doc) || (s2.body !== s1.body) || (s2.el !== s1.el);
             }
           }
 
-          if (changed) {
-            noChangeCount = 0;
-          }
+          noChangeCount = newRectsFound ? 0 : noChangeCount;
 
           const isShort = scrollEl ? (scrollEl.scrollHeight <= scrollEl.clientHeight + 15) : true;
-          reachedBottom = (!changed && noChangeCount >= 3) || isShort;
+          reachedBottom = (!changed && !newRectsFound && noChangeCount >= 3) || isShort;
         }
 
         // Stop the media stream
