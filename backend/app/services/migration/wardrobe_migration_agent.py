@@ -446,14 +446,14 @@ class WardrobeMigrationAgent:
             stylist_prompt = (
                 "You are DressApp's Wardrobe Stylist. Analyze this clothing item image and return detailed attributes.\n"
                 "Return a JSON object with these fields:\n"
-                '- "pattern": one of "Solid", "Striped", "Plaid", "Floral", "Polka Dot", "Geometric", "Abstract", "Camouflage", "Animal Print", "Other"\n'
-                '- "material": one of "Cotton", "Polyester", "Denim", "Leather", "Silk", "Wool", "Linen", "Nylon", "Spandex", "Mixed", "Other"\n'
-                '- "style": one of "Casual", "Formal", "Sporty", "Bohemian", "Classic", "Streetwear", "Vintage", "Minimalist", "Preppy", "Other"\n'
-                '- "dress_code": one of "Casual", "Business Casual", "Business", "Formal", "Sporty", "Loungewear", "Other"\n'
-                '- "gender": one of "Women", "Men", "Unisex"\n'
-                '- "season": array of "Spring", "Summer", "Fall", "Winter"\n'
+                '- "pattern": one of "solid", "striped", "plaid", "floral", "polka dot", "geometric", "abstract", "camouflage", "animal print", "other"\n'
+                '- "material": one of "cotton", "polyester", "denim", "leather", "silk", "wool", "linen", "nylon", "spandex", "mixed", "other"\n'
+                '- "style": one of "casual", "formal", "sporty", "bohemian", "classic", "streetwear", "vintage", "minimalist", "preppy", "other"\n'
+                '- "dress_code": one of "casual", "smart-casual", "business", "formal", "athletic", "loungewear"\n'
+                '- "gender": one of "women", "men", "unisex"\n'
+                '- "season": lowercase array from "spring", "summer", "fall", "winter"\n'
                 '- "item_type": a specific short description like "t-shirt", "jeans", "sneakers", etc.\n'
-                '- "sub_category": more specific than the main category, e.g. for "Top" use "T-shirt" or "Blouse"'
+                '- "sub_category": more specific than the main category, e.g. for "Top" use "t-shirt" or "blouse"'
             )
             stylist_schema = {
                 "type": "OBJECT",
@@ -478,6 +478,23 @@ class WardrobeMigrationAgent:
                 response_schema=stylist_schema,
             )
             stylist_result = json.loads(class_resp)
+
+            # Normalize stylist values to match Pydantic Literal enums (lowercase)
+            _gender_map = {"women": "women", "woman": "women", "female": "women", "men": "men", "man": "men", "male": "men", "unisex": "unisex"}
+            _dresscode_map = {
+                "casual": "casual", "smart-casual": "smart-casual", "smart casual": "smart-casual",
+                "business casual": "smart-casual", "business": "business", "formal": "formal",
+                "athletic": "athletic", "sporty": "athletic", "loungewear": "loungewear",
+            }
+            _g = (stylist_result.get("gender") or "").lower().strip()
+            stylist_result["gender"] = _gender_map.get(_g, "unisex")
+            _dc = (stylist_result.get("dress_code") or "").lower().strip()
+            stylist_result["dress_code"] = _dresscode_map.get(_dc, "casual")
+            _raw_season = stylist_result.get("season")
+            if isinstance(_raw_season, list):
+                stylist_result["season"] = [s.lower().strip() for s in _raw_season if isinstance(s, str)]
+            else:
+                stylist_result["season"] = ["spring", "summer", "fall", "winter"]
 
             cutout_bytes = None
             try:
@@ -548,9 +565,12 @@ class WardrobeMigrationAgent:
                     "sub_category": sub_category,
                     "item_type": item_type,
                     "color": color,
-                    "pattern": stylist_result.get("pattern", "Solid"),
-                    "material": stylist_result.get("material", "Mixed"),
-                    "style": stylist_result.get("style", "Casual"),
+                    "pattern": stylist_result.get("pattern", "solid"),
+                    "material": stylist_result.get("material", "mixed"),
+                    "style": stylist_result.get("style", "casual"),
+                    "gender": stylist_result.get("gender", "unisex"),
+                    "dress_code": stylist_result.get("dress_code", "casual"),
+                    "season": stylist_result.get("season", []),
                     "segmented_image_url": cutout_url,
                 })
         except Exception as ingest_err:
