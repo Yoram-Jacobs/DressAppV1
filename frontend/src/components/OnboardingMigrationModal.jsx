@@ -387,9 +387,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           }, '*');
         }
 
-        // Show green completion badge, then remove after 4s
+        // Show green completion badge
         o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;">👗 DressApp Agent</div><div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">✓ Scan Complete!</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">' + batch.length + ' cards captured and sent to DressApp for processing.<br>You can now safely close this window and return to DressApp.</div>';
-        setTimeout(() => { try { o.remove(); } catch (_) {} }, 4000);
       };
     })();`;
     return 'javascript:' + encodeURIComponent(rawJS);
