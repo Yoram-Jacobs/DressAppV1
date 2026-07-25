@@ -45,24 +45,8 @@ style.textContent = `
 document.head.appendChild(style);
 
 function initImporter() {
-  const isClosetPage = /pieces|closet|wardrobe|clothes/i.test(location.href);
-  console.log('👗 DressApp Importer check - isClosetPage:', isClosetPage, 'body:', !!document.body);
-  if (!isClosetPage) return;
-
-  if (!document.body) return;
-
-  if (document.getElementById('dressapp-importer-widget')) return;
-
-  console.log('👗 Injecting DressApp Importer widget...');
-  const widget = document.createElement('div');
-  widget.id = 'dressapp-importer-widget';
-  widget.className = 'dressapp-importer-widget';
-  widget.innerHTML = `
-    <div class="dressapp-importer-title">👗 DressApp Importer</div>
-    <div class="dressapp-importer-status" id="dai-status">Ready to capture and import your competitor wardrobe.</div>
-    <button class="dressapp-importer-btn" id="dai-btn">Import Wardrobe</button>
-  `;
-  document.body.appendChild(widget);
+  // Floating widget injection disabled — bookmarklet handles migration widget
+  return;
 
   const btn = document.getElementById('dai-btn');
   const status = document.getElementById('dai-status');

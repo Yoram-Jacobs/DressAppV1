@@ -140,16 +140,12 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
           const validImgs = Array.from(document.querySelectorAll('img')).filter(img => {
             const imgRect = img.getBoundingClientRect();
-            if (imgRect.width < 50 || imgRect.height < 50) return false;
+            if (imgRect.width < 40 || imgRect.height < 40) return false;
 
-            const headerHeight = 110;
-            const footerHeight = 60;
-            const viewportMinY = scrollRect.top + headerHeight;
-            const viewportMaxY = scrollRect.bottom - footerHeight;
+            // Must overlap visible page content
+            if (imgRect.bottom < 40 || imgRect.top > window.innerHeight - 20) return false;
 
-            if (imgRect.top < viewportMinY || imgRect.bottom > viewportMaxY) return false;
-
-            const src = img.src.toLowerCase();
+            const src = (img.src || '').toLowerCase();
             if (src.includes('logo') || src.includes('avatar') || src.includes('icon') || src.includes('profile')) return false;
 
             let insideNavOrHeader = false;
@@ -182,9 +178,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             let p = img.parentElement;
             while (p && p !== document.body) {
               const r = p.getBoundingClientRect();
-              if (r.width >= 100 && r.width <= 450 && r.height >= 120 && r.height <= 650) {
+              if (r.width >= 80 && r.width <= 600 && r.height >= 80 && r.height <= 800) {
                 const ratio = r.height / r.width;
-                if (ratio >= 0.85 && ratio <= 2.3) {
+                if (ratio >= 0.7 && ratio <= 2.5) {
                   cardEl = p;
                   break;
                 }
@@ -238,24 +234,36 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         const MAX_CROP_H = 580;
         let noChangeCount = 0;
         let reachedBottom = false;
-        const scaleX = video.videoWidth / window.innerWidth;
-        const scaleY = video.videoHeight / window.innerHeight;
 
         const cropCardFromStream = (rect) => {
           try {
+            const vW = (video && video.videoWidth > 0) ? video.videoWidth : window.innerWidth;
+            const vH = (video && video.videoHeight > 0) ? video.videoHeight : window.innerHeight;
+            const scaleX = vW / window.innerWidth;
+            const scaleY = vH / window.innerHeight;
+
             // Map viewport coordinates to video pixel coordinates
-            const srcX = rect.left * scaleX;
-            const srcY = rect.top * scaleY;
-            const srcW = rect.width * scaleX;
-            const srcH = rect.height * scaleY;
+            let srcX = rect.left * scaleX;
+            let srcY = rect.top * scaleY;
+            let srcW = rect.width * scaleX;
+            let srcH = rect.height * scaleY;
+
+            // Clamp bounds to video dimensions
+            if (srcX < 0) { srcW += srcX; srcX = 0; }
+            if (srcY < 0) { srcH += srcY; srcY = 0; }
+            if (srcX + srcW > vW) { srcW = vW - srcX; }
+            if (srcY + srcH > vH) { srcH = vH - srcY; }
+
+            if (srcW <= 10 || srcH <= 10) return null;
 
             // Limit output size
             let outW = Math.min(Math.round(rect.width), MAX_CROP_W);
             let outH = Math.min(Math.round(rect.height), MAX_CROP_H);
-            // Maintain aspect ratio
             const aspect = rect.width / rect.height;
             if (outW / outH > aspect) { outW = Math.round(outH * aspect); }
             else { outH = Math.round(outW / aspect); }
+
+            if (outW <= 10 || outH <= 10) return null;
 
             const cvs = document.createElement('canvas');
             cvs.width = outW;
@@ -263,24 +271,28 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             const ctx = cvs.getContext('2d');
             ctx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, outW, outH);
 
-            // Client-side blank tile rejection: check pixel variance
+            // Client-side blank tile rejection: sample across FULL canvas
             try {
-              const px = ctx.getImageData(0, 0, Math.min(outW, 50), Math.min(outH, 50)).data;
+              const imgData = ctx.getImageData(0, 0, outW, outH).data;
               let sumR = 0, sumG = 0, sumB = 0, n = 0;
-              for (let i = 0; i < px.length; i += 4) { sumR += px[i]; sumG += px[i+1]; sumB += px[i+2]; n++; }
-              const avgR = sumR / n, avgG = sumG / n, avgB = sumB / n;
-              let variance = 0;
-              for (let i = 0; i < px.length; i += 4) {
-                variance += (px[i] - avgR) ** 2 + (px[i+1] - avgG) ** 2 + (px[i+2] - avgB) ** 2;
+              for (let i = 0; i < imgData.length; i += 64) {
+                sumR += imgData[i]; sumG += imgData[i+1]; sumB += imgData[i+2]; n++;
               }
-              variance = Math.sqrt(variance / (n * 3));
-              if (variance < 5) return null; // solid/blank tile
+              if (n > 0) {
+                const avgR = sumR / n, avgG = sumG / n, avgB = sumB / n;
+                let variance = 0;
+                for (let i = 0; i < imgData.length; i += 64) {
+                  variance += (imgData[i] - avgR) ** 2 + (imgData[i+1] - avgG) ** 2 + (imgData[i+2] - avgB) ** 2;
+                }
+                variance = Math.sqrt(variance / (n * 3));
+                if (variance < 3) return null; // Reject solid single-color tiles
+              }
             } catch (_) {}
 
             // Reject extreme aspect ratios (banners, scrollbars)
             if (rect.width > rect.height * 5 || rect.height > rect.width * 5) return null;
 
-            return cvs.toDataURL('image/jpeg', 0.8).split(',')[1]; // Return base64 without prefix
+            return cvs.toDataURL('image/jpeg', 0.8).split(',')[1];
           } catch (_) {
             return null;
           }
@@ -295,12 +307,11 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
           // Detect visible cards and crop each one
           const cardRects = getVisibleGarmentRects();
-          let newCardsThisStep = 0;
 
           for (const rect of cardRects) {
             // Check if this card center was already harvested (cross-scroll dedup)
             const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.width / 2 + scrollPos; // Absolute Y = viewport Y + scroll offset
+            const cy = rect.top + rect.height / 2 + scrollPos; // Absolute Y
             const alreadyHarvested = harvestedCards.some(c =>
               Math.abs(c.cx - cx) < 20 && Math.abs(c.cy - cy) < 20
             );
@@ -309,7 +320,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             const b64 = cropCardFromStream(rect);
             if (b64) {
               harvestedCards.push({ crop_base64: b64, cx, cy });
-              newCardsThisStep++;
             }
           }
 
@@ -365,7 +375,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         // ======================================================================
         st.innerText = 'Scan complete! ' + harvestedCards.length + ' cards captured. Sending to DressApp...';
 
-        // Strip cx/cy metadata before sending (backend only needs crop_base64)
         const batch = harvestedCards.map(c => ({ crop_base64: c.crop_base64 }));
 
         if (window.opener) {
@@ -378,8 +387,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           }, '*');
         }
 
-        // Show green completion badge (static, no pulsing)
+        // Show green completion badge, then remove after 4s
         o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;">👗 DressApp Agent</div><div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">✓ Scan Complete!</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">' + batch.length + ' cards captured and sent to DressApp for processing.<br>You can now safely close this window and return to DressApp.</div>';
+        setTimeout(() => { try { o.remove(); } catch (_) {} }, 4000);
       };
     })();`;
     return 'javascript:' + encodeURIComponent(rawJS);
