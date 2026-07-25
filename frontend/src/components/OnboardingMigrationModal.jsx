@@ -103,8 +103,18 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         document.body.appendChild(video);
         await video.play();
 
-        await new Promise(r => { if (video.readyState >= 3) r(); else video.oncanplay = r; });
-        await new Promise(r => setTimeout(r, 1000));
+        // Wait for video to have actual playable frames (readyState >= 3 = HAVE_FUTURE_DATA)
+        await new Promise(r => {
+          if (video.readyState >= 3) { r(); return; }
+          const onReady = () => { video.removeEventListener('canplay', onReady); r(); };
+          video.addEventListener('canplay', onReady);
+        });
+        // Extra settle time for first frame decode
+        await new Promise(r => setTimeout(r, 1500));
+        // Verify video dimensions are initialized before proceeding
+        if (!video.videoWidth || !video.videoHeight) {
+          await new Promise(r => setTimeout(r, 2000));
+        }
 
         // --- Scroll element detection ---
         const getScrollEl = () => {
@@ -237,8 +247,11 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
         const cropCardFromStream = (rect) => {
           try {
-            const vW = (video && video.videoWidth > 0) ? video.videoWidth : window.innerWidth;
-            const vH = (video && video.videoHeight > 0) ? video.videoHeight : window.innerHeight;
+            // Verify video has valid frames before attempting crop
+            if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return null;
+
+            const vW = video.videoWidth;
+            const vH = video.videoHeight;
             const scaleX = vW / window.innerWidth;
             const scaleY = vH / window.innerHeight;
 
@@ -303,7 +316,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         while (!reachedBottom) {
           // Hide widget for clean capture
           o.style.display = 'none';
-          await new Promise(r => setTimeout(r, 200));
+          await new Promise(r => setTimeout(r, 300));
+          // Ensure layout repaint completes before capture
+          await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
           // Detect visible cards and crop each one
           const cardRects = getVisibleGarmentRects();
@@ -337,8 +352,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           document.documentElement.scrollTop = scrollPos;
           document.body.scrollTop = scrollPos;
 
-          // Wait for lazy-load rendering
-          await new Promise(r => setTimeout(r, 1500));
+          // Wait for lazy-load rendering (2500ms for slow-loading images)
+          await new Promise(r => setTimeout(r, 2500));
 
           // Check if scroll position actually changed
           let s2 = getScrollState();
@@ -348,10 +363,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             noChangeCount++;
             if (noChangeCount < 3) {
               st.innerText = 'Waiting for lazy load (attempt ' + noChangeCount + '/3)... ' + harvestedCards.length + ' cards';
-              scrollPos += 150;
+              scrollPos += 200;
               window.scrollTo(0, scrollPos);
               if (scrollEl && scrollEl !== window) scrollEl.scrollTop = scrollPos;
-              await new Promise(r => setTimeout(r, 2000));
+              await new Promise(r => setTimeout(r, 3000));
 
               s2 = getScrollState();
               changed = (s2.window !== s1.window) || (s2.doc !== s1.doc) || (s2.body !== s1.body) || (s2.el !== s1.el);
