@@ -753,7 +753,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                       }}
                       className="px-4 py-2 bg-primary text-primary-foreground font-bold rounded-lg cursor-move shadow-sm hover:opacity-90 flex items-center gap-1.5"
                     >
-                      <Shirt className="w-4 h-4" />
+                      <span className="text-base leading-none">👗</span>
                       {t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}
                     </a>
                     <span className="text-[10px] text-muted-foreground">{t('migration.dragTip', { defaultValue: 'Drag this button to your browser Bookmarks Bar' })}</span>

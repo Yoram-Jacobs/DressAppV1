@@ -319,6 +319,7 @@ export default function AddItem() {
     if (!migrationPending || migrationPending.length === 0) return;
     const cards = migrationStore.consumeCards();
     if (!cards || cards.length === 0) return;
+    console.log(`[AddItem] Migration cards consumed: ${cards.length}`);
     const fingerprints = cards.map((c, idx) => ({
       file: { name: c.title || `Imported Garment ${idx + 1}`, size: 1024, type: 'image/jpeg' },
       _b64: c.crop_base64,
@@ -1534,6 +1535,7 @@ export default function AddItem() {
   // falling through to the "save raw image" branch.
   // ------------------------------------------------------------------
     async function handleBatchBackground(fingerprints, skippedDuplicates = 0) {
+    console.log(`[handleBatchBackground] Starting: ${fingerprints.length} fingerprints, ${skippedDuplicates} skipped dups`);
     setBgBatch({
       total: fingerprints.length,
       processed: 0,
@@ -1568,11 +1570,13 @@ export default function AddItem() {
       const metas = frame.items_meta || [];
       detectMetas = metas;
       totalItemsExpected = metas.length;
+      console.log(`[handleBatchBackground] detect: ${metas.length} items detected across ${new Set(metas.map(m => m.image_index)).size} images`);
       // We can bump processed to something to show it started
       setBgBatch(b => b ? { ...b, processed: 1 } : null);
     };
 
     const handleItem = (frame) => {
+      console.log(`[handleBatchBackground] item frame: index=${frame.index}, image_index=${frame.image_index}, has_analysis=${!!frame.analysis}`);
       const p = (async () => {
       const meta = detectMetas[frame.index] || {};
       const idx = meta.image_index ?? frame.image_index ?? 0;
@@ -1637,6 +1641,7 @@ export default function AddItem() {
     };
 
     const handleItemSkip = (frame) => {
+      console.log(`[handleBatchBackground] item_skip: index=${frame.index}, reason=${frame.reason}`);
       setBgBatch(b => b ? { ...b, processed: b.processed + 1 } : null);
     };
 
@@ -1648,10 +1653,12 @@ export default function AddItem() {
     } catch (err) {
       // Stream failed. Try to save all remaining as fallbacks?
       // For now just error out gracefully
+      console.error('[handleBatchBackground] analyzeItemImage failed:', err);
       setBgBatch(b => b ? { ...b, failed: b.failed + (b.total - b.processed) } : null);
     }
 
     await Promise.all(savePromises);
+    console.log('[handleBatchBackground] All save promises resolved');
 
     // Final checks and navigation
     setBgBatch((b) => {
@@ -1660,6 +1667,7 @@ export default function AddItem() {
       const analyzeFailed = b?.analyzeFailed ?? 0;
       const pendingDuplicates = b?.pendingDuplicates ?? 0;
       const skippedDups = b?.skippedDuplicates ?? 0;
+      console.log(`[handleBatchBackground] DONE: saved=${saved}, failed=${failed}, analyzeFailed=${analyzeFailed}, pendingDuplicates=${pendingDuplicates}, skippedDups=${skippedDups}`);
       
       const dupTrailer = skippedDups
         ? ' ' + t('addItem.bgUpload.skippedDupSuffix', { count: skippedDups, defaultValue: '(skipped {{count}} already in closet)' })

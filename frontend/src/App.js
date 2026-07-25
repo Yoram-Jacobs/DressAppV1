@@ -66,6 +66,7 @@ function MigrationMessageListener() {
         const { cards } = msg;
         if (cards && cards.length > 0) {
           collectedCards.push(...cards);
+          console.log(`[MigrationListener] STREAM batch: ${cards.length} cards (total: ${collectedCards.length})`);
         }
         return;
       }
@@ -75,6 +76,7 @@ function MigrationMessageListener() {
         if (!total_cards || total_cards === 0) return;
 
         const cardsWithImages = collectedCards.filter(c => c.crop_base64);
+        console.log(`[MigrationListener] COMPLETE: total_cards=${total_cards}, collected=${collectedCards.length}, withImages=${cardsWithImages.length}`);
         collectedCards.length = 0;
 
         if (cardsWithImages.length > 0) {
