@@ -41,16 +41,20 @@ import SharedOutfit from '@/pages/SharedOutfit';
 import DeleteAccount from '@/pages/DeleteAccount';
 
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { useTranslation } from 'react-i18next';
 import { isRtl } from '@/lib/i18n';
-import { workStore } from '@/lib/workStore';
+import { migrationStore } from '@/lib/migrationStore';
 
 /** Global listener for migration postMessage events from the bookmarklet popup.
  *  Collects streamed cards and on DRESSAPP_MIGRATION_COMPLETE stores them
- *  in workStore so AddItem.jsx can pick them up and run handleBatchBackground. */
+ *  in migrationStore then navigates to /closet/add so AddItem.jsx mounts
+ *  and feeds them into the GarmentVision silent 6+ batch pipeline. */
 function MigrationMessageListener() {
+  const navigate = useNavigate();
+
   useEffect(() => {
     const collectedCards = [];
 
@@ -70,15 +74,12 @@ function MigrationMessageListener() {
         const { total_cards } = msg;
         if (!total_cards || total_cards === 0) return;
 
-        // Filter to cards that have crop_base64 (the actual garment image)
         const cardsWithImages = collectedCards.filter(c => c.crop_base64);
         collectedCards.length = 0;
 
         if (cardsWithImages.length > 0) {
-          // Store in workStore — AddItem.jsx reads this on mount
-          // and feeds it into handleBatchBackground (the native
-          // GarmentVision batch pipeline).
-          workStore.setPendingMigrationCards(cardsWithImages);
+          migrationStore.setCards(cardsWithImages);
+          navigate('/closet/add');
         }
         return;
       }
@@ -86,7 +87,7 @@ function MigrationMessageListener() {
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, []);
+  }, [navigate]);
 
   return null;
 }

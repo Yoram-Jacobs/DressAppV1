@@ -27,6 +27,7 @@ import { api } from '@/lib/api';
 import { cn, sha256File, aHashFile, colorSignatureFile } from '@/lib/utils';
 import { findDuplicatesInCloset } from '@/lib/duplicateDetection';
 import { closetStore } from '@/lib/closetStore';
+import { migrationStore } from '@/lib/migrationStore';
 import { useClosetStore, useClosetItems } from '@/lib/useClosetStore';
 import { workStore } from '@/lib/workStore';
 import DuplicatePreflightDialog from '@/components/DuplicatePreflightDialog';
@@ -302,30 +303,31 @@ export default function AddItem() {
   const [cards, setCards] = useState([]); // [{id,file,previewUrl,base64,status,progress,fields,error,dppData?}]
   const [saving, setSaving] = useState(false);
 
-  // Auto-run bulk import workflow when pending migration cards arrive
-  // from the bookmarklet (stored in workStore by MigrationMessageListener).
-  // Uses useSyncExternalStore to react when cards are set after mount.
+  // ── Migration import from bookmarklet ──────────────────────────────
+  // migrationStore holds cards posted by the bookmarklet via
+  // MigrationMessageListener.  A ref to handleBatchBackground avoids
+  // stale-closure issues (the function is defined later in the
+  // component body and recreated every render).
   const migrationPending = useSyncExternalStore(
-    workStore.subscribe,
-    () => workStore.getSnapshot().pendingMigrationCards,
-    () => workStore.getSnapshot().pendingMigrationCards,
+    migrationStore.subscribe,
+    migrationStore.getSnapshot,
+    migrationStore.getSnapshot,
   );
+  const _handleBatchRef = useRef(null);
 
   useEffect(() => {
     if (!migrationPending || migrationPending.length === 0) return;
-
-    const migrationCards = workStore.consumePendingMigrationCards();
-    if (!migrationCards || migrationCards.length === 0) return;
-
-    const fingerprints = migrationCards.map((c, idx) => ({
+    const cards = migrationStore.consumeCards();
+    if (!cards || cards.length === 0) return;
+    const fingerprints = cards.map((c, idx) => ({
       file: { name: c.title || `Imported Garment ${idx + 1}`, size: 1024, type: 'image/jpeg' },
       _b64: c.crop_base64,
       sha256: null,
       phash: null,
       color_sig: null,
     }));
-
-    handleBatchBackground(fingerprints, 0);
+    // Feed into GarmentVision silent 6+ batch pipeline
+    if (_handleBatchRef.current) _handleBatchRef.current(fingerprints, 0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [migrationPending]);
   const [quickConfirm, setQuickConfirm] = useState(false);
@@ -1688,6 +1690,8 @@ export default function AddItem() {
       return null;
     });
   };
+  // Expose to migration useEffect via ref (avoids stale-closure)
+  _handleBatchRef.current = handleBatchBackground;
 
   const analyzeCards = async (cardsList) => {
     const cardsToProcess = cardsList.filter((card) => {

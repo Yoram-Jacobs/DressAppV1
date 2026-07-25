@@ -40,8 +40,6 @@ let _state = {
   _onBatchDoneSubscribers: new Set(),
   // Migration job tracking
   migrationJob: null, // { jobId, imported, skipped, total, status, items }
-  // Pending migration cards waiting for AddItem to pick them up
-  pendingMigrationCards: null, // [{ crop_base64, title, ... }] | null
 };
 
 function _notify() {
@@ -361,20 +359,6 @@ export const workStore = {
     setTimeout(() => {
       _set({ migrationJob: null });
     }, 3000);
-  },
-
-  // ─── Pending migration cards for AddItem pickup ───
-  setPendingMigrationCards(cards) {
-    _set({ pendingMigrationCards: cards });
-  },
-
-  consumePendingMigrationCards() {
-    const cards = _state.pendingMigrationCards;
-    if (cards && cards.length > 0) {
-      _set({ pendingMigrationCards: null });
-      return cards;
-    }
-    return null;
   },
 
   // Internal — exposed for testing the polling loop directly.
