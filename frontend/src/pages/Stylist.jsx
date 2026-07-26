@@ -37,7 +37,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -78,8 +77,8 @@ import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { useOutfitStore } from '@/lib/useOutfitStore';
 import { useLocation as useAppLocation } from '@/lib/location';
-import { prewarmStylist, loadStylistMessages, setStylistActiveSession, addStylistMessage } from '@/lib/stylistStore';
-import { dailySuggestionsStore, useDailySuggestionsStore } from '@/lib/dailySuggestionsStore';
+import { prewarmStylist, loadStylistMessages } from '@/lib/stylistStore';
+import { useDailySuggestionsStore } from '@/lib/dailySuggestionsStore';
 import {
   isSTTSupported,
   isTTSSupported,

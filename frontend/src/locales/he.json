@@ -2250,6 +2250,7 @@
   "help": {
     "title": "ספר הארון של DressApp",
     "subtitle": "מדריך פשוט ונוח לניהול הבגדים והמלתחה הדיגיטלית",
+    "geminiKeyStep": "A Gemini API Key. Get it for free on <a href=\"https://aistudio.google.com/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary hover:underline font-semibold\">Google AI Studio</a>.",
     "overview_title": "סקירה כללית",
     "overview_p1": "ברוכים הבאים ל-DressApp! זוהי אפליקציה חדשנית המאפשרת לבנות ארון בגדים דיגיטלי אישי.",
     "overview_p2": "ניתן לצלם את כל החולצות, המכנסיים, החצאיות והנעליים, ולרכז אותם בספר דיגיטלי אחד. לאחר מכן, סטייליסט מקצועי ומנוסה יבחן את הבגדים, יבדוק את מזג האוויר בחוץ, ויסייע בבחירת הלבוש המתאים לכל אירוע!",
@@ -2789,5 +2790,10 @@
     "helpDocLink": "למד/י איך להוסיף בגדים ב-DressApp",
     "letsStart": "בוא/י נתחיל",
     "migrateBtn": "העברה"
+  },
+  "aiNotice": {
+    "geminiKeyRequired": "עליך להזין את מפתח Google AI Gemini שלך",
+    "geminiKeyDescription": "עליך להגדיר את מפתח Google AI Gemini API שלך. ניתן לקבל מפתח מ-Google AI Studio.",
+    "configureKey": "הגדר מפתח"
   }
 }

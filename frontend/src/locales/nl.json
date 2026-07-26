@@ -2210,6 +2210,7 @@
   "help": {
     "title": "DressApp: Mijn DressApp Kastboek",
     "subtitle": "Een supereenvoudige gids voor het beheren van uw kleding en outfits",
+    "geminiKeyStep": "A Gemini API Key. Get it for free on <a href=\"https://aistudio.google.com/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary hover:underline font-semibold\">Google AI Studio</a>.",
     "overview_title": "Overzicht",
     "overview_p1": "Welkom bij DressApp! Dit is een geavanceerde app waarmee je je eigen digitale kledingkast kunt bouwen.",
     "overview_p2": "Stel je voor dat je foto's maakt van al je shirts, broeken, rokken en schoenen en deze in een magisch boek stopt. Zodra ze binnen zijn, bekijkt een professionele en ervaren stylist je kleding, controleert het weer buiten en helpt je bij het kiezen van wat je voor welke gelegenheid dan ook draagt!",
@@ -2749,5 +2750,10 @@
     "helpDocLink": "Lees hoe je kleding toevoegt in DressApp",
     "letsStart": "Aan de slag",
     "migrateBtn": "Migreren"
+  },
+  "aiNotice": {
+    "geminiKeyRequired": "U moet uw Google AI Gemini-sleutel invoeren",
+    "geminiKeyDescription": "U moet uw Google AI Gemini API-sleutel configureren. U kunt een sleutel verkrijgen bij Google AI Studio.",
+    "configureKey": "Sleutel configureren"
   }
 }

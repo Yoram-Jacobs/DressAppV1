@@ -351,13 +351,7 @@ export default function HelpMenu() {
                   <li className="flex items-start gap-3">
                     <span className="h-6 w-6 shrink-0 rounded-full bg-secondary flex items-center justify-center text-xs font-semibold text-foreground">4</span>
                     <span className="text-muted-foreground pt-0.5">
-                      {i18n.language === 'he' ? (
-                        <>מפתח Gemini API. ניתן להשיגו בחינם ב-<a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">Google AI Studio</a>.</>
-                      ) : i18n.language === 'ar' ? (
-                        <>مفتاح Gemini API المجاني. احصل عليه من <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">Google AI Studio</a>.</>
-                      ) : (
-                        <>A Gemini API Key. Get it for free on <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">Google AI Studio</a>.</>
-                      )}
+                      {t('help.geminiKeyStep', { defaultValue: 'A Gemini API Key. Get it for free on <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">Google AI Studio</a>.' })}
                     </span>
                   </li>
                 </ul>

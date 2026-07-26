@@ -186,7 +186,6 @@ export const api = {
   register: (body) => client.post('/auth/register', body).then((r) => r.data),
   login: (body) => client.post('/auth/login', body).then((r) => r.data),
   devBypass: () => client.post('/auth/dev-bypass').then((r) => r.data),
-  me: () => client.get('/auth/me').then((r) => r.data),
 
   /** Resolve the Google OAuth start URL for the *sign-in / sign-up* flow.
    * Returns ``{ authorization_url }``. The caller is expected to do a
@@ -206,24 +205,13 @@ export const api = {
   getMe: () => client.get('/users/me').then((r) => r.data),
   patchMe: (body) => client.patch('/users/me', body).then((r) => r.data),
   updateMigrationFlag: (body) => client.patch('/users/migration-flag', body).then((r) => r.data),
-  getMigrationStatus: (jobId) => client.get(`/closet/migration/status/${jobId}`).then((r) => r.data),
   saveMigrationCrops: (body) => client.post('/closet/migration/save-crops', body, { timeout: 120000 }).then((r) => r.data),
-  reanalyzeByBrand: (body) => client.post('/closet/migration/reanalyze-by-brand', body, { timeout: 30000 }).then((r) => r.data),
 
   // closet
   listCloset: (params = {}) =>
     client.get('/closet', { params }).then((r) => r.data),
   getItem: (id) => client.get(`/closet/${id}`).then((r) => r.data),
   createItem: (body) => client.post('/closet', body).then((r) => r.data),
-  // Phase Z2 — pre-flight duplicate check.
-  // Pass an array of `{sha256, filename, size_bytes}` for the photos
-  // the user just selected. Returns `{matches: [...]}` listing only
-  // those that collide with an existing closet item. The frontend
-  // either prompts (≤5 photos) or silently filters them out (>5).
-  preflightDuplicates: (photos) =>
-    client
-      .post('/closet/preflight', { photos })
-      .then((r) => r.data),
   /**
    * Phase Z2.3 — streaming hash-repair pass.
    *
@@ -419,24 +407,8 @@ export const api = {
   updateItem: (id, body) => client.patch(`/closet/${id}`, body).then((r) => r.data),
   deleteItem: (id) => client.delete(`/closet/${id}`).then((r) => r.data),
   groupItems: (body) => client.post('/closet/group', body).then((r) => r.data),
-  uploadGroupMember: (hostId, body) =>
-    client.post(`/closet/${hostId}/upload-member`, body).then((r) => r.data),
-  setGroupHost: (hostId, memberId) =>
-    client.post(`/closet/${hostId}/set-host/${memberId}`).then((r) => r.data),
-  ungroupItem: (id) => client.post(`/closet/${id}/ungroup`).then((r) => r.data),
   groupEdit: (hostId, body) =>
     client.post(`/closet/${hostId}/group-edit`, body).then((r) => r.data),
-  editItemImage: (id, prompt) =>
-    client
-      .post(`/closet/${id}/edit-image`, null, { params: { prompt } })
-      .then((r) => r.data),
-  // One-shot helper that auto-creates marketplace listings for closet
-  // items that already have ``marketplace_intent`` set but never made
-  // it to the marketplace (legacy data / pre-pipeline items). Returns
-  // a {candidates, created, skipped_existing, source_synced, failed}
-  // summary so the caller can render a confirmation toast.
-  backfillMarketplaceListings: () =>
-    client.post('/closet/marketplace/backfill').then((r) => r.data),
   /**
    * Streaming variant of the marketplace backfill — same semantics,
    * but emits one NDJSON line per candidate so the UI can render
@@ -481,17 +453,11 @@ export const api = {
   getSimilarListings: (id, params = {}) =>
     client.get(`/listings/${id}/similar`, { params }).then((r) => r.data),
   createListing: (body) => client.post('/listings', body).then((r) => r.data),
-  patchListing: (id, body) =>
-    client.patch(`/listings/${id}`, body).then((r) => r.data),
   deleteListing: (id) => client.delete(`/listings/${id}`).then((r) => r.data),
 
   // transactions
   listTransactions: (params = {}) =>
     client.get('/transactions', { params }).then((r) => r.data),
-  createTransaction: (body) =>
-    client.post('/transactions', body).then((r) => r.data),
-  getTransaction: (id) =>
-    client.get(`/transactions/${id}`).then((r) => r.data),
 
   // Wave 2 — swap + donate marketplace flows
   proposeSwap: (listingId, offeredItemId) =>
@@ -520,13 +486,6 @@ export const api = {
   confirmReceipt: (txId) =>
     client
       .post(`/transactions/${txId}/confirm-receipt`)
-      .then((r) => r.data),
-  // Public (no auth) — used by the email-landing page so users who
-  // click accept/deny from a logged-out browser can still see the
-  // listing summary + status banner.
-  getLandingSummary: (txId) =>
-    client
-      .get(`/transactions/${txId}/landing-summary`)
       .then((r) => r.data),
 
   // stylist — returns raw axios promise for multipart
@@ -646,8 +605,6 @@ export const api = {
     client.post('/auth/google/sync-profile').then((r) => r.data),
 
   // trend-scout
-  trendsLatest: (perBucket = 1) =>
-    client.get('/trends/latest', { params: { per_bucket: perBucket } }).then((r) => r.data),
   fashionScoutFeed: (limit = 12, params = {}) =>
     client
       .get('/trends/fashion-scout', {
@@ -666,9 +623,6 @@ export const api = {
   // ``run_trend_scout`` would skip).
   trendsRefreshAdmin: (force = true) =>
     client.post('/trends/run-now', null, { params: { force } }).then((r) => r.data),
-  // Public-safe diagnostics: when did each bucket last refresh?
-  trendsLastRefresh: () =>
-    client.get('/trends/last_refresh').then((r) => r.data),
 
   // share — mint a read-only snapshot link for an outfit recommendation
   createSharedOutfit: (body) =>
@@ -683,8 +637,6 @@ export const api = {
     }),
   getSharedOutfit: (id) =>
     client.get(`/share/outfit/${id}`).then((r) => r.data),
-  saveOutfitShareCard: (id, image_b64) =>
-    client.post(`/outfits/${id}/share-card`, { image_b64 }).then((r) => r.data),
   saveSharedOutfitShareCard: (id, image_b64) =>
     client.post(`/share/outfit/${id}/share-card`, { image_b64 }).then((r) => r.data),
 
@@ -694,8 +646,6 @@ export const api = {
   adminListings: (params = {}) => client.get('/admin/listings', { params }).then((r) => r.data),
   adminTransactions: (params = {}) => client.get('/admin/transactions', { params }).then((r) => r.data),
   adminProviders: () => client.get('/admin/providers').then((r) => r.data),
-  adminProviderCalls: (provider, limit = 50) =>
-    client.get(`/admin/providers/${provider}/calls`, { params: { limit } }).then((r) => r.data),
   adminTrendScout: (limit = 30) =>
     client.get('/admin/trend-scout', { params: { limit } }).then((r) => r.data),
   adminTrendScoutRun: (force = true) =>
@@ -718,8 +668,6 @@ export const api = {
   // --- Phase U: ad campaigns ---
   listMyAdCampaigns: () =>
     client.get('/promotions/campaigns').then((r) => r.data),
-  getAdCampaign: (id) =>
-    client.get(`/promotions/campaigns/${id}`).then((r) => r.data),
   createAdCampaign: (body) =>
     client.post('/promotions/campaigns', body).then((r) => r.data),
   patchAdCampaign: (id, body) =>
@@ -733,19 +681,6 @@ export const api = {
   trackAdClick: (id) =>
     client.post(`/promotions/click/${id}`).then((r) => r.data).catch(() => null),
 
-  // --- Phase U: admin professionals + ads ---
-  adminProfessionals: (params = {}) =>
-    client.get('/admin/professionals', { params }).then((r) => r.data),
-  adminHideProfessional: (userId) =>
-    client.post(`/admin/professionals/${userId}/hide`).then((r) => r.data),
-  adminUnhideProfessional: (userId) =>
-    client.post(`/admin/professionals/${userId}/unhide`).then((r) => r.data),
-  adminAdCampaigns: (params = {}) =>
-    client.get('/admin/promotions/campaigns', { params }).then((r) => r.data),
-  adminDisableCampaign: (id) =>
-    client.post(`/admin/promotions/campaigns/${id}/disable`).then((r) => r.data),
-  adminEnableCampaign: (id) =>
-    client.post(`/admin/promotions/campaigns/${id}/enable`).then((r) => r.data),
 
   // --- Phase O.3: Eyes provider runtime override ---
   // Snapshot of the currently-active vision provider on this pod
@@ -764,10 +699,6 @@ export const api = {
   paypalConfig: () => client.get('/paypal/config').then((r) => r.data),
   creditsBalance: (currency = 'USD') =>
     client.get('/credits/balance', { params: { currency } }).then((r) => r.data),
-  creditsAllBalances: () =>
-    client.get('/credits/balances').then((r) => r.data),
-  creditsHistory: (limit = 30) =>
-    client.get('/credits/history', { params: { limit } }).then((r) => r.data),
   creditsTopupCreate: (body) =>
     client.post('/credits/topup', body).then((r) => r.data),
   creditsTopupCapture: (topupId) =>
@@ -797,7 +728,6 @@ export const api = {
   triggerEventProposal: (body) => client.post('/outfits/proposal/event', body).then((r) => r.data),
   rejectItemSuggestion: (itemId) => client.post('/outfits/reject-item', { item_id: itemId }).then((r) => r.data),
   listSimulatedNotifications: () => client.get('/outfits/notifications').then((r) => r.data),
-  clearSimulatedNotifications: () => client.post('/outfits/notifications/clear').then((r) => r.data),
   subscribeWebPush: (sub) => client.post('/outfits/webpush/subscribe', sub).then((r) => r.data),
   unsubscribeWebPush: (endpoint) => client.post('/outfits/webpush/unsubscribe', { endpoint }).then((r) => r.data),
   getVapidKey: () => client.get('/outfits/webpush/vapid-key').then((r) => r.data),
@@ -810,7 +740,6 @@ export const api = {
   packSuitcase: (body) => client.post('/suitcase/pack', body).then((r) => r.data),
   approveSuitcase: (body) => client.post('/suitcase/approve', body).then((r) => r.data),
   updateSuitcaseItemPackStatus: (body) => client.post('/suitcase/items/pack-status', body).then((r) => r.data),
-  addSuitcaseItem: (body) => client.post('/suitcase/items', body).then((r) => r.data),
   deleteSuitcaseItem: (itemId) => client.delete(`/suitcase/items/${itemId}`).then((r) => r.data),
   enterSuitcaseLocation: (body) => client.post('/suitcase/enter-location', body).then((r) => r.data),
   getSuitcaseArchive: () => client.get('/suitcase/archive').then((r) => r.data),
@@ -827,9 +756,6 @@ export const api = {
 export const campaignApi = {
   /** Create a new campaign (Expert only) */
   createCampaign: (data) => client.post('/campaigns', data).then((r) => r.data),
-
-  /** List own campaigns (Expert only) */
-  listMyCampaigns: (params) => client.get('/campaigns/mine', { params }).then((r) => r.data),
 
   /** Get single campaign detail */
   getCampaign: (id) => client.get(`/campaigns/${id}`).then((r) => r.data),
@@ -887,12 +813,6 @@ export const campaignApi = {
   /** Get campaign approval queue */
   adminGetCampaignQueue: (params) => client.get('/admin/campaigns', { params }).then((r) => r.data),
 
-  /** Get all campaigns (any status) */
-  adminGetAllCampaigns: (params) => client.get('/admin/campaigns/all', { params }).then((r) => r.data),
-
-  /** Get single campaign (admin) */
-  adminGetCampaign: (id) => client.get(`/admin/campaigns/${id}`).then((r) => r.data),
-
   /** Approve a campaign */
   adminApproveCampaign: (id) => client.post(`/admin/campaigns/${id}/approve`).then((r) => r.data),
 
@@ -900,8 +820,7 @@ export const campaignApi = {
   adminRejectCampaign: (id, reason) =>
     client.post(`/admin/campaigns/${id}/reject`, { reason }).then((r) => r.data),
 
-  /** Admin edit campaign fields before approval */
-  adminEditCampaign: (id, data) => client.patch(`/admin/campaigns/${id}`, data).then((r) => r.data),
+
 };
 
 export default client;

@@ -2210,6 +2210,7 @@
   "help": {
     "title": "DressApp：我的 DressApp 衣柜书",
     "subtitle": "管理衣物的超级简单指南",
+    "geminiKeyStep": "A Gemini API Key. Get it for free on <a href=\"https://aistudio.google.com/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary hover:underline font-semibold\">Google AI Studio</a>.",
     "overview_title": "概览",
     "overview_p1": "欢迎使用 DressApp！这是一款尖端应用程序，可让您构建自己的数字衣柜。",
     "overview_p2": "想象一下给你所有的衬衫、裤子、裙子和鞋子拍照，然后把它们放进一本神奇的书里。一旦他们进去，专业且经验丰富的造型师就会检查您的衣服，检查外面的天气，并帮助您选择适合任何场合的穿着！",
@@ -2749,5 +2750,10 @@
     "helpDocLink": "了解如何在 DressApp 中添加衣服",
     "letsStart": "开始使用",
     "migrateBtn": "迁移"
+  },
+  "aiNotice": {
+    "geminiKeyRequired": "您必须输入您的 Google AI Gemini 密钥",
+    "geminiKeyDescription": "您必须配置您的 Google AI Gemini API 密钥。您可以在 Google AI Studio 获取密钥。",
+    "configureKey": "配置密钥"
   }
 }

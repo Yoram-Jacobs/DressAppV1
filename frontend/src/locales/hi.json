@@ -2210,6 +2210,7 @@
   "help": {
     "title": "ड्रेसऐप: माई ड्रेसऐप क्लोसेट बुक",
     "subtitle": "अपने कपड़ों और परिधानों को प्रबंधित करने के लिए एक अत्यंत सरल मार्गदर्शिका",
+    "geminiKeyStep": "A Gemini API Key. Get it for free on <a href=\"https://aistudio.google.com/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary hover:underline font-semibold\">Google AI Studio</a>.",
     "overview_title": "अवलोकन",
     "overview_p1": "ड्रेसऐप में आपका स्वागत है! यह एक अत्याधुनिक ऐप है जो आपको अपनी खुद की डिजिटल कपड़ों की अलमारी बनाने की सुविधा देता है।",
     "overview_p2": "अपनी सभी शर्ट, पैंट, स्कर्ट और जूतों की तस्वीरें लेने और उन्हें एक जादुई किताब में रखने की कल्पना करें। एक बार जब वे अंदर आ जाते हैं, तो एक पेशेवर और अनुभवी स्टाइलिस्ट आपके कपड़ों को देखता है, बाहर के मौसम की जाँच करता है, और आपको यह चुनने में मदद करता है कि किसी भी अवसर के लिए क्या पहनना है!",
@@ -2749,5 +2750,10 @@
     "helpDocLink": "जानें कि DressApp में कपड़े कैसे जोड़ें",
     "letsStart": "शुरू करें",
     "migrateBtn": "माइग्रेट करें"
+  },
+  "aiNotice": {
+    "geminiKeyRequired": "आपको अपनी Google AI Gemini कुंजी दर्ज करनी होगी",
+    "geminiKeyDescription": "आपको अपनी Google AI Gemini API कुंजी कॉन्फ़िगर करनी होगी। आप Google AI Studio से कुंजी प्राप्त कर सकते हैं।",
+    "configureKey": "कुंजी कॉन्फ़िगर करें"
   }
 }

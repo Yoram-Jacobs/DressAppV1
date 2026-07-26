@@ -2,6 +2,10 @@
 
 Welcome, AI coding agent! This file defines the repository rules, design guidelines, and provides entry points to the project's knowledge base.
 
+## Deployment Facts
+
+**Read [CONCRETE_FACTS.md](file:///C:/DressApp_AG/CONCRETE_FACTS.md) at the start of every session.** It contains locked, never-changing facts about the DressApp deployment topology: VPS hardware, container layout, env vars, backend↔eyes wiring, and reference commands. Anything in that document is authoritative for production operations.
+
 ## Knowledge Base (Wiki)
 
 To prevent context stuffing, the documentation for this repository is modularly structured inside the [wiki/](file:///C:/DressApp_AG/wiki/) directory. Please read the specific topic file corresponding to the module you are working on:

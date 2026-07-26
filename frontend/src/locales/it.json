@@ -2210,6 +2210,7 @@
   "help": {
     "title": "DressApp: il mio libro nell'armadio DressApp",
     "subtitle": "Una guida semplicissima per gestire vestiti e outfit",
+    "geminiKeyStep": "A Gemini API Key. Get it for free on <a href=\"https://aistudio.google.com/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary hover:underline font-semibold\">Google AI Studio</a>.",
     "overview_title": "Panoramica",
     "overview_p1": "Benvenuto su DressApp! Questa è un'app all'avanguardia che ti consente di creare il tuo armadio digitale personale.",
     "overview_p2": "Immagina di scattare foto di tutte le tue magliette, pantaloni, gonne e scarpe e di inserirle in un libro magico. Una volta dentro, uno stilista professionista ed esperto guarda i tuoi vestiti, controlla il tempo fuori e ti aiuta a scegliere cosa indossare per ogni occasione!",
@@ -2749,5 +2750,10 @@
     "helpDocLink": "Scopri come aggiungere vestiti su DressApp",
     "letsStart": "Iniziamo",
     "migrateBtn": "Migra"
+  },
+  "aiNotice": {
+    "geminiKeyRequired": "Devi inserire la tua chiave Google AI Gemini",
+    "geminiKeyDescription": "Devi configurare la tua chiave API Google AI Gemini. Puoi ottenere una chiave da Google AI Studio.",
+    "configureKey": "Configura chiave"
   }
 }

@@ -2210,6 +2210,7 @@
   "help": {
     "title": "كتاب خزانة DressApp",
     "subtitle": "دليل بسيط ومريح لإدارة ملابسك وتنسيقاتك الرقمية",
+    "geminiKeyStep": "A Gemini API Key. Get it for free on <a href=\"https://aistudio.google.com/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary hover:underline font-semibold\">Google AI Studio</a>.",
     "overview_title": "لمحة عامة",
     "overview_p1": "مرحباً بك في DressApp! هذا تطبيق متطور يتيح لك بناء خزانة ملابسك الرقمية الخاصة.",
     "overview_p2": "يمكنك التقاط صور لجميع القمصان والسراويل والتنانير والأحذية ووضعها في كتاب سحري. بمجرد دخولها، يقوم منسق أزياء محترف ومحترف بالاطلاع على ملابسك، والتحقق من الطقس في الخارج، ويساعدك في اختيار ما ترتديه لأي مناسبة!",
@@ -2749,5 +2750,10 @@
     "helpDocLink": "تعرف على كيفية إضافة الملابس في DressApp",
     "letsStart": "فلنبدأ",
     "migrateBtn": "نقل"
+  },
+  "aiNotice": {
+    "geminiKeyRequired": "يجب عليك إدخال مفتاح Google AI Gemini الخاص بك",
+    "geminiKeyDescription": "يجب عليك تكوين مفتاح Google AI Gemini API الخاص بك. يمكنك الحصول على مفتاح من Google AI Studio.",
+    "configureKey": "تكوين المفتاح"
   }
 }
