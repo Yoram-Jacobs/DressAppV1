@@ -869,7 +869,13 @@ export default function Profile() {
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => setIsMigrationModalOpen(true)}
+                onClick={() => {
+                  if ('ontouchstart' in window) {
+                    toast.info(t('profile.mobileDesktopGuide', { defaultValue: 'Wardrobe import is available on the desktop version of DressApp. Please open your account on a desktop browser to continue.' }), { duration: 8000 });
+                  } else {
+                    setIsMigrationModalOpen(true);
+                  }
+                }}
                 className="text-xs font-semibold bg-slate-900 text-slate-100 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 px-3.5 py-1.5 rounded-full transition-all duration-200 shadow-sm inline-flex items-center gap-1.5 h-8 mt-2"
                 data-testid="profile-import-wardrobe-pill"
               >
@@ -952,27 +958,35 @@ function ShoppingAssistantAccordionItem() {
             {t('profile.bookmarkletDesc', { defaultValue: "Drag the button below to your bookmarks bar. On mobile, add it to your bookmarks and name it 'DressApp Shopping Assistant'. Click it when on any product page." })}
           </p>
           
-          <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <a
-              ref={(el) => {
-                if (el) {
-                  el.setAttribute('href', "javascript:(function(){if(!document.getElementById('dressapp-mobile-styles')){var s=document.createElement('script');s.src='https://dressapp.co/widget/dressapp-mobile-floater.js?t='+Date.now();document.body.appendChild(s);}})();");
-                }
-              }}
-              title="DressApp Shopping Assistant"
-              className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-emerald-500 transition-colors cursor-grab"
-              onClick={(e) => {
-                // If clicked, trigger alert instruction on how to add to bookmark
-                e.preventDefault();
-                alert(t('profile.bookmarkletInstruction', { defaultValue: "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations." }));
-              }}
-            >
-              {t('profile.bookmarkletBtn', { defaultValue: 'DressApp Assistant' })}
-            </a>
-            <span className="text-[11px] text-muted-foreground italic">
-              {t('profile.bookmarkletInstruction', { defaultValue: "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations." })}
-            </span>
-          </div>
+          {'ontouchstart' in window ? (
+            <div className="pt-2 flex items-center gap-2 p-3 rounded-xl bg-muted/50 border border-border/40">
+              <Info className="w-4 h-4 text-muted-foreground shrink-0" />
+              <span className="text-xs text-muted-foreground">
+                {t('profile.mobileDesktopGuide', { defaultValue: 'Wardrobe import is available on the desktop version of DressApp. Please open your account on a desktop browser to continue.' })}
+              </span>
+            </div>
+          ) : (
+            <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <a
+                ref={(el) => {
+                  if (el) {
+                    el.setAttribute('href', "javascript:(function(){if(!document.getElementById('dressapp-mobile-styles')){var s=document.createElement('script');s.src='https://dressapp.co/widget/dressapp-mobile-floater.js?t='+Date.now();document.body.appendChild(s);}})();");
+                  }
+                }}
+                title="DressApp Shopping Assistant"
+                className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-emerald-500 transition-colors cursor-grab"
+                onClick={(e) => {
+                  e.preventDefault();
+                  alert(t('profile.bookmarkletInstruction', { defaultValue: "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations." }));
+                }}
+              >
+                {t('profile.bookmarkletBtn', { defaultValue: 'DressApp Assistant' })}
+              </a>
+              <span className="text-[11px] text-muted-foreground italic">
+                {t('profile.bookmarkletInstruction', { defaultValue: "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations." })}
+              </span>
+            </div>
+          )}
         </div>
 
       </AccordionContent>

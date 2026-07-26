@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { HelpCircle, Sparkles, UploadCloud, ArrowRight, X } from 'lucide-react';
+import { toast } from 'sonner';
 import OnboardingMigrationModal from './OnboardingMigrationModal';
 
 export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
@@ -90,7 +91,13 @@ export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setShowMigrateForm(true)}
+                  onClick={() => {
+                    if ('ontouchstart' in window) {
+                      toast.info(t('profile.mobileDesktopGuide', { defaultValue: 'Wardrobe import is available on the desktop version of DressApp. Please open your account on a desktop browser to continue.' }), { duration: 8000 });
+                    } else {
+                      setShowMigrateForm(true);
+                    }
+                  }}
                   className="rounded-xl h-10 text-xs font-semibold border-primary/30 text-primary hover:bg-primary/5 flex items-center justify-center gap-1"
                   data-testid="login-reminder-migrate-btn"
                 >

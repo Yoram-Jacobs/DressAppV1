@@ -1096,6 +1096,8 @@
       "appFeeLabel": "अर्जित ऐप शुल्क",
       "appFeeDescription": "क्रेडिट उपयोग से अर्जित किया गया अवैतनिक प्लेटफ़ॉर्म शुल्क।"
     },
+    "importWardrobePill": "अलमारी आयात करें",
+    "mobileDesktopGuide": "अलमारी आयात DressApp के डेस्कटॉप संस्करण में उपलब्ध है। जारी रखने के लिए कृपया अपने खाते को डेस्कटॉप ब्राउज़र में खोलें।",
     "deleteAccountLink": "Delete my Account",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",

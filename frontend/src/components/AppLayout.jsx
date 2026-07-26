@@ -1,5 +1,6 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { TopNav } from '@/components/TopNav';
 import { BottomTabs } from '@/components/BottomTabs';
 import { LanguageSync } from '@/components/LanguageSync';
@@ -11,6 +12,7 @@ import { prewarmExperts, resetExperts } from '@/lib/expertsStore';
 import { prewarmSuitcase, resetSuitcase } from '@/lib/suitcaseStore';
 import { outfitStore } from '@/lib/outfitStore';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { api } from '@/lib/api';
 
 function urlBase64ToUint8Array(base64String) {
@@ -32,6 +34,7 @@ import { useClosetStore } from '@/lib/useClosetStore';
 import { useState } from 'react';
 
 export const AppLayout = () => {
+  const { t } = useTranslation();
   const { user, loading, refresh } = useAuth();
   const { items } = useClosetStore();
   const [dismissedLoginReminder, setDismissedLoginReminder] = useState(() => {
@@ -114,6 +117,12 @@ export const AppLayout = () => {
     }
   }, [user, loading]);
 
+  useEffect(() => {
+    if (user && !user.migration_flag && 'ontouchstart' in window) {
+      toast.info(t('profile.mobileDesktopGuide', { defaultValue: 'Wardrobe import is available on the desktop version of DressApp. Please open your account on a desktop browser to continue.' }), { duration: 8000 });
+    }
+  }, [user]);
+
   if (loading) {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center">
@@ -136,8 +145,8 @@ export const AppLayout = () => {
       </main>
       <BottomTabs />
 
-      {/* Onboarding Migration Question Modal */}
-      {showOnboardingMigration && (
+      {/* Onboarding Migration Question Modal — desktop only */}
+      {showOnboardingMigration && !('ontouchstart' in window) && (
         <OnboardingMigrationModal
           isOpen={true}
           onClose={() => { refresh().catch(() => {}); }}

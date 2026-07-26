@@ -902,6 +902,8 @@
     "voice": "Voice (Piper Offline)",
     "saveChanges": "Save changes",
     "signOut": "Sign out",
+    "importWardrobePill": "Import Wardrobe",
+    "mobileDesktopGuide": "Wardrobe import is available on the desktop version of DressApp. Please open your account on a desktop browser to continue.",
     "deleteAccountLink": "Delete my Account",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",

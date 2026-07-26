@@ -1096,6 +1096,8 @@
       "appFeeLabel": "Frais d'application accumulés",
       "appFeeDescription": "Frais de plateforme non payés accumulés suite à l'utilisation des crédits."
     },
+    "importWardrobePill": "Importer la garde-robe",
+    "mobileDesktopGuide": "L'importation de la garde-robe est disponible sur la version bureau de DressApp. Veuillez ouvrir votre compte dans un navigateur bureau pour continuer.",
     "deleteAccountLink": "Delete my Account",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",

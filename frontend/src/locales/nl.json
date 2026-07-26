@@ -902,6 +902,8 @@
     "voice": "Stem (Piper offline)",
     "saveChanges": "Wijzigingen opslaan",
     "signOut": "Meld u af",
+    "importWardrobePill": "Garderobe importeren",
+    "mobileDesktopGuide": "Garderobe-import is beschikbaar in de desktopversie van DressApp. Open je account in een desktopbrowser om verder te gaan.",
     "deleteAccountLink": "Verwijder mijn account",
     "deleteAccountTitle": "Account verwijderen",
     "deleteAccountSubtitle": "Permanente accountverwijdering",

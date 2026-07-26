@@ -1096,6 +1096,8 @@
       "appFeeLabel": "رسوم التطبيق المتراكمة",
       "appFeeDescription": "رسوم المنصة غير المدفوعة المتراكمة من استخدام النقاط."
     },
+    "importWardrobePill": "استيراد الخزانة",
+    "mobileDesktopGuide": "استيراد الخزانة متاح في نسخة سطح المكتب من DressApp. يرجى فتح حسابك في متصفح سطح المكتب للمتابعة.",
     "deleteAccountLink": "Delete my Account",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",

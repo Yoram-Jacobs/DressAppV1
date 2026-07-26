@@ -1105,6 +1105,8 @@
       "appFeeLabel": "Angelaufene App-Gebühr",
       "appFeeDescription": "Unbezahlte Plattformgebühr, die durch die Credit-Nutzung entstanden ist."
     },
+    "importWardrobePill": "Kleiderschrank importieren",
+    "mobileDesktopGuide": "Der Kleiderschrank-Import ist in der Desktop-Version von DressApp verfügbar. Bitte öffnen Sie Ihr Konto im Desktop-Browser, um fortzufahren.",
     "deleteAccountLink": "Delete my Account",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",

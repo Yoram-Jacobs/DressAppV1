@@ -1096,6 +1096,8 @@
       "appFeeLabel": "Tarifa de Aplicación Acumulada",
       "appFeeDescription": "Tarifa de plataforma no pagada acumulada por el uso de créditos."
     },
+    "importWardrobePill": "Importar armario",
+    "mobileDesktopGuide": "La importación del armario está disponible en la versión de escritorio de DressApp. Abre tu cuenta en un navegador de escritorio para continuar.",
     "deleteAccountLink": "Delete my Account",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",

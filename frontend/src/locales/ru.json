@@ -1096,6 +1096,8 @@
       "appFeeLabel": "Накопленная плата за приложение",
       "appFeeDescription": "Неоплаченная плата за платформу, накопленная в результате использования кредитов."
     },
+    "importWardrobePill": "Импортировать гардероб",
+    "mobileDesktopGuide": "Импорт гардероба доступен в десктопной версии DressApp. Пожалуйста, откройте свой аккаунт в десктопном браузере, чтобы продолжить.",
     "deleteAccountLink": "Delete my Account",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
