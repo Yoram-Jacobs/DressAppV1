@@ -81,20 +81,16 @@ function MigrationMessageListener() {
         collectedCards.length = 0;
 
         if (cardsWithImages.length > 0) {
-          // DB-backed pipeline: save crops to closet, then re-analyze with Stylist
+          // DB-backed pipeline: save crops + kick off Stylist re-analyze in ONE call
           (async () => {
             try {
               toast.info(t('migration.saving', { defaultValue: `Saving ${cardsWithImages.length} items to your closet...` }));
 
-              // Step 1: Save crops to DB (with brand = appName)
-              const saveResult = await api.saveMigrationCrops({ app_name: appName, cards: cardsWithImages });
-              console.log(`[MigrationListener] Saved ${saveResult.items_saved} items to DB`);
+              // Single atomic call: saves crops to DB AND starts Stylist worker
+              const result = await api.saveMigrationCrops({ app_name: appName, cards: cardsWithImages });
+              console.log(`[MigrationListener] Saved ${result.items_saved} items, Stylist job: ${result.job_id}`);
 
-              // Step 2: Kick off Stylist re-analysis worker (background)
-              const reanalyzeResult = await api.reanalyzeByBrand({ app_name: appName });
-              console.log(`[MigrationListener] Re-analysis job started: ${reanalyzeResult.job_id}`);
-
-              toast.success(t('migration.saved', { defaultValue: `${saveResult.items_saved} items saved to closet. Stylist is analysing them now — you'll see details update automatically.` }));
+              toast.success(t('migration.saved', { defaultValue: `${result.items_saved} items saved. Stylist is analysing them — details update automatically.` }));
 
               // Navigate to closet so user can see items appearing
               navigate('/closet');

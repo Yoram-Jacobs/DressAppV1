@@ -3105,11 +3105,136 @@ async def save_migration_crops(
         item_ids.append(doc["id"])
         saved += 1
 
+    # ── Atomically kick off the Stylist re-analyze worker ──
+    # This avoids a race condition where the client closes between
+    # saving crops and starting analysis.
+    job_id: str | None = None
+    if saved > 0 and garment_vision_service is not None:
+        job_id = f"reanalyze_{uuid.uuid4().hex[:12]}"
+        _migration_status[job_id] = {
+            "status": "processing",
+            "imported": 0,
+            "skipped": 0,
+            "total": saved,
+            "items": [],
+        }
+
+        # Snapshot the items we just saved so the worker doesn't re-query
+        # (avoids a race where the brand hasn't been written yet).
+        saved_items = await repos.find_many(
+            db.closet_items,
+            {"user_id": user["id"], "brand": payload.app_name, "id": {"$in": item_ids}},
+            limit=500,
+        )
+        user_lang = (user or {}).get("preferred_language") or "en"
+
+        async def _run_reanalyze():
+            imported = 0
+            skipped = 0
+            all_items: list[dict[str, Any]] = []
+
+            for item_doc in saved_items:
+                item_id = item_doc.get("id")
+                try:
+                    variants = item_doc.get("image_variants") or {}
+                    image_url = (
+                        item_doc.get("segmented_image_url")
+                        or item_doc.get("cutout_url")
+                        or item_doc.get("clean_image_url")
+                        or (variants.get("webp") or {}).get("large")
+                        or (variants.get("webp") or {}).get("medium")
+                        or item_doc.get("reconstructed_image_url")
+                        or variants.get("original")
+                        or item_doc.get("original_image_url")
+                        or item_doc.get("image_url")
+                    )
+                    if not image_url:
+                        skipped += 1
+                        continue
+
+                    raw = await _read_image_bytes_from_url(image_url)
+                    if not raw:
+                        skipped += 1
+                        continue
+
+                    try:
+                        async with _ANALYZE_LOCK:
+                            parsed = await garment_vision_service.analyze(raw, language=user_lang)
+                    except Exception as exc:
+                        logger.warning("[migration] Re-analyze failed for %s: %s", item_id, exc)
+                        skipped += 1
+                        continue
+
+                    analysis = _safe_analysis(parsed)
+                    from app.services.vision import _is_unidentifiable
+
+                    if _is_unidentifiable(analysis):
+                        skipped += 1
+                        continue
+
+                    update_doc: dict[str, Any] = {
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    }
+                    for key in (
+                        "title", "name", "caption", "category", "sub_category",
+                        "item_type", "brand", "gender", "dress_code", "season",
+                        "tradition", "colors", "fabric_materials", "pattern",
+                        "state", "condition", "quality", "repair_advice", "tags",
+                    ):
+                        val = analysis.get(key)
+                        if val is not None:
+                            update_doc[key] = val
+
+                    colours_list = analysis.get("colors") or []
+                    if colours_list and isinstance(colours_list, list):
+                        first_colour = colours_list[0]
+                        if isinstance(first_colour, dict) and first_colour.get("name"):
+                            update_doc["color"] = first_colour["name"]
+                    materials_list = analysis.get("fabric_materials") or []
+                    if materials_list and isinstance(materials_list, list):
+                        first_material = materials_list[0]
+                        if isinstance(first_material, dict) and first_material.get("name"):
+                            update_doc["material"] = first_material["name"]
+
+                    await repos.update(
+                        db.closet_items,
+                        {"id": item_id, "user_id": user["id"]},
+                        update_doc,
+                    )
+
+                    imported += 1
+                    all_items.append({"id": item_id, "title": update_doc.get("title")})
+
+                except Exception as exc:
+                    logger.warning("[migration] Re-analyze error for %s: %s", item_id, exc)
+                    skipped += 1
+
+                _migration_status[job_id] = {
+                    "status": "processing",
+                    "imported": imported,
+                    "skipped": skipped,
+                    "total": len(saved_items),
+                    "items": all_items,
+                }
+
+            _migration_status[job_id] = {
+                "status": "done",
+                "imported": imported,
+                "skipped": skipped,
+                "total": len(saved_items),
+                "items": all_items,
+            }
+            await asyncio.sleep(60)
+            _migration_status.pop(job_id, None)
+
+        asyncio.create_task(_run_reanalyze())
+
     return {
         "items_saved": saved,
         "items_skipped": skipped,
         "item_ids": item_ids,
         "app_name": payload.app_name,
+        "job_id": job_id,
     }
 
 
@@ -3122,7 +3247,7 @@ async def reanalyze_by_brand(
     payload: MigrationReanalyzeIn,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Kick off background Stylist re-analysis for all items matching brand.
+    """Standalone re-analyze endpoint (for manual re-triggering).
 
     Queries closet_items where ``brand == app_name`` for the user,
     then processes each through The Eyes (Gemini) one by one.
@@ -3151,7 +3276,7 @@ async def reanalyze_by_brand(
 
     user_lang = (user or {}).get("preferred_language") or "en"
 
-    async def _run_reanalyze():
+    async def _run_reanalyze_standalone():
         imported = 0
         skipped = 0
         all_items = []
@@ -3159,7 +3284,6 @@ async def reanalyze_by_brand(
         for i, item_doc in enumerate(items):
             item_id = item_doc.get("id")
             try:
-                # Resolve best image URL (same priority as reanalyze_item)
                 variants = item_doc.get("image_variants") or {}
                 image_url = (
                     item_doc.get("segmented_image_url")
@@ -3181,7 +3305,6 @@ async def reanalyze_by_brand(
                     skipped += 1
                     continue
 
-                # Run The Eyes under the analyze lock
                 try:
                     async with _ANALYZE_LOCK:
                         parsed = await garment_vision_service.analyze(raw, language=user_lang)
@@ -3197,7 +3320,6 @@ async def reanalyze_by_brand(
                     skipped += 1
                     continue
 
-                # Build update doc (same OVERWRITE_KEYS as reanalyze_item)
                 update_doc: dict[str, Any] = {
                     "updated_at": datetime.now(timezone.utc).isoformat(),
                 }
@@ -3211,7 +3333,6 @@ async def reanalyze_by_brand(
                     if val is not None:
                         update_doc[key] = val
 
-                # Mirror dominant color/material into legacy scalars
                 colours_list = analysis.get("colors") or []
                 if colours_list and isinstance(colours_list, list):
                     first_colour = colours_list[0]
@@ -3223,7 +3344,6 @@ async def reanalyze_by_brand(
                     if isinstance(first_material, dict) and first_material.get("name"):
                         update_doc["material"] = first_material["name"]
 
-                # Persist to DB
                 await repos.update(
                     db.closet_items,
                     {"id": item_id, "user_id": user["id"]},
@@ -3252,11 +3372,10 @@ async def reanalyze_by_brand(
             "total": len(items),
             "items": all_items,
         }
-        # Clean up after a delay
         await asyncio.sleep(60)
         _migration_status.pop(job_id, None)
 
-    asyncio.create_task(_run_reanalyze())
+    asyncio.create_task(_run_reanalyze_standalone())
     return {"job_id": job_id, "total_items": len(items)}
 
 
