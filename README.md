@@ -37,7 +37,7 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
 
 **Backend** — FastAPI (Python 3.11) · Motor async MongoDB driver · Pydantic v2
 
-**Frontend** — React 19 · `useSyncExternalStore` custom stores · React Router · Tailwind · Shadcn/UI · `react-i18next` (12 locales) · Sonner toasts · Lucide icons
+**Frontend** — React 19 · `useSyncExternalStore` custom stores · React Router · Tailwind · Shadcn/UI · `react-i18next` (13 locales) · Sonner toasts · Lucide icons
 
 **Vision pipeline** — full stack:
 * **Hetzner / dev**: `rembg` (U2-Net) for matting · HuggingFace SegFormer-b2-clothes for clothing parsing · Fashion-CLIP for embeddings — all CPU-local. See `requirements-ml.txt` and the auto-detection in `app/config.py`.
@@ -94,7 +94,13 @@ A more detailed write-up has been archived to the external Appendix directory to
 ├── .agents/                # AI Agent workflows
 │   └── workflows/
 │       ├── deploy.md       # Target A / SSH deployment runbook
-│       └── labrrerian.md   # Documentation maintenance and linting guide
+│       ├── labrrerian.md   # Documentation maintenance and linting guide
+│       ├── translator.md   # Locale file translation workflow
+│       └── user-manual.md  # User manual generation workflow
+├── wiki/                   # Localized help & modular wiki (13 languages)
+│   ├── en/                 # English topic files (38 guides)
+│   ├── ar/                 # Arabic, de/ German, es/ Spanish, …
+│   └── …                   # One directory per supported locale
 ├── backend/                # FastAPI service
 │   ├── server.py           # App entry, ASGI bindings, CORS
 │   ├── app/
@@ -115,7 +121,7 @@ A more detailed write-up has been archived to the external Appendix directory to
 │   │   ├── components/     # Shared UI (DppScanner, AdTicker, …)
 │   │   ├── components/ui/  # Shadcn primitives
 │   │   ├── lib/            # api client, i18n, helpers
-│   │   └── locales/        # 12 translation files
+│   │   └── locales/        # 13 translation files
 │   └── package.json
 │
 ├── chrome-extension/       # Manifest V3 Shopping Assistant extension
