@@ -60,7 +60,8 @@
     "share": "Partager",
     "time": "Heure",
     "unknownColor": "Autre",
-    "saved": "Enregistré"
+    "saved": "Enregistré",
+    "errorOccurred": "Une erreur s'est produite. Veuillez réessayer."
   },
   "auth": {
     "welcomeBack": "Bon retour",
@@ -2058,6 +2059,8 @@
   "floater": {
     "done": "Tout est fait",
     "analysingGroup": "Analyse du groupe...",
+    "analyzing": "Analyse de {{n}}/{{m}} articles",
+    "analyzingPhotos": "Analyse de {{count}} photo",
     "polishing": "Optimisation de {{n}}/{{m}} photos",
     "polishingMore_one": "Optimisation de {{count}} photo",
     "polishingMore_other": "Optimisation de {{count}} photos"
@@ -2700,7 +2703,29 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "Importer votre garde-robe existante ?",
+    "welcomeSub": "Vous avez déjà une garde-robe numérique sur une autre application ? Nous pouvons transférer vos vêtements pour que vous n'ayez pas à recommencer de zéro.",
+    "noStartFresh": "Non, recommencer de zéro",
+    "yesImportBtn": "Oui, importer ma garde-robe",
+    "selectAppTitle": "De quelle application venez-vous ?",
+    "selectAppSub": "Sélectionnez votre application de garde-robe précédente ou entrez un nom personnalisé ci-dessous.",
+    "screenshotPipelineTitle": "Pipeline de capture d'écran prête",
+    "screenshotPipelineSub": "DressApp capturera les fiches de vêtements de la garde-robe concurrente via capture d'écran. Aucune clé API ou exportation de données nécessaire.",
+    "connectToAppTitle": "Se connecter à {{appName}}",
+    "bookmarkletInstallInstructions": "Glissez le bookmarklet DressApp Agent dans votre Barre de signets, puis connectez-vous à {{appName}} et naviguez vers votre page de garde-robe.",
+    "bookmarkletClickTip": "Cliquez sur le bookmarklet sur la page du concurrent pour commencer la capture.",
+    "bookmarkletBtn": "DressApp Agent",
+    "dragTip": "Glissez ceci dans votre Barre de signets",
+    "bookmarkletUsageInstructions": "Après l'installation, cliquez sur \"Importer la garde-robe\" ci-dessous pour initialiser. Connectez-vous à {{appName}}, allez à votre page de garde-robe, puis cliquez sur le bookmarklet \"DressApp Agent\".",
+    "garmentVisionReady": "Ingestion agentique prête",
+    "importWardrobeBtn": "Importer la garde-robe",
+    "mattingNotice": "Le traitement de tous les assets est assuré par GarmentVision.",
+    "tabSleepAlert": "Alerte de mise en veille de l'onglet : Ne changez pas d'onglet dans la fenêtre du concurrent pendant l'importation (Chrome mettra en veille/limitera le défilement).",
+    "proTip": "Astuce pro : Glissez l'onglet du concurrent hors de votre fenêtre de navigateur vers sa propre fenêtre pour le garder en focus pendant que vous multi-tâchez !",
+    "saving": "Enregistrement de {{count}} articles dans votre garde-robe...",
+    "saved": "{{count}} articles enregistrés. Le styliste les analyse — les détails se mettent à jour automatiquement.",
+    "error": "Échec de la migration. Veuillez réessayer."
   },
   "login_reminder": {
     "newTitle": "Votre garde-robe est vide — Ajoutez votre premier vêtement !",

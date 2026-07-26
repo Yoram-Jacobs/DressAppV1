@@ -60,7 +60,8 @@
     "share": "Share",
     "time": "Time",
     "unknownColor": "Other",
-    "saved": "Saved"
+    "saved": "Saved",
+    "errorOccurred": "An error occurred. Please try again."
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -2058,6 +2059,8 @@
   "floater": {
     "done": "All done",
     "analysingGroup": "Analysing group…",
+    "analyzing": "Analysing {{n}}/{{m}} items",
+    "analyzingPhotos": "Analysing {{count}} photo",
     "polishing": "Polishing {{n}}/{{m}} photos",
     "polishingMore_one": "Polishing {{count}} photo",
     "polishingMore_other": "Polishing {{count}} photos"
@@ -2698,7 +2701,29 @@
     "webLoginAuthenticated": "Session Connected: Authenticated with {{appName}}",
     "webLoginProceed": "Proceed to Migration Permission",
     "openExternal": "Open Official Login Page",
-    "popupOpened": "Opened {{appName}} login window. Complete login and return to proceed."
+    "popupOpened": "Opened {{appName}} login window. Complete login and return to proceed.",
+    "welcomeTitle": "Import Your Existing Wardrobe?",
+    "welcomeSub": "Already have a digital wardrobe on another app? We can bring your clothes over so you don't have to start from scratch.",
+    "noStartFresh": "No, start fresh",
+    "yesImportBtn": "Yes, import my wardrobe",
+    "selectAppTitle": "Which App Are You Coming From?",
+    "selectAppSub": "Select your previous wardrobe app or enter a custom name below.",
+    "screenshotPipelineTitle": "Screen Capture Pipeline Ready",
+    "screenshotPipelineSub": "DressApp will capture garment cards from your competitor's wardrobe via screen capture. No API keys or data exports needed.",
+    "connectToAppTitle": "Connect to {{appName}}",
+    "bookmarkletInstallInstructions": "Drag the DressApp Agent bookmarklet below to your Bookmarks Bar, then log in to {{appName}} and navigate to your closet page.",
+    "bookmarkletClickTip": "Click the bookmarklet on the competitor page to start capturing.",
+    "bookmarkletBtn": "DressApp Agent",
+    "dragTip": "Drag this to your Bookmarks Bar",
+    "bookmarkletUsageInstructions": "After installing, click \"Import wardrobe\" below to initialize. Log in to {{appName}}, go to your closet page, then click the \"DressApp Agent\" bookmarklet.",
+    "garmentVisionReady": "Agentic Ingestion Ready",
+    "importWardrobeBtn": "Import wardrobe",
+    "mattingNotice": "All assets matting is handled by GarmentVision.",
+    "tabSleepAlert": "Tab Sleep Alert: Do not switch tabs inside the competitor window while importing (Chrome will sleep/throttle the scroller).",
+    "proTip": "Pro-Tip: Drag the competitor tab out of your browser window into its own window to keep it running in focus while you multitask!",
+    "saving": "Saving {{count}} items to your closet...",
+    "saved": "{{count}} items saved. Stylist is analysing them — details update automatically.",
+    "error": "Migration failed. Please try again."
   },
   "login_reminder": {
     "newTitle": "Your Closet is Empty — Let's Add Your First Item!",

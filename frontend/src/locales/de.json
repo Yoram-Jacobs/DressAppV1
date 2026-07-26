@@ -60,7 +60,8 @@
     "share": "Teilen",
     "time": "Uhrzeit",
     "unknownColor": "Andere",
-    "saved": "Gespeichert"
+    "saved": "Gespeichert",
+    "errorOccurred": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
   },
   "auth": {
     "welcomeBack": "Willkommen zurück",
@@ -2058,6 +2059,8 @@
   "floater": {
     "done": "Alles erledigt",
     "analysingGroup": "Gruppe wird analysiert...",
+    "analyzing": "Analysiere {{n}}/{{m}} Artikel",
+    "analyzingPhotos": "Analysiere {{count}} Foto",
     "polishing": "Optimieren von {{n}}/{{m}} Fotos",
     "polishingMore_one": "Optimieren von {{count}} Foto",
     "polishingMore_other": "Optimieren von {{count}} Fotos"
@@ -2700,7 +2703,29 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "Bestehenden Kleiderschrank importieren?",
+    "welcomeSub": "Haben Sie bereits einen digitalen Kleiderschrank in einer anderen App? Wir können Ihre Kleidung hinüberbringen, damit Sie nicht bei null anfangen müssen.",
+    "noStartFresh": "Nein, neu beginnen",
+    "yesImportBtn": "Ja, meinen Kleiderschrank importieren",
+    "selectAppTitle": "Aus welcher App kommen Sie?",
+    "selectAppSub": "Wählen Sie Ihre vorherige Kleiderschrank-App oder geben Sie einen benutzerdefinierten Namen ein.",
+    "screenshotPipelineTitle": "Bildschirmaufnahme-Pipeline bereit",
+    "screenshotPipelineSub": "DressApp erfasst Kleidungskarten aus dem Kleiderschrank des Wettbewerbers über Bildschirmaufnahme. Keine API-Schlüssel oder Datenexporte erforderlich.",
+    "connectToAppTitle": "Mit {{appName}} verbinden",
+    "bookmarkletInstallInstructions": "Ziehen Sie das DressApp Agent-Lesezeichen unten in Ihre Lesezeichenleiste, melden Sie sich dann bei {{appName}} an und navigieren Sie zu Ihrer Kleiderschrankseite.",
+    "bookmarkletClickTip": "Klicken Sie auf das Lesezeichen auf der Wettbewerbsseite, um die Erfassung zu starten.",
+    "bookmarkletBtn": "DressApp Agent",
+    "dragTip": "Ziehen Sie dieses in Ihre Lesezeichenleiste",
+    "bookmarkletUsageInstructions": "Nach der Installation klicken Sie unten auf \"Kleiderschrank importieren\", um zu initialisieren. Melden Sie sich bei {{appName}} an, gehen Sie zu Ihrer Kleiderschrankseite und klicken Sie dann auf das Lesezeichen \"DressApp Agent\".",
+    "garmentVisionReady": "Agentische Aufnahme bereit",
+    "importWardrobeBtn": "Kleiderschrank importieren",
+    "mattingNotice": "Alle Assets-Matting wird von GarmentVision durchgeführt.",
+    "tabSleepAlert": "Tab-Schlaf-Alarm: Schalten Sie während des Imports nicht zwischen Tabs im Wettbewerbsfenster um (Chrome wird den Scroller schlafen/ throttlen).",
+    "proTip": "Profipp: Ziehen Sie den Wettbewerbs-Tab aus Ihrem Browserfenster in ein eigenes Fenster, um ihn beim Multitasking fokussiert laufen zu lassen!",
+    "saving": "{{count}} Artikel werden in Ihren Kleiderschrank gespeichert...",
+    "saved": "{{count}} Artikel gespeichert. Der Stylist analysiert sie — Details werden automatisch aktualisiert.",
+    "error": "Migration fehlgeschlagen. Bitte versuchen Sie es erneut."
   },
   "login_reminder": {
     "newTitle": "Ihr Kleiderschrank ist leer — Fügen Sie Ihr erstes Kleidungsstück hinzu!",

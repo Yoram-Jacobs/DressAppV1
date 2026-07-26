@@ -60,7 +60,8 @@
     "share": "共有",
     "time": "時間",
     "unknownColor": "その他",
-    "saved": "保存されました"
+    "saved": "保存されました",
+    "errorOccurred": "エラーが発生しました。もう一度お試しください。"
   },
   "auth": {
     "welcomeBack": "おかえりなさい",
@@ -2058,6 +2059,8 @@
   "floater": {
     "done": "完了",
     "analysingGroup": "グループを分析中...",
+    "analyzing": "{{n}}/{{m}}個のアイテムを分析中",
+    "analyzingPhotos": "{{count}}枚の写真を分析中",
     "polishing": "{{n}}/{{m}}枚の写真を最適化中",
     "polishingMore_one": "{{count}}枚の写真を最適化中",
     "polishingMore_other": "{{count}}枚の写真を最適化中"
@@ -2701,7 +2704,29 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "既存のワードローブをインポートしますか？",
+    "welcomeSub": "他のアプリにデジタルワードローブをお持ちですか？服を引き継げるので、ゼロからやり直す必要はありません。",
+    "noStartFresh": "いいえ、ゼロから始めます",
+    "yesImportBtn": "はい、ワードローブをインポートする",
+    "selectAppTitle": "どのアプリから移行しますか？",
+    "selectAppSub": "以前のワードローブアプリを選択するか、下にカスタム名を入力してください。",
+    "screenshotPipelineTitle": "スクリーンキャプチャパイプライン準備完了",
+    "screenshotPipelineSub": "DressAppはスクリーンキャプチャによって競合アプリのワードローブから衣類カードを取得します。APIキーもデータエクスポートも不要です。",
+    "connectToAppTitle": "{{appName}}に接続",
+    "bookmarkletInstallInstructions": "以下のDressApp Agentブックマークレットをブックマークバーにドラッグし、{{appName}}にログインしてクローゼットページに移動してください。",
+    "bookmarkletClickTip": "キャプチャを開始するには、競合ページでブックマークレットをクリックしてください。",
+    "bookmarkletBtn": "DressApp Agent",
+    "dragTip": "これをブックマークバーにドラッグ",
+    "bookmarkletUsageInstructions": "インストール後、下の「ワードローブをインポート」をクリックして初期化します。{{appName}}にログインし、クローゼットページに移動して、\"DressApp Agent\"ブックマークレットをクリックしてください。",
+    "garmentVisionReady": "エージェントインジェスション準備完了",
+    "importWardrobeBtn": "ワードローブをインポート",
+    "mattingNotice": "すべてのアセットのマッティングはGarmentVisionが処理します。",
+    "tabSleepAlert": "タブスリープアラート: インポート中に競合ウィンドウ内でタブを切り替えないでください（Chromeはスクローラーをスリープ/スロットルします）。",
+    "proTip": "プロのヒント: 競合タブをブラウザウィンドウから別のウィンドウにドラッグすると、マルチタスク中もフォーカスを維持できます！",
+    "saving": "{{count}}個のアイテムをクローゼットに保存中...",
+    "saved": "{{count}}個のアイテムが保存されました。スタイリストが分析中 — 詳細は自動的に更新されます。",
+    "error": "移行に失敗しました。もう一度お試しください。"
   },
   "login_reminder": {
     "newTitle": "クローゼットが空です — 最初の服を追加しましょう！",

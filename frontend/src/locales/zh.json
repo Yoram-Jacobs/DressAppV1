@@ -60,7 +60,8 @@
     "share": "分享",
     "time": "时间",
     "unknownColor": "其他",
-    "saved": "已保存"
+    "saved": "已保存",
+    "errorOccurred": "发生错误。请重试。"
   },
   "auth": {
     "welcomeBack": "欢迎回来",
@@ -2058,6 +2059,8 @@
   "floater": {
     "done": "全部完成",
     "analysingGroup": "正在分析分组...",
+    "analyzing": "正在分析 {{n}}/{{m}} 件物品",
+    "analyzingPhotos": "正在分析 {{count}} 张照片",
     "polishing": "正在优化 {{n}}/{{m}} 张照片",
     "polishingMore_one": "正在优化 {{count}} 张照片",
     "polishingMore_other": "正在优化 {{count}} 张照片"
@@ -2700,7 +2703,29 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "导入您现有的衣橱？",
+    "welcomeSub": "已经在其他应用上有数字衣橱了？我们可以把您的衣服带过来，这样您就不必从零开始了。",
+    "noStartFresh": "不，从零开始",
+    "yesImportBtn": "是的，导入我的衣橱",
+    "selectAppTitle": "您来自哪个应用？",
+    "selectAppSub": "选择您之前使用的衣橱应用，或在下方输入自定义名称。",
+    "screenshotPipelineTitle": "屏幕捕获管道就绪",
+    "screenshotPipelineSub": "DressApp 将通过屏幕捕获从竞争对手的衣橱中获取服装卡片。无需 API 密钥或数据导出。",
+    "connectToAppTitle": "连接到 {{appName}}",
+    "bookmarkletInstallInstructions": "将下方的 DressApp Agent 书签工具拖到书签栏，然后登录 {{appName}} 并导航到您的衣橱页面。",
+    "bookmarkletClickTip": "点击竞争对手页面上的书签工具开始捕获。",
+    "bookmarkletBtn": "DressApp Agent",
+    "dragTip": "将此拖到书签栏",
+    "bookmarkletUsageInstructions": "安装后，点击下方\"导入衣橱\"进行初始化。登录 {{appName}}，前往您的衣橱页面，然后点击 \"DressApp Agent\" 书签工具。",
+    "garmentVisionReady": "智能摄取就绪",
+    "importWardrobeBtn": "导入衣橱",
+    "mattingNotice": "所有资产抠图由 GarmentVision 处理。",
+    "tabSleepAlert": "标签页休眠提醒：导入期间请勿在竞争对手窗口中切换标签页（Chrome 会休眠/限制滚动）。",
+    "proTip": "专业提示：将竞争对手标签页从浏览器窗口拖到独立窗口中，这样在多任务时可以保持其聚焦运行！",
+    "saving": "正在保存 {{count}} 件物品到您的衣橱...",
+    "saved": "{{count}} 件物品已保存。造型师正在分析它们 — 详情会自动更新。",
+    "error": "迁移失败。请重试。"
   },
   "login_reminder": {
     "newTitle": "您的衣橱还是空的 — 添加您的第一件衣服吧！",

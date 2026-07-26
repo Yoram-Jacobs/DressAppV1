@@ -60,7 +60,8 @@
     "share": "مشاركة",
     "time": "الوقت",
     "unknownColor": "آخر",
-    "saved": "تم الحفظ"
+    "saved": "تم الحفظ",
+    "errorOccurred": "حدث خطأ. يرجى المحاولة مرة أخرى."
   },
   "auth": {
     "welcomeBack": "مرحبًا بعودتك",
@@ -2058,6 +2059,8 @@
   "floater": {
     "done": "اكتمل العمل",
     "analysingGroup": "جاري تحليل المجموعة...",
+    "analyzing": "جارٍ تحليل {{n}}/{{m}} عناصر",
+    "analyzingPhotos": "جارٍ تحليل {{count}} صورة",
     "polishing": "جاري تحسين {{n}} من أصل {{m}} صور",
     "polishingMore_one": "جاري تحسين صورة واحدة",
     "polishingMore_other": "جاري تحسين {{count}} صور"
@@ -2700,7 +2703,29 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "هل تريد استيراد خزانة ملابسك الحالية؟",
+    "welcomeSub": "هل لديك خزانة رقمية على تطبيق آخر؟ يمكننا نقل ملابسك حتى لا تضطر للبدء من الصفر.",
+    "noStartFresh": "لا، ابدأ من جديد",
+    "yesImportBtn": "نعم، استورد خزانة ملابسي",
+    "selectAppTitle": "من أي تطبيق تأتي؟",
+    "selectAppSub": "اختر تطبيق الخزانة السابق أو أدخل اسمًا مخصصًا أدناه.",
+    "screenshotPipelineTitle": "خط التقاط الشاشة جاهز",
+    "screenshotPipelineSub": "ستلتقط DressApp بطاقات الملابس من خزانة التطبيق المنافس عبر التقاط الشاشة. لا حاجة لمفاتيح API أو تصدير البيانات.",
+    "connectToAppTitle": "الاتصال بـ {{appName}}",
+    "bookmarkletInstallInstructions": "اسحب أداة DressApp Agent أدناه إلى شريط الإشارات المرجعية، ثم سجّل الدخول إلى {{appName}} وانتقل إلى صفحة خزانتك.",
+    "bookmarkletClickTip": "انقر على الأداة في صفحة التطبيق المنافس لبدء الالتقاط.",
+    "bookmarkletBtn": "DressApp Agent",
+    "dragTip": "اسحب هذا إلى شريط الإشارات المرجعية",
+    "bookmarkletUsageInstructions": "بعد التثبيت، انقر \"استورد الخزانة\" أدناه للتهيئة. سجّل الدخول إلى {{appName}}، انتقل إلى صفحة خزانتك، ثم انقر على أداة \"DressApp Agent\".",
+    "garmentVisionReady": "جاهز للامتصاص الذكي",
+    "importWardrobeBtn": "استورد الخزانة",
+    "mattingNotice": "يتم التعامل مع دمج جميع الأصول بواسطة GarmentVision.",
+    "tabSleepAlert": "تنبيه توقف علامة التبويب: لا تقم بتبديل علامات التبويب داخل نافذة التطبيق المنافس أثناء الاستيراد (سيتم إيقاف/تقليل التمرير في Chrome).",
+    "proTip": "نصيحة احترافية: اسحب علامة تبويب التطبيق المنافس من نافذة المتصفح إلى نافذة مستقلة للحفاظ على تشغيلها أثناء تنفيذ مهام متعددة!",
+    "saving": "جارٍ حفظ {{count}} عنصر في خزانتك...",
+    "saved": "تم حفظ {{count}} عنصر. يجري تحليلها من قبل المصمم — تُحدّث التفاصيل تلقائيًا.",
+    "error": "فشل النقل. يرجى المحاولة مرة أخرى."
   },
   "login_reminder": {
     "newTitle": "خزانتك فارغة — فلنضف عنصرك الأول!",

@@ -60,7 +60,8 @@
     "share": "Поделиться",
     "time": "Время",
     "unknownColor": "Другое",
-    "saved": "Сохранено"
+    "saved": "Сохранено",
+    "errorOccurred": "Произошла ошибка. Пожалуйста, попробуйте снова."
   },
   "auth": {
     "welcomeBack": "С возвращением",
@@ -2058,6 +2059,8 @@
   "floater": {
     "done": "Всё готово",
     "analysingGroup": "Анализ группы...",
+    "analyzing": "Анализ {{n}}/{{m}} предметов",
+    "analyzingPhotos": "Анализ {{count}} фото",
     "polishing": "Обработка {{n}}/{{m}} фото",
     "polishingMore_one": "Обработка {{count}} фото",
     "polishingMore_other": "Обработка {{count}} фото"
@@ -2700,7 +2703,29 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "Импортировать существующий гардероб?",
+    "welcomeSub": "Уже есть цифровой гардероб в другом приложении? Мы можем перенести вашу одежду, чтобы вам не приходилось начинать с нуля.",
+    "noStartFresh": "Нет, начать с нуля",
+    "yesImportBtn": "Да, импортировать мой гардероб",
+    "selectAppTitle": "Из какого приложения вы переходите?",
+    "selectAppSub": "Выберите предыдущее приложение гардероба или введите пользовательское имя ниже.",
+    "screenshotPipelineTitle": "Пайплайн захвата экрана готов",
+    "screenshotPipelineSub": "DressApp будет захватывать карточки одежды из гардероба конкурента через захват экрана. API-ключи или экспорт данных не требуются.",
+    "connectToAppTitle": "Подключиться к {{appName}}",
+    "bookmarkletInstallInstructions": "Перетащите закладку DressApp Agent на панель закладок, затем войдите в {{appName}} и перейдите на страницу вашего гардероба.",
+    "bookmarkletClickTip": "Нажмите на закладку на странице конкурента, чтобы начать захват.",
+    "bookmarkletBtn": "DressApp Agent",
+    "dragTip": "Перетащите это на панель закладок",
+    "bookmarkletUsageInstructions": "После установки нажмите \"Импортировать гардероб\" ниже для инициализации. Войдите в {{appName}}, перейдите на страницу гардероба, затем нажмите закладку \"DressApp Agent\".",
+    "garmentVisionReady": "Агентное поглощение готово",
+    "importWardrobeBtn": "Импортировать гардероб",
+    "mattingNotice": "Обработка всех ресурсов выполняется GarmentVision.",
+    "tabSleepAlert": "Оповещение о засыпании вкладки: Не переключайте вкладки в окне конкурента во время импорта (Chrome будет замедлять/останавливать прокрутку).",
+    "proTip": "Про-совет: Перетащите вкладку конкурента из окна браузера в отдельное окно, чтобы она оставалась в фокусе во время многозадачности!",
+    "saving": "Сохранение {{count}} предметов в ваш гардероб...",
+    "saved": "{{count}} предметов сохранено. Стилист анализирует их — детали обновляются автоматически.",
+    "error": "Миграция не удалась. Пожалуйста, попробуйте снова."
   },
   "login_reminder": {
     "newTitle": "Ваш гардероб пуст — Добавьте первую вещь!",

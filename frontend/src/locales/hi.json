@@ -60,7 +60,8 @@
     "time": "समय",
     "unknownColor": "अन्य",
     "saved": "सहेज लिया गया",
-    "day": "day"
+    "day": "day",
+    "errorOccurred": "एक त्रुटि हुई। कृपया पुनः प्रयास करें।"
   },
   "auth": {
     "welcomeBack": "वापसी पर स्वागत है",
@@ -2058,6 +2059,8 @@
   "floater": {
     "done": "सब हो गया",
     "analysingGroup": "समूह का विश्लेषण किया जा रहा है...",
+    "analyzing": "{{n}}/{{m}} आइटम का विश्लेषण",
+    "analyzingPhotos": "{{count}} फ़ोटो का विश्लेषण",
     "polishing": "{{n}}/{{m}} फ़ोटो को बेहतर बनाया जा रहा है",
     "polishingMore_one": "{{count}} फ़ोटो को बेहतर बनाया जा रहा है",
     "polishingMore_other": "{{count}} फ़ोटो को बेहतर बनाया जा रहा है"
@@ -2700,7 +2703,29 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "अपनी मौजूदा अलमारी आयात करें?",
+    "welcomeSub": "क्या आपके पास पहले से किसी अन्य ऐप पर डिजिटल अलमारी है? हम आपके कपड़े ला सकते हैं ताकि आपको शुरू से शुरू न करना पड़े।",
+    "noStartFresh": "नहीं, नए से शुरू करें",
+    "yesImportBtn": "हाँ, मेरी अलमारी आयात करें",
+    "selectAppTitle": "आप किस ऐप से आ रहे हैं?",
+    "selectAppSub": "अपना पिछला अलमारी ऐप चुनें या नीचे कस्टम नाम दर्ज करें।",
+    "screenshotPipelineTitle": "स्क्रीन कैप्चर पाइपलाइन तैयार",
+    "screenshotPipelineSub": "DressApp प्रतिस्पर्धी की अलमारी से स्क्रीन कैप्चर के माध्यम से वस्त्र कार्ड कैप्चर करेगा। किसी API कुंजी या डेटा निर्यात की आवश्यकता नहीं है।",
+    "connectToAppTitle": "{{appName}} से कनेक्ट करें",
+    "bookmarkletInstallInstructions": "नीचे दिए गए DressApp Agent बुकमार्कलेट को अपनी बुकमार्क बार में खींचें, फिर {{appName}} में लॉग इन करें और अपनी अलमारी पेज पर जाएं।",
+    "bookmarkletClickTip": "कैप्चर शुरू करने के लिए प्रतिस्पर्धी पेज पर बुकमार्कलेट पर क्लिक करें।",
+    "bookmarkletBtn": "DressApp Agent",
+    "dragTip": "इसे अपनी बुकमार्क बार में खींचें",
+    "bookmarkletUsageInstructions": "इंस्टॉल करने के बाद, आरंभ करने के लिए नीचे \"अलमारी आयात करें\" पर क्लिक करें। {{appName}} में लॉग इन करें, अपनी अलमारी पेज पर जाएं, फिर \"DressApp Agent\" बुकमार्कलेट पर क्लिक करें।",
+    "garmentVisionReady": "एजेंटिक इनजेशन तैयार",
+    "importWardrobeBtn": "अलमारी आयात करें",
+    "mattingNotice": "सभी एसेट्स मैटिंग GarmentVision द्वारा संभाली जाती है।",
+    "tabSleepAlert": "टैब स्लीप अलर्ट: आयात के दौरान प्रतिस्पर्धी विंडो में टैब स्विच न करें (Chrome स्क्रॉलर को स्लीप/थ्रॉटल करेगा)।",
+    "proTip": "प्रो टिप: प्रतिस्पर्धी टैब को अपने ब्राउज़र विंडो से अलग विंडो में खींचें ताकि मल्टीटास्किंग के दौरान यह फोकस में रहे!",
+    "saving": "{{count}} आइटम आपकी अलमारी में सहेजे जा रहे हैं...",
+    "saved": "{{count}} आइटम सहेजे गए। स्टाइलिस्ट उनका विश्लेषण कर रहा है — विवरण स्वचालित रूप से अपडेट होते हैं।",
+    "error": "माइग्रेशन विफल। कृपया पुनः प्रयास करें।"
   },
   "login_reminder": {
     "newTitle": "आपकी अलमारी खाली है — अपना पहला कपड़ा जोड़ें!",

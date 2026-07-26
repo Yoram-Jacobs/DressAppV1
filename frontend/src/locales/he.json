@@ -63,7 +63,8 @@
     "confirming": "מאשר...",
     "untitled": "ללא שם",
     "currencyFormat": "₪{{val}}",
-    "saved": "נשמר"
+    "saved": "נשמר",
+    "errorOccurred": "אירעה שגיאה. אנא נסה שוב."
   },
   "auth": {
     "welcomeBack": "ברוך שובך",
@@ -2079,6 +2080,8 @@
   "floater": {
     "done": "הכל מוכן",
     "analysingGroup": "מנתח קבוצה…",
+    "analyzing": "מנתח {{n}}/{{m}} פריטים",
+    "analyzingPhotos": "מנתח {{count}} תמונה",
     "polishing": "משפר {{n}} מתוך {{m}} תמונות",
     "polishingMore_one": "משפר תמונה {{count}}",
     "polishingMore_other": "משפר {{count}} תמונות"
@@ -2740,7 +2743,29 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "לייבא את הארון הקיים שלך?",
+    "welcomeSub": "כבר יש לך ארון דיגיטלי באפליקציה אחרת? נוכל להעביר את הבגדים שלך כדי שלא תצטרך להתחיל מאפס.",
+    "noStartFresh": "לא, להתחיל מאפס",
+    "yesImportBtn": "כן, לייבא את הארון שלי",
+    "selectAppTitle": "מאיזו אפליקציה אתה בא?",
+    "selectAppSub": "בחר את אפליקציית הארון הקודמת או הזן שם מותאם אישית למטה.",
+    "screenshotPipelineTitle": "צינור לכידת מסך מוכן",
+    "screenshotPipelineSub": "DressApp תலכד כרטיסי בגדים מארון המתחרה באמצעות לכידת מסך. אין צורך במפתחות API או ייצוא נתונים.",
+    "connectToAppTitle": "התחבר ל-{{appName}}",
+    "bookmarkletInstallInstructions": "גרור את סימניית DressApp Agent לסרגל הסימניות, אחר כך התחבר ל-{{appName}} ונווט לדף הארון שלך.",
+    "bookmarkletClickTip": "לחץ על הסימנייה בדף המתחרה כדי להתחיל ללכוד.",
+    "bookmarkletBtn": "DressApp Agent",
+    "dragTip": "גרור זאת לסרגל הסימניות",
+    "bookmarkletUsageInstructions": "אחרי ההתקנה, לחץ על \"ייבא ארון\" למטה לאתחול. התחבר ל-{{appName}}, עבור לדף הארון שלך, ואז לחץ על סימניית \"DressApp Agent\".",
+    "garmentVisionReady": "קליטה סוכנית מוכנה",
+    "importWardrobeBtn": "ייבא ארון",
+    "mattingNotice": "עיבוד כל הנכסים מתבצע על ידי GarmentVision.",
+    "tabSleepAlert": "התראת שינה של לשונית: אל תחליף לשוניות בתוך חלון המתחרה בעת הייבוא (Chrome ישים את הגלילה במצב שינה/יגביל אותה).",
+    "proTip": "טיפ מקצועי: גרור את לשונית המתחרה מחוץ לחלון הדפדפן לחלון עצמאי כדי לשמור על פעילותה בזמן שאתה מבצע משימות מרובות!",
+    "saving": "שומר {{count}} פריטים בארון שלך...",
+    "saved": "{{count}} פריטים נשמרו. הסטייליסט מנתח אותם — הפרטים מתעדכנים אוטומטית.",
+    "error": "ההעברה נכשלה. נסה שוב."
   },
   "login_reminder": {
     "newTitle": "הארון שלך ריק — בוא/י נוסיף פריט ראשון!",

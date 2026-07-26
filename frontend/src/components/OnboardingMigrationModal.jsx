@@ -756,8 +756,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     {t('migration.bookmarkletUsageInstructions', { appName, defaultValue: `After installing, click "Import wardrobe" below to initialize. Log in to Whering, go to your closet page, then click the "DressApp Agent" bookmarklet.` })}
                   </p>
                   <div className="mt-2.5 p-3 bg-amber-500/10 text-amber-600 rounded-xl border border-amber-500/20 text-[11px] leading-normal font-medium space-y-1">
-                    <div>Tab Sleep Alert: Do not switch tabs inside the competitor window while importing (Chrome will sleep/throttle the scroller).</div>
-                    <div>Pro-Tip: Drag the competitor tab out of your browser window into its own window to keep it running in focus while you multitask!</div>
+                    <div>{t('migration.tabSleepAlert', { defaultValue: 'Tab Sleep Alert: Do not switch tabs inside the competitor window while importing (Chrome will sleep/throttle the scroller).' })}</div>
+                    <div>{t('migration.proTip', { defaultValue: 'Pro-Tip: Drag the competitor tab out of your browser window into its own window to keep it running in focus while you multitask!' })}</div>
                   </div>
                 </div>
               </div>

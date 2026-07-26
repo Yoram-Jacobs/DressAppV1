@@ -60,7 +60,8 @@
     "share": "Deel",
     "time": "Tijd",
     "unknownColor": "Ander",
-    "saved": "Opgeslagen"
+    "saved": "Opgeslagen",
+    "errorOccurred": "Er is een fout opgetreden. Probeer het opnieuw."
   },
   "auth": {
     "welcomeBack": "Welkom terug",
@@ -2058,6 +2059,8 @@
   "floater": {
     "done": "Alles gedaan",
     "analysingGroup": "Groep analyseren…",
+    "analyzing": "{{n}}/{{m}} items analyseren",
+    "analyzingPhotos": "{{count}} foto analyseren",
     "polishing": "Polijsten{{n}}/{{m}}foto's",
     "polishingMore_one": "Polijsten{{count}}foto",
     "polishingMore_other": "Polijsten van{{count}}foto's"
@@ -2700,7 +2703,29 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "Bestaande garderobe importeren?",
+    "welcomeSub": "Heb je al een digitale garderobe in een andere app? We kunnen je kleding overzetten zodat je niet vanaf nul hoeft te beginnen.",
+    "noStartFresh": "Nee, opnieuw beginnen",
+    "yesImportBtn": "Ja, mijn garderobe importeren",
+    "selectAppTitle": "Van welke app kom je?",
+    "selectAppSub": "Selecteer je vorige garderobe-app of voer hieronder een aangepaste naam in.",
+    "screenshotPipelineTitle": "Schermafname-pijplijn gereed",
+    "screenshotPipelineSub": "DressApp zal kledingkaarten van de concurrent via schermafname vastleggen. Geen API-sleutels of gegevensexport nodig.",
+    "connectToAppTitle": "Verbinden met {{appName}}",
+    "bookmarkletInstallInstructions": "Sleep de DressApp Agent-bookmarklet naar je bladwijzerbalk, meld je dan aan bij {{appName}} en navigeer naar je garderobe-pagina.",
+    "bookmarkletClickTip": "Klik op de bookmarklet op de concurrentiepagina om vastleggen te starten.",
+    "bookmarkletBtn": "DressApp Agent",
+    "dragTip": "Sleep dit naar je bladwijzerbalk",
+    "bookmarkletUsageInstructions": "Na installatie klik je hieronder op \"Garderobe importeren\" om te initialiseren. Meld je aan bij {{appName}}, ga naar je garderobe-pagina en klik op de \"DressApp Agent\"-bookmarklet.",
+    "garmentVisionReady": "Agentische opname gereed",
+    "importWardrobeBtn": "Garderobe importeren",
+    "mattingNotice": "Alle asset-verwerking wordt afgehandeld door GarmentVision.",
+    "tabSleepAlert": "Tab-slaapwaarschuwing: Schakel niet van tabblad in het venster van de concurrent tijdens het importeren (Chrome zal de scroller slapen/throtlen).",
+    "proTip": "Pro-tip: Sleep het tabblad van de concurrent uit je browservenster naar een eigen venster om het gefocust te houden terwijl je multitaskt!",
+    "saving": "{{count}} items worden opgeslagen in je garderobe...",
+    "saved": "{{count}} items opgeslagen. De stylist analyseert ze — details worden automatisch bijgewerkt.",
+    "error": "Migratie mislukt. Probeer het opnieuw."
   },
   "login_reminder": {
     "newTitle": "Je kledingkast is leeg — Voeg je eerste kledingstuk toe!",

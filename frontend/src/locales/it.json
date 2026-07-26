@@ -60,7 +60,8 @@
     "share": "Condividi",
     "time": "Ora",
     "unknownColor": "Altro",
-    "saved": "Salvato"
+    "saved": "Salvato",
+    "errorOccurred": "Si è verificato un errore. Riprova."
   },
   "auth": {
     "welcomeBack": "Bentornato",
@@ -2058,6 +2059,8 @@
   "floater": {
     "done": "Tutto pronto",
     "analysingGroup": "Analisi del gruppo in corso...",
+    "analyzing": "Analisi di {{n}}/{{m}} articoli",
+    "analyzingPhotos": "Analisi di {{count}} foto",
     "polishing": "Perfezionamento di {{n}}/{{m}} foto",
     "polishingMore_one": "Perfezionamento di {{count}} foto",
     "polishingMore_other": "Perfezionamento di {{count}} foto"
@@ -2700,7 +2703,29 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "Importare il tuo armadio esistente?",
+    "welcomeSub": "Hai già un armadio digitale su un'altra app? Possiamo trasferire i tuoi vestiti così non devi ricominciare da zero.",
+    "noStartFresh": "No, ricominciare da zero",
+    "yesImportBtn": "Sì, importa il mio armadio",
+    "selectAppTitle": "Da quale app vieni?",
+    "selectAppSub": "Seleziona la tua precedente app armadio o inserisci un nome personalizzato qui sotto.",
+    "screenshotPipelineTitle": "Pipeline di cattura schermo pronta",
+    "screenshotPipelineSub": "DressApp catturerà le schede capi dall'armario del concorrente tramite cattura schermo. Non servono chiavi API o esportazioni dati.",
+    "connectToAppTitle": "Connetti a {{appName}}",
+    "bookmarkletInstallInstructions": "Trascina il bookmarklet DressApp Agent nella tua Barra dei segnalibri, poi accedi a {{appName}} e naviga alla pagina del tuo armadio.",
+    "bookmarkletClickTip": "Clicca sul bookmarklet nella pagina del concorrente per iniziare la cattura.",
+    "bookmarkletBtn": "DressApp Agent",
+    "dragTip": "Trascina questo nella tua Barra dei segnalibri",
+    "bookmarkletUsageInstructions": "Dopo l'installazione, clicca \"Importa armadio\" qui sotto per inizializzare. Accedi a {{appName}}, vai alla pagina del tuo armadio, poi clicca il bookmarklet \"DressApp Agent\".",
+    "garmentVisionReady": "Ingestione agentica pronta",
+    "importWardrobeBtn": "Importa armadio",
+    "mattingNotice": "L'elaborazione di tutte le risorse è gestita da GarmentVision.",
+    "tabSleepAlert": "Avviso sospensione scheda: Non cambiare schede nella finestra del concorrente durante l'importazione (Chrome sospenderà/limiterà lo scorrimento).",
+    "proTip": "Consiglio pro: Trascina la scheda del concorrente fuori dalla finestra del browser in una finestra dedicata per mantenerla attiva mentre fai più cose!",
+    "saving": "Salvataggio di {{count}} articoli nel tuo armadio...",
+    "saved": "{{count}} articoli salvati. Lo stilista li sta analizzando — i dettagli si aggiornano automaticamente.",
+    "error": "Migrazione fallita. Riprova."
   },
   "login_reminder": {
     "newTitle": "Il tuo armadio è vuoto — Aggiungi il tuo primo capo!",
