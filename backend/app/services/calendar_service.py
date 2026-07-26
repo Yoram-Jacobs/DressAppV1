@@ -323,6 +323,32 @@ class CalendarService:
             except Exception as exc:  # noqa: BLE001
                 logger.warning("Failed to fetch Google userinfo: %s", exc)
         doc = self._tokens_to_doc(tokens, userinfo.get("email"))
+
+        # Log granted scopes so we can diagnose missing People API access.
+        granted_scopes = (doc.get("scope") or "").split()
+        people_scopes = [
+            "https://www.googleapis.com/auth/user.birthday.read",
+            "https://www.googleapis.com/auth/user.phonenumbers.read",
+            "https://www.googleapis.com/auth/user.addresses.read",
+            "https://www.googleapis.com/auth/user.gender.read",
+        ]
+        missing_people = [s for s in people_scopes if s not in granted_scopes]
+        if missing_people:
+            logger.warning(
+                "persist_tokens_for_user: People API scopes MISSING for user %s — "
+                "granted=%s missing=%s. The OAuth consent screen may not be verified "
+                "in Google Cloud Console, or the user did not consent to these scopes.",
+                user_id,
+                granted_scopes,
+                missing_people,
+            )
+        else:
+            logger.info(
+                "persist_tokens_for_user: All People API scopes granted for user %s — scopes=%s",
+                user_id,
+                granted_scopes,
+            )
+
         db = get_db()
         # Preserve the previously stored refresh_token if Google didn't send a
         # new one (Google only returns refresh_token on first consent).

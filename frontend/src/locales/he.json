@@ -1014,6 +1014,11 @@
     "savedProfile": "הפרופיל נשמר",
     "autofilledFromGoogle": "מולא אוטומטית מ-Google — ניתן לערוך בכל עת.",
     "syncGoogle": "סנכרון פרופיל Google",
+    "syncGoogleFromSection": "סנכרון מ-Google",
+    "googleConnectedSyncHint": "מחובר דרך Google — סנכרן כדי למלא שדות ריקים מהפרופיל שלך ב-Google.",
+    "googleSyncContactHint": "סנכרון טלפון וכתובת מחשבון ה-Google שלך.",
+    "googleSyncDemographicsHint": "סנכרון מגדר ותאריך לידה מחשבון ה-Google שלך.",
+    "googleReConsentNeeded": "Google זקוק להרשאתך כדי לגשת לפרטי פרופיל. תופנה אל Google כדי לאפשר גישה.",
     "googleSyncSuccess": "הפרופיל סונכרן בהצלחה.",
     "googleSyncFailed": "הסנכרון נכשל.",
     "professional": {

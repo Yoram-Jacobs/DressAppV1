@@ -1029,8 +1029,13 @@
     "savedProfile": "Profile saved",
     "autofilledFromGoogle": "Auto-filled from Google — edit anytime.",
     "syncGoogle": "Sync Google Profile",
+    "syncGoogleFromSection": "Sync from Google",
     "googleSyncSuccess": "Profile synced with Google successfully!",
     "googleSyncFailed": "Failed to sync with Google.",
+    "googleConnectedSyncHint": "Connected via Google — sync to auto-fill empty fields from your Google profile.",
+    "googleSyncContactHint": "Sync phone and address from your Google account.",
+    "googleSyncDemographicsHint": "Sync gender and date of birth from your Google account.",
+    "googleReConsentNeeded": "Google needs your permission to access profile details. You will be redirected to Google to grant access.",
     "professional": {
       "sectionTitle": "Professional fashion expert",
       "sectionDesc": "Business approval credentials and professional directory listings",

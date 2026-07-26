@@ -41,8 +41,9 @@ dressapp.co (port 443)
 ## Deployment Steps
 
 ### 1. Server Setup
+-Open WSL terminal.
 - Create Ubuntu 24.04 server (Hetzner CX32 4vCPU / 8 GB RAM / 160 GB NVMe)
-- SSH in: `ssh root@<IP>`
+- SSH in: `ssh root@178.105.144.142`
 
 ### 2. Install Docker
 ```bash
@@ -71,7 +72,7 @@ cd AI-Stylist
 
 ### 6. Environment Variables
 ```bash
-cp deploy/.env.example deploy/.env
+cd deploy/.env.example deploy/.env
 $EDITOR deploy/.env
 ```
 

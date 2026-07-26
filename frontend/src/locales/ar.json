@@ -989,6 +989,11 @@
     "savedProfile": "تم حفظ الملف الشخصي",
     "autofilledFromGoogle": "تم التعبئة تلقائيًا من Google — يمكنك التعديل في أي وقت.",
     "syncGoogle": "مزامنة ملف تعريف Google",
+    "syncGoogleFromSection": "مزامنة من Google",
+    "googleConnectedSyncHint": "متصل عبر Google — قم بالمزامنة لملء الحقول الفارغة من ملف تعريف Google.",
+    "googleSyncContactHint": "مزامنة العنوان ورقم الهاتف من حسابك على Google.",
+    "googleSyncDemographicsHint": "مزامنة الجنس وتاريخ الميلاد من حسابك على Google.",
+    "googleReConsentNeeded": "يحتاج Google إلى إذنك للوصول إلى تفاصيل\"profile. سيتم إعادة توجيهك إلى Google لمنح الوصول.",
     "googleSyncSuccess": "تمت مزامنة الملف الشخصي بنجاح.",
     "googleSyncFailed": "فشلت المزامنة.",
     "professional": {

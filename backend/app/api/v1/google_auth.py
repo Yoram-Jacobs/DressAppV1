@@ -214,6 +214,43 @@ async def google_oauth_disconnect(
     return {"status": "disconnected"}
 
 
+@auth_router.get("/re-consent")
+async def google_re_consent(
+    request: Request,
+    user: dict = Depends(get_current_user),
+    with_calendar: bool = Query(
+        default=False,
+        description="When true, also requests calendar.readonly scope.",
+    ),
+) -> dict[str, Any]:
+    """Generate a new Google authorization URL that forces re-consent with
+    the full scope set (including People API scopes for demographics).
+
+    This is needed for users who signed in BEFORE the People API scopes
+    were added — their existing tokens don't have the permissions needed
+    to fetch birthday, phone, address, or gender from Google.
+    """
+    if not calendar_service.enabled:
+        raise HTTPException(503, "Google OAuth not configured on server")
+
+    state = _build_state(
+        user["id"],
+        purpose="google-oauth-link",
+        extra={"reconsent": True},
+    )
+
+    scopes = SCOPES if with_calendar else LOGIN_SCOPES
+    try:
+        url = calendar_service.build_authorization_url(
+            state,
+            request=request,
+            scopes=scopes,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(503, str(exc)) from exc
+    return {"authorization_url": url, "with_calendar": bool(with_calendar)}
+
+
 # -------------------- 2) Sign in / Sign up with Google (NEW) --------------------
 def _frontend_origin(request: Request) -> str:
     """Resolve the public frontend origin for the post-login redirect.
@@ -391,6 +428,30 @@ async def _handle_login_callback(
     if not access_token:
         return _login_error_redirect(origin, "no_access_token")
 
+    # Log granted scopes for diagnostics — helps identify if People API
+    # scopes were silently skipped by Google (restricted scope issue).
+    granted_scopes = (tokens.get("scope") or "").split()
+    people_scopes_needed = [
+        "https://www.googleapis.com/auth/user.birthday.read",
+        "https://www.googleapis.com/auth/user.phonenumbers.read",
+        "https://www.googleapis.com/auth/user.addresses.read",
+        "https://www.googleapis.com/auth/user.gender.read",
+    ]
+    missing = [s for s in people_scopes_needed if s not in granted_scopes]
+    if missing:
+        logger.warning(
+            "google sign-in: People API scopes NOT granted — missing=%s granted=%s. "
+            "Demographics will not be auto-filled. Verify the OAuth consent screen "
+            "is published in Google Cloud Console.",
+            missing,
+            granted_scopes,
+        )
+    else:
+        logger.info(
+            "google sign-in: all People API scopes granted — scopes=%s",
+            granted_scopes,
+        )
+
     # 2) Fetch userinfo (email is the join key).
     try:
         userinfo = await calendar_service.fetch_userinfo(access_token)
@@ -402,6 +463,18 @@ async def _handle_login_callback(
     extended_profile = {}
     try:
         extended_profile = await calendar_service.fetch_people_profile(access_token)
+        if not extended_profile:
+            # People API returned empty — likely missing scopes. Log the
+            # granted scopes so the admin can diagnose from logs.
+            granted = (tokens.get("scope") or "").split()
+            logger.warning(
+                "google sign-in: People API returned empty for user email=%s — "
+                "granted_scopes=%s. If user.birthday.read / user.gender.read / "
+                "user.phonenumbers.read / user.addresses.read are not in the list, "
+                "the OAuth consent screen needs to be verified in Google Cloud Console.",
+                email,
+                granted,
+            )
     except Exception as e:
         logger.warning("Google sign-in People API fetch failed: %s", e)
 
@@ -546,7 +619,29 @@ async def sync_profile_from_google(
     tokens = user.get("google_calendar_tokens") or {}
     if not tokens.get("access_token"):
         raise HTTPException(status_code=400, detail="Google account not connected.")
-        
+
+    # Check if People API scopes were granted — if not, the People API
+    # calls will silently return empty data, confusing the user.
+    granted_scopes = (tokens.get("scope") or "").split()
+    people_scopes = [
+        "https://www.googleapis.com/auth/user.birthday.read",
+        "https://www.googleapis.com/auth/user.phonenumbers.read",
+        "https://www.googleapis.com/auth/user.addresses.read",
+        "https://www.googleapis.com/auth/user.gender.read",
+    ]
+    missing_people = [s for s in people_scopes if s not in granted_scopes]
+    if missing_people:
+        logger.warning(
+            "sync-profile: People API scopes missing for user %s — missing=%s. "
+            "Returning re-consent prompt.",
+            user["id"],
+            missing_people,
+        )
+        raise HTTPException(
+            status_code=403,
+            detail="missing_people_scopes",
+        )
+
     try:
         from google.auth.transport.requests import Request as GoogleAuthRequest
         from google.oauth2.credentials import Credentials

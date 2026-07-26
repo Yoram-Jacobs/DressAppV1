@@ -1029,6 +1029,11 @@
     "savedProfile": "Profiel opgeslagen",
     "autofilledFromGoogle": "Automatisch ingevuld door Google: bewerk het op elk gewenst moment.",
     "syncGoogle": "Google-profiel synchroniseren",
+    "syncGoogleFromSection": "Synchroniseren vanuit Google",
+    "googleConnectedSyncHint": "Verbonden via Google — synchroniseer om lege velden automatisch in te vullen uit uw Google-profiel.",
+    "googleSyncContactHint": "Synchroniseer telefoonnummer en adres vanuit uw Google-account.",
+    "googleSyncDemographicsHint": "Synchroniseer geslacht en geboortedatum vanuit uw Google-account.",
+    "googleReConsentNeeded": "Google heeft uw toestemming nodig om profielgegevens te openen. U wordt doorgestuurd naar Google om toegang te verlenen.",
     "googleSyncSuccess": "Profiel succesvol gesynchroniseerd.",
     "googleSyncFailed": "Synchronisatie mislukt.",
     "professional": {

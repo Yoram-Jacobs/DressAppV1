@@ -357,7 +357,26 @@ export function ProfileDetailsCard() {
         toast.success(t('profile.googleSyncSuccess', { defaultValue: 'Profile synced with Google successfully!' }));
       }
     } catch (err) {
-      toast.error(err?.response?.data?.detail || t('profile.googleSyncFailed', { defaultValue: 'Failed to sync with Google.' }));
+      const detail = err?.response?.data?.detail;
+      if (detail === 'missing_people_scopes') {
+        // People API scopes were not granted — prompt re-consent
+        toast.info(
+          t('profile.googleReConsentNeeded', {
+            defaultValue: 'Google needs your permission to access profile details. You will be redirected to Google to grant access.',
+          }),
+          { duration: 6000 },
+        );
+        try {
+          const { authorization_url } = await api.googleReConsent(false);
+          if (authorization_url) {
+            window.location.href = authorization_url;
+          }
+        } catch {
+          toast.error(t('profile.googleSyncFailed', { defaultValue: 'Failed to sync with Google.' }));
+        }
+      } else {
+        toast.error(detail || t('profile.googleSyncFailed', { defaultValue: 'Failed to sync with Google.' }));
+      }
     } finally {
       setSyncingGoogle(false);
     }
@@ -479,6 +498,55 @@ export function ProfileDetailsCard() {
   const autofilledFromGoogle =
     !!user?.google_connected &&
     (!!user?.first_name || !!user?.last_name || !!user?.avatar_url);
+
+  const googleConnected = !!user?.google_connected;
+
+  const GoogleSyncBadge = ({ section }) => {
+    if (!googleConnected) return null;
+    const hintKey =
+      section === 'contact'
+        ? 'profile.googleSyncContactHint'
+        : 'profile.googleSyncDemographicsHint';
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-7 text-[11px] gap-1 rounded-full border-[hsl(var(--accent)/40)] hover:bg-[hsl(var(--accent)/5)] ms-auto shrink-0"
+        onClick={(e) => {
+          e.stopPropagation();
+          syncGoogleProfile();
+        }}
+        disabled={syncingGoogle}
+        title={t(hintKey)}
+      >
+        {syncingGoogle ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : (
+          <RefreshCw className="h-3 w-3" />
+        )}
+        {t('profile.syncGoogleFromSection', { defaultValue: 'Sync from Google' })}
+      </Button>
+    );
+  };
+
+  const GoogleSyncBanner = ({ section }) => {
+    if (!googleConnected) return null;
+    const hasData =
+      section === 'contact'
+        ? !!(form.phone || form.address.line1 || form.address.city)
+        : !!(form.sex || form.date_of_birth);
+    if (hasData) return null;
+    return (
+      <div className="flex items-center gap-2 p-3 rounded-xl bg-[hsl(217_91%_97%)] dark:bg-[hsl(217_30%_15%)] border border-[hsl(217_91%_85%)] dark:border-[hsl(217_30%_25%)] mb-3">
+        <Sparkles className="h-4 w-4 text-[hsl(217_91%_56%)] shrink-0" />
+        <span className="text-xs text-[hsl(217_91%_30%)] dark:text-[hsl(217_91%_75%)]">
+          {section === 'contact'
+            ? t('profile.googleConnectedSyncHint', { defaultValue: 'Connected via Google — sync to auto-fill empty fields from your Google profile.' })
+            : t('profile.googleConnectedSyncHint', { defaultValue: 'Connected via Google — sync to auto-fill empty fields from your Google profile.' })}
+        </span>
+      </div>
+    );
+  };
 
   const save = async () => {
     setBusy(true);
@@ -660,11 +728,11 @@ export function ProfileDetailsCard() {
               className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
               data-testid="profile-accordion-contact"
             >
-              <div className="flex items-center gap-4 text-start">
+              <div className="flex items-center gap-4 text-start w-full">
                 <div className="p-2.5 rounded-xl bg-[hsl(174_44%_93%)] text-[hsl(174_44%_33%)] dark:bg-[hsl(174_30%_18%)] dark:text-[hsl(174_44%_60%)] shrink-0 transition-transform duration-200">
                   <MapPin className="h-5 w-5" />
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('profile.sections.contact')}
                   </span>
@@ -672,9 +740,11 @@ export function ProfileDetailsCard() {
                     {t('profile.sections.contactDesc', { defaultValue: 'Phone number, delivery address, and localization' })}
                   </span>
                 </div>
+                <GoogleSyncBadge section="contact" />
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
+              <GoogleSyncBanner section="contact" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label={t('profile.phone')} htmlFor="f-phone">
                   <Input
@@ -798,11 +868,11 @@ export function ProfileDetailsCard() {
               className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
               data-testid="profile-accordion-demographics"
             >
-              <div className="flex items-center gap-4 text-start">
+              <div className="flex items-center gap-4 text-start w-full">
                 <div className="p-2.5 rounded-xl bg-[hsl(18_78%_94%)] text-[hsl(18_78%_56%)] dark:bg-[hsl(18_30%_18%)] dark:text-[hsl(18_78%_70%)] shrink-0 transition-transform duration-200">
                   <Fingerprint className="h-5 w-5" />
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('profile.sections.demographics')}
                   </span>
@@ -810,9 +880,11 @@ export function ProfileDetailsCard() {
                     {t('profile.sections.demographicsDesc', { defaultValue: 'Gender, occupational background, and personal status' })}
                   </span>
                 </div>
+                <GoogleSyncBadge section="demographics" />
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
+              <GoogleSyncBanner section="demographics" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label={t('profile.sex')}>
                   <Select
