@@ -742,16 +742,36 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                       <button
                         type="button"
                         onClick={() => {
-                          if (navigator.clipboard && harvesterBookmarkletCode) {
-                            navigator.clipboard.writeText(harvesterBookmarkletCode).then(() => {
+                          if (!harvesterBookmarkletCode) return;
+                          const doCopy = (text) => {
+                            const ta = document.createElement('textarea');
+                            ta.value = text;
+                            ta.style.position = 'fixed';
+                            ta.style.left = '-9999px';
+                            ta.style.top = '-9999px';
+                            document.body.appendChild(ta);
+                            ta.focus();
+                            ta.select();
+                            try {
+                              document.execCommand('copy');
                               toast.success(t('migration.bookmarkletCopied', { defaultValue: 'Bookmarklet copied! Now create a new bookmark and paste it as the URL.' }), { duration: 6000 });
-                            }).catch(() => {
+                            } catch (err) {
                               toast.error(t('migration.copyFailed', { defaultValue: 'Copy failed. Please manually copy the bookmarklet code.' }));
-                            });
+                            } finally {
+                              document.body.removeChild(ta);
+                            }
+                          };
+                          if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(harvesterBookmarkletCode)
+                              .then(() => {
+                                toast.success(t('migration.bookmarkletCopied', { defaultValue: 'Bookmarklet copied! Now create a new bookmark and paste it as the URL.' }), { duration: 6000 });
+                              })
+                              .catch(() => doCopy(harvesterBookmarkletCode));
                           } else {
-                            toast.error(t('migration.copyFailed', { defaultValue: 'Copy failed. Please manually copy the bookmarklet code.' }));
+                            doCopy(harvesterBookmarkletCode);
                           }
                         }}
+                        style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
                         className="px-4 py-2 bg-primary text-primary-foreground font-bold rounded-lg shadow-sm hover:opacity-90 flex items-center gap-1.5"
                       >
                         <span className="text-base leading-none">👗</span>
