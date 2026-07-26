@@ -1041,7 +1041,8 @@ export function ProfileDetailsCard() {
                 predicting={predicting}
                 hasPredicted={hasPredicted}
               />
-            </AccordionContent          </AccordionItem>
+            </AccordionContent>
+          </AccordionItem>
 
           {/* --- Photos & Avatar --- */}
           <AccordionItem value="photos" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
