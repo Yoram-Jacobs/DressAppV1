@@ -733,50 +733,19 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   <div className="space-y-3 text-xs text-muted-foreground">
                   <p>
                     {('ontouchstart' in window)
-                      ? t('migration.bookmarkletInstallInstructionsMobile', { defaultValue: `Tap below to copy the bookmarklet, then create a new bookmark and paste it as the URL:` })
+                      ? t('migration.bookmarkletInstallInstructionsMobile', { defaultValue: `Copy the code below, then create a new bookmark and paste it as the URL:` })
                       : t('migration.bookmarkletInstallInstructions', { appName, defaultValue: `Drag the agent bookmarklet button below to your browser Bookmarks Bar (Ctrl+Shift+B to show the bar):` })}
                   </p>
                   
                   <div className="flex flex-col items-center justify-center p-3 bg-card border border-border rounded-xl gap-2">
                     {('ontouchstart' in window) ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!harvesterBookmarkletCode) return;
-                          const doCopy = (text) => {
-                            const ta = document.createElement('textarea');
-                            ta.value = text;
-                            ta.style.position = 'fixed';
-                            ta.style.left = '-9999px';
-                            ta.style.top = '-9999px';
-                            document.body.appendChild(ta);
-                            ta.focus();
-                            ta.select();
-                            try {
-                              document.execCommand('copy');
-                              toast.success(t('migration.bookmarkletCopied', { defaultValue: 'Bookmarklet copied! Now create a new bookmark and paste it as the URL.' }), { duration: 6000 });
-                            } catch (err) {
-                              toast.error(t('migration.copyFailed', { defaultValue: 'Copy failed. Please manually copy the bookmarklet code.' }));
-                            } finally {
-                              document.body.removeChild(ta);
-                            }
-                          };
-                          if (navigator.clipboard && navigator.clipboard.writeText) {
-                            navigator.clipboard.writeText(harvesterBookmarkletCode)
-                              .then(() => {
-                                toast.success(t('migration.bookmarkletCopied', { defaultValue: 'Bookmarklet copied! Now create a new bookmark and paste it as the URL.' }), { duration: 6000 });
-                              })
-                              .catch(() => doCopy(harvesterBookmarkletCode));
-                          } else {
-                            doCopy(harvesterBookmarkletCode);
-                          }
-                        }}
-                        style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
-                        className="px-4 py-2 bg-primary text-primary-foreground font-bold rounded-lg shadow-sm hover:opacity-90 flex items-center gap-1.5"
-                      >
-                        <span className="text-base leading-none">👗</span>
-                        {t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}
-                      </button>
+                      <textarea
+                        readOnly
+                        value={harvesterBookmarkletCode || ''}
+                        onClick={(e) => { e.target.select(); }}
+                        className="w-full text-[10px] leading-tight p-2 bg-muted border border-border rounded-lg font-mono text-foreground resize-none overflow-auto"
+                        rows={3}
+                      />
                     ) : (
                       <a
                         ref={bookmarkletRef}
@@ -794,7 +763,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     )}
                     <span className="text-[10px] text-muted-foreground">
                       {('ontouchstart' in window)
-                        ? t('migration.bookmarkletMobileSaveTip', { defaultValue: 'Tap to copy → Open ⋮ menu → Bookmarks → + → paste as URL' })
+                        ? t('migration.bookmarkletMobileSaveTip', { defaultValue: 'Tap to select → Copy → Open ⋮ menu → Bookmarks → + → paste as URL' })
                         : t('migration.dragTip', { defaultValue: 'Drag this button to your browser Bookmarks Bar' })}
                     </span>
                   </div>
