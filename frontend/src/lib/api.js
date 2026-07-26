@@ -215,6 +215,8 @@ export const api = {
   startMigrationProcessing: (body) => client.post('/closet/migration/process', body).then((r) => r.data),
   getMigrationStatus: (jobId) => client.get(`/closet/migration/status/${jobId}`).then((r) => r.data),
   streamMigrationProgress: (jobId) => `${client.defaults.baseURL}/closet/migration/stream/${jobId}`,
+  saveMigrationCrops: (body) => client.post('/closet/migration/save-crops', body, { timeout: 120000 }).then((r) => r.data),
+  reanalyzeByBrand: (body) => client.post('/closet/migration/reanalyze-by-brand', body, { timeout: 30000 }).then((r) => r.data),
   getImportJobStatus: (jobId) => client.get(`/closet/import-job-status/${jobId}`).then((r) => r.data),
   importCompetitorClosetStream: ({ body, onFrame, signal } = {}) =>
     streamNdjson('/closet/import-competitor-stream', {

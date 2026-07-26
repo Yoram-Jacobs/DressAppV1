@@ -3028,6 +3028,238 @@ async def stream_migration_progress(
     )
 
 
+# ─── DB-backed migration: save crops + Stylist re-analyze ──────────────
+
+
+class MigrationSaveCropsIn(BaseModel):
+    app_name: str = "Competitor App"
+    cards: list[dict[str, Any]] = Field(default_factory=list)
+
+
+@router.post("/migration/save-crops")
+async def save_migration_crops(
+    payload: MigrationSaveCropsIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Save bookmarklet-captured garment crops directly to the closet DB.
+
+    Each card must have a ``crop_base64`` field (raw base64 JPEG).
+    Items are saved with ``brand=<app_name>`` so the re-analyze worker
+    can later find and enrich them via The Eyes / Stylist.
+    """
+    db = get_db()
+    from app.models.schemas import ClosetItem
+    saved = 0
+    skipped = 0
+    item_ids: list[str] = []
+
+    for card in payload.cards:
+        crop_b64 = card.get("crop_base64")
+        if not crop_b64:
+            skipped += 1
+            continue
+
+        # Decode crop bytes
+        try:
+            if crop_b64.startswith("data:"):
+                _, encoded = crop_b64.split(",", 1)
+                crop_raw = base64.b64decode(encoded)
+            else:
+                crop_raw = base64.b64decode(crop_b64, validate=True)
+        except Exception:
+            skipped += 1
+            continue
+
+        if len(crop_raw) < 100:
+            skipped += 1
+            continue
+
+        # Build the crop data URL for segmented_image_url
+        crop_data_url = f"data:image/jpeg;base64,{crop_b64}"
+
+        # Create a minimal ClosetItem
+        item = ClosetItem(
+            user_id=user["id"],
+            source="Private",
+            title=card.get("title") or "Imported garment",
+            category="Top",
+            brand=payload.app_name,
+        )
+        doc = item.model_dump()
+        doc["segmented_image_url"] = crop_data_url
+        doc["original_image_url"] = crop_data_url
+
+        # Compute phash for future dedup
+        try:
+            from app.services.image_hash import average_hash, color_signature
+            ph = average_hash(crop_raw)
+            if ph:
+                doc["source_phash"] = ph
+            cs = color_signature(crop_raw)
+            if cs:
+                doc["source_color_sig"] = cs
+        except Exception:
+            pass
+
+        await repos.insert(db.closet_items, doc)
+        item_ids.append(doc["id"])
+        saved += 1
+
+    return {
+        "items_saved": saved,
+        "items_skipped": skipped,
+        "item_ids": item_ids,
+        "app_name": payload.app_name,
+    }
+
+
+class MigrationReanalyzeIn(BaseModel):
+    app_name: str = "Competitor App"
+
+
+@router.post("/migration/reanalyze-by-brand")
+async def reanalyze_by_brand(
+    payload: MigrationReanalyzeIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Kick off background Stylist re-analysis for all items matching brand.
+
+    Queries closet_items where ``brand == app_name`` for the user,
+    then processes each through The Eyes (Gemini) one by one.
+    Returns a job_id for polling via /migration/status/{job_id}.
+    """
+    if garment_vision_service is None:
+        raise HTTPException(503, "Garment analyzer not configured")
+
+    db = get_db()
+    items = await repos.find_many(
+        db.closet_items,
+        {"user_id": user["id"], "brand": payload.app_name},
+        limit=500,
+    )
+    if not items:
+        return {"job_id": None, "message": "No items found for this brand"}
+
+    job_id = f"reanalyze_{uuid.uuid4().hex[:12]}"
+    _migration_status[job_id] = {
+        "status": "processing",
+        "imported": 0,
+        "skipped": 0,
+        "total": len(items),
+        "items": [],
+    }
+
+    user_lang = (user or {}).get("preferred_language") or "en"
+
+    async def _run_reanalyze():
+        imported = 0
+        skipped = 0
+        all_items = []
+
+        for i, item_doc in enumerate(items):
+            item_id = item_doc.get("id")
+            try:
+                # Resolve best image URL (same priority as reanalyze_item)
+                variants = item_doc.get("image_variants") or {}
+                image_url = (
+                    item_doc.get("segmented_image_url")
+                    or item_doc.get("cutout_url")
+                    or item_doc.get("clean_image_url")
+                    or (variants.get("webp") or {}).get("large")
+                    or (variants.get("webp") or {}).get("medium")
+                    or item_doc.get("reconstructed_image_url")
+                    or variants.get("original")
+                    or item_doc.get("original_image_url")
+                    or item_doc.get("image_url")
+                )
+                if not image_url:
+                    skipped += 1
+                    continue
+
+                raw = await _read_image_bytes_from_url(image_url)
+                if not raw:
+                    skipped += 1
+                    continue
+
+                # Run The Eyes under the analyze lock
+                try:
+                    async with _ANALYZE_LOCK:
+                        parsed = await garment_vision_service.analyze(raw, language=user_lang)
+                except Exception as exc:
+                    logger.warning("Re-analyze failed for item %s: %s", item_id, exc)
+                    skipped += 1
+                    continue
+
+                analysis = _safe_analysis(parsed)
+                from app.services.vision import _is_unidentifiable
+
+                if _is_unidentifiable(analysis):
+                    skipped += 1
+                    continue
+
+                # Build update doc (same OVERWRITE_KEYS as reanalyze_item)
+                update_doc: dict[str, Any] = {
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                }
+                for key in (
+                    "title", "name", "caption", "category", "sub_category",
+                    "item_type", "brand", "gender", "dress_code", "season",
+                    "tradition", "colors", "fabric_materials", "pattern",
+                    "state", "condition", "quality", "repair_advice", "tags",
+                ):
+                    val = analysis.get(key)
+                    if val is not None:
+                        update_doc[key] = val
+
+                # Mirror dominant color/material into legacy scalars
+                colours_list = analysis.get("colors") or []
+                if colours_list and isinstance(colours_list, list):
+                    first_colour = colours_list[0]
+                    if isinstance(first_colour, dict) and first_colour.get("name"):
+                        update_doc["color"] = first_colour["name"]
+                materials_list = analysis.get("fabric_materials") or []
+                if materials_list and isinstance(materials_list, list):
+                    first_material = materials_list[0]
+                    if isinstance(first_material, dict) and first_material.get("name"):
+                        update_doc["material"] = first_material["name"]
+
+                # Persist to DB
+                await repos.update(
+                    db.closet_items,
+                    {"id": item_id, "user_id": user["id"]},
+                    update_doc,
+                )
+
+                imported += 1
+                all_items.append({"id": item_id, "title": update_doc.get("title")})
+
+            except Exception as exc:
+                logger.warning("Re-analyze error for item %s: %s", item_id, exc)
+                skipped += 1
+
+            _migration_status[job_id] = {
+                "status": "processing",
+                "imported": imported,
+                "skipped": skipped,
+                "total": len(items),
+                "items": all_items,
+            }
+
+        _migration_status[job_id] = {
+            "status": "done",
+            "imported": imported,
+            "skipped": skipped,
+            "total": len(items),
+            "items": all_items,
+        }
+        # Clean up after a delay
+        await asyncio.sleep(60)
+        _migration_status.pop(job_id, None)
+
+    asyncio.create_task(_run_reanalyze())
+    return {"job_id": job_id, "total_items": len(items)}
+
+
 class ImportCompetitorIn(BaseModel):
     app_name: str | None = "Competitor App"
     target_url: str | None = None

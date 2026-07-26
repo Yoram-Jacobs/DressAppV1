@@ -46,14 +46,14 @@ import { toast } from 'sonner';
 
 import { useTranslation } from 'react-i18next';
 import { isRtl } from '@/lib/i18n';
-import { migrationStore } from '@/lib/migrationStore';
+import { api } from '@/lib/api';
 
 /** Global listener for migration postMessage events from the bookmarklet popup.
- *  Collects streamed cards and on DRESSAPP_MIGRATION_COMPLETE stores them
- *  in migrationStore then navigates to /closet/add so AddItem.jsx mounts
- *  and feeds them into the GarmentVision silent 6+ batch pipeline. */
+ *  Collects streamed cards and on DRESSAPP_MIGRATION_COMPLETE saves them
+ *  to the closet DB, then kicks off the Stylist re-analysis worker. */
 function MigrationMessageListener() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const collectedCards = [];
@@ -72,16 +72,37 @@ function MigrationMessageListener() {
       }
 
       if (msg.type === 'DRESSAPP_MIGRATION_COMPLETE') {
-        const { total_cards } = msg;
+        const { total_cards, app_name } = msg;
         if (!total_cards || total_cards === 0) return;
 
         const cardsWithImages = collectedCards.filter(c => c.crop_base64);
-        console.log(`[MigrationListener] COMPLETE: total_cards=${total_cards}, collected=${collectedCards.length}, withImages=${cardsWithImages.length}`);
+        const appName = app_name || 'Competitor App';
+        console.log(`[MigrationListener] COMPLETE: total_cards=${total_cards}, collected=${collectedCards.length}, withImages=${cardsWithImages.length}, app=${appName}`);
         collectedCards.length = 0;
 
         if (cardsWithImages.length > 0) {
-          migrationStore.setCards(cardsWithImages);
-          navigate('/closet/add');
+          // DB-backed pipeline: save crops to closet, then re-analyze with Stylist
+          (async () => {
+            try {
+              toast.info(t('migration.saving', { defaultValue: `Saving ${cardsWithImages.length} items to your closet...` }));
+
+              // Step 1: Save crops to DB (with brand = appName)
+              const saveResult = await api.saveMigrationCrops({ app_name: appName, cards: cardsWithImages });
+              console.log(`[MigrationListener] Saved ${saveResult.items_saved} items to DB`);
+
+              // Step 2: Kick off Stylist re-analysis worker (background)
+              const reanalyzeResult = await api.reanalyzeByBrand({ app_name: appName });
+              console.log(`[MigrationListener] Re-analysis job started: ${reanalyzeResult.job_id}`);
+
+              toast.success(t('migration.saved', { defaultValue: `${saveResult.items_saved} items saved to closet. Stylist is analysing them now — you'll see details update automatically.` }));
+
+              // Navigate to closet so user can see items appearing
+              navigate('/closet');
+            } catch (err) {
+              console.error('[MigrationListener] Pipeline error:', err);
+              toast.error(t('migration.error', { defaultValue: 'Migration failed. Please try again.' }));
+            }
+          })();
         }
         return;
       }
@@ -89,7 +110,7 @@ function MigrationMessageListener() {
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [navigate]);
+  }, [navigate, t]);
 
   return null;
 }
