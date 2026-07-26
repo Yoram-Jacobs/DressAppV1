@@ -1,10 +1,10 @@
 import React from 'react';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
+import i18n from 'i18next';
 import { Sparkles, ArrowRight } from 'lucide-react';
 
 export function showAiKeyWarningToast(navigate) {
-  const { t } = useTranslation();
+  const t = i18n.t.bind(i18n);
   toast.error(
     <div className="flex flex-col gap-2 text-start p-1">
       <div className="flex items-center gap-2 font-semibold text-sm">
