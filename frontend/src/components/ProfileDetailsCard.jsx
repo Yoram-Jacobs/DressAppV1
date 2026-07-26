@@ -1009,6 +1009,40 @@ export function ProfileDetailsCard() {
             </AccordionContent>
           </AccordionItem>
 
+          {/* --- Measurements --- */}
+          <AccordionItem value="measurements" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
+            <AccordionTrigger
+              className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+              data-testid="profile-accordion-measurements"
+            >
+              <div className="flex items-center gap-4 text-start">
+                <div className="p-2.5 rounded-xl bg-[hsl(142_71%_93%)] text-[hsl(142_71%_35%)] dark:bg-[hsl(142_30%_15%)] dark:text-[hsl(142_71%_55%)] shrink-0 transition-transform duration-200">
+                  <Ruler className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('profile.sections.measurements')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                    {t('profile.sections.measurementsDesc', { defaultValue: 'Garment sizing fits (height, chest, waist, and inseams)' })}
+                  </span>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
+              <MeasurementsGrid
+                form={form}
+                onChange={(k, v) => setNested('body_measurements', k, v)}
+                wUnit={wUnit}
+                lUnit={lUnit}
+                isFemale={isFemale}
+                isFreshStart={isFreshStart}
+                hasFilledBasic={hasFilledBasic}
+                predicting={predicting}
+                hasPredicted={hasPredicted}
+              />
+            </AccordionContent          </AccordionItem>
+
           {/* --- Photos & Avatar --- */}
           <AccordionItem value="photos" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
             <AccordionTrigger
@@ -1151,41 +1185,6 @@ export function ProfileDetailsCard() {
                   </Select>
                 </Field>
               </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* --- Measurements --- */}
-          <AccordionItem value="measurements" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
-            <AccordionTrigger
-              className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
-              data-testid="profile-accordion-measurements"
-            >
-              <div className="flex items-center gap-4 text-start">
-                <div className="p-2.5 rounded-xl bg-[hsl(142_71%_93%)] text-[hsl(142_71%_35%)] dark:bg-[hsl(142_30%_15%)] dark:text-[hsl(142_71%_55%)] shrink-0 transition-transform duration-200">
-                  <Ruler className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
-                    {t('profile.sections.measurements')}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
-                    {t('profile.sections.measurementsDesc', { defaultValue: 'Garment sizing fits (height, chest, waist, and inseams)' })}
-                  </span>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
-              <MeasurementsGrid
-                form={form}
-                onChange={(k, v) => setNested('body_measurements', k, v)}
-                wUnit={wUnit}
-                lUnit={lUnit}
-                isFemale={isFemale}
-                isFreshStart={isFreshStart}
-                hasFilledBasic={hasFilledBasic}
-                predicting={predicting}
-                hasPredicted={hasPredicted}
-              />
             </AccordionContent>
           </AccordionItem>
 

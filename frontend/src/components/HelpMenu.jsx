@@ -30,6 +30,7 @@ export default function HelpMenu() {
     { id: 'suitcase', label: t('help.suitcase_title'), icon: MapPin, wiki: 'suitcase_packing' },
     { id: 'marketplace', label: t('help.market_title'), icon: ShoppingBag, wiki: 'marketplace_listing' },
     { id: 'shopping-assistant', label: t('help.shopping_assistant_title'), icon: Chrome, wiki: 'chrome_extension' },
+    { id: 'import-wardrobe', label: t('help.import_wardrobe_title'), icon: Search, wiki: 'import_wardrobe' },
     { id: 'trend-scout', label: t('help.trend_scout_title'), icon: TrendingUp, wiki: 'trend_scout' },
     { id: 'experts', label: t('help.experts_title'), icon: UserRound, wiki: 'experts_registry' },
     ...(viewerIsPro ? [
@@ -594,6 +595,32 @@ export default function HelpMenu() {
                     t('help.shopping_assistant_step4'),
                     t('help.shopping_assistant_step5'),
                     t('help.shopping_assistant_step6')
+                  ].map((text, idx) => (
+                    <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
+                      <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>
+                      <p className="text-sm text-muted-foreground pt-0.5">
+                        {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-foreground font-semibold">{part}</strong> : part)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'import-wardrobe' && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <Search className="h-6 w-6" /> {t('help.import_wardrobe_title')}
+                </h2>
+                <p className="text-muted-foreground">{t('help.import_wardrobe_p1')}</p>
+                <div className="space-y-3">
+                  {[
+                    t('help.import_wardrobe_step1'),
+                    t('help.import_wardrobe_step2'),
+                    t('help.import_wardrobe_step3'),
+                    t('help.import_wardrobe_step4'),
+                    t('help.import_wardrobe_step5'),
+                    t('help.import_wardrobe_step6')
                   ].map((text, idx) => (
                     <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
                       <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>

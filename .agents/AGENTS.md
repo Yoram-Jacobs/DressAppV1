@@ -25,3 +25,28 @@ To prevent context stuffing, the documentation for this repository is modularly 
 - **Troubleshooting**: [troubleshooting.md](file:///C:/DressApp_AG/wiki/en/troubleshooting.md) - Common errors and limits.
 
 Note: Translations for all topic files are organized into language subdirectories (e.g. `he/` for Hebrew, `ar/` for Arabic, `de/` for German, etc.).
+
+## Help File Rules
+
+Every subject in the help tree (`HelpMenu.jsx`) follows a **two-layer structure**:
+
+### Layer 1: Simplified Summary (HelpMenu.jsx)
+- Displayed directly in the Help Menu UI
+- Uses translation keys (e.g., `help.shopping_assistant_title`, `help.shopping_assistant_p1`, `help.shopping_assistant_step1` through `step6`)
+- Content must be **concise, friendly, and easy to understand**
+- Maximum 6 steps for any feature
+- No technical jargon — focus on user actions and outcomes
+
+### Layer 2: "Learn More" Detailed Guide (Wiki Markdown Files)
+- Loaded when user clicks **"Learn More"** button
+- Stored in `wiki/{language}/{topic}.md` (e.g., `wiki/en/shopping-assistant.md`)
+- Content must be **comprehensive but accessible**
+- Includes: Overview, Prerequisites, Step-by-Step instructions, Expected Results, Troubleshooting, Limitations
+- Uses the same friendly, helpful tone as Layer 1 but provides deeper detail
+- Must be translated to all 13 supported languages
+
+### When Updating or Creating Help Files
+1. **Always follow the two-layer structure** — Layer 1 in HelpMenu.jsx, Layer 2 in wiki markdown
+2. **Maintain consistent tone** — friendly, helpful, user-focused
+3. **Translate to all languages** — use `/translator` to translate after creating/updating the English version
+4. **Test the "Learn More" link** — ensure the wiki file loads correctly from the Help Menu
