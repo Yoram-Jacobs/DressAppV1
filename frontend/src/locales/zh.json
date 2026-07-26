@@ -1098,7 +1098,7 @@
     },
     "importWardrobePill": "导入衣橱",
     "mobileDesktopGuide": "衣橱导入功能可在DressApp桌面版中使用。请在桌面浏览器中打开您的账户以继续。",
-    "deleteAccountLink": "Delete my Account",
+    "deleteAccountLink": "删除我的账户",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
     "deleteWarning": "You are about to delete your account. This will permanently remove your profile, all your closet items (including photos and metadata), and all your saved outfits.",

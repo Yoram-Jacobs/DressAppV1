@@ -1098,7 +1098,7 @@
     },
     "importWardrobePill": "استيراد الخزانة",
     "mobileDesktopGuide": "استيراد الخزانة متاح في نسخة سطح المكتب من DressApp. يرجى فتح حسابك في متصفح سطح المكتب للمتابعة.",
-    "deleteAccountLink": "Delete my Account",
+    "deleteAccountLink": "احذف حسابي",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
     "deleteWarning": "You are about to delete your account. This will permanently remove your profile, all your closet items (including photos and metadata), and all your saved outfits.",

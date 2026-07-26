@@ -1107,7 +1107,7 @@
     },
     "importWardrobePill": "Kleiderschrank importieren",
     "mobileDesktopGuide": "Der Kleiderschrank-Import ist in der Desktop-Version von DressApp verfügbar. Bitte öffnen Sie Ihr Konto im Desktop-Browser, um fortzufahren.",
-    "deleteAccountLink": "Delete my Account",
+    "deleteAccountLink": "Konto löschen",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
     "deleteWarning": "You are about to delete your account. This will permanently remove your profile, all your closet items (including photos and metadata), and all your saved outfits.",

@@ -1098,7 +1098,7 @@
     },
     "importWardrobePill": "Importer la garde-robe",
     "mobileDesktopGuide": "L'importation de la garde-robe est disponible sur la version bureau de DressApp. Veuillez ouvrir votre compte dans un navigateur bureau pour continuer.",
-    "deleteAccountLink": "Delete my Account",
+    "deleteAccountLink": "Supprimer mon compte",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
     "deleteWarning": "You are about to delete your account. This will permanently remove your profile, all your closet items (including photos and metadata), and all your saved outfits.",
