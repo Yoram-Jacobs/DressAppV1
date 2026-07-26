@@ -212,7 +212,6 @@ function App() {
             <Route path="*" element={<Navigate to="/home" replace />} />
           </Routes>
           <Toaster position="top-center" richColors closeButton className="mt-14 sm:mt-0" />
-          <GlobalScrollListener />
           <WorkProgressFloater />
           <WorkBatchDoneToast />
           </BrowserRouter>

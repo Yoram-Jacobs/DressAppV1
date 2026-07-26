@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,7 +27,6 @@ import { api } from '@/lib/api';
 import { cn, sha256File, aHashFile, colorSignatureFile } from '@/lib/utils';
 import { findDuplicatesInCloset } from '@/lib/duplicateDetection';
 import { closetStore } from '@/lib/closetStore';
-import { migrationStore } from '@/lib/migrationStore';
 import { useClosetStore, useClosetItems } from '@/lib/useClosetStore';
 import { workStore } from '@/lib/workStore';
 import DuplicatePreflightDialog from '@/components/DuplicatePreflightDialog';
@@ -303,34 +302,6 @@ export default function AddItem() {
   const [cards, setCards] = useState([]); // [{id,file,previewUrl,base64,status,progress,fields,error,dppData?}]
   const [saving, setSaving] = useState(false);
 
-  // ── Migration import from bookmarklet ──────────────────────────────
-  // migrationStore holds cards posted by the bookmarklet via
-  // MigrationMessageListener.  A ref to handleBatchBackground avoids
-  // stale-closure issues (the function is defined later in the
-  // component body and recreated every render).
-  const migrationPending = useSyncExternalStore(
-    migrationStore.subscribe,
-    migrationStore.getSnapshot,
-    migrationStore.getSnapshot,
-  );
-  const _handleBatchRef = useRef(null);
-
-  useEffect(() => {
-    if (!migrationPending || migrationPending.length === 0) return;
-    const cards = migrationStore.consumeCards();
-    if (!cards || cards.length === 0) return;
-    console.log(`[AddItem] Migration cards consumed: ${cards.length}`);
-    const fingerprints = cards.map((c, idx) => ({
-      file: { name: c.title || `Imported Garment ${idx + 1}`, size: 1024, type: 'image/jpeg' },
-      _b64: c.crop_base64,
-      sha256: null,
-      phash: null,
-      color_sig: null,
-    }));
-    // Feed into GarmentVision silent 6+ batch pipeline
-    if (_handleBatchRef.current) _handleBatchRef.current(fingerprints, 0);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [migrationPending]);
   const [quickConfirm, setQuickConfirm] = useState(false);
   // Phase R — receipt ingest animation overlay state.
   // ``ingestPhase``: null | 'saving' | 'syncing'
@@ -1698,8 +1669,6 @@ export default function AddItem() {
       return null;
     });
   };
-  // Expose to migration useEffect via ref (avoids stale-closure)
-  _handleBatchRef.current = handleBatchBackground;
 
   const analyzeCards = async (cardsList) => {
     const cardsToProcess = cardsList.filter((card) => {

@@ -206,24 +206,9 @@ export const api = {
   getMe: () => client.get('/users/me').then((r) => r.data),
   patchMe: (body) => client.patch('/users/me', body).then((r) => r.data),
   updateMigrationFlag: (body) => client.patch('/users/migration-flag', body).then((r) => r.data),
-  importCompetitorCloset: (body) => client.post('/closet/import-competitor', body).then((r) => r.data),
-  importCompetitorScreenshotScroll: (body) => client.post('/closet/import-competitor-screenshot-scroll', body).then((r) => r.data),
-  startMigrationSession: (body) => client.post('/closet/migration/session/start', body).then((r) => r.data),
-  stepMigrationSession: (body) => client.post('/closet/migration/session/step', body).then((r) => r.data),
-  batchMigrationImport: (body) => client.post('/closet/migration/batch', body).then((r) => r.data),
-  sendMigrationCards: (body) => client.post('/closet/migration/cards', body).then((r) => r.data),
-  startMigrationProcessing: (body) => client.post('/closet/migration/process', body).then((r) => r.data),
   getMigrationStatus: (jobId) => client.get(`/closet/migration/status/${jobId}`).then((r) => r.data),
-  streamMigrationProgress: (jobId) => `${client.defaults.baseURL}/closet/migration/stream/${jobId}`,
   saveMigrationCrops: (body) => client.post('/closet/migration/save-crops', body, { timeout: 120000 }).then((r) => r.data),
   reanalyzeByBrand: (body) => client.post('/closet/migration/reanalyze-by-brand', body, { timeout: 30000 }).then((r) => r.data),
-  getImportJobStatus: (jobId) => client.get(`/closet/import-job-status/${jobId}`).then((r) => r.data),
-  importCompetitorClosetStream: ({ body, onFrame, signal } = {}) =>
-    streamNdjson('/closet/import-competitor-stream', {
-      body,
-      onFrame,
-      signal,
-    }),
 
   // closet
   listCloset: (params = {}) =>

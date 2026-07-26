@@ -80,8 +80,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         } catch (e) {
           try {
             stream = await navigator.mediaDevices.getDisplayMedia({ video: true, preferCurrentTab: true });
-    } catch {
-            st.innerHTML = '<span style="color:#f87171;">Permission denied: ' + err.message + '</span>';
+    } catch (e2) {
+            st.innerHTML = '<span style="color:#f87171;">Permission denied: ' + (e2?.message || e?.message || 'unknown') + '</span>';
             setTimeout(() => o.remove(), 4000);
             return;
           }
@@ -560,22 +560,15 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   };
 
   const handleOpenPopupWindow = async () => {
-    try {
-      await api.startMigrationSession({ app_name: appName.trim() });
-      
-      // Open in a standard browser tab to preserve Bookmarks Bar
-      const win = window.open(targetLoginUrl, '_blank');
-      if (win) {
-        win.opener = window;
-      }
-      
-      toast.info(t('migration.popupOpened', { appName, defaultValue: `Opened ${appName} login tab. Log in & go to your closet page, then click the "DressApp Agent" bookmarklet.` }));
-      // Kill modal — the global MigrationMessageListener in App.jsx
-      // will collect cards and navigate to /add when the bookmarklet finishes.
-      onClose();
-    } catch {
-      toast.error(t('migration.sessionStartError', { defaultValue: 'Could not initialize migration session. Please try again.' }));
+    // Open the competitor site in a new tab — the bookmarklet handles
+    // crop capture and posts results to MigrationMessageListener.
+    const win = window.open(targetLoginUrl, '_blank');
+    if (win) {
+      win.opener = window;
     }
+    
+    toast.info(t('migration.popupOpened', { appName, defaultValue: `Opened ${appName} tab. Log in, go to your closet, then click the "DressApp Agent" bookmarklet.` }));
+    onClose();
   };
 
   const handleCancelForm = () => {

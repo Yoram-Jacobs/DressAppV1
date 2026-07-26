@@ -38,8 +38,6 @@ let _state = {
   polishBatchCompleted: 0,
   _polishStartedAt: {},
   _onBatchDoneSubscribers: new Set(),
-  // Migration job tracking
-  migrationJob: null, // { jobId, imported, skipped, total, status, items }
 };
 
 function _notify() {
@@ -69,26 +67,6 @@ function _syncClosetPolishTerminal(id, status) {
 }
 
 async function _pollOnce() {
-  // ── Migration job polling ──
-  const mj = _state.migrationJob;
-  if (mj && mj.status === 'processing' && mj.jobId) {
-    try {
-      const st = await api.getMigrationStatus(mj.jobId);
-      if (st.status === 'done') {
-        _set({ migrationJob: { ...mj, ...st, status: 'done' } });
-        setTimeout(() => {
-          if (_state.migrationJob && _state.migrationJob.jobId === mj.jobId) {
-            _set({ migrationJob: null });
-          }
-        }, 3000);
-      } else if (st.status === 'error') {
-        _set({ migrationJob: { ...mj, status: 'error', error: st.error } });
-      } else {
-        _set({ migrationJob: { ...mj, imported: st.imported || 0, skipped: st.skipped || 0 } });
-      }
-    } catch { /* swallow */ }
-  }
-
   // ── Polish job polling ──
   const pendingIds = Array.from(_state.polishPendingIds);
   if (pendingIds.length === 0) {
@@ -196,11 +174,7 @@ function _ensurePollerRunning() {
 }
 
 function _maybeStopPoller() {
-  // Stop the timer when there's nothing left to poll, so we don't
-  // bombard the API with empty ticks. The next ``registerPolishItems``
-  // call will spin it back up.
-  const hasMigration = _state.migrationJob && _state.migrationJob.status === 'processing';
-  if (_state.polishPendingIds.size === 0 && !hasMigration && _pollerHandle != null) {
+  if (_state.polishPendingIds.size === 0 && _pollerHandle != null) {
     clearInterval(_pollerHandle);
     _pollerHandle = null;
   }
@@ -331,34 +305,8 @@ export const workStore = {
       polishBatchCompleted: 0,
       _polishStartedAt: {},
       _onBatchDoneSubscribers: _state._onBatchDoneSubscribers,
-      migrationJob: null,
     };
     _notify();
-  },
-
-  // ─── Migration job tracking ───
-  startMigration(jobId, total) {
-    _set({
-      migrationJob: { jobId, imported: 0, skipped: 0, total, status: 'processing', items: [] },
-    });
-    _ensurePollerRunning();
-  },
-
-  updateMigration(patch) {
-    if (!_state.migrationJob) return;
-    _set({
-      migrationJob: { ..._state.migrationJob, ...patch },
-    });
-  },
-
-  completeMigration() {
-    const job = _state.migrationJob;
-    if (!job) return;
-    _set({ migrationJob: { ...job, status: 'done' } });
-    // Clear after a delay so the floater can show "done" briefly
-    setTimeout(() => {
-      _set({ migrationJob: null });
-    }, 3000);
   },
 
   // Internal — exposed for testing the polling loop directly.

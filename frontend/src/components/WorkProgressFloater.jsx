@@ -9,7 +9,7 @@
  */
 
 import { useSyncExternalStore, useEffect, useState, useRef, useCallback } from 'react';
-import { Sparkles, Shirt } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { workStore } from '@/lib/workStore';
@@ -24,8 +24,7 @@ export function WorkProgressFloater() {
 
   const [linger, setLinger] = useState(false);
   const analyzeCount = Object.keys(state.analyzeJobs).length;
-  const migrationJob = state.migrationJob;
-  const active = analyzeCount > 0 || (migrationJob && migrationJob.status === 'processing');
+  const active = analyzeCount > 0;
 
   useEffect(() => {
     if (active) {
@@ -86,12 +85,6 @@ export function WorkProgressFloater() {
       ? Math.min(100, Math.round((analyzeItems / analyzeExpected) * 100))
       : 0;
 
-  // Migration progress
-  const migrationPct = migrationJob?.total
-    ? Math.min(100, Math.round(((migrationJob.imported + migrationJob.skipped) / migrationJob.total) * 100))
-    : 0;
-  const migrationDone = migrationJob?.status === 'done';
-
   return (
     <div
       data-testid="work-progress-floater"
@@ -110,36 +103,6 @@ export function WorkProgressFloater() {
           (active ? 'opacity-100' : 'opacity-70')
         }
       >
-        {migrationJob && (
-          <div className="flex flex-col gap-1.5" data-testid="floater-migration">
-            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <Shirt className="h-3.5 w-3.5 text-primary animate-pulse" aria-hidden />
-              <span className="truncate">
-                {migrationDone
-                  ? t('floater.importDone', { defaultValue: 'Import complete!' })
-                  : t('floater.importing', {
-                      defaultValue: 'Importing your wardrobe {{n}}/{{m}}',
-                      n: migrationJob.imported + migrationJob.skipped,
-                      m: migrationJob.total,
-                    })}
-              </span>
-            </div>
-            {!migrationDone && (
-              <div
-                className="h-1 rounded-full bg-muted overflow-hidden"
-                role="progressbar"
-                aria-valuenow={migrationPct}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              >
-                <div
-                  className="h-full bg-primary transition-all duration-300"
-                  style={{ width: `${Math.max(5, migrationPct)}%` }}
-                />
-              </div>
-            )}
-          </div>
-        )}
         {analyzeCount > 0 && (
           <div className="flex flex-col gap-1.5" data-testid="floater-analyze">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">

@@ -2668,367 +2668,116 @@ async def import_dpp(
     }
 
 
-class ScreenshotMigrationIn(BaseModel):
-    app_name: str = "Competitor Import"
-    screenshots: list[str] = Field(default_factory=list)  # Base64 data URLs or image URLs
-    region: tuple[int, int, int, int] | None = None  # (x, y, w, h)
-    scroll_amount: int | None = 300
-    hamming_threshold: int | None = 5
-
-
-@router.post("/import-competitor-screenshot-scroll", status_code=200)
-async def import_competitor_screenshot_scroll(
-    payload: ScreenshotMigrationIn,
-    user: dict = Depends(get_current_user),
-) -> dict[str, Any]:
-    """
-    Executes automated Screenshot-Scroller & Deduplication Pipeline on competitor wardrobe captures:
-    Step A: ScrollerEngine viewport frame comparison & stabilization (ImageChops.difference)
-    Step B: GridSlicer dynamic contour bounding box extraction (cv2.findContours / grid layout)
-    Step C: DedupEngine perceptual hashing deduplication (imagehash / Hamming distance <= 5)
-    Step D: GarmentVisionAdapter ingestion (background matting, vision classification, Mongo DB persistence)
-    """
-    import base64
-    import io
-    from PIL import Image
-    from app.services.migration import ScrollerEngine, GridSlicer, DedupEngine, GarmentVisionAdapter
-
-    if not payload.screenshots:
-        return {
-            "status": "error",
-            "message": "No screenshot frames provided.",
-            "items": [],
-        }
-
-    # Decode incoming base64 / URL screenshot frames into PIL Images
-    pil_frames: list[Image.Image] = []
-    for sc in payload.screenshots:
-        try:
-            if sc.startswith("data:image/"):
-                _, b64data = sc.split(",", 1)
-                raw_bytes = base64.b64decode(b64data)
-                img = Image.open(io.BytesIO(raw_bytes))
-            else:
-                raw_bytes = base64.b64decode(sc)
-                img = Image.open(io.BytesIO(raw_bytes))
-            if img.mode != "RGB":
-                img = img.convert("RGB")
-            pil_frames.append(img)
-        except Exception as exc:
-            logger.warning("Failed to decode screenshot frame: %s", exc)
-
-    if not pil_frames:
-        return {
-            "status": "error",
-            "message": "Could not decode provided screenshot images.",
-            "items": [],
-        }
-
-    # Step A: ScrollerEngine
-    scroller = ScrollerEngine(scroll_amount=payload.scroll_amount or 300)
-    scroll_res = scroller.process_frame_sequence(pil_frames, region=payload.region)
-    captured_viewports = scroll_res["captured_frames"]
-
-    # Step B: GridSlicer
-    slicer = GridSlicer()
-    raw_tiles = slicer.slice_viewport_frames(captured_viewports)
-
-    # Step C: DedupEngine
-    dedup = DedupEngine(threshold=payload.hamming_threshold or 5)
-    unique_tiles = dedup.deduplicate_tiles(raw_tiles)
-
-    # Step D: GarmentVisionAdapter
-    adapter = GarmentVisionAdapter(user_id=user["id"], app_name=payload.app_name)
-    persisted_items = await adapter.process_and_persist_tiles(unique_tiles)
-
-    return {
-        "status": "completed",
-        "app_name": payload.app_name,
-        "viewports_captured": len(captured_viewports),
-        "tiles_extracted": len(raw_tiles),
-        "unique_assets": len(unique_tiles),
-        "items_persisted_count": len(persisted_items),
-        "items": [
-            {
-                "id": doc.get("id"),
-                "title": doc.get("title"),
-                "category": doc.get("category"),
-                "color": doc.get("color"),
-                "segmented_image_url": doc.get("segmented_image_url"),
-            }
-            for doc in persisted_items
-        ],
-    }
-
-
-class MigrationSessionStartIn(BaseModel):
-    app_name: str = "Whering"
-
-
-class MigrationSessionStepIn(BaseModel):
-    session_id: str
-    app_name: str
-    screenshot: str
-    viewport_width: float
-    viewport_height: float
-    reached_bottom: bool = False
-    card_rects: list[dict[str, Any]] | None = None
-
-
-@router.post("/migration/session/start")
-async def start_migration_session(
-    payload: MigrationSessionStartIn,
-    user: dict = Depends(get_current_user),
-) -> dict[str, Any]:
-    import uuid
-    from datetime import datetime, timezone
-    db = get_db()
-
-    session_id = f"mig_sess_{uuid.uuid4().hex[:12]}"
-    session = {
-        "id": session_id,
-        "user_id": user["id"],
-        "app_name": payload.app_name,
-        "parsed_hashes": [],
-        "created_at": datetime.now(timezone.utc).isoformat(),
-    }
-    await db.migration_sessions.insert_one(session)
-    return {
-        "session_id": session_id,
-        "app_name": payload.app_name,
-    }
-
-
-@router.post("/migration/session/step")
-async def step_migration_session(
-    payload: MigrationSessionStepIn,
-    user: dict = Depends(get_current_user),
-) -> dict[str, Any]:
-    import base64
-    import io
-    from PIL import Image
-    from fastapi import HTTPException
-    from app.services.migration.wardrobe_migration_agent import WardrobeMigrationAgent
-
-    try:
-        sc = payload.screenshot
-        if sc.startswith("data:image/"):
-            _, b64data = sc.split(",", 1)
-            raw_bytes = base64.b64decode(b64data)
-            img = Image.open(io.BytesIO(raw_bytes))
-        else:
-            raw_bytes = base64.b64decode(sc)
-            img = Image.open(io.BytesIO(raw_bytes))
-        if img.mode != "RGB":
-            img = img.convert("RGB")
-    except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Failed to decode screenshot: {exc}")
-
-    agent = WardrobeMigrationAgent()
-    result = await agent.process_step(
-        session_id=payload.session_id,
-        user_id=user["id"],
-        app_name=payload.app_name,
-        pil_img=img,
-        viewport_width=payload.viewport_width,
-        viewport_height=payload.viewport_height,
-        reached_bottom=payload.reached_bottom,
-        card_rects=payload.card_rects,
-    )
-    return result
-
-
-class MigrationBatchIn(BaseModel):
-    app_name: str = "Competitor App"
-    cards: list[dict[str, Any]] = Field(default_factory=list)
-
-@router.post("/migration/batch")
-async def batch_migration_import(
-    payload: MigrationBatchIn,
-    user: dict = Depends(get_current_user),
-) -> dict[str, Any]:
-    from app.services.migration.wardrobe_migration_agent import WardrobeMigrationAgent
-
-    if not payload.cards:
-        return {"items_imported": 0, "items_skipped": 0, "items": []}
-
-    agent = WardrobeMigrationAgent()
-    result = await agent.process_batch(
-        user_id=user["id"],
-        app_name=payload.app_name,
-        cards=payload.cards,
-    )
-    return result
-
-
-# ─── Temporary storage for streaming migration cards ───
-_migration_cards: dict[str, list[dict[str, Any]]] = {}
-_migration_status: dict[str, dict[str, Any]] = {}
-_migration_queues: dict[str, asyncio.Queue] = {}  # job_id → event queue
-
-
-class MigrationCardsIn(BaseModel):
-    app_name: str = "Competitor App"
-    cards: list[dict[str, Any]] = Field(default_factory=list)
-
-
-@router.post("/migration/cards")
-async def receive_migration_cards(
-    payload: MigrationCardsIn,
-    user: dict = Depends(get_current_user),
-) -> dict[str, Any]:
-    """Receive streaming cards from the bookmarklet and buffer them server-side."""
-    uid = user["id"]
-    if uid not in _migration_cards:
-        _migration_cards[uid] = []
-    _migration_cards[uid].extend(payload.cards)
-    return {"received": len(payload.cards), "total_buffered": len(_migration_cards[uid])}
-
-
-class MigrationProcessIn(BaseModel):
-    app_name: str = "Competitor App"
-
-
-@router.post("/migration/process")
-async def start_migration_processing(
-    payload: MigrationProcessIn,
-    user: dict = Depends(get_current_user),
-) -> dict[str, Any]:
-    """Start async processing of all buffered cards. Returns immediately."""
-    from app.services.migration.wardrobe_migration_agent import WardrobeMigrationAgent
-
-    uid = user["id"]
-    cards = _migration_cards.pop(uid, [])
-    if not cards:
-        return {"job_id": None, "message": "No cards buffered"}
-
-    job_id = f"migration_{uuid.uuid4().hex[:12]}"
-    _migration_status[job_id] = {"status": "processing", "imported": 0, "skipped": 0, "items": []}
-    event_queue: asyncio.Queue = asyncio.Queue()
-    _migration_queues[job_id] = event_queue
-
-    async def _run():
-        try:
-            agent = WardrobeMigrationAgent()
-            imported = 0
-            skipped = 0
-            all_items = []
-            total = len(cards)
-
-            for i, card in enumerate(cards):
-                try:
-                    result = await agent.process_batch(
-                        user_id=uid,
-                        app_name=payload.app_name,
-                        cards=[card],
-                    )
-                    item_imported = result.get("items_imported", 0)
-                    item_skipped = result.get("items_skipped", 0)
-                    imported += item_imported
-                    skipped += item_skipped
-                    all_items.extend(result.get("items", []))
-
-                    _migration_status[job_id] = {
-                        "status": "processing",
-                        "imported": imported,
-                        "skipped": skipped,
-                        "total": total,
-                        "items": all_items,
-                    }
-
-                    event = {
-                        "type": "item_processed",
-                        "index": i + 1,
-                        "total": total,
-                        "imported": imported,
-                        "skipped": skipped,
-                        "items": result.get("items", []),
-                    }
-                    await event_queue.put(event)
-                except Exception as e:
-                    logger.warning("Error processing card %d: %s", i, e)
-                    skipped += 1
-                    _migration_status[job_id] = {
-                        "status": "processing",
-                        "imported": imported,
-                        "skipped": skipped,
-                        "total": total,
-                        "items": all_items,
-                    }
-                    await event_queue.put({
-                        "type": "item_processed",
-                        "index": i + 1,
-                        "total": total,
-                        "imported": imported,
-                        "skipped": skipped,
-                        "items": [],
-                    })
-
-            final = {
-                "status": "done",
-                "imported": imported,
-                "skipped": skipped,
-                "items": all_items,
-            }
-            _migration_status[job_id] = final
-            await event_queue.put({"type": "done", **final})
-        except Exception as e:
-            logger.error("Migration processing failed for job %s: %s", job_id, e)
-            _migration_status[job_id] = {"status": "error", "error": str(e), "imported": 0, "skipped": 0, "items": []}
-            await event_queue.put({"type": "error", "error": str(e)})
-
-    asyncio.create_task(_run())
-    return {"job_id": job_id, "cards_queued": len(cards)}
-
-
-@router.get("/migration/status/{job_id}")
-async def get_migration_status(
-    job_id: str,
-    user: dict = Depends(get_current_user),
-) -> dict[str, Any]:
-    """Poll migration processing status."""
-    status = _migration_status.get(job_id)
-    if not status:
-        raise HTTPException(status_code=404, detail="Job not found")
-    return status
-
-
-@router.get("/migration/stream/{job_id}")
-async def stream_migration_progress(
-    job_id: str,
-    user: dict = Depends(get_current_user),
-):
-    """SSE stream that emits per-item processing events as they complete."""
-    from fastapi.responses import StreamingResponse
-
-    queue = _migration_queues.get(job_id)
-    if not queue:
-        raise HTTPException(status_code=404, detail="Job not found")
-
-    async def event_generator():
-        try:
-            while True:
-                event = await asyncio.wait_for(queue.get(), timeout=300)
-                yield f"data: {json.dumps(event)}\n\n"
-                if event.get("type") in ("done", "error"):
-                    _migration_queues.pop(job_id, None)
-                    break
-        except asyncio.TimeoutError:
-            yield f"data: {json.dumps({'type': 'timeout'})}\n\n"
-            _migration_queues.pop(job_id, None)
-
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
-    )
-
-
 # ─── DB-backed migration: save crops + Stylist re-analyze ──────────────
+
+_migration_status: dict[str, dict[str, Any]] = {}
+
+
+async def _run_reanalyze_items(
+    items: list[dict[str, Any]],
+    user: dict,
+    job_id: str,
+    db,
+) -> None:
+    """Shared background worker: run Stylist (Gemini) analysis on a batch of closet items."""
+    user_lang = (user or {}).get("preferred_language") or "en"
+    imported = 0
+    skipped = 0
+    all_items: list[dict[str, Any]] = []
+
+    for item_doc in items:
+        item_id = item_doc.get("id")
+        try:
+            variants = item_doc.get("image_variants") or {}
+            image_url = (
+                item_doc.get("segmented_image_url")
+                or item_doc.get("cutout_url")
+                or item_doc.get("clean_image_url")
+                or (variants.get("webp") or {}).get("large")
+                or (variants.get("webp") or {}).get("medium")
+                or item_doc.get("reconstructed_image_url")
+                or variants.get("original")
+                or item_doc.get("original_image_url")
+                or item_doc.get("image_url")
+            )
+            if not image_url:
+                skipped += 1
+                continue
+
+            raw = await _read_image_bytes_from_url(image_url)
+            if not raw:
+                skipped += 1
+                continue
+
+            try:
+                async with _ANALYZE_LOCK:
+                    parsed = await garment_vision_service.analyze(raw, language=user_lang)
+            except Exception as exc:
+                logger.warning("[migration] Re-analyze failed for %s: %s", item_id, exc)
+                skipped += 1
+                continue
+
+            analysis = _safe_analysis(parsed)
+            from app.services.vision import _is_unidentifiable
+
+            if _is_unidentifiable(analysis):
+                skipped += 1
+                continue
+
+            update_doc: dict[str, Any] = {
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+            for key in (
+                "title", "name", "caption", "category", "sub_category",
+                "item_type", "brand", "gender", "dress_code", "season",
+                "tradition", "colors", "fabric_materials", "pattern",
+                "state", "condition", "quality", "repair_advice", "tags",
+            ):
+                val = analysis.get(key)
+                if val is not None:
+                    update_doc[key] = val
+
+            colours_list = analysis.get("colors") or []
+            if colours_list and isinstance(colours_list, list):
+                first_colour = colours_list[0]
+                if isinstance(first_colour, dict) and first_colour.get("name"):
+                    update_doc["color"] = first_colour["name"]
+            materials_list = analysis.get("fabric_materials") or []
+            if materials_list and isinstance(materials_list, list):
+                first_material = materials_list[0]
+                if isinstance(first_material, dict) and first_material.get("name"):
+                    update_doc["material"] = first_material["name"]
+
+            await repos.update(
+                db.closet_items,
+                {"id": item_id, "user_id": user["id"]},
+                update_doc,
+            )
+
+            imported += 1
+            all_items.append({"id": item_id, "title": update_doc.get("title")})
+
+        except Exception as exc:
+            logger.warning("[migration] Re-analyze error for %s: %s", item_id, exc)
+            skipped += 1
+
+        _migration_status[job_id] = {
+            "status": "processing",
+            "imported": imported,
+            "skipped": skipped,
+            "total": len(items),
+            "items": all_items,
+        }
+
+    _migration_status[job_id] = {
+        "status": "done",
+        "imported": imported,
+        "skipped": skipped,
+        "total": len(items),
+        "items": all_items,
+    }
+    await asyncio.sleep(60)
+    _migration_status.pop(job_id, None)
 
 
 class MigrationSaveCropsIn(BaseModel):
@@ -3126,108 +2875,8 @@ async def save_migration_crops(
             {"user_id": user["id"], "brand": payload.app_name, "id": {"$in": item_ids}},
             limit=500,
         )
-        user_lang = (user or {}).get("preferred_language") or "en"
 
-        async def _run_reanalyze():
-            imported = 0
-            skipped = 0
-            all_items: list[dict[str, Any]] = []
-
-            for item_doc in saved_items:
-                item_id = item_doc.get("id")
-                try:
-                    variants = item_doc.get("image_variants") or {}
-                    image_url = (
-                        item_doc.get("segmented_image_url")
-                        or item_doc.get("cutout_url")
-                        or item_doc.get("clean_image_url")
-                        or (variants.get("webp") or {}).get("large")
-                        or (variants.get("webp") or {}).get("medium")
-                        or item_doc.get("reconstructed_image_url")
-                        or variants.get("original")
-                        or item_doc.get("original_image_url")
-                        or item_doc.get("image_url")
-                    )
-                    if not image_url:
-                        skipped += 1
-                        continue
-
-                    raw = await _read_image_bytes_from_url(image_url)
-                    if not raw:
-                        skipped += 1
-                        continue
-
-                    try:
-                        async with _ANALYZE_LOCK:
-                            parsed = await garment_vision_service.analyze(raw, language=user_lang)
-                    except Exception as exc:
-                        logger.warning("[migration] Re-analyze failed for %s: %s", item_id, exc)
-                        skipped += 1
-                        continue
-
-                    analysis = _safe_analysis(parsed)
-                    from app.services.vision import _is_unidentifiable
-
-                    if _is_unidentifiable(analysis):
-                        skipped += 1
-                        continue
-
-                    update_doc: dict[str, Any] = {
-                        "updated_at": datetime.now(timezone.utc).isoformat(),
-                    }
-                    for key in (
-                        "title", "name", "caption", "category", "sub_category",
-                        "item_type", "brand", "gender", "dress_code", "season",
-                        "tradition", "colors", "fabric_materials", "pattern",
-                        "state", "condition", "quality", "repair_advice", "tags",
-                    ):
-                        val = analysis.get(key)
-                        if val is not None:
-                            update_doc[key] = val
-
-                    colours_list = analysis.get("colors") or []
-                    if colours_list and isinstance(colours_list, list):
-                        first_colour = colours_list[0]
-                        if isinstance(first_colour, dict) and first_colour.get("name"):
-                            update_doc["color"] = first_colour["name"]
-                    materials_list = analysis.get("fabric_materials") or []
-                    if materials_list and isinstance(materials_list, list):
-                        first_material = materials_list[0]
-                        if isinstance(first_material, dict) and first_material.get("name"):
-                            update_doc["material"] = first_material["name"]
-
-                    await repos.update(
-                        db.closet_items,
-                        {"id": item_id, "user_id": user["id"]},
-                        update_doc,
-                    )
-
-                    imported += 1
-                    all_items.append({"id": item_id, "title": update_doc.get("title")})
-
-                except Exception as exc:
-                    logger.warning("[migration] Re-analyze error for %s: %s", item_id, exc)
-                    skipped += 1
-
-                _migration_status[job_id] = {
-                    "status": "processing",
-                    "imported": imported,
-                    "skipped": skipped,
-                    "total": len(saved_items),
-                    "items": all_items,
-                }
-
-            _migration_status[job_id] = {
-                "status": "done",
-                "imported": imported,
-                "skipped": skipped,
-                "total": len(saved_items),
-                "items": all_items,
-            }
-            await asyncio.sleep(60)
-            _migration_status.pop(job_id, None)
-
-        asyncio.create_task(_run_reanalyze())
+        asyncio.create_task(_run_reanalyze_items(saved_items, user, job_id, db))
 
     return {
         "items_saved": saved,
@@ -3274,670 +2923,8 @@ async def reanalyze_by_brand(
         "items": [],
     }
 
-    user_lang = (user or {}).get("preferred_language") or "en"
-
-    async def _run_reanalyze_standalone():
-        imported = 0
-        skipped = 0
-        all_items = []
-
-        for i, item_doc in enumerate(items):
-            item_id = item_doc.get("id")
-            try:
-                variants = item_doc.get("image_variants") or {}
-                image_url = (
-                    item_doc.get("segmented_image_url")
-                    or item_doc.get("cutout_url")
-                    or item_doc.get("clean_image_url")
-                    or (variants.get("webp") or {}).get("large")
-                    or (variants.get("webp") or {}).get("medium")
-                    or item_doc.get("reconstructed_image_url")
-                    or variants.get("original")
-                    or item_doc.get("original_image_url")
-                    or item_doc.get("image_url")
-                )
-                if not image_url:
-                    skipped += 1
-                    continue
-
-                raw = await _read_image_bytes_from_url(image_url)
-                if not raw:
-                    skipped += 1
-                    continue
-
-                try:
-                    async with _ANALYZE_LOCK:
-                        parsed = await garment_vision_service.analyze(raw, language=user_lang)
-                except Exception as exc:
-                    logger.warning("Re-analyze failed for item %s: %s", item_id, exc)
-                    skipped += 1
-                    continue
-
-                analysis = _safe_analysis(parsed)
-                from app.services.vision import _is_unidentifiable
-
-                if _is_unidentifiable(analysis):
-                    skipped += 1
-                    continue
-
-                update_doc: dict[str, Any] = {
-                    "updated_at": datetime.now(timezone.utc).isoformat(),
-                }
-                for key in (
-                    "title", "name", "caption", "category", "sub_category",
-                    "item_type", "brand", "gender", "dress_code", "season",
-                    "tradition", "colors", "fabric_materials", "pattern",
-                    "state", "condition", "quality", "repair_advice", "tags",
-                ):
-                    val = analysis.get(key)
-                    if val is not None:
-                        update_doc[key] = val
-
-                colours_list = analysis.get("colors") or []
-                if colours_list and isinstance(colours_list, list):
-                    first_colour = colours_list[0]
-                    if isinstance(first_colour, dict) and first_colour.get("name"):
-                        update_doc["color"] = first_colour["name"]
-                materials_list = analysis.get("fabric_materials") or []
-                if materials_list and isinstance(materials_list, list):
-                    first_material = materials_list[0]
-                    if isinstance(first_material, dict) and first_material.get("name"):
-                        update_doc["material"] = first_material["name"]
-
-                await repos.update(
-                    db.closet_items,
-                    {"id": item_id, "user_id": user["id"]},
-                    update_doc,
-                )
-
-                imported += 1
-                all_items.append({"id": item_id, "title": update_doc.get("title")})
-
-            except Exception as exc:
-                logger.warning("Re-analyze error for item %s: %s", item_id, exc)
-                skipped += 1
-
-            _migration_status[job_id] = {
-                "status": "processing",
-                "imported": imported,
-                "skipped": skipped,
-                "total": len(items),
-                "items": all_items,
-            }
-
-        _migration_status[job_id] = {
-            "status": "done",
-            "imported": imported,
-            "skipped": skipped,
-            "total": len(items),
-            "items": all_items,
-        }
-        await asyncio.sleep(60)
-        _migration_status.pop(job_id, None)
-
-    asyncio.create_task(_run_reanalyze_standalone())
+    asyncio.create_task(_run_reanalyze_items(items, user, job_id, db))
     return {"job_id": job_id, "total_items": len(items)}
-
-
-class ImportCompetitorIn(BaseModel):
-    app_name: str | None = "Competitor App"
-    target_url: str | None = None
-    items: list[dict[str, Any]] | None = Field(default_factory=list)
-    outfits: list[dict[str, Any]] | None = Field(default_factory=list)
-
-
-@router.post("/import-competitor", status_code=201, deprecated=True)
-async def import_competitor_closet(
-    payload: ImportCompetitorIn, user: dict = Depends(get_current_user)
-) -> dict[str, Any]:
-    """Import closet items and saved outfits exported from another digital wardrobe app (App A -> App B DressApp)."""
-    db = get_db()
-    raw_items = payload.items if payload.items is not None else []
-    raw_outfits = payload.outfits if payload.outfits is not None else []
-
-    # Only generate mock items if caller sent a fully empty payload
-    if not raw_items and not raw_outfits and not payload.target_url:
-        raw_items = [
-            {"id": "appA_1", "title": "Classic White Linen Shirt", "category": "Top", "color": "White", "brand": "Zara", "wear_count": 5},
-            {"id": "appA_2", "title": "Slim Dark Indigo Jeans", "category": "Bottom", "color": "Blue", "brand": "Levi's", "wear_count": 12},
-            {"id": "appA_3", "title": "Beige Trench Coat", "category": "Outerwear", "color": "Beige", "brand": "Burberry", "wear_count": 3},
-            {"id": "appA_4", "title": "Leather Oxford Shoes", "category": "Footwear", "color": "Brown", "brand": "Clarks", "wear_count": 8},
-        ]
-        raw_outfits = [
-            {
-                "name": "Casual Friday Office",
-                "description": "Classic Linen Shirt with Slim Jeans and Oxfords",
-                "garments": [
-                    {"item_id": "appA_1", "role": "Top", "title": "Classic White Linen Shirt"},
-                    {"item_id": "appA_2", "role": "Bottom", "title": "Slim Dark Indigo Jeans"},
-                    {"item_id": "appA_4", "role": "Footwear", "title": "Leather Oxford Shoes"}
-                ]
-            }
-        ]
-
-
-    # Remove previous migrated items and outfits for this user to prevent duplication (e.g. 95 + 95 = 190)
-    await db.closet_items.delete_many({"user_id": user["id"], "migrated_from": {"$exists": True}})
-    await db.outfits.delete_many({"user_id": user["id"], "migrated_from": {"$exists": True}})
-
-    category_images = {
-        "Top": [
-            "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=600&q=80",
-        ],
-        "Bottom": [
-            "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1582142306909-195724d33ffc?auto=format&fit=crop&w=600&q=80",
-        ],
-        "Footwear": [
-            "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1560343776-97e7d202ff0e?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=600&q=80",
-        ],
-        "Outerwear": [
-            "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=600&q=80",
-        ],
-        "Dress": [
-            "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=600&q=80",
-        ],
-        "Accessory": [
-            "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80",
-        ],
-    }
-
-    docs = []
-    now = datetime.now(timezone.utc).isoformat()
-    item_id_map = {}
-
-    from app.services import background_matting
-    from app.services import clothing_parser as _cp
-    from PIL import Image
-    import io
-
-    def _determine_color(pil_img: Image.Image) -> str:
-        try:
-            img = pil_img.convert("RGB").resize((40, 40))
-            colors = img.getcolors(maxcolors=2000)
-            if not colors:
-                return "Neutral"
-            sorted_colors = sorted(colors, key=lambda t: t[0], reverse=True)
-            for count, (r, g, b) in sorted_colors:
-                # Filter out pure white/near-white backgrounds
-                if r > 242 and g > 242 and b > 242:
-                    continue
-                # Filter out pure black/near-black backgrounds
-                if r < 12 and g < 12 and b < 12:
-                    continue
-                if r > 175 and g < 75 and b < 75:
-                    return "Red"
-                if r < 75 and g > 165 and b < 85:
-                    return "Green"
-                if r < 75 and g < 85 and b > 165:
-                    return "Blue"
-                if r > 180 and g > 180 and b < 75:
-                    return "Yellow"
-                if r > 150 and g > 100 and b < 50:
-                    return "Brown"
-                if r < 65 and g < 65 and b < 65:
-                    return "Black"
-                if r > 200 and g > 200 and b > 200:
-                    return "White"
-                if abs(r - g) < 25 and abs(g - b) < 25:
-                    return "Grey"
-                return "Neutral"
-        except Exception:
-            pass
-        return "Neutral"
-
-async def _run_serial_import_worker(job_id: str, user_id: str, app_name: str | None, raw_items: list[dict[str, Any]], raw_outfits: list[dict[str, Any]]):
-    """Background worker executing serial GarmentVision AI Gemini vision analysis item-by-item."""
-    db = get_db()
-    docs = []
-    item_id_map = {}
-    now = datetime.now(timezone.utc).isoformat()
-    total = len(raw_items)
-
-    async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as http_client:
-        for idx, item in enumerate(raw_items):
-            try:
-                img_url = item.get("image_url") or item.get("photo_url") or ""
-                if not img_url or any(bad in img_url.lower() for bad in [".svg", "data:image/svg", "bookmark", "logo", "avatar", "icon", "badge", "button", "grid"]):
-                    await db.import_jobs.update_one({"job_id": job_id}, {"$set": {"processed": idx + 1}})
-                    continue
-
-                c_id = f"item_{uuid.uuid4().hex[:12]}"
-                orig_id = item.get("id") or item.get("item_id")
-                if orig_id:
-                    item_id_map[str(orig_id)] = c_id
-
-                title = item.get("title") or item.get("name") or ""
-                category = "Top"
-                sub_category = "Top"
-                color = item.get("color") or "Neutral"
-                pattern = None
-                material = None
-                brand = item.get("brand") or item.get("label") or "Imported"
-                quality = None
-                condition = None
-                state = None
-                repair_advice = None
-                orig_data_url = img_url
-                cutout_url = img_url
-
-                img_bytes = None
-                if img_url.startswith("data:image/"):
-                    header, encoded = img_url.split(",", 1)
-                    img_bytes = base64.b64decode(encoded)
-                elif img_url.startswith(("http://", "https://")):
-                    try:
-                        resp = await http_client.get(img_url)
-                        if resp.status_code == 200:
-                            img_bytes = resp.content
-                    except Exception as download_err:
-                        logger.warning("Item %d image download failed: %s", idx, download_err)
-
-                if img_bytes:
-                    try:
-                        pil_img = Image.open(io.BytesIO(img_bytes))
-                        w, h = pil_img.size
-                        if w >= 60 and h >= 60:
-                            b64_orig = base64.b64encode(img_bytes).decode("utf-8")
-                            orig_data_url = f"data:image/jpeg;base64,{b64_orig}"
-
-                            try:
-                                bg_task = asyncio.create_task(background_matting.remove_background(img_bytes))
-                                cp_task = asyncio.create_task(_cp.parse_garments(img_bytes))
-                                gv_task = asyncio.create_task(garment_vision_service.analyze(img_bytes)) if garment_vision_service else None
-
-                                tasks = [bg_task, cp_task]
-                                if gv_task:
-                                    tasks.append(gv_task)
-
-                                # Full serial GarmentVision AI Gemini vision analysis without artificial timeouts
-                                await asyncio.gather(*tasks, return_exceptions=True)
-
-                                bg_res = bg_task.result() if bg_task.done() and not bg_task.exception() else {}
-                                garments = cp_task.result() if cp_task.done() and not cp_task.exception() else []
-                                gv_analysis = gv_task.result() if gv_task and gv_task.done() and not gv_task.exception() else {}
-
-                                png_bytes = bg_res.get("png_bytes") or bg_res.get("image_png")
-                                if png_bytes:
-                                    b64_png = base64.b64encode(png_bytes).decode("utf-8")
-                                    cutout_url = f"data:image/png;base64,{b64_png}"
-                                else:
-                                    cutout_url = orig_data_url
-
-                                if isinstance(gv_analysis, dict) and gv_analysis.get("category"):
-                                    category = gv_analysis.get("category") or category
-                                    sub_category = gv_analysis.get("sub_category") or category
-                                    color = gv_analysis.get("primary_color") or gv_analysis.get("color") or color
-                                    pattern = gv_analysis.get("pattern")
-                                    material = gv_analysis.get("material")
-                                    brand = gv_analysis.get("brand") or brand
-                                    title = gv_analysis.get("friendly_name") or gv_analysis.get("title") or f"{color} {category}"
-                                    quality = gv_analysis.get("quality")
-                                    condition = gv_analysis.get("condition")
-                                    state = gv_analysis.get("state")
-                                    repair_advice = gv_analysis.get("repair_advice")
-                                else:
-                                    if garments:
-                                        top_g = garments[0]
-                                        det_label = str(top_g.get("label") or top_g.get("kind") or "").lower()
-                                        if any(k in det_label for k in ["top", "shirt", "blouse", "tee", "sweat", "upper"]):
-                                            category = "Top"
-                                        elif any(k in det_label for k in ["pant", "bottom", "skirt", "jean", "short", "trouser"]):
-                                            category = "Bottom"
-                                        elif any(k in det_label for k in ["shoe", "footwear", "boot", "sneaker", "sandal"]):
-                                            category = "Footwear"
-                                        elif any(k in det_label for k in ["dress", "gown"]):
-                                            category = "Dress"
-                                        elif any(k in det_label for k in ["coat", "jacket", "outerwear"]):
-                                            category = "Outerwear"
-                                        elif any(k in det_label for k in ["belt", "bag", "accessory", "hat", "watch"]):
-                                            category = "Accessory"
-                                    color = _determine_color(pil_img)
-                                    sub_category = category
-                                    if not title or title.startswith("Pasted Garment") or title.startswith("Garment"):
-                                        title = f"{color} {category}"
-                            except Exception as proc_err:
-                                logger.warning("Item %d image parsing error: %s", idx, proc_err)
-                                cutout_url = orig_data_url
-                    except Exception as img_err:
-                        logger.warning("Item %d image decode error: %s", idx, img_err)
-
-                doc = {
-                    "id": c_id,
-                    "user_id": user_id,
-                    "schemaVersion": 1,
-                    "source": "Private",
-                    "title": title,
-                    "name": title,
-                    "category": category,
-                    "sub_category": sub_category or category,
-                    "color": color,
-                    "colors": [color],
-                    "pattern": pattern,
-                    "material": material,
-                    "brand": brand or "Imported",
-                    "quality": quality,
-                    "condition": condition,
-                    "state": state,
-                    "repair_advice": repair_advice,
-                    "image_url": orig_data_url,
-                    "original_image_url": orig_data_url,
-                    "clean_image_url": cutout_url,
-                    "segmented_image_url": cutout_url,
-                    "cutout_url": cutout_url,
-                    "wear_count": int(item.get("wear_count") or item.get("times_worn") or 0),
-                    "is_duplicate": False,
-                    "group_role": None,
-                    "created_at": item.get("created_at") or now,
-                    "updated_at": now,
-                    "migrated_from": app_name or "Competitor App",
-                }
-                await repos.insert_one(db.closet_items, doc)
-                docs.append(doc)
-            except Exception as err:
-                logger.warning("Serial worker item %d creation error: %s", idx, err)
-            finally:
-                await db.import_jobs.update_one({"job_id": job_id}, {"$set": {"processed": idx + 1}})
-
-    # Process outfits
-    doc_map = {doc["id"]: doc for doc in docs}
-    for outfit in raw_outfits:
-        o_id = str(uuid.uuid4())
-        garments = []
-        raw_garments = outfit.get("garments") or outfit.get("items") or []
-        for g in raw_garments:
-            g_dict = g if isinstance(g, dict) else {}
-            old_item_id = str(g_dict.get("closet_item_id") or g_dict.get("item_id") or g_dict.get("id") or "")
-            mapped_item_id = item_id_map.get(old_item_id) or (old_item_id if old_item_id.startswith("item_") else None)
-            matched_doc = doc_map.get(mapped_item_id, {})
-            img = g_dict.get("image_url") or g_dict.get("photo_url") or matched_doc.get("image_url") or matched_doc.get("cutout_url")
-            garments.append({
-                "closet_item_id": mapped_item_id,
-                "role": g_dict.get("role") or g_dict.get("category") or matched_doc.get("category") or "Garment",
-                "title": g_dict.get("title") or g_dict.get("name") or matched_doc.get("title") or "Garment",
-                "image_url": img,
-            })
-
-        o_doc = {
-            "id": o_id,
-            "user_id": user_id,
-            "name": outfit.get("name") or outfit.get("title") or "Migrated Outfit",
-            "description": outfit.get("description") or f"Migrated from {app_name or 'Competitor App'}",
-            "source_workflow": "Competitor Migration",
-            "garments": garments,
-            "items": garments,
-            "migrated_from": app_name or "Competitor App",
-            "created_at": outfit.get("created_at") or now,
-            "updated_at": now,
-        }
-        await repos.insert_one(db.outfits, o_doc)
-
-    await db.import_jobs.update_one({"job_id": job_id}, {"$set": {"status": "completed", "processed": total}})
-
-
-@router.post("/import-competitor", status_code=202, deprecated=True)
-async def import_competitor_closet(
-    payload: ImportCompetitorIn,
-    background_tasks: BackgroundTasks,
-    user: dict = Depends(get_current_user)
-) -> dict[str, Any]:
-    """Imports wardrobe items serially in a non-blocking background task with full GarmentVision AI Gemini vision analysis."""
-    db = get_db()
-    raw_items = payload.items if payload.items is not None else []
-    raw_outfits = payload.outfits if payload.outfits is not None else []
-
-    if not raw_items and not raw_outfits and not payload.target_url:
-        raw_items = [
-            {"id": "appA_1", "title": "Classic White Linen Shirt", "category": "Top", "color": "White", "brand": "Zara", "wear_count": 5},
-            {"id": "appA_2", "title": "Slim Dark Indigo Jeans", "category": "Bottom", "color": "Blue", "brand": "Levi's", "wear_count": 12},
-            {"id": "appA_3", "title": "Beige Trench Coat", "category": "Outerwear", "color": "Beige", "brand": "Burberry", "wear_count": 3},
-            {"id": "appA_4", "title": "Leather Oxford Shoes", "category": "Footwear", "color": "Brown", "brand": "Clarks", "wear_count": 8},
-        ]
-
-    # Remove previous migrated items and outfits for this user
-    await db.closet_items.delete_many({"user_id": user["id"], "migrated_from": {"$exists": True}})
-    await db.outfits.delete_many({"user_id": user["id"], "migrated_from": {"$exists": True}})
-
-    job_id = f"import_{uuid.uuid4().hex[:10]}"
-    await db.import_jobs.insert_one({
-        "job_id": job_id,
-        "user_id": user["id"],
-        "status": "processing",
-        "processed": 0,
-        "total": len(raw_items),
-        "created_at": datetime.now(timezone.utc).isoformat(),
-    })
-
-    background_tasks.add_task(
-        _run_serial_import_worker,
-        job_id,
-        user["id"],
-        payload.app_name,
-        raw_items,
-        raw_outfits,
-    )
-
-    return {
-        "status": "accepted",
-        "job_id": job_id,
-        "total": len(raw_items),
-        "imported_count": len(raw_items),
-    }
-
-
-@router.get("/import-job-status/{job_id}")
-async def get_import_job_status(job_id: str, user: dict = Depends(get_current_user)) -> dict[str, Any]:
-    """Returns real-time progress status of a running background wardrobe import job."""
-    db = get_db()
-    job = await db.import_jobs.find_one({"job_id": job_id, "user_id": user["id"]}, {"_id": 0})
-    if not job:
-        return {"status": "completed", "processed": 0, "total": 0}
-    return job
-
-
-@router.post("/import-competitor-stream", deprecated=True)
-async def import_competitor_closet_stream(
-    payload: ImportCompetitorIn,
-    user: dict[str, Any] = Depends(get_current_user),
-) -> StreamingResponse:
-    """Streams imported items chunk-by-chunk via NDJSON, running GarmentVision AI analysis and emitting live progress."""
-    async def _event_stream():
-        db = get_db()
-        raw_items = payload.items or []
-        raw_outfits = payload.outfits or []
-
-        if not raw_items and not raw_outfits and not payload.target_url:
-            raw_items = [
-                {"id": "appA_1", "title": "Classic White Linen Shirt", "category": "Top", "color": "White", "brand": "Zara", "wear_count": 5},
-                {"id": "appA_2", "title": "Slim Dark Indigo Jeans", "category": "Bottom", "color": "Blue", "brand": "Levi's", "wear_count": 12},
-                {"id": "appA_3", "title": "Beige Trench Coat", "category": "Outerwear", "color": "Beige", "brand": "Burberry", "wear_count": 3},
-                {"id": "appA_4", "title": "Leather Oxford Shoes", "category": "Footwear", "color": "Brown", "brand": "Clarks", "wear_count": 8},
-            ]
-
-        # Purge previous migrated data
-        await db.closet_items.delete_many({"user_id": user["id"], "migrated_from": {"$exists": True}})
-        await db.outfits.delete_many({"user_id": user["id"], "migrated_from": {"$exists": True}})
-
-        total = len(raw_items)
-        yield json.dumps({"event": "start", "total": total}, ensure_ascii=False) + "\n"
-
-        from app.services import background_matting
-        from app.services import clothing_parser as _cp
-        from PIL import Image
-        import io
-
-        now = datetime.now(timezone.utc).isoformat()
-        item_id_map = {}
-
-        # Shared httpx client & semaphore for fast parallel processing (10 concurrent downloads)
-        sem = asyncio.Semaphore(10)
-        async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as http_client:
-            async def _process_single(idx: int, item: dict[str, Any]) -> dict[str, Any] | None:
-                async with sem:
-                    try:
-                        img_url = item.get("image_url") or item.get("photo_url") or ""
-                        if not img_url or any(bad in img_url.lower() for bad in [".svg", "data:image/svg", "bookmark", "logo", "avatar", "icon", "badge", "button", "grid"]):
-                            return None
-
-                        c_id = f"item_{uuid.uuid4().hex[:12]}"
-                        orig_id = item.get("id") or item.get("item_id")
-                        if orig_id:
-                            item_id_map[str(orig_id)] = c_id
-
-                        title = item.get("title") or item.get("name") or ""
-                        category = "Top"
-                        sub_category = "Top"
-                        color = item.get("color") or "Neutral"
-                        pattern = None
-                        material = None
-                        brand = item.get("brand") or item.get("label") or "Imported"
-                        quality = None
-                        condition = None
-                        state = None
-                        repair_advice = None
-                        orig_data_url = img_url
-                        cutout_url = img_url
-
-                        img_bytes = None
-                        if img_url.startswith("data:image/"):
-                            header, encoded = img_url.split(",", 1)
-                            img_bytes = base64.b64decode(encoded)
-                        elif img_url.startswith(("http://", "https://")):
-                            try:
-                                resp = await http_client.get(img_url)
-                                if resp.status_code == 200:
-                                    img_bytes = resp.content
-                            except Exception:
-                                pass
-
-                        if img_bytes:
-                            try:
-                                pil_img = Image.open(io.BytesIO(img_bytes))
-                                w, h = pil_img.size
-                                if w < 60 or h < 60:
-                                    return None
-
-                                b64_orig = base64.b64encode(img_bytes).decode("utf-8")
-                                orig_data_url = f"data:image/jpeg;base64,{b64_orig}"
-
-                                bg_task = asyncio.create_task(background_matting.remove_background(img_bytes))
-                                cp_task = asyncio.create_task(_cp.parse_garments(img_bytes))
-                                await asyncio.wait_for(asyncio.gather(bg_task, cp_task, return_exceptions=True), timeout=2.5)
-
-                                bg_res = bg_task.result() if bg_task.done() and not bg_task.exception() else {}
-                                garments = cp_task.result() if cp_task.done() and not cp_task.exception() else []
-
-                                png_bytes = bg_res.get("png_bytes") or bg_res.get("image_png")
-                                if png_bytes:
-                                    b64_png = base64.b64encode(png_bytes).decode("utf-8")
-                                    cutout_url = f"data:image/png;base64,{b64_png}"
-                                else:
-                                    cutout_url = orig_data_url
-
-                                if garments:
-                                    top_g = garments[0]
-                                    det_label = str(top_g.get("label") or top_g.get("kind") or "").lower()
-                                    if any(k in det_label for k in ["top", "shirt", "blouse", "tee", "sweat", "upper"]):
-                                        category = "Top"
-                                    elif any(k in det_label for k in ["pant", "bottom", "skirt", "jean", "short", "trouser"]):
-                                        category = "Bottom"
-                                    elif any(k in det_label for k in ["shoe", "footwear", "boot", "sneaker", "sandal"]):
-                                        category = "Footwear"
-                                    elif any(k in det_label for k in ["dress", "gown"]):
-                                        category = "Dress"
-                                    elif any(k in det_label for k in ["coat", "jacket", "outerwear"]):
-                                        category = "Outerwear"
-                                    elif any(k in det_label for k in ["belt", "bag", "accessory", "hat", "watch"]):
-                                        category = "Accessory"
-
-                                color = _determine_color(pil_img)
-                                sub_category = category
-                                if not title or title.startswith("Pasted Garment") or title.startswith("Garment"):
-                                    title = f"{color} {category}"
-                            except Exception as proc_err:
-                                logger.warning("Item %d image parsing skip: %s", idx, proc_err)
-                                cutout_url = orig_data_url
-
-                        doc = {
-                            "id": c_id,
-                            "user_id": user["id"],
-                            "schemaVersion": 1,
-                            "source": "Private",
-                            "title": title,
-                            "name": title,
-                            "category": category,
-                            "sub_category": sub_category or category,
-                            "color": color,
-                            "colors": [color],
-                            "pattern": pattern,
-                            "material": material,
-                            "brand": brand or "Imported",
-                            "quality": quality,
-                            "condition": condition,
-                            "state": state,
-                            "repair_advice": repair_advice,
-                            "image_url": orig_data_url,
-                            "original_image_url": orig_data_url,
-                            "clean_image_url": cutout_url,
-                            "segmented_image_url": cutout_url,
-                            "cutout_url": cutout_url,
-                            "wear_count": int(item.get("wear_count") or item.get("times_worn") or 0),
-                            "is_duplicate": False,
-                            "group_role": None,
-                            "created_at": item.get("created_at") or now,
-                            "updated_at": now,
-                            "migrated_from": payload.app_name or "Competitor App",
-                        }
-                        await repos.insert_one(db.closet_items, doc)
-                        return doc
-                    except Exception as err:
-                        logger.warning("Item %d creation error: %s", idx, err)
-                        return None
-
-            # Stream results as tasks complete in parallel batches
-            processed_count = 0
-            tasks = [asyncio.create_task(_process_single(idx, item)) for idx, item in enumerate(raw_items)]
-            for completed_task in asyncio.as_completed(tasks):
-                try:
-                    res_doc = await completed_task
-                    if res_doc:
-                        processed_count += 1
-                        yield json.dumps({
-                            "event": "item",
-                            "processed": processed_count,
-                            "total": total,
-                            "item": res_doc,
-                        }, ensure_ascii=False) + "\n"
-                except Exception as stream_err:
-                    logger.warning("Stream task exception: %s", stream_err)
-
-        yield json.dumps({"event": "done", "total": processed_count}, ensure_ascii=False) + "\n"
-
-    return StreamingResponse(
-        _event_stream(),
-        media_type="application/x-ndjson",
-        headers={
-            "X-Accel-Buffering": "no",
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-        },
-    )
-
-
 
 
 @router.get("")
