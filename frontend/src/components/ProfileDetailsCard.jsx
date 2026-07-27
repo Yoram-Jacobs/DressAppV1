@@ -1610,22 +1610,33 @@ export function ProfileDetailsCard() {
           </Button>
          </div>
 
-         {/* Privacy Policy link */}
-         <div className="flex justify-center pt-2">
+         {/* Legal links — Privacy Policy & Terms of Service */}
+         <div className="flex justify-center items-center gap-1 pt-2">
            <Button
              variant="link"
              size="sm"
-             className="text-xs text-muted-foreground hover:text-foreground underline-offset-4"
+             className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 px-2"
              onClick={() => nav('/privacy')}
              data-testid="profile-privacy-link"
            >
              {t('profile.privacyPolicy', { defaultValue: 'Privacy Policy' })}
+           </Button>
+           <span className="text-xs text-muted-foreground/40 select-none">·</span>
+           <Button
+             variant="link"
+             size="sm"
+             className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 px-2"
+             onClick={() => nav('/terms')}
+             data-testid="profile-terms-link"
+           >
+             {t('profile.termsOfService', { defaultValue: 'Terms of Service' })}
            </Button>
          </div>
        </CardContent>
      </Card>
   );
 }
+
 
 /**
  * Numeric measurement field. Defined OUTSIDE its parent so React keeps

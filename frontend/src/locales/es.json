@@ -1,4 +1,4 @@
-{
+﻿{
   "brand": "DressApp",
   "nav": {
     "home": "Inicio",
@@ -1104,6 +1104,8 @@
     "importWardrobePill": "Importar armario",
     "mobileDesktopGuide": "La importación del armario está disponible en la versión de escritorio de DressApp. Abre tu cuenta en un navegador de escritorio para continuar.",
     "deleteAccountLink": "Eliminar mi cuenta",
+    "privacyPolicy": "Política de privacidad",
+    "termsOfService": "Términos de servicio",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
     "deleteWarning": "You are about to delete your account. This will permanently remove your profile, all your closet items (including photos and metadata), and all your saved outfits.",

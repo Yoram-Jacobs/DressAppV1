@@ -1,4 +1,4 @@
-{
+﻿{
   "brand": "DressApp",
   "nav": {
     "home": "Thuis",
@@ -905,6 +905,8 @@
     "importWardrobePill": "Garderobe importeren",
     "mobileDesktopGuide": "Garderobe-import is beschikbaar in de desktopversie van DressApp. Open je account in een desktopbrowser om verder te gaan.",
     "deleteAccountLink": "Verwijder mijn account",
+    "privacyPolicy": "Privacybeleid",
+    "termsOfService": "Servicevoorwaarden",
     "deleteAccountTitle": "Account verwijderen",
     "deleteAccountSubtitle": "Permanente accountverwijdering",
     "deleteWarning": "U staat op het punt uw account te verwijderen. Hiermee worden je profiel, al je kastitems (inclusief foto's en metadata) en al je opgeslagen outfits permanent verwijderd.",

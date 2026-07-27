@@ -1,4 +1,4 @@
-{
+﻿{
   "brand": "DressApp",
   "nav": {
     "home": "ホーム",
@@ -1104,6 +1104,8 @@
     "importWardrobePill": "ワードローブをインポート",
     "mobileDesktopGuide": "ワードローブのインポートはDressAppのデスクトップ版で利用できます。続行するにはデスクトップブラウザでアカウントを開いてください。",
     "deleteAccountLink": "アカウントを削除",
+    "privacyPolicy": "プライバシーポリシー",
+    "termsOfService": "利用規約",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
     "deleteWarning": "You are about to delete your account. This will permanently remove your profile, all your closet items (including photos and metadata), and all your saved outfits.",

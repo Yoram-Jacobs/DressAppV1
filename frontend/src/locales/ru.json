@@ -1,4 +1,4 @@
-{
+﻿{
   "brand": "DressApp",
   "nav": {
     "home": "Главная",
@@ -1104,6 +1104,8 @@
     "importWardrobePill": "Импортировать гардероб",
     "mobileDesktopGuide": "Импорт гардероба доступен в десктопной версии DressApp. Пожалуйста, откройте свой аккаунт в десктопном браузере, чтобы продолжить.",
     "deleteAccountLink": "Удалить аккаунт",
+    "privacyPolicy": "Политика конфиденциальности",
+    "termsOfService": "Условия использования",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
     "deleteWarning": "You are about to delete your account. This will permanently remove your profile, all your closet items (including photos and metadata), and all your saved outfits.",
