@@ -1154,7 +1154,8 @@
     "upgradeAnnualBtn": "Upgrade annuale",
     "inviteDesc": "Condividi DressApp con i tuoi amici e familiari",
     "bookmarkletDesc": "Trascina il pulsante in basso sulla barra dei preferiti. Su dispositivo mobile, aggiungilo ai preferiti e nominalo 'Assistente shopping DressApp'. Cliccaci sopra quando sei su una pagina prodotto.",
-    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings"
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
+    "privacyPolicy": "Privacy Policy"
   },
   "admin": {
     "title": "Amministratore",
@@ -2763,5 +2764,13 @@
     "geminiKeyRequired": "Devi inserire la tua chiave Google AI Gemini",
     "geminiKeyDescription": "Devi configurare la tua chiave API Google AI Gemini. Puoi ottenere una chiave da Google AI Studio.",
     "configureKey": "Configura chiave"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "description": "DressApp Terms of Service — rules and conditions for using our app."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "DressApp privacy policy — how we collect, use, and protect your data."
   }
 }

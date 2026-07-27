@@ -1,103 +1,86 @@
 # Importe seu Guarda-Roupa - Guia Detalhado
 
-## Visão Geral
+## Visão geral
 
-Você já mantém seu guarda-roupa em outro aplicativo? Sem problema! DressApp facilita a importação dos dados do seu guarda-roupa existente para que você não precise começar do zero. Suportamos importações de uma ampla gama de populares aplicativos de guarda-roupa e planejamento de looks.
+Você já tem seu guarda-roupa registrado em outro app? Sem problemas!O DressApp facilita a importação dos seus dados de guarda-roupa existentes para que você não precise começar do zero.Apoiámos importações de uma ampla gama de apps populares de gerenciamento de guarda-roupa e planejamento de outfits.
 
-## Fontes de Importação Suportadas
+## Fontes de importação suportadas
 
-- **Cladwell** - Exporte seu guarda-roupa Cladwell e importe diretamente no DressApp
-- **Stylebook** - Transfira seu inventário Stylebook com facilidade
-- **Acloset** - Importe seus itens e looks do Acloset
-- **SmartCloset** - Migre os dados do seu guarda-roupa SmartCloset
-- **Arquivos CSV** - Importe de qualquer aplicativo que suporte exportação CSV (formato genérico)
-- **Outros Aplicativos** - Muitos outros aplicativos de guarda-roupa suportam exportação CSV, que o DressApp pode importar
+- **Cladwell** - Export your Cladwell wardrobe and import directly into DressApp
+- **Stylebook** - Transfer your Stylebook inventory with ease
+- **Acloset** - Import your Acloset items and outfits
+- **SmartCloset** - Migrate your SmartCloset wardrobe data
+- **CSV Files** - Import from any app that supports CSV export (generic format)
+- **Other Apps** - Many other wardrobe apps support CSV export which DressApp can import
 
-## Guia Passo a Passo
+## Guia passo a passo para importar
 
-### Passo 1: Abra a Página do Guarda-Roupa
-Navegue até sua página **Guarda-Roupa** no DressApp. Aqui aparecerão todos os seus itens importados.
+### Passo 1: Abra a página do Closet
+Navigate to your **Closet** page in DressApp. This is where all your imported items will appear.
 
-### Passo 2: Acesse a Funcionalidade de Importação
-Procure o botão **Importar** na página do Guarda-Roupa. Geralmente está localizado no canto superior direito ou nas opções do menu.
+### Passo 2: Acesse a função de importação
+Look for the **Import** button on the Closet page. It's usually in the top-right corner or in the menu options.
 
-### Passo 3: Selecione seu Aplicativo de Origem
-Escolha o aplicativo de onde você está importando da lista de aplicativos suportados. Se seu aplicativo não estiver listado, selecione **Arquivo CSV** para uma opção de importação genérica.
+### Passo 3: Selecione a fonte do app
+Choose the app you're importing from from the list of supported apps. If your app isn't listed, select **CSV File** for a generic import option.
 
-### Passo 4: Exporte Dados do Aplicativo Antigo
-Siga as instruções específicas para seu aplicativo:
-- **Cladwell**: Vá para Configurações > Exportar Dados > Baixar CSV
-- **Stylebook**: Abra Menu > Exportar > Escolha formato CSV
-- **Acloset**: Navegue até Perfil > Exportar Guarda-Roupa > Baixar
-- **SmartCloset**: Vá para Configurações > Gerenciamento de Dados > Exportar
-- **Exportação CSV**: Procure uma opção de exportação ou download nas configurações do seu aplicativo
+### Passo 4: Exporte dados do app antigo
+Follow the instructions for your specific app:
+- **Cladwell**: Go to Settings > Export Data > Download CSV
+- **Stylebook**: Open Menu > Export > Choose CSV format
+- **Acloset**: Navigate to Profile > Export Wardrobe > Download
+- **SmartCloset**: Go to Settings > Data Management > Export
+- **CSV Export**: Look for an export or download option in your app's settings
 
-### Passo 5: Carregue no DressApp
-Carregue o arquivo exportado no DressApp. O sistema automaticamente:
-- Analisará os dados e mapeará campos para o formato do DressApp
-- Categorizará itens com base em seu tipo (partes superiores, inferiores, vestidos, etc.)
-- Organizará cores e tamanhos
-- Importará imagens se disponíveis
+### Passo 5: Faça upload para o DressApp
+Upload the exported file to DressApp. The system will automatically:
+- Parse the data and map fields to DressApp's format
+- Categorize items based on their type (tops, bottoms, dresses, etc.)
+- Organize colors and sizes
+- Import images if available in the export
 
-### Passo 6: Revise e Ajuste
-Após a conclusão da importação:
-- Revise seus itens na página do Guarda-Roupa
-- Ajuste qualquer categoria que possa ter sido atribuída incorretamente
-- Adicione quaisquer detalhes faltantes (marca, preço, data de compra)
-- Exclua duplicatas ou itens de teste
+### Passo 6: Revise e ajuste
+After import completes:
+- Review your items on the Closet page
+- Fix any miscategorized items
+- Add missing details (brand, price, purchase date)
+- Remove any duplicates or test items
 
-## O que é Importado
+## O que é importado
 
-Dependendo do aplicativo de origem, os seguintes dados podem ser importados:
-- Nomes e descrições de itens
-- Categorias e subcategorias
-- Cores e padrões
-- Tamanhos e medições
-- Informações da marca
-- Datas de compra e preços
-- Imagens de itens (se disponíveis na exportação)
-- Histórico de uso (se suportado)
+Depending on the source app, the following data may be imported:
+- Item names and descriptions
+- Categories and subcategories
+- Colors and patterns
+- Sizes and measurements
+- Brand information
+- Purchase dates and prices
+- Item images (if included in export)
+- Wear history (if supported)
 
-## Solução de Problemas
+## Solução de problemas
 
-### Falha na Importação
-- Verifique se o formato do arquivo está correto (CSV, JSON ou formato específico do aplicativo)
-- Certifique-se de que o arquivo não está corrompido ou grande demais
-- Tente exportar novamente do aplicativo de origem
+### Import Failed
+- Check that the file format is correct (CSV, JSON, or app-specific format)
+- Ensure the file isn't corrupted or too large
+- Try exporting again from the source app
 
-### Itens Faltando Após Importação
-- Alguns campos podem não ter sido mapeados corretamente
-- Verifique a página de Resultados da Importação para quaisquer avisos
-- Adicione manualmente os itens faltantes se necessário
+### Missing Items After Import
+- Some fields may not have mapped correctly
+- Check the import results page for warnings
+- Manually add missing items if needed
 
-### Imagens Não Importadas
-- Nem todos os aplicativos incluem imagens em seus arquivos de exportação
-- Você pode adicionar manualmente imagens aos itens importados depois
-- Use a funcionalidade de câmera ou upload na página de detalhes do item
+### Images Not Imported
+- Not all apps include images in their export files
+- You can add images manually to imported items later
+- Use the camera or upload function on the item detail page
 
-## Dicas para uma Importação Bem-sucedida
+## Precisa de ajuda?
 
-1. **Limpe Primeiro**: Remova duplicatas e itens de teste do seu aplicativo antigo antes de exportar
-2. **Verifique Categorias**: Certifique-se de que os itens estão categorizados corretamente no aplicativo de origem
-3. **Verifique Dados**: Abra o arquivo exportado para garantir que contém todas as informações esperadas
-4. **Comece Pequeno**: Se você tem um guarda-roupa grande, considere importar em lotes
-5. **Backup Primeiro**: Mantenha uma cópia do seu arquivo exportado caso precise reimportar
-
-## Após Importar
-
-Uma vez que seu guarda-roupa esteja importado:
-- **Navegue pelo seu Guarda-Roupa**: Todos os seus itens aparecerão na página do Guarda-Roupa
-- **Crie Looks**: Comece a misturar e combinar itens importados
-- **Obtenha Recomendações de IA**: O Estilista IA usará seu guarda-roupa importado para sugestões
-- **Acompanhe o Uso**: Registre quando você usa itens para construir seu histórico de uso
-- **Sincronize entre Dispositivos**: Seu guarda-roupa importado sincroniza automaticamente em todos os seus dispositivos
-
-## Precisa de Ajuda?
-
-Se você encontrar algum problema durante o processo de importação:
-- Consulte a seção de Solução de Problemas acima
-- Entre em contato com o suporte através do menu de Ajuda
-- Junte-se ao nosso fórum da comunidade para dicas de outros usuários
+If you run into issues with importing:
+- Check the troubleshooting section above
+- Contact support through the Help menu
+- Join our community forum for tips from other users
 
 ---
 

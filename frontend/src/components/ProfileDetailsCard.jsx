@@ -112,7 +112,7 @@ function PhotoSlot({ label, value, onChange, testid }) {
           <Button
             size="sm"
             variant="outline"
-            className="rounded-lg"
+            className="rounded-lg whitespace-nowrap"
             disabled={busy}
             onClick={() => cameraRef.current?.click()}
             data-testid={`profile-photo-${testid}-camera-btn`}
@@ -128,7 +128,7 @@ function PhotoSlot({ label, value, onChange, testid }) {
           <Button
             size="sm"
             variant="outline"
-            className="rounded-lg"
+            className="rounded-lg whitespace-nowrap"
             disabled={busy}
             onClick={() => inputRef.current?.click()}
             data-testid={`profile-photo-${testid}-upload-btn`}
@@ -511,7 +511,7 @@ export function ProfileDetailsCard() {
       <Button
         variant="outline"
         size="sm"
-        className="h-7 text-[11px] gap-1 rounded-full border-[hsl(var(--accent)/40)] hover:bg-[hsl(var(--accent)/5)] ms-auto shrink-0"
+        className="h-7 text-[11px] gap-1 rounded-full border-[hsl(var(--accent)/40)] hover:bg-[hsl(var(--accent)/5)] ms-auto shrink-0 whitespace-nowrap"
         onClick={(e) => {
           e.stopPropagation();
           syncGoogleProfile();
@@ -674,7 +674,7 @@ export function ProfileDetailsCard() {
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('profile.sections.identity')}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.sections.identityDesc', { defaultValue: 'Your name, email address, and date of birth' })}
                   </span>
                 </div>
@@ -736,7 +736,7 @@ export function ProfileDetailsCard() {
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('profile.sections.contact')}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.sections.contactDesc', { defaultValue: 'Phone number, delivery address, and localization' })}
                   </span>
                 </div>
@@ -876,7 +876,7 @@ export function ProfileDetailsCard() {
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('profile.sections.demographics')}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.sections.demographicsDesc', { defaultValue: 'Gender, occupational background, and personal status' })}
                   </span>
                 </div>
@@ -969,7 +969,7 @@ export function ProfileDetailsCard() {
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('profile.sections.preferences')} — {t('profile.units')}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.sections.preferencesDesc', { defaultValue: 'Default measurement scales for sizes, lengths, and weights' })}
                   </span>
                 </div>
@@ -1023,7 +1023,7 @@ export function ProfileDetailsCard() {
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('profile.sections.measurements')}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.sections.measurementsDesc', { defaultValue: 'Garment sizing fits (height, chest, waist, and inseams)' })}
                   </span>
                 </div>
@@ -1058,7 +1058,7 @@ export function ProfileDetailsCard() {
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('profile.sections.photosAvatar', { defaultValue: 'Photos & Avatar' })}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.sections.photosAvatarDesc', { defaultValue: 'Avatar model visual reference photos and body-render shape' })}
                   </span>
                 </div>
@@ -1132,7 +1132,7 @@ export function ProfileDetailsCard() {
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('profile.styleProfile')}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.styleProfileDesc', { defaultValue: 'Aesthetics, color palette preferences, things to avoid, and conservativeness' })}
                   </span>
                 </div>
@@ -1203,7 +1203,7 @@ export function ProfileDetailsCard() {
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('profile.sections.hair')}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.sections.hairDesc', { defaultValue: 'Hair length, type, style, and color properties' })}
                   </span>
                 </div>
@@ -1289,7 +1289,7 @@ export function ProfileDetailsCard() {
                       </Badge>
                     )}
                   </div>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.professional.sectionDesc', { defaultValue: 'Business approval credentials and professional directory listings' })}
                   </span>
                 </div>
@@ -1481,7 +1481,7 @@ export function ProfileDetailsCard() {
                       </Badge>
                     )}
                   </div>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.payouts.sectionDesc', { defaultValue: 'Linked PayPal billing address for designer and listing sales' })}
                   </span>
                 </div>
@@ -1522,7 +1522,7 @@ export function ProfileDetailsCard() {
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('campaigns.notifications.sectionTitle')}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('campaigns.notifications.sectionSubtitle')}
                   </span>
                 </div>
@@ -1608,9 +1608,22 @@ export function ProfileDetailsCard() {
               </>
             )}
           </Button>
-        </div>
-      </CardContent>
-    </Card>
+         </div>
+
+         {/* Privacy Policy link */}
+         <div className="flex justify-center pt-2">
+           <Button
+             variant="link"
+             size="sm"
+             className="text-xs text-muted-foreground hover:text-foreground underline-offset-4"
+             onClick={() => nav('/privacy')}
+             data-testid="profile-privacy-link"
+           >
+             {t('profile.privacyPolicy', { defaultValue: 'Privacy Policy' })}
+           </Button>
+         </div>
+       </CardContent>
+     </Card>
   );
 }
 

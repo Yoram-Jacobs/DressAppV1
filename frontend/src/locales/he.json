@@ -1160,7 +1160,8 @@
     "annualPlan": "תוכנית שנתית",
     "annualPlanDesc": "חסוך 50% בהשוואה לחיוב חודשי.",
     "perYear": " / שנה",
-    "upgradeAnnualBtn": "שדרג שנתי"
+    "upgradeAnnualBtn": "שדרג שנתי",
+    "privacyPolicy": "Privacy Policy"
   },
   "admin": {
     "title": "ניהול",
@@ -2803,5 +2804,13 @@
     "geminiKeyRequired": "עליך להזין את מפתח Google AI Gemini שלך",
     "geminiKeyDescription": "עליך להגדיר את מפתח Google AI Gemini API שלך. ניתן לקבל מפתח מ-Google AI Studio.",
     "configureKey": "הגדר מפתח"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "description": "DressApp Terms of Service — rules and conditions for using our app."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "DressApp privacy policy — how we collect, use, and protect your data."
   }
 }

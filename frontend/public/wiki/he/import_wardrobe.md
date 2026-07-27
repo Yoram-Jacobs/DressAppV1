@@ -1,104 +1,87 @@
-# ייבוא הארון שלך - מדריך מפורט
+# ייבוא המלתחה שלך - מדריך מפורט
 
-## סקירה
+## סקירה כללית
 
-כבר עוקבת אחר הארון שלך באפליקציה אחרת? אין בעיה! DressApp מקל על ייבוא נתוני הארון הקיימים שלך כדי שלא תצטרך להתחיל מאפס. אנחנו תומכים בייבוא ממגוון רחב של אפליקציות פופולאריות לארון ולתכנון אאוטפיטים.
+כבר יש לך את המלתחה שלך במעקב באפליקציה אחרת? אין בעיה!DressApp הופכת את זה לקל לייבא את נתוני המלתחה הקיימים שלך כך שלא תצטרך להתחיל מאפס.אנחנו תומכים בייבוא ממגוון רחב של אפליקציות פופולריות לתכנון ארון בגדים ואאוטפיטים.
 
 ## מקורות ייבוא נתמכים
 
-- **Cladwell** - ייצא את הארון Cladwell שלך וייבא אותו ישירות ל-DressApp
-- **Stylebook** - העבר את המלאי Stylebook שלך בקלות
-- **Acloset** - ייבא את הפריטים והאאוטפיטים שלך מ-Acloset
-- **SmartCloset** - העבר את נתוני הארון SmartCloset שלך
-- **קבצי CSV** - ייבא מכל אפליקציה שתומכת בייצוא CSV (פורמט גנרי)
-- **אפליקציות אחרות** - הרבה אפליקציות ארונות אחרות תומכות בייצוא CSV, ש-DressApp יכול לייבא
+- **Cladwell** - Export your Cladwell wardrobe and import directly into DressApp
+- **Stylebook** - Transfer your Stylebook inventory with ease
+- **Acloset** - Import your Acloset items and outfits
+- **SmartCloset** - Migrate your SmartCloset wardrobe data
+- **CSV Files** - Import from any app that supports CSV export (generic format)
+- **Other Apps** - Many other wardrobe apps support CSV export which DressApp can import
 
-## מדריך שלב אחר שלב
+## מדריך ייבוא מפורט
 
-### שלב 1: פתח את דף הארון
-נווט לדף **הארון** שלך ב-DressApp. כאן יופיעו כל הפריטים המיובאים שלך.
+### שלב 1: פתח את דף המלתחה
+Navigate to your **Closet** page in DressApp. This is where all your imported items will appear.
 
 ### שלב 2: גישה לתכונת הייבוא
-חפש את כפתור **ייבוא** בדף הארון. הוא ממוקם בדרך כלל בפינה הימנית העליונה או בתפריט האפשרויות.
+Look for the **Import** button on the Closet page. It's usually in the top-right corner or in the menu options.
 
 ### שלב 3: בחר את אפליקציית המקור
-בחר את האפליקציה שממנה אתה מייבא מרשימת האפליקציות הנתמכות. אם האפליקציה שלך לא מופיעה, בחר **קובץ CSV** לאפשרות ייבוא גנרית.
+Choose the app you're importing from from the list of supported apps. If your app isn't listed, select **CSV File** for a generic import option.
 
 ### שלב 4: ייצא נתונים מהאפליקציה הישנה
-עקב אחר ההוראות עבור האפליקציה הספציפית שלך:
-- **Cladwell**: עבור להגדרות > ייצוא נתונים > הורד CSV
-- **Stylebook**: פתח תפריט > ייצוא > בחר פורמט CSV
-- **Acloset**: נווט לפרופיל > ייצוא אר > הורד
-- **SmartCloset**: עבור להגדרות > ניהול נתונים > ייצוא
-- **ייצוא CSV**: חפש אפשרות ייצוא או הורדה בהגדרות האפליקציה שלך
+Follow the instructions for your specific app:
+- **Cladwell**: Go to Settings > Export Data > Download CSV
+- **Stylebook**: Open Menu > Export > Choose CSV format
+- **Acloset**: Navigate to Profile > Export Wardrobe > Download
+- **SmartCloset**: Go to Settings > Data Management > Export
+- **CSV Export**: Look for an export or download option in your app's settings
 
-### שלb 5: העלה ל-DressApp
-העלה את הקובץ המיוצא ל-DressApp. המערכת באופן אוטומטי:
-- תanalyze את הנתונים ות mapch שדות לפורמט DressApp
-- תctegorize פריטים לפי הסוג שלהם (עליות, תחתונות, שמלות וכו')
-- תorganize צבעים ומידות
-- תibay תמונות אם זמינות
+### שלב 5: העלה ל-DressApp
+Upload the exported file to DressApp. The system will automatically:
+- Parse the data and map fields to DressApp's format
+- Categorize items based on their type (tops, bottoms, dresses, etc.)
+- Organize colors and sizes
+- Import images if available in the export
 
 ### שלב 6: סקירה והתאמה
-לאחר סיום הייבוא:
-- סקור את הפריטים שלך בדף הארון
-- התאם כל קטוגריה שmaybe שובצה לא נכון
-- הוסף פרטים חסרים (מותג, מחיר, תאריך רכישה)
-- מחק כפילויות או פריטי בדיקה
+After import completes:
+- Review your items on the Closet page
+- Fix any miscategorized items
+- Add missing details (brand, price, purchase date)
+- Remove any duplicates or test items
 
-## מה מייבאים
+## מה ייקח לקחת
 
-בהתאם לאפליקציית המקור, הנתונים הבאים עשויים להיות מיובאים:
-- שמות ותיאורי פריטים
-- קטגוריות ותת-קטגוריות
-- צבעים ודוגמאות
-- מידות ומדידות
-- מידע על מותג
-- תאריכי רכישה ומחירים
-- תמונות פריטים (אם זמינות בייצוא)
-- היסטוריית לבישה (אם נתמך)
+Depending on the source app, the following data may be imported:
+- Item names and descriptions
+- Categories and subcategories
+- Colors and patterns
+- Sizes and measurements
+- Brand information
+- Purchase dates and prices
+- Item images (if included in export)
+- Wear history (if supported)
 
 ## פתרון בעיות
 
-### ייבוא נכשל
-- בדוק שפורמט הקובץ נכון (CSV, JSON או פורמט ספציפי לאפליקציה)
-- ודא שהקובץ לא פגום או גדול מדי
-- נסה לייצא שוב מאפליקציית המקור
+### Import Failed
+- Check that the file format is correct (CSV, JSON, or app-specific format)
+- Ensure the file isn't corrupted or too large
+- Try exporting again from the source app
 
-### פריטים חסרים לאחר הייבוא
-- bazı שדות perhaps לא mapchied נכון
-- בדוק את דף תוצאות הייבוא לאזהרות
-- הוסף ידנית פריטים חסרים אם necesario
+### Missing Items After Import
+- Some fields may not have mapped correctly
+- Check the import results page for warnings
+- Manually add missing items if needed
 
-### תמונות לא מיובאות
-- לא כל האפליקציות כוללות תמונות בקבצי הייצוא שלהן
-- אתה יכול להضاف ידנית תמונות לפריטים המיובאים מאוחר יותר
-- השתמש בתכונת המצלמה או ההעלאה בדף פרטי הפריט
+### Images Not Imported
+- Not all apps include images in their export files
+- You can add images manually to imported items later
+- Use the camera or upload function on the item detail page
 
-## טיפים לייבוא מוצלח
+## זקוק לעזרה?
 
-1. **נקה קודם**: הסר כפילויות ופריטי בדיקה מהאפליקציה הישנה שלך לפני הייצוא
-2. **בדוק קטגוריות**: ודא שפריטים מקוטגוריים נכון באפליקציית המקור
-3. **אמת נתונים**: פתח את הקובץ המיוצא כדי להבטיח שהוא מכיל את כל המידע הצפוי
-4. **התחל בקטן**: אם יש לך ארון גדול, שקול לייבא במנות
-5. **גיבוי קודם**: שמור עותק של הקובץ המיוצא למקרה שתצטרך לייבא שוב
-
-## לאחר הייבוא
-
-לאחר ייבוא הארון שלך:
-- **דפדף בארון**: כל הפריטים שלך יופיעו בדף הארון
-- **צור אאוטפיטים**: התחל לערבב ולהתאים פריטים מיובאים
-- **קבל המלצות AI**: הסטייליסט AI ישתמש בארון המיוב suggestion לת suggesties
-- **עקב שימוש**: רשום מתי אתה לובש פריטים כדי לבנות את היסטוריית הלבישה שלך
-- **סנכרון בין מכשירים**: הארון המיובא שלך מסונכרן אוטומטית בכל המכשירים שלך
-
-## צריך עזרה?
-
-אם אתה נתקל בבעיות בתהליך הייבוא:
-- בדוק את סection פתרון הבעיות למעלה
-- צור קשר עם התמיכה דרך תפרit העזרה
-- הצטרף לפורום הקהילה שלנו לטיפים ממשתמשים אחרים
+If you run into issues with importing:
+- Check the troubleshooting section above
+- Contact support through the Help menu
+- Join our community forum for tips from other users
 
 ---
 
-*עדכון אחרון: יולי 2026*
+*עודכן לאחרונה: יולי 2026*

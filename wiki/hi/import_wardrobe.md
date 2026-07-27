@@ -2,102 +2,85 @@
 
 ## अवलोकन
 
-क्या आपका वार्डरोब पहले से किसी दूसरे ऐप में ट्रैक हो रहा है? कोई बात नहीं! DressApp आपके मौजूदा वार्डरोब डेटा को इंपोर्ट करना आसान बनाता है ताकि आपको शुरुआत से शुरू न करना पड़े। हम लोकप्रिय वार्डरोब और आउटफिट प्लानिंग ऐप्स की एक विस्तृत श्रृंखला से इंपोर्ट का समर्थन करते हैं।
+क्या आपके पास पहले से ही कोई ऐसा ऐप है जिसमें आपके वार्डरोब को ट्रैक किया गया है? कोई समस्या नहीं!DressApp आपके मौजूदा वार्डरोब डेटा को इम्पोर्ट करना आसान बनाता है ताकि आपको शुरू करने के लिए पहली बार से न शुरू करना पड़े.हम कई लोकप्रिय वार्डरोब और आउटफिट प्लानिंग ऐप्स से इम्पोर्ट को सपोर्ट करते हैं.
 
-## समर्थित इंपोर्ट स्रोत
+## सपोर्टेड इम्पोर्ट सोर्सेज
 
-- **Cladwell** - अपना Cladwell वार्डरोब एक्सपोर्ट करें और सीधे DressApp में इंपोर्ट करें
-- **Stylebook** - अपने Stylebook इन्वेंटरी को आसानी से ट्रांसफर करें
-- **Acloset** - अपने Acloset आइटम्स और आउटफिट्स इंपोर्ट करें
-- **SmartCloset** - अपने SmartCloset वार्डरोब डेटा को माइग्रेट करें
-- **CSV फाइलें** - किसी भी ऐप से इंपोर्ट करें जो CSV एक्सपोर्ट का समर्थन करता है (जेनेरिक फॉर्मेट)
-- **अन्य ऐप्स** - कई अन्य वार्डरोब ऐप्स CSV एक्सपोर्ट का समर्थन करते हैं, जिन्हें DressApp इंपोर्ट कर सकता है
+- **Cladwell** - Export your Cladwell wardrobe and import directly into DressApp
+- **Stylebook** - Transfer your Stylebook inventory with ease
+- **Acloset** - Import your Acloset items and outfits
+- **SmartCloset** - Migrate your SmartCloset wardrobe data
+- **CSV Files** - Import from any app that supports CSV export (generic format)
+- **Other Apps** - Many other wardrobe apps support CSV export which DressApp can import
 
-## चरण-दर-चरण गाइड
+## स्टेप-बाय-स्टेप इम्पोर्ट गाइड
 
-### चरण 1: क्लोसेट पेज खोलें
-DressApp में अपने **क्लोसेट** पेज पर जाएँ। यहीं आपके सभी इंपोर्ट किए गए आइटम दिखाई देंगे।
+### स्टेप 1: क्लोजेट पेज खोलें
+Navigate to your **Closet** page in DressApp. This is where all your imported items will appear.
 
-### चरण 2: इंपोर्ट फीचर एक्सेस करें
-क्लोसेट पेज पर **इंपोर्ट** बटन देखें। यह आमतौर पर ऊपरी दाएं कोने या मेनू विकल्पों में होता है।
+### स्टेप 2: इम्पोर्ट फीचर तक पहुँचें
+Look for the **Import** button on the Closet page. It's usually in the top-right corner or in the menu options.
 
-### चरण 3: अपना स्रोत ऐप चुनें
-समर्थित ऐप्स की सूची से वह ऐप चुनें जिससे आप इंपोर्ट कर रहे हैं। यदि आपका ऐप सूचीबद्ध नहीं है, तो जेनेरिक इंपोर्ट विकल्प के लिए **CSV फ़ाइल** चुनें।
+### स्टेप 3: सोर्स ऐप चुनें
+Choose the app you're importing from from the list of supported apps. If your app isn't listed, select **CSV File** for a generic import option.
 
-### चरण 4: पुराने ऐप से डेटा एक्सपोर्ट करें
-अपने विशिष्ट ऐप के लिए दिए गए निर्देशों का पालन करें:
-- **Cladwell**: सेटिंग्स > डेटा एक्सपोर्ट करें > CSV डाउनलोड करें पर जाएँ
-- **Stylebook**: मेनू खोलें > एक्सपोर्ट करें > CSV फॉर्मेट चुनें
-- **Acloset**: प्रोफाइल > वार्डरोब एक्सपोर्ट करें > डाउनलोड पर नेविगेट करें
-- **SmartCloset**: सेटिंग्स > डेटा मैनेजमेंट > एक्सपोर्ट पर जाएँ
-- **CSV एक्सपोर्ट**: अपनी ऐप की सेटिंग्स में एक्सपोर्ट या डाउनलोड विकल्प देखें
+### स्टेप 4: पुराने ऐप से डेटा एक्सपोर्ट करें
+Follow the instructions for your specific app:
+- **Cladwell**: Go to Settings > Export Data > Download CSV
+- **Stylebook**: Open Menu > Export > Choose CSV format
+- **Acloset**: Navigate to Profile > Export Wardrobe > Download
+- **SmartCloset**: Go to Settings > Data Management > Export
+- **CSV Export**: Look for an export or download option in your app's settings
 
-### चरण 5: DressApp पर अपलोड करें
-एक्सपोर्ट की गई फ़ाइल को DressApp पर अपलोड करें। सिस्टम स्वचालित रूप से:
-- डेटा को पार्स करेगा और फील्ड्स को DressApp के फॉर्मेट में मैप करेगा
-- आइटम्स को उनके प्रकार के आधार पर वर्गीकृत करेगा (टॉप्स, बॉटम्स, ड्रेसेस, आदि)
-- रंगों और आकारों को व्यवस्थित करेगा
-- इमेजेज इंपोर्ट करेगा यदि उपलब्ध हों
+### स्टेप 5: DressApp में अपलोड करें
+Upload the exported file to DressApp. The system will automatically:
+- Parse the data and map fields to DressApp's format
+- Categorize items based on their type (tops, bottoms, dresses, etc.)
+- Organize colors and sizes
+- Import images if available in the export
 
-### चरण 6: समीक्षा करें और समायोजित करें
-इंपोर्ट पूरा होने के बाद:
-- क्लोसेट पेज पर अपने आइटम्स की समीक्षा करें
-- गलत तरीके से असाइन की गई किसी भी कैटेगरी को एडजस्ट करें
-- कोई भी गुम विवरण जोड़ें (ब्रांड, कीमत, खरीद की तारीख)
-- किसी भी डुप्लीकेट या टेस्ट आइटम को डिलीट करें
+### स्टेप 6: रिव्यू और एडजस्ट करें
+After import completes:
+- Review your items on the Closet page
+- Fix any miscategorized items
+- Add missing details (brand, price, purchase date)
+- Remove any duplicates or test items
 
 ## क्या इंपोर्ट होता है
 
-स्रोत ऐप के आधार पर, निम्नलिखित डेटा इंपोर्ट किया जा सकता है:
-- आइटम के नाम और विवरण
-- कैटेगरी और सबकैटेगरी
-- रंग और पैटर्न
-- आकार और माप
-- ब्रांड जानकारी
-- खरीद की तारीखें और कीमतें
-- आइटम इमेजेज (यदि एक्सपोर्ट में उपलब्ध हों)
-- पहनने का इतिहास (यदि समर्थित हो)
+Depending on the source app, the following data may be imported:
+- Item names and descriptions
+- Categories and subcategories
+- Colors and patterns
+- Sizes and measurements
+- Brand information
+- Purchase dates and prices
+- Item images (if included in export)
+- Wear history (if supported)
 
-## समस्या निवारण
+## ट्रबलशूटिंग
 
-### इंपोर्ट विफल
-- जाँचें कि फ़ाइल फॉर्मेट सही है (CSV, JSON, या ऐप-विशिष्ट फॉर्मेट)
-- सुनिश्चित करें कि फ़ाइल करप्ट या बहुत बड़ी नहीं है
-- स्रोत ऐप से फिर से एक्सपोर्ट करने का प्रयास करें
+### Import Failed
+- Check that the file format is correct (CSV, JSON, or app-specific format)
+- Ensure the file isn't corrupted or too large
+- Try exporting again from the source app
 
-### इंपोर्ट के बाद आइटम्स गुम
-- कुछ फील्ड्स सही तरीके से मैप नहीं हो पाए होंगे
-- किसी भी चेतावनी के लिए इंपोर्ट रिजल्ट्स पेज देखें
-- यदि आवश्यक हो तो गुम आइटम्स को मैन्युअली जोड़ें
+### Missing Items After Import
+- Some fields may not have mapped correctly
+- Check the import results page for warnings
+- Manually add missing items if needed
 
-### इमेजेज इंपोर्ट नहीं हुईं
-- सभी ऐप्स अपने एक्सपोर्ट फ़ाइलों में इमेजेज शामिल नहीं करते
-- आप बाद में इंपोर्ट किए गए आइटम्स में मैन्युअली इमेजेज जोड़ सकते हैं
-- आइटम डिटेल पेज पर कैमरा या अपलोड फीचर का उपयोग करें
-
-## सफल इंपोर्ट के लिए टिप्स
-
-1. **पहले साफ़ करें**: एक्सपोर्ट करने से पहले अपने पुराने ऐप से डुप्लीकेट और टेस्ट आइटम्स हटा दें
-2. **कैटेगरी जाँचें**: सुनिश्चित करें कि आइटम्स स्रोत ऐप में ठीक से वर्गीकृत हैं
-3. **डेटा सत्यापित करें**: एक्सपोर्ट की गई फ़ाइल खोलकर सुनिश्चित करें कि इसमें सभी अपेक्षित जानकारी है
-4. **छोटे से शुरू करें**: यदि आपका वार्डरोब बड़ा है, तो बैच में इंपोर्ट करने पर विचार करें
-5. **पहले बैकअप लें**: अपनी एक्सपोर्ट की गई फ़ाइल की एक कॉपी रखें ताकि ज़रूरत पड़ने पर पुनः इंपोर्ट कर सकें
-
-## इंपोर्ट करने के बाद
-
-एक बार आपका वार्डरोब इंपोर्ट हो जाए:
-- **अपना क्लोसेट ब्राउज़ करें**: आपके सभी आइटम क्लोसेट पेज पर दिखाई देंगे
-- **आउटफिट्स बनाएँ**: इंपोर्ट किए गए आइटम्स को मिक्स और मैच करना शुरू करें
-- **AI अनुशंसाएँ प्राप्त करें**: AI स्टाइलिस्ट सुझावों के लिए आपके इंपोर्ट किए गए वार्डरोब का उपयोग करेगा
-- **उपयोग ट्रैक करें**: लॉग करें कि आप कब आइटम्स पहनते हैं ताकि आपका पहनने का इतिहास बन सके
-- **डिवाइसेज़ में सिंक करें**: आपका इंपोर्ट किया गया वार्डरोब आपके सभी डिवाइसेज़ में अपने आप सिंक हो जाता है
+### Images Not Imported
+- Not all apps include images in their export files
+- You can add images manually to imported items later
+- Use the camera or upload function on the item detail page
 
 ## मदद चाहिए?
 
-यदि इंपोर्ट प्रक्रिया के दौरान आपको कोई समस्या आती है:
-- ऊपर दिए गए समस्या निवारण सेक्शन देखें
-- सहायता मेनू के माध्यम से सपोर्ट से संपर्क करें
-- अन्य यूजर्स से टिप्स के लिए हमारे कम्युनिटी फोरम से जुड़ें
+If you run into issues with importing:
+- Check the troubleshooting section above
+- Contact support through the Help menu
+- Join our community forum for tips from other users
 
 ---
 

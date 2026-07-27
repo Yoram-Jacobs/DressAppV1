@@ -2,102 +2,85 @@
 
 ## Обзор
 
-Уже ведете учет своего гардероба в другом приложении? Ничего страшного! DressApp упрощает импорт существующих данных гардероба, чтобы вам не приходилось начинать с нуля. Мы поддерживаем импорт из широкого спектра популярных приложений для гардероба и планирования образов.
+У вас уже есть учетная запись в другой программе, в которой отслеживается ваша гардеробная? Что ж, не беспокойтесь!DressApp позволяет легко импортировать ваши существующие данные гардероба, поэтому вам не нужно начинать с нуля.Мы поддерживаем импорт из широкого спектра популярных приложений для планирования гардероба и аутфитов.
 
 ## Поддерживаемые источники импорта
 
-- **Cladwell** - Экспортируйте свой гардероб Cladwell и импортируйте напрямую в DressApp
-- **Stylebook** - Перенесите свой инвентарь Stylebook с легкостью
-- **Acloset** - Импортируйте свои предметы и образы Acloset
-- **SmartCloset** - Мигрируйте данные своего гардероба SmartCloset
-- **CSV файлы** - Импортируйте из любого приложения, поддерживающего CSV-экспорт (универсальный формат)
-- **Другие приложения** - Многие другие приложения для гардероба поддерживают CSV-экспорт, который DressApp может импортировать
+- **Cladwell** - Export your Cladwell wardrobe and import directly into DressApp
+- **Stylebook** - Transfer your Stylebook inventory with ease
+- **Acloset** - Import your Acloset items and outfits
+- **SmartCloset** - Migrate your SmartCloset wardrobe data
+- **CSV Files** - Import from any app that supports CSV export (generic format)
+- **Other Apps** - Many other wardrobe apps support CSV export which DressApp can import
 
-## Пошаговое руководство
+## Пошаговое руководство по импорту
 
-### Шаг 1: Откройте страницу Гардероба
-Перейдите на страницу **Гардероб** в DressApp. Здесь появятся все ваши импортированные предметы.
+### Шаг 1: Откройте страницу Closet
+Navigate to your **Closet** page in DressApp. This is where all your imported items will appear.
 
-### Шаг 2: Доступ к функции Импорта
-Найдите кнопку **Импорт** на странице Гардероба. Обычно она находится в правом верхнем углу или в параметрах меню.
+### Шаг 2: Доступ к функции импорта
+Look for the **Import** button on the Closet page. It's usually in the top-right corner or in the menu options.
 
-### Шаг 3: Выберите приложение-источник
-Выберите приложение, из которого вы импортируете, из списка поддерживаемых приложений. Если ваше приложение не указано, выберите **CSV файл** для универсального варианта импорта.
+### Шаг 3: Выберите источник приложения
+Choose the app you're importing from from the list of supported apps. If your app isn't listed, select **CSV File** for a generic import option.
 
-### Шаг 4: Экспорт данных из старого приложения
-Следуйте инструкциям для вашего конкретного приложения:
-- **Cladwell**: Перейдите в Настройки > Экспорт данных > Скачать CSV
-- **Stylebook**: Откройте Меню > Экспорт > Выберите формат CSV
-- **Acloset**: Перейдите в Профиль > Экспорт гардероба > Скачать
-- **SmartCloset**: Перейдите в Настройки > Управление данными > Экспорт
-- **CSV экспорт**: Найдите параметр экспорта или скачивания в настройках вашего приложения
+### Шаг 4: Экспортируйте данные из старой программы
+Follow the instructions for your specific app:
+- **Cladwell**: Go to Settings > Export Data > Download CSV
+- **Stylebook**: Open Menu > Export > Choose CSV format
+- **Acloset**: Navigate to Profile > Export Wardrobe > Download
+- **SmartCloset**: Go to Settings > Data Management > Export
+- **CSV Export**: Look for an export or download option in your app's settings
 
 ### Шаг 5: Загрузите в DressApp
-Загрузите экспортированный файл в DressApp. Система автоматически:
-- Разберет данные и сопоставит поля с форматом DressApp
-- Классифицирует предметы по их типу (верх, низ, платья и т.д.)
-- Организует цвета и размеры
-- Импортирует изображения, если они доступны
+Upload the exported file to DressApp. The system will automatically:
+- Parse the data and map fields to DressApp's format
+- Categorize items based on their type (tops, bottoms, dresses, etc.)
+- Organize colors and sizes
+- Import images if available in the export
 
-### Шаг 6: Просмотр и корректировка
-После завершения импорта:
-- Просмотрите свои предметы на странице Гардероба
-- Скорректируйте любые категории, которые могли быть назначены неправильно
-- Добавьте недостающие детали (бренд, цена, дата покупки)
-- Удалите дубликаты или тестовые предметы
+### Шаг 6: Проверьте и откорректируйте
+After import completes:
+- Review your items on the Closet page
+- Fix any miscategorized items
+- Add missing details (brand, price, purchase date)
+- Remove any duplicates or test items
 
 ## Что импортируется
 
-В зависимости от приложения-источника, могут быть импортированы следующие данные:
-- Названия и описания предметов
-- Категории и подкатегории
-- Цвета и узоры
-- Размеры и мерки
-- Информация о бренде
-- Даты покупки и цены
-- Изображения предметов (если доступны в экспорте)
-- История ношения (если поддерживается)
+Depending on the source app, the following data may be imported:
+- Item names and descriptions
+- Categories and subcategories
+- Colors and patterns
+- Sizes and measurements
+- Brand information
+- Purchase dates and prices
+- Item images (if included in export)
+- Wear history (if supported)
 
-## Устранение неполадок
+## Решение проблем
 
-### Импорт не удался
-- Проверьте, что формат файла правильный (CSV, JSON или специфический формат приложения)
-- Убедитесь, что файл не поврежден или слишком большой
-- Попробуйте экспортировать снова из приложения-источника
+### Import Failed
+- Check that the file format is correct (CSV, JSON, or app-specific format)
+- Ensure the file isn't corrupted or too large
+- Try exporting again from the source app
 
-### Предметы отсутствуют после импорта
-- Некоторые поля могли быть неправильно сопоставлены
-- Проверьте страницу Результатов импорта на наличие предупреждений
-- Вручную добавьте отсутствующие предметы при необходимости
+### Missing Items After Import
+- Some fields may not have mapped correctly
+- Check the import results page for warnings
+- Manually add missing items if needed
 
-### Изображения не импортированы
-- Не все приложения включают изображения в файлы экспорта
-- Вы можете вручную добавить изображения к импортированным предметам позже
-- Используйте функцию камеры или загрузки на странице деталей предмета
-
-## Советы для успешного импорта
-
-1. **Сначала очистите**: Удалите дубликаты и тестовые предметы из старого приложения перед экспортом
-2. **Проверьте категории**: Убедитесь, что предметы правильно классифицированы в приложении-источнике
-3. **Проверьте данные**: Откройте экспортированный файл, чтобы убедиться, что он содержит всю ожидаемую информацию
-4. **Начните с малого**: Если у вас большой гардероб, рассмотрите импорт партиями
-5. **Сначала резервная копия**: Сохраните копию экспортированного файла на случай, если потребуется повторный импорт
-
-## После импорта
-
-Как только ваш гардероб импортирован:
-- **Просмотрите свой Гардероб**: Все ваши предметы появятся на странице Гардероба
-- **Создавайте образы**: Начните смешивать и сочетать импортированные предметы
-- **Получайте рекомендации ИИ**: Стилист ИИ будет использовать ваш импортированный гардероб для предложений
-- **Отслеживайте использование**: Записывайте, когда вы носите предметы, для построения истории ношения
-- **Синхронизация между устройствами**: Ваш импортированный гардероб автоматически синхронизируется на всех ваших устройствах
+### Images Not Imported
+- Not all apps include images in their export files
+- You can add images manually to imported items later
+- Use the camera or upload function on the item detail page
 
 ## Нужна помощь?
 
-Если вы столкнулись с проблемами во время процесса импорта:
-- Обратитесь к разделу Устранения неполадок выше
-- Свяжитесь с поддержкой через меню Помощи
-- Присоединитесь к нашему форуму сообщества для советов от других пользователей
+If you run into issues with importing:
+- Check the troubleshooting section above
+- Contact support through the Help menu
+- Join our community forum for tips from other users
 
 ---
 

@@ -39,6 +39,8 @@ import MyCampaigns from '@/pages/MyCampaigns';
 import Suitcase from '@/pages/Suitcase';
 import SharedOutfit from '@/pages/SharedOutfit';
 import DeleteAccount from '@/pages/DeleteAccount';
+import Privacy from '@/pages/Privacy';
+import TermsOfService from '@/pages/TermsOfService';
 
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -204,6 +206,8 @@ function App() {
               <Route path="/ads" element={<AdsManager />} />
               <Route path="/me" element={<Profile />} />
               <Route path="/delete-account" element={<DeleteAccount />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<TermsOfService />} />
               <Route path="/me/stats" element={<WardrobeStats />} />
               <Route path="/trends" element={<TrendScout />} />
               <Route path="/avatar" element={<AvatarPage />} />

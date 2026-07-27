@@ -2,103 +2,86 @@
 
 ## Panoramica
 
-Hai già il tuo guardaroba tracciato in un'altra app? Nessun problema! DressApp rende facile importare i tuoi dati esistenti così non devi ricominciare da zero. Supportiamo l'importazione da una vasta gamma di popolari app per guardaroba e pianificazione outfit.
+Hai già il tuo guardaroba registrato in un'altra app? Nessun problema!DressApp rende facile importare i tuoi dati di guardaroba esistenti così non devi ricominciare da capo.Supportiamo importazioni da un'ampia gamma di app popolari per la pianificazione di guardaroba e outfit.
 
-## Fonti di Importazione Supportate
+## Fonti di importazione supportate
 
-- **Cladwell** - Esporta il tuo guardaroba Cladwell e importalo direttamente in DressApp
-- **Stylebook** - Trasferisci il tuo inventario Stylebook con facilità
-- **Acloset** - Importa i tuoi articoli e outfit Acloset
-- **SmartCloset** - Migra i dati del tuo guardaroba SmartCloset
-- **File CSV** - Importa da qualsiasi app che supporta l'esportazione CSV (formato generico)
-- **Altre App** - Molte altre app per guardaroba supportano l'esportazione CSV, che DressApp può importare
+- **Cladwell** - Export your Cladwell wardrobe and import directly into DressApp
+- **Stylebook** - Transfer your Stylebook inventory with ease
+- **Acloset** - Import your Acloset items and outfits
+- **SmartCloset** - Migrate your SmartCloset wardrobe data
+- **CSV Files** - Import from any app that supports CSV export (generic format)
+- **Other Apps** - Many other wardrobe apps support CSV export which DressApp can import
 
-## Guida Passo-Passo
+## Guida passo-passo per l'importazione
 
-### Passo 1: Apri la Pagina Guardaroba
-Vai alla tua pagina **Guardaroba** in DressApp. Qui appariranno tutti gli articoli importati.
+### Passo 1: Apri la pagina del Closet
+Navigate to your **Closet** page in DressApp. This is where all your imported items will appear.
 
-### Passo 2: Accedi alla Funzione Importa
-Cerca il pulsante **Importa** nella pagina Guardaroba. Solitamente si trova nell'angolo in alto a destra o nelle opzioni del menu.
+### Passo 2: Accedi alla funzione di importazione
+Look for the **Import** button on the Closet page. It's usually in the top-right corner or in the menu options.
 
-### Passo 3: Seleziona la Tua App di Origine
-Scegli l'app da cui stai importando dall'elenco delle app supportate. Se la tua app non è elencata, seleziona **File CSV** per un'opzione di importazione generica.
+### Passo 3: Seleziona l'app sorgente
+Choose the app you're importing from from the list of supported apps. If your app isn't listed, select **CSV File** for a generic import option.
 
-### Passo 4: Esporta i Dati dalla Vecchia App
-Segui le istruzioni per la tua app specifica:
-- **Cladwell**: Vai a Impostazioni > Esporta Dati > Scarica CSV
-- **Stylebook**: Apri Menu > Esporta > Scegli formato CSV
-- **Acloset**: Vai a Profilo > Esporta Guardaroba > Scarica
-- **SmartCloset**: Vai a Impostazioni > Gestione Dati > Esporta
-- **Esportazione CSV**: Cerca un'opzione di esportazione o download nelle impostazioni della tua app
+### Passo 4: Esporta i dati dall'app vecchia
+Follow the instructions for your specific app:
+- **Cladwell**: Go to Settings > Export Data > Download CSV
+- **Stylebook**: Open Menu > Export > Choose CSV format
+- **Acloset**: Navigate to Profile > Export Wardrobe > Download
+- **SmartCloset**: Go to Settings > Data Management > Export
+- **CSV Export**: Look for an export or download option in your app's settings
 
 ### Passo 5: Carica su DressApp
-Carica il file esportato su DressApp. Il sistema farà automaticamente:
-- Analizzare i dati e mappare i campi al formato di DressApp
-- Categorizzare gli articoli per tipo (top, bottom, abiti, ecc.)
-- Organizzare colori e taglie
-- Importare le immagini se disponibili
+Upload the exported file to DressApp. The system will automatically:
+- Parse the data and map fields to DressApp's format
+- Categorize items based on their type (tops, bottoms, dresses, etc.)
+- Organize colors and sizes
+- Import images if available in the export
 
-### Passo 6: Rivedi e Regola
-Dopo il completamento dell'importazione:
-- Rivedi i tuoi articoli nella pagina Guardaroba
-- Regola eventuali categorie assegnate erroneamente
-- Aggiungi dettagli mancanti (marca, prezzo, data acquisto)
-- Elimina duplicati o articoli di prova
+### Passo 6: Rivedi e adatta
+After import completes:
+- Review your items on the Closet page
+- Fix any miscategorized items
+- Add missing details (brand, price, purchase date)
+- Remove any duplicates or test items
 
-## Cosa Viene Importato
+## Cosa viene importato
 
-A seconda dell'app di origine, possono essere importati i seguenti dati:
-- Nomi e descrizioni degli articoli
-- Categorie e sottocategorie
-- Colori e motivi
-- Taglie e misure
-- Informazioni sulla marca
-- Date e prezzi di acquisto
-- Immagini degli articoli (se disponibili nell'esportazione)
-- Cronologia indossi (se supportato)
+Depending on the source app, the following data may be imported:
+- Item names and descriptions
+- Categories and subcategories
+- Colors and patterns
+- Sizes and measurements
+- Brand information
+- Purchase dates and prices
+- Item images (if included in export)
+- Wear history (if supported)
 
-## Risoluzione Problemi
+## Risoluzione problemi
 
-### Importazione Fallita
-- Verifica che il formato del file sia corretto (CSV, JSON, o formato specifico dell'app)
-- Assicurati che il file non sia corrotto o troppo grande
-- Prova a riesportare dall'app di origine
+### Import Failed
+- Check that the file format is correct (CSV, JSON, or app-specific format)
+- Ensure the file isn't corrupted or too large
+- Try exporting again from the source app
 
-### Articoli Mancanti Dopo l'Importazione
-- Alcuni campi potrebbero non essere stati mappati correttamente
-- Controlla la pagina Risultati Importazione per eventuali avvisi
-- Aggiungi manualmente gli articoli mancanti se necessario
+### Missing Items After Import
+- Some fields may not have mapped correctly
+- Check the import results page for warnings
+- Manually add missing items if needed
 
-### Immagini Non Importate
-- Non tutte le app includono le immagini nei file di esportazione
-- Puoi aggiungere manualmente le immagini agli articoli importati in seguito
-- Usa la fotocamera o la funzione di upload nella pagina dettagli articolo
+### Images Not Imported
+- Not all apps include images in their export files
+- You can add images manually to imported items later
+- Use the camera or upload function on the item detail page
 
-## Consigli per un'Importazione Riuscita
+## Hai bisogno di aiuto?
 
-1. **Pulisci Prima**: Rimuovi duplicati e articoli di prova dalla tua vecchia app prima di esportare
-2. **Controlla le Categorie**: Assicurati che gli articoli siano correttamente categorizzati nell'app di origine
-3. **Verifica i Dati**: Apri il file esportato per assicurarti che contenga tutte le informazioni attese
-4. **Inizia in Piccolo**: Se hai un grande guardaroba, considera di importare a batch
-5. **Backup Prima**: Conserva una copia del tuo file esportato in caso tu debba reimportare
-
-## Dopo l'Importazione
-
-Una volta importato il tuo guardaroba:
-- **Sfoglia il Tuo Guardaroba**: Tutti i tuoi articoli appariranno nella pagina Guardaroba
-- **Crea Outfit**: Inizia a combinare gli articoli importati
-- **Ottieni Raccomandazioni AI**: L'AI Stylist userà il tuo guardaroba importato per suggerimenti
-- **Traccia l'Utilizzo**: Registra quando indossi gli articoli per costruire la tua cronologia
-- **Sincronizza su Dispositivi**: Il tuo guardaroba importato si sincronizza automaticamente su tutti i tuoi dispositivi
-
-## Hai Bisogno di Aiuto?
-
-Se incontri problemi durante il processo di importazione:
-- Controlla la sezione Risoluzione Problemi sopra
-- Contatta il supporto tramite il menu Aiuto
-- Unisciti al nostro forum community per consigli da altri utenti
+If you run into issues with importing:
+- Check the troubleshooting section above
+- Contact support through the Help menu
+- Join our community forum for tips from other users
 
 ---
 
-*Ultimo aggiornamento: Luglio 2026*
+*Ultima aggiornamento: luglio 2026*

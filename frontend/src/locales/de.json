@@ -1154,7 +1154,8 @@
     "perYear": " / Jahr",
     "upgradeAnnualBtn": "Jährlich upgraden",
     "inviteDesc": "Teilen Sie DressApp mit Ihren Freunden und Ihrer Familie",
-    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings"
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
+    "privacyPolicy": "Privacy Policy"
   },
   "admin": {
     "title": "Admin",
@@ -2763,5 +2764,13 @@
     "geminiKeyRequired": "Sie müssen Ihren Google AI Gemini-Schlüssel eingeben",
     "geminiKeyDescription": "Sie müssen Ihren Google AI Gemini API-Schlüssel konfigurieren. Sie können einen Schlüssel bei Google AI Studio erhalten.",
     "configureKey": "Schlüssel konfigurieren"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "description": "DressApp Terms of Service — rules and conditions for using our app."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "DressApp privacy policy — how we collect, use, and protect your data."
   }
 }

@@ -2,103 +2,86 @@
 
 ## Overzicht
 
-Heb je je garderobe al bijgehouden in een andere app? Geen probleem! DressApp maakt het gemakkelijk om je bestaande garderobe-gegevens te importeren zodat je niet vanaf nul hoeft te beginnen. We ondersteunen imports van een breed scala aan populaire garderobe- en outfitplanning-apps.
+Heb je je garderobe al in een andere app bijgehouden? Geen probleem!DressApp maakt het gemakkelijk om je bestaande garderobedata te importeren, zodat je niet opnieuw hoeft te beginnen.We ondersteunen importen van een breed scala aan populaire garderobe- en outfitplaning apps.
 
-## Ondersteunde Importbronnen
+## Ondersteunde importbronnen
 
-- **Cladwell** - Exporteer je Cladwell-garderobe en importeer direct in DressApp
-- **Stylebook** - Draag je Stylebook-inventaris eenvoudig over
-- **Acloset** - Importeer je Acloset-items en outfits
-- **SmartCloset** - Migreer je SmartCloset-garderobe-gegevens
-- **CSV-bestanden** - Importeer uit elke app die CSV-export ondersteunt (generiek formaat)
-- **Andere Apps** - Veel andere garderobe-apps ondersteunen CSV-export, die DressApp kan importeren
+- **Cladwell** - Export your Cladwell wardrobe and import directly into DressApp
+- **Stylebook** - Transfer your Stylebook inventory with ease
+- **Acloset** - Import your Acloset items and outfits
+- **SmartCloset** - Migrate your SmartCloset wardrobe data
+- **CSV Files** - Import from any app that supports CSV export (generic format)
+- **Other Apps** - Many other wardrobe apps support CSV export which DressApp can import
 
-## Stap-voor-Stap Gids
+## Stapsgewijze importgids
 
-### Stap 1: Open de Garderobe-pagina
-Navigeer naar je **Garderobe**-pagina in DressApp. Hier verschijnen al je geïmporteerde items.
+### Stap 1: Open de Closet-pagina
+Navigate to your **Closet** page in DressApp. This is where all your imported items will appear.
 
-### Stap 2: Toegang tot de Importfunctie
-Zoek naar de **Importeer**-knop op de Garderobe-pagina. Deze bevindt zich meestal rechtsboven of in de menuopties.
+### Stap 2: Toegang tot de importfunctie
+Look for the **Import** button on the Closet page. It's usually in the top-right corner or in the menu options.
 
-### Stap 3: Selecteer je Bron-app
-Kies de app waaruit je importeert uit de lijst met ondersteunde apps. Als je app niet wordt weergegeven, selecteer **CSV-bestand** voor een generieke importoptie.
+### Stap 3: Selecteer de brong
+Choose the app you're importing from from the list of supported apps. If your app isn't listed, select **CSV File** for a generic import option.
 
-### Stap 4: Exporteer Gegevens uit de Oude App
-Volg de instructies voor je specifieke app:
-- **Cladwell**: Ga naar Instellingen > Gegevens exporteren > CSV downloaden
-- **Stylebook**: Open Menu > Exporteren > Kies CSV-formaat
-- **Acloset**: Ga naar Profiel > Garderobe exporteren > Downloaden
-- **SmartCloset**: Ga naar Instellingen > Gegevensbeheer > Exporteren
-- **CSV-export**: Zoek naar een export- of downloadoptie in de instellingen van je app
+### Stap 4: Exporteer gegevens van de oude app
+Follow the instructions for your specific app:
+- **Cladwell**: Go to Settings > Export Data > Download CSV
+- **Stylebook**: Open Menu > Export > Choose CSV format
+- **Acloset**: Navigate to Profile > Export Wardrobe > Download
+- **SmartCloset**: Go to Settings > Data Management > Export
+- **CSV Export**: Look for an export or download option in your app's settings
 
 ### Stap 5: Upload naar DressApp
-Upload het geëxporteerde bestand naar DressApp. Het systeem zal automatisch:
-- De gegevens analyseren en velden matchen met het formaat van DressApp
-- Items categoriseren op basis van hun type (bovenkanten, onderkanten, jurken, etc.)
-- Kleuren en maten organiseren
-- Afbeeldingen importeren indien beschikbaar
+Upload the exported file to DressApp. The system will automatically:
+- Parse the data and map fields to DressApp's format
+- Categorize items based on their type (tops, bottoms, dresses, etc.)
+- Organize colors and sizes
+- Import images if available in the export
 
-### Stap 6: Beoordelen en Aanpassen
-Na voltooiing van de import:
-- Beoordeel je items op de Garderobe-pagina
-- Pas eventuele categorieën aan die mogelijk onjuist zijn toegewezen
-- Voeg ontbrekende details toe (merk, prijs, aankoopdatum)
-- Verwijder duplicaten of testitems
+### Stap 6: Beoordelen en aanpassen
+After import completes:
+- Review your items on the Closet page
+- Fix any miscategorized items
+- Add missing details (brand, price, purchase date)
+- Remove any duplicates or test items
 
-## Wat wordt Geïmporteerd
+## Wat wordt geïmporteerd
 
-Afhankelijk van de bron-app kunnen de volgende gegevens worden geïmporteerd:
-- Itemnamen en beschrijvingen
-- Categorieën en subcategorieën
-- Kleuren en patronen
-- Maten en afmetingen
-- Merkinformatie
-- Aankoopdatums en prijzen
-- Itemafbeeldingen (indien beschikbaar in de export)
-- Draaggeschiedenis (indien ondersteund)
+Depending on the source app, the following data may be imported:
+- Item names and descriptions
+- Categories and subcategories
+- Colors and patterns
+- Sizes and measurements
+- Brand information
+- Purchase dates and prices
+- Item images (if included in export)
+- Wear history (if supported)
 
 ## Probleemoplossing
 
-### Import Mislukt
-- Controleer of het bestandsformaat correct is (CSV, JSON of app-specifiek formaat)
-- Zorg ervoor dat het bestand niet beschadigd of te groot is
-- Probeer opnieuw te exporteren vanuit de bron-app
+### Import Failed
+- Check that the file format is correct (CSV, JSON, or app-specific format)
+- Ensure the file isn't corrupted or too large
+- Try exporting again from the source app
 
-### Items Ontbreken Na Import
-- Sommige velden zijn mogelijk niet correct gematcht
-- Controleer de Importresultaten-pagina op waarschuwingen
-- Voeg ontbrekende items handmatig toe indien nodig
+### Missing Items After Import
+- Some fields may not have mapped correctly
+- Check the import results page for warnings
+- Manually add missing items if needed
 
-### Afbeeldingen Niet Geïmporteerd
-- Niet alle apps voegen afbeeldingen toe aan hun exportbestanden
-- Je kunt handmatig afbeeldingen toevoegen aan geïmporteerde items
-- Gebruik de camera- of uploadfunctie op de itemdetailspagina
+### Images Not Imported
+- Not all apps include images in their export files
+- You can add images manually to imported items later
+- Use the camera or upload function on the item detail page
 
-## Tips voor een Succesvolle Import
+## Heb je hulp nodig?
 
-1. **Ruim eerst op**: Verwijder duplicaten en testitems uit je oude app voordat je exporteert
-2. **Controleer categorieën**: Zorg ervoor dat items correct zijn gecategoriseerd in de bron-app
-3. **Verifieer gegevens**: Open het geëxporteerde bestand om te controleren of het alle verwachte informatie bevat
-4. **Begin klein**: Als je een grote garderobe hebt, overweeg dan om in batches te importeren
-5. **Back-up eerst**: Bewaar een kopie van je geëxporteerde bestand voor het geval je opnieuw moet importeren
-
-## Na het Importeren
-
-Zodra je garderobe is geïmporteerd:
-- **Blader door je Garderobe**: Al je items verschijnen op de Garderobe-pagina
-- **Maak outfits**: Begin met het mixen en matchen van geïmporteerde items
-- **Ontvang AI-aanbevelingen**: De AI-stylist zal je geïmporteerde garderobe gebruiken voor suggesties
-- **Track gebruik**: Log wanneer je items draagt om je draaggeschiedenis op te bouwen
-- **Synchroniseer tussen apparaten**: Je geïmporteerde garderobe synchroniseert automatisch op al je apparaten
-
-## Hulp Nodig?
-
-Als je problemen ondervindt tijdens het importproces:
-- Raadpleeg de Probleemoplossing-sectie hierboven
-- Neem contact op met ondersteuning via het Hulp-menu
-- Sluit je aan bij ons communityforum voor tips van andere gebruikers
+If you run into issues with importing:
+- Check the troubleshooting section above
+- Contact support through the Help menu
+- Join our community forum for tips from other users
 
 ---
 
-*Laatst bijgewerkt: juli 2026*
+*Laatste update: juli 2026*

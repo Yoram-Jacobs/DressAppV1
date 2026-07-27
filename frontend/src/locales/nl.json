@@ -1154,7 +1154,8 @@
     "annualPlan": "Jaarlijks plan",
     "annualPlanDesc": "Bespaar 50% in vergelijking met maandelijkse facturering.",
     "perYear": " / jaar",
-    "upgradeAnnualBtn": "Upgrade jaarlijks"
+    "upgradeAnnualBtn": "Upgrade jaarlijks",
+    "privacyPolicy": "Privacy Policy"
   },
   "admin": {
     "title": "Beheerder",
@@ -2763,5 +2764,13 @@
     "geminiKeyRequired": "U moet uw Google AI Gemini-sleutel invoeren",
     "geminiKeyDescription": "U moet uw Google AI Gemini API-sleutel configureren. U kunt een sleutel verkrijgen bij Google AI Studio.",
     "configureKey": "Sleutel configureren"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "description": "DressApp Terms of Service — rules and conditions for using our app."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "DressApp privacy policy — how we collect, use, and protect your data."
   }
 }

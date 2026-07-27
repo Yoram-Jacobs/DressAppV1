@@ -1154,7 +1154,8 @@
     "upgradeAnnualBtn": "升级年度版",
     "inviteDesc": "与您的朋友和家人分享 DressApp",
     "bookmarkletDesc": "将下方按钮拖拽至书签栏。在移动端上，将其加入书签并命名为 'DressApp 购物助手'。浏览任何商品详情页时点击此书签即可使用。",
-    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings"
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
+    "privacyPolicy": "Privacy Policy"
   },
   "admin": {
     "title": "管理",
@@ -2763,5 +2764,13 @@
     "geminiKeyRequired": "您必须输入您的 Google AI Gemini 密钥",
     "geminiKeyDescription": "您必须配置您的 Google AI Gemini API 密钥。您可以在 Google AI Studio 获取密钥。",
     "configureKey": "配置密钥"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "description": "DressApp Terms of Service — rules and conditions for using our app."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "DressApp privacy policy — how we collect, use, and protect your data."
   }
 }

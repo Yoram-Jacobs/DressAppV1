@@ -1,103 +1,86 @@
-# استيراد خزانة ملابسك - دليل مفصل
+# استيراد خزانة الملابس - دليل مفصل
 
 ## نظرة عامة
 
-هل لديك خزانة ملابسك مُتتبعة في تطبيق آخر؟ لا مشكلة! يجعل DressApp من السهل استيراد بيانات خزانة ملابسك الحالية حتى لا تضطر للبدء من الصفر. نحن ندعم الاستيراد من مجموعة واسعة من تطبيقات خزانة الملابس وتخطيط الزيارات الشائعة.
+لديك بالفعل خزانتك المسجلة في تطبيق آخر؟ لا مشكلة!DressApp يجعل من السهل استيراد بيانات خزانتك الحالية حتى لا تضطر للبدء من الصفر.نحن ندعم استيراد البيانات من مجموعة واسعة من تطبيقات تنظيم الملابس وتنسيق الملابس الشهيرة.
 
 ## مصادر الاستيراد المدعومة
 
-- **Cladwell** - صدّر خزانة ملابس Cladwell واستوردها مباشرة إلى DressApp
-- **Stylebook** - انقل مخزون Stylebook بسهولة
-- **Acloset** - استورد عناصر وأزياء Acloset الخاصة بك
-- **SmartCloset** - هاجر بيانات خزانة ملابس SmartCloset
-- **ملفات CSV** - استورد من أي تطبيق يدعم تصدير CSV (تنسيق عام)
-- **تطبيقات أخرى** - العديد من تطبيقات خزانة الملابس الأخرى تدعم تصدير CSV، والذي يمكن لـ DressApp استيراده
+- **Cladwell** - Export your Cladwell wardrobe and import directly into DressApp
+- **Stylebook** - Transfer your Stylebook inventory with ease
+- **Acloset** - Import your Acloset items and outfits
+- **SmartCloset** - Migrate your SmartCloset wardrobe data
+- **CSV Files** - Import from any app that supports CSV export (generic format)
+- **Other Apps** - Many other wardrobe apps support CSV export which DressApp can import
 
-## دليل خطوة بخطوة
+## دليل الاستيراد خطوة بخطوة
 
 ### الخطوة 1: افتح صفحة الخزانة
-انتقل إلى صفحة **الخزانة** في DressApp. هنا ستظهر جميع العناصر المستوردة.
+Navigate to your **Closet** page in DressApp. This is where all your imported items will appear.
 
-### الخطوة 2: الوصول لميزة الاستيراد
-ابحث عن زر **استيراد** في صفحة الخزانة. عادة ما يكون موجودًا في الزاوية العلوية اليمنى أو ضمن خيارات القائمة.
+### الخطوة 2: الوصول إلى ميزة الاستيراد
+Look for the **Import** button on the Closet page. It's usually in the top-right corner or in the menu options.
 
-### الخطوة 3: اختر تطبيق المصدر
-اختر التطبيق الذي تستورد منه من قائمة التطبيقات المدعومة. إذا لم يكن تطبيقك مدرجًا، اختر **ملف CSV** لخيار الاستيراد العام.
+### الخطوة 3: اختر مصدر التطبيق
+Choose the app you're importing from from the list of supported apps. If your app isn't listed, select **CSV File** for a generic import option.
 
-### الخطوة 4: صدّر البيانات من التطبيق القديم
-اتبع التعليمات المقدمة لتطبيقك المحدد:
-- **Cladwell**: انتقل إلى الإعدادات > تصدير البيانات > تنزيل CSV
-- **Stylebook**: افتح القائمة > تصدير > اختر تنسيق CSV
-- **Acloset**: انتقل إلى الملف الشخصي > تصدير الخزانة > تنزيل
-- **SmartCloset**: انتقل إلى الإعدادات > إدارة البيانات > تصدير
-- **تصدير CSV**: ابحث عن خيار تصدير أو تنزيل في إعدادات تطبيقك
+### الخطوة 4: قم بتصدير البيانات من التطبيق القديم
+Follow the instructions for your specific app:
+- **Cladwell**: Go to Settings > Export Data > Download CSV
+- **Stylebook**: Open Menu > Export > Choose CSV format
+- **Acloset**: Navigate to Profile > Export Wardrobe > Download
+- **SmartCloset**: Go to Settings > Data Management > Export
+- **CSV Export**: Look for an export or download option in your app's settings
 
-### الخطوة 5: ارفع إلى DressApp
-ارفع الملف المُصدّر إلى DressApp. سيقوم النظام تلقائيًا بـ:
-- تحليل البيانات ورسم الحقول لتنسيق DressApp
-- تصنيف العناصر بناءً على نوعها (قمصان، بناطيل، فساتين، إلخ)
-- تنظيم الألوان والأحجام
-- استيراد الصور إذا كانت متاحة
+### الخطوة 5: قم بتحميل إلى DressApp
+Upload the exported file to DressApp. The system will automatically:
+- Parse the data and map fields to DressApp's format
+- Categorize items based on their type (tops, bottoms, dresses, etc.)
+- Organize colors and sizes
+- Import images if available in the export
 
-### الخطوة 6: راجع وعدّل
-بعد اكتمال الاستيراد:
-- راجع عناصرك في صفحة الخزانة
-- عدّل أي فئات قد تم تعيينها بشكل غير صحيح
-- أضف أي تفاصيل مفقودة (العلامة التجارية، السعر، تاريخ الشراء)
-- احذف أي عناصر مكررة أو تجريبية
+### الخطوة 6: المراجعة والتعديل
+After import completes:
+- Review your items on the Closet page
+- Fix any miscategorized items
+- Add missing details (brand, price, purchase date)
+- Remove any duplicates or test items
 
-## ما يتم استيراده
+## ما الذي يتم استيراده
 
-اعتمادًا على تطبيق المصدر، قد يتم استيراد البيانات التالية:
-- أسماء العناصر وأوصافها
-- الفئات والفئات الفرعية
-- الألوان والأنماط
-- الأحجام والقياسات
-- معلومات العلامة التجارية
-- تواريخ الشراء والأسعار
-- صور العناصر (إذا كانت متاحة في التصدير)
-- سجل الارتداء (إذا كان مدعومًا)
+Depending on the source app, the following data may be imported:
+- Item names and descriptions
+- Categories and subcategories
+- Colors and patterns
+- Sizes and measurements
+- Brand information
+- Purchase dates and prices
+- Item images (if included in export)
+- Wear history (if supported)
 
-## استكشاف الأخطاء وإصلاحها
+## حل المشاكل
 
-### فشل الاستيراد
-- تحقق من أن تنسيق الملف صحيح (CSV، JSON، أو تنسيق خاص بالتطبيق)
-- تأكد من أن الملف غير تالف أو كبير جدًا
-- جرّب التصدير مرة أخرى من التطبيق المصدر
+### Import Failed
+- Check that the file format is correct (CSV, JSON, or app-specific format)
+- Ensure the file isn't corrupted or too large
+- Try exporting again from the source app
 
-### عناصر مفقودة بعد الاستيراد
-- قد لا تكون بعض الحقول قد تم رسمها بشكل صحيح
-- تحقق من صفحة نتائج الاستيراد لأي تحذيرات
-- أضف العناصر المفقودة يدويًا إذا لزم الأمر
+### Missing Items After Import
+- Some fields may not have mapped correctly
+- Check the import results page for warnings
+- Manually add missing items if needed
 
-### الصور غير مستوردة
-- لا تتضمن جميع التطبيقات الصور في ملفات التصدير الخاصة بها
-- يمكنك إضافة صور يدويًا للعناصر المستوردة لاحقًا
-- استخدم ميزة الكاميرا أو التحميل في صفحة تفاصيل العنصر
-
-## نصائح لاستيراد ناجح
-
-1. **نظّف أولاً**: أزل العناصر المكررة والتجريبية من تطبيقك القديم قبل التصدير
-2. **تحقق من الفئات**: تأكد من تصنيف العناصر بشكل صحيح في تطبيق المصدر
-3. **تحقق من البيانات**: افتح الملف المُصدّر للتأكد من احتوائه على جميع المعلومات المتوقعة
-4. **ابدأ صغيرًا**: إذا كانت خزانة ملابسك كبيرة، فكر في الاستيراد على دفعات
-5. **نسخ احتياطي أولاً**: احتفظ بنسخة من ملفك المُصدّر في حال احتجت لإعادة الاستيراد
-
-## بعد الاستيراد
-
-بمجرد استيراد خزانة ملابسك:
-- **تصفح خزانتك**: ستظهر جميع عناصرك في صفحة الخزانة
-- **أنشئ أزياء**: ابدأ بدمج العناصر المستوردة ومطابقتها
-- **احصل على توصيات الذكاء الاصطناعي**: سيستخدم مصمم الأزياء بالذكاء الاصطناعي خزانة ملابسك المستوردة للاقتراحات
-- **تتبع الاستخدام**: سجّل متى ترتدي العناصر لبناء سجل ارتدائك
-- **مزامنة عبر الأجهزة**: تتم مزامنة خزانة ملابسك المستوردة تلقائيًا عبر جميع أجهزتك
+### Images Not Imported
+- Not all apps include images in their export files
+- You can add images manually to imported items later
+- Use the camera or upload function on the item detail page
 
 ## تحتاج مساعدة؟
 
-إذا واجهت أي مشاكل أثناء عملية الاستيراد:
-- تحقق من قسم استكشاف الأخطاء أعلاه
-- تواصل مع الدعم من خلال قائمة المساعدة
-- انضم لمنتدى مجتمعنا للحصول على نصائح من مستخدمين آخرين
+If you run into issues with importing:
+- Check the troubleshooting section above
+- Contact support through the Help menu
+- Join our community forum for tips from other users
 
 ---
 

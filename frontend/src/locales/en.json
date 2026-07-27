@@ -1154,7 +1154,8 @@
     "annualPlan": "Annual Plan",
     "annualPlanDesc": "Save 50% compared to monthly billing.",
     "perYear": " / year",
-    "upgradeAnnualBtn": "Upgrade Annual"
+    "upgradeAnnualBtn": "Upgrade Annual",
+    "privacyPolicy": "Privacy Policy"
   },
   "admin": {
     "title": "Admin",
@@ -2761,5 +2762,37 @@
     "geminiKeyRequired": "Gemini AI Key or Plan Required",
     "geminiKeyDescription": "To use DressApp's Gemini AI features (AI Stylist, GarmentVision, Image Editing, Reconstruction), please configure your Gemini API Key in your Profile settings.",
     "configureKey": "Configure API Key in Profile"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "description": "DressApp Terms of Service — rules and conditions for using our app."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "DressApp privacy policy — how we collect, use, and protect your data.",
+    "lastUpdated": "Last updated: July 2026",
+    "sections": {
+      "intro": "1. Introduction",
+      "dataCollection": "2. Data We Collect",
+      "dataUse": "3. How We Use Your Data",
+      "dataSharing": "4. Data Sharing",
+      "aiUsage": "5. AI & Stylist Features",
+      "storage": "6. Data Storage & Security",
+      "retention": "7. Data Retention",
+      "rights": "8. Your Rights",
+      "cookies": "9. Cookies",
+      "contact": "10. Contact Us"
+    },
+    "intro": "DressApp (\"we\", \"our\", or \"us\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our application.",
+    "dataCollection": "We collect information you provide directly, including your name, email address, phone number, profile photos, body measurements, style preferences, and payment information. We also collect data automatically, such as device information, usage analytics, and cookies.",
+    "dataUse": "Your data is used to provide and improve our services, personalize your experience, process transactions, send relevant notifications, and ensure the security and integrity of our platform.",
+    "dataSharing": "We do not sell your personal data. We may share limited information with trusted third-party service providers who assist us in operating our platform, subject to strict confidentiality obligations.",
+    "aiUsage": "Our AI-powered stylist and measurement prediction features process your body measurements and photos locally or on secure servers to generate personalized recommendations. No biometric data is shared with advertisers or third parties.",
+    "storage": "Data is stored securely using encryption at rest and in transit. We implement industry-standard security measures to protect your information against unauthorized access, alteration, or disclosure.",
+    "retention": "We retain your data for as long as necessary to provide our services. You may request deletion of your account and all associated data at any time through your account settings or by contacting us.",
+    "rights": "You have the right to access, correct, export, and delete your personal data. You may also opt out of data processing for marketing purposes at any time. To exercise these rights, please contact us through the app or at our privacy email.",
+    "cookies": "We use cookies and similar technologies to enhance your experience, analyze usage, and personalize content. You can manage cookie preferences through your browser settings.",
+    "contact": "For any privacy-related inquiries, please reach out to us through the app settings or via the contact form on our website at dressapp.co.",
+    "loadError": "Privacy policy could not be loaded. Please try again later."
   }
 }

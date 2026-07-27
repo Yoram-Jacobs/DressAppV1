@@ -2,103 +2,86 @@
 
 ## 概要
 
-すでに他のアプリでワードローブを追跡していますか？問題ありません！DressAppは既存のワードローブデータを簡単にインポートできるので、最初からやり直す必要はありません。人気のあるワードローブやコーディネート計画アプリから幅広いインポートをサポートしています。
+すでに別のアプリでワードローブを管理していますか？問題ありません！DressAppを使用すると、既存のワードローブデータを簡単にインポートでき、最初からやり直す必要がありません。幅広い人気のあるワードローブ管理アプリやスタイリングアプリからのインポートをサポートしています.
 
-## サポートされているインポートソース
+## サポートされているインポート元
 
-- **Cladwell** - Cladwellワードローブをエクスポートし、DressAppに直接インポート
-- **Stylebook** - Stylebookインベントリを簡単に転送
-- **Acloset** - Aclosetのアイテムとコーディネートをインポート
-- **SmartCloset** - SmartClosetワードローブデータを移行
-- **CSVファイル** - CSVエクスポートをサポートする任意のアプリからインポート（汎用形式）
-- **その他アプリ** - 多くの他のワードローブアプリがCSVエクスポートをサポートしており、DressAppがインポート可能
+- **Cladwell** - Export your Cladwell wardrobe and import directly into DressApp
+- **Stylebook** - Transfer your Stylebook inventory with ease
+- **Acloset** - Import your Acloset items and outfits
+- **SmartCloset** - Migrate your SmartCloset wardrobe data
+- **CSV Files** - Import from any app that supports CSV export (generic format)
+- **Other Apps** - Many other wardrobe apps support CSV export which DressApp can import
 
-## ステップバイステップガイド
+## ステップ・バイ・ステップのインポートガイド
 
-### ステップ1：ワードローブページを開く
-DressAppの**ワードローブ**ページに移動します。ここにインポートされたすべてのアイテムが表示されます。
+### ステップ1: クローゼットページを開く
+Navigate to your **Closet** page in DressApp. This is where all your imported items will appear.
 
-### ステップ2：インポート機能にアクセス
-ワードローブページで**インポート**ボタンを探します。通常、右上隅またはメニューオプション内にあります。
+### ステップ2: インポート機能にアクセスする
+Look for the **Import** button on the Closet page. It's usually in the top-right corner or in the menu options.
 
-### ステップ3：ソースアプリを選択
-サポートされているアプリのリストからインポート元のアプリを選択します。アプリがリストにない場合は、汎用インポートオプションとして**CSVファイル**を選択します。
+### ステップ3: ソースアプリを選択する
+Choose the app you're importing from from the list of supported apps. If your app isn't listed, select **CSV File** for a generic import option.
 
-### ステップ4：古いアプリからデータをエクスポート
-特定のアプリに従って手順に従います：
-- **Cladwell**：設定 > データエクスポート > CSVダウンロード
-- **Stylebook**：メニューを開く > エクスポート > CSV形式を選択
-- **Acloset**：プロフィール > ワードローブエクスポート > ダウンロード
-- **SmartCloset**：設定 > データ管理 > エクスポート
-- **CSVエクスポート**：アプリの設定でエクスポートまたはダウンロードオプションを探す
+### ステップ4: 古いアプリからデータをエクスポートする
+Follow the instructions for your specific app:
+- **Cladwell**: Go to Settings > Export Data > Download CSV
+- **Stylebook**: Open Menu > Export > Choose CSV format
+- **Acloset**: Navigate to Profile > Export Wardrobe > Download
+- **SmartCloset**: Go to Settings > Data Management > Export
+- **CSV Export**: Look for an export or download option in your app's settings
 
-### ステップ5：DressAppにアップロード
-エクスポートされたファイルをDressAppにアップロードします。システムが自動的に：
-- データを解析し、フィールドをDressApp形式にマッピング
-- アイテムのタイプに基づいてカテゴリ化（トップス、ボトムス、ドレスなど）
-- カラーとサイズを整理
-- 利用可能な場合は画像をインポート
+### ステップ5: DressAppにアップロードする
+Upload the exported file to DressApp. The system will automatically:
+- Parse the data and map fields to DressApp's format
+- Categorize items based on their type (tops, bottoms, dresses, etc.)
+- Organize colors and sizes
+- Import images if available in the export
 
-### ステップ6：確認と調整
-インポート完了後：
-- ワードローブページでアイテムを確認
-- 誤って割り当てられたカテゴリを調整
-- 不足している詳細（ブランド、価格、購入日）を追加
-- 重複やテストアイテムを削除
+### ステップ6: レビューして調整する
+After import completes:
+- Review your items on the Closet page
+- Fix any miscategorized items
+- Add missing details (brand, price, purchase date)
+- Remove any duplicates or test items
 
-## インポートされるデータ
+## インポートされるもの
 
-ソースアプリに応じて、以下のデータがインポートされる場合があります：
-- アイテム名と説明
-- カテゴリとサブカテゴリ
-- カラーとパターン
-- サイズと寸法
-- ブランド情報
-- 購入日と価格
-- アイテム画像（エクスポートに含まれる場合）
-- 着用履歴（サポートされている場合）
+Depending on the source app, the following data may be imported:
+- Item names and descriptions
+- Categories and subcategories
+- Colors and patterns
+- Sizes and measurements
+- Brand information
+- Purchase dates and prices
+- Item images (if included in export)
+- Wear history (if supported)
 
 ## トラブルシューティング
 
-### インポート失敗
-- ファイル形式が正しいことを確認（CSV、JSON、またはアプリ固有の形式）
-- ファイルが破損していないか、大きすぎないことを確認
-- ソースアプリから再度エクスポートを試みる
+### Import Failed
+- Check that the file format is correct (CSV, JSON, or app-specific format)
+- Ensure the file isn't corrupted or too large
+- Try exporting again from the source app
 
-### インポート後にアイテムが不足
-- 一部のフィールドが正しくマッピングされていない可能性がある
-- インポート結果ページで警告を確認
-- 必要に応じて不足アイテムを手動で追加
+### Missing Items After Import
+- Some fields may not have mapped correctly
+- Check the import results page for warnings
+- Manually add missing items if needed
 
-### 画像がインポートされない
-- すべてのアプリがエクスポートファイルに画像を含むわけではない
-- 後でインポートされたアイテムに手動で画像を追加可能
-- アイテム詳細ページでカメラまたはアップロード機能を使用
+### Images Not Imported
+- Not all apps include images in their export files
+- You can add images manually to imported items later
+- Use the camera or upload function on the item detail page
 
-## 成功するインポートのヒント
+## 助けが必要ですか？
 
-1. **まず整理**：エクスポート前に古いアプリから重複やテストアイテムを削除
-2. **カテゴリを確認**：ソースアプリでアイテムが適切にカテゴリ化されていることを確認
-3. **データを検証**：エクスポートされたファイルを開き、すべての予想される情報が含まれていることを確認
-4. **小さく始める**：ワードローブが大きい場合は、バッチでインポートを検討
-5. **バックアップを先に**：再インポートが必要な場合に備えて、エクスポートファイルのコピーを保存
-
-## インポート後
-
-ワードローブがインポートされると：
-- **ワードローブを閲覧**：すべてのアイテムがワードローブページに表示
-- **コーディネートを作成**：インポートされたアイテムをミックス＆マッチ
-- **AIレコメンデーションを取得**：AIスタイリストがインポートされたワードローブを使用して提案
-- **使用を追跡**：アイテムを着用するたびに記録して着用履歴を構築
-- **デバイス間で同期**：インポートされたワードローブはすべてのデバイスで自動同期
-
-## ヘルプが必要ですか？
-
-インポート中に問題が発生した場合：
-- 上記のトラブルシューティングセクションを確認
-- ヘルプメニューからサポートに連絡
-- 他のユーザーからのヒントのためのコミュニティフォーラムに参加
+If you run into issues with importing:
+- Check the troubleshooting section above
+- Contact support through the Help menu
+- Join our community forum for tips from other users
 
 ---
 
-*最終更新：2026年7月*
+*最終更新日: 2026年7月*

@@ -48,5 +48,18 @@ Every subject in the help tree (`HelpMenu.jsx`) follows a **two-layer structure*
 ### When Updating or Creating Help Files
 1. **Always follow the two-layer structure** — Layer 1 in HelpMenu.jsx, Layer 2 in wiki markdown
 2. **Maintain consistent tone** — friendly, helpful, user-focused
-3. **Translate to all languages** — use `/translator` to translate after creating/updating the English version
+3. **Translate to all languages** — use `/translate` to translate after creating/updating the English version
 4. **Test the "Learn More" link** — ensure the wiki file loads correctly from the Help Menu
+
+## Available Skills
+
+| Command | Skill | Description |
+|---------|-------|-------------|
+| `/translate` | [translator](skills/translator/SKILL.md) | Translate markdown, JSON locales, and user manuals into all 13 languages |
+| `/prune` | [codebase-pruning](skills/codebase-pruning/SKILL.md) | Deep codebase pruning and dead-code elimination |
+| `/strategy` | [strategy-consultant](skills/strategy-consultant/SKILL.md) | Strategic analysis and decision-making framework |
+| `/i18n` | [i18next-localizer](skills/i18next-localizer/SKILL.md) | UI/UX inspection across 12 languages |
+| `/uiux` | [uiux-designer-dressapp](skills/uiux-designer-dressapp/SKILL.md) | UI/UX design for DressApp screens |
+| `/deploy` | [deploy-dressapp](skills/deploy-dressapp/SKILL.md) | Deployment and DevOps for DressApp |
+| `/narrate` | [narrator](skills/narrator/SKILL.md) | Technical authoring and architectural overviews |
+| `/compete` | [competitor-ux-strategist](skills/competitor-ux-strategist/SKILL.md) | Competitor UX analysis and strategy |

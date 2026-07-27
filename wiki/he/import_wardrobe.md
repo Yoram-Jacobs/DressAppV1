@@ -2,102 +2,85 @@
 
 ## סקירה כללית
 
-כבר יש לך את המלתחה שלך במעקב באפליקציה אחרת? אין בעיה! DressApp מקלה על ייבוא נתוני המלתחה הקיימים שלך כך שלא תצטרך להתחיל מההתחלה. אנו תומכים בייבוא ממגוון רחב של אפליקציות פופולריות למלתחה ותכנון אאוטפיטים.
+כבר יש לך את המלתחה שלך במעקב באפליקציה אחרת? אין בעיה!DressApp הופכת את זה לקל לייבא את נתוני המלתחה הקיימים שלך כך שלא תצטרך להתחיל מאפס.אנחנו תומכים בייבוא ממגוון רחב של אפליקציות פופולריות לתכנון ארון בגדים ואאוטפיטים.
 
 ## מקורות ייבוא נתמכים
 
-- **Cladwell** - ייצא את המלתחה שלך של Cladwell וייבא אותה ישירות ל-DressApp
-- **Stylebook** - העבר את המלאי של Stylebook בקלות
-- **Acloset** - ייבא את הפריטים והאאוטפיטים שלך של Acloset
-- **SmartCloset** - העבר את נתוני המלתחה שלך של SmartCloset
-- **קבצי CSV** - ייבא מכל אפליקציה התומכת בייצוא CSV (פורמט גנרי)
-- **אפליקציות אחרות** - אפליקציות רבות אחרות למלתחה תומכות בייצוא CSV ש-DressApp יכולה לייבא
+- **Cladwell** - Export your Cladwell wardrobe and import directly into DressApp
+- **Stylebook** - Transfer your Stylebook inventory with ease
+- **Acloset** - Import your Acloset items and outfits
+- **SmartCloset** - Migrate your SmartCloset wardrobe data
+- **CSV Files** - Import from any app that supports CSV export (generic format)
+- **Other Apps** - Many other wardrobe apps support CSV export which DressApp can import
 
-## מדריך שלב אחר שלב
+## מדריך ייבוא מפורט
 
 ### שלב 1: פתח את דף המלתחה
-נווט לדף **מלתחה** שלך ב-DressApp. כאן יופיעו כל הפריטים המיובאים שלך.
+Navigate to your **Closet** page in DressApp. This is where all your imported items will appear.
 
-### שלב 2: גש לתכונת הייבוא
-חפש את כפתור **ייבוא** בדף המלתחה. הוא נמצא בדרך כלל בפינה הימנית העליונה או באפשרויות התפריט.
+### שלב 2: גישה לתכונת הייבוא
+Look for the **Import** button on the Closet page. It's usually in the top-right corner or in the menu options.
 
-### שלב 3: בחר אפליקציית מקור
-בחר את האפליקציה שממנה אתה מייבא מרשימת האפליקציות הנתמכות. אם האפליקציה שלך לא ברשימה, בחר **קובץ CSV** לאפשרות ייבוא גנרית.
+### שלב 3: בחר את אפליקציית המקור
+Choose the app you're importing from from the list of supported apps. If your app isn't listed, select **CSV File** for a generic import option.
 
 ### שלב 4: ייצא נתונים מהאפליקציה הישנה
-עקוב אחר ההוראות לאפליקציה הספציפית שלך:
-- **Cladwell**: עבור להגדרות > ייצא נתונים > הורד CSV
-- **Stylebook**: פתח תפריט > ייצא > בחר פורמט CSV
-- **Acloset**: נווט לפרופיל > ייצא מלתחה > הורד
-- **SmartCloset**: עבור להגדרות > ניהול נתונים > ייצא
-- **ייצוא CSV**: חפש אפשרות ייצוא או הורדה בהגדרות האפליקציה שלך
+Follow the instructions for your specific app:
+- **Cladwell**: Go to Settings > Export Data > Download CSV
+- **Stylebook**: Open Menu > Export > Choose CSV format
+- **Acloset**: Navigate to Profile > Export Wardrobe > Download
+- **SmartCloset**: Go to Settings > Data Management > Export
+- **CSV Export**: Look for an export or download option in your app's settings
 
 ### שלב 5: העלה ל-DressApp
-העלה את הקובץ המיוצא ל-DressApp. המערכת תעשה אוטומטית:
-- ניתוח הנתונים ומיפוי שדות לפורמט של DressApp
-- סיווג פריטים לפי סוגם (חולצות, מכנסיים, שמלות, וכו')
-- ארגון צבעים ומידות
-- ייבוא תמונות אם זמינות בייצוא
+Upload the exported file to DressApp. The system will automatically:
+- Parse the data and map fields to DressApp's format
+- Categorize items based on their type (tops, bottoms, dresses, etc.)
+- Organize colors and sizes
+- Import images if available in the export
 
-### שלב 6: סקור והתאם
-לאחר סיום הייבוא:
-- סקור את הפריטים שלך בדף המלתחה
-- תקן קטגוריות שהוקצו בצורה שגויה
-- הוסף פרטים חסרים (מותג, מחיר, תאריך רכישה)
-- הסר כפילויות או פריטי בדיקה
+### שלב 6: סקירה והתאמה
+After import completes:
+- Review your items on the Closet page
+- Fix any miscategorized items
+- Add missing details (brand, price, purchase date)
+- Remove any duplicates or test items
 
-## מה מיובא
+## מה ייקח לקחת
 
-בהתאם לאפליקציית המקור, הנתונים הבאים עשויים להיות מיובאים:
-- שמות ותיאורי פריטים
-- קטגוריות ותת-קטגוריות
-- צבעים ודפוסים
-- מידות ומדידות
-- מידע על מותג
-- תאריכי רכישה ומחירים
-- תמונות פריטים (אם זמינות בייצוא)
-- היסטוריית לבישה (אם נתמך)
+Depending on the source app, the following data may be imported:
+- Item names and descriptions
+- Categories and subcategories
+- Colors and patterns
+- Sizes and measurements
+- Brand information
+- Purchase dates and prices
+- Item images (if included in export)
+- Wear history (if supported)
 
 ## פתרון בעיות
 
-### הייבוא נכשל
-- בדוק שפורמט הקובץ נכון (CSV, JSON או פורמט ספציפי לאפליקציה)
-- ודא שהקובץ לא פגום או גדול מדי
-- נסה לייצא שוב מהאפליקציה המקורית
+### Import Failed
+- Check that the file format is correct (CSV, JSON, or app-specific format)
+- Ensure the file isn't corrupted or too large
+- Try exporting again from the source app
 
-### פריטים חסרים לאחר הייבוא
-- חלק מהשדות לא מופו בצורה נכונה
-- בדוק את דף תוצאות הייבוא לאזהרות
-- הוסף ידנית פריטים חסרים במידת הצורך
+### Missing Items After Import
+- Some fields may not have mapped correctly
+- Check the import results page for warnings
+- Manually add missing items if needed
 
-### תמונות לא יובאו
-- לא כל האפליקציות כוללות תמונות בקבצי הייצוא שלהן
-- אתה יכול להוסיף תמונות ידנית לפריטים מיובאים מאוחר יותר
-- השתמש במצלמה או בפונקציית ההעלאה בדף פרטי הפריט
-
-## טיפים לייבוא מוצלח
-
-1. **נקה תחילה**: הסר כפילויות ופריטי בדיקה מהאפליקציה הישנה שלך לפני הייצוא
-2. **בדוק קטגוריות**: ודא שהפריטים מקוטלגים כראוי באפליקציית המקור
-3. **אמת נתונים**: פתח את הקובץ המיוצא כדי לאשר שהוא מכיל את כל המידע הצפוי
-4. **התחל בקטן**: אם יש לך מלתחה גדולה, שקול לייבא בקבוצות
-5. **גבה תחילה**: שמור עותק של הקובץ המיוצא למקרה שתצטרך לייבא מחדש
-
-## לאחר הייבוא
-
-לאחר שהמלתחה שלך יובאה:
-- **עיין במלתחה שלך**: כל הפריטים שלך יופיעו בדף המלתחה
-- **צור אאוטפיטים**: התחל לערבב ולהתאים פריטים מיובאים
-- **קבל המלצות AI**: המעצב האישי AI ישתמש במלתחה המיובאת שלך להצעות
-- **עקוב אחר לבישות**: רשום מתי אתה לובש פריטים כדי לבנות את היסטוריית הלבישה שלך
-- **סנכרן בין מכשירים**: המלתחה המיובאת שלך מסתנכרנת אוטומטית בכל המכשירים שלך
+### Images Not Imported
+- Not all apps include images in their export files
+- You can add images manually to imported items later
+- Use the camera or upload function on the item detail page
 
 ## זקוק לעזרה?
 
-אם אתה נתקל בבעיות במהלך הייבוא:
-- בדוק את סעיף פתרון הבעיות לעיל
-- צור קשר עם התמיכה דרך תפריט העזרה
-- הצטרף לפורום הקהילה שלנו לקבלת טיפים ממשתמשים אחרים
+If you run into issues with importing:
+- Check the troubleshooting section above
+- Contact support through the Help menu
+- Join our community forum for tips from other users
 
 ---
 
