@@ -1,4 +1,4 @@
-{
+﻿{
   "brand": "DressApp",
   "nav": {
     "home": "Home",
@@ -1157,7 +1157,6 @@
     "annualPlanDesc": "Save 50% compared to monthly billing.",
     "perYear": " / year",
     "upgradeAnnualBtn": "Upgrade Annual",
-    "privacyPolicy": "Privacy Policy"
   },
   "admin": {
     "title": "Admin",
