@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 
 from app.config import settings
 from app.db.database import get_db
