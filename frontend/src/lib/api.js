@@ -46,7 +46,16 @@ client.interceptors.response.use(
         err.response.data.detail = detail.message || JSON.stringify(detail);
       }
       const detailStr = String(err.response.data.detail || '');
-      if (detailStr.includes('GEMINI_API_KEY') || detailStr.includes('Gemini vision unavailable') || detailStr.includes('No GEMINI_API_KEY')) {
+      if (
+        err.response.status === 402 ||
+        detailStr.includes('GEMINI_API_KEY') ||
+        detailStr.includes('Gemini vision unavailable') ||
+        detailStr.includes('No GEMINI_API_KEY') ||
+        detailStr.includes('credits') ||
+        detailStr.includes('quota') ||
+        detailStr.includes('limit') ||
+        detailStr.includes('exhausted')
+      ) {
         import('./aiNotice').then(({ showAiKeyWarningToast }) => showAiKeyWarningToast());
       }
     }
