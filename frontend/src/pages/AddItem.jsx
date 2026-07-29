@@ -3512,11 +3512,19 @@ export default function AddItem() {
 /* -------------------- item card -------------------- */
 function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch, quickConfirm }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { fields, status, progress, previewUrl, error } = card;
   const isBusy = status === 'scanning';
   const saved = status === 'saved';
   const hasReconstruction = !!(card.reconstructedUrl && card.reconstructionMeta);
   const showingReconstructed = hasReconstruction && card.useReconstructed;
+
+  const isQuotaError = !!(error && (
+    error.toLowerCase().includes('credit') || 
+    error.toLowerCase().includes('quota') || 
+    error.toLowerCase().includes('limit') || 
+    error.toLowerCase().includes('exhausted')
+  ));
 
   const [sections, setSections] = useState({
     basic: true,
@@ -3590,12 +3598,40 @@ function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch, quickConfirm
               </div>
             )}
             {status === 'error' && !isBusy && (
-              <div className="absolute bottom-0 start-0 end-0 bg-rose-50/95 text-rose-900 px-3 py-2 text-xs flex items-start gap-2">
-                <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                <span className="flex-1">{error || t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' })}</span>
-                <button onClick={onRetry} className="underline shrink-0" data-testid="add-item-retry">
-                  {t('addItem.tryAgain', { defaultValue: 'Try again' })}
-                </button>
+              <div className="absolute bottom-0 start-0 end-0 bg-rose-50/95 text-rose-900 px-3 py-2 text-xs flex flex-col gap-1.5 border-t border-rose-200">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-rose-600" />
+                  <span className="flex-1 font-medium">
+                    {isQuotaError 
+                      ? t('addItem.quotaBlockedDesc', { defaultValue: 'AI features are locked due to insufficient credits or tier limitations.' })
+                      : (error || t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' }))}
+                  </span>
+                </div>
+                {isQuotaError ? (
+                  <div className="flex flex-wrap gap-x-2 gap-y-1 ps-6 text-[10px] font-semibold text-rose-800">
+                    <button 
+                      type="button"
+                      onClick={() => navigate('/me?open=ai-config')} 
+                      className="underline hover:text-rose-950 cursor-pointer"
+                    >
+                      {t('addItem.configureKeyLink', { defaultValue: 'Configure API Key' })}
+                    </button>
+                    <span className="text-rose-400">|</span>
+                    <button 
+                      type="button"
+                      onClick={() => navigate('/pricing')} 
+                      className="underline hover:text-rose-950 cursor-pointer"
+                    >
+                      {t('addItem.upgradeTierLink', { defaultValue: 'Upgrade Tier' })}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="ps-6">
+                    <button onClick={onRetry} className="underline font-bold shrink-0 hover:text-rose-950" data-testid="add-item-retry">
+                      {t('addItem.tryAgain', { defaultValue: 'Try again' })}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             {saved && (
