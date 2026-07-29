@@ -59,7 +59,7 @@ async def test_credit_buckets():
     print("✓ Added paid credit bucket (50 credits)")
     
     # Reload and verify
-    user_record = await db.users.find_one({"id": test_user_id"})
+    user_record = await db.users.find_one({"id": test_user_id})
     u_model = User.parse_obj(user_record)
     assert u_model.total_credits == 50, f"Expected 50, got {u_model.total_credits}"
     print(f"✓ Total credits verified: {u_model.total_credits}")
