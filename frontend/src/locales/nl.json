@@ -2776,5 +2776,62 @@
   "privacy": {
     "title": "Privacy Policy",
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
+  },
+  "pricing": {
+    "title": "Tarieven & Credits",
+    "subtitle": "Kies het abonnement dat bij uw stijl past. Upgrade of laad op elk gewenst moment op.",
+    "monthlyBilling": "Maandelijkse facturering",
+    "annualBilling": "Jaarlijkse facturering",
+    "savePercent": "Bespaar 20%",
+    "popular": "Meest populair",
+    "creditsPerMonth": "{{count}} AI-credits / mnd",
+    "creditsPerMonth_one": "1 AI-credit / mnd",
+    "creditsPerMonth_other": "{{count}} AI-credits / mnd",
+    "dailyLimit": "Dagelijkse limiet: {{count}}",
+    "monthlyLimit": "Maandelijkse limiet: {{count}}",
+    "selectPlan": "Selecteer dit abonnement",
+    "currentPlan": "Uw huidige abonnement",
+    "upgradePlan": "Abonnement upgraden",
+    "currentBalanceHeader": "Uw huidige creditsaldo",
+    "paidCredits": "Gekochte credits",
+    "paidCreditsDesc": "Verlopen nooit, worden gebruikt nadat de gratis credits op zijn.",
+    "freeCredits": "Gratis credits",
+    "freeCreditsDesc": "Maandelijks verstrekt bij uw abonnement, verlopen na 30 dagen.",
+    "expired": "verlopen",
+    "totalCredits": "Totaal bruikbare credits",
+    "readyToUse": "Gereed voor gebruik",
+    "requiresAction": "Actie vereist",
+    "usageStatsHeader": "Creditverbruik & Verwerkingslimieten",
+    "monthlyUsed": "Maandelijkse limiet verbruikt",
+    "dailyUsed": "Dagelijkse limiet verbruikt",
+    "topUpHeader": "Extra credits kopen",
+    "topUpSub": "Gekochte creditpakketten verlopen nooit en worden verbruikt nadat de maandelijkse credits op zijn.",
+    "buyCredits": "Koop {{count}} credits",
+    "buyNow": "Nu kopen",
+    "featureComparisonHeader": "Vergelijk abonnementsfuncties",
+    "features": {
+      "credits": "AI-credits / maand",
+      "dailyLimit": "Dagelijkse AI-verwerkingslimiet",
+      "monthlyLimit": "Maandelijkse AI-verwerkingslimiet",
+      "customApiKey": "Eigen API-sleutel ondersteuning",
+      "support": "Support-prioriteit",
+      "uploads": "Afbeelding uploadcapaciteit",
+      "branding": "Eigen branding opties"
+    },
+    "supportTiers": {
+      "community": "Community-support",
+      "priority": "Prioriteits-e-mail",
+      "dedicated": "Persoonlijke support"
+    },
+    "uploadsTiers": {
+      "limited": "Standaard",
+      "unlimited": "Onbeperkt"
+    },
+    "alerts": {
+      "soft_warning": "Credits bijna op",
+      "hard_limit": "Credits verbruikt",
+      "exhausted": "Geen credits",
+      "all_set": "Alles in orde"
+    }
   }
 }

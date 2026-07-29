@@ -2776,5 +2776,62 @@
   "privacy": {
     "title": "Privacy Policy",
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
+  },
+  "pricing": {
+    "title": "الأسعار وخطط النقاط",
+    "subtitle": "اختر الفئة التي تناسب أسلوبك. قم بالترقية أو التعبئة في أي وقت.",
+    "monthlyBilling": "فاتورة شهرية",
+    "annualBilling": "فاتورة سنوية",
+    "savePercent": "وفر 20%",
+    "popular": "الأكثر رواجاً",
+    "creditsPerMonth": "{{count}} نقطة ذكاء اصطناعي / شهر",
+    "creditsPerMonth_one": "نقطة ذكاء اصطناعي واحدة / شهر",
+    "creditsPerMonth_other": "{{count}} نقطة ذكاء اصطناعي / شهر",
+    "dailyLimit": "الحد اليومي: {{count}}",
+    "monthlyLimit": "الحد الشهري: {{count}}",
+    "selectPlan": "اختر هذه الخطة",
+    "currentPlan": "خطتك الحالية",
+    "upgradePlan": "ترقية الخطة",
+    "currentBalanceHeader": "رصيد نقاطك الحالي",
+    "paidCredits": "نقاط مدفوعة",
+    "paidCreditsDesc": "لا تنتهي صلاحيتها، تستخدم بعد نفاد النقاط المجانية.",
+    "freeCredits": "نقاط مجانية",
+    "freeCreditsDesc": "تُقدم شهريًا مع فئتك، وتنتهي صلاحيتها خلال 30 يومًا.",
+    "expired": "منتهية الصلاحية",
+    "totalCredits": "إجمالي النقاط الصالحة للاستخدام",
+    "readyToUse": "جاهز للاستخدام",
+    "requiresAction": "يتطلب إجراءً",
+    "usageStatsHeader": "استهلاك النقاط وحدود المعالجة",
+    "monthlyUsed": "الحد الشهري المستهلك",
+    "dailyUsed": "الحد اليومي المستهلك",
+    "topUpHeader": "شراء نقاط إضافية",
+    "topUpSub": "باقات النقاط المدفوعة لا تنتهي صلاحيتها وتستهلك بعد نفاد النقاط الشهرية.",
+    "buyCredits": "شراء {{count}} نقطة",
+    "buyNow": "اشترِ الآن",
+    "featureComparisonHeader": "مقارنة ميزات الخطط",
+    "features": {
+      "credits": "نقاط الذكاء الاصطناعي / شهر",
+      "dailyLimit": "حد عمليات الذكاء الاصطناعي اليومي",
+      "monthlyLimit": "حد عمليات الذكاء الاصطناعي الشهري",
+      "customApiKey": "دعم مفتاح API مخصص",
+      "support": "أولوية الدعم",
+      "uploads": "سعة تحميل الصور",
+      "branding": "خيارات مخصصة للعلامة التجارية"
+    },
+    "supportTiers": {
+      "community": "دعم مجتمعي",
+      "priority": "بريد إلكتروني ذو أولوية",
+      "dedicated": "دعم مخصص"
+    },
+    "uploadsTiers": {
+      "limited": "قياسي",
+      "unlimited": "غير محدود"
+    },
+    "alerts": {
+      "soft_warning": "الرصيد منخفض",
+      "hard_limit": "نفدت النقاط",
+      "exhausted": "لا يوجد نقاط",
+      "all_set": "كل شيء جاهز"
+    }
   }
 }

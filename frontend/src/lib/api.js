@@ -214,6 +214,10 @@ export const api = {
   updateMigrationFlag: (body) => client.patch('/users/migration-flag', body).then((r) => r.data),
   saveMigrationCrops: (body) => client.post('/closet/migration/save-crops', body, { timeout: 120000 }).then((r) => r.data),
 
+  // pricing
+  getPricingInfo: () => client.get('/pricing/info').then((r) => r.data),
+  getQuotaStatus: () => client.get('/quota/status').then((r) => r.data),
+
   // closet
   listCloset: (params = {}) =>
     client.get('/closet', { params }).then((r) => r.data),

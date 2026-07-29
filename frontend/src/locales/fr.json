@@ -2776,5 +2776,62 @@
   "privacy": {
     "title": "Privacy Policy",
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
+  },
+  "pricing": {
+    "title": "Tarifs & Forfaits de Crédits",
+    "subtitle": "Choisissez le forfait adapté à votre style. Mettez à niveau ou rechargez à tout moment.",
+    "monthlyBilling": "Facturation mensuelle",
+    "annualBilling": "Facturation annuelle",
+    "savePercent": "Économisez 20%",
+    "popular": "Le plus populaire",
+    "creditsPerMonth": "{{count}} crédits d'IA / mois",
+    "creditsPerMonth_one": "1 crédit d'IA / mois",
+    "creditsPerMonth_other": "{{count}} crédits d'IA / mois",
+    "dailyLimit": "Limite quotidienne : {{count}}",
+    "monthlyLimit": "Limite mensuelle : {{count}}",
+    "selectPlan": "Choisir ce forfait",
+    "currentPlan": "Votre forfait actuel",
+    "upgradePlan": "Mettre à niveau le forfait",
+    "currentBalanceHeader": "Votre solde de crédits actuel",
+    "paidCredits": "Crédits achetés",
+    "paidCreditsDesc": "N'expirent jamais, utilisés après épuisement des crédits gratuits.",
+    "freeCredits": "Crédits gratuits",
+    "freeCreditsDesc": "Fournis mensuellement avec votre forfait, expirent sous 30 jours.",
+    "expired": "expiré",
+    "totalCredits": "Total des crédits utilisables",
+    "readyToUse": "Prêt à l'emploi",
+    "requiresAction": "Action requise",
+    "usageStatsHeader": "Utilisation des crédits & limites de traitement",
+    "monthlyUsed": "Limite mensuelle utilisée",
+    "dailyUsed": "Limite quotidienne utilisée",
+    "topUpHeader": "Acheter des crédits supplémentaires",
+    "topUpSub": "Les packs de crédits achetés n'expirent jamais et sont consommés après les crédits mensuels.",
+    "buyCredits": "Acheter {{count}} crédits",
+    "buyNow": "Acheter",
+    "featureComparisonHeader": "Comparer les fonctionnalités des forfaits",
+    "features": {
+      "credits": "Crédits d'IA / mois",
+      "dailyLimit": "Limite quotidienne d'opérations d'IA",
+      "monthlyLimit": "Limite mensuelle d'opérations d'IA",
+      "customApiKey": "Support de clé API personnalisée",
+      "support": "Priorité du support",
+      "uploads": "Capacité de téléchargement d'images",
+      "branding": "Options de marque personnalisée"
+    },
+    "supportTiers": {
+      "community": "Support communauté",
+      "priority": "E-mail prioritaire",
+      "dedicated": "Support dédié"
+    },
+    "uploadsTiers": {
+      "limited": "Standard",
+      "unlimited": "Illimité"
+    },
+    "alerts": {
+      "soft_warning": "Crédits faibles",
+      "hard_limit": "Crédits épuisés",
+      "exhausted": "Aucun crédit",
+      "all_set": "Tout est opérationnel"
+    }
   }
 }

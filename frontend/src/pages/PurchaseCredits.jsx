@@ -90,10 +90,6 @@ const PurchaseCredits = () => {
           credits_added: selectedPack.credits_amount,
           total_cost: (selectedPack.price / 100).toFixed(2)
         });
-
-        // Refresh quota status after successful purchase
-        const quotaRes = await axios.get('/api/v1/quota/status');
-        setQuotaStatus(quotaRes.data);
       }, 2000);
 
     } catch (err) {

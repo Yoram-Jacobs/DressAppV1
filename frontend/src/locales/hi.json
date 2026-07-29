@@ -2776,5 +2776,62 @@
   "privacy": {
     "title": "Privacy Policy",
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
+  },
+  "pricing": {
+    "title": "मूल्य निर्धारण और क्रेडिट योजनाएं",
+    "subtitle": "अपनी शैली के अनुकूल टियर चुनें। किसी भी समय अपग्रेड या टॉप अप करें।",
+    "monthlyBilling": "मासिक बिलिंग",
+    "annualBilling": "वार्षिक बिलिंग",
+    "savePercent": "20% बचाएं",
+    "popular": "सबसे लोकप्रिय",
+    "creditsPerMonth": "{{count}} एआई क्रेडिट / माह",
+    "creditsPerMonth_one": "1 एआई क्रेडिट / माह",
+    "creditsPerMonth_other": "{{count}} एआई क्रेडिट / माह",
+    "dailyLimit": "दैनिक सीमा: {{count}}",
+    "monthlyLimit": "मासिक सीमा: {{count}}",
+    "selectPlan": "यह योजना चुनें",
+    "currentPlan": "आपकी वर्तमान योजना",
+    "upgradePlan": "योजना अपग्रेड करें",
+    "currentBalanceHeader": "आपका वर्तमान क्रेडिट बैलेंस",
+    "paidCredits": "पेड क्रेडिट",
+    "paidCreditsDesc": "कभी समाप्त नहीं होते, मुफ्त क्रेडिट समाप्त होने के बाद उपयोग किए जाते हैं।",
+    "freeCredits": "मुफ्त क्रेडिट",
+    "freeCreditsDesc": "आपके टियर द्वारा मासिक प्रदान किए जाते हैं, 30 दिनों में समाप्त होते हैं।",
+    "expired": "समाप्त",
+    "totalCredits": "कुल उपयोगी क्रेडिट",
+    "readyToUse": "उपयोग के लिए तैयार",
+    "requiresAction": "कार्रवाई आवश्यक",
+    "usageStatsHeader": "क्रेडिट उपयोग और प्रसंस्करण सीमाएं",
+    "monthlyUsed": "मासिक सीमा का उपयोग",
+    "dailyUsed": "दैनिक सीमा का उपयोग",
+    "topUpHeader": "अतिरिक्त क्रेडिट खरीदें",
+    "topUpSub": "सशुल्क क्रेडिट पैक कभी समाप्त नहीं होते हैं और मासिक क्रेडिट समाप्त होने के बाद उपभोग किए जाते हैं।",
+    "buyCredits": "{{count}} क्रेडिट खरीदें",
+    "buyNow": "अभी खरीदें",
+    "featureComparisonHeader": "योजना सुविधाओं की तुलना करें",
+    "features": {
+      "credits": "एआई क्रेडिट / माह",
+      "dailyLimit": "दैनिक एआई संचालन सीमा",
+      "monthlyLimit": "मासिक एआई संचालन सीमा",
+      "customApiKey": "कस्टम एपीआई कुंजी समर्थन",
+      "support": "समर्थन प्राथमिकता",
+      "uploads": "छवि अपलोड क्षमता",
+      "branding": "कस्टम ब्रांडिंग विकल्प"
+    },
+    "supportTiers": {
+      "community": "सामुदायिक समर्थन",
+      "priority": "प्राथमिकता ईमेल",
+      "dedicated": "समर्पित समर्थन"
+    },
+    "uploadsTiers": {
+      "limited": "मानक",
+      "unlimited": "असीमित"
+    },
+    "alerts": {
+      "soft_warning": "क्रेडिट कम है",
+      "hard_limit": "क्रेडिट समाप्त",
+      "exhausted": "कोई क्रेडिट नहीं",
+      "all_set": "सब ठीक है"
+    }
   }
 }

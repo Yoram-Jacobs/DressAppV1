@@ -2776,5 +2776,62 @@
   "privacy": {
     "title": "Privacy Policy",
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
+  },
+  "pricing": {
+    "title": "Precios y Planes de Créditos",
+    "subtitle": "Elige el nivel que se adapte a tu estilo. Mejora o recarga en cualquier momento.",
+    "monthlyBilling": "Facturación mensual",
+    "annualBilling": "Facturación anual",
+    "savePercent": "Ahorra 20%",
+    "popular": "Más popular",
+    "creditsPerMonth": "{{count}} créditos de IA / mes",
+    "creditsPerMonth_one": "1 crédito de IA / mes",
+    "creditsPerMonth_other": "{{count}} créditos de IA / mes",
+    "dailyLimit": "Límite diario: {{count}}",
+    "monthlyLimit": "Límite mensual: {{count}}",
+    "selectPlan": "Seleccionar plan",
+    "currentPlan": "Tu plan actual",
+    "upgradePlan": "Mejorar plan",
+    "currentBalanceHeader": "Tu saldo de créditos actual",
+    "paidCredits": "Créditos de pago",
+    "paidCreditsDesc": "No caducan, se usan tras consumir los créditos gratuitos.",
+    "freeCredits": "Créditos gratuitos",
+    "freeCreditsDesc": "Proporcionados mensualmente por tu nivel, caducan en 30 días.",
+    "expired": "caducado",
+    "totalCredits": "Total de créditos utilizables",
+    "readyToUse": "Listo para usar",
+    "requiresAction": "Requiere acción",
+    "usageStatsHeader": "Uso de créditos y límites de procesamiento",
+    "monthlyUsed": "Límite mensual usado",
+    "dailyUsed": "Límite diario usado",
+    "topUpHeader": "Comprar créditos adicionales",
+    "topUpSub": "Los paquetes de créditos pagados nunca caducan y se consumen tras agotar los mensuales.",
+    "buyCredits": "Comprar {{count}} créditos",
+    "buyNow": "Comprar ahora",
+    "featureComparisonHeader": "Comparar características de planes",
+    "features": {
+      "credits": "Créditos de IA / mes",
+      "dailyLimit": "Límite diario de operaciones de IA",
+      "monthlyLimit": "Límite mensual de operaciones de IA",
+      "customApiKey": "Soporte de clave API personalizada",
+      "support": "Prioridad de soporte",
+      "uploads": "Capacidad de subida de imágenes",
+      "branding": "Opciones de marca personalizada"
+    },
+    "supportTiers": {
+      "community": "Soporte de la comunidad",
+      "priority": "Correo prioritario",
+      "dedicated": "Soporte dedicado"
+    },
+    "uploadsTiers": {
+      "limited": "Estándar",
+      "unlimited": "Ilimitado"
+    },
+    "alerts": {
+      "soft_warning": "Créditos bajos",
+      "hard_limit": "Créditos agotados",
+      "exhausted": "Sin créditos",
+      "all_set": "Todo listo"
+    }
   }
 }

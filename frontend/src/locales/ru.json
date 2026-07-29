@@ -2776,5 +2776,62 @@
   "privacy": {
     "title": "Privacy Policy",
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
+  },
+  "pricing": {
+    "title": "Тарифные планы и баланс",
+    "subtitle": "Выберите подходящий именно вам тарифный план. Вы можете повысить уровень или докупить кредиты в любое время.",
+    "monthlyBilling": "Оплата помесячно",
+    "annualBilling": "Оплата за год",
+    "savePercent": "Скидка 20%",
+    "popular": "Популярный",
+    "creditsPerMonth": "{{count}} AI-кредитов / мес.",
+    "creditsPerMonth_one": "1 AI-кредит / мес.",
+    "creditsPerMonth_other": "{{count}} AI-кредитов / мес.",
+    "dailyLimit": "Дневной лимит: {{count}}",
+    "monthlyLimit": "Месячный лимит: {{count}}",
+    "selectPlan": "Выбрать тариф",
+    "currentPlan": "Ваш текущий тариф",
+    "upgradePlan": "Повысить тариф",
+    "currentBalanceHeader": "Текущий баланс кредитов",
+    "paidCredits": "Платные кредиты",
+    "paidCreditsDesc": "Никогда не сгорают, расходуются после исчерпания бесплатных.",
+    "freeCredits": "Бесплатные кредиты",
+    "freeCreditsDesc": "Предоставляются ежемесячно в рамках вашего тарифа, сгорают через 30 дней.",
+    "expired": "сгорело",
+    "totalCredits": "Всего доступных кредитов",
+    "readyToUse": "Готов к работе",
+    "requiresAction": "Требуется действие",
+    "usageStatsHeader": "Расход кредитов и ограничения обработки",
+    "monthlyUsed": "Израсходовано за месяц",
+    "dailyUsed": "Израсходовано за день",
+    "topUpHeader": "Купить дополнительные кредиты",
+    "topUpSub": "Купленные пакеты кредитов никогда не сгорают и используются после окончания ежемесячного лимита.",
+    "buyCredits": "Купить {{count}} кредитов",
+    "buyNow": "Купить сейчас",
+    "featureComparisonHeader": "Сравнение возможностей тарифов",
+    "features": {
+      "credits": "AI-кредитов в месяц",
+      "dailyLimit": "Дневной лимит операций AI",
+      "monthlyLimit": "Месячный лимит операций AI",
+      "customApiKey": "Поддержка собственного ключа API",
+      "support": "Приоритет поддержки",
+      "uploads": "Загрузка изображений",
+      "branding": "Персонализация бренда"
+    },
+    "supportTiers": {
+      "community": "Поддержка сообщества",
+      "priority": "Приоритетный e-mail",
+      "dedicated": "Персональный менеджер"
+    },
+    "uploadsTiers": {
+      "limited": "Стандартная",
+      "unlimited": "Безлимитная"
+    },
+    "alerts": {
+      "soft_warning": "Кредиты заканчиваются",
+      "hard_limit": "Кредиты исчерпаны",
+      "exhausted": "Нет кредитов",
+      "all_set": "Всё в порядке"
+    }
   }
 }

@@ -2798,5 +2798,62 @@
     "cookies": "We use cookies and similar technologies to enhance your experience, analyze usage, and personalize content. You can manage cookie preferences through your browser settings.",
     "contact": "For any privacy-related inquiries, please reach out to us through the app settings or via the contact form on our website at dressapp.co.",
     "loadError": "Privacy policy could not be loaded. Please try again later."
+  },
+  "pricing": {
+    "title": "Pricing & Credit Plans",
+    "subtitle": "Choose the tier that fits your style. Upgrade or top up at any time.",
+    "monthlyBilling": "Monthly Billing",
+    "annualBilling": "Annual Billing",
+    "savePercent": "Save 20%",
+    "popular": "Most Popular",
+    "creditsPerMonth": "{{count}} AI credits / mo",
+    "creditsPerMonth_one": "1 AI credit / mo",
+    "creditsPerMonth_other": "{{count}} AI credits / mo",
+    "dailyLimit": "Daily limit: {{count}}",
+    "monthlyLimit": "Monthly limit: {{count}}",
+    "selectPlan": "Select This Plan",
+    "currentPlan": "Your Current Plan",
+    "upgradePlan": "Upgrade Plan",
+    "currentBalanceHeader": "Your Current Credits Balance",
+    "paidCredits": "Paid Credits",
+    "paidCreditsDesc": "Never expire, used after free credits are exhausted.",
+    "freeCredits": "Free Credits",
+    "freeCreditsDesc": "Provided monthly by your tier, expire in 30 days.",
+    "expired": "expired",
+    "totalCredits": "Total Usable Credits",
+    "readyToUse": "Ready to use",
+    "requiresAction": "Action required",
+    "usageStatsHeader": "Credit Usage & Processing Limits",
+    "monthlyUsed": "Monthly limit used",
+    "dailyUsed": "Daily limit used",
+    "topUpHeader": "Purchase Additional Credits",
+    "topUpSub": "Paid credit packs never expire and are consumed after monthly credits are depleted.",
+    "buyCredits": "Buy {{count}} Credits",
+    "buyNow": "Buy Now",
+    "featureComparisonHeader": "Compare Plan Features",
+    "features": {
+      "credits": "AI Credits / Month",
+      "dailyLimit": "Daily AI operations limit",
+      "monthlyLimit": "Monthly AI operations limit",
+      "customApiKey": "Custom API Key Support",
+      "support": "Support Priority",
+      "uploads": "Image upload capacity",
+      "branding": "Custom branding options"
+    },
+    "supportTiers": {
+      "community": "Community Support",
+      "priority": "Priority Email",
+      "dedicated": "Dedicated Support"
+    },
+    "uploadsTiers": {
+      "limited": "Standard",
+      "unlimited": "Unlimited"
+    },
+    "alerts": {
+      "soft_warning": "Running Low",
+      "hard_limit": "Credits Exhausted",
+      "exhausted": "No Credits",
+      "all_set": "All Set"
+    }
   }
 }

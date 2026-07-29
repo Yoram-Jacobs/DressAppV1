@@ -2816,5 +2816,62 @@
   "privacy": {
     "title": "Privacy Policy",
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
+  },
+  "pricing": {
+    "title": "תעריפים וחבילות נקודות זכות",
+    "subtitle": "בחר/י את המסלול המתאים לסגנון שלך. ניתן לשדרג או להטעין בכל עת.",
+    "monthlyBilling": "חיוב חודשי",
+    "annualBilling": "חיוב שנתי",
+    "savePercent": "חסוך 20%",
+    "popular": "הכי פופולרי",
+    "creditsPerMonth": "{{count}} נקודות זכות AI בחודש",
+    "creditsPerMonth_one": "נקודת זכות AI אחת בחודש",
+    "creditsPerMonth_other": "{{count}} נקודות זכות AI בחודש",
+    "dailyLimit": "מגבלה יומית: {{count}}",
+    "monthlyLimit": "מגבלה חודשית: {{count}}",
+    "selectPlan": "בחר במסלול זה",
+    "currentPlan": "המסלול הנוכחי שלך",
+    "upgradePlan": "שדרוג מסלול",
+    "currentBalanceHeader": "יתרת נקודות הזכות הנוכחית שלך",
+    "paidCredits": "נקודות זכות בתשלום",
+    "paidCreditsDesc": "לא פגות תוקף, בשימוש לאחר ניצול נקודות הזכות החינמיות.",
+    "freeCredits": "נקודות זכות חינמיות",
+    "freeCreditsDesc": "ניתנות מדי חודש במסגרת המסלול שלך, פגות תוקף תוך 30 יום.",
+    "expired": "פג תוקף",
+    "totalCredits": "סה\"כ נקודות זכות לשימוש",
+    "readyToUse": "מוכן לשימוש",
+    "requiresAction": "נדרשת פעולה",
+    "usageStatsHeader": "ניצול נקודות זכות ומגבלות עיבוד",
+    "monthlyUsed": "מגבלה חודשית שנוצלה",
+    "dailyUsed": "מגבלה יומית שנוצלה",
+    "topUpHeader": "רכישת נקודות זכות נוספות",
+    "topUpSub": "חבילות נקודות זכות בתשלום אינן פגות תוקף ומשמשות לאחר ניצול נקודות הזכות החודשיות.",
+    "buyCredits": "קנה {{count}} נקודות זכות",
+    "buyNow": "קנה עכשיו",
+    "featureComparisonHeader": "השוואת מאפייני המסלולים",
+    "features": {
+      "credits": "נקודות זכות AI בחודש",
+      "dailyLimit": "מגבלה יומית של פעולות AI",
+      "monthlyLimit": "מגבלה חודשית של פעולות AI",
+      "customApiKey": "תמיכה במפתח API מותאם אישית",
+      "support": "עדיפות תמיכה",
+      "uploads": "קיבולת העלאת תמונות",
+      "branding": "אפשרויות מיתוג מותאמות אישית"
+    },
+    "supportTiers": {
+      "community": "תמיכת קהילה",
+      "priority": "אימייל בעדיפות",
+      "dedicated": "תמיכה ייעודית"
+    },
+    "uploadsTiers": {
+      "limited": "סטנדרטי",
+      "unlimited": "ללא הגבלה"
+    },
+    "alerts": {
+      "soft_warning": "יתרה נמוכה",
+      "hard_limit": "נקודות הזכות אזלו",
+      "exhausted": "אין נקודות זכות",
+      "all_set": "הכל מוכן"
+    }
   }
 }

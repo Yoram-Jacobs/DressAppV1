@@ -2776,5 +2776,62 @@
   "privacy": {
     "title": "Privacy Policy",
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
+  },
+  "pricing": {
+    "title": "Prezzi e Piani Crediti",
+    "subtitle": "Scegli il piano adatto al tuo stile. Aggiorna o ricarica in qualsiasi momento.",
+    "monthlyBilling": "Fatturazione mensile",
+    "annualBilling": "Fatturazione annuale",
+    "savePercent": "Risparmia il 20%",
+    "popular": "Più popolare",
+    "creditsPerMonth": "{{count}} crediti IA / mese",
+    "creditsPerMonth_one": "1 credito IA / mese",
+    "creditsPerMonth_other": "{{count}} crediti IA / mese",
+    "dailyLimit": "Limite giornaliero: {{count}}",
+    "monthlyLimit": "Limite mensile: {{count}}",
+    "selectPlan": "Seleziona questo piano",
+    "currentPlan": "Il tuo piano attuale",
+    "upgradePlan": "Migliora piano",
+    "currentBalanceHeader": "Il tuo saldo crediti attuale",
+    "paidCredits": "Crediti a pagamento",
+    "paidCreditsDesc": "Non scadono mai, usati dopo l'esaurimento dei crediti gratuiti.",
+    "freeCredits": "Crediti gratuiti",
+    "freeCreditsDesc": "Forniti mensilmente dal tuo piano, scadono dopo 30 giorni.",
+    "expired": "scaduto",
+    "totalCredits": "Totale crediti utilizzabili",
+    "readyToUse": "Pronto all'uso",
+    "requiresAction": "Richiede azione",
+    "usageStatsHeader": "Utilizzo dei crediti e limiti di elaborazione",
+    "monthlyUsed": "Limite mensile utilizzato",
+    "dailyUsed": "Limite giornaliero utilizzato",
+    "topUpHeader": "Acquista crediti aggiuntivi",
+    "topUpSub": "I pacchetti di crediti a pagamento non scadono mai e vengono consumati dopo i crediti mensili.",
+    "buyCredits": "Acquista {{count}} crediti",
+    "buyNow": "Acquista ora",
+    "featureComparisonHeader": "Confronta le caratteristiche dei piani",
+    "features": {
+      "credits": "Crediti IA / mese",
+      "dailyLimit": "Limite giornaliero di operazioni IA",
+      "monthlyLimit": "Limite mensile di operazioni IA",
+      "customApiKey": "Supporto chiave API personalizzata",
+      "support": "Priorità del supporto",
+      "uploads": "Capacità caricamento immagini",
+      "branding": "Opzioni di branding personalizzato"
+    },
+    "supportTiers": {
+      "community": "Supporto community",
+      "priority": "Email prioritaria",
+      "dedicated": "Supporto dedicato"
+    },
+    "uploadsTiers": {
+      "limited": "Standard",
+      "unlimited": "Illimitato"
+    },
+    "alerts": {
+      "soft_warning": "Crediti in esaurimento",
+      "hard_limit": "Crediti esauriti",
+      "exhausted": "Nessun credito",
+      "all_set": "Tutto pronto"
+    }
   }
 }

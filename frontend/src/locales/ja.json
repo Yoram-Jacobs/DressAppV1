@@ -2777,5 +2777,62 @@
   "privacy": {
     "title": "Privacy Policy",
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
+  },
+  "pricing": {
+    "title": "料金＆クレジットプラン",
+    "subtitle": "あなたのスタイルに合ったプランをお選びください。アップグレードやチャージはいつでも可能です。",
+    "monthlyBilling": "月々払い",
+    "annualBilling": "年間払い",
+    "savePercent": "20%お得",
+    "popular": "一番人気",
+    "creditsPerMonth": "月 {{count}} AIクレジット",
+    "creditsPerMonth_one": "月 1 AIクレジット",
+    "creditsPerMonth_other": "月 {{count}} AIクレジット",
+    "dailyLimit": "1日制限: {{count}}",
+    "monthlyLimit": "月間制限: {{count}}",
+    "selectPlan": "このプランを選択する",
+    "currentPlan": "現在のプラン",
+    "upgradePlan": "プランをアップグレード",
+    "currentBalanceHeader": "現在のクレジット残高",
+    "paidCredits": "購入クレジット",
+    "paidCreditsDesc": "有効期限はありません。無料クレジットが使い切られた後に使用されます。",
+    "freeCredits": "無料クレジット",
+    "freeCreditsDesc": "プランごとに毎月提供され、30日で期限切れになります。",
+    "expired": "期限切れ",
+    "totalCredits": "使用可能な総クレジット数",
+    "readyToUse": "利用可能",
+    "requiresAction": "要対応",
+    "usageStatsHeader": "クレジット使用状況＆処理制限",
+    "monthlyUsed": "月間制限使用率",
+    "dailyUsed": "1日制限使用率",
+    "topUpHeader": "追加クレジットの購入",
+    "topUpSub": "購入されたクレジットパックに有効期限はなく、月間クレジットの使い切り後に消費されます。",
+    "buyCredits": "{{count}} クレジットを購入",
+    "buyNow": "今すぐ購入する",
+    "featureComparisonHeader": "プラン機能の比較",
+    "features": {
+      "credits": "月間AIクレジット数",
+      "dailyLimit": "1日のAI処理上限数",
+      "monthlyLimit": "月間のAI処理上限数",
+      "customApiKey": "カスタムAPIキー設定",
+      "support": "サポートの優先度",
+      "uploads": "画像アップロード容量",
+      "branding": "カスタムブランド設定"
+    },
+    "supportTiers": {
+      "community": "コミュニティサポート",
+      "priority": "優先Eメール対応",
+      "dedicated": "専任サポート"
+    },
+    "uploadsTiers": {
+      "limited": "標準",
+      "unlimited": "無制限"
+    },
+    "alerts": {
+      "soft_warning": "残高わずか",
+      "hard_limit": "クレジット不足",
+      "exhausted": "クレジットなし",
+      "all_set": "準備完了"
+    }
   }
 }

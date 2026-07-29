@@ -2776,5 +2776,62 @@
   "privacy": {
     "title": "Privacy Policy",
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
+  },
+  "pricing": {
+    "title": "Preise & Guthabenpläne",
+    "subtitle": "Wählen Sie den Tarif, der zu Ihrem Stil passt. Jederzeit upgraden oder aufladen.",
+    "monthlyBilling": "Monatliche Abrechnung",
+    "annualBilling": "Jährliche Abrechnung",
+    "savePercent": "20% sparen",
+    "popular": "Beliebtestes",
+    "creditsPerMonth": "{{count}} KI-Guthaben / Monat",
+    "creditsPerMonth_one": "1 KI-Guthaben / Monat",
+    "creditsPerMonth_other": "{{count}} KI-Guthaben / Monat",
+    "dailyLimit": "Tageslimit: {{count}}",
+    "monthlyLimit": "Monatslimit: {{count}}",
+    "selectPlan": "Tarif wählen",
+    "currentPlan": "Ihr aktueller Tarif",
+    "upgradePlan": "Tarif upgraden",
+    "currentBalanceHeader": "Ihr aktueller Kontostand",
+    "paidCredits": "Gekauftes Guthaben",
+    "paidCreditsDesc": "Läuft nie ab, wird nach dem Gratis-Guthaben verbraucht.",
+    "freeCredits": "Gratis-Guthaben",
+    "freeCreditsDesc": "Monatlich in Ihrem Tarif enthalten, läuft nach 30 Tagen ab.",
+    "expired": "abgelaufen",
+    "totalCredits": "Gesamtes nutzbares Guthaben",
+    "readyToUse": "Bereit zur Nutzung",
+    "requiresAction": "Aktion erforderlich",
+    "usageStatsHeader": "Guthabennutzung & Verarbeitungslimits",
+    "monthlyUsed": "Monatslimit verbraucht",
+    "dailyUsed": "Tageslimit verbraucht",
+    "topUpHeader": "Zusätzliches Guthaben kaufen",
+    "topUpSub": "Gekaufte Guthabenpakete laufen nie ab und werden nach dem Monatsguthaben verbraucht.",
+    "buyCredits": "Kaufe {{count}} Guthaben",
+    "buyNow": "Jetzt kaufen",
+    "featureComparisonHeader": "Tarifmerkmale vergleichen",
+    "features": {
+      "credits": "KI-Guthaben / Monat",
+      "dailyLimit": "Tägliches KI-Limit",
+      "monthlyLimit": "Monatliches KI-Limit",
+      "customApiKey": "Eigener API-Schlüssel",
+      "support": "Support-Priorität",
+      "uploads": "Bilder-Upload-Kapazität",
+      "branding": "Eigene Branding-Optionen"
+    },
+    "supportTiers": {
+      "community": "Community-Support",
+      "priority": "Priorisierter E-Mail-Support",
+      "dedicated": "Persönlicher Support"
+    },
+    "uploadsTiers": {
+      "limited": "Standard",
+      "unlimited": "Unbegrenzt"
+    },
+    "alerts": {
+      "soft_warning": "Guthaben fast leer",
+      "hard_limit": "Guthaben aufgebraucht",
+      "exhausted": "Kein Guthaben",
+      "all_set": "Alles bestens"
+    }
   }
 }

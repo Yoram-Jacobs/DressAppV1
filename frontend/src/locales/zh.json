@@ -2776,5 +2776,62 @@
   "privacy": {
     "title": "Privacy Policy",
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
+  },
+  "pricing": {
+    "title": "价格与额度套餐",
+    "subtitle": "选择适合您风格的套餐。可随时升级或充值。",
+    "monthlyBilling": "按月付款",
+    "annualBilling": "按年付款",
+    "savePercent": "立省 20%",
+    "popular": "最受欢迎",
+    "creditsPerMonth": "每月 {{count}} AI 额度",
+    "creditsPerMonth_one": "每月 1 AI 额度",
+    "creditsPerMonth_other": "每月 {{count}} AI 额度",
+    "dailyLimit": "每日限制: {{count}}",
+    "monthlyLimit": "每月限制: {{count}}",
+    "selectPlan": "选择此套餐",
+    "currentPlan": "您当前的套餐",
+    "upgradePlan": "升级套餐",
+    "currentBalanceHeader": "您当前的额度余额",
+    "paidCredits": "购买额度",
+    "paidCreditsDesc": "永久有效，在每月赠送额度消耗完之后使用。",
+    "freeCredits": "赠送额度",
+    "freeCreditsDesc": "每月按套餐类型赠送，30天内有效。",
+    "expired": "已过期",
+    "totalCredits": "总计可用额度",
+    "readyToUse": "可使用",
+    "requiresAction": "需要操作",
+    "usageStatsHeader": "额度消耗与处理限额",
+    "monthlyUsed": "每月额度消耗比例",
+    "dailyUsed": "每日额度消耗比例",
+    "topUpHeader": "购买额外额度",
+    "topUpSub": "购买的额度包永久有效，将在月度额度耗尽后自动启用。",
+    "buyCredits": "购买 {{count}} 额度",
+    "buyNow": "立即购买",
+    "featureComparisonHeader": "对比套餐权益",
+    "features": {
+      "credits": "每月 AI 额度",
+      "dailyLimit": "每日 AI 处理次数上限",
+      "monthlyLimit": "每月 AI 处理次数上限",
+      "customApiKey": "支持自定义 API 密钥",
+      "support": "客户支持优先级",
+      "uploads": "图片上传容量",
+      "branding": "自定义品牌选项"
+    },
+    "supportTiers": {
+      "community": "社区支持",
+      "priority": "优先邮件支持",
+      "dedicated": "专属客户经理"
+    },
+    "uploadsTiers": {
+      "limited": "标准",
+      "unlimited": "无限制"
+    },
+    "alerts": {
+      "soft_warning": "余额不足",
+      "hard_limit": "额度耗尽",
+      "exhausted": "无可用额度",
+      "all_set": "运行正常"
+    }
   }
 }
