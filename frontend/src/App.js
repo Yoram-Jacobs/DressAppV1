@@ -91,6 +91,12 @@ function MigrationMessageListener() {
   return null;
 }
 
+function OutfitsRedirect() {
+  const location = useLocation();
+  const search = location.search;
+  return <Navigate to={`/stylist?tab=match${search ? '&' + search.substring(1) : ''}`} replace />;
+}
+
 function App() {
   return (
     <BrowserRouter>
