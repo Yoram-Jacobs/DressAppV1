@@ -10,7 +10,6 @@ from datetime import datetime, timezone, timedelta
 from enum import Enum
 from typing import Any, Optional, Dict
 
-from app.services.pricing import get_credit_thresholds, CreditQuotaStatus  # Import quota-aware functions
 
 from app.db.database import get_db
 from app.services.auth import get_current_user
