@@ -142,7 +142,7 @@ const PurchaseCredits = () => {
             <Tab.Pane key={pack.amount} tabKey={pack.amount.toString()}>
               <Card className="text-center mb-4">
                 <Card.Body>
-                  <Card.Title>{pack.credits_amount} Credits</CardTitle>
+                  <Card.Title>{pack.credits_amount} Credits</Card.Title>
                   <Card.Text className="display-6 text-primary">
                     ${(pack.price / 100).toFixed(2)}
                   </CardText>
@@ -208,7 +208,7 @@ const PurchaseCredits = () => {
           <Col md={4} className="mb-4">
             <Card>
               <Card.Body>
-                <Card.Title>🎯 Always Available</CardTitle>
+                <Card.Title>🎯 Always Available</Card.Title>
                 <Card.Text>Paid credits never expire - use them whenever you need.</CardText>
               </Card.Body>
             </Card>
@@ -216,7 +216,7 @@ const PurchaseCredits = () => {
           <Col md={4} className="mb-4">
             <Card>
               <Card.Body>
-                <Card.Title>💰 Bulk Discounts</CardTitle>
+                <Card.Title>💰 Bulk Discounts</Card.Title>
                 <Card.Text>Buy larger packs and get better value per credit.</CardText>
               </Card.Body>
             </Card>
@@ -224,7 +224,7 @@ const PurchaseCredits = () => {
           <Col md={4} className="mb-4">
             <Card>
               <Card.Body>
-                <Card.Title>⚡ Instant Access</CardTitle>
+                <Card.Title>⚡ Instant Access</Card.Title>
                 <Card.Text>Purchase today and get immediate access to premium AI features.</CardText>
               </Card.Body>
             </Card>

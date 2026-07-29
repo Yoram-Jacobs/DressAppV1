@@ -119,7 +119,7 @@ const Pricing = () => {
           <div className="col-md-4 mb-4" key={tier.name}>
             <Card className="h-100" border={tier.name === 'Pro' ? 'primary' : 'light'}>
               <Card.Body>
-                <Card.Title className="text-center">{tier.name} Plan</CardTitle>
+                <Card.Title className="text-center">{tier.name} Plan</Card.Title>
                 <Card.Text className="text-center text-muted">
                   ${(tier.price / 100).toFixed(2)}/mo <small>({((tier.price / 100) * 0.8).toFixed(2)}/yr annual)</small>
                 </CardText>
@@ -191,7 +191,7 @@ const Pricing = () => {
             <div className="col-md-3 mb-3" key={pack.amount}>
               <Card className="h-100 text-center">
                 <Card.Body>
-                  <Card.Title>{pack.credits_amount} Credits</CardTitle>
+                  <Card.Title>{pack.credits_amount} Credits</Card.Title>
                   <Card.Text className="display-6 text-primary">${(pack.price / 100).toFixed(2)}</CardText>
                   <Link to={`/pricing/purchase?pack_size=${pack.amount}`} className="btn btn-outline-primary w-100 mt-2">
                     Buy Now
