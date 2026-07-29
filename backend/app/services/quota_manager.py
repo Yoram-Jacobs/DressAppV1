@@ -54,9 +54,12 @@ async def check_operation_quota(user_id: str, required_credits: int = 1, operati
         # Check if we have enough raw credit balance
         if u_model.total_credits < required_credits:
             # Check if we can wait/resume - this is where pause happens
-            got_enough = await _handle_exhaustion_with_resume(user_id, required_credits, operation)
-            if not got_enough:
-                return False, CreditQuotaStatus.EXHAUSTED, "No usable credits available after waiting"
+            if operation != "quota_check":
+                got_enough = await _handle_exhaustion_with_resume(user_id, required_credits, operation)
+                if not got_enough:
+                    return False, CreditQuotaStatus.EXHAUSTED, "No usable credits available after waiting"
+            else:
+                return False, CreditQuotaStatus.EXHAUSTED, "No usable credits available"
         
         # Check daily/monthly quotas
         daily_limit = ai_config.get("ai_daily_limit", 100)
