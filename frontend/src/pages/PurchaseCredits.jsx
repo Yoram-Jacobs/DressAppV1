@@ -66,7 +66,7 @@ const PurchaseCredits = () => {
   const handlePurchase = async () => {
     if (!selectedPack) return;
 
-    try:
+    try {
       setLoading(true);
       
       // Create PayPal order
@@ -78,9 +78,9 @@ const PurchaseCredits = () => {
       setPayPalState({ order: orderRes.data.order_id, status: 'created' });
 
       // Simulate payment completion (in production, this would be handled by PayPal webhook)
-      setTimeout(async () =>:
+      setTimeout(async () => {
         // Capture the order
-        const captureRes = await axios.post(
+        await axios.post(
           `/api/v1/ai-credits/purchase/${orderRes.data.purchase_id}/capture`
         );
 
@@ -94,14 +94,14 @@ const PurchaseCredits = () => {
         // Refresh quota status after successful purchase
         const quotaRes = await axios.get('/api/v1/quota/status');
         setQuotaStatus(quotaRes.data);
-      , 2000);
+      }, 2000);
 
-    catch (err) {
+    } catch (err) {
       console.error('Purchase failed:', err);
       setError('Payment failed. Please try again or contact support.');
-    finally:
+    } finally {
       setLoading(false);
-    };
+    }
   };
 
   return (

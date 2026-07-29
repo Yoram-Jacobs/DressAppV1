@@ -31,16 +31,15 @@ const Pricing = () => {
     fetchPricingData();
   }, []);
 
-  // Refresh quota status periodically (every 30 seconds) to show real-time updates
   useEffect(() => {
     const interval = setInterval(async () => {
-      try:
+      try {
         const quotaRes = await axios.get('/api/v1/quota/status');
         setQuotaStatus(quotaRes.data);
-      catch (err) {
+      } catch (err) {
         console.warn('Failed to refresh quota status:', err);
-      }, 30000;
-    });
+      }
+    }, 30000);
 
     return () => clearInterval(interval);
   }, []);
