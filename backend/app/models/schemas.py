@@ -119,6 +119,7 @@ class User(BaseDoc):
     style_profile: StyleProfile = Field(default_factory=StyleProfile)
     cultural_context: CulturalContext = Field(default_factory=CulturalContext)
     google_oauth: GoogleOAuthTokens | None = None
+    google_calendar_tokens: dict[str, Any] | None = None
     stripe_account_id: str | None = None
     stripe_onboarding_complete: bool = False
     roles: list[str] = Field(default_factory=lambda: ["user"])
