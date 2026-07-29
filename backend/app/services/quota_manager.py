@@ -88,6 +88,7 @@ async def _handle_exhaustion_with_resume(user_id: str, required_credits: int, op
     
     Instead of failing immediately, this function waits for credits to become
     available (via purchase, renewal, or rollover) up to a timeout period.
+    """
     # Try briefly waiting for credits to appear
     did_we_get_credits = await _wait_for_credit_replenishment(user_id, max_wait=60)  # 1 minute timeout
     
