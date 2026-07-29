@@ -145,7 +145,7 @@ const PurchaseCredits = () => {
                   <Card.Title>{pack.credits_amount} Credits</Card.Title>
                   <Card.Text className="display-6 text-primary">
                     ${(pack.price / 100).toFixed(2)}
-                  </CardText>
+                  </Card.Text>
                   <p className="text-muted">Per pack - no expiration</p>
                   <Button 
                     variant="primary" 
@@ -209,7 +209,7 @@ const PurchaseCredits = () => {
             <Card>
               <Card.Body>
                 <Card.Title>🎯 Always Available</Card.Title>
-                <Card.Text>Paid credits never expire - use them whenever you need.</CardText>
+                <Card.Text>Paid credits never expire - use them whenever you need.</Card.Text>
               </Card.Body>
             </Card>
           </Col>
@@ -217,7 +217,7 @@ const PurchaseCredits = () => {
             <Card>
               <Card.Body>
                 <Card.Title>💰 Bulk Discounts</Card.Title>
-                <Card.Text>Buy larger packs and get better value per credit.</CardText>
+                <Card.Text>Buy larger packs and get better value per credit.</Card.Text>
               </Card.Body>
             </Card>
           </Col>
@@ -225,7 +225,7 @@ const PurchaseCredits = () => {
             <Card>
               <Card.Body>
                 <Card.Title>⚡ Instant Access</Card.Title>
-                <Card.Text>Purchase today and get immediate access to premium AI features.</CardText>
+                <Card.Text>Purchase today and get immediate access to premium AI features.</Card.Text>
               </Card.Body>
             </Card>
           </Col>

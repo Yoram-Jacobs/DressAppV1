@@ -122,7 +122,7 @@ const Pricing = () => {
                 <Card.Title className="text-center">{tier.name} Plan</Card.Title>
                 <Card.Text className="text-center text-muted">
                   ${(tier.price / 100).toFixed(2)}/mo <small>({((tier.price / 100) * 0.8).toFixed(2)}/yr annual)</small>
-                </CardText>
+                </Card.Text>
                 <hr />
                 <ul className="list-unstyled mb-4">
                   <li>✅ <strong>{tier.credits} AI credits/mo</strong></li>
@@ -192,7 +192,7 @@ const Pricing = () => {
               <Card className="h-100 text-center">
                 <Card.Body>
                   <Card.Title>{pack.credits_amount} Credits</Card.Title>
-                  <Card.Text className="display-6 text-primary">${(pack.price / 100).toFixed(2)}</CardText>
+                  <Card.Text className="display-6 text-primary">${(pack.price / 100).toFixed(2)}</Card.Text>
                   <Link to={`/pricing/purchase?pack_size=${pack.amount}`} className="btn btn-outline-primary w-100 mt-2">
                     Buy Now
                   </Link>
