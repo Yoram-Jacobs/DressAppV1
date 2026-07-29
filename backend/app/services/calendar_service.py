@@ -475,7 +475,7 @@ class CalendarService:
             token_uri=GOOGLE_TOKEN_URL,
             client_id=self.client_id,
             client_secret=self.client_secret,
-            scopes=SCOPES,
+            scopes=tokens.get("scopes") or SCOPES,
         )
         if not creds.valid and creds.refresh_token:
             # The library does a sync HTTP call; this is acceptable here.

@@ -653,7 +653,7 @@ async def sync_profile_from_google(
             token_uri=GOOGLE_TOKEN_URL,
             client_id=calendar_service.client_id,
             client_secret=calendar_service.client_secret,
-            scopes=SCOPES,
+            scopes=tokens.get("scopes") or SCOPES,
         )
         if not creds.valid and creds.refresh_token:
             creds.refresh(GoogleAuthRequest())
