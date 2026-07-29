@@ -93,7 +93,7 @@ async def test_credit_buckets():
     
     # After spending 25, we should have used all 20 free + 5 paid
     remaining = user_model.credit_buckets
-    total_remaining = sum(b["amount"] for b in remaining)
+    total_remaining = sum(b.amount for b in remaining)
     expected_remaining = 45  # 50 - 5 = 45 paid left
     assert total_remaining == expected_remaining, f"Expected {expected_remaining} remaining, got {total_remaining}"
     print(f"✓ Spent 25 credits: free consumed, then 5 from paid. Remaining: {total_remaining}")
