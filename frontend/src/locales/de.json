@@ -1,4 +1,4 @@
-﻿{
+{
   "brand": "DressApp",
   "nav": {
     "home": "Start",
@@ -1156,7 +1156,7 @@
     "perYear": " / Jahr",
     "upgradeAnnualBtn": "Jährlich upgraden",
     "inviteDesc": "Teilen Sie DressApp mit Ihren Freunden und Ihrer Familie",
-    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings"
   },
   "admin": {
     "title": "Admin",

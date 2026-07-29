@@ -1,4 +1,4 @@
-"""Auth routes: register, login, /me, dev-bypass."""
+"""Auth routes: /me, dev-bypass."""
 from __future__ import annotations
 
 import logging
@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, EmailStr, Field
 
 from app.config import settings
 from app.db.database import get_db
@@ -17,25 +16,10 @@ from app.services.auth import (
     create_access_token,
     get_current_user,
     hash_password,
-    verify_password,
 )
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-
-class RegisterIn(BaseModel):
-    email: EmailStr
-    password: str = Field(min_length=8, max_length=128)
-    display_name: str | None = None
-    preferred_language: str = "en"
-    preferred_voice_id: str = "en_US-ryan-medium"
-    referrer_id: str | None = None
-
-
-class LoginIn(BaseModel):
-    email: EmailStr
-    password: str
 
 
 class TokenOut(BaseModel):
@@ -47,72 +31,7 @@ class TokenOut(BaseModel):
 def _public_user(user: dict[str, Any]) -> dict[str, Any]:
     out = {k: v for k, v in user.items() if k not in {"password_hash", "google_oauth"}}
     out["google_connected"] = bool(user.get("google_oauth"))
-    out["has_password"] = bool(user.get("password_hash"))
     return out
-
-
-@router.post("/register", response_model=TokenOut, status_code=201)
-async def register(payload: RegisterIn) -> TokenOut:
-    db = get_db()
-    existing = await db.users.find_one({"email": payload.email.lower()})
-    if existing:
-        raise HTTPException(status.HTTP_409_CONFLICT, "Email already registered")
-
-    user = User(
-        email=payload.email.lower(),
-        password_hash=hash_password(payload.password),
-        display_name=payload.display_name or payload.email.split("@")[0],
-        preferred_language=payload.preferred_language,
-        preferred_voice_id=payload.preferred_voice_id,
-    )
-    doc = user.model_dump()
-    # Apply admin allow-list at registration time so the very first sign-up
-    # of an allow-listed email already has admin powers.
-    doc["roles"] = apply_admin_role(doc.get("roles"), user.email)
-    await repos.insert(db.users, doc)
-    
-    # Handle referral capacity bonus
-    if payload.referrer_id:
-        ref_user = await db.users.find_one({"id": payload.referrer_id})
-        if ref_user:
-            await db.users.update_one(
-                {"id": payload.referrer_id},
-                {
-                    "$inc": {"closet_capacity_bonus": 10},
-                    "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}
-                }
-            )
-            logger.info("Referred by %s, awarded +10 closet capacity slots", payload.referrer_id)
-
-    logger.info("user registered email=%s id=%s", user.email, user.id)
-    token = create_access_token(user.id, {"email": user.email})
-    return TokenOut(access_token=token, user=_public_user(doc))
-
-
-@router.post("/login", response_model=TokenOut)
-async def login(payload: LoginIn) -> TokenOut:
-    db = get_db()
-    user = await db.users.find_one({"email": payload.email.lower()}, {"_id": 0})
-    if not user or not user.get("password_hash"):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
-    if not verify_password(payload.password, user["password_hash"]):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
-    # Re-apply admin allow-list on every login so promotions via .env are
-    # picked up immediately without a DB migration.
-    new_roles = apply_admin_role(user.get("roles"), user.get("email"))
-    if set(new_roles) != set(user.get("roles") or []):
-        await db.users.update_one(
-            {"id": user["id"]},
-            {
-                "$set": {
-                    "roles": new_roles,
-                    "updated_at": datetime.now(timezone.utc).isoformat(),
-                }
-            },
-        )
-        user["roles"] = new_roles
-    token = create_access_token(user["id"], {"email": user["email"]})
-    return TokenOut(access_token=token, user=_public_user(user))
 
 
 @router.get("/me")

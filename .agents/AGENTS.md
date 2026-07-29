@@ -23,6 +23,7 @@ To prevent context stuffing, the documentation for this repository is modularly 
 - **Trend Scout**: [trend_scout.md](file:///C:/DressApp_AG/wiki/en/trend_scout.md) - Curated daily fashion feeds.
 - **Experts Registry**: [experts_registry.md](file:///C:/DressApp_AG/wiki/en/experts_registry.md) - Certified professional stylist contact directory.
 - **Troubleshooting**: [troubleshooting.md](file:///C:/DressApp_AG/wiki/en/troubleshooting.md) - Common errors and limits.
+- **Pricing Plan**: [Pricing-Plane.md](file:///D:/ai/Emergent/Appendix/docs/Pricing-Plane.md) - Hybrid pricing model, tiers, credit system, and monetization strategy.
 
 Note: Translations for all topic files are organized into language subdirectories (e.g. `he/` for Hebrew, `ar/` for Arabic, `de/` for German, etc.).
 
@@ -63,3 +64,6 @@ Every subject in the help tree (`HelpMenu.jsx`) follows a **two-layer structure*
 | `/deploy` | [deploy-dressapp](skills/deploy-dressapp/SKILL.md) | Deployment and DevOps for DressApp |
 | `/narrate` | [narrator](skills/narrator/SKILL.md) | Technical authoring and architectural overviews |
 | `/compete` | [competitor-ux-strategist](skills/competitor-ux-strategist/SKILL.md) | Competitor UX analysis and strategy |
+| `/pricing` | [pricing-strategist](skills/pricing-strategist/SKILL.md) | Pricing plan design, tier recommendations, credit system architecture |
+| `/pricing-info` | [pricing](skills/pricing/SKILL.md) | AI credit management, billing, and subscription operations |
+| `/billing` | [billing](skills/billing/SKILL.md) | Billing and payment processing services |

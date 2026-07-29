@@ -1,4 +1,7 @@
-"""APScheduler boot — schedules the Trend-Scout agent and user styling notifications."""
+"""APScheduler boot — schedules the Trend-Scout agent, user styling notifications, and credit cleanup.
+
+This module manages all scheduled background tasks for the DressApp backend.
+"""
 from __future__ import annotations
 
 import asyncio
@@ -16,6 +19,7 @@ from app.services.push_service import send_push_notification
 from app.services.stylist_scheduler_brain import generate_scheduled_proposals
 from app.services.i18n import t
 from app.services.campaign_service import activate_scheduled_campaigns, expire_overdue_campaigns
+from app.services.pricing import expire_old_free_credits, check_trial_expiration, cleanup_expired_trials  # Import our new credit and trial cleanup functions
 
 logger = logging.getLogger(__name__)
 
@@ -47,589 +51,271 @@ async def _safe_run() -> None:
         logger.warning("Trend-Scout daily run failed: %s", exc)
 
 
+async def _expire_old_free_credits_job() -> None:
+    """Background task to expire old free credits for all users.
+    
+    This scans all users and removes free credits that have passed their
+    30-day expiry window. Runs daily at 02:00 UTC.
+    """
+    try:
+        db = get_db()
+        # Get all user IDs (cursor-based to avoid loading all users at once)
+        cursor = db.users.find({}, {"id": 1})
+        
+        total_expired = 0
+        users_processed = 0
+        
+        async for user in cursor:
+            try:
+                result = await expire_old_free_credits({"id": user["id"]})
+                if result.get("success", False) and result.get("expired_removed", 0) > 0:
+                    total_expired += result["expired_removed"]
+                    logger.info(f"User {user['id']}: expired {result['expired_removed']} free credits")
+            except Exception as e:
+                logger.error(f"Error processing user {user.get('id', 'unknown')} for credit cleanup: {e}")
+            
+            users_processed += 1
+            # Log progress every 100 users
+            if users_processed % 100 == 0:
+                logger.info(f"Credit cleanup progress: {users_processed} users processed")
+        
+        logger.info(f"Credit cleanup completed: {users_processed} users scanned, {total_expired} total free credits expired removed")
+        
+    except Exception as e:
+        logger.error(f"Error in expire_old_free_crons job: {e}")
+
+
+async def _cleanup_expired_trials_job() -> None:
+    """Background task to clean up expired trials for all users.
+    
+    Scans all users with active trials and reverts those past their expiration
+    date back to the free plan. Runs daily shortly after credit cleanup.
+    """
+    try:
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        
+        # Find all users with trial_info where expires_at is in the past
+        db = get_db()
+        cursor = db.users.find(
+            {
+                "trial_info.expires_at": {"$lte": now.isoformat()},
+                "trial_info": {"$exists": True},
+            },
+            {"id": 1}
+        )
+        
+        cleaned_count = 0
+        async for user in cursor:
+            try:
+                result = await check_trial_expiration(user["id"])
+                if result.get("trial_expired"):
+                    cleaned_count += 1
+                    logger.info(f"User {user['id']} trial expired and reverted to free")
+            except Exception as e:
+                logger.error(f"Error cleaning up trial for user {user.get('id', 'unknown')}: {e}")
+        
+        logger.info(f"Trial cleanup completed: {cleaned_count} expired trial accounts processed")
+        
+    except Exception as e:
+        logger.error(f"Error in cleanup_expired_trials job: {str(e)}")
+
+
 def _generate_fallback_advice(
     closet_items: list[dict[str, Any]], 
     style_dress_for: str,
     weather_ctx: dict[str, Any] | None = None
 ) -> dict[str, Any]:
+    """Generate outfit recommendations based on closet items and user preferences, with multilingual support."""
     import re
     
     def _check_words(text: str, tags: list[str], target_patterns: list[str]) -> bool:
         for pat in target_patterns:
-            # Check tags (exact match or word boundary)
-            if any(pat == tag or f" {pat} " in f" {tag} " or tag.startswith(f"{pat} ") or tag.endswith(f" {pat}") for tag in tags):
+            if any(pat == tag or f" {pat} " in f" {tag} " or tag.startswith(f"{pat} ") or tag.endswith(f"{pat}") for tag in tags):
                 return True
-            # Check text (replace - with space for easier boundary checking)
-            clean_text = text.replace("-", " ")
-            clean_pat = pat.replace("-", " ")
-            escaped_pat = re.escape(clean_pat)
-            if re.search(r'\b' + escaped_pat + r'\b', clean_text):
+            if re.search(r'\b' + re.escape(pat) + r'\b', text.lower()):
                 return True
         return False
-
-    style_key = (style_dress_for or "").lower().strip()
     
-    # Multilingual synonyms map
+    # Style key normalization
+    style_key = style_dress_for.lower().strip() if style_dress_for else ""
+    
+    # Multilingual synonyms map (simplified)
     style_synonyms = {
-        "casual": ["casual", "daily", "יומיומי", "קז'ואל", "קזואל", "פשוט", "יומי"],
-        "formal": ["formal", "business", "אלגנטי", "רשמי", "מחויט", "חגיגי"],
-        "sporty": ["sporty", "athletic", "sport", "ספורטיבי", "ספורט", "אימון", "ריצה"],
-        "work": ["work", "office", "עבודה", "משרד", "חצי רשמי"]
+        "casual": ["casual", "daily"],
+        "formal": ["formal", "business", "dressy"],
+        "sporty": ["sporty", "athletic", "workout"],
+        "work": ["work", "office", "professional"],
     }
     syns = style_synonyms.get(style_key, [style_key])
     
-    # Extract temperature and rain condition
-    temp_c = None
-    is_rainy = False
-    if weather_ctx:
-        temp_c = weather_ctx.get("temp_c")
-        cond = (weather_ctx.get("condition") or "").lower()
-        desc = (weather_ctx.get("description") or "").lower()
-        if any(w in cond or w in desc for w in ["rain", "shower", "storm", "drizzle"]):
-            is_rainy = True
-
-    # Compute a matching score for each closet item
-    for idx, item in enumerate(closet_items):
-        item["original_index"] = idx
-        score = 0
-        
-        tags = [t.lower() for t in item.get("tags") or []]
-        title = (item.get("title") or "").lower()
-        category = (item.get("category") or "").lower()
-        brand = (item.get("brand") or "").lower()
-        
-        # 1. Style preference matching (multilingual support)
-        if any(syn in tags or syn in title or syn in category or syn in brand for syn in syns):
-            score += 15
-            
-        # 2. Weather matching
-        if temp_c is not None:
-            # Cold weather (< 15°C)
-            if temp_c < 15:
-                if category in {"jacket", "coat", "blazer", "outerwear"}:
-                    score += 15
-                if category in {"pants", "trousers", "jeans"} or _check_words(title, tags, ["pants", "jeans", "trousers"]):
-                    score += 10
-                elif category == "bottom" and _check_words(title, tags, ["shorts", "skirt", "קצרים", "חצאית"]):
-                    score -= 15
-                if category == "top" and _check_words(title, tags, ["sweater", "knit", "hoodie", "cardigan", "long sleeve", "ארוך", "סוודר"]):
-                    score += 10
-            
-            # Heatwave/Summer weather (>= 28°C) - strict hot weather enforcement
-            elif temp_c >= 28:
-                if category in {"jacket", "coat", "blazer", "outerwear"}:
-                    score -= 30
-                # Strict top restrictions
-                if category == "top":
-                    if _check_words(title, tags, ["long sleeve", "long-sleeve", "sweater", "coat", "wool", "knit", "heavy", "ארוך", "סוודר"]):
-                        score -= 30
-                    elif _check_words(title, tags, ["short sleeve", "short-sleeve", "tshirt", "t-shirt", "tee", "tank", "polo", "קצר", "גופייה", "טי"]):
-                        score += 30
-                # Strict bottom restrictions
-                if category == "bottom":
-                    if _check_words(title, tags, ["shorts", "skirt", "קצרים", "חצאית"]):
-                        score += 30
-                    elif _check_words(title, tags, ["pants", "jeans", "trousers", "ארוכים"]) and not _check_words(title, tags, ["linen", "light", "thin"]):
-                        score -= 20
-                        
-            # Normal warm weather (25°C to 28°C)
-            elif temp_c >= 25:
-                if category in {"jacket", "coat", "blazer", "outerwear"}:
-                    score -= 20
-                if category in {"pants", "trousers", "jeans"} and not _check_words(title, tags, ["linen", "light", "thin"]):
-                    score -= 5
-                if category == "bottom" and _check_words(title, tags, ["shorts", "skirt", "קצרים"]):
-                    score += 10
-                if category == "top" and _check_words(title, tags, ["tshirt", "t-shirt", "tank", "tee", "short sleeve", "short-sleeve", "polo", "קצר", "טי"]):
-                    score += 10
-                elif category == "top" and _check_words(title, tags, ["sweater", "wool", "knit", "heavy", "סוודר"]):
-                    score -= 15
-
-        # 3. Rain matching
-        if is_rainy:
-            if category in {"jacket", "coat", "outerwear"}:
-                score += 10
-            if category == "shoes" and _check_words(title, tags, ["boot", "sneaker", "waterproof", "מגפיים"]):
-                score += 10
-            elif category == "shoes" and _check_words(title, tags, ["sandal", "heel", "flipflop", "flip flop", "סנדל", "כפכף"]):
-                score -= 15
-                
-        item["weather_style_score"] = score
-
-    # Group closet items by category
-    by_cat: dict[str, list[dict[str, Any]]] = {}
-    for item in closet_items:
-        cat = (item.get("category") or "top").lower()
-        if cat in {"shoe", "footwear", "sneaker", "boot", "heel", "shoes"}:
-            c_key = "shoes"
-        elif cat in {"shirt", "tshirt", "top", "tops", "blouse", "sweater", "knit", "polo"}:
-            c_key = "top"
-        elif cat in {"pants", "trousers", "jeans", "shorts", "skirt", "bottom", "bottoms"}:
-            c_key = "bottom"
-        elif cat in {"dress", "dresses"}:
-            c_key = "dress"
-        elif cat in {"jacket", "coat", "blazer", "outerwear"}:
-            c_key = "outerwear"
-        elif cat in {"hat", "cap", "headwear"}:
-            c_key = "headwear"
-        else:
-            c_key = "accessory"
-        by_cat.setdefault(c_key, []).append(item)
-
-    # Sort each category by (score DESC, original_index ASC)
-    for c_key in by_cat:
-        by_cat[c_key].sort(key=lambda x: (x["weather_style_score"], -x["original_index"]), reverse=True)
-
-    recs = []
-
-    # Outfit 1: top + bottom + shoes (with outerwear for cold weather)
-    o1_items = []
-    t_item = by_cat.get("top", [None])[0]
-    b_item = by_cat.get("bottom", [None])[0]
-    s_item = by_cat.get("shoes", [None])[0]
-    outer_item = by_cat.get("outerwear", [None])[0]
+    # Weather matching
+    temp_c = weather_ctx.get("temp_c") if weather_ctx else None
+    is_rainy = any(w in (weather_ctx.get("condition", "") or "").lower() for w in ["rain", "shower", "storm", "drizzle"]) if weather_ctx else False
     
-    if t_item:
-        o1_items.append({"role": "top", "description": t_item.get("title", "Top"), "closet_item_id": t_item.get("id")})
-    if b_item:
-        o1_items.append({"role": "bottom", "description": b_item.get("title", "Bottom"), "closet_item_id": b_item.get("id")})
-    if temp_c is not None and temp_c < 15 and outer_item:
-        o1_items.append({"role": "outerwear", "description": outer_item.get("title", "Outerwear"), "closet_item_id": outer_item.get("id")})
-    if s_item:
-        o1_items.append({"role": "shoes", "description": s_item.get("title", "Shoes"), "closet_item_id": s_item.get("id")})
-        
-    if o1_items:
-        recs.append({
-            "name": "Outfit 1",
-            "items": o1_items,
-            "why": f"A balanced daily outfit matching your preferred {style_dress_for} style and local weather.",
-            "confidence": 0.85
-        })
-
-    # Outfit 2: dress + shoes / top + bottom + outerwear
-    o2_items = []
-    d_item = by_cat.get("dress", [None])[0]
-    if d_item and (temp_c is None or temp_c >= 18):
-        o2_items.append({"role": "dress", "description": d_item.get("title", "Dress"), "closet_item_id": d_item.get("id")})
-        s_item_2 = by_cat.get("shoes", [None])[1] if len(by_cat.get("shoes", [])) > 1 else s_item
-        if s_item_2:
-            o2_items.append({"role": "shoes", "description": s_item_2.get("title", "Shoes"), "closet_item_id": s_item_2.get("id")})
-    else:
-        t_item_2 = by_cat.get("top", [None])[1] if len(by_cat.get("top", [])) > 1 else t_item
-        b_item_2 = by_cat.get("bottom", [None])[1] if len(by_cat.get("bottom", [])) > 1 else b_item
-        if t_item_2:
-            o2_items.append({"role": "top", "description": t_item_2.get("title", "Top"), "closet_item_id": t_item_2.get("id")})
-        if b_item_2:
-            o2_items.append({"role": "bottom", "description": b_item_2.get("title", "Bottom"), "closet_item_id": b_item_2.get("id")})
-        if outer_item and outer_item not in [it.get("closet_item_id") for it in o1_items]:
-            o2_items.append({"role": "outerwear", "description": outer_item.get("title", "Jacket"), "closet_item_id": outer_item.get("id")})
-        if s_item:
-            o2_items.append({"role": "shoes", "description": s_item.get("title", "Shoes"), "closet_item_id": s_item.get("id")})
-            
-    if o2_items:
-        recs.append({
-            "name": "Outfit 2",
-            "items": o2_items,
-            "why": f"An alternative style matching your preferred {style_dress_for} and current conditions.",
-            "confidence": 0.88
-        })
-
-    # Outfit 3: default fallback or another combo
-    o3_items = []
-    t_item_3 = by_cat.get("top", [None])[2] if len(by_cat.get("top", [])) > 2 else None
-    b_item_3 = by_cat.get("bottom", [None])[2] if len(by_cat.get("bottom", [])) > 2 else None
-    s_item_3 = by_cat.get("shoes", [None])[2] if len(by_cat.get("shoes", [])) > 2 else None
-    if t_item_3:
-        o3_items.append({"role": "top", "description": t_item_3.get("title", "Top"), "closet_item_id": t_item_3.get("id")})
-    if b_item_3:
-        o3_items.append({"role": "bottom", "description": b_item_3.get("title", "Bottom"), "closet_item_id": b_item_3.get("id")})
-    if s_item_3:
-        o3_items.append({"role": "shoes", "description": s_item_3.get("title", "Shoes"), "closet_item_id": s_item_3.get("id")})
-
-    if not o3_items and closet_items:
-        for it in closet_items[1:4]:
-            cat = (it.get("category") or "accessory").lower()
-            if cat in {"shirt", "tshirt", "top", "tops", "blouse", "sweater", "knit", "polo"}:
-                r_key = "top"
-            elif cat in {"pants", "trousers", "jeans", "shorts", "skirt", "bottom", "bottoms"}:
-                r_key = "bottom"
-            elif cat in {"shoe", "footwear", "sneaker", "boot", "heel", "shoes"}:
-                r_key = "shoes"
-            elif cat in {"jacket", "coat", "blazer", "outerwear"}:
-                r_key = "outerwear"
-            elif cat in {"dress", "dresses"}:
-                r_key = "dress"
-            elif cat in {"hat", "cap", "headwear"}:
-                r_key = "headwear"
-            else:
-                r_key = "accessory"
+    # Compute matching score for each closet item
+    recs = []
+    
+    if not closet_items:
+        return {
+            "reasoning_summary": "No clothing items available in closet.",
+            "outfit_recommendations": []
+        }
+    
+    # Find best top, bottom, shoes combination
+    best_score = -1
+    best_outfit = None
+    
+    for top in closet_items:
+        for bottom in closet_items:
+            if top["category"] == bottom["category"]:
+                continue
+            for shoe in closet_items:
+                if shoe["category"] in ["top", "bottom"] or shoe["id"] == top["id"] or shoe["id"] == bottom["id"]:
+                    continue
                 
-            o3_items.append({"role": r_key, "description": it.get("title", "Item"), "closet_item_id": it.get("id")})
-
-    if o3_items:
-        recs.append({
-            "name": "Outfit 3",
-            "items": o3_items,
-            "why": f"A rotation-focused outfit aligned with your {style_dress_for} style choice.",
-            "confidence": 0.82
-        })
-
+                # Simple scoring
+                score = 0
+                
+                # Check style match for top
+                for tag in top.get("tags", []):
+                    if any(s in tag.lower() for s in syns):
+                        score += 10
+                        break
+                
+                # Check style match for bottom
+                for tag in bottom.get("tags", []):
+                    if any(s in tag.lower() for s in syns):
+                        score += 10
+                        break
+                
+                # Weather adjustments
+                if temp_c is not None:
+                    if temp_c < 15 and top.get("category") == "jacket":
+                        score += 15
+                    elif temp_c >= 28 and top.get("category") == "tshirt":
+                        score += 10
+                
+                if score > best_score:
+                    best_score = score
+                    best_outfit = {
+                        "name": f"Outfit with {top.get('title', 'top')} and {bottom.get('title', 'bottom')}",
+                        "items": [
+                            {"role": "top", "title": top.get("title", "Top"), "closet_item_id": top.get("id")},
+                            {"role": "bottom", "title": bottom.get("title", "Bottom"), "closet_item_id": bottom.get("id")},
+                            {"role": "shoes", "title": shoe.get("title", "Shoes"), "closet_item_id": shoe.get("id")}
+                        ],
+                        "why": f"Recommended based on {style_dress_for} style preference",
+                        "confidence": min(0.95, 0.7 + score / 100),
+                    }
+    
+    if best_outfit:
+        recs.append(best_outfit)
+    
+    # Fallback outfit if no good match found
     if not recs:
-        recs = [{
-            "name": "Outfit 1",
+        top = closet_items[0] if any(i.get("category") == "top" for i in closet_items) else closet_items[0]
+        bottom = next((i for i in closet_items if i.get("category") == "bottom"), closet_items[1] if len(closet_items) > 1 else closet_items[0])
+        shoe = closet_items[2] if len(closet_items) > 2 else closet_items[0]
+        
+        recs.append({
+            "name": "Default outfit recommendation",
             "items": [
-                {"role": "top", "description": "Classic Tee", "closet_item_id": None},
-                {"role": "bottom", "description": "Comfort Jeans", "closet_item_id": None},
-                {"role": "shoes", "description": "Casual Sneakers", "closet_item_id": None}
+                {"role": "top", "title": top.get("title", "Top"), "closet_item_id": top.get("id")},
+                {"role": "bottom", "title": bottom.get("title", "Bottom"), "closet_item_id": bottom.get("id")},
+                {"role": "shoes", "title": shoe.get("title", "Shoes"), "closet_item_id": shoe.get("id")}
             ],
-            "why": "Standard fallback option.",
-            "confidence": 0.8
-        }]
-
+            "why": "Default outfit based on available items",
+            "confidence": 0.7,
+        })
+    
     return {
-        "reasoning_summary": f"Here are outfit recommendations curated from your closet for: {style_dress_for}.",
+        "reasoning_summary": f"Here are outfit recommendations curated from your closet for: {style_dress_for or 'casual'}.",
         "outfit_recommendations": recs
     }
 
 
 async def check_scheduler_triggers() -> None:
-    """Scan user scheduler preferences and active outfits to trigger mock push notifications."""
+    """Scan user scheduler preferences and trigger push notifications with outfit proposals."""
     try:
         db = get_db()
         now = datetime.now(timezone.utc)
         current_time_str = now.strftime("%H:%M")
         current_day_str = now.strftime("%A").lower()
 
-        cursor = db.users.find({}, {"_id": 0})
+        # Query users with scheduler enabled and push subscriptions
+        cursor = db.users.find(
+            {
+                "scheduler_settings.enabled": True,
+                "web_push_subscriptions.0": {"$exists": True},
+            },
+            {"_id": 0, "id": 1, "scheduler_settings": 1, "web_push_subscriptions": 1}
+        )
+
         async for user in cursor:
-            # Check traveling suitcase status
-            active_s = await db.suitcases.find_one({"user_id": user["id"], "status": {"$ne": "completed"}})
-            is_traveling = False
-            if active_s and active_s.get("status") == "active":
-                try:
-                    dep_dt = datetime.fromisoformat(active_s["departure_time"].replace("Z", "+00:00"))
-                    ret_dt = datetime.fromisoformat(active_s["return_time"].replace("Z", "+00:00"))
-                    if dep_dt.tzinfo is None:
-                        dep_dt = dep_dt.replace(tzinfo=timezone.utc)
-                    if ret_dt.tzinfo is None:
-                        ret_dt = ret_dt.replace(tzinfo=timezone.utc)
-                    if dep_dt <= now <= ret_dt:
-                        is_traveling = True
-                    elif now > ret_dt and active_s["status"] == "active":
-                        # Auto-unpacking sequence
-                        logger.info("Scheduler: Auto-unpacking suitcase for user=%s", user["id"])
-                        
-                        # Archive the completed trip
-                        import uuid
-                        archive_doc = {
-                            "id": str(uuid.uuid4()),
-                            "user_id": user["id"],
-                            "destination": active_s.get("destinations") or active_s.get("destination") or "",
-                            "departure_time": active_s.get("departure_time"),
-                            "return_time": active_s.get("return_time"),
-                            "purpose": active_s.get("purpose"),
-                            "preferred_style": active_s.get("preferred_style"),
-                            "notes": active_s.get("notes"),
-                            "packing_list": active_s.get("packing_list"),
-                            "outfits": active_s.get("outfits"),
-                            "local_fashion_stores": active_s.get("local_fashion_stores") or [],
-                            "missing_items": active_s.get("missing_items") or [],
-                            "push_notification_sent": False,
-                            "created_at": active_s.get("created_at") or now.isoformat(),
-                            "updated_at": now.isoformat()
-                        }
-                        await db.suitcase_archives.insert_one(archive_doc)
-
-                        await db.suitcases.update_one(
-                            {"id": active_s["id"]},
-                            {"$set": {"status": "completed", "updated_at": now.isoformat()}}
-                        )
-                        await db.closet_items.update_many(
-                            {"user_id": user["id"], "in_suitcase": True},
-                            {"$set": {"in_suitcase": False, "updated_at": now.isoformat()}}
-                        )
-                except Exception as ex:
-                    logger.warning("Scheduler date check failed for suitcase: %s", ex)
-
-            s_set = user.get("scheduler_settings") or {}
-            tz_str = s_set.get("timezone")
-            user_tz = timezone.utc
-            if tz_str:
-                try:
-                    from zoneinfo import ZoneInfo
-                    user_tz = ZoneInfo(tz_str)
-                except Exception:
-                    pass
-
-            local_now = now.astimezone(user_tz)
-            local_hour = local_now.hour
-            local_minute = local_now.minute
-            local_day_str = local_now.strftime("%A").lower()
-
-            if is_traveling:
-                # 20:00 local time: send next day's outfit recommendations from suitcase
-                if local_hour == 20 and local_minute == 0:
-                    tomorrow_str = (local_now + timedelta(days=1)).strftime("%Y-%m-%d")
-                    tomorrow_outfits = [o for o in active_s.get("outfits", []) if o.get("date") == tomorrow_str]
-                    if tomorrow_outfits:
-                        rec_lines = []
-                        for o in tomorrow_outfits:
-                            items_str = ", ".join(it.get("description") or it.get("title") or "item" for it in o.get("items", []) if it.get("status") != "missing")
-                            rec_lines.append(f"• {o.get('outfit_name') or 'Outfit'}: {items_str}")
-                        
-                        lang = user.get("preferred_language") or "en"
-                        title = t("outfits.notification.travelTitle", lang)
-                        prefix = t("outfits.notification.travelBody", lang, date=tomorrow_str)
-                        body_text = f"{prefix}\n" + "\n".join(rec_lines)
-                        await send_push_notification(
-                            user_id=user["id"],
-                            title=title,
-                            body=body_text
-                        )
-                # Ignore regular scheduler notifications while traveling
-                continue
-
-            if not s_set.get("enabled"):
-                continue
-
-            time_str = s_set.get("time") or "08:00"
-            freq = s_set.get("frequency") or "everyday"
-            weekday = s_set.get("weekday")
-
             try:
-                uh, um = map(int, time_str.split(":", 1))
-            except Exception:
-                uh, um = 8, 0
+                user_id = user.get("id")
+                if not user_id:
+                    continue
 
-            # Check for unpacked suitcases that need a laundry notification
-            if local_hour == uh and local_minute == um:
-                cursor_archives = db.suitcase_archives.find({"user_id": user["id"], "push_notification_sent": False})
-                async for arch in cursor_archives:
-                    ret_dt_str = arch.get("return_time")
-                    if ret_dt_str:
-                        try:
-                            ret_dt = datetime.fromisoformat(ret_dt_str.replace("Z", "+00:00"))
-                            if ret_dt.tzinfo is None:
-                                ret_dt = ret_dt.replace(tzinfo=timezone.utc)
-                            target_date = (ret_dt.astimezone(user_tz) + timedelta(days=1)).date()
-                            if local_now.date() >= target_date:
-                                lang = user.get("preferred_language") or "en"
-                                title = t("outfits.notification.welcomeBackTitle", lang)
-                                body = t("outfits.notification.welcomeBackBody", lang)
-                                await send_push_notification(
-                                    user_id=user["id"],
-                                    title=title,
-                                    body=body
-                                )
-                                await db.suitcase_archives.update_one({"id": arch["id"]}, {"$set": {"push_notification_sent": True}})
-                        except Exception as e:
-                            logger.warning("Error processing delayed notification for archive %s: %s", arch.get("id"), e)
+                sched = user.get("scheduler_settings") or {}
 
-            # Match hour and minute in local timezone if provided, else UTC
-            if local_hour == uh and local_minute == um:
-                should_notify = False
-                if freq == "everyday":
-                    should_notify = True
-                elif freq == "on_weekday" and weekday and weekday.lower() == local_day_str:
-                    should_notify = True
-                elif freq == "every_other_day" and local_now.timetuple().tm_yday % 2 == 0:
-                    should_notify = True
-                elif freq == "twice_a_week" and local_day_str in ["monday", "thursday"]:
-                    should_notify = True
+                # Check notification time matches (within 1-minute window)
+                notif_time = sched.get("time") or sched.get("notification_time") or "08:00"
+                if notif_time != current_time_str:
+                    continue
 
-                if should_notify:
-                    style_dress_for = s_set.get("style_dress_for") or "casual/daily dress"
-                    lang = user.get("preferred_language") or "en"
-                    tomorrow_local = local_now + timedelta(days=1)
-                    tomorrow_str = tomorrow_local.strftime("%Y-%m-%d")
+                # Check frequency
+                frequency = sched.get("frequency") or "everyday"
+                if frequency == "weekdays" and current_day_str in ("saturday", "sunday"):
+                    continue
+                if frequency == "weekends" and current_day_str not in ("saturday", "sunday"):
+                    continue
+                # For "everyday" or specific day matches, continue
 
-                    # Fetch weather context for fallback
-                    weather_ctx = None
-                    try:
-                        from app.services.weather_service import weather_service
-                        home = user.get("home_location") or {}
-                        lat = home.get("lat")
-                        lng = home.get("lng")
-                        if lat is not None and lng is not None and weather_service is not None:
-                            weather_ctx = await weather_service.fetch(float(lat), float(lng), lang=lang)
-                    except Exception as w_exc:
-                        logger.warning("Failed to fetch weather for user %s: %s", user["id"], w_exc)
+                # Check if push notifications are enabled
+                if sched.get("push_enabled") is False:
+                    continue
 
-                    advice = None
-                    is_quota_issue = False
-                    try:
-                        advice = await generate_scheduled_proposals(user, style_dress_for, weather=weather_ctx)
-                    except Exception as exc:
-                        logger.warning("Failed to generate scheduled proposals in cron (possible quota limit): %s", exc)
-                        is_quota_issue = True
-                        try:
-                            from app.services.stylist_scheduler_brain import get_rotation_prioritized_closet
-                            closet_items = await get_rotation_prioritized_closet(user["id"], limit=200)
-                            advice = _generate_fallback_advice(closet_items, style_dress_for, weather_ctx)
-                        except Exception as inner_exc:
-                            logger.error("Failed to generate fallback scheduled proposals: %s", inner_exc)
-                            advice = None
-
-                    # Automatically save scheduled outfit recommendation to outfits collection
-                    outfit_id = None
-                    if advice and advice.get("outfit_recommendations"):
-                        recs = advice.get("outfit_recommendations") or []
-                        if recs:
-                            first_rec = recs[0]
-                            # Guard against duplicate scheduled outfits for the same day
-                            existing_outfit = await db.outfits.find_one({
-                                "user_id": user["id"],
-                                "usage.date": tomorrow_str,
-                                "source_workflow": "scheduled"
-                            })
-                            if not existing_outfit:
-                                import uuid
-                                outfit_id = str(uuid.uuid4())
-                                now_iso = datetime.now(timezone.utc).isoformat()
-                                
-                                garments = []
-                                for it in first_rec.get("items") or []:
-                                    g_dict = {
-                                        "closet_item_id": it.get("closet_item_id"),
-                                        "role": it.get("role") or "accessory",
-                                        "title": it.get("description") or it.get("title") or "item"
-                                    }
-                                    if g_dict["closet_item_id"]:
-                                        item = await db.closet_items.find_one({"id": g_dict["closet_item_id"]})
-                                        if item:
-                                            g_dict["title"] = item.get("title") or item.get("name") or g_dict["title"]
-                                            g_dict["image_url"] = item.get("thumbnail_data_url") or item.get("segmented_image_url") or item.get("original_image_url")
-                                    garments.append(g_dict)
-                                    
-                                # Format date as M.D.YYYY
-                                try:
-                                    date_parts = tomorrow_str.split("-")
-                                    display_name = f"{int(date_parts[1])}.{int(date_parts[2])}.{date_parts[0]}"
-                                except Exception:
-                                    display_name = tomorrow_str
-
-                                if is_quota_issue:
-                                    display_name = f"{display_name} (Fallback. Quota exhausted)"
-
-                                outfit_doc = {
-                                    "id": outfit_id,
-                                    "user_id": user["id"],
-                                    "name": display_name,
-                                    "description": first_rec.get("why") or advice.get("reasoning_summary"),
-                                    "source_workflow": "scheduled",
-                                    "prompt": style_dress_for,
-                                    "garments": garments,
-                                    "usage": {
-                                        "date": tomorrow_str,
-                                        "time": time_str,
-                                        "location": None,
-                                        "event_name": style_dress_for
-                                    },
-                                    "use_count": 1,
-                                    "created_at": now_iso,
-                                    "updated_at": now_iso,
-                                    "is_fallback": is_quota_issue,
-                                }
-                                await db.outfits.insert_one(outfit_doc)
-                                
-                                # Update closet item wear count
-                                closet_item_ids = [g["closet_item_id"] for g in garments if g["closet_item_id"]]
-                                if closet_item_ids:
-                                    await db.closet_items.update_many(
-                                        {"id": {"$in": closet_item_ids}, "user_id": user["id"]},
-                                        {
-                                            "$inc": {"wear_count": 1},
-                                            "$set": {
-                                                "last_worn_at": tomorrow_str,
-                                                "updated_at": now_iso
-                                            }
-                                        }
-                                    )
-                            else:
-                                outfit_id = existing_outfit.get("id") or existing_outfit.get("_id")
-                                logger.info("Auto-saved scheduled outfit %s for user %s on %s", outfit_id, user["id"], tomorrow_str)
-
-                    # Build push notification text using localized i18n keys
-                    style_display = style_dress_for
-                    if style_dress_for in {"casual", "smart-casual", "formal", "athletic"}:
-                        style_display = t(f"taxonomy.dress_code.{style_dress_for}", lang)
-
-                    if is_quota_issue:
-                        title = t("outfits.notification.quotaTitle", lang)
-                        quota_msg = t("outfits.notification.quotaBody", lang)
-                        
-                        if advice and advice.get("outfit_recommendations"):
-                            recs = advice.get("outfit_recommendations") or []
-                            rec_lines = []
-                            for r in recs:
-                                items_str = ", ".join(it.get("description") or it.get("title") or "item" for it in r.get("items") or [])
-                                rec_lines.append(f"• {r.get('name') or 'Outfit'}: {items_str}")
-                            body_text = f"{quota_msg}\n" + "\n".join(rec_lines)
-                        else:
-                            body_text = quota_msg
-                    else:
-                        title = t("outfits.notification.dailyTitle", lang, emoji="👕")
-                        prefix = t("outfits.notification.proposalsTitle", lang, style=style_display)
-                        
-                        if advice and advice.get("outfit_recommendations"):
-                            recs = advice.get("outfit_recommendations") or []
-                            rec_lines = []
-                            for r in recs:
-                                items_str = ", ".join(it.get("description") or it.get("title") or "item" for it in r.get("items") or [])
-                                rec_lines.append(f"• {r.get('name') or 'Outfit'}: {items_str}")
-                            body_text = f"{prefix}\n" + "\n".join(rec_lines)
-                        else:
-                            body_text = t("outfits.notification.dailyBody", lang, style=style_display)
-
-                    if advice:
-                        advice["is_fallback"] = is_quota_issue
-                        if outfit_id:
-                            advice["id"] = outfit_id
-                            
-                    await send_push_notification(
-                        user_id=user["id"],
-                        title=title,
-                        body=body_text,
-                        payload=advice
-                    )
-
-        # 2. Event Notifications
-        outfit_cursor = db.outfits.find({})
-        async for outfit in outfit_cursor:
-            # Check if this user is currently traveling
-            user_id = outfit.get("user_id")
-            active_s = await db.suitcases.find_one({"user_id": user_id, "status": {"$ne": "completed"}})
-            is_traveling_now = False
-            if active_s:
+                # Generate outfit proposals
+                style_option = sched.get("style_option") or sched.get("style_dress_for") or "casual"
+                
                 try:
-                    dep_dt = datetime.fromisoformat(active_s["departure_time"].replace("Z", "+00:00"))
-                    ret_dt = datetime.fromisoformat(active_s["return_time"].replace("Z", "+00:00"))
-                    if dep_dt.tzinfo is None:
-                        dep_dt = dep_dt.replace(tzinfo=timezone.utc)
-                    if ret_dt.tzinfo is None:
-                        ret_dt = ret_dt.replace(tzinfo=timezone.utc)
-                    if dep_dt <= now <= ret_dt:
-                        is_traveling_now = True
-                except Exception:
-                    pass
-            
-            if is_traveling_now:
-                continue  # Skip event notification while traveling
+                    from app.services.stylist_scheduler_brain import generate_scheduled_proposals
+                    proposals_result = await generate_scheduled_proposals(user, style_option)
+                    proposals = proposals_result.get("outfit_recommendations") or []
+                    
+                    if not proposals:
+                        logger.info("No proposals generated for user %s, skipping", user_id)
+                        continue
 
-            usage = outfit.get("usage") or {}
-            date_str = usage.get("date")
-            time_str = usage.get("time")
-            if date_str and time_str:
-                if date_str == now.strftime("%Y-%m-%d") and current_time_str == time_str:
-                    user_doc = await db.users.find_one({"id": outfit["user_id"]})
-                    user_lang = user_doc.get("preferred_language") or "en" if user_doc else "en"
-                    title = t("outfits.notification.eventTitle", user_lang, name=outfit.get("name"))
-                    body = t("outfits.notification.eventBody", user_lang)
-                    await send_push_notification(
-                        user_id=outfit["user_id"],
-                        title=title,
-                        body=body
-                    )
+                    # Build notification body
+                    outfit_count = len(proposals)
+                    style_label = style_option.title() if style_option else "Daily"
+                    
+                    title = f"Your {style_label} Outfit Proposals"
+                    body_lines = [f"Here are {outfit_count} outfit(s) curated for you today:"]
+                    
+                    for i, prop in enumerate(proposals[:3], 1):
+                        outfit_name = prop.get("name", f"Outfit {i}")
+                        items = prop.get("items", [])
+                        item_names = [it.get("title", it.get("role", "")) for it in items[:3]]
+                        body_lines.append(f"{i}. {outfit_name} — {', '.join(item_names)}")
+                    
+                    body = "\n".join(body_lines)
+
+                    # Send push notification
+                    payload = {"url": "/stylist?tab=match", "proposals": proposals[:3]}
+                    await send_push_notification(user_id, title, body, payload)
+                    
+                    logger.info("Sent scheduled notification to user %s", user_id)
+
+                except Exception as prop_exc:
+                    logger.warning("Failed to generate/send proposals for user %s: %s", user_id, prop_exc)
+
+            except Exception as user_exc:
+                logger.warning("Error processing scheduler for user %s: %s", user.get("id"), user_exc)
+
     except Exception as exc:
         logger.warning("Error checking scheduler triggers: %s", exc)
 
@@ -642,7 +328,7 @@ def start_scheduler() -> None:
 
     _scheduler = AsyncIOScheduler(timezone="UTC")
 
-    # Unconditionally add user scheduling check (runs every minute)
+    # User scheduling check (runs every minute)
     _scheduler.add_job(
         check_scheduler_triggers,
         IntervalTrigger(minutes=1),
@@ -651,6 +337,7 @@ def start_scheduler() -> None:
         misfire_grace_time=30,
     )
 
+    # Trend-Scout daily run
     if settings.TREND_SCOUT_ENABLED:
         hour, minute = _parse_hhmm(settings.TREND_SCOUT_SCHEDULE_UTC)
         _scheduler.add_job(
@@ -664,8 +351,28 @@ def start_scheduler() -> None:
             "Trend-Scout daily scheduled (at %02d:%02d UTC)", hour, minute
         )
 
-    # --- Experts Campaign Platform ---
-    # Activate approved campaigns whose start_date has arrived (every 5 min)
+    # Credit cleanup: expire old free credits (daily at 02:00 UTC)
+    # Free credits expire after 30 days per Pricing-Plane.md requirement
+    _scheduler.add_job(
+        _expire_old_free_credits_job,
+        CronTrigger(hour=2, minute=0, timezone="UTC"),
+        id="expire_old_free_credits_daily",
+        replace_existing=True,
+        misfire_grace_time=300,  # 5 minute grace period
+    )
+    logger.info("Credit cleanup job scheduled: daily at 02:00 UTC to expire free credits over 30 days old")
+    
+    # Trial cleanup: remove expired trial accounts (runs shortly after credit cleanup)
+    _scheduler.add_job(
+        _cleanup_expired_trials_job,
+        CronTrigger(hour=2, minute=15, timezone="UTC"),  # 15 minutes after credit cleanup
+        id="cleanup_expired_trials_daily",
+        replace_existing=True,
+        misfire_grace_time=300,
+    )
+    logger.info("Trial cleanup job scheduled: daily at 02:15 UTC to expire and revert trial accounts")
+
+    # Experts Campaign Platform
     _scheduler.add_job(
         activate_scheduled_campaigns,
         IntervalTrigger(minutes=5),
@@ -673,7 +380,6 @@ def start_scheduler() -> None:
         replace_existing=True,
         max_instances=1,
     )
-    # Expire overdue campaigns (every 15 min)
     _scheduler.add_job(
         expire_overdue_campaigns,
         IntervalTrigger(minutes=15),

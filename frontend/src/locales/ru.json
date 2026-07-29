@@ -1,4 +1,4 @@
-﻿{
+{
   "brand": "DressApp",
   "nav": {
     "home": "Главная",
@@ -1156,7 +1156,7 @@
     "upgradeAnnualBtn": "Обновить на год",
     "inviteDesc": "Поделитесь DressApp с друзьями и семьей",
     "bookmarkletDesc": "Перетащите кнопку ниже на панель закладок. На мобильном телефоне добавьте её в закладки и назовите 'Помощник DressApp'. Нажимайте на неё на страницах товаров.",
-    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings"
   },
   "admin": {
     "title": "Админ",

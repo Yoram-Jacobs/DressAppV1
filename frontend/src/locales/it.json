@@ -1,4 +1,4 @@
-﻿{
+{
   "brand": "DressApp",
   "nav": {
     "home": "Home",
@@ -1156,7 +1156,7 @@
     "upgradeAnnualBtn": "Upgrade annuale",
     "inviteDesc": "Condividi DressApp con i tuoi amici e familiari",
     "bookmarkletDesc": "Trascina il pulsante in basso sulla barra dei preferiti. Su dispositivo mobile, aggiungilo ai preferiti e nominalo 'Assistente shopping DressApp'. Cliccaci sopra quando sei su una pagina prodotto.",
-    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings"
   },
   "admin": {
     "title": "Amministratore",

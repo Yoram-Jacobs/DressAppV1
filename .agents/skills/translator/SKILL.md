@@ -94,14 +94,14 @@ For each target language, apply these rules:
 #### German
 - Watch for compound word length
 - Use formal "Sie" register
-- Keep technical terms in English when commonly used
+- Keep technical terms in English where commonly used
 
 #### French
 - Use formal "vous" register
 - Keep English technical terms where standard in French tech writing
 
 #### Japanese
-- Use polite form (ます/です) for instructions
+- Use polite form (masu/です) for instructions
 - Keep English technical terms where commonly used in Japanese
 
 #### Chinese (Simplified)

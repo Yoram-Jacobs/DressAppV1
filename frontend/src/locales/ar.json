@@ -1,4 +1,4 @@
-﻿{
+{
   "brand": "DressApp",
   "nav": {
     "home": "الرئيسية",
@@ -1156,7 +1156,7 @@
     "upgradeAnnualBtn": "ترقية سنوية",
     "inviteDesc": "شارك DressApp مع أصدقائك وعائلتك",
     "bookmarkletDesc": "اسحب الزر أدناه إلى شريط العلامات المرجعية. على الهاتف المحمول، أضفه إلى علاماتك المرجعية وسمه 'مساعد التسوق من DressApp'. انقر عليه عند تصفح أي صفحة منتج.",
-    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings"
   },
   "admin": {
     "title": "الإدارة",

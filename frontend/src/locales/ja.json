@@ -1,4 +1,4 @@
-﻿{
+{
   "brand": "DressApp",
   "nav": {
     "home": "ホーム",
@@ -1156,7 +1156,7 @@
     "upgradeAnnualBtn": "年間プランへ移行",
     "inviteDesc": "DressAppをお友達やご家族と共有しましょう",
     "bookmarkletDesc": "下のボタンをブックマークバーにドラッグします。モバイルの場合は、ブックマークに追加し、「DressAppショッピングアシスタント」と名前を付けます。商品ページを表示中にクリックします。",
-    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings"
   },
   "admin": {
     "title": "管理",

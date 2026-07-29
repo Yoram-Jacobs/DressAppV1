@@ -5,11 +5,12 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Body, Response
+from fastapi import APIRouter, Depends, HTTPException, Body, Response, BackgroundTasks
 from pydantic import BaseModel
 
 from app.db.database import get_db
 from app.services.auth import get_current_user
+from app.services.calendar_service import calendar_service
 from app.services.stylist_scheduler_brain import (
     generate_scheduled_proposals,
     generate_event_proposals,
@@ -71,6 +72,7 @@ async def list_saved_outfits(
 @router.post("", status_code=201)
 async def save_outfit(
     payload: SaveOutfitIn,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Save an outfit to the user's closet diary, updating worn stats for closet items."""
@@ -126,6 +128,30 @@ async def save_outfit(
             },
         )
 
+    # Write event to Google Calendar if connected and usage is specified
+    if payload.usage and payload.usage.date and user.get("google_calendar_tokens", {}).get("refresh_token"):
+        garment_descriptions = [f"- {g['role']}: {g.get('title') or 'Garment'}" for g in garments]
+        desc = (payload.description or "") + "\n\nGarments:\n" + "\n".join(garment_descriptions)
+        
+        async def _create_and_save_event_id():
+            try:
+                event = await calendar_service.create_calendar_event(
+                    user,
+                    payload.name,
+                    desc,
+                    payload.usage.date,
+                    payload.usage.time,
+                )
+                if event and event.get("id"):
+                    await db.outfits.update_one(
+                        {"id": outfit_id},
+                        {"$set": {"google_calendar_event_id": event["id"]}}
+                    )
+            except Exception as e:
+                logger.error("Failed to save google_calendar_event_id: %s", e)
+                
+        background_tasks.add_task(_create_and_save_event_id)
+
     logger.info("Saved outfit id=%s user_id=%s", outfit_id, user["id"])
     return _safe_doc(doc)
 
@@ -133,13 +159,20 @@ async def save_outfit(
 @router.delete("/{outfit_id}")
 async def delete_saved_outfit(
     outfit_id: str,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Delete a saved outfit."""
     db = get_db()
-    res = await db.outfits.delete_one({"id": outfit_id, "user_id": user["id"]})
-    if res.deleted_count == 0:
+    existing = await db.outfits.find_one({"id": outfit_id, "user_id": user["id"]})
+    if not existing:
         raise HTTPException(status_code=404, detail="Outfit not found")
+        
+    event_id = existing.get("google_calendar_event_id")
+    if event_id and user.get("google_calendar_tokens", {}).get("refresh_token"):
+        background_tasks.add_task(calendar_service.delete_calendar_event, user, event_id)
+        
+    res = await db.outfits.delete_one({"id": outfit_id, "user_id": user["id"]})
     return {"deleted": True, "id": outfit_id}
 
 
@@ -295,6 +328,7 @@ class UpdateOutfitIn(BaseModel):
 async def update_saved_outfit(
     outfit_id: str,
     payload: UpdateOutfitIn,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Update a saved outfit's metadata (e.g. usage date, name)."""
@@ -331,6 +365,56 @@ async def update_saved_outfit(
         )
         
     res_doc = await db.outfits.find_one({"id": outfit_id, "user_id": user["id"]})
+    
+    # Sync update to Google Calendar
+    if user.get("google_calendar_tokens", {}).get("refresh_token"):
+        final_name = res_doc.get("name") or "Unnamed outfit"
+        final_desc = res_doc.get("description") or ""
+        final_usage = res_doc.get("usage") or {}
+        final_date = final_usage.get("date")
+        final_time = final_usage.get("time")
+        
+        event_id = res_doc.get("google_calendar_event_id")
+        
+        if final_date:
+            garment_descriptions = [f"- {g['role']}: {g.get('title') or 'Garment'}" for g in res_doc.get("garments", [])]
+            desc = final_desc + "\n\nGarments:\n" + "\n".join(garment_descriptions)
+            
+            if event_id:
+                background_tasks.add_task(
+                    calendar_service.update_calendar_event,
+                    user,
+                    event_id,
+                    final_name,
+                    desc,
+                    final_date,
+                    final_time
+                )
+            else:
+                async def _create_and_save_event_id():
+                    try:
+                        event = await calendar_service.create_calendar_event(
+                            user,
+                            final_name,
+                            desc,
+                            final_date,
+                            final_time
+                        )
+                        if event and event.get("id"):
+                            await db.outfits.update_one(
+                                {"id": outfit_id},
+                                {"$set": {"google_calendar_event_id": event["id"]}}
+                            )
+                    except Exception as e:
+                        logger.error("Failed to save google_calendar_event_id during patch: %s", e)
+                background_tasks.add_task(_create_and_save_event_id)
+        elif event_id:
+            background_tasks.add_task(calendar_service.delete_calendar_event, user, event_id)
+            await db.outfits.update_one(
+                {"id": outfit_id},
+                {"$set": {"google_calendar_event_id": None}}
+            )
+
     return _safe_doc(res_doc)
 
 

@@ -1,4 +1,4 @@
-﻿{
+{
   "brand": "DressApp",
   "nav": {
     "home": "בית",
@@ -1162,7 +1162,7 @@
     "annualPlan": "תוכנית שנתית",
     "annualPlanDesc": "חסוך 50% בהשוואה לחיוב חודשי.",
     "perYear": " / שנה",
-    "upgradeAnnualBtn": "שדרג שנתי",
+    "upgradeAnnualBtn": "שדרג שנתי"
   },
   "admin": {
     "title": "ניהול",

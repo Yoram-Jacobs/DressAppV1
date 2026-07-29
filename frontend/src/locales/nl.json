@@ -1,4 +1,4 @@
-﻿{
+{
   "brand": "DressApp",
   "nav": {
     "home": "Thuis",
@@ -1156,7 +1156,7 @@
     "annualPlan": "Jaarlijks plan",
     "annualPlanDesc": "Bespaar 50% in vergelijking met maandelijkse facturering.",
     "perYear": " / jaar",
-    "upgradeAnnualBtn": "Upgrade jaarlijks",
+    "upgradeAnnualBtn": "Upgrade jaarlijks"
   },
   "admin": {
     "title": "Beheerder",
