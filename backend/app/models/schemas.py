@@ -759,6 +759,16 @@ class AiCreditPurchase(BaseDoc):
     payer_email: str | None = None
 
 
+class CreditUsageResponse(BaseModel):
+    available_credits: int
+    daily_usage: int
+    monthly_usage: int
+    daily_limit: int
+    monthly_limit: int
+    can_use: bool
+    upgrade_required: bool
+
+
 # --------------------- DressApp Suitcase ---------------------
 class Suitcase(BaseDoc):
     user_id: str
