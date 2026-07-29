@@ -173,13 +173,7 @@ class CreditExhaustionWaiter:
             cls._instance._waiters = []
             cls._instance._initialized = False
         return cls._instance
-    
-    async def __init__(self):
-        if not self._initialized:
-            async with self._lock:
-                if not self._initialized:
-                    self._waiters = []
-                    self._initialized = True
+
     
     def add_waiter(self, coro: Any) -> None:
         """Add an async coroutine to be notified when credits are restored."""
