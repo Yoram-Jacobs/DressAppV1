@@ -739,8 +739,10 @@ async def run_trend_scout(*, force: bool = False, client_type: str = "desktop", 
         results.append(doc)
         
     if user and results:
+        from fastapi import HTTPException
         from app.services.billing_service import deduct_user_credits
-        await deduct_user_credits(db, user, cost=1)
+        if not await deduct_user_credits(db, user, cost=1):
+            raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
         
     logger.info(
         "Fashion-Scout run complete: generated=%d, skipped=%d, client_type=%s, country_code=%s",

@@ -1004,7 +1004,10 @@ async def analyze_chart(
         try:
             from app.db.database import get_db
             from app.services.billing_service import deduct_user_credits
-            await deduct_user_credits(get_db(), user, cost=1)
+            if not await deduct_user_credits(get_db(), user, cost=1):
+                raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
+        except HTTPException:
+            raise
         except Exception as exc:  # noqa: BLE001
             log.exception("Failed to deduct user credits for size-chart analysis: %s", exc)
 

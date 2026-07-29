@@ -1790,7 +1790,8 @@ async def analyze_item_image(
     from app.db.database import get_db
     from app.services.billing_service import deduct_user_credits
     db = get_db()
-    await deduct_user_credits(db, user, cost=len(raw_list))
+    if not await deduct_user_credits(db, user, cost=len(raw_list)):
+        raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
 
     # Multi-item pipeline (default). Degrades gracefully to single.
     # Language priority: explicit request override > profile setting > "en".
@@ -4288,7 +4289,8 @@ async def complete_outfit(
     """
     db = get_db()
     from app.services.billing_service import deduct_user_credits
-    await deduct_user_credits(db, user, cost=1)
+    if not await deduct_user_credits(db, user, cost=1):
+        raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
 
     # ------- 1. Fetch & validate anchors (preserve client-supplied order) -------
     fetched = await repos.find_many(
@@ -5112,7 +5114,8 @@ async def repair_item_image(
     crop_bytes = await _read_image_bytes_from_url(crop_url) if crop_url else b""
 
     from app.services.billing_service import deduct_user_credits
-    await deduct_user_credits(db, user, cost=1)
+    if not await deduct_user_credits(db, user, cost=1):
+        raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
 
     out = await reconstruct(
         crop_bytes,
@@ -6498,7 +6501,8 @@ async def edit_item_image(
         raise HTTPException(503, "Image generation service not configured")
     try:
         from app.services.billing_service import deduct_user_credits
-        await deduct_user_credits(db, user, cost=1)
+        if not await deduct_user_credits(db, user, cost=1):
+            raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
 
         edit = await gemini_image_service.edit(
             source_bytes,
@@ -6560,7 +6564,8 @@ async def extract_pdf_text(
         from app.db.database import get_db
         from app.services.billing_service import deduct_user_credits
         db = get_db()
-        await deduct_user_credits(db, user, cost=1)
+        if not await deduct_user_credits(db, user, cost=1):
+            raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
 
         # Try Gemini Multimodal OCR first
         try:
@@ -6704,7 +6709,8 @@ async def parse_receipt(
         from app.db.database import get_db
         from app.services.billing_service import deduct_user_credits
         db = get_db()
-        await deduct_user_credits(db, user, cost=1)
+        if not await deduct_user_credits(db, user, cost=1):
+            raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
 
         gemini = await get_default_client()
         response_text = await gemini.vision(

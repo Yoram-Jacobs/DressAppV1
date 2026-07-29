@@ -62,6 +62,7 @@ async def dev_bypass() -> TokenOut:
             preferred_voice_id="en_US-ryan-medium",
             home_location={"lat": 40.758, "lng": -73.9855, "city": "New York"},
         )
+        new_user.add_credit_bucket(amount=10, credit_type="free", days_until_expiry=30)
         doc = new_user.model_dump()
         await repos.insert(db.users, doc)
         user = doc
