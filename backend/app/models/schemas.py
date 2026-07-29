@@ -103,8 +103,7 @@ class CreditBucket(BaseModel):
     created_at: str  # ISO timestamp
     expires_at: str | None = None  # None means infinite (paid credits)
 
-    class Config:
-        frozen = True
+
 
 
 class User(BaseDoc):
