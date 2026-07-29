@@ -106,9 +106,8 @@ async def test_credit_buckets():
         "expires_at": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat(),  # Expired yesterday
     }
     
-    user_record["credit_buckets"].append(expired_bucket)
-    user_record_copy = user_record.copy()
-    user_model2 = User.parse_obj(user_record_copy)
+    user_model2 = User.parse_obj(user_model.dict())
+    user_model2.credit_buckets.append(CreditBucket.parse_obj(expired_bucket))
     
     # Verify expired bucket is not counted in total
     assert user_model2.total_credits == 45, f"After adding expired bucket, total should still be 45, got {user_model2.total_credits}"
