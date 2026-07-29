@@ -12,7 +12,7 @@ const Pricing = () => {
   // Fetch comprehensive pricing information and quota status on mount
   useEffect(() => {
     const fetchPricingData = async () => {
-      try:
+      try {
         // Get comprehensive pricing info
         const pricingRes = await axios.get('/api/v1/pricing/info');
         setPricingData(pricingRes.data);
@@ -20,12 +20,12 @@ const Pricing = () => {
         // Get quota status
         const quotaRes = await axios.get('/api/v1/quota/status');
         setQuotaStatus(quotaRes.data);
-      catch (err) {
+      } catch (err) {
         console.error('Failed to fetch pricing data:', err);
         setError('Failed to load pricing information. Please try again later.');
-      finally:
+      } finally {
         setLoading(false);
-      };
+      }
     };
 
     fetchPricingData();

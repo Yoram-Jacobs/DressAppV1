@@ -19,7 +19,7 @@ const PurchaseCredits = () => {
   useEffect(() => {
     // Fetch available credit packs and current user info
     const fetchData = async () => {
-      try:
+      try {
         const packsRes = await axios.get('/api/v1/pricing/info');
         setCreditPacks(packsRes.data.credit_packs);
         
@@ -28,12 +28,12 @@ const PurchaseCredits = () => {
           const pack = packsRes.data.credit_packs.find(p => p.amount.toString() === initialPackSize);
           if (pack) setSelectedPack(pack);
         }
-      catch (err) {
+      } catch (err) {
         console.error('Failed to fetch pricing data:', err);
         setError('Could not load pricing information. Please refresh the page.');
-      finally:
+      } finally {
         setLoading(false);
-      };
+      }
     };
 
     fetchData();
