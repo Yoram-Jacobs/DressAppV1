@@ -44,7 +44,6 @@ async def test_credit_buckets():
     print(f"✓ Created test user: {test_user_id}")
     
     # Test 1: Add paid credits bucket
-    from datetime import datetime, timezone
     new_paid_bucket = {
         "amount": 50,
         "type": "paid",
