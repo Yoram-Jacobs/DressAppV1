@@ -647,13 +647,19 @@ async def sync_profile_from_google(
         from google.oauth2.credentials import Credentials
         from app.services.calendar_service import GOOGLE_TOKEN_URL
         
+        scope_val = tokens.get("scope")
+        if isinstance(scope_val, str):
+            token_scopes = scope_val.split(" ")
+        else:
+            token_scopes = tokens.get("scopes") or SCOPES
+            
         creds = Credentials(
             token=tokens.get("access_token"),
             refresh_token=tokens.get("refresh_token"),
             token_uri=GOOGLE_TOKEN_URL,
             client_id=calendar_service.client_id,
             client_secret=calendar_service.client_secret,
-            scopes=tokens.get("scopes") or SCOPES,
+            scopes=token_scopes,
         )
         if not creds.valid and creds.refresh_token:
             creds.refresh(GoogleAuthRequest())

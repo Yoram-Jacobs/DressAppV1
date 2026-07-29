@@ -469,13 +469,19 @@ class CalendarService:
         self, user_id: str, tokens: dict[str, Any]
     ) -> Any:
         """Build an authenticated googleapiclient service; refresh if needed."""
+        scope_val = tokens.get("scope")
+        if isinstance(scope_val, str):
+            token_scopes = scope_val.split(" ")
+        else:
+            token_scopes = tokens.get("scopes") or SCOPES
+            
         creds = Credentials(
             token=tokens.get("access_token"),
             refresh_token=tokens.get("refresh_token"),
             token_uri=GOOGLE_TOKEN_URL,
             client_id=self.client_id,
             client_secret=self.client_secret,
-            scopes=tokens.get("scopes") or SCOPES,
+            scopes=token_scopes,
         )
         if not creds.valid and creds.refresh_token:
             # The library does a sync HTTP call; this is acceptable here.
