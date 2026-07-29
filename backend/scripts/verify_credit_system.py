@@ -84,7 +84,6 @@ async def test_credit_buckets():
     
     # Test 3: Spend credits (should use free first, then paid)
     # For this test, we'll manually update the model and call spend_credits
-    user_record["credit_buckets"].append(free_bucket)  # Ensure it's there
     user_record_copy = user_record.copy()
     user_model = User.parse_obj(user_record_copy)
     

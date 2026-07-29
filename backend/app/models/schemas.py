@@ -270,52 +270,86 @@ class User(BaseDoc):
         """
         if required_amount <= 0:
             return True, [{"type": "noop", "amount": 0, "operation": operation or "usage"}]
-        
-        buckets = self.get_aging_credit_buckets()
-        remaining = required_amount
-        spent_details = []
-        
-        i = 0
-        while remaining > 0 and i < len(buckets):
-            bucket = buckets[i]
-            if bucket.type == "free" and bucket.expires_at and _now_iso() > bucket.expires_at:
+            
+        # 1. Identify which buckets are active and sort them by priority
+        now = _now_iso()
+        active_buckets_with_indices = []
+        for idx, bucket in enumerate(self.credit_buckets):
+            if bucket.type == "free" and bucket.expires_at and now > bucket.expires_at:
                 # Skip expired free credits
-                i += 1
                 continue
             
+            # Priority: lower = earlier to consume
+            if bucket.type == "free" and bucket.expires_at:
+                priority = (0, bucket.expires_at)
+            elif bucket.type == "free":
+                priority = (1, bucket.created_at)
+            else:
+                priority = (2, bucket.created_at)
+            active_buckets_with_indices.append((priority, idx, bucket))
+            
+        # Sort by priority
+        active_buckets_with_indices.sort(key=lambda x: x[0])
+        
+        # 2. Check if we have enough total credits across all active buckets
+        total_active_credits = sum(x[2].amount for x in active_buckets_with_indices)
+        if total_active_credits < required_amount:
+            return False, [{"error": "Insufficient active credits"}]
+            
+        # 3. Deduct from sorted active buckets
+        remaining = required_amount
+        spent_details = []
+        consumed_indices = set()
+        modified_buckets = {}  # index -> new_amount
+        
+        for priority, idx, bucket in active_buckets_with_indices:
+            if remaining <= 0:
+                break
+                
             if bucket.amount >= remaining:
-                # This bucket covers everything needed
+                # This bucket covers the remaining amount
                 spent_details.append({
-                    "bucket_index": i,
+                    "bucket_index": idx,
                     "type": bucket.type,
                     "amount_spent": remaining,
                     "remaining_after": bucket.amount - remaining,
                     "operation": operation
                 })
                 if bucket.amount - remaining > 0:
-                    # Update bucket amount in place
-                    buckets[i].amount -= remaining
+                    modified_buckets[idx] = bucket.amount - remaining
                 else:
-                    # Remove empty bucket
-                    buckets.pop(i)
-                    # Adjust index since list changed
-                    i -= 1
+                    consumed_indices.add(idx)
                 remaining = 0
             else:
-                # Use entire bucket
+                # Use the entire bucket
                 spent_details.append({
-                    "bucket_index": i,
+                    "bucket_index": idx,
                     "type": bucket.type,
                     "amount_spent": bucket.amount,
                     "remaining_after": 0,
                     "operation": operation
                 })
-                buckets.pop(i)
+                consumed_indices.add(idx)
                 remaining -= bucket.amount
-                i -= 1  # adjust after pop
-        
-        # Update the credit_buckets list
-        self.credit_buckets = buckets
+                
+        # 4. Rebuild the user's credit_buckets list in place
+        new_buckets = []
+        for idx, bucket in enumerate(self.credit_buckets):
+            if idx in consumed_indices:
+                continue
+            if idx in modified_buckets:
+                new_buckets.append(
+                    CreditBucket(
+                        amount=modified_buckets[idx],
+                        type=bucket.type,
+                        created_at=bucket.created_at,
+                        expires_at=bucket.expires_at
+                    )
+                )
+            else:
+                new_buckets.append(bucket)
+                
+        self.credit_buckets = new_buckets
         self._ai_credits_computed = None
         return True, spent_details
 
