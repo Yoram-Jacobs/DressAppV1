@@ -183,7 +183,7 @@ class CreditExhaustionWaiter:
                     self._waiters = []
                     self._initialized = True
     
-    def add_waiter(self, coro: asyncio.Coroutine) -> None:
+    def add_waiter(self, coro: Any) -> None:
         """Add an async coroutine to be notified when credits are restored."""
         self._waiters.append(coro)
     
