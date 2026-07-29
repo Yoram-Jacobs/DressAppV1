@@ -75,7 +75,7 @@ async def check_operation_quota(user_id: str, required_credits: int = 1, operati
             daily_used=ai_config.get("ai_daily_used", 0.0)
         )
         
-        can_proceed = status != CreditQuotaStatus.EXHAUSTED and u_model.total_credits >= required_credits
+        can_proceed = status not in [CreditQuotaStatus.EXHAUSTED, CreditQuotaStatus.HARD_LIMIT] and u_model.total_credits >= required_credits
         return can_proceed, status, message or "Operation ready to proceed"
         
     except Exception as e:

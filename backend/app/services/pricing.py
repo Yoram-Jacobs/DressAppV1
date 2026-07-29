@@ -69,6 +69,10 @@ class CreditThresholdConfig:
         monthly_pct = (m_used / monthly_limit) if monthly_limit > 0 else 0.0
         daily_pct = (d_used / daily_limit) if daily_limit > 0 else 0.0
         
+        # Check for hard limit (100% or more of quota used)
+        if monthly_pct >= 1.0 or daily_pct >= 1.0:
+            return CreditQuotaStatus.HARD_LIMIT, self.HARD_LIMIT_MESSAGE, "Quota exceeded"
+            
         # If approaching limits
         if monthly_pct >= 1 - self.SOFT_WARNING_THRESHOLD or daily_pct >= 1 - self.SOFT_WARNING_THRESHOLD:
             return CreditQuotaStatus.SOFT_WARNING, self.SOFT_WARNING_MESSAGE, "Consider topping up before you run out"
@@ -588,14 +592,26 @@ async def check_ai_access(user_id: str, operation: str = "ai_operation") -> Cred
     u_model = User.parse_obj(user)
     available = u_model.total_credits
     
-    requires_credits = operation in ["text_generation", "image_processing", "video_processing"]
+    requires_credits = operation in [
+        "text_generation", "image_processing", "video_processing",
+        "auto_tagging", "outfit_recommendation", "stylist_chat",
+        "bookmarklet_migration", "body_measurement", "background_removal"
+    ]
     credits_needed = 10  # Default estimate
     
     can_use = True
     upgrade_required = False
     
+    daily_used = user.get("ai_configuration", {}).get("ai_daily_used", 0.0)
+    monthly_used = user.get("ai_configuration", {}).get("ai_monthly_used", 0.0)
+    daily_limit = user.get("ai_configuration", {}).get("ai_daily_limit", 100)
+    monthly_limit = user.get("ai_configuration", {}).get("ai_monthly_limit", 1000)
+    
     if requires_credits:
         if available < credits_needed:
+            can_use = False
+            upgrade_required = True
+        elif daily_used >= daily_limit or monthly_used >= monthly_limit:
             can_use = False
             upgrade_required = True
     
