@@ -638,3 +638,204 @@ async def get_ai_credits_usage_legacy(user: dict = Depends(get_current_user)) ->
 async def get_pricing_info_legacy(user: dict = Depends(get_current_user)) -> Dict:
     """Legacy pricing endpoint."""
     return await get_pricing_info(user)
+
+
+async def expire_old_free_credits(user_data: dict) -> dict:
+    """Scan the user's credit buckets and remove any expired free credits.
+    
+    Returns:
+        dict: {"success": True, "expired_removed": expired_removed}
+    """
+    try:
+        user_id = user_data.get("id")
+        if not user_id:
+            return {"success": False, "expired_removed": 0}
+            
+        db = get_db()
+        user_record = await db.users.find_one({"id": user_id})
+        if not user_record:
+            return {"success": False, "expired_removed": 0}
+            
+        u_model = User.parse_obj(user_record)
+        now = datetime.now(timezone.utc).isoformat()
+        
+        expired_removed = 0
+        new_buckets = []
+        for bucket in u_model.credit_buckets:
+            if bucket.type == "free" and bucket.expires_at and now > bucket.expires_at:
+                expired_removed += bucket.amount
+            else:
+                new_buckets.append(bucket)
+                
+        if expired_removed > 0:
+            await db.users.update_one(
+                {"id": user_id},
+                {"$set": {"credit_buckets": [b.dict() for b in new_buckets]}}
+            )
+            
+        return {"success": True, "expired_removed": expired_removed}
+    except Exception as e:
+        logger.error(f"Error in expire_old_free_credits: {e}")
+        return {"success": False, "expired_removed": 0}
+
+
+async def start_pro_trial(user_id: str, days: int = 14) -> dict:
+    """Start a 14-day Pro trial with 50 bonus free credits."""
+    try:
+        db = get_db()
+        user_record = await db.users.find_one({"id": user_id})
+        if not user_record:
+            return {"success": False, "error": "User not found"}
+            
+        u_model = User.parse_obj(user_record)
+        now = datetime.now(timezone.utc)
+        expiry = now + timedelta(days=days)
+        now_iso = now.isoformat()
+        expiry_iso = expiry.isoformat()
+        
+        subscription = user_record.get("subscription") or {}
+        subscription["plan_type"] = "pro"
+        subscription["is_active"] = True
+        subscription["expires_at"] = expiry_iso
+        
+        trial_info = {
+            "trial_type": "pro",
+            "started_at": now_iso,
+            "expires_at": expiry_iso
+        }
+        
+        u_model.add_credit_bucket(amount=50, credit_type="free", days_until_expiry=days)
+        
+        await db.users.update_one(
+            {"id": user_id},
+            {
+                "$set": {
+                    "subscription": subscription,
+                    "trial_info": trial_info,
+                    "credit_buckets": [b.dict() for b in u_model.credit_buckets],
+                    "ai_configuration.ai_provider_mode": "standard",
+                    "ai_configuration.ai_monthly_limit": 1000
+                }
+            }
+        )
+        return {"success": True, "message": "Pro trial started successfully", "expires_at": expiry_iso}
+    except Exception as e:
+        logger.error(f"Error starting pro trial: {e}")
+        return {"success": False, "error": str(e)}
+
+
+async def start_business_trial(user_id: str, days: int = 30) -> dict:
+    """Start a 30-day Business trial with 300 bonus free credits."""
+    try:
+        db = get_db()
+        user_record = await db.users.find_one({"id": user_id})
+        if not user_record:
+            return {"success": False, "error": "User not found"}
+            
+        u_model = User.parse_obj(user_record)
+        now = datetime.now(timezone.utc)
+        expiry = now + timedelta(days=days)
+        now_iso = now.isoformat()
+        expiry_iso = expiry.isoformat()
+        
+        subscription = user_record.get("subscription") or {}
+        subscription["plan_type"] = "business"
+        subscription["is_active"] = True
+        subscription["expires_at"] = expiry_iso
+        
+        trial_info = {
+            "trial_type": "business",
+            "started_at": now_iso,
+            "expires_at": expiry_iso
+        }
+        
+        u_model.add_credit_bucket(amount=300, credit_type="free", days_until_expiry=days)
+        
+        await db.users.update_one(
+            {"id": user_id},
+            {
+                "$set": {
+                    "subscription": subscription,
+                    "trial_info": trial_info,
+                    "credit_buckets": [b.dict() for b in u_model.credit_buckets],
+                    "ai_configuration.ai_provider_mode": "standard",
+                    "ai_configuration.ai_monthly_limit": 3000
+                }
+            }
+        )
+        return {"success": True, "message": "Business trial started successfully", "expires_at": expiry_iso}
+    except Exception as e:
+        logger.error(f"Error starting business trial: {e}")
+        return {"success": False, "error": str(e)}
+
+
+async def check_trial_expiration(user_id: str) -> dict:
+    """Check if the user's trial has expired and revert to free plan if so."""
+    try:
+        db = get_db()
+        user_record = await db.users.find_one({"id": user_id})
+        if not user_record:
+            return {"trial_expired": False, "error": "User not found"}
+            
+        trial_info = user_record.get("trial_info")
+        if not trial_info:
+            return {"trial_expired": False, "message": "No active trial found"}
+            
+        now = datetime.now(timezone.utc)
+        expires_at_str = trial_info.get("expires_at")
+        if not expires_at_str:
+            return {"trial_expired": False, "message": "Trial expires_at missing"}
+            
+        expires_at = datetime.fromisoformat(expires_at_str.replace("Z", "+00:00"))
+        if now > expires_at:
+            subscription = user_record.get("subscription") or {}
+            subscription["plan_type"] = "free"
+            subscription["is_active"] = True
+            subscription.pop("expires_at", None)
+            
+            await db.users.update_one(
+                {"id": user_id},
+                {
+                    "$set": {
+                        "subscription": subscription,
+                        "ai_configuration.ai_provider_mode": "on_device",
+                        "ai_configuration.ai_monthly_limit": 100
+                    },
+                    "$unset": {"trial_info": ""}
+                }
+            )
+            return {"trial_expired": True, "message": "Trial has expired. Downgraded to free plan."}
+            
+        days_remaining = (expires_at - now).days
+        return {
+            "trial_expired": False,
+            "trial_type": trial_info.get("trial_type"),
+            "days_remaining": max(0, days_remaining),
+            "expires_at": expires_at_str
+        }
+    except Exception as e:
+        logger.error(f"Error checking trial expiration: {e}")
+        return {"trial_expired": False, "error": str(e)}
+
+
+async def cleanup_expired_trials() -> dict:
+    """Helper to scan and expire trials (redundant but matches import)."""
+    try:
+        db = get_db()
+        now = datetime.now(timezone.utc)
+        cursor = db.users.find(
+            {
+                "trial_info.expires_at": {"$lte": now.isoformat()},
+                "trial_info": {"$exists": True},
+            },
+            {"id": 1}
+        )
+        cleaned = 0
+        async for user in cursor:
+            res = await check_trial_expiration(user["id"])
+            if res.get("trial_expired"):
+                cleaned += 1
+        return {"cleaned_count": cleaned}
+    except Exception as e:
+        logger.error(f"Error cleaning up expired trials: {e}")
+        return {"cleaned_count": 0}
