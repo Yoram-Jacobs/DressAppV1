@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Literal
+from typing import Any, Literal, List
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -87,6 +87,24 @@ class SubscriptionInfo(BaseModel):
     paypal_subscription_id: str | None = None
     expires_at: str | None = None
     cancelled_at: str | None = None
+
+
+CreditType = Literal["free", "paid"]
+
+
+class CreditBucket(BaseModel):
+    """A bucket of credits with an expiration date.
+    
+    Free credits expire after 30 days. Paid credits have no expiry.
+    When spending credits, we always use the oldest (oldest expiry first) buckets.
+    """
+    amount: int
+    type: CreditType  # "free" or "paid"
+    created_at: str  # ISO timestamp
+    expires_at: str | None = None  # None means infinite (paid credits)
+
+    class Config:
+        frozen = True
 
 
 class User(BaseDoc):
@@ -171,6 +189,158 @@ class User(BaseDoc):
     # --- AI Stylist Scheduler Settings (Phase Scheduler) ---
     scheduler_settings: dict[str, Any] | None = None
     web_push_subscriptions: list[dict] = Field(default_factory=list)
+
+    # --- Phase 4P: AI Credits System - Credit Buckets (replaces simple ai_credits)
+    # List of credit buckets. Each bucket has an amount, type (free/paid),
+    # creation date, and expiry (None for paid/never-expiring credits).
+    # We use LIFO/FIFO ordering based on creation order - oldest first gets spent first.
+    credit_buckets: List[CreditBucket] = Field(default_factory=list)
+
+    # --- Legacy compatibility field (kept for backward compatibility) ----
+    # This is computed from credit_buckets; do not update directly.
+    _ai_credits_computed: int | None = None  # Internal use only
+
+    # --- Phase AS-3: Free tier credit management (enhanced with buckets) ---
+    # Free AI credits daily allocation (these go into free buckets with expiry)
+    free_ai_credits_daily: int = Field(default_factory=lambda: 10)
+
+    # --- Calendar and Scheduling ---
+    calendar_events: list[dict[str, Any]] = Field(default_factory=list)
+
+    @property
+    def total_credits(self) -> int:
+        """Get total available credits across all non-expired buckets."""
+        now = _now_iso()
+        total = 0
+        for bucket in self.credit_buckets:
+            # Skip if expired (for free credits with expiry)
+            if bucket.type == "free" and bucket.expires_at and now > bucket.expires_at:
+                continue
+            total += bucket.amount
+        return total
+
+    def get_aging_credit_buckets(self) -> List[CreditBucket]:
+        """
+        Get credit buckets sorted by age (oldest first) for consumption.
+        Free credits expire after 30 days; paid credits never expire.
+        Order: free expiring soonest first, then other free credits, then paid credits.
+        """
+        now = _now_iso()
+        buckets_with_priority = []
+        for bucket in self.credit_buckets:
+            # Determine sort priority: lower = earlier to be consumed
+            if bucket.type == "free" and bucket.expires_at:
+                # Free credits with expiry: sort by expiry (earliest first)
+                priority = (0, bucket.expires_at)
+            elif bucket.type == "free":
+                # Unexpired free credits: sort by created_at
+                priority = (1, bucket.created_at)
+            else:
+                # Paid credits: no expiry, sort by created_at
+                priority = (2, bucket.created_at)
+            buckets_with_priority.append((priority, bucket))
+        # Sort by priority tuple
+        buckets_with_priority.sort(key=lambda x: x[0])
+        return [bucket for _, bucket in buckets_with_priority]
+
+    def add_credit_bucket(self, amount: int, credit_type: CreditType, days_until_expiry: int | None = None) -> None:
+        """Add a new credit bucket to the user's credit history."""
+        now = _now_iso()
+        expires_at: str | None = None
+        if credit_type == "free" and days_until_expiry is not None:
+            # Calculate expiry date (30 days default for free credits)
+            from datetime import timedelta
+            expiry_dt = datetime.fromisoformat(now.replace("Z", "+00:00")) + timedelta(days=days_until_expiry)
+            expires_at = expiry_dt.isoformat()
+        
+        new_bucket = CreditBucket(
+            amount=amount,
+            type=credit_type,
+            created_at=now,
+            expires_at=expires_at
+        )
+        self.credit_buckets.append(new_bucket)
+        # Clear computed cache
+        self._ai_credits_computed = None
+
+    def spend_credits(self, required_amount: int, operation: str | None = None) -> tuple[bool, List[dict]]:
+        """
+        Spend credits from the oldest buckets first. Returns (success, details of what was spent).
+        Updates credit_buckets in-place.
+        """
+        if required_amount <= 0:
+            return True, [{"type": "noop", "amount": 0, "operation": operation or "usage"}]
+        
+        buckets = self.get_aging_credit_buckets()
+        remaining = required_amount
+        spent_details = []
+        
+        i = 0
+        while remaining > 0 and i < len(buckets):
+            bucket = buckets[i]
+            if bucket.type == "free" and bucket.expires_at and _now_iso() > bucket.expires_at:
+                # Skip expired free credits
+                i += 1
+                continue
+            
+            if bucket.amount >= remaining:
+                # This bucket covers everything needed
+                spent_details.append({
+                    "bucket_index": i,
+                    "type": bucket.type,
+                    "amount_spent": remaining,
+                    "remaining_after": bucket.amount - remaining,
+                    "operation": operation
+                })
+                if bucket.amount - remaining > 0:
+                    # Update bucket amount in place
+                    buckets[i].amount -= remaining
+                else:
+                    # Remove empty bucket
+                    buckets.pop(i)
+                    # Adjust index since list changed
+                    i -= 1
+                remaining = 0
+            else:
+                # Use entire bucket
+                spent_details.append({
+                    "bucket_index": i,
+                    "type": bucket.type,
+                    "amount_spent": bucket.amount,
+                    "remaining_after": 0,
+                    "operation": operation
+                })
+                buckets.pop(i)
+                remaining -= bucket.amount
+                i -= 1  # adjust after pop
+        
+        # Update the credit_buckets list
+        self.credit_buckets = buckets
+        self._ai_credits_computed = None
+        return True, spent_details
+
+    def get_credit_usage_summary(self) -> dict[str, Any]:
+        """Return a summary of credit usage by type and age."""
+        now = _now_iso()
+        free_total = 0
+        paid_total = 0
+        free_expired = 0
+        
+        for bucket in self.credit_buckets:
+            if bucket.type == "free":
+                free_total += bucket.amount
+                if bucket.expires_at and now > bucket.expires_at:
+                    free_expired += bucket.amount
+            else:
+                paid_total += bucket.amount
+        
+        return {
+            "free_available": free_total - free_expired,
+            "free_expired": free_expired,
+            "paid": paid_total,
+            "total": self.total_credits,
+            "bucket_count": len(self.credit_buckets)
+        }
 
 
 # ------------------------- Closet items -------------------------
@@ -574,6 +744,19 @@ class CreditTopup(BaseDoc):
     captured_at: str | None = None
     payer_email: str | None = None
     pack: str | None = None  # "10" | "25" | "50" | "custom"
+
+
+class AiCreditPurchase(BaseDoc):
+    user_id: str
+    pack: str
+    credits_amount: int
+    amount_cents: int
+    currency: str = "USD"
+    status: str = "pending"
+    paypal_order_id: str | None = None
+    paypal_capture_id: str | None = None
+    captured_at: str | None = None
+    payer_email: str | None = None
 
 
 # --------------------- DressApp Suitcase ---------------------
