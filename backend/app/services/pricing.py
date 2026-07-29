@@ -47,7 +47,15 @@ class CreditThresholdConfig:
         self.HARD_LIMIT_MESSAGE = "Daily/your monthly AI credit allocation has been exhausted. Upgrade your plan or purchase additional credits."
         self.PAGE_LINK = "/pricing/purchase"  # Relative URL to credits page
         
-    def get_status(self, available: float, total_needed: int, monthly_limit: int, daily_limit: int) -> Tuple[CreditQuotaStatus, str, str]:
+    def get_status(
+        self,
+        available: float,
+        total_needed: int,
+        monthly_limit: int,
+        daily_limit: int,
+        monthly_used: float | None = None,
+        daily_used: float | None = None
+    ) -> Tuple[CreditQuotaStatus, str, str | None]:
         """Determine the credit status based on usage levels."""
         
         # Check if there's sufficient credit for the requested operation
@@ -55,10 +63,11 @@ class CreditThresholdConfig:
             return CreditQuotaStatus.EXHAUSTED, "Insufficient credits to complete this operation", "Purchase more credits"
         
         # Calculate percentages of monthly and daily limits used
-        from app.services.billing_service import get_user_ai_balance
-        # We need to get actual usage - simplified check here
-        monthly_pct = 1.0 if monthly_limit == 0 else (monthly_limit - available) / monthly_limit if monthly_limit > 0 else 1.0
-        daily_pct = 1.0 if daily_limit == 0 else (daily_limit - available) / daily_limit if daily_limit > 0 else 1.0
+        m_used = monthly_used if monthly_used is not None else max(0.0, monthly_limit - available)
+        d_used = daily_used if daily_used is not None else max(0.0, daily_limit - available)
+        
+        monthly_pct = (m_used / monthly_limit) if monthly_limit > 0 else 0.0
+        daily_pct = (d_used / daily_limit) if daily_limit > 0 else 0.0
         
         # If approaching limits
         if monthly_pct >= 1 - self.SOFT_WARNING_THRESHOLD or daily_pct >= 1 - self.SOFT_WARNING_THRESHOLD:
@@ -324,7 +333,9 @@ async def get_credit_status(
             available=u_model.total_credits,
             total_needed=1,  # Default minimum request
             monthly_limit=ai_config.get("ai_monthly_limit", 1000),
-            daily_limit=ai_config.get("ai_daily_limit", 100)
+            daily_limit=ai_config.get("ai_daily_limit", 100),
+            monthly_used=ai_config.get("ai_monthly_used", 0.0),
+            daily_used=ai_config.get("ai_daily_used", 0.0)
         )
         
         # Add exhaustion handling info

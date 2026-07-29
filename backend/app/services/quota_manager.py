@@ -70,7 +70,9 @@ async def check_operation_quota(user_id: str, required_credits: int = 1, operati
             available=u_model.total_credits,
             total_needed=required_credits,
             monthly_limit=monthly_limit,
-            daily_limit=daily_limit
+            daily_limit=daily_limit,
+            monthly_used=ai_config.get("ai_monthly_used", 0.0),
+            daily_used=ai_config.get("ai_daily_used", 0.0)
         )
         
         can_proceed = status != CreditQuotaStatus.EXHAUSTED and u_model.total_credits >= required_credits
