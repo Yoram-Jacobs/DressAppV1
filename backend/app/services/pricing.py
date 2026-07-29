@@ -253,9 +253,6 @@ async def handle_credit_exhaustion(operation: str, user_id: str, required_credit
     1. Pauses the operation (raises a special exception that can be caught upstream)
     2. Waits for the user to purchase more credits (via webhook or periodic polling)
     3. Resumes the operation automatically when credits are replenished
-    """
-    from app.services.billing_service import get_user_balance
-    
     db = get_db()
     user_record = await db.users.find_one({"id": user_id})
     

@@ -98,7 +98,7 @@ async def get_pricing_info(user: dict = Depends(get_current_user)) -> Dict[str, 
             "credits": {
                 "total_credits": summary["total"],
                 "free_credits_available": summary["free_available"],
-                "free_credits_expired": summary["expired"],
+                "free_credits_expired": summary["free_expired"],
                 "paid_credits": summary["paid"],
                 "ai_credits_used_this_month": user_record.get("ai_configuration", {}).get("ai_credits_used_this_month", 0),
                 "ai_monthly_limit": user_record.get("ai_configuration", {}).get("ai_monthly_limit", 1000),
