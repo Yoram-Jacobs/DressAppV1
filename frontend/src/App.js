@@ -104,54 +104,52 @@ function App() {
         <AuthProvider>
           <LocationProvider>
             <PayPalProvider>
-              <AppLayout>
-                <Routes>
-                  {/* Public routes that don't require auth/layout */}
-                  <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
-                  <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
-                  <Route path="/auth/callback" element={<AuthCallback />} />
+              <Routes>
+                {/* Public routes that don't require auth/layout */}
+                <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
+                <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                
+                {/* Extension bridge route (standalone view) */}
+                <Route path="/extension/connect" element={<ExtensionConnect />} />
+                
+                {/* Main application routes wrapped in AppLayout */}
+                <Route element={<AppLayout />}>
+                  <Route path="/" element={<Navigate to="/home" replace />} />
+                  <Route path="/home" element={<Home />} />
+                  <Route path="/closet" element={<Closet />} />
+                  <Route path="/suitcase" element={<Suitcase />} />
+                  <Route path="/closet/add" element={<AddItem />} />
+                  <Route path="/closet/:id" element={<ItemDetail />} />
+                  <Route path="/stylist" element={<Stylist />} />
+                  <Route path="/outfits" element={<OutfitsRedirect />} />
+                  <Route path="/market" element={<Marketplace />} />
+                  <Route path="/market/create" element={<CreateListing />} />
+                  <Route path="/market/:id" element={<ListingDetail />} />
+                  <Route path="/transactions" element={<Transactions />} />
+                  <Route path="/transactions/:id/landing" element={<TransactionLanding />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/experts" element={<ExpertsDirectory />} />
+                  <Route path="/campaigns/create" element={<CreateCampaign />} />
+                  <Route path="/campaigns/mine" element={<MyCampaigns />} />
+                  <Route path="/campaigns/:id" element={<CampaignDetail />} />
+                  <Route path="/ads" element={<AdsManager />} />
+                  <Route path="/me" element={<Profile />} />
+                  <Route path="/delete-account" element={<DeleteAccount />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/terms" element={<TermsOfService />} />
+                  <Route path="/me/stats" element={<WardrobeStats />} />
+                  <Route path="/trends" element={<TrendScout />} />
+                  <Route path="/avatar" element={<AvatarPage />} />
                   
-                  {/* Extension bridge route (standalone view) */}
-                  <Route path="/extension/connect" element={<ExtensionConnect />} />
-                  
-                  {/* Main application routes wrapped in AppLayout */}
-                  <Route element={<AppLayout />}>
-                    <Route path="/" element={<Navigate to="/home" replace />} />
-                    <Route path="/home" element={<Home />} />
-                    <Route path="/closet" element={<Closet />} />
-                    <Route path="/suitcase" element={<Suitcase />} />
-                    <Route path="/closet/add" element={<AddItem />} />
-                    <Route path="/closet/:id" element={<ItemDetail />} />
-                    <Route path="/stylist" element={<Stylist />} />
-                    <Route path="/outfits" element={<OutfitsRedirect />} />
-                    <Route path="/market" element={<Marketplace />} />
-                    <Route path="/market/create" element={<CreateListing />} />
-                    <Route path="/market/:id" element={<ListingDetail />} />
-                    <Route path="/transactions" element={<Transactions />} />
-                    <Route path="/transactions/:id/landing" element={<TransactionLanding />} />
-                    <Route path="/admin" element={<Admin />} />
-                    <Route path="/experts" element={<ExpertsDirectory />} />
-                    <Route path="/campaigns/create" element={<CreateCampaign />} />
-                    <Route path="/campaigns/mine" element={<MyCampaigns />} />
-                    <Route path="/campaigns/:id" element={<CampaignDetail />} />
-                    <Route path="/ads" element={<AdsManager />} />
-                    <Route path="/me" element={<Profile />} />
-                    <Route path="/delete-account" element={<DeleteAccount />} />
-                    <Route path="/privacy" element={<Privacy />} />
-                    <Route path="/terms" element={<TermsOfService />} />
-                    <Route path="/me/stats" element={<WardrobeStats />} />
-                    <Route path="/trends" element={<TrendScout />} />
-                    <Route path="/avatar" element={<AvatarPage />} />
-                    
-                    {/* NEW PRICING ROUTES */}
-                    <Route path="/pricing" element={<Pricing />} />
-                    <Route path="/pricing/purchase" element={<PurchaseCredits />} />
-                  </Route>
-                  
-                  {/* Fallback route */}
-                  <Route path="*" element={<Navigate to="/home" replace />} />
-                </Routes>
-              </AppLayout>
+                  {/* NEW PRICING ROUTES */}
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/pricing/purchase" element={<PurchaseCredits />} />
+                </Route>
+                
+                {/* Fallback route */}
+                <Route path="*" element={<Navigate to="/home" replace />} />
+              </Routes>
             </PayPalProvider>
           </LocationProvider>
         </AuthProvider>
