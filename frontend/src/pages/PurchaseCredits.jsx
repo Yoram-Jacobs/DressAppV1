@@ -164,7 +164,7 @@ const PurchaseCredits = () => {
       {/* Purchase Summary & Button */}
       {selectedPack && (
         <Card className="mb-4">
-          <Card.Header><h5>Your Selection</h5></CardHeader>
+          <Card.Header><h5>Your Selection</h5></Card.Header>
           <Card.Body>
             <Table responsive>
               <tbody>
