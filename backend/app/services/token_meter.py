@@ -11,6 +11,7 @@ from enum import Enum
 from typing import Any, Optional, Dict
 
 
+from fastapi import APIRouter
 from app.db.database import get_db
 from app.services.auth import get_current_user
 from app.models.schemas import User, CreditType
