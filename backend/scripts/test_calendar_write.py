@@ -10,8 +10,13 @@ logger = logging.getLogger("test_calendar_write")
 
 async def test_crud():
     db = get_db()
-    # Search for any user with calendar tokens
-    user = await db.users.find_one({"google_calendar_tokens.refresh_token": {"": True}})
+    users = await db.users.find({}).to_list(length=100)
+    user = None
+    for u in users:
+        if u.get("google_calendar_tokens", {}).get("refresh_token"):
+            user = u
+            break
+            
     if not user:
         logger.error("No user with connected Google Calendar found in DB!")
         return
