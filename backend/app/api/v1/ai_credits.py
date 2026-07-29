@@ -51,7 +51,7 @@ class CreditUsageResponse(BaseModel):
     daily_limit: int
     monthly_limit: int
     can_use: bool
-    upgrade_required: False
+    upgrade_required: bool
 
 
 def _now_iso() -> str:
