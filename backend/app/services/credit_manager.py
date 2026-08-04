@@ -240,6 +240,45 @@ class QuotaExhaustionError(Exception):
         super().__init__(message)
 
 
+async def migrate_legacy_credits_if_needed(user_record: dict, db: Any) -> dict:
+    user_id = user_record.get("id")
+    ai_config = user_record.get("ai_configuration", {})
+    legacy_credits = ai_config.get("current_credits", 0)
+    
+    if legacy_credits <= 0:
+        return user_record
+
+    buckets = user_record.get("credit_buckets") or []
+    # Sum the amounts in all buckets
+    total_in_buckets = sum(b.get("amount", 0) for b in buckets)
+    
+    if total_in_buckets == 0:
+        import uuid
+        from datetime import datetime, timezone
+        new_bucket = {
+            "id": str(uuid.uuid4()),
+            "amount": legacy_credits,
+            "type": "paid",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "expires_at": None,
+            "description": "Legacy migrated credits"
+        }
+        await db.users.update_one(
+            {"id": user_id},
+            {
+                "$set": {
+                    "credit_buckets": [new_bucket],
+                    "ai_configuration.current_credits": legacy_credits
+                }
+            }
+        )
+        updated_record = await db.users.find_one({"id": user_id})
+        logger.info("Migrated legacy %d credits to bucket for user %s", legacy_credits, user_id)
+        return updated_record
+        
+    return user_record
+
+
 async def check_operation_quota(user_id: str, required_credits: int = 1, operation: str = "ai_operation") -> Tuple[bool, CreditQuotaStatus, str]:
     try:
         db = get_db()
@@ -247,38 +286,9 @@ async def check_operation_quota(user_id: str, required_credits: int = 1, operati
         if not user_record:
             return False, CreditQuotaStatus.EXHAUSTED, "User not found"
         
+        user_record = await migrate_legacy_credits_if_needed(user_record, db)
         ai_config = user_record.get("ai_configuration", {})
-        legacy_credits = ai_config.get("current_credits", 0)
-        
-        # On-the-fly migration: if credit_buckets is missing or empty, but legacy credits exist,
-        # create a paid bucket with the legacy credits.
-        buckets = user_record.get("credit_buckets")
-        if (buckets is None or len(buckets) == 0) and legacy_credits > 0:
-            import uuid
-            from datetime import datetime, timezone
-            new_bucket = {
-                "id": str(uuid.uuid4()),
-                "amount": legacy_credits,
-                "type": "paid",
-                "created_at": datetime.now(timezone.utc).isoformat(),
-                "expires_at": None,
-                "description": "Legacy migrated credits"
-            }
-            await db.users.update_one(
-                {"id": user_id},
-                {
-                    "$set": {
-                        "credit_buckets": [new_bucket],
-                        "ai_configuration.current_credits": legacy_credits
-                    }
-                }
-            )
-            # Reload the record to get updated buckets
-            user_record = await db.users.find_one({"id": user_id})
-            logger.info("Migrated legacy %d credits to bucket for user %s", legacy_credits, user_id)
-
         u_model = User.parse_obj(user_record)
-        ai_config = user_record.get("ai_configuration", {})
         
         if u_model.total_credits < required_credits:
             if operation != "quota_check":
@@ -658,7 +668,7 @@ async def use_ai_c_with_threshold_check(
         user_record = await db.users.find_one({"id": user_id})
         if not user_record:
             return False
-        
+        user_record = await migrate_legacy_credits_if_needed(user_record, db)
         u_model = User.parse_obj(user_record)
         if u_model.total_credits < credits_required:
             if not wait_if_exhausted:
