@@ -17,7 +17,8 @@
     "mobilePrimary": "移动端主导航",
     "guest": "访客",
     "experts": "专家",
-    "ads": "我的广告"
+    "ads": "我的广告",
+    "pricing": "价格"
   },
   "common": {
     "day": "天",
@@ -1877,7 +1878,12 @@
       "action_failed": "操作失败",
       "listing_status_updated": "商品状态已设为 {{status}}",
       "update_failed": "更新失败",
-      "all": "全部"
+      "all": "全部",
+      "subscription_plan": "订阅计划",
+      "subscription_status": "订阅状态",
+      "active": "激活",
+      "inactive": "未激活",
+      "cancelled": "已取消"
     },
     "closet": {
       "back_to_full_closet": "返回完整衣橱",
@@ -2816,7 +2822,16 @@
       "customApiKey": "支持自定义 API 密钥",
       "support": "客户支持优先级",
       "uploads": "图片上传容量",
-      "branding": "自定义品牌选项"
+      "branding": "自定义品牌选项",
+      "basicOps": "基础 AI 操作",
+      "communitySupport": "社区支持",
+      "advancedOps": "高级 AI 操作",
+      "prioritySupport": "优先支持",
+      "unlimitedUploads": "无限上传",
+      "allProFeatures": "所有专业版功能",
+      "dedicatedSupport": "专属支持",
+      "apiAccess": "API 访问权",
+      "customBranding": "自定义品牌推广"
     },
     "supportTiers": {
       "community": "社区支持",
@@ -2832,6 +2847,45 @@
       "hard_limit": "额度耗尽",
       "exhausted": "无可用额度",
       "all_set": "运行正常"
+    },
+    "backToPricing": "返回价格方案",
+    "purchaseCreditsHeader": "购买 AI 额度",
+    "purchaseCreditsDesc": "充值购买 AI 额度包。购买的额度永久有效，每月自动结转。",
+    "purchaseSuccessToast": "额度购买成功！",
+    "purchaseSuccessMsg": "额度包购买成功！",
+    "captureFailed": "确认交易失败。",
+    "checkoutCancelled": "付款已取消。",
+    "loadError": "无法加载价格信息。请刷新页面。",
+    "confirmingPayment": "正在确认您的购买...",
+    "loadingPacks": "正在加载购买选项...",
+    "purchaseSuccessful": "购买成功！",
+    "purchaseSuccessDetails": "成功以 ${{cost}} 购买了 {{count}} 个 AI 额度！",
+    "creditsLabel": "额度",
+    "noExpiration": "付费包 - 永久有效",
+    "creditLabelShort": "额度",
+    "orderSummary": "订单摘要",
+    "summaryItem": "商品:",
+    "summaryMode": "计费模式:",
+    "summaryOneTime": "一次性付款",
+    "summaryTax": "税率:",
+    "summaryTotal": "总计:",
+    "redirectingToGateway": "正在跳转至支付页面...",
+    "checkoutBtn": "支付",
+    "billingDisclaimer": "付款由 Atzmai Sachir 网关处理。点击购买即表示您同意我们的服务条款。",
+    "whyCreditsHeader": "为什么选择 DressApp 额度？",
+    "benefitAlwaysAvailable": "永久有效",
+    "benefitAlwaysAvailableDesc": "购买的额度没有过期时间。即使在数月后，您依然可以随时使用。",
+    "benefitBulkDiscounts": "多买多优惠",
+    "benefitBulkDiscountsDesc": "购买更大的额度包可获得更优惠的单价。100 额度包的单价最划算。",
+    "benefitInstantAccess": "即时生效",
+    "benefitInstantAccessDesc": "立即购买，即可马上使用背景消除、搭配建议等高级 AI 功能。",
+    "freeDesc": "探索和数字化您基础衣橱的完美选择。",
+    "proDesc": "真正时尚爱好者的最佳搭配师体验。",
+    "businessDesc": "专为专家提供的终极限制和高级品牌定制功能。",
+    "tier": {
+      "free": "免费",
+      "pro": "专业",
+      "business": "商业"
     }
   }
 }

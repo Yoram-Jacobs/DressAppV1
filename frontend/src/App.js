@@ -43,6 +43,7 @@ import Privacy from '@/pages/Privacy';
 import TermsOfService from '@/pages/TermsOfService';
 import Pricing from '@/pages/Pricing';           // New pricing page component
 import PurchaseCredits from '@/pages/PurchaseCredits';  // Credit purchase page component
+import MockAtzmaiPayment from '@/pages/MockAtzmaiPayment';
 
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -109,6 +110,7 @@ function App() {
                 <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
                 <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/mock-atzmai-payment-link" element={<MockAtzmaiPayment />} />
                 
                 {/* Extension bridge route (standalone view) */}
                 <Route path="/extension/connect" element={<ExtensionConnect />} />

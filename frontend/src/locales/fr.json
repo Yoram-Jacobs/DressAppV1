@@ -17,7 +17,8 @@
     "guest": "Invité",
     "experts": "Experts",
     "ads": "Mes annonces",
-    "outfits": "Tenues"
+    "outfits": "Tenues",
+    "pricing": "Tarifs"
   },
   "common": {
     "day": "jour",
@@ -1877,7 +1878,12 @@
       "action_failed": "L'action a échoué",
       "listing_status_updated": "Annonce définie sur {{status}}",
       "update_failed": "Mise à jour échouée",
-      "all": "Tout"
+      "all": "Tout",
+      "subscription_plan": "Plan d'abonnement",
+      "subscription_status": "Statut de l'abonnement",
+      "active": "Actif",
+      "inactive": "Inactif",
+      "cancelled": "Annulé"
     },
     "closet": {
       "back_to_full_closet": "Retour au dressing complet",
@@ -2816,7 +2822,16 @@
       "customApiKey": "Support de clé API personnalisée",
       "support": "Priorité du support",
       "uploads": "Capacité de téléchargement d'images",
-      "branding": "Options de marque personnalisée"
+      "branding": "Options de marque personnalisée",
+      "basicOps": "Opérations d'IA de base",
+      "communitySupport": "Support communautaire",
+      "advancedOps": "Opérations d'IA avancées",
+      "prioritySupport": "Support prioritaire",
+      "unlimitedUploads": "Téléchargements illimités",
+      "allProFeatures": "Toutes les fonctionnalités Pro",
+      "dedicatedSupport": "Support dédié",
+      "apiAccess": "Accès API",
+      "customBranding": "Marque personnalisée"
     },
     "supportTiers": {
       "community": "Support communauté",
@@ -2832,6 +2847,45 @@
       "hard_limit": "Crédits épuisés",
       "exhausted": "Aucun crédit",
       "all_set": "Tout est opérationnel"
+    },
+    "backToPricing": "Retour aux tarifs",
+    "purchaseCreditsHeader": "Acheter des crédits IA",
+    "purchaseCreditsDesc": "Rechargez votre compte avec des packs de crédits payants. Les crédits n'expirent jamais et sont reportés mensuellement.",
+    "purchaseSuccessToast": "Crédits achetés avec succès !",
+    "purchaseSuccessMsg": "Pack de crédits acheté avec succès !",
+    "captureFailed": "Échec de la confirmation de la transaction.",
+    "checkoutCancelled": "Paiement annulé.",
+    "loadError": "Impossible de charger les informations de prix. Veuillez actualiser la page.",
+    "confirmingPayment": "Confirmation de votre achat...",
+    "loadingPacks": "Chargement des options d'achat...",
+    "purchaseSuccessful": "Achat réussi !",
+    "purchaseSuccessDetails": "Achat réussi de {{count}} crédits pour ${{cost}} !",
+    "creditsLabel": "Crédits",
+    "noExpiration": "Pack payant - sans expiration",
+    "creditLabelShort": "crédit",
+    "orderSummary": "Récapitulatif de la commande",
+    "summaryItem": "Article:",
+    "summaryMode": "Mode de facturation:",
+    "summaryOneTime": "Paiement unique",
+    "summaryTax": "Taxes:",
+    "summaryTotal": "Total:",
+    "redirectingToGateway": "Redirection vers la caisse...",
+    "checkoutBtn": "Payer",
+    "billingDisclaimer": "Paiements traités via Atzmai Sachir Gateway. En cliquant sur acheter, vous acceptez nos conditions d'utilisation.",
+    "whyCreditsHeader": "Pourquoi choisir les crédits DressApp ?",
+    "benefitAlwaysAvailable": "Toujours disponible",
+    "benefitAlwaysAvailableDesc": "Les crédits payants n'expirent jamais. Utilisez-les quand vous le souhaitez, même dans plusieurs mois.",
+    "benefitBulkDiscounts": "Remises sur volume",
+    "benefitBulkDiscountsDesc": "Achetez des packs plus importants et obtenez un meilleur tarif par crédit. Le pack de 100 offre le meilleur rapport qualité-prix.",
+    "benefitInstantAccess": "Accès instantané",
+    "benefitInstantAccessDesc": "Achetez aujourd'hui et accédez immédiatement aux fonctionnalités d'IA premium.",
+    "freeDesc": "Parfait pour explorer et numériser votre garde-robe de base.",
+    "proDesc": "L'expérience styliste optimale pour les vrais passionnés de mode.",
+    "businessDesc": "Limites ultimes et fonctionnalités de marque premium pour les spécialistes.",
+    "tier": {
+      "free": "Gratuit",
+      "pro": "Pro",
+      "business": "Business"
     }
   }
 }

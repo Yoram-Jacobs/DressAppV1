@@ -17,7 +17,8 @@
     "guest": "Gast",
     "experts": "Experten",
     "ads": "Meine Anzeigen",
-    "outfits": "Outfits"
+    "outfits": "Outfits",
+    "pricing": "Preise"
   },
   "common": {
     "day": "Tag",
@@ -1877,7 +1878,12 @@
       "action_failed": "Aktion fehlgeschlagen",
       "listing_status_updated": "Eintrag auf {{status}} gesetzt",
       "update_failed": "Update fehlgeschlagen",
-      "all": "Alle"
+      "all": "Alle",
+      "subscription_plan": "Abonnement-Plan",
+      "subscription_status": "Abonnement-Status",
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "cancelled": "Gekündigt"
     },
     "closet": {
       "back_to_full_closet": "Zurück zum vollständigen Kleiderschrank",
@@ -2816,7 +2822,16 @@
       "customApiKey": "Eigener API-Schlüssel",
       "support": "Support-Priorität",
       "uploads": "Bilder-Upload-Kapazität",
-      "branding": "Eigene Branding-Optionen"
+      "branding": "Eigene Branding-Optionen",
+      "basicOps": "Einfache KI-Operationen",
+      "communitySupport": "Community-Support",
+      "advancedOps": "Erweiterte KI-Operationen",
+      "prioritySupport": "Priorisierter Support",
+      "unlimitedUploads": "Unbegrenzte Uploads",
+      "allProFeatures": "Alle Pro-Funktionen",
+      "dedicatedSupport": "Dedizierter Support",
+      "apiAccess": "API-Zugriff",
+      "customBranding": "Eigenes Branding"
     },
     "supportTiers": {
       "community": "Community-Support",
@@ -2832,6 +2847,45 @@
       "hard_limit": "Guthaben aufgebraucht",
       "exhausted": "Kein Guthaben",
       "all_set": "Alles bestens"
+    },
+    "backToPricing": "Zurück zu den Preisen",
+    "purchaseCreditsHeader": "KI-Guthaben kaufen",
+    "purchaseCreditsDesc": "Laden Sie Ihr Konto mit kostenpflichtigen Guthabenpaketen auf. Guthaben verfällt nie und wird auf den nächsten Monat übertragen.",
+    "purchaseSuccessToast": "Guthaben erfolgreich gekauft!",
+    "purchaseSuccessMsg": "Guthabenpaket erfolgreich gekauft!",
+    "captureFailed": "Transaktionsbestätigung fehlgeschlagen.",
+    "checkoutCancelled": "Zahlung abgebrochen.",
+    "loadError": "Preisinformationen konnten nicht geladen werden. Bitte aktualisieren Sie die Seite.",
+    "confirmingPayment": "Zahlung wird bestätigt...",
+    "loadingPacks": "Optionen werden geladen...",
+    "purchaseSuccessful": "Kauf erfolgreich!",
+    "purchaseSuccessDetails": "Erfolgreich {{count}} Guthaben für ${{cost}} gekauft!",
+    "creditsLabel": "Guthaben",
+    "noExpiration": "Kaufpaket – verfällt nie",
+    "creditLabelShort": "Guthaben",
+    "orderSummary": "Bestellübersicht",
+    "summaryItem": "Artikel:",
+    "summaryMode": "Zahlungsart:",
+    "summaryOneTime": "Einmalige Zahlung",
+    "summaryTax": "MwSt.:",
+    "summaryTotal": "Gesamt:",
+    "redirectingToGateway": "Weiterleitung zur Kasse...",
+    "checkoutBtn": "Bezahlen",
+    "billingDisclaimer": "Zahlungen werden über das Atzmai Sachir Gateway abgewickelt. Mit dem Kauf stimmen Sie unseren Nutzungsbedingungen zu.",
+    "whyCreditsHeader": "Warum DressApp-Guthaben wählen?",
+    "benefitAlwaysAvailable": "Immer verfügbar",
+    "benefitAlwaysAvailableDesc": "Kaufguthaben verfällt nie. Nutzen Sie es, wann immer Sie wollen, auch in Monaten.",
+    "benefitBulkDiscounts": "Mengenrabatte",
+    "benefitBulkDiscountsDesc": "Kaufen Sie größere Pakete für einen besseren Preis pro Guthaben. Das 100er-Paket bietet den besten Wert.",
+    "benefitInstantAccess": "Sofortiger Zugriff",
+    "benefitInstantAccessDesc": "Kaufen Sie noch heute und erhalten Sie sofortigen Zugriff auf Premium-KI-Funktionen.",
+    "freeDesc": "Perfekt zum Erkunden und Digitalisieren Ihres Basiskleiderschranks.",
+    "proDesc": "Das optimale Stylisten-Erlebnis für echte Modeliebhaber.",
+    "businessDesc": "Höchste Limits und Premium-Branding-Funktionen für Spezialisten.",
+    "tier": {
+      "free": "Kostenlos",
+      "pro": "Pro",
+      "business": "Business"
     }
   }
 }

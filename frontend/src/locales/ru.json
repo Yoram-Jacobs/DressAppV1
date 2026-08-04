@@ -17,7 +17,8 @@
     "guest": "Гость",
     "experts": "Эксперты",
     "ads": "Мои объявления",
-    "outfits": "Образы"
+    "outfits": "Образы",
+    "pricing": "Цены"
   },
   "common": {
     "day": "день",
@@ -1877,7 +1878,12 @@
       "action_failed": "Действие не удалось",
       "listing_status_updated": "Объявление переведено в статус {{status}}",
       "update_failed": "Обновление не удалось",
-      "all": "Все"
+      "all": "Все",
+      "subscription_plan": "Тарифный план",
+      "subscription_status": "Статус подписки",
+      "active": "Активен",
+      "inactive": "Неактивен",
+      "cancelled": "Отменен"
     },
     "closet": {
       "back_to_full_closet": "Вернуться ко всему гардеробу",
@@ -2816,7 +2822,16 @@
       "customApiKey": "Поддержка собственного ключа API",
       "support": "Приоритет поддержки",
       "uploads": "Загрузка изображений",
-      "branding": "Персонализация бренда"
+      "branding": "Персонализация бренда",
+      "basicOps": "Базовые операции ИИ",
+      "communitySupport": "Поддержка сообщества",
+      "advancedOps": "Расширенные операции ИИ",
+      "prioritySupport": "Приоритетная поддержка",
+      "unlimitedUploads": "Безлимитная загрузка",
+      "allProFeatures": "Все функции уровня Про",
+      "dedicatedSupport": "Выделенная поддержка",
+      "apiAccess": "Доступ к API",
+      "customBranding": "Индивидуальный брендинг"
     },
     "supportTiers": {
       "community": "Поддержка сообщества",
@@ -2832,6 +2847,45 @@
       "hard_limit": "Кредиты исчерпаны",
       "exhausted": "Нет кредитов",
       "all_set": "Всё в порядке"
+    },
+    "backToPricing": "Назад к тарифным планам",
+    "purchaseCreditsHeader": "Купить кредиты ИИ",
+    "purchaseCreditsDesc": "Пополните свой счет платными пакетами кредитов. Кредиты не имеют срока действия и переносятся на следующий месяц.",
+    "purchaseSuccessToast": "Кредиты успешно приобретены!",
+    "purchaseSuccessMsg": "Пакет кредитов успешно приобретен!",
+    "captureFailed": "Не удалось подтвердить транзакцию.",
+    "checkoutCancelled": "Оплата отменена.",
+    "loadError": "Не удалось загрузить информацию о ценах. Пожалуйста, обновите страницу.",
+    "confirmingPayment": "Подтверждение вашей покупки...",
+    "loadingPacks": "Загрузка вариантов покупки...",
+    "purchaseSuccessful": "Покупка совершена успешно!",
+    "purchaseSuccessDetails": "Успешно приобретено {{count}} кредитов за ${{cost}}!",
+    "creditsLabel": "Кредиты",
+    "noExpiration": "Платный пакет — без срока действия",
+    "creditLabelShort": "кредит",
+    "orderSummary": "Детали заказа",
+    "summaryItem": "Товар:",
+    "summaryMode": "Способ оплаты:",
+    "summaryOneTime": "Единовременный платеж",
+    "summaryTax": "Налог:",
+    "summaryTotal": "Итого:",
+    "redirectingToGateway": "Перенаправление на страницу оплаты...",
+    "checkoutBtn": "Оплатить",
+    "billingDisclaimer": "Платежи обрабатываются через шлюз Atzmai Sachir Gateway. Нажимая кнопку «Купить», вы соглашаетесь с Условиями обслуживания.",
+    "whyCreditsHeader": "Почему выбирают кредиты DressApp?",
+    "benefitAlwaysAvailable": "Всегда доступны",
+    "benefitAlwaysAvailableDesc": "Платные кредиты не имеют срока действия. Используйте их, когда вам удобно, даже через несколько месяцев.",
+    "benefitBulkDiscounts": "Оптовые скидки",
+    "benefitBulkDiscountsDesc": "Покупайте пакеты большего размера и получайте более выгодную цену за кредит. Пакет из 100 кредитов предлагает лучшую цену за единицу.",
+    "benefitInstantAccess": "Мгновенный доступ",
+    "benefitInstantAccessDesc": "Купите сегодня и получите мгновенный доступ к премиум-функциям ИИ.",
+    "freeDesc": "Идеяльно подходит для изучения и оцифровки вашего базового гардероба.",
+    "proDesc": "Оптимальный опыт стилиста для истинных любителей моды.",
+    "businessDesc": "Максимальные лимиты и функции премиум-брендинга для специалистов.",
+    "tier": {
+      "free": "Бесплатный",
+      "pro": "Про",
+      "business": "Бизнес"
     }
   }
 }

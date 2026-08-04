@@ -17,7 +17,8 @@
     "primary": "ניווט ראשי",
     "mobilePrimary": "ניווט נייד ראשי",
     "guest": "אורח",
-    "outfits": "לוקים"
+    "outfits": "לוקים",
+    "pricing": "מחירון"
   },
   "common": {
     "save": "שמור",
@@ -1885,7 +1886,12 @@
       "action_failed": "הפעולה נכשלה",
       "listing_status_updated": "מצב הפריט שונה ל-{{status}}",
       "update_failed": "העדכון נכשל",
-      "all": "הכל"
+      "all": "הכל",
+      "subscription_plan": "תוכנית מנוי",
+      "subscription_status": "מצב מנוי",
+      "active": "פעיל",
+      "inactive": "לא פעיל",
+      "cancelled": "מבוטל"
     },
     "closet": {
       "back_to_full_closet": "חזרה לארון המלא",
@@ -2856,7 +2862,16 @@
       "customApiKey": "תמיכה במפתח API מותאם אישית",
       "support": "עדיפות תמיכה",
       "uploads": "קיבולת העלאת תמונות",
-      "branding": "אפשרויות מיתוג מותאמות אישית"
+      "branding": "אפשרויות מיתוג מותאמות אישית",
+      "basicOps": "פעולות AI בסיסיות",
+      "communitySupport": "תמיכת קהילה",
+      "advancedOps": "פעולות AI מתקדמות",
+      "prioritySupport": "תמיכה בעדיפות",
+      "unlimitedUploads": "העלאות ללא הגבלה",
+      "allProFeatures": "כל תכונות הפרו",
+      "dedicatedSupport": "תמיכה ייעודית",
+      "apiAccess": "גישת API",
+      "customBranding": "מיתוג מותאם אישית"
     },
     "supportTiers": {
       "community": "תמיכת קהילה",
@@ -2872,6 +2887,45 @@
       "hard_limit": "נקודות הזכות אזלו",
       "exhausted": "אין נקודות זכות",
       "all_set": "הכל מוכן"
+    },
+    "backToPricing": "חזרה לתוכניות התמחור",
+    "purchaseCreditsHeader": "רכישת נקודות זיכוי ל-AI",
+    "purchaseCreditsDesc": "טען את החשבון שלך עם חבילות נקודות זיכוי בתשלום. נקודות הזיכוי לעולם אינן פגות ונשמרות מחודש לחודש.",
+    "purchaseSuccessToast": "נקודות הזיכוי נרכשו בהצלחה!",
+    "purchaseSuccessMsg": "חבילת נקודות הזיכוי נרכשה בהצלחה!",
+    "captureFailed": "אישור העסקה נכשל.",
+    "checkoutCancelled": "התשלום בוטל.",
+    "loadError": "לא ניתן לטעון את מידע התמחור. אנא רענן את הדף.",
+    "confirmingPayment": "מאשר את הרכישה שלך...",
+    "loadingPacks": "טוען אפשרויות רכישה...",
+    "purchaseSuccessful": "הרכישה בוצעה בהצלחה!",
+    "purchaseSuccessDetails": "רכשת בהצלחה {{count}} נקודות זיכוי תמורת ${{cost}}!",
+    "creditsLabel": "נקודות זיכוי",
+    "noExpiration": "חבילה בתשלום - ללא תוקף",
+    "creditLabelShort": "נקודת זיכוי",
+    "orderSummary": "סיכום הזמנה",
+    "summaryItem": "פריט:",
+    "summaryMode": "אופן החיוב:",
+    "summaryOneTime": "תשלום חד-פעמי",
+    "summaryTax": "מע\"מ:",
+    "summaryTotal": "סך הכל:",
+    "redirectingToGateway": "מנתב לדף התשלום...",
+    "checkoutBtn": "שלם",
+    "billingDisclaimer": "התשלומים מעובדים באמצעות ספק התשלומים עצמאי שכיר. בלחיצה על כפתור הרכישה, אתה מסכים לתנאי השירות שלנו.",
+    "whyCreditsHeader": "למה לבחור בנקודות זיכוי של DressApp?",
+    "benefitAlwaysAvailable": "תמיד זמין",
+    "benefitAlwaysAvailableDesc": "נקודות זיכוי בתשלום לעולם אינן פגות. השתמש בהן מתי שתרצה, אפילו בעוד מספר חודשים.",
+    "benefitBulkDiscounts": "הנחות כמות",
+    "benefitBulkDiscountsDesc": "קנה חבילות גדולות יותר וקבל תמורה טובה יותר עבור כל נקודת זיכוי. חבילת 100 הנקודות מציעה את המחיר המשתלם ביותר.",
+    "benefitInstantAccess": "גישה מיידית",
+    "benefitInstantAccessDesc": "קנה היום וקבל גישה מיידית לתכונות ה-AI המתקדמות שלנו כמו הסרת רקע והמלצות סטייליסט.",
+    "freeDesc": "מושלם לחקירה ודיגיטציה של המלתחה הבסיסית שלך.",
+    "proDesc": "חוויית הסטייליסט האופטימלית לחובבי אופנה אמיתיים.",
+    "businessDesc": "מגבלות מקסימליות ותכונות מיתוג פרימיום למקצוענים.",
+    "tier": {
+      "free": "חינם",
+      "pro": "פרו",
+      "business": "עסקי"
     }
   }
 }

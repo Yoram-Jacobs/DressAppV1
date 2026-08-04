@@ -17,7 +17,8 @@
     "guest": "अतिथि",
     "experts": "विशेषज्ञ",
     "ads": "मेरे विज्ञापन",
-    "outfits": "आउटफिट"
+    "outfits": "आउटफिट",
+    "pricing": "कीमतें"
   },
   "common": {
     "save": "सहेजें",
@@ -1877,7 +1878,12 @@
       "action_failed": "कार्रवाई विफल रही",
       "listing_status_updated": "लिस्टिंग {{status}} पर सेट की गई",
       "update_failed": "अपडेट विफल रहा",
-      "all": "सभी"
+      "all": "सभी",
+      "subscription_plan": "सदस्यता योजना",
+      "subscription_status": "सदस्यता की स्थिति",
+      "active": "सक्रिय",
+      "inactive": "निष्क्रिय",
+      "cancelled": "रद्द"
     },
     "closet": {
       "back_to_full_closet": "पूर्ण क्लोसेट पर वापस जाएं",
@@ -2816,7 +2822,16 @@
       "customApiKey": "कस्टम एपीआई कुंजी समर्थन",
       "support": "समर्थन प्राथमिकता",
       "uploads": "छवि अपलोड क्षमता",
-      "branding": "कस्टम ब्रांडिंग विकल्प"
+      "branding": "कस्टम ब्रांडिंग विकल्प",
+      "basicOps": "बुनियादी एआई संचालन",
+      "communitySupport": "सामुदायिक सहायता",
+      "advancedOps": "उन्नत एआई संचालन",
+      "prioritySupport": "प्राथमिकता सहायता",
+      "unlimitedUploads": "असीमित अपलोड",
+      "allProFeatures": "सभी प्रो विशेषताएं",
+      "dedicatedSupport": "समर्पित सहायता",
+      "apiAccess": "एपीआई पहुंच",
+      "customBranding": "कस्टम ब्रांडिंग"
     },
     "supportTiers": {
       "community": "सामुदायिक समर्थन",
@@ -2832,6 +2847,45 @@
       "hard_limit": "क्रेडिट समाप्त",
       "exhausted": "कोई क्रेडिट नहीं",
       "all_set": "सब ठीक है"
+    },
+    "backToPricing": "मूल्य निर्धारण योजनाओं पर वापस जाएं",
+    "purchaseCreditsHeader": "एआई क्रेडिट खरीदें",
+    "purchaseCreditsDesc": "सशुल्क क्रेडिट पैक के साथ अपना खाता टॉप अप करें। एआई क्रेडिट कभी समाप्त नहीं होते हैं और प्रत्येक महीने आगे बढ़ाए जाते हैं।",
+    "purchaseSuccessToast": "क्रेडिट सफलतापूर्वक खरीदे गए!",
+    "purchaseSuccessMsg": "क्रेडिट पैक सफलतापूर्वक खरीदा गया!",
+    "captureFailed": "लेन-देन की पुष्टि विफल रही।",
+    "checkoutCancelled": "चेकआउट रद्द कर दिया गया।",
+    "loadError": "मूल्य निर्धारण जानकारी लोड नहीं की जा सकी। कृपया पृष्ठ को रीफ़्रेश करें।",
+    "confirmingPayment": "आपकी खरीद की पुष्टि की जा रही है...",
+    "loadingPacks": "खरीद विकल्प लोड हो रहे हैं...",
+    "purchaseSuccessful": "खरीद सफल!",
+    "purchaseSuccessDetails": "${{cost}} में {{count}} क्रेडिट सफलतापूर्वक खरीदे गए!",
+    "creditsLabel": "क्रेडिट",
+    "noExpiration": "सशुल्क पैक - कोई समाप्ति नहीं",
+    "creditLabelShort": "क्रेडिट",
+    "orderSummary": "ऑर्डर सारांश",
+    "summaryItem": "आइटम:",
+    "summaryMode": "बिलिंग मोड:",
+    "summaryOneTime": "एकमुश्त भुगतान",
+    "summaryTax": "कर:",
+    "summaryTotal": "कुल:",
+    "redirectingToGateway": "चेकआउट गेटवे पर पुनर्निर्देशित किया जा रहा है...",
+    "checkoutBtn": "भुगतान करें",
+    "billingDisclaimer": "अत्ज़मई सचिर गेटवे के माध्यम से भुगतान संसाधित किया गया। खरीदने पर क्लिक करके, आप हमारी सेवा की शर्तों से सहमत होते हैं।",
+    "whyCreditsHeader": "ड्रेसएप क्रेडिट क्यों चुनें?",
+    "benefitAlwaysAvailable": "हमेशा उपलब्ध",
+    "benefitAlwaysAvailableDesc": "सशुल्क क्रेडिट कभी समाप्त नहीं होते हैं। जब चाहें उनका उपयोग करें, महीनों बाद भी।",
+    "benefitBulkDiscounts": "थोक छूट",
+    "benefitBulkDiscountsDesc": "बड़े पैक खरीदें और प्रति क्रेडिट बेहतर मूल्य प्राप्त करें। 100-क्रेडिट पैक सर्वोत्तम इकाई मूल्य प्रदान करता है।",
+    "benefitInstantAccess": "त्वरित पहुँच",
+    "benefitInstantAccessDesc": "आज ही खरीदें और एआई सुविधाओं तक तुरंत पहुंच प्राप्त करें।",
+    "freeDesc": "अपनी बुनियादी अलमारी की खोज और डिजिटलीकरण के लिए बिल्कुल सही।",
+    "proDesc": "सच्चे फैशन प्रेमियों के लिए इष्टतम स्टाइलिस्ट अनुभव।",
+    "businessDesc": "विशेषज्ञों के लिए अंतिम सीमाएं और प्रीमियम ब्रांडिंग सुविधाएं।",
+    "tier": {
+      "free": "निःशुल्क",
+      "pro": "प्रो",
+      "business": "बिजनेस"
     }
   }
 }

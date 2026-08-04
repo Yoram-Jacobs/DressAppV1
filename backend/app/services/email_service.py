@@ -63,6 +63,7 @@ async def _send(
     html: str,
     *,
     reply_to: str | None = None,
+    attachments: list | None = None,
 ) -> dict[str, Any]:
     if not is_configured():
         logger.warning("email skipped — RESEND_API_KEY not set: subj=%r", subject)
@@ -78,6 +79,8 @@ async def _send(
     }
     if reply_to:
         params["reply_to"] = reply_to
+    if attachments:
+        params["attachments"] = attachments
     try:
         result = await asyncio.to_thread(resend.Emails.send, params)
         eid = result.get("id") if isinstance(result, dict) else None
@@ -282,7 +285,7 @@ expect dispatch within 3 working days.</p>
 
 async def sale_buyer(
     *, to: str, buyer: dict, seller: dict, item: dict, gross_cents: int, currency: str,
-    is_rental: bool = False,
+    is_rental: bool = False, attachments: list | None = None,
 ) -> dict:
     buyer_name = buyer.get("display_name") or buyer.get("name") or "there"
     gross = f"{currency} {gross_cents/100:.2f}"
@@ -312,7 +315,7 @@ Reach out to them directly if you need to coordinate delivery:</p>
 {_contact_block(contact_label, seller)}
 {_btn("View transaction in DressApp", f"{_APP_URL}/transactions")}
 """
-    return await _send(to, subject, _wrap(body, preheader=preheader))
+    return await _send(to, subject, _wrap(body, preheader=preheader), attachments=attachments)
 
 
 async def swap_request(
@@ -397,7 +400,8 @@ async def donation_both(
 
 
 async def send_thank_you_payment(
-    *, to: str, user: dict, amount_cents: int, currency: str, credits_purchased: int, transaction_id: str
+    *, to: str, user: dict, amount_cents: int, currency: str, credits_purchased: int, transaction_id: str,
+    attachments: list | None = None,
 ) -> dict:
     lang = (user.get("preferred_language") or "en").lower().split("-")[0]
     
@@ -563,7 +567,7 @@ async def send_thank_you_payment(
   </tr>
 </table>
 """
-    return await _send(to, t_data["subject"], _wrap(body_html, preheader=t_data["subject"]))
+    return await _send(to, t_data["subject"], _wrap(body_html, preheader=t_data["subject"]), attachments=attachments)
 
 
 async def send_deletion_email(*, to: str, display_name: str) -> dict:
@@ -576,6 +580,7 @@ async def send_deletion_email(*, to: str, display_name: str) -> dict:
 {_btn("Sign in to start a new experience", f"{_APP_URL}/login", color=_ACCENT)}
 """
     return await _send(to, subject, _wrap(body, preheader="Your DressApp account has been successfully deleted."))
+
 
 
 async def campaign_submission_alert(
@@ -636,3 +641,58 @@ async def campaign_submission_alert(
         subject,
         _wrap(body, preheader=f"New campaign from {expert_name} — {category} · {location_str}"),
     )
+
+
+async def fetch_invoice_and_receipt_attachments(amount_cents: int) -> list:
+    """Fetch invoice and receipt PDF attachment paths from Atzmai Sachir API for the given transaction amount."""
+    from app.services import atzmai_client
+    from app.config import settings
+    
+    agent_id = settings.ATZMAI_AGENT_ID
+    attachments = []
+    try:
+        # Fetch latest invoices
+        inv_resp = await atzmai_client.get_invoices(agent_id, size=5)
+        inv_list = inv_resp.get("body", {}).get("list", [])
+        if inv_list:
+            latest_inv = inv_list[0]
+            # Match by amount if possible
+            for inv in inv_list:
+                if abs(inv.get("totalAmount", 0) * 100 - amount_cents) < 5:
+                    latest_inv = inv
+                    break
+            
+            invoice_num = latest_inv.get("number")
+            if invoice_num:
+                pdf_resp = await atzmai_client.get_invoice_pdf(agent_id, invoice_num)
+                pdf_url = pdf_resp.get("body", {}).get("url")
+                if pdf_url:
+                    attachments.append({
+                        "path": pdf_url,
+                        "filename": f"invoice_{invoice_num}.pdf"
+                    })
+                    
+        # Fetch latest receipts
+        rec_resp = await atzmai_client.get_receipts(agent_id, size=5)
+        rec_list = rec_resp.get("body", {}).get("list", [])
+        if rec_list:
+            latest_rec = rec_list[0]
+            # Match by amount if possible
+            for rec in rec_list:
+                if abs(rec.get("totalAmount", 0) * 100 - amount_cents) < 5:
+                    latest_rec = rec
+                    break
+            
+            receipt_num = latest_rec.get("number")
+            if receipt_num:
+                pdf_resp = await atzmai_client.get_receipt_pdf(agent_id, receipt_num)
+                pdf_url = pdf_resp.get("body", {}).get("url")
+                if pdf_url:
+                    attachments.append({
+                        "path": pdf_url,
+                        "filename": f"receipt_{receipt_num}.pdf"
+                    })
+    except Exception as e:
+        logger.error(f"Failed to fetch invoice/receipt PDFs from Atzmai: {e}")
+        
+    return attachments

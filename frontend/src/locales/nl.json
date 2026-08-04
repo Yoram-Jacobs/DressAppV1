@@ -17,7 +17,8 @@
     "primary": "Primaire navigatie",
     "mobilePrimary": "Mobiele primaire navigatie",
     "guest": "Gast",
-    "outfits": "Kleding"
+    "outfits": "Kleding",
+    "pricing": "Prijzen"
   },
   "common": {
     "day": "dag",
@@ -1877,7 +1878,12 @@
       "action_failed": "Actie mislukt",
       "listing_status_updated": "Advertentie ingesteld op{{status}}",
       "update_failed": "Update mislukt",
-      "all": "Alle"
+      "all": "Alle",
+      "subscription_plan": "Abonnementsplan",
+      "subscription_status": "Abonnementsstatus",
+      "active": "Actief",
+      "inactive": "Inactief",
+      "cancelled": "Geannuleerd"
     },
     "closet": {
       "back_to_full_closet": "Terug naar volle kast",
@@ -2816,7 +2822,16 @@
       "customApiKey": "Eigen API-sleutel ondersteuning",
       "support": "Support-prioriteit",
       "uploads": "Afbeelding uploadcapaciteit",
-      "branding": "Eigen branding opties"
+      "branding": "Eigen branding opties",
+      "basicOps": "Basis AI-bewerkingen",
+      "communitySupport": "Community-ondersteuning",
+      "advancedOps": "Geavanceerde AI-bewerkingen",
+      "prioritySupport": "Prioritaire ondersteuning",
+      "unlimitedUploads": "Onbeperkte uploads",
+      "allProFeatures": "Alle Pro-functies",
+      "dedicatedSupport": "Toegewijde ondersteuning",
+      "apiAccess": "API-toegang",
+      "customBranding": "Aangepaste branding"
     },
     "supportTiers": {
       "community": "Community-support",
@@ -2832,6 +2847,45 @@
       "hard_limit": "Credits verbruikt",
       "exhausted": "Geen credits",
       "all_set": "Alles in orde"
+    },
+    "backToPricing": "Terug naar abonnementen",
+    "purchaseCreditsHeader": "AI-tegoed kopen",
+    "purchaseCreditsDesc": "Waardeer je account op met betaalde tegoedpakketten. Tegoeden verlopen nooit en worden maandelijks meegenomen.",
+    "purchaseSuccessToast": "Tegoed succesvol gekocht!",
+    "purchaseSuccessMsg": "Tegoedpakket succesvol gekocht!",
+    "captureFailed": "Transactiebevestiging mislukt.",
+    "checkoutCancelled": "Betaling geannuleerd.",
+    "loadError": "Prijsinformatie kon niet worden geladen. Vernieuw de pagina.",
+    "confirmingPayment": "Aankoop bevestigen...",
+    "loadingPacks": "Aankoopopties laden...",
+    "purchaseSuccessful": "Aankoop geslaagd!",
+    "purchaseSuccessDetails": "Met succes {{count}} tegoeden gekocht voor ${{cost}}!",
+    "creditsLabel": "Tegoeden",
+    "noExpiration": "Betaald pakket - verloopt nooit",
+    "creditLabelShort": "tegoed",
+    "orderSummary": "Besteloverzicht",
+    "summaryItem": "Item:",
+    "summaryMode": "Facturatiemethode:",
+    "summaryOneTime": "Eenmalige betaling",
+    "summaryTax": "Btw:",
+    "summaryTotal": "Totaal:",
+    "redirectingToGateway": "Doorsturen naar kassa...",
+    "checkoutBtn": "Betalen",
+    "billingDisclaimer": "Betalingen worden verwerkt via de Atzmai Sachir Gateway. Door op kopen te klikken, ga je akkoord met onze Servicevoorwaarden.",
+    "whyCreditsHeader": "Waarom kiezen voor DressApp-tegoed?",
+    "benefitAlwaysAvailable": "Altijd beschikbaar",
+    "benefitAlwaysAvailableDesc": "Betaald tegoed verloopt nooit. Gebruik het wanneer je wilt, zelfs over maanden.",
+    "benefitBulkDiscounts": "Volumekortingen",
+    "benefitBulkDiscountsDesc": "Koop grotere pakketten voor een betere prijs per tegoed. Het pakket van 100 tegoeden biedt de beste waarde.",
+    "benefitInstantAccess": "Directe toegang",
+    "benefitInstantAccessDesc": "Koop vandaag nog en krijg direct toegang tot premium AI-functies.",
+    "freeDesc": "Perfect voor het verkennen en digitaliseren van je basisgarderobe.",
+    "proDesc": "De optimale stylist-ervaring voor echte modeliefhebbers.",
+    "businessDesc": "Ultieme limieten en premium merkfuncties voor specialisten.",
+    "tier": {
+      "free": "Gratis",
+      "pro": "Pro",
+      "business": "Business"
     }
   }
 }

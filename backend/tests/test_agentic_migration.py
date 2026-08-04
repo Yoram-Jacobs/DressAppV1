@@ -16,10 +16,11 @@ async def test_agentic_migration_step():
     # 2. Mock GeminiClient.vision call response text for detection and classification
     mock_detect = '{"garments": [{"box_2d": [50, 50, 250, 250], "label": "test red top", "category": "Top", "color": "Red"}], "should_scroll": true}'
     mock_classify = '{"category": "Top", "color": "Red", "label": "test red top", "is_model_fit_pic": false}'
+    mock_stylist = '{"pattern": "solid", "material": "cotton", "style": "casual", "dress_code": "casual", "gender": "unisex", "season": ["spring", "summer"], "item_type": "t-shirt", "sub_category": "t-shirt"}'
 
     # 3. Instantiate agent and mock the client call
     agent = WardrobeMigrationAgent(api_key="mock_key")
-    agent.client.vision = AsyncMock(side_effect=[mock_detect, mock_classify])
+    agent.client.vision = AsyncMock(side_effect=[mock_detect, mock_classify, mock_stylist])
 
     # 4. Patch database and background matting
     with patch("app.services.migration.wardrobe_migration_agent.get_db") as mock_get_db, \
@@ -208,7 +209,9 @@ async def test_agentic_migration_batch():
     agent = WardrobeMigrationAgent(api_key="mock_key")
     mock_classify1 = '{"category": "Top", "color": "Red", "label": "test red top", "is_model_fit_pic": false}'
     mock_classify2 = '{"category": "Top", "color": "Blue", "label": "test blue top", "is_model_fit_pic": false}'
-    agent.client.vision = AsyncMock(side_effect=[mock_classify1, mock_classify2])
+    mock_stylist1 = '{"pattern": "solid", "material": "cotton", "style": "casual", "dress_code": "casual", "gender": "unisex", "season": ["spring", "summer"], "item_type": "t-shirt", "sub_category": "t-shirt"}'
+    mock_stylist2 = '{"pattern": "solid", "material": "wool", "style": "casual", "dress_code": "casual", "gender": "unisex", "season": ["winter"], "item_type": "sweater", "sub_category": "sweater"}'
+    agent.client.vision = AsyncMock(side_effect=[mock_classify1, mock_stylist1, mock_classify2, mock_stylist2])
 
     with patch("app.services.migration.wardrobe_migration_agent.get_db") as mock_get_db, \
          patch("app.services.background_matting.matte_crop", new_callable=AsyncMock) as mock_matte:

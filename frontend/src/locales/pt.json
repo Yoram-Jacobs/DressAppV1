@@ -17,7 +17,8 @@
     "guest": "Convidado",
     "experts": "Especialistas",
     "ads": "Meus anúncios",
-    "outfits": "Conjuntos"
+    "outfits": "Conjuntos",
+    "pricing": "Preços"
   },
   "common": {
     "day": "dia",
@@ -1877,7 +1878,12 @@
       "action_failed": "Ação falhou",
       "listing_status_updated": "Anúncio definido para {{status}}",
       "update_failed": "Falha na atualização",
-      "all": "Tudo"
+      "all": "Tudo",
+      "subscription_plan": "Plano de assinatura",
+      "subscription_status": "Status da assinatura",
+      "active": "Ativo",
+      "inactive": "Inativo",
+      "cancelled": "Cancelado"
     },
     "closet": {
       "back_to_full_closet": "Voltar ao closet completo",
@@ -2816,7 +2822,16 @@
       "customApiKey": "Suporte a chave API personalizada",
       "support": "Prioridade do suporte",
       "uploads": "Capacidade de envio de imagens",
-      "branding": "Opções de marca personalizada"
+      "branding": "Opções de marca personalizada",
+      "basicOps": "Operações básicas de IA",
+      "communitySupport": "Suporte comunitário",
+      "advancedOps": "Operações avançadas de IA",
+      "prioritySupport": "Suporte prioritário",
+      "unlimitedUploads": "Uploads ilimitados",
+      "allProFeatures": "Todos os recursos Pro",
+      "dedicatedSupport": "Suporte dedicado",
+      "apiAccess": "Acesso à API",
+      "customBranding": "Branding personalizado"
     },
     "supportTiers": {
       "community": "Suporte da comunidade",
@@ -2832,6 +2847,45 @@
       "hard_limit": "Créditos esgotados",
       "exhausted": "Sem créditos",
       "all_set": "Tudo pronto"
+    },
+    "backToPricing": "Voltar aos planos de preços",
+    "purchaseCreditsHeader": "Comprar créditos de IA",
+    "purchaseCreditsDesc": "Recarregue sua conta com pacotes de créditos pagos. Os créditos nunca expiram e acumulam mensalmente.",
+    "purchaseSuccessToast": "Créditos comprados com sucesso!",
+    "purchaseSuccessMsg": "Pacote de créditos comprado com sucesso!",
+    "captureFailed": "Falha ao confirmar a transação.",
+    "checkoutCancelled": "Pagamento cancelado.",
+    "loadError": "Não foi possível carregar as informações de preços. Por favor, atualize a página.",
+    "confirmingPayment": "Confirmando sua compra...",
+    "loadingPacks": "Carregando opções de compra...",
+    "purchaseSuccessful": "Compra realizada com sucesso!",
+    "purchaseSuccessDetails": "Comprados com sucesso {{count}} créditos por ${{cost}}!",
+    "creditsLabel": "Créditos",
+    "noExpiration": "Pacote pago - nunca expira",
+    "creditLabelShort": "crédito",
+    "orderSummary": "Resumo do pedido",
+    "summaryItem": "Item:",
+    "summaryMode": "Modo de cobrança:",
+    "summaryOneTime": "Pagamento único",
+    "summaryTax": "Impostos:",
+    "summaryTotal": "Total:",
+    "redirectingToGateway": "Redirecionando para o pagamento...",
+    "checkoutBtn": "Pagar",
+    "billingDisclaimer": "Pagamentos processados através do Atzmai Sachir Gateway. Ao clicar em comprar, você concorda com nossos Termos de Serviço.",
+    "whyCreditsHeader": "Por que escolher os créditos da DressApp?",
+    "benefitAlwaysAvailable": "Sempre disponível",
+    "benefitAlwaysAvailableDesc": "Os créditos pagos nunca expiram. Use quando quiser, mesmo meses depois.",
+    "benefitBulkDiscounts": "Descontos em lote",
+    "benefitBulkDiscountsDesc": "Compre pacotes maiores e obtenha um valor melhor por crédito. O pacote de 100 oferece o melhor valor unitário.",
+    "benefitInstantAccess": "Acesso instantâneo",
+    "benefitInstantAccessDesc": "Compre hoje e obtenha acesso imediato a recursos premium de IA.",
+    "freeDesc": "Perfeito para explorar e digitalizar o seu guarda-roupa básico.",
+    "proDesc": "A melhor experiência de estilista para os verdadeiros amantes da moda.",
+    "businessDesc": "Limites máximos e recursos de marca premium para especialistas.",
+    "tier": {
+      "free": "Gratuito",
+      "pro": "Pro",
+      "business": "Business"
     }
   }
 }

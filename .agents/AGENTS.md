@@ -62,6 +62,7 @@ Every subject in the help tree (`HelpMenu.jsx`) follows a **two-layer structure*
 | `/i18n` | [i18next-localizer](skills/i18next-localizer/SKILL.md) | UI/UX inspection across 12 languages |
 | `/uiux` | [uiux-designer-dressapp](skills/uiux-designer-dressapp/SKILL.md) | UI/UX design for DressApp screens |
 | `/deploy` | [deploy-dressapp](skills/deploy-dressapp/SKILL.md) | Deployment and DevOps for DressApp |
+| `/local-deploy` | [local-deploy](skills/local-deploy/SKILL.md) | Local container deployment and testing guide for DressApp in WSL |
 | `/narrate` | [narrator](skills/narrator/SKILL.md) | Technical authoring and architectural overviews |
 | `/compete` | [competitor-ux-strategist](skills/competitor-ux-strategist/SKILL.md) | Competitor UX analysis and strategy |
 | `/pricing` | [pricing-strategist](skills/pricing-strategist/SKILL.md) | Pricing plan design, tier recommendations, credit system architecture |

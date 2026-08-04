@@ -13,11 +13,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   RefreshCcw, Users as UsersIcon, ShoppingBag, Receipt, Activity, Sparkles,
   Settings, KeyRound, AlertTriangle, CheckCircle2, ShieldCheck, ShieldOff,
-  Play, Search,
+  Play, Search, ArrowUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api, campaignApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
+import { useAdminStore, adminStore } from '@/lib/adminStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 const fmtCents = (cents, cur = 'USD') =>
@@ -44,6 +46,21 @@ const tone = (errorRate) => {
 export default function Admin() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useLocalStorageSync('dressapp.admin.activeTab', 'overview');
+  
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const isAdmin = (user?.roles || []).includes('admin');
   if (user && !isAdmin) return <Navigate to="/home" replace />;
 
@@ -62,7 +79,7 @@ export default function Admin() {
         </Button>
       </div>
 
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="rounded-xl flex-wrap h-auto p-1" data-testid="admin-tabs">
           <TabsTrigger value="overview" data-testid="admin-tab-overview">{t('admin.overview')}</TabsTrigger>
           <TabsTrigger value="providers" data-testid="admin-tab-providers">{t('admin.providers')}</TabsTrigger>
@@ -83,6 +100,16 @@ export default function Admin() {
         <TabsContent value="system" className="mt-6"><SystemSection /></TabsContent>
         <TabsContent value="campaigns" className="mt-6"><CampaignQueueTab /></TabsContent>
       </Tabs>
+
+      {showScrollTop && (
+        <Button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-50 rounded-full h-12 w-12 p-0 shadow-editorial bg-primary text-primary-foreground hover:scale-105 active:scale-95 transition-all duration-200"
+          data-testid="admin-scroll-top"
+        >
+          <ArrowUp className="h-5 w-5" />
+        </Button>
+      )}
     </div>
   );
 }
@@ -90,20 +117,19 @@ export default function Admin() {
 // -------------------- Overview --------------------
 function OverviewSection() {
   const { t } = useTranslation();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const refresh = async () => {
-    setLoading(true);
+  const { overview: data, loadingOverview: loading } = useAdminStore();
+  
+  const refresh = async (force = false) => {
     try {
-      setData(await api.adminOverview());
+      await adminStore.loadOverview({ force });
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('pages.admin.failed_to_load_overview', { defaultValue: 'Failed to load overview' }));
-    } finally {
-      setLoading(false);
     }
   };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { refresh(); }, []);
+
+  useEffect(() => {
+    refresh(false);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading || !data) {
     return (
@@ -177,17 +203,17 @@ function ProvidersInline({ summary }) {
 function ProviderTable({ rows }) {
   const { t } = useTranslation();
   return (
-    <div className="overflow-x-auto">
-      <Table data-testid="admin-providers-table">
+    <div className="overflow-visible">
+      <Table data-testid="admin-providers-table" wrapperClassName="overflow-visible">
         <TableHeader>
           <TableRow>
-            <TableHead>{t('pages.admin.provider')}</TableHead>
-            <TableHead className="text-end">{t('pages.admin.calls')}</TableHead>
-            <TableHead className="text-end">{t('pages.admin.errors')}</TableHead>
-            <TableHead className="text-end">{t('pages.admin.error_rate')}</TableHead>
-            <TableHead className="text-end">{t('pages.admin.avg_ms', { defaultValue: 'avg ms' })}</TableHead>
-            <TableHead className="text-end">{t('pages.admin.p95_ms', { defaultValue: 'p95 ms' })}</TableHead>
-            <TableHead>{t('pages.admin.last')}</TableHead>
+            <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.provider')}</TableHead>
+            <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.calls')}</TableHead>
+            <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.errors')}</TableHead>
+            <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.error_rate')}</TableHead>
+            <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.avg_ms', { defaultValue: 'avg ms' })}</TableHead>
+            <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.p95_ms', { defaultValue: 'p95 ms' })}</TableHead>
+            <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.last')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -226,19 +252,19 @@ function ProviderTable({ rows }) {
 // -------------------- Providers --------------------
 function ProvidersSection() {
   const { t } = useTranslation();
-  const [summary, setSummary] = useState(null);
-  const [usage, setUsage] = useState(null);
-  const refresh = async () => {
+  const { providersSummary: summary, llmUsage: usage } = useAdminStore();
+
+  const refresh = async (force = false) => {
     try {
-      const [p, u] = await Promise.all([api.adminProviders(), api.adminLlmUsage()]);
-      setSummary(p?.summary || []);
-      setUsage(u);
+      await adminStore.loadProviders({ force });
     } catch (err) {
       toast.error(t('pages.admin.failed_to_load_provider_data'));
     }
   };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { refresh(); }, []);
+
+  useEffect(() => {
+    refresh(false);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-6">
@@ -296,23 +322,25 @@ function ProvidersSection() {
 // -------------------- Trend-Scout --------------------
 function TrendScoutSection() {
   const { t } = useTranslation();
-  const [items, setItems] = useState(null);
+  const { trends: items } = useAdminStore();
   const [busy, setBusy] = useState(false);
-  const refresh = async () => {
+
+  const refresh = async (force = false) => {
     try {
-      const res = await api.adminTrendScout(30);
-      setItems(res.items || []);
+      await adminStore.loadTrends({ force });
     } catch { toast.error(t('pages.admin.failed_to_load_trend_reports')); }
   };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { refresh(); }, []);
+
+  useEffect(() => {
+    refresh(false);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const run = async () => {
     setBusy(true);
     try {
       const res = await api.adminTrendScoutRun(true);
       toast.success(t('pages.admin.generated_cards', { defaultValue: 'Generated {{count}} card(s)', count: res.generated?.length || 0 }));
-      await refresh();
+      await refresh(true);
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('pages.admin.run_failed', { defaultValue: 'Run failed' }));
     } finally { setBusy(false); }
@@ -360,19 +388,18 @@ function TrendScoutSection() {
 // -------------------- Users --------------------
 function UsersSection() {
   const { t } = useTranslation();
-  const [items, setItems] = useState(null);
-  const [q, setQ] = useState('');
-  const [total, setTotal] = useState(0);
+  const { users: items, usersTotal: total, usersQuery } = useAdminStore();
+  const [q, setQ] = useState(usersQuery || '');
 
-  const refresh = async (search = q) => {
+  const refresh = async (search = q, force = false) => {
     try {
-      const res = await api.adminUsers({ q: search || undefined, limit: 50 });
-      setItems(res.items || []);
-      setTotal(res.total || 0);
+      await adminStore.loadUsers({ q: search, force });
     } catch { toast.error(t('pages.admin.failed_to_load_users')); }
   };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { refresh(''); }, []);
+
+  useEffect(() => {
+    refresh(usersQuery, false);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const togglePromotion = async (u) => {
     const isAdmin = (u.roles || []).includes('admin');
@@ -380,7 +407,7 @@ function UsersSection() {
       if (isAdmin) await api.adminDemoteUser(u.id);
       else await api.adminPromoteUser(u.id);
       toast.success(isAdmin ? t('pages.admin.removed_admin_role', { defaultValue: 'Removed admin role' }) : t('pages.admin.promoted_to_admin', { defaultValue: 'Promoted to admin' }));
-      refresh();
+      refresh(q, true);
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('pages.admin.action_failed', { defaultValue: 'Action failed' }));
     }
@@ -407,32 +434,51 @@ function UsersSection() {
       </div>
       <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table data-testid="admin-users-table">
+          <div className="overflow-visible">
+            <Table data-testid="admin-users-table" wrapperClassName="overflow-visible">
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('auth.email', { defaultValue: 'Email' })}</TableHead>
-                  <TableHead>{t('auth.displayName', { defaultValue: 'Display name' })}</TableHead>
-                  <TableHead>{t('pages.admin.roles')}</TableHead>
-                  <TableHead>{t('pages.admin.model', { defaultValue: 'Model' })}</TableHead>
-                  <TableHead className="text-end">{t('pages.admin.credits_quota', { defaultValue: 'Credits quota' })}</TableHead>
-                  <TableHead className="text-end">{t('pages.admin.credit_used', { defaultValue: 'Credit used' })}</TableHead>
-                  <TableHead className="text-end">{t('pages.admin.dressapp_fee', { defaultValue: 'DressApp fee' })}</TableHead>
-                  <TableHead className="text-end">{t('pages.admin.billing_history', { defaultValue: 'Billing History' })}</TableHead>
-                  <TableHead className="text-end">{t('nav.closet', { defaultValue: 'Closet' })}</TableHead>
-                  <TableHead className="text-end">{t('admin.listings', { defaultValue: 'Listings' })}</TableHead>
-                  <TableHead>{t('pages.admin.calendar')}</TableHead>
-                  <TableHead>{t('pages.admin.created')}</TableHead>
-                  <TableHead></TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('auth.email', { defaultValue: 'Email' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('auth.displayName', { defaultValue: 'Display name' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.roles')}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.model', { defaultValue: 'Model' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.subscription_plan', { defaultValue: 'Plan' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.subscription_status', { defaultValue: 'Status' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.credits_quota', { defaultValue: 'Credits quota' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.credit_used', { defaultValue: 'Credit used' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.dressapp_fee', { defaultValue: 'DressApp fee' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.billing_history', { defaultValue: 'Billing History' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('nav.closet', { defaultValue: 'Closet' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('admin.listings', { defaultValue: 'Listings' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.calendar')}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.created')}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {items === null ? (
-                  <TableRow><TableCell colSpan={13}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={15}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
                 ) : items.length === 0 ? (
-                  <TableRow><TableCell colSpan={13} className="text-center text-sm text-muted-foreground py-6">{t('pages.admin.no_users_match')}</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={15} className="text-center text-sm text-muted-foreground py-6">{t('pages.admin.no_users_match')}</TableCell></TableRow>
                 ) : items.map((u) => {
                   const isAdmin = (u.roles || []).includes('admin');
+                  const sub = u.subscription || {};
+                  const planName = sub.is_active ? (sub.tier || 'free') : 'free';
+                  const isActive = sub.is_active;
+                  const isCancelled = !!sub.cancelled_at;
+
+                  let statusColor = 'bg-slate-50 text-slate-850 border-slate-200 dark:bg-slate-900/50 dark:text-slate-300 dark:border-slate-800';
+                  let statusText = t('pages.admin.inactive', { defaultValue: 'Inactive' });
+                  if (isActive) {
+                    if (isCancelled) {
+                      statusColor = 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50';
+                      statusText = t('pages.admin.cancelled', { defaultValue: 'Cancelled' });
+                    } else {
+                      statusColor = 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50';
+                      statusText = t('pages.admin.active', { defaultValue: 'Active' });
+                    }
+                  }
+
                   return (
                     <TableRow key={u.id} data-testid="admin-users-row">
                       <TableCell className="text-sm">{u.email}</TableCell>
@@ -443,6 +489,14 @@ function UsersSection() {
                         ))}
                       </TableCell>
                       <TableCell className="text-sm font-mono text-muted-foreground">{u.selected_model || '—'}</TableCell>
+                      <TableCell className="text-sm capitalize font-semibold">
+                        {t('pricing.tier.' + planName, { defaultValue: planName })}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`text-[11px] ${statusColor}`}>
+                          {statusText}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-end text-sm">{fmtNum(u.credits_quota)}</TableCell>
                       <TableCell className="text-end text-sm">{fmtNum(u.credits_used)}</TableCell>
                       <TableCell className="text-end text-sm font-medium text-emerald-600 dark:text-emerald-400">
@@ -490,21 +544,24 @@ function UsersSection() {
 // -------------------- Listings --------------------
 function ListingsSection() {
   const { t } = useTranslation();
-  const [items, setItems] = useState(null);
-  const [status, setStatus] = useState('');
-  const refresh = async () => {
+  const { listings: items, listingsStatus } = useAdminStore();
+  const [status, setStatus] = useState(listingsStatus || '');
+
+  const refresh = async (currentStatus = status, force = false) => {
     try {
-      const res = await api.adminListings({ status: status || undefined, limit: 100 });
-      setItems(res.items || []);
+      await adminStore.loadListings({ status: currentStatus, force });
     } catch { toast.error(t('pages.admin.failed_to_load_listings')); }
   };
-  useEffect(() => { refresh(); }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    refresh(status, false);
+  }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setListingStatus = async (id, newStatus) => {
     try {
       await api.adminSetListingStatus(id, newStatus);
       toast.success(t('pages.admin.listing_status_updated', { defaultValue: 'Listing set to {{status}}', status: newStatus }));
-      refresh();
+      refresh(status, true);
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('pages.admin.update_failed', { defaultValue: 'Update failed' }));
     }
@@ -528,17 +585,17 @@ function ListingsSection() {
       </div>
       <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table data-testid="admin-listings-table">
+          <div className="overflow-visible">
+            <Table data-testid="admin-listings-table" wrapperClassName="overflow-visible">
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('pages.admin.listing')}</TableHead>
-                  <TableHead>{t('transactions.seller', { defaultValue: 'Seller' })}</TableHead>
-                  <TableHead className="text-end">{t('addItem.price', { defaultValue: 'Price' })}</TableHead>
-                  <TableHead>{t('market.status', { defaultValue: 'Status' })}</TableHead>
-                  <TableHead>{t('pages.admin.source_tag')}</TableHead>
-                  <TableHead>{t('pages.admin.created')}</TableHead>
-                  <TableHead></TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.listing')}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('transactions.seller', { defaultValue: 'Seller' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('addItem.price', { defaultValue: 'Price' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('market.status', { defaultValue: 'Status' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.source_tag')}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.created')}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -589,15 +646,18 @@ function ListingsSection() {
 // -------------------- Transactions --------------------
 function TransactionsSection() {
   const { t } = useTranslation();
-  const [items, setItems] = useState(null);
-  const [status, setStatus] = useState('');
-  const refresh = async () => {
+  const { transactions: items, transactionsStatus } = useAdminStore();
+  const [status, setStatus] = useState(transactionsStatus || '');
+
+  const refresh = async (currentStatus = status, force = false) => {
     try {
-      const res = await api.adminTransactions({ status: status || undefined, limit: 100 });
-      setItems(res.items || []);
+      await adminStore.loadTransactions({ status: currentStatus, force });
     } catch { toast.error(t('transactions.loadFailed', { defaultValue: 'Failed to load transactions' })); }
   };
-  useEffect(() => { refresh(); }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    refresh(status, false);
+  }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const aggregate = (items || []).reduce(
     (acc, t) => {
@@ -646,17 +706,17 @@ function TransactionsSection() {
       </div>
       <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table data-testid="admin-transactions-table">
+          <div className="overflow-visible">
+            <Table data-testid="admin-transactions-table" wrapperClassName="overflow-visible">
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('pages.admin.tx')}</TableHead>
-                  <TableHead>{t('market.status', { defaultValue: 'Status' })}</TableHead>
-                  <TableHead className="text-end">{t('transactions.gross', { defaultValue: 'Gross' })}</TableHead>
-                  <TableHead className="text-end">{t('pages.admin.platform')}</TableHead>
-                  <TableHead className="text-end">{t('pages.admin.stripe')}</TableHead>
-                  <TableHead className="text-end">{t('pages.admin.seller_net')}</TableHead>
-                  <TableHead>{t('pages.admin.created')}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.tx')}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('market.status', { defaultValue: 'Status' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('transactions.gross', { defaultValue: 'Gross' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.platform')}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.stripe')}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.seller_net')}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.created')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -692,10 +752,18 @@ function TransactionsSection() {
 // -------------------- System --------------------
 function SystemSection() {
   const { t } = useTranslation();
-  const [data, setData] = useState(null);
+  const { system: data } = useAdminStore();
+
+  const refresh = async (force = false) => {
+    try {
+      await adminStore.loadSystem({ force });
+    } catch { toast.error(t('pages.admin.failed_to_load_system_info')); }
+  };
+
   useEffect(() => {
-    api.adminSystem().then(setData).catch(() => toast.error(t('pages.admin.failed_to_load_system_info')));
-  }, []);
+    refresh(false);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!data) return <Skeleton className="h-40 w-full rounded-[calc(var(--radius)+6px)]" />;
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-testid="admin-system-grid">
@@ -754,27 +822,27 @@ function SystemSection() {
 // -------------------- Campaign Queue --------------------
 function CampaignQueueTab() {
   const { t } = useTranslation();
-  const [items, setItems] = useState(null);
-  const [status, setStatus] = useState('pending_approval');
+  const { campaigns: items, campaignsStatus } = useAdminStore();
+  const [status, setStatus] = useState(campaignsStatus || 'pending_approval');
   const [rejectId, setRejectId] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [previewItem, setPreviewItem] = useState(null);
 
-  const refresh = async () => {
+  const refresh = async (currentStatus = status, force = false) => {
     try {
-      setItems(null);
-      const res = await campaignApi.adminGetCampaignQueue({ status: status === 'all' ? undefined : status, limit: 100 });
-      setItems(res.items || []);
+      await adminStore.loadCampaigns({ status: currentStatus, force });
     } catch { toast.error(t('campaigns.admin.loadFailed', { defaultValue: 'Failed to load campaigns' })); }
   };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { refresh(); }, [status]);
+
+  useEffect(() => {
+    refresh(status, false);
+  }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const approve = async (id) => {
     try {
       await campaignApi.adminApproveCampaign(id);
       toast.success(t('campaigns.admin.approved', { defaultValue: 'Campaign approved' }));
-      refresh();
+      refresh(status, true);
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('common.error', { defaultValue: 'Error' }));
     }
@@ -787,7 +855,7 @@ function CampaignQueueTab() {
       toast.success(t('campaigns.admin.rejected', { defaultValue: 'Campaign rejected' }));
       setRejectId(null);
       setRejectReason('');
-      refresh();
+      refresh(status, true);
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('common.error', { defaultValue: 'Error' }));
     }
@@ -811,17 +879,17 @@ function CampaignQueueTab() {
       </div>
       <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table data-testid="admin-campaigns-table">
+          <div className="overflow-visible">
+            <Table data-testid="admin-campaigns-table" wrapperClassName="overflow-visible">
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('campaigns.admin.cover', { defaultValue: 'Cover' })}</TableHead>
-                  <TableHead>{t('campaigns.admin.details', { defaultValue: 'Details' })}</TableHead>
-                  <TableHead>{t('campaigns.admin.location', { defaultValue: 'Location' })}</TableHead>
-                  <TableHead>{t('campaigns.admin.category', { defaultValue: 'Category' })}</TableHead>
-                  <TableHead>{t('campaigns.admin.status', { defaultValue: 'Status' })}</TableHead>
-                  <TableHead>{t('campaigns.admin.submitted', { defaultValue: 'Submitted' })}</TableHead>
-                  <TableHead></TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('campaigns.admin.cover', { defaultValue: 'Cover' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('campaigns.admin.details', { defaultValue: 'Details' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('campaigns.admin.location', { defaultValue: 'Location' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('campaigns.admin.category', { defaultValue: 'Category' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('campaigns.admin.status', { defaultValue: 'Status' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('campaigns.admin.submitted', { defaultValue: 'Submitted' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

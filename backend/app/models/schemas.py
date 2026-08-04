@@ -89,19 +89,15 @@ class SubscriptionInfo(BaseModel):
     cancelled_at: str | None = None
 
 
-CreditType = Literal["free", "paid"]
+from app.models.credit import (
+    CreditType,
+    CreditBucket,
+    get_total_credits,
+    get_aging_credit_buckets as _get_aging_credit_buckets,
+    add_credit_bucket as _add_credit_bucket,
+    spend_credits as _spend_credits
+)
 
-
-class CreditBucket(BaseModel):
-    """A bucket of credits with an expiration date.
-    
-    Free credits expire after 30 days. Paid credits have no expiry.
-    When spending credits, we always use the oldest (oldest expiry first) buckets.
-    """
-    amount: int
-    type: CreditType  # "free" or "paid"
-    created_at: str  # ISO timestamp
-    expires_at: str | None = None  # None means infinite (paid credits)
 
 
 
@@ -210,148 +206,28 @@ class User(BaseDoc):
     @property
     def total_credits(self) -> int:
         """Get total available credits across all non-expired buckets."""
-        now = _now_iso()
-        total = 0
-        for bucket in self.credit_buckets:
-            # Skip if expired (for free credits with expiry)
-            if bucket.type == "free" and bucket.expires_at and now > bucket.expires_at:
-                continue
-            total += bucket.amount
-        return total
+        return get_total_credits(self.credit_buckets)
 
     def get_aging_credit_buckets(self) -> List[CreditBucket]:
         """
         Get credit buckets sorted by age (oldest first) for consumption.
-        Free credits expire after 30 days; paid credits never expire.
-        Order: free expiring soonest first, then other free credits, then paid credits.
         """
-        now = _now_iso()
-        buckets_with_priority = []
-        for bucket in self.credit_buckets:
-            # Determine sort priority: lower = earlier to be consumed
-            if bucket.type == "free" and bucket.expires_at:
-                # Free credits with expiry: sort by expiry (earliest first)
-                priority = (0, bucket.expires_at)
-            elif bucket.type == "free":
-                # Unexpired free credits: sort by created_at
-                priority = (1, bucket.created_at)
-            else:
-                # Paid credits: no expiry, sort by created_at
-                priority = (2, bucket.created_at)
-            buckets_with_priority.append((priority, bucket))
-        # Sort by priority tuple
-        buckets_with_priority.sort(key=lambda x: x[0])
-        return [bucket for _, bucket in buckets_with_priority]
+        return _get_aging_credit_buckets(self.credit_buckets)
 
     def add_credit_bucket(self, amount: int, credit_type: CreditType, days_until_expiry: int | None = None) -> None:
         """Add a new credit bucket to the user's credit history."""
-        now = _now_iso()
-        expires_at: str | None = None
-        if credit_type == "free" and days_until_expiry is not None:
-            # Calculate expiry date (30 days default for free credits)
-            from datetime import timedelta
-            expiry_dt = datetime.fromisoformat(now.replace("Z", "+00:00")) + timedelta(days=days_until_expiry)
-            expires_at = expiry_dt.isoformat()
-        
-        new_bucket = CreditBucket(
-            amount=amount,
-            type=credit_type,
-            created_at=now,
-            expires_at=expires_at
-        )
-        self.credit_buckets.append(new_bucket)
-        # Clear computed cache
+        _add_credit_bucket(self.credit_buckets, amount, credit_type, days_until_expiry)
         self._ai_credits_computed = None
 
     def spend_credits(self, required_amount: int, operation: str | None = None) -> tuple[bool, List[dict]]:
         """
         Spend credits from the oldest buckets first. Returns (success, details of what was spent).
-        Updates credit_buckets in-place.
         """
-        if required_amount <= 0:
-            return True, [{"type": "noop", "amount": 0, "operation": operation or "usage"}]
-            
-        # 1. Identify which buckets are active and sort them by priority
-        now = _now_iso()
-        active_buckets_with_indices = []
-        for idx, bucket in enumerate(self.credit_buckets):
-            if bucket.type == "free" and bucket.expires_at and now > bucket.expires_at:
-                # Skip expired free credits
-                continue
-            
-            # Priority: lower = earlier to consume
-            if bucket.type == "free" and bucket.expires_at:
-                priority = (0, bucket.expires_at)
-            elif bucket.type == "free":
-                priority = (1, bucket.created_at)
-            else:
-                priority = (2, bucket.created_at)
-            active_buckets_with_indices.append((priority, idx, bucket))
-            
-        # Sort by priority
-        active_buckets_with_indices.sort(key=lambda x: x[0])
-        
-        # 2. Check if we have enough total credits across all active buckets
-        total_active_credits = sum(x[2].amount for x in active_buckets_with_indices)
-        if total_active_credits < required_amount:
-            return False, [{"error": "Insufficient active credits"}]
-            
-        # 3. Deduct from sorted active buckets
-        remaining = required_amount
-        spent_details = []
-        consumed_indices = set()
-        modified_buckets = {}  # index -> new_amount
-        
-        for priority, idx, bucket in active_buckets_with_indices:
-            if remaining <= 0:
-                break
-                
-            if bucket.amount >= remaining:
-                # This bucket covers the remaining amount
-                spent_details.append({
-                    "bucket_index": idx,
-                    "type": bucket.type,
-                    "amount_spent": remaining,
-                    "remaining_after": bucket.amount - remaining,
-                    "operation": operation
-                })
-                if bucket.amount - remaining > 0:
-                    modified_buckets[idx] = bucket.amount - remaining
-                else:
-                    consumed_indices.add(idx)
-                remaining = 0
-            else:
-                # Use the entire bucket
-                spent_details.append({
-                    "bucket_index": idx,
-                    "type": bucket.type,
-                    "amount_spent": bucket.amount,
-                    "remaining_after": 0,
-                    "operation": operation
-                })
-                consumed_indices.add(idx)
-                remaining -= bucket.amount
-                
-        # 4. Rebuild the user's credit_buckets list in place
-        new_buckets = []
-        for idx, bucket in enumerate(self.credit_buckets):
-            if idx in consumed_indices:
-                continue
-            if idx in modified_buckets:
-                new_buckets.append(
-                    CreditBucket(
-                        amount=modified_buckets[idx],
-                        type=bucket.type,
-                        created_at=bucket.created_at,
-                        expires_at=bucket.expires_at
-                    )
-                )
-            else:
-                new_buckets.append(bucket)
-                
-        self.credit_buckets = new_buckets
-        self._ai_credits_computed = None
-        return True, spent_details
+        success, details = _spend_credits(self.credit_buckets, required_amount, operation)
+        if success:
+            self._ai_credits_computed = None
+        return success, details
+
 
     def get_credit_usage_summary(self) -> dict[str, Any]:
         """Return a summary of credit usage by type and age."""

@@ -17,7 +17,8 @@
     "primary": "Primary navigation",
     "mobilePrimary": "Mobile primary navigation",
     "guest": "Guest",
-    "outfits": "Outfits"
+    "outfits": "Outfits",
+    "pricing": "Pricing"
   },
   "common": {
     "day": "day",
@@ -1877,7 +1878,12 @@
       "action_failed": "Action failed",
       "listing_status_updated": "Listing set to {{status}}",
       "update_failed": "Update failed",
-      "all": "All"
+      "all": "All",
+      "subscription_plan": "Subscription plan",
+      "subscription_status": "Subscription status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "cancelled": "Cancelled"
     },
     "closet": {
       "back_to_full_closet": "Back to full closet",
@@ -2838,7 +2844,16 @@
       "customApiKey": "Custom API Key Support",
       "support": "Support Priority",
       "uploads": "Image upload capacity",
-      "branding": "Custom branding options"
+      "branding": "Custom branding options",
+      "basicOps": "Basic AI operations",
+      "communitySupport": "Community support",
+      "advancedOps": "Advanced AI operations",
+      "prioritySupport": "Priority support",
+      "unlimitedUploads": "Unlimited uploads",
+      "allProFeatures": "All Pro features",
+      "dedicatedSupport": "Dedicated support",
+      "apiAccess": "API access",
+      "customBranding": "Custom branding"
     },
     "supportTiers": {
       "community": "Community Support",
@@ -2854,6 +2869,45 @@
       "hard_limit": "Credits Exhausted",
       "exhausted": "No Credits",
       "all_set": "All Set"
+    },
+    "backToPricing": "Back to Pricing Plans",
+    "purchaseCreditsHeader": "Purchase AI Credits",
+    "purchaseCreditsDesc": "Top up your account with paid credit packs. Credits never expire and carry over monthly.",
+    "purchaseSuccessToast": "Credits purchased successfully!",
+    "purchaseSuccessMsg": "Successfully purchased credit pack!",
+    "captureFailed": "Failed to confirm transaction.",
+    "checkoutCancelled": "Checkout cancelled.",
+    "loadError": "Could not load pricing information. Please refresh the page.",
+    "confirmingPayment": "Confirming your purchase...",
+    "loadingPacks": "Loading purchase options...",
+    "purchaseSuccessful": "Purchase Successful!",
+    "purchaseSuccessDetails": "Successfully purchased {{count}} credits for ${{cost}}!",
+    "creditsLabel": "Credits",
+    "noExpiration": "Paid pack - never expires",
+    "creditLabelShort": "credit",
+    "orderSummary": "Order Summary",
+    "summaryItem": "Item:",
+    "summaryMode": "Billing Mode:",
+    "summaryOneTime": "One-time payment",
+    "summaryTax": "Tax:",
+    "summaryTotal": "Total:",
+    "redirectingToGateway": "Redirecting to checkout...",
+    "checkoutBtn": "Pay",
+    "billingDisclaimer": "Payments processed via Atzmai Sachir Gateway. By clicking buy, you agree to our Terms of Service.",
+    "whyCreditsHeader": "Why Choose DressApp Credits?",
+    "benefitAlwaysAvailable": "Always Available",
+    "benefitAlwaysAvailableDesc": "Paid credits never expire. Use them whenever you need, even months from now.",
+    "benefitBulkDiscounts": "Bulk Discounts",
+    "benefitBulkDiscountsDesc": "Buy larger packs and get better value per credit. The 100-credit pack offers the best unit value.",
+    "benefitInstantAccess": "Instant Access",
+    "benefitInstantAccessDesc": "Purchase today and get immediate access to premium AI features like background removals and stylist suggestions.",
+    "freeDesc": "Perfect for exploring and digitalizing your basic closet.",
+    "proDesc": "The optimal stylist experience for true fashion lovers.",
+    "businessDesc": "Ultimate limits and premium branding features for specialists.",
+    "tier": {
+      "free": "Free",
+      "pro": "Pro",
+      "business": "Business"
     }
   }
 }

@@ -17,7 +17,8 @@
     "primary": "التنقل الرئيسي",
     "mobilePrimary": "التنقل الرئيسي للهاتف",
     "guest": "ضيف",
-    "outfits": "التنسيقات"
+    "outfits": "التنسيقات",
+    "pricing": "الأسعار"
   },
   "common": {
     "day": "يوم",
@@ -1877,7 +1878,12 @@
       "action_failed": "فشلت العملية",
       "listing_status_updated": "تم تعيين القائمة إلى {{status}}",
       "update_failed": "فشل التحديث",
-      "all": "الكل"
+      "all": "الكل",
+      "subscription_plan": "خطة الاشتراك",
+      "subscription_status": "حالة الاشتراك",
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "cancelled": "ملغي"
     },
     "closet": {
       "back_to_full_closet": "العودة إلى الخزانة الكاملة",
@@ -2816,7 +2822,16 @@
       "customApiKey": "دعم مفتاح API مخصص",
       "support": "أولوية الدعم",
       "uploads": "سعة تحميل الصور",
-      "branding": "خيارات مخصصة للعلامة التجارية"
+      "branding": "خيارات مخصصة للعلامة التجارية",
+      "basicOps": "عمليات الذكاء الاصطناعي الأساسية",
+      "communitySupport": "دعم المجتمع",
+      "advancedOps": "عمليات الذكاء الاصطناعي المتقدمة",
+      "prioritySupport": "دعم ذو أولوية",
+      "unlimitedUploads": "تحميلات غير محدودة",
+      "allProFeatures": "جميع ميزات برو",
+      "dedicatedSupport": "دعم مخصص",
+      "apiAccess": "وصول إلى واجهة برمجة التطبيقات",
+      "customBranding": "علامة تجارية مخصصة"
     },
     "supportTiers": {
       "community": "دعم مجتمعي",
@@ -2832,6 +2847,45 @@
       "hard_limit": "نفدت النقاط",
       "exhausted": "لا يوجد نقاط",
       "all_set": "كل شيء جاهز"
+    },
+    "backToPricing": "العودة إلى خطط التسعير",
+    "purchaseCreditsHeader": "شراء رصيد الذكاء الاصطناعي",
+    "purchaseCreditsDesc": "اشحن حسابك بحزم رصيد مدفوعة. الرصيد لا تنتهي صلاحيته أبدًا ويتم ترحيله شهريًا.",
+    "purchaseSuccessToast": "تم شراء الرصيد بنجاح!",
+    "purchaseSuccessMsg": "تم شراء حزمة الرصيد بنجاح!",
+    "captureFailed": "فشل تأكيد المعاملة.",
+    "checkoutCancelled": "تم إلغاء عملية الدفع.",
+    "loadError": "تعذر تحميل معلومات التسعير. يرجى إعادة تحميل الصفحة.",
+    "confirmingPayment": "جاري تأكيد عملية الشراء...",
+    "loadingPacks": "جاري تحميل خيارات الشراء...",
+    "purchaseSuccessful": "عملية شراء ناجحة!",
+    "purchaseSuccessDetails": "تم شراء {{count}} رصيد بنجاح مقابل ${{cost}}!",
+    "creditsLabel": "رصيد",
+    "noExpiration": "حزمة مدفوعة - بدون تاريخ انتهاء",
+    "creditLabelShort": "رصيد",
+    "orderSummary": "ملخص الطلب",
+    "summaryItem": "العنصر:",
+    "summaryMode": "طريقة الدفع:",
+    "summaryOneTime": "دفع لمرة واحدة",
+    "summaryTax": "الضريبة:",
+    "summaryTotal": "الإجمالي:",
+    "redirectingToGateway": "جاري التوجيه إلى بوابة الدفع...",
+    "checkoutBtn": "ادفع",
+    "billingDisclaimer": "يتم معالجة المدفوعات عبر بوابة الدفع עצמאي שכיר. بالضغط على شراء، فإنك توافق على شروط الخدمة الخاصة بنا.",
+    "whyCreditsHeader": "لماذا تختار رصيد DressApp؟",
+    "benefitAlwaysAvailable": "متاح دائمًا",
+    "benefitAlwaysAvailableDesc": "الرصيد المدفوع لا تنتهي صلاحيته أبدًا. استخدمه وقتما تشاء، حتى بعد عدة أشهر.",
+    "benefitBulkDiscounts": "خصومات الكمية",
+    "benefitBulkDiscountsDesc": "اشترِ حزمًا أكبر واحصل على قيمة أفضل لكل رصيد. حزمة 100 رصيد تقدم أفضل قيمة للوحدة.",
+    "benefitInstantAccess": "وصول فوري",
+    "benefitInstantAccessDesc": "اشترِ اليوم واحصل على وصول فوري لميزات الذكاء الاصطناعي المتقدمة مثل إزالة الخلفيات واقتراحات المنسق.",
+    "freeDesc": "مثالي لاستكشاف ورقمنة خزانتك الأساسية.",
+    "proDesc": "تجربة المنسق المثالية لعشاق الموضة الحقيقيين.",
+    "businessDesc": "حدود قصوى وميزات علامة تجارية مميزة للمتخصصين.",
+    "tier": {
+      "free": "مجاني",
+      "pro": "برو",
+      "business": "أعمال"
     }
   }
 }

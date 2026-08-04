@@ -58,7 +58,7 @@ log = logging.getLogger("dressapp-eyes")
 # ---- Config (env, with defaults set in Dockerfile) ------------------
 MODEL_DIR = Path(os.environ.get("EYES_MODEL_DIR", "/models"))
 MODEL_REPO = os.environ.get("EYES_MODEL_REPO", "Yoram-Jacobs/dressapp-eyes-gguf")
-MODEL_FILE = os.environ.get("EYES_MODEL_FILE", "phase6-Q4_K_M.gguf")
+MODEL_FILE = os.environ.get("EYES_MODEL_FILE", "gemma-4-e2b-it.Q4_K_M-002.gguf")
 MMPROJ_FILE = os.environ.get("EYES_MMPROJ_FILE")
 HF_TOKEN = os.environ.get("EYES_HF_TOKEN")
 API_TOKEN = os.environ.get("EYES_API_TOKEN")

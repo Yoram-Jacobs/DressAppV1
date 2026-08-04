@@ -17,7 +17,8 @@
     "guest": "ゲスト",
     "experts": "エキスパート",
     "ads": "マイ広告",
-    "outfits": "コーディネート"
+    "outfits": "コーディネート",
+    "pricing": "料金プラン"
   },
   "common": {
     "day": "日",
@@ -1877,7 +1878,12 @@
       "action_failed": "アクションが失敗しました",
       "listing_status_updated": "出品が{{status}}に設定されました",
       "update_failed": "更新に失敗しました",
-      "all": "全て"
+      "all": "全て",
+      "subscription_plan": "サブスクリプションプラン",
+      "subscription_status": "サブスクリプションステータス",
+      "active": "アクティブ",
+      "inactive": "非アクティブ",
+      "cancelled": "キャンセル済み"
     },
     "closet": {
       "back_to_full_closet": "フルクローゼットに戻る",
@@ -2817,7 +2823,16 @@
       "customApiKey": "カスタムAPIキー設定",
       "support": "サポートの優先度",
       "uploads": "画像アップロード容量",
-      "branding": "カスタムブランド設定"
+      "branding": "カスタムブランド設定",
+      "basicOps": "基本的なAI機能",
+      "communitySupport": "コミュニティサポート",
+      "advancedOps": "高度なAI機能",
+      "prioritySupport": "優先サポート",
+      "unlimitedUploads": "無制限のアップロード",
+      "allProFeatures": "すべてのプロ機能",
+      "dedicatedSupport": "専用サポート",
+      "apiAccess": "APIアクセス",
+      "customBranding": "カスタムブランディング"
     },
     "supportTiers": {
       "community": "コミュニティサポート",
@@ -2833,6 +2848,45 @@
       "hard_limit": "クレジット不足",
       "exhausted": "クレジットなし",
       "all_set": "準備完了"
+    },
+    "backToPricing": "料金プランに戻る",
+    "purchaseCreditsHeader": "AIクレジットの購入",
+    "purchaseCreditsDesc": "有料クレジットパックでアカウントをチャージします。クレジットに有効期限はなく、毎月繰り越されます。",
+    "purchaseSuccessToast": "クレジットの購入が完了しました！",
+    "purchaseSuccessMsg": "クレジットパックの購入に成功しました！",
+    "captureFailed": "取引の確認に失敗しました。",
+    "checkoutCancelled": "決済がキャンセルされました。",
+    "loadError": "料金情報を読み込めませんでした。ページを更新してください。",
+    "confirmingPayment": "購入を確認中...",
+    "loadingPacks": "購入オプションを読み込み中...",
+    "purchaseSuccessful": "購入完了！",
+    "purchaseSuccessDetails": "{{count}} クレジットを ${{cost}} で正常に購入しました！",
+    "creditsLabel": "クレジット",
+    "noExpiration": "有料パック - 有効期限なし",
+    "creditLabelShort": "クレジット",
+    "orderSummary": "注文内容の確認",
+    "summaryItem": "商品:",
+    "summaryMode": "お支払い方法:",
+    "summaryOneTime": "一回払い",
+    "summaryTax": "税金:",
+    "summaryTotal": "合計:",
+    "redirectingToGateway": "決済画面へ移行中...",
+    "checkoutBtn": "支払う",
+    "billingDisclaimer": "決済は Atzmai Sachir ゲートウェイを通じて処理されます。購入をクリックすると、利用規約に同意したことになります。",
+    "whyCreditsHeader": "DressAppクレジットを選ぶ理由",
+    "benefitAlwaysAvailable": "いつでも利用可能",
+    "benefitAlwaysAvailableDesc": "購入されたクレジットには有効期限がありません。数ヶ月後でも必要な時にいつでも使えます。",
+    "benefitBulkDiscounts": "まとめ買い割引",
+    "benefitBulkDiscountsDesc": "大容量パックを購入するほど、1クレジットあたりの価格がお得になります。100クレジットパックが最もお得です。",
+    "benefitInstantAccess": "即時アクセス",
+    "benefitInstantAccessDesc": "今すぐ購入して、背景削除やスタイリスト提案などのプレミアムAI機能をすぐに使い始めましょう。",
+    "freeDesc": "基本的なクローゼットの探索とデジタル化に最適です。",
+    "proDesc": "真のファッション愛好家のための最適なスタイリスト体験。",
+    "businessDesc": "スペシャリスト向けの究極の制限 and プレミアムブランディング機能。",
+    "tier": {
+      "free": "無料",
+      "pro": "プロ",
+      "business": "ビジネス"
     }
   }
 }
