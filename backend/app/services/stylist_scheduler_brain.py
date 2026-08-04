@@ -323,6 +323,8 @@ async def generate_scheduled_proposals(
     weather: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """Generate 3 scheduled outfit proposals using the rotation prioritized items."""
+    user = dict(user)
+    user.pop("_id", None)
     user_id = user["id"]
     raw_closet = await get_rotation_prioritized_closet(user_id, limit=40)
     
@@ -442,6 +444,8 @@ async def generate_event_proposals(
     event_name: str | None = None
 ) -> dict[str, Any]:
     """Generate 3 outfit proposals for a special event, incorporating marketplace search if closet matches are poor."""
+    user = dict(user)
+    user.pop("_id", None)
     user_id = user["id"]
     prioritized_closet = await get_rotation_prioritized_closet(user_id, limit=40)
     
