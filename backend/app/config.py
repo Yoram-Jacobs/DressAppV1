@@ -514,27 +514,30 @@ class Settings:
 
     @property
     def paypal_client_id(self) -> str | None:
-        return (
+        val = (
             self.PAYPAL_LIVE_CLIENT_ID
             if self.PAYPAL_ENV == "live"
             else self.PAYPAL_SANDBOX_CLIENT_ID
         )
+        return val or os.environ.get("PAYPAL_CLIENT_ID") or None
 
     @property
     def paypal_secret(self) -> str | None:
-        return (
+        val = (
             self.PAYPAL_LIVE_SECRET
             if self.PAYPAL_ENV == "live"
             else self.PAYPAL_SANDBOX_SECRET
         )
+        return val or os.environ.get("PAYPAL_CLIENT_SECRET") or os.environ.get("PAYPAL_SECRET") or None
 
     @property
     def paypal_webhook_id(self) -> str | None:
-        return (
+        val = (
             self.PAYPAL_LIVE_WEBHOOK_ID
             if self.PAYPAL_ENV == "live"
             else self.PAYPAL_SANDBOX_WEBHOOK_ID
         )
+        return val or os.environ.get("PAYPAL_WEBHOOK_ID") or None
 
     @property
     def paypal_api_base(self) -> str:
