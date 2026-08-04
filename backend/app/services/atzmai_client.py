@@ -20,6 +20,9 @@ def _headers() -> Dict[str, str]:
         "Accept": "application/json",
     }
 
+def _base_url() -> str:
+    return settings.ATZMAI_BASE_URL.rstrip("/")
+
 def is_mock_mode() -> bool:
     # Fallback to mock mode if credentials are at their default values or if explicitly mocked
     return (
@@ -66,7 +69,7 @@ async def generate_payment_link(
             }
         }
 
-    url = f"{settings.ATZMAI_BASE_URL}/payments/generatePaymentLink"
+    url = f"{_base_url()}/payments/generatePaymentLink"
     payload = {
         "items": items,
         "customerName": customer_name,
@@ -129,7 +132,7 @@ async def generate_recurring_payment_link(
             }
         }
 
-    url = f"{settings.ATZMAI_BASE_URL}/payments/generateRecurringPaymentLink"
+    url = f"{_base_url()}/payments/generateRecurringPaymentLink"
     payload = {
         "amount": amount,
         "description": description,
@@ -190,7 +193,7 @@ async def generate_bit_payment_link(
             }
         }
 
-    url = f"{settings.ATZMAI_BASE_URL}/payments/generateBitPaymentLink"
+    url = f"{_base_url()}/payments/generateBitPaymentLink"
     payload = {
         "amount": amount,
         "description": description,
@@ -227,7 +230,7 @@ async def cancel_subscription(
             }
         }
 
-    url = f"{settings.ATZMAI_BASE_URL}/payments/cancelSubscription"
+    url = f"{_base_url()}/payments/cancelSubscription"
     payload = {
         "atzmaiPaymentId": atzmai_payment_id,
     }
@@ -260,7 +263,7 @@ async def get_invoices(agent_id: int, size: int = 10) -> Dict[str, Any]:
             }
         }
 
-    url = f"{settings.ATZMAI_BASE_URL}/invoices/getInvoices"
+    url = f"{_base_url()}/invoices/getInvoices"
     params = {"agentID": agent_id, "size": size}
     async with httpx.AsyncClient() as client:
         resp = await client.get(url, headers=_headers(), params=params, timeout=30.0)
@@ -284,7 +287,7 @@ async def get_invoice_pdf(agent_id: int, invoice_id: int) -> Dict[str, Any]:
             }
         }
 
-    url = f"{settings.ATZMAI_BASE_URL}/invoices/getInvoicePDF"
+    url = f"{_base_url()}/invoices/getInvoicePDF"
     params = {"agentID": agent_id, "invoiceID": invoice_id}
     async with httpx.AsyncClient() as client:
         resp = await client.get(url, headers=_headers(), params=params, timeout=30.0)
@@ -316,7 +319,7 @@ async def get_receipts(agent_id: int, size: int = 10) -> Dict[str, Any]:
             }
         }
 
-    url = f"{settings.ATZMAI_BASE_URL}/receipts/getReceipts"
+    url = f"{_base_url()}/receipts/getReceipts"
     params = {"agentID": agent_id, "size": size}
     async with httpx.AsyncClient() as client:
         resp = await client.get(url, headers=_headers(), params=params, timeout=30.0)
@@ -340,7 +343,7 @@ async def get_receipt_pdf(agent_id: int, receipt_id: int) -> Dict[str, Any]:
             }
         }
 
-    url = f"{settings.ATZMAI_BASE_URL}/receipts/getReceiptPDF"
+    url = f"{_base_url()}/receipts/getReceiptPDF"
     params = {"agentID": agent_id, "receiptID": receipt_id}
     async with httpx.AsyncClient() as client:
         resp = await client.get(url, headers=_headers(), params=params, timeout=30.0)
