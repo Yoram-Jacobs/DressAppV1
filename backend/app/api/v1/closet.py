@@ -255,733 +255,17 @@ class UpdateItemIn(BaseModel):
     clear_reconstruction: bool = False
 
 
-# --- SegFormer category mapping --------------------------------------
-# Frontend / Gemini-side `CreateItemIn.category` values (e.g. "Top",
-# "Bottom", "Outerwear", "Full Body", "Footwear", "Accessories",
-# "Underwear") collapse onto the SegFormer-internal kinds emitted by
-# ``clothing_parser.parse_garments`` — `"top" | "bottom" | "dress" |
-# "footwear" | "accessory" | "headwear"`. The map is intentionally
-# lower-cased and forgiving; anything we don't recognise falls back to
-# "largest instance by mask area" inside the picker below.
-_CATEGORY_TO_SEGFORMER_KIND: dict[str, str] = {
-    "top": "top",
-    "tops": "top",
-    "shirt": "top",
-    "shirts": "top",
-    "blouse": "top",
-    "outerwear": "top",
-    "jacket": "top",
-    "jackets": "top",
-    "coat": "top",
-    "underwear": "top",
-    "bottom": "bottom",
-    "bottoms": "bottom",
-    "pants": "bottom",
-    "trousers": "bottom",
-    "jeans": "bottom",
-    "skirt": "bottom",
-    "skirts": "bottom",
-    "shorts": "bottom",
-    "dress": "dress",
-    "dresses": "dress",
-    "full body": "dress",
-    "fullbody": "dress",
-    "full-body": "dress",
-    "footwear": "footwear",
-    "shoes": "footwear",
-    "sneakers": "footwear",
-    "boots": "footwear",
-    "accessory": "accessory",
-    "accessories": "accessory",
-    "bag": "accessory",
-    "bags": "accessory",
-    "belt": "accessory",
-    "scarf": "accessory",
-    "sunglasses": "accessory",
-    "headwear": "headwear",
-    "hat": "headwear",
-    "hats": "headwear",
-}
+# --- Closet Service Helpers & Background Tasks ---
+from app.services import closet_service
 
-
-def _pick_segformer_mask_for_category(
-    garments: list[dict[str, Any]],
-    category: str | None,
-) -> tuple[np.ndarray | None, np.ndarray | None]:
-    """Return the best SegFormer per-garment mask (full-res ``np.uint8``
-    H×W array) to AND against rembg, given the item's user-facing
-    category. Returns ``None`` if SegFormer found nothing usable.
-
-    Strategy
-    --------
-    1. Map ``category`` → SegFormer kind via ``_CATEGORY_TO_SEGFORMER_KIND``.
-    2. Pick the instance whose ``category`` matches the kind AND has
-       the largest mask area (multi-component items already merged
-       upstream — see ``parse_garments``).
-    3. If no kind match, fall back to the largest mask overall — better
-       to AND with *something* (trims wall / poster / lamp) than to
-       give rembg free rein on the whole frame.
-
-    Defensive: catches structurally broken instances (missing ``mask``,
-    non-array masks, etc.) and ignores them silently.
-    """
-    if not garments:
-        return None, None
-    target_kind = (
-        _CATEGORY_TO_SEGFORMER_KIND.get((category or "").strip().lower())
-        if category
-        else None
-    )
-
-    def _area(g: dict[str, Any]) -> int:
-        m = g.get("mask")
-        if m is None:
-            return 0
-        try:
-            return int(m.sum())  # type: ignore[union-attr]
-        except Exception:  # noqa: BLE001
-            return 0
-
-    if target_kind:
-        matches = [g for g in garments if g.get("category") == target_kind]
-        if matches:
-            best = max(matches, key=_area)
-            if _area(best) > 0:
-                return best.get("mask"), best.get("_human_mask_full")
-    # Fallback: largest mask of any garment kind.
-    candidates = [g for g in garments if _area(g) > 0]
-    if not candidates:
-        return None, None
-    best_fallback = max(candidates, key=_area)
-    return best_fallback.get("mask"), best_fallback.get("_human_mask_full")
-
-
-def _bytes_from_data_url(url: str | None) -> bytes | None:
-    """Decode a ``data:<mime>;base64,...`` URL to raw bytes (soft-fail)."""
-    if not isinstance(url, str) or not url.startswith("data:"):
-        return None
-    try:
-        _header, b64 = url.split(",", 1)
-        return base64.b64decode(b64, validate=True)
-    except Exception:  # noqa: BLE001
-        return None
-
-
-def _ensure_min_resolution(image_bytes: bytes, min_dim: int = 512) -> bytes:
-    if not image_bytes:
-        return image_bytes
-    try:
-        import io
-        from PIL import Image
-        img = Image.open(io.BytesIO(image_bytes))
-        w, h = img.size
-        if w >= min_dim and h >= min_dim:
-            return image_bytes
-            
-        # Scale keeping aspect ratio using high-quality BICUBIC resampling
-        if w < h:
-            new_w = min_dim
-            new_h = int(h * (min_dim / w))
-        else:
-            new_h = min_dim
-            new_w = int(w * (min_dim / h))
-            
-        img_resized = img.resize((new_w, new_h), Image.Resampling.BICUBIC)
-        
-        # Save back to bytes in original format or JPEG/PNG
-        out_buf = io.BytesIO()
-        fmt = img.format or "JPEG"
-        img_resized.save(out_buf, format=fmt)
-        return out_buf.getvalue()
-    except Exception as e:
-        logger.warning("Failed to upscale low-resolution image: %s", e)
-        return image_bytes
-
-
-async def _read_image_bytes_from_url(url: str | None) -> bytes | None:
-    if not isinstance(url, str):
-        return None
-    
-    result_bytes = None
-    if url.startswith("data:"):
-        result_bytes = _bytes_from_data_url(url)
-    
-    # If it is a local upload path
-    elif "/static/uploads/" in url:
-        idx = url.find("/static/uploads/")
-        relative_path = url[idx + len("/static/uploads/"):]
-        import os
-        from app.services.upload_manager import BUCKET_DIR
-        import aiofiles
-        local_path = os.path.join(BUCKET_DIR, relative_path)
-        if os.path.exists(local_path):
-            try:
-                async with aiofiles.open(local_path, "rb") as f:
-                    result_bytes = await f.read()
-            except Exception as e:
-                logger.error("Failed to read local uploaded file: %s", e)
-                
-    # Fallback: Download via httpx
-    if not result_bytes:
-        import httpx
-        try:
-            # Resolve full URL if relative
-            full_url = url
-            if url.startswith("/"):
-                # On staging/production it is hosted at dressapp.co or localhost:8001
-                full_url = f"http://localhost:8001{url}"
-                
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                resp = await client.get(full_url)
-                if resp.status_code == 200:
-                    result_bytes = resp.content
-        except Exception as e:
-            logger.error("Failed to download image URL %s: %s", url, e)
-        
-    if result_bytes:
-        return _ensure_min_resolution(result_bytes)
-    return None
-
-
-# Re-queue matte for items whose BackgroundTask never ran or died
-# mid-flight (process restart, OOM) — otherwise ``clean_image_status``
-# stays ``pending`` forever and the frontend poll never converges.
-_STALE_MATTE_RETRY_SECONDS = 90
-_STALE_MATTE_RETRY_COOLDOWN_SECONDS = 5 * 60
-
-
-async def _maybe_retry_stale_matte(
-    item: dict[str, Any],
-    background_tasks: BackgroundTasks,
-) -> None:
-    if item.get("clean_image_status") != "pending" or item.get("clean_image_url"):
-        return
-    updated_raw = item.get("updated_at")
-    if not updated_raw:
-        return
-    try:
-        updated_at = datetime.fromisoformat(
-            str(updated_raw).replace("Z", "+00:00"),
-        )
-    except Exception:  # noqa: BLE001
-        return
-    age_s = (datetime.now(timezone.utc) - updated_at).total_seconds()
-    if age_s < _STALE_MATTE_RETRY_SECONDS:
-        return
-    last_retry_raw = item.get("matte_last_retry_at")
-    if last_retry_raw:
-        try:
-            last_retry = datetime.fromisoformat(
-                str(last_retry_raw).replace("Z", "+00:00"),
-            )
-            if (
-                datetime.now(timezone.utc) - last_retry
-            ).total_seconds() < _STALE_MATTE_RETRY_COOLDOWN_SECONDS:
-                return
-        except Exception:  # noqa: BLE001
-            pass
-    raw_bytes = _bytes_from_data_url(item.get("original_image_url"))
-    if not raw_bytes:
-        return
-    item_id = item["id"]
-    now_iso = datetime.now(timezone.utc).isoformat()
-    db = get_db()
-    await db.closet_items.update_one(
-        {"id": item_id},
-        {"$set": {"matte_last_retry_at": now_iso}},
-    )
-    logger.info(
-        "Re-queuing stale background matte for item %s (pending %.0fs)",
-        item_id, age_s,
-    )
-    background_tasks.add_task(
-        _run_background_matte,
-        item_id,
-        raw_bytes,
-        item.get("category"),
-    )
-
-
-async def _run_background_matte(
-    item_id: str,
-    raw_bytes: bytes,
-    category: str | None = None,
-) -> None:
-    """Phase O.6 (revised Z2.6 + Patch 12 — May 2026) — Background
-    matte runner.
-
-    Fired by :func:`create_item` for items that arrived through the
-    single-pass ``/analyze`` pipeline (``from_one_pass=True``) or the
-    legacy multi-crop ``/analyze`` with deferred matting
-    (``defer_matte=True``). In both cases the upstream pipeline has
-    already bbox-cropped to a single garment, so ``raw_bytes`` is a
-    tight per-garment image — there is no "raw full-frame upload"
-    code path that fires this task.
-
-    Pipeline
-    --------
-    SegFormer + rembg + ``apply_alpha_intersection`` — the same triad
-    the legacy multi-crop ``_matte_crops`` flow uses on the hot path::
-
-        SegFormer (clothing_parser.parse_garments)
-            └─ pick the instance matching ``category`` (largest blob fallback)
-            └─ full-resolution H×W binary mask
-        rembg (background_matting.remove_background)
-            └─ alpha matte + CLIP faithfulness guard
-        clothing_parser.apply_alpha_intersection(matted_png, seg_mask)
-            └─ AND of the two alphas, gaussian-softened
-        → clean_image_url
-
-    Why SegFormer is back
-    ---------------------
-    Z2.6 removed it on the assumption that upstream crops were always
-    tight. They are not always tight in practice — when ``/analyze``
-    runs with ``USE_LOCAL_CLOTHING_PARSER=false`` or when the Gemini
-    fallback over-pads the bbox, rembg sees background junk (lamps,
-    posters, plants) and keeps it all as foreground. Result: the
-    "white-window" cutout regression. Intersecting with a per-class
-    SegFormer mask removes the junk regardless of crop tightness. On
-    already-tight crops the intersection is effectively a no-op (the
-    SegFormer mask covers ~100% of rembg's foreground), so this is
-    pure upside.
-
-    Failure modes (all soft — never block rembg)
-    --------------------------------------------
-      * SegFormer disabled (``USE_LOCAL_CLOTHING_PARSER=false``) →
-        skip the intersection, persist rembg-only output (today's
-        behaviour, lightweight-deploy compatible).
-      * SegFormer ran but found nothing matching the category → fall
-        back to the largest detected mask; if there's still nothing,
-        persist rembg-only output.
-      * ``apply_alpha_intersection`` returned ``None`` (mask shape
-        mismatch, decode error) → persist rembg-only output.
-      * rembg itself crashed or returned empty → mark
-        ``clean_image_status="failed"`` as before.
-      * CLIP faithfulness rejected the matte → same as before.
-    """
-    from app.services import background_matting
-    from app.services import clothing_parser as _cp
-
-    db = get_db()
-
-    # 1. SegFormer (best-effort) — runs first so we can pass its mask
-    #    to the intersection step after rembg returns. Wrapped tight
-    #    so any failure here is invisible to rembg downstream.
-    seg_mask = None
-    human_mask = None
-    if settings.USE_LOCAL_CLOTHING_PARSER:
-        try:
-            garments = await _cp.parse_garments(raw_bytes)
-            seg_mask, human_mask = _pick_segformer_mask_for_category(garments, category)
-            if seg_mask is None and garments:
-                logger.info(
-                    "Background matte SegFormer: parsed %d instance(s) for item %s "
-                    "but none usable for category=%r",
-                    len(garments), item_id, category,
-                )
-        except Exception as exc:  # noqa: BLE001
-            logger.info(
-                "Background matte SegFormer skipped for item %s: %s",
-                item_id, repr(exc)[:160],
-            )
-            seg_mask = None
-            human_mask = None
-
-    # 2. rembg + CLIP guard (unchanged — the matte primitive).
-    try:
-        out = await background_matting.remove_background(raw_bytes)
-    except Exception as exc:  # noqa: BLE001
-        logger.warning(
-            "Background rembg matte FAILED for item %s: %s", item_id, exc,
-        )
-        await db.closet_items.update_one(
-            {"id": item_id},
-            {"$set": {
-                "clean_image_status": "failed",
-                "updated_at": datetime.now(timezone.utc).isoformat(),
-            }},
-        )
-        return
-
-    # ``remove_background`` returns a dict — ``image_png`` is the
-    # raw PNG bytes (or None if rembg failed/rejected); ``provider``
-    # tells us which backend served the matte (self-hosted vs local
-    # rembg); ``faithful`` is the CLIP guard verdict.
-    result = out.get("image_png") if isinstance(out, dict) else None
-    provider = out.get("provider") if isinstance(out, dict) else None
-    faithful = out.get("faithful", True) if isinstance(out, dict) else True
-
-    # 3. Alpha intersection (best-effort) — refines edges and trims any
-    #    non-garment foreground rembg kept. Skipped silently when the
-    #    rembg PNG is missing or the SegFormer mask is unavailable.
-    if result and seg_mask is not None:
-        try:
-            refined = _cp.apply_alpha_intersection(
-                result,
-                seg_mask,
-                # Patch 12i — pass the item's category through to the
-                # intersection so it picks the per-category dilation
-                # budget. ``category`` is the user-facing string from
-                # the create_item payload (Top / Bottom / Outerwear /
-                # Full Body / Footwear / Accessories) and
-                # ``_resolve_dilate_pct_for_category`` accepts both
-                # the user vocabulary and the SegFormer-kind
-                # vocabulary case-insensitively.
-                category=category,
-                human_mask=human_mask,
-                is_padded_canvas=True,
-            )
-            if refined:
-                logger.info(
-                    "Background matte SegFormer-refined for item %s "
-                    "(%d → %d bytes)",
-                    item_id, len(result), len(refined),
-                )
-                result = refined
-            else:
-                logger.info(
-                    "Background matte apply_alpha_intersection returned None "
-                    "for item %s — keeping rembg-only output", item_id,
-                )
-        except Exception as exc:  # noqa: BLE001
-            logger.info(
-                "Background matte alpha intersection skipped for item %s: %s",
-                item_id, repr(exc)[:160],
-            )
-
-    if not result:
-        # Distinguish "rembg produced nothing" from "rembg produced
-        # something but CLIP rejected it" in the log so we can tell
-        # the failure mode apart when triaging.
-        reason = (
-            "CLIP faithfulness rejected"
-            if isinstance(out, dict) and out.get("rejected_reason")
-            else "rembg returned no bytes"
-        )
-        logger.info(
-            "Background matte SKIPPED for item %s (%s; provider=%s)",
-            item_id, reason, provider,
-        )
-        await db.closet_items.update_one(
-            {"id": item_id},
-            {"$set": {
-                "clean_image_status": "failed",
-                "updated_at": datetime.now(timezone.utc).isoformat(),
-            }},
-        )
-        return
-
-    try:
-        compressed_result = compress_image_bytes(result, max_dim=1024, quality=75)
-        import io
-        from PIL import Image
-        temp_img = Image.open(io.BytesIO(compressed_result))
-        mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/jpeg"
-        data_url = f"data:{mime};base64," + base64.b64encode(compressed_result).decode("ascii")
-    except Exception:
-        data_url = (
-            "data:image/png;base64,"
-            + base64.b64encode(result).decode("ascii")
-        )
-    await db.closet_items.update_one(
-        {"id": item_id},
-        {
-            "$set": {
-                "clean_image_url": data_url,
-                "clean_image_status": "ready",
-                "updated_at": datetime.now(timezone.utc).isoformat(),
-                # Patch M20 (May 2026) — Explicitly null out the cached
-                # thumbnail INSTEAD of $unset. Two reasons:
-                #
-                #   1. Original rationale (preserved) — invalidate the
-                #      stale thumbnail so the next ``GET /closet``
-                #      lazy-backfill regenerates it from
-                #      ``clean_image_url`` via
-                #      ``pick_source_data_url``. Both null and unset
-                #      trigger the backfill (it checks
-                #      ``isinstance(it.get("thumbnail_data_url"),
-                #      str)``).
-                #
-                #   2. NEW — the Phase O.6 frontend poll
-                #      (``Closet.jsx::useEffect[store.items]``) merges
-                #      the GET response into the local store via
-                #      ``{...items[idx], ...polled}``. MongoDB omits
-                #      unset fields from query results, so the merge
-                #      would KEEP the stale optimistic
-                #      ``thumbnail_data_url`` (a JPEG of the original
-                #      upload) and the user would see the unpolished
-                #      photo in the closet card even though
-                #      ``clean_image_status`` flipped to "ready". By
-                #      explicitly persisting null, the polled response
-                #      includes the field, the merge overwrites the
-                #      stale local data URL, and ``bestImageUrl``
-                #      falls through to ``clean_image_url`` (the
-                #      polished cutout) as designed.
-                "thumbnail_data_url": None,
-            },
-        },
-    )
-    logger.info(
-        "Background matte READY for item %s "
-        "(provider=%s faithful=%s %d bytes png)",
-        item_id, provider, faithful, len(result),
-    )
-
-
-
-async def _run_background_matte_and_analyze(
-    item_id: str,
-    raw_bytes: bytes,
-    category: str | None,
-    receipt_locked_fields: list[str],
-) -> None:
-    # Ensure minimum resolution for receipt-imported low-resolution raw bytes
-    raw_bytes = _ensure_min_resolution(raw_bytes)
-    """Phase R (July 2026) — Full GarmentVision pipeline for receipt imports.
-
-    Chains :func:`_run_background_matte` with a Gemini VLM analysis pass
-    so receipt-imported items with an attached photo get the same rich
-    taxonomy (dress_code, season, pattern, fabric, condition, tags, …) as
-    items added via the standard camera / file-upload flow.
-
-    Merge rule
-    ----------
-    Receipt fields listed in ``receipt_locked_fields`` are **never**
-    overwritten by the Gemini output, even if Gemini returns a value for
-    them. For every other analysis field the task applies the value only
-    when the current document value is empty/falsy — so a manual edit
-    made between save and analysis completion is not clobbered.
-
-    Failure modes (all soft)
-    ------------------------
-    * rembg fails → logged; clean_image_status = "failed"; no analysis.
-    * GarmentVision not configured → skipped with info log.
-    * Gemini returns garbage / _is_unidentifiable → skipped.
-    * Any exception → logged; item remains saved with its original data.
-    """
-    # Step 1: run the standard matte pipeline.  This writes
-    # ``clean_image_url`` and ``clean_image_status`` to the document.
-    await _run_background_matte(item_id, raw_bytes, category)
-
-    # Step 2: Gemini VLM analysis — only runs when the Eyes service is
-    # available. The model analyses the same raw bytes that rembg just
-    # processed; we don't re-read the clean PNG from the DB because the
-    # GarmentVision service handles its own cropping internally and the
-    # original bytes give the full picture (literally).
-    if garment_vision_service is None:
-        logger.info(
-            "Receipt matte+analyze: Gemini skipped for item %s "
-            "(garment_vision_service not configured)",
-            item_id,
-        )
-        return
-
-    db = get_db()
-    try:
-        parsed = await garment_vision_service.analyze(raw_bytes)
-    except Exception as exc:  # noqa: BLE001
-        logger.warning(
-            "Receipt matte+analyze: Gemini FAILED for item %s: %s",
-            item_id, repr(exc)[:200],
-        )
-        return
-
-    analysis = _safe_analysis(parsed)
-    try:
-        from app.services.vision import _is_unidentifiable
-        if _is_unidentifiable(analysis):
-            logger.info(
-                "Receipt matte+analyze: Gemini returned unidentifiable "
-                "result for item %s — skipping merge",
-                item_id,
-            )
-            return
-    except Exception:  # noqa: BLE001
-        pass
-
-    # Step 3: merge analysis → document, honouring the locked fields.
-    # Fields The Eyes is allowed to set on any item:
-    ANALYSIS_KEYS = (
-        "title", "name", "caption", "category", "sub_category", "item_type",
-        "brand", "gender", "dress_code", "season", "tradition", "colors",
-        "fabric_materials", "pattern", "state", "condition", "quality",
-        "repair_advice", "tags",
-    )
-
-    # Fetch the current document so we can check which fields are already
-    # populated (receipt data wins even if it arrived first).
-    item_doc = await repos.find_one(db.closet_items, {"id": item_id})
-    if not item_doc:
-        logger.info(
-            "Receipt matte+analyze: item %s no longer exists — aborting merge",
-            item_id,
-        )
-        return
-
-    locked = set(receipt_locked_fields or [])
-    update_doc: dict[str, Any] = {
-        "updated_at": datetime.now(timezone.utc).isoformat(),
-    }
-
-    for key in ANALYSIS_KEYS:
-        if key not in analysis:
-            continue
-        # Receipt-locked: skip entirely (never overwrite).
-        if key in locked:
-            continue
-        # Already populated by the user/receipt: skip (fill-empty rule).
-        current = item_doc.get(key)
-        if current or current == 0:  # 0 is a valid int — treat as set
-            continue
-        update_doc[key] = analysis[key]
-
-    # Mirror dominant colour/material into legacy scalar fields if not locked.
-    if "color" not in locked:
-        colors_list = analysis.get("colors") or []
-        if colors_list and isinstance(colors_list, list):
-            first = colors_list[0]
-            if isinstance(first, dict) and first.get("name") and not item_doc.get("color"):
-                update_doc["color"] = first["name"]
-
-    if "material" not in locked:
-        mats = analysis.get("fabric_materials") or []
-        if mats and isinstance(mats, list):
-            first = mats[0]
-            if isinstance(first, dict) and first.get("name") and not item_doc.get("material"):
-                update_doc["material"] = first["name"]
-
-    if len(update_doc) > 1:  # at least one non-timestamp field
-        await db.closet_items.update_one(
-            {"id": item_id},
-            {"$set": update_doc},
-        )
-        logger.info(
-            "Receipt matte+analyze: merged %d analysis field(s) onto item %s",
-            len(update_doc) - 1, item_id,
-        )
-    else:
-        logger.info(
-            "Receipt matte+analyze: no new fields to merge for item %s "
-            "(all analysis fields already populated or locked)",
-            item_id,
-        )
-
-    # Step 4: Auto-reconstruction removed to give the user manual control via the details pane.
-
-
-async def _run_background_reconstruction(
-    item_id: str,
-    crop_bytes: bytes,
-    analysis: dict[str, Any],
-    reasons: list[str],
-) -> None:
-    """Patch M14 (May 2026) — Post-save Nano Banana reconstruction.
-
-    Mirrors :func:`_run_background_matte` but for the
-    ``reconstructed_image_url`` field. Fired by :func:`create_item` when
-    the upstream ``/analyze`` deferred reconstruction
-    (``settings.DEFER_RECONSTRUCTION_ON_ANALYZE=true``) — the analyzer
-    marked the item with ``needs_reconstruction=true`` and a list of
-    heuristic ``reasons`` (e.g. ``["edge_touch_top", "edge_touch_left"]``).
-
-    Why defer
-    ---------
-    ``should_reconstruct`` triggers on every crop whose bbox touches a
-    frame edge — which is the common case for full-body outfit uploads
-    (tops touch top, footwear touch bottom, etc.). Each fire spawns a
-    20-40 s Gemini image-generation call. Inside the synchronous
-    ``_analyse_one_crop`` loop with a ``Semaphore(6)``, a 4-item outfit
-    blocks the analyze response for 30-60 s — routinely hitting the
-    Kubernetes ingress 60 s ceiling → 502 Bad Gateway. Deferring it
-    here lets ``/analyze`` return in ~15 s and the reconstruction
-    fills in seconds-to-minutes later on the saved item document.
-
-    Failure modes (all soft — match the matte task)
-    -----------------------------------------------
-      * Reconstruction returned ``None`` (Gemini image gen unavailable
-        / safety blocked / validation failed) — leave
-        ``reconstructed_image_url`` unset; UI falls back to the bbox
-        crop, identical to today.
-      * Exception during the generation — log and exit; the item still
-        saves successfully without a reconstruction.
-    """
-    from app.services.reconstruction import reconstruct
-
-    # Patch M16 — Belt-and-braces. ``should_reconstruct`` is the
-    # authoritative gate but if an in-flight save from before the flag
-    # flip carried ``needs_reconstruction=True`` we still want to
-    # honour the kill-switch and skip the work cleanly.
-    if not settings.ENABLE_RECONSTRUCTION:
-        logger.info(
-            "Background reconstruction SKIPPED for item %s "
-            "(ENABLE_RECONSTRUCTION=false)",
-            item_id,
-        )
-        return
-
-    db = get_db()
-    t0 = datetime.now(timezone.utc)
-    try:
-        result = await reconstruct(crop_bytes, analysis, reasons=reasons)
-    except Exception as exc:  # noqa: BLE001
-        logger.warning(
-            "Background reconstruction FAILED for item %s: %s",
-            item_id, repr(exc)[:200],
-        )
-        return
-
-    if not result or not result.get("image_b64"):
-        logger.info(
-            "Background reconstruction SKIPPED for item %s "
-            "(no image returned; reasons=%s)",
-            item_id, reasons,
-        )
-        return
-
-    recon_b64 = compress_b64_image(result['image_b64'], max_dim=1024, quality=75)
-    try:
-        import io
-        from PIL import Image
-        temp_raw = base64.b64decode(recon_b64)
-        temp_img = Image.open(io.BytesIO(temp_raw))
-        mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/jpeg"
-    except Exception:
-        mime = result.get("mime_type", "image/png")
-    data_url = f"data:{mime};base64,{recon_b64}"
-    meta = {
-        "method": "reconstruction",
-        "model": result.get("model"),
-        "prompt": result.get("prompt"),
-        "reasons": reasons,
-        "deferred": True,
-        "updated_at": datetime.now(timezone.utc).isoformat(),
-    }
-    await db.closet_items.update_one(
-        {"id": item_id},
-        {
-            "$set": {
-                "reconstructed_image_url": data_url,
-                "reconstruction_metadata": meta,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
-                # Patch M20 — Explicitly null out (was $unset). See
-                # comment in ``_run_background_matte`` for the full
-                # rationale. tl;dr: the frontend poll merges the
-                # GET response into the local store, so we need the
-                # field present-as-null for the merge to overwrite the
-                # stale optimistic thumbnail.
-                "thumbnail_data_url": None,
-            },
-        },
-    )
-    elapsed = (datetime.now(timezone.utc) - t0).total_seconds()
-    logger.info(
-        "Background reconstruction READY for item %s "
-        "(model=%s in %.1fs reasons=%s)",
-        item_id, result.get("model"), elapsed, reasons,
-    )
-
-
-
+_pick_segformer_mask_for_category = closet_service.pick_segformer_mask_for_category
+_bytes_from_data_url = closet_service.bytes_from_data_url
+_ensure_min_resolution = closet_service.ensure_min_resolution
+_read_image_bytes_from_url = closet_service.read_image_bytes_from_url
+_maybe_retry_stale_matte = closet_service.maybe_retry_stale_matte
+_run_background_matte = closet_service.run_background_matte
+_run_background_matte_and_analyze = closet_service.run_background_matte_and_analyze
+_run_background_reconstruction = closet_service.run_background_reconstruction
 @router.post("", status_code=201)
 async def create_item(
     payload: CreateItemIn,
@@ -1683,26 +967,8 @@ class AnalyzeIn(BaseModel):
     language: str | None = None
 
 
-def _apply_defaults(parsed: dict[str, Any]) -> dict[str, Any]:
-    parsed.setdefault("category", "Top")
-    parsed.setdefault("pattern", "solid")
-    parsed.setdefault("gender", "unisex")
-    parsed.setdefault("dress_code", "casual")
-    parsed.setdefault("state", "used")
-    parsed.setdefault("condition", "good")
-    parsed.setdefault("quality", "mid")
-    return parsed
-
-
-def _safe_analysis(parsed: dict[str, Any]) -> dict[str, Any]:
-    """Validate through Pydantic; fall back to a minimal shape on error."""
-    try:
-        return GarmentAnalysis(**_apply_defaults(parsed)).model_dump()
-    except Exception:  # noqa: BLE001
-        return GarmentAnalysis(
-            title=parsed.get("title") or "Unnamed garment"
-        ).model_dump()
-
+_apply_defaults = closet_service._apply_defaults
+_safe_analysis = closet_service.safe_analysis
 
 @router.post("/analyze")
 async def analyze_item_image(
@@ -1786,12 +1052,29 @@ async def analyze_item_image(
     if not raw_list:
         raise HTTPException(400, "Could not load image bytes")
 
+    cost = len(raw_list)
     # Deduct credits for the AI model calls
     from app.db.database import get_db
     from app.services.billing_service import deduct_user_credits
     db = get_db()
-    if not await deduct_user_credits(db, user, cost=len(raw_list)):
+    if not await deduct_user_credits(db, user, cost=cost):
         raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
+
+    async def try_refund():
+        try:
+            latest_usage = await db.token_usage.find_one(
+                {"user_id": user["id"]},
+                sort=[("created_at", -1)]
+            )
+            credit_type = "free"
+            if latest_usage and latest_usage.get("credit_type") == "paid":
+                credit_type = "paid"
+            
+            from app.services.billing_service import refund_user_credits
+            await refund_user_credits(db, user["id"], amount=cost, credit_type=credit_type)
+            logger.info("Refunded %d %s credits to user %s due to analysis failure", cost, credit_type, user["id"])
+        except Exception as refund_err:
+            logger.error("Failed to refund credits: %s", refund_err)
 
     # Multi-item pipeline (default). Degrades gracefully to single.
     # Language priority: explicit request override > profile setting > "en".
@@ -1889,6 +1172,7 @@ async def analyze_item_image(
                                 + "\n"
                             ).encode("utf-8")
                         elif ftype == "error":
+                            await try_refund()
                             yield (
                                 json.dumps(frame, ensure_ascii=False)
                                 + "\n"
@@ -1919,6 +1203,7 @@ async def analyze_item_image(
                         ).encode("utf-8")
             except Exception as exc:  # noqa: BLE001
                 logger.exception("ndjson analyze stream error: %s", exc)
+                await try_refund()
                 yield (
                     json.dumps(
                         {
@@ -2063,6 +1348,7 @@ async def analyze_item_image(
         try:
             body = task.result()
         except HTTPException as exc:
+            await try_refund()
             # Stream is already open with status 200; we surface the
             # intended HTTP status via ``_status`` so the frontend can
             # detect it and behave like an axios rejection.
@@ -2073,6 +1359,7 @@ async def analyze_item_image(
                 "_error": str(exc.detail),
             }
         except Exception as exc:  # noqa: BLE001
+            await try_refund()
             logger.exception("analyze streaming exception: %s", exc)
             body = {
                 "items": [],
@@ -4247,26 +3534,8 @@ class CompleteOutfitIn(BaseModel):
     lng: float | None = None
 
 
-def _slim_item(it: dict[str, Any]) -> dict[str, Any]:
-    """Strip the 512-float embedding + other heavy fields from an item."""
-    return {k: v for k, v in it.items() if k not in ("clip_embedding",)}
-
-
-def _anchor_summary(anchor: dict[str, Any]) -> dict[str, Any]:
-    """Compact anchor description used for stylist prompting."""
-    return {
-        "id": anchor.get("id"),
-        "title": anchor.get("title") or anchor.get("name"),
-        "category": anchor.get("category"),
-        "sub_category": anchor.get("sub_category"),
-        "color": anchor.get("color"),
-        "material": anchor.get("material"),
-        "pattern": anchor.get("pattern"),
-        "dress_code": anchor.get("dress_code"),
-        "season": anchor.get("season") or [],
-    }
-
-
+_slim_item = closet_service.slim_item
+_anchor_summary = closet_service.anchor_summary
 @router.post("/complete-outfit")
 async def complete_outfit(
     payload: CompleteOutfitIn,
@@ -5195,187 +4464,7 @@ class GroupEditIn(BaseModel):
     new_uploads: list[UploadMemberIn] = []
 
 
-async def reanalyze_group_helper(group_id: str, user_id: str) -> None:
-    db = get_db()
-    group_items = await repos.find_many(
-        db.closet_items,
-        {"group_id": group_id, "user_id": user_id}
-    )
-    if not group_items:
-        return
-
-    # Check if it's a set (multiple categories)
-    def norm_category(cat):
-        s = str(cat or "").strip().lower().replace(" ", "_")
-        if s in ("top", "tops"): return "top"
-        if s in ("bottom", "bottoms"): return "bottom"
-        if s in ("footwear", "shoes"): return "footwear"
-        if s in ("accessory", "accessories"): return "accessories"
-        return s
-
-    categories = {norm_category(r.get("category")) for r in group_items if r.get("category")}
-    if len(categories) > 1:
-        # It's a set of clothes! Skip LLM reanalysis.
-        item_ids = [it["id"] for it in group_items]
-        await db.closet_items.update_many(
-            {"id": {"$in": item_ids}, "user_id": user_id},
-            {"$set": {"group_analysis_status": "ready", "updated_at": datetime.now(timezone.utc).isoformat()}}
-        )
-        return
-
-    # Sort host first, then members
-    group_items.sort(key=lambda x: 0 if x.get("group_role") == "host" else 1)
-
-    # Collect images
-    images_bytes: list[bytes] = []
-    aligned_items: list[dict[str, Any]] = []
-    for g_item in group_items:
-        img_url = g_item.get("segmented_image_url") or g_item.get("reconstructed_image_url") or g_item.get("original_image_url")
-        if img_url and img_url.startswith("data:"):
-            try:
-                b64_part = img_url.split(",", 1)[1]
-                raw = base64.b64decode(b64_part, validate=False)
-                if raw:
-                    images_bytes.append(raw)
-                    aligned_items.append(g_item)
-            except Exception:
-                pass
-
-    if not images_bytes:
-        item_ids = [it["id"] for it in group_items]
-        await db.closet_items.update_many(
-            {"id": {"$in": item_ids}, "user_id": user_id},
-            {"$set": {"group_analysis_status": "failed", "updated_at": datetime.now(timezone.utc).isoformat()}}
-        )
-        return
-
-    user_lang = "en"
-    user_doc = await db.users.find_one({"id": user_id})
-    if user_doc:
-        user_lang = user_doc.get("preferred_language") or "en"
-
-    try:
-        result = await garment_vision_service.analyze_group(
-            images_bytes, aligned_items, language=user_lang
-        )
-    except Exception as exc:
-        logger.warning("Group re-analysis failed: %r", exc)
-        item_ids = [it["id"] for it in group_items]
-        await db.closet_items.update_many(
-            {"id": {"$in": item_ids}, "user_id": user_id},
-            {"$set": {"group_analysis_status": "failed", "updated_at": datetime.now(timezone.utc).isoformat()}}
-        )
-        return
-
-    items_updates = result.get("items") or []
-    updated_ids = set()
-    
-    OVERWRITE_KEYS = (
-        "title",
-        "name",
-        "caption",
-        "category",
-        "sub_category",
-        "item_type",
-        "brand",
-        "gender",
-        "dress_code",
-        "season",
-        "tradition",
-        "colors",
-        "fabric_materials",
-        "pattern",
-        "state",
-        "condition",
-        "quality",
-        "repair_advice",
-        "tags",
-    )
-
-    for item_up in items_updates:
-        item_id = item_up.get("id")
-        updates = item_up.get("updates") or {}
-        if not item_id:
-            continue
-            
-        orig_item = next((it for it in group_items if it["id"] == item_id), None)
-        if not orig_item:
-            continue
-            
-        update_doc: dict[str, Any] = {
-            "group_analysis_status": "ready",
-            "updated_at": datetime.now(timezone.utc).isoformat(),
-        }
-        
-        for key in OVERWRITE_KEYS:
-            if key in updates:
-                update_doc[key] = updates[key]
-                
-        view_tag = item_up.get("view_tag")
-        if not view_tag:
-            if orig_item.get("group_role") == "host":
-                view_tag = "Front"
-            else:
-                view_tag = "Back"
-                
-        tags_list = update_doc.get("tags") or orig_item.get("tags") or []
-        if not isinstance(tags_list, list):
-            tags_list = [tags_list]
-        tags_list = list(tags_list)
-        
-        for t in ["Front", "Back", "Profile"]:
-            if t in tags_list:
-                tags_list.remove(t)
-        if view_tag not in tags_list:
-            tags_list.append(view_tag)
-            
-        update_doc["tags"] = tags_list
-
-        colors_list = update_doc.get("colors") or orig_item.get("colors") or []
-        if colors_list and isinstance(colors_list, list):
-            first_colour = colors_list[0]
-            if isinstance(first_colour, dict) and first_colour.get("name"):
-                update_doc["color"] = first_colour["name"]
-        materials_list = update_doc.get("fabric_materials") or orig_item.get("fabric_materials") or []
-        if materials_list and isinstance(materials_list, list):
-            first_material = materials_list[0]
-            if isinstance(first_material, dict) and first_material.get("name"):
-                update_doc["material"] = first_material["name"]
-
-        await db.closet_items.update_one(
-            {"id": item_id, "user_id": user_id},
-            {"$set": update_doc}
-        )
-        updated_ids.add(item_id)
-
-    for item in group_items:
-        if item["id"] not in updated_ids:
-            role = item.get("group_role")
-            view_tag = "Front" if role == "host" else "Back"
-            
-            tags_list = item.get("tags") or []
-            if not isinstance(tags_list, list):
-                tags_list = [tags_list]
-            tags_list = list(tags_list)
-            
-            for t in ["Front", "Back", "Profile"]:
-                if t in tags_list:
-                    tags_list.remove(t)
-            if view_tag not in tags_list:
-                tags_list.append(view_tag)
-                
-            await db.closet_items.update_one(
-                {"id": item["id"], "user_id": user_id},
-                {
-                    "$set": {
-                        "group_analysis_status": "ready",
-                        "tags": tags_list,
-                        "updated_at": datetime.now(timezone.utc).isoformat(),
-                    }
-                }
-            )
-
-
+reanalyze_group_helper = closet_service.reanalyze_group_helper
 @router.post("/group")
 async def group_items(
     payload: GroupItemsIn,

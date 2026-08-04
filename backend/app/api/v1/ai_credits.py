@@ -24,11 +24,14 @@ from app.services import paypal_client
 from app.services.auth import get_current_user
 from app.services.pricing import get_user_ai_balance, apply_credit_rollover as apply_daily_allocation
 from app.services.token_meter import TokenMeter
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 ai_credits_router = APIRouter(prefix="/ai-credits", tags=["ai-credits"])
 pricing_router = APIRouter(prefix="/pricing", tags=["pricing"])  # Complementary pricing endpoints
+quota_router = APIRouter(prefix="/quota", tags=["quota"])  # Quota management endpoints
+
 
 _CREDIT_PACKS = {"10": 10, "25": 25, "50": 50, "100": 100}  # Updated to match modern pack sizes
 
@@ -107,10 +110,10 @@ async def get_pricing_info(user: dict = Depends(get_current_user)) -> Dict[str, 
                 "ai_monthly_used": user_record.get("ai_configuration", {}).get("ai_monthly_used", 0),
             },
             "credit_packs": [
-                {"amount": 10, "price_cents": 199},
-                {"amount": 25, "price_cents": 399},
-                {"amount": 50, "price_cents": 799},
-                {"amount": 100, "price_cents": 1599},
+                {"amount": 10, "credits_amount": 10, "price": 199, "price_cents": 199},
+                {"amount": 25, "credits_amount": 25, "price": 399, "price_cents": 399},
+                {"amount": 50, "credits_amount": 50, "price": 799, "price_cents": 799},
+                {"amount": 100, "credits_amount": 100, "price": 1599, "price_cents": 1599},
             ],
             "pricing_tiers": [
                 {
@@ -192,49 +195,92 @@ async def create_purchase(
     payload: AiCreditPurchaseIn,
     user: dict = Depends(get_current_user),
 ) -> Dict[str, Any]:
-    """Create PayPal order for credit pack purchase (adds paid credit bucket upon capture)."""
-    _require_configured()
+    """Create Atzmai payment link for credit pack purchase (adds paid credit bucket upon capture)."""
+    import uuid
+    from app.services import atzmai_client
+    
     currency = payload.currency.upper()
     pack_size = payload.pack
     credits_amount = _CREDIT_PACKS[pack_size]
-    amount_cents = int(pack_size) * 100  # Price per pack (e.g., 10 credits = $1.99 ≈ 199 cents, but we'll simplify)
     
     # Actually use correct pricing from config
     from app.services.pricing import CREDIT_PACK_PRICES
     pack_info = CREDIT_PACK_PRICES[pack_size]
     amount_cents = pack_info.price_cents
     
-    db = get_db()
-    purchase = AiCreditPurchase(
-        user_id=user["id"],
-        pack=pack_size,
-        credits_amount=credits_amount,
-        amount_cents=amount_cents,
-        currency=currency,
-    )
-    doc = purchase.model_dump()
+    purchase_id = f"ai_pur_{uuid.uuid4().hex[:16]}"
+    amount_units = amount_cents / 100.0
+    description = f"DressApp AI credit pack ({credits_amount} credits)"
+    phone = user.get("phone", "0500000000") or "0500000000"
+    email = user["email"]
+    customer_name = f"{user.get('first_name', 'User')} {user.get('last_name', '')}".strip() or "User"
+    
+    # Default local development port proxy
+    redirect_url = f"{settings.APP_PUBLIC_URL}/pricing/purchase?sub_status=success&token={purchase_id}"
+    fail_redirect_url = f"{settings.APP_PUBLIC_URL}/pricing/purchase?sub_status=cancel&token={purchase_id}"
+    callback_url = "http://localhost:8001/api/v1/atzmai/webhook"
     
     try:
-        order = await paypal_client.create_order(
-            amount_cents=amount_cents,
-            currency=currency,
-            reference_id=f"ai-credit:{purchase.id}",
-            description=f"DressApp AI credit pack ({credits_amount} credits)",
-            custom_id=purchase.id,
+        items = [{"amount": amount_units, "description": description}]
+        resp = await atzmai_client.generate_payment_link(
+            items=items,
+            customer_name=customer_name,
+            email=email,
+            phone=phone,
+            language="he",
+            redirect_url=redirect_url,
+            fail_redirect_url=fail_redirect_url,
+            callback_url=callback_url,
+            atzmai_client_id=user["id"]
         )
-    except paypal_client.PayPalError as exc:
-        raise HTTPException(status.HTTP_502_BAD_GATEWAY, {"paypal_error": str(exc.body)}) from exc
+    except atzmai_client.AtzmaiError as exc:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, {"atzmai_error": str(exc.body)}) from exc
+        
+    body_data = resp.get("body") or {}
+    atzmai_payment_id = body_data.get("atzmai_payment_id")
+    payment_url = body_data.get("url")
+
+    if not atzmai_payment_id or not payment_url:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Invalid response from Atzmai payment gateway")
+        
+    db = get_db()
+    topup_doc = {
+        "id": purchase_id,
+        "atzmai_payment_id": atzmai_payment_id,
+        "user_id": user["id"],
+        "amount_cents": amount_cents,
+        "currency": currency,
+        "type": "ai_credits",
+        "pack": pack_size,
+        "status": "pending",
+        "payment_url": payment_url,
+        "created_at": _now_iso(),
+        "updated_at": _now_iso()
+    }
+    await db.atzmai_topups.insert_one(topup_doc)
     
-    doc["paypal_order_id"] = order["id"]
-    doc["status"] = "pending"
-    await db.ai_credit_purchases.insert_one(doc)
+    compat_doc = {
+        "id": purchase_id,
+        "user_id": user["id"],
+        "pack": pack_size,
+        "credits_amount": credits_amount,
+        "amount_cents": amount_cents,
+        "currency": currency,
+        "paypal_order_id": atzmai_payment_id,
+        "status": "pending",
+        "created_at": _now_iso(),
+        "updated_at": _now_iso()
+    }
+    await db.ai_credit_purchases.insert_one(compat_doc)
+    
     return {
-        "purchase_id": purchase.id,
-        "order_id": order["id"],
+        "purchase_id": purchase_id,
+        "order_id": atzmai_payment_id,
         "credits_amount": credits_amount,
         "amount_cents": amount_cents,
         "currency": currency,
         "status": "pending",
+        "approve_url": payment_url,
     }
 
 
@@ -243,92 +289,87 @@ async def capture_purchase(
     purchase_id: str,
     user: dict = Depends(get_current_user),
 ) -> Dict[str, Any]:
-    """Capture PayPal order and add credit bucket (paid credits, never expires)."""
-    _require_configured()
+    """Capture Atzmai transaction and add credit bucket (paid credits, never expires)."""
     db = get_db()
+    from app.services import atzmai_client
     
     purchase = await db.ai_credit_purchases.find_one(
         {"id": purchase_id, "user_id": user["id"]}, {"_id": 0}
     )
     if not purchase:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="AI credit purchase not found")
-    
+        
     if purchase.get("status") == "captured":
         return {"ok": True, "already_captured": True, "purchase": purchase}
+        
+    topup = await db.atzmai_topups.find_one({"id": purchase_id})
+    if not topup:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Atzmai transaction not found")
+        
+    is_captured = topup.get("status") == "captured" or atzmai_client.is_mock_mode()
     
-    order_id = purchase.get("paypal_order_id")
-    if not order_id:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Purchase has no paypal_order_id")
-    
-    try:
-        captured = await paypal_client.capture_order(order_id)
-    except paypal_client.PayPalError as exc:
-        await db.ai_credit_purchases.update_one(
+    if is_captured and topup.get("status") != "captured":
+        await db.atzmai_topups.update_one(
             {"id": purchase_id},
-            {"$set": {"status": "failed", "updated_at": _now_iso()}},
+            {"$set": {"status": "captured", "updated_at": _now_iso()}}
         )
-        raise HTTPException(status.HTTP_502_BAD_GATEWAY, {"paypal_error": str(exc.body)}) from exc
-    
-    capture_status = (
-        (captured.get("purchase_units") or [{}])[0]
-        .get("payments", {})
-        .get("captures", [{}])[0]
-        .get("status", "COMPLETED")
-    )
-    capture_id = (
-        (captured.get("purchase_units") or [{}])[0]
-        .get("payments", {})
-        .get("captures", [{}])[0]
-        .get("id")
-    )
-    payer_email = (captured.get("payer") or {}).get("email_address")
-    
-    new_status = "captured" if capture_status == "COMPLETED" else "pending"
+        
+    if not is_captured:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Payment has not been captured yet")
+        
     await db.ai_credit_purchases.update_one(
         {"id": purchase_id},
         {
             "$set": {
-                "status": new_status,
-                "paypal_capture_id": capture_id,
-                "captured_at": _now_iso() if new_status == "captured" else None,
-                "payer_email": payer_email,
+                "status": "captured",
+                "captured_at": _now_iso(),
                 "updated_at": _now_iso(),
             }
         },
     )
     
-    if new_status == "captured":
-        credits_added = int(purchase["credits_amount"])
-        
-        # Create a NEW credit bucket (PAID, never expires) as per modern system
-        from datetime import datetime, timezone
-        new_bucket = {
-            "amount": credits_added,
-            "type": "paid",
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "expires_at": None,  # Paid credits never expire
-        }
-        
-        # Get current user record and add bucket
-        user_record = await db.users.find_one({"id": user["id"]})
-        user_record["credit_buckets"] = user_record.get("credit_buckets", [])
-        user_record["credit_buckets"].append(new_bucket)
-        
+    credits_added = int(purchase["credits_amount"])
+    from datetime import datetime, timezone
+    new_bucket = {
+        "amount": credits_added,
+        "type": "paid",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "expires_at": None,
+    }
+    
+    user_record = await db.users.find_one({"id": user["id"]})
+    if user_record:
+        from app.models.credit import add_credit_bucket
+        updated_buckets = user_record.get("credit_buckets", [])
+        updated_buckets.append(new_bucket)
         await db.users.update_one(
             {"id": user["id"]},
-            {"$set": {"credit_buckets": user_record["credit_buckets"]}},
+            {"$set": {"credit_buckets": updated_buckets}},
         )
         
-        # Also update legacy field for backward compatibility if needed
         ai_config = user_record.get("ai_configuration", {})
         existing = int(ai_config.get("current_credits", 0))
         await db.users.update_one(
             {"id": user["id"]},
             {"$set": {"ai_configuration.current_credits": existing + credits_added}},
         )
-    
+        try:
+            from app.api.v1.atzmai import trigger_success_email
+            import asyncio
+            asyncio.create_task(
+                trigger_success_email(
+                    user_record=user_record,
+                    amount_cents=int(purchase["amount_cents"]),
+                    currency=purchase.get("currency", "USD"),
+                    credits_purchased=credits_added,
+                    atzmai_payment_id=purchase.get("paypal_order_id") or purchase_id
+                )
+            )
+        except Exception as e:
+            logger.error(f"Failed to dispatch thank-you email: {e}")
+        
     final = await db.ai_credit_purchases.find_one({"id": purchase_id}, {"_id": 0})
-    return {"ok": new_status == "captured", "purchase": final}
+    return {"ok": True, "purchase": final}
 
 
 @ai_credits_router.get("/history")
@@ -622,4 +663,28 @@ async def get_trial_status(
         return result
     except Exception as e:
         logger.error(f"Error checking trial status: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@quota_router.get("/status")
+async def get_status(
+    user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get current credit quota status with actionable messages for frontend."""
+    from app.services.quota_manager import check_quota_status
+    try:
+        return await check_quota_status(user)
+    except Exception as e:
+        logger.error(f"Error getting quota status for user {user.get('id', 'unknown')}: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@quota_router.get("/config")
+async def get_config() -> Dict[str, Any]:
+    """Get global quota configuration thresholds for frontend UI rendering."""
+    from app.services.quota_manager import get_quota_config
+    try:
+        return await get_quota_config()
+    except Exception as e:
+        logger.error(f"Error getting quota config: {str(e)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
