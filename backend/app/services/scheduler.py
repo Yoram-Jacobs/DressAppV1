@@ -240,16 +240,13 @@ async def check_scheduler_triggers() -> None:
     try:
         db = get_db()
         now = datetime.now(timezone.utc)
-        current_time_str = now.strftime("%H:%M")
-        current_day_str = now.strftime("%A").lower()
 
         # Query users with scheduler enabled and push subscriptions
         cursor = db.users.find(
             {
                 "scheduler_settings.enabled": True,
                 "web_push_subscriptions.0": {"$exists": True},
-            },
-            {"_id": 0, "id": 1, "scheduler_settings": 1, "web_push_subscriptions": 1}
+            }
         )
 
         async for user in cursor:
@@ -259,6 +256,16 @@ async def check_scheduler_triggers() -> None:
                     continue
 
                 sched = user.get("scheduler_settings") or {}
+
+                # Convert current UTC time to user's local time based on their timezone
+                user_timezone = sched.get("timezone") or "UTC"
+                try:
+                    from zoneinfo import ZoneInfo
+                    local_now = now.astimezone(ZoneInfo(user_timezone))
+                except Exception:
+                    local_now = now
+                current_time_str = local_now.strftime("%H:%M")
+                current_day_str = local_now.strftime("%A").lower()
 
                 # Check notification time matches (within 1-minute window)
                 notif_time = sched.get("time") or sched.get("notification_time") or "08:00"
@@ -277,14 +284,41 @@ async def check_scheduler_triggers() -> None:
                 if sched.get("push_enabled") is False:
                     continue
 
+                # Fetch weather (soft-fail)
+                weather_ctx = None
+                try:
+                    from app.services.weather_service import weather_service
+                    home = user.get("home_location") or {}
+                    lat = home.get("lat")
+                    lng = home.get("lng")
+                    lang = user.get("preferred_language") or "en"
+                    if lat is not None and lng is not None and weather_service is not None:
+                        weather_ctx = await weather_service.fetch(float(lat), float(lng), lang=lang)
+                except Exception as w_exc:
+                    logger.warning("Failed to fetch weather for user %s: %s", user_id, w_exc)
+
                 # Generate outfit proposals
                 style_option = sched.get("style_option") or sched.get("style_dress_for") or "casual"
                 
+                # Sanitize user dict to prevent ObjectId JSON serialization errors
+                user_clean = dict(user)
+                user_clean.pop("_id", None)
+
                 try:
-                    from app.services.stylist_scheduler_brain import generate_scheduled_proposals
-                    proposals_result = await generate_scheduled_proposals(user, style_option)
-                    proposals = proposals_result.get("outfit_recommendations") or []
-                    
+                    try:
+                        from app.services.stylist_scheduler_brain import generate_scheduled_proposals
+                        proposals_result = await generate_scheduled_proposals(user_clean, style_option, weather=weather_ctx)
+                        proposals = proposals_result.get("outfit_recommendations") or []
+                        if not proposals:
+                            raise ValueError("No proposals returned from LLM brain")
+                    except Exception as prop_exc:
+                        logger.warning("Failed to generate scheduled proposals from LLM brain, falling back to rule-based: %s", prop_exc)
+                        # Fallback to local rule-based scheduler
+                        cursor_items = db.closet_items.find({"user_id": user_id})
+                        closet_items = [d async for d in cursor_items]
+                        fallback_result = _generate_fallback_advice(closet_items, style_option, weather_ctx=weather_ctx)
+                        proposals = fallback_result.get("outfit_recommendations") or []
+
                     if not proposals:
                         logger.info("No proposals generated for user %s, skipping", user_id)
                         continue
@@ -310,8 +344,8 @@ async def check_scheduler_triggers() -> None:
                     
                     logger.info("Sent scheduled notification to user %s", user_id)
 
-                except Exception as prop_exc:
-                    logger.warning("Failed to generate/send proposals for user %s: %s", user_id, prop_exc)
+                except Exception as trigger_exc:
+                    logger.warning("Failed to process notification generation/sending for user %s: %s", user_id, trigger_exc)
 
             except Exception as user_exc:
                 logger.warning("Error processing scheduler for user %s: %s", user.get("id"), user_exc)

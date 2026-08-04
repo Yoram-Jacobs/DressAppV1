@@ -270,7 +270,7 @@ class Settings:
 
 
     # --- OpenWeatherMap ---
-    OPENWEATHER_API_KEY: str | None = os.environ.get("OPENWEATHER_API_KEY")
+    OPENWEATHER_API_KEY: str | None = os.environ.get("OPENWEATHER_API_KEY") or os.environ.get("OPENWEATHERMAP_API_KEY")
 
     # --- Stripe (legacy; Phase 4P swaps to PayPal) ---
     STRIPE_SECRET_KEY: str | None = os.environ.get("STRIPE_SECRET_KEY") or None

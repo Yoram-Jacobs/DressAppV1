@@ -247,6 +247,36 @@ async def check_operation_quota(user_id: str, required_credits: int = 1, operati
         if not user_record:
             return False, CreditQuotaStatus.EXHAUSTED, "User not found"
         
+        ai_config = user_record.get("ai_configuration", {})
+        legacy_credits = ai_config.get("current_credits", 0)
+        
+        # On-the-fly migration: if credit_buckets is missing or empty, but legacy credits exist,
+        # create a paid bucket with the legacy credits.
+        buckets = user_record.get("credit_buckets")
+        if (buckets is None or len(buckets) == 0) and legacy_credits > 0:
+            import uuid
+            from datetime import datetime, timezone
+            new_bucket = {
+                "id": str(uuid.uuid4()),
+                "amount": legacy_credits,
+                "type": "paid",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "expires_at": None,
+                "description": "Legacy migrated credits"
+            }
+            await db.users.update_one(
+                {"id": user_id},
+                {
+                    "$set": {
+                        "credit_buckets": [new_bucket],
+                        "ai_configuration.current_credits": legacy_credits
+                    }
+                }
+            )
+            # Reload the record to get updated buckets
+            user_record = await db.users.find_one({"id": user_id})
+            logger.info("Migrated legacy %d credits to bucket for user %s", legacy_credits, user_id)
+
         u_model = User.parse_obj(user_record)
         ai_config = user_record.get("ai_configuration", {})
         
