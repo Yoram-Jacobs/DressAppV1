@@ -41,6 +41,7 @@ async def generate_payment_link(
     fail_redirect_url: Optional[str] = None,
     callback_url: Optional[str] = None,
     atzmai_client_id: Optional[str] = None,
+    currency: str = "USD",
 ) -> Dict[str, Any]:
     if is_mock_mode():
         import urllib.parse
@@ -76,6 +77,9 @@ async def generate_payment_link(
         "email": email,
         "phone": phone or "",
         "language": language,
+        "currency": currency.upper(),
+        "currencyCode": currency.upper(),
+        "currencyId": 2 if currency.upper() == "USD" else 1,
     }
     if redirect_url:
         payload["redirectURL"] = redirect_url
@@ -105,6 +109,7 @@ async def generate_recurring_payment_link(
     redirect_url: Optional[str] = None,
     callback_url: Optional[str] = None,
     atzmai_client_id: Optional[str] = None,
+    currency: str = "USD",
 ) -> Dict[str, Any]:
     if is_mock_mode():
         import urllib.parse
@@ -142,6 +147,9 @@ async def generate_recurring_payment_link(
         "recurringPeriod": recurring_period,
         "paymentsCount": payments_count,
         "startDate": start_date,
+        "currency": currency.upper(),
+        "currencyCode": currency.upper(),
+        "currencyId": 2 if currency.upper() == "USD" else 1,
     }
     if redirect_url:
         payload["redirectURL"] = redirect_url
@@ -166,6 +174,7 @@ async def generate_bit_payment_link(
     language: str = "he",
     callback_url: Optional[str] = None,
     atzmai_client_id: Optional[str] = None,
+    currency: str = "USD",
 ) -> Dict[str, Any]:
     if is_mock_mode():
         import urllib.parse
@@ -201,6 +210,9 @@ async def generate_bit_payment_link(
         "phone": phone,
         "email": email,
         "language": language,
+        "currency": currency.upper(),
+        "currencyCode": currency.upper(),
+        "currencyId": 2 if currency.upper() == "USD" else 1,
     }
     if callback_url:
         payload["callbackUrl"] = callback_url

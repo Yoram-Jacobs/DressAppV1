@@ -446,9 +446,9 @@ async def listing_buy_create(
     email = user["email"]
     customer_name = f"{user.get('first_name', 'User')} {user.get('last_name', '')}".strip() or "User"
     
-    # Default local development port proxy
+    # Resolve callback and redirect URLs dynamically
     redirect_url = f"{settings.APP_PUBLIC_URL}/transactions?sub_status=success&token={listing_id}"
-    callback_url = "http://localhost:8001/api/v1/atzmai/webhook"
+    callback_url = f"{settings.APP_PUBLIC_URL}/api/v1/atzmai/webhook"
 
     try:
         items = [{"amount": amount_units, "description": description}]
@@ -461,7 +461,8 @@ async def listing_buy_create(
             redirect_url=redirect_url,
             fail_redirect_url=redirect_url,
             callback_url=callback_url,
-            atzmai_client_id=user["id"]
+            atzmai_client_id=user["id"],
+            currency=currency,
         )
     except atzmai_client.AtzmaiError as exc:
         raise HTTPException(502, {"atzmai_error": str(exc.body)}) from exc
@@ -702,9 +703,9 @@ async def create_subscription_order(
     recurring_period = 4 if payload.plan_type == "yearly" else 3
     payments_count = 12 if payload.plan_type == "yearly" else 999
     
-    # Default local development port proxy
+    # Resolve callback and redirect URLs dynamically
     redirect_url = payload.return_url or f"{settings.APP_PUBLIC_URL}/profile?sub_status=success"
-    callback_url = "http://localhost:8001/api/v1/atzmai/webhook"  # fallback or default env webhook
+    callback_url = f"{settings.APP_PUBLIC_URL}/api/v1/atzmai/webhook"
     
     try:
         resp = await atzmai_client.generate_recurring_payment_link(
@@ -718,7 +719,8 @@ async def create_subscription_order(
             start_date=start_date,
             redirect_url=redirect_url,
             callback_url=callback_url,
-            atzmai_client_id=user["id"]
+            atzmai_client_id=user["id"],
+            currency="USD",
         )
     except atzmai_client.AtzmaiError as exc:
         raise HTTPException(502, {"atzmai_error": str(exc.body)}) from exc

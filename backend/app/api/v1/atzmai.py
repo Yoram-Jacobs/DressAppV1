@@ -119,7 +119,8 @@ async def create_atzmai_topup(
                 start_date=start_date,
                 redirect_url=redirect_url,
                 callback_url=callback_url,
-                atzmai_client_id=user["id"]
+                atzmai_client_id=user["id"],
+                currency=currency
             )
         elif payload.method == "bit":
             resp = await atzmai_client.generate_bit_payment_link(
@@ -130,7 +131,8 @@ async def create_atzmai_topup(
                 email=user["email"],
                 language="he",
                 callback_url=callback_url,
-                atzmai_client_id=user["id"]
+                atzmai_client_id=user["id"],
+                currency=currency
             )
         else:
             items = [{"amount": amount_units, "description": description}]
@@ -143,7 +145,8 @@ async def create_atzmai_topup(
                 redirect_url=redirect_url,
                 fail_redirect_url=redirect_url,
                 callback_url=callback_url,
-                atzmai_client_id=user["id"]
+                atzmai_client_id=user["id"],
+                currency=currency
             )
     except atzmai_client.AtzmaiError as exc:
         logger.error(f"Atzmai API failure: {exc}")

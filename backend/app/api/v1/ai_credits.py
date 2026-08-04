@@ -215,10 +215,10 @@ async def create_purchase(
     email = user["email"]
     customer_name = f"{user.get('first_name', 'User')} {user.get('last_name', '')}".strip() or "User"
     
-    # Default local development port proxy
+    # Resolve callback and redirect URLs dynamically
     redirect_url = f"{settings.APP_PUBLIC_URL}/pricing/purchase?sub_status=success&token={purchase_id}"
     fail_redirect_url = f"{settings.APP_PUBLIC_URL}/pricing/purchase?sub_status=cancel&token={purchase_id}"
-    callback_url = "http://localhost:8001/api/v1/atzmai/webhook"
+    callback_url = f"{settings.APP_PUBLIC_URL}/api/v1/atzmai/webhook"
     
     try:
         items = [{"amount": amount_units, "description": description}]
@@ -231,7 +231,8 @@ async def create_purchase(
             redirect_url=redirect_url,
             fail_redirect_url=fail_redirect_url,
             callback_url=callback_url,
-            atzmai_client_id=user["id"]
+            atzmai_client_id=user["id"],
+            currency=currency,
         )
     except atzmai_client.AtzmaiError as exc:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, {"atzmai_error": str(exc.body)}) from exc
