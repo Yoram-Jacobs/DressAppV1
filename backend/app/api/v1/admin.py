@@ -900,3 +900,66 @@ async def admin_edit_campaign(
     })
     doc = await db.experts_campaigns.find_one({"id": campaign_id}, {"_id": 0})
     return _strip_campaign(doc)
+
+
+# -------------------- Eyes provider toggle --------------------
+# These two routes are the missing link between the DeveloperPanel
+# frontend toggle (Profile → Developer / Internal) and the
+# eyes_override service that backs vision/service.py routing.
+#
+# GET  /admin/eyes  — read active provider + wiring sanity flags
+# POST /admin/eyes  — flip/clear the DB-backed provider override
+
+
+class _EyesSetBody(BaseModel):
+    provider: str | None = Field(
+        None,
+        description="'gemma' | 'gemini' | null (null clears the override)",
+    )
+
+
+@router.get("/eyes")
+async def eyes_status(admin: dict = Depends(require_admin)) -> dict[str, Any]:
+    """Return the current Eyes provider resolution + wiring sanity flags.
+
+    Response shape mirrors ``eyes_override.status()`` and also injects
+    the most recent ``garment-vision`` activity record so the
+    DeveloperPanel "Last analyze call" badge has data.
+    """
+    from app.services import eyes_override
+
+    result = await eyes_override.status()
+    # Enrich with the last garment-vision provider_activity record so
+    # the "Last analyze call" panel badge shows latency / ok / error.
+    summary = provider_activity.summary()
+    result["last_call"] = summary.get("garment-vision")
+    return result
+
+
+@router.post("/eyes")
+async def eyes_set(
+    body: _EyesSetBody,
+    admin: dict = Depends(require_admin),
+) -> dict[str, Any]:
+    """Flip or clear the runtime Eyes provider override.
+
+    Writes to ``config.{_id: 'eyes_provider'}`` in Mongo. The change
+    propagates to all backend analyse calls within ~5 s (the
+    eyes_override cache TTL). Pass ``provider: null`` to clear the
+    override and revert to the env-default.
+    """
+    from app.services import eyes_override
+
+    try:
+        result = await eyes_override.set_override(
+            body.provider,
+            by_email=admin.get("email"),
+        )
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+    # Enrich with last activity record (same as GET) so the UI can
+    # refresh from the POST response without a second round-trip.
+    summary = provider_activity.summary()
+    result["last_call"] = summary.get("garment-vision")
+    return result
