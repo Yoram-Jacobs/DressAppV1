@@ -1833,6 +1833,26 @@ export default function AddItem() {
         setCards((prev) => prev.filter((c) => c.id !== slot.id));
       };
 
+      const handleField = (frame) => {
+        const slot = flatSlotIds[frame.index];
+        if (!slot) return;
+        const { id: slotId } = slot;
+        setCards((prev) =>
+          prev.map((c) =>
+            c.id === slotId
+              ? {
+                  ...c,
+                  fields: {
+                    ...c.fields,
+                    ...frame.fields,
+                  },
+                  label: frame.fields.sub_category || frame.fields.item_type || c.label || frame.fields.title || frame.fields.name,
+                }
+              : c
+          )
+        );
+      };
+
       const images_base64 = cardsToProcess.map(c => c.base64);
       const payload = { images_base64, language: requestLang };
 
@@ -1842,6 +1862,7 @@ export default function AddItem() {
           onDetect: handleDetect,
           onItem: handleItem,
           onItemSkip: handleItemSkip,
+          onField: handleField,
         }
       );
       clearInterval(tick);
@@ -2067,12 +2088,32 @@ export default function AddItem() {
         setCards((prev) => prev.filter((c) => c.id !== slotId));
       };
 
+      const handleField = (frame) => {
+        const slotId = perCardIds[frame.index];
+        if (!slotId) return;
+        setCards((prev) =>
+          prev.map((c) =>
+            c.id === slotId
+              ? {
+                  ...c,
+                  fields: {
+                    ...c.fields,
+                    ...frame.fields,
+                  },
+                  label: frame.fields.sub_category || frame.fields.item_type || c.label || frame.fields.title || frame.fields.name,
+                }
+              : c
+          )
+        );
+      };
+
       const resp = await api.analyzeItemImage(
         { image_base64: card.base64, language: requestLang },
         {
           onDetect: handleDetect,
           onItem: handleItem,
           onItemSkip: handleItemSkip,
+          onField: handleField,
         }
       );
       clearInterval(tick);

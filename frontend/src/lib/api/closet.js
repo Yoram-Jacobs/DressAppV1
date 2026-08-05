@@ -1,4 +1,4 @@
-﻿import { client, tokenStore } from './client.js';
+import { client, tokenStore } from './client.js';
 import { streamNdjson } from './streaming.js';
 
 export const closet = {
@@ -124,6 +124,9 @@ export const closet = {
               break;
             case 'item_skip':
               callbacks.onItemSkip?.(frame);
+              break;
+            case 'field':
+              callbacks.onField?.(frame);
               break;
             case 'done':
               doneCount = frame.count || 0;
