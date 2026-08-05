@@ -979,72 +979,61 @@ ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
         ["name", "title", "category", "sub_category", "item_type"],
         280,
         (
-            'Return ONLY a JSON object with exactly these keys:\n'
-            '{\n'
-            '  "name": "2-5 distinctive words, e.g. \\"ribbed slim crewneck\\"",\n'
-            '  "title": "short fallback title, e.g. \\"Blue Sweater\\"",\n'
-            '  "category": "one of: Top, Bottom, Outerwear, Full Body, Footwear, Accessories, Underwear",\n'
-            '  "sub_category": "e.g. T-shirt, Dress, Coat, Sneakers",\n'
-            '  "item_type": "specific type, e.g. Oxford shirt, Mini-dress"\n'
-            '}'
-        ),
+            'Identify the garment:\n'
+            '- name: 2-5 unique, distinguishing words (e.g. "heavyweight boxy tee", "hooded windbreaker")\n'
+            '- title: short fallback title matching name (e.g. "Boxy Tee", "Windbreaker Jacket")\n'
+            '- category: Top | Bottom | Outerwear | Full Body | Footwear | Accessories | Underwear\n'
+            '- sub_category: e.g. Shirt, Pants, Jacket, Dress, Sneakers\n'
+            '- item_type: specific type, e.g. Oxford shirt, Bomber jacket, Parka'
+        )
     ),
     (
         "visual",
         ["colors", "pattern", "fabric_materials"],
         320,
         (
-            'Return ONLY a JSON object:\n'
-            '{\n'
-            '  "colors": [{"name": "color name", "pct": integer 0-100}],\n'
-            '  "pattern": "one of: solid, striped, plaid, floral, herringbone, polka, paisley, geometric, abstract",\n'
-            '  "fabric_materials": [{"name": "fabric", "pct": integer 0-100}]\n'
-            '}\n'
-            'colors[*].pct should sum to ~100. fabric_materials[*].pct should sum to ~100.'
-        ),
+            'Analyze visual properties:\n'
+            '- colors: list of [{"name": "color name", "pct": 0-100}] summing to 100\n'
+            '- pattern: solid | striped | plaid | floral | herringbone | polka | paisley | geometric | abstract\n'
+            '- fabric_materials: list of [{"name": "fabric", "pct": 0-100}] summing to 100 (infer composition)'
+        )
     ),
     (
         "context",
         ["gender", "dress_code", "season", "tradition"],
         120,
         (
-            'Return ONLY a JSON object:\n'
-            '{\n'
-            '  "gender": "men OR women OR unisex OR kids",\n'
-            '  "dress_code": "one of: casual, smart-casual, business, formal, athletic, loungewear",\n'
-            '  "season": ["spring" and/or "summer" and/or "fall" and/or "winter" and/or "all"],\n'
-            '  "tradition": "cultural/religious style if clearly visible (e.g. arabic, jewish, indian), else null"\n'
-            '}'
-        ),
+            'Analyze context of use:\n'
+            '- gender: men | women | unisex | kids\n'
+            '- dress_code: casual | smart-casual | business | formal | athletic | loungewear\n'
+            '- season: array of spring, summer, fall, winter, all\n'
+            '- tradition: cultural/religious style if clearly visible (e.g. arabic, jewish, indian), else null'
+        )
     ),
     (
         "condition",
         ["state", "condition", "quality", "size", "brand"],
         160,
         (
-            'Return ONLY a JSON object:\n'
-            '{\n'
-            '  "state": "new OR used",\n'
-            '  "condition": "bad OR fair OR good OR excellent",\n'
-            '  "quality": "budget OR mid OR premium OR luxury",\n'
-            '  "size": "readable label/tag in photo only, else null",\n'
-            '  "brand": "legibly visible brand only, else null"\n'
-            '}'
-        ),
+            'Analyze physical condition:\n'
+            '- state: new | used\n'
+            '- condition: bad | fair | good | excellent\n'
+            '- quality: budget | mid | premium | luxury\n'
+            '- size: readable size label/tag in photo, else null\n'
+            '- brand: legibly visible brand name, else null'
+        )
     ),
     (
         "narrative",
         ["caption", "price_cents", "repair_advice", "tags"],
         520,
         (
-            'Return ONLY a JSON object:\n'
-            '{\n'
-            '  "caption": "ONE confident vivid sentence max 240 chars. No hedging (no seems/appears/probably).",\n'
-            '  "price_cents": "estimated resale value in USD cents as integer, or null",\n'
-            '  "repair_advice": "short actionable tip if badly worn, else null",\n'
-            '  "tags": ["3 to 8 searchable keywords"]\n'
-            '}'
-        ),
+            'Generate narrative fields:\n'
+            '- caption: ONE confident vivid sentence (max 240 chars) describing silhouette and key details. No hedging!\n'
+            '- price_cents: estimated resale value in USD cents as integer, or null\n'
+            '- repair_advice: short actionable restoration tip if condition is bad, else null\n'
+            '- tags: array of 3 to 8 searchable keywords'
+        )
     ),
 ]
 
@@ -1089,22 +1078,59 @@ async def call_gemma_space_stream_attributes(
     lang_name = _LANG_NAMES.get(lang_code, lang_code) if lang_code != "en" else None
 
     for group_name, field_names, max_tokens, sys_snippet in ATTRIBUTE_GROUPS:
-        # Build a minimal, focused system prompt for this group only.
+        # Build stitched system prompt: Header + Style Rules + Group Questions
         sys_parts = [
-            "You are DressApp's garment analyst. Look at the garment photo.",
+            "You are The Eyes — DressApp's visual garment analyst. Your job is to describe the garment in the photo in exhaustive, merchandisable detail for an Add-Item form. Be confident, concise, and never invent brand names or details that are not visible.\n",
+            "Style Rules:\n"
+            "- CONFIDENCE: Do not hedge (do not use 'seems', 'appears', 'looks like', 'probably'). State observations directly.\n"
+            "- VOICE: Thoughtful, professional editor. No markdown, emojis, or sales pitch."
         ]
-        # Language directive only for text-heavy groups to save tokens.
-        if lang_name and group_name in _TEXT_GROUPS:
-            sys_parts.append(
-                f"OUTPUT LANGUAGE: {lang_name}. "
-                f"All free-text values must be written in fluent {lang_name}. "
-                "JSON keys and enum tokens stay in English."
-            )
-        sys_parts.append(sys_snippet)
-        sys_parts.append("Return only the JSON object. No markdown, no commentary.")
+        
+        # Add target language rule if applicable
+        if lang_name:
+            sys_parts.append(f"- LANGUAGE: All free-text values must be written in fluent {lang_name}.")
+        
+        sys_parts.append(f"\n{sys_snippet}\n")
+        sys_parts.append("Return ONLY the JSON object. No markdown, no commentary.")
         system_prompt = "\n".join(sys_parts)
 
         user_text = "Analyse this garment photo and return the JSON."
+
+        # Build strict JSON schema for this group to grammar-constrain Gemma.
+        import copy
+        properties = {}
+        for name in field_names:
+            if name in _GARMENT_OBJECT_SCHEMA["properties"]:
+                prop = copy.deepcopy(_GARMENT_OBJECT_SCHEMA["properties"][name])
+                
+                # Enforce maxLength on string fields to prevent repetition loops
+                if isinstance(prop, dict):
+                    p_type = prop.get("type")
+                    if p_type == "string" and "maxLength" not in prop and "enum" not in prop:
+                        prop["maxLength"] = 16 if name == "size" else 36
+                    elif isinstance(p_type, list) and "string" in p_type and "maxLength" not in prop:
+                        prop["maxLength"] = 16 if name == "size" else 36
+                    
+                    # Nested array properties (colors, fabric_materials, tags)
+                    if p_type == "array" and "items" in prop:
+                        items_schema = prop["items"]
+                        if isinstance(items_schema, dict):
+                            i_type = items_schema.get("type")
+                            if i_type == "string" and "maxLength" not in items_schema:
+                                items_schema["maxLength"] = 24
+                            elif i_type == "object" and "properties" in items_schema:
+                                for sub_p_name, sub_p in items_schema["properties"].items():
+                                    if isinstance(sub_p, dict) and sub_p.get("type") == "string":
+                                        sub_p["maxLength"] = 24
+                
+                properties[name] = prop
+
+        group_schema = {
+            "type": "object",
+            "properties": properties,
+            "required": field_names,
+            "additionalProperties": False,
+        }
 
         try:
             raw = await _call_gemma_space(
@@ -1112,10 +1138,9 @@ async def call_gemma_space_stream_attributes(
                 user_text=user_text,
                 image_b64_jpeg=image_b64_jpeg,
                 max_tokens=max_tokens,
-                temperature=0.1,
+                temperature=1.0,
                 timeout=tpg,
-                # json_mode=True keeps the output valid JSON without
-                # requiring a full grammar schema per group.
+                json_schema=group_schema,
             )
         except Exception as exc:  # noqa: BLE001
             logger.warning(

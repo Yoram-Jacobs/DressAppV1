@@ -65,7 +65,7 @@ API_TOKEN = os.environ.get("EYES_API_TOKEN")
 
 N_THREADS = int(os.environ.get("LLAMA_THREADS", "2"))
 N_CTX = int(os.environ.get("LLAMA_CTX_SIZE", "4096"))
-N_BATCH = int(os.environ.get("LLAMA_N_BATCH", "256"))
+N_BATCH = int(os.environ.get("LLAMA_N_BATCH", "2048"))
 
 LLAMA_BIN = os.environ.get("LLAMA_BIN", "/usr/local/bin/llama-server")
 LLAMA_INTERNAL_HOST = "127.0.0.1"
@@ -240,6 +240,7 @@ def _build_llama_argv(model_path: Path, mmproj_path: Path | None) -> list[str]:
         "--ctx-size", str(N_CTX),
         "--threads", str(N_THREADS),
         "--batch-size", str(N_BATCH),
+        "--ubatch-size", str(N_BATCH),
         "--n-predict", "1024",
         "--jinja",
         "--reasoning-budget", "0",
@@ -386,6 +387,8 @@ class PredictIn(BaseModel):
     temperature: float = Field(default=0.2, ge=0.0, le=1.5)
     top_p: float = Field(default=0.9, ge=0.0, le=1.0)
     json_mode: bool = False
+    json_schema: dict[str, Any] | None = None
+    response_format: dict[str, Any] | None = None
 
 
 class PredictOut(BaseModel):
@@ -489,7 +492,9 @@ async def predict(req: PredictIn) -> PredictOut:
         "top_p": req.top_p,
         "stream": False,
     }
-    if req.json_mode:
+    if req.response_format:
+        payload["response_format"] = req.response_format
+    elif req.json_mode:
         payload["response_format"] = {"type": "json_object"}
 
     client: httpx.AsyncClient = app.state.client
