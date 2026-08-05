@@ -1049,6 +1049,7 @@ async def call_gemma_space_stream_attributes(
     timeout_per_group: float | None = None,
     segformer_label: str | None = None,
     segformer_category: str | None = None,
+    request_id: str | None = None,
 ) -> "AsyncIterator[tuple[str, list[str], dict[str, Any]]]":
     """Patch M23 — per-attribute streaming for Gemma on CPU.
 
@@ -1118,6 +1119,8 @@ async def call_gemma_space_stream_attributes(
         system_prompt = "\n".join(sys_parts)
 
         user_text = "Analyse this garment photo and return the JSON."
+        if request_id:
+            user_text = f"Analyse this garment photo (Request ID: {request_id}) and return the JSON."
 
         # Build strict JSON schema for this group to grammar-constrain Gemma.
         import copy

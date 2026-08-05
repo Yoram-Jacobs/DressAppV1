@@ -2132,11 +2132,14 @@ class GarmentVisionService:
                     b64 = base64.b64encode(shrunk).decode("ascii")
                     assembled: dict[str, Any] = {}
 
+                    import uuid
+                    request_id = str(uuid.uuid4())
                     async for grp_name, grp_fields, partial in call_gemma_space_stream_attributes(
                         image_b64_jpeg=b64,
                         language=language,
                         segformer_label=det.get("label"),
                         segformer_category=det.get("category"),
+                        request_id=request_id,
                     ):
                         assembled.update(partial)
                         if partial:  # only emit if the group produced data
