@@ -18,7 +18,11 @@
 }
 
 {$DOMAIN} {
-    encode zstd gzip
+    # Match everything except API routes for compression to avoid proxy buffering on chunked streaming responses
+    @not_api {
+        not path /api/*
+    }
+    encode @not_api zstd gzip
 
     # Backend API — matched first so it never falls through to the SPA.
     handle /api/* {
