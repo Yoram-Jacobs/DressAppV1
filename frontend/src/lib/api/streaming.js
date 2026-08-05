@@ -1,4 +1,4 @@
-﻿import { client, API_BASE, tokenStore } from './client.js';
+import { client, API_BASE, tokenStore } from './client.js';
 
 /**
  * streamNdjson — open an `application/x-ndjson` POST stream from the
@@ -27,7 +27,7 @@ export async function streamNdjson(path, {
     });
   }
   const headers = {
-    'Accept': 'application/x-ndjson',
+    'Accept': 'text/event-stream, application/x-ndjson',
   };
   const tok = tokenStore.get();
   if (tok) headers.Authorization = `Bearer ${tok}`;

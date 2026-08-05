@@ -1096,7 +1096,7 @@ async def analyze_item_image(
     # JSON path on any setup error so a misbehaving client never
     # breaks the API.
     accept = (request.headers.get("accept") or "").lower()
-    wants_ndjson = "application/x-ndjson" in accept
+    wants_ndjson = "application/x-ndjson" in accept or "text/event-stream" in accept
 
     if wants_ndjson:
         async def _ndjson_stream():
@@ -1262,10 +1262,11 @@ async def analyze_item_image(
 
         return StreamingResponse(
             _ndjson_stream(),
-            media_type="application/x-ndjson",
+            media_type="text/event-stream",
             headers={
                 "X-Accel-Buffering": "no",
                 "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
             },
         )
 

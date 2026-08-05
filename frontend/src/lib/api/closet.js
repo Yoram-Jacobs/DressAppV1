@@ -73,7 +73,7 @@ export const closet = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Accept: 'application/x-ndjson',
+          Accept: 'text/event-stream, application/x-ndjson',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(body),
