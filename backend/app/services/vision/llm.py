@@ -444,6 +444,7 @@ _LANG_NAMES = {
     "zh": "Chinese (Simplified)",
     "ja": "Japanese",
     "hi": "Hindi",
+    "nl": "Dutch",
 }
 
 
