@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect  } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,28 @@ export const TopNav = () => {
     { to: '/market', icon: Store, key: 'market', label: t('nav.market') },
     { to: '/experts', icon: UserRound, key: 'experts', label: t('nav.experts') },
   ];
+  useEffect(() => {
+    const handleScroll = () => {
+      const navbar = document.querySelector(".navbar-premium");
+
+      if (!navbar) return;
+
+      if (window.scrollY > 50) {
+        navbar.classList.add("scrolled");
+      } else {
+        navbar.classList.remove("scrolled");
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    // Page refresh hone par bhi check ho jaye
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   return (
     <header data-testid="top-nav" className="">

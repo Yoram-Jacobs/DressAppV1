@@ -12,12 +12,6 @@ import {
   Sparkles,
   Megaphone,
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useLocation } from '@/lib/location';
 import { AdTicker } from '@/components/AdTicker';
 import { useAuth } from '@/lib/auth';
@@ -25,13 +19,17 @@ import { expertsStore } from '@/lib/expertsStore';
 import { useCachedList } from '@/lib/createCachedStore';
 import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
 import { CampaignFeed } from '@/components/CampaignFeed';
-import { cn } from '@/lib/utils';
+
 
 /**
  * Experts directory — public-facing list of self-certified fashion pros.
  * Pre-filters by viewer's country when LocationProvider has coordinates.
  *
  * Tab bar: Experts | Campaigns
+ *
+ * NOTE: styling lives in ./experts-directory.css — this file only owns
+ * markup, state, and data. Nothing about the data flow / API calls below
+ * has changed from the original.
  */
 const INITIAL_FILTERS = {
   profession: '',
@@ -108,234 +106,194 @@ export default function ExpertsDirectory() {
   ];
 
   return (
-    <div className="min-h-full">
-      <div className="container-px max-w-6xl mx-auto pt-6 md:pt-10">
-        <div className="flex items-end justify-between gap-4 mb-6 flex-wrap">
-          <div>
-            <div className="caps-label text-muted-foreground">{t('nav.experts')}</div>
-            <h1
-              className="font-display text-3xl sm:text-4xl mt-1"
-              data-testid="experts-title"
-            >
-              {activeTab === 'campaigns' ? t('campaigns.feed.title') : t('experts.title')}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-2 max-w-xl">
-              {activeTab === 'campaigns' ? t('campaigns.feed.subtitle') : t('experts.subtitle')}
-            </p>
+    <>
+      {/* banner-start */}
+      <section className="closet-banner">
+        <div className="container-fluid">
+          <div className="closet-banner__content">
+            <div className="closet-banner__title-row">
+              {/* <div className="experts-eyebrow">{t('nav.experts')}</div> */}
+              <h1 className="hero-title" data-testid="experts-title">
+                {activeTab === 'campaigns' ? t('campaigns.feed.title') : t('experts.title')}
+              </h1>
+              <p className="hero-description">
+                {activeTab === 'campaigns' ? t('campaigns.feed.subtitle') : t('experts.subtitle')}
+              </p>
+            </div>
           </div>
+        </div>
+      </section>
+      <section className="experts-page">
+        <div className="container-fluid">
+          {/* tabs */}
+          <div className="experts-tabs" role="tablist" aria-label={t('experts.tabBar')}>
+            {TABS.map(({ id, label, Icon }) => (
+              <button key={id} role="tab" aria-selected={activeTab === id} onClick={() => setTab(id)}
+                className={`experts-tab${activeTab === id ? ' is-active' : ''}`}
+                data-testid={`experts-tab-${id}`}>
+                <Icon className="experts-tab-icon" />
+                {label}
+              </button>
+            ))}
+          </div>
+          {/* ---- EXPERTS TAB ---- */}
           {activeTab === 'experts' && (
-            <Badge
-              variant="outline"
-              className="rounded-full bg-card caps-label"
-              data-testid="experts-count-badge"
-            >
-              {t('experts.countLabel', { count: total })}
-            </Badge>
-          )}
-        </div>
-
-        {/* Tab bar */}
-        <div
-          className="flex gap-1 mb-6 bg-secondary/50 rounded-xl p-1 w-fit"
-          role="tablist"
-          aria-label={t('experts.tabBar')}
-        >
-          {TABS.map(({ id, label, Icon }) => (
-            <button
-              key={id}
-              role="tab"
-              aria-selected={activeTab === id}
-              onClick={() => setTab(id)}
-              className={cn(
-                'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm transition-all font-medium',
-                activeTab === id
-                  ? 'bg-background shadow text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-              data-testid={`experts-tab-${id}`}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* ---- EXPERTS TAB ---- */}
-        {activeTab === 'experts' && (
-          <>
-            {/* Filters */}
-            <Card
-              className="rounded-[calc(var(--radius)+6px)] shadow-editorial mb-6"
-              data-testid="experts-filter-card"
-            >
-              <CardContent className="p-5">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                  <div>
-                    <Label className="caps-label text-muted-foreground">
-                      {t('experts.filters.search')}
-                    </Label>
-                    <div className="relative mt-1">
-                      <SearchIcon className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        value={draft.q}
-                        onChange={(e) => setDraft({ ...draft, q: e.target.value })}
-                        onKeyDown={(e) => e.key === 'Enter' && apply()}
-                        className="ps-9 rounded-xl"
-                        placeholder={t('experts.filters.search')}
-                        data-testid="experts-filter-search"
-                      />
+            <>
+              {/* Filters */}
+              <div className="filter-card" data-testid="experts-filter-card">
+                <div className="row">
+                  <div className='col-md-12'>
+                    <div className='expert-main'>
+                      <div class=""><h6><i class="fa-solid fa-sliders me-2"></i>Filters</h6></div>
+                      {activeTab === 'experts' && (
+                        <span className="experts-count-tag" data-testid="experts-count-badge">
+                          {t('experts.countLabel', { count: total })}
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <div>
-                    <Label className="caps-label text-muted-foreground">
-                      {t('experts.filters.profession')}
-                    </Label>
-                    <Input
-                      list="experts-profession-suggestions"
-                      value={draft.profession}
-                      onChange={(e) =>
-                        setDraft({ ...draft, profession: e.target.value })
-                      }
-                      onKeyDown={(e) => e.key === 'Enter' && apply()}
-                      className="mt-1 rounded-xl"
-                      placeholder={t('experts.filters.anyProfession')}
-                      data-testid="experts-filter-profession"
-                    />
-                    <datalist id="experts-profession-suggestions">
-                      {professions.map((p) => (
-                        <option key={p} value={p} />
-                      ))}
-                    </datalist>
+                  <div className="col-md-3">
+                    <div className="field-set">
+                      <label>{t('experts.filters.search')}</label>
+                      <div className="filter-input-wrap has-icon">
+                        <SearchIcon className="filter-search-icon" />
+                        <input
+                          value={draft.q}
+                          onChange={(e) => setDraft({ ...draft, q: e.target.value })}
+                          onKeyDown={(e) => e.key === 'Enter' && apply()}
+                          className="createlisting-input"
+                          placeholder={t('experts.filters.search')}
+                          data-testid="experts-filter-search"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <Label className="caps-label text-muted-foreground">
-                      {t('experts.filters.country')}
-                    </Label>
-                    <Input
-                      value={draft.country}
-                      onChange={(e) =>
-                        setDraft({ ...draft, country: e.target.value })
-                      }
-                      onKeyDown={(e) => e.key === 'Enter' && apply()}
-                      className="mt-1 rounded-xl"
-                      placeholder={t('pages.expertsDirectory.il_us_fr')}
-                      data-testid="experts-filter-country"
-                    />
+                  <div className="col-md-3">
+                    <div className="field-set">
+                      <label>{t('experts.filters.profession')}</label>
+                      <div className="filter-input-wrap">
+                        <input
+                          list="experts-profession-suggestions"
+                          value={draft.profession}
+                          onChange={(e) => setDraft({ ...draft, profession: e.target.value })}
+                          onKeyDown={(e) => e.key === 'Enter' && apply()}
+                          className="createlisting-input"
+                          placeholder={t('experts.filters.anyProfession')}
+                          data-testid="experts-filter-profession"
+                        />
+                        <datalist id="experts-profession-suggestions">
+                          {professions.map((p) => (
+                            <option key={p} value={p} />
+                          ))}
+                        </datalist>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <Label className="caps-label text-muted-foreground">
-                      {t('experts.filters.region')}
-                    </Label>
-                    <Input
-                      value={draft.region}
-                      onChange={(e) =>
-                        setDraft({ ...draft, region: e.target.value })
-                      }
-                      onKeyDown={(e) => e.key === 'Enter' && apply()}
-                      className="mt-1 rounded-xl"
-                      data-testid="experts-filter-region"
-                    />
+                  <div className="col-md-3">
+                    <div className="field-set">
+                      <label>{t('experts.filters.country')}</label>
+                      <div className="filter-input-wrap">
+                        <input
+                          value={draft.country}
+                          onChange={(e) => setDraft({ ...draft, country: e.target.value })}
+                          onKeyDown={(e) => e.key === 'Enter' && apply()}
+                          className="createlisting-input"
+                          placeholder={t('pages.expertsDirectory.il_us_fr')}
+                          data-testid="experts-filter-country"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="field-set">
+                      <label>{t('experts.filters.region')}</label>
+                      <div className="filter-input-wrap">
+                        <input
+                          value={draft.region}
+                          onChange={(e) => setDraft({ ...draft, region: e.target.value })}
+                          onKeyDown={(e) => e.key === 'Enter' && apply()}
+                          className="createlisting-input"
+                          data-testid="experts-filter-region"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="flex gap-2 mt-4">
-                  <Button
+                <div className="filter-actions">
+                  <button
                     onClick={apply}
                     disabled={loading}
-                    className="rounded-xl"
+                    className="btn-edit-icon"
                     data-testid="experts-apply-filters"
                   >
                     {t('common.search', { defaultValue: 'Search' })}
-                  </Button>
-                  <Button
-                    variant="secondary"
+                  </button>
+                  <button
                     onClick={clear}
                     disabled={loading}
-                    className="rounded-xl"
+                    className="btn-pill hover-item"
                     data-testid="experts-clear-filters"
                   >
                     {t('experts.filters.clear')}
-                  </Button>
+                  </button>
                   {!viewerIsPro && (
-                    <Link
-                      to="/me"
-                      className="ms-auto text-xs text-[hsl(var(--accent))] self-center"
-                      data-testid="experts-become-pro-cta"
-                    >
-                      <Sparkles className="inline h-3 w-3 me-1" />
+                    <Link to="/me" className="become-pro-link" data-testid="experts-become-pro-cta">
+                      <Sparkles />
                       {t('experts.becomeExpertCta')}
                     </Link>
                   )}
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Grid */}
-            {showSkeleton ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <Skeleton
-                    key={i}
-                    className="h-48 w-full rounded-[calc(var(--radius)+6px)]"
-                  />
-                ))}
               </div>
-            ) : items.length === 0 ? (
-              <Card
-                className="rounded-[calc(var(--radius)+6px)] shadow-editorial"
-                data-testid="experts-empty"
-              >
-                <CardContent className="p-10 text-center">
-                  <UserRound className="h-8 w-8 mx-auto text-muted-foreground" />
-                  <h3 className="font-display text-xl mt-3">
-                    {t('experts.emptyTitle')}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
-                    {t('experts.emptyBody')}
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-                data-testid="experts-grid"
-              >
-                {items.map((p) => (
-                  <ExpertCard key={p.id} expert={p} />
-                ))}
-              </div>
-            )}
-          </>
-        )}
+              {showSkeleton ? (
+                <div className="row gx-3 gy-3">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="col-xl-4 col-lg-4 col-md-6 col-12">
+                      <div className="skeleton-card" />
+                    </div>
+                  ))}
+                </div>
+              ) : items.length === 0 ? (
+                <div className="empty-state" data-testid="experts-empty">
+                  <UserRound />
+                  <h3 className="empty-title">{t("experts.emptyTitle")}</h3>
+                  <p className="empty-body">{t("experts.emptyBody")}</p>
+                </div>
+              ) : (
+                <div className="row gx-3 gy-3" data-testid="experts-grid">
+                  {items.map((p) => (
+                    <div key={p.id} className="col-xl-4 col-lg-4 col-md-6 col-12">
+                      <ExpertCard expert={p} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
 
-        {/* ---- CAMPAIGNS TAB ---- */}
-        {activeTab === 'campaigns' && (
-          <>
-            {viewerIsPro && (
-              <div className="flex justify-end gap-2 mb-4">
-                <Button asChild variant="outline" className="rounded-xl" data-testid="experts-campaigns-manage-btn">
-                  <Link to="/campaigns/mine">
+          {/* ---- CAMPAIGNS TAB ---- */}
+          {activeTab === 'campaigns' && (
+            <>
+              {viewerIsPro && (
+                <div className="campaigns-actions">
+                  <Link to="/campaigns/mine" className="btn btn-outline" data-testid="experts-campaigns-manage-btn">
                     {t('campaigns.mine.title', { defaultValue: 'My Campaigns' })}
                   </Link>
-                </Button>
-                <Button asChild className="rounded-xl" data-testid="experts-campaigns-create-btn">
-                  <Link to="/campaigns/create">
-                    <Megaphone className="h-4 w-4 me-1" />
+                  <Link to="/campaigns/create" className="btn btn-primary" data-testid="experts-campaigns-create-btn">
+                    <Megaphone className="btn-icon" />
                     {t('campaigns.mine.createNew')}
                   </Link>
-                </Button>
-              </div>
-            )}
-            <CampaignFeed />
-          </>
-        )}
+                </div>
+              )}
+              <CampaignFeed />
+            </>
+          )}
+        </div>
 
-        <div className="h-10" />
-      </div>
-
-      {/* Regional ad ticker at the bottom */}
-      <AdTicker placement="experts" className="mt-6" />
-      <ExploreBackButton />
-    </div>
+        {/* Regional ad ticker at the bottom */}
+        <AdTicker placement="experts" className="mt-6" />
+        <ExploreBackButton />
+      </section>
+    </>
   );
 }
 
@@ -355,113 +313,59 @@ function ExpertCard({ expert }) {
     biz.phone && biz.phone.trim().length > 3
       ? biz.phone.trim()
       : expert.phone
-      ? expert.phone.trim()
-      : null;
+        ? expert.phone.trim()
+        : null;
 
   return (
-    <Card
-      className="rounded-[calc(var(--radius)+6px)] shadow-editorial h-full flex flex-col"
-      data-testid={`expert-card-${expert.id}`}
-    >
-      <CardContent className="p-5 flex-1 flex flex-col">
-        <div className="flex items-start gap-3">
-          <div className="h-12 w-12 rounded-xl bg-secondary border border-border overflow-hidden shrink-0">
-            {avatar ? (
-              <img
-                src={avatar}
-                alt={expert.display_name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="h-full w-full inline-flex items-center justify-center text-muted-foreground">
-                <UserRound className="h-5 w-5" />
-              </div>
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="font-display text-lg truncate">
-              {expert.display_name}
-            </h3>
-            {prof.profession && (
-              <Badge
-                variant="outline"
-                className="rounded-full text-[10px] bg-card mt-0.5"
-              >
-                {prof.profession}
-              </Badge>
-            )}
-            {biz.name && (
-              <div className="text-sm text-muted-foreground mt-1 truncate">
-                {biz.name}
-              </div>
-            )}
-          </div>
+    <div className="expert-card" data-testid={`expert-card-${expert.id}`}>
+      <div className="expert-pro-card">
+        <div className="expert-avatar-wrap">
+          {avatar ? (
+            <img src={avatar} alt={expert.display_name} className="expert-avatar" />
+          ) : (
+            <UserRound className="expert-avatar-fallback" />
+          )}
+          <span className="expert-avatar-badge"><i className="bi bi-patch-check-fill"></i></span>
         </div>
-
-        {biz.description && (
-          <p className="text-sm text-muted-foreground mt-3 line-clamp-3">
-            {biz.description}
-          </p>
-        )}
-
-        <div className="mt-auto pt-4 space-y-1 text-xs text-muted-foreground">
+        <h5>{expert.display_name}</h5>
+        {prof.profession && <span className="expert-spec-tag">{prof.profession}</span>}
+        {biz.name && <span className="expert-spec-tag">{biz.name}</span>}
+        <div className="expert-rating-row">
           {city && (
-            <div className="inline-flex items-center gap-1">
-              <MapPin className="h-3 w-3" />
+            <>
+              <MapPin />
               {city}
-            </div>
+            </>
           )}
         </div>
-
-        <div className="mt-3 flex flex-wrap gap-2">
+        {biz.description && <p className="expert-bio">{biz.description}</p>}
+        <div className="expert-actions">
           {biz.website && (
-            <Button
-              asChild
-              size="sm"
-              variant="outline"
-              className="rounded-full"
+            <a
+              href={biz.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="expert-book-btn"
               data-testid={`expert-${expert.id}-website`}
             >
-              <a
-                href={biz.website}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Globe className="h-3 w-3 me-1" />
-                {t('experts.visitWebsite')}
-              </a>
-            </Button>
+              <Globe className="btn-icon" />
+              {t('experts.visitWebsite')}
+            </a>
           )}
           {expertPhone && (
-            <Button
-              asChild
-              size="sm"
-              variant="outline"
-              className="rounded-full"
-              data-testid={`expert-${expert.id}-phone`}
-            >
-              <a href={`tel:${expertPhone}`}>
-                <Phone className="h-3 w-3 me-1" />
-                {t('experts.callNow')}
-              </a>
-            </Button>
+            <a href={`tel:${expertPhone}`} className="expert-book-btn" data-testid={`expert-${expert.id}-phone`}>
+              <Phone className="btn-icon" />
+              {t('experts.callNow')}
+            </a>
           )}
           {biz.email && (
-            <Button
-              asChild
-              size="sm"
-              variant="outline"
-              className="rounded-full"
-              data-testid={`expert-${expert.id}-email`}
-            >
-              <a href={`mailto:${biz.email}`}>
-                <Mail className="h-3 w-3 me-1" />
-                {t('experts.sendEmail')}
-              </a>
-            </Button>
+            <a href={`mailto:${biz.email}`} className="expert-book-btn" data-testid={`expert-${expert.id}-email`}>
+              <Mail className="btn-icon" />
+              {t('experts.sendEmail')}
+            </a>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

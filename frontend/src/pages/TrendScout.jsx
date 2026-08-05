@@ -9,7 +9,7 @@ import { useLocation as useAppLocation } from '@/lib/location';
 import { api } from '@/lib/api';
 import { ExploreBackButton } from '@/components/ExploreBackButton';
 
-const PAGE_SIZE = 9; // 3x3 grid per page — chahe to 6/12 kar sakte hain
+const PAGE_SIZE = 12; // 3x3 grid per page — chahe to 6/12 kar sakte hain
 const FALLBACK_IMAGE =
   'https://i.pinimg.com/736x/17/50/e9/1750e9027cf70bc488293df0f91daa1d.jpg';
 

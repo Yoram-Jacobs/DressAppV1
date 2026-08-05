@@ -1,10 +1,10 @@
-import axios from 'axios';
+import axios from "axios";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API_BASE = `${BACKEND_URL}/api/v1`;
 
-const STORAGE_TOKEN = 'dressapp.token';
-const STORAGE_USER = 'dressapp.user';
+const STORAGE_TOKEN = "dressapp.token";
+const STORAGE_USER = "dressapp.user";
 
 export const tokenStore = {
   get: () => localStorage.getItem(STORAGE_TOKEN) || null,
@@ -17,8 +17,11 @@ export const tokenStore = {
 
 export const userStore = {
   get: () => {
-    try { return JSON.parse(localStorage.getItem(STORAGE_USER) || 'null'); }
-    catch { return null; }
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_USER) || "null");
+    } catch {
+      return null;
+    }
   },
   set: (u) => localStorage.setItem(STORAGE_USER, JSON.stringify(u)),
 };
@@ -36,22 +39,28 @@ client.interceptors.response.use(
   (err) => {
     if (err?.response?.status === 401) {
       tokenStore.clear();
-      if (!window.location.pathname.startsWith('/login')) {
-        window.location.href = '/login';
+      if (!window.location.pathname.startsWith("/login")) {
+        window.location.href = "/login";
       }
     }
     if (err?.response?.data?.detail) {
       const detail = err.response.data.detail;
-      if (typeof detail === 'object') {
+      if (typeof detail === "object") {
         err.response.data.detail = detail.message || JSON.stringify(detail);
       }
-      const detailStr = String(err.response.data.detail || '');
-      if (detailStr.includes('GEMINI_API_KEY') || detailStr.includes('Gemini vision unavailable') || detailStr.includes('No GEMINI_API_KEY')) {
-        import('./aiNotice').then(({ showAiKeyWarningToast }) => showAiKeyWarningToast());
+      const detailStr = String(err.response.data.detail || "");
+      if (
+        detailStr.includes("GEMINI_API_KEY") ||
+        detailStr.includes("Gemini vision unavailable") ||
+        detailStr.includes("No GEMINI_API_KEY")
+      ) {
+        import("./aiNotice").then(({ showAiKeyWarningToast }) =>
+          showAiKeyWarningToast(),
+        );
       }
     }
     return Promise.reject(err);
-  }
+  },
 );
 
 /**
@@ -89,25 +98,22 @@ client.interceptors.response.use(
  * @param {AbortSignal} [options.signal]
  * @returns {Promise<object|null>} The final parsed event, or null on empty stream.
  */
-export async function streamNdjson(path, {
-  method = 'POST',
-  params,
-  body,
-  onLine,
-  signal,
-} = {}) {
+export async function streamNdjson(
+  path,
+  { method = "POST", params, body, onLine, signal } = {},
+) {
   const url = new URL(`${API_BASE}${path}`);
-  if (params && typeof params === 'object') {
+  if (params && typeof params === "object") {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
     });
   }
   const headers = {
-    'Accept': 'application/x-ndjson',
+    Accept: "application/x-ndjson",
   };
   const tok = tokenStore.get();
   if (tok) headers.Authorization = `Bearer ${tok}`;
-  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  if (body !== undefined) headers["Content-Type"] = "application/json";
 
   const resp = await fetch(url.toString(), {
     method,
@@ -115,23 +121,23 @@ export async function streamNdjson(path, {
     body: body === undefined ? undefined : JSON.stringify(body),
     signal,
     // Match axios: cookies for same-site, no credentials cross-site.
-    credentials: 'same-origin',
+    credentials: "same-origin",
   });
 
   if (resp.status === 401) {
     tokenStore.clear();
-    if (!window.location.pathname.startsWith('/login')) {
-      window.location.href = '/login';
+    if (!window.location.pathname.startsWith("/login")) {
+      window.location.href = "/login";
     }
     throw new Error(`stream 401`);
   }
   if (!resp.ok || !resp.body) {
-    throw new Error(`stream ${resp.status}: ${resp.statusText || 'no body'}`);
+    throw new Error(`stream ${resp.status}: ${resp.statusText || "no body"}`);
   }
 
   const reader = resp.body.getReader();
-  const decoder = new TextDecoder('utf-8');
-  let buf = '';
+  const decoder = new TextDecoder("utf-8");
+  let buf = "";
   let last = null;
 
   try {
@@ -143,7 +149,7 @@ export async function streamNdjson(path, {
       // Drain every complete line we have so far. The leftover
       // (potentially-partial last line) stays in ``buf`` for the
       // next chunk.
-      let nl = buf.indexOf('\n');
+      let nl = buf.indexOf("\n");
       while (nl !== -1) {
         const raw = buf.slice(0, nl).trim();
         buf = buf.slice(nl + 1);
@@ -158,10 +164,10 @@ export async function streamNdjson(path, {
             // utf-8 boundaries occasionally inject a stray byte.
             // Throwing here would kill the whole repair pass.
             // eslint-disable-next-line no-console
-            console.warn('streamNdjson: skipping malformed line', parseErr);
+            console.warn("streamNdjson: skipping malformed line", parseErr);
           }
         }
-        nl = buf.indexOf('\n');
+        nl = buf.indexOf("\n");
       }
     }
     // End-of-stream — drain any leftover that didn't end with \n.
@@ -176,16 +182,21 @@ export async function streamNdjson(path, {
       }
     }
   } finally {
-    try { reader.releaseLock(); } catch { /* already released */ }
+    try {
+      reader.releaseLock();
+    } catch {
+      /* already released */
+    }
   }
   return last;
 }
 
 export const api = {
   // auth
-  register: (body) => client.post('/auth/register', body).then((r) => r.data),
-  login: (body) => client.post('/auth/login', body).then((r) => r.data),
-  devBypass: () => client.post('/auth/dev-bypass').then((r) => r.data),
+  register: (body) => client.post("/auth/register", body).then((r) => r.data),
+  login: (body) => client.post("/auth/login", body).then((r) => r.data),
+  devBypass: () => client.post("/auth/dev-bypass").then((r) => r.data),
+  me: () => client.get("/auth/me").then((r) => r.data),
 
   /** Resolve the Google OAuth start URL for the *sign-in / sign-up* flow.
    * Returns ``{ authorization_url }``. The caller is expected to do a
@@ -193,25 +204,50 @@ export const api = {
    */
   googleLoginStart: ({ withCalendar = false, next = null } = {}) => {
     const params = new URLSearchParams();
-    if (withCalendar) params.set('with_calendar', 'true');
-    if (next) params.set('next', next);
+    if (withCalendar) params.set("with_calendar", "true");
+    if (next) params.set("next", next);
     const qs = params.toString();
     return client
-      .get(`/auth/google/login/start${qs ? `?${qs}` : ''}`)
+      .get(`/auth/google/login/start${qs ? `?${qs}` : ""}`)
       .then((r) => r.data);
   },
 
   // users
-  getMe: () => client.get('/users/me').then((r) => r.data),
-  patchMe: (body) => client.patch('/users/me', body).then((r) => r.data),
-  updateMigrationFlag: (body) => client.patch('/users/migration-flag', body).then((r) => r.data),
-  saveMigrationCrops: (body) => client.post('/closet/migration/save-crops', body, { timeout: 120000 }).then((r) => r.data),
+  getMe: () => client.get("/users/me").then((r) => r.data),
+  patchMe: (body) => client.patch("/users/me", body).then((r) => r.data),
+  updateMigrationFlag: (body) =>
+    client.patch("/users/migration-flag", body).then((r) => r.data),
+  saveMigrationCrops: (body) =>
+    client
+      .post("/closet/migration/save-crops", body, { timeout: 120000 })
+      .then((r) => r.data),
+  importCompetitorCloset: (body) =>
+    client.post("/closet/import-competitor", body).then((r) => r.data),
+  importCompetitorScreenshotScroll: (body) =>
+    client
+      .post("/closet/import-competitor-screenshot-scroll", body)
+      .then((r) => r.data),
+  getImportJobStatus: (jobId) =>
+    client.get(`/closet/import-job-status/${jobId}`).then((r) => r.data),
+  importCompetitorClosetStream: ({ body, onFrame, signal } = {}) =>
+    streamNdjson("/closet/import-competitor-stream", {
+      body,
+      onFrame,
+      signal,
+    }),
 
   // closet
   listCloset: (params = {}) =>
-    client.get('/closet', { params }).then((r) => r.data),
+    client.get("/closet", { params }).then((r) => r.data),
   getItem: (id) => client.get(`/closet/${id}`).then((r) => r.data),
-  createItem: (body) => client.post('/closet', body).then((r) => r.data),
+  createItem: (body) => client.post("/closet", body).then((r) => r.data),
+  // Phase Z2 — pre-flight duplicate check.
+  // Pass an array of `{sha256, filename, size_bytes}` for the photos
+  // the user just selected. Returns `{matches: [...]}` listing only
+  // those that collide with an existing closet item. The frontend
+  // either prompts (≤5 photos) or silently filters them out (>5).
+  preflightDuplicates: (photos) =>
+    client.post("/closet/preflight", { photos }).then((r) => r.data),
   /**
    * Phase Z2.3 — streaming hash-repair pass.
    *
@@ -231,12 +267,18 @@ export const api = {
    *
    * Safe to call repeatedly; the endpoint is idempotent.
    */
-  repairClosetHashes: ({ dryRun = false, onlyMissing = false, limit = 2000, onEvent, signal } = {}) =>
-    streamNdjson('/closet/repair-hashes', {
-      method: 'POST',
+  repairClosetHashes: ({
+    dryRun = false,
+    onlyMissing = false,
+    limit = 2000,
+    onEvent,
+    signal,
+  } = {}) =>
+    streamNdjson("/closet/repair-hashes", {
+      method: "POST",
       params: {
-        dry_run: dryRun ? 'true' : 'false',
-        only_missing: onlyMissing ? 'true' : 'false',
+        dry_run: dryRun ? "true" : "false",
+        only_missing: onlyMissing ? "true" : "false",
         limit,
       },
       onLine: onEvent,
@@ -262,11 +304,16 @@ export const api = {
    * Set ``onlyStale=false`` to force-regenerate every thumbnail
    * unconditionally (useful after a thumbnail-format bug ships).
    */
-  repairClosetThumbnails: ({ onlyStale = true, limit = 2000, onEvent, signal } = {}) =>
-    streamNdjson('/closet/repair-thumbnails', {
-      method: 'POST',
+  repairClosetThumbnails: ({
+    onlyStale = true,
+    limit = 2000,
+    onEvent,
+    signal,
+  } = {}) =>
+    streamNdjson("/closet/repair-thumbnails", {
+      method: "POST",
       params: {
-        only_stale: onlyStale ? 'true' : 'false',
+        only_stale: onlyStale ? "true" : "false",
         limit,
       },
       onLine: onEvent,
@@ -296,11 +343,11 @@ export const api = {
         !callbacks.onDone)
     ) {
       return client
-        .post('/closet/analyze', body, { timeout: 180000 })
+        .post("/closet/analyze", body, { timeout: 180000 })
         .then((r) => {
           const data = r.data || {};
           if (data && data._status && Number(data._status) >= 400) {
-            const err = new Error(data._error || 'Analyze failed');
+            const err = new Error(data._error || "Analyze failed");
             err.response = { status: Number(data._status), data };
             throw err;
           }
@@ -313,10 +360,10 @@ export const api = {
     const token = tokenStore.get();
     return (async () => {
       const resp = await fetch(url, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/x-ndjson',
+          "Content-Type": "application/json",
+          Accept: "application/x-ndjson",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(body),
@@ -335,8 +382,8 @@ export const api = {
         throw err;
       }
       const reader = resp.body.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let buffer = '';
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
       const emittedItems = [];
       let detectMeta = null;
       let doneCount = 0;
@@ -345,9 +392,9 @@ export const api = {
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
         // Split on newlines; keep any trailing partial line in buffer.
-        const newlineIdx = buffer.lastIndexOf('\n');
+        const newlineIdx = buffer.lastIndexOf("\n");
         if (newlineIdx < 0) continue;
-        const lines = buffer.slice(0, newlineIdx).split('\n');
+        const lines = buffer.slice(0, newlineIdx).split("\n");
         buffer = buffer.slice(newlineIdx + 1);
         for (const raw of lines) {
           const line = raw.trim();
@@ -359,23 +406,23 @@ export const api = {
             continue;
           }
           switch (frame.type) {
-            case 'detect':
+            case "detect":
               detectMeta = frame;
               callbacks.onDetect?.(frame);
               break;
-            case 'item':
+            case "item":
               emittedItems[frame.index] = frame;
               callbacks.onItem?.(frame);
               break;
-            case 'item_skip':
+            case "item_skip":
               callbacks.onItemSkip?.(frame);
               break;
-            case 'done':
+            case "done":
               doneCount = frame.count || 0;
               callbacks.onDone?.(frame);
               break;
-            case 'error': {
-              const err = new Error(frame.message || 'Analyze failed');
+            case "error": {
+              const err = new Error(frame.message || "Analyze failed");
               err.response = {
                 status: frame.status || 503,
                 data: { detail: frame.message },
@@ -400,15 +447,35 @@ export const api = {
     })();
   },
   searchCloset: (body) =>
-    client.post('/closet/search', body, { timeout: 30000 }).then((r) => r.data),
+    client.post("/closet/search", body, { timeout: 30000 }).then((r) => r.data),
   polishCrop: (body) =>
-    client.post('/closet/polish-crop', body, { timeout: 60000 }).then((r) => r.data),
-  patchItem: (id, body) => client.patch(`/closet/${id}`, body).then((r) => r.data),
-  updateItem: (id, body) => client.patch(`/closet/${id}`, body).then((r) => r.data),
+    client
+      .post("/closet/polish-crop", body, { timeout: 60000 })
+      .then((r) => r.data),
+  patchItem: (id, body) =>
+    client.patch(`/closet/${id}`, body).then((r) => r.data),
+  updateItem: (id, body) =>
+    client.patch(`/closet/${id}`, body).then((r) => r.data),
   deleteItem: (id) => client.delete(`/closet/${id}`).then((r) => r.data),
-  groupItems: (body) => client.post('/closet/group', body).then((r) => r.data),
+  groupItems: (body) => client.post("/closet/group", body).then((r) => r.data),
+  uploadGroupMember: (hostId, body) =>
+    client.post(`/closet/${hostId}/upload-member`, body).then((r) => r.data),
+  setGroupHost: (hostId, memberId) =>
+    client.post(`/closet/${hostId}/set-host/${memberId}`).then((r) => r.data),
+  ungroupItem: (id) => client.post(`/closet/${id}/ungroup`).then((r) => r.data),
   groupEdit: (hostId, body) =>
     client.post(`/closet/${hostId}/group-edit`, body).then((r) => r.data),
+  editItemImage: (id, prompt) =>
+    client
+      .post(`/closet/${id}/edit-image`, null, { params: { prompt } })
+      .then((r) => r.data),
+  // One-shot helper that auto-creates marketplace listings for closet
+  // items that already have ``marketplace_intent`` set but never made
+  // it to the marketplace (legacy data / pre-pipeline items). Returns
+  // a {candidates, created, skipped_existing, source_synced, failed}
+  // summary so the caller can render a confirmation toast.
+  backfillMarketplaceListings: () =>
+    client.post("/closet/marketplace/backfill").then((r) => r.data),
   /**
    * Streaming variant of the marketplace backfill — same semantics,
    * but emits one NDJSON line per candidate so the UI can render
@@ -421,15 +488,15 @@ export const api = {
    * skipped, source_synced, failed}`` summary.
    */
   streamMarketplaceBackfill: ({ onEvent, signal } = {}) =>
-    streamNdjson('/closet/marketplace/backfill/stream', {
-      method: 'POST',
+    streamNdjson("/closet/marketplace/backfill/stream", {
+      method: "POST",
       onLine: onEvent,
       signal,
     }),
 
   // listings
   listListings: (params = {}) =>
-    client.get('/listings', { params }).then((r) => r.data),
+    client.get("/listings", { params }).then((r) => r.data),
   /**
    * Streaming variant of ``GET /listings`` — same filters, but
    * each listing arrives on its own NDJSON line so the
@@ -439,37 +506,42 @@ export const api = {
    * Resolves with the final ``{type:'done', emitted}`` summary.
    */
   streamListings: ({ params = {}, onEvent, signal } = {}) =>
-    streamNdjson('/listings/stream', {
-      method: 'GET',
+    streamNdjson("/listings/stream", {
+      method: "GET",
       params,
       onLine: onEvent,
       signal,
     }),
   feePreview: (cents) =>
     client
-      .get('/listings/fee-preview', { params: { list_price_cents: cents } })
+      .get("/listings/fee-preview", { params: { list_price_cents: cents } })
       .then((r) => r.data),
   getListing: (id) => client.get(`/listings/${id}`).then((r) => r.data),
   getSimilarListings: (id, params = {}) =>
     client.get(`/listings/${id}/similar`, { params }).then((r) => r.data),
-  createListing: (body) => client.post('/listings', body).then((r) => r.data),
+  createListing: (body) => client.post("/listings", body).then((r) => r.data),
+  patchListing: (id, body) =>
+    client.patch(`/listings/${id}`, body).then((r) => r.data),
   deleteListing: (id) => client.delete(`/listings/${id}`).then((r) => r.data),
 
   // transactions
   listTransactions: (params = {}) =>
-    client.get('/transactions', { params }).then((r) => r.data),
+    client.get("/transactions", { params }).then((r) => r.data),
+  createTransaction: (body) =>
+    client.post("/transactions", body).then((r) => r.data),
+  getTransaction: (id) => client.get(`/transactions/${id}`).then((r) => r.data),
 
   // Wave 2 — swap + donate marketplace flows
   proposeSwap: (listingId, offeredItemId) =>
     client
-      .post('/transactions/swap', {
+      .post("/transactions/swap", {
         listing_id: listingId,
         offered_item_id: offeredItemId,
       })
       .then((r) => r.data),
   claimDonation: (listingId, handlingFeeCents = 0) =>
     client
-      .post('/transactions/donate', {
+      .post("/transactions/donate", {
         listing_id: listingId,
         handling_fee_cents: handlingFeeCents,
       })
@@ -484,39 +556,50 @@ export const api = {
       })
       .then((r) => r.data),
   confirmReceipt: (txId) =>
-    client
-      .post(`/transactions/${txId}/confirm-receipt`)
-      .then((r) => r.data),
+    client.post(`/transactions/${txId}/confirm-receipt`).then((r) => r.data),
+  // Public (no auth) — used by the email-landing page so users who
+  // click accept/deny from a logged-out browser can still see the
+  // listing summary + status banner.
+  getLandingSummary: (txId) =>
+    client.get(`/transactions/${txId}/landing-summary`).then((r) => r.data),
 
   // stylist — returns raw axios promise for multipart
   stylist: (formData) =>
-    client.post('/stylist', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }).then((r) => r.data),
+    client
+      .post("/stylist", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => r.data),
   stylistHistory: (sessionId = null, limit = 200) =>
     client
-      .get('/stylist/history', {
+      .get("/stylist/history", {
         params: sessionId ? { session_id: sessionId, limit } : { limit },
       })
       .then((r) => r.data),
-  stylistSessions: () =>
-    client.get('/stylist/sessions').then((r) => r.data),
+  stylistSessions: () => client.get("/stylist/sessions").then((r) => r.data),
   stylistCreateSession: () =>
-    client.post('/stylist/sessions').then((r) => r.data),
+    client.post("/stylist/sessions").then((r) => r.data),
   stylistDeleteSession: (sessionId) =>
     client.delete(`/stylist/sessions/${sessionId}`).then((r) => r.data),
 
   // Phase R — Stylist Power-Up: multi-image outfit composer
   composeOutfit: (formData) =>
-    client.post('/stylist/compose-outfit', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      timeout: 240000,  // composer can take 30-60s when N images need analysis
-    }).then((r) => r.data),
+    client
+      .post("/stylist/compose-outfit", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 240000, // composer can take 30-60s when N images need analysis
+      })
+      .then((r) => r.data),
 
   // outfit completion (Phase P)
-  completeOutfit: ({ itemIds, includeMarketplace = false, occasion = null, limit = 6 }) =>
+  completeOutfit: ({
+    itemIds,
+    includeMarketplace = false,
+    occasion = null,
+    limit = 6,
+  }) =>
     client
-      .post('/closet/complete-outfit', {
+      .post("/closet/complete-outfit", {
         item_ids: itemIds,
         include_marketplace: includeMarketplace,
         occasion: occasion || null,
@@ -525,16 +608,25 @@ export const api = {
       .then((r) => r.data),
 
   // wardrobe reconstructor (Phase Q — now used as fallback only)
-  repairItemImage: (itemId, { userHint = null, force = false, preview = false } = {}) =>
+  repairItemImage: (
+    itemId,
+    { userHint = null, force = false, preview = false } = {},
+  ) =>
     client
-      .post(`/closet/${itemId}/repair`, {
-        user_hint: userHint || null,
-        force,
-      }, { params: { preview } })
+      .post(
+        `/closet/${itemId}/repair`,
+        {
+          user_hint: userHint || null,
+          force,
+        },
+        { params: { preview } },
+      )
       .then((r) => r.data),
   // Clean background (Phase V Fix 2 — non-generative matting)
   cleanItemBackground: (itemId, preview = false) =>
-    client.post(`/closet/${itemId}/clean-background`, null, { params: { preview } }).then((r) => r.data),
+    client
+      .post(`/closet/${itemId}/clean-background`, null, { params: { preview } })
+      .then((r) => r.data),
   // Re-run The Eyes on the item's stored image and patch the analysis
   // fields back onto the doc. Used by the "Analyze" action on the
   // edit page after a photo replace, or to recover from a bad first
@@ -549,28 +641,28 @@ export const api = {
   // Fetch image from URL to bypass CORS on frontend
   fetchImageUrl: (url) =>
     client
-      .post('/closet/fetch-image-url', { url }, { timeout: 20000 })
+      .post("/closet/fetch-image-url", { url }, { timeout: 20000 })
       .then((r) => r.data),
   // Phase V6 — EU Digital Product Passport (DPP) import via QR scan
   importDpp: (qrPayload) =>
     client
-      .post('/closet/import-dpp', { qr_payload: qrPayload }, { timeout: 30000 })
+      .post("/closet/import-dpp", { qr_payload: qrPayload }, { timeout: 30000 })
       .then((r) => r.data),
   // Parse digital receipt from text, file, or URL using Gemini Vision
   parseReceipt: (formData) =>
     client
-      .post('/closet/parse-receipt', formData, {
+      .post("/closet/parse-receipt", formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
         timeout: 60000,
       })
       .then((r) => r.data),
   extractPdfText: (formData) =>
     client
-      .post('/closet/extract-pdf-text', formData, {
+      .post("/closet/extract-pdf-text", formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
         timeout: 30000,
       })
@@ -578,7 +670,10 @@ export const api = {
   // Phase V6 — add or replace an item's photo (runs The Eyes single-item).
   // ``language`` (optional ISO-639-1 code) overrides the analyzer's output
   // language for this call — see ``AnalyzeIn.language`` on the backend.
-  setItemPhoto: (itemId, { imageBase64, imageMime = 'image/jpeg', autoSegment = true, language }) =>
+  setItemPhoto: (
+    itemId,
+    { imageBase64, imageMime = "image/jpeg", autoSegment = true, language },
+  ) =>
     client
       .post(
         `/closet/${itemId}/photo`,
@@ -593,21 +688,23 @@ export const api = {
       .then((r) => r.data),
 
   // google calendar
-  calendarStatus: () => client.get('/calendar/status').then((r) => r.data),
+  calendarStatus: () => client.get("/calendar/status").then((r) => r.data),
   calendarUpcoming: (hours = 48) =>
-    client.get('/calendar/upcoming', { params: { hours_ahead: hours } }).then((r) => r.data),
-  googleOAuthStart: () => client.get('/auth/google/start').then((r) => r.data),
+    client
+      .get("/calendar/upcoming", { params: { hours_ahead: hours } })
+      .then((r) => r.data),
+  googleOAuthStart: () => client.get("/auth/google/start").then((r) => r.data),
   googleOAuthDisconnect: () =>
-    client.post('/auth/google/disconnect').then((r) => r.data),
-  googleReConsent: (withCalendar = false) =>
-    client.get('/auth/google/re-consent', { params: { with_calendar: withCalendar } }).then((r) => r.data),
-  googleSyncProfile: () =>
-    client.post('/auth/google/sync-profile').then((r) => r.data),
+    client.post("/auth/google/disconnect").then((r) => r.data),
 
   // trend-scout
+  trendsLatest: (perBucket = 1) =>
+    client
+      .get("/trends/latest", { params: { per_bucket: perBucket } })
+      .then((r) => r.data),
   fashionScoutFeed: (limit = 12, params = {}) =>
     client
-      .get('/trends/fashion-scout', {
+      .get("/trends/fashion-scout", {
         params: {
           limit,
           ...(params.language ? { language: params.language } : {}),
@@ -616,71 +713,116 @@ export const api = {
       })
       .then((r) => r.data),
   trendsRunNowDev: (force = true) =>
-    client.post('/trends/run-now-dev', null, { params: { force } }).then((r) => r.data),
+    client
+      .post("/trends/run-now-dev", null, { params: { force } })
+      .then((r) => r.data),
   // Admin-only force refresh — used by the 🔄 button next to "Daily edit"
   // on the Home page. Force=true so the run regenerates *today's* cards
   // even if they already exist (otherwise the dedupe in
   // ``run_trend_scout`` would skip).
   trendsRefreshAdmin: (force = true) =>
-    client.post('/trends/run-now', null, { params: { force } }).then((r) => r.data),
+    client
+      .post("/trends/run-now", null, { params: { force } })
+      .then((r) => r.data),
+  // Public-safe diagnostics: when did each bucket last refresh?
+  trendsLastRefresh: () =>
+    client.get("/trends/last_refresh").then((r) => r.data),
 
   // share — mint a read-only snapshot link for an outfit recommendation
   createSharedOutfit: (body) =>
-    client.post('/share/outfit', body).then((r) => {
+    client.post("/share/outfit", body).then((r) => {
       const data = r.data;
       // Convenience: attach the fully-qualified share URL so callers can
       // drop it straight into `navigator.share`.
-      if (data?.id && typeof window !== 'undefined') {
+      if (data?.id && typeof window !== "undefined") {
         data.share_url = `${window.location.origin}/shared/${data.id}`;
       }
       return data;
     }),
   getSharedOutfit: (id) =>
     client.get(`/share/outfit/${id}`).then((r) => r.data),
+  saveOutfitShareCard: (id, image_b64) =>
+    client.post(`/outfits/${id}/share-card`, { image_b64 }).then((r) => r.data),
   saveSharedOutfitShareCard: (id, image_b64) =>
-    client.post(`/share/outfit/${id}/share-card`, { image_b64 }).then((r) => r.data),
+    client
+      .post(`/share/outfit/${id}/share-card`, { image_b64 })
+      .then((r) => r.data),
 
   // admin
-  adminOverview: () => client.get('/admin/overview').then((r) => r.data),
-  adminUsers: (params = {}) => client.get('/admin/users', { params }).then((r) => r.data),
-  adminListings: (params = {}) => client.get('/admin/listings', { params }).then((r) => r.data),
-  adminTransactions: (params = {}) => client.get('/admin/transactions', { params }).then((r) => r.data),
-  adminProviders: () => client.get('/admin/providers').then((r) => r.data),
+  adminOverview: () => client.get("/admin/overview").then((r) => r.data),
+  adminUsers: (params = {}) =>
+    client.get("/admin/users", { params }).then((r) => r.data),
+  adminListings: (params = {}) =>
+    client.get("/admin/listings", { params }).then((r) => r.data),
+  adminTransactions: (params = {}) =>
+    client.get("/admin/transactions", { params }).then((r) => r.data),
+  adminProviders: () => client.get("/admin/providers").then((r) => r.data),
+  adminProviderCalls: (provider, limit = 50) =>
+    client
+      .get(`/admin/providers/${provider}/calls`, { params: { limit } })
+      .then((r) => r.data),
   adminTrendScout: (limit = 30) =>
-    client.get('/admin/trend-scout', { params: { limit } }).then((r) => r.data),
+    client.get("/admin/trend-scout", { params: { limit } }).then((r) => r.data),
   adminTrendScoutRun: (force = true) =>
-    client.post('/admin/trend-scout/run', null, { params: { force } }).then((r) => r.data),
-  adminLlmUsage: () => client.get('/admin/llm-usage').then((r) => r.data),
-  adminSystem: () => client.get('/admin/system').then((r) => r.data),
+    client
+      .post("/admin/trend-scout/run", null, { params: { force } })
+      .then((r) => r.data),
+  adminLlmUsage: () => client.get("/admin/llm-usage").then((r) => r.data),
+  adminSystem: () => client.get("/admin/system").then((r) => r.data),
   adminPromoteUser: (userId) =>
     client.post(`/admin/users/${userId}/promote`).then((r) => r.data),
   adminDemoteUser: (userId) =>
     client.post(`/admin/users/${userId}/demote`).then((r) => r.data),
   adminSetListingStatus: (listingId, status) =>
-    client.post(`/admin/listings/${listingId}/status`, null, { params: { status } }).then((r) => r.data),
+    client
+      .post(`/admin/listings/${listingId}/status`, null, { params: { status } })
+      .then((r) => r.data),
 
   // --- Phase U: professionals directory ---
   listProfessionals: (params = {}) =>
-    client.get('/professionals', { params }).then((r) => r.data),
+    client.get("/professionals", { params }).then((r) => r.data),
   getProfessional: (id) =>
     client.get(`/professionals/${id}`).then((r) => r.data),
 
   // --- Phase U: ad campaigns ---
   listMyAdCampaigns: () =>
-    client.get('/promotions/campaigns').then((r) => r.data),
+    client.get("/promotions/campaigns").then((r) => r.data),
+  getAdCampaign: (id) =>
+    client.get(`/promotions/campaigns/${id}`).then((r) => r.data),
   createAdCampaign: (body) =>
-    client.post('/promotions/campaigns', body).then((r) => r.data),
+    client.post("/promotions/campaigns", body).then((r) => r.data),
   patchAdCampaign: (id, body) =>
     client.patch(`/promotions/campaigns/${id}`, body).then((r) => r.data),
   deleteAdCampaign: (id) =>
     client.delete(`/promotions/campaigns/${id}`).then((r) => r.data),
   adTicker: (params = {}) =>
-    client.get('/promotions/ticker', { params }).then((r) => r.data),
+    client.get("/promotions/ticker", { params }).then((r) => r.data),
   trackAdImpression: (id) =>
-    client.post(`/promotions/impression/${id}`).then((r) => r.data).catch(() => null),
+    client
+      .post(`/promotions/impression/${id}`)
+      .then((r) => r.data)
+      .catch(() => null),
   trackAdClick: (id) =>
-    client.post(`/promotions/click/${id}`).then((r) => r.data).catch(() => null),
+    client
+      .post(`/promotions/click/${id}`)
+      .then((r) => r.data)
+      .catch(() => null),
 
+  // --- Phase U: admin professionals + ads ---
+  adminProfessionals: (params = {}) =>
+    client.get("/admin/professionals", { params }).then((r) => r.data),
+  adminHideProfessional: (userId) =>
+    client.post(`/admin/professionals/${userId}/hide`).then((r) => r.data),
+  adminUnhideProfessional: (userId) =>
+    client.post(`/admin/professionals/${userId}/unhide`).then((r) => r.data),
+  adminAdCampaigns: (params = {}) =>
+    client.get("/admin/promotions/campaigns", { params }).then((r) => r.data),
+  adminDisableCampaign: (id) =>
+    client
+      .post(`/admin/promotions/campaigns/${id}/disable`)
+      .then((r) => r.data),
+  adminEnableCampaign: (id) =>
+    client.post(`/admin/promotions/campaigns/${id}/enable`).then((r) => r.data),
 
   // --- Phase O.3: Eyes provider runtime override ---
   // Snapshot of the currently-active vision provider on this pod
@@ -688,27 +830,34 @@ export const api = {
   // wiring sanity flags, and the last analyse call recorded by
   // ``provider_activity`` for the closet pipeline. Called by the
   // admin-only Developer panel in Profile.
-  adminEyesStatus: () => client.get('/admin/eyes').then((r) => r.data),
+  adminEyesStatus: () => client.get("/admin/eyes").then((r) => r.data),
   // Persist (or clear) the runtime override. Pass ``provider``
   // as ``"gemma"`` / ``"qwen"`` to set, or ``null`` / undefined to
   // clear and revert to env-default.
   adminEyesSet: (provider) =>
-    client.post('/admin/eyes', { provider: provider ?? null }).then((r) => r.data),
+    client
+      .post("/admin/eyes", { provider: provider ?? null })
+      .then((r) => r.data),
 
   // --- Phase 4P: PayPal / credits / marketplace buy ---
-  paypalConfig: () => client.get('/paypal/config').then((r) => r.data),
-  creditsBalance: (currency = 'USD') =>
-    client.get('/credits/balance', { params: { currency } }).then((r) => r.data),
+  paypalConfig: () => client.get("/paypal/config").then((r) => r.data),
+  creditsBalance: (currency = "USD") =>
+    client
+      .get("/credits/balance", { params: { currency } })
+      .then((r) => r.data),
+  creditsAllBalances: () => client.get("/credits/balances").then((r) => r.data),
+  creditsHistory: (limit = 30) =>
+    client.get("/credits/history", { params: { limit } }).then((r) => r.data),
   creditsTopupCreate: (body) =>
-    client.post('/credits/topup', body).then((r) => r.data),
+    client.post("/credits/topup", body).then((r) => r.data),
   creditsTopupCapture: (topupId) =>
     client.post(`/credits/topup/${topupId}/capture`).then((r) => r.data),
   createSubscription: (body) =>
-    client.post('/paypal/subscribe', body).then((r) => r.data),
+    client.post("/paypal/subscribe", body).then((r) => r.data),
   captureSubscription: (subId) =>
     client.post(`/paypal/subscribe/capture/${subId}`).then((r) => r.data),
   cancelSubscription: () =>
-    client.post('/paypal/subscribe/cancel').then((r) => r.data),
+    client.post("/paypal/subscribe/cancel").then((r) => r.data),
 
   listingBuyCreate: (listingId) =>
     client.post(`/listings/${listingId}/buy`).then((r) => r.data),
@@ -720,33 +869,62 @@ export const api = {
       .then((r) => r.data),
 
   // --- AI Stylist Scheduler (Phase Scheduler) ---
-  listSavedOutfits: () => client.get('/outfits').then((r) => r.data),
-  saveOutfit: (body) => client.post('/outfits', body).then((r) => r.data),
-  updateSavedOutfit: (id, body) => client.patch(`/outfits/${id}`, body).then((r) => r.data),
-  deleteSavedOutfit: (id) => client.delete(`/outfits/${id}`).then((r) => r.data),
-  triggerScheduledProposal: () => client.post('/outfits/proposal/scheduled').then((r) => r.data),
-  triggerEventProposal: (body) => client.post('/outfits/proposal/event', body).then((r) => r.data),
-  rejectItemSuggestion: (itemId) => client.post('/outfits/reject-item', { item_id: itemId }).then((r) => r.data),
-  listSimulatedNotifications: () => client.get('/outfits/notifications').then((r) => r.data),
-  subscribeWebPush: (sub) => client.post('/outfits/webpush/subscribe', sub).then((r) => r.data),
-  unsubscribeWebPush: (endpoint) => client.post('/outfits/webpush/unsubscribe', { endpoint }).then((r) => r.data),
-  getVapidKey: () => client.get('/outfits/webpush/vapid-key').then((r) => r.data),
-  plannerScout: (body) => client.post('/stylist/planner-scout', body).then((r) => r.data),
+  listSavedOutfits: () => client.get("/outfits").then((r) => r.data),
+  saveOutfit: (body) => client.post("/outfits", body).then((r) => r.data),
+  updateSavedOutfit: (id, body) =>
+    client.patch(`/outfits/${id}`, body).then((r) => r.data),
+  deleteSavedOutfit: (id) =>
+    client.delete(`/outfits/${id}`).then((r) => r.data),
+  triggerScheduledProposal: () =>
+    client.post("/outfits/proposal/scheduled").then((r) => r.data),
+  triggerEventProposal: (body) =>
+    client.post("/outfits/proposal/event", body).then((r) => r.data),
+  rejectItemSuggestion: (itemId) =>
+    client
+      .post("/outfits/reject-item", { item_id: itemId })
+      .then((r) => r.data),
+  listSimulatedNotifications: () =>
+    client.get("/outfits/notifications").then((r) => r.data),
+  clearSimulatedNotifications: () =>
+    client.post("/outfits/notifications/clear").then((r) => r.data),
+  subscribeWebPush: (sub) =>
+    client.post("/outfits/webpush/subscribe", sub).then((r) => r.data),
+  unsubscribeWebPush: (endpoint) =>
+    client
+      .post("/outfits/webpush/unsubscribe", { endpoint })
+      .then((r) => r.data),
+  getVapidKey: () =>
+    client.get("/outfits/webpush/vapid-key").then((r) => r.data),
+  plannerScout: (body) =>
+    client.post("/stylist/planner-scout", body).then((r) => r.data),
 
   // --- DressApp Suitcase ---
-  getSuitcaseActive: () => client.get('/suitcase/active').then((r) => r.data),
-  saveSuitcaseActive: (body) => client.post('/suitcase/active', body).then((r) => r.data),
-  deleteSuitcaseActive: (params) => client.delete('/suitcase/active', { params }).then((r) => r.data),
-  packSuitcase: (body) => client.post('/suitcase/pack', body).then((r) => r.data),
-  approveSuitcase: (body) => client.post('/suitcase/approve', body).then((r) => r.data),
-  updateSuitcaseItemPackStatus: (body) => client.post('/suitcase/items/pack-status', body).then((r) => r.data),
-  deleteSuitcaseItem: (itemId) => client.delete(`/suitcase/items/${itemId}`).then((r) => r.data),
-  enterSuitcaseLocation: (body) => client.post('/suitcase/enter-location', body).then((r) => r.data),
-  getSuitcaseArchive: () => client.get('/suitcase/archive').then((r) => r.data),
-  deleteSuitcaseArchives: (ids) => client.delete(`/suitcase/archive?ids=${ids.join(',')}`).then((r) => r.data),
-  suitcaseChat: (body) => client.post('/suitcase/chat', body).then((r) => r.data),
-  deleteAccount: (body) => client.post('/users/me/delete', body).then((r) => r.data),
-  predictMeasurements: (body) => client.post('/sizes/predict-measurements', body).then((r) => r.data),
+  getSuitcaseActive: () => client.get("/suitcase/active").then((r) => r.data),
+  saveSuitcaseActive: (body) =>
+    client.post("/suitcase/active", body).then((r) => r.data),
+  deleteSuitcaseActive: (params) =>
+    client.delete("/suitcase/active", { params }).then((r) => r.data),
+  packSuitcase: (body) =>
+    client.post("/suitcase/pack", body).then((r) => r.data),
+  approveSuitcase: (body) =>
+    client.post("/suitcase/approve", body).then((r) => r.data),
+  updateSuitcaseItemPackStatus: (body) =>
+    client.post("/suitcase/items/pack-status", body).then((r) => r.data),
+  addSuitcaseItem: (body) =>
+    client.post("/suitcase/items", body).then((r) => r.data),
+  deleteSuitcaseItem: (itemId) =>
+    client.delete(`/suitcase/items/${itemId}`).then((r) => r.data),
+  enterSuitcaseLocation: (body) =>
+    client.post("/suitcase/enter-location", body).then((r) => r.data),
+  getSuitcaseArchive: () => client.get("/suitcase/archive").then((r) => r.data),
+  deleteSuitcaseArchives: (ids) =>
+    client.delete(`/suitcase/archive?ids=${ids.join(",")}`).then((r) => r.data),
+  suitcaseChat: (body) =>
+    client.post("/suitcase/chat", body).then((r) => r.data),
+  deleteAccount: (body) =>
+    client.post("/users/me/delete", body).then((r) => r.data),
+  predictMeasurements: (body) =>
+    client.post("/sizes/predict-measurements", body).then((r) => r.data),
 };
 
 // ============================================================
@@ -755,31 +933,42 @@ export const api = {
 
 export const campaignApi = {
   /** Create a new campaign (Expert only) */
-  createCampaign: (data) => client.post('/campaigns', data).then((r) => r.data),
+  createCampaign: (data) => client.post("/campaigns", data).then((r) => r.data),
+
+  /** List own campaigns (Expert only) */
+  listMyCampaigns: (params) =>
+    client.get("/campaigns/mine", { params }).then((r) => r.data),
 
   /** Get single campaign detail */
   getCampaign: (id) => client.get(`/campaigns/${id}`).then((r) => r.data),
 
   /** Update campaign (Draft/Rejected only) */
-  updateCampaign: (id, data) => client.patch(`/campaigns/${id}`, data).then((r) => r.data),
+  updateCampaign: (id, data) =>
+    client.patch(`/campaigns/${id}`, data).then((r) => r.data),
 
   // Submit flow (Phase 1: creates PayPal order)
   submitCampaign: (campaignId) =>
     client.post(`/campaigns/${campaignId}/submit`).then((r) => r.data),
-  
+
   // Submit flow (Phase 2: capture PayPal order, fires admin alert, moves to pending_approval)
   captureSubmissionOrder: (campaignId, orderId) =>
-    client.post(`/campaigns/${campaignId}/submit/capture`, { order_id: orderId }).then((r) => r.data),
+    client
+      .post(`/campaigns/${campaignId}/submit/capture`, { order_id: orderId })
+      .then((r) => r.data),
 
   // Extension flow
   extendCampaign: (campaignId, newEndDate) =>
-    client.post(`/campaigns/${campaignId}/extend`, { new_end_date: newEndDate }).then((r) => r.data),
+    client
+      .post(`/campaigns/${campaignId}/extend`, { new_end_date: newEndDate })
+      .then((r) => r.data),
 
   captureExtensionOrder: (campaignId, orderId, newEndDate) =>
-    client.post(`/campaigns/${campaignId}/extend/capture`, {
-      order_id: orderId,
-      new_end_date: newEndDate,
-    }).then((r) => r.data),
+    client
+      .post(`/campaigns/${campaignId}/extend/capture`, {
+        order_id: orderId,
+        new_end_date: newEndDate,
+      })
+      .then((r) => r.data),
 
   // Lifecycle
   pauseCampaign: (campaignId) =>
@@ -795,32 +984,51 @@ export const campaignApi = {
   cancelCampaign: (id) => client.delete(`/campaigns/${id}`).then((r) => r.data),
 
   /** Public campaign feed with geo + sort params */
-  getCampaignFeed: (params) => client.get('/campaigns/feed', { params }).then((r) => r.data),
+  getCampaignFeed: (params) =>
+    client.get("/campaigns/feed", { params }).then((r) => r.data),
 
   /** Save / unsave a campaign */
-  saveCampaign: (id) => client.post(`/campaigns/${id}/save`).then((r) => r.data),
+  saveCampaign: (id) =>
+    client.post(`/campaigns/${id}/save`).then((r) => r.data),
 
   /** Increment share counter */
-  shareCampaign: (id) => client.post(`/campaigns/${id}/share`).then((r) => r.data),
+  shareCampaign: (id) =>
+    client.post(`/campaigns/${id}/share`).then((r) => r.data),
 
   /** Report a campaign */
-  reportCampaign: (id) => client.post(`/campaigns/${id}/report`).then((r) => r.data),
+  reportCampaign: (id) =>
+    client.post(`/campaigns/${id}/report`).then((r) => r.data),
 
   /** Track a campaign view impression */
-  trackCampaignView: (id) => client.post(`/campaigns/${id}/view`).then((r) => r.data),
+  trackCampaignView: (id) =>
+    client.post(`/campaigns/${id}/view`).then((r) => r.data),
 
   // --- Admin ---
   /** Get campaign approval queue */
-  adminGetCampaignQueue: (params) => client.get('/admin/campaigns', { params }).then((r) => r.data),
+  adminGetCampaignQueue: (params) =>
+    client.get("/admin/campaigns", { params }).then((r) => r.data),
+
+  /** Get all campaigns (any status) */
+  adminGetAllCampaigns: (params) =>
+    client.get("/admin/campaigns/all", { params }).then((r) => r.data),
+
+  /** Get single campaign (admin) */
+  adminGetCampaign: (id) =>
+    client.get(`/admin/campaigns/${id}`).then((r) => r.data),
 
   /** Approve a campaign */
-  adminApproveCampaign: (id) => client.post(`/admin/campaigns/${id}/approve`).then((r) => r.data),
+  adminApproveCampaign: (id) =>
+    client.post(`/admin/campaigns/${id}/approve`).then((r) => r.data),
 
   /** Reject a campaign with a reason */
   adminRejectCampaign: (id, reason) =>
-    client.post(`/admin/campaigns/${id}/reject`, { reason }).then((r) => r.data),
+    client
+      .post(`/admin/campaigns/${id}/reject`, { reason })
+      .then((r) => r.data),
 
-
+  /** Admin edit campaign fields before approval */
+  adminEditCampaign: (id, data) =>
+    client.patch(`/admin/campaigns/${id}`, data).then((r) => r.data),
 };
 
 export default client;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -51,7 +51,15 @@ import market2 from "../assets/img/market2.jpg";
 import market3 from "../assets/img/market3.jpg";
 import market4 from "../assets/img/market4.jpg";
 import editor from "../assets/img/editor.jpg";
-
+import slide1 from "../assets/img/slide1.avif";
+import slide2 from "../assets/img/slide2.avif";
+import slide3 from "../assets/img/slide3.avif";
+import Swiper from "swiper";
+import { Navigation, Autoplay } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "animate.css/animate.min.css";
+import WOW from "wowjs";
 // Fallback cards used only if the Trend-Scout endpoint fails or returns empty.
 // Shape mirrors the real API (``label``, ``headline``, ``summary``) so the
 // renderer below can read ONE consistent set of fields. The actual strings
@@ -98,9 +106,9 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const slides = [
-    "/assets/img/slide1.avif",
-    "/assets/img/slide2.avif",
-    "/assets/img/slide3.avif",
+    slide1,
+    slide2,
+    slide3,
   ];
   useEffect(() => {
     const interval = setInterval(() => {
@@ -192,7 +200,6 @@ export default function Home() {
       setRefreshing(false);
     }
   };
-
   useEffect(() => {
     (async () => {
       try {
@@ -213,7 +220,6 @@ export default function Home() {
     // stays accurate after add/delete.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
   // Keep the closet chip in sync with store mutations from elsewhere
   // in the app (AddItem, ItemDetail delete, etc.) without a refetch.
   useEffect(() => {
@@ -223,19 +229,19 @@ export default function Home() {
       return { closet: closetCount, market: prev?.market ?? 0 };
     });
   }, [closet.total, closet.items]);
+  const trendSwiperRef = useRef(null);
   useEffect(() => {
-    const sliderElement = document.querySelector(".trend-swiper");
+    const sliderElement = trendSwiperRef.current;
 
-    if (!window.Swiper || !sliderElement) {
-      console.error("Swiper library or slider element not found");
-      return undefined;
-    }
+    if (!sliderElement) return;
 
     if (sliderElement.swiper) {
       sliderElement.swiper.destroy(true, true);
     }
 
-    const trendSwiper = new window.Swiper(sliderElement, {
+    const trendSwiper = new Swiper(sliderElement, {
+      modules: [Navigation, Autoplay],
+
       slidesPerView: 1.15,
       spaceBetween: 15,
       loop: true,
@@ -248,44 +254,43 @@ export default function Home() {
       },
 
       navigation: {
-        nextEl: ".trend-swiper-next",
-        prevEl: ".trend-swiper-prev",
+        nextEl: sliderElement.querySelector(".trend-swiper-next"),
+        prevEl: sliderElement.querySelector(".trend-swiper-prev"),
       },
 
       breakpoints: {
         576: {
           slidesPerView: 2,
-          spaceBetween: 15,
         },
         992: {
           slidesPerView: 3,
-          spaceBetween: 15,
         },
         1200: {
           slidesPerView: 4,
-          spaceBetween: 15,
         },
       },
     });
 
     return () => {
-      if (trendSwiper && !trendSwiper.destroyed) {
+      if (!trendSwiper.destroyed) {
         trendSwiper.destroy(true, true);
       }
     };
   }, []);
+  const marketSwiperRef = useRef(null);
   useEffect(() => {
-    const sliderElement = document.querySelector(".market-swiper");
+    const sliderElement = marketSwiperRef.current;
 
-    if (!window.Swiper || !sliderElement) {
-      return undefined;
-    }
+    if (!sliderElement) return;
 
+    // Destroy previous instance
     if (sliderElement.swiper) {
       sliderElement.swiper.destroy(true, true);
     }
 
-    const marketSwiper = new window.Swiper(sliderElement, {
+    const marketSwiper = new Swiper(sliderElement, {
+      modules: [Navigation, Autoplay],
+
       slidesPerView: 1.15,
       spaceBetween: 15,
       loop: true,
@@ -298,8 +303,8 @@ export default function Home() {
       },
 
       navigation: {
-        nextEl: ".market-swiper-next",
-        prevEl: ".market-swiper-prev",
+        nextEl: sliderElement.querySelector(".market-swiper-next"),
+        prevEl: sliderElement.querySelector(".market-swiper-prev"),
       },
 
       breakpoints: {
@@ -324,43 +329,6 @@ export default function Home() {
       }
     };
   }, []);
-  const trendSlides = [
-    {
-      id: 1,
-      tag: "Runway Report",
-      title: "Relaxed tailoring dominance",
-      image:
-        "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=600",
-    },
-    {
-      id: 2,
-      tag: "Street Style",
-      title: "Monochromatic utility earth tones",
-      image:
-        "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?q=80&w=600",
-    },
-    {
-      id: 3,
-      tag: "Sustainability",
-      title: "Regenerative organic linen and cotton",
-      image:
-        "https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=600",
-    },
-    {
-      id: 4,
-      tag: "Influencer Focus",
-      title: "Functional gorpcore accessories",
-      image:
-        "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?q=80&w=600",
-    },
-    {
-      id: 5,
-      tag: "Editorial Pick",
-      title: "Statement outerwear layering",
-      image:
-        "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?q=80&w=600",
-    },
-  ];
   const marketplaceItems = [
     {
       id: 1,
@@ -409,7 +377,18 @@ export default function Home() {
     },
   ];
   const firstName = (user?.display_name || user?.email || '').split(/\s|@/)[0];
+  // --- WOW.js Scroll Animations
+  useEffect(() => {
+    const wow = new WOW.WOW({
+      boxClass: "wow",
+      animateClass: "animated",
+      offset: 60,
+      mobile: true,
+      live: true,
+    });
 
+    wow.init();
+  }, []);
   return (
     <>
       {/* banner-start */}
@@ -758,7 +737,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div className="swiper market-swiper wow fadeInUp">
+          <div ref={marketSwiperRef} className="swiper market-swiper wow fadeInUp">
             <div className="swiper-wrapper">
               {marketplaceItems.map((item) => (
                 <div className="swiper-slide" key={item.id}>
@@ -1071,15 +1050,32 @@ export default function Home() {
         <div className="container-fluid">
           <div className="section-heading wow fadeInDown">
             <span className="section-tag">Fashion Intelligence</span>
-            <a href="/trends"><h2>The Trend Scout</h2></a>
+
+            <Link to="/trends">
+              <h2>The Trend Scout</h2>
+            </Link>
+
             <div className="view-more">
-              <p>Get styled ahead of the global curve. Discover real-time stylistic
+              <p>
+                Get styled ahead of the global curve. Discover real-time stylistic
                 shifts curated by computational trend models.
               </p>
-              <a href="/trends" data-testid="home-trend-scout-title-link" className="custm-btn">View More<i className="fa-solid fa-arrow-right ms-2"></i></a>
+
+              <Link
+                to="/trends"
+                data-testid="home-trend-scout-title-link"
+                className="custm-btn"
+              >
+                View More
+                <i className="fa-solid fa-arrow-right ms-2" />
+              </Link>
             </div>
           </div>
-          <div className="swiper trend-swiper wow fadeInUp">
+
+          <div
+            ref={trendSwiperRef}
+            className="swiper trend-swiper wow fadeInUp"
+          >
             <div className="swiper-wrapper">
               {trends === null
                 ? Array.from({ length: 4 }).map((_, i) => (
@@ -1087,60 +1083,85 @@ export default function Home() {
                     <Skeleton className="h-100 w-100 rounded-4" />
                   </div>
                 ))
-                : (trends.length > 0 ? trends : FALLBACK_TRENDS).map((card, i) => {
-                  const _prettyBucket = (b) =>
-                    (b || "")
-                      .replace(/[-_]+/g, " ")
-                      .replace(/\b\w/g, (c) => c.toUpperCase());
+                : (trends.length > 0 ? trends : FALLBACK_TRENDS).map(
+                  (card, i) => {
+                    const prettyBucket = (bucket) =>
+                      (bucket || "")
+                        .replace(/[-_]+/g, " ")
+                        .replace(/\b\w/g, (char) => char.toUpperCase());
 
-                  const localisedBucket = card.bucket
-                    ? t(`trends.bucket.${card.bucket}`, { defaultValue: "" })
-                    : "";
-                  const chip =
-                    localisedBucket ||
-                    card.label ||
-                    _prettyBucket(card.bucket) ||
-                    card.tag;
-                  const headline = card.headline || card.title;
-                  const body = card.summary || card.body || card.blurb;
-                  const sourceUrl = card.source_url;
-                  // image fallback
-                  const image =
-                    card.image_url ||
-                    "https://i.pinimg.com/736x/17/50/e9/1750e9027cf70bc488293df0f91daa1d.jpg";
+                    const localisedBucket = card.bucket
+                      ? t(`trends.bucket.${card.bucket}`, {
+                        defaultValue: "",
+                      })
+                      : "";
 
-                  return (
-                    <div className="swiper-slide" key={card.id || i}>
-                      <div className="trend-card" style={{ backgroundImage: `url(${image})`, }} >
-                        <div className="trend-card-content">
-                          <span className="trend-tag">{chip}</span>
-                          <h3>{headline}</h3>
-                          {body && <p>{body}</p>}
-                          {sourceUrl && (
-                            <a
-                              href={sourceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="trend-btn"
-                            >
-                              {t("home.trendReadSource", {
-                                defaultValue: "Read Editorial",
-                              })}
-                              <i className="bi bi-arrow-right ms-2"></i>
-                            </a>
-                          )}
+                    const chip =
+                      localisedBucket ||
+                      card.label ||
+                      prettyBucket(card.bucket) ||
+                      card.tag;
+
+                    const headline = card.headline || card.title;
+                    const body = card.summary || card.body || card.blurb;
+                    const sourceUrl = card.source_url;
+
+                    const image =
+                      card.image_url ||
+                      "https://i.pinimg.com/736x/17/50/e9/1750e9027cf70bc488293df0f91daa1d.jpg";
+
+                    return (
+                      <div className="swiper-slide" key={card.id || i}>
+                        <div
+                          className="trend-card"
+                          style={{
+                            backgroundImage: `url(${image})`,
+                          }}
+                        >
+                          <div className="trend-card-content">
+                            <span className="trend-tag">{chip}</span>
+
+                            <h3>{headline}</h3>
+
+                            {body && <p>{body}</p>}
+
+                            {sourceUrl && (
+                              <a
+                                href={sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="trend-btn"
+                              >
+                                {t("home.trendReadSource", {
+                                  defaultValue: "Read Editorial",
+                                })}
+
+                                <i className="bi bi-arrow-right ms-2" />
+                              </a>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  }
+                )}
             </div>
-            <div className="swiper-button-prev trend-swiper-prev">
-              <i className="bi bi-chevron-left"></i>
-            </div>
-            <div className="swiper-button-next trend-swiper-next">
-              <i className="bi bi-chevron-right"></i>
-            </div>
+
+            <button
+              type="button"
+              className="swiper-button-prev trend-swiper-prev"
+              aria-label="Previous trend"
+            >
+              <i className="bi bi-chevron-left" />
+            </button>
+
+            <button
+              type="button"
+              className="swiper-button-next trend-swiper-next"
+              aria-label="Next trend"
+            >
+              <i className="bi bi-chevron-right" />
+            </button>
           </div>
         </div>
       </section>

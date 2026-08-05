@@ -1,4 +1,7 @@
+// Existing global styles
 import '@/App.css';
+// Your custom styles
+import '@/style.css';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/sonner';
@@ -40,15 +43,12 @@ import SharedOutfit from '@/pages/SharedOutfit';
 import DeleteAccount from '@/pages/DeleteAccount';
 import Privacy from '@/pages/Privacy';
 import TermsOfService from '@/pages/TermsOfService';
-
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-
 import { useTranslation } from 'react-i18next';
 import { isRtl } from '@/lib/i18n';
 import { api } from '@/lib/api';
-
 /** Global listener for migration postMessage events from the bookmarklet popup.
  *  Collects streamed cards and on DRESSAPP_MIGRATION_COMPLETE saves them
  *  to the closet DB, then kicks off the Stylist re-analysis worker. */
