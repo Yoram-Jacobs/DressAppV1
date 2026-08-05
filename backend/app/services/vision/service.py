@@ -2135,6 +2135,8 @@ class GarmentVisionService:
                     async for grp_name, grp_fields, partial in call_gemma_space_stream_attributes(
                         image_b64_jpeg=b64,
                         language=language,
+                        segformer_label=det.get("label"),
+                        segformer_category=det.get("category"),
                     ):
                         assembled.update(partial)
                         if partial:  # only emit if the group produced data

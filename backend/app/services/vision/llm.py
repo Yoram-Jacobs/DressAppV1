@@ -1047,6 +1047,8 @@ async def call_gemma_space_stream_attributes(
     image_b64_jpeg: str,
     language: str | None = None,
     timeout_per_group: float | None = None,
+    segformer_label: str | None = None,
+    segformer_category: str | None = None,
 ) -> "AsyncIterator[tuple[str, list[str], dict[str, Any]]]":
     """Patch M23 — per-attribute streaming for Gemma on CPU.
 
@@ -1087,6 +1089,26 @@ async def call_gemma_space_stream_attributes(
             "- VOICE: Thoughtful, professional editor. No markdown, emojis, or sales pitch."
         ]
         
+        # Inject category restriction based on SegFormer detection
+        if segformer_category:
+            mapped_cat = None
+            if segformer_category == "top":
+                mapped_cat = "Top or Outerwear"
+            elif segformer_category == "bottom":
+                mapped_cat = "Bottom"
+            elif segformer_category == "dress":
+                mapped_cat = "Full Body (Dress)"
+            elif segformer_category == "footwear":
+                mapped_cat = "Footwear"
+            elif segformer_category in ("headwear", "accessory"):
+                mapped_cat = "Accessories"
+            
+            if mapped_cat:
+                sys_parts.append(
+                    f"- CATEGORY RESTRICTION: The garment in the photo has been pre-classified as Category: '{mapped_cat}' (SegFormer label: '{segformer_label}'). "
+                    f"You MUST classify this garment under Category: '{mapped_cat}' and describe subcategory and item types that strictly belong to this category (e.g., do not describe pants, shorts, or skirts if the category is Top)."
+                )
+
         # Add target language rule if applicable
         if lang_name:
             sys_parts.append(f"- LANGUAGE: All free-text values must be written in fluent {lang_name}.")
@@ -1104,6 +1126,19 @@ async def call_gemma_space_stream_attributes(
             if name in _GARMENT_OBJECT_SCHEMA["properties"]:
                 prop = copy.deepcopy(_GARMENT_OBJECT_SCHEMA["properties"][name])
                 
+                # Constrain category enum based on SegFormer pre-classification
+                if name == "category" and segformer_category:
+                    if segformer_category == "top":
+                        prop["enum"] = ["Top", "Outerwear"]
+                    elif segformer_category == "bottom":
+                        prop["enum"] = ["Bottom"]
+                    elif segformer_category == "dress":
+                        prop["enum"] = ["Full Body"]
+                    elif segformer_category == "footwear":
+                        prop["enum"] = ["Footwear"]
+                    elif segformer_category in ("headwear", "accessory"):
+                        prop["enum"] = ["Accessories"]
+
                 # Enforce maxLength on string fields to prevent repetition loops
                 if isinstance(prop, dict):
                     p_type = prop.get("type")
