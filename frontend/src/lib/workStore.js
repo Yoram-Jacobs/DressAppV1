@@ -32,26 +32,11 @@ const ITEM_POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 const _listeners = new Set();
 let _state = {
-  // Active /analyze upload jobs keyed by frontend card id. Each value
-  // is `{ id, label, startedAt, items, total }` where `items` ramps
-  // from 0 → `total` as ``onItem`` frames arrive on the NDJSON stream.
   analyzeJobs: {},
-  // Set of item ids whose matte / reconstruction BackgroundTask is
-  // still pending in the backend. We poll each until ``clean_image_status``
-  // flips out of "pending" or the timeout elapses.
   polishPendingIds: new Set(),
-  // Snapshot of the latest "batch": when ``registerPolishItems``
-  // is called, we stash how many items the user just saved so the
-  // floater can show "Polishing 3 / 8 photos" cleanly. Resets to
-  // 0 / 0 once the batch drains.
   polishBatchTotal: 0,
   polishBatchCompleted: 0,
-  // Per-item registration timestamp so we can stop polling stalled
-  // items after ITEM_POLL_TIMEOUT_MS.
   _polishStartedAt: {},
-  // Callback fired exactly once per batch drain — used by App.jsx to
-  // pop the "You have news in your closet" toast. The store doesn't
-  // own toast UI; it just emits the signal.
   _onBatchDoneSubscribers: new Set(),
 };
 
@@ -82,6 +67,7 @@ function _syncClosetPolishTerminal(id, status) {
 }
 
 async function _pollOnce() {
+  // ── Polish job polling ──
   const pendingIds = Array.from(_state.polishPendingIds);
   if (pendingIds.length === 0) {
     _maybeStopPoller();
@@ -188,9 +174,6 @@ function _ensurePollerRunning() {
 }
 
 function _maybeStopPoller() {
-  // Stop the timer when there's nothing left to poll, so we don't
-  // bombard the API with empty ticks. The next ``registerPolishItems``
-  // call will spin it back up.
   if (_state.polishPendingIds.size === 0 && _pollerHandle != null) {
     clearInterval(_pollerHandle);
     _pollerHandle = null;

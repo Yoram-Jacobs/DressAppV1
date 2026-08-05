@@ -11,7 +11,6 @@ import { SeoBase } from '@/components/SeoBase';
 import { LanguageSwitchOverlay } from '@/components/LanguageSwitchOverlay';
 import { WorkProgressFloater } from '@/components/WorkProgressFloater';
 import { WorkBatchDoneToast } from '@/components/WorkBatchDoneToast';
-
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import AuthCallback from '@/pages/AuthCallback';
@@ -39,12 +38,79 @@ import MyCampaigns from '@/pages/MyCampaigns';
 import Suitcase from '@/pages/Suitcase';
 import SharedOutfit from '@/pages/SharedOutfit';
 import DeleteAccount from '@/pages/DeleteAccount';
+import Privacy from '@/pages/Privacy';
+import TermsOfService from '@/pages/TermsOfService';
 
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { useTranslation } from 'react-i18next';
 import { isRtl } from '@/lib/i18n';
+import { api } from '@/lib/api';
+
+/** Global listener for migration postMessage events from the bookmarklet popup.
+ *  Collects streamed cards and on DRESSAPP_MIGRATION_COMPLETE saves them
+ *  to the closet DB, then kicks off the Stylist re-analysis worker. */
+function MigrationMessageListener() {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    const collectedCards = [];
+
+    const handleMessage = (event) => {
+      const msg = event.data;
+      if (!msg || !msg.type) return;
+
+      if (msg.type === 'DRESSAPP_MIGRATION_STREAM') {
+        const { cards } = msg;
+        if (cards && cards.length > 0) {
+          collectedCards.push(...cards);
+          console.log(`[MigrationListener] STREAM batch: ${cards.length} cards (total: ${collectedCards.length})`);
+        }
+        return;
+      }
+
+      if (msg.type === 'DRESSAPP_MIGRATION_COMPLETE') {
+        const { total_cards, app_name } = msg;
+        if (!total_cards || total_cards === 0) return;
+
+        const cardsWithImages = collectedCards.filter(c => c.crop_base64);
+        const appName = app_name || 'Competitor App';
+        console.log(`[MigrationListener] COMPLETE: total_cards=${total_cards}, collected=${collectedCards.length}, withImages=${cardsWithImages.length}, app=${appName}`);
+        collectedCards.length = 0;
+
+        if (cardsWithImages.length > 0) {
+          // DB-backed pipeline: save crops + kick off Stylist re-analyze in ONE call
+          (async () => {
+            try {
+              toast.info(t('migration.saving', { defaultValue: `Saving ${cardsWithImages.length} items to your closet...` }));
+
+              // Single atomic call: saves crops to DB AND starts Stylist worker
+              const result = await api.saveMigrationCrops({ app_name: appName, cards: cardsWithImages });
+              console.log(`[MigrationListener] Saved ${result.items_saved} items, Stylist job: ${result.job_id}`);
+
+              toast.success(t('migration.saved', { defaultValue: `${result.items_saved} items saved. Stylist is analysing them — details update automatically.` }));
+
+              // Navigate to closet so user can see items appearing
+              navigate('/closet');
+            } catch (err) {
+              console.error('[MigrationListener] Pipeline error:', err);
+              toast.error(t('migration.error', { defaultValue: 'Migration failed. Please try again.' }));
+            }
+          })();
+        }
+        return;
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [navigate, t]);
+
+  return null;
+}
 function GlobalScrollListener() {
   useEffect(() => {
     const handleScroll = () => {
@@ -92,6 +158,7 @@ function App() {
             <BrowserRouter>
               <ReferrerTracker />
               <GlobalScrollListener />
+              <MigrationMessageListener />
               <SeoBase />
               <LanguageSwitchOverlay />
           <a
@@ -138,6 +205,8 @@ function App() {
               <Route path="/ads" element={<AdsManager />} />
               <Route path="/me" element={<Profile />} />
               <Route path="/delete-account" element={<DeleteAccount />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<TermsOfService />} />
               <Route path="/me/stats" element={<WardrobeStats />} />
               <Route path="/trends" element={<TrendScout />} />
               <Route path="/avatar" element={<AvatarPage />} />
@@ -146,7 +215,6 @@ function App() {
             <Route path="*" element={<Navigate to="/home" replace />} />
           </Routes>
           <Toaster position="top-center" richColors closeButton className="mt-14 sm:mt-0" />
-          <GlobalScrollListener />
           <WorkProgressFloater />
           <WorkBatchDoneToast />
           </BrowserRouter>

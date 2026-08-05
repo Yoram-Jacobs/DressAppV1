@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  BookOpen, Info, ShieldAlert, Sparkles, User, BarChart4, 
-  MapPin, Phone, HelpCircle, AlertTriangle, Layers, Wallet, 
+import {
+  BookOpen, Info, ShieldAlert, Sparkles, User, BarChart4,
+  MapPin, Phone, HelpCircle, AlertTriangle, Layers, Wallet,
   ShoppingBag, Search, ClipboardList, Camera, Mic, Grid, TrendingUp, UserRound, Loader2, Bell, Chrome, Megaphone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -30,6 +30,7 @@ export default function HelpMenu() {
     { id: 'suitcase', label: t('help.suitcase_title'), icon: MapPin, wiki: 'suitcase_packing' },
     { id: 'marketplace', label: t('help.market_title'), icon: ShoppingBag, wiki: 'marketplace_listing' },
     { id: 'shopping-assistant', label: t('help.shopping_assistant_title'), icon: Chrome, wiki: 'chrome_extension' },
+    { id: 'import-wardrobe', label: t('help.import_wardrobe_title'), icon: Search, wiki: 'import_wardrobe' },
     { id: 'trend-scout', label: t('help.trend_scout_title'), icon: TrendingUp, wiki: 'trend_scout' },
     { id: 'experts', label: t('help.experts_title'), icon: UserRound, wiki: 'experts_registry' },
     ...(viewerIsPro ? [
@@ -78,11 +79,11 @@ export default function HelpMenu() {
 
   const parseMarkdown = (mdText) => {
     if (!mdText) return null;
-    
+
     const lines = mdText.split('\n');
     const elements = [];
     let listItems = [];
-    
+
     const flushList = (key) => {
       if (listItems.length > 0) {
         elements.push(
@@ -93,22 +94,22 @@ export default function HelpMenu() {
         listItems = [];
       }
     };
-    
+
     const parseInline = (text) => {
       const parts = [];
       const regex = /(\*\*.*?\*\*|`.*?`|\[.*?\]\(.*?\))/g;
       let match;
       let lastIndex = 0;
       let keyIdx = 0;
-      
+
       while ((match = regex.exec(text)) !== null) {
         const matchText = match[0];
         const matchIndex = match.index;
-        
+
         if (matchIndex > lastIndex) {
           parts.push(text.substring(lastIndex, matchIndex));
         }
-        
+
         if (matchText.startsWith('**') && matchText.endsWith('**')) {
           parts.push(<strong key={keyIdx++} className="font-semibold text-foreground">{matchText.slice(2, -2)}</strong>);
         } else if (matchText.startsWith('`') && matchText.endsWith('`')) {
@@ -122,23 +123,23 @@ export default function HelpMenu() {
             </a>
           );
         }
-        
+
         lastIndex = regex.lastIndex;
       }
-      
+
       if (lastIndex < text.length) {
         parts.push(text.substring(lastIndex));
       }
-      
+
       return parts.length > 0 ? parts : text;
     };
-    
+
     let inCode = false;
     let codeLines = [];
-    
+
     for (let idx = 0; idx < lines.length; idx++) {
       const line = lines[idx].trim();
-      
+
       if (line.startsWith('```')) {
         if (inCode) {
           elements.push(
@@ -153,12 +154,12 @@ export default function HelpMenu() {
         }
         continue;
       }
-      
+
       if (inCode) {
         codeLines.push(lines[idx]);
         continue;
       }
-      
+
       if (line.startsWith('# ')) {
         flushList(idx);
         elements.push(
@@ -168,7 +169,7 @@ export default function HelpMenu() {
         );
         continue;
       }
-      
+
       if (line.startsWith('## ')) {
         flushList(idx);
         elements.push(
@@ -178,7 +179,7 @@ export default function HelpMenu() {
         );
         continue;
       }
-      
+
       if (line.startsWith('### ')) {
         flushList(idx);
         elements.push(
@@ -188,12 +189,12 @@ export default function HelpMenu() {
         );
         continue;
       }
-      
+
       if (line.startsWith('- ') || line.startsWith('* ')) {
         listItems.push(line.slice(2));
         continue;
       }
-      
+
       if (/^\d+\.\s/.test(line)) {
         flushList(idx);
         const match = line.match(/^\d+\.\s(.*)/);
@@ -205,18 +206,18 @@ export default function HelpMenu() {
         );
         continue;
       }
-      
+
       if (line === '') {
         flushList(idx);
         continue;
       }
-      
+
       if (line === '---') {
         flushList(idx);
         elements.push(<hr key={`hr-${idx}`} className="my-6 border-border/50" />);
         continue;
       }
-      
+
       if (line.startsWith('> ')) {
         flushList(idx);
         elements.push(
@@ -226,7 +227,7 @@ export default function HelpMenu() {
         );
         continue;
       }
-      
+
       flushList(idx);
       elements.push(
         <p key={`p-${idx}`} className="text-sm text-muted-foreground leading-relaxed my-3">
@@ -234,569 +235,550 @@ export default function HelpMenu() {
         </p>
       );
     }
-    
+
     flushList(lines.length);
     return elements;
   };
 
   return (
-    <div 
+    <div
       dir={isRtl ? 'rtl' : 'ltr'}
       className={cn(
-        "flex h-full w-full overflow-hidden bg-background rounded-lg text-foreground",
+        "",
         isRtl ? "text-right" : "text-left"
       )}
     >
-      {/* Sidebar Navigation */}
-      <aside 
-        className={cn(
-          "w-64 bg-secondary/10 flex flex-col shrink-0 hidden md:flex",
-          isRtl ? "border-l border-border" : "border-r border-border"
-        )}
-      >
-        <div className="p-4 border-b border-border">
-          <div className="flex items-center gap-2 font-semibold">
-            <BookOpen className="h-5 w-5 text-primary" />
-            <span>{isRtl ? (i18n.language === 'he' ? 'תוכן העניינים' : 'جدول المحتويات') : 'Table of Contents'}</span>
+      <div className='row gx-3 gy-3'>
+        {/* Sidebar Navigation */}
+        <div className='col-md-4'>
+          <div className='helpsidebar'>
+            <div className="helphead">
+              <h6>{isRtl ? (i18n.language === 'he' ? 'תוכן העניינים' : 'جدول المحتويات') : 'Table of Contents'}</h6>
+            </div>
+            <ScrollArea>
+              <nav className="custmhelptab">
+                {SECTIONS.map((sec) => {
+                  const Icon = sec.icon;
+                  return (
+                    <button
+                      key={sec.id}
+                      onClick={() => setActiveTab(sec.id)}
+                      className={cn(
+                        isRtl ? "text-right" : "text-left",
+                        activeTab === sec.id && "active"
+                      )}
+                    >
+                      <Icon className="tab-icon" />
+                      {sec.label}
+                    </button>
+                  );
+                })}
+              </nav>
+            </ScrollArea>
           </div>
         </div>
-        <ScrollArea className="flex-1 py-2">
-          <nav className="px-2 space-y-1">
-            {SECTIONS.map((sec) => {
-              const Icon = sec.icon;
-              const isActive = activeTab === sec.id;
-              return (
-                <button
-                  key={sec.id}
-                  onClick={() => setActiveTab(sec.id)}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors font-medium",
-                    isRtl ? "text-right" : "text-left",
-                    isActive 
-                      ? "bg-primary/10 text-primary" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
-                  )}
-                >
-                  <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
-                  <span className="truncate">{sec.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-        </ScrollArea>
-      </aside>
-
-      {/* Content Area */}
-      <main className="flex-1 flex flex-col min-w-0">
-        {/* Mobile quick tabs selection dropdown */}
-        <div className="md:hidden p-3 border-b border-border bg-secondary/15">
-          <select 
-            value={activeTab}
-            onChange={(e) => setActiveTab(e.target.value)}
-            className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            {SECTIONS.map((sec) => (
-              <option key={sec.id} value={sec.id}>
-                {sec.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <ScrollArea className="flex-1 p-6">
-          <div className="max-w-2xl mx-auto space-y-6">
-            
+        {/* Content Area */}
+        <div className='col-md-8'>
+          {/* Mobile quick tabs selection dropdown */}
+          <div className="md:hidden p-3 border-b border-border bg-secondary/15">
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value)}
+              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {SECTIONS.map((sec) => (
+                <option key={sec.id} value={sec.id}>
+                  {sec.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <ScrollArea>
             {viewingGuide ? (
-              <div className="space-y-4">
-                <button
-                  onClick={() => setViewingGuide(false)}
-                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-medium mb-4 border border-border/40 px-3 py-1.5 rounded bg-secondary/15 transition-colors cursor-pointer"
-                >
+              <div className="">
+                <button onClick={() => setViewingGuide(false)}>
                   &larr; {isRtl ? 'חזרה לתקציר' : 'Back to Summary'}
                 </button>
-                <div className="space-y-4">
+                <div className="">
                   {parseMarkdown(guideContent)}
                 </div>
               </div>
             ) : (
               <>
                 {activeTab === 'overview' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <BookOpen className="h-6 w-6" /> {t('help.overview_title')}
-                </h2>
-                <p className="text-base leading-relaxed text-muted-foreground">{t('help.overview_p1')}</p>
-                <p className="text-base leading-relaxed text-muted-foreground">{t('help.overview_p2')}</p>
-                <p className="text-base leading-relaxed text-muted-foreground">{t('help.overview_p3')}</p>
-              </div>
-            )}
-
-            {activeTab === 'prerequisites' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <ClipboardList className="h-6 w-6" /> {t('help.prereq_title')}
-                </h2>
-                <p className="text-muted-foreground">{t('help.prereq_p1')}</p>
-                <ul className="space-y-3 pl-1 pr-1">
-                  {[
-                    t('help.prereq_item1'),
-                    t('help.prereq_item2'),
-                    t('help.prereq_item3')
-                  ].map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <span className="h-6 w-6 shrink-0 rounded-full bg-secondary flex items-center justify-center text-xs font-semibold text-foreground">{idx + 1}</span>
-                      <span className="text-muted-foreground pt-0.5">{item}</span>
-                    </li>
-                  ))}
-                  <li className="flex items-start gap-3">
-                    <span className="h-6 w-6 shrink-0 rounded-full bg-secondary flex items-center justify-center text-xs font-semibold text-foreground">4</span>
-                    <span className="text-muted-foreground pt-0.5">
-                      {i18n.language === 'he' ? (
-                        <>מפתח Gemini API. ניתן להשיגו בחינם ב-<a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">Google AI Studio</a>.</>
-                      ) : i18n.language === 'ar' ? (
-                        <>مفتاح Gemini API المجاني. احصل عليه من <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">Google AI Studio</a>.</>
-                      ) : (
-                        <>A Gemini API Key. Get it for free on <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">Google AI Studio</a>.</>
-                      )}
-                    </span>
-                  </li>
-                </ul>
-              </div>
-            )}
-
-            {activeTab === 'adding-clothes' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <Camera className="h-6 w-6" /> {t('help.add_clothes_title')}
-                </h2>
-                <p className="text-muted-foreground">{t('help.add_clothes_p1')}</p>
-                <div className="space-y-3">
-                  {[
-                    t('help.add_clothes_step1'),
-                    t('help.add_clothes_step2'),
-                    t('help.add_clothes_step3'),
-                    t('help.add_clothes_step4'),
-                    t('help.add_clothes_step5'),
-                    t('help.add_clothes_step6')
-                  ].map((text, idx) => (
-                    <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
-                      <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>
-                      <p className="text-sm text-muted-foreground pt-0.5">
-                        {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-foreground font-semibold">{part}</strong> : part)}
-                      </p>
+                  <div className="sidecontent">
+                    <h6><BookOpen />{t('help.overview_title')}</h6>
+                    <p>{t('help.overview_p1')}</p>
+                    <p>{t('help.overview_p2')}</p>
+                    <p>{t('help.overview_p3')}</p>
+                  </div>
+                )}
+                {activeTab === 'prerequisites' && (
+                  <div className="sidecontent">
+                    <h6><ClipboardList />{t('help.prereq_title')}</h6>
+                    <p>{t('help.prereq_p1')}</p>
+                    <ul>
+                      {[
+                        t('help.prereq_item1'),
+                        t('help.prereq_item2'),
+                        t('help.prereq_item3')
+                      ].map((item, idx) => (
+                        <li key={idx} className='helplist'>
+                          <span>{idx + 1}</span>{item}
+                        </li>
+                      ))}
+                      <li className="helplist">
+                        <span>4</span>
+                        {t('help.geminiKeyStep', { defaultValue: 'A Gemini API Key. Get it for free on <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" >Google AI Studio</a>.' })}
+                      </li>
+                    </ul>
+                  </div>
+                )}
+                {activeTab === 'adding-clothes' && (
+                  <div className="sidecontent">
+                    <h6><Camera /> {t('help.add_clothes_title')}</h6>
+                    <p>{t('help.add_clothes_p1')}</p>
+                    <div className="">
+                      {[
+                        t('help.add_clothes_step1'),
+                        t('help.add_clothes_step2'),
+                        t('help.add_clothes_step3'),
+                        t('help.add_clothes_step4'),
+                        t('help.add_clothes_step5'),
+                        t('help.add_clothes_step6')
+                      ].map((text, idx) => (
+                        <div key={idx} className="helplist">
+                          <span>{idx + 1}</span>
+                          {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-foreground font-semibold">{part}</strong> : part)}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                  </div>
+                )}
 
-            {activeTab === 'closet-page' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <Grid className="h-6 w-6" /> {t('help.closet_page_title')}
-                </h2>
-                <p className="text-muted-foreground">{t('help.closet_page_p1')}</p>
-                <div className="space-y-3">
-                  {[
-                    { title: t('help.closet_view_title'), desc: t('help.closet_view_desc') },
-                    { title: t('help.closet_select_title'), desc: t('help.closet_select_desc') },
-                    { title: t('help.closet_group_title'), desc: t('help.closet_group_desc') },
-                    { title: t('help.closet_edit_title'), desc: t('help.closet_edit_desc') }
-                  ].map((item, idx) => (
-                    <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
-                      <h4 className="font-semibold text-sm">{item.title}</h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                {activeTab === 'closet-page' && (
+                  <div className="sidecontent">
+                    <h6><Grid /> {t('help.closet_page_title')}</h6>
+                    <p>{t('help.closet_page_p1')}</p>
+                    <div className="">
+                      {[
+                        { title: t('help.closet_view_title'), desc: t('help.closet_view_desc') },
+                        { title: t('help.closet_select_title'), desc: t('help.closet_select_desc') },
+                        { title: t('help.closet_group_title'), desc: t('help.closet_group_desc') },
+                        { title: t('help.closet_edit_title'), desc: t('help.closet_edit_desc') }
+                      ].map((item, idx) => (
+                        <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                          <h4 className="font-semibold text-sm">{item.title}</h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                  </div>
+                )}
 
-            {activeTab === 'ai-stylist' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <Mic className="h-6 w-6" /> {t('help.stylist_title')}
-                </h2>
-                <p className="text-muted-foreground">{t('help.stylist_p1')}</p>
-                <div className="space-y-3">
-                  {[
-                    t('help.stylist_step1'),
-                    t('help.stylist_step2'),
-                    t('help.stylist_step3'),
-                    t('help.stylist_step4'),
-                    t('help.stylist_step5'),
-                    t('help.stylist_step6'),
-                    t('help.stylist_step7')
-                  ].map((text, idx) => (
-                    <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
-                      <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>
-                      <p className="text-sm text-muted-foreground pt-0.5">
-                        {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-foreground font-semibold">{part}</strong> : part)}
-                      </p>
+                {activeTab === 'ai-stylist' && (
+                  <div className="sidecontent">
+                    <h6><Mic /> {t('help.stylist_title')}</h6>
+                    <p>{t('help.stylist_p1')}</p>
+                    <div className="">
+                      {[
+                        t('help.stylist_step1'),
+                        t('help.stylist_step2'),
+                        t('help.stylist_step3'),
+                        t('help.stylist_step4'),
+                        t('help.stylist_step5'),
+                        t('help.stylist_step6'),
+                        t('help.stylist_step7')
+                      ].map((text, idx) => (
+                        <div key={idx} className="helplist">
+                          <span>{idx + 1}</span>
+                          {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i}>{part}</strong> : part)}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'scheduler-push' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <Bell className="h-6 w-6" /> {t('help.scheduler_push_title')}
-                </h2>
-                <p className="text-muted-foreground">{t('help.scheduler_push_p1')}</p>
-                <div className="space-y-3">
-                  {[
-                    t('help.scheduler_push_step1'),
-                    t('help.scheduler_push_step2'),
-                    t('help.scheduler_push_step3'),
-                    t('help.scheduler_push_step4'),
-                    t('help.scheduler_push_step5'),
-                    t('help.scheduler_push_step6')
-                  ].map((text, idx) => (
-                    <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
-                      <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>
-                      <p className="text-sm text-muted-foreground pt-0.5">
-                        {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-foreground font-semibold">{part}</strong> : part)}
-                      </p>
+                  </div>
+                )}
+                {activeTab === 'scheduler-push' && (
+                  <div className="sidecontent">
+                    <h6><Bell/> {t('help.scheduler_push_title')}</h6>
+                    <p>{t('help.scheduler_push_p1')}</p>
+                    <div className="">
+                      {[
+                        t('help.scheduler_push_step1'),
+                        t('help.scheduler_push_step2'),
+                        t('help.scheduler_push_step3'),
+                        t('help.scheduler_push_step4'),
+                        t('help.scheduler_push_step5'),
+                        t('help.scheduler_push_step6')
+                      ].map((text, idx) => (
+                        <div key={idx} className="helplist">
+                          <span>{idx + 1}</span>
+                          
+                            {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i}>{part}</strong> : part)}
+                    
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                  </div>
+                )}
 
-            {activeTab === 'profile-matters' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <User className="h-6 w-6" /> {t('help.profile_title')}
-                </h2>
-                <p className="text-muted-foreground">{t('help.profile_p1')}</p>
-                <div className="space-y-4">
-                  {Array.from({ length: 16 }, (_, i) => i + 1)
-                    .map((num) => ({
-                      title: t(`help.profile_item${num}_title`, { defaultValue: '' }),
-                      desc: t(`help.profile_item${num}_desc`, { defaultValue: '' }),
-                    }))
-                    .filter((item) => item.title && item.desc)
-                    .map((item, idx) => (
-                      <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/5 space-y-2">
-                        <h4 className="font-semibold text-foreground text-sm flex items-center gap-2">
-                          <Info className="h-4 w-4 text-primary shrink-0" />
-                          {item.title}
+                {activeTab === 'profile-matters' && (
+                  <div className="space-y-6">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <User className="h-6 w-6" /> {t('help.profile_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.profile_p1')}</p>
+                    <div className="space-y-4">
+                      {Array.from({ length: 16 }, (_, i) => i + 1)
+                        .map((num) => ({
+                          title: t(`help.profile_item${num}_title`, { defaultValue: '' }),
+                          desc: t(`help.profile_item${num}_desc`, { defaultValue: '' }),
+                        }))
+                        .filter((item) => item.title && item.desc)
+                        .map((item, idx) => (
+                          <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/5 space-y-2">
+                            <h4 className="font-semibold text-foreground text-sm flex items-center gap-2">
+                              <Info className="h-4 w-4 text-primary shrink-0" />
+                              {item.title}
+                            </h4>
+                            <p className={cn("text-xs text-muted-foreground leading-relaxed", isRtl ? "pr-6" : "pl-6")}>
+                              <strong className="text-primary/90 font-medium">
+                                {isRtl ? (i18n.language === 'he' ? 'למה זה משנה:' : 'لماذا يهم:') : 'Why it matters:'}
+                              </strong>{' '}
+                              {item.desc}
+                            </p>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'wardrobe-stats' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <BarChart4 className="h-6 w-6" /> {t('help.stats_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.stats_p1')}</p>
+                    <ul className="space-y-3 pl-1 pr-1">
+                      {[
+                        t('help.stats_worth'),
+                        t('help.stats_util'),
+                        t('help.stats_cpw'),
+                        t('help.stats_palette')
+                      ].map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-primary mt-2"></span>
+                          <span className="text-muted-foreground leading-relaxed">
+                            {item.split(':').map((part, i) => i === 0 ? <strong key={i} className="text-foreground">{part}:</strong> : part)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {activeTab === 'dress-up' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <Layers className="h-6 w-6" /> {t('help.planner_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.planner_p1')}</p>
+                    <div className="space-y-3">
+                      {[
+                        { title: t('help.planner_item1_title'), desc: t('help.planner_item1_desc') },
+                        { title: t('help.planner_item2_title'), desc: t('help.planner_item2_desc') },
+                        { title: t('help.planner_item3_title'), desc: t('help.planner_item3_desc') },
+                        { title: t('help.planner_item4_title'), desc: t('help.planner_item4_desc') }
+                      ].map((item, idx) => (
+                        <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                          <h4 className="font-semibold text-sm">{item.title}</h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'suitcase' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <MapPin className="h-6 w-6" /> {t('help.suitcase_title')}
+                    </h2>
+                    <div className="space-y-3">
+                      {[
+                        t('help.suitcase_step1'),
+                        t('help.suitcase_step2'),
+                        t('help.suitcase_step3'),
+                        t('help.suitcase_step4'),
+                        t('help.suitcase_step5')
+                      ].map((text, idx) => (
+                        <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
+                          <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>
+                          <p className="text-sm text-muted-foreground pt-0.5">{text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'marketplace' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <ShoppingBag className="h-6 w-6" /> {t('help.market_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.market_p1')}</p>
+                    <div className="space-y-3">
+                      {[
+                        t('help.market_step1'),
+                        t('help.market_step2')
+                      ].map((text, idx) => (
+                        <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
+                          <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>
+                          <p className="text-sm text-muted-foreground pt-0.5">
+                            {text.split(':').map((part, i) => i === 0 ? <strong key={i} className="text-foreground font-semibold">{part}:</strong> : part)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'shopping-assistant' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <Chrome className="h-6 w-6" /> {t('help.shopping_assistant_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.shopping_assistant_p1')}</p>
+                    <div className="space-y-3">
+                      {[
+                        t('help.shopping_assistant_step1'),
+                        t('help.shopping_assistant_step2'),
+                        t('help.shopping_assistant_step3'),
+                        t('help.shopping_assistant_step4'),
+                        t('help.shopping_assistant_step5'),
+                        t('help.shopping_assistant_step6')
+                      ].map((text, idx) => (
+                        <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
+                          <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>
+                          <p className="text-sm text-muted-foreground pt-0.5">
+                            {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-foreground font-semibold">{part}</strong> : part)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'import-wardrobe' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <Search className="h-6 w-6" /> {t('help.import_wardrobe_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.import_wardrobe_p1')}</p>
+                    <div className="space-y-3">
+                      {[
+                        t('help.import_wardrobe_step1'),
+                        t('help.import_wardrobe_step2'),
+                        t('help.import_wardrobe_step3'),
+                        t('help.import_wardrobe_step4'),
+                        t('help.import_wardrobe_step5'),
+                        t('help.import_wardrobe_step6')
+                      ].map((text, idx) => (
+                        <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
+                          <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>
+                          <p className="text-sm text-muted-foreground pt-0.5">
+                            {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-foreground font-semibold">{part}</strong> : part)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'trend-scout' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <TrendingUp className="h-6 w-6" /> {t('help.trend_scout_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.trend_scout_p1')}</p>
+                    <div className="space-y-3">
+                      {[
+                        { title: t('help.trend_feed_title'), desc: t('help.trend_feed_desc') },
+                        { title: t('help.trend_buckets_title'), desc: t('help.trend_buckets_desc') }
+                      ].map((item, idx) => (
+                        <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                          <h4 className="font-semibold text-sm">{item.title}</h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'experts' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <UserRound className="h-6 w-6" /> {t('help.experts_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.experts_p1')}</p>
+                    <div className="space-y-3">
+                      {[
+                        { title: t('help.experts_dir_title'), desc: t('help.experts_dir_desc') },
+                        { title: t('help.experts_search_title'), desc: t('help.experts_search_desc') },
+                        { title: t('help.experts_contact_title'), desc: t('help.experts_contact_desc') }
+                      ].map((item, idx) => (
+                        <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                          <h4 className="font-semibold text-sm">{item.title}</h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'campaigns' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <Megaphone className="h-6 w-6" /> {t('help.campaigns_help_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.campaigns_help_p1')}</p>
+                    <div className="space-y-3">
+                      {[
+                        { title: t('help.campaigns_feed_help_title'), desc: t('help.campaigns_feed_help_desc') },
+                        { title: t('help.campaigns_maps_help_title'), desc: t('help.campaigns_maps_help_desc') },
+                        { title: t('help.campaigns_save_help_title'), desc: t('help.campaigns_save_help_desc') }
+                      ].map((item, idx) => (
+                        <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                          <h4 className="font-semibold text-sm">{item.title}</h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'expert-campaigns' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <Megaphone className="h-6 w-6" /> {t('help.expert_campaigns_help_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.expert_campaigns_help_p1')}</p>
+                    <div className="space-y-3">
+                      {[
+                        { title: t('help.expert_campaigns_status_title'), desc: t('help.expert_campaigns_status_desc') },
+                        { title: t('help.expert_campaigns_extend_title'), desc: t('help.expert_campaigns_extend_desc') },
+                        { title: t('help.expert_campaigns_pause_title'), desc: t('help.expert_campaigns_pause_desc') },
+                        { title: t('help.expert_campaigns_delete_title'), desc: t('help.expert_campaigns_delete_desc') }
+                      ].map((item, idx) => (
+                        <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                          <h4 className="font-semibold text-sm">{item.title}</h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'create-campaign' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <Sparkles className="h-6 w-6" /> {t('help.create_campaign_help_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.create_campaign_help_p1')}</p>
+                    <div className="space-y-3">
+                      {[
+                        { title: t('help.create_campaign_button_title'), desc: t('help.create_campaign_button_desc') },
+                        { title: t('help.create_campaign_step_title'), desc: t('help.create_campaign_step_desc') },
+                        { title: t('help.create_campaign_fee_title'), desc: t('help.create_campaign_fee_desc') },
+                        { title: t('help.create_campaign_submit_title'), desc: t('help.create_campaign_submit_desc') }
+                      ].map((item, idx) => (
+                        <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                          <h4 className="font-semibold text-sm">{item.title}</h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'troubleshooting' && (
+                  <div className="space-y-6">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <AlertTriangle className="h-6 w-6" /> {t('help.trouble_title')}
+                    </h2>
+
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 space-y-2">
+                        <h4 className="font-semibold text-sm flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                          <ShieldAlert className="h-4 w-4 shrink-0" />
+                          {t('help.trouble_full_q')}
                         </h4>
-                        <p className={cn("text-xs text-muted-foreground leading-relaxed", isRtl ? "pr-6" : "pl-6")}>
-                          <strong className="text-primary/90 font-medium">
-                            {isRtl ? (i18n.language === 'he' ? 'למה זה משנה:' : 'لماذا يهم:') : 'Why it matters:'}
-                          </strong>{' '}
-                          {item.desc}
-                        </p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{t('help.trouble_full_why')}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{t('help.trouble_full_fix')}</p>
                       </div>
-                    ))}
-                </div>
-              </div>
-            )}
 
-            {activeTab === 'wardrobe-stats' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <BarChart4 className="h-6 w-6" /> {t('help.stats_title')}
-                </h2>
-                <p className="text-muted-foreground">{t('help.stats_p1')}</p>
-                <ul className="space-y-3 pl-1 pr-1">
-                  {[
-                    t('help.stats_worth'),
-                    t('help.stats_util'),
-                    t('help.stats_cpw'),
-                    t('help.stats_palette')
-                  ].map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-primary mt-2"></span>
-                      <span className="text-muted-foreground leading-relaxed">
-                        {item.split(':').map((part, i) => i === 0 ? <strong key={i} className="text-foreground">{part}:</strong> : part)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+                      <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-2">
+                        <h4 className="font-semibold text-sm flex items-center gap-2">
+                          <HelpCircle className="h-4 w-4 text-primary shrink-0" />
+                          {t('help.trouble_cam_q')}
+                        </h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{t('help.trouble_cam_why')}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{t('help.trouble_cam_fix')}</p>
+                      </div>
 
-            {activeTab === 'dress-up' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <Layers className="h-6 w-6" /> {t('help.planner_title')}
-                </h2>
-                <p className="text-muted-foreground">{t('help.planner_p1')}</p>
-                <div className="space-y-3">
-                  {[
-                    { title: t('help.planner_item1_title'), desc: t('help.planner_item1_desc') },
-                    { title: t('help.planner_item2_title'), desc: t('help.planner_item2_desc') },
-                    { title: t('help.planner_item3_title'), desc: t('help.planner_item3_desc') },
-                    { title: t('help.planner_item4_title'), desc: t('help.planner_item4_desc') }
-                  ].map((item, idx) => (
-                    <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
-                      <h4 className="font-semibold text-sm">{item.title}</h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                      <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-2">
+                        <h4 className="font-semibold text-sm flex items-center gap-2">
+                          <HelpCircle className="h-4 w-4 text-primary shrink-0" />
+                          {t('help.trouble_slow_q')}
+                        </h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{t('help.trouble_slow_why')}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{t('help.trouble_slow_fix')}</p>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
-            {activeTab === 'suitcase' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <MapPin className="h-6 w-6" /> {t('help.suitcase_title')}
-                </h2>
-                <div className="space-y-3">
-                  {[
-                    t('help.suitcase_step1'),
-                    t('help.suitcase_step2'),
-                    t('help.suitcase_step3'),
-                    t('help.suitcase_step4'),
-                    t('help.suitcase_step5')
-                  ].map((text, idx) => (
-                    <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
-                      <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>
-                      <p className="text-sm text-muted-foreground pt-0.5">{text}</p>
+                    <div className="pt-4 border-t border-border space-y-3">
+                      <h3 className="font-semibold text-base text-foreground">{t('help.limit_title')}</h3>
+                      <ul className="space-y-2 pl-1 pr-1">
+                        <li className="flex items-start gap-3">
+                          <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground mt-2 shrink-0"></span>
+                          <span className="text-xs text-muted-foreground leading-relaxed">{t('help.limit_item1')}</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground mt-2 shrink-0"></span>
+                          <span className="text-xs text-muted-foreground leading-relaxed">{t('help.limit_item2')}</span>
+                        </li>
+                      </ul>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'marketplace' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <ShoppingBag className="h-6 w-6" /> {t('help.market_title')}
-                </h2>
-                <p className="text-muted-foreground">{t('help.market_p1')}</p>
-                <div className="space-y-3">
-                  {[
-                    t('help.market_step1'),
-                    t('help.market_step2')
-                  ].map((text, idx) => (
-                    <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
-                      <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>
-                      <p className="text-sm text-muted-foreground pt-0.5">
-                        {text.split(':').map((part, i) => i === 0 ? <strong key={i} className="text-foreground font-semibold">{part}:</strong> : part)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'shopping-assistant' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <Chrome className="h-6 w-6" /> {t('help.shopping_assistant_title')}
-                </h2>
-                <p className="text-muted-foreground">{t('help.shopping_assistant_p1')}</p>
-                <div className="space-y-3">
-                  {[
-                    t('help.shopping_assistant_step1'),
-                    t('help.shopping_assistant_step2'),
-                    t('help.shopping_assistant_step3'),
-                    t('help.shopping_assistant_step4'),
-                    t('help.shopping_assistant_step5'),
-                    t('help.shopping_assistant_step6')
-                  ].map((text, idx) => (
-                    <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
-                      <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>
-                      <p className="text-sm text-muted-foreground pt-0.5">
-                        {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-foreground font-semibold">{part}</strong> : part)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'trend-scout' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <TrendingUp className="h-6 w-6" /> {t('help.trend_scout_title')}
-                </h2>
-                <p className="text-muted-foreground">{t('help.trend_scout_p1')}</p>
-                <div className="space-y-3">
-                  {[
-                    { title: t('help.trend_feed_title'), desc: t('help.trend_feed_desc') },
-                    { title: t('help.trend_buckets_title'), desc: t('help.trend_buckets_desc') }
-                  ].map((item, idx) => (
-                    <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
-                      <h4 className="font-semibold text-sm">{item.title}</h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'experts' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <UserRound className="h-6 w-6" /> {t('help.experts_title')}
-                </h2>
-                <p className="text-muted-foreground">{t('help.experts_p1')}</p>
-                <div className="space-y-3">
-                  {[
-                    { title: t('help.experts_dir_title'), desc: t('help.experts_dir_desc') },
-                    { title: t('help.experts_search_title'), desc: t('help.experts_search_desc') },
-                    { title: t('help.experts_contact_title'), desc: t('help.experts_contact_desc') }
-                  ].map((item, idx) => (
-                    <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
-                      <h4 className="font-semibold text-sm">{item.title}</h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'campaigns' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <Megaphone className="h-6 w-6" /> {t('help.campaigns_help_title')}
-                </h2>
-                <p className="text-muted-foreground">{t('help.campaigns_help_p1')}</p>
-                <div className="space-y-3">
-                  {[
-                    { title: t('help.campaigns_feed_help_title'), desc: t('help.campaigns_feed_help_desc') },
-                    { title: t('help.campaigns_maps_help_title'), desc: t('help.campaigns_maps_help_desc') },
-                    { title: t('help.campaigns_save_help_title'), desc: t('help.campaigns_save_help_desc') }
-                  ].map((item, idx) => (
-                    <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
-                      <h4 className="font-semibold text-sm">{item.title}</h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'expert-campaigns' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <Megaphone className="h-6 w-6" /> {t('help.expert_campaigns_help_title')}
-                </h2>
-                <p className="text-muted-foreground">{t('help.expert_campaigns_help_p1')}</p>
-                <div className="space-y-3">
-                  {[
-                    { title: t('help.expert_campaigns_status_title'), desc: t('help.expert_campaigns_status_desc') },
-                    { title: t('help.expert_campaigns_extend_title'), desc: t('help.expert_campaigns_extend_desc') },
-                    { title: t('help.expert_campaigns_pause_title'), desc: t('help.expert_campaigns_pause_desc') },
-                    { title: t('help.expert_campaigns_delete_title'), desc: t('help.expert_campaigns_delete_desc') }
-                  ].map((item, idx) => (
-                    <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
-                      <h4 className="font-semibold text-sm">{item.title}</h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'create-campaign' && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <Sparkles className="h-6 w-6" /> {t('help.create_campaign_help_title')}
-                </h2>
-                <p className="text-muted-foreground">{t('help.create_campaign_help_p1')}</p>
-                <div className="space-y-3">
-                  {[
-                    { title: t('help.create_campaign_button_title'), desc: t('help.create_campaign_button_desc') },
-                    { title: t('help.create_campaign_step_title'), desc: t('help.create_campaign_step_desc') },
-                    { title: t('help.create_campaign_fee_title'), desc: t('help.create_campaign_fee_desc') },
-                    { title: t('help.create_campaign_submit_title'), desc: t('help.create_campaign_submit_desc') }
-                  ].map((item, idx) => (
-                    <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
-                      <h4 className="font-semibold text-sm">{item.title}</h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'troubleshooting' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <AlertTriangle className="h-6 w-6" /> {t('help.trouble_title')}
-                </h2>
-                
-                <div className="space-y-4">
-                  <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 space-y-2">
-                    <h4 className="font-semibold text-sm flex items-center gap-2 text-amber-600 dark:text-amber-400">
-                      <ShieldAlert className="h-4 w-4 shrink-0" />
-                      {t('help.trouble_full_q')}
-                    </h4>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{t('help.trouble_full_why')}</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{t('help.trouble_full_fix')}</p>
                   </div>
+                )}
 
-                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-2">
-                    <h4 className="font-semibold text-sm flex items-center gap-2">
-                      <HelpCircle className="h-4 w-4 text-primary shrink-0" />
-                      {t('help.trouble_cam_q')}
-                    </h4>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{t('help.trouble_cam_why')}</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{t('help.trouble_cam_fix')}</p>
+                {/* Wiki Link Footer */}
+                {activeSection && (
+                  <div className={cn("sidebarbtn")}>
+                    <button
+                      onClick={loadGuide}
+                      disabled={loadingGuide}
+                      className="custm-btn"
+                    >
+                      {loadingGuide ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          {isRtl ? 'טוען...' : 'Loading...'}
+                        </>
+                      ) : (
+                        <>
+                          {t('help.learnMore', { defaultValue: 'Learn more' })}<i className="fa-solid fa-arrow-right ms-2"></i>
+                        </>
+                      )}
+                    </button>
                   </div>
-
-                  <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-2">
-                    <h4 className="font-semibold text-sm flex items-center gap-2">
-                      <HelpCircle className="h-4 w-4 text-primary shrink-0" />
-                      {t('help.trouble_slow_q')}
-                    </h4>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{t('help.trouble_slow_why')}</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{t('help.trouble_slow_fix')}</p>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-border space-y-3">
-                  <h3 className="font-semibold text-base text-foreground">{t('help.limit_title')}</h3>
-                  <ul className="space-y-2 pl-1 pr-1">
-                    <li className="flex items-start gap-3">
-                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground mt-2 shrink-0"></span>
-                      <span className="text-xs text-muted-foreground leading-relaxed">{t('help.limit_item1')}</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground mt-2 shrink-0"></span>
-                      <span className="text-xs text-muted-foreground leading-relaxed">{t('help.limit_item2')}</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            )}
-
-            {/* Wiki Link Footer */}
-            {activeSection && (
-              <div className={cn("pt-4 mt-6 border-t border-border flex", isRtl ? "justify-start" : "justify-end")}>
-                <button 
-                  onClick={loadGuide}
-                  disabled={loadingGuide}
-                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-medium disabled:opacity-50 cursor-pointer bg-transparent border-0 p-0"
-                >
-                  {loadingGuide ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      {isRtl ? 'טוען...' : 'Loading...'}
-                    </>
-                  ) : (
-                    <>
-                      {t('help.learnMore', { defaultValue: 'Learn more' })} &rarr;
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
+                )}
 
               </>
             )}
-
-          </div>
-        </ScrollArea>
-      </main>
+          </ScrollArea>
+        </div>
+      </div>
     </div>
   );
 }

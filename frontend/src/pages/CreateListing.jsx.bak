@@ -323,7 +323,7 @@ export default function CreateListing() {
                     Shipping fee (optional)
                   </Label>
                   <span className="text-[11px] text-[hsl(var(--accent))]">
-                    🌱 Prefer local pickup
+                    Prefer local pickup
                   </span>
                 </div>
                 <Input

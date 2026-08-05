@@ -37,9 +37,9 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
       if (it && it.role) {
         const itemObj = itemData[it.closet_item_id];
         map[it.role] = {
-           id: it.closet_item_id,
-           url: images[it.closet_item_id],
-           placeholder: itemObj?.placeholder_data_url || null
+          id: it.closet_item_id,
+          url: images[it.closet_item_id],
+          placeholder: itemObj?.placeholder_data_url || null
         };
       }
     });
@@ -71,7 +71,7 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
       setItemData((prev) => ({ ...prev, ...fetchedData }));
     }
 
-    if (toFetch.length === 0) return () => {};
+    if (toFetch.length === 0) return () => { };
 
     (async () => {
       const netImages = {};
@@ -124,42 +124,38 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
   if (!rec) return null;
 
   return (
-    <div
-      className={cn(
-        "rounded-xl bg-[hsl(var(--accent))]/5 border border-[hsl(var(--accent))]/15 overflow-hidden shadow-sm transition-all duration-200",
-        draggable ? "cursor-grab active:cursor-grabbing hover:shadow-md select-none" : ""
-      )}
-      data-testid={`outfit-recommendation-${index}`}
-      draggable={draggable}
-      onDragStart={onDragStart}
-    >
-      <OutfitAvatarViewer
-         shapeParams={user?.avatar_shape_params || {}}
-         sex={user?.sex || 'female'}
-         outfitItemsMap={outfitItemsMap}
-         onItemClick={onItemClick}
-      />
-      <div className="p-3 text-start">
-        <div className="caps-label text-[hsl(var(--accent))] font-semibold">
-          {t('stylist.outfitN', { n: index + 1 })}
-        </div>
-        <div className="font-display text-base mt-1 text-foreground">{rec.name}</div>
+    <div className={cn('outfit-card', draggable && 'outfit-card--draggable')} data-testid={`outfit-recommendation-${index}`}
+      draggable={draggable} onDragStart={onDragStart}>
+      <div className="outfit-card__stage">
+        <OutfitAvatarViewer
+          shapeParams={user?.avatar_shape_params || {}}
+          sex={user?.sex || 'female'}
+          outfitItemsMap={outfitItemsMap}
+          onItemClick={onItemClick} />
+      </div>
+      <div className="outfit-card__body">
+        <div className="outfit-card__eyebrow">{t('stylist.outfitN', { n: index + 1 })}</div>
+        <div className="outfit-card__title font-display">{rec.name}</div>
         {/* F1 — Colour Harmony Score Badge */}
         {outfitColors.length >= 2 && (
-          <HarmonyBadge colors={outfitColors} />
+          <div className="outfit-card__harmony">
+            <HarmonyBadge colors={outfitColors} />
+          </div>
         )}
-        {rec.why ? <p className="text-xs mt-2.5 italic break-words text-muted-foreground/95">{rec.why}</p> : null}
-        <div className="mt-4 flex items-center justify-between gap-2 pt-2 border-t border-[hsl(var(--accent))]/10">
+        {rec.why ? <p className="outfit-card__why">{rec.why}</p> : null}
+        <div className="outfit-card__footer">
           {onSave ? (
             <Button
               size="sm"
               onClick={() => onSave(rec)}
-              className="rounded-xl text-xs font-semibold bg-brand text-brand-foreground hover:bg-brand/90 shadow-sm"
+              className="outfit-card__save-btn"
               data-testid={`outfit-recommendation-${index}-save-btn`}
             >
               {t('stylist.saveOutfit', { defaultValue: 'Save Outfit' })}
             </Button>
-          ) : <div />}
+          ) : (
+            <div className="outfit-card__footer-spacer" />
+          )}
           <ShareOutfitButton rec={rec} sessionId={sessionId} />
         </div>
       </div>

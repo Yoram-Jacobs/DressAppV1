@@ -8,7 +8,7 @@
  * gets a visible "done" beat without it lingering forever.
  */
 
-import { useSyncExternalStore, useEffect, useState } from 'react';
+import { useSyncExternalStore, useEffect, useState, useRef, useCallback } from 'react';
 import { Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -22,9 +22,6 @@ export function WorkProgressFloater() {
     workStore.getSnapshot,
   );
 
-  // Linger a moment after the last job drains so the pill doesn't
-  // vanish the instant the final percentage hits 100. Pure
-  // affordance — gives the user time to register "done".
   const [linger, setLinger] = useState(false);
   const analyzeCount = Object.keys(state.analyzeJobs).length;
   const active = analyzeCount > 0;
@@ -34,22 +31,43 @@ export function WorkProgressFloater() {
       setLinger(true);
       return undefined;
     }
-    // No active work — schedule a fade-out.
     const handle = setTimeout(() => setLinger(false), 1200);
     return () => clearTimeout(handle);
   }, [active]);
 
+  // Draggable state
+  const [pos, setPos] = useState(null); // null = default position
+  const dragging = useRef(false);
+  const dragOffset = useRef({ x: 0, y: 0 });
+  const boxRef = useRef(null);
+
+  const handlePointerDown = useCallback((e) => {
+    if (!boxRef.current) return;
+    const rect = boxRef.current.getBoundingClientRect();
+    dragOffset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    dragging.current = true;
+    boxRef.current.setPointerCapture(e.pointerId);
+  }, []);
+
+  const handlePointerMove = useCallback((e) => {
+    if (!dragging.current || !boxRef.current) return;
+    const parentRect = boxRef.current.parentElement.getBoundingClientRect();
+    const x = e.clientX - parentRect.left - dragOffset.current.x;
+    const y = e.clientY - parentRect.top - dragOffset.current.y;
+    setPos({ x: Math.max(0, Math.min(x, parentRect.width - boxRef.current.offsetWidth)), y: Math.max(0, Math.min(y, parentRect.height - boxRef.current.offsetHeight)) });
+  }, []);
+
+  const handlePointerUp = useCallback(() => {
+    dragging.current = false;
+  }, []);
+
   if (!active && !linger) return null;
 
-  // Aggregate the analyze progress across all running jobs so the
-  // pill shows a single line of text instead of N stacked rows.
   const analyzeItems = Object.values(state.analyzeJobs).reduce(
-    (acc, j) => acc + (j.items || 0),
-    0,
+    (acc, j) => acc + (j.items || 0), 0,
   );
   const analyzeExpected = Object.values(state.analyzeJobs).reduce(
-    (acc, j) => acc + (j.total || 0),
-    0,
+    (acc, j) => acc + (j.total || 0), 0,
   );
   const analyzeLabel =
     analyzeExpected > 0
@@ -62,7 +80,6 @@ export function WorkProgressFloater() {
           defaultValue: 'Analysing {{count}} photo',
           count: analyzeCount,
         });
-
   const analyzePct =
     analyzeExpected > 0
       ? Math.min(100, Math.round((analyzeItems / analyzeExpected) * 100))
@@ -71,13 +88,18 @@ export function WorkProgressFloater() {
   return (
     <div
       data-testid="work-progress-floater"
-      className="fixed bottom-4 end-4 z-50 pointer-events-none"
+      className="fixed z-50 pointer-events-none bottom-20 start-4 md:bottom-4"
     >
       <div
+        ref={boxRef}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        style={pos ? { transform: `translate(${pos.x - (boxRef.current?.offsetLeft || 0)}px, ${pos.y - (boxRef.current?.offsetTop || 0)}px)` } : undefined}
         className={
           'pointer-events-auto rounded-2xl border border-border bg-card/95 ' +
           'shadow-lg backdrop-blur-xl px-4 py-3 min-w-[220px] max-w-[calc(100vw-2rem)] sm:max-w-[320px] ' +
-          'transition-opacity duration-300 ' +
+          'transition-opacity duration-300 touch-none select-none cursor-grab active:cursor-grabbing ' +
           (active ? 'opacity-100' : 'opacity-70')
         }
       >
@@ -102,7 +124,6 @@ export function WorkProgressFloater() {
           </div>
         )}
         {!active && (
-          // Brief "all done" beat just before fade-out.
           <div className="flex items-center gap-2 text-sm font-medium text-foreground/70">
             <span aria-hidden>✓</span>
             <span>{t('floater.done', { defaultValue: 'All done' })}</span>

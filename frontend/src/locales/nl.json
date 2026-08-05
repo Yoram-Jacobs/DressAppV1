@@ -1,4 +1,4 @@
-{
+﻿{
   "brand": "DressApp",
   "nav": {
     "home": "Thuis",
@@ -60,7 +60,8 @@
     "share": "Deel",
     "time": "Tijd",
     "unknownColor": "Ander",
-    "saved": "Opgeslagen"
+    "saved": "Opgeslagen",
+    "errorOccurred": "Er is een fout opgetreden. Probeer het opnieuw."
   },
   "auth": {
     "welcomeBack": "Welkom terug",
@@ -901,7 +902,11 @@
     "voice": "Stem (Piper offline)",
     "saveChanges": "Wijzigingen opslaan",
     "signOut": "Meld u af",
+    "importWardrobePill": "Garderobe importeren",
+    "mobileDesktopGuide": "Garderobe-import is beschikbaar in de desktopversie van DressApp. Open je account in een desktopbrowser om verder te gaan.",
     "deleteAccountLink": "Verwijder mijn account",
+    "privacyPolicy": "Privacybeleid",
+    "termsOfService": "Servicevoorwaarden",
     "deleteAccountTitle": "Account verwijderen",
     "deleteAccountSubtitle": "Permanente accountverwijdering",
     "deleteWarning": "U staat op het punt uw account te verwijderen. Hiermee worden je profiel, al je kastitems (inclusief foto's en metadata) en al je opgeslagen outfits permanent verwijderd.",
@@ -1025,6 +1030,14 @@
     "saveProfile": "Wijzigingen opslaan",
     "savedProfile": "Profiel opgeslagen",
     "autofilledFromGoogle": "Automatisch ingevuld door Google: bewerk het op elk gewenst moment.",
+    "syncGoogle": "Google-profiel synchroniseren",
+    "syncGoogleFromSection": "Synchroniseren vanuit Google",
+    "googleConnectedSyncHint": "Verbonden via Google — synchroniseer om lege velden automatisch in te vullen uit uw Google-profiel.",
+    "googleSyncContactHint": "Synchroniseer telefoonnummer en adres vanuit uw Google-account.",
+    "googleSyncDemographicsHint": "Synchroniseer geslacht en geboortedatum vanuit uw Google-account.",
+    "googleReConsentNeeded": "Google heeft uw toestemming nodig om profielgegevens te openen. U wordt doorgestuurd naar Google om toegang te verlenen.",
+    "googleSyncSuccess": "Profiel succesvol gesynchroniseerd.",
+    "googleSyncFailed": "Synchronisatie mislukt.",
     "professional": {
       "sectionTitle": "Professioneel mode-expert",
       "sectionDesc": "Bedrijfskwalificaties en professionele directoryvermeldingen",
@@ -1143,7 +1156,8 @@
     "annualPlan": "Jaarlijks plan",
     "annualPlanDesc": "Bespaar 50% in vergelijking met maandelijkse facturering.",
     "perYear": " / jaar",
-    "upgradeAnnualBtn": "Upgrade jaarlijks"
+    "upgradeAnnualBtn": "Upgrade jaarlijks",
+    "privacyPolicy": "Privacy Policy"
   },
   "admin": {
     "title": "Beheerder",
@@ -1917,8 +1931,8 @@
       "propose_a_swap": "Stel een ruil voor",
       "this_donation_is_free_coordinate": "Deze donatie is gratis. Spreek af met de donor om elkaar lokaal te ontmoeten of regel de verzending rechtstreeks.",
       "well_email_the_lister_a": "We sturen de lijstder een beveiligde link voor accepteren/weigeren per e-mail. Geen kosten: artikelen worden rechtstreeks tussen u verzonden.",
-      "or_meet_locally_to_skip": "· Of spreek lokaal af om de vergoeding over te slaan 🌱",
-      "local_pickup_preferred_no_shipping": "🌱 Bij voorkeur afhalen ter plaatse, geen verzendkosten"
+      "or_meet_locally_to_skip": "· Of spreek lokaal af om de vergoeding over te slaan",
+      "local_pickup_preferred_no_shipping": "Bij voorkeur afhalen ter plaatse, geen verzendkosten"
     },
     "extensionConnect": {
       "connecting_to_dressapp_extension": "Verbinding maken met DressApp-extensie…",
@@ -1941,7 +1955,7 @@
     "createListing": {
       "leave_at": "Vertrek om",
       "to_encourage_neighbours_to_meet": "om buren aan te moedigen je te ontmoeten - geen verpakking, geen uitstoot, en misschien maak je wel een vriend met geweldige stijl. Voeg alleen kosten toe als verzending onvermijdelijk is.",
-      "prefer_local_pickup": "🌱 Liever lokaal afhalen"
+      "prefer_local_pickup": "Liever lokaal afhalen"
     },
     "marketplace": {
       "nothing_to_sync_no_closet": "Niets om te synchroniseren: geen enkele kastitem heeft een marktintentie.",
@@ -2055,6 +2069,8 @@
   "floater": {
     "done": "Alles gedaan",
     "analysingGroup": "Groep analyseren…",
+    "analyzing": "{{n}}/{{m}} items analyseren",
+    "analyzingPhotos": "{{count}} foto analyseren",
     "polishing": "Polijsten{{n}}/{{m}}foto's",
     "polishingMore_one": "Polijsten{{count}}foto",
     "polishingMore_other": "Polijsten van{{count}}foto's"
@@ -2197,6 +2213,7 @@
   "help": {
     "title": "DressApp: Mijn DressApp Kastboek",
     "subtitle": "Een supereenvoudige gids voor het beheren van uw kleding en outfits",
+    "geminiKeyStep": "A Gemini API Key. Get it for free on <a href=\"https://aistudio.google.com/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary hover:underline font-semibold\">Google AI Studio</a>.",
     "overview_title": "Overzicht",
     "overview_p1": "Welkom bij DressApp! Dit is een geavanceerde app waarmee je je eigen digitale kledingkast kunt bouwen.",
     "overview_p2": "Stel je voor dat je foto's maakt van al je shirts, broeken, rokken en schoenen en deze in een magisch boek stopt. Zodra ze binnen zijn, bekijkt een professionele en ervaren stylist je kleding, controleert het weer buiten en helpt je bij het kiezen van wat je voor welke gelegenheid dan ook draagt!",
@@ -2336,6 +2353,14 @@
     "shopping_assistant_step4": "Het controleert uw **lichaamsafmetingen** die zijn opgeslagen in uw profielgegevens.",
     "shopping_assistant_step5": "Het adviseert de beste maat voor u, waarbij de pasvormvergelijking wordt benadrukt.",
     "shopping_assistant_step6": "Klik op **Toevoegen aan kast** om het itemconcept rechtstreeks naar uw app te importeren.",
+    "import_wardrobe_title": "Importeer je garderobe",
+    "import_wardrobe_p1": "Beheer je je garderobe al in een andere app? Importeer je items met een paar klikken naar DressApp. We ondersteunen imports van een breed scala aan populaire garderobe- en outfitplanning-apps.",
+    "import_wardrobe_step1": "Open de **Kast**-pagina in DressApp.",
+    "import_wardrobe_step2": "Klik op de knop **Importeren** (of zoek naar de importoptie in het menu).",
+    "import_wardrobe_step3": "Selecteer de app waaruit je importeert (bijv. Cladwell, Stylebook, Acloset, SmartCloset of een CSV-bestand).",
+    "import_wardrobe_step4": "Volg de instructies op het scherm om je gegevens uit de oude app te exporteren en naar DressApp te uploaden.",
+    "import_wardrobe_step5": "DressApp zal je geïmporteerde items automatisch classificeren en organiseren.",
+    "import_wardrobe_step6": "Controleer je items en pas de categorieën aan indien nodig. Je garderobe is nu gereed!",
     "scheduler_push_title": "Ochtendschema en pushmeldingen",
     "scheduler_push_p1": "Begin uw dag met automatische stijlaanbevelingen die bij het weer passen, rechtstreeks op uw apparaat.",
     "scheduler_push_step1": "Navigeer naar uw **Profielinstellingen**.",
@@ -2697,7 +2722,36 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "Bestaande garderobe importeren?",
+    "welcomeSub": "Heb je al een digitale garderobe in een andere app? We kunnen je kleding overzetten zodat je niet vanaf nul hoeft te beginnen.",
+    "noStartFresh": "Nee, opnieuw beginnen",
+    "yesImportBtn": "Ja, mijn garderobe importeren",
+    "selectAppTitle": "Van welke app kom je?",
+    "selectAppSub": "Selecteer je vorige garderobe-app of voer hieronder een aangepaste naam in.",
+    "screenshotPipelineTitle": "Schermafname-pijplijn gereed",
+    "screenshotPipelineSub": "DressApp zal kledingkaarten van de concurrent via schermafname vastleggen. Geen API-sleutels of gegevensexport nodig.",
+    "connectToAppTitle": "Verbinden met {{appName}}",
+    "bookmarkletInstallInstructions": "Sleep de DressApp Agent-bookmarklet naar je bladwijzerbalk, meld je dan aan bij {{appName}} en navigeer naar je garderobe-pagina.",
+    "bookmarkletInstallInstructionsMobile": "Tik hieronder om de bookmarklet te kopiëren, maak dan een nieuwe bladwijzer en plak deze als URL:",
+    "bookmarkletClickTip": "Klik op de bookmarklet op de concurrentiepagina om vastleggen te starten.",
+    "bookmarkletLongPressTip": "Houd deze knop ingedrukt om toe te voegen aan je bladwijzers.",
+    "bookmarkletMobileInstruction": "Tik op het ⋮ drie-puntenmenu in je browser, tik dan op \"Bladwijzers\" om deze pagina op te slaan.",
+    "bookmarkletMobileSaveTip": "Tik om te kopiëren → ⋮-menu → Bladwijzers → + → plak als URL",
+    "bookmarkletCopied": "Bookmarklet gekopieërd! Maak een nieuwe bladwijzer en plak deze als URL.",
+    "copyFailed": "Kopiëren mislukt. Kopieer de bookmarklet handmatig.",
+    "bookmarkletBtn": "DressApp Agent",
+    "dragTip": "Sleep dit naar je bladwijzerbalk",
+    "longPressTip": "Houd de bovenstaande knop ingedrukt om toe te voegen aan bladwijzers",
+    "bookmarkletUsageInstructions": "Na installatie klik je hieronder op \"Garderobe importeren\" om te initialiseren. Meld je aan bij {{appName}}, ga naar je garderobe-pagina en klik op de \"DressApp Agent\"-bookmarklet.",
+    "garmentVisionReady": "Agentische opname gereed",
+    "importWardrobeBtn": "Garderobe importeren",
+    "mattingNotice": "Alle asset-verwerking wordt afgehandeld door GarmentVision.",
+    "tabSleepAlert": "Tab-slaapwaarschuwing: Schakel niet van tabblad in het venster van de concurrent tijdens het importeren (Chrome zal de scroller slapen/throtlen).",
+    "proTip": "Pro-tip: Sleep het tabblad van de concurrent uit je browservenster naar een eigen venster om het gefocust te houden terwijl je multitaskt!",
+    "saving": "{{count}} items worden opgeslagen in je garderobe...",
+    "saved": "{{count}} items opgeslagen. De stylist analyseert ze — details worden automatisch bijgewerkt.",
+    "error": "Migratie mislukt. Probeer het opnieuw."
   },
   "login_reminder": {
     "newTitle": "Je kledingkast is leeg — Voeg je eerste kledingstuk toe!",
@@ -2707,5 +2761,18 @@
     "helpDocLink": "Lees hoe je kleding toevoegt in DressApp",
     "letsStart": "Aan de slag",
     "migrateBtn": "Migreren"
+  },
+  "aiNotice": {
+    "geminiKeyRequired": "U moet uw Google AI Gemini-sleutel invoeren",
+    "geminiKeyDescription": "U moet uw Google AI Gemini API-sleutel configureren. U kunt een sleutel verkrijgen bij Google AI Studio.",
+    "configureKey": "Sleutel configureren"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "description": "DressApp Terms of Service — rules and conditions for using our app."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "DressApp privacy policy — how we collect, use, and protect your data."
   }
 }

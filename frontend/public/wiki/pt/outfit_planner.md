@@ -1,25 +1,25 @@
-# Planejador de roupa e tela
+# Planeador de Conjuntos e Lona
 
-Componha, crie camadas e revise layouts coordenados.
+Componha, sobreponha e reveja esquemas coordenados.
 
-## Visão geral
-O Outfit Planner fornece uma tela visual com modelos de avatar para sobrepor partes superiores, inferiores, agasalhos e calçados de forma dinâmica.
+## Visão Geral
+O Planeador de Conjuntos oferece uma lona visual de avatar 2D (suportando tanto recortes de fotos reais do corpo do utilizador como manequins vetoriais dinâmicos SVG) com desvios de pontos de referência calibrados (`top-[14.5%]` do colar ao decote e `top-[36.5%]` da cintura à linha da cintura) para sobrepor peças superiores, inferiores, agasalhos e calçado perfeitamente alinhados com os limites do corpo.
 
 ## Pré-requisitos
-- Itens guardados no armário.
+- Itens de guarda-roupa guardados.
 
-## Passo a passo
-1. **Selecione Canvas**: abra o Planner e clique em um dia ou novo rascunho.
-2. **Itens de camada**: arraste as roupas para o avatar 2D. As roupas externas são empilhadas automaticamente sobre as camisas internas.
-3. **Avaliar ajuste**: verifique pontuações e avisos de compatibilidade (por exemplo, conflitos de cores ou alertas meteorológicos).
-4. **Salvar**: Defina um título e agende o look em seu diário de guarda-roupa.
+## Passo a Passo
+1. **Selecionar Lona**: Abra o Planeador e clique num dia ou num novo rascunho.
+2. **Sobrepor Itens**: Arraste vestuário sobre o avatar 2D. Os agasalhos ficam automaticamente sobrepostos às t-shirts interiores.
+3. **Avaliar Ajuste**: Verifique as pontuações de compatibilidade e avisos (ex.: conflitos de cores ou alertas meteorológicos).
+4. **Guardar**: Defina um título e agende o look no seu diário de guarda-roupa. As atualizaciones são transmitidas de forma segura através de `useOutfitStore`.
 
-## Resultados esperados
-Composições de roupas lindamente em camadas salvas em seu calendário e visíveis como visualizações de cartões de grade.
+## Resultados Esperados
+Composições de conjuntos sobrepostas com elegância guardadas no seu calendário e visíveis como pré-visualizações em cartões de grelha sem ciclos de consultas de rede em segundo plano.
 
-## Solução de problemas
-- **Ordem das camadas incorreta**: Verifique novamente a categoria do item; os agasalhos devem ser classificados como "Agasalhos" para serem empilhados corretamente.
-- **Alertas de sobreposição**: se o avatar avisar sobre usos repetidos, verifique se você usou a mesma roupa no mesmo local recentemente.
+## Resolução de Problemas
+- **Ordem das camadas incorreta**: Reverifique a categoria do item; os agasalhos devem ser classificados como "Outerwear" para sobrepor corretamente.
+- **Alertas de sobreposição**: Se o avatar avisar sobre uso repetido, verifique se vestiu o mesmo conjunto no mesmo local recentemente.
 
 ## Limitações
-- As camadas são gerenciadas automaticamente com base em tags de categoria; substituições manuais de índice z não são suportadas.
+- As camadas são geridas automaticamente com base nas etiquetas de categoria; a substituição manual de z-index não é suportada.

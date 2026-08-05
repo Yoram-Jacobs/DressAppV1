@@ -1,4 +1,4 @@
-{
+﻿{
   "brand": "DressApp",
   "nav": {
     "home": "בית",
@@ -63,7 +63,8 @@
     "confirming": "מאשר...",
     "untitled": "ללא שם",
     "currencyFormat": "₪{{val}}",
-    "saved": "נשמר"
+    "saved": "נשמר",
+    "errorOccurred": "אירעה שגיאה. אנא נסה שוב."
   },
   "auth": {
     "welcomeBack": "ברוך שובך",
@@ -1012,6 +1013,14 @@
     "saveProfile": "שמור שינויים",
     "savedProfile": "הפרופיל נשמר",
     "autofilledFromGoogle": "מולא אוטומטית מ-Google — ניתן לערוך בכל עת.",
+    "syncGoogle": "סנכרון פרופיל Google",
+    "syncGoogleFromSection": "סנכרון מ-Google",
+    "googleConnectedSyncHint": "מחובר דרך Google — סנכרן כדי למלא שדות ריקים מהפרופיל שלך ב-Google.",
+    "googleSyncContactHint": "סנכרון טלפון וכתובת מחשבון ה-Google שלך.",
+    "googleSyncDemographicsHint": "סנכרון מגדר ותאריך לידה מחשבון ה-Google שלך.",
+    "googleReConsentNeeded": "Google זקוק להרשאתך כדי לגשת לפרטי פרופיל. תופנה אל Google כדי לאפשר גישה.",
+    "googleSyncSuccess": "הפרופיל סונכרן בהצלחה.",
+    "googleSyncFailed": "הסנכרון נכשל.",
     "professional": {
       "sectionTitle": "מומחה אופנה מקצועי",
       "sectionDesc": "אישורי עסק ורישומי מדריך מקצועיים",
@@ -1112,7 +1121,11 @@
       "appFeeLabel": "עמלת אפליקציה שנצברה",
       "appFeeDescription": "עמלת פלטפורמה שלא שולמה שנצברה משימוש בקרדיטים."
     },
-    "deleteAccountLink": "Delete my Account",
+    "importWardrobePill": "ייבא ארון",
+    "mobileDesktopGuide": "ייבוא הארון זמין בגרסת הדסקטופ של DressApp. אנא פתח את חשבונך בדפדפן דסקטופ כדי להמשיך.",
+    "deleteAccountLink": "מחק את החשבון שלי",
+    "privacyPolicy": "מדיניות פרטיות",
+    "termsOfService": "תנאי שירות",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
     "deleteWarning": "You are about to delete your account. This will permanently remove your profile, all your closet items (including photos and metadata), and all your saved outfits.",
@@ -1149,7 +1162,8 @@
     "annualPlan": "תוכנית שנתית",
     "annualPlanDesc": "חסוך 50% בהשוואה לחיוב חודשי.",
     "perYear": " / שנה",
-    "upgradeAnnualBtn": "שדרג שנתי"
+    "upgradeAnnualBtn": "שדרג שנתי",
+    "privacyPolicy": "Privacy Policy"
   },
   "admin": {
     "title": "ניהול",
@@ -1925,8 +1939,8 @@
       "propose_a_swap": "הצע החלפה",
       "this_donation_is_free_coordinate": "תרומה זו היא בחינם. תאם עם התורם פגישה מקומית או הסדר משלוח ישירות.",
       "well_email_the_lister_a": "נשלח למפרסם קישור מאובטח לאישור / דחייה. ללא עמלות — הפריטים נשלחים ישירות ביניכם.",
-      "or_meet_locally_to_skip": "· או פגוש מקומית כדי לוותר על העמלה 🌱",
-      "local_pickup_preferred_no_shipping": "🌱 עדיפות לאיסוף עצמי — ללא דמי משלוח"
+      "or_meet_locally_to_skip": "· או פגוש מקומית כדי לוותר על העמלה",
+      "local_pickup_preferred_no_shipping": " עדיפות לאיסוף עצמי — ללא דמי משלוח"
     },
     "extensionConnect": {
       "connecting_to_dressapp_extension": "מתחבר לתוסף DressApp…",
@@ -1949,7 +1963,7 @@
     "createListing": {
       "leave_at": "השאר ב-",
       "to_encourage_neighbours_to_meet": "כדי לעודד שכנים לפגוש אותך — אפס אריזה, אפס פליטות, ובנוסף אולי תכיר חבר עם סטייל נהדר. הוסף עמלה רק אם המשלוח בלתי נמנע.",
-      "prefer_local_pickup": "🌱 מעדיף איסוף עצמי"
+      "prefer_local_pickup": "מעדיף איסוף עצמי"
     },
     "marketplace": {
       "nothing_to_sync_no_closet": "אין מה לסנכרן — לא הוגדרה כוונת מרקטפלייס לאף פריט בארון.",
@@ -2076,6 +2090,8 @@
   "floater": {
     "done": "הכל מוכן",
     "analysingGroup": "מנתח קבוצה…",
+    "analyzing": "מנתח {{n}}/{{m}} פריטים",
+    "analyzingPhotos": "מנתח {{count}} תמונה",
     "polishing": "משפר {{n}} מתוך {{m}} תמונות",
     "polishingMore_one": "משפר תמונה {{count}}",
     "polishingMore_other": "משפר {{count}} תמונות"
@@ -2237,6 +2253,7 @@
   "help": {
     "title": "ספר הארון של DressApp",
     "subtitle": "מדריך פשוט ונוח לניהול הבגדים והמלתחה הדיגיטלית",
+    "geminiKeyStep": "A Gemini API Key. Get it for free on <a href=\"https://aistudio.google.com/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary hover:underline font-semibold\">Google AI Studio</a>.",
     "overview_title": "סקירה כללית",
     "overview_p1": "ברוכים הבאים ל-DressApp! זוהי אפליקציה חדשנית המאפשרת לבנות ארון בגדים דיגיטלי אישי.",
     "overview_p2": "ניתן לצלם את כל החולצות, המכנסיים, החצאיות והנעליים, ולרכז אותם בספר דיגיטלי אחד. לאחר מכן, סטייליסט מקצועי ומנוסה יבחן את הבגדים, יבדוק את מזג האוויר בחוץ, ויסייע בבחירת הלבוש המתאים לכל אירוע!",
@@ -2376,6 +2393,14 @@
     "shopping_assistant_step4": "זה בודק את **מידות הגוף** שלך המאוחסנות בפרטי הפרופיל שלך.",
     "shopping_assistant_step5": "הוא ממליץ על הגודל הטוב ביותר עבורך, תוך הדגשת השוואת ההתאמה.",
     "shopping_assistant_step6": "לחץ על **הוסף לארון** כדי לייבא את טיוטת הפריט ישירות לאפליקציה שלך.",
+    "import_wardrobe_title": "ייבא את הארון שלך",
+    "import_wardrobe_p1": "כבר עוקבים אחרי הארון שלך באפליקציה אחרת? ייבא את הפריטים שלך ל-DressApp בלחיצה אחת. אנו תומכים בייבא ממגוון רחב של אפליקציות פופולריות לארון ולתלבושות.",
+    "import_wardrobe_step1": "פתח את דף **הארון** ב-DressApp.",
+    "import_wardrobe_step2": "לחץ על כפתור **ייבוא** (או חפש את אפשרות הייבוא בתפריט).",
+    "import_wardrobe_step3": "בחר את האפליקציה שממנה אתה מייבא (למשל, Cladwell, Stylebook, Acloset, SmartCloset או קובץ CSV).",
+    "import_wardrobe_step4": "עקב אחר ההוראות שעל המסך כדי לייצא את הנתונים מהאפליקציה הישנה ולהעלות אותם ל-DressApp.",
+    "import_wardrobe_step5": "DressApp יסווג ויארגן אוטומטית את הפריטים המיובאים שלך.",
+    "import_wardrobe_step6": "בדוק את הפריטים שלך והתאם את הקטגוריות במידת הצורך. הארון שלך מוכן!",
     "scheduler_push_title": "לוח זמנים של בוקר והתראות דחיפה",
     "scheduler_push_p1": "התחל את היום שלך עם המלצות סגנונות אוטומטיות ומותאמת למזג האוויר המועברות ישירות למכשיר שלך.",
     "scheduler_push_step1": "נווט אל **הגדרות הפרופיל** שלך.",
@@ -2737,7 +2762,36 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "לייבא את הארון הקיים שלך?",
+    "welcomeSub": "כבר יש לך ארון דיגיטלי באפליקציה אחרת? נוכל להעביר את הבגדים שלך כדי שלא תצטרך להתחיל מאפס.",
+    "noStartFresh": "לא, להתחיל מאפס",
+    "yesImportBtn": "כן, לייבא את הארון שלי",
+    "selectAppTitle": "מאיזו אפליקציה אתה בא?",
+    "selectAppSub": "בחר את אפליקציית הארון הקודמת או הזן שם מותאם אישית למטה.",
+    "screenshotPipelineTitle": "צינור לכידת מסך מוכן",
+    "screenshotPipelineSub": "DressApp תலכד כרטיסי בגדים מארון המתחרה באמצעות לכידת מסך. אין צורך במפתחות API או ייצוא נתונים.",
+    "connectToAppTitle": "התחבר ל-{{appName}}",
+    "bookmarkletInstallInstructions": "גרור את סימניית DressApp Agent לסרגל הסימניות, אחר כך התחבר ל-{{appName}} ונווט לדף הארון שלך.",
+    "bookmarkletInstallInstructionsMobile": "לחץ למטה כדי להעתיק את הסימנייה, אחר כך צור סימנייה חדשה והדבק אותה ככתובת:",
+    "bookmarkletClickTip": "לחץ על הסימנייה בדף המתחרה כדי להתחיל ללכוד.",
+    "bookmarkletLongPressTip": "לחץ לחיצה ארוכה על כפתור זה כדי להוסיף אותו לסימניות שלך.",
+    "bookmarkletMobileInstruction": "לחץ על תפריט ⋮ שלוש הנקודות בדפדפן שלך, אחר כך לחץ על \"סימניות\" כדי לשמור דף זה.",
+    "bookmarkletMobileSaveTip": "לחץ להעתקה → תפריט ⋮ → סימניות → + → הדבק ככתובת",
+    "bookmarkletCopied": "הסימנייה הועתקה! צור סימנייה חדשה והדבק אותה ככתובת.",
+    "copyFailed": "ההעתקה נכשלה. אנא העתק את הסימנייה ידנית.",
+    "bookmarkletBtn": "סוכן DressApp",
+    "dragTip": "גרור זאת לסרגל הסימניות",
+    "longPressTip": "לחץ לחיצה ארוכה על הכפתור למעלה כדי להוסיף לסימניות",
+    "bookmarkletUsageInstructions": "אחרי ההתקנה, לחץ על \"ייבא ארון\" למטה לאתחול. התחבר ל-{{appName}}, עבור לדף הארון שלך, ואז לחץ על סימניית \"DressApp Agent\".",
+    "garmentVisionReady": "קליטה סוכנית מוכנה",
+    "importWardrobeBtn": "ייבא ארון",
+    "mattingNotice": "עיבוד כל הנכסים מתבצע על ידי GarmentVision.",
+    "tabSleepAlert": "התראת שינה של לשונית: אל תחליף לשוניות בתוך חלון המתחרה בעת הייבוא (Chrome ישים את הגלילה במצב שינה/יגביל אותה).",
+    "proTip": "טיפ מקצועי: גרור את לשונית המתחרה מחוץ לחלון הדפדפן לחלון עצמאי כדי לשמור על פעילותה בזמן שאתה מבצע משימות מרובות!",
+    "saving": "שומר {{count}} פריטים בארון שלך...",
+    "saved": "{{count}} פריטים נשמרו. הסטייליסט מנתח אותם — הפרטים מתעדכנים אוטומטית.",
+    "error": "ההעברה נכשלה. נסה שוב."
   },
   "login_reminder": {
     "newTitle": "הארון שלך ריק — בוא/י נוסיף פריט ראשון!",
@@ -2747,5 +2801,18 @@
     "helpDocLink": "למד/י איך להוסיף בגדים ב-DressApp",
     "letsStart": "בוא/י נתחיל",
     "migrateBtn": "העברה"
+  },
+  "aiNotice": {
+    "geminiKeyRequired": "עליך להזין את מפתח Google AI Gemini שלך",
+    "geminiKeyDescription": "עליך להגדיר את מפתח Google AI Gemini API שלך. ניתן לקבל מפתח מ-Google AI Studio.",
+    "configureKey": "הגדר מפתח"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "description": "DressApp Terms of Service — rules and conditions for using our app."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "DressApp privacy policy — how we collect, use, and protect your data."
   }
 }

@@ -1,255 +1,259 @@
-# DressApp Complete Technical User Manual
+# DressApp 技術ユーザーマニュアル（完全版）
 
-Comprehensive user manual and technical reference guide for the DressApp personal wardrobe ecosystem, styling engine, circular marketplace, and administration panels.
-
----
-
-## 1. Overview & Technology Stack
-
-DressApp is an AI-driven personal wardrobe manager, styling advisor, and circular marketplace. It helps users manage clothing items digitally, auto-crop and tag them, receive weather- and calendar-aware outfit recommendations, scan EU Digital Product Passports (DPP), and trade garments.
-
-### Core Value Proposition
-- **Digital Wardrobe Ingestion**: Snapshot or upload photo processing with automated background removal, clothing categorization, and attribute tag generation.
-- **AI Virtual Stylist**: A conversational agent that contextually reviews your wardrobe, Google Calendar events, and local weather forecasts to suggest daily outfits.
-- **Circular Marketplace**: Secure peer-to-peer buying, selling, swapping, and renting of clothes to reduce fast fashion waste.
-- **Cost-Per-Wear (CPW) Analytics**: Insights into wardrobe capitalization value, utilization rates, and usage optimization.
-
-### Technology Architecture
-- **Backend Edge**: Python 3.11 with FastAPI, using asynchronous Motor drivers connected to a MongoDB Atlas cluster.
-- **Frontend SPA**: React 19 single-page application utilizing Tailwind CSS, Shadcn/UI primitives, Zustand global stores, IndexedDB local caching, and `react-i18next` supporting 12 locales.
-- **Local Machine Learning**: CPU-local U2-Net (`rembg`) background matting, SegFormer-b2 clothing parsing, and Fashion-CLIP embeddings. Optionally routes to self-hosted GPU containers (SegFormer-b3 + BiRefNet) for fast operations.
-- **Conversational STT/TTS**: Real-time client-side Web Speech recognition fallback, multimodal server-side Gemini 2.5 Flash modulations, and on-device offline Piper/Sherpa-ONNX engines.
-- **External Integration Services**: OpenWeatherMap API for weather fetching, Google Calendar OAuth for daily schedule exports, and PayPal Subscriptions/Checkout REST APIs.
+DressApp個人向けクローゼットエコシステム、スタイリングエンジン、循環型マーケットプレイス、および管理パネルに関する包括的なユーザーマニュアルおよび技術リファレンスガイドです。
 
 ---
 
-## 2. Prerequisites
+## 1. 概要とテクノロジースタック
 
-### Host Environment Requirements
-- **Hardware**: Minimum 4 GB RAM VPS (e.g., Hetzner VPS hosting the production `dressapp.co`).
-- **Dependencies**: Docker & Docker Compose stack (including backend, frontend, and Caddy TLS termination).
-- **Environment Variables**: API keys configuration (`GEMINI_API_KEY`, `DEEPGRAM_API_KEY`, `OPENWEATHER_API_KEY`, `PAYPAL_LIVE_CLIENT_ID/SECRET`, and Google Calendar OAuth tokens).
+DressAppは、AIを活用した個人向けクローゼット管理、スタイリングアドバイザー、および循環型マーケットプレイスのプラットフォームです。ユーザーが衣類アイテムをデジタル管理し、自動切り抜きとタグ付けを行い、天気やスケジュールに対応したコーディネート提案を受け取り、EUのデジタル製品パスポート（DPP）をスキャンし、衣類を取引するのを支援します。
 
-### User App Requirements
-- **Web Browser**: Google Chrome or Apple Safari (required for full voice feature compatibility).
-- **Permissions**: Grant Camera permission (for clothing snapshots and QR scans) and Microphone permission (for voice conversation).
-- **Network**: Active connection for LLM processing, with IndexedDB caching providing offline catalog browsing.
+### 主要な価値提案
+- **デジタルクローゼットへの登録**：スナップショットまたはアップロードされた写真処理により、自動で背景を削除し、衣類の分類と属性タグの生成を行います。
+- **AIバーチャルスタイリスト**：クローゼットの履歴、Googleカレンダーのイベント、地域の天気予報を文脈に合わせて確認し、毎日のコーディネートを提案する対話型エージェントです。
+- **循環型マーケットプレイス**：ファストファッションの廃棄を削減するため、安全なC2C（ユーザー間）での衣類の購入、販売、交換、レンタルを提供します。
+- **着用あたりコスト（CPW）分析**：クローゼットの資産価値、活用率、および使用頻度の最適化に関するインサイトを提供します。
 
----
-
-## 3. Step-by-Step Instructions
-
-### 3.1 Ingesting Garments (Adding Items)
-INGESTION PARADIGMS: Photography, EU Product Passports, and Digital Commerce Receipts.
-
-#### A. Interactive Camera and File Upload
-1. Navigate to the **Add Item** screen.
-2. Select **Take Photo** (launches native mobile camera) or click **Upload Photos** (opens OS file chooser).
-3. The client computes the image's SHA-256 and horizontal difference-hash (dHash) in-browser (~100-180ms) to check against your existing closet.
-4. If a match is found, the **Duplicate Preflight Dialog** opens showing matching previews. Select **Skip** or **Add anyway**.
-5. Once accepted, the server starts an NDJSON stream. A placeholders preview frame displays within 5-7 seconds, allowing you to edit the item details immediately while the backend completes tagging.
-6. Verify auto-detected tags (color, fabric, fit, pattern, occasion). If the cutout shape is incorrect, change the **Category** dropdown; this triggers SegFormer to automatically re-crop the garment.
-7. Click **Save** to optimistically paint the item in the closet grid immediately (~16ms) while background WebP thumbnail generation concludes.
-
-#### B. Scanning EU Digital Product Passports (DPP)
-1. Tap the **Scan QR (DPP)** button on the Add Item page.
-2. Grant camera permissions and align the QR code printed on the garment's retail label, or upload a saved QR screenshot.
-3. The backend resolves the URL and executes SSRF safety checks (blocking private IP ranges).
-4. The system scrapes the JSON-LD schemas to extract brand, materials composition, supply-chain trace, carbon footprint, and care guidelines.
-5. Review the extracted data displayed in the green **Verified DPP Data** accordion panel and click **Save**.
-
-#### C. Importing Digital Commerce Receipts
-1. Open the **Digital Import** tab.
-2. Choose a sub-mode: **Paste Text**, **Upload Image**, **Upload PDF**, or input a **Web Link**.
-3. The backend uses multimodal vision models to extract transaction facts (brand, price, size, category).
-4. Parsed fields are receipt-locked to protect them from future visual re-analysis. Click **Save** to confirm.
+### 技術アーキテクチャ
+- **バックエンドエッジ**：Python 3.11とFastAPIを使用し、MongoDB Atlasクラスターに接続された非同期Motorドライバーを使用。
+- **フロントエンドSPA**：React 19シングルページアプリケーション。`useSyncExternalStore` カスタムストア（`stylistStore`, `dailySuggestionsStore`, `useOutfitStore`, `useClosetStore`, `useSuitcaseStore`）、Tailwind CSS、Shadcn/UIプリミティブ、および12の言語をサポートする `react-i18next` を使用。
+- **状態とネットワークの最適化**：処理中のリクエストの重複排除、15分間のストアキャッシュ、およびタブ切り替え（`visibilitychange`）時の再検証により、アイドル時のバックエンドGETリクエストをゼロに抑制。
+- **ローカル機械学習とサイズ予測**：CPUローカルのU2-Net（`rembg`）による背景切り抜き、SegFormer-b2による衣類解析、Fashion-CLIPによる特徴量埋め込み、およびANSUR II人体測定データベースに基づく回帰モデル（`body_predictor.py`）。高速処理のため、オプションでセルフホストのGPUコンテナ（SegFormer-b3 + BiRefNet）へのルーティングが可能。
+- **対話型STT/TTS**：クライアント側のリアルタイムWeb Speech API認識（フォールバック用）、サーバー側のマルチモーダルGemini 2.5 Flashによる音声生成、およびデバイス上のオフラインPiper/Sherpa-ONNXエンジン。
+- **外部連携サービス**：天気取得用のOpenWeatherMap API、日々の予定エクスポート用のGoogleカレンダーOAuth認証、住所自動補完用のOpenStreetMap (Nominatim)、およびPayPalサブスクリプション/決済REST API。
 
 ---
 
-### 3.2 Conversational AI Virtual Stylist
-Describe styling dilemmas and receive hands-free spoken outfit advice.
+## 2. 前提条件
 
-1. Navigate to the **AI Stylist** screen.
-2. Click the microphone icon `[Microphone]` in the chat input bar.
-3. Speak your request (e.g., "What top matches my beige trousers for a rainy outdoor lunch?").
-4. If Web Speech is supported, your voice transcribes live in the input box. If not, the app records a WebM file and uploads it.
-5. The backend routes the voice query to the local Gemma4 container (falling back to Gemini 2.5 Flash transcription if offline).
-6. The stylist processes your wardrobe history, local weather forecasts, and calendar events to formulate a styling proposal.
-7. The stylist speaks the response using preselected voice profiles (`puck`, `aoede`, or `charon`).
-8. Tap **Play reply** (or **Replay** in Hebrew mode) on the card to replay the voice audio.
+### ホスト環境要件
+- **ハードウェア**：最小4 GB RAMを搭載したVPS（例：本番環境 `dressapp.co` をホストするHetzner VPS）。
+- **依存関係**：DockerおよびDocker Composeスタック（バックエンド、フロントエンド、およびCaddy TLS終端を含む）。
+- **環境変数**：APIキーの設定（`GEMINI_API_KEY`, `DEEPGRAM_API_KEY`, `OPENWEATHER_API_KEY`, `PAYPAL_LIVE_CLIENT_ID/SECRET`、およびGoogleカレンダーのOAuthトークン）。
 
----
-
-### 3.3 Profile, Preferences, and Subsystem Dependencies
-The Profile page serves as the core control panel for DressApp. Configuration fields directly impact the performance, routing, and behavior of downstream modules.
-
-#### Accordion Section Dependencies & Rationale
-
-1. **Photos & Avatar**
-   - **Why does it matter?**: It provides the visual identity for personalized styling rendering and canvas overlays.
-   - **Subsystem Dependencies**: Avatars and reference photos populate the `AvatarViewer2D` and `OutfitAvatarViewer`. To prevent database upload failures (MongoDB's 16MB document boundary) and conserve bandwidth, photos are compressed in-browser to a maximum of 1280px at 82% quality.
-
-2. **Style Profile (Modest rules, Dress code)**
-   - **Why does it matter?**: It establishes personal boundaries for recommended outfits, preventing the AI from generating inappropriate style suggestions.
-   - **Subsystem Dependencies**: The selected parameters (e.g., Modest clothing constraints) are fed directly into the styling prompts for Gemini 2.5 Flash, filtering matching wardrobe outputs before they are shown.
-
-3. **Details (Name, Phone, Occupation)**
-   - **Why does it matter?**: It customizes the communication tone and routes notification alerts.
-   - **Subsystem Dependencies**: The user's name is dynamically parsed into emails and system-level pushes. The phone number serves as a fallback registry for scheduled alerts. The occupation parameter is fed to the stylist LLM to customize proposals (e.g., corporate office vs. remote work templates).
-
-4. **Body & Measurements (Height, Weight, Shapes)**
-   - **Why does it matter?**: It eliminates sizing guesswork, allowing external retail size comparison and accurate virtual layering.
-   - **Subsystem Dependencies**: Measurements are queried directly by the **Shopping Assistant** Chrome Extension content scripts to read size tables on partner websites (like Zara and Asos) and recommend sizes. They also adjust the rendering scale of clothing segments on the Outfit Canvas.
-
-5. **Lifestyle (Status, Sex)**
-   - **Why does it matter?**: It tailors default recommendations and scores content algorithms.
-   - **Subsystem Dependencies**: The sex selection directly affects the ranking logic of daily Trend Scout cards. If a news card category mismatches the user's sex, the algorithm applies a -2.0 score penalty, demoting it in the feed.
-
-6. **AI Configuration (SaaS keys, edge mode, credits)**
-   - **Why does it matter?**: It determines billing routing, operational performance, and network offline status.
-   - **Subsystem Dependencies**: Routes text/audio generation queries. Standard setups consume DressApp system credits. Inputting personal API keys (Google AI Studio, Anthropic, OpenAI) redirects charges to the user's developer billing accounts. Selecting edge local mode routes queries to the offline Gemma container.
-
-7. **Scheduler & Push (Frequency, daily alarm, style focus)**
-   - **Why does it matter?**: It manages automatic daily style pushes.
-   - **Subsystem Dependencies**: Activates `APScheduler` cron jobs on the FastAPI backend. Every morning, it triggers push notifications via `pywebpush` using the client's VAPID keys, matching the selected style focus parameters.
-
-8. **Google Calendar (OAuth sync, export rules)**
-   - **Why does it matter?**: It bridges your wardrobe directly with your real-world calendar events.
-   - **Subsystem Dependencies**: Authenticates via Google OAuth. The scheduler queries your calendar to identify events, formats outfits, and pushes calendar events straight to your Google Calendar agenda.
-
-9. **Location Services (GPS tracking, weather accuracy)**
-   - **Why does it matter?**: It coordinates weather-appropriate suggestions and local transaction radius filters.
-   - **Subsystem Dependencies**: Triggers `navigator.geolocation` reverse-geocoding. Coordinates are sent to OpenWeatherMap API to adjust the stylist recommendations (e.g., rainwear for downpours). It also calculates distances for local Marketplace listings and experts (e.g.,Lisbon radius checks).
-
-10. **Voice & Language (Virtual stylist voice selection)**
-    - **Why does it matter?**: It establishes text dictionary locales and voice modulations.
-    - **Subsystem Dependencies**: Controls the active language for translations via `react-i18next`. The voice selection maps BCP-47 voice codes (e.g., `he-IL` or `ar-JO`) to client Web Speech synthesis voices or offline Piper TTS models.
-
-11. **Invite Friends (Share payload API)**
-    - **Why does it matter?**: It provides a viral loop for free closet expansion.
-    - **Subsystem Dependencies**: Appends the referrer's MongoDB ID to the URL. New registrations dynamically query this ID and atomically increment the referrer's `closet_capacity_bonus` by +10 slots, modifying the limit guards in `closet.py`.
+### ユーザーアプリ要件
+- **ウェブブラウザ**：Google ChromeまたはApple Safari（音声機能の完全な互換性に必要）。
+- **権限設定**：カメラ権限（衣類の撮影やQRコードのスキャンのため）およびマイク権限（音声会話のため）の許可。
+- **ネットワーク**：LLM処理のためのアクティブな接続（IndexedDBキャッシュにより、オフラインでのカタログ閲覧も可能）。
 
 ---
 
-### 3.4 Wardrobe Insights Dashboard
-Analyze wardrobe capitalization value, tracking garment utilization, and cost-per-wear parameters.
+## 3. ステップバイステップの手順
 
-1. Navigate to **Wardrobe Insights**.
-2. **Review Metrics**:
-   - *Closet Worth*: Dynamic summation of purchase prices.
-   - *Closet Utilization*: Percentage of closet garments worn at least once.
-   - *Average Cost-per-Wear (CPW)*: Computed as `Price / Wear Count`.
-3. **Distribution Graphs**: Toggle tabs to view Recharts visualizations:
-   - *Color Palette*: Mapped hex codes distribution.
-   - *Materials*: Fabric percentages distribution.
-   - *Subcategories*: Mapped subcategories.
-4. **Efficiency Leaderboard**: View the top 5 garments showing the lowest Cost-per-Wear scores.
+### 3.1 衣類の登録（アイテムの追加）
+登録方法：写真撮影、EU製品パスポート（DPP）、デジタル購入レシート。
 
----
+#### A. カメラ撮影とファイルアップロード
+1. **アイテム追加**（Add Item）画面に移動します。
+2. **写真を撮る**（Take Photo、モバイルカメラの起動）または**写真をアップロード**（Upload Photos、OSのファイル選択を開く）をクリックします。
+3. クローゼット内の既存のアイテムと比較するため、ブラウザ内で画像のSHA-256値と横方向差分ハッシュ（dHash）を計算します（約100〜180ミリ秒）。
+4. 重複が見つかった場合、**重複確認ダイアログ**が開き、一致するアイテムのプレビューが表示されます。**スキップ**（Skip）または**そのまま追加**（Add anyway）を選択します。
+5. 承認されると、サーバーはNDJSONストリームを開始します。5〜7秒以内にプレースホルダーのプレビューフレームが表示され、バックエンドがタグ付けを完了するのを待つ間にアイテム詳細をすぐに編集できます。
+6. 自動検出されたタグ（色、生地、フィット感、柄、着用シーン）を確認します。切り抜き形状が正しくない場合は、**カテゴリー**のドロップダウンを変更します。これにより、SegFormerが服を自動的に再切り抜きします。
+7. **保存**（Save）をクリックすると、バックエンドでのWebPサムネイル生成が完了するのを待つ間、クローゼットのグリッドに即座にアイテムが仮反映されます（約16ミリ秒）。
 
-### 3.5 Outfit Canvas & Planner
-Build, layer, and review outfit proposals on an interactive 2D avatar canvas.
+#### B. 欧州デジタル製品パスポート（DPP）のスキャン
+1. アイテム追加ページの **QRスキャン (DPP)** ボタンをタップします。
+2. カメラのアクセス権を許可し、衣類の小売りラベルに印刷されているQRコードを合わせるか、保存されたQRコードのスクリーンショットをアップロードします。
+3. バックエンドがURLを解決し、SSRF安全チェック（プライベートIPレンジのブロック）を実行します。
+4. システムがJSON-LDスキーマをスクレイピングして、ブランド、素材構成、サプライチェーンの追跡、カーボンフットプリント、およびお手入れ方法を抽出します。
+5. 緑色の **Verified DPP Data** アコーディオンパネルに表示される抽出されたデータを確認し、**保存**をクリックします。
 
-1. Open the **Outfit Canvas** planner.
-2. **Outerwear Layering (Dual Canvas)**: If your outfit includes outerwear (e.g., a jacket) over a top, the page renders two vertical canvas modules: "With Outerwear" (showing the jacket layered) and "Without Outerwear" (revealing the top underneath).
-3. **Interactive 2D Elements**: Tap directly on any clothing piece on the avatar's body. The app routes you straight to that garment's detail screen.
-4. **Review Metrics Tab**: Click the details button and choose the **Metrics** tab to view progress bars for compatibility criteria:
-   - *Color Harmony* (neutral harmony)
-   - *Pattern Compatibility* (pattern clashing prevention)
-   - *Body Fitting* (size matching)
-   - *Weather Match* (season suitability)
-   - *Event Match* (activity appropriateness)
-   - *Location Match* (modest rules checks)
-5. **Rename/Describe**: Click the Pencil icon to edit outfit names and descriptions.
+#### C. デジタル購入レシートのインポート
+1. **デジタルインポート**（Digital Import）タブを開きます。
+2. サブモードを選択します：**テキスト貼り付け**、**画像アップロード**、**PDFアップロード**、または**ウェブリンク**入力。
+3. バックエンドがマルチモーダル視覚モデルを使用して、取引データ（ブランド、価格、サイズ、カテゴリー）を抽出します。
+4. 解析されたフィールドは、将来的な再解析を防ぐためにロックされます。**保存**をクリックして確定します。
 
 ---
 
-### 3.6 Suitcase Assistant
-Organize your packing requirements for trips without overpacking.
+### 3.2 対話型AIバーチャルスタイリスト
+スタイリングの悩みを声で伝えて、ハンズフリーで音声コーディネート提案を受け取ります。
 
-1. Go to the **Suitcase** page and fill out the Trip Context form (destination, start/end dates, trip category, calendar events).
-2. The AI generates a customized packing list and daily outfits based on trip duration and weather forecasts.
-3. Review the packing progress. If an important item is missing (e.g., umbrella for rain, swimwear for beach), the system alerts you and suggests matches from the marketplace or local stores.
-4. Use the integrated chat box to refine suggestions (e.g., "Change day 2 to casual evening wear"). The assistant edits the suitcase while preserving the rest of the list.
-5. Tap **Approve Suitcase** to finalize your plan.
-
----
-
-### 3.7 Scheduler & Push Reminders
-Set daily styling alerts to receive outfit recommendations automatically.
-
-1. Open **Profile** and go to **Scheduler & Push**.
-2. Toggle notifications, set a daily notification time, weekday frequency, and styling focus theme.
-3. Every morning, the background cron task (`APScheduler`) checks weather forecasts and sends a push notification.
-4. Tap the notification on your device (or view the web app's Notification Center) to open a proposal dialog displaying 3 styled suggestions.
-5. Save a suggestion directly to your **Wardrobe Diary**.
+1. **AIスタイリスト**（AI Stylist）画面に移動します。
+2. チャット入力バーのマイクアイコン `[Microphone]` をクリックします。
+3. 質問を声に出して話します（例：「雨の日の屋外ランチで、ベージュのパンツに合うトップスは何？」）。
+4. Web Speech APIがサポートされている場合、音声は入力ボックスにリアルタイムでテキスト変換されます。非対応ブラウザの場合は、アプリがWebMファイルを録音してアップロードします。
+5. バックエンドは音声クエリをローカルのGemmaコンテナにルーティングします（オフライン時はGemini 2.5 Flashテキスト変換にフォールバック）。
+6. スタイリストは、クローゼットの履歴、地域の天気予報、およびカレンダーの予定を処理してコーディネート案を組み立てます。
+7. あらかじめ選択された音声プロファイル（`puck`、`aoede`、または `charon`）を使用して、スタイリストが音声で回答します。
+8. カードの**返答を再生**（Play reply、またはヘブライ語モードの **Replay**）をタップすると、音声を再再生できます。
 
 ---
 
-### 3.8 Marketplace (Resale, Renting, Swapping, Gifting)
-Engage in the peer-to-peer circular fashion marketplace.
+### 3.3 プロフィール、設定、およびサブシステム依存関係
+プロフィールページは、DressAppのコア制御パネルとして機能します。設定フィールドは、後続モジュールのパフォーマンス、ルーティング、および動作に直接影響を与えます。
 
-- **Create a Listing**: Open an item's detail page, select **Edit Intent**, and choose a non-private intent:
-  - *For Sale*: Input list price and currency (detects your default currency via regional locale preferences).
-  - *Rent*: Set daily rental tariff and borrowing conditions.
-  - *Swap*: Mark item open for trade.
-  - *Donate*: Publish item for free.
-- **State Synchronization**: Listings propagate to the feed automatically. The client uses `useSyncExternalStore` and IndexedDB caching to load search parameters with zero-latency.
-- **Try-On Sandbox**: Renters/buyers can test-fit a listing against items in their private closet before checking out.
-- **Transactional Checkout**:
-  - *Purchasing/Renting*: Complete transaction via integrated PayPal buttons. Captured webhooks notify the seller, flip listing state to sold/rented, and log transactions in the ledger minus the 7% platform fee.
-  - *Bartering (Swapping)*: Prospective swappers propose trades. Lister receives confirmation emails to accept or decline.
+##### アコーディオンセクションの技術的依存関係とロジック
+
+1. **写真とデジタルアバター（`AvatarViewer2D` と `DynamicAvatar`）**
+   - **なぜ重要か？**：セグメンテーションされた実際の身体写真切り抜きと、動的2Dベジェ曲線ベクトルSVGマネキンのデュアルモードを使用して、試着画面上で視覚的アイデンティティをレンダリングします。
+   - **サブシステム依存関係**：写真切り抜きはローカルのU2-Net（`rembg`）を介して背景が消去され、MongoDBの16MBドキュメント制限に収めるためにブラウザ内で最大1280px、品質82%に縮小されます。アバター表示には、キャリブレーションされた位置マーク（襟から首ラインの `top-[14.5%]`、ウエストバンドから腰ラインの `top-[36.5%]`、フットウェア平面の `bottom-[2%]`）および胸囲/ヒップ幅の比例拡大縮小（$scaleX$）が適用されます。*写真を削除*をクリックすると、即座に2D SVGベクトルマネキンに戻ります。
+
+2. **スタイルプロフィール（露出制限、ドレスコード）**
+   - **なぜ重要か？**：推奨されるコーディネートの個人的な許容範囲を設定し、AIが不適切なスタイル提案を生成するのを防ぎます。
+   - **サブシステム依存関係**：選択されたパラメータ（控えめな衣服の制限など）はGemini 2.5 Flashのスタイリングプロンプトに直接送られ、出力される前に一致するクローゼットアイテムがフィルタリングされます。
+
+3. **詳細（名前、電話番号、職業）**
+   - **なぜ重要か？**：コミュニケーションのトーンをカスタマイズし、通知アラートのルーティングを管理します。
+   - **サブシステム依存関係**：ユーザーの名前はメールやシステムレベルのプッシュ通知に動的に挿入されます。電話番号はスケジュールされたアラートのバックアップ用です。職業パラメータは、スタイリストLLMおよびTrend Scoutパーソナライズランカーに送られ、提案内容のカスタマイズに使用されます。
+
+4. **体型計測とサイズ測定（ANSUR II回帰モデル＆サイズ予測器）**
+   - **なぜ重要か？**：サイズ選びの手間を省き、自動でのブランドサイズ計算、外部小売店のサイズ比較、および正確なバーチャルレイヤリングを可能にします。
+   - **サブシステム依存関係**：4つの基本パラメータ（**身長**、**体重**、**ウエスト**、**足の長さ**）を入力すると、scikit-learnのANSUR II回帰モデル（`body_predictor.py`）が起動し、6つの構造的寸法（*肩幅*、*胸囲*、*ヒップ*、*袖丈*、*股下/インシーム*、*総丈/アウトシーム*）を自動予測します。
+     - **決定論的なサイズ変換**：予測された寸法に基づいて、バックエンドのサイズエンジンがそれをアパレル小売サイズに動的変換します：**シャツサイズ**（胸囲に基づくXS-XXL）、**パンツサイズ**（インチ表記のウエスト）、**靴のサイズ**（足の長さと性別に基づくUSメンズ/レディースおよびEU規格）、**ドレスサイズ**（胸囲、ウエスト、ヒップに基づくUS 0-14+）、および**ブラジャーサイズ**（胸囲と予測アンダーバストに基づくアンダー＋カップ）。
+     - **自動入力**：これらの推奨サイズは、プロフィールダッシュボード内の「詳細編集モード」フィールドに自動入力されます。
+     - **外部連携**：これらの計測値は、ブラウザ拡張機能 **Shopping Assistant** (Chrome) のスクリプトから直接参照され、提携サイト（Zara, Asos）のサイズチャートを読み込んで適切なサイズを提案します。
+
+5. **ライフスタイル（既婚/未婚ステータス、性別）**
+   - **なぜ重要か？**：デフォルトの推奨事項を調整し、コンテンツアルゴリズムのスコアを最適化します。
+   - **サブシステム依存関係**：性別の選択は、毎日のTrend Scoutカードのランキングロジックに直接影響します。ニュースカードのカテゴリーがユーザーの性別と一致しない場合、アルゴリズムはスコアに -2.0 のペナルティを適用し、フィード内での表示順位を下げます。
+
+6. **AI設定（SaaSキー、エッジモード、クレジット）**
+   - **なぜ重要か？**：課金ルーティング、動作パフォーマンス、およびオフライン状態を決定します。
+   - **サブシステム依存関係**：テキスト/音声生成の処理ルートを制御します。標準セットアップでは、DressAppシステムクレジットを消費します。個人のAPIキー（Google AI Studio, Anthropic, OpenAI）を入力すると、料金はユーザーの開発者課金アカウントに請求されます。エッジモード（Edge Local Mode）を選択すると、ローカルのオフラインGemmaコンテナにリクエストがルーティングされます。
+
+7. **スケジューラーとプッシュ通知（頻度、毎日のアラーム、スタイルフォーカス）**
+   - **なぜ重要か？**：毎朝自動で送信されるスタイル提案のプッシュ通知を管理します。
+   - **サブシステム依存関係**：FastAPIバックエンド上の `APScheduler` クローンジョブを有効にします。毎朝、クライアントのVAPIDキーを使用して `pywebpush` 経由でプッシュ通知をトリガーし、選択されたスタイルフォーカスに合致する提案を送ります。
+
+8. **Googleカレンダー（OAuth同期、エクスポートルール）**
+   - **なぜ重要か？**：クローゼットを実際の予定スケジュールと直接結び付けます。
+   - **サブシステム依存関係**：Google OAuth認証を使用します。スケジューラーがカレンダーのイベントを検索して適したコーデを作成し、予定をGoogleカレンダーのスケジュールに直接書き込みます。
+
+9. **位置情報サービス（GPSトラッキング、天気の正確性）**
+   - **なぜ重要か？**：天気に適した提案の調整や、ローカル取引の検索半径フィルターを管理します。
+   - **サブシステム依存関係**：`navigator.geolocation` 逆ジオコーディングをトリガーします。座標データはOpenWeatherMap APIに送信され、スタイリストの推奨設定（大雨時のレインウェア提案など）を調整します。また、ローカルマーケットプレイスの出品や専門家との距離（リスボン中心の半径チェックなど）も計算します。
+
+10. **音声と言語（バーチャルスタイリスト音声選択）**
+    - **なぜ重要か？**：テキスト翻訳の言語ロケールと、読み上げ音声のトーンを設定します。
+    - **サブシステム依存関係**：`react-i18next` を通じてアクティブな翻訳言語を制御します。音声選択では、BCP-47音声コード（例：`he-IL` や `ar-JO`）をブラウザのWeb Speech音声またはオフラインのPiper TTSモデルに関連付けます。
+
+11. **友達を招待（紹介コード共有API）**
+    - **なぜ重要か？**：無料でクローゼットの容量を拡張するためのバイラルな仕組みを提供します。
+    - **サブシステム依存関係**：紹介者のMongoDB IDをURLに付加します。新規登録時にこのIDを照会し、紹介者の `closet_capacity_bonus` を自動で +10 スロット追加し、`closet.py` のクローゼット上限を書き換えます。
 
 ---
 
-### 3.9 Admin Panel Dashboard
-System liveness validation, financial bookkeeping, and user account management.
+## 3.4 クローゼットインサイトダッシュボード
+クローゼットの資産価値、衣類の活用率、および着用あたりコスト（CPW）パラメータを分析します。
 
-1. Navigate to `/admin` (available to administrator roles).
-2. **Overview**: Audit Gross Volumes and Platform Fee income summaries. Inspect the **Provider Activity Table** to view downstream liveness statistics (Gemini API, weather service latency, and error rates).
-3. **Providers**: Click **Verify Key** to send a direct ping to the Gemini API. Toggle the **Eyes Vision Override** switch to route image analysis between the default Gemini endpoint and a local Gemma container.
-4. **Users**: View active credits, roles, and lifetime payments. Use direct actions to Promote or Demote users.
-5. **Listings**: View listing states and toggle active flags to suspend fraudulent items.
-
----
-
-## 4. Expected Results
-
-- **Ingestion**: Items immediately populate the closet grid (~16ms). Background cutouts render clean, transparent PNG results.
-- **DPP Verified Badge**: Scanning valid passports displays the green information card with sustainability details.
-- **Avatar Outerwear**: Outerwear displays correctly layered over tops on the 2D avatar canvas without clipping headwear/shoes.
-- **Voice Response**: Virtual Stylist text outputs play spoken audio automatically with a visible waveform indicator.
-- **Subscriptions**: Activating Pro immediately removes the 150-item limit warning.
+1. **クローゼットインサイト**（Wardrobe Insights）に移動します。
+2. **指標の確認**：
+   - *クローゼットの総価値（Closet Worth）*：購入価格の動的な合計。
+   - *活用率（Closet Utilization）*：少なくとも1回以上着用した服の割合。
+   - *平均着用あたりコスト（CPW）*：`価格 / 着用回数` で算出。
+3. **分布グラフ**：タブを切り替えてRechartsのビジュアライゼーションを表示します：
+   - *カラーパレット*：検出されたカラーコードの分布。
+   - *素材*：生地の割合の分布。
+   - *サブカテゴリー*：登録されているサブカテゴリーの分布。
+4. **高効率リーダーボード**：着用あたりコスト（CPW）が低い上位5つのアイテムを表示します。
 
 ---
 
-## 5. Troubleshooting
+### 3.5 コーディネートキャンバスとプランナー
+インタラクティブな2Dアバターキャンバス上で、コーディネートの構築、レイヤリング、プレビューを行います。
+
+1. **コーディネートキャンバス**（Outfit Canvas）プランナーを開きます。
+2. **アウターレイヤリング（ダブルキャンバス）**：コーディネートにアウター（ジャケットなど）とインナーが含まれる場合、画面には「アウターあり」（ジャケットを羽織った状態）と「アウターなし」（ジャケットを脱いだインナーの状態）の2つの縦並びキャンバスが表示されます。
+3. **インタラクティブ2D要素**：アバター上の服のパーツを直接タップすると、そのアイテムの詳細画面に遷移します。
+4. **適合度指標タブ**：詳細ボタンをクリックし、**Metrics** タブを選択すると、適合度基準のステータスバーが表示されます：
+   - *カラー調和*（配色バランス）
+   - *柄の組み合わせ*（派手な柄同士のバッティング防止）
+   - *サイズ適合*（アバターのサイズとの一致）
+   - *天候適合*（季節感の一致）
+   - *イベント適合*（オケージョン適性）
+   - *場所適合*（露出度のルールチェック）
+5. **名前・説明の変更**：鉛筆アイコンをクリックして、コーディネートの名前と説明を編集できます。
+
+---
+
+### 3.6 スーツケース荷造りアシスタント
+旅行時の荷造りを過不足なく整理します。
+
+1. **スーツケース**（Suitcase）ページに進み、旅行コンテキストフォーム（目的地、出発・帰着日、旅行カテゴリー、予定イベント）に入力します。
+2. AIが旅行日程と現地の天気予報に基づいて、カスタマイズされたパッキングリストと毎日のコーディネートスケジュールを自動生成します。
+3. 荷造りの進捗状況を確認します。必要なアイテム（雨天時の傘、ビーチでの水着など）が抜けている場合、システムが警告を出し、マーケットプレイスや提携店から提案します。
+4. 統合されたチャットボックスを使用して提案を修正できます（例：「2日目をカジュアルなイブニングウェアに変更して」）。アシスタントは他のリストを保持したまま、該当日のスーツケース内容を書き換えます。
+5. **スーツケースを承認**（Approve Suitcase）をタップして、計画を決定します。
+
+---
+
+### 3.7 スケジューラーとプッシュ通知設定
+毎朝コーディネートの提案を自動で受け取るためのアラートを設定します。
+
+1. **プロフィール**から **Scheduler & Push** に移動します。
+2. 通知を有効にし、毎日の通知時間、曜日、およびスタイルのテーマを選択します。
+3. 毎朝、バックエンドのクローンタスク（`APScheduler`）が天気予報を確認し、プッシュ通知を送信します。
+4. デバイスの通知をタップ（またはウェブアプリの通知センターを表示）すると、3つのコーディネート提案を表示するダイアログが開きます。
+5. 気に入った提案を直接 **クローゼット日記**（Wardrobe Diary）に保存します。
+
+---
+
+## 3.8 マーケットプレイス（販売、レンタル、交換、寄付）
+ユーザー間で衣類を取引する循環型ファッションマーケットプレイスに参加します。
+
+- **出品する**：アイテムの詳細ページを開き、**取引目的の編集**（Edit Intent）を選択して、プライベート以外の目的を選びます：
+  - *販売用（For Sale）*：価格と通貨を入力します（地域のロケール設定からデフォルト通貨を検出します）。
+  - *レンタル用（Rent）*：1日あたりのレンタル料金と貸出条件を設定します。
+  - *交換用（Swap）*：トレード可能な状態に設定します。
+  - *寄付用（Donate）*：無料で出品します。
+- **状態の同期**：出品物は自動的にマーケットフィードに反映されます。クライアントは `useSyncExternalStore` とIndexedDBキャッシュにより、検索結果をゼロ遅延で読み込みます。
+- **試着サンドボックス**：購入者やレンタル希望者は、決済手続きを行う前に、出品アイテムをご自身のクローゼットアイテムと組み合わせてアバターに試着させることができます。
+- **チェックアウト決済**：
+  - *購入・レンタル*：統合されたPayPalボタンを介して安全に取引を完了します。決済成功のウェブフックを検知すると、出品者に通知され、出品状態が「販売・レンタル済み」になり、プラットフォーム手数料7%を差し引いた金額が台帳に記録されます。
+  - *物々交換（交換）*：交換希望のユーザーからトレード提案が届きます。出品者は承認または拒否の確認メールを受け取ります。
+
+---
+
+### 3.9 管理ダッシュボード
+システムの稼働状況の確認、財務会計、およびユーザーアカウントの管理を行います。
+
+1. `/admin` にアクセスします（管理者ロールのユーザーのみ利用可能）。
+2. **概要**：総取引額とプラットフォーム手数料収入の要約を確認します。**プロバイダーアクティビティテーブル**で、連携サービス（Gemini API、天気サービスの遅延、およびエラー率）の稼働状況を確認します。
+3. **プロバイダー**：**キーの検証**（Verify Key）をクリックして、Gemini APIに直接pingを送信します。**Eyes Vision Override** のスイッチを切り替えると、画像解析のエンドポイントをデフォルトのGeminiとローカルのGemmaコンテナ間で切り替えることができます。
+4. **ユーザー**：アクティブクレジット、ユーザーロール、および累計支払額を確認します。管理アクションからユーザーの昇格（管理者に設定）や降格が可能です。
+5. **出品管理**：出品状態を確認し、詐欺的または不適切な出品を非表示にする切り替えが可能です。
+
+---
+
+## 4. 期待される結果
+
+- **アイテム登録**：アイテムは即座にクローゼットに反映されます（約16ミリ秒）。背景切り抜きは、綺麗で透過的なPNG画像として出力されます。
+- **DPP検証バッジ**：有効な製品パスポートをスキャンすると、サステナビリティ詳細が記載された緑色の情報カードが表示されます。
+- **アバターのアウター重ね着**：2Dアバターキャンバス上で、アウターがインナーの上に正しく重ねて表示され、帽子や靴と重なって崩れることはありません。
+- **音声返答**：バーチャルスタイリストのテキスト出力に合わせて、音声波形インジケーターが表示され、音声が自動再生されます。
+- **サブスクリプション**：Proプランを有効にすると、150アイテム上限の警告警告が即座に消えます。
+
+---
+
+## 5. トラブルシューティング
 
 ### HTTP 402 Payment Required
-- **Problem**: Ingestion blocked. You have reached the maximum baseline limit of 150 closet items.
-- **Solution**: Go to Profile -> Subscription and upgrade to Pro, or share your invite link to get +10 slots per registration.
+- **問題**：アイテム登録がブロックされます。無料プランの上限である150アイテムに達しています。
+- **解決策**：プロフィール -> サブスクリプションに移動してProプランにアップグレードするか、紹介リンクを共有して新規登録ごとに+10の追加スロットを獲得してください。
 
-### SSRF Blocked / DNS Error on DPP
-- **Problem**: Scanned QR passport URL fails to parse.
-- **Solution**: The parser blocks private IP addresses (e.g. `127.0.0.1`, `192.168.x.x`) to protect internal servers. Ensure QR codes point to public domains.
+### DPPでのSSRFブロック / DNSエラー
+- **問題**：スキャンしたQRコードのURL解析に失敗します。
+- **解決策**：内部サーバーを保護するため、パーサーはプライベートIPアドレス（例：`127.0.0.1`, `192.168.x.x`）へのアクセスをブロックします。QRコードが公開ドメインを指していることを確認してください。
 
-### Camera / Microphone Permission Denied
-- **Problem**: Capture/scan viewport displays an 'X' error screen, or voice typing fails.
-- **Solution**: Open browser permissions, enable Camera and Microphone access for the domain, and reload.
+### カメラ / マイクの権限エラー
+- **問題**：撮影画面やスキャン画面に「X」の付いたエラー画面が表示されるか、音声認識が機能しません。
+- **解決策**：ブラウザの設定を開き、該当ドメインに対するカメラとマイクのアクセスを許可してからリロードしてください。
 
-### Stylist Chat Failure / Rate Limits
-- **Problem**: Chat shows errors or freezes.
-- **Solution**: The server catches Gemini `429` rate limits and falls back to a rule-based closet selection algorithm. Verify your internet connection.
+### スタイリストのチャットエラー / レート制限
+- **問題**：チャット画面にエラーが表示される、または動作がフリーズします。
+- **解決策**：サーバーがGeminiのレート制限（`429`）を検知すると、一時的にルールベースの選択アルゴリズムに切り替わります。インターネット接続状況を確認してください。
 
-### Out of Memory (OOM) VPS Spikes
-- **Problem**: CPU/RAM peaks during upload processes.
-- **Solution**: Ingestion utilizes sequential queue locks for batches >5 items. Ensure the server has at least 4 GB RAM.
+### VPSのメモリ不足（OOM）スパイク
+- **問題**：画像アップロード中にCPU/RAMの使用率が一時的に極端に高くなります。
+- **解決策**：5アイテム以上の同時登録時には、バックエンドでシーケンシャルキューロック（順次処理）が動作します。サーバーに少なくとも4 GB以上のRAMがあることを確認してください。
 
 ---
 
-## 6. Limitations
+## 6. アプリの制限事項
 
-- **Browser Web Speech APIs**: Native Speech-to-Text translation is restricted to Chrome and Safari; other browsers fall back to standard text input.
-- **Offline Client Modulations**: Mobile offline Piper ONNX speech synthesis uses fewer voice profiles than the server-side Gemini audio modal.
-- **Image Size Constraints**: Avatar and profile uploads are compressed locally in the browser to 82% quality to fit within the 16MB MongoDB document boundary.
-- **Receipt Parsing Scope**: Highly blurred, distorted, or handwritten receipts may fail data extraction.
+- **ブラウザのWeb Speech API**：ネイティブの音声認識機能はChromeとSafariに限定されます。その他のブラウザでは、標準のテキスト入力フォールバックが適用されます。
+- **オフライン音声合成**：モバイルのオフラインPiper ONNX音声合成は、サーバー側のGemini音声生成に比べて、選択できる音声プロフィール数が少なくなります。
+- **画像サイズ制限**：アバターやプロフィール写真は、MongoDBのドキュメントサイズ制限（16MB）に収めるため、ブラウザ側で自動的に品質82%に圧縮されます。
+- **レシート解析の精度**：極端に不鮮明な画像、歪みがあるレシート、または手書きのレシートからは正確にデータを抽出できない場合があります。

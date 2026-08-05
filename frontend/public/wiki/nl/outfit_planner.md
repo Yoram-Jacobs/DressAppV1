@@ -1,25 +1,25 @@
-# Outfitplanner en canvas
+# Outfitplanner & Canvas
 
-Componeer, laag en bekijk gecoördineerde lay-outs.
+Stel gecoördineerde layouts samen, laag ze en bekijk ze.
 
 ## Overzicht
-De Outfit Planner biedt een visueel canvas met avatarsjablonen om topjes, broeken, bovenkleding en schoenen dynamisch in lagen te leggen.
+De Outfitplanner biedt een visueel 2D-avatarcanvas (dat zowel uitsneden van echte lichaamsfoto's van gebruikers als dynamische vector SVG-mannequins ondersteunt) met gecalibreerde landmark-offsets (`top-[14.5%]` kraag-tot-halslijn en `top-[36.5%]` tailleband-tot-taillelijn) om bovenstukken, onderstukken, outerwear en schoenen naadloos op de lichaamsgrenzen te lagen.
 
 ## Vereisten
-- Opgeslagen kastartikelen.
+- Opgeslagen kledingkastartikelen.
 
-## Stap voor stap
-1. **Selecteer Canvas**: Open de Planner en klik op een dag of nieuw concept.
-2. **Laag items**: Sleep kledingstukken naar de 2D-avatar. Bovenkleding wordt automatisch op de binnenoverhemden gestapeld.
-3. **Evalueer de pasvorm**: controleer compatibiliteitsscores en waarschuwingen (bijvoorbeeld kleurconflicten of weerwaarschuwingen).
-4. **Opslaan**: stel een titel in en plan de look in uw garderobedagboek.
+## Stap-voor-stap
+1. **Selecteer canvas**: Open de Planner en klik op een dag of een nieuw concept.
+2. **Artikelen lagen**: Sleep kledingstukken naar de 2D-avatar. Outerwear wordt automatisch over binnenhemden gestapeld.
+3. **Pasvorm beoordelen**: Controleer compatibiliteitsscores en waarschuwingen (bijv. kleurconflicten of weerwaarschuwingen).
+4. **Opslaan**: Stel een titel in en plan de look in uw kledingkastdagboek. Updates worden thread-safe gestreamd via `useOutfitStore`.
 
 ## Verwachte resultaten
-Prachtig gelaagde outfitcomposities opgeslagen in je kalender en zichtbaar als rasterkaartvoorbeelden.
+Prachtig gelaagde outfitcomposities opgeslagen in uw kalender en zichtbaar als rasterkaart-voorbeelden zonder achtergrondnetwerkverzoek-pollinglussen.
 
-## Problemen oplossen
-- **Laagvolgorde onjuist**: controleer de categorie van het item opnieuw; bovenkleding moet worden geclassificeerd als 'Bovenkleding' om correct te kunnen worden gestapeld.
-- **Overlapwaarschuwingen**: als de avatar waarschuwt voor herhaaldelijk dragen, controleer dan of je onlangs dezelfde outfit op dezelfde locatie hebt gedragen.
+## Probleemoplossing
+- **Laagvolgorde onjuist**: Controleer de categorie van het artikel opnieuw; outerwear moet worden gecategoriseerd als "Outerwear" om correct te stapelen.
+- **Overlapwaarschuwingen**: Als de avatar waarschuwt voor herhaald dragen, controleer dan of u recentelijk dezelfde outfit op dezelfde locatie hebt gedragen.
 
 ## Beperkingen
-- Lagen worden automatisch beheerd op basis van categorietags; handmatige z-indexoverschrijvingen worden niet ondersteund.
+- Lagen worden automatisch beheerd op basis van categorietags; handmatige z-index-overschrijvingen worden niet ondersteund.

@@ -1,4 +1,4 @@
-{
+﻿{
   "brand": "DressApp",
   "nav": {
     "home": "Главная",
@@ -60,7 +60,8 @@
     "share": "Поделиться",
     "time": "Время",
     "unknownColor": "Другое",
-    "saved": "Сохранено"
+    "saved": "Сохранено",
+    "errorOccurred": "Произошла ошибка. Пожалуйста, попробуйте снова."
   },
   "auth": {
     "welcomeBack": "С возвращением",
@@ -987,6 +988,14 @@
     "saveProfile": "Сохранить изменения",
     "savedProfile": "Профиль сохранён",
     "autofilledFromGoogle": "Автоматически заполнено из Google — редактируйте в любой момент.",
+    "syncGoogle": "Синхронизировать профиль Google",
+    "syncGoogleFromSection": "Синхронизировать из Google",
+    "googleConnectedSyncHint": "Подключено через Google — синхронизируйте, чтобы заполнить пустые поля из вашего профиля Google.",
+    "googleSyncContactHint": "Синхронизируйте телефон и адрес из вашей учётной записи Google.",
+    "googleSyncDemographicsHint": "Синхронизируйте пол и дату рождения из вашей учётной записи Google.",
+    "googleReConsentNeeded": "Google требуется ваше разрешение для доступа к данным профиля. Вы будете перенаправлены в Google для предоставления доступа.",
+    "googleSyncSuccess": "Профиль успешно синхронизирован.",
+    "googleSyncFailed": "Ошибка синхронизации.",
     "addressLine1Placeholder": "Начните вводить название улицы…",
     "cityPlaceholder": "Начните вводить название города…",
     "countryPlaceholder": "Выберите или введите страну…",
@@ -1092,7 +1101,11 @@
       "appFeeLabel": "Накопленная плата за приложение",
       "appFeeDescription": "Неоплаченная плата за платформу, накопленная в результате использования кредитов."
     },
-    "deleteAccountLink": "Delete my Account",
+    "importWardrobePill": "Импортировать гардероб",
+    "mobileDesktopGuide": "Импорт гардероба доступен в десктопной версии DressApp. Пожалуйста, откройте свой аккаунт в десктопном браузере, чтобы продолжить.",
+    "deleteAccountLink": "Удалить аккаунт",
+    "privacyPolicy": "Политика конфиденциальности",
+    "termsOfService": "Условия использования",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
     "deleteWarning": "You are about to delete your account. This will permanently remove your profile, all your closet items (including photos and metadata), and all your saved outfits.",
@@ -1143,7 +1156,8 @@
     "upgradeAnnualBtn": "Обновить на год",
     "inviteDesc": "Поделитесь DressApp с друзьями и семьей",
     "bookmarkletDesc": "Перетащите кнопку ниже на панель закладок. На мобильном телефоне добавьте её в закладки и назовите 'Помощник DressApp'. Нажимайте на неё на страницах товаров.",
-    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings"
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
+    "privacyPolicy": "Privacy Policy"
   },
   "admin": {
     "title": "Админ",
@@ -1917,8 +1931,8 @@
       "propose_a_swap": "Предложить обмен",
       "this_donation_is_free_coordinate": "Этот дар бесплатен. Договоритесь с дарителем о встрече или доставке напрямую.",
       "well_email_the_lister_a": "Мы отправим владельцу безопасную ссылку. Никаких комиссий — вещи пересылаются напрямую между вами.",
-      "or_meet_locally_to_skip": "· Или встретьтесь лично, чтобы не платить комиссию 🌱",
-      "local_pickup_preferred_no_shipping": "🌱 Предпочтителен самовывоз — без комиссии за доставку"
+      "or_meet_locally_to_skip": "· Или встретьтесь лично, чтобы не платить комиссию",
+      "local_pickup_preferred_no_shipping": "Предпочтителен самовывоз — без комиссии за доставку"
     },
     "extensionConnect": {
       "connecting_to_dressapp_extension": "Подключение к расширению DressApp…",
@@ -1941,7 +1955,7 @@
     "createListing": {
       "leave_at": "Оставить в",
       "to_encourage_neighbours_to_meet": "чтобы вы могли познакомиться с соседями — ноль упаковки, ноль выбросов, плюс вы можете найти друга с отличным вкусом. Добавляйте плату только за доставку.",
-      "prefer_local_pickup": "🌱 Предпочитаю самовывоз"
+      "prefer_local_pickup": "Предпочитаю самовывоз"
     },
     "marketplace": {
       "nothing_to_sync_no_closet": "Нечего синхронизировать — ни для одной вещи не задано намерение продажи.",
@@ -2055,6 +2069,8 @@
   "floater": {
     "done": "Всё готово",
     "analysingGroup": "Анализ группы...",
+    "analyzing": "Анализ {{n}}/{{m}} предметов",
+    "analyzingPhotos": "Анализ {{count}} фото",
     "polishing": "Обработка {{n}}/{{m}} фото",
     "polishingMore_one": "Обработка {{count}} фото",
     "polishingMore_other": "Обработка {{count}} фото"
@@ -2197,6 +2213,7 @@
   "help": {
     "title": "DressApp: Моя гардеробная книга DressApp",
     "subtitle": "Супер простое руководство по управлению одеждой",
+    "geminiKeyStep": "A Gemini API Key. Get it for free on <a href=\"https://aistudio.google.com/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary hover:underline font-semibold\">Google AI Studio</a>.",
     "overview_title": "Обзор",
     "overview_p1": "Добро пожаловать в DressApp! Это современное приложение, которое позволит вам создать свой собственный цифровой гардероб для одежды.",
     "overview_p2": "Представьте, что вы фотографируете все свои рубашки, брюки, юбки и туфли и складываете их в волшебную книгу. Как только они окажутся внутри, профессиональный и опытный стилист осмотрит вашу одежду, узнает погоду на улице и поможет выбрать, что надеть на любой случай!",
@@ -2336,6 +2353,14 @@
     "shopping_assistant_step4": "Он проверяет ваши **размеры тела**, хранящиеся в данных вашего профиля.",
     "shopping_assistant_step5": "Он рекомендует вам лучший размер, подчеркивая соответствие размера.",
     "shopping_assistant_step6": "Нажмите **Добавить в шкаф**, чтобы импортировать черновик товара прямо в приложение.",
+    "import_wardrobe_title": "Импорт гардероба",
+    "import_wardrobe_p1": "Уже ведёте гардероб в другом приложении? Импортируйте свои вещи в DressApp всего за несколько кликов. Мы поддерживаем импорт из широкого спектра популярных приложений для гардероба и планирования образов.",
+    "import_wardrobe_step1": "Откройте страницу **Шкаф** в DressApp.",
+    "import_wardrobe_step2": "Нажмите кнопку **Импорт** (или найдите опцию импорта в меню).",
+    "import_wardrobe_step3": "Выберите приложение, из которого импортируете (например, Cladwell, Stylebook, Acloset, SmartCloset или файл CSV).",
+    "import_wardrobe_step4": "Следуйте инструкциям на экране, чтобы экспортировать данные из старого приложения и загрузить их в DressApp.",
+    "import_wardrobe_step5": "DressApp автоматически классифицирует и организует ваши импортированные вещи.",
+    "import_wardrobe_step6": "Проверьте свои вещи и при необходимости скорректируйте категории. Ваш гардероб готов!",
     "scheduler_push_title": "Утреннее расписание и push-уведомления",
     "scheduler_push_p1": "Начните свой день с автоматических рекомендаций по стилю, соответствующих погоде, которые будут доставлены прямо на ваше устройство.",
     "scheduler_push_step1": "Перейдите в **Настройки профиля**.",
@@ -2697,7 +2722,36 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "Импортировать существующий гардероб?",
+    "welcomeSub": "Уже есть цифровой гардероб в другом приложении? Мы можем перенести вашу одежду, чтобы вам не приходилось начинать с нуля.",
+    "noStartFresh": "Нет, начать с нуля",
+    "yesImportBtn": "Да, импортировать мой гардероб",
+    "selectAppTitle": "Из какого приложения вы переходите?",
+    "selectAppSub": "Выберите предыдущее приложение гардероба или введите пользовательское имя ниже.",
+    "screenshotPipelineTitle": "Пайплайн захвата экрана готов",
+    "screenshotPipelineSub": "DressApp будет захватывать карточки одежды из гардероба конкурента через захват экрана. API-ключи или экспорт данных не требуются.",
+    "connectToAppTitle": "Подключиться к {{appName}}",
+    "bookmarkletInstallInstructions": "Перетащите закладку DressApp Agent на панель закладок, затем войдите в {{appName}} и перейдите на страницу вашего гардероба.",
+    "bookmarkletInstallInstructionsMobile": "Нажмите ниже, чтобы скопировать закладку, затем создайте новую закладку и вставьте её как URL:",
+    "bookmarkletClickTip": "Нажмите на закладку на странице конкурента, чтобы начать захват.",
+    "bookmarkletLongPressTip": "Нажмите и удерживайте эту кнопку, чтобы добавить в закладки.",
+    "bookmarkletMobileInstruction": "Нажмите на меню ⋮ с тремя точками в браузере, затем нажмите \"Закладки\", чтобы сохранить эту страницу.",
+    "bookmarkletMobileSaveTip": "Нажмите для копирования → Меню ⋮ → Закладки → + → вставьте как URL",
+    "bookmarkletCopied": "Закладка скопирована! Создайте новую закладку и вставьте её как URL.",
+    "copyFailed": "Не удалось скопировать. Скопируйте закладку вручную.",
+    "bookmarkletBtn": "DressApp Агент",
+    "dragTip": "Перетащите это на панель закладок",
+    "longPressTip": "Нажмите и удерживайте кнопку выше, чтобы добавить в закладки",
+    "bookmarkletUsageInstructions": "После установки нажмите \"Импортировать гардероб\" ниже для инициализации. Войдите в {{appName}}, перейдите на страницу гардероба, затем нажмите закладку \"DressApp Agent\".",
+    "garmentVisionReady": "Агентное поглощение готово",
+    "importWardrobeBtn": "Импортировать гардероб",
+    "mattingNotice": "Обработка всех ресурсов выполняется GarmentVision.",
+    "tabSleepAlert": "Оповещение о засыпании вкладки: Не переключайте вкладки в окне конкурента во время импорта (Chrome будет замедлять/останавливать прокрутку).",
+    "proTip": "Про-совет: Перетащите вкладку конкурента из окна браузера в отдельное окно, чтобы она оставалась в фокусе во время многозадачности!",
+    "saving": "Сохранение {{count}} предметов в ваш гардероб...",
+    "saved": "{{count}} предметов сохранено. Стилист анализирует их — детали обновляются автоматически.",
+    "error": "Миграция не удалась. Пожалуйста, попробуйте снова."
   },
   "login_reminder": {
     "newTitle": "Ваш гардероб пуст — Добавьте первую вещь!",
@@ -2707,5 +2761,18 @@
     "helpDocLink": "Узнайте, как добавлять одежду в DressApp",
     "letsStart": "Начать",
     "migrateBtn": "Мигрировать"
+  },
+  "aiNotice": {
+    "geminiKeyRequired": "Вы должны ввести свой ключ Google AI Gemini",
+    "geminiKeyDescription": "Вы должны настроить свой ключ Google AI Gemini API. Вы можете получить ключ в Google AI Studio.",
+    "configureKey": "Настроить ключ"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "description": "DressApp Terms of Service — rules and conditions for using our app."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "DressApp privacy policy — how we collect, use, and protect your data."
   }
 }

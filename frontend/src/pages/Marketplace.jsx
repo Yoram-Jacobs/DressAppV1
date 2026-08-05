@@ -27,8 +27,7 @@ import { useMarketplaceProgress } from '@/lib/useMarketplaceProgress';
 import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
 import { useCachedList } from '@/lib/createCachedStore';
 import { toast } from 'sonner';
-import { ScrollToTop } from '@/components/ScrollToTop';
-
+import market5 from '@/assets/img/market5.png';
 const fmt = (cents, cur = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format((cents || 0) / 100);
 
@@ -136,164 +135,207 @@ export default function Marketplace() {
   }, [JSON.stringify(browseParams)]);
 
   return (
-    <div className="container-px max-w-6xl mx-auto pt-6 md:pt-10">
-      <div className="flex items-end justify-between mb-6">
-        <div>
-          <div className="caps-label text-muted-foreground">{t('market.title')}</div>
-          <h1 className="font-display text-3xl sm:text-4xl mt-1">{t('market.hero')}</h1>
-        </div>
-        <Button asChild className="rounded-xl" data-testid="marketplace-create-listing">
-          <Link to="/market/create"><Plus className="h-4 w-4 me-2" /> {t('market.createListing')}</Link>
-        </Button>
-      </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="rounded-xl" data-testid="marketplace-tabs">
-          <TabsTrigger value="browse" data-testid="marketplace-tab-browse">{t('market.browse')}</TabsTrigger>
-          <TabsTrigger value="mine" data-testid="marketplace-tab-mine">{t('market.myListings')}</TabsTrigger>
-          <TabsTrigger value="tx" data-testid="marketplace-tab-transactions">{t('market.transactionsTab')}</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="browse" className="mt-4">
-          <div className="flex flex-wrap gap-2 mb-4">
-            <Select value={filters.source} onValueChange={(v) => setFilters((f) => ({ ...f, source: v }))}>
-              <SelectTrigger className="w-[140px] rounded-xl" data-testid="market-source-select"><SelectValue /></SelectTrigger>
-              <SelectContent>{SOURCES.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {_INTENT_VALUES.has(s) ? labelForIntent(s, t) : labelForSource(s, t)}
-                </SelectItem>
-              ))}</SelectContent>
-            </Select>
-            <Select value={filters.category} onValueChange={(v) => setFilters((f) => ({ ...f, category: v }))}>
-              <SelectTrigger className="w-[140px] rounded-xl" data-testid="market-category-select"><SelectValue /></SelectTrigger>
-              <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{labelForCategory(c, t)}</SelectItem>)}</SelectContent>
-            </Select>
-            {loc?.coords ? (
-              <Select
-                value={filters.radius}
-                onValueChange={(v) => setFilters((f) => ({ ...f, radius: v }))}
-              >
-                <SelectTrigger
-                  className="w-[160px] rounded-xl"
-                  data-testid="market-radius-select"
-                >
-                  <MapPin className="h-3.5 w-3.5 me-1 text-[hsl(var(--accent))]" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {RADIUS_OPTIONS.map((r) => (
-                    <SelectItem key={r} value={r}>
-                      {r === 'any'
-                        ? t('market.anyDistance')
-                        : t('market.radiusKm', { km: r })}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <Badge
-                variant="outline"
-                className="text-[11px] rounded-full bg-card"
-                data-testid="market-location-hint"
-              >
-                <MapPin className="h-3 w-3 me-1" />
-                {t('market.needLocationForNearby')}
-              </Badge>
-            )}
+    <>
+      {/* banner-start */}
+      <section className="closet-banner">
+        <div className="container-fluid">
+          <div className="closet-banner__content">
+            <div className="closet-banner__title-row">
+              <h1 className="hero-title">{t('market.hero')}</h1>
+              <p className="hero-description">Discover pre-loved fashion, list your wardrobe, or connect with nearby buyers and sellers. Shop smarter, earn from your closet, and embrace sustainable style—all in one marketplace.</p>
+            </div>
           </div>
-
-          {/* Phase Z2.4 — show skeletons while the stream is in
-              flight AND we haven't received any item yet. Once the
-              first card lands, we paint the grid progressively so
-              the user feels the stream working. */}
-          {(loading || (browseProgress.running && items.length === 0)) && (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i}><Skeleton className="aspect-[3/4] w-full rounded-[calc(var(--radius)+6px)]" /></div>
-              ))}
+        </div>
+      </section>
+      <section className='market-secstart'>
+        <div className="container-fluid">
+          <div className='markethead'>
+            <h2>{t('market.title')}</h2>
+          </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <div className='row align-items-center gx-3 gy-3'>
+              <div className='col-md-9'>
+                <TabsList data-testid="marketplace-tabs" className="market-tabs-list">
+                  <TabsTrigger value="browse" data-testid="marketplace-tab-browse" className="market-tab-trigger">
+                    <i className="fa-solid fa-store"></i> {t('market.browse')}
+                  </TabsTrigger>
+                  <TabsTrigger value="mine" data-testid="marketplace-tab-mine" className="market-tab-trigger">
+                    <i className="fa-solid fa-shirt"></i> {t('market.myListings')}
+                  </TabsTrigger>
+                  <TabsTrigger value="tx" data-testid="marketplace-tab-transactions" className="market-tab-trigger">
+                    <i className="fa-solid fa-receipt"></i> {t('market.transactionsTab')}
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+              <div className='col-md-3 text-end'>
+                <div className="topaligntab">
+                  <Link to="/market/create" asChild data-testid="marketplace-create-listing" className='custm-btn'><i className="fa-solid fa-plus me-2"></i>{t('market.createListing')}</Link>
+                </div>
+              </div>
             </div>
-          )}
+            <TabsContent value="browse">
+              <div className="row gx-3 gy-3">
+                <div className="col-md-3 col-lg-2">
+                  <div className="market-filter-panel">
+                    <div className="market-filter-title">
+                      <i className="fa-solid fa-sliders"></i> {t('market.filters', { defaultValue: 'Filters' })}
+                    </div>
 
-          {/* Empty-state guard now also excludes "stream hasn't
-              finished yet" so the user doesn't see a flash of
-              "No matching listings" while the first card is still
-              en-route. */}
-          {!loading && !browseProgress.running && items.length === 0 && (
-            <div className="text-center py-16" data-testid="marketplace-empty-state">
-              <h2 className="font-display text-2xl">{t('market.noMatching')}</h2>
-              <p className="text-sm text-muted-foreground mt-2">{t('market.noMatchingSub')}</p>
-            </div>
-          )}
+                    <div className="market-filter-group">
+                      <label className="market-filter-label">{t('market.source', { defaultValue: 'Source' })}</label>
+                      <Select value={filters.source} onValueChange={(v) => setFilters((f) => ({ ...f, source: v }))}>
+                        <SelectTrigger className="closet-filter-select" data-testid="market-source-select"><SelectValue /></SelectTrigger>
+                        <SelectContent>{SOURCES.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {_INTENT_VALUES.has(s) ? labelForIntent(s, t) : labelForSource(s, t)}
+                          </SelectItem>
+                        ))}</SelectContent>
+                      </Select>
+                    </div>
 
-          {!loading && items.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" data-testid="marketplace-grid">
-              {items.map((l) => (
-                <Link key={l.id} to={`/market/${l.id}`} data-testid="marketplace-item-card">
-                  <Card className="rounded-[calc(var(--radius)+6px)] overflow-hidden shadow-editorial hover:shadow-editorial-md transition-shadow">
-                    <AspectRatio ratio={3 / 4} className="bg-secondary">
-                      {(l.images || [])[0]
-                        ? <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover" />
-                        : <div className="w-full h-full flex items-center justify-center text-muted-foreground caps-label">{t('market.noImage')}</div>}
-                    </AspectRatio>
-                    <CardContent className="p-3 space-y-2.5">
-                      {/* Brand & Title */}
-                      <div className="min-w-0">
-                        {l.brand && <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{l.brand}</div>}
-                        <div className="font-medium text-sm truncate text-foreground">{l.title}</div>
-                      </div>
+                    <div className="market-filter-group">
+                      <label className="market-filter-label">{t('market.category', { defaultValue: 'Category' })}</label>
+                      <Select value={filters.category} onValueChange={(v) => setFilters((f) => ({ ...f, category: v }))}>
+                        <SelectTrigger className="closet-filter-select" data-testid="market-category-select"><SelectValue /></SelectTrigger>
+                        <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{labelForCategory(c, t)}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
 
-                      {/* Common Region: Price, Size, Condition, Intent badge */}
-                      <div className="p-2 rounded-xl bg-secondary/35 border border-border/50 space-y-1.5 shadow-sm">
-                        <div className="flex items-center justify-between gap-1.5">
-                          <span className="font-display text-base text-foreground font-bold">
-                            {fmt(
-                              l.financial_metadata?.list_price_cents,
-                              l.financial_metadata?.currency || l.currency,
-                            )}
-                            {l.mode === 'rent' && ` / ${t('common.day', { defaultValue: 'day' })}`}
-                          </span>
-                          <SourceTagBadge source={l.source} mode={l.mode} className="hidden md:inline-flex" />
+                    <div className="market-filter-group">
+                      <label className="market-filter-label">{t('market.distance', { defaultValue: 'Distance' })}</label>
+                      {loc?.coords ? (
+                        <Select
+                          value={filters.radius}
+                          onValueChange={(v) => setFilters((f) => ({ ...f, radius: v }))}
+                        >
+                          <SelectTrigger className="closet-filter-select" data-testid="market-radius-select">
+                            <MapPin className="h-3.5 w-3.5 me-1 text-[hsl(var(--accent))]" />
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {RADIUS_OPTIONS.map((r) => (
+                              <SelectItem key={r} value={r}>
+                                {r === 'any' ? t('market.anyDistance') : t('market.radiusKm', { km: r })}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="market-location-badge"
+                          data-testid="market-location-hint"
+                        >
+                          <MapPin className="h-3 w-3 me-1" />
+                          {t('market.needLocationForNearby')}
+                        </Badge>
+                      )}
+                    </div>
+
+                    {(filters.source !== 'all' || filters.category !== 'all' || filters.radius !== 'any') && (
+                      <button
+                        type="button"
+                        className="market-filter-reset"
+                        onClick={() => setFilters(INITIAL_FILTERS)}
+                      >
+                        {t('market.clearFilters', { defaultValue: 'Clear all filters' })}
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="col-md-9 col-lg-10">
+                  {!loading && items.length > 0 && (
+                    <div className="row gx-3 gy-4" data-testid="marketplace-grid">
+                      {items.map((l) => (
+                        <div className="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12" key={l.id}>
+                          <Link to={`/market/${l.id}`} className="market-card-link" data-testid="marketplace-item-card">
+                            <div className="card market-card">
+                              <div className="market-card-image">
+                                {(l.images || [])[0] ? (
+                                  <img src={l.images[0]} alt={l.title} />
+                                ) : (
+                                  <div className="no-image">
+                                    <i className="fa-solid fa-image"></i>
+                                    <span>{t("market.noImage")}</span>
+                                  </div>
+                                )}
+                                <div className="market-card-badge">
+                                  <SourceTagBadge source={l.source} mode={l.mode} />
+                                </div>
+                                {l.condition && (
+                                  <span className="market-card-condition">
+                                    {t(`taxonomy.condition.${l.condition}`)}
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="card-body">
+                                <div className="market-card-top">
+                                  {l.brand && <span className="market-brand">{l.brand}</span>}
+                                  {l.size && <span className="market-size">{t("addItem.size")} {l.size}</span>}
+                                </div>
+
+                                <h4 className="market-title">{l.title}</h4>
+
+                                <div className="market-price-row">
+                                  <span className="market-price">
+                                    {fmt(l.financial_metadata?.list_price_cents, l.financial_metadata?.currency || l.currency)}
+                                    {l.mode === "rent" && <span className="market-price-unit">/{t("common.day")}</span>}
+                                  </span>
+                                  <span className="market-net">
+                                    {t("market.netShort", {
+                                      amount: fmt(l.financial_metadata?.estimated_seller_net_cents, l.financial_metadata?.currency || l.currency),
+                                    })}
+                                  </span>
+                                </div>
+
+                                {typeof l.distance_km === "number" && (
+                                  <div className="market-distance">
+                                    <MapPin size={12} />
+                                    {t("market.distanceKmAway", { km: l.distance_km })}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </Link>
                         </div>
-                        
-                        <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-                          <span className="truncate">{l.size ? `${t('addItem.size')}: ${l.size}` : ''}</span>
-                          <span className="capitalize">{l.condition ? t(`taxonomy.condition.${l.condition}`, { defaultValue: l.condition }) : ''}</span>
+                      ))}
+                    </div>
+                  )}
+                  {(loading || (browseProgress.running && items.length === 0)) && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <div key={i}><Skeleton className="aspect-[3/4] w-full rounded-[calc(var(--radius)+6px)]" /></div>
+                      ))}
+                    </div>
+                  )}
+                  {!loading && !browseProgress.running && items.length === 0 && (
+                    <div className="card closet-empty-card" data-testid="marketplace-empty-state">
+                      <div className='card-body'>
+                        <div className="closet-empty-card__visual">
+                          <img src={market5} />
+                        </div>
+                        <div className="closet-empty-card__content">
+                          <div className='text-center'>
+                            <h2>{t('market.noMatching')}</h2>
+                            <p>{t('market.noMatchingSub')}</p>
+                          </div>
                         </div>
                       </div>
-
-                      {/* Proximity & Seller Net */}
-                      <div className="flex items-center justify-between pt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
-                        {typeof l.distance_km === 'number' ? (
-                          <span className="inline-flex items-center gap-0.5 truncate max-w-[50%]">
-                            <MapPin className="h-2.5 w-2.5 text-[hsl(var(--accent))]" />
-                            {t('market.distanceKmAway', { km: l.distance_km })}
-                          </span>
-                        ) : <span />}
-                        <span className="truncate">
-                          {t('market.netShort', {
-                            amount: fmt(
-                              l.financial_metadata?.estimated_seller_net_cents,
-                              l.financial_metadata?.currency || l.currency,
-                            ),
-                          })}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="mine"><MyListings /></TabsContent>
-        <TabsContent value="tx"><InlineTransactions /></TabsContent>
-      </Tabs>
-      <ScrollToTop />
-    </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+            <TabsContent value="mine"><MyListings /></TabsContent>
+            <TabsContent value="tx"><InlineTransactions /></TabsContent>
+          </Tabs>
+        </div>
+      </section>
+    </>
   );
 }
-
+// my-listings tab content
 function MyListings() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -303,7 +345,6 @@ function MyListings() {
   // consistently.
   const { backfill: backfillProgress, streamBackfill } = useMarketplaceProgress();
   const syncing = !!backfillProgress.running;
-
   // Filter object that drives the cached store. The same shape was
   // used in the prewarm at AppLayout boot — passing the exact same
   // ``{seller_id}`` here means the page paints from cache instantly.
@@ -311,13 +352,11 @@ function MyListings() {
     () => (user?.id ? { seller_id: user.id } : null),
     [user?.id],
   );
-
   // useCachedList tolerates a missing user (filters=null short-circuits
   // to an empty cache slot) so we don't have to gate the hook call.
   const { items, loading } = useCachedList(myListingsStore, sellerFilters || {}, {
     revalidateOnMount: !!sellerFilters,
   });
-
   // Hard-delete the listing AND reset the linked closet item back to
   // private/own (handled atomically on the backend). The closet card
   // flips to "Private" on next render so the user gets immediate
@@ -339,7 +378,6 @@ function MyListings() {
       setRemovingId(null);
     }
   };
-
   // One-shot rescue for users whose closet items have a
   // marketplace_intent set (swap/donate/for_sale) but never made it
   // to the marketplace — typically because they pre-date the
@@ -405,18 +443,13 @@ function MyListings() {
   if (loading) return <div className="py-10 caps-label text-muted-foreground">{t('market.loading')}</div>;
 
   return (
-    <div className="space-y-4">
-      {/* Top bar: sync rescue button + count */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="text-sm text-muted-foreground flex items-center gap-3" data-testid="my-listings-count">
-          <span>
+    <div className="market-mylistings">
+      {/* Heading row: count on the left, contextual sync action on the right */}
+      <div className="market-mylistings-heading">
+        <div className="market-mylistings-heading-left">
+          <span className="market-mylistings-count">
             {t('market.myListingsCount', { count: items.length, defaultValue: `${items.length} listing${items.length === 1 ? '' : 's'}` })}
           </span>
-          {/* Phase Z2.4 — ambient streaming chip for the backfill
-              flow. Lives next to the count so it doesn't compete
-              with the primary "Sync" CTA on the right. Renders
-              nothing while idle and fades out automatically a few
-              seconds after completion. */}
           <StreamingProgressChip
             progress={backfillProgress}
             runningLabel={t('market.backfill.running', { defaultValue: 'Listing closet items… {{n}}/{{total}}', n: backfillProgress.scanned || 0, total: backfillProgress.total || '?' })}
@@ -441,49 +474,61 @@ function MyListings() {
             testId="market-backfill-chip"
           />
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="rounded-full"
+
+        <button
+          type="button"
+          className="market-sync-link"
           onClick={syncMarketplace}
           disabled={syncing}
           data-testid="sync-marketplace-btn"
         >
+          <i className={`fa-solid fa-rotate ${syncing ? 'fa-spin' : ''}`}></i>
           {syncing
             ? t('market.syncing', { defaultValue: 'Syncing…' })
             : t('market.syncMarketplace', { defaultValue: 'Sync from closet' })}
-        </Button>
+        </button>
       </div>
 
       {items.length === 0 ? (
-        <div className="py-10 text-sm text-muted-foreground">{t('market.noMyListings')}</div>
+        <div className="market-mylistings-empty">
+          <div className="market-empty-icon">
+            <i className="fa-solid fa-shirt"></i>
+          </div>
+          <h2>{t('market.noMyListings')}</h2>
+        </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" data-testid="market-my-listings-grid">
+        <div className="market-mylistings-grid" data-testid="market-my-listings-grid">
           {items.map((l) => (
-            <Card
+            <div
               key={l.id}
-              className="rounded-[calc(var(--radius)+6px)] overflow-hidden shadow-editorial group relative"
+              className="market-mylisting-card"
               data-testid={`my-listing-card-${l.id}`}
             >
-              <Link to={`/market/${l.id}`} className="block">
-                <AspectRatio ratio={3 / 4} className="bg-secondary">
-                  {(l.images || [])[0] ? <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover" /> : null}
-                </AspectRatio>
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="font-medium text-sm truncate">{l.title}</div>
-                    <SourceTagBadge source={l.source} mode={l.mode} className="hidden md:inline-flex" />
+              <Link to={`/market/${l.id}`} className="market-mylisting-link">
+                <div className="market-mylisting-image">
+                  {(l.images || [])[0] ? (
+                    <img src={l.images[0]} alt={l.title} />
+                  ) : (
+                    <div className="no-image">
+                      <i className="fa-solid fa-image"></i>
+                    </div>
+                  )}
+                  <div className="market-card-badge">
+                    <SourceTagBadge source={l.source} mode={l.mode} />
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
+                  <span className={`market-mylisting-status market-status-${(l.status || '').toLowerCase()}`}>
                     {l.status}
-                  </div>
-                </CardContent>
+                  </span>
+                </div>
+                <div className="market-mylisting-body">
+                  <div className="market-mylisting-title">{l.title}</div>
+                </div>
               </Link>
-              <div className="px-3 pb-3">
+              <div className="market-mylisting-footer">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full rounded-lg text-xs h-8 text-rose-700 hover:text-rose-800 hover:bg-rose-50"
+                  className="market-remove-btn"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -497,14 +542,14 @@ function MyListings() {
                     : t('market.removeListing', { defaultValue: 'Remove listing' })}
                 </Button>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       )}
     </div>
   );
 }
-
+// transactions tab content
 function InlineTransactions() {
   const { t } = useTranslation();
   const [tab, setTab] = useLocalStorageSync('dressapp.marketplace.inlineTab', 'buyer');
@@ -512,37 +557,82 @@ function InlineTransactions() {
     autoRefresh: true,
   });
   return (
-    <div className="pt-2">
-      <div className="flex gap-2 mb-4">
-        {['buyer', 'seller'].map((role) => (
-          <Button key={role} size="sm" variant={tab === role ? 'default' : 'secondary'}
-            onClick={() => setTab(role)} className="rounded-full capitalize" data-testid={`tx-tab-${role}`}>
-            {role === 'buyer' ? t('transactions.buyer') : t('transactions.seller')}
-          </Button>
-        ))}
+    <div className="market-tx">
+      <div className="market-tx-toolbar">
+        <Select value={tab} onValueChange={setTab}>
+          <SelectTrigger className="market-tx-select" data-testid="tx-role-select">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="buyer" data-testid="tx-tab-buyer">
+              {t('transactions.buyer')}
+            </SelectItem>
+            <SelectItem value="seller" data-testid="tx-tab-seller">
+              {t('transactions.seller')}
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-      {loading ? <div className="caps-label text-muted-foreground">{t('market.loading')}</div>
-        : items.length === 0 ? <div className="text-sm text-muted-foreground">{t('market.noTx')}</div>
-        : (
-          <div className="space-y-3" data-testid="tx-list">
-            {items.map((tx) => (
-              <Card key={tx.id} className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div>
-                    <div className="font-medium text-sm">{t('transactions.listingShort', { id: tx.listing_id.slice(0, 8) })}</div>
-                    <div className="text-xs text-muted-foreground">{tx.status} · {new Date(tx.created_at).toLocaleString()}</div>
-                  </div>
-                  <div className="text-end">
-                    <div className="font-display text-lg">{fmt(tx.financial?.gross_cents, tx.currency)}</div>
-                    <div className="text-[11px] text-muted-foreground">
-                      {t('market.platformFee')}: {fmt(tx.financial?.platform_fee_cents, tx.currency)} · {t('market.sellerNet')}: {fmt(tx.financial?.seller_net_cents, tx.currency)}
+      {loading ? (
+        <div className="caps-label text-muted-foreground">{t('market.loading')}</div>
+      ) : items.length === 0 ? (
+        <div className="market-tx-empty">
+          <svg viewBox="0 0 200 160" className="market-tx-empty-illustration" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="100" cy="140" rx="70" ry="10" fill="var(--accent-beige)" />
+            <rect x="55" y="35" width="90" height="95" rx="10" fill="#ffffff" stroke="rgba(31,92,69,0.18)" strokeWidth="2" />
+            <line x1="70" y1="58" x2="130" y2="58" stroke="rgba(31,92,69,0.22)" strokeWidth="3" strokeLinecap="round" />
+            <line x1="70" y1="74" x2="120" y2="74" stroke="rgba(31,92,69,0.16)" strokeWidth="3" strokeLinecap="round" />
+            <line x1="70" y1="90" x2="125" y2="90" stroke="rgba(31,92,69,0.16)" strokeWidth="3" strokeLinecap="round" />
+            <line x1="70" y1="106" x2="105" y2="106" stroke="rgba(31,92,69,0.16)" strokeWidth="3" strokeLinecap="round" />
+            <circle cx="140" cy="112" r="26" fill="var(--primary-color)" />
+            <path d="M129 112 L137 120 L152 103" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <path d="M55 45 Q60 20 85 22" stroke="rgba(31,92,69,0.12)" strokeWidth="3" strokeLinecap="round" fill="none" />
+            <path d="M145 40 Q152 18 130 15" stroke="rgba(31,92,69,0.12)" strokeWidth="3" strokeLinecap="round" fill="none" />
+          </svg>
+          <h2>{t('market.noTx')}</h2>
+          <p>
+            {tab === 'buyer'
+              ? t('transactions.emptyBuyerSub', { defaultValue: 'Items you purchase will show up here.' })
+              : t('transactions.emptySellerSub', { defaultValue: 'Items you sell will show up here.' })}
+          </p>
+        </div>
+      ) : (
+        <div className="market-tx-table-wrap">
+          <table className="market-tx-table" data-testid="tx-list">
+            <thead>
+              <tr>
+                <th>{t('transactions.listingCol', { defaultValue: 'Listing' })}</th>
+                <th>{t('transactions.statusCol', { defaultValue: 'Status' })}</th>
+                <th>{t('transactions.dateCol', { defaultValue: 'Date' })}</th>
+                <th className="text-right">{t('transactions.amountCol', { defaultValue: 'Amount' })}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((tx) => (
+                <tr key={tx.id} data-testid={`tx-row-${tx.id}`}>
+                  <td className="market-tx-listing">
+                    #{tx.listing_id.slice(0, 8)}
+                  </td>
+                  <td>
+                    <span className={`market-tx-status-pill market-tx-status-${(tx.status || '').toLowerCase()}`}>
+                      {tx.status}
+                    </span>
+                  </td>
+                  <td className="market-tx-date">
+                    {new Date(tx.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </td>
+                  <td className="text-right">
+                    <div className="market-tx-amount">{fmt(tx.financial?.gross_cents, tx.currency)}</div>
+                    <div className="market-tx-fee">
+                      {t('market.sellerNet')} {fmt(tx.financial?.seller_net_cents, tx.currency)}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-{
+﻿{
   "brand": "DressApp",
   "nav": {
     "home": "Accueil",
@@ -60,7 +60,8 @@
     "share": "Partager",
     "time": "Heure",
     "unknownColor": "Autre",
-    "saved": "Enregistré"
+    "saved": "Enregistré",
+    "errorOccurred": "Une erreur s'est produite. Veuillez réessayer."
   },
   "auth": {
     "welcomeBack": "Bon retour",
@@ -987,6 +988,14 @@
     "saveProfile": "Save changes",
     "savedProfile": "Profile saved",
     "autofilledFromGoogle": "Auto-filled from Google — edit anytime.",
+    "syncGoogle": "Synchroniser le profil Google",
+    "syncGoogleFromSection": "Synchroniser depuis Google",
+    "googleConnectedSyncHint": "Connecté via Google — synchronisez pour remplir les champs vides depuis votre profil Google.",
+    "googleSyncContactHint": "Synchronisez le téléphone et l'adresse depuis votre compte Google.",
+    "googleSyncDemographicsHint": "Synchronisez le genre et la date de naissance depuis votre compte Google.",
+    "googleReConsentNeeded": "Google a besoin de votre autorisation pour accéder aux détails du profil. Vous serez redirigé vers Google pour accorder l'accès.",
+    "googleSyncSuccess": "Profil synchronisé avec succès.",
+    "googleSyncFailed": "Échec de la synchronisation.",
     "addressLine1Placeholder": "Commencez à saisir votre rue…",
     "cityPlaceholder": "Commencez à saisir votre ville…",
     "countryPlaceholder": "Choisissez ou saisissez votre pays…",
@@ -1092,7 +1101,11 @@
       "appFeeLabel": "Frais d'application accumulés",
       "appFeeDescription": "Frais de plateforme non payés accumulés suite à l'utilisation des crédits."
     },
-    "deleteAccountLink": "Delete my Account",
+    "importWardrobePill": "Importer la garde-robe",
+    "mobileDesktopGuide": "L'importation de la garde-robe est disponible sur la version bureau de DressApp. Veuillez ouvrir votre compte dans un navigateur bureau pour continuer.",
+    "deleteAccountLink": "Supprimer mon compte",
+    "privacyPolicy": "Politique de confidentialité",
+    "termsOfService": "Conditions d'utilisation",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
     "deleteWarning": "You are about to delete your account. This will permanently remove your profile, all your closet items (including photos and metadata), and all your saved outfits.",
@@ -1143,7 +1156,8 @@
     "upgradeAnnualBtn": "Passer à l'annuel",
     "inviteDesc": "Partagez DressApp avec vos amis et votre famille",
     "bookmarkletDesc": "Faites glisser le bouton ci-dessous vers votre barre de favoris. Sur mobile, ajoutez-le à vos favoris et nommez-le 'Assistant shopping DressApp'. Cliquez dessus sur n'importe quelle page produit.",
-    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings"
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
+    "privacyPolicy": "Privacy Policy"
   },
   "admin": {
     "title": "Admin",
@@ -1917,8 +1931,8 @@
       "propose_a_swap": "Proposer un échange",
       "this_donation_is_free_coordinate": "Ce don est gratuit. Voyez avec le donateur pour une remise en main propre ou l'expédition.",
       "well_email_the_lister_a": "Nous enverrons au vendeur un lien sécurisé. Aucun frais — les articles sont expédiés directement entre vous.",
-      "or_meet_locally_to_skip": "· Ou RDV sur place pour éviter les frais 🌱",
-      "local_pickup_preferred_no_shipping": "🌱 Retrait sur place privilégié — pas de frais d'expédition"
+      "or_meet_locally_to_skip": "· Ou RDV sur place pour éviter les frais",
+      "local_pickup_preferred_no_shipping": "Retrait sur place privilégié — pas de frais d'expédition"
     },
     "extensionConnect": {
       "connecting_to_dressapp_extension": "Connexion à l'extension DressApp…",
@@ -1941,7 +1955,7 @@
     "createListing": {
       "leave_at": "Déposer à",
       "to_encourage_neighbours_to_meet": "pour encourager les voisins à se rencontrer — zéro emballage, zéro émission, et peut-être un nouvel ami stylé. Ajoutez des frais si l'expédition est inévitable.",
-      "prefer_local_pickup": "🌱 Retrait sur place privilégié"
+      "prefer_local_pickup": "Retrait sur place privilégié"
     },
     "marketplace": {
       "nothing_to_sync_no_closet": "Rien à synchroniser — aucun article n'a d'intention de mise en vente.",
@@ -2055,6 +2069,8 @@
   "floater": {
     "done": "Tout est fait",
     "analysingGroup": "Analyse du groupe...",
+    "analyzing": "Analyse de {{n}}/{{m}} articles",
+    "analyzingPhotos": "Analyse de {{count}} photo",
     "polishing": "Optimisation de {{n}}/{{m}} photos",
     "polishingMore_one": "Optimisation de {{count}} photo",
     "polishingMore_other": "Optimisation de {{count}} photos"
@@ -2197,6 +2213,7 @@
   "help": {
     "title": "DressApp : Mon livre de placard DressApp",
     "subtitle": "Un guide très simple pour gérer vos vêtements et vos tenues",
+    "geminiKeyStep": "A Gemini API Key. Get it for free on <a href=\"https://aistudio.google.com/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary hover:underline font-semibold\">Google AI Studio</a>.",
     "overview_title": "Vue d'ensemble",
     "overview_p1": "Bienvenue sur DressApp ! Il s'agit d'une application de pointe qui vous permet de créer votre propre garde-robe numérique.",
     "overview_p2": "Imaginez prendre des photos de toutes vos chemises, pantalons, jupes et chaussures, et les mettre dans un livre magique. Une fois à l'intérieur, un styliste professionnel et expérimenté examine vos vêtements, vérifie la météo à l'extérieur et vous aide à choisir quoi porter pour toute occasion !",
@@ -2336,6 +2353,14 @@
     "shopping_assistant_step4": "Il vérifie vos **mesures corporelles** stockées dans les détails de votre profil.",
     "shopping_assistant_step5": "Il vous recommande la meilleure taille, en mettant en évidence la comparaison des ajustements.",
     "shopping_assistant_step6": "Cliquez sur **Ajouter au placard** pour importer le brouillon de l'article directement dans votre application.",
+    "import_wardrobe_title": "Importer votre garde-robe",
+    "import_wardrobe_p1": "Vous suivez déjà votre garde-robe dans une autre application ? Importez vos articles dans DressApp en quelques clics. Nous prenons en charge les imports d'une large gamme d'applications populaires de garde-robe et de planification d'outfits.",
+    "import_wardrobe_step1": "Ouvrez la page **Placard** dans DressApp.",
+    "import_wardrobe_step2": "Cliquez sur le bouton **Importer** (ou cherchez l'option d'importation dans le menu).",
+    "import_wardrobe_step3": "Sélectionnez l'application d'importation (par exemple, Cladwell, Stylebook, Acloset, SmartCloset ou un fichier CSV).",
+    "import_wardrobe_step4": "Suivez les instructions à l'écran pour exporter vos données de l'ancienne application et les télécharger dans DressApp.",
+    "import_wardrobe_step5": "DressApp classera et organisera automatiquement vos articles importés.",
+    "import_wardrobe_step6": "Vérifiez vos articles et ajustez les catégories si nécessaire. Votre garde-robe est maintenant prête !",
     "scheduler_push_title": "Programme du matin et alertes push",
     "scheduler_push_p1": "Commencez votre journée avec des recommandations de style automatiques et adaptées à la météo, envoyées directement sur votre appareil.",
     "scheduler_push_step1": "Accédez à vos **Paramètres de profil**.",
@@ -2697,7 +2722,36 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "Importer votre garde-robe existante ?",
+    "welcomeSub": "Vous avez déjà une garde-robe numérique sur une autre application ? Nous pouvons transférer vos vêtements pour que vous n'ayez pas à recommencer de zéro.",
+    "noStartFresh": "Non, recommencer de zéro",
+    "yesImportBtn": "Oui, importer ma garde-robe",
+    "selectAppTitle": "De quelle application venez-vous ?",
+    "selectAppSub": "Sélectionnez votre application de garde-robe précédente ou entrez un nom personnalisé ci-dessous.",
+    "screenshotPipelineTitle": "Pipeline de capture d'écran prête",
+    "screenshotPipelineSub": "DressApp capturera les fiches de vêtements de la garde-robe concurrente via capture d'écran. Aucune clé API ou exportation de données nécessaire.",
+    "connectToAppTitle": "Se connecter à {{appName}}",
+    "bookmarkletInstallInstructions": "Glissez le bookmarklet DressApp Agent dans votre Barre de signets, puis connectez-vous à {{appName}} et naviguez vers votre page de garde-robe.",
+    "bookmarkletInstallInstructionsMobile": "Appuyez ci-dessous pour copier le bookmarklet, puis créez un signet et collez-le en URL :",
+    "bookmarkletClickTip": "Cliquez sur le bookmarklet sur la page du concurrent pour commencer la capture.",
+    "bookmarkletLongPressTip": "Appuyez longuement sur ce bouton pour l'ajouter à vos signets.",
+    "bookmarkletMobileInstruction": "Appuyez sur le menu ⋮ à trois points dans votre navigateur, puis appuyez sur \"Signets\" pour enregistrer cette page.",
+    "bookmarkletMobileSaveTip": "Appuyez pour copier → Menu ⋮ → Signets → + → collez en URL",
+    "bookmarkletCopied": "Bookmarklet copié ! Créez un signet et collez-le en URL.",
+    "copyFailed": "Échec de la copie. Veuillez copier le bookmarklet manuellement.",
+    "bookmarkletBtn": "Agent DressApp",
+    "dragTip": "Glissez ceci dans votre Barre de signets",
+    "longPressTip": "Appuyez longuement sur le bouton ci-dessus pour ajouter aux signets",
+    "bookmarkletUsageInstructions": "Après l'installation, cliquez sur \"Importer la garde-robe\" ci-dessous pour initialiser. Connectez-vous à {{appName}}, allez à votre page de garde-robe, puis cliquez sur le bookmarklet \"DressApp Agent\".",
+    "garmentVisionReady": "Ingestion agentique prête",
+    "importWardrobeBtn": "Importer la garde-robe",
+    "mattingNotice": "Le traitement de tous les assets est assuré par GarmentVision.",
+    "tabSleepAlert": "Alerte de mise en veille de l'onglet : Ne changez pas d'onglet dans la fenêtre du concurrent pendant l'importation (Chrome mettra en veille/limitera le défilement).",
+    "proTip": "Astuce pro : Glissez l'onglet du concurrent hors de votre fenêtre de navigateur vers sa propre fenêtre pour le garder en focus pendant que vous multi-tâchez !",
+    "saving": "Enregistrement de {{count}} articles dans votre garde-robe...",
+    "saved": "{{count}} articles enregistrés. Le styliste les analyse — les détails se mettent à jour automatiquement.",
+    "error": "Échec de la migration. Veuillez réessayer."
   },
   "login_reminder": {
     "newTitle": "Votre garde-robe est vide — Ajoutez votre premier vêtement !",
@@ -2707,5 +2761,18 @@
     "helpDocLink": "Découvrez comment ajouter des vêtements dans DressApp",
     "letsStart": "C'est parti",
     "migrateBtn": "Migrer"
+  },
+  "aiNotice": {
+    "geminiKeyRequired": "Vous devez entrer votre clé Google AI Gemini",
+    "geminiKeyDescription": "Vous devez configurer votre clé API Google AI Gemini. Vous pouvez obtenir une clé sur Google AI Studio.",
+    "configureKey": "Configurer la clé"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "description": "DressApp Terms of Service — rules and conditions for using our app."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "DressApp privacy policy — how we collect, use, and protect your data."
   }
 }

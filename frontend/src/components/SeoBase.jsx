@@ -21,6 +21,8 @@ const ROUTE_KEYS = {
   '/admin':           'admin',
   '/me':              'me',
   '/trends':          'trends',
+  '/privacy':         'privacy',
+  '/terms':           'terms',
 };
 
 function routeKeyFor(pathname) {

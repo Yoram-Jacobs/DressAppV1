@@ -1,4 +1,4 @@
-{
+﻿{
   "brand": "DressApp",
   "nav": {
     "home": "ホーム",
@@ -60,7 +60,8 @@
     "share": "共有",
     "time": "時間",
     "unknownColor": "その他",
-    "saved": "保存されました"
+    "saved": "保存されました",
+    "errorOccurred": "エラーが発生しました。もう一度お試しください。"
   },
   "auth": {
     "welcomeBack": "おかえりなさい",
@@ -987,6 +988,14 @@
     "saveProfile": "変更を保存",
     "savedProfile": "プロフィールを保存しました",
     "autofilledFromGoogle": "Googleから自動入力されました — いつでも編集できます。",
+    "syncGoogle": "Googleプロフィールを同期",
+    "syncGoogleFromSection": "Google から同期",
+    "googleConnectedSyncHint": "Google 経由で接続済み — 同期して Google プロフィールから空のフィールドを自動入力します。",
+    "googleSyncContactHint": "Google アカウントから電話番号と住所を同期します。",
+    "googleSyncDemographicsHint": "Google アカウントから性別と生年月日を同期します。",
+    "googleReConsentNeeded": "Google がプロフィールの詳細にアクセスするにはあなたの許可が必要です。アクセスを許可するために Google にリダイレクトされます。",
+    "googleSyncSuccess": "プロフィールが正常に同期されました。",
+    "googleSyncFailed": "同期に失敗しました。",
     "addressLine1Placeholder": "番地・建物名を入力してください…",
     "cityPlaceholder": "市区町村を入力してください…",
     "countryPlaceholder": "国を選択または入力してください…",
@@ -1092,7 +1101,11 @@
       "appFeeLabel": "未払いのアプリ利用料",
       "appFeeDescription": "クレジット利用から発生した未払いのプラットフォーム手数料。"
     },
-    "deleteAccountLink": "Delete my Account",
+    "importWardrobePill": "ワードローブをインポート",
+    "mobileDesktopGuide": "ワードローブのインポートはDressAppのデスクトップ版で利用できます。続行するにはデスクトップブラウザでアカウントを開いてください。",
+    "deleteAccountLink": "アカウントを削除",
+    "privacyPolicy": "プライバシーポリシー",
+    "termsOfService": "利用規約",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
     "deleteWarning": "You are about to delete your account. This will permanently remove your profile, all your closet items (including photos and metadata), and all your saved outfits.",
@@ -1143,7 +1156,8 @@
     "upgradeAnnualBtn": "年間プランへ移行",
     "inviteDesc": "DressAppをお友達やご家族と共有しましょう",
     "bookmarkletDesc": "下のボタンをブックマークバーにドラッグします。モバイルの場合は、ブックマークに追加し、「DressAppショッピングアシスタント」と名前を付けます。商品ページを表示中にクリックします。",
-    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings"
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
+    "privacyPolicy": "Privacy Policy"
   },
   "admin": {
     "title": "管理",
@@ -1917,8 +1931,8 @@
       "propose_a_swap": "交換を提案",
       "this_donation_is_free_coordinate": "この寄付は無料です。直接会っての手渡し、または配送方法について出品者と調整してください。",
       "well_email_the_lister_a": "出品者に、安全な承認/拒否リンクをメールで送信します。手数料はかかりません。アイテムは直接やり取りされます。",
-      "or_meet_locally_to_skip": "· または直接会って手数料を節約 🌱",
-      "local_pickup_preferred_no_shipping": "🌱 直接手渡しを希望 — 配送料なし"
+      "or_meet_locally_to_skip": "· または直接会って手数料を節約",
+      "local_pickup_preferred_no_shipping": "直接手渡しを希望 — 配送料なし"
     },
     "extensionConnect": {
       "connecting_to_dressapp_extension": "DressApp拡張機能に接続中…",
@@ -1941,7 +1955,7 @@
     "createListing": {
       "leave_at": "置く場所",
       "to_encourage_neighbours_to_meet": "近所の人との出会いを促進するために。梱包ゼロ、排出ゼロ、そして素敵なセンスの友人ができるかもしれません。配送料がどうしても必要な場合のみ、手数料を追加してください。",
-      "prefer_local_pickup": "🌱 直接手渡しを希望"
+      "prefer_local_pickup": "直接手渡しを希望"
     },
     "marketplace": {
       "nothing_to_sync_no_closet": "同期するものがありません。マーケットプレイス出品設定がされているアイテムがありません。",
@@ -2055,6 +2069,8 @@
   "floater": {
     "done": "完了",
     "analysingGroup": "グループを分析中...",
+    "analyzing": "{{n}}/{{m}}個のアイテムを分析中",
+    "analyzingPhotos": "{{count}}枚の写真を分析中",
     "polishing": "{{n}}/{{m}}枚の写真を最適化中",
     "polishingMore_one": "{{count}}枚の写真を最適化中",
     "polishingMore_other": "{{count}}枚の写真を最適化中"
@@ -2197,6 +2213,7 @@
   "help": {
     "title": "DressApp: 私の DressApp クローゼット ブック",
     "subtitle": "服装と服装を管理するための超簡単ガイド",
+    "geminiKeyStep": "A Gemini API Key. Get it for free on <a href=\"https://aistudio.google.com/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary hover:underline font-semibold\">Google AI Studio</a>.",
     "overview_title": "概要",
     "overview_p1": "DressApp へようこそ!これは、独自のデジタル衣類クローゼットを構築できる最先端のアプリです。",
     "overview_p2": "シャツ、パンツ、スカート、靴をすべて写真に撮り、魔法の本に収めることを想像してみてください。店内に入ると、プロの経験豊富なスタイリストがあなたの服を見て、外の天気をチェックし、あらゆるシーンに合わせて何を着るか選ぶお手伝いをします。",
@@ -2336,6 +2353,14 @@
     "shopping_assistant_step4": "プロフィールの詳細に保存されている**身体測定値**をチェックします。",
     "shopping_assistant_step5": "フィット感の比較を強調しながら、あなたに最適なサイズを推奨します。",
     "shopping_assistant_step6": "[**クローゼットに追加**] をクリックして、アイテムの下書きをアプリに直接インポートします。",
+    "import_wardrobe_title": "ワードローブをインポート",
+    "import_wardrobe_p1": "別のアプリでワードローブを管理していますか？数クリックでアイテムをDressAppにインポートできます。多くの人気ワードローブ・コーディネートアプリからのインポートに対応しています。",
+    "import_wardrobe_step1": "DressAppの**クローゼット**ページを開きます。",
+    "import_wardrobe_step2": "**インポート**ボタンをクリックします（またはメニューからインポートオプションを選択）。",
+    "import_wardrobe_step3": "インポート元のアプリを選択します（例：Cladwell、Stylebook、Acloset、SmartCloset、またはCSVファイル）。",
+    "import_wardrobe_step4": "画面の指示に従って、古いアプリからデータをエクスポートし、DressAppにアップロードします。",
+    "import_wardrobe_step5": "DressAppがインポートされたアイテムを自動的に分類・整理します。",
+    "import_wardrobe_step6": "アイテムを確認し、必要に応じてカテゴリを調整します。ワードローブの準備が完了しました！",
     "scheduler_push_title": "朝のスケジュールとプッシュアラート",
     "scheduler_push_p1": "デバイスに直接配信される、天候に応じたスタイルの自動提案で 1 日を始めましょう。",
     "scheduler_push_step1": "**プロフィール設定**に移動します。",
@@ -2698,7 +2723,36 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "既存のワードローブをインポートしますか？",
+    "welcomeSub": "他のアプリにデジタルワードローブをお持ちですか？服を引き継げるので、ゼロからやり直す必要はありません。",
+    "noStartFresh": "いいえ、ゼロから始めます",
+    "yesImportBtn": "はい、ワードローブをインポートする",
+    "selectAppTitle": "どのアプリから移行しますか？",
+    "selectAppSub": "以前のワードローブアプリを選択するか、下にカスタム名を入力してください。",
+    "screenshotPipelineTitle": "スクリーンキャプチャパイプライン準備完了",
+    "screenshotPipelineSub": "DressAppはスクリーンキャプチャによって競合アプリのワードローブから衣類カードを取得します。APIキーもデータエクスポートも不要です。",
+    "connectToAppTitle": "{{appName}}に接続",
+    "bookmarkletInstallInstructions": "以下のDressApp Agentブックマークレットをブックマークバーにドラッグし、{{appName}}にログインしてクローゼットページに移動してください。",
+    "bookmarkletInstallInstructionsMobile": "下をタップしてブックマークレットをコピーし、新しいブックマークを作成してURLとして貼り付けしてください：",
+    "bookmarkletClickTip": "キャプチャを開始するには、競合ページでブックマークレットをクリックしてください。",
+    "bookmarkletLongPressTip": "このボタンを長押ししてブックマークに追加してください。",
+    "bookmarkletMobileInstruction": "ブラウザの⋮⋮メニューをタップし、「ブックマーク」をタップしてこのページを保存してください。",
+    "bookmarkletMobileSaveTip": "コピーするにはタップ → ⋮⋮メニュー → ブックマーク → + → URLとして貼り付け",
+    "bookmarkletCopied": "ブックマークレットをコピーしました！新しいブックマークを作成してURLとして貼り付けてください。",
+    "copyFailed": "コピーに失敗しました。ブックマークレットを手動でコピーしてください。",
+    "bookmarkletBtn": "DressApp エージェント",
+    "dragTip": "これをブックマークバーにドラッグ",
+    "longPressTip": "上のボタンを長押ししてブックマークに追加",
+    "bookmarkletUsageInstructions": "インストール後、下の「ワードローブをインポート」をクリックして初期化します。{{appName}}にログインし、クローゼットページに移動して、\"DressApp Agent\"ブックマークレットをクリックしてください。",
+    "garmentVisionReady": "エージェントインジェスション準備完了",
+    "importWardrobeBtn": "ワードローブをインポート",
+    "mattingNotice": "すべてのアセットのマッティングはGarmentVisionが処理します。",
+    "tabSleepAlert": "タブスリープアラート: インポート中に競合ウィンドウ内でタブを切り替えないでください（Chromeはスクローラーをスリープ/スロットルします）。",
+    "proTip": "プロのヒント: 競合タブをブラウザウィンドウから別のウィンドウにドラッグすると、マルチタスク中もフォーカスを維持できます！",
+    "saving": "{{count}}個のアイテムをクローゼットに保存中...",
+    "saved": "{{count}}個のアイテムが保存されました。スタイリストが分析中 — 詳細は自動的に更新されます。",
+    "error": "移行に失敗しました。もう一度お試しください。"
   },
   "login_reminder": {
     "newTitle": "クローゼットが空です — 最初の服を追加しましょう！",
@@ -2708,5 +2762,18 @@
     "helpDocLink": "DressAppでの服の追加方法を見る",
     "letsStart": "始める",
     "migrateBtn": "移行する"
+  },
+  "aiNotice": {
+    "geminiKeyRequired": "Google AI Geminiキーを入力してください",
+    "geminiKeyDescription": "Google AI Gemini APIキーを設定する必要があります。Google AI Studioでキーを取得できます。",
+    "configureKey": "キーを設定"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "description": "DressApp Terms of Service — rules and conditions for using our app."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "DressApp privacy policy — how we collect, use, and protect your data."
   }
 }

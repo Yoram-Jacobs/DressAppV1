@@ -1,4 +1,4 @@
-{
+﻿{
   "brand": "DressApp",
   "nav": {
     "home": "الرئيسية",
@@ -60,7 +60,8 @@
     "share": "مشاركة",
     "time": "الوقت",
     "unknownColor": "آخر",
-    "saved": "تم الحفظ"
+    "saved": "تم الحفظ",
+    "errorOccurred": "حدث خطأ. يرجى المحاولة مرة أخرى."
   },
   "auth": {
     "welcomeBack": "مرحبًا بعودتك",
@@ -987,6 +988,14 @@
     "saveProfile": "حفظ التغييرات",
     "savedProfile": "تم حفظ الملف الشخصي",
     "autofilledFromGoogle": "تم التعبئة تلقائيًا من Google — يمكنك التعديل في أي وقت.",
+    "syncGoogle": "مزامنة ملف تعريف Google",
+    "syncGoogleFromSection": "مزامنة من Google",
+    "googleConnectedSyncHint": "متصل عبر Google — قم بالمزامنة لملء الحقول الفارغة من ملف تعريف Google.",
+    "googleSyncContactHint": "مزامنة العنوان ورقم الهاتف من حسابك على Google.",
+    "googleSyncDemographicsHint": "مزامنة الجنس وتاريخ الميلاد من حسابك على Google.",
+    "googleReConsentNeeded": "يحتاج Google إلى إذنك للوصول إلى تفاصيل\"profile. سيتم إعادة توجيهك إلى Google لمنح الوصول.",
+    "googleSyncSuccess": "تمت مزامنة الملف الشخصي بنجاح.",
+    "googleSyncFailed": "فشلت المزامنة.",
     "professional": {
       "sectionTitle": "خبير أزياء محترف",
       "checkboxLabel": "أنا خبير أزياء محترف",
@@ -1092,7 +1101,11 @@
       "appFeeLabel": "رسوم التطبيق المتراكمة",
       "appFeeDescription": "رسوم المنصة غير المدفوعة المتراكمة من استخدام النقاط."
     },
-    "deleteAccountLink": "Delete my Account",
+    "importWardrobePill": "استيراد الخزانة",
+    "mobileDesktopGuide": "استيراد الخزانة متاح في نسخة سطح المكتب من DressApp. يرجى فتح حسابك في متصفح سطح المكتب للمتابعة.",
+    "deleteAccountLink": "احذف حسابي",
+    "privacyPolicy": "سياسة الخصوصية",
+    "termsOfService": "شروط الخدمة",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
     "deleteWarning": "You are about to delete your account. This will permanently remove your profile, all your closet items (including photos and metadata), and all your saved outfits.",
@@ -1143,7 +1156,8 @@
     "upgradeAnnualBtn": "ترقية سنوية",
     "inviteDesc": "شارك DressApp مع أصدقائك وعائلتك",
     "bookmarkletDesc": "اسحب الزر أدناه إلى شريط العلامات المرجعية. على الهاتف المحمول، أضفه إلى علاماتك المرجعية وسمه 'مساعد التسوق من DressApp'. انقر عليه عند تصفح أي صفحة منتج.",
-    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings"
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
+    "privacyPolicy": "Privacy Policy"
   },
   "admin": {
     "title": "الإدارة",
@@ -1917,8 +1931,8 @@
       "propose_a_swap": "اقتراح مقايضة",
       "this_donation_is_free_coordinate": "هذا التبرع مجاني. نسق مع المتبرع للمقابلة محليًا أو لترتيب الشحن مباشرة.",
       "well_email_the_lister_a": "سنرسل بريدًا إلكترونيًا إلى صاحب القائمة يتضمن رابط قبول / رفض آمن. لا توجد رسوم — يتم شحن العناصر مباشرة بينكما.",
-      "or_meet_locally_to_skip": "· أو قابل محلياً لتجاوز الرسوم 🌱",
-      "local_pickup_preferred_no_shipping": "🌱 يفضل الاستلام المحلي — لا توجد رسوم شحن"
+      "or_meet_locally_to_skip": "· أو قابل محلياً لتجاوز الرسوم",
+      "local_pickup_preferred_no_shipping": " يفضل الاستلام المحلي — لا توجد رسوم شحن"
     },
     "extensionConnect": {
       "connecting_to_dressapp_extension": "جارٍ الاتصال بـ DressApp Extension…",
@@ -1941,7 +1955,7 @@
     "createListing": {
       "leave_at": "اتركه في",
       "to_encourage_neighbours_to_meet": "لتشجيع الجيران على مقابلتك — صفر تغليف، صفر انبعاثات، بالإضافة إلى أنك قد تكسب صديقاً بذوق رائع. أضف رسومًا فقط إذا كان الشحن لا مفر منه.",
-      "prefer_local_pickup": "🌱 يفضل الاستلام المحلي"
+      "prefer_local_pickup": " يفضل الاستلام المحلي"
     },
     "marketplace": {
       "nothing_to_sync_no_closet": "لا يوجد شيء للمزامنة — لم يتم تحديد غرض السوق لأي من عناصر الخزانة.",
@@ -2055,6 +2069,8 @@
   "floater": {
     "done": "اكتمل العمل",
     "analysingGroup": "جاري تحليل المجموعة...",
+    "analyzing": "جارٍ تحليل {{n}}/{{m}} عناصر",
+    "analyzingPhotos": "جارٍ تحليل {{count}} صورة",
     "polishing": "جاري تحسين {{n}} من أصل {{m}} صور",
     "polishingMore_one": "جاري تحسين صورة واحدة",
     "polishingMore_other": "جاري تحسين {{count}} صور"
@@ -2197,6 +2213,7 @@
   "help": {
     "title": "كتاب خزانة DressApp",
     "subtitle": "دليل بسيط ومريح لإدارة ملابسك وتنسيقاتك الرقمية",
+    "geminiKeyStep": "A Gemini API Key. Get it for free on <a href=\"https://aistudio.google.com/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary hover:underline font-semibold\">Google AI Studio</a>.",
     "overview_title": "لمحة عامة",
     "overview_p1": "مرحباً بك في DressApp! هذا تطبيق متطور يتيح لك بناء خزانة ملابسك الرقمية الخاصة.",
     "overview_p2": "يمكنك التقاط صور لجميع القمصان والسراويل والتنانير والأحذية ووضعها في كتاب سحري. بمجرد دخولها، يقوم منسق أزياء محترف ومحترف بالاطلاع على ملابسك، والتحقق من الطقس في الخارج، ويساعدك في اختيار ما ترتديه لأي مناسبة!",
@@ -2336,6 +2353,14 @@
     "shopping_assistant_step4": "فهو يتحقق من **قياسات جسمك** المخزنة في تفاصيل ملفك الشخصي.",
     "shopping_assistant_step5": "فهو يوصي بالمقاس الأفضل بالنسبة لك، مع تسليط الضوء على المقارنة الملائمة.",
     "shopping_assistant_step6": "انقر **إضافة إلى الخزانة** لاستيراد مسودة العنصر مباشرة إلى تطبيقك.",
+    "import_wardrobe_title": "استيراد خزانة ملابسك",
+    "import_wardrobe_p1": "هل تتابع خزانة ملابسك في تطبيق آخر؟ استورد عناصرك إلى DressApp بنقرات قليلة فقط. نحن ندعم الاستيراد من مجموعة واسعة من تطبيقات خزانة الملابس وتنسيق الأزياء الشائعة.",
+    "import_wardrobe_step1": "افتح صفحة **الخزانة** في DressApp.",
+    "import_wardrobe_step2": "انقر على زر **استيراد** (أو ابحث عن خيار الاستيراد في القائمة).",
+    "import_wardrobe_step3": "اختر التطبيق الذي تستورد منه (مثل Cladwell أو Stylebook أو Acloset أو SmartCloset أو ملف CSV).",
+    "import_wardrobe_step4": "اتبع التعليمات التي تظهر على الشاشة لتصدير بياناتك من التطبيق القديم ورفعها إلى DressApp.",
+    "import_wardrobe_step5": "سيقوم DressApp تصنيف وتنظيم عناصرك المستوردة تلقائيًا.",
+    "import_wardrobe_step6": "راجع عناصرك وعدّل التصنيفات حسب الحاجة. خزانة ملابسك جاهزة الآن!",
     "scheduler_push_title": "الجدول الصباحي والتنبيهات الفورية",
     "scheduler_push_p1": "ابدأ يومك بتوصيات نمطية تلقائية ومناسبة للطقس يتم تسليمها مباشرة إلى جهازك.",
     "scheduler_push_step1": "انتقل إلى **إعدادات الملف الشخصي**.",
@@ -2697,7 +2722,36 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "هل تريد استيراد خزانة ملابسك الحالية؟",
+    "welcomeSub": "هل لديك خزانة رقمية على تطبيق آخر؟ يمكننا نقل ملابسك حتى لا تضطر للبدء من الصفر.",
+    "noStartFresh": "لا، ابدأ من جديد",
+    "yesImportBtn": "نعم، استورد خزانة ملابسي",
+    "selectAppTitle": "من أي تطبيق تأتي؟",
+    "selectAppSub": "اختر تطبيق الخزانة السابق أو أدخل اسمًا مخصصًا أدناه.",
+    "screenshotPipelineTitle": "خط التقاط الشاشة جاهز",
+    "screenshotPipelineSub": "ستلتقط DressApp بطاقات الملابس من خزانة التطبيق المنافس عبر التقاط الشاشة. لا حاجة لمفاتيح API أو تصدير البيانات.",
+    "connectToAppTitle": "الاتصال بـ {{appName}}",
+    "bookmarkletInstallInstructions": "اسحب أداة DressApp Agent أدناه إلى شريط الإشارات المرجعية، ثم سجّل الدخول إلى {{appName}} وانتقل إلى صفحة خزانتك.",
+    "bookmarkletInstallInstructionsMobile": "اضغط أدناه لنسخ الأداة، ثم أنشئ علامة مرجعية جديدة والصقها كعنوان:",
+    "bookmarkletClickTip": "انقر على الأداة في صفحة التطبيق المنافس لبدء الالتقاط.",
+    "bookmarkletLongPressTip": "اضغط مطولاً على هذا الزر لإضافته إلى إشاراتك المرجعية.",
+    "bookmarkletMobileInstruction": "اضغط على قائمة ⋮ النقاط الثلاث في متصفحك، ثم اضغط على \"الإشارات المرجعية\" لحفظ هذه الصفحة.",
+    "bookmarkletMobileSaveTip": "اضغط للنسخ → افتح قائمة ⋮ → الإشارات المرجعية → + → الصق كعنوان",
+    "bookmarkletCopied": "تم نسخ الأداة! أنشئ علامة مرجعية جديدة والصقها كعنوان.",
+    "copyFailed": "فشل النسخ. يرجى نسخ الأداة يدوياً.",
+    "bookmarkletBtn": "وكيل DressApp",
+    "dragTip": "اسحب هذا إلى شريط الإشارات المرجعية",
+    "longPressTip": "اضغط مطولاً على الزر أعلاه للإضافة إلى الإشارات المرجعية",
+    "bookmarkletUsageInstructions": "بعد التثبيت، انقر \"استورد الخزانة\" أدناه للتهيئة. سجّل الدخول إلى {{appName}}، انتقل إلى صفحة خزانتك، ثم انقر على أداة \"DressApp Agent\".",
+    "garmentVisionReady": "جاهز للامتصاص الذكي",
+    "importWardrobeBtn": "استورد الخزانة",
+    "mattingNotice": "يتم التعامل مع دمج جميع الأصول بواسطة GarmentVision.",
+    "tabSleepAlert": "تنبيه توقف علامة التبويب: لا تقم بتبديل علامات التبويب داخل نافذة التطبيق المنافس أثناء الاستيراد (سيتم إيقاف/تقليل التمرير في Chrome).",
+    "proTip": "نصيحة احترافية: اسحب علامة تبويب التطبيق المنافس من نافذة المتصفح إلى نافذة مستقلة للحفاظ على تشغيلها أثناء تنفيذ مهام متعددة!",
+    "saving": "جارٍ حفظ {{count}} عنصر في خزانتك...",
+    "saved": "تم حفظ {{count}} عنصر. يجري تحليلها من قبل المصمم — تُحدّث التفاصيل تلقائيًا.",
+    "error": "فشل النقل. يرجى المحاولة مرة أخرى."
   },
   "login_reminder": {
     "newTitle": "خزانتك فارغة — فلنضف عنصرك الأول!",
@@ -2707,5 +2761,18 @@
     "helpDocLink": "تعرف على كيفية إضافة الملابس في DressApp",
     "letsStart": "فلنبدأ",
     "migrateBtn": "نقل"
+  },
+  "aiNotice": {
+    "geminiKeyRequired": "يجب عليك إدخال مفتاح Google AI Gemini الخاص بك",
+    "geminiKeyDescription": "يجب عليك تكوين مفتاح Google AI Gemini API الخاص بك. يمكنك الحصول على مفتاح من Google AI Studio.",
+    "configureKey": "تكوين المفتاح"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "description": "DressApp Terms of Service — rules and conditions for using our app."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "DressApp privacy policy — how we collect, use, and protect your data."
   }
 }

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  Camera, Image as ImgIcon, Save, Trash2, Loader2, Sparkles,
+  Camera, Image as ImgIcon, Save, Trash2, Loader2, Sparkles, RefreshCw,
   User, MapPin, Fingerprint, Sliders, Ruler, Scissors, Briefcase, CreditCard, Palette, Bell
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -112,7 +112,7 @@ function PhotoSlot({ label, value, onChange, testid }) {
           <Button
             size="sm"
             variant="outline"
-            className="rounded-lg"
+            className="rounded-lg whitespace-nowrap"
             disabled={busy}
             onClick={() => cameraRef.current?.click()}
             data-testid={`profile-photo-${testid}-camera-btn`}
@@ -128,7 +128,7 @@ function PhotoSlot({ label, value, onChange, testid }) {
           <Button
             size="sm"
             variant="outline"
-            className="rounded-lg"
+            className="rounded-lg whitespace-nowrap"
             disabled={busy}
             onClick={() => inputRef.current?.click()}
             data-testid={`profile-photo-${testid}-upload-btn`}
@@ -312,6 +312,75 @@ export function ProfileDetailsCard() {
         },
       },
     }));
+    
+  const [syncingGoogle, setSyncingGoogle] = useState(false);
+
+  const syncGoogleProfile = async () => {
+    setSyncingGoogle(true);
+    try {
+      const res = await api.googleSyncProfile();
+      if (res.success) {
+        const newForm = {
+          ...form,
+          sex: res.sex || form.sex,
+          phone: res.phone || form.phone,
+          date_of_birth: res.date_of_birth || form.date_of_birth,
+          address: {
+            ...form.address,
+            line1: res.address?.line1 || form.address.line1,
+            line2: res.address?.line2 || form.address.line2,
+            city: res.address?.city || form.address.city,
+            region: res.address?.region || form.address.region,
+            postal_code: res.address?.postal_code || form.address.postal_code,
+            country: res.address?.country || form.address.country,
+          }
+        };
+        setForm(newForm);
+
+        // Auto-save the synchronized details to the database
+        const prune = (obj) =>
+          Object.fromEntries(
+            Object.entries(obj).filter(
+              ([, v]) => v !== '' && v !== null && v !== undefined,
+            ),
+          );
+        const payload = {
+          phone: newForm.phone || null,
+          date_of_birth: newForm.date_of_birth || null,
+          sex: newForm.sex || null,
+          address: prune(newForm.address),
+        };
+        const updated = await api.patchMe(payload);
+        updateUserLocal?.(updated);
+        baselineRef.current = JSON.stringify(newForm);
+
+        toast.success(t('profile.googleSyncSuccess', { defaultValue: 'Profile synced with Google successfully!' }));
+      }
+    } catch (err) {
+      const detail = err?.response?.data?.detail;
+      if (detail === 'missing_people_scopes') {
+        // People API scopes were not granted — prompt re-consent
+        toast.info(
+          t('profile.googleReConsentNeeded', {
+            defaultValue: 'Google needs your permission to access profile details. You will be redirected to Google to grant access.',
+          }),
+          { duration: 6000 },
+        );
+        try {
+          const { authorization_url } = await api.googleReConsent(false);
+          if (authorization_url) {
+            window.location.href = authorization_url;
+          }
+        } catch {
+          toast.error(t('profile.googleSyncFailed', { defaultValue: 'Failed to sync with Google.' }));
+        }
+      } else {
+        toast.error(detail || t('profile.googleSyncFailed', { defaultValue: 'Failed to sync with Google.' }));
+      }
+    } finally {
+      setSyncingGoogle(false);
+    }
+  };
 
   const isFemale = form.sex === 'female';
   const wUnit = form.units.weight === 'lb' ? 'lb' : 'kg';
@@ -351,9 +420,8 @@ export function ProfileDetailsCard() {
         return Math.round(val * 10) / 10;
       };
 
-      setForm((prev) => ({
-        ...prev,
-        body_measurements: {
+      setForm((prev) => {
+        const nextMeasurements = {
           ...prev.body_measurements,
           shoulders: convertVal(res.shoulders),
           chest: convertVal(res.chest),
@@ -361,8 +429,29 @@ export function ProfileDetailsCard() {
           sleeve: convertVal(res.sleeve),
           inseam: convertVal(res.inseam),
           outseam: convertVal(res.outseam),
-        },
-      }));
+        };
+        if (res.recommended_sizes) {
+          if (res.recommended_sizes.shirt_size) {
+            nextMeasurements.shirt_size = res.recommended_sizes.shirt_size;
+          }
+          if (res.recommended_sizes.pants_size) {
+            nextMeasurements.pants_size = res.recommended_sizes.pants_size;
+          }
+          if (res.recommended_sizes.shoe_size_us) {
+            nextMeasurements.shoe_size = res.recommended_sizes.shoe_size_us;
+          }
+          if (res.recommended_sizes.dress_size && res.recommended_sizes.dress_size !== 'N/A') {
+            nextMeasurements.dress_size = res.recommended_sizes.dress_size;
+          }
+          if (res.recommended_sizes.bra_size && res.recommended_sizes.bra_size !== 'N/A') {
+            nextMeasurements.bra_size = res.recommended_sizes.bra_size;
+          }
+        }
+        return {
+          ...prev,
+          body_measurements: nextMeasurements,
+        };
+      });
       setHasPredicted(true);
     } catch (err) {
       console.error("Prediction failed:", err);
@@ -409,6 +498,55 @@ export function ProfileDetailsCard() {
   const autofilledFromGoogle =
     !!user?.google_connected &&
     (!!user?.first_name || !!user?.last_name || !!user?.avatar_url);
+
+  const googleConnected = !!user?.google_connected;
+
+  const GoogleSyncBadge = ({ section }) => {
+    if (!googleConnected) return null;
+    const hintKey =
+      section === 'contact'
+        ? 'profile.googleSyncContactHint'
+        : 'profile.googleSyncDemographicsHint';
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-7 text-[11px] gap-1 rounded-full border-[hsl(var(--accent)/40)] hover:bg-[hsl(var(--accent)/5)] ms-auto shrink-0 whitespace-nowrap"
+        onClick={(e) => {
+          e.stopPropagation();
+          syncGoogleProfile();
+        }}
+        disabled={syncingGoogle}
+        title={t(hintKey)}
+      >
+        {syncingGoogle ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : (
+          <RefreshCw className="h-3 w-3" />
+        )}
+        {t('profile.syncGoogleFromSection', { defaultValue: 'Sync from Google' })}
+      </Button>
+    );
+  };
+
+  const GoogleSyncBanner = ({ section }) => {
+    if (!googleConnected) return null;
+    const hasData =
+      section === 'contact'
+        ? !!(form.phone || form.address.line1 || form.address.city)
+        : !!(form.sex || form.date_of_birth);
+    if (hasData) return null;
+    return (
+      <div className="flex items-center gap-2 p-3 rounded-xl bg-[hsl(217_91%_97%)] dark:bg-[hsl(217_30%_15%)] border border-[hsl(217_91%_85%)] dark:border-[hsl(217_30%_25%)] mb-3">
+        <Sparkles className="h-4 w-4 text-[hsl(217_91%_56%)] shrink-0" />
+        <span className="text-xs text-[hsl(217_91%_30%)] dark:text-[hsl(217_91%_75%)]">
+          {section === 'contact'
+            ? t('profile.googleConnectedSyncHint', { defaultValue: 'Connected via Google — sync to auto-fill empty fields from your Google profile.' })
+            : t('profile.googleConnectedSyncHint', { defaultValue: 'Connected via Google — sync to auto-fill empty fields from your Google profile.' })}
+        </span>
+      </div>
+    );
+  };
 
   const save = async () => {
     setBusy(true);
@@ -487,16 +625,34 @@ export function ProfileDetailsCard() {
             </div>
             <h3 className="font-display text-xl mt-0.5">{t('profile.title')}</h3>
           </div>
-          {autofilledFromGoogle && (
-            <Badge
-              variant="outline"
-              className="text-[11px] bg-card rounded-full"
-              data-testid="profile-google-autofill-badge"
-            >
-              <Sparkles className="h-3 w-3 me-1 text-[hsl(var(--accent))]" />
-              {t('profile.autofilledFromGoogle')}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {user?.google_connected && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5 rounded-full border-[hsl(var(--accent)/40)] hover:bg-[hsl(var(--accent)/5)]"
+                onClick={syncGoogleProfile}
+                disabled={syncingGoogle}
+              >
+                {syncingGoogle ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-3 w-3" />
+                )}
+                {t('profile.syncGoogle', { defaultValue: 'Sync Google Profile' })}
+              </Button>
+            )}
+            {autofilledFromGoogle && (
+              <Badge
+                variant="outline"
+                className="text-[11px] bg-card rounded-full"
+                data-testid="profile-google-autofill-badge"
+              >
+                <Sparkles className="h-3 w-3 me-1 text-[hsl(var(--accent))]" />
+                {t('profile.autofilledFromGoogle')}
+              </Badge>
+            )}
+          </div>
         </div>
 
         <Accordion
@@ -518,7 +674,7 @@ export function ProfileDetailsCard() {
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('profile.sections.identity')}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.sections.identityDesc', { defaultValue: 'Your name, email address, and date of birth' })}
                   </span>
                 </div>
@@ -572,21 +728,23 @@ export function ProfileDetailsCard() {
               className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
               data-testid="profile-accordion-contact"
             >
-              <div className="flex items-center gap-4 text-start">
+              <div className="flex items-center gap-4 text-start w-full">
                 <div className="p-2.5 rounded-xl bg-[hsl(174_44%_93%)] text-[hsl(174_44%_33%)] dark:bg-[hsl(174_30%_18%)] dark:text-[hsl(174_44%_60%)] shrink-0 transition-transform duration-200">
                   <MapPin className="h-5 w-5" />
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('profile.sections.contact')}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.sections.contactDesc', { defaultValue: 'Phone number, delivery address, and localization' })}
                   </span>
                 </div>
+                <GoogleSyncBadge section="contact" />
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
+              <GoogleSyncBanner section="contact" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label={t('profile.phone')} htmlFor="f-phone">
                   <Input
@@ -710,21 +868,23 @@ export function ProfileDetailsCard() {
               className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
               data-testid="profile-accordion-demographics"
             >
-              <div className="flex items-center gap-4 text-start">
+              <div className="flex items-center gap-4 text-start w-full">
                 <div className="p-2.5 rounded-xl bg-[hsl(18_78%_94%)] text-[hsl(18_78%_56%)] dark:bg-[hsl(18_30%_18%)] dark:text-[hsl(18_78%_70%)] shrink-0 transition-transform duration-200">
                   <Fingerprint className="h-5 w-5" />
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('profile.sections.demographics')}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.sections.demographicsDesc', { defaultValue: 'Gender, occupational background, and personal status' })}
                   </span>
                 </div>
+                <GoogleSyncBadge section="demographics" />
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
+              <GoogleSyncBanner section="demographics" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label={t('profile.sex')}>
                   <Select
@@ -809,7 +969,7 @@ export function ProfileDetailsCard() {
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('profile.sections.preferences')} — {t('profile.units')}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.sections.preferencesDesc', { defaultValue: 'Default measurement scales for sizes, lengths, and weights' })}
                   </span>
                 </div>
@@ -849,6 +1009,41 @@ export function ProfileDetailsCard() {
             </AccordionContent>
           </AccordionItem>
 
+          {/* --- Measurements --- */}
+          <AccordionItem value="measurements" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
+            <AccordionTrigger
+              className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+              data-testid="profile-accordion-measurements"
+            >
+              <div className="flex items-center gap-4 text-start">
+                <div className="p-2.5 rounded-xl bg-[hsl(142_71%_93%)] text-[hsl(142_71%_35%)] dark:bg-[hsl(142_30%_15%)] dark:text-[hsl(142_71%_55%)] shrink-0 transition-transform duration-200">
+                  <Ruler className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+                    {t('profile.sections.measurements')}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
+                    {t('profile.sections.measurementsDesc', { defaultValue: 'Garment sizing fits (height, chest, waist, and inseams)' })}
+                  </span>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
+              <MeasurementsGrid
+                form={form}
+                onChange={(k, v) => setNested('body_measurements', k, v)}
+                wUnit={wUnit}
+                lUnit={lUnit}
+                isFemale={isFemale}
+                isFreshStart={isFreshStart}
+                hasFilledBasic={hasFilledBasic}
+                predicting={predicting}
+                hasPredicted={hasPredicted}
+              />
+            </AccordionContent>
+          </AccordionItem>
+
           {/* --- Photos & Avatar --- */}
           <AccordionItem value="photos" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
             <AccordionTrigger
@@ -863,7 +1058,7 @@ export function ProfileDetailsCard() {
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('profile.sections.photosAvatar', { defaultValue: 'Photos & Avatar' })}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.sections.photosAvatarDesc', { defaultValue: 'Avatar model visual reference photos and body-render shape' })}
                   </span>
                 </div>
@@ -937,7 +1132,7 @@ export function ProfileDetailsCard() {
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('profile.styleProfile')}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.styleProfileDesc', { defaultValue: 'Aesthetics, color palette preferences, things to avoid, and conservativeness' })}
                   </span>
                 </div>
@@ -994,41 +1189,6 @@ export function ProfileDetailsCard() {
             </AccordionContent>
           </AccordionItem>
 
-          {/* --- Measurements --- */}
-          <AccordionItem value="measurements" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
-            <AccordionTrigger
-              className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
-              data-testid="profile-accordion-measurements"
-            >
-              <div className="flex items-center gap-4 text-start">
-                <div className="p-2.5 rounded-xl bg-[hsl(142_71%_93%)] text-[hsl(142_71%_35%)] dark:bg-[hsl(142_30%_15%)] dark:text-[hsl(142_71%_55%)] shrink-0 transition-transform duration-200">
-                  <Ruler className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
-                    {t('profile.sections.measurements')}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
-                    {t('profile.sections.measurementsDesc', { defaultValue: 'Garment sizing fits (height, chest, waist, and inseams)' })}
-                  </span>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
-              <MeasurementsGrid
-                form={form}
-                onChange={(k, v) => setNested('body_measurements', k, v)}
-                wUnit={wUnit}
-                lUnit={lUnit}
-                isFemale={isFemale}
-                isFreshStart={isFreshStart}
-                hasFilledBasic={hasFilledBasic}
-                predicting={predicting}
-                hasPredicted={hasPredicted}
-              />
-            </AccordionContent>
-          </AccordionItem>
-
           {/* --- Hair --- */}
           <AccordionItem value="hair" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
             <AccordionTrigger
@@ -1043,7 +1203,7 @@ export function ProfileDetailsCard() {
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('profile.sections.hair')}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.sections.hairDesc', { defaultValue: 'Hair length, type, style, and color properties' })}
                   </span>
                 </div>
@@ -1129,7 +1289,7 @@ export function ProfileDetailsCard() {
                       </Badge>
                     )}
                   </div>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.professional.sectionDesc', { defaultValue: 'Business approval credentials and professional directory listings' })}
                   </span>
                 </div>
@@ -1321,7 +1481,7 @@ export function ProfileDetailsCard() {
                       </Badge>
                     )}
                   </div>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('profile.payouts.sectionDesc', { defaultValue: 'Linked PayPal billing address for designer and listing sales' })}
                   </span>
                 </div>
@@ -1362,7 +1522,7 @@ export function ProfileDetailsCard() {
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('campaigns.notifications.sectionTitle')}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
                     {t('campaigns.notifications.sectionSubtitle')}
                   </span>
                 </div>
@@ -1448,11 +1608,35 @@ export function ProfileDetailsCard() {
               </>
             )}
           </Button>
-        </div>
-      </CardContent>
-    </Card>
+         </div>
+
+         {/* Legal links — Privacy Policy & Terms of Service */}
+         <div className="flex justify-center items-center gap-1 pt-2">
+           <Button
+             variant="link"
+             size="sm"
+             className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 px-2"
+             onClick={() => nav('/privacy')}
+             data-testid="profile-privacy-link"
+           >
+             {t('profile.privacyPolicy', { defaultValue: 'Privacy Policy' })}
+           </Button>
+           <span className="text-xs text-muted-foreground/40 select-none">·</span>
+           <Button
+             variant="link"
+             size="sm"
+             className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 px-2"
+             onClick={() => nav('/terms')}
+             data-testid="profile-terms-link"
+           >
+             {t('profile.termsOfService', { defaultValue: 'Terms of Service' })}
+           </Button>
+         </div>
+       </CardContent>
+     </Card>
   );
 }
+
 
 /**
  * Numeric measurement field. Defined OUTSIDE its parent so React keeps

@@ -1,4 +1,4 @@
-{
+﻿{
   "brand": "DressApp",
   "nav": {
     "home": "होम",
@@ -60,7 +60,8 @@
     "time": "समय",
     "unknownColor": "अन्य",
     "saved": "सहेज लिया गया",
-    "day": "day"
+    "day": "day",
+    "errorOccurred": "एक त्रुटि हुई। कृपया पुनः प्रयास करें।"
   },
   "auth": {
     "welcomeBack": "वापसी पर स्वागत है",
@@ -987,6 +988,14 @@
     "saveProfile": "परिवर्तन सहेजें",
     "savedProfile": "प्रोफ़ाइल सहेजी गई",
     "autofilledFromGoogle": "Google से ऑटो-फ़िल्ड — किसी भी समय संपादित करें।",
+    "syncGoogle": "Google प्रोफ़ाइल सिंक करें",
+    "syncGoogleFromSection": "Google से सिंक करें",
+    "googleConnectedSyncHint": "Google के माध्यम से कनेक्ट किया गया — अपनी Google प्रोफ़ाइल से खाली फ़ील्ड भरने के लिए सिंक करें।",
+    "googleSyncContactHint": "अपने Google खाते से फ़ोन और पता सिंक करें।",
+    "googleSyncDemographicsHint": "अपने Google खाते से लिंग और जन्म तिथि सिंक करें।",
+    "googleReConsentNeeded": "Google को प्रोफ़ाइल विवरण तक पहुँचने के लिए आपकी अनुमति चाहिए। पहुँच प्रदान करने के लिए आपको Google पर रीडायरेक्ट किया जाएगा।",
+    "googleSyncSuccess": "प्रोफ़ाइल सफलतापूर्वक सिंक हो गई।",
+    "googleSyncFailed": "सिंक विफल रहा।",
     "addressLine1Placeholder": "अपनी गली लिखना शुरू करें…",
     "cityPlaceholder": "अपना शहर लिखना शुरू करें…",
     "countryPlaceholder": "अपना देश चुनें या टाइप करें…",
@@ -1092,7 +1101,11 @@
       "appFeeLabel": "अर्जित ऐप शुल्क",
       "appFeeDescription": "क्रेडिट उपयोग से अर्जित किया गया अवैतनिक प्लेटफ़ॉर्म शुल्क।"
     },
-    "deleteAccountLink": "Delete my Account",
+    "importWardrobePill": "अलमारी आयात करें",
+    "mobileDesktopGuide": "अलमारी आयात DressApp के डेस्कटॉप संस्करण में उपलब्ध है। जारी रखने के लिए कृपया अपने खाते को डेस्कटॉप ब्राउज़र में खोलें।",
+    "deleteAccountLink": "मेरा खाता हटाएं",
+    "privacyPolicy": "गोपनीयता नीति",
+    "termsOfService": "सेवा की शर्तें",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
     "deleteWarning": "You are about to delete your account. This will permanently remove your profile, all your closet items (including photos and metadata), and all your saved outfits.",
@@ -1143,7 +1156,8 @@
     "upgradeAnnualBtn": "वार्षिक अपग्रेड करें",
     "inviteDesc": "DressApp को अपने दोस्तों और परिवार के साथ साझा करें",
     "bookmarkletDesc": "नीचे दिए गए बटन को अपने बुकमार्क बार पर खींचें। मोबाइल पर, इसे अपने बुकमार्क में जोड़ें और इसे 'DressApp शॉपिंग असिस्टेंट' नाम दें। किसी भी उत्पाद पृष्ठ पर होने पर इस पर क्लिक करें।",
-    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings"
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
+    "privacyPolicy": "Privacy Policy"
   },
   "admin": {
     "title": "व्यवस्थापक",
@@ -1917,8 +1931,8 @@
       "propose_a_swap": "स्वैप का प्रस्ताव दें",
       "this_donation_is_free_coordinate": "यह दान मुफ़्त है। स्थानीय स्तर पर मिलने या सीधे शिपिंग की व्यवस्था करने के लिए डोनर के साथ समन्वय करें।",
       "well_email_the_lister_a": "हम लिस्टर को एक सुरक्षित स्वीकार / अस्वीकार लिंक ईमेल करेंगे। कोई शुल्क नहीं — आइटम सीधे आपके बीच शिप होते हैं।",
-      "or_meet_locally_to_skip": "· या शुल्क से बचने के लिए स्थानीय रूप से मिलें 🌱",
-      "local_pickup_preferred_no_shipping": "🌱 स्थानीय पिकअप को प्राथमिकता — कोई शिपिंग शुल्क नहीं"
+      "or_meet_locally_to_skip": "· या शुल्क से बचने के लिए स्थानीय रूप से मिलें",
+      "local_pickup_preferred_no_shipping": "स्थानीय पिकअप को प्राथमिकता — कोई शिपिंग शुल्क नहीं"
     },
     "extensionConnect": {
       "connecting_to_dressapp_extension": "DressApp एक्सटेंशन से जुड़ रहा है…",
@@ -1941,7 +1955,7 @@
     "createListing": {
       "leave_at": "यहाँ छोड़ें",
       "to_encourage_neighbours_to_meet": "पड़ोसियों को आपसे मिलने के लिए प्रोत्साहित करने के लिए — शून्य पैकेजिंग, शून्य उत्सर्जन, साथ ही आप एक बेहतरीन स्टाइल वाले मित्र बना सकते हैं। शुल्क केवल तभी जोड़ें जब शिपिंग अपरिहार्य हो।",
-      "prefer_local_pickup": "🌱 स्थानीय पिकअप को प्राथमिकता दें"
+      "prefer_local_pickup": "स्थानीय पिकअप को प्राथमिकता दें"
     },
     "marketplace": {
       "nothing_to_sync_no_closet": "सिंक करने के लिए कुछ भी नहीं है — किसी भी क्लोसेट आइटम के लिए मार्केटप्लेस उद्देश्य सेट नहीं है।",
@@ -2055,6 +2069,8 @@
   "floater": {
     "done": "सब हो गया",
     "analysingGroup": "समूह का विश्लेषण किया जा रहा है...",
+    "analyzing": "{{n}}/{{m}} आइटम का विश्लेषण",
+    "analyzingPhotos": "{{count}} फ़ोटो का विश्लेषण",
     "polishing": "{{n}}/{{m}} फ़ोटो को बेहतर बनाया जा रहा है",
     "polishingMore_one": "{{count}} फ़ोटो को बेहतर बनाया जा रहा है",
     "polishingMore_other": "{{count}} फ़ोटो को बेहतर बनाया जा रहा है"
@@ -2197,6 +2213,7 @@
   "help": {
     "title": "ड्रेसऐप: माई ड्रेसऐप क्लोसेट बुक",
     "subtitle": "अपने कपड़ों और परिधानों को प्रबंधित करने के लिए एक अत्यंत सरल मार्गदर्शिका",
+    "geminiKeyStep": "A Gemini API Key. Get it for free on <a href=\"https://aistudio.google.com/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary hover:underline font-semibold\">Google AI Studio</a>.",
     "overview_title": "अवलोकन",
     "overview_p1": "ड्रेसऐप में आपका स्वागत है! यह एक अत्याधुनिक ऐप है जो आपको अपनी खुद की डिजिटल कपड़ों की अलमारी बनाने की सुविधा देता है।",
     "overview_p2": "अपनी सभी शर्ट, पैंट, स्कर्ट और जूतों की तस्वीरें लेने और उन्हें एक जादुई किताब में रखने की कल्पना करें। एक बार जब वे अंदर आ जाते हैं, तो एक पेशेवर और अनुभवी स्टाइलिस्ट आपके कपड़ों को देखता है, बाहर के मौसम की जाँच करता है, और आपको यह चुनने में मदद करता है कि किसी भी अवसर के लिए क्या पहनना है!",
@@ -2336,6 +2353,14 @@
     "shopping_assistant_step4": "यह आपके प्रोफ़ाइल विवरण में संग्रहीत आपके **शरीर के माप** की जाँच करता है।",
     "shopping_assistant_step5": "यह फिट तुलना पर प्रकाश डालते हुए आपके लिए सर्वोत्तम आकार की सिफारिश करता है।",
     "shopping_assistant_step6": "आइटम ड्राफ्ट को सीधे अपने ऐप पर आयात करने के लिए **क्लोसेट में जोड़ें** पर क्लिक करें।",
+    "import_wardrobe_title": "अपना वॉर्डरोब आयात करें",
+    "import_wardrobe_p1": "पहले से किसी अन्य ऐप में अपना वॉर्डरोब ट्रैक कर रहे हैं? बस कुछ क्लिक में अपने आइटम को DressApp में आयात करें। हम कई लोकप्रिय वॉर्डरोब और आउटफिट प्लानिंग ऐप्स से आयाम का समर्थन करते हैं।",
+    "import_wardrobe_step1": "DressApp में **क्लोसेट** पेज खोलें।",
+    "import_wardrobe_step2": "**आयात** बटन पर क्लिक करें (या मेनू में आयात विकल्प देखें)।",
+    "import_wardrobe_step3": "उस ऐप को चुनें जिससे आप आयात कर रहे हैं (जैसे Cladwell, Stylebook, Acloset, SmartCloset, या CSV फ़ाइल)।",
+    "import_wardrobe_step4": "पुराने ऐप से अपना डेटा निर्यात करने और DressApp में अपलोड करने के लिए ऑन-स्क्रीन निर्देशों का पालन करें।",
+    "import_wardrobe_step5": "DressApp आपके आयातित आइटम को स्वचालित रूप से वर्गीकृत और व्यवस्थित करेगा।",
+    "import_wardrobe_step6": "अपने आइटम की समीक्षा करें और आवश्यकतानुसार श्रेणियाँ समायोजित करें। आपका वॉर्डरोब अब तैयार है!",
     "scheduler_push_title": "सुबह का शेड्यूल और पुश अलर्ट",
     "scheduler_push_p1": "अपने दिन की शुरुआत स्वचालित, मौसम-उपयुक्त शैली अनुशंसाओं के साथ करें जो सीधे आपके डिवाइस पर वितरित की जाती हैं।",
     "scheduler_push_step1": "अपनी **प्रोफ़ाइल सेटिंग** पर जाएँ।",
@@ -2697,7 +2722,36 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "अपनी मौजूदा अलमारी आयात करें?",
+    "welcomeSub": "क्या आपके पास पहले से किसी अन्य ऐप पर डिजिटल अलमारी है? हम आपके कपड़े ला सकते हैं ताकि आपको शुरू से शुरू न करना पड़े।",
+    "noStartFresh": "नहीं, नए से शुरू करें",
+    "yesImportBtn": "हाँ, मेरी अलमारी आयात करें",
+    "selectAppTitle": "आप किस ऐप से आ रहे हैं?",
+    "selectAppSub": "अपना पिछला अलमारी ऐप चुनें या नीचे कस्टम नाम दर्ज करें।",
+    "screenshotPipelineTitle": "स्क्रीन कैप्चर पाइपलाइन तैयार",
+    "screenshotPipelineSub": "DressApp प्रतिस्पर्धी की अलमारी से स्क्रीन कैप्चर के माध्यम से वस्त्र कार्ड कैप्चर करेगा। किसी API कुंजी या डेटा निर्यात की आवश्यकता नहीं है।",
+    "connectToAppTitle": "{{appName}} से कनेक्ट करें",
+    "bookmarkletInstallInstructions": "नीचे दिए गए DressApp Agent बुकमार्कलेट को अपनी बुकमार्क बार में खींचें, फिर {{appName}} में लॉग इन करें और अपनी अलमारी पेज पर जाएं।",
+    "bookmarkletInstallInstructionsMobile": "बुकमार्कलेट कॉपी करने के लिए नीचे टैप करें, फिर नया बुकमार्क बनाएं और इसे URL के रूप में पेस्ट करें:",
+    "bookmarkletClickTip": "कैप्चर शुरू करने के लिए प्रतिस्पर्धी पेज पर बुकमार्कलेट पर क्लिक करें।",
+    "bookmarkletLongPressTip": "इस बटन को अपने बुकमार्क में जोड़ने के लिए लंबे समय तक दबाएं।",
+    "bookmarkletMobileInstruction": "अपने ब्राउज़र में ⋮ तीन डॉट मेनू पर टैप करें, फिर इस पेज को सहेजने के लिए \"बुकमार्क\" पर टैप करें।",
+    "bookmarkletMobileSaveTip": "कॉपी करने के लिए टैप करें → ⋮ मेनू खोलें → बुकमार्क → + → URL के रूप में पेस्ट करें",
+    "bookmarkletCopied": "बुकमार्कलेट कॉपी हो गया! अब नया बुकमार्क बनाएं और इसे URL के रूप में पेस्ट करें।",
+    "copyFailed": "कॉपी विफल। कृपया बुकमार्कलेट मैनुअल रूप से कॉपी करें।",
+    "bookmarkletBtn": "DressApp एजेंट",
+    "dragTip": "इसे अपनी बुकमार्क बार में खींचें",
+    "longPressTip": "बुकमार्क में जोड़ने के लिए ऊपर दिए गए बटन को लंबे समय तक दबाएं",
+    "bookmarkletUsageInstructions": "इंस्टॉल करने के बाद, आरंभ करने के लिए नीचे \"अलमारी आयात करें\" पर क्लिक करें। {{appName}} में लॉग इन करें, अपनी अलमारी पेज पर जाएं, फिर \"DressApp Agent\" बुकमार्कलेट पर क्लिक करें।",
+    "garmentVisionReady": "एजेंटिक इनजेशन तैयार",
+    "importWardrobeBtn": "अलमारी आयात करें",
+    "mattingNotice": "सभी एसेट्स मैटिंग GarmentVision द्वारा संभाली जाती है।",
+    "tabSleepAlert": "टैब स्लीप अलर्ट: आयात के दौरान प्रतिस्पर्धी विंडो में टैब स्विच न करें (Chrome स्क्रॉलर को स्लीप/थ्रॉटल करेगा)।",
+    "proTip": "प्रो टिप: प्रतिस्पर्धी टैब को अपने ब्राउज़र विंडो से अलग विंडो में खींचें ताकि मल्टीटास्किंग के दौरान यह फोकस में रहे!",
+    "saving": "{{count}} आइटम आपकी अलमारी में सहेजे जा रहे हैं...",
+    "saved": "{{count}} आइटम सहेजे गए। स्टाइलिस्ट उनका विश्लेषण कर रहा है — विवरण स्वचालित रूप से अपडेट होते हैं।",
+    "error": "माइग्रेशन विफल। कृपया पुनः प्रयास करें।"
   },
   "login_reminder": {
     "newTitle": "आपकी अलमारी खाली है — अपना पहला कपड़ा जोड़ें!",
@@ -2707,5 +2761,18 @@
     "helpDocLink": "जानें कि DressApp में कपड़े कैसे जोड़ें",
     "letsStart": "शुरू करें",
     "migrateBtn": "माइग्रेट करें"
+  },
+  "aiNotice": {
+    "geminiKeyRequired": "आपको अपनी Google AI Gemini कुंजी दर्ज करनी होगी",
+    "geminiKeyDescription": "आपको अपनी Google AI Gemini API कुंजी कॉन्फ़िगर करनी होगी। आप Google AI Studio से कुंजी प्राप्त कर सकते हैं।",
+    "configureKey": "कुंजी कॉन्फ़िगर करें"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "description": "DressApp Terms of Service — rules and conditions for using our app."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "DressApp privacy policy — how we collect, use, and protect your data."
   }
 }

@@ -60,7 +60,8 @@
     "share": "Share",
     "time": "Time",
     "unknownColor": "Other",
-    "saved": "Saved"
+    "saved": "Saved",
+    "errorOccurred": "An error occurred. Please try again."
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -725,7 +726,7 @@
   "market": {
     "title": "Marketplace",
     "subtitle": "Community-curated resale and swaps.",
-    "hero": "Shop, swap, donate",
+    "hero": "Buy, Sell & Swap Fashion with Confidence",
     "createListing": "Create listing",
     "browseAll": "Browse all",
     "browse": "Browse",
@@ -901,7 +902,11 @@
     "voice": "Voice (Piper Offline)",
     "saveChanges": "Save changes",
     "signOut": "Sign out",
+    "importWardrobePill": "Import Wardrobe",
+    "mobileDesktopGuide": "Wardrobe import is available on the desktop version of DressApp. Please open your account on a desktop browser to continue.",
     "deleteAccountLink": "Delete my Account",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
     "deleteWarning": "You are about to delete your account. This will permanently remove your profile, all your closet items (including photos and metadata), and all your saved outfits.",
@@ -1025,6 +1030,14 @@
     "saveProfile": "Save changes",
     "savedProfile": "Profile saved",
     "autofilledFromGoogle": "Auto-filled from Google — edit anytime.",
+    "syncGoogle": "Sync Google Profile",
+    "syncGoogleFromSection": "Sync from Google",
+    "googleSyncSuccess": "Profile synced with Google successfully!",
+    "googleSyncFailed": "Failed to sync with Google.",
+    "googleConnectedSyncHint": "Connected via Google — sync to auto-fill empty fields from your Google profile.",
+    "googleSyncContactHint": "Sync phone and address from your Google account.",
+    "googleSyncDemographicsHint": "Sync gender and date of birth from your Google account.",
+    "googleReConsentNeeded": "Google needs your permission to access profile details. You will be redirected to Google to grant access.",
     "professional": {
       "sectionTitle": "Professional fashion expert",
       "sectionDesc": "Business approval credentials and professional directory listings",
@@ -1143,7 +1156,8 @@
     "annualPlan": "Annual Plan",
     "annualPlanDesc": "Save 50% compared to monthly billing.",
     "perYear": " / year",
-    "upgradeAnnualBtn": "Upgrade Annual"
+    "upgradeAnnualBtn": "Upgrade Annual",
+    "privacyPolicy": "Privacy Policy"
   },
   "admin": {
     "title": "Admin",
@@ -1917,8 +1931,8 @@
       "propose_a_swap": "Propose a swap",
       "this_donation_is_free_coordinate": "This donation is free. Coordinate with the donor to meet locally or arrange shipping directly.",
       "well_email_the_lister_a": "We'll email the lister a secure accept / decline link. No charges — items ship directly between you.",
-      "or_meet_locally_to_skip": "· Or meet locally to skip the fee 🌱",
-      "local_pickup_preferred_no_shipping": "🌱 Local pickup preferred — no shipping fee"
+      "or_meet_locally_to_skip": "· Or meet locally to skip the fee",
+      "local_pickup_preferred_no_shipping": "Local pickup preferred — no shipping fee"
     },
     "extensionConnect": {
       "connecting_to_dressapp_extension": "Connecting to DressApp Extension…",
@@ -1941,7 +1955,7 @@
     "createListing": {
       "leave_at": "Leave at",
       "to_encourage_neighbours_to_meet": "to encourage neighbours to meet you — zero packaging, zero emissions, plus you might make a friend with great style. Add a fee only if shipping is unavoidable.",
-      "prefer_local_pickup": "🌱 Prefer local pickup"
+      "prefer_local_pickup": "Prefer local pickup"
     },
     "marketplace": {
       "nothing_to_sync_no_closet": "Nothing to sync — no closet items have a marketplace intent set.",
@@ -2055,6 +2069,8 @@
   "floater": {
     "done": "All done",
     "analysingGroup": "Analysing group…",
+    "analyzing": "Analysing {{n}}/{{m}} items",
+    "analyzingPhotos": "Analysing {{count}} photo",
     "polishing": "Polishing {{n}}/{{m}} photos",
     "polishingMore_one": "Polishing {{count}} photo",
     "polishingMore_other": "Polishing {{count}} photos"
@@ -2197,6 +2213,7 @@
   "help": {
     "title": "DressApp: My DressApp Closet Book",
     "subtitle": "A Super Simple Guide to Managing Your Clothes & Outfits",
+    "geminiKeyStep": "A Gemini API Key. Get it for free on <a href=\"https://aistudio.google.com/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary hover:underline font-semibold\">Google AI Studio</a>.",
     "overview_title": "Overview",
     "overview_p1": "Welcome to DressApp! This is a cutting-edge app that lets you build your very own digital clothes closet.",
     "overview_p2": "Imagine taking pictures of all your shirts, pants, skirts, and shoes, and putting them into a magical book. Once they are inside, a professional and experienced stylist looks at your clothes, checks the weather outside, and helps you pick what to wear for any occasion!",
@@ -2336,6 +2353,14 @@
     "shopping_assistant_step4": "It checks your **body measurements** stored in your Profile details.",
     "shopping_assistant_step5": "It recommends the best size for you, highlighting the fit comparison.",
     "shopping_assistant_step6": "Click **Add to Closet** to import the item draft straight to your app.",
+    "import_wardrobe_title": "Import Your Wardrobe",
+    "import_wardrobe_p1": "Already have your wardrobe tracked in another app? Import your items into DressApp with just a few clicks. We support imports from a wide range of popular wardrobe and outfit planning apps.",
+    "import_wardrobe_step1": "Open the **Closet** page in DressApp.",
+    "import_wardrobe_step2": "Click the **Import** button (or look for the import option in the menu).",
+    "import_wardrobe_step3": "Select the app you're importing from (e.g., Cladwell, Stylebook, Acloset, SmartCloset, or a CSV file).",
+    "import_wardrobe_step4": "Follow the on-screen instructions to export your data from the old app and upload it to DressApp.",
+    "import_wardrobe_step5": "DressApp will automatically categorize and organize your imported items.",
+    "import_wardrobe_step6": "Review your items and adjust categories if needed. Your wardrobe is now ready!",
     "scheduler_push_title": "Morning Schedule & Push Alerts",
     "scheduler_push_p1": "Start your day with automatic, weather-appropriate style recommendations delivered directly to your device.",
     "scheduler_push_step1": "Navigate to your **Profile settings**.",
@@ -2695,7 +2720,36 @@
     "webLoginAuthenticated": "Session Connected: Authenticated with {{appName}}",
     "webLoginProceed": "Proceed to Migration Permission",
     "openExternal": "Open Official Login Page",
-    "popupOpened": "Opened {{appName}} login window. Complete login and return to proceed."
+    "popupOpened": "Opened {{appName}} login window. Complete login and return to proceed.",
+    "welcomeTitle": "Import Your Existing Wardrobe?",
+    "welcomeSub": "Already have a digital wardrobe on another app? We can bring your clothes over so you don't have to start from scratch.",
+    "noStartFresh": "No, start fresh",
+    "yesImportBtn": "Yes, import my wardrobe",
+    "selectAppTitle": "Which App Are You Coming From?",
+    "selectAppSub": "Select your previous wardrobe app or enter a custom name below.",
+    "screenshotPipelineTitle": "Screen Capture Pipeline Ready",
+    "screenshotPipelineSub": "DressApp will capture garment cards from your competitor's wardrobe via screen capture. No API keys or data exports needed.",
+    "connectToAppTitle": "Connect to {{appName}}",
+    "bookmarkletInstallInstructions": "Drag the DressApp Agent bookmarklet below to your Bookmarks Bar, then log in to {{appName}} and navigate to your closet page.",
+    "bookmarkletInstallInstructionsMobile": "Tap below to copy the bookmarklet, then create a new bookmark and paste it as the URL:",
+    "bookmarkletClickTip": "Click the bookmarklet on the competitor page to start capturing.",
+    "bookmarkletLongPressTip": "Long-press this button to add it to your bookmarks.",
+    "bookmarkletMobileInstruction": "Tap the ⋮ three-dot menu in your browser, then tap \"Bookmarks\" to save this page.",
+    "bookmarkletMobileSaveTip": "Tap to copy → Open ⋮ menu → Bookmarks → + → paste as URL",
+    "bookmarkletCopied": "Bookmarklet copied! Now create a new bookmark and paste it as the URL.",
+    "copyFailed": "Copy failed. Please manually copy the bookmarklet code.",
+    "bookmarkletBtn": "DressApp Agent",
+    "dragTip": "Drag this to your Bookmarks Bar",
+    "longPressTip": "Long-press the button above to add to bookmarks",
+    "bookmarkletUsageInstructions": "After installing, click \"Import wardrobe\" below to initialize. Log in to {{appName}}, go to your closet page, then click the \"DressApp Agent\" bookmarklet.",
+    "garmentVisionReady": "Agentic Ingestion Ready",
+    "importWardrobeBtn": "Import wardrobe",
+    "mattingNotice": "All assets matting is handled by GarmentVision.",
+    "tabSleepAlert": "Tab Sleep Alert: Do not switch tabs inside the competitor window while importing (Chrome will sleep/throttle the scroller).",
+    "proTip": "Pro-Tip: Drag the competitor tab out of your browser window into its own window to keep it running in focus while you multitask!",
+    "saving": "Saving {{count}} items to your closet...",
+    "saved": "{{count}} items saved. Stylist is analysing them — details update automatically.",
+    "error": "Migration failed. Please try again."
   },
   "login_reminder": {
     "newTitle": "Your Closet is Empty — Let's Add Your First Item!",
@@ -2705,5 +2759,42 @@
     "helpDocLink": "Learn how adding clothes works in DressApp",
     "letsStart": "Let's start",
     "migrateBtn": "Migrate"
+  },
+  "aiNotice": {
+    "geminiKeyRequired": "Gemini AI Key or Plan Required",
+    "geminiKeyDescription": "To use DressApp's Gemini AI features (AI Stylist, GarmentVision, Image Editing, Reconstruction), please configure your Gemini API Key in your Profile settings.",
+    "configureKey": "Configure API Key in Profile"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "description": "DressApp Terms of Service — rules and conditions for using our app."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "DressApp privacy policy — how we collect, use, and protect your data.",
+    "lastUpdated": "Last updated: July 2026",
+    "sections": {
+      "intro": "1. Introduction",
+      "dataCollection": "2. Data We Collect",
+      "dataUse": "3. How We Use Your Data",
+      "dataSharing": "4. Data Sharing",
+      "aiUsage": "5. AI & Stylist Features",
+      "storage": "6. Data Storage & Security",
+      "retention": "7. Data Retention",
+      "rights": "8. Your Rights",
+      "cookies": "9. Cookies",
+      "contact": "10. Contact Us"
+    },
+    "intro": "DressApp (\"we\", \"our\", or \"us\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our application.",
+    "dataCollection": "We collect information you provide directly, including your name, email address, phone number, profile photos, body measurements, style preferences, and payment information. We also collect data automatically, such as device information, usage analytics, and cookies.",
+    "dataUse": "Your data is used to provide and improve our services, personalize your experience, process transactions, send relevant notifications, and ensure the security and integrity of our platform.",
+    "dataSharing": "We do not sell your personal data. We may share limited information with trusted third-party service providers who assist us in operating our platform, subject to strict confidentiality obligations.",
+    "aiUsage": "Our AI-powered stylist and measurement prediction features process your body measurements and photos locally or on secure servers to generate personalized recommendations. No biometric data is shared with advertisers or third parties.",
+    "storage": "Data is stored securely using encryption at rest and in transit. We implement industry-standard security measures to protect your information against unauthorized access, alteration, or disclosure.",
+    "retention": "We retain your data for as long as necessary to provide our services. You may request deletion of your account and all associated data at any time through your account settings or by contacting us.",
+    "rights": "You have the right to access, correct, export, and delete your personal data. You may also opt out of data processing for marketing purposes at any time. To exercise these rights, please contact us through the app or at our privacy email.",
+    "cookies": "We use cookies and similar technologies to enhance your experience, analyze usage, and personalize content. You can manage cookie preferences through your browser settings.",
+    "contact": "For any privacy-related inquiries, please reach out to us through the app settings or via the contact form on our website at dressapp.co.",
+    "loadError": "Privacy policy could not be loaded. Please try again later."
   }
 }

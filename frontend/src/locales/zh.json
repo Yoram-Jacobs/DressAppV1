@@ -1,4 +1,4 @@
-{
+﻿{
   "brand": "DressApp",
   "nav": {
     "home": "首页",
@@ -60,7 +60,8 @@
     "share": "分享",
     "time": "时间",
     "unknownColor": "其他",
-    "saved": "已保存"
+    "saved": "已保存",
+    "errorOccurred": "发生错误。请重试。"
   },
   "auth": {
     "welcomeBack": "欢迎回来",
@@ -989,6 +990,14 @@
     "saveProfile": "保存更改",
     "savedProfile": "个人资料已保存",
     "autofilledFromGoogle": "已从 Google 自动填充 — 随时可编辑。",
+    "syncGoogle": "同步 Google 个人资料",
+    "syncGoogleFromSection": "从 Google 同步",
+    "googleConnectedSyncHint": "已通过 Google 连接 — 同步以从您的 Google 个人资料自动填充空字段。",
+    "googleSyncContactHint": "从您的 Google 帐户同步电话和地址。",
+    "googleSyncDemographicsHint": "从您的 Google 帐户同步性别和出生日期。",
+    "googleReConsentNeeded": "Google 需要您的许可才能访问个人资料详情。您将被重定向到 Google 以授予权限。",
+    "googleSyncSuccess": "个人资料同步成功。",
+    "googleSyncFailed": "同步失败。",
     "addressLine1Placeholder": "开始输入您的街道…",
     "cityPlaceholder": "开始输入您的城市…",
     "countryPlaceholder": "选择或输入您的国家…",
@@ -1092,7 +1101,11 @@
       "appFeeLabel": "累计应用服务费",
       "appFeeDescription": "因额度使用而产生且尚未支付的平台费用。"
     },
-    "deleteAccountLink": "Delete my Account",
+    "importWardrobePill": "导入衣橱",
+    "mobileDesktopGuide": "衣橱导入功能可在DressApp桌面版中使用。请在桌面浏览器中打开您的账户以继续。",
+    "deleteAccountLink": "删除我的账户",
+    "privacyPolicy": "隐私政策",
+    "termsOfService": "服务条款",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
     "deleteWarning": "You are about to delete your account. This will permanently remove your profile, all your closet items (including photos and metadata), and all your saved outfits.",
@@ -1143,7 +1156,8 @@
     "upgradeAnnualBtn": "升级年度版",
     "inviteDesc": "与您的朋友和家人分享 DressApp",
     "bookmarkletDesc": "将下方按钮拖拽至书签栏。在移动端上，将其加入书签并命名为 'DressApp 购物助手'。浏览任何商品详情页时点击此书签即可使用。",
-    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings"
+    "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
+    "privacyPolicy": "Privacy Policy"
   },
   "admin": {
     "title": "管理",
@@ -1917,8 +1931,8 @@
       "propose_a_swap": "提议交换",
       "this_donation_is_free_coordinate": "此捐赠是免费的。请与捐赠者协商面交或直接安排寄送。",
       "well_email_the_lister_a": "我们将向发布者发送安全的接受/拒绝链接。无须手续费——商品直接在双方之间寄送。",
-      "or_meet_locally_to_skip": "· 或面交以减免费用 🌱",
-      "local_pickup_preferred_no_shipping": "🌱 优先面交——无运费"
+      "or_meet_locally_to_skip": "· 或面交以减免费用",
+      "local_pickup_preferred_no_shipping": "优先面交——无运费"
     },
     "extensionConnect": {
       "connecting_to_dressapp_extension": "正在连接到 DressApp 浏览器扩展…",
@@ -1941,7 +1955,7 @@
     "createListing": {
       "leave_at": "留在",
       "to_encourage_neighbours_to_meet": "鼓励邻里面交——零包装、零排放，还能交到品味不凡的朋友。仅在不可避免需要快递时才增加运费。",
-      "prefer_local_pickup": "🌱 优先面交"
+      "prefer_local_pickup": "优先面交"
     },
     "marketplace": {
       "nothing_to_sync_no_closet": "无可同步内容——衣橱商品均未设置市场发布意向。",
@@ -2055,6 +2069,8 @@
   "floater": {
     "done": "全部完成",
     "analysingGroup": "正在分析分组...",
+    "analyzing": "正在分析 {{n}}/{{m}} 件物品",
+    "analyzingPhotos": "正在分析 {{count}} 张照片",
     "polishing": "正在优化 {{n}}/{{m}} 张照片",
     "polishingMore_one": "正在优化 {{count}} 张照片",
     "polishingMore_other": "正在优化 {{count}} 张照片"
@@ -2197,6 +2213,7 @@
   "help": {
     "title": "DressApp：我的 DressApp 衣柜书",
     "subtitle": "管理衣物的超级简单指南",
+    "geminiKeyStep": "A Gemini API Key. Get it for free on <a href=\"https://aistudio.google.com/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary hover:underline font-semibold\">Google AI Studio</a>.",
     "overview_title": "概览",
     "overview_p1": "欢迎使用 DressApp！这是一款尖端应用程序，可让您构建自己的数字衣柜。",
     "overview_p2": "想象一下给你所有的衬衫、裤子、裙子和鞋子拍照，然后把它们放进一本神奇的书里。一旦他们进去，专业且经验丰富的造型师就会检查您的衣服，检查外面的天气，并帮助您选择适合任何场合的穿着！",
@@ -2336,6 +2353,14 @@
     "shopping_assistant_step4": "它会检查您的个人资料详细信息中存储的**身体测量数据**。",
     "shopping_assistant_step5": "它会为您推荐最佳尺码，并突出显示合身比较。",
     "shopping_assistant_step6": "单击 **添加到壁橱** 将项目草稿直接导入到您的应用程序中。",
+    "import_wardrobe_title": "导入您的衣橱",
+    "import_wardrobe_p1": "已经在其他应用中管理您的衣橱了吗？只需几次点击，即可将您的物品导入到 DressApp。我们支持从多种流行的衣橱和穿搭规划应用中导入。",
+    "import_wardrobe_step1": "在 DressApp 中打开**壁橱**页面。",
+    "import_wardrobe_step2": "点击**导入**按钮（或在菜单中查找导入选项）。",
+    "import_wardrobe_step3": "选择您要从中导入的应用（例如 Cladwell、Stylebook、Acloset、SmartCloset 或 CSV 文件）。",
+    "import_wardrobe_step4": "按照屏幕上的说明从旧应用导出数据并上传到 DressApp。",
+    "import_wardrobe_step5": "DressApp 将自动分类和整理您导入的物品。",
+    "import_wardrobe_step6": "检查您的物品，必要时调整分类。您的衣橱现已准备就绪！",
     "scheduler_push_title": "上午时间表和推送提醒",
     "scheduler_push_p1": "通过直接发送到您的设备的自动、适合天气的风格推荐来开始新的一天。",
     "scheduler_push_step1": "导航至您的**个人资料设置**。",
@@ -2697,7 +2722,36 @@
     "itemsDoneAskOutfits": "Wardrobe items successfully imported! Would you like to import your saved outfits as well?",
     "allImportedSuccess": "Successfully imported all wardrobe items and outfits to DressApp!",
     "statusScrapingItems": "Scraping & analyzing wardrobe items from {{appName}}...",
-    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items..."
+    "statusScrapingOutfits": "Scraping outfits canvas & matching garments to closet items...",
+    "welcomeTitle": "导入您现有的衣橱？",
+    "welcomeSub": "已经在其他应用上有数字衣橱了？我们可以把您的衣服带过来，这样您就不必从零开始了。",
+    "noStartFresh": "不，从零开始",
+    "yesImportBtn": "是的，导入我的衣橱",
+    "selectAppTitle": "您来自哪个应用？",
+    "selectAppSub": "选择您之前使用的衣橱应用，或在下方输入自定义名称。",
+    "screenshotPipelineTitle": "屏幕捕获管道就绪",
+    "screenshotPipelineSub": "DressApp 将通过屏幕捕获从竞争对手的衣橱中获取服装卡片。无需 API 密钥或数据导出。",
+    "connectToAppTitle": "连接到 {{appName}}",
+    "bookmarkletInstallInstructions": "将下方的 DressApp Agent 书签工具拖到书签栏，然后登录 {{appName}} 并导航到您的衣橱页面。",
+    "bookmarkletInstallInstructionsMobile": "点击下方复制书签工具，然后创建新书签并将其粘贴为URL：",
+    "bookmarkletClickTip": "点击竞争对手页面上的书签工具开始捕获。",
+    "bookmarkletLongPressTip": "长按此按钮将其添加到书签。",
+    "bookmarkletMobileInstruction": "点击浏览器中的⋮⋮菜单，然后点击\"书签\"以保存此页面。",
+    "bookmarkletMobileSaveTip": "点击复制 → 打开 ⋮⋮ 菜单 → 书签 → + → 粘贴为URL",
+    "bookmarkletCopied": "书签工具已复制！请创建新书签并将其粘贴为URL。",
+    "copyFailed": "复制失败。请手动复制书签工具代码。",
+    "bookmarkletBtn": "DressApp 代理",
+    "dragTip": "将此拖到书签栏",
+    "longPressTip": "长按上方按钮添加到书签",
+    "bookmarkletUsageInstructions": "安装后，点击下方\"导入衣橱\"进行初始化。登录 {{appName}}，前往您的衣橱页面，然后点击 \"DressApp Agent\" 书签工具。",
+    "garmentVisionReady": "智能摄取就绪",
+    "importWardrobeBtn": "导入衣橱",
+    "mattingNotice": "所有资产抠图由 GarmentVision 处理。",
+    "tabSleepAlert": "标签页休眠提醒：导入期间请勿在竞争对手窗口中切换标签页（Chrome 会休眠/限制滚动）。",
+    "proTip": "专业提示：将竞争对手标签页从浏览器窗口拖到独立窗口中，这样在多任务时可以保持其聚焦运行！",
+    "saving": "正在保存 {{count}} 件物品到您的衣橱...",
+    "saved": "{{count}} 件物品已保存。造型师正在分析它们 — 详情会自动更新。",
+    "error": "迁移失败。请重试。"
   },
   "login_reminder": {
     "newTitle": "您的衣橱还是空的 — 添加您的第一件衣服吧！",
@@ -2707,5 +2761,18 @@
     "helpDocLink": "了解如何在 DressApp 中添加衣服",
     "letsStart": "开始使用",
     "migrateBtn": "迁移"
+  },
+  "aiNotice": {
+    "geminiKeyRequired": "您必须输入您的 Google AI Gemini 密钥",
+    "geminiKeyDescription": "您必须配置您的 Google AI Gemini API 密钥。您可以在 Google AI Studio 获取密钥。",
+    "configureKey": "配置密钥"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "description": "DressApp Terms of Service — rules and conditions for using our app."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "DressApp privacy policy — how we collect, use, and protect your data."
   }
 }

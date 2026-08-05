@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Sparkles, Save, ImageOff, ChevronLeft, ChevronRight, X, Globe, CalendarDays, Loader2 } from 'lucide-react';
+import { Sparkles, Save, ImageOff, ChevronLeft, ChevronRight, X, CalendarDays, Loader2, Shirt, Layers, Footprints, ShoppingBag } from 'lucide-react';
 import { useStoreState } from '@/lib/createSimpleStore';
 import { shufflerUIStore } from '@/lib/shufflerUIStore';
 import { useClosetItems } from '@/lib/useClosetStore';
@@ -130,7 +130,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
 
   // Active item detail floater
   const [activeFloaterItemId, setActiveFloaterItemId] = useStoreState(shufflerUIStore, 'activeFloaterItemId');
-  
+
   const [topApi, setTopApi] = useState(null);
   const [bottomApi, setBottomApi] = useState(null);
   const [shoeApi, setShoeApi] = useState(null);
@@ -153,11 +153,11 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
       setBottomSelectedIdx(null);
       setShoeSelectedIdx(null);
       setActiveFloaterItemId(null);
-      
+
       if (topApi && filteredTops.length > 0) topApi.scrollTo(0, false);
       if (bottomApi && filteredBottoms.length > 0) bottomApi.scrollTo(0, false);
       if (shoeApi && filteredShoes.length > 0) shoeApi.scrollTo(0, false);
-      
+
       lastFilterRef.current = { style: selectedStyle, tag: selectedTag };
     }
   }, [selectedStyle, selectedTag, topApi, bottomApi, shoeApi, filteredTops.length, filteredBottoms.length, filteredShoes.length]);
@@ -242,7 +242,6 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
   }, [shoeApi]);
 
   // Sync State -> Carousel API (when user triggers selection click or shuffle)
-  // We only run scrollTo when a selection index changes to center it.
   useEffect(() => {
     if (topApi && duplicatedTops.length > 0 && topSelectedIdx !== null) {
       if (topApi.selectedScrollSnap() !== topSelectedIdx) {
@@ -270,13 +269,11 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
   // AI-driven, weather- and calendar-aware shuffler scout
   const handleShuffle = async () => {
     if (isSpinning) return;
-    
-    // Clear selection and close floater when starting shuffle
+
     handleStartScroll();
     setIsSpinning(true);
     setAiRationale('');
 
-    // Pre-spin / visual slot-machine effect to delight the user while the API call is in flight
     let spinCount = 0;
     const spinTimer = setInterval(() => {
       if (duplicatedTops.length > 1) {
@@ -301,8 +298,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
       };
 
       const res = await api.plannerScout(payload);
-      
-      // Stop the spinning interval
+
       clearInterval(spinTimer);
 
       if (res.weather_summary) {
@@ -312,7 +308,6 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
         setAiRationale(res.why);
       }
 
-      // Scroll to the recommended top
       if (res.top_id) {
         let tIdx = filteredTops.findIndex(it => it.id === res.top_id);
         if (tIdx === -1) {
@@ -329,7 +324,6 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
         }
       }
 
-      // Scroll to the recommended bottom
       if (res.bottom_id) {
         let bIdx = filteredBottoms.findIndex(it => it.id === res.bottom_id);
         if (bIdx === -1) {
@@ -341,7 +335,6 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
         }
       }
 
-      // Scroll to the recommended shoes
       if (res.shoes_id) {
         let sIdx = filteredShoes.findIndex(it => it.id === res.shoes_id);
         if (sIdx === -1) {
@@ -369,7 +362,6 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
   };
 
   const handleSave = async () => {
-    // Resolve to focused item in center of the carousels
     const selectedTop = filteredTops.length > 0 ? filteredTops[topFocusIdx % filteredTops.length] : null;
     const selectedBottom = filteredBottoms.length > 0 ? filteredBottoms[bottomFocusIdx % filteredBottoms.length] : null;
     const selectedShoe = filteredShoes.length > 0 ? filteredShoes[shoeFocusIdx % filteredShoes.length] : null;
@@ -380,7 +372,6 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
       return;
     }
 
-    // Generate a short, descriptive title
     const generateDescriptiveOutfitTitle = (items, translator) => {
       const colorList = items
         .map(it => {
@@ -392,13 +383,13 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
         })
         .filter(Boolean)
         .map(c => c.toLowerCase());
-        
+
       const uniqueColors = Array.from(new Set(colorList)).map(c => {
         const key = `color.${c}`;
         const localized = translator(key, { defaultValue: c });
         return localized.charAt(0).toUpperCase() + localized.slice(1);
       });
-      
+
       let colorStr = '';
       if (uniqueColors.length === 1) {
         colorStr = uniqueColors[0];
@@ -409,10 +400,10 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
       }
 
       const types = items.map(it => (it.item_type || it.title || '').toLowerCase());
-      
+
       let vibe = translator('stylist.vibe.casual', { defaultValue: 'Casual' });
       let season = translator('stylist.season.daily', { defaultValue: 'Daily' });
-      
+
       if (types.some(t => t.includes('hoodie') || t.includes('sweatpants') || t.includes('sneaker') || t.includes('sport'))) {
         vibe = translator('stylist.vibe.sporty', { defaultValue: 'Sporty' });
       } else if (types.some(t => t.includes('suit') || t.includes('blazer') || t.includes('dress shirt') || t.includes('formal'))) {
@@ -420,19 +411,19 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
       } else if (types.some(t => t.includes('jeans') || t.includes('denim') || t.includes('jacket'))) {
         vibe = translator('stylist.vibe.classic', { defaultValue: 'Classic' });
       }
-      
+
       if (types.some(t => t.includes('shorts') || t.includes('t-shirt') || t.includes('sandal') || t.includes('swim'))) {
         season = translator('stylist.season.summer', { defaultValue: 'Summer' });
       } else if (types.some(t => t.includes('coat') || t.includes('sweater') || t.includes('wool') || t.includes('heavy'))) {
         season = translator('stylist.season.winter', { defaultValue: 'Winter' });
       }
-      
-      const suffix = vibe === 'Sporty' 
-        ? translator('stylist.suffix.workout', { defaultValue: 'Workout' }) 
-        : vibe === 'Formal' 
-          ? translator('stylist.suffix.attire', { defaultValue: 'Attire' }) 
+
+      const suffix = vibe === 'Sporty'
+        ? translator('stylist.suffix.workout', { defaultValue: 'Workout' })
+        : vibe === 'Formal'
+          ? translator('stylist.suffix.attire', { defaultValue: 'Attire' })
           : translator('stylist.suffix.hangout', { defaultValue: 'Hangout' });
-      
+
       if (colorStr) {
         return `${vibe} ${colorStr} ${season} ${suffix}`;
       } else {
@@ -491,62 +482,72 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
     setShoeSelectedIdx(null);
   };
 
-  const renderRow = (label, list, focusIdx, selectedIdx, setIdx, setApi, api) => {
+  const rowIcons = {
+    top: <Shirt className="shuffler-icon-sm shuffler-icon-accent" />,
+    bottom: <Layers className="shuffler-icon-sm shuffler-icon-accent" />,
+    shoes: <Footprints className="shuffler-icon-sm shuffler-icon-accent" />,
+  };
+
+  const renderRow = (roleKey, label, list, focusIdx, selectedIdx, setIdx, setApi, api) => {
     const hasItems = list.length > 0;
     const duplicatedList = getDuplicatedList(list);
 
     const handleItemClick = (itemIdx, item) => {
       if (itemIdx === focusIdx) {
-        // Center item is clicked -> select it and open details floater
         setIdx(itemIdx);
         setActiveFloaterItemId(item.id);
       } else {
-        // Side item is clicked -> center it (focused), but do not select it
         api?.scrollTo(itemIdx);
       }
     };
 
     return (
-      <div className="flex flex-col items-center bg-card p-4 rounded-2xl border border-border shadow-sm w-full max-w-sm">
-        <span className="caps-label text-xs text-muted-foreground font-medium mb-2">{label}</span>
-        <div className="w-full relative px-10">
+      <div className="shuffler-row-card">
+        <div className="shuffler-row-header">
+          {rowIcons[roleKey]}
+          <span className="shuffler-row-label">{label}</span>
+        </div>
+        <div className="shuffler-row-carousel-wrap">
           <Carousel
             setApi={setApi}
             opts={{ align: 'center', loop: true, watchDrag: !isSpinning, dragFree: true, direction: i18n.dir() }}
-            className="w-full"
+            className="shuffler-carousel"
           >
-            <CarouselContent className="-ml-2">
+            <CarouselContent className="shuffler-carousel-content">
               {hasItems ? (
                 duplicatedList.map((item, itemIdx) => {
                   const imageUrl = bestImageUrl(item);
                   const isFocused = itemIdx === focusIdx;
                   const isSelected = itemIdx === selectedIdx;
                   return (
-                    <CarouselItem 
-                      key={`${item.id}-${itemIdx}`} 
-                      className="pl-2 basis-1/3 flex items-center justify-center cursor-pointer"
+                    <CarouselItem
+                      key={`${item.id}-${itemIdx}`}
+                      className="shuffler-carousel-item"
                       onClick={() => !isSpinning && handleItemClick(itemIdx, item)}
                     >
-                      <div className={`relative h-20 w-20 rounded-xl overflow-hidden flex items-center justify-center border transition-all duration-300 select-none ${
-                        isFocused 
-                          ? "scale-110 opacity-100 shadow-md z-10"
-                          : "scale-90 opacity-40 hover:opacity-75 z-0"
-                      } ${
-                        isSelected
-                          ? "border-brand bg-secondary/30"
-                          : "border-border/40 bg-secondary/10"
-                      }`}>
+                      <div
+                        className={
+                          `shuffler-thumb ${isFocused ? 'shuffler-thumb--focused' : 'shuffler-thumb--unfocused'} ${isSelected ? 'shuffler-thumb--selected' : ''}`
+                        }
+                      >
+                        {isSelected && (
+                          <span className="shuffler-check-badge">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </span>
+                        )}
                         {imageUrl ? (
                           <img
                             src={imageUrl}
                             alt={item.name || label}
-                            className="max-h-full max-w-full object-contain pointer-events-none p-1.5"
+                            className="shuffler-thumb-img"
                             draggable={false}
                           />
                         ) : (
-                          <div className="text-center text-muted-foreground p-1">
-                            <ImageOff className="h-5 w-5 mx-auto mb-0.5 opacity-55" />
-                            <span className="text-[8px] block truncate px-0.5 max-w-[60px]">
+                          <div className="shuffler-thumb-empty">
+                            <ImageOff className="shuffler-icon-sm" />
+                            <span className="shuffler-thumb-empty-label">
                               {item.name || item.title || t('common.garment', { defaultValue: 'Garment' })}
                             </span>
                           </div>
@@ -556,11 +557,11 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
                   );
                 })
               ) : (
-                <CarouselItem className="pl-2 basis-full flex items-center justify-center">
-                  <div className="relative h-20 w-20 bg-secondary/30 rounded-xl overflow-hidden flex items-center justify-center border border-border/50 select-none">
-                    <div className="text-center p-2 text-muted-foreground/60">
-                      <ImageOff className="h-5 w-5 mx-auto mb-0.5 opacity-40" />
-                      <span className="text-[9px] block font-medium">{t('common.noResults')}</span>
+                <CarouselItem className="shuffler-carousel-item shuffler-carousel-item--full">
+                  <div className="shuffler-thumb-noresults">
+                    <div className="shuffler-thumb-noresults-inner">
+                      <ImageOff className="shuffler-icon-sm" />
+                      <span className="shuffler-thumb-noresults-label">{t('common.noResults')}</span>
                     </div>
                   </div>
                 </CarouselItem>
@@ -572,22 +573,22 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="hidden md:flex absolute start-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground z-10" 
+                  className="shuffler-nav-btn shuffler-nav-btn--prev"
                   disabled={isSpinning}
                   onClick={() => api?.scrollPrev()}
                 >
-                  <ChevronLeft className="h-4 w-4" />
-                  <span className="sr-only">{t('components.dressMeShuffler.previous_slide', { defaultValue: 'Previous slide' })}</span>
+                  <ChevronLeft className="shuffler-icon-xs" />
+                  <span className="shuffler-sr-only">{t('components.dressMeShuffler.previous_slide', { defaultValue: 'Previous slide' })}</span>
                 </Button>
                 <Button
                   variant="outline"
                   size="icon"
-                  className="hidden md:flex absolute end-0 top-1/2 -translate-y-1/2 rounded-full h-8 w-8 hover:bg-accent hover:text-accent-foreground z-10" 
+                  className="shuffler-nav-btn shuffler-nav-btn--next"
                   disabled={isSpinning}
                   onClick={() => api?.scrollNext()}
                 >
-                  <ChevronRight className="h-4 w-4" />
-                  <span className="sr-only">{t('components.dressMeShuffler.next_slide', { defaultValue: 'Next slide' })}</span>
+                  <ChevronRight className="shuffler-icon-xs" />
+                  <span className="shuffler-sr-only">{t('components.dressMeShuffler.next_slide', { defaultValue: 'Next slide' })}</span>
                 </Button>
               </>
             )}
@@ -598,203 +599,212 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-4 py-2 w-full">
-      <div className="text-[10px] text-muted-foreground bg-secondary/20 px-3 py-1 rounded-full">
-        DEBUG: {items.length} items | {tops.length} tops | {bottoms.length} bottoms | {shoes.length} shoes
-      </div>
-      {/* Location, Weather & Calendar Header */}
-      <div className="w-full max-w-sm flex flex-col gap-3 px-4">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onOpenCalendar}
-          className="rounded-2xl flex items-center justify-center gap-2 w-full h-11 border-border/80 shadow-sm font-semibold text-xs text-foreground/90 bg-secondary/30 hover:bg-secondary/50"
-          data-testid="stylist-open-calendar-btn"
-          disabled={isSpinning}
-        >
-          <CalendarDays className="h-4 w-4 text-[hsl(var(--accent))]" />
-          <span>{t('calendar.viewCalendar', { defaultValue: 'View 7-Day Planner' })}</span>
-        </Button>
-
-        {/* Switchable Calendar Agenda Toggle */}
-        <div className="flex items-center justify-between p-3.5 rounded-2xl bg-secondary/20 border border-border/50 w-full">
-          <div className="flex items-center gap-2">
-            <CalendarDays className="h-4.5 w-4.5 text-[hsl(var(--accent))]" />
-            <div className="text-start">
-              <Label htmlFor="include-calendar" className="text-xs font-semibold block cursor-pointer select-none">
-                {t('stylist.todayEvents', { defaultValue: "Today's Agenda" })}
-              </Label>
-              <span className="text-[10px] text-muted-foreground block">
-                {includeCalendar 
-                  ? t('stylist.calendarSyncOn', { defaultValue: 'Syncing calendar items' }) 
-                  : t('stylist.calendarSyncOff', { defaultValue: 'Toggle to check events' })}
-              </span>
+    <div className="row gx-3 gy-4">
+      <div className="col-md-3">
+        {/* ============ LEFT PANEL: Planner ============ */}
+        <div className="shuffler-planner-card">
+          <div className="shuffler-panel-eyebrow">
+            <Sparkles className="shuffler-icon-sm shuffler-icon-accent" />
+            <span>{t('stylist.personalStylist', { defaultValue: 'Personal Stylist' })}</span>
+          </div>
+          <h2 className="shuffler-panel-title">{t('stylist.planYourOutfit', { defaultValue: 'Plan Your Outfit' })}</h2>
+          <p className="shuffler-panel-subtitle">
+            {t('stylist.planYourOutfitDesc', { defaultValue: 'Choose your schedule, style and preferred tag.' })}
+          </p>
+          <Button variant="outline" onClick={onOpenCalendar} className="shuffler-calendar-btn" data-testid="stylist-open-calendar-btn" disabled={isSpinning}>
+            <CalendarDays className="shuffler-icon-sm shuffler-icon-accent" />
+            <span>{t('calendar.viewCalendar', { defaultValue: 'View 7-Day Planner' })}</span>
+            <ChevronRight className="shuffler-icon-xs shuffler-calendar-chevron" />
+          </Button>
+          <div className="shuffler-toggle-card">
+            <div className="shuffler-toggle-left">
+              <CalendarDays className="shuffler-icon-md shuffler-icon-accent"/>
+              <div className="shuffler-toggle-text">
+                <Label htmlFor="include-calendar" className="shuffler-toggle-label">
+                  {t('stylist.todayEvents', { defaultValue: "Today's Agenda" })}
+                </Label>
+                <span className="shuffler-toggle-sub">
+                  {includeCalendar
+                    ? t('stylist.calendarSyncOn', { defaultValue: 'Syncing calendar items' })
+                    : t('stylist.calendarSyncOff', { defaultValue: 'Toggle to check events' })}
+                </span>
+              </div>
             </div>
+            <Switch id="include-calendar" checked={includeCalendar} onCheckedChange={setIncludeCalendar} disabled={isSpinning}/>
           </div>
-          <Switch
-            id="include-calendar"
-            checked={includeCalendar}
-            onCheckedChange={setIncludeCalendar}
-            disabled={isSpinning}
-          />
-        </div>
-
-        {/* Collapsible agenda items */}
-        {includeCalendar && (
-          <div className="w-full rounded-2xl border border-border/60 bg-card/60 p-3 space-y-2 text-start animate-[fadeIn_0.2s_ease-out]">
-            <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider px-1">
-              {t('stylist.todaysAgenda', { defaultValue: "Today's Schedule" })}
-            </div>
-            {calendarLoading ? (
-              <div className="text-xs text-muted-foreground px-1 py-1 flex items-center gap-2">
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-[hsl(var(--accent))]" />
-                {t('common.loading')}
+          {includeCalendar && (
+            <div className="shuffler-agenda">
+              <div className="shuffler-agenda-title">
+                {t('stylist.todaysAgenda', { defaultValue: "Today's Schedule" })}
               </div>
-            ) : calendarEvents.length === 0 ? (
-              <div className="text-xs text-muted-foreground/75 px-1 py-1 italic">
-                {t('stylist.noEventsToday', { defaultValue: 'No events scheduled for today.' })}
-              </div>
-            ) : (
-              <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                {calendarEvents.map((evt, idx) => (
-                  <div key={idx} className="text-xs flex items-center gap-2 p-1.5 rounded-lg bg-secondary/40 border border-border/30">
-                    <span className="h-1.5 w-1.5 rounded-full bg-brand shrink-0" />
-                    <span className="font-semibold truncate">{evt.summary}</span>
-                    {evt.start?.dateTime && (
-                      <span className="text-[10px] text-muted-foreground ms-auto">
-                        {new Date(evt.start.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Filter Row */}
-      <div className="w-full max-w-sm flex items-end gap-3 px-4 mb-1">
-        {/* Tag Filter (Autocomplete) */}
-        <div className="flex-[1.2] min-w-0 relative">
-          <label className="text-[10px] caps-label text-muted-foreground font-semibold block mb-1 ps-1 text-start">
-            {t('stylist.tagFilterLabel', { defaultValue: 'Tag' })}
-          </label>
-          <div className="relative">
-            <Input
-              value={tagInput}
-              onChange={(e) => {
-                setTagInput(e.target.value);
-                setShowSuggestions(true);
-                if (!e.target.value) {
-                  setSelectedTag('');
-                }
-              }}
-              onFocus={() => setShowSuggestions(true)}
-              onBlur={() => {
-                setTimeout(() => setShowSuggestions(false), 200);
-              }}
-              placeholder={t('stylist.tagFilterPlaceholder', { defaultValue: 'e.g. Work, Gym' })}
-              className="rounded-2xl border-border bg-card shadow-sm h-10 text-xs font-medium focus:ring-[hsl(var(--accent))] pe-8 rtl:pe-3 rtl:ps-8"
-              disabled={isSpinning}
-            />
-            {tagInput && (
-              <button
-                onClick={() => {
-                  setTagInput('');
-                  setSelectedTag('');
-                }}
-                className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-
-          {showSuggestions && tagSuggestions.length > 0 && (
-            <div className="absolute z-20 start-0 end-0 mt-1 max-h-40 overflow-y-auto bg-card border border-border rounded-xl shadow-lg p-1">
-              {tagSuggestions.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => {
-                    setTagInput(tag);
-                    setSelectedTag(tag);
-                    setShowSuggestions(false);
-                  }}
-                  className="w-full text-start px-3 py-2 text-xs hover:bg-accent hover:text-accent-foreground rounded-lg transition-colors"
-                >
-                  {tag}
-                </button>
-              ))}
+              {calendarLoading ? (
+                <div className="shuffler-agenda-loading">
+                  <Loader2 className="shuffler-icon-sm shuffler-icon-accent shuffler-spin" />
+                  {t('common.loading')}
+                </div>
+              ) : calendarEvents.length === 0 ? (
+                <div className="shuffler-agenda-empty">
+                  {t('stylist.noEventsToday', { defaultValue: 'No events scheduled for today.' })}
+                </div>
+              ) : (
+                <div className="shuffler-agenda-list">
+                  {calendarEvents.slice(0, 4).map((evt, idx) => (
+                    <div key={idx} className="shuffler-agenda-item">
+                      <span className="shuffler-agenda-dot" />
+                      <span className="shuffler-agenda-name">{evt.summary}</span>
+                      {evt.start?.dateTime && (
+                        <span className="shuffler-agenda-time">
+                          {new Date(evt.start.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                  {calendarEvents.length > 4 && (
+                    <div className="shuffler-agenda-more">
+                      {t('stylist.moreEvents', { defaultValue: `+${calendarEvents.length - 4} more events`, count: calendarEvents.length - 4 })}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
-        </div>
+          <div className="shuffler-preferences-card">
+            <div className="shuffler-preferences-title">
+              {t('stylist.outfitPreferences', { defaultValue: 'Outfit Preferences' })}
+            </div>
+            <div className="shuffler-filter-tag">
+              <label className="shuffler-filter-label">
+                {t('stylist.tagFilterLabel', { defaultValue: 'Tag' })}
+              </label>
+              <div className="shuffler-filter-input-wrap">
+                <ShoppingBag className="shuffler-input-icon" />
+                <Input
+                  value={tagInput}
+                  onChange={(e) => {
+                    setTagInput(e.target.value);
+                    setShowSuggestions(true);
+                    if (!e.target.value) {
+                      setSelectedTag('');
+                    }
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => {
+                    setTimeout(() => setShowSuggestions(false), 200);
+                  }}
+                  placeholder={t('stylist.tagFilterPlaceholder', { defaultValue: 'e.g. Work, Gym, Casual' })}
+                  className="createlisting-input"
+                  disabled={isSpinning}
+                />
+                {tagInput && (
+                  <button
+                    onClick={() => {
+                      setTagInput('');
+                      setSelectedTag('');
+                    }}
+                    className="shuffler-filter-clear">
+                    <X className="shuffler-icon-sm" />
+                  </button>
+                )}
+              </div>
 
-        {/* Style Filter */}
-        <div className="flex-[0.8] min-w-0">
-          <label className="text-[10px] caps-label text-muted-foreground font-semibold block mb-1 ps-1 text-start">
-            {t('stylist.styleFilterLabel', { defaultValue: 'Style' })}
-          </label>
-          <Select value={selectedStyle} onValueChange={setSelectedStyle} disabled={isSpinning}>
-            <SelectTrigger className="w-full rounded-2xl border-border bg-card shadow-sm h-10 text-xs font-medium focus:ring-[hsl(var(--accent))]">
-              <SelectValue placeholder={t('stylist.selectStyle', { defaultValue: 'Select Style' })} />
-            </SelectTrigger>
-            <SelectContent className="rounded-2xl border-border bg-card shadow-md">
-              {DRESS_CODE_OPTIONS.map((style) => (
-                <SelectItem key={style} value={style} className="text-xs focus:bg-accent focus:text-accent-foreground rounded-xl py-2">
-                  {style === 'all' 
-                    ? t('taxonomy.dress_code.all', { defaultValue: 'All Styles' }) 
-                    : labelForDressCode(style, t)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+              {showSuggestions && tagSuggestions.length > 0 && (
+                <div className="shuffler-tag-suggestions">
+                  {tagSuggestions.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => {
+                        setTagInput(tag);
+                        setSelectedTag(tag);
+                        setShowSuggestions(false);
+                      }}
+                      className="shuffler-tag-suggestion-item"
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
-      {/* Outfit Canvas Carousel Rows */}
-      <div className="flex flex-col gap-3 w-full items-center">
-        {renderRow(labelForRole('top', t), filteredTops, topFocusIdx, topSelectedIdx, setTopSelectedIdx, setTopApi, topApi)}
-        {renderRow(labelForRole('bottom', t), filteredBottoms, bottomFocusIdx, bottomSelectedIdx, setBottomSelectedIdx, setBottomApi, bottomApi)}
-        {renderRow(labelForRole('shoes', t), filteredShoes, shoeFocusIdx, shoeSelectedIdx, setShoeSelectedIdx, setShoeApi, shoeApi)}
-      </div>
-
-      {/* AI Styling Rationale */}
-      {aiRationale && (
-        <div className="w-full max-w-sm px-4 mt-1 animate-[fadeIn_0.35s_ease-out]">
-          <div className="p-3.5 rounded-2xl border border-brand/20 bg-accent-lilac/10 text-start">
-            <span className="text-[10px] font-bold text-brand uppercase tracking-wider block mb-1">
-              {t('stylist.aiRationale', { defaultValue: "Stylist's Advice" })}
-            </span>
-            <p className="text-xs text-foreground/90 font-medium leading-relaxed">
-              {aiRationale}
-            </p>
+            <div className="shuffler-filter-style">
+              <label className="shuffler-filter-label">
+                {t('stylist.styleFilterLabel', { defaultValue: 'Style' })}
+              </label>
+              <Select value={selectedStyle} onValueChange={setSelectedStyle} disabled={isSpinning}>
+                <SelectTrigger className="createlisting-select">
+                  <SelectValue placeholder={t('stylist.selectStyle', { defaultValue: 'Select Style' })} />
+                </SelectTrigger>
+                <SelectContent>
+                  {DRESS_CODE_OPTIONS.map((style) => (
+                    <SelectItem key={style} value={style} className="shuffler-select-item">
+                      {style === 'all'
+                        ? t('taxonomy.dress_code.all', { defaultValue: 'All Styles' })
+                        : labelForDressCode(style, t)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
-      )}
-
-      {/* Buttons */}
-      <div className="flex items-center gap-4 mt-2">
-        <Button
-          onClick={handleShuffle}
-          disabled={isSpinning}
-          className="rounded-2xl bg-brand text-brand-foreground hover:bg-brand/90 px-6 py-6 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 text-sm font-semibold"
-        >
-          <Sparkles className={`h-4 w-4 ${isSpinning ? 'animate-spin' : ''}`} />
-          {t('stylist.refreshScout')}
-        </Button>
-
-        <Button
-          onClick={handleSave}
-          disabled={saving || isSpinning || (filteredTops.length === 0 && filteredBottoms.length === 0 && filteredShoes.length === 0)}
-          variant="outline"
-          className="rounded-2xl px-6 py-6 border-brand/20 hover:bg-accent-lilac/30 text-brand font-semibold flex items-center gap-2 text-sm"
-        >
-          <Save className="h-4 w-4" />
-          {t('common.save')}
-        </Button>
       </div>
+      <div className="col-md-9">
+        {/* ============ RIGHT PANEL: Builder ============ */}
+        <div className="shuffler-builder-card">
+          <div className="shuffler-builder-header">
+            <div>
+              <div className="shuffler-panel-eyebrow">
+                <Sparkles className="shuffler-icon-sm shuffler-icon-accent" />
+                <span>{t('stylist.aiOutfitBuilder', { defaultValue: 'AI Outfit Builder' })}</span>
+              </div>
+              <h2 className="shuffler-panel-title">{t('stylist.createTodaysLook', { defaultValue: "Create today's look" })}</h2>
+              <p className="shuffler-panel-subtitle">
+                {t('stylist.swipeOrLetAi', { defaultValue: 'Swipe through your wardrobe or let AI select an outfit.' })}
+              </p>
+            </div>
+            <div className="shuffler-items-badge">
+              <ShoppingBag className="shuffler-icon-sm" />
+              <span>{t('stylist.itemsCount', { defaultValue: `${items.length} items`, count: items.length })}</span>
+            </div>
+          </div>
 
+          <div className="shuffler-rows">
+            {renderRow('top', labelForRole('top', t), filteredTops, topFocusIdx, topSelectedIdx, setTopSelectedIdx, setTopApi, topApi)}
+            {renderRow('bottom', labelForRole('bottom', t), filteredBottoms, bottomFocusIdx, bottomSelectedIdx, setBottomSelectedIdx, setBottomApi, bottomApi)}
+            {renderRow('shoes', labelForRole('shoes', t), filteredShoes, shoeFocusIdx, shoeSelectedIdx, setShoeSelectedIdx, setShoeApi, shoeApi)}
+          </div>
+
+          {aiRationale && (
+            <div className="shuffler-rationale-card">
+              <span className="shuffler-rationale-title">
+                {t('stylist.aiRationale', { defaultValue: "Stylist's Advice" })}
+              </span>
+              <p className="shuffler-rationale-text">
+                {aiRationale}
+              </p>
+            </div>
+          )}
+          <div className="shuffler-actions">
+            <Button
+              onClick={handleShuffle}
+              disabled={isSpinning}
+              className="custm-btn w-100"
+            >
+              <Sparkles className={`shuffler-icon-sm ${isSpinning ? 'shuffler-spin' : ''}`} />
+              {t('stylist.refreshScout', { defaultValue: 'Generate New Outfit' })}
+            </Button>
+
+            <Button
+              onClick={handleSave}
+              disabled={saving || isSpinning || (filteredTops.length === 0 && filteredBottoms.length === 0 && filteredShoes.length === 0)}
+              variant="outline"
+              className="btn-premium-secondary w-100"
+            >
+              {t('common.save', { defaultValue: 'Save Outfit' })}
+            </Button>
+          </div>
+        </div>
+      </div>
       <ItemFloater itemId={activeFloaterItemId} onClose={handleCloseFloater} fromOutfits={true} />
     </div>
   );

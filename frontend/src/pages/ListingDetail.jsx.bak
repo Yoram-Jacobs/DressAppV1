@@ -133,7 +133,7 @@ export default function ListingDetail() {
                     + {fmt(listing.shipping_fee_cents, fm.currency)} shipping
                   </span>
                   <span className="text-[hsl(var(--accent))] text-xs">
-                    · Or meet locally to skip the fee 🌱
+                    · Or meet locally to skip the fee
                   </span>
                 </div>
               ) : (
@@ -141,7 +141,7 @@ export default function ListingDetail() {
                   className="mt-2 text-xs text-[hsl(var(--accent))]"
                   data-testid="listing-detail-shipping-free"
                 >
-                  🌱 Local pickup preferred — no shipping fee
+                  Local pickup preferred — no shipping fee
                 </div>
               )}
 

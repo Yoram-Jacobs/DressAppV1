@@ -31,24 +31,17 @@ export function BrandLogo({ className, size = 'md', showWordmark = true, testId 
   }[size] || { markH: 'h-6', wordClass: 'text-2xl' };
 
   return (
-    <span
-      className={cn('inline-flex items-baseline gap-2 select-none', className)}
-      data-testid={testId}
-    >
-      <img
-        src="/apple-touch-icon.png"
-        alt={t('brand', { defaultValue: 'DressApp' })}
-        className={cn(sizing.markH, 'w-auto shrink-0 self-center drop-shadow-sm')}
-        loading="eager"
-        decoding="async"
-      />
+    <div className="logomain" data-testid={testId}>
+      <img src="/apple-touch-icon.png" alt={t('brand', { defaultValue: 'DressApp' })} loading="eager" decoding="async" />
       {showWordmark && (
-        <span className={cn('font-display leading-none self-center', sizing.wordClass)}>
-          {t('brand', { defaultValue: 'DressApp' })}
-        </span>
+        <>
+        <span>{t('brand', { defaultValue: 'DressApp' })}</span>
+        </>
       )}
-    </span>
+    </div>
   );
 }
-
+// <span className={cn('font-display leading-none self-center', sizing.wordClass)}>
+//   {t('brand', { defaultValue: 'DressApp' })}
+// </span>
 export default BrandLogo;
