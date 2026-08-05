@@ -1100,26 +1100,81 @@ async def analyze_item_image(
 
     if wants_ndjson:
         async def _ndjson_stream():
-            # Frame producer — translates ``analyze_outfit_stream``
+            # Frame producer — translates ``analyze_outfits_stream``
             # frames into NDJSON lines + the per-item augmentation
             # the existing closet save flow expects.
-            
+            #
+            # Patch M22 (Aug 2026) — Split lock scope.
+            # The original implementation held ``_ANALYZE_LOCK`` for the
+            # entire generator (detect → LLM items).  When Gemma is the
+            # active provider each inference takes ~80 s on CPU, so a
+            # concurrent request would block here before emitting the
+            # detect frame — zero placeholder cards, zero loading
+            # indicator — giving the user the impression that the
+            # analysis was silently killed.
+            #
+            # Fix: run detect + emit the detect frame *outside* the lock,
+            # then acquire the lock only for the slow LLM item calls.
+            # This matches the intent of _ANALYZE_LOCK (guard GPU/CPU-
+            # intensive model calls) without blocking fast detect IO.
+
             try:
+                # ── Phase 1: detect (fast, CPU-bound, no LLM) ──────────
+                # Start the stream OUTSIDE the lock so the detect frame
+                # (SegFormer + crop) is emitted immediately even when
+                # another analyse job is in flight.
+                streamer = garment_vision_service.analyze_outfits_stream(
+                    raw_list, language=user_lang,
+                )
+
+                saw_detect = False
+                items_meta: list[dict[str, Any]] = []
+
+                # Consume frames until we have the detect frame, then
+                # stash the remaining item/done frames for phase 2.
+                pending_frames: list[dict[str, Any]] = []
+
+                async for frame in streamer:
+                    ftype = frame.get("type")
+                    if ftype == "detect":
+                        saw_detect = True
+                        items_meta = frame.get("items_meta") or []
+                        # Emit detect immediately — no lock needed.
+                        yield (json.dumps(frame, ensure_ascii=False) + "\n").encode("utf-8")
+                    elif ftype == "error":
+                        # Surface errors immediately.
+                        await try_refund()
+                        yield (json.dumps(frame, ensure_ascii=False) + "\n").encode("utf-8")
+                        return
+                    else:
+                        # item / item_skip / done — queue for phase 2
+                        pending_frames.append(frame)
+
+                if not saw_detect:
+                    yield (
+                        json.dumps(
+                            {
+                                "type": "error",
+                                "status": 503,
+                                "message": (
+                                    "Garment analyzer produced no "
+                                    "frames; please retry."
+                                ),
+                            },
+                            ensure_ascii=False,
+                        )
+                        + "\n"
+                    ).encode("utf-8")
+                    return
+
+                # ── Phase 2: LLM items (slow) — hold the lock ──────────
+                # By this point the detect frame has already been streamed
+                # to the client.  We now acquire the lock to serialise
+                # the expensive LLM calls (Gemma ~80 s, Gemini ~16 s).
                 async with _ANALYZE_LOCK:
-                    saw_detect = False
-                    items_meta: list[dict[str, Any]] = []
-                    
-                    streamer = garment_vision_service.analyze_outfits_stream(
-                        raw_list, language=user_lang,
-                    )
-                        
-                    async for frame in streamer:
+                    for frame in pending_frames:
                         ftype = frame.get("type")
-                        if ftype == "detect":
-                            saw_detect = True
-                            items_meta = frame.get("items_meta") or []
-                            yield (json.dumps(frame, ensure_ascii=False) + "\n").encode("utf-8")
-                        elif ftype == "item":
+                        if ftype == "item":
                             idx = frame.get("index", -1)
                             meta = (
                                 items_meta[idx]
@@ -1131,10 +1186,6 @@ async def analyze_item_image(
                                 _is_unidentifiable,
                             )
                             if _is_unidentifiable(analysis):
-                                # Drop the slot — emit ``item_skip``
-                                # so the frontend can remove the
-                                # placeholder card it created from the
-                                # detect frame.
                                 out_frame = {
                                     "type": "item_skip",
                                     "index": idx,
@@ -1171,36 +1222,21 @@ async def analyze_item_image(
                                 json.dumps(out_frame, ensure_ascii=False)
                                 + "\n"
                             ).encode("utf-8")
+                        elif ftype == "item_skip":
+                            yield (
+                                json.dumps(frame, ensure_ascii=False) + "\n"
+                            ).encode("utf-8")
+                        elif ftype == "done":
+                            yield (
+                                json.dumps(frame, ensure_ascii=False) + "\n"
+                            ).encode("utf-8")
                         elif ftype == "error":
                             await try_refund()
                             yield (
-                                json.dumps(frame, ensure_ascii=False)
-                                + "\n"
+                                json.dumps(frame, ensure_ascii=False) + "\n"
                             ).encode("utf-8")
                             return
-                        elif ftype == "done":
-                            yield (
-                                json.dumps(frame, ensure_ascii=False)
-                                + "\n"
-                            ).encode("utf-8")
-                    # Sentinel — protect against generators that exit
-                    # without a `done` frame (very rare; would only
-                    # happen if `analyze_outfit_stream` was cancelled).
-                    if not saw_detect:
-                        yield (
-                            json.dumps(
-                                {
-                                    "type": "error",
-                                    "status": 503,
-                                    "message": (
-                                        "Garment analyzer produced no "
-                                        "frames; please retry."
-                                    ),
-                                },
-                                ensure_ascii=False,
-                            )
-                            + "\n"
-                        ).encode("utf-8")
+
             except Exception as exc:  # noqa: BLE001
                 logger.exception("ndjson analyze stream error: %s", exc)
                 await try_refund()
