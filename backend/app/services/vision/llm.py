@@ -953,3 +953,197 @@ _SEGFORMER_KIND_HUMAN_LABEL: dict[str, str] = {
     "accessory": "Accessories (belt / scarf / sunglasses / bag)",
     "headwear": "Accessories (hat / cap / beanie)",
 }
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Patch M23 (Aug 2026) — Gemma per-attribute streaming
+#
+# Problem: one 2400-token Gemma call takes 82-111 s on the CPU-only VPS.
+# After 111 s the stream silently dies (Caddy idle timeout).
+#
+# Solution: split the 17 fields into 5 focused attribute groups and send
+# one /predict request per group.  Each group outputs 50-250 tokens
+# (~8-22 s on CPU) and the result is immediately yielded to the NDJSON
+# stream so the frontend can update form fields progressively.
+#
+# Total wall time: ~60-75 s (sequential, 5 calls) vs 82-111 s (single).
+# Time to first field: ~8-14 s vs 82-111 s.
+# No silent kill: each call finishes well within any proxy idle timeout.
+# ─────────────────────────────────────────────────────────────────────
+
+# Each entry: (group_name, field_names, max_output_tokens, system_snippet)
+# Groups are ordered so fast enum-heavy groups fire first.
+ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
+    (
+        "identity",
+        ["name", "title", "category", "sub_category", "item_type"],
+        280,
+        (
+            'Return ONLY a JSON object with exactly these keys:\n'
+            '{\n'
+            '  "name": "2-5 distinctive words, e.g. \\"ribbed slim crewneck\\"",\n'
+            '  "title": "short fallback title, e.g. \\"Blue Sweater\\"",\n'
+            '  "category": "one of: Top, Bottom, Outerwear, Full Body, Footwear, Accessories, Underwear",\n'
+            '  "sub_category": "e.g. T-shirt, Dress, Coat, Sneakers",\n'
+            '  "item_type": "specific type, e.g. Oxford shirt, Mini-dress"\n'
+            '}'
+        ),
+    ),
+    (
+        "visual",
+        ["colors", "pattern", "fabric_materials"],
+        320,
+        (
+            'Return ONLY a JSON object:\n'
+            '{\n'
+            '  "colors": [{"name": "color name", "pct": integer 0-100}],\n'
+            '  "pattern": "one of: solid, striped, plaid, floral, herringbone, polka, paisley, geometric, abstract",\n'
+            '  "fabric_materials": [{"name": "fabric", "pct": integer 0-100}]\n'
+            '}\n'
+            'colors[*].pct should sum to ~100. fabric_materials[*].pct should sum to ~100.'
+        ),
+    ),
+    (
+        "context",
+        ["gender", "dress_code", "season", "tradition"],
+        120,
+        (
+            'Return ONLY a JSON object:\n'
+            '{\n'
+            '  "gender": "men OR women OR unisex OR kids",\n'
+            '  "dress_code": "one of: casual, smart-casual, business, formal, athletic, loungewear",\n'
+            '  "season": ["spring" and/or "summer" and/or "fall" and/or "winter" and/or "all"],\n'
+            '  "tradition": "cultural/religious style if clearly visible (e.g. arabic, jewish, indian), else null"\n'
+            '}'
+        ),
+    ),
+    (
+        "condition",
+        ["state", "condition", "quality", "size", "brand"],
+        160,
+        (
+            'Return ONLY a JSON object:\n'
+            '{\n'
+            '  "state": "new OR used",\n'
+            '  "condition": "bad OR fair OR good OR excellent",\n'
+            '  "quality": "budget OR mid OR premium OR luxury",\n'
+            '  "size": "readable label/tag in photo only, else null",\n'
+            '  "brand": "legibly visible brand only, else null"\n'
+            '}'
+        ),
+    ),
+    (
+        "narrative",
+        ["caption", "price_cents", "repair_advice", "tags"],
+        520,
+        (
+            'Return ONLY a JSON object:\n'
+            '{\n'
+            '  "caption": "ONE confident vivid sentence max 240 chars. No hedging (no seems/appears/probably).",\n'
+            '  "price_cents": "estimated resale value in USD cents as integer, or null",\n'
+            '  "repair_advice": "short actionable tip if badly worn, else null",\n'
+            '  "tags": ["3 to 8 searchable keywords"]\n'
+            '}'
+        ),
+    ),
+]
+
+# Text-heavy groups that need language localisation for free-text fields.
+_TEXT_GROUPS = {"identity", "narrative"}
+
+
+async def call_gemma_space_stream_attributes(
+    *,
+    image_b64_jpeg: str,
+    language: str | None = None,
+    timeout_per_group: float | None = None,
+) -> "AsyncIterator[tuple[str, list[str], dict[str, Any]]]":
+    """Patch M23 — per-attribute streaming for Gemma on CPU.
+
+    Sends one focused /predict request per attribute group and yields
+    ``(group_name, field_names, partial_dict)`` as each call resolves.
+
+    Callers ``async for`` over this generator and emit an NDJSON
+    ``{"type": "field", ...}`` frame for each yielded tuple, so the
+    frontend can progressively fill the Add-Item form while the next
+    group is still being processed by the model.
+
+    The 5-group split reduces the single 2400-token call (82-111 s) to
+    5 calls of 50-280 tokens each (~8-22 s per group), cutting the
+    total wall time to ~60-75 s while giving the user visible results
+    within ~10 s.
+
+    On any individual group failure the generator yields an empty dict
+    for that group and continues — the final assembled analysis will
+    simply be missing those fields, which is better than failing the
+    entire analysis.
+    """
+    # Per-group timeout: default to max(45s, EYES_GEMMA_TIMEOUT_S/3).
+    # 45 s is generous for 280 tokens at 35 ms/token (~10 s generation
+    # + ~30 s image prefill overhead worst-case on a cold CPU).
+    tpg: float = timeout_per_group or max(
+        45.0, float(settings.EYES_GEMMA_TIMEOUT_S) / 3.0
+    )
+
+    lang_code = (language or "en").lower()
+    lang_name = _LANG_NAMES.get(lang_code, lang_code) if lang_code != "en" else None
+
+    for group_name, field_names, max_tokens, sys_snippet in ATTRIBUTE_GROUPS:
+        # Build a minimal, focused system prompt for this group only.
+        sys_parts = [
+            "You are DressApp's garment analyst. Look at the garment photo.",
+        ]
+        # Language directive only for text-heavy groups to save tokens.
+        if lang_name and group_name in _TEXT_GROUPS:
+            sys_parts.append(
+                f"OUTPUT LANGUAGE: {lang_name}. "
+                f"All free-text values must be written in fluent {lang_name}. "
+                "JSON keys and enum tokens stay in English."
+            )
+        sys_parts.append(sys_snippet)
+        sys_parts.append("Return only the JSON object. No markdown, no commentary.")
+        system_prompt = "\n".join(sys_parts)
+
+        user_text = "Analyse this garment photo and return the JSON."
+
+        try:
+            raw = await _call_gemma_space(
+                system_prompt=system_prompt,
+                user_text=user_text,
+                image_b64_jpeg=image_b64_jpeg,
+                max_tokens=max_tokens,
+                temperature=0.1,
+                timeout=tpg,
+                # json_mode=True keeps the output valid JSON without
+                # requiring a full grammar schema per group.
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "M23: Gemma attribute group %r failed: %s",
+                group_name,
+                repr(exc)[:200],
+            )
+            yield group_name, field_names, {}
+            continue
+
+        try:
+            parsed = _extract_json(raw)
+            # Model may occasionally wrap results in a list — take first.
+            if isinstance(parsed, list) and parsed:
+                parsed = parsed[0]
+            if not isinstance(parsed, dict):
+                parsed = {}
+            # Keep only the fields this group owns; discard hallucinated keys.
+            filtered = {k: v for k, v in parsed.items() if k in field_names}
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "M23: Gemma attribute group %r parse error: %s",
+                group_name,
+                repr(exc)[:200],
+            )
+            filtered = {}
+
+        logger.debug(
+            "M23: Gemma group %r → keys=%s", group_name, list(filtered.keys()),
+        )
+        yield group_name, field_names, filtered

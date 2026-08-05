@@ -1141,6 +1141,11 @@ async def analyze_item_image(
                         items_meta = frame.get("items_meta") or []
                         # Emit detect immediately — no lock needed.
                         yield (json.dumps(frame, ensure_ascii=False) + "\n").encode("utf-8")
+                    elif ftype == "field":
+                        # Patch M23 — per-attribute Gemma result.
+                        # Yield immediately so the frontend can fill form
+                        # fields progressively while the next group runs.
+                        yield (json.dumps(frame, ensure_ascii=False) + "\n").encode("utf-8")
                     elif ftype == "error":
                         # Surface errors immediately.
                         await try_refund()

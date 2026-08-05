@@ -1,6 +1,6 @@
 from __future__ import annotations
 from __future__ import annotations
-from .llm import EYES_JSON_SCHEMA, _call_gemma_space, _build_system_prompt, _language_directive, _user_prompt, _extract_json, DETECT_SYSTEM_PROMPT, _scan_complete_json_objects, _build_batch_prompts, GROUP_ANALYZE_SYSTEM_PROMPT, _LANG_NAMES
+from .llm import EYES_JSON_SCHEMA, _call_gemma_space, _build_system_prompt, _language_directive, _user_prompt, _extract_json, DETECT_SYSTEM_PROMPT, _scan_complete_json_objects, _build_batch_prompts, GROUP_ANALYZE_SYSTEM_PROMPT, _LANG_NAMES, call_gemma_space_stream_attributes
 from .image import _shrink_for_vision, _crop_to_bbox, _PHANTOM_DROP_PCT, _solid_alpha_coverage, _fit_crop_to_card, _apply_fast_matte
 from .geometry import _nms_detections, _is_unidentifiable, _looks_already_cropped
 from .validation import _coerce_single_garment, _coerce_enums, _enforce_segformer_category
@@ -2106,6 +2106,7 @@ class GarmentVisionService:
         yield {"type": "detect", "count": len(flat_crops), "items_meta": items_meta}
 
         from app.config import settings as _settings
+        from app.services import eyes_override as _eyes_override
 
         emitted = 0
         try:
@@ -2114,96 +2115,164 @@ class GarmentVisionService:
             except Exception:
                 should_reconstruct = None  # type: ignore[assignment]
 
-            # Process all crops concurrently using individual analyze calls.
-            # This avoids the 4-minute latency caused by forcing Gemini to
-            # generate multiple GarmentAnalysis objects sequentially in a single
-            # batch stream. We cap concurrency to 6 to avoid overwhelming the
-            # LLM proxy while maintaining very fast TTFB.
-            sem = asyncio.Semaphore(6)
+            # Resolve provider so we can choose the right crop strategy.
+            active_provider = (
+                await _eyes_override.get_active_provider()
+            ).lower()
 
-            async def _process_crop(slot_idx: int, crop_tuple: tuple[int, dict[str, Any], bytes, str]) -> tuple[int, dict[str, Any]]:
-                image_idx, det, c_bytes, c_mime = crop_tuple
-                async with sem:
-                    try:
-                        # Use the single-garment analyze for fastest TTFB per item
-                        analysis = await self.analyze(
-                            c_bytes, language=language, think=False
-                        )
-                        return slot_idx, analysis
-                    except Exception as exc:
-                        logger.warning(
-                            "analyze_outfits_stream: concurrent analyze failed slot=%d: %s",
-                            slot_idx, repr(exc)[:160],
-                        )
-                        return slot_idx, {}
+            if active_provider == "gemma" and settings.EYES_GEMMA_SPACE_URL:
+                # ── Patch M23: Gemma per-attribute sequential path ────────
+                # On CPU, a single 2400-token call takes 82-111 s and hits
+                # the Caddy idle-timeout.  Instead we send 5 focused
+                # /predict calls (~10-22 s each) and stream each group's
+                # result back to the client as a "field" NDJSON frame so
+                # the form fills progressively while the next group runs.
+                for slot_idx, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
+                    shrunk = _shrink_for_vision(c_bytes)
+                    b64 = base64.b64encode(shrunk).decode("ascii")
+                    assembled: dict[str, Any] = {}
 
-            tasks = [
-                asyncio.create_task(_process_crop(i, crop_tuple))
-                for i, crop_tuple in enumerate(flat_crops)
-            ]
+                    async for grp_name, grp_fields, partial in call_gemma_space_stream_attributes(
+                        image_b64_jpeg=b64,
+                        language=language,
+                    ):
+                        assembled.update(partial)
+                        if partial:  # only emit if the group produced data
+                            yield {
+                                "type": "field",
+                                "index": slot_idx,
+                                "image_index": image_idx,
+                                "group": grp_name,
+                                "fields": partial,
+                            }
 
-            for completed_task in asyncio.as_completed(tasks):
-                slot_idx, analysis = await completed_task
-                image_idx, det, c_bytes, c_mime = flat_crops[slot_idx]
-                
-                needs_reconstruction = False
-                reasons: list[str] = []
-                if should_reconstruct is not None:
-                    try:
-                        needs, raw_reasons = should_reconstruct(analysis, det.get("bbox"))
-                        if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
-                            needs_reconstruction = True
-                            reasons = list(raw_reasons)
-                    except Exception as exc:
-                        logger.warning(
-                            "reconstruction gate failed (concurrent) slot=%d: %s",
-                            slot_idx, repr(exc)[:160],
-                        )
+                    # Normalise / coerce the fully-assembled dict.
+                    analysis = _coerce_single_garment(assembled)
+                    if not analysis.get("title") and analysis.get("name"):
+                        analysis["title"] = analysis["name"]
+                    if not analysis.get("title"):
+                        analysis["title"] = "Unnamed garment"
+                    analysis = _coerce_enums(analysis)
+                    analysis["provider_used"] = "gemma"
+                    analysis["model_used"] = "gemma-4-e2b-q4_k_m"
 
-                yield {
-                    "type": "item",
-                    "index": slot_idx,
-                    "image_index": image_idx,
-                    "analysis": analysis,
-                    "label": analysis.get("sub_category") or analysis.get("item_type"),
-                    "needs_reconstruction": needs_reconstruction,
-                    "reconstruction_reasons": reasons,
-                }
-                emitted += 1
+                    needs_reconstruction = False
+                    reasons: list[str] = []
+                    if should_reconstruct is not None:
+                        try:
+                            needs, raw_reasons = should_reconstruct(
+                                analysis, det.get("bbox")
+                            )
+                            if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
+                                needs_reconstruction = True
+                                reasons = list(raw_reasons)
+                        except Exception as exc:  # noqa: BLE001
+                            logger.warning(
+                                "reconstruction gate failed (gemma) slot=%d: %s",
+                                slot_idx, repr(exc)[:160],
+                            )
+
+                    yield {
+                        "type": "item",
+                        "index": slot_idx,
+                        "image_index": image_idx,
+                        "analysis": analysis,
+                        "label": analysis.get("sub_category") or analysis.get("item_type"),
+                        "needs_reconstruction": needs_reconstruction,
+                        "reconstruction_reasons": reasons,
+                    }
+                    emitted += 1
+
+            else:
+                # ── Gemini concurrent path (unchanged) ────────────────────
+                # Process all crops concurrently using individual analyze calls.
+                # We cap concurrency to 6 to avoid overwhelming the LLM proxy
+                # while maintaining very fast TTFB.
+                sem = asyncio.Semaphore(6)
+
+                async def _process_crop(
+                    slot_idx: int,
+                    crop_tuple: tuple[int, dict[str, Any], bytes, str],
+                ) -> tuple[int, dict[str, Any]]:
+                    image_idx, det, c_bytes, c_mime = crop_tuple
+                    async with sem:
+                        try:
+                            analysis = await self.analyze(
+                                c_bytes, language=language, think=False
+                            )
+                            return slot_idx, analysis
+                        except Exception as exc:  # noqa: BLE001
+                            logger.warning(
+                                "analyze_outfits_stream: concurrent analyze failed slot=%d: %s",
+                                slot_idx, repr(exc)[:160],
+                            )
+                            return slot_idx, {}
+
+                tasks = [
+                    asyncio.create_task(_process_crop(i, crop_tuple))
+                    for i, crop_tuple in enumerate(flat_crops)
+                ]
+
+                for completed_task in asyncio.as_completed(tasks):
+                    slot_idx, analysis = await completed_task
+                    image_idx, det, c_bytes, c_mime = flat_crops[slot_idx]
+
+                    needs_reconstruction = False
+                    reasons: list[str] = []
+                    if should_reconstruct is not None:
+                        try:
+                            needs, raw_reasons = should_reconstruct(
+                                analysis, det.get("bbox")
+                            )
+                            if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
+                                needs_reconstruction = True
+                                reasons = list(raw_reasons)
+                        except Exception as exc:  # noqa: BLE001
+                            logger.warning(
+                                "reconstruction gate failed (concurrent) slot=%d: %s",
+                                slot_idx, repr(exc)[:160],
+                            )
+
+                    yield {
+                        "type": "item",
+                        "index": slot_idx,
+                        "image_index": image_idx,
+                        "analysis": analysis,
+                        "label": analysis.get("sub_category") or analysis.get("item_type"),
+                        "needs_reconstruction": needs_reconstruction,
+                        "reconstruction_reasons": reasons,
+                    }
+                    emitted += 1
+
         except Exception as exc:
             err_text = repr(exc)
             logger.error(
-                "analyze_outfits_stream: concurrent stream FAILED after %d emit(s): %s",
+                "analyze_outfits_stream: stream FAILED after %d emit(s): %s",
                 emitted, err_text[:400],
             )
             low = err_text.lower()
             if "permission_denied" in low or " 403" in low or "permission denied" in low:
-                msg = "Garment analyzer: Gemini API rejected the request (403 PERMISSION_DENIED)."
+                msg = "Garment analyzer: API rejected the request (403)."
                 status = 403
             elif "unauthenticated" in low or " 401" in low:
-                msg = "Garment analyzer: Gemini API rejected the key (401 UNAUTHENTICATED)."
+                msg = "Garment analyzer: API rejected the key (401)."
                 status = 401
             elif "resource_exhausted" in low or " 429" in low or "quota" in low:
-                msg = "Garment analyzer: Gemini quota exhausted (429). Wait a minute and retry."
+                msg = "Garment analyzer: quota exhausted (429). Wait a minute and retry."
                 status = 429
             elif "not_found" in low or " 404" in low or "model not found" in low:
-                msg = "Garment analyzer: requested Gemini model is not available to this key (404 NOT_FOUND)."
+                msg = "Garment analyzer: requested model is not available (404)."
                 status = 404
             elif "deadline" in low or "timeout" in low or "timed out" in low:
-                msg = "Garment analyzer: Gemini API timed out. Retry in a moment."
+                msg = "Garment analyzer: request timed out. Retry in a moment."
                 status = 504
             elif " 500" in low or " 502" in low or " 503" in low or "internal" in low:
-                msg = "Garment analyzer: Gemini API returned a server error."
+                msg = "Garment analyzer: server error. Retry in a moment."
                 status = 503
             else:
                 msg = "Garment analyzer hit a transient error. (debug: " + err_text[:160].replace("\n", " ") + ")"
                 status = 503
-
-            yield {
-                "type": "error",
-                "status": status,
-                "message": msg,
-            }
+            yield {"type": "error", "status": status, "message": msg}
             return
 
         yield {"type": "done", "count": emitted}
