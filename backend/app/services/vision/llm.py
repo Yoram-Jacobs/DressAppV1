@@ -47,22 +47,29 @@ async def _call_gemma_space(
     if not space_url:
         raise RuntimeError("EYES_GEMMA_SPACE_URL not configured.")
 
+    # Build OpenAI-compatible messages with multimodal format
+    # Gemma-4 expects image_url content part according to the eyes container
+    messages = []
+    
+    # System message
+    messages.append({"role": "system", "content": system_prompt})
+    
+    # User message with image and text (OpenAI multimodal format)
+    # Image must precede text for optimal attention mapping
+    user_content = [
+        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_b64_jpeg}"}},
+        {"type": "text", "text": user_text}
+    ]
+    messages.append({"role": "user", "content": user_content})
+    
+    # Build the payload in OpenAI-compatible format for the eyes proxy
     payload: dict[str, Any] = {
-        "system": system_prompt,
-        "prompt": user_text,
-        "image_b64": image_b64_jpeg,
-        "image_mime": "image/jpeg",
+        "messages": messages,
         "max_tokens": int(max_tokens),
         "temperature": float(temperature),
-        # Trigger llama.cpp grammar-constrained JSON when the Space
-        # supports it; older builds ignore the flag harmlessly.
         "json_mode": True,
-        # Switchable reasoning. The current dressapp-eyes container
-        # launches llama-server with enable_thinking=false; we still
-        # send the flag every call so a future proxy build can honour
-        # per-request overrides without redeploys.
         "enable_thinking": bool(think),
-        "think": bool(think),  # alias for forward-compat
+        "think": bool(think),
     }
     if json_schema is not None:
         # The dressapp-eyes proxy should forward this to llama-server's
@@ -1083,8 +1090,12 @@ async def call_gemma_space_stream_attributes(
 
     for group_name, field_names, max_tokens, sys_snippet in ATTRIBUTE_GROUPS:
         # Build stitched system prompt: Header + Style Rules + Group Questions
+        first_part = "You are The Eyes — DressApp's visual garment analyst. Your job is to describe the garment in the photo in exhaustive, merchandisable detail for an Add-Item form. Be confident, concise, and never invent brand names or details that are not visible.\n"
+        if request_id:
+            first_part = f"Request ID: {request_id}\n\n" + first_part
+
         sys_parts = [
-            "You are The Eyes — DressApp's visual garment analyst. Your job is to describe the garment in the photo in exhaustive, merchandisable detail for an Add-Item form. Be confident, concise, and never invent brand names or details that are not visible.\n",
+            first_part,
             "Style Rules:\n"
             "- CONFIDENCE: Do not hedge (do not use 'seems', 'appears', 'looks like', 'probably'). State observations directly.\n"
             "- VOICE: Thoughtful, professional editor. No markdown, emojis, or sales pitch."
