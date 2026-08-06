@@ -254,6 +254,7 @@ def _build_llama_argv(model_path: Path, mmproj_path: Path | None) -> list[str]:
         "-fa", "auto",
         "-sps", "0.0",
         "--media-path", "/",
+        "--cache-prompt",
     ]
     if mmproj_path is not None:
         argv += ["--mmproj", str(mmproj_path)]
