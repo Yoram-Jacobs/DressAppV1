@@ -252,7 +252,7 @@ def _build_llama_argv(model_path: Path, mmproj_path: Path | None) -> list[str]:
         "--reasoning-budget", "0",
         "--chat-template-kwargs", '{"enable_thinking": false}',
         "-fa", "auto",
-        "-sps", "0.0",
+        "-sps", "0.5",
         "--media-path", "/",
         "--cache-prompt",
     ]
