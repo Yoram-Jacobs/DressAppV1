@@ -1192,7 +1192,7 @@ async def call_gemma_space_stream_attributes(
                 user_text=user_text,
                 image_b64_jpeg=image_b64_jpeg,
                 max_tokens=max_tokens,
-                temperature=1.0,
+                temperature=0.2,
                 timeout=tpg,
                 json_schema=group_schema,
                 id_slot=id_slot,

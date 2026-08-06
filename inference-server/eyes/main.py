@@ -498,9 +498,8 @@ async def predict(req: PredictIn) -> PredictOut:
         "model": "local",  # llama-server ignores model name; field required.
         "messages": msgs,
         "max_tokens": req.max_tokens,
-        "temperature": 1.0,
-        "top_p": 0.95,
-        "top_k": 64,
+        "temperature": req.temperature,
+        "top_p": req.top_p,
         "stream": False,
     }
     if req.response_format:
