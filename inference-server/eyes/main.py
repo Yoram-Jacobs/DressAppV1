@@ -511,6 +511,25 @@ async def predict(req: PredictIn) -> PredictOut:
     if req.id_slot is not None:
         payload["id_slot"] = req.id_slot
 
+    preview_msgs = []
+    for m in msgs:
+        content_prev = m["content"]
+        if isinstance(content_prev, list):
+            parts = []
+            for part in content_prev:
+                p = {}
+                for k, v in part.items():
+                    if k == "image_url" and isinstance(v, dict) and "url" in v:
+                        p[k] = {"url": v["url"][:60] + "..."}
+                    else:
+                        p[k] = v
+                parts.append(p)
+            content_prev = parts
+        elif isinstance(content_prev, str):
+            content_prev = content_prev[:120] + "..." if len(content_prev) > 120 else content_prev
+        preview_msgs.append({"role": m["role"], "content": content_prev})
+    log.info(f"llama-server request messages payload: {preview_msgs}")
+
     client: httpx.AsyncClient = app.state.client
     t0 = time.time()
     async with app.state.lock:
