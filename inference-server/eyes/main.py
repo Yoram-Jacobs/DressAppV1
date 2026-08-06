@@ -496,10 +496,18 @@ def _build_openai_messages(req: PredictIn) -> list[dict[str, Any]]:
 async def predict(req: PredictIn) -> PredictOut:
     msgs = _build_openai_messages(req)
 
-    import uuid
     import base64
     import os
-    temp_files = []
+    import hashlib
+
+    async def delete_after_delay(path: str, delay: float):
+        await asyncio.sleep(delay)
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+                log.info(f"Cleaned up temp file: {path}")
+        except Exception as e:
+            log.warning(f"Failed to delete temp file {path}: {e}")
 
     # Process messages to convert base64 data URLs to file URLs
     for msg in msgs:
@@ -513,10 +521,12 @@ async def predict(req: PredictIn) -> PredictOut:
                         try:
                             header, base64_str = url_str.split(";base64,", 1)
                             img_bytes = base64.b64decode(base64_str)
-                            temp_path = f"/tmp/{uuid.uuid4()}.jpg"
-                            with open(temp_path, "wb") as f:
-                                f.write(img_bytes)
-                            temp_files.append(temp_path)
+                            img_hash = hashlib.sha256(base64_str.encode("ascii")).hexdigest()
+                            temp_path = f"/tmp/{img_hash}.jpg"
+                            if not os.path.exists(temp_path):
+                                with open(temp_path, "wb") as f:
+                                    f.write(img_bytes)
+                                asyncio.create_task(delete_after_delay(temp_path, 120.0))
                             img_url_obj["url"] = f"file://{temp_path}"
                         except Exception as e:
                             log.warning(f"Failed to convert base64 image: {e}")
@@ -558,71 +568,63 @@ async def predict(req: PredictIn) -> PredictOut:
 
     client: httpx.AsyncClient = app.state.client
     t0 = time.time()
-    try:
-        async with app.state.lock:
-            try:
-                r = await client.post(
-                    f"{LLAMA_BASE_URL}/v1/chat/completions",
-                    json=payload,
-                    timeout=httpx.Timeout(120.0, connect=5.0),
-                )
-            except httpx.HTTPError as exc:
-                log.exception("llama-server request failed")
-                raise HTTPException(
-                    status_code=502, detail=f"llama-server error: {exc}",
-                ) from exc
-
-        if r.status_code != 200:
-            raise HTTPException(
-                status_code=502,
-                detail=f"llama-server returned {r.status_code}: {r.text[:300]}",
+    async with app.state.lock:
+        try:
+            r = await client.post(
+                f"{LLAMA_BASE_URL}/v1/chat/completions",
+                json=payload,
+                timeout=httpx.Timeout(120.0, connect=5.0),
             )
+        except httpx.HTTPError as exc:
+            log.exception("llama-server request failed")
+            raise HTTPException(
+                status_code=502, detail=f"llama-server error: {exc}",
+            ) from exc
 
-        res = r.json()
-        elapsed_ms = int((time.time() - t0) * 1000)
-        choice = (res.get("choices") or [{}])[0]
-        msg = choice.get("message") or {}
-        usage = res.get("usage") or {}
-        # Models trained with ``thinking = 1`` (the Gemma-4 fine-tune is one)
-        # split their output between ``reasoning_content`` (the deliberation
-        # inside ``<|think|> ... </think>``) and ``content`` (the answer
-        # after the closing think tag). When the model runs out of token
-        # budget inside the think block — common for verbose JSON schemas —
-        # ``content`` arrives empty even though ``tokens_completion`` shows
-        # the full max. Fall back to ``reasoning_content`` so the backend
-        # always gets *something* and can decide whether the JSON inside
-        # is parseable. The backend's ``_extract_json`` already handles
-        # JSON embedded in free-form text, so this is safe.
-        content = msg.get("content") or ""
-        if not content:
-            content = msg.get("reasoning_content") or ""
-        has_image = bool(req.image_b64)
-        if not has_image and req.messages:
-            for m in req.messages:
-                if isinstance(m.content, list):
-                    for part in m.content:
-                        if isinstance(part, dict) and part.get("type") == "image_url":
-                            has_image = True
-                            break
-                if has_image:
-                    break
-
-        return PredictOut(
-            output=str(content),
-            finish_reason=choice.get("finish_reason"),
-            tokens_prompt=int(usage.get("prompt_tokens") or 0),
-            tokens_completion=int(usage.get("completion_tokens") or 0),
-            elapsed_ms=elapsed_ms,
-            vision_used=bool(app.state.vision_enabled and has_image),
-            vision_disabled=bool(has_image and not app.state.vision_enabled),
+    if r.status_code != 200:
+        raise HTTPException(
+            status_code=502,
+            detail=f"llama-server returned {r.status_code}: {r.text[:300]}",
         )
-    finally:
-        for p in temp_files:
-            try:
-                if os.path.exists(p):
-                    os.remove(p)
-            except Exception as e:
-                log.warning(f"Failed to delete temp file {p}: {e}")
+
+    res = r.json()
+    elapsed_ms = int((time.time() - t0) * 1000)
+    choice = (res.get("choices") or [{}])[0]
+    msg = choice.get("message") or {}
+    usage = res.get("usage") or {}
+    # Models trained with ``thinking = 1`` (the Gemma-4 fine-tune is one)
+    # split their output between ``reasoning_content`` (the deliberation
+    # inside ``<|think|> ... </think>``) and ``content`` (the answer
+    # after the closing think tag). When the model runs out of token
+    # budget inside the think block — common for verbose JSON schemas —
+    # ``content`` arrives empty even though ``tokens_completion`` shows
+    # the full max. Fall back to ``reasoning_content`` so the backend
+    # always gets *something* and can decide whether the JSON inside
+    # is parseable. The backend's ``_extract_json`` already handles
+    # JSON embedded in free-form text, so this is safe.
+    content = msg.get("content") or ""
+    if not content:
+        content = msg.get("reasoning_content") or ""
+    has_image = bool(req.image_b64)
+    if not has_image and req.messages:
+        for m in req.messages:
+            if isinstance(m.content, list):
+                for part in m.content:
+                    if isinstance(part, dict) and part.get("type") == "image_url":
+                        has_image = True
+                        break
+            if has_image:
+                break
+
+    return PredictOut(
+        output=str(content),
+        finish_reason=choice.get("finish_reason"),
+        tokens_prompt=int(usage.get("prompt_tokens") or 0),
+        tokens_completion=int(usage.get("completion_tokens") or 0),
+        elapsed_ms=elapsed_ms,
+        vision_used=bool(app.state.vision_enabled and has_image),
+        vision_disabled=bool(has_image and not app.state.vision_enabled),
+    )
 
 
 @app.post(
