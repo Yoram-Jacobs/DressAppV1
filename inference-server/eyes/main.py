@@ -381,7 +381,7 @@ def _require_token(authorization: str | None = Header(default=None)) -> None:
 # ---- Schemas (updated for OpenAI-compatible format) ------------------
 class ChatTurn(BaseModel):
     role: str = Field(..., pattern="^(system|user|assistant)$")
-    content: str
+    content: str | list[dict[str, Any]]
 
 
 class PredictIn(BaseModel):
@@ -549,14 +549,25 @@ async def predict(req: PredictIn) -> PredictOut:
     content = msg.get("content") or ""
     if not content:
         content = msg.get("reasoning_content") or ""
+    has_image = bool(req.image_b64)
+    if not has_image and req.messages:
+        for m in req.messages:
+            if isinstance(m.content, list):
+                for part in m.content:
+                    if isinstance(part, dict) and part.get("type") == "image_url":
+                        has_image = True
+                        break
+            if has_image:
+                break
+
     return PredictOut(
         output=str(content),
         finish_reason=choice.get("finish_reason"),
         tokens_prompt=int(usage.get("prompt_tokens") or 0),
         tokens_completion=int(usage.get("completion_tokens") or 0),
         elapsed_ms=elapsed_ms,
-        vision_used=bool(app.state.vision_enabled and req.image_b64),
-        vision_disabled=bool(req.image_b64 and not app.state.vision_enabled),
+        vision_used=bool(app.state.vision_enabled and has_image),
+        vision_disabled=bool(has_image and not app.state.vision_enabled),
     )
 
 
