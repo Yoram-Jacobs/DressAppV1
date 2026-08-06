@@ -1166,8 +1166,17 @@ async def call_gemma_space_stream_attributes(
                     elif isinstance(p_type, list) and "string" in p_type and "maxLength" not in prop:
                         prop["maxLength"] = 16 if name == "size" else 36
                     
-                    # Nested array properties (colors, fabric_materials, tags)
+                    # Nested array properties (colors, fabric_materials, tags, season)
                     if p_type == "array" and "items" in prop:
+                        if name == "season":
+                            prop["maxItems"] = 4
+                        elif name == "colors":
+                            prop["maxItems"] = 4
+                        elif name == "fabric_materials":
+                            prop["maxItems"] = 3
+                        elif name == "tags":
+                            prop["maxItems"] = 6
+
                         items_schema = prop["items"]
                         if isinstance(items_schema, dict):
                             i_type = items_schema.get("type")
