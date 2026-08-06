@@ -497,6 +497,7 @@ async def predict(req: PredictIn) -> PredictOut:
     msgs = _build_openai_messages(req)
 
     import uuid
+    import base64
     import os
     temp_files = []
 
