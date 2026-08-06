@@ -232,6 +232,12 @@ def _build_llama_argv(model_path: Path, mmproj_path: Path | None) -> list[str]:
       --no-warmup      — skip the synthetic warmup token; saves ~3 s
                           and the first real request will warm naturally.
     """
+    # Gemma-4 requires thinking mode to process images. The reasoning-budget
+    # controls whether the model generates reasoning steps (CoT) before the
+    # final answer. Since our pipeline uses JSON schema output directly,
+    # we enable thinking mode to ensure the model processes the image content.
+    # Note: The <think> tags in the model's output will be stripped by the
+    # backend's _extract_json function, so this doesn't affect our JSON parsing.
     argv = [
         LLAMA_BIN,
         "--model", str(model_path),
@@ -243,9 +249,10 @@ def _build_llama_argv(model_path: Path, mmproj_path: Path | None) -> list[str]:
         "--ubatch-size", str(N_BATCH),
         "--n-predict", "1024",
         "--jinja",
-        "--reasoning-budget", "0",
-        "--chat-template-kwargs", '{"enable_thinking": false}',
+        "--reasoning-budget", "4096",  # Enable thinking (sufficient for garment analysis)
+        "--chat-template-kwargs", '{"enable_thinking": true}',
         "-fa", "auto",
+        "-sps", "0.0",
     ]
     if mmproj_path is not None:
         argv += ["--mmproj", str(mmproj_path)]
@@ -371,24 +378,27 @@ def _require_token(authorization: str | None = Header(default=None)) -> None:
         raise HTTPException(status_code=401, detail="bad bearer token")
 
 
-# ---- Schemas (unchanged from previous main.py) ----------------------
+# ---- Schemas (updated for OpenAI-compatible format) ------------------
 class ChatTurn(BaseModel):
     role: str = Field(..., pattern="^(system|user|assistant)$")
     content: str
 
 
 class PredictIn(BaseModel):
-    prompt: str | None = None
-    system: str | None = None
+    # Support OpenAI-compatible format with optional custom backward compatibility
     messages: list[ChatTurn] | None = None
-    image_b64: str | None = None
-    image_mime: str = "image/jpeg"
     max_tokens: int = Field(default=512, ge=1, le=4096)
     temperature: float = Field(default=0.2, ge=0.0, le=1.5)
     top_p: float = Field(default=0.9, ge=0.0, le=1.0)
     json_mode: bool = False
     json_schema: dict[str, Any] | None = None
     response_format: dict[str, Any] | None = None
+    # Legacy fields for backward compatibility (unused when messages is provided)
+    prompt: str | None = None
+    system: str | None = None
+    image_b64: str | None = None
+    image_mime: str = "image/jpeg"
+    id_slot: int | None = None
 
 
 class PredictOut(BaseModel):
@@ -496,6 +506,9 @@ async def predict(req: PredictIn) -> PredictOut:
         payload["response_format"] = req.response_format
     elif req.json_mode:
         payload["response_format"] = {"type": "json_object"}
+
+    if req.id_slot is not None:
+        payload["id_slot"] = req.id_slot
 
     client: httpx.AsyncClient = app.state.client
     t0 = time.time()

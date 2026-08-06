@@ -2140,6 +2140,7 @@ class GarmentVisionService:
                         segformer_label=det.get("label"),
                         segformer_category=det.get("category"),
                         request_id=request_id,
+                        id_slot=slot_idx,
                     ):
                         assembled.update(partial)
                         if partial:  # only emit if the group produced data
@@ -2160,6 +2161,18 @@ class GarmentVisionService:
                     analysis = _coerce_enums(analysis)
                     analysis["provider_used"] = "gemma"
                     analysis["model_used"] = "gemma-4-e2b-q4_k_m"
+
+                    # Record activity for the admin dashboard panel
+                    provider_activity.record(
+                        "garment-vision",
+                        ok=True,
+                        latency_ms=0,
+                        extra={
+                            "provider": "gemma",
+                            "model": "gemma-4-e2b-q4_k_m",
+                            "routing_source": "toggle",
+                        },
+                    )
 
                     needs_reconstruction = False
                     reasons: list[str] = []

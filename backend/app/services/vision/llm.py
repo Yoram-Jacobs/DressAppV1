@@ -19,6 +19,7 @@ async def _call_gemma_space(
     timeout: float | None = None,
     json_schema: dict[str, Any] | None = None,
     think: bool = False,
+    id_slot: int | None = None,
 ) -> str:
     """Phase O.3 — call the self-hosted Gemma-4 E2B HF Space.
 
@@ -71,6 +72,8 @@ async def _call_gemma_space(
         "enable_thinking": bool(think),
         "think": bool(think),
     }
+    if id_slot is not None:
+        payload["id_slot"] = id_slot
     if json_schema is not None:
         # The dressapp-eyes proxy should forward this to llama-server's
         # OpenAI-compatible response_format. Unknown to older proxies
@@ -1057,6 +1060,7 @@ async def call_gemma_space_stream_attributes(
     segformer_label: str | None = None,
     segformer_category: str | None = None,
     request_id: str | None = None,
+    id_slot: int | None = None,
 ) -> "AsyncIterator[tuple[str, list[str], dict[str, Any]]]":
     """Patch M23 — per-attribute streaming for Gemma on CPU.
 
@@ -1191,6 +1195,7 @@ async def call_gemma_space_stream_attributes(
                 temperature=1.0,
                 timeout=tpg,
                 json_schema=group_schema,
+                id_slot=id_slot,
             )
         except Exception as exc:  # noqa: BLE001
             logger.warning(
