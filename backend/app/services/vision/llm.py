@@ -1061,6 +1061,7 @@ async def call_gemma_space_stream_attributes(
     segformer_category: str | None = None,
     request_id: str | None = None,
     id_slot: int | None = None,
+    is_single_item: bool = False,
 ) -> "AsyncIterator[tuple[str, list[str], dict[str, Any]]]":
     """Patch M23 — per-attribute streaming for Gemma on CPU.
 
@@ -1093,7 +1094,7 @@ async def call_gemma_space_stream_attributes(
     lang_name = _LANG_NAMES.get(lang_code, lang_code) if lang_code != "en" else None
 
     for group_name, field_names, max_tokens, sys_snippet in ATTRIBUTE_GROUPS:
-        # Build stitched system prompt: Header + Style Rules + Group Questions
+        # Build stitched system prompt: Header + Style Rules (Common & Identical across groups to hit cache)
         first_part = "You are The Eyes — DressApp's visual garment analyst. Your job is to describe the garment in the photo in exhaustive, merchandisable detail for an Add-Item form. Be confident, concise, and never invent brand names or details that are not visible.\n"
         if request_id:
             first_part = f"Request ID: {request_id}\n\n" + first_part
@@ -1105,8 +1106,8 @@ async def call_gemma_space_stream_attributes(
             "- VOICE: Thoughtful, professional editor. No markdown, emojis, or sales pitch."
         ]
         
-        # Inject category restriction based on SegFormer detection
-        if segformer_category:
+        # Inject category restriction based on SegFormer detection (ONLY if NOT is_single_item)
+        if segformer_category and not is_single_item:
             mapped_cat = None
             if segformer_category == "top":
                 mapped_cat = "Top or Outerwear"
@@ -1129,13 +1130,13 @@ async def call_gemma_space_stream_attributes(
         if lang_name:
             sys_parts.append(f"- LANGUAGE: All free-text values must be written in fluent {lang_name}.")
         
-        sys_parts.append(f"\n{sys_snippet}\n")
         sys_parts.append("Return ONLY the JSON object. No markdown, no commentary.")
         system_prompt = "\n".join(sys_parts)
 
-        user_text = "Analyse this garment photo and return the JSON."
+        # Build group-specific user query (contains the changing group guidelines/fields)
+        user_text = f"Analyse this garment photo and return JSON for the following fields: {', '.join(field_names)}.\n\nSpecific guidelines for these fields:\n{sys_snippet}"
         if request_id:
-            user_text = f"Analyse this garment photo (Request ID: {request_id}) and return the JSON."
+            user_text = f"Analyse this garment photo (Request ID: {request_id}) and return JSON for the following fields: {', '.join(field_names)}.\n\nSpecific guidelines for these fields:\n{sys_snippet}"
 
         # Build strict JSON schema for this group to grammar-constrain Gemma.
         import copy
@@ -1144,8 +1145,8 @@ async def call_gemma_space_stream_attributes(
             if name in _GARMENT_OBJECT_SCHEMA["properties"]:
                 prop = copy.deepcopy(_GARMENT_OBJECT_SCHEMA["properties"][name])
                 
-                # Constrain category enum based on SegFormer pre-classification
-                if name == "category" and segformer_category:
+                # Constrain category enum based on SegFormer pre-classification (ONLY if NOT is_single_item)
+                if name == "category" and segformer_category and not is_single_item:
                     if segformer_category == "top":
                         prop["enum"] = ["Top", "Outerwear"]
                     elif segformer_category == "bottom":

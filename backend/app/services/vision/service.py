@@ -1032,6 +1032,7 @@ class GarmentVisionService:
                     analysis,
                     segformer_kind=det.get("kind"),
                     label=det.get("label"),
+                    is_single_item=det.get("is_single_item", False),
                 )
             except Exception as exc:  # noqa: BLE001
                 logger.warning(
@@ -2141,6 +2142,7 @@ class GarmentVisionService:
                         segformer_category=det.get("category"),
                         request_id=request_id,
                         id_slot=slot_idx,
+                        is_single_item=det.get("is_single_item", False),
                     ):
                         assembled.update(partial)
                         if partial:  # only emit if the group produced data
