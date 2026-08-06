@@ -249,8 +249,8 @@ def _build_llama_argv(model_path: Path, mmproj_path: Path | None) -> list[str]:
         "--ubatch-size", str(N_BATCH),
         "--n-predict", "1024",
         "--jinja",
-        "--reasoning-budget", "4096",  # Enable thinking (sufficient for garment analysis)
-        "--chat-template-kwargs", '{"enable_thinking": true}',
+        "--reasoning-budget", "0",
+        "--chat-template-kwargs", '{"enable_thinking": false}',
         "-fa", "auto",
         "-sps", "0.0",
     ]
@@ -498,8 +498,9 @@ async def predict(req: PredictIn) -> PredictOut:
         "model": "local",  # llama-server ignores model name; field required.
         "messages": msgs,
         "max_tokens": req.max_tokens,
-        "temperature": req.temperature,
-        "top_p": req.top_p,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 64,
         "stream": False,
     }
     if req.response_format:
