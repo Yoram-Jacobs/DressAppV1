@@ -83,6 +83,7 @@ class GoogleOAuthTokens(BaseModel):
 class SubscriptionInfo(BaseModel):
     is_active: bool = False
     plan_type: Literal["free", "monthly", "yearly"] = "free"
+    tier: Literal["free", "pro", "business", "manager", "professional"] = "free"
     stripe_subscription_id: str | None = None
     paypal_subscription_id: str | None = None
     expires_at: str | None = None

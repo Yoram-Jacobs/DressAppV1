@@ -675,11 +675,11 @@ async def listing_buy_capture(
 class SubscribeIn(BaseModel):
     model_config = ConfigDict(extra="ignore")
     plan_type: Literal["monthly", "yearly"]
-    tier: Optional[Literal["pro", "business"]] = "pro"
+    tier: Optional[Literal["pro", "business", "manager", "professional"]] = "manager"
     return_url: str | None = None
     cancel_url: str | None = None
-
-
+ 
+ 
 @paypal_router.post("/subscribe")
 async def create_subscription_order(
     payload: SubscribeIn,
@@ -688,15 +688,23 @@ async def create_subscription_order(
     from app.services import atzmai_client
     from datetime import datetime, timezone
     
+    tier = payload.tier
+    if tier == "pro":
+        tier = "manager"
+    elif tier == "business":
+        tier = "professional"
+    if not tier:
+        tier = "manager"
+
     # Pricing setup
     prices = {
-        "pro": {"monthly": 9.99, "yearly": 99.90},
-        "business": {"monthly": 29.00, "yearly": 290.00}
+        "manager": {"monthly": 5.00, "yearly": 50.00},
+        "professional": {"monthly": 10.00, "yearly": 100.00}
     }
-    amount = prices.get(payload.tier, prices["pro"])[payload.plan_type]
+    amount = prices.get(tier, prices["manager"])[payload.plan_type]
     
     start_date = datetime.now(timezone.utc).strftime("%d/%m/%Y")
-    description = f"DressApp {payload.tier.upper()} Plan ({payload.plan_type.capitalize()})"
+    description = f"DressApp {tier.upper()} Plan ({payload.plan_type.capitalize()})"
     phone = user.get("phone", "0500000000") or "0500000000"
     email = user["email"]
     customer_name = f"{user.get('first_name', 'User')} {user.get('last_name', '')}".strip() or "User"
@@ -738,9 +746,9 @@ async def create_subscription_order(
         "atzmai_payment_id": atzmai_payment_id,
         "user_id": user["id"],
         "amount_cents": int(amount * 100),
-        "currency": "ILS",
+        "currency": "USD",
         "type": "subscription",
-        "tier": payload.tier,
+        "tier": tier,
         "plan_type": payload.plan_type,
         "status": "pending",
         "payment_url": payment_url,
@@ -785,10 +793,18 @@ async def capture_subscription(
     duration_days = 365 if topup["plan_type"] == "yearly" else 30
     expires_at = (datetime.now(timezone.utc) + timedelta(days=duration_days)).isoformat()
     
+    tier = topup.get("tier", "manager")
+    if tier == "pro":
+        tier = "manager"
+    elif tier == "business":
+        tier = "professional"
+    if not tier:
+        tier = "manager"
+
     sub_doc = {
         "is_active": True,
         "plan_type": topup["plan_type"],
-        "tier": topup.get("tier", "pro"),
+        "tier": tier,
         "stripe_subscription_id": None,
         "paypal_subscription_id": None,
         "atzmai_subscription_id": subscription_id,
@@ -806,24 +822,8 @@ async def capture_subscription(
         },
     )
     
-    # Credit the user's AI credits balance with included plan credits using credit.py domain logic
     user_record = await db.users.find_one({"id": user["id"]})
     if user_record:
-        from app.models.credit import add_credit_bucket
-        credits_map = {"pro": 100, "business": 300}
-        included_credits = credits_map.get(topup.get("tier", "pro"), 100)
-        
-        expiry_time = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
-        updated_buckets = add_credit_bucket(
-            user_record.get("credit_buckets") or [],
-            amount=included_credits,
-            bucket_type="free",
-            expires_at=expiry_time
-        )
-        await db.users.update_one(
-            {"id": user["id"]},
-            {"$set": {"credit_buckets": updated_buckets}}
-        )
         try:
             from app.api.v1.atzmai import trigger_success_email
             import asyncio
@@ -831,8 +831,8 @@ async def capture_subscription(
                 trigger_success_email(
                     user_record=user_record,
                     amount_cents=int(topup["amount_cents"]),
-                    currency=topup.get("currency", "ILS"),
-                    credits_purchased=included_credits,
+                    currency=topup.get("currency", "USD"),
+                    credits_purchased=0,
                     atzmai_payment_id=subscription_id
                 )
             )

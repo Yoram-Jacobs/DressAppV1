@@ -285,33 +285,34 @@ async def check_operation_quota(user_id: str, required_credits: int = 1, operati
         user_record = await db.users.find_one({"id": user_id})
         if not user_record:
             return False, CreditQuotaStatus.EXHAUSTED, "User not found"
+            
+        sub = user_record.get("subscription") or {}
+        is_active = sub.get("is_active", False)
+        plan_type = sub.get("plan_type", "free")
+        tier = sub.get("tier", "free")
         
-        user_record = await migrate_legacy_credits_if_needed(user_record, db)
-        ai_config = user_record.get("ai_configuration", {})
-        u_model = User.parse_obj(user_record)
+        user_tier = "free"
+        if is_active and plan_type != "free":
+            if tier in ["pro", "manager"]:
+                user_tier = "manager"
+            elif tier in ["business", "professional"]:
+                user_tier = "professional"
+                
+        if user_tier != "free":
+            return True, CreditQuotaStatus.OK, "All set"
+            
+        today = datetime.now(timezone.utc).date().isoformat()
+        ai_config = user_record.get("ai_configuration") or {}
+        last_date = ai_config.get("daily_request_date")
+        count = ai_config.get("daily_request_count", 0)
         
-        if u_model.total_credits < required_credits:
-            if operation != "quota_check":
-                got_enough = await handle_credit_exhaustion(operation, user_id, required_credits)
-                if not got_enough:
-                    return False, CreditQuotaStatus.EXHAUSTED, "No usable credits available after waiting"
-            else:
-                return False, CreditQuotaStatus.EXHAUSTED, "No usable credits available"
-        
-        daily_limit = ai_config.get("ai_daily_limit", 100)
-        monthly_limit = ai_config.get("ai_monthly_limit", 1000)
-        
-        status, message, action = _threshold_config.get_status(
-            available=u_model.total_credits,
-            total_needed=required_credits,
-            monthly_limit=monthly_limit,
-            daily_limit=daily_limit,
-            monthly_used=ai_config.get("ai_monthly_used", 0.0),
-            daily_used=ai_config.get("ai_daily_used", 0.0)
-        )
-        
-        can_proceed = status not in [CreditQuotaStatus.EXHAUSTED, CreditQuotaStatus.HARD_LIMIT] and u_model.total_credits >= required_credits
-        return can_proceed, status, message or "Operation ready to proceed"
+        if last_date != today:
+            count = 0
+            
+        if count >= 10:
+            return False, CreditQuotaStatus.EXHAUSTED, "Daily AI operation limit of 10 requests reached. Please upgrade to continue."
+            
+        return True, CreditQuotaStatus.OK, "All set"
     except Exception as e:
         logger.error(f"Error checking quota: {str(e)}")
         return False, CreditQuotaStatus.EXHAUSTED, f"System error checking quota: {str(e)}"
@@ -324,30 +325,20 @@ async def execute_with_quotas(
     operation_name: str = "operation",
     **kwargs
 ) -> Any:
-    can_proceed, status, message = await check_operation_quota(
-        user_id=user_id,
-        required_credits=required_credits,
-        operation=operation_name
-    )
-    if not can_proceed:
+    db = get_db()
+    success = await check_and_increment_daily_request(db, user_id)
+    if not success:
         raise QuotaExhaustionError(
-            message=message,
-            status=status,
+            message="Daily AI operation limit of 10 requests reached. Please upgrade to continue.",
+            status=CreditQuotaStatus.EXHAUSTED,
             details={
-                "status": status.value,
-                "required_credits": required_credits,
-                "available": await _get_available_credits(user_id),
+                "status": "exhausted",
+                "required_credits": 1,
+                "available": 0,
                 "operation": operation_name,
             }
         )
     try:
-        success = await use_ai_c_with_threshold_check(
-            user_id=user_id,
-            credits_required=required_credits,
-            operation=operation_name
-        )
-        if not success:
-            raise RuntimeError("Failed to deduct credits even though quota check passed")
         return await operation_func(**kwargs)
     except QuotaExhaustionError as e:
         raise e
@@ -402,38 +393,7 @@ class TokenMeter:
 
     async def _deduct_credits(self, db_connection: Any = None) -> bool:
         db = db_connection or get_db()
-        user_record = await db.users.find_one({"id": self.user_id})
-        if not user_record:
-            return False
-        
-        user_model = User.parse_obj(user_record)
-        credits_needed = int(round(self.credits_consumed))
-        if credits_needed <= 0:
-            self.credit_type_used = "paid"
-            return True
-        
-        success, spent_details = user_model.spend_credits(credits_needed, self.operation)
-        if not success:
-            return False
-        
-        free_spent = sum(d["amount_spent"] for d in spent_details if d["type"] == "free")
-        paid_spent = sum(d["amount_spent"] for d in spent_details if d["type"] == "paid")
-        
-        if free_spent > 0:
-            self.credit_type_used = "free"
-        elif paid_spent > 0:
-            self.credit_type_used = "paid"
-        else:
-            self.credit_type_used = None
-        
-        user_model.credit_buckets = [b for b in user_model.credit_buckets if b.amount > 0]
-        user_record["credit_buckets"] = [b.dict() for b in user_model.credit_buckets]
-        
-        await db.users.update_one(
-            {"id": self.user_id},
-            {"$set": {"credit_buckets": user_record["credit_buckets"]}}
-        )
-        return True
+        return await check_and_increment_daily_request(db, self.user_id)
 
     async def _save_token_usage(self, input_tokens: int, output_tokens: int) -> None:
         db = get_db()
@@ -492,6 +452,53 @@ def estimate_token_cost(
 # BILLING OPERATIONS & TRIAL MANAGEMENT
 # ============================================================================
 
+async def check_and_increment_daily_request(db: Any, user_id: str) -> bool:
+    user_record = await db.users.find_one({"id": user_id})
+    if not user_record:
+        return False
+        
+    sub = user_record.get("subscription") or {}
+    is_active = sub.get("is_active", False)
+    plan_type = sub.get("plan_type", "free")
+    tier = sub.get("tier", "free")
+    
+    user_tier = "free"
+    if is_active and plan_type != "free":
+        if tier in ["pro", "manager"]:
+            user_tier = "manager"
+        elif tier in ["business", "professional"]:
+            user_tier = "professional"
+            
+    if user_tier != "free":
+        return True
+        
+    today = datetime.now(timezone.utc).date().isoformat()
+    ai_config = user_record.get("ai_configuration") or {}
+    
+    last_date = ai_config.get("daily_request_date")
+    count = ai_config.get("daily_request_count", 0)
+    
+    if last_date != today:
+        count = 0
+        last_date = today
+        
+    if count >= 10:
+        logger.info(f"User {user_id} on FREE plan has reached the daily limit of 10 requests.")
+        return False
+        
+    count += 1
+    await db.users.update_one(
+        {"id": user_id},
+        {
+            "$set": {
+                "ai_configuration.daily_request_date": last_date,
+                "ai_configuration.daily_request_count": count
+            }
+        }
+    )
+    return True
+
+
 async def deduct_user_credits(
     db_connection: Any,
     user: dict,
@@ -504,14 +511,10 @@ async def deduct_user_credits(
         user_id = user.get("id")
         if not user_id:
             return False
-        return await use_ai_c_with_threshold_check(
-            user_id=user_id,
-            credits_required=int(round(cost)),
-            operation=operation or "usage",
-            wait_if_exhausted=wait_if_exhausted
-        )
+        db = db_connection or get_db()
+        return await check_and_increment_daily_request(db, user_id)
     except Exception as e:
-        logger.error(f"Error deducting credits with threshold checking: {str(e)}")
+        logger.error(f"Error checking/deducting user daily request: {str(e)}")
         return False
 
 
@@ -718,15 +721,13 @@ async def check_quota_status(user: dict) -> Dict[str, Any]:
         "status": status.value,
         "message": message,
         "thresholds": thresholds,
-        "needs_purchase_action": status in [CreditQuotaStatus.SOFT_WARNING, CreditQuotaStatus.HARD_LIMIT, CreditQuotaStatus.EXHAUSTED],
-        "purchase_link": f"{_threshold_config.PAGE_LINK}",
+        "needs_purchase_action": not can_proceed,
+        "purchase_link": "/pricing",
     }
-    if status == CreditQuotaStatus.SOFT_WARNING:
-        result["actionable_message"] = "You're approaching your credit limit. Consider purchasing a pack to avoid disruption."
-    elif status == CreditQuotaStatus.HARD_LIMIT:
-        result["actionable_message"] = "Your allocated credits have been exhausted for this billing cycle. Upgrade your plan or purchase additional credits."
-    elif status == CreditQuotaStatus.EXHAUSTED:
-        result["actionable_message"] = "No credits available. Please purchase more credits to continue using AI services."
+    if not can_proceed:
+        result["actionable_message"] = "Daily AI operation limit of 10 requests reached. Please upgrade to continue."
+    else:
+        result["actionable_message"] = "All set"
     return result
 
 

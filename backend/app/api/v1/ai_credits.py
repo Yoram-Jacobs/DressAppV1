@@ -89,59 +89,76 @@ async def get_pricing_info(user: dict = Depends(get_current_user)) -> Dict[str, 
         u_model = User.parse_obj(user_record)
         summary = u_model.get_credit_usage_summary()
         
+        sub = user_record.get("subscription") or {}
+        is_active = sub.get("is_active", False)
+        plan_type = sub.get("plan_type", "free")
+        tier = sub.get("tier", "free")
+        
+        user_tier = "free"
+        if is_active and plan_type != "free":
+            if tier in ["pro", "manager"]:
+                user_tier = "manager"
+            elif tier in ["business", "professional"]:
+                user_tier = "professional"
+
         return {
             "success": True,
             "user_id": user["id"],
             "pricing_plan": {
-                "plan_type": user_record.get("ai_configuration", {}).get("subscription", {}).get("plan_type", "free"),
-                "ai_provider_mode": user_record.get("ai_configuration", {}).get("ai_provider_mode", "standard"),
-                "ai_provider": user_record.get("ai_configuration", {}).get("ai_provider", "gemini"),
-                "ai_model": user_record.get("ai_configuration", {}).get("ai_model", "gemini-2.5-flash"),
+                "plan_type": user_tier,
+                "ai_provider_mode": "custom_keys",
+                "ai_provider": user_record.get("ai_configuration", {}).get("selected_provider", "google_ai"),
+                "ai_model": user_record.get("ai_configuration", {}).get("selected_model", "gemini-2.5-flash"),
             },
             "credits": {
-                "total_credits": summary["total"],
-                "free_credits_available": summary["free_available"],
-                "free_credits_expired": summary["free_expired"],
-                "paid_credits": summary["paid"],
-                "ai_credits_used_this_month": user_record.get("ai_configuration", {}).get("ai_credits_used_this_month", 0),
-                "ai_monthly_limit": user_record.get("ai_configuration", {}).get("ai_monthly_limit", 1000),
-                "ai_daily_limit": user_record.get("ai_configuration", {}).get("ai_daily_limit", 100),
-                "ai_daily_used": user_record.get("ai_configuration", {}).get("ai_daily_used", 0),
-                "ai_monthly_used": user_record.get("ai_configuration", {}).get("ai_monthly_used", 0),
+                "total_credits": 0,
+                "free_credits_available": 0,
+                "free_credits_expired": 0,
+                "paid_credits": 0,
+                "ai_credits_used_this_month": 0,
+                "ai_monthly_limit": 0,
+                "ai_daily_limit": 10 if user_tier == "free" else 999999,
+                "ai_daily_used": user_record.get("ai_configuration", {}).get("daily_request_count", 0),
+                "ai_monthly_used": 0,
             },
-            "credit_packs": [
-                {"amount": 10, "credits_amount": 10, "price": 199, "price_cents": 199},
-                {"amount": 25, "credits_amount": 25, "price": 399, "price_cents": 399},
-                {"amount": 50, "credits_amount": 50, "price": 799, "price_cents": 799},
-                {"amount": 100, "credits_amount": 100, "price": 1599, "price_cents": 1599},
-            ],
+            "credit_packs": [],
             "pricing_tiers": [
                 {
                     "name": "Free",
                     "price": 0,
-                    "credits": 10,
-                    "ai_daily_limit": 20,
-                    "ai_monthly_limit": 100,
-                    "features": ["Basic AI operations", "Community support"],
+                    "features": [
+                        "Up to 50 closet items",
+                        "Up to 10 requests per day",
+                        "Community support"
+                    ],
                 },
                 {
-                    "name": "Pro",
-                    "price": 999,  # $9.99
-                    "credits": 100,
-                    "ai_daily_limit": 200,
-                    "ai_monthly_limit": 1000,
-                    "features": ["Advanced AI operations", "Priority support", "Unlimited uploads"],
+                    "name": "Manager",
+                    "price": 500,  # $5.00
+                    "features": [
+                        "Unlimited closet items",
+                        "Unlimited daily requests",
+                        "Marketplace selling & renting",
+                        "Trend Scout",
+                        "Scheduler & push notifications",
+                        "Priority support"
+                    ],
                 },
                 {
-                    "name": "Business",
-                    "price": 2900,  # $29.00
-                    "credits": 300,
-                    "ai_daily_limit": 500,
-                    "ai_monthly_limit": 3000,
-                    "features": ["All Pro features", "Dedicated support", "API access", "Custom branding"],
+                    "name": "Professional",
+                    "price": 1000,  # $10.00
+                    "features": [
+                        "Unlimited closet items",
+                        "Unlimited daily requests",
+                        "Marketplace selling & renting",
+                        "Trend Scout",
+                        "Scheduler & push notifications",
+                        "Ad Campaigns included",
+                        "Dedicated support"
+                    ],
                 },
             ],
-            "bucket_count": summary["bucket_count"],
+            "bucket_count": 0,
         }
     except Exception as e:
         logger.error(f"Error fetching pricing info: {str(e)}")

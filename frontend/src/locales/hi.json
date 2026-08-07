@@ -1059,7 +1059,7 @@
     "phoneWarning": "* पुश अलर्ट प्राप्त करने के लिए संपर्क के अंतर्गत फ़ोन नंबर कॉन्फ़िगर करें।",
     "aiConfig": {
       "title": "एआई कॉन्फ़िगरेशन",
-      "subtitle": "अपने एआई प्रदाताओं को प्रबंधित करें, एपीआई कुंजी कस्टमाइज़ करें, या ऑन-डिवाइस स्थानीय एआई मॉडल पर स्विच करें।",
+      "subtitle": "अपने एआई प्रदाताओं को प्रबंधित करें और एपीआई कुंजी कस्टमाइज़ करें।",
       "modeLabel": "एआई प्रदाता मोड",
       "standardPlan": "मानक योजना (क्रेडिट-आधारित)",
       "customKeys": "मेरी अपनी एपीआई कुंजी (SaaS)",
@@ -2784,8 +2784,8 @@
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
   },
   "pricing": {
-    "title": "मूल्य निर्धारण और क्रेडिट योजनाएं",
-    "subtitle": "अपनी शैली के अनुकूल टियर चुनें। किसी भी समय अपग्रेड या टॉप अप करें।",
+    "title": "सदस्यता मूल्य निर्धारण योजनाएं",
+    "subtitle": "वह योजना चुनें जो आपकी शैली के अनुकूल हो। किसी भी समय अपग्रेड, डाउनग्रेड या रद्द करें।",
     "monthlyBilling": "मासिक बिलिंग",
     "annualBilling": "वार्षिक बिलिंग",
     "savePercent": "20% बचाएं",
@@ -2795,7 +2795,7 @@
     "creditsPerMonth_other": "{{count}} एआई क्रेडिट / माह",
     "dailyLimit": "दैनिक सीमा: {{count}}",
     "monthlyLimit": "मासिक सीमा: {{count}}",
-    "selectPlan": "यह योजना चुनें",
+    "selectPlan": "इस योजना को चुनें",
     "currentPlan": "आपकी वर्तमान योजना",
     "upgradePlan": "योजना अपग्रेड करें",
     "currentBalanceHeader": "आपका वर्तमान क्रेडिट बैलेंस",
@@ -2824,14 +2824,26 @@
       "uploads": "छवि अपलोड क्षमता",
       "branding": "कस्टम ब्रांडिंग विकल्प",
       "basicOps": "बुनियादी एआई संचालन",
-      "communitySupport": "सामुदायिक सहायता",
+      "communitySupport": "सामुदायिक सहयोग",
       "advancedOps": "उन्नत एआई संचालन",
       "prioritySupport": "प्राथमिकता सहायता",
       "unlimitedUploads": "असीमित अपलोड",
       "allProFeatures": "सभी प्रो विशेषताएं",
       "dedicatedSupport": "समर्पित सहायता",
       "apiAccess": "एपीआई पहुंच",
-      "customBranding": "कस्टम ब्रांडिंग"
+      "customBranding": "कस्टम ब्रांडिंग",
+      "closetLimit": "अलमारी क्षमता",
+      "marketplace": "मार्केटप्लेस विकल्प",
+      "trendScout": "ट्रेड स्काउट पहुंच",
+      "scheduler": "अनुसूची और पुश सूचनाएं",
+      "campaigns": "विज्ञापन अभियान निर्माण",
+      "closetLimitFree": "50 अलमारी आइटम तक",
+      "dailyLimitFree": "प्रति दिन 10 अनुरोधों तक",
+      "unlimitedCloset": "असीमित अलमारी आइटम",
+      "unlimitedOps": "असीमित दैनिक अनुरोध",
+      "marketplaceAccess": "मार्केटप्लेस में बेचना और किराए पर देना",
+      "schedulerAccess": "शेड्यूलर और पुश सूचनाएं",
+      "campaignsAccess": "विज्ञापन अभियान शामिल"
     },
     "supportTiers": {
       "community": "सामुदायिक समर्थन",
@@ -2855,7 +2867,7 @@
     "purchaseSuccessMsg": "क्रेडिट पैक सफलतापूर्वक खरीदा गया!",
     "captureFailed": "लेन-देन की पुष्टि विफल रही।",
     "checkoutCancelled": "चेकआउट रद्द कर दिया गया।",
-    "loadError": "मूल्य निर्धारण जानकारी लोड नहीं की जा सकी। कृपया पृष्ठ को रीफ़्रेश करें।",
+    "loadError": "मूल्य निर्धारण जानकारी लोड करने में विफल। कृपया बाद में पुनः प्रयास करें।",
     "confirmingPayment": "आपकी खरीद की पुष्टि की जा रही है...",
     "loadingPacks": "खरीद विकल्प लोड हो रहे हैं...",
     "purchaseSuccessful": "खरीद सफल!",
@@ -2885,7 +2897,22 @@
     "tier": {
       "free": "निःशुल्क",
       "pro": "प्रो",
-      "business": "बिजनेस"
-    }
+      "business": "बिजनेस",
+      "manager": "प्रबंधक",
+      "professional": "पेशेवर"
+    },
+    "unlimited": "असीमित",
+    "tenRequests": "10 अनुरोध",
+    "swapDonateOnly": "केवल स्वैप और दान",
+    "rentSellIncluded": "किराया और बिक्री शामिल",
+    "loadErrorFallback": "मूल्य निर्धारण जानकारी लोड करने में विफल।",
+    "membershipTitle": "ड्रेसएप क्लब",
+    "compareFeatureCol": "विशेषताएं",
+    "managerDesc": "कपड़ों या एआई संचालन पर बिना किसी सीमा के इष्टतम स्टाइलिस्ट योजना।",
+    "professionalDesc": "विशेषज्ञ-केंद्रित अभियान निर्माता स्लॉट के साथ असीमित संसाधन।",
+    "perMonth": "प्रति माह",
+    "perYear": "प्रति वर्ष",
+    "billedMonthly": "मासिक बिलिंग (${{price}})",
+    "billedAnnually": "वार्षिक बिलिंग (${{price}})"
   }
 }

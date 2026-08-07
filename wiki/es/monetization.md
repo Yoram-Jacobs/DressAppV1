@@ -1,24 +1,36 @@
-# DressApp Monetization & Billing Engine
+Aquí tienes la traducción de la documentación de DressApp al español, siguiendo todas las reglas especificadas:
 
-This document provides a comprehensive architectural overview, user manual, and technology deep-dive of the monetization, subscription billing, and growth-loop mechanics in DressApp.
+# Motor de Monetización y Facturación de DressApp
+
+Este documento ofrece una descripción arquitectónica exhaustiva, un manual de usuario y un análisis tecnológico profundo de la monetización, la facturación por suscripción y los límites de tres niveles en DressApp.
 
 ---
 
-## 1. Executive Summary & Value Proposition
+## 1. Resumen Ejecutivo y Propuesta de Valor
 
-### High-Level Overview
-DressApp implements a hybrid freemium and growth-loop monetization model. Free tier users are allocated a baseline closet capacity of **150 garments**. When limits are reached, the platform gates new garment uploads behind a **402 Payment Required** guard, offering two distinct paths to expansion:
-1.  **Pro Subscription (Paid)**: A premium subscription (Monthly at $4.99 or Yearly at $29.99) powered by a native **PayPal Subscriptions REST API** integration.
-2.  **Viral Growth Loop (Free)**: A referral program where inviting friends grants the referrer **+10 capacity slots** per registered signup, expanding their baseline closet indefinitely.
+### Descripción General
+DressApp implementa un modelo de monetización de tres niveles diseñado para adaptarse a diferentes arquetipos de usuario:
+1.  **Nivel Gratuito**:
+    *   **Costo**: $0 / mes (no se requiere tarjeta de crédito).
+    *   **Límites**: Hasta 50 artículos en el armario y hasta 10 operaciones diarias de IA.
+    *   **Características**: Organización básica del armario, soporte comunitario. Restricciones para vender/alquilar en el mercado (solo intercambio/donación). El acceso a Trend Scout y Campañas está deshabilitado.
+2.  **Nivel Manager**:
+    *   **Costo**: $5 / mes o $50 / año.
+    *   **Límites**: Artículos ilimitados en el armario y solicitudes diarias ilimitadas de IA.
+    *   **Características**: Opciones de mercado (Vender, Intercambiar, Alquilar, Donar), Trend Scout, Programador y notificaciones push, Soporte prioritario. La creación de Campañas está deshabilitada.
+3.  **Nivel Profesional**:
+    *   **Costo**: $10 / mes o $100 / año.
+    *   **Límites**: Artículos ilimitados en el armario y solicitudes diarias ilimitadas de IA.
+    *   **Características**: Todas las características incluidas, soporte dedicado y soporte completo para la creación de Campañas publicitarias.
 
-### Architectural Flow
+### Flujo Arquitectónico
 
 ```mermaid
 graph TD
     User([User App Client])
     Gateway[Payments API Gateway /paypal]
-    Auth[Auth Router /auth/register]
     Closet[Closet Router /closet/item]
+    Campaigns[Campaigns Router /campaigns]
     DB[(MongoDB Atlas)]
     PayPalAPI[PayPal Subscriptions API]
 
@@ -26,7 +38,7 @@ graph TD
     User -->|1. Upload Garment| Closet
     Closet -->|2. Check Item Count & Subscription| DB
     DB -->|3. Return Count + SubscriptionInfo| Closet
-    Closet -.->|If Exceeded & Sub Inactive: HTTP 402| User
+    Closet -.->|If Exceeded: HTTP 402| User
     
     %% Paid Subscription Checkout
     User -->|4. Post /paypal/subscribe| Gateway
@@ -36,75 +48,43 @@ graph TD
     User -->|8. User Approves Payment| PayPalAPI
     User -->|9. Post /paypal/subscribe/capture| Gateway
     Gateway -->|10. Verify Activation| PayPalAPI
-    Gateway -->|11. Write Active Sub| DB
+    Gateway -->|11. Write Active Sub & Tier| DB
     
-    %% Viral Referral Mechanics
-    User -->|12. Register with referrer_id| Auth
-    Auth -->|13. Increment closet_capacity_bonus| DB
+    %% Campaigns Gating
+    User -->|12. Create Campaign| Campaigns
+    Campaigns -->|13. Check Tier| DB
+    Campaigns -.->|If Not Professional: HTTP 403| User
 ```
-
-### User Value Proposition
-*   **Frictionless Upgrade Path**: Premium features (unlimited closet space and priority GPU background matting) can be unlocked instantly.
-*   **Organic Limit Expansion**: Users who do not wish to pay can increase their limits simply by sharing a link, keeping the core utility accessible to viral advocates.
-*   **PayPal Mock-Testing Mode**: Developers and staging testers can evaluate the end-to-end checkout flow without any real credit cards or active merchant billing plans.
 
 ---
 
-## 2. Comprehensive User Manual
+## 2. Manual de Usuario Exhaustivo
 
-### Visual Interface Topology
-The user profile page ([Profile.jsx](file:///C:/DressApp_AG/frontend/src/pages/Profile.jsx)) hosts the Subscription Management widget under the **Subscription & Limits** section:
+### Topología de la Interfaz Visual
+La página de perfil de usuario ([Profile.jsx](file:///C:/DressApp_AG/frontend/src/pages/Profile.jsx)) alberga el widget de Gestión de Suscripciones en la sección **Suscripción y Límites**, mostrando el recuento de artículos (límite de 0 a 50 para el plan Gratuito), el estado del nivel del plan activo y las próximas fechas de renovación.
+La página de precios ([Pricing.jsx](file:///C:/DressApp_AG/frontend/src/pages/Pricing.jsx)) muestra tarjetas que comparan los planes Gratuito, Manager y Profesional, así como una lista de verificación detallada de características.
 
-```
-+-------------------------------------------------------------------+
-|  [Crown] SUBSCRIPTION & LIMITS                                    v|
-+-------------------------------------------------------------------+
-|  Free Plan: 85 / 150 items used                                   |
-|                                                                   |
-|  Closet Capacity                             85 / 150 items       |
-|  [=======================>.....................................]  |
-|                                                                   |
-|  +----------------------------+   +----------------------------+  |
-|  | Monthly Plan               |   | Annual Plan   [BEST VALUE] |  |
-|  | Flexible billing cycle.    |   | Save 50% vs monthly rate.  |  |
-|  |                            |   |                            |  |
-|  | $4.99 / month              |   | $29.99 / year              |  |
-|  |                            |   |                            |  |
-|  | [ Upgrade Monthly ]        |   | [ Upgrade Annual ]         |  |
-|  +----------------------------+   +----------------------------+  |
-|                                                                   |
-|  Refer Friends (Get +10 slots per signup):                        |
-|  [ Copy Invite Link ]                                             |
-+-------------------------------------------------------------------+
-```
+### Recorridos por Modos y Flujos de Trabajo
 
-### Mode & Workflow Walkthroughs
-
-#### A. Upgrading to DressApp Pro (Paid Flow)
-1.  **Initiating Upgrade**: The user selects their plan (Monthly or Annual) and clicks **Upgrade**.
-2.  **Order Registration**: The client issues a `POST /paypal/subscribe` request. The backend contacts PayPal, generates a subscription ID, and returns an `approve_url`.
-3.  **Payment Processing**: The client browser redirects to the PayPal Sandbox checkout page (or is intercepted locally in mock mode). The user logs in and approves the billing agreement.
-4.  **Redirection & Capture**: PayPal redirects the browser back to `/me?sub_status=success&token=SUBSCRIPTION_ID`.
-5.  **Activation**: The client detects the search params, issues `POST /paypal/subscribe/capture/{subscription_id}`, and refreshes the user session. The limits indicator vanishes and displays **Active Premium**.
-
-#### B. Referral Loop Activation (Free Flow)
-1.  **Invite Share**: The user clicks **Copy Invite Link**, which appends their database ID to the URL: `https://dressapp.co/register?ref=USER_ID`.
-2.  **Tracking & Referral Staging**: When the referred friend visits the register URL, the client-side router caches the `ref` token in `sessionStorage` under the key `referrer_id`.
-3.  **Registration Bridge**: Upon submitting the registration form, the payload includes the staged `referrer_id`.
-4.  **Reward Grant**: The backend registers the new account, finds the referrer, and atomically increments their `closet_capacity_bonus` by `10`.
+#### A. Actualización de su Membresía (Flujo de Pago)
+1.  **Inicio de la Actualización**: El usuario selecciona su plan deseado (Manager o Profesional) y la frecuencia de facturación (Mensual o Anual) y hace clic en **Actualizar Plan**.
+2.  **Registro de Pedido**: El cliente emite una solicitud `POST /paypal/subscribe`. El backend se comunica con PayPal, genera un ID de suscripción y devuelve una `approve_url`.
+3.  **Procesamiento de Pago**: El navegador del cliente redirige a la página de pago de PayPal Sandbox (o es manejado a través de una pasarela Mock Atzmai/PayPal). El usuario inicia sesión y aprueba el acuerdo de facturación.
+4.  **Redirección y Captura**: PayPal redirige el navegador de vuelta a `/pricing?sub_status=success&token=SUBSCRIPTION_ID`.
+5.  **Activación**: El cliente detecta los parámetros de búsqueda, emite `POST /paypal/subscribe/capture/{subscription_id}` y actualiza la sesión del usuario. El nivel del plan activo se actualiza inmediatamente en la interfaz de usuario.
 
 ---
 
-## 3. Technology Stack & Capability Deep-Dive
+## 3. Análisis Profundo de la Pila Tecnológica y Capacidades
 
-### Data Schema Definitions
-The MongoDB schema in [schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) holds the user's billing status:
+### Definiciones del Esquema de Datos
+El esquema de MongoDB en [schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) contiene el estado de facturación y el nivel activo del usuario:
 
 ```python
 class SubscriptionInfo(BaseModel):
     is_active: bool = False
     plan_type: Literal["free", "monthly", "yearly"] = "free"
-    stripe_subscription_id: str | None = None  # Legacy support
+    tier: Literal["free", "manager", "professional"] = "free"
     paypal_subscription_id: str | None = None
     expires_at: str | None = None              # ISO timestamp
     cancelled_at: str | None = None            # ISO timestamp
@@ -112,37 +92,40 @@ class SubscriptionInfo(BaseModel):
 class User(BaseDoc):
     # ... other profile documents ...
     subscription: SubscriptionInfo = Field(default_factory=SubscriptionInfo)
-    closet_capacity_bonus: int = 0             # Earned via referrals
 ```
 
-### API Routing & Gateway Contracts
+### Enrutamiento de la API y Acciones Restringidas
 
-#### Gated Endpoints ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
-During item insertion, the system verifies limits using:
+#### Límite de Artículos del Armario ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
+Durante la inserción de artículos, el sistema verifica los límites para los usuarios del nivel Gratuito:
 ```python
-capacity = 150 + user.get("closet_capacity_bonus", 0)
-item_count = await db.closet_items.count_documents({"owner_id": user_id, "status": {"$ne": "deleted"}})
+sub = user.get("subscription") or {}
+is_active = sub.get("is_active", False)
+plan_type = sub.get("plan_type", "free")
+tier = sub.get("tier", "free")
 
-if item_count >= capacity and not user.get("subscription", {}).get("is_active", False):
-    raise HTTPException(status_code=402, detail="Closet capacity limit exceeded. Upgrade required.")
+user_tier = "free"
+if is_active and plan_type != "free":
+    user_tier = tier
+
+if user_tier == "free":
+    item_count = await db.closet_items.count_documents({"owner_id": user_id, "status": {"$ne": "deleted"}})
+    if item_count >= 50:
+        raise HTTPException(status_code=402, detail="Closet capacity limit (50 items) exceeded. Please upgrade.")
 ```
 
-#### Billing Actions ([payments.py](file:///C:/DressApp_AG/backend/app/api/v1/payments.py))
-*   `POST /paypal/subscribe`: Reads plan configurations based on request payload and requests a billing agreement token from PayPal.
-*   `POST /paypal/subscribe/capture/{subscription_id}`: Retrieves subscription details from the PayPal API, extracts the start date and plan frequency, calculates the expiration timestamp, and saves the active status in the database.
-*   `POST /paypal/subscribe/cancel`: Contacts PayPal to terminate the billing agreement and marks the subscription object in MongoDB as scheduled for termination upon expiry.
+#### Límite Diario de Operaciones de IA ([credit_manager.py](file:///C:/DressApp_AG/backend/app/services/credit_manager.py))
+Para los usuarios del nivel Gratuito, las operaciones de IA incrementan un contador diario registrado en `user.ai_configuration.daily_request_count`. Cuando este alcanza 10, las solicitudes son bloqueadas con HTTP 402.
 
-### Mock Integration Framework ([paypal_client.py](file:///C:/DressApp_AG/backend/app/services/paypal_client.py))
-To simplify local and staging environment testing, the integration uses `PAYPAL_MOCK_MODE=true`:
+#### Restricción del Marketplace ([listings.py](file:///C:/DressApp_AG/backend/app/api/v1/listings.py))
+Si un usuario está en el nivel Gratuito, las publicaciones creadas con intención `"for_sale"` o `"rent"` son rechazadas:
 ```python
-if _is_mock_token(token) or plan_id.startswith("P-MOCK"):
-    mock_sub_id = f"MOCK-SUB-{uuid.uuid4().hex[:14].upper()}"
-    # Instead of navigating to PayPal, redirect immediately to return_url with mock token
-    checkout_href = f"{return_url}&token={mock_sub_id}" if return_url else ...
-    return {
-        "id": mock_sub_id,
-        "status": "APPROVAL_PENDING",
-        "links": [{"href": checkout_href, "rel": "approve", "method": "GET"}]
-    }
+if user_tier == "free" and listing.intent in ["for_sale", "rent"]:
+    raise HTTPException(status_code=403, detail="Free plan users can only Swap or Donate garments. Upgrade to list for sale or rent.")
 ```
-This bypasses external dependencies entirely, making end-to-end checkout testing accessible instantly to local developers.
+
+#### Restricción de Campañas ([campaigns.py](file:///C:/DressApp_AG/backend/app/api/v1/campaigns.py))
+Los puntos finales de creación de Campañas restringen las acciones a menos que el nivel de suscripción activo sea Profesional:
+```python
+if user_tier != "professional":
+    raise HTTPException(status_code=403, detail="Ad Campaign creation is only available on the Professional plan.")

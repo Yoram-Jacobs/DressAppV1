@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Sparkles,
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
 import { useLocation as useAppLocation } from '@/lib/location';
 import { api } from '@/lib/api';
@@ -43,7 +45,16 @@ export default function TrendScout() {
       .toString()
       .toUpperCase() || null;
 
+  const sub = user?.subscription || {};
+  const isActive = sub.is_active || false;
+  const planType = sub.plan_type || 'free';
+  const tier = sub.tier || 'free';
+  
+  const userTier = (isActive && planType !== 'free') ? tier : 'free';
+  const isBlocked = userTier === 'free';
+
   useEffect(() => {
+    if (isBlocked) return;
     const fetchTrends = async () => {
       try {
         // Load up to 50 personalized trends since user signed in
@@ -58,7 +69,33 @@ export default function TrendScout() {
       }
     };
     fetchTrends();
-  }, [language, country]);
+  }, [language, country, isBlocked]);
+
+  if (isBlocked) {
+    return (
+      <div className="container-px max-w-2xl mx-auto pt-16 pb-24 text-center">
+        <div className="p-8 rounded-3xl border border-border bg-card shadow-lg space-y-6 flex flex-col items-center">
+          <div className="p-4 rounded-2xl bg-amber-500/10 text-amber-500">
+            <Crown className="h-10 w-10" />
+          </div>
+          <h2 className="font-display text-2xl font-bold text-foreground">
+            {t('trends.lockedTitle', { defaultValue: 'Trend Scout is Premium' })}
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            {t('trends.lockedDesc', { defaultValue: 'Trend Scout is only available on Manager or Professional plans. Upgrade your plan to get daily curated style feeds, sustainability news, and runway highlights.' })}
+          </p>
+          <div className="flex gap-4 w-full justify-center">
+            <ExploreBackButton />
+            <Link to="/pricing">
+              <Button className="rounded-xl px-6 bg-primary text-primary-foreground hover:translate-y-[-1px] transition-all">
+                {t('pricing.upgradeLinkBtn', { defaultValue: 'Upgrade Plan' })}
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container-px max-w-6xl mx-auto pt-6 md:pt-10 pb-24" data-testid="trend-scout-page">

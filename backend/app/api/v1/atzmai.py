@@ -348,7 +348,14 @@ async def atzmai_webhook(payload: AtzmaiCallbackPayload) -> dict[str, Any]:
                 
         elif tx_type == "subscription":
             # Subscription upgrade
-            tier = topup.get("tier", "pro")
+            tier = topup.get("tier", "manager")
+            if tier == "pro":
+                tier = "manager"
+            elif tier == "business":
+                tier = "professional"
+            if not tier:
+                tier = "manager"
+                
             plan_type = topup.get("plan_type", "monthly")
             
             duration_days = 365 if plan_type == "yearly" else 30
@@ -377,28 +384,13 @@ async def atzmai_webhook(payload: AtzmaiCallbackPayload) -> dict[str, Any]:
             )
             
             if user_record:
-                from app.models.credit import add_credit_bucket
-                credits_map = {"pro": 100, "business": 300}
-                included_credits = credits_map.get(tier, 100)
-                
-                expiry_time = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
-                updated_buckets = add_credit_bucket(
-                    user_record.get("credit_buckets") or [],
-                    amount=included_credits,
-                    bucket_type="free",
-                    expires_at=expiry_time
-                )
-                await db.users.update_one(
-                    {"id": user_id},
-                    {"$set": {"credit_buckets": updated_buckets}}
-                )
                 import asyncio
                 asyncio.create_task(
                     trigger_success_email(
                         user_record=user_record,
                         amount_cents=amount_cents,
                         currency=currency,
-                        credits_purchased=included_credits,
+                        credits_purchased=0,
                         atzmai_payment_id=atzmai_payment_id
                     )
                 )

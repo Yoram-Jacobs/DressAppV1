@@ -24,7 +24,7 @@ export function AIConfiguration() {
   const { user, updateUserLocal } = useAuth();
   const isRtl = i18n.dir() === 'rtl';
   
-  const [providerMode, setProviderMode] = useState(user?.ai_configuration?.provider_mode || 'standard');
+  const [providerMode, setProviderMode] = useState('custom_keys');
   const [activeProviderId, setActiveProviderId] = useState(user?.ai_configuration?.selected_provider || 'google_ai');
   const [activeModel, setActiveModel] = useState(user?.ai_configuration?.selected_model || 'gemini-2.5-flash');
   const [apiKeyInput, setApiKeyInput] = useState('');
@@ -58,37 +58,25 @@ export function AIConfiguration() {
       
       const payload = {
         ai_configuration: {
-          provider_mode: mode,
+          provider_mode: 'custom_keys',
           selected_provider: newProviderId,
           selected_model: newModelVal,
           custom_keys: {}
         }
       };
       
-      if (mode === 'standard') {
-        if (keyVal !== null) {
-          payload.ai_configuration.custom_keys.google_ai = keyVal;
-        } else {
-          payload.ai_configuration.custom_keys.google_ai = true;
+      const providersList = ['google_ai', 'openai', 'anthropic', 'deepseek', 'qwen'];
+      providersList.forEach(p => {
+        if (p === newProviderId && keyVal !== null) {
+          payload.ai_configuration.custom_keys[p] = keyVal;
+        } else if (currentConfig.custom_keys?.[p]) {
+          payload.ai_configuration.custom_keys[p] = true;
         }
-      } else if (mode === 'custom_keys') {
-        const providersList = ['google_ai', 'openai', 'anthropic', 'deepseek', 'qwen'];
-        providersList.forEach(p => {
-          if (p === newProviderId && keyVal !== null) {
-            payload.ai_configuration.custom_keys[p] = keyVal;
-          } else if (currentConfig.custom_keys?.[p]) {
-            payload.ai_configuration.custom_keys[p] = true;
-          }
-        });
-      } else {
-        payload.ai_configuration.custom_keys = {
-          google_ai: "", openai: "", anthropic: "", deepseek: "", qwen: ""
-        };
-      }
+      });
       
       const updatedUser = await api.patchMe(payload);
       updateUserLocal(updatedUser);
-      setProviderMode(mode);
+      setProviderMode('custom_keys');
       if (providerId) setActiveProviderId(providerId);
       if (newModelVal) setActiveModel(newModelVal);
       toast.success(t('common.success', { defaultValue: 'Settings updated successfully' }));
@@ -160,228 +148,137 @@ export function AIConfiguration() {
               {t('profile.aiConfig.title', { defaultValue: 'AI Configuration' })}
             </span>
             <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
-              {t('profile.aiConfig.subtitle', { defaultValue: 'Manage your AI service providers, customize API keys, or switch to edge AI models.' })}
+              {t('profile.aiConfig.subtitle', { defaultValue: 'Manage your AI service providers and customize API keys.' })}
             </span>
           </div>
         </div>
       </AccordionTrigger>
       
       <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5 space-y-4">
-        <div className="space-y-2 text-start">
-          <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {t('profile.aiConfig.modeLabel', { defaultValue: 'AI Provider Mode' })}
-          </Label>
-          <Select
-            value={providerMode}
-            onValueChange={(val) => handleSaveConfig(val)}
-            disabled={busy}
-            dir={isRtl ? 'rtl' : 'ltr'}
-          >
-            <SelectTrigger className="rounded-xl bg-card w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              <SelectItem value="standard">
-                {t('profile.aiConfig.standardPlan', { defaultValue: 'Standard Plan (Credit-based)' })}
-              </SelectItem>
-              <SelectItem value="custom_keys">
-                {t('profile.aiConfig.customKeys', { defaultValue: 'My Own API Keys (SaaS)' })}
-              </SelectItem>
-              <SelectItem value="on_device">
-                {t('profile.aiConfig.onDevice', { defaultValue: 'On-Device Local AI (Gemma)' })}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start">
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {t('profile.aiConfig.providerLabel', { defaultValue: 'Active Provider' })}
+            </Label>
+            <Select
+              value={activeProviderId}
+              onValueChange={(val) => handleSaveConfig('custom_keys', null, val)}
+              disabled={busy}
+              dir={isRtl ? 'rtl' : 'ltr'}
+            >
+              <SelectTrigger className="rounded-xl bg-card w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                {PROVIDERS.map(p => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {t('profile.aiConfig.modelLabel', { defaultValue: 'Model Preference' })}
+            </Label>
+            <Select
+              value={activeModel}
+              onValueChange={(val) => handleSaveConfig('custom_keys', null, null, val)}
+              disabled={busy}
+              dir={isRtl ? 'rtl' : 'ltr'}
+            >
+              <SelectTrigger className="rounded-xl bg-card w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                {activeProvider.models.map(m => (
+                  <SelectItem key={m} value={m}>{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {providerMode === 'custom_keys' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start">
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {t('profile.aiConfig.providerLabel', { defaultValue: 'Active Provider' })}
-              </Label>
-              <Select
-                value={activeProviderId}
-                onValueChange={(val) => handleSaveConfig(providerMode, null, val)}
-                disabled={busy}
-                dir={isRtl ? 'rtl' : 'ltr'}
-              >
-                <SelectTrigger className="rounded-xl bg-card w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {PROVIDERS.map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <div className="p-4 rounded-2xl bg-card border border-border/50 space-y-3 shadow-sm text-start">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-foreground flex items-center gap-2">
+              {t('profile.aiConfig.providerKeyLabel', { defaultValue: '{{providerName}} Key:', providerName: activeProvider.name })}
+              {hasSelectedProviderKey ? (
+                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  {t('profile.aiConfig.statusActive', { defaultValue: 'Active' })}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] text-rose-500 font-medium">
+                  <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                  {t('profile.aiConfig.statusInactive', { defaultValue: 'Inactive' })}
+                </span>
+              )}
+            </span>
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="xs" className="rounded-lg text-[10px] h-6 bg-secondary/50">
+                  {hasSelectedProviderKey 
+                    ? t('common.edit', { defaultValue: 'Edit' }) 
+                    : t('profile.aiConfig.connectKey', { defaultValue: 'Connect Key' })}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="rounded-2xl max-w-md bg-card border border-border shadow-lg">
+                <DialogHeader>
+                  <DialogTitle className="text-base font-bold flex items-center gap-2">
+                    <Key className="h-4 w-4 text-primary" />
+                    {t('profile.aiConfig.modelSelectorTitleProvider', { defaultValue: 'Connect {{providerName}} Key', providerName: activeProvider.name })}
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground">
+                    {t('profile.aiConfig.setupInstructions', { defaultValue: 'Setting up your custom API key is easy! Follow these steps:' })}
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="space-y-4 py-2">
+                  <div className="text-xs space-y-2 text-foreground/90 bg-secondary/25 p-3.5 rounded-xl border border-border/40">
+                    <p>{steps.step1}</p>
+                    <p>{steps.step2}</p>
+                    <p>{steps.step3}</p>
+                  </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {t('profile.aiConfig.modelLabel', { defaultValue: 'Model Preference' })}
-              </Label>
-              <Select
-                value={activeModel}
-                onValueChange={(val) => handleSaveConfig(providerMode, null, null, val)}
-                disabled={busy}
-                dir={isRtl ? 'rtl' : 'ltr'}
-              >
-                <SelectTrigger className="rounded-xl bg-card w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {activeProvider.models.map(m => (
-                    <SelectItem key={m} value={m}>{m}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        )}
-
-        {(providerMode === 'standard' || providerMode === 'custom_keys') && (
-          <div className="p-4 rounded-2xl bg-card border border-border/50 space-y-3 shadow-sm text-start">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-foreground flex items-center gap-2">
-                {providerMode === 'standard' 
-                  ? t('profile.aiConfig.geminiKeyLabel', { defaultValue: 'Google Gemini Key:' }) 
-                  : t('profile.aiConfig.providerKeyLabel', { defaultValue: '{{providerName}} Key:', providerName: activeProvider.name })}
-                {((providerMode === 'standard' && !!user?.ai_configuration?.custom_keys?.google_ai) || 
-                  (providerMode === 'custom_keys' && hasSelectedProviderKey)) ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    {t('profile.aiConfig.statusActive', { defaultValue: 'Active' })}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-[10px] text-rose-500 font-medium">
-                    <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                    {t('profile.aiConfig.statusInactive', { defaultValue: 'Inactive' })}
-                  </span>
-                )}
-              </span>
-              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="xs" className="rounded-lg text-[10px] h-6 bg-secondary/50">
-                    {((providerMode === 'standard' && !!user?.ai_configuration?.custom_keys?.google_ai) || 
-                      (providerMode === 'custom_keys' && hasSelectedProviderKey)) 
-                      ? t('common.edit', { defaultValue: 'Edit' }) 
-                      : t('profile.aiConfig.connectKey', { defaultValue: 'Connect Key' })}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="rounded-2xl max-w-md bg-card border border-border shadow-lg">
-                  <DialogHeader>
-                    <DialogTitle className="text-base font-bold flex items-center gap-2">
-                      <Key className="h-4 w-4 text-primary" />
-                      {providerMode === 'standard'
-                        ? t('profile.aiConfig.modelSelectorTitleGemini', { defaultValue: 'Connect Gemini Key' })
-                        : t('profile.aiConfig.modelSelectorTitleProvider', { defaultValue: 'Connect {{providerName}} Key', providerName: activeProvider.name })}
-                    </DialogTitle>
-                    <DialogDescription className="text-xs text-muted-foreground">
-                      {t('profile.aiConfig.setupInstructions', { defaultValue: 'Setting up your custom API key is easy! Follow these steps:' })}
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="space-y-4 py-2">
-                    <div className="text-xs space-y-2 text-foreground/90 bg-secondary/25 p-3.5 rounded-xl border border-border/40">
-                      <p>{steps.step1}</p>
-                      <p>{steps.step2}</p>
-                      <p>{steps.step3}</p>
-                    </div>
-
-                    <div className="flex justify-end">
-                      <a 
-                        href={steps.link} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
-                      >
-                        {t('profile.aiConfig.getKeyBtn', { defaultValue: 'Get API Key' })}
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold">{t('profile.aiConfig.apiKeyLabel', { defaultValue: 'API Key' })}</Label>
-                      <Input 
-                        type="password"
-                        value={apiKeyInput}
-                        onChange={(e) => setApiKeyInput(e.target.value)}
-                        placeholder={t('profile.aiConfig.keyPlaceholder', { defaultValue: 'Paste your API key here...' })}
-                        className="rounded-xl text-xs h-9 bg-card"
-                      />
-                    </div>
-                    
-                    <Button 
-                      className="w-full rounded-xl text-xs h-9 font-semibold"
-                      onClick={() => handleSaveConfig(providerMode, apiKeyInput, providerMode === 'standard' ? 'google_ai' : activeProviderId)}
-                      disabled={busy || !apiKeyInput}
+                  <div className="flex justify-end">
+                    <a 
+                      href={steps.link} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
                     >
-                      {busy && <Loader2 className="h-3 w-3 animate-spin mr-1.5" />}
-                      {t('profile.aiConfig.saveBtn', { defaultValue: 'Save Configuration' })}
-                    </Button>
+                      {t('profile.aiConfig.getKeyBtn', { defaultValue: 'Get API Key' })}
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
                   </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-            <p className="text-[11px] text-muted-foreground leading-normal">
-              {providerMode === 'standard' 
-                ? t('profile.aiConfig.standardInstructions', { defaultValue: 'Configure your own Google Gemini key to run personalized model queries. The standard plan uses Google\'s free-tier developer API quota.' })
-                : t('profile.aiConfig.setupInstructions', { defaultValue: 'Configure your own developer key to run queries directly against your own account quota.' })
-              }
-            </p>
-          </div>
-        )}
 
-        {providerMode !== 'on_device' && (
-          <div className="space-y-3">
-            <div className="p-4 rounded-2xl bg-card border border-border/50 flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-2.5">
-                <Coins className="h-5 w-5 text-primary/80" />
-                <div className="text-start">
-                  <div className="text-xs font-semibold text-foreground">
-                    {t('profile.aiConfig.creditsLabel', { defaultValue: 'Remaining Credits' })}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">{t('profile.aiConfig.apiKeyLabel', { defaultValue: 'API Key' })}</Label>
+                    <Input 
+                      type="password"
+                      value={apiKeyInput}
+                      onChange={(e) => setApiKeyInput(e.target.value)}
+                      placeholder={t('profile.aiConfig.keyPlaceholder', { defaultValue: 'Paste your API key here...' })}
+                      className="rounded-xl text-xs h-9 bg-card"
+                    />
                   </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">
-                    {t('profile.aiConfig.creditsUsed', { defaultValue: 'Monthly credit price is $0.005. 7% platform fee is added.' })}
-                  </div>
+                  
+                  <Button 
+                    className="w-full rounded-xl text-xs h-9 font-semibold"
+                    onClick={() => handleSaveConfig(providerMode, apiKeyInput, activeProviderId)}
+                    disabled={busy || !apiKeyInput}
+                  >
+                    {busy && <Loader2 className="h-3 w-3 animate-spin mr-1.5" />}
+                    {t('profile.aiConfig.saveBtn', { defaultValue: 'Save Configuration' })}
+                  </Button>
                 </div>
-              </div>
-              <span className="text-base font-bold text-primary">{currentCredits}</span>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-card border border-border/50 flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-2.5">
-                <Coins className="h-5 w-5 text-amber-500/80" />
-                <div className="text-start">
-                  <div className="text-xs font-semibold text-foreground">
-                    {t('profile.aiConfig.appFeeLabel', { defaultValue: 'Accrued App Fee' })}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">
-                    {t('profile.aiConfig.appFeeDescription', { defaultValue: 'Unpaid platform fee accrued from credit usage.' })}
-                  </div>
-                </div>
-              </div>
-              <span className="text-base font-bold text-amber-600 dark:text-amber-400">${calculatedFee}</span>
-            </div>
+              </DialogContent>
+            </Dialog>
           </div>
-        )}
-
-        {providerMode === 'on_device' && (
-          <div className="p-4 rounded-2xl bg-card border border-border/60 flex items-center gap-3 text-start shadow-sm">
-            <Info className="h-5 w-5 text-muted-foreground shrink-0" />
-            <p className="text-[11px] text-muted-foreground leading-normal">
-              {t('profile.aiConfig.edgeNotice', { defaultValue: 'Running local Gemma4-E2B offline. Execution usage metrics are monitored locally and credited back via Google Nano Banana.' })}
-            </p>
-          </div>
-        )}
-
-        <div className="text-[10px] text-muted-foreground leading-normal flex items-start gap-1.5 p-1 bg-secondary/15 rounded-lg text-start">
-          <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
-          <span>
-            {t('profile.aiConfig.feeNotice', { defaultValue: 'A 7% platform fee is applied to your credit usage to cover custom technology, layout rendering, and prompt processing.' })}
-            {creditsUsed > 0 && ` Current fee: $${calculatedFee}.`}
-          </span>
+          <p className="text-[11px] text-muted-foreground leading-normal">
+            {t('profile.aiConfig.setupInstructions', { defaultValue: 'Configure your own developer key to run queries directly against your own account quota.' })}
+          </p>
         </div>
       </AccordionContent>
     </AccordionItem>

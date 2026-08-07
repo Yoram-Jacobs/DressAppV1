@@ -1059,7 +1059,7 @@
     "phoneWarning": "* قم بتهيئة رقم الهاتف ضمن قسم التواصل لتلقي تنبيهات الدفع.",
     "aiConfig": {
       "title": "إعدادات الذكاء الاصطناعي",
-      "subtitle": "إدارة مزودي خدمة الذكاء الاصطناعي، وتخصيص مفاتيح API، أو التبديل إلى نماذج الذكاء الاصطناعي المحلية.",
+      "subtitle": "إدارة مزودي خدمة الذكاء الاصطناعي وتخصيص مفاتيح API.",
       "modeLabel": "وضع مزود الذكاء الاصطناعي",
       "standardPlan": "الخطة القياسية (تعتمد على الرصيد)",
       "customKeys": "مفاتيح API الخاصة بي (SaaS)",
@@ -2784,12 +2784,12 @@
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
   },
   "pricing": {
-    "title": "الأسعار وخطط النقاط",
-    "subtitle": "اختر الفئة التي تناسب أسلوبك. قم بالترقية أو التعبئة في أي وقت.",
-    "monthlyBilling": "فاتورة شهرية",
-    "annualBilling": "فاتورة سنوية",
+    "title": "خطط تسعير العضوية",
+    "subtitle": "اختر الخطة التي تناسب أسلوبك. قم بالترقية أو التخفيض أو الإلغاء في أي وقت.",
+    "monthlyBilling": "الفواتير الشهرية",
+    "annualBilling": "الفواتير السنوية",
     "savePercent": "وفر 20%",
-    "popular": "الأكثر رواجاً",
+    "popular": "الأكثر شعبية",
     "creditsPerMonth": "{{count}} نقطة ذكاء اصطناعي / شهر",
     "creditsPerMonth_one": "نقطة ذكاء اصطناعي واحدة / شهر",
     "creditsPerMonth_other": "{{count}} نقطة ذكاء اصطناعي / شهر",
@@ -2831,7 +2831,19 @@
       "allProFeatures": "جميع ميزات برو",
       "dedicatedSupport": "دعم مخصص",
       "apiAccess": "وصول إلى واجهة برمجة التطبيقات",
-      "customBranding": "علامة تجارية مخصصة"
+      "customBranding": "علامة تجارية مخصصة",
+      "closetLimit": "سعة قطع الملابس في الخزانة",
+      "marketplace": "خيارات السوق",
+      "trendScout": "الوصول إلى Trend Scout",
+      "scheduler": "الجدولة وإشعارات الدفع",
+      "campaigns": "إنشاء الحملات الإعلانية",
+      "closetLimitFree": "حتى 50 قطعة في الخزانة",
+      "dailyLimitFree": "حتى 10 طلبات يوميًا",
+      "unlimitedCloset": "عدد غير محدود من القطع في الخزانة",
+      "unlimitedOps": "طلبات يومية غير محدودة",
+      "marketplaceAccess": "البيع والتأجير في السوق",
+      "schedulerAccess": "المجدول والإشعارات الفورية",
+      "campaignsAccess": "حملات إعلانية متضمنة"
     },
     "supportTiers": {
       "community": "دعم مجتمعي",
@@ -2855,7 +2867,7 @@
     "purchaseSuccessMsg": "تم شراء حزمة الرصيد بنجاح!",
     "captureFailed": "فشل تأكيد المعاملة.",
     "checkoutCancelled": "تم إلغاء عملية الدفع.",
-    "loadError": "تعذر تحميل معلومات التسعير. يرجى إعادة تحميل الصفحة.",
+    "loadError": "فشل في تحميل معلومات الأسعار. يرجى المحاولة مرة أخرى لاحقًا.",
     "confirmingPayment": "جاري تأكيد عملية الشراء...",
     "loadingPacks": "جاري تحميل خيارات الشراء...",
     "purchaseSuccessful": "عملية شراء ناجحة!",
@@ -2879,13 +2891,28 @@
     "benefitBulkDiscountsDesc": "اشترِ حزمًا أكبر واحصل على قيمة أفضل لكل رصيد. حزمة 100 رصيد تقدم أفضل قيمة للوحدة.",
     "benefitInstantAccess": "وصول فوري",
     "benefitInstantAccessDesc": "اشترِ اليوم واحصل على وصول فوري لميزات الذكاء الاصطناعي المتقدمة مثل إزالة الخلفيات واقتراحات المنسق.",
-    "freeDesc": "مثالي لاستكشاف ورقمنة خزانتك الأساسية.",
+    "freeDesc": "مثالي لاستكشاف ورقمنة خزانة ملابسك الأساسية.",
     "proDesc": "تجربة المنسق المثالية لعشاق الموضة الحقيقيين.",
     "businessDesc": "حدود قصوى وميزات علامة تجارية مميزة للمتخصصين.",
     "tier": {
       "free": "مجاني",
       "pro": "برو",
-      "business": "أعمال"
-    }
+      "business": "أعمال",
+      "manager": "مدير",
+      "professional": "محترف"
+    },
+    "unlimited": "غير محدود",
+    "tenRequests": "10 طلبات",
+    "swapDonateOnly": "التبادل والتبرع فقط",
+    "rentSellIncluded": "يشمل التأجير والبيع",
+    "loadErrorFallback": "فشل في تحميل معلومات الأسعار.",
+    "membershipTitle": "نادي DressApp",
+    "compareFeatureCol": "الميزات",
+    "managerDesc": "خطة منسق الملابس المثالية بدون قيود على الملابس أو عمليات الذكاء الاصطناعي.",
+    "professionalDesc": "موارد غير محدودة مع فتحات لإنشاء حملات مخصصة للخبراء.",
+    "perMonth": "شهريًا",
+    "perYear": "سنويًا",
+    "billedMonthly": "تُحاسب شهريًا (${price})",
+    "billedAnnually": "تُحاسب سنويًا (${price})"
   }
 }

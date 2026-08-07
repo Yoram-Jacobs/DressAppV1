@@ -108,6 +108,24 @@ async def fee_preview(
 async def create_listing(
     payload: CreateListingIn, user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
+    sub = user.get("subscription") or {}
+    is_active = sub.get("is_active", False)
+    plan_type = sub.get("plan_type", "free")
+    tier = sub.get("tier", "free")
+    
+    user_tier = "free"
+    if is_active and plan_type != "free":
+        if tier in ["pro", "manager"]:
+            user_tier = "manager"
+        elif tier in ["business", "professional"]:
+            user_tier = "professional"
+            
+    if user_tier == "free" and payload.mode in ["sell", "rent"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Selling or renting items is not allowed on the Free plan. Please upgrade to Manager or Professional to sell or rent."
+        )
+
     db = get_db()
     # If linking to a closet item, ensure ownership and mark it Shared/Retail.
     closet_item = None

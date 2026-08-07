@@ -1068,7 +1068,7 @@
     "phoneWarning": "* Konfiguriere die Telefonnummer unter KONTAKT, um Push-Benachrichtigungen zu erhalten.",
     "aiConfig": {
       "title": "KI-Konfiguration",
-      "subtitle": "Verwalten Sie Ihre KI-Anbieter, passen Sie API-Schlüssel an oder wechseln Sie zu lokalen KI-Modellen.",
+      "subtitle": "Verwalten Sie Ihre KI-Anbieter und passen Sie API-Schlüssel an.",
       "modeLabel": "KI-Anbietermodus",
       "standardPlan": "Standard-Tarif (Guthabenbasiert)",
       "customKeys": "Eigene API-Schlüssel (SaaS)",
@@ -2784,18 +2784,18 @@
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
   },
   "pricing": {
-    "title": "Preise & Guthabenpläne",
-    "subtitle": "Wählen Sie den Tarif, der zu Ihrem Stil passt. Jederzeit upgraden oder aufladen.",
+    "title": "Mitgliedschafts-Tarife",
+    "subtitle": "Wählen Sie den Tarif, der zu Ihrem Stil passt. Upgrade, Downgrade oder Kündigung jederzeit möglich.",
     "monthlyBilling": "Monatliche Abrechnung",
     "annualBilling": "Jährliche Abrechnung",
     "savePercent": "20% sparen",
-    "popular": "Beliebtestes",
+    "popular": "Sehr beliebt",
     "creditsPerMonth": "{{count}} KI-Guthaben / Monat",
     "creditsPerMonth_one": "1 KI-Guthaben / Monat",
     "creditsPerMonth_other": "{{count}} KI-Guthaben / Monat",
     "dailyLimit": "Tageslimit: {{count}}",
     "monthlyLimit": "Monatslimit: {{count}}",
-    "selectPlan": "Tarif wählen",
+    "selectPlan": "Diesen Tarif wählen",
     "currentPlan": "Ihr aktueller Tarif",
     "upgradePlan": "Tarif upgraden",
     "currentBalanceHeader": "Ihr aktueller Kontostand",
@@ -2814,7 +2814,7 @@
     "topUpSub": "Gekaufte Guthabenpakete laufen nie ab und werden nach dem Monatsguthaben verbraucht.",
     "buyCredits": "Kaufe {{count}} Guthaben",
     "buyNow": "Jetzt kaufen",
-    "featureComparisonHeader": "Tarifmerkmale vergleichen",
+    "featureComparisonHeader": "Tarifdetails vergleichen",
     "features": {
       "credits": "KI-Guthaben / Monat",
       "dailyLimit": "Tägliches KI-Limit",
@@ -2831,7 +2831,19 @@
       "allProFeatures": "Alle Pro-Funktionen",
       "dedicatedSupport": "Dedizierter Support",
       "apiAccess": "API-Zugriff",
-      "customBranding": "Eigenes Branding"
+      "customBranding": "Eigenes Branding",
+      "closetLimit": "Kleiderschrank-Kapazität",
+      "marketplace": "Marktplatz-Optionen",
+      "trendScout": "Zugang zu Trend Scout",
+      "scheduler": "Planer & Push-Benachrichtigungen",
+      "campaigns": "Erstellung von Werbekampagnen",
+      "closetLimitFree": "Bis zu 50 Kleiderschrank-Artikel",
+      "dailyLimitFree": "Bis zu 10 Anfragen pro Tag",
+      "unlimitedCloset": "Unbegrenzte Kleiderschrank-Artikel",
+      "unlimitedOps": "Unbegrenzte tägliche Anfragen",
+      "marketplaceAccess": "Marktplatz-Zugang (Verkaufen & Vermieten)",
+      "schedulerAccess": "Terminplaner & Push-Benachrichtigungen",
+      "campaignsAccess": "Werbekampagnen inklusive"
     },
     "supportTiers": {
       "community": "Community-Support",
@@ -2855,7 +2867,7 @@
     "purchaseSuccessMsg": "Guthabenpaket erfolgreich gekauft!",
     "captureFailed": "Transaktionsbestätigung fehlgeschlagen.",
     "checkoutCancelled": "Zahlung abgebrochen.",
-    "loadError": "Preisinformationen konnten nicht geladen werden. Bitte aktualisieren Sie die Seite.",
+    "loadError": "Preise konnten nicht geladen werden. Bitte versuchen Sie es später noch einmal.",
     "confirmingPayment": "Zahlung wird bestätigt...",
     "loadingPacks": "Optionen werden geladen...",
     "purchaseSuccessful": "Kauf erfolgreich!",
@@ -2879,13 +2891,28 @@
     "benefitBulkDiscountsDesc": "Kaufen Sie größere Pakete für einen besseren Preis pro Guthaben. Das 100er-Paket bietet den besten Wert.",
     "benefitInstantAccess": "Sofortiger Zugriff",
     "benefitInstantAccessDesc": "Kaufen Sie noch heute und erhalten Sie sofortigen Zugriff auf Premium-KI-Funktionen.",
-    "freeDesc": "Perfekt zum Erkunden und Digitalisieren Ihres Basiskleiderschranks.",
+    "freeDesc": "Perfekt zum Kennenlernen und Digitalisieren Ihrer Basis-Garderobe.",
     "proDesc": "Das optimale Stylisten-Erlebnis für echte Modeliebhaber.",
     "businessDesc": "Höchste Limits und Premium-Branding-Funktionen für Spezialisten.",
     "tier": {
       "free": "Kostenlos",
       "pro": "Pro",
-      "business": "Business"
-    }
+      "business": "Business",
+      "manager": "Manager",
+      "professional": "Professional"
+    },
+    "unlimited": "Unbegrenzt",
+    "tenRequests": "10 Anfragen",
+    "swapDonateOnly": "Nur Tauschen & Spenden",
+    "rentSellIncluded": "Mieten & Verkaufen inbegriffen",
+    "loadErrorFallback": "Preise konnten nicht geladen werden.",
+    "membershipTitle": "DressApp Club",
+    "compareFeatureCol": "Funktionen",
+    "managerDesc": "Optimaler Stylist-Tarif ohne Einschränkungen bei Kleidungsstücken oder KI-Aktionen.",
+    "professionalDesc": "Unbegrenzte Ressourcen inklusive Tools zur Erstellung von Werbekampagnen.",
+    "perMonth": "/Mo",
+    "perYear": "/Jahr",
+    "billedMonthly": "monatlich abgerechnet (${price})",
+    "billedAnnually": "jährlich abgerechnet (${price})"
   }
 }

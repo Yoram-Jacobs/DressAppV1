@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 
 import { QuotaMonitor } from '@/components/pricing/QuotaMonitor';
 import { PricingDisplay } from '@/components/pricing/PricingDisplay';
-import { CreditPackPurchase } from '@/components/pricing/CreditPackPurchase';
 
 export default function Pricing() {
   const { t } = useTranslation();
@@ -37,7 +36,7 @@ export default function Pricing() {
         setQuotaStatus(quotaRes);
       } catch (err) {
         console.error('Failed to fetch pricing data:', err);
-        setError('Failed to load pricing information. Please try again later.');
+        setError(t('pricing.loadError', { defaultValue: 'Failed to load pricing information. Please try again later.' }));
       } finally {
         setLoading(false);
       }
@@ -139,7 +138,7 @@ export default function Pricing() {
       <div className="max-w-md mx-auto my-12 px-6 py-8 text-center bg-rose-50/50 border border-rose-100 rounded-2xl">
         <AlertTriangle className="h-10 w-10 text-rose-500 mx-auto mb-4" />
         <h3 className="text-lg font-bold text-rose-950 mb-2">{t('common.error', { defaultValue: 'Error' })}</h3>
-        <p className="text-sm text-rose-800/80 mb-6">{error || 'Failed to load pricing information.'}</p>
+        <p className="text-sm text-rose-800/80 mb-6">{error || t('pricing.loadErrorFallback', { defaultValue: 'Failed to load pricing information.' })}</p>
         <Button onClick={() => window.location.reload()} variant="outline" className="border-rose-200 hover:bg-rose-50">
           {t('common.retry', { defaultValue: 'Retry' })}
         </Button>
@@ -175,14 +174,9 @@ export default function Pricing() {
         handleUpgrade={handleUpgrade}
       />
 
-      {/* Quota status, warnings, credit balances, and limit progress meters */}
+      {/* Quota status, warnings, and daily limits monitor */}
       <QuotaMonitor
         quotaStatus={quotaStatus}
-        pricingData={pricingData}
-      />
-
-      {/* Add-on credit pack purchases */}
-      <CreditPackPurchase
         pricingData={pricingData}
       />
     </div>

@@ -42,7 +42,6 @@ import DeleteAccount from '@/pages/DeleteAccount';
 import Privacy from '@/pages/Privacy';
 import TermsOfService from '@/pages/TermsOfService';
 import Pricing from '@/pages/Pricing';           // New pricing page component
-import PurchaseCredits from '@/pages/PurchaseCredits';  // Credit purchase page component
 import MockAtzmaiPayment from '@/pages/MockAtzmaiPayment';
 
 import { useEffect } from 'react';
@@ -146,7 +145,6 @@ function App() {
                   
                   {/* NEW PRICING ROUTES */}
                   <Route path="/pricing" element={<Pricing />} />
-                  <Route path="/pricing/purchase" element={<PurchaseCredits />} />
                 </Route>
                 
                 {/* Fallback route */}

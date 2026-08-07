@@ -20,9 +20,11 @@ export function SubscriptionSettings() {
   const sub = user?.subscription || {};
   const isActive = sub.is_active || false;
   const planType = sub.plan_type || 'free';
+  const tier = sub.tier || 'free';
   const expiresAt = sub.expires_at ? new Date(sub.expires_at).toLocaleDateString() : '';
 
-  const capacity = 150 + (user?.closet_capacity_bonus || 0);
+  const userTier = (isActive && planType !== 'free') ? tier : 'free';
+  const capacity = userTier === 'free' ? (50 + (user?.closet_capacity_bonus || 0)) : 999999;
 
   const handleUpgrade = async (type) => {
     if (busy) return;
@@ -103,8 +105,8 @@ export function SubscriptionSettings() {
               {t('profile.subscription', { defaultValue: 'Subscription & Limits' })}
             </span>
             <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
-              {isActive 
-                ? t('profile.subActiveSummary', { defaultValue: 'Active: {{plan}} plan (Expires: {{date}})', plan: planType.toUpperCase(), date: expiresAt })
+              {userTier !== 'free' 
+                ? t('profile.subActiveSummary', { defaultValue: 'Active: {{plan}} plan (Expires: {{date}})', plan: userTier.toUpperCase(), date: expiresAt })
                 : t('profile.subFreeSummary', { defaultValue: 'Free Plan: {{count}} / {{capacity}} items used', count: closetCount, capacity: capacity })
               }
             </span>
@@ -112,12 +114,12 @@ export function SubscriptionSettings() {
         </div>
       </AccordionTrigger>
       <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5 space-y-4">
-        {isActive ? (
+        {userTier !== 'free' ? (
           <div className="space-y-3 text-start">
             <div className="p-4 rounded-xl border border-[hsl(47_95%_80%)] bg-[hsl(47_95%_97%)] dark:bg-[hsl(47_30%_12%)] dark:border-[hsl(47_30%_25%)] flex items-center justify-between">
               <div>
                 <h4 className="font-semibold text-foreground flex items-center gap-1.5">
-                  <Crown className="h-4 w-4 text-[hsl(47_95%_50%)]" /> {t('profile.proPlanTitle', { defaultValue: 'DressApp Pro ({{plan}})', plan: planType.toUpperCase() })}
+                  <Crown className="h-4 w-4 text-[hsl(47_95%_50%)]" /> {t('profile.planTitle', { defaultValue: 'DressApp {{tier}} ({{plan}})', tier: userTier.toUpperCase(), plan: planType.toUpperCase() })}
                 </h4>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {t('profile.renewalDate', { defaultValue: 'Renewal date: {{date}}', date: expiresAt })}
@@ -127,7 +129,9 @@ export function SubscriptionSettings() {
             </div>
             
             <p className="text-xs text-muted-foreground">
-              {t('profile.proPlanBenefits', { defaultValue: 'You have unlimited closet slots and fast GPU image segmentation enabled.' })}
+              {userTier === 'professional' 
+                ? t('profile.professionalPlanBenefits', { defaultValue: 'You have unlimited closet slots, unlimited daily requests, full marketplace access, and active ad campaign management.' })
+                : t('profile.managerPlanBenefits', { defaultValue: 'You have unlimited closet slots, unlimited daily requests, and full marketplace access.' })}
             </p>
 
             <div className="pt-2 flex justify-end">
@@ -165,7 +169,7 @@ export function SubscriptionSettings() {
 
             <Separator className="my-2" />
 
-            <div className="flex flex-col sm:flex-row gap-4 pt-1">
+            <div className="flex flex-col gap-4 pt-1">
               <Link 
                 to="/pricing#tiers" 
                 className="flex-1 flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:bg-secondary/10 transition-colors group"
@@ -185,28 +189,6 @@ export function SubscriptionSettings() {
                 </div>
                 <span className="text-xs font-semibold text-brand flex items-center gap-1 whitespace-nowrap">
                   {t('profile.viewTiers', { defaultValue: 'View Plans' })} &rarr;
-                </span>
-              </Link>
-
-              <Link 
-                to="/pricing#topup" 
-                className="flex-1 flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:bg-secondary/10 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-accent/5 text-accent group-hover:bg-accent group-hover:text-white transition-colors">
-                    <Zap className="h-5 w-5" />
-                  </div>
-                  <div className="text-start">
-                    <span className="font-semibold text-sm block text-foreground">
-                      {t('profile.topUpCredits', { defaultValue: 'Top-up Credits' })}
-                    </span>
-                    <span className="text-xs text-muted-foreground block mt-0.5">
-                      {t('profile.topUpCreditsDesc', { defaultValue: 'Purchase one-time paid credit packs.' })}
-                    </span>
-                  </div>
-                </div>
-                <span className="text-xs font-semibold text-brand flex items-center gap-1 whitespace-nowrap">
-                  {t('profile.buyCredits', { defaultValue: 'Top-up' })} &rarr;
                 </span>
               </Link>
             </div>

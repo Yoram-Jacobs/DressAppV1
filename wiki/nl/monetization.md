@@ -1,148 +1,131 @@
-# DressApp-engine voor het genereren van inkomsten en facturering
+Hier is de vertaling van de DressApp-documentatie naar het Nederlands, met behoud van de opgegeven regels:
 
-Dit document biedt een uitgebreid architectonisch overzicht, een gebruikershandleiding en een diepgaande technologische analyse van het genereren van inkomsten, abonnementsfacturering en groeicyclusmechanismen in DressApp.
+# DressApp Monetarisatie- & Factureringsengine
+
+Dit document biedt een uitgebreid architecturaal overzicht, gebruikershandleiding en technologische diepgang van de monetarisatie, abonnementsfacturering en drielagenlimieten in DressApp.
 
 ---
 
-## 1. Samenvatting en waardevoorstel
+## 1. Managementoverzicht & Waardepropositie
 
-### Overzicht op hoog niveau
-DressApp implementeert een hybride freemium- en growth-loop-model voor het genereren van inkomsten. Gebruikers op het gratis niveau krijgen een basiskastcapaciteit van **150 kledingstukken** toegewezen. Wanneer de limieten zijn bereikt, laat het platform nieuwe kledinguploads achter een **402 Betaling vereist**-wachter, die twee verschillende paden naar uitbreiding biedt:
-1. **Pro-abonnement (betaald)**: een premium-abonnement (maandelijks voor $ 4,99 of jaarlijks voor $ 29,99) mogelijk gemaakt door een native **PayPal Subscriptions REST API**-integratie.
-2. **Virale groeilus (gratis)**: een verwijzingsprogramma waarbij het uitnodigen van vrienden de verwijzer **+10 capaciteitsslots** per geregistreerde aanmelding verleent, waardoor hun basiskast voor onbepaalde tijd wordt uitgebreid.
+### Algemeen Overzicht
+DressApp implementeert een drielagen-monetarisatiemodel, ontworpen om te passen bij verschillende gebruikerstypes:
+1.  **Gratis Laag**:
+    *   **Kosten**: $0 / maand (geen creditcard vereist).
+    *   **Limieten**: Maximaal 50 kledingstukken en maximaal 10 dagelijkse AI-bewerkingen.
+    *   **Functies**: Basis garderobe-organisatie, communityondersteuning. Beperkt van verkopen/verhuren op de marktplaats (alleen ruilen/doneren). Toegang tot Trend Scout en Campagnes is uitgeschakeld.
+2.  **Manager Laag**:
+    *   **Kosten**: $5 / maand of $50 / jaar.
+    *   **Limieten**: Onbeperkt aantal kledingstukken en onbeperkt aantal dagelijkse AI-verzoeken.
+    *   **Functies**: Marktplaatsopties (Verkopen, Ruilen, Verhuren, Doneren), Trend Scout, Scheduler & pushmeldingen, Prioritaire ondersteuning. Het aanmaken van campagnes is uitgeschakeld.
+3.  **Professionele Laag**:
+    *   **Kosten**: $10 / maand of $100 / jaar.
+    *   **Limieten**: Onbeperkt aantal kledingstukken en onbeperkt aantal dagelijkse AI-verzoeken.
+    *   **Functies**: Alle functies inbegrepen, toegewijde ondersteuning en volledige ondersteuning voor het aanmaken van advertentiecampagnes.
 
-### Architecturale stroom
+### Architecturale Stroom
 
-```Zeemeermin
-grafiek TD
-    Gebruiker([Gebruikersapp-client])
-    Gateway[Betalings-API-gateway /paypal]
-    Auth[Auth-router /auth/registreren]
-    Kast[Kastrouter /kast/item]
-    DB[(MongoDB-atlas)]
-    PayPalAPI[PayPal-abonnementen-API]
+```mermaid
+graph TD
+    User([User App Client])
+    Gateway[Payments API Gateway /paypal]
+    Closet[Closet Router /closet/item]
+    Campaigns[Campaigns Router /campaigns]
+    DB[(MongoDB Atlas)]
+    PayPalAPI[PayPal Subscriptions API]
 
-%% Closet Uploadlimiet Gating
-    Gebruiker -->|1. Kledingstuk uploaden| Kast
-    Kast -->|2. Controleer het aantal artikelen en het abonnement| DB
-    DB -->|3. Retourtelling + abonnementsinformatie| Kast
-    Kast -.->|Indien overschreden en sub-inactief: HTTP 402| Gebruiker
+    %% Closet Upload Limit Gating
+    User -->|1. Upload Garment| Closet
+    Closet -->|2. Check Item Count & Subscription| DB
+    DB -->|3. Return Count + SubscriptionInfo| Closet
+    Closet -.->|If Exceeded: HTTP 402| User
     
-    %% betaald abonnement afrekenen
-    Gebruiker -->|4. Post /paypal/abonneren| Poort
-    Toegangspoort -->|5. Intentie creëren| PayPalAPI
-    PayPalAPI -->|6. Retourneer URL goedkeuren| Poort
-    Toegangspoort -->|7. Retourneer URL goedkeuren| Gebruiker
-    Gebruiker -->|8. Gebruiker keurt betaling goed| PayPalAPI
-    Gebruiker -->|9. Plaats /paypal/subscribe/capture| Poort
-    Toegangspoort -->|10. Activering verifiëren| PayPalAPI
-    Toegangspoort -->|11. Schrijf actieve sub| DB
+    %% Paid Subscription Checkout
+    User -->|4. Post /paypal/subscribe| Gateway
+    Gateway -->|5. Create Intent| PayPalAPI
+    PayPalAPI -->|6. Return Approve URL| Gateway
+    Gateway -->|7. Return Approve URL| User
+    User -->|8. User Approves Payment| PayPalAPI
+    User -->|9. Post /paypal/subscribe/capture| Gateway
+    Gateway -->|10. Verify Activation| PayPalAPI
+    Gateway -->|11. Write Active Sub & Tier| DB
     
-    %% Virale verwijzingsmechanismen
-    Gebruiker -->|12. Registreer met referrer_id| Aut
-    Verificatie -->|13. Verhoog closet_capacity_bonus| DB
+    %% Campaigns Gating
+    User -->|12. Create Campaign| Campaigns
+    Campaigns -->|13. Check Tier| DB
+    Campaigns -.->|If Not Professional: HTTP 403| User
 ```
-
-### Waardepropositie voor gebruikers
-* **Wrijvingsloos upgradepad**: Premiumfuncties (onbeperkte kastruimte en prioriteit GPU-achtergrondmatten) kunnen onmiddellijk worden ontgrendeld.
-* **Organische limietuitbreiding**: gebruikers die niet willen betalen, kunnen hun limieten verhogen door simpelweg een link te delen, waardoor het kernhulpprogramma toegankelijk blijft voor voorstanders van virussen.
-* **PayPal Mock-Testmodus**: ontwikkelaars en testtesters kunnen het end-to-end betaalproces evalueren zonder echte creditcards of actieve factureringsplannen voor verkopers.
 
 ---
 
-## 2. Uitgebreide gebruikershandleiding
+## 2. Uitgebreide Gebruikershandleiding
 
-### Visuele interfacetopologie
-De gebruikersprofielpagina ([Profile.jsx](file:///C:/DressApp_AG/frontend/src/pages/Profile.jsx)) host de widget Abonnementsbeheer onder de sectie **Abonnementen en limieten**:
+### Visuele Interface Topologie
+De gebruikersprofielpagina ([Profile.jsx](file:///C:/DressApp_AG/frontend/src/pages/Profile.jsx)) bevat de Abonnementenbeheer-widget onder de sectie **Abonnement & Limieten**, die het aantal items weergeeft (limiet van 0 tot 50 voor het Gratis plan), de status van de actieve planlaag en de volgende verlengingsdata.
+De prijspagina ([Pricing.jsx](file:///C:/DressApp_AG/frontend/src/pages/Pricing.jsx)) toont kaarten die de Gratis, Manager en Professionele plannen vergelijken, evenals een gedetailleerde checklist met functies in een raster.
 
-```
-+-----------------------------------------------------------+
-|  [Kroon] ABONNEMENT & LIMIETEN v|
-+-----------------------------------------------------------+
-|  Gratis abonnement: 85 / 150 gebruikte items |
-|                                                                   |
-|  Kastcapaciteit 85 / 150 stuks |
-|  [=======================>................................................] |
-|                                                                   |
-|  +--------------------------+ +--------------------------+ |
-|  | Maandabonnement |   | Jaarabonnement [BESTE WAARDE] |  |
-|  | Flexibele factureringscyclus.    |   | Bespaar 50% ten opzichte van het maandtarief.  |  |
-|  |                            |   |                            |  |
-|  | $ 4,99 / maand |   | $ 29,99 / jaar |  |
-|  |                            |   |                            |  |
-|  | [ Maandelijks upgraden ] |   | [ Jaarlijkse upgrade ] |  |
-|  +--------------------------+ +--------------------------+ |
-|                                                                   |
-|  Verwijs vrienden (ontvang +10 slots per aanmelding): |
-|  [Kopieer uitnodigingslink] |
-+-----------------------------------------------------------+
-```
+### Modus & Workflow Uitleg
 
-### Modus- en workflow-walkthroughs
-
-#### A. Upgraden naar DressApp Pro (betaalde stroom)
-1. **Upgrade starten**: de gebruiker selecteert zijn abonnement (maandelijks of jaarlijks) en klikt op **Upgraden**.
-2. **Bestellingsregistratie**: De klant geeft een 'POST /paypal/subscribe'-verzoek uit. De backend neemt contact op met PayPal, genereert een abonnements-ID en retourneert een `approve_url`.
-3. **Betalingsverwerking**: de clientbrowser wordt omgeleid naar de betaalpagina van PayPal Sandbox (of wordt lokaal onderschept in de nepmodus). De gebruiker logt in en keurt de factureringsovereenkomst goed.
-4. **Omleiding en vastleggen**: PayPal leidt de browser terug naar `/me?sub_status=success&token=SUBSCRIPTION_ID`.
-5. **Activering**: De client detecteert de zoekparameters, geeft `POST /paypal/subscribe/capture/{subscription_id}` uit en vernieuwt de gebruikerssessie. De limietindicator verdwijnt en geeft **Active Premium** weer.
-
-#### B. Activering van de verwijzingslus (Free Flow)
-1. **Uitnodiging delen**: de gebruiker klikt op **Uitnodigingslink kopiëren**, waardoor zijn database-ID wordt toegevoegd aan de URL: `https://dressapp.co/register?ref=USER_ID`.
-2. **Tracking en verwijzingsstaging**: wanneer de doorverwezen vriend de registratie-URL bezoekt, slaat de router aan de clientzijde het `ref`-token op in `sessionStorage` onder de sleutel `referrer_id`.
-3. **Registratiebrug**: bij het indienen van het registratieformulier bevat de payload de geënsceneerde `referrer_id`.
-4. **Beloning**: De backend registreert het nieuwe account, vindt de verwijzer en verhoogt atomair hun `closet_capacity_bonus` met `10`.
+#### A. Je Lidmaatschap Upgraden (Betaalde Stroom)
+1.  **Upgrade Initiëren**: De gebruiker selecteert het gewenste plan (Manager of Professioneel) en de factureringsfrequentie (Maandelijks of Jaarlijks) en klikt op **Plan Upgraden**.
+2.  **Bestellingsregistratie**: De client stuurt een `POST /paypal/subscribe` verzoek. De backend neemt contact op met PayPal, genereert een abonnements-ID en retourneert een `approve_url`.
+3.  **Betalingsverwerking**: De clientbrowser wordt doorgestuurd naar de PayPal Sandbox afrekenpagina (of wordt afgehandeld via de Mock Atzmai/PayPal gateway). De gebruiker logt in en keurt de factureringsovereenkomst goed.
+4.  **Omleiding & Vastlegging**: PayPal leidt de browser terug naar `/pricing?sub_status=success&token=SUBSCRIPTION_ID`.
+5.  **Activering**: De client detecteert de zoekparameters, stuurt `POST /paypal/subscribe/capture/{subscription_id}`, en ververst de gebruikerssessie. De actieve planlaag wordt onmiddellijk bijgewerkt in de UI.
 
 ---
 
-## 3. Technologiestapel en mogelijkheden Deep-Dive
+## 3. Technologische Stack & Diepgang van Mogelijkheden
 
-### Definities van gegevensschema's
-Het MongoDB-schema in [schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) bevat de factureringsstatus van de gebruiker:
+### Gegevensschemadefinities
+Het MongoDB-schema in [schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) bevat de factureringsstatus en actieve laag van de gebruiker:
 
 ```python
-klasse SubscriptionInfo(BaseModel):
-    is_actief: bool = Onwaar
-    plan_type: Letterlijk["gratis", "maandelijks", "jaarlijks"] = "gratis"
-    stripe_subscription_id: str | Geen = Geen # Oudere ondersteuning
-    paypal_subscription_id: str | Geen = Geen
-    verloopt_at: str | Geen = Geen # ISO-tijdstempel
-    geannuleerd_at: str | Geen = Geen # ISO-tijdstempel
+class SubscriptionInfo(BaseModel):
+    is_active: bool = False
+    plan_type: Literal["free", "monthly", "yearly"] = "free"
+    tier: Literal["free", "manager", "professional"] = "free"
+    paypal_subscription_id: str | None = None
+    expires_at: str | None = None              # ISO timestamp
+    cancelled_at: str | None = None            # ISO timestamp
 
-klasse Gebruiker (BaseDoc):
-    # ...andere profieldocumenten ...
-    abonnement: SubscriptionInfo = Field(default_factory=SubscriptionInfo)
-    closet_capacity_bonus: int = 0 # Verdiend via verwijzingen
+class User(BaseDoc):
+    # ... other profile documents ...
+    subscription: SubscriptionInfo = Field(default_factory=SubscriptionInfo)
 ```
 
-### API-routing- en gatewaycontracten
+### API-Routering & Beveiligde Acties
 
-#### Gated eindpunten ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
-Tijdens het invoegen van artikelen verifieert het systeem de limieten met behulp van:
+#### Limiet voor Kledingkastitems ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
+Tijdens het invoegen van items verifieert het systeem de limieten voor Gratis gebruikers:
 ```python
-capaciteit = 150 + user.get("closet_capacity_bonus", 0)
-item_count = wacht op db.closet_items.count_documents({"owner_id": user_id, "status": {"$ne": "verwijderd"}})
+sub = user.get("subscription") or {}
+is_active = sub.get("is_active", False)
+plan_type = sub.get("plan_type", "free")
+tier = sub.get("tier", "free")
 
-if item_count >= capaciteit en niet user.get("abonnement", {}).get("is_actief", False):
-    raise HTTPException(status_code=402, detail="Capaciteitslimiet kast overschreden. Upgrade vereist.")
+user_tier = "free"
+if is_active and plan_type != "free":
+    user_tier = tier
+
+if user_tier == "free":
+    item_count = await db.closet_items.count_documents({"owner_id": user_id, "status": {"$ne": "deleted"}})
+    if item_count >= 50:
+        raise HTTPException(status_code=402, detail="Closet capacity limit (50 items) exceeded. Please upgrade.")
 ```
 
-#### Factureringsacties ([betalingen.py](file:///C:/DressApp_AG/backend/app/api/v1/betalingen.py))
-* `POST /paypal/subscribe`: Leest planconfiguraties op basis van de payload van de aanvraag en vraagt een token voor een factuurovereenkomst aan bij PayPal.
-* `POST /paypal/subscribe/capture/{subscription_id}`: Haalt abonnementsgegevens op uit de PayPal API, extraheert de startdatum en abonnementsfrequentie, berekent de vervaltijdstempel en slaat de actieve status op in de database.
-* `POST /paypal/subscribe/cancel`: neemt contact op met PayPal om de factureringsovereenkomst te beëindigen en markeert het abonnementsobject in MongoDB als gepland voor beëindiging na afloop.
+#### Limiet voor Dagelijkse AI-bewerkingen ([credit_manager.py](file:///C:/DressApp_AG/backend/app/services/credit_manager.py))
+Voor gebruikers van de Gratis laag verhogen AI-bewerkingen een dagelijkse telling die wordt bijgehouden in `user.ai_configuration.daily_request_count`. Wanneer deze 10 bereikt, worden verzoeken geblokkeerd met HTTP 402.
 
-### Mock-integratieframework ([paypal_client.py](file:///C:/DressApp_AG/backend/app/services/paypal_client.py))
-Om het testen van lokale en testomgevingen te vereenvoudigen, gebruikt de integratie `PAYPAL_MOCK_MODE=true`:
+#### Marktplaatsbeperking ([listings.py](file:///C:/DressApp_AG/backend/app/api/v1/listings.py))
+Als een gebruiker zich in de Gratis laag bevindt, worden advertenties aangemaakt met het doel `"for_sale"` of `"rent"` geweigerd:
 ```python
-if _is_mock_token(token) of plan_id.startswith("P-MOCK"):
-    mock_sub_id = f"MOCK-SUB-{uuid.uuid4().hex[:14].upper()}"
-    # In plaats van naar PayPal te navigeren, kunt u onmiddellijk doorsturen naar return_url met een nep-token
-    checkout_href = f"{return_url}&token={mock_sub_id}" if return_url anders ...
-    terug {
-        "id": mock_sub_id,
-        "status": "APPROVAL_PENDING",
-        "links": [{"href": checkout_href, "rel": "goedkeuren", "methode": "GET"}]
-    }
+if user_tier == "free" and listing.intent in ["for_sale", "rent"]:
+    raise HTTPException(status_code=403, detail="Free plan users can only Swap or Donate garments. Upgrade to list for sale or rent.")
 ```
-Hierdoor worden externe afhankelijkheden volledig omzeild, waardoor end-to-end checkout-tests direct toegankelijk zijn voor lokale ontwikkelaars.
+
+#### Campagnebeperking ([campaigns.py](file:///C:/DressApp_AG/backend/app/api/v1/campaigns.py))
+Eindpunten voor het aanmaken van campagnes beperken acties, tenzij de actieve abonnementslaag Professioneel is:
+```python
+if user_tier != "professional":
+    raise HTTPException(status_code=403, detail="Ad Campaign creation is only available on the Professional plan.")

@@ -13,15 +13,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const featureKeys = {
-  "Basic AI operations": "pricing.features.basicOps",
+  "Up to 50 closet items": "pricing.features.closetLimitFree",
+  "Up to 10 requests per day": "pricing.features.dailyLimitFree",
   "Community support": "pricing.features.communitySupport",
-  "Advanced AI operations": "pricing.features.advancedOps",
+  "Unlimited closet items": "pricing.features.unlimitedCloset",
+  "Unlimited daily requests": "pricing.features.unlimitedOps",
+  "Marketplace selling & renting": "pricing.features.marketplaceAccess",
+  "Trend Scout": "pricing.features.trendScout",
+  "Scheduler & push notifications": "pricing.features.schedulerAccess",
   "Priority support": "pricing.features.prioritySupport",
-  "Unlimited uploads": "pricing.features.unlimitedUploads",
-  "All Pro features": "pricing.features.allProFeatures",
-  "Dedicated support": "pricing.features.dedicatedSupport",
-  "API access": "pricing.features.apiAccess",
-  "Custom branding": "pricing.features.customBranding"
+  "Ad Campaigns included": "pricing.features.campaignsAccess",
+  "Dedicated support": "pricing.features.dedicatedSupport"
 };
 
 export function PricingDisplay({ 
@@ -39,21 +41,25 @@ export function PricingDisplay({
     return key ? t(key, { defaultValue: feature }) : feature;
   };
 
-  // Helper to calculate price depending on billing cycle
   const getDisplayPrice = (tier) => {
-    if (tier.price === 0) return { priceStr: '$0', subStr: '' };
-    const monthlyPrice = tier.price / 100;
-    if (isAnnual) {
-      const discountedPrice = (monthlyPrice * 0.8).toFixed(2);
+    if (tier.name.toLowerCase() === 'free') return { priceStr: '$0', subStr: '' };
+    if (tier.name.toLowerCase() === 'manager') {
       return { 
-        priceStr: `$${discountedPrice}`, 
-        subStr: t('pricing.billedAnnually', { defaultValue: 'billed annually' }) 
+        priceStr: isAnnual ? '$50' : '$5', 
+        subStr: isAnnual 
+          ? t('pricing.billedAnnually', { price: '50', defaultValue: 'billed annually ($50)' }) 
+          : t('pricing.billedMonthly', { price: '5', defaultValue: 'billed monthly ($5)' }) 
       };
     }
-    return { 
-      priceStr: `$${monthlyPrice.toFixed(2)}`, 
-      subStr: t('pricing.billedMonthly', { defaultValue: 'billed monthly' }) 
-    };
+    if (tier.name.toLowerCase() === 'professional') {
+      return { 
+        priceStr: isAnnual ? '$100' : '$10', 
+        subStr: isAnnual 
+          ? t('pricing.billedAnnually', { price: '100', defaultValue: 'billed annually ($100)' }) 
+          : t('pricing.billedMonthly', { price: '10', defaultValue: 'billed monthly ($10)' }) 
+      };
+    }
+    return { priceStr: '$0', subStr: '' };
   };
 
   return (
@@ -65,10 +71,10 @@ export function PricingDisplay({
           {t('pricing.membershipTitle', { defaultValue: 'DressApp Club' })}
         </span>
         <h1 className="text-4xl sm:text-5xl font-display tracking-tight text-primary mb-4">
-          {t('pricing.title', { defaultValue: 'Pricing & Credit Plans' })}
+          {t('pricing.title', { defaultValue: 'Membership Pricing Plans' })}
         </h1>
         <p className="text-sm sm:text-base text-muted-foreground font-body leading-relaxed">
-          {t('pricing.subtitle', { defaultValue: 'Choose the tier that fits your style. Upgrade or top up at any time.' })}
+          {t('pricing.subtitle', { defaultValue: 'Choose the plan that fits your style. Upgrade, downgrade, or cancel at any time.' })}
         </p>
 
         {/* Toggle Switch */}
@@ -104,7 +110,7 @@ export function PricingDisplay({
       {/* Pricing Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch" data-testid="pricing-tiers-grid">
         {pricingData.pricing_tiers.map((tier, index) => {
-          const isPro = tier.name.toLowerCase() === 'pro';
+          const isPro = tier.name.toLowerCase() === 'professional';
           const isCurrent = currentPlanName.toLowerCase() === tier.name.toLowerCase();
           const { priceStr, subStr } = getDisplayPrice(tier);
 
@@ -138,14 +144,14 @@ export function PricingDisplay({
                     {t('pricing.tier.' + tier.name.toLowerCase(), { defaultValue: tier.name })}
                   </CardTitle>
                   <CardDescription className="text-xs mt-1 min-h-[32px] font-body">
-                    {tier.name === 'Free' && t('pricing.freeDesc', { defaultValue: 'Perfect for exploring and digitalizing your basic closet.' })}
-                    {tier.name === 'Pro' && t('pricing.proDesc', { defaultValue: 'The optimal stylist experience for true fashion lovers.' })}
-                    {tier.name === 'Business' && t('pricing.businessDesc', { defaultValue: 'Ultimate limits and premium branding features for specialists.' })}
+                    {tier.name.toLowerCase() === 'free' && t('pricing.freeDesc', { defaultValue: 'Perfect for exploring and digitalizing your basic closet.' })}
+                    {tier.name.toLowerCase() === 'manager' && t('pricing.managerDesc', { defaultValue: 'Optimal stylist plan with no limitations on garments or AI operations.' })}
+                    {tier.name.toLowerCase() === 'professional' && t('pricing.professionalDesc', { defaultValue: 'Unlimited resources with expert-focused campaign creator slots.' })}
                   </CardDescription>
                   
                   <div className="mt-4 flex items-baseline gap-1">
                     <span className="text-3xl font-bold tracking-tight font-body">{priceStr}</span>
-                    <span className="text-xs text-muted-foreground font-semibold">{tier.price > 0 ? '/mo' : ''}</span>
+                    <span className="text-xs text-muted-foreground font-semibold">{tier.price > 0 ? (isAnnual ? t('pricing.perYear', { defaultValue: '/yr' }) : t('pricing.perMonth', { defaultValue: '/mo' })) : ''}</span>
                   </div>
                   {subStr && <p className="text-[10px] text-muted-foreground mt-0.5">{subStr}</p>}
                 </CardHeader>
@@ -154,26 +160,6 @@ export function PricingDisplay({
                   <div className="border-t border-border/80 my-4" />
                   
                   <ul className="space-y-3 flex-1 font-body text-xs text-foreground/90">
-                    <li className="flex items-start gap-2.5">
-                      <div className="h-4 w-4 rounded-full bg-[hsl(var(--accent))]/10 flex items-center justify-center shrink-0 mt-0.5">
-                        <Check className="h-2.5 w-2.5 text-[hsl(var(--accent))]" />
-                      </div>
-                      <span>
-                        <strong>{tier.credits}</strong> {t('pricing.features.creditsDesc', { defaultValue: 'Credits included' })}
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2.5">
-                      <div className="h-4 w-4 rounded-full bg-[hsl(var(--accent))]/10 flex items-center justify-center shrink-0 mt-0.5">
-                        <Check className="h-2.5 w-2.5 text-[hsl(var(--accent))]" />
-                      </div>
-                      <span>{t('pricing.features.dailyDesc', { defaultValue: 'Daily limit: {{count}} ops', count: tier.ai_daily_limit })}</span>
-                    </li>
-                    <li className="flex items-start gap-2.5">
-                      <div className="h-4 w-4 rounded-full bg-[hsl(var(--accent))]/10 flex items-center justify-center shrink-0 mt-0.5">
-                        <Check className="h-2.5 w-2.5 text-[hsl(var(--accent))]" />
-                      </div>
-                      <span>{t('pricing.features.monthlyDesc', { defaultValue: 'Monthly limit: {{count}} ops', count: tier.ai_monthly_limit })}</span>
-                    </li>
                     {tier.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-2.5">
                         <div className="h-4 w-4 rounded-full bg-[hsl(var(--accent))]/10 flex items-center justify-center shrink-0 mt-0.5">
@@ -236,82 +222,62 @@ export function PricingDisplay({
                 <TableHead className="text-center text-xs font-semibold py-4 text-primary">
                   {t('pricing.tier.free', { defaultValue: 'Free' })}
                 </TableHead>
-                <TableHead className="text-center text-xs font-semibold py-4 text-accent font-bold">
-                  {t('pricing.tier.pro', { defaultValue: 'Pro' })}
-                </TableHead>
                 <TableHead className="text-center text-xs font-semibold py-4 text-primary">
-                  {t('pricing.tier.business', { defaultValue: 'Business' })}
+                  {t('pricing.tier.manager', { defaultValue: 'Manager' })}
+                </TableHead>
+                <TableHead className="text-center text-xs font-semibold py-4 text-accent font-bold">
+                  {t('pricing.tier.professional', { defaultValue: 'Professional' })}
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="text-xs font-body divide-y divide-border">
               <TableRow className="border-border/60">
                 <TableCell className="font-semibold py-3.5 text-muted-foreground">
-                  {t('pricing.features.credits', { defaultValue: 'AI Credits / Month' })}
+                  {t('pricing.features.closetLimit', { defaultValue: 'Closet Items Capacity' })}
                 </TableCell>
-                <TableCell className="text-center py-3.5">10</TableCell>
-                <TableCell className="text-center py-3.5 font-semibold text-accent bg-accent/5">100</TableCell>
-                <TableCell className="text-center py-3.5">300</TableCell>
+                <TableCell className="text-center py-3.5">50</TableCell>
+                <TableCell className="text-center py-3.5 font-semibold text-primary">{t('pricing.unlimited', { defaultValue: 'Unlimited' })}</TableCell>
+                <TableCell className="text-center py-3.5 font-semibold text-accent bg-accent/5">{t('pricing.unlimited', { defaultValue: 'Unlimited' })}</TableCell>
               </TableRow>
               <TableRow className="border-border/60">
                 <TableCell className="font-semibold py-3.5 text-muted-foreground">
-                  {t('pricing.features.dailyLimit', { defaultValue: 'Daily processing limit' })}
+                  {t('pricing.features.dailyLimit', { defaultValue: 'Daily AI operation limit' })}
                 </TableCell>
-                <TableCell className="text-center py-3.5">20</TableCell>
-                <TableCell className="text-center py-3.5 font-semibold text-accent bg-accent/5">200</TableCell>
-                <TableCell className="text-center py-3.5">500</TableCell>
+                <TableCell className="text-center py-3.5">{t('pricing.tenRequests', { defaultValue: '10 requests' })}</TableCell>
+                <TableCell className="text-center py-3.5 font-semibold text-primary">{t('pricing.unlimited', { defaultValue: 'Unlimited' })}</TableCell>
+                <TableCell className="text-center py-3.5 font-semibold text-accent bg-accent/5">{t('pricing.unlimited', { defaultValue: 'Unlimited' })}</TableCell>
               </TableRow>
               <TableRow className="border-border/60">
                 <TableCell className="font-semibold py-3.5 text-muted-foreground">
-                  {t('pricing.features.monthlyLimit', { defaultValue: 'Monthly processing limit' })}
+                  {t('pricing.features.marketplace', { defaultValue: 'Marketplace options' })}
                 </TableCell>
-                <TableCell className="text-center py-3.5">100</TableCell>
-                <TableCell className="text-center py-3.5 font-semibold text-accent bg-accent/5">1,000</TableCell>
-                <TableCell className="text-center py-3.5">3,000</TableCell>
+                <TableCell className="text-center py-3.5 text-muted-foreground">{t('pricing.swapDonateOnly', { defaultValue: 'Swap & Donate only' })}</TableCell>
+                <TableCell className="text-center py-3.5 font-semibold text-primary">{t('pricing.rentSellIncluded', { defaultValue: 'Rent & Sell included' })}</TableCell>
+                <TableCell className="text-center py-3.5 font-semibold text-accent bg-accent/5">{t('pricing.rentSellIncluded', { defaultValue: 'Rent & Sell included' })}</TableCell>
               </TableRow>
               <TableRow className="border-border/60">
                 <TableCell className="font-semibold py-3.5 text-muted-foreground">
-                  {t('pricing.features.uploads', { defaultValue: 'Image uploads capacity' })}
-                </TableCell>
-                <TableCell className="text-center py-3.5 text-muted-foreground">
-                  {t('pricing.uploadsTiers.limited', { defaultValue: 'Standard' })}
-                </TableCell>
-                <TableCell className="text-center py-3.5 font-semibold text-accent bg-accent/5">
-                  {t('pricing.uploadsTiers.unlimited', { defaultValue: 'Unlimited' })}
-                </TableCell>
-                <TableCell className="text-center py-3.5 font-semibold">
-                  {t('pricing.uploadsTiers.unlimited', { defaultValue: 'Unlimited' })}
-                </TableCell>
-              </TableRow>
-              <TableRow className="border-border/60">
-                <TableCell className="font-semibold py-3.5 text-muted-foreground">
-                  {t('pricing.features.customApiKey', { defaultValue: 'Custom API key support' })}
+                  {t('pricing.features.trendScout', { defaultValue: 'Trend Scout access' })}
                 </TableCell>
                 <TableCell className="text-center py-3.5 text-rose-500 font-bold">✕</TableCell>
-                <TableCell className="text-center py-3.5 font-semibold text-accent bg-accent/5">✓</TableCell>
                 <TableCell className="text-center py-3.5 text-accent font-bold">✓</TableCell>
+                <TableCell className="text-center py-3.5 text-accent font-bold bg-accent/5">✓</TableCell>
               </TableRow>
               <TableRow className="border-border/60">
                 <TableCell className="font-semibold py-3.5 text-muted-foreground">
-                  {t('pricing.features.support', { defaultValue: 'Support priority' })}
-                </TableCell>
-                <TableCell className="text-center py-3.5 text-muted-foreground">
-                  {t('pricing.supportTiers.community', { defaultValue: 'Community' })}
-                </TableCell>
-                <TableCell className="text-center py-3.5 font-semibold text-accent bg-accent/5">
-                  {t('pricing.supportTiers.priority', { defaultValue: 'Priority' })}
-                </TableCell>
-                <TableCell className="text-center py-3.5 font-semibold">
-                  {t('pricing.supportTiers.dedicated', { defaultValue: 'Dedicated' })}
-                </TableCell>
-              </TableRow>
-              <TableRow className="border-border/60">
-                <TableCell className="font-semibold py-3.5 text-muted-foreground">
-                  {t('pricing.features.branding', { defaultValue: 'Custom branding options' })}
+                  {t('pricing.features.scheduler', { defaultValue: 'Schedule & push notifications' })}
                 </TableCell>
                 <TableCell className="text-center py-3.5 text-rose-500 font-bold">✕</TableCell>
-                <TableCell className="text-center py-3.5 text-rose-500 font-bold bg-accent/5">✕</TableCell>
                 <TableCell className="text-center py-3.5 text-accent font-bold">✓</TableCell>
+                <TableCell className="text-center py-3.5 text-accent font-bold bg-accent/5">✓</TableCell>
+              </TableRow>
+              <TableRow className="border-border/60">
+                <TableCell className="font-semibold py-3.5 text-muted-foreground">
+                  {t('pricing.features.campaigns', { defaultValue: 'Ad Campaigns creation' })}
+                </TableCell>
+                <TableCell className="text-center py-3.5 text-rose-500 font-bold">✕</TableCell>
+                <TableCell className="text-center py-3.5 text-rose-500 font-bold">✕</TableCell>
+                <TableCell className="text-center py-3.5 text-accent font-bold bg-accent/5">✓</TableCell>
               </TableRow>
             </TableBody>
           </Table>

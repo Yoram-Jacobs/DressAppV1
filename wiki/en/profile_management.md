@@ -114,9 +114,8 @@ Manages system-level settings, subscriptions, and AI integrations:
   - *Standard Mode*: Uses system-managed Gemini Flash 2.x endpoints.
   - *Custom API Keys Mode*: Connect custom Google Gemini, Anthropic, OpenAI, or DeepSeek API keys via a guided setup modal.
 - **Subscription & Closet Limits**:
-  - View current account tier (**Free**: 150-item limit vs **Pro**: Unlimited items).
-  - Upgrade via PayPal Subscriptions REST API ($4.99/month or $29.99/year).
-  - Copy **Referral Link**: Grants +10 closet capacity slots for each friend who registers.
+  - View current account tier (**Free**: 50-item limit vs **Manager** or **Professional**: Unlimited items).
+  - Upgrade via PayPal Subscriptions REST API (Manager: $5/month or $50/year; Professional: $10/month or $100/year).
 - **Scheduler & Push Reminders**:
   - Toggle morning outfit proposal notifications.
   - Set frequency (*Everyday*, *Every Other Day*, *Twice a Week*, *On Weekday*), time (e.g., *07:00*), and dress-code style demands (*Casual*, *Formal*, *Athletic*, *Custom*).

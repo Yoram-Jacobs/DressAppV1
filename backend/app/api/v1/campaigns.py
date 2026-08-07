@@ -204,6 +204,24 @@ async def create_campaign(
     body: CampaignCreateIn,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
+    sub = user.get("subscription") or {}
+    is_active = sub.get("is_active", False)
+    plan_type = sub.get("plan_type", "free")
+    tier = sub.get("tier", "free")
+    
+    user_tier = "free"
+    if is_active and plan_type != "free":
+        if tier in ["pro", "manager"]:
+            user_tier = "manager"
+        elif tier in ["business", "professional"]:
+            user_tier = "professional"
+            
+    if user_tier != "professional":
+        raise HTTPException(
+            status_code=403,
+            detail="Campaigns are only available on the Professional plan. Please upgrade your plan to create campaigns."
+        )
+
     if not _is_expert(user):
         raise HTTPException(403, "Only verified Experts may create campaigns")
 

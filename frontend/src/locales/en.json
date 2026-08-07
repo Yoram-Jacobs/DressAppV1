@@ -1095,7 +1095,7 @@
     "schedulerDesc": "Daily outfit proposals, push alerts, and scheduling options",
     "aiConfig": {
       "title": "AI Configuration",
-      "subtitle": "Manage your AI service providers, customize API keys, or switch to edge AI models.",
+      "subtitle": "Manage your AI service providers and customize API keys.",
       "modeLabel": "AI Provider Mode",
       "standardPlan": "Standard Plan (Credit-based)",
       "customKeys": "My Own API Keys (SaaS)",
@@ -2806,8 +2806,8 @@
     "loadError": "Privacy policy could not be loaded. Please try again later."
   },
   "pricing": {
-    "title": "Pricing & Credit Plans",
-    "subtitle": "Choose the tier that fits your style. Upgrade or top up at any time.",
+    "title": "Membership Pricing Plans",
+    "subtitle": "Choose the plan that fits your style. Upgrade, downgrade, or cancel at any time.",
     "monthlyBilling": "Monthly Billing",
     "annualBilling": "Annual Billing",
     "savePercent": "Save 20%",
@@ -2839,7 +2839,7 @@
     "featureComparisonHeader": "Compare Plan Features",
     "features": {
       "credits": "AI Credits / Month",
-      "dailyLimit": "Daily AI operations limit",
+      "dailyLimit": "Daily AI operation limit",
       "monthlyLimit": "Monthly AI operations limit",
       "customApiKey": "Custom API Key Support",
       "support": "Support Priority",
@@ -2853,7 +2853,19 @@
       "allProFeatures": "All Pro features",
       "dedicatedSupport": "Dedicated support",
       "apiAccess": "API access",
-      "customBranding": "Custom branding"
+      "customBranding": "Custom branding",
+      "closetLimit": "Closet Items Capacity",
+      "marketplace": "Marketplace options",
+      "trendScout": "Trend Scout access",
+      "scheduler": "Schedule & push notifications",
+      "campaigns": "Ad Campaigns creation",
+      "closetLimitFree": "Up to 50 closet items",
+      "dailyLimitFree": "Up to 10 requests per day",
+      "unlimitedCloset": "Unlimited closet items",
+      "unlimitedOps": "Unlimited daily requests",
+      "marketplaceAccess": "Marketplace selling & renting",
+      "schedulerAccess": "Scheduler & push notifications",
+      "campaignsAccess": "Ad Campaigns included"
     },
     "supportTiers": {
       "community": "Community Support",
@@ -2877,7 +2889,7 @@
     "purchaseSuccessMsg": "Successfully purchased credit pack!",
     "captureFailed": "Failed to confirm transaction.",
     "checkoutCancelled": "Checkout cancelled.",
-    "loadError": "Could not load pricing information. Please refresh the page.",
+    "loadError": "Failed to load pricing information. Please try again later.",
     "confirmingPayment": "Confirming your purchase...",
     "loadingPacks": "Loading purchase options...",
     "purchaseSuccessful": "Purchase Successful!",
@@ -2907,7 +2919,22 @@
     "tier": {
       "free": "Free",
       "pro": "Pro",
-      "business": "Business"
-    }
+      "business": "Business",
+      "manager": "Manager",
+      "professional": "Professional"
+    },
+    "unlimited": "Unlimited",
+    "tenRequests": "10 requests",
+    "swapDonateOnly": "Swap & Donate only",
+    "rentSellIncluded": "Rent & Sell included",
+    "loadErrorFallback": "Failed to load pricing information.",
+    "membershipTitle": "DressApp Club",
+    "compareFeatureCol": "Features",
+    "managerDesc": "Optimal stylist plan with no limitations on garments or AI operations.",
+    "professionalDesc": "Unlimited resources with expert-focused campaign creator slots.",
+    "perMonth": "/mo",
+    "perYear": "/yr",
+    "billedMonthly": "billed monthly (${{price}})",
+    "billedAnnually": "billed annually (${{price}})"
   }
 }
