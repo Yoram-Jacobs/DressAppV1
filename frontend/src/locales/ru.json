@@ -1883,7 +1883,9 @@
       "subscription_status": "Статус подписки",
       "active": "Активен",
       "inactive": "Неактивен",
-      "cancelled": "Отменен"
+      "cancelled": "Отменен",
+      "total_requests": "Запросы",
+      "daily_requests": "Запр./День"
     },
     "closet": {
       "back_to_full_closet": "Вернуться ко всему гардеробу",

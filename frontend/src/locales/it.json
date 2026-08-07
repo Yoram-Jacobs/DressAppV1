@@ -1883,7 +1883,9 @@
       "subscription_status": "Stato dell'abbonamento",
       "active": "Attivo",
       "inactive": "Inattivo",
-      "cancelled": "Annullato"
+      "cancelled": "Annullato",
+      "total_requests": "Richieste",
+      "daily_requests": "Rich./Giorno"
     },
     "closet": {
       "back_to_full_closet": "Torna all'armadio completo",

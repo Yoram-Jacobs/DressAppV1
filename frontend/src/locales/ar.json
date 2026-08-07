@@ -1883,7 +1883,9 @@
       "subscription_status": "حالة الاشتراك",
       "active": "نشط",
       "inactive": "غير نشط",
-      "cancelled": "ملغي"
+      "cancelled": "ملغي",
+      "total_requests": "الطلبات",
+      "daily_requests": "طلب/يوم"
     },
     "closet": {
       "back_to_full_closet": "العودة إلى الخزانة الكاملة",

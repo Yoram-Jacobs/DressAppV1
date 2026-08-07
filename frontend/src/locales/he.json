@@ -1891,7 +1891,9 @@
       "subscription_status": "מצב מנוי",
       "active": "פעיל",
       "inactive": "לא פעיל",
-      "cancelled": "מבוטל"
+      "cancelled": "מבוטל",
+      "total_requests": "בקשות",
+      "daily_requests": "בקשות ליום"
     },
     "closet": {
       "back_to_full_closet": "חזרה לארון המלא",

@@ -1883,7 +1883,9 @@
       "subscription_status": "Abonnementsstatus",
       "active": "Actief",
       "inactive": "Inactief",
-      "cancelled": "Geannuleerd"
+      "cancelled": "Geannuleerd",
+      "total_requests": "Verzoeken",
+      "daily_requests": "Verz./Dag"
     },
     "closet": {
       "back_to_full_closet": "Terug naar volle kast",

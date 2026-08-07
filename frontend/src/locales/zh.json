@@ -1883,7 +1883,9 @@
       "subscription_status": "订阅状态",
       "active": "激活",
       "inactive": "未激活",
-      "cancelled": "已取消"
+      "cancelled": "已取消",
+      "total_requests": "请求次数",
+      "daily_requests": "日请求数"
     },
     "closet": {
       "back_to_full_closet": "返回完整衣橱",

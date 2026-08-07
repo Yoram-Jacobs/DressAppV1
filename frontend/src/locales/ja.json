@@ -1883,7 +1883,9 @@
       "subscription_status": "サブスクリプションステータス",
       "active": "アクティブ",
       "inactive": "非アクティブ",
-      "cancelled": "キャンセル済み"
+      "cancelled": "キャンセル済み",
+      "total_requests": "リクエスト数",
+      "daily_requests": "1日あたりリクエスト"
     },
     "closet": {
       "back_to_full_closet": "フルクローゼットに戻る",

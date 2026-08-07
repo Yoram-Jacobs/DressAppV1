@@ -159,6 +159,9 @@ async def ensure_indexes() -> None:
     await db.outfits.create_index([("user_id", 1), ("created_at", -1)])
     await db.simulated_notifications.create_index([("user_id", 1), ("created_at", -1)])
 
+    # --- token usage indexing for Admin panel queries ---
+    await db.token_usage.create_index([("user_id", 1), ("created_at", -1)])
+
     # Backfill missing listing locations from seller home_location
     try:
         updated_count = 0

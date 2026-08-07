@@ -241,11 +241,10 @@ async def check_scheduler_triggers() -> None:
         db = get_db()
         now = datetime.now(timezone.utc)
 
-        # Query users with scheduler enabled and push subscriptions
+        # Query users with scheduler enabled
         cursor = db.users.find(
             {
                 "scheduler_settings.enabled": True,
-                "web_push_subscriptions.0": {"$exists": True},
             }
         )
 

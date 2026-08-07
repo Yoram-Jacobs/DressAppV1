@@ -1883,7 +1883,9 @@
       "subscription_status": "Abonnement-Status",
       "active": "Aktiv",
       "inactive": "Inaktiv",
-      "cancelled": "Gekündigt"
+      "cancelled": "Gekündigt",
+      "total_requests": "Anfragen",
+      "daily_requests": "Anfr./Tag"
     },
     "closet": {
       "back_to_full_closet": "Zurück zum vollständigen Kleiderschrank",

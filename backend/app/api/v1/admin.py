@@ -130,7 +130,30 @@ async def list_users(
         .skip(skip)
         .limit(limit)
     )
-    async for doc in cursor:
+    user_docs = [doc async for doc in cursor]
+    user_ids = [d["id"] for d in user_docs]
+    today_str = datetime.now(timezone.utc).date().isoformat()
+
+    total_counts = {}
+    daily_counts = {}
+    if user_ids:
+        # Total requests aggregate
+        pipeline_total = [
+            {"$match": {"user_id": {"$in": user_ids}}},
+            {"$group": {"_id": "$user_id", "count": {"$sum": 1}}}
+        ]
+        async for row in db.token_usage.aggregate(pipeline_total):
+            total_counts[row["_id"]] = row["count"]
+
+        # Daily requests aggregate
+        pipeline_daily = [
+            {"$match": {"user_id": {"$in": user_ids}, "created_at": {"$gte": today_str}}},
+            {"$group": {"_id": "$user_id", "count": {"$sum": 1}}}
+        ]
+        async for row in db.token_usage.aggregate(pipeline_daily):
+            daily_counts[row["_id"]] = row["count"]
+
+    for doc in user_docs:
         # add lightweight per-user counts
         doc["closet_count"] = await db.closet_items.count_documents(
             {"user_id": doc["id"]}
@@ -156,6 +179,10 @@ async def list_users(
         async for t_doc in db.credit_topups.find({"user_id": doc["id"], "status": "captured"}):
             total_payment_cents += t_doc.get("amount_cents", 0)
         doc["billing_history_sum"] = total_payment_cents / 100.0
+
+        # Add total_requests and daily_requests
+        doc["total_requests"] = total_counts.get(doc["id"], 0)
+        doc["daily_requests"] = daily_counts.get(doc["id"], 0)
 
         items.append(doc)
     return {"items": items, "total": total, "skip": skip, "limit": limit}
@@ -963,3 +990,91 @@ async def eyes_set(
     summary = provider_activity.summary()
     result["last_call"] = summary.get("garment-vision")
     return result
+
+
+@router.get("/reports")
+async def admin_reports(_: dict = Depends(require_admin)) -> dict[str, Any]:
+    """Retrieve detailed charts data, subscription breakdowns, and AI utilization logs."""
+    db = get_db()
+    
+    # 1. Subscription Tiers Breakdown
+    free_count = await db.users.count_documents({
+        "$or": [
+            {"subscription.is_active": False},
+            {"subscription.plan_type": "free"},
+            {"subscription.tier": "free"}
+        ]
+    })
+    manager_count = await db.users.count_documents({
+        "subscription.is_active": True,
+        "subscription.plan_type": {"$ne": "free"},
+        "subscription.tier": "manager"
+    })
+    professional_count = await db.users.count_documents({
+        "subscription.is_active": True,
+        "subscription.plan_type": {"$ne": "free"},
+        "subscription.tier": "professional"
+    })
+
+    # 2. Closet stats
+    items_count = await db.closet_items.count_documents({})
+    users_count = await db.users.count_documents({})
+    avg_items = (items_count / users_count) if users_count > 0 else 0
+
+    # 3. AI operations monitoring
+    ai_users_cursor = db.users.find({}, {"ai_configuration.daily_request_count": 1})
+    total_daily_ops = 0
+    users_with_ops = 0
+    async for u in ai_users_cursor:
+        ops = (u.get("ai_configuration") or {}).get("daily_request_count", 0)
+        if ops > 0:
+            total_daily_ops += ops
+            users_with_ops += 1
+
+    # 4. Recent Revenue transactions from credit_topups (which holds subscription checkout receipts)
+    pipeline = [
+        {"$match": {"status": "captured"}},
+        {
+            "$group": {
+                "_id": {
+                    "year": {"$year": {"$dateFromString": {"dateString": "$created_at"}}},
+                    "month": {"$month": {"$dateFromString": {"dateString": "$created_at"}}}
+                },
+                "total_cents": {"$sum": "$amount_cents"},
+                "count": {"$sum": 1}
+            }
+        },
+        {"$sort": {"_id.year": -1, "_id.month": -1}},
+        {"$limit": 6}
+    ]
+    revenue_history = []
+    try:
+        async for row in db.credit_topups.aggregate(pipeline):
+            year = row["_id"]["year"]
+            month = row["_id"]["month"]
+            revenue_history.append({
+                "month": f"{year}-{month:02d}",
+                "amount": row["total_cents"] / 100.0,
+                "count": row["count"]
+            })
+    except Exception as e:
+        logger.error(f"Failed to aggregate revenue history: {e}")
+
+    return {
+        "subscriptions": {
+            "free": free_count,
+            "manager": manager_count,
+            "professional": professional_count,
+            "total_active_paid": manager_count + professional_count
+        },
+        "closet": {
+            "total_items": items_count,
+            "avg_items_per_user": round(avg_items, 1)
+        },
+        "ai_monitoring": {
+            "total_daily_ops": total_daily_ops,
+            "active_ai_users_today": users_with_ops
+        },
+        "revenue_history": revenue_history
+    }
+

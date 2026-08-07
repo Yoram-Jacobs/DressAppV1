@@ -444,8 +444,8 @@ function UsersSection() {
                   <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.model', { defaultValue: 'Model' })}</TableHead>
                   <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.subscription_plan', { defaultValue: 'Plan' })}</TableHead>
                   <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.subscription_status', { defaultValue: 'Status' })}</TableHead>
-                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.credits_quota', { defaultValue: 'Credits quota' })}</TableHead>
-                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.credit_used', { defaultValue: 'Credit used' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.total_requests', { defaultValue: 'Requests' })}</TableHead>
+                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.daily_requests', { defaultValue: 'Req/Day' })}</TableHead>
                   <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.dressapp_fee', { defaultValue: 'DressApp fee' })}</TableHead>
                   <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.billing_history', { defaultValue: 'Billing History' })}</TableHead>
                   <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('nav.closet', { defaultValue: 'Closet' })}</TableHead>
@@ -497,8 +497,8 @@ function UsersSection() {
                           {statusText}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-end text-sm">{fmtNum(u.credits_quota)}</TableCell>
-                      <TableCell className="text-end text-sm">{fmtNum(u.credits_used)}</TableCell>
+                      <TableCell className="text-end text-sm">{fmtNum(u.total_requests)}</TableCell>
+                      <TableCell className="text-end text-sm">{fmtNum(u.daily_requests)}</TableCell>
                       <TableCell className="text-end text-sm font-medium text-emerald-600 dark:text-emerald-400">
                         ${(u.dressapp_fee || 0).toFixed(2)}
                       </TableCell>
