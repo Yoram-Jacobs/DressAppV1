@@ -126,8 +126,9 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
             logger.info("Sent Web Push successfully to endpoint=%s", sub.get("endpoint")[:45] + "...")
         except WebPushException as ex:
             # Handle expired / gone subscription endpoints (404 Not Found or 410 Gone)
-            if ex.response is not None and ex.response.status_code in (404, 410):
-                logger.info("Subscription endpoint has expired (HTTP %d). Removing from user.", ex.response.status_code)
+            # or unauthorized / forbidden endpoints (401, 403) due to VAPID key mismatch
+            if ex.response is not None and ex.response.status_code in (401, 403, 404, 410):
+                logger.info("Subscription endpoint has expired or has VAPID mismatch (HTTP %d). Removing from user.", ex.response.status_code)
                 await db.users.update_one(
                     {"id": user_id},
                     {"$pull": {"web_push_subscriptions": {"endpoint": sub["endpoint"]}}}
