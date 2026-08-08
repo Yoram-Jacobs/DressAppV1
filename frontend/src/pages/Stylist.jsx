@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useStoreState } from '@/lib/createSimpleStore';
 import { stylistUIStore } from '@/lib/stylistUIStore';
 import { useTranslation } from 'react-i18next';
