@@ -126,6 +126,21 @@ const getOutfitPiecesMap = (o) => {
   return map;
 };
 
+const getRecommendationPiecesMap = (rec, closetItems) => {
+  const map = {};
+  if (Array.isArray(rec?.items)) {
+    rec.items.forEach((item) => {
+      if (item && item.role) {
+        const closetItem = closetItems.find(c => c.id === item.closet_item_id);
+        if (closetItem) {
+          map[item.role] = { image_url: closetItem.image_url };
+        }
+      }
+    });
+  }
+  return map;
+};
+
 const getWeekdayName = (day, locale) => {
   const days = {
     monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0
@@ -345,9 +360,32 @@ export default function Stylist() {
       if (targetOutfit) {
         setSelectedOutfitForDetail(targetOutfit);
         setHasAutoSelected(true);
+      } else {
+        const checkDateHasSuggestions = (dateStr) => {
+          const matches = (notifications || []).filter(n => {
+            try {
+              const notifDate = new Date(n.created_at);
+              const y = notifDate.getFullYear();
+              const m = String(notifDate.getMonth() + 1).padStart(2, '0');
+              const d = String(notifDate.getDate()).padStart(2, '0');
+              return `${y}-${m}-${d}` === dateStr;
+            } catch (e) {
+              return n.created_at?.slice(0, 10) === dateStr;
+            }
+          });
+          return matches.length > 0;
+        };
+
+        if (checkDateHasSuggestions(tomorrowStr)) {
+          setSchedulingDate(tomorrowStr);
+          setHasAutoSelected(true);
+        } else if (checkDateHasSuggestions(todayStr)) {
+          setSchedulingDate(todayStr);
+          setHasAutoSelected(true);
+        }
       }
     }
-  }, [activeTab, outfits, selectedOutfitForDetail, hasAutoSelected]);
+  }, [activeTab, outfits, selectedOutfitForDetail, hasAutoSelected, notifications, setSchedulingDate, setHasAutoSelected]);
 
   const deleteOutfit = async (id) => {
     try {
@@ -616,6 +654,37 @@ export default function Stylist() {
     if (pct >= 50) return 'bg-gradient-to-r from-amber-500 to-orange-400';
     return 'bg-gradient-to-r from-rose-500 to-red-400';
   };
+
+  const dailyRecommendations = useMemo(() => {
+    if (!schedulingDate || !notifications) return [];
+    const targetDateStr = schedulingDate;
+    const matches = notifications.filter(n => {
+      try {
+        const notifDate = new Date(n.created_at);
+        const y = notifDate.getFullYear();
+        const m = String(notifDate.getMonth() + 1).padStart(2, '0');
+        const d = String(notifDate.getDate()).padStart(2, '0');
+        const localNotifDateStr = `${y}-${m}-${d}`;
+        return localNotifDateStr === targetDateStr && n.payload;
+      } catch (e) {
+        return n.created_at?.slice(0, 10) === targetDateStr && n.payload;
+      }
+    });
+    
+    const recs = [];
+    matches.forEach(n => {
+      const payload = n.payload || {};
+      const list = payload.outfit_recommendations || payload.proposals || [];
+      list.forEach((rec, idx) => {
+        recs.push({
+          ...rec,
+          notifId: n.id,
+          recIndex: idx,
+        });
+      });
+    });
+    return recs;
+  }, [schedulingDate, notifications]);
 
   const detailMetrics = selectedOutfitForDetail ? calculateOutfitMetrics(selectedOutfitForDetail) : null;
   const overallMatchingGrade = detailMetrics ? Math.round(
@@ -2662,6 +2731,39 @@ export default function Stylist() {
               </div>
             );
           })()}
+
+          {/* AI Daily Suggestions */}
+          {dailyRecommendations.length > 0 && (
+            <div className="space-y-3 mb-6 pb-6 border-b border-border/80">
+              <h4 className="text-xs font-semibold text-[hsl(var(--accent))] flex items-center gap-1.5 caps-label">
+                <Sparkles className="h-3.5 w-3.5" />
+                {t('calendar.dailyAISuggestions', { defaultValue: 'AI Daily Suggestions' })}
+              </h4>
+              <div className="grid grid-cols-2 gap-3">
+                {dailyRecommendations.map((rec, idx) => (
+                  <div
+                    key={`daily-rec-${idx}`}
+                    onClick={async () => {
+                      await handleSaveOutfitToDate(rec.notifId, rec.recIndex, schedulingDate);
+                      setSchedulingDate(null);
+                    }}
+                    className="flex flex-col items-center p-2 rounded-xl border border-[hsl(var(--accent))]/30 bg-[hsl(var(--accent))]/5 hover:border-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/10 cursor-pointer text-center group transition-all relative overflow-hidden"
+                  >
+                    <div className="w-full aspect-[4/5] bg-secondary/5 rounded-lg overflow-hidden relative shrink-0">
+                      <AvatarViewer
+                        shapeParams={user?.avatar_shape_params || {}}
+                        sex={user?.sex || 'female'}
+                        outfitItems={getRecommendationPiecesMap(rec, closetItems)}
+                      />
+                    </div>
+                    <div className="text-[11px] font-semibold truncate text-foreground mt-2 w-full px-1">
+                      {rec.name}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* List of saved outfits */}
           <div className="space-y-3">
