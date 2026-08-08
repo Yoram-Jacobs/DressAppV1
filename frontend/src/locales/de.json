@@ -2378,7 +2378,7 @@
     "scheduler_push_step3": "Aktivieren Sie **Morgenwarnungen aktivieren** und wählen Sie Ihre bevorzugte Benachrichtigungszeit aus.",
     "scheduler_push_step4": "Verknüpfen Sie Ihren **Google Kalender**, damit der Planer Ihren täglichen Veranstaltungsplan überprüfen kann.",
     "scheduler_push_step5": "Das System verfolgt Wettervorhersagen und generiert drei individuelle Outfit-Konfigurationen.",
-    "scheduler_push_step6": "Tippen Sie auf die Push-Benachrichtigung auf Ihrem Gerät, um eine Konfiguration zu akzeptieren und zu planen.",
+    "scheduler_push_step6": "Tippen Sie auf den Push-Alarm, um den Tab „Match“ zu öffnen. Dort können Sie Vorschläge auf Ihrem Avatar ansehen und einen auswählen, um ihn im Kalender zu planen.",
     "expert_campaigns_title": "Meine Kampagnen (Experte)",
     "expert_campaigns_help_title": "Verwaltung Ihrer Kampagnen",
     "expert_campaigns_help_p1": "Verfolgen und aktualisieren Sie Ihre geschäftlichen Aktionen in Ihren Experten-Einstellungen:",

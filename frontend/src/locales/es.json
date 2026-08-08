@@ -2378,7 +2378,7 @@
     "scheduler_push_step3": "Active **Habilitar alertas matutinas** y seleccione su hora de notificación preferida.",
     "scheduler_push_step4": "Vincula tu **Google Calendar** para permitir que el programador revise tu programación diaria de eventos.",
     "scheduler_push_step5": "El sistema realiza un seguimiento de las previsiones meteorológicas y genera 3 configuraciones de vestimenta personalizadas.",
-    "scheduler_push_step6": "Toque la notificación push en su dispositivo para aceptar y programar una configuración.",
+    "scheduler_push_step6": "Toque la alerta push para abrir la pestaña Combinar (Match), donde puede ver sugerencias en su avatar y seleccionar una para programarla en el calendario.",
     "expert_campaigns_title": "Mis Campañas (Experto)",
     "expert_campaigns_help_title": "Gestión de tus Campañas",
     "expert_campaigns_help_p1": "Rastrea y actualiza tus promociones comerciales desde tus ajustes de Experto:",

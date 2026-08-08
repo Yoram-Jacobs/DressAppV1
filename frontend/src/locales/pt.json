@@ -2378,7 +2378,7 @@
     "scheduler_push_step3": "Ative **Ativar alertas matinais** e selecione seu horário de notificação preferido.",
     "scheduler_push_step4": "Vincule seu **Google Agenda** para permitir que o agendador verifique sua programação diária de eventos.",
     "scheduler_push_step5": "O sistema rastreia as previsões meteorológicas e gera 3 configurações de roupas personalizadas.",
-    "scheduler_push_step6": "Toque na notificação push no seu dispositivo para aceitar e agendar uma configuração.",
+    "scheduler_push_step6": "Toque no alerta push para abrir a guia Match, onde você pode ver as sugestões no seu avatar e selecionar uma para agendar no calendário.",
     "expert_campaigns_title": "Minhas Campanhas (Especialista)",
     "expert_campaigns_help_title": "Gerenciando Suas Campanhas",
     "expert_campaigns_help_p1": "Acompanhe e atualize suas promoções comerciais nas configurações de Especialista:",
