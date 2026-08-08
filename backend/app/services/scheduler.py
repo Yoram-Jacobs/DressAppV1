@@ -235,6 +235,40 @@ def _generate_fallback_advice(
     }
 
 
+def _get_target_weather(weather_ctx: dict[str, Any] | None, is_next_day: bool) -> dict[str, Any] | None:
+    if not weather_ctx:
+        return None
+    if not is_next_day:
+        return weather_ctx
+    
+    forecasts = weather_ctx.get("forecast_next_24h") or []
+    if not forecasts:
+        return weather_ctx
+    
+    target_entry = None
+    for f in forecasts:
+        at_str = f.get("at") or ""
+        if "12:00:00" in at_str or "09:00:00" in at_str or "15:00:00" in at_str:
+            target_entry = f
+            break
+            
+    if not target_entry and forecasts:
+        target_entry = forecasts[-1]
+        
+    if target_entry:
+        return {
+            "temp_c": target_entry.get("temp_c"),
+            "feels_like_c": target_entry.get("temp_c"),
+            "humidity": weather_ctx.get("humidity"),
+            "condition": target_entry.get("condition"),
+            "description": f"Forecasted {target_entry.get('condition')}",
+            "wind_speed": weather_ctx.get("wind_speed"),
+            "city": weather_ctx.get("city"),
+            "country": weather_ctx.get("country"),
+        }
+    return weather_ctx
+
+
 async def check_scheduler_triggers() -> None:
     """Scan user scheduler preferences and trigger push notifications with outfit proposals."""
     try:
@@ -283,6 +317,11 @@ async def check_scheduler_triggers() -> None:
                 if sched.get("push_enabled") is False:
                     continue
 
+                # Determine if we are scheduling for today or the next day
+                is_next_day = local_now.hour >= 12
+                target_date = local_now + timedelta(days=1) if is_next_day else local_now
+                target_date_str = target_date.strftime("%Y-%m-%d")
+
                 # Fetch weather (soft-fail)
                 weather_ctx = None
                 try:
@@ -296,6 +335,27 @@ async def check_scheduler_triggers() -> None:
                 except Exception as w_exc:
                     logger.warning("Failed to fetch weather for user %s: %s", user_id, w_exc)
 
+                # Get weather for the target date
+                target_weather = _get_target_weather(weather_ctx, is_next_day)
+
+                # Fetch calendar events for the target date
+                calendar_events = []
+                try:
+                    from app.services.calendar_service import calendar_service
+                    from zoneinfo import ZoneInfo
+                    local_start = datetime(target_date.year, target_date.month, target_date.day, 0, 0, 0, tzinfo=ZoneInfo(user_timezone))
+                    local_end = datetime(target_date.year, target_date.month, target_date.day, 23, 59, 59, tzinfo=ZoneInfo(user_timezone))
+                    time_min = local_start.astimezone(timezone.utc)
+                    time_max = local_end.astimezone(timezone.utc)
+                    
+                    calendar_events = await calendar_service.get_events_for_user(
+                        user,
+                        time_min=time_min,
+                        time_max=time_max
+                    )
+                except Exception as cal_exc:
+                    logger.warning("Failed to fetch calendar events for user %s on %s: %s", user_id, target_date_str, cal_exc)
+
                 # Generate outfit proposals
                 style_option = sched.get("style_option") or sched.get("style_dress_for") or "casual"
                 
@@ -306,7 +366,12 @@ async def check_scheduler_triggers() -> None:
                 try:
                     try:
                         from app.services.stylist_scheduler_brain import generate_scheduled_proposals
-                        proposals_result = await generate_scheduled_proposals(user_clean, style_option, weather=weather_ctx)
+                        proposals_result = await generate_scheduled_proposals(
+                            user_clean, 
+                            style_option, 
+                            weather=target_weather,
+                            calendar_events=calendar_events
+                        )
                         proposals = proposals_result.get("outfit_recommendations") or []
                         if not proposals:
                             raise ValueError("No proposals returned from LLM brain")
@@ -315,7 +380,7 @@ async def check_scheduler_triggers() -> None:
                         # Fallback to local rule-based scheduler
                         cursor_items = db.closet_items.find({"user_id": user_id})
                         closet_items = [d async for d in cursor_items]
-                        fallback_result = _generate_fallback_advice(closet_items, style_option, weather_ctx=weather_ctx)
+                        fallback_result = _generate_fallback_advice(closet_items, style_option, weather_ctx=target_weather)
                         proposals = fallback_result.get("outfit_recommendations") or []
 
                     if not proposals:
@@ -327,7 +392,8 @@ async def check_scheduler_triggers() -> None:
                     style_label = style_option.title() if style_option else "Daily"
                     
                     title = f"Your {style_label} Outfit Proposals"
-                    body_lines = [f"Here are {outfit_count} outfit(s) curated for you today:"]
+                    day_word = "tomorrow" if is_next_day else "today"
+                    body_lines = [f"Here are {outfit_count} outfit(s) curated for you {day_word}:"]
                     
                     for i, prop in enumerate(proposals[:3], 1):
                         outfit_name = prop.get("name", f"Outfit {i}")
@@ -338,10 +404,14 @@ async def check_scheduler_triggers() -> None:
                     body = "\n".join(body_lines)
 
                     # Send push notification
-                    payload = {"url": "/stylist?tab=match", "proposals": proposals[:3]}
+                    payload = {
+                        "url": "/stylist?tab=match", 
+                        "target_date": target_date_str,
+                        "proposals": proposals[:3]
+                    }
                     await send_push_notification(user_id, title, body, payload)
                     
-                    logger.info("Sent scheduled notification to user %s", user_id)
+                    logger.info("Sent scheduled notification to user %s for %s", user_id, target_date_str)
 
                 except Exception as trigger_exc:
                     logger.warning("Failed to process notification generation/sending for user %s: %s", user_id, trigger_exc)

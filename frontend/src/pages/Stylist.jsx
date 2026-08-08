@@ -375,6 +375,10 @@ export default function Stylist() {
         const checkDateHasSuggestions = (dateStr) => {
           const matches = (notifications || []).filter(n => {
             try {
+              const payload = n.payload || {};
+              if (payload.target_date) {
+                return payload.target_date === dateStr;
+              }
               const notifDate = new Date(n.created_at);
               const y = notifDate.getFullYear();
               const m = String(notifDate.getMonth() + 1).padStart(2, '0');
@@ -671,6 +675,10 @@ export default function Stylist() {
     const targetDateStr = schedulingDate;
     const matches = notifications.filter(n => {
       try {
+        const payload = n.payload || {};
+        if (payload.target_date) {
+          return payload.target_date === targetDateStr;
+        }
         const notifDate = new Date(n.created_at);
         const y = notifDate.getFullYear();
         const m = String(notifDate.getMonth() + 1).padStart(2, '0');
