@@ -1,0 +1,1419 @@
+openapi: 3.0.0
+info:
+  title: DressApp API
+  version: 1.0.0
+  description: >
+    REST API for DressApp — a virtual wardrobe and outfit planner application.
+    Covers user management, wardrobe & outfits, billing tiers, top-up quota,
+    payments (credit card & Bit via Atzmai), invoices, transfers, and monitoring.
+
+servers:
+  - url: https://api.dressapp.com/v1
+    description: Production
+  - url: https://staging-api.dressapp.com/v1
+    description: Staging
+
+tags:
+  - name: Auth
+    description: User registration and authentication
+  - name: Users
+    description: User profile management
+  - name: Wardrobe
+    description: Clothing items in the user's wardrobe
+  - name: Outfits
+    description: Outfit combinations from wardrobe items
+  - name: Billing
+    description: Subscription tiers (monthly/yearly)
+  - name: TopUp
+    description: One-time quota top-up purchases
+  - name: Payments
+    description: Credit card and Bit payment processing
+  - name: Invoices
+    description: Invoices and receipts
+  - name: Transfers
+    description: Quota/credit transfers between users
+  - name: Monitoring
+    description: Platform health and usage monitoring
+
+paths:
+
+  # ── AUTH ──────────────────────────────────────────────────────────────────
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              email: user@example.com
+              password: "P@ssw0rd!"
+              fullName: Jane Doe
+              phone: "0501234567"
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Email already in use
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and receive access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: user@example.com
+              password: "P@ssw0rd!"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout and invalidate token
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Logged out successfully
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: New access token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  # ── USERS ─────────────────────────────────────────────────────────────────
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get current user profile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      tags: [Users]
+      summary: Update current user profile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users/me/quota:
+    get:
+      tags: [Users]
+      summary: Get current user's quota balance
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Quota details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotaBalance'
+
+  # ── WARDROBE ──────────────────────────────────────────────────────────────
+  /wardrobe/items:
+    get:
+      tags: [Wardrobe]
+      summary: List all clothing items in the wardrobe
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [tops, bottoms, dresses, shoes, accessories, outerwear]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of wardrobe items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WardrobeItemList'
+    post:
+      tags: [Wardrobe]
+      summary: Add a clothing item to the wardrobe
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WardrobeItemRequest'
+      responses:
+        '201':
+          description: Item added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WardrobeItem'
+
+  /wardrobe/items/{itemId}:
+    get:
+      tags: [Wardrobe]
+      summary: Get a specific wardrobe item
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ItemId'
+      responses:
+        '200':
+          description: Wardrobe item details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WardrobeItem'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Wardrobe]
+      summary: Update a wardrobe item
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ItemId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WardrobeItemRequest'
+      responses:
+        '200':
+          description: Updated item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WardrobeItem'
+    delete:
+      tags: [Wardrobe]
+      summary: Remove a wardrobe item
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ItemId'
+      responses:
+        '204':
+          description: Item deleted
+
+  # ── OUTFITS ───────────────────────────────────────────────────────────────
+  /outfits:
+    get:
+      tags: [Outfits]
+      summary: List all outfits
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of outfits
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutfitList'
+    post:
+      tags: [Outfits]
+      summary: Create a new outfit
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OutfitRequest'
+      responses:
+        '201':
+          description: Outfit created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Outfit'
+
+  /outfits/{outfitId}:
+    get:
+      tags: [Outfits]
+      summary: Get a specific outfit
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OutfitId'
+      responses:
+        '200':
+          description: Outfit details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Outfit'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Outfits]
+      summary: Update an outfit
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OutfitId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OutfitRequest'
+      responses:
+        '200':
+          description: Updated outfit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Outfit'
+    delete:
+      tags: [Outfits]
+      summary: Delete an outfit
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OutfitId'
+      responses:
+        '204':
+          description: Outfit deleted
+
+  # ── BILLING ───────────────────────────────────────────────────────────────
+  /billing/plans:
+    get:
+      tags: [Billing]
+      summary: List available subscription plans
+      responses:
+        '200':
+          description: Available plans
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanList'
+
+  /billing/subscription:
+    get:
+      tags: [Billing]
+      summary: Get current user's active subscription
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Active subscription
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+    post:
+      tags: [Billing]
+      summary: Subscribe to a plan
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscribeRequest'
+      responses:
+        '201':
+          description: Subscription created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+
+  /billing/subscription/cancel:
+    post:
+      tags: [Billing]
+      summary: Cancel current subscription
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Subscription cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+
+  # ── TOP-UP QUOTA ──────────────────────────────────────────────────────────
+  /topup:
+    get:
+      tags: [TopUp]
+      summary: List available top-up packages
+      responses:
+        '200':
+          description: Top-up packages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopUpPackageList'
+    post:
+      tags: [TopUp]
+      summary: Purchase a one-time quota top-up
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TopUpRequest'
+      responses:
+        '201':
+          description: Top-up initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopUpResponse'
+
+  # ── PAYMENTS ──────────────────────────────────────────────────────────────
+  /payments/credit-card:
+    post:
+      tags: [Payments]
+      summary: Initiate a credit card payment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditCardPaymentRequest'
+      responses:
+        '201':
+          description: Payment initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+
+  /payments/bit/generate-link:
+    post:
+      tags: [Payments]
+      summary: Generate a Bit payment link (via Atzmai)
+      description: >
+        Calls the Atzmai external API to generate a Bit payment link.
+        The external endpoint is POST https://externalapi.atzmai.botlee.com/api/payments/generateBitPaymentLink.
+        Payment result is delivered asynchronously via the callbackUrl.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BitPaymentRequest'
+            example:
+              amount: 500
+              description: "DressApp Pro Plan - Monthly"
+              customerName: "Jane Doe"
+              phone: "0501234567"
+              email: "jane@example.com"
+              language: "en"
+              callbackUrl: "https://api.dressapp.com/v1/payments/bit/callback"
+              atzmaiClientId: "client123"
+      responses:
+        '201':
+          description: Bit payment link generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BitPaymentLinkResponse'
+              example:
+                header:
+                  requestId: "qwerty-123"
+                  responseId: "c549efc3-a395-4c3c-90ab-bc470e628599"
+                  responseServerTime: "2026-06-09T14:06:06.280Z"
+                body:
+                  url: "https://sandbox.payme.io/sale/generate/SALE1781-013966PS-PLRHPRXH-YZVUMNXA"
+                  atzmai_payment_id: "302c227e-463b-4531-b744-ea0a6cdeb620"
+
+  /payments/bit/callback:
+    post:
+      tags: [Payments]
+      summary: Bit payment callback (webhook from Atzmai)
+      description: >
+        Receives asynchronous payment status updates from the Atzmai/PayMe gateway.
+        This endpoint should be set as the callbackUrl when generating a Bit payment link.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BitPaymentCallback'
+      responses:
+        '200':
+          description: Callback received
+
+  /payments/{paymentId}:
+    get:
+      tags: [Payments]
+      summary: Get payment details
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        '200':
+          description: Payment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── INVOICES ──────────────────────────────────────────────────────────────
+  /invoices:
+    get:
+      tags: [Invoices]
+      summary: List all invoices for the current user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of invoices
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceList'
+
+  /invoices/{invoiceId}:
+    get:
+      tags: [Invoices]
+      summary: Get a specific invoice
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/InvoiceId'
+      responses:
+        '200':
+          description: Invoice details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /invoices/{invoiceId}/download:
+    get:
+      tags: [Invoices]
+      summary: Download invoice as PDF
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/InvoiceId'
+      responses:
+        '200':
+          description: PDF file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  # ── TRANSFERS ─────────────────────────────────────────────────────────────
+  /transfers:
+    get:
+      tags: [Transfers]
+      summary: List all transfers for the current user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of transfers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferList'
+    post:
+      tags: [Transfers]
+      summary: Transfer quota/credits to another user
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+            example:
+              toUserId: "usr_abc123"
+              amount: 100
+              note: "Sharing quota with friend"
+      responses:
+        '201':
+          description: Transfer completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          description: Insufficient quota balance
+
+  /transfers/{transferId}:
+    get:
+      tags: [Transfers]
+      summary: Get transfer details
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TransferId'
+      responses:
+        '200':
+          description: Transfer details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── MONITORING ────────────────────────────────────────────────────────────
+  /monitoring/health:
+    get:
+      tags: [Monitoring]
+      summary: Platform health check
+      responses:
+        '200':
+          description: Platform is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /monitoring/stats:
+    get:
+      tags: [Monitoring]
+      summary: Platform usage statistics (admin only)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Usage statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformStats'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /monitoring/activity:
+    get:
+      tags: [Monitoring]
+      summary: Get current user's activity log
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Activity log
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityLog'
+
+# ── COMPONENTS ────────────────────────────────────────────────────────────────
+components:
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ItemId:
+      name: itemId
+      in: path
+      required: true
+      schema:
+        type: string
+    OutfitId:
+      name: outfitId
+      in: path
+      required: true
+      schema:
+        type: string
+    PaymentId:
+      name: paymentId
+      in: path
+      required: true
+      schema:
+        type: string
+    InvoiceId:
+      name: invoiceId
+      in: path
+      required: true
+      schema:
+        type: string
+    TransferId:
+      name: transferId
+      in: path
+      required: true
+      schema:
+        type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+    RegisterRequest:
+      type: object
+      required: [email, password, fullName, phone]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        fullName:
+          type: string
+        phone:
+          type: string
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        phone:
+          type: string
+        avatarUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        subscription:
+          $ref: '#/components/schemas/Subscription'
+        quota:
+          $ref: '#/components/schemas/QuotaBalance'
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+        phone:
+          type: string
+        avatarUrl:
+          type: string
+
+    QuotaBalance:
+      type: object
+      properties:
+        total:
+          type: integer
+        used:
+          type: integer
+        remaining:
+          type: integer
+        resetDate:
+          type: string
+          format: date
+
+    WardrobeItem:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+          enum: [tops, bottoms, dresses, shoes, accessories, outerwear]
+        color:
+          type: string
+        brand:
+          type: string
+        imageUrl:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    WardrobeItemRequest:
+      type: object
+      required: [name, category]
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+          enum: [tops, bottoms, dresses, shoes, accessories, outerwear]
+        color:
+          type: string
+        brand:
+          type: string
+        imageUrl:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    WardrobeItemList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/WardrobeItem'
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    Outfit:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/WardrobeItem'
+        occasion:
+          type: string
+        season:
+          type: string
+          enum: [spring, summer, autumn, winter, all]
+        createdAt:
+          type: string
+          format: date-time
+
+    OutfitRequest:
+      type: object
+      required: [name, itemIds]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        itemIds:
+          type: array
+          items:
+            type: string
+        occasion:
+          type: string
+        season:
+          type: string
+          enum: [spring, summer, autumn, winter, all]
+
+    OutfitList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Outfit'
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    Plan:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: Pro
+        billingCycle:
+          type: string
+          enum: [monthly, yearly]
+        price:
+          type: number
+          format: float
+        currency:
+          type: string
+          example: ILS
+        quotaItems:
+          type: integer
+          description: Max wardrobe items allowed
+        quotaOutfits:
+          type: integer
+          description: Max outfits allowed
+        features:
+          type: array
+          items:
+            type: string
+
+    PlanList:
+      type: object
+      properties:
+        plans:
+          type: array
+          items:
+            $ref: '#/components/schemas/Plan'
+
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: string
+        planId:
+          type: string
+        planName:
+          type: string
+        billingCycle:
+          type: string
+          enum: [monthly, yearly]
+        status:
+          type: string
+          enum: [active, cancelled, expired, trialing]
+        currentPeriodStart:
+          type: string
+          format: date
+        currentPeriodEnd:
+          type: string
+          format: date
+        autoRenew:
+          type: boolean
+
+    SubscribeRequest:
+      type: object
+      required: [planId, paymentMethod]
+      properties:
+        planId:
+          type: string
+        billingCycle:
+          type: string
+          enum: [monthly, yearly]
+        paymentMethod:
+          type: string
+          enum: [credit_card, bit]
+        paymentToken:
+          type: string
+          description: Token from payment provider (for credit card)
+
+    TopUpPackage:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        quotaAmount:
+          type: integer
+        price:
+          type: number
+          format: float
+        currency:
+          type: string
+          example: ILS
+
+    TopUpPackageList:
+      type: object
+      properties:
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopUpPackage'
+
+    TopUpRequest:
+      type: object
+      required: [packageId, paymentMethod]
+      properties:
+        packageId:
+          type: string
+        paymentMethod:
+          type: string
+          enum: [credit_card, bit]
+        paymentToken:
+          type: string
+
+    TopUpResponse:
+      type: object
+      properties:
+        topUpId:
+          type: string
+        status:
+          type: string
+          enum: [pending, completed, failed]
+        quotaAdded:
+          type: integer
+        paymentId:
+          type: string
+        bitPaymentUrl:
+          type: string
+          description: Present only when paymentMethod is bit
+
+    CreditCardPaymentRequest:
+      type: object
+      required: [amount, currency, description, paymentToken]
+      properties:
+        amount:
+          type: number
+          format: float
+        currency:
+          type: string
+          example: ILS
+        description:
+          type: string
+        paymentToken:
+          type: string
+
+    PaymentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [pending, completed, failed, refunded]
+        method:
+          type: string
+          enum: [credit_card, bit]
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    BitPaymentRequest:
+      type: object
+      required: [amount, description, customerName, phone, email]
+      properties:
+        amount:
+          type: number
+          format: float
+          description: Payment amount (up to 2 decimal places)
+        description:
+          type: string
+          maxLength: 500
+          description: Short name and description of the product/service
+        customerName:
+          type: string
+          description: Name displayed in the payment notification
+        phone:
+          type: string
+          description: Phone number for SMS notification
+        email:
+          type: string
+          format: email
+          description: Email address for notification
+        language:
+          type: string
+          description: Payment IFRAME language. Default is Hebrew (he)
+          example: en
+        callbackUrl:
+          type: string
+          description: URL to receive payment result data
+        atzmaiClientId:
+          type: string
+          description: Unique Atzmai client ID
+
+    BitPaymentLinkResponse:
+      type: object
+      properties:
+        header:
+          type: object
+          properties:
+            requestId:
+              type: string
+            responseId:
+              type: string
+            responseServerTime:
+              type: string
+              format: date-time
+        body:
+          type: object
+          properties:
+            url:
+              type: string
+              description: Bit payment page URL
+            atzmai_payment_id:
+              type: string
+
+    BitPaymentCallback:
+      type: object
+      properties:
+        atzmai_payment_id:
+          type: string
+        atzmai_client_id:
+          type: string
+        status:
+          type: string
+        payme_status:
+          type: string
+        status_error_code:
+          type: string
+        status_code:
+          type: string
+        payme_sale_id:
+          type: string
+        sale_created:
+          type: string
+        sale_paid_date:
+          type: string
+        payme_sale_status:
+          type: string
+        sale_status:
+          type: string
+        currency:
+          type: string
+        sale_payment_method:
+          type: string
+        transaction_id:
+          type: string
+        price:
+          type: string
+        sale_description:
+          type: string
+        sale_type:
+          type: string
+        payme_transaction_id:
+          type: string
+        buyer_name:
+          type: string
+        buyer_email:
+          type: string
+        buyer_phone:
+          type: string
+        status_error_details:
+          type: string
+        notify_type:
+          type: string
+
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: string
+        invoiceNumber:
+          type: string
+        userId:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [paid, pending, void]
+        type:
+          type: string
+          enum: [subscription, topup, transfer]
+        paymentId:
+          type: string
+        issuedAt:
+          type: string
+          format: date-time
+        paidAt:
+          type: string
+          format: date-time
+        downloadUrl:
+          type: string
+
+    InvoiceList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Invoice'
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    Transfer:
+      type: object
+      properties:
+        id:
+          type: string
+        fromUserId:
+          type: string
+        toUserId:
+          type: string
+        amount:
+          type: integer
+          description: Quota units transferred
+        note:
+          type: string
+        status:
+          type: string
+          enum: [completed, failed]
+        createdAt:
+          type: string
+          format: date-time
+
+    TransferRequest:
+      type: object
+      required: [toUserId, amount]
+      properties:
+        toUserId:
+          type: string
+        amount:
+          type: integer
+          minimum: 1
+        note:
+          type: string
+
+    TransferList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transfer'
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, down]
+        timestamp:
+          type: string
+          format: date-time
+        services:
+          type: object
+          additionalProperties:
+            type: string
+
+    PlatformStats:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        activeSubscriptions:
+          type: integer
+        totalWardrobeItems:
+          type: integer
+        totalOutfits:
+          type: integer
+        totalPaymentsToday:
+          type: number
+        totalTransfersToday:
+          type: integer
+
+    ActivityLog:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              action:
+                type: string
+              entity:
+                type: string
+              entityId:
+                type: string
+              timestamp:
+                type: string
+                format: date-time
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
