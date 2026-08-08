@@ -708,7 +708,7 @@ export default function Stylist() {
 
   const handleSaveOutfitToDate = async (notifId, recIndex, targetDate) => {
     const notif = notifications.find(n => n.id === notifId);
-    const rec = notif?.payload?.outfit_recommendations?.[recIndex];
+    const rec = notif?.payload?.outfit_recommendations?.[recIndex] || notif?.payload?.proposals?.[recIndex];
     if (!rec) return;
     
     const isEvent = (notif?.title || '').toLowerCase().includes('get ready');
@@ -748,10 +748,13 @@ export default function Stylist() {
 
     try {
       const saved = await api.saveOutfit(body);
-      upsert(saved?.outfit || saved);
+      const savedOutfit = saved?.outfit || saved;
+      upsert(savedOutfit);
       toast.success(t('stylist.outfitSaved', { defaultValue: 'Outfit saved and scheduled!' }));
+      return savedOutfit;
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('stylist.saveFailed', { defaultValue: 'Failed to save outfit.' }));
+      return null;
     }
   };
 
@@ -2759,7 +2762,11 @@ export default function Stylist() {
                   <div
                     key={`daily-rec-${idx}`}
                     onClick={async () => {
-                      await handleSaveOutfitToDate(rec.notifId, rec.recIndex, schedulingDate);
+                      const saved = await handleSaveOutfitToDate(rec.notifId, rec.recIndex, schedulingDate);
+                      if (saved) {
+                        setSelectedOutfitForDetail(saved);
+                        setIsEditingOutfit(false);
+                      }
                       setSchedulingDate(null);
                     }}
                     className="flex flex-col items-center p-2 rounded-xl border border-[hsl(var(--accent))]/30 bg-[hsl(var(--accent))]/5 hover:border-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/10 cursor-pointer text-center group transition-all relative overflow-hidden"
