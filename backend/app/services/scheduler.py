@@ -403,10 +403,10 @@ async def check_scheduler_triggers() -> None:
                     
                     body = "\n".join(body_lines)
 
-                    # Send push notification
                     payload = {
                         "url": "/stylist?tab=match", 
                         "target_date": target_date_str,
+                        "tag": f"daily-suggestions-{target_date_str}",
                         "proposals": proposals[:3]
                     }
                     await send_push_notification(user_id, title, body, payload)

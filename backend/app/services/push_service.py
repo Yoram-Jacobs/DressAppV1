@@ -107,13 +107,24 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
     payload_dict = {
         "title": title,
         "body": web_push_body,
-        "url": "/stylist?tab=match"
+        "url": (payload or {}).get("url") or "/stylist?tab=match",
+        "tag": (payload or {}).get("tag") or "daily-suggestions"
     }
 
     payload_data_str = json.dumps(payload_dict)
 
-    # Send web push to each registered subscription endpoint
+    # Deduplicate subscription list by endpoint to prevent sending duplicate notifications
+    # to the exact same subscription string
+    unique_subs = []
+    seen_endpoints = set()
     for sub in subscriptions:
+        endpoint = sub.get("endpoint")
+        if endpoint and endpoint not in seen_endpoints:
+            seen_endpoints.add(endpoint)
+            unique_subs.append(sub)
+
+    # Send web push to each registered subscription endpoint
+    for sub in unique_subs:
         try:
             # pywebpush blocks synchronously, but since it is a fast HTTP call we can wrap it or call it inline.
             # In a production environment, this could be delegated to a task runner.

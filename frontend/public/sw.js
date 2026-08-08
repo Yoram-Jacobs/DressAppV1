@@ -9,6 +9,7 @@ self.addEventListener('push', function(event) {
         icon: '/favicon-48x48.png',
         badge: '/favicon-16x16.png',
         vibrate: [100, 50, 100],
+        tag: data.tag || 'dressapp-notification',
         data: { url: data.url || '/stylist?tab=match' }
       };
       
