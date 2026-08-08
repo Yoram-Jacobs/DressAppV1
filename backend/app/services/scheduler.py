@@ -161,17 +161,16 @@ def _generate_fallback_advice(
             "reasoning_summary": "No clothing items available in closet.",
             "outfit_recommendations": []
         }
-    
-    # Find best top, bottom, shoes combination
-    best_score = -1
-    best_outfit = None
+        
+    # Find best top, bottom, shoes combinations
+    all_outfits = []
     
     for top in closet_items:
         for bottom in closet_items:
-            if top["category"] == bottom["category"]:
+            if top.get("category") == bottom.get("category"):
                 continue
             for shoe in closet_items:
-                if shoe["category"] in ["top", "bottom"] or shoe["id"] == top["id"] or shoe["id"] == bottom["id"]:
+                if shoe.get("category") in ["top", "bottom"] or shoe.get("id") == top.get("id") or shoe.get("id") == bottom.get("id"):
                     continue
                 
                 # Simple scoring
@@ -196,23 +195,33 @@ def _generate_fallback_advice(
                     elif temp_c >= 28 and top.get("category") == "tshirt":
                         score += 10
                 
-                if score > best_score:
-                    best_score = score
-                    best_outfit = {
-                        "name": f"Outfit with {top.get('title', 'top')} and {bottom.get('title', 'bottom')}",
-                        "items": [
-                            {"role": "top", "title": top.get("title", "Top"), "closet_item_id": top.get("id")},
-                            {"role": "bottom", "title": bottom.get("title", "Bottom"), "closet_item_id": bottom.get("id")},
-                            {"role": "shoes", "title": shoe.get("title", "Shoes"), "closet_item_id": shoe.get("id")}
-                        ],
-                        "why": f"Recommended based on {style_dress_for} style preference",
-                        "confidence": min(0.95, 0.7 + score / 100),
-                    }
+                outfit = {
+                    "name": f"Outfit with {top.get('title', 'top')} and {bottom.get('title', 'bottom')}",
+                    "items": [
+                        {"role": "top", "title": top.get("title", "Top"), "closet_item_id": top.get("id")},
+                        {"role": "bottom", "title": bottom.get("title", "Bottom"), "closet_item_id": bottom.get("id")},
+                        {"role": "shoes", "title": shoe.get("title", "Shoes"), "closet_item_id": shoe.get("id")}
+                    ],
+                    "why": f"Recommended based on {style_dress_for} style preference",
+                    "confidence": min(0.95, 0.7 + score / 100),
+                    "_score": score
+                }
+                all_outfits.append(outfit)
+
+    # Sort combinations by score descending
+    all_outfits.sort(key=lambda x: x["_score"], reverse=True)
+
+    seen_combos = set()
+    for o in all_outfits:
+        item_ids = tuple(sorted([item["closet_item_id"] for item in o["items"]]))
+        if item_ids not in seen_combos:
+            seen_combos.add(item_ids)
+            o.pop("_score", None)
+            recs.append(o)
+            if len(recs) >= 3:
+                break
     
-    if best_outfit:
-        recs.append(best_outfit)
-    
-    # Fallback outfit if no good match found
+    # Fallback outfit if no combination found
     if not recs:
         top = closet_items[0] if any(i.get("category") == "top" for i in closet_items) else closet_items[0]
         bottom = next((i for i in closet_items if i.get("category") == "bottom"), closet_items[1] if len(closet_items) > 1 else closet_items[0])

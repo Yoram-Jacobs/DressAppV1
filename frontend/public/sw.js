@@ -1,5 +1,13 @@
 /* DressApp Service Worker for Web Push notifications (Phase Scheduler) */
 
+self.addEventListener('install', function(event) {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', function(event) {
+  event.waitUntil(clients.claim());
+});
+
 self.addEventListener('push', function(event) {
   if (event.data) {
     try {
