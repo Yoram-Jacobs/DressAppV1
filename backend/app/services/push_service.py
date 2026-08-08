@@ -84,6 +84,26 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
                 else:
                     web_push_body = clean_body + " · Tap to view recommendations."
 
+    # Write VAPID private key to a temp file if it's PEM format (starts with ---)
+    # or contains newlines, because pywebpush from_string expects DER format.
+    private_key_input = settings.VAPID_PRIVATE_KEY
+    if private_key_input:
+        private_key_input = private_key_input.strip('"').replace("\\n", "\n")
+
+    vapid_key_param = private_key_input
+    temp_key_file = None
+    if private_key_input and "-----BEGIN" in private_key_input:
+        import tempfile
+        import os
+        try:
+            fd, path = tempfile.mkstemp()
+            with os.fdopen(fd, 'w') as f:
+                f.write(private_key_input)
+            temp_key_file = path
+            vapid_key_param = path
+        except Exception as e:
+            logger.error("Failed to create temporary VAPID key file: %s", e)
+
     payload_dict = {
         "title": title,
         "body": web_push_body,
@@ -100,7 +120,7 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
             webpush(
                 subscription_info=sub,
                 data=payload_data_str,
-                vapid_private_key=settings.VAPID_PRIVATE_KEY,
+                vapid_private_key=vapid_key_param,
                 vapid_claims={"sub": f"mailto:{settings.VAPID_CLAIM_EMAIL}"}
             )
             logger.info("Sent Web Push successfully to endpoint=%s", sub.get("endpoint")[:45] + "...")
@@ -116,5 +136,12 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
                 logger.error("WebPushException sending notification: %s", ex)
         except Exception as e:
             logger.error("General error sending Web Push notification: %s", e)
+
+    if temp_key_file:
+        try:
+            import os
+            os.unlink(temp_key_file)
+        except Exception as e:
+            logger.error("Failed to unlink temporary VAPID key file: %s", e)
 
     return {k: v for k, v in doc.items() if k != "_id"}
