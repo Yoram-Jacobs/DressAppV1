@@ -133,7 +133,18 @@ const getRecommendationPiecesMap = (rec, closetItems) => {
       if (item && item.role) {
         const closetItem = closetItems.find(c => c.id === item.closet_item_id);
         if (closetItem) {
-          map[item.role] = { image_url: closetItem.image_url };
+          map[item.role] = { 
+            id: closetItem.id,
+            closet_item_id: closetItem.id,
+            image_url: closetItem.image_url,
+            clean_image_url: closetItem.clean_image_url,
+            cutout_url: closetItem.cutout_url,
+            segmented_image_url: closetItem.segmented_image_url,
+            thumbnail_data_url: closetItem.thumbnail_data_url,
+            reconstructed_image_url: closetItem.reconstructed_image_url,
+            original_image_url: closetItem.original_image_url,
+            image_variants: closetItem.image_variants,
+          };
         }
       }
     });
@@ -311,7 +322,7 @@ export default function Stylist() {
   const [schedulingDate, setSchedulingDate] = useStoreState(stylistUIStore, 'schedulingDate');
   const [currentCalendarMonth, setCurrentCalendarMonth] = useStoreState(stylistUIStore, 'currentCalendarMonth');
 
-  const { items: closetItems } = useClosetStore();
+  const { items: closetItems } = useClosetStore({ prewarm: true });
   const [isEditingOutfit, setIsEditingOutfit] = useStoreState(stylistUIStore, 'isEditingOutfit');
   const [editOutfitName, setEditOutfitName] = useStoreState(stylistUIStore, 'editOutfitName');
   const [editOutfitDescription, setEditOutfitDescription] = useStoreState(stylistUIStore, 'editOutfitDescription');
@@ -671,16 +682,20 @@ export default function Stylist() {
       }
     });
     
+    if (matches.length === 0) return [];
+    
+    // Sort matches by created_at descending (latest first)
+    matches.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    const latestNotif = matches[0];
+    
     const recs = [];
-    matches.forEach(n => {
-      const payload = n.payload || {};
-      const list = payload.outfit_recommendations || payload.proposals || [];
-      list.forEach((rec, idx) => {
-        recs.push({
-          ...rec,
-          notifId: n.id,
-          recIndex: idx,
-        });
+    const payload = latestNotif.payload || {};
+    const list = payload.outfit_recommendations || payload.proposals || [];
+    list.forEach((rec, idx) => {
+      recs.push({
+        ...rec,
+        notifId: latestNotif.id,
+        recIndex: idx,
       });
     });
     return recs;
