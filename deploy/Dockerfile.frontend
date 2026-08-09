@@ -29,6 +29,7 @@ ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN yarn install --frozen-lockfile --network-timeout 600000
 
 COPY frontend/ ./
+RUN rm -f .env
 RUN yarn build
 
 # --- Runtime stage ---------------------------------------------------
