@@ -11,7 +11,7 @@ Find quick solutions for camera permissions, slow upload speeds, account limit q
 ## Step-by-Step
 1. **Camera block**: If the camera won't start, go to browser settings, select DressApp, and reset Camera permissions.
 2. **Stalled uploads**: If loading freezes on multiple photos, wait for the background sequential queue to process them one-by-one.
-3. **Closet full**: Free users are capped at 150 items. Subscribe to the Pro tier or invite a friend (+10 slots per signup).
+3. **Closet full**: Free users are capped at a baseline of 50 items. Subscribe to the Manager or Professional tier on the **Pricing page** (`/pricing`), or invite a friend to get +10 slots per signup (up to 200 items max).
 4. **API errors**: If AI features fail, verify your custom Google AI Studio keys in your Profile page.
 
 ## Expected Results

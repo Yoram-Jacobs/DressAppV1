@@ -111,10 +111,13 @@ If you signed in with Google before DressApp requested access to your **People A
 Manages system-level settings, subscriptions, and AI integrations:
 
 - **AI Configuration**:
-    - *Custom API Keys Mode*: Connect custom Google Gemini, Anthropic, OpenAI, or DeepSeek API keys via a guided setup modal.
+  - *Standard Mode*: Uses system-managed Gemini Flash 2.x endpoints.
+  - *Custom API Keys Mode*: Connect custom Google Gemini, Anthropic, OpenAI, or DeepSeek API keys via a guided setup modal.
 - **Subscription & Closet Limits**:
   - View current account tier (**Free**: 50-item limit vs **Manager** or **Professional**: Unlimited items).
-  - Upgrade via PayPal Subscriptions REST API (Manager: $5/month or $50/year; Professional: $10/month or $100/year).
+  - Access the **Pricing page** (`/pricing` or click on your plan card) to view the tier comparison table, select a plan, and subscribe.
+  - Upgrade via PayPal Subscriptions REST API (Manager: $4.99/month; Professional: $9.99/month) or the Atzmai Gateway for local ILS transactions.
+  - Copy **Referral Link**: Grants +10 closet capacity slots for each friend who registers (up to 200 items max).
 - **Scheduler & Push Reminders**:
   - Toggle morning outfit proposal notifications.
   - Set frequency (*Everyday*, *Every Other Day*, *Twice a Week*, *On Weekday*), time (e.g., *07:00*), and dress-code style demands (*Casual*, *Formal*, *Athletic*, *Custom*).
@@ -151,5 +154,5 @@ Manages system-level settings, subscriptions, and AI integrations:
 ---
 
 ## Limitations
-- Free tier account space is capped at 150 items unless expanded via referral bonus (+10 slots per invite) or Pro subscription.
+- Free tier account space is capped at 50 items unless expanded via referral bonus (+10 slots per invite up to 200 items max) or upgrading to the Manager or Professional tier.
 - Custom API key mode requires valid keys with remaining quota from the respective provider.

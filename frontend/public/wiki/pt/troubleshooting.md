@@ -1,25 +1,25 @@
-# Solução de problemas e limites
+# Solução de Problemas & Limites
 
-Correções rápidas para comportamentos, limites e configurações comuns de aplicativos.
+Soluções rápidas para comportamentos comuns do aplicativo, limites e configurações.
 
-## Visão geral
-Encontre soluções rápidas para permissões de câmera, velocidades lentas de upload, dúvidas sobre limites de conta e transcrições de bate-papo por voz.
+## Visão Geral
+Encontre soluções rápidas para permissões de câmera, velocidades de upload lentas, perguntas sobre limites de conta e transcrições de chat de voz.
 
 ## Pré-requisitos
 - Conexão com a Internet.
 
-## Passo a passo
-1. **Bloqueio da câmera**: se a câmera não iniciar, acesse as configurações do navegador, selecione DressApp e redefina as permissões da câmera.
-2. **Uploads travados**: se o carregamento congelar em várias fotos, aguarde até que a fila sequencial em segundo plano as processe uma por uma.
-3. **Armário cheio**: os usuários gratuitos têm um limite de 150 itens. Assine o nível Pro ou convide um amigo (+10 vagas por inscrição).
-4. **Erros de API**: se os recursos de IA falharem, verifique suas chaves personalizadas do Google AI Studio na sua página de perfil.
+## Passo a Passo
+1. **Bloqueio da câmera**: Se a câmera não iniciar, vá para as configurações do navegador, selecione DressApp e redefina as permissões da câmera.
+2. **Uploads travados**: Se o carregamento congelar em várias fotos, aguarde a fila sequencial em segundo plano processá-las uma por uma.
+3. **Guarda-roupa cheio**: Os usuários gratuitos são limitados a um limite básico de 50 itens. Assine o nível Manager ou Professional na **página de preços** (`/pricing`), ou convide um amigo para ganhar +10 vagas por registro (até o limite máximo de 200 itens).
+4. **Erros de API**: Se os recursos de IA falharem, verifique suas chaves personalizadas do Google AI Studio na página de perfil.
 
-## Resultados esperados
-Resolução rápida de permissões e configurações sem necessidade de tickets de suporte técnico.
+## Resultados Esperados
+Resolução rápida de permissões e configurações sem a necessidade de tickets de suporte técnico.
 
-## Solução de problemas
-- **Problemas de banco de dados**: se os itens estiverem fora de sincronia, efetue logout e login novamente para atualizar as sessões de token.
-- **Problemas de layout RTL**: se as sobreposições de árabe/hebraico se sobrepuserem, atualize seu navegador para a versão mais recente.
+## Solução de Problemas
+- **Problemas de banco de dados**: Se os itens estiverem fora de sincronia, saia e faça login novamente para atualizar as sessões do token.
+- **Problemas de layout RTL**: Se as sobreposições em árabe ou hebraico se sobrepuserem, atualize seu navegador para a versão mais recente.
 
 ## Limitações
-- Os limites das plataformas são rigorosamente aplicados para proteger os recursos do servidor.
+- Os limites da plataforma são rigidamente aplicados para proteger os recursos do servidor.
