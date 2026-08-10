@@ -1014,19 +1014,20 @@ async def parse_garments(image_bytes: bytes) -> list[dict[str, Any]]:
     # 2) Collapse Left-shoe + Right-shoe into a single "Shoes" item —
     #    users think of them as one pair, and `_looks_already_cropped`
     #    handles single-item footwear photos more cleanly this way.
-    left = by_label.pop("Left-shoe", None)
-    right = by_label.pop("Right-shoe", None)
-    if left or right:
-        pair_masks = [x["mask"] for x in (left, right) if x]
-        combined = pair_masks[0]
-        for m in pair_masks[1:]:
-            combined = np.maximum(combined, m)
-        by_label["Shoes"] = {
-            "label": "Shoes",
-            "category": "footwear",
-            "score": 0.95,
-            "mask": combined,
-        }
+    shoe_keys = [k for k in list(by_label.keys()) if k.startswith(("Left-shoe", "Right-shoe", "Shoes"))]
+    if shoe_keys:
+        pair_items = [by_label.pop(k) for k in shoe_keys]
+        pair_masks = [x["mask"] for x in pair_items if x and x.get("mask") is not None]
+        if pair_masks:
+            combined = pair_masks[0]
+            for m in pair_masks[1:]:
+                combined = np.maximum(combined, m)
+            by_label["Shoes"] = {
+                "label": "Shoes",
+                "category": "footwear",
+                "score": 0.95,
+                "mask": combined,
+            }
 
     # 2a) Patch 12e (May 2026) — Option B2 pair recovery for footwear.
     #     When the unified Shoes mask is anatomically lopsided (one

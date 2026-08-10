@@ -66,7 +66,8 @@ export const closet = {
         });
     }
 
-    const url = `${process.env.REACT_APP_BACKEND_URL}/api/v1/closet/analyze`;
+    const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+    const url = `${baseUrl}/api/v1/closet/analyze`;
     const token = tokenStore.get();
     return (async () => {
       const resp = await fetch(url, {
