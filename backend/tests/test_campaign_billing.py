@@ -5,8 +5,8 @@ from app.services.campaign_service import bill_ended_campaign, expire_overdue_ca
 
 @pytest.mark.anyio
 async def test_bill_ended_campaign():
-    # Setup mock campaign (5 days duration, 1 paused day = 4 active days)
-    activated_at = (datetime.now(timezone.utc) - timedelta(days=5)).isoformat()
+    # Setup mock campaign (4.9 days duration, 1 paused day = 3.9 active days, ceil = 4 active days)
+    activated_at = (datetime.now(timezone.utc) - timedelta(days=4.9)).isoformat()
     campaign = {
         "id": "test_camp_123",
         "expert_id": "test_expert_123",
