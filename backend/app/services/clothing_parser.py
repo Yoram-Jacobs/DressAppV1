@@ -737,59 +737,24 @@ async def _call_self_hosted(
 # bag in front of a dress, shoes overlapping the hem of trousers are
 # all legitimate overlaps that the user expects to see as separate
 # cards in their closet.
-_NMS_CATEGORIES: frozenset[str] = frozenset({"top", "bottom", "dress"})
+_NMS_CATEGORIES: frozenset[str] = frozenset({"top", "bottom", "dress", "outerwear", "footwear", "accessory", "headwear"})
 
-# Two thresholds, OR-combined:
-#   * containment of smaller-in-larger — catches "phantom inside real"
-#     (e.g. SegFormer's tight Upper-clothes mask fully inside its
-#     looser Dress mask on a long coat).
-#   * IoU — catches "two overlapping masks of similar size" (e.g.
-#     a pair of trousers split by a shadow into two adjacent blobs).
-# Empirically 0.70 / 0.50 fire on the coat / split-trousers cases in
-# the test closet without firing on legitimately-overlapping garments
-# like a tucked-in shirt + visible waistband.
-_NMS_CONTAINMENT_THRESHOLD: float = 0.70
-_NMS_IOU_THRESHOLD: float = 0.50
+_NMS_CONTAINMENT_THRESHOLD: float = 0.65
+_NMS_IOU_THRESHOLD: float = 0.45
 
 
 def _suppress_overlapping_garments(
     by_label: dict[str, dict[str, Any]],
 ) -> dict[str, dict[str, Any]]:
-    """Patch 12 (May 2026) — inter-label NMS for SegFormer outputs.
+    """Patch 12g (Aug 2026) — inter-label NMS and footwear fragmentation resolution.
 
     Removes / merges per-label detections that occupy substantially the
     same pixels but were classified under different SegFormer labels.
 
-    Two cases this fixes
-    --------------------
-    1. **Phantom-inside-real** (e.g. long coat fires both ``Upper-clothes``
-       and ``Dress`` — the tight Upper-clothes mask sits entirely inside
-       the looser Dress mask). Containment-of-smaller-in-larger ≥
-       ``_NMS_CONTAINMENT_THRESHOLD`` → drop the smaller.
-
-    2. **Split-by-shadow** (e.g. trousers fire ``Pants`` on the upper
-       half and ``Skirt`` on the lower half because a shadow band
-       confused the per-pixel classifier). IoU is low but containment
-       on the smaller half is also low — instead this is caught by
-       same-category masks that *don't* overlap much being unioned
-       (see below).
-
-    Algorithm
-    ---------
-    * Sort garment-class entries (top / bottom / dress) by descending
-      mask area.
-    * For each smaller entry, compare against every larger entry kept
-      so far:
-        - If ``containment ≥ 0.70`` OR ``IoU ≥ 0.50``:
-            - **Same category** → union the smaller mask into the
-              larger and drop the smaller (handles "Pants" + "Skirt"
-              both = "bottom" overlapping a single trouser).
-            - **Different category** → drop the smaller (handles
-              "Upper-clothes" inside "Dress").
-
-    Accessories, footwear, and headwear are passed through untouched.
-
-    Idempotent and safe on empty / single-entry input.
+    Fixes:
+    1. **Phantom-inside-real** (e.g. long coat fires both ``Upper-clothes`` and ``Dress``).
+    2. **Footwear fragmentation** (e.g. standalone shoe photos firing phantom ``Hat``,
+       ``Bag``, ``Accessory``, or ``Shoes`` fragments on shoe patterns/laces).
     """
     if not by_label:
         return by_label
@@ -797,25 +762,21 @@ def _suppress_overlapping_garments(
     nms_items: list[tuple[str, dict[str, Any], int]] = []
     passthrough: dict[str, dict[str, Any]] = {}
     for lbl, item in by_label.items():
-        if item.get("category") in _NMS_CATEGORIES:
-            try:
-                area = int(item["mask"].sum())
-            except Exception:  # noqa: BLE001
-                area = 0
-            if area > 0:
-                nms_items.append((lbl, item, area))
-            # else: zero-area item drops on the floor — useless anyway.
+        try:
+            area = int(item["mask"].sum())
+        except Exception:  # noqa: BLE001
+            area = 0
+        if area > 0:
+            nms_items.append((lbl, item, area))
         else:
             passthrough[lbl] = item
 
-    # No or one garment-class detection → nothing to suppress.
     if len(nms_items) < 2:
         for lbl, item, _ in nms_items:
             passthrough[lbl] = item
         return passthrough
 
-    # Sort largest → smallest so we always compare new candidates
-    # against the already-kept "winners".
+    # Sort largest → smallest so we compare candidates against dominant items
     nms_items.sort(key=lambda t: t[2], reverse=True)
 
     kept: list[tuple[str, dict[str, Any], int]] = []
@@ -823,36 +784,39 @@ def _suppress_overlapping_garments(
     for lbl, item, area in nms_items:
         merged = False
         dropped = False
+        item_cat = item.get("category")
         for kept_idx, (kept_lbl, kept_item, kept_area) in enumerate(kept):
             inter = int(np.logical_and(item["mask"], kept_item["mask"]).sum())
             if inter == 0:
                 continue
             union = kept_area + area - inter
             iou = inter / union if union > 0 else 0.0
-            # Containment of the smaller (= ``item``) inside the larger
-            # (= ``kept_item``). Larger-first sort guarantees this.
-            containment = inter / area if area > 0 else 0.0
-            if containment < _NMS_CONTAINMENT_THRESHOLD and iou < _NMS_IOU_THRESHOLD:
+            containment = inter / float(area) if area > 0 else 0.0
+            kept_cat = kept_item.get("category")
+
+            # Footwear special rule: any fragment overlapping footwear by >= 25% is merged into footwear
+            is_footwear_overlap = (kept_cat == "footwear" or item_cat == "footwear") and (containment >= 0.25 or iou >= 0.20)
+            is_general_overlap = containment >= _NMS_CONTAINMENT_THRESHOLD or iou >= _NMS_IOU_THRESHOLD
+
+            if not (is_footwear_overlap or is_general_overlap):
                 continue
-            same_category = item.get("category") == kept_item.get("category")
-            if same_category:
-                # Union the smaller into the larger and drop the smaller.
-                kept_item["mask"] = np.maximum(
-                    kept_item["mask"], item["mask"]
-                )
-                # Refresh area on the kept entry so subsequent comparisons
-                # see the post-union mask.
+
+            # Merge mask into kept_item if same category OR if footwear overlap
+            if item_cat == kept_cat or is_footwear_overlap:
+                kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
                 kept[kept_idx] = (
                     kept_lbl,
                     kept_item,
                     int(kept_item["mask"].sum()),
                 )
                 merged = True
+
             suppressed.append(
-                (lbl, kept_lbl, item.get("category") or "?", iou, containment)
+                (lbl, kept_lbl, item_cat or "?", iou, containment)
             )
             dropped = True
             break
+
         if not (merged or dropped):
             kept.append((lbl, item, area))
 
