@@ -64,6 +64,25 @@ async def root() -> dict:
     return {"message": "DressApp API is live", "docs": "/docs"}
 
 
+@app.get("/health")
+@api_router.get("/health")
+async def health_check() -> dict:
+    """Fast health probe checking database connectivity and API status."""
+    db_ok = False
+    try:
+        await db.command("ping")
+        db_ok = True
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Health ping failed: %s", exc)
+
+    return {
+        "status": "ok" if db_ok else "degraded",
+        "database": "connected" if db_ok else "disconnected",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "service": "dressapp-api",
+    }
+
+
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate) -> StatusCheck:
     status_obj = StatusCheck(**input.model_dump())
