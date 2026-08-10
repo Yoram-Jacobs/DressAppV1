@@ -696,3 +696,79 @@ async def fetch_invoice_and_receipt_attachments(amount_cents: int) -> list:
         logger.error(f"Failed to fetch invoice/receipt PDFs from Atzmai: {e}")
         
     return attachments
+
+
+async def send_campaign_billing_invoice(
+    *,
+    to: str,
+    user: dict,
+    campaign: dict,
+    amount_cents: int,
+    currency: str,
+    active_days: int,
+    transaction_id: str,
+    attachments: list | None = None,
+) -> dict:
+    """Send a billing email with invoice to the expert when their campaign ends."""
+    lang = (user.get("preferred_language") or "en").lower().split("-")[0]
+    campaign_title = campaign.get("title", "Fashion Campaign")
+    
+    matrix = {
+        "en": {
+            "subject": f"Invoice for your fashion campaign - {campaign_title}",
+            "header": "Fashion Campaign Invoice",
+            "body": f"We have compiled the final billing for your campaign '{campaign_title}' which has now ended. Your campaign was active for {active_days} days. We have successfully processed your payment of {currency} {amount_cents/100:.2f} via Atzmai.",
+            "details": "Invoice Details",
+            "txn_id": "Transaction ID",
+            "campaign": "Campaign Title",
+            "days": "Active Days",
+            "amount": "Total Charged",
+            "status": "Payment Status",
+            "completed": "Paid & Settled"
+        },
+        "he": {
+            "subject": f"חשבונית עבור קמפיין האופנה שלך - {campaign_title}",
+            "header": "חשבונית קמפיין אופנה",
+            "body": f"הפקנו את החיוב הסופי עבור הקמפיין שלך '{campaign_title}' שהסתיים כעת. הקמפיין היה פעיל במשך {active_days} ימים. עיבדנו בהצלחה את התשלום שלך בסך {currency} {amount_cents/100:.2f} באמצעות Atzmai.",
+            "details": "פרטי החשבונית",
+            "txn_id": "מזהה עסקה",
+            "campaign": "שם הקמפיין",
+            "days": "ימים פעילים",
+            "amount": "סה\"כ לתשלום",
+            "status": "סטטוס תשלום",
+            "completed": "שולם בהצלחה"
+        }
+    }
+    
+    t_data = matrix.get(lang) or matrix["en"]
+    
+    body_html = f"""\
+<h1 style="margin:0 0 14px;font-size:22px;">{t_data['header']}</h1>
+<p>{t_data['body']}</p>
+<div style="font-size:12px;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-top:18px;margin-bottom:8px;font-weight:bold;">
+  {t_data['details']}
+</div>
+<table role="presentation" cellpadding="0" cellspacing="0" style="border:1px solid #eee;border-radius:10px;padding:16px;width:100%;background:#fafafa;font-size:14px;line-height:1.6;">
+  <tr>
+    <td style="padding-bottom:8px;color:#666;width:140px;">{t_data['campaign']}:</td>
+    <td style="padding-bottom:8px;font-weight:600;">{campaign_title}</td>
+  </tr>
+  <tr>
+    <td style="padding-bottom:8px;color:#666;">{t_data['days']}:</td>
+    <td style="padding-bottom:8px;font-weight:600;">{active_days} days</td>
+  </tr>
+  <tr>
+    <td style="padding-bottom:8px;color:#666;">{t_data['txn_id']}:</td>
+    <td style="padding-bottom:8px;font-weight:600;font-family:monospace;">{transaction_id}</td>
+  </tr>
+  <tr>
+    <td style="padding-bottom:8px;color:#666;">{t_data['amount']}:</td>
+    <td style="padding-bottom:8px;font-weight:600;">{currency} {amount_cents/100:.2f}</td>
+  </tr>
+  <tr>
+    <td>{t_data['status']}:</td>
+    <td style="color:#1F6F6B;font-weight:600;">{t_data['completed']}</td>
+  </tr>
+</table>
+"""
+    return await _send(to, t_data["subject"], _wrap(body_html, preheader=t_data["subject"]), attachments=attachments)

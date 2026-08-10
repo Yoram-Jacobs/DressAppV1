@@ -121,79 +121,6 @@ async def _cleanup_expired_trials_job() -> None:
         logger.error(f"Error in cleanup_expired_trials job: {str(e)}")
 
 
-async def _process_daily_campaign_billing_job() -> None:
-    """Scheduled task to run daily to charge $1 for each running active campaign via Atzmai."""
-    try:
-        from app.services import atzmai_client
-        import uuid
-        db = get_db()
-        today = datetime.now(timezone.utc).date().isoformat()
-        
-        # Find all campaigns that are active
-        cursor = db.experts_campaigns.find({"status": "active"})
-        billed_count = 0
-        
-        async for campaign in cursor:
-            try:
-                campaign_id = campaign["id"]
-                expert_id = campaign["expert_id"]
-                
-                # Check if already billed today
-                billing = campaign.get("billing") or {}
-                last_daily_pay = billing.get("last_daily_payment_date")
-                if last_daily_pay == today:
-                    continue
-                    
-                # Get user (expert) record
-                expert = await db.users.find_one({"id": expert_id})
-                if not expert:
-                    continue
-                    
-                # Convert $1 USD to ILS using currency API
-                rate = await atzmai_client.get_usd_to_ils_rate()
-                amount_ils = round(1.0 * rate, 2)
-                amount_cents = int(amount_ils * 100)
-                
-                # Create Atzmai payment intent (represented in atzmai_topups)
-                atzmai_payment_id = f"mock_daily_{uuid.uuid4().hex[:12]}"
-                topup_doc = {
-                    "id": f"camp_pay_{uuid.uuid4().hex[:12]}",
-                    "atzmai_payment_id": atzmai_payment_id,
-                    "user_id": expert_id,
-                    "campaign_id": campaign_id,
-                    "amount_cents": amount_cents,
-                    "currency": "ILS",
-                    "type": "campaign_daily",
-                    "status": "pending",
-                    "created_at": datetime.now(timezone.utc).isoformat(),
-                    "updated_at": datetime.now(timezone.utc).isoformat()
-                }
-                await db.atzmai_topups.insert_one(topup_doc)
-                
-                # In mock mode, auto-capture it to simulate immediate success
-                if atzmai_client.is_mock_mode():
-                    await db.atzmai_topups.update_one(
-                        {"atzmai_payment_id": atzmai_payment_id},
-                        {"$set": {"status": "captured", "captured_at": datetime.now(timezone.utc).isoformat()}}
-                    )
-                    await db.experts_campaigns.update_one(
-                        {"id": campaign_id},
-                        {"$set": {
-                            "billing.last_daily_payment_date": today,
-                            "billing.payment_status": "paid",
-                            "updated_at": datetime.now(timezone.utc).isoformat()
-                        }}
-                    )
-                    logger.info(f"Auto-captured daily campaign payment for campaign {campaign_id}")
-                
-                billed_count += 1
-            except Exception as e:
-                logger.error(f"Error billing campaign {campaign.get('id', 'unknown')}: {e}")
-                
-        logger.info(f"Daily campaign billing job completed: {billed_count} campaigns billed.")
-    except Exception as e:
-        logger.error(f"Error in _process_daily_campaign_billing_job: {e}")
-
 
 def _generate_fallback_advice(
     closet_items: list[dict[str, Any]], 
@@ -558,15 +485,7 @@ def start_scheduler() -> None:
     )
     logger.info("Trial cleanup job scheduled: daily at 02:15 UTC to expire and revert trial accounts")
 
-    # Daily campaign billing (runs daily at 02:30 UTC)
-    _scheduler.add_job(
-        _process_daily_campaign_billing_job,
-        CronTrigger(hour=2, minute=30, timezone="UTC"),
-        id="daily_campaign_billing",
-        replace_existing=True,
-        misfire_grace_time=300,
-    )
-    logger.info("Daily campaign billing job scheduled: daily at 02:30 UTC")
+
 
     # Experts Campaign Platform
     _scheduler.add_job(

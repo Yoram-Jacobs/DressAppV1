@@ -797,6 +797,10 @@ async def cancel_campaign(
     if (campaign.get("billing") or {}).get("payment_status") == "pending":
         billing_update["billing.payment_status"] = "voided"
 
+    if campaign.get("status") in ("active", "paused"):
+        from app.services.campaign_service import bill_ended_campaign
+        await bill_ended_campaign(campaign, db)
+
     update_fields = {"status": "cancelled", "updated_at": _now_iso()}
     update_fields.update(billing_update)
     await db.experts_campaigns.update_one(

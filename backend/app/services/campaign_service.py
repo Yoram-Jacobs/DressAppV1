@@ -435,18 +435,131 @@ async def activate_scheduled_campaigns() -> None:
                     logger.error("Campaign email failed for %s: %s", campaign_id, exc)
 
 
+async def bill_ended_campaign(campaign: dict[str, Any], db: Any) -> None:
+    """Bill the expert when their campaign is completed (either expired or cancelled)."""
+    try:
+        from app.services import atzmai_client
+        from app.services.email_service import send_campaign_billing_invoice, fetch_invoice_and_receipt_attachments
+        import uuid
+        import math
+        
+        campaign_id = campaign.get("id")
+        expert_id = campaign.get("expert_id")
+        
+        # Calculate active days
+        activated_at_str = campaign.get("activated_at")
+        if not activated_at_str:
+            activated_at_str = campaign.get("created_at")
+            
+        activated_at = datetime.fromisoformat(activated_at_str.replace("Z", "+00:00"))
+        now_dt = datetime.now(timezone.utc)
+        
+        total_paused_days = (campaign.get("billing") or {}).get("total_paused_days", 0)
+        
+        # Calculate duration
+        total_seconds = (now_dt - activated_at).total_seconds()
+        active_seconds = max(0, total_seconds - (total_paused_days * 86400))
+        active_days = math.ceil(active_seconds / 86400.0)
+        active_days = max(1, active_days)
+        
+        # Get expert record
+        expert = await db.users.find_one({"id": expert_id})
+        if not expert:
+            logger.warning(f"Could not find expert {expert_id} for campaign {campaign_id} billing.")
+            return
+            
+        # Convert $1/day to ILS
+        rate = await atzmai_client.get_usd_to_ils_rate()
+        amount_usd = active_days * 1.00
+        amount_ils = round(amount_usd * rate, 2)
+        amount_cents = int(amount_ils * 100)
+        
+        # Create Atzmai transaction doc
+        atzmai_payment_id = f"mock_end_{uuid.uuid4().hex[:12]}"
+        topup_doc = {
+            "id": f"camp_pay_{uuid.uuid4().hex[:12]}",
+            "atzmai_payment_id": atzmai_payment_id,
+            "user_id": expert_id,
+            "campaign_id": campaign_id,
+            "amount_cents": amount_cents,
+            "currency": "ILS",
+            "type": "campaign_final",
+            "status": "pending",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.atzmai_topups.insert_one(topup_doc)
+        
+        # In mock mode, auto-capture it
+        if atzmai_client.is_mock_mode():
+            await db.atzmai_topups.update_one(
+                {"atzmai_payment_id": atzmai_payment_id},
+                {"$set": {"status": "captured", "captured_at": datetime.now(timezone.utc).isoformat()}}
+            )
+            
+            # Update campaign billing fields
+            await db.experts_campaigns.update_one(
+                {"id": campaign_id},
+                {"$set": {
+                    "billing.payment_status": "paid",
+                    "billing.total_active_days": active_days,
+                    "billing.total_fee_cents": amount_cents,
+                    "billing.final_payment_id": atzmai_payment_id,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            
+            # Send invoice + receipt PDFs
+            attachments = []
+            try:
+                attachments = await fetch_invoice_and_receipt_attachments(amount_cents)
+            except Exception as e:
+                logger.error(f"Failed to fetch attachments: {e}")
+                
+            try:
+                await send_campaign_billing_invoice(
+                    to=expert["email"],
+                    user=expert,
+                    campaign=campaign,
+                    amount_cents=amount_cents,
+                    currency="ILS",
+                    active_days=active_days,
+                    transaction_id=atzmai_payment_id,
+                    attachments=attachments
+                )
+                logger.info(f"Campaign final invoice and email sent for campaign {campaign_id}")
+            except Exception as e:
+                logger.error(f"Failed to send campaign billing email: {e}")
+                
+    except Exception as e:
+        logger.error(f"Error in bill_ended_campaign: {e}")
+
+
 async def expire_overdue_campaigns() -> None:
-    """Move Active campaigns past their end_date to Expired."""
+    """Move Active campaigns past their end_date to Expired and bill them."""
     db = get_db()
     now_date = datetime.now(timezone.utc).date().isoformat()
     now_iso = datetime.now(timezone.utc).isoformat()
 
-    result = await db.experts_campaigns.update_many(
-        {
-            "status": "active",
-            "end_date": {"$lt": now_date, "$ne": None},
-        },
-        {"$set": {"status": "expired", "expired_at": now_iso, "updated_at": now_iso}},
-    )
-    if result.modified_count:
-        logger.info("Expired %d campaigns", result.modified_count)
+    cursor = db.experts_campaigns.find({
+        "status": "active",
+        "end_date": {"$lt": now_date, "$ne": None},
+    })
+    
+    expired_count = 0
+    async for campaign in cursor:
+        campaign_id = campaign.get("id")
+        
+        # Bill the campaign
+        await bill_ended_campaign(campaign, db)
+        
+        # Expire it
+        await db.experts_campaigns.update_one(
+            {"id": campaign_id},
+            {"$set": {"status": "expired", "expired_at": now_iso, "updated_at": now_iso}}
+        )
+        expired_count += 1
+        logger.info(f"Expired and billed campaign {campaign_id}")
+        
+    if expired_count:
+        logger.info("Expired %d campaigns total", expired_count)
