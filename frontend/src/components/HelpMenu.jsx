@@ -39,6 +39,7 @@ export default function HelpMenu() {
     ] : [
       { id: 'campaigns', label: t('help.campaigns_help_title'), icon: Megaphone, wiki: 'campaigns' },
     ]),
+    { id: 'tiers', label: t('help.tiers_title', { defaultValue: 'Subscription Tiers' }), icon: Wallet, wiki: 'monetization' },
     { id: 'troubleshooting', label: t('help.trouble_title'), icon: HelpCircle, wiki: 'troubleshooting' },
   ];
 
@@ -735,6 +736,50 @@ export default function HelpMenu() {
                       <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'tiers' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                  <Wallet className="h-6 w-6" /> {t('help.tiers_title', { defaultValue: 'Subscription Tiers' })}
+                </h2>
+                <p className="text-base leading-relaxed text-muted-foreground">
+                  {t('help.tiers_p1', { defaultValue: 'DressApp offers flexible subscription tiers tailored to your closet size and styling needs. Upgrade on the Pricing page to unlock unlimited features.' })}
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-xl border border-border bg-secondary/5 space-y-2">
+                    <h3 className="font-bold text-sm text-foreground">{t('help.tiers_free_title', { defaultValue: 'Free Plan' })}</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {t('help.tiers_free_desc', { defaultValue: 'Baseline limit of 50 items. Expandable up to 200 items by sharing your invite code with friends (+10 capacity slots per friend).' })}
+                    </p>
+                  </div>
+                  
+                  <div className="p-4 rounded-xl border border-primary/30 bg-primary/5 space-y-2">
+                    <h3 className="font-bold text-sm text-primary">{t('help.tiers_manager_title', { defaultValue: 'Manager Plan' })}</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {t('help.tiers_manager_desc', { defaultValue: 'Costs $4.99/mo. Removes closet size limits entirely, unlocks advanced stats, calendar synchronization, and Trend Scout ranking filters.' })}
+                    </p>
+                  </div>
+                  
+                  <div className="p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 space-y-2">
+                    <h3 className="font-bold text-sm text-purple-600 dark:text-purple-400">{t('help.tiers_pro_title', { defaultValue: 'Professional Plan' })}</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {t('help.tiers_pro_desc', { defaultValue: 'Costs $9.99/mo. Built for style experts and fashion creators. Allows registration in the stylist directory and creation of fashion campaigns.' })}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-2">
+                  <h4 className="font-semibold text-xs text-foreground uppercase tracking-wider">{t('help.tiers_how_to_upgrade_title', { defaultValue: 'How to upgrade:' })}</h4>
+                  <ol className="list-decimal pl-4 text-xs text-muted-foreground space-y-1">
+                    <li>{t('help.tiers_step1', { defaultValue: 'Go to your Profile settings page.' })}</li>
+                    <li>{t('help.tiers_step2', { defaultValue: 'Scroll down to the System Preferences section.' })}</li>
+                    <li>{t('help.tiers_step3', { defaultValue: 'Locate Closet & Subscription Limits and click on the Pricing Page link.' })}</li>
+                    <li>{t('help.tiers_step4', { defaultValue: 'Select your preferred plan and complete checkout securely.' })}</li>
+                  </ol>
                 </div>
               </div>
             )}

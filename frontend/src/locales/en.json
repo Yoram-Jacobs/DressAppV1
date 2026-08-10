@@ -2408,7 +2408,20 @@
     "create_campaign_fee_title": "Monetization & Budget",
     "create_campaign_fee_desc": "Billed at a simple flat rate of $1.00 USD per day. You must connect your PayPal email before submitting.",
     "create_campaign_submit_title": "Submit for Approval",
-    "create_campaign_submit_desc": "After PayPal payment, campaigns go to the admin moderation queue and are activated immediately upon approval."
+    "create_campaign_submit_desc": "After PayPal payment, campaigns go to the admin moderation queue and are activated immediately upon approval.",
+    "tiers_title": "Subscription Tiers",
+    "tiers_p1": "DressApp offers flexible subscription tiers tailored to your closet size and styling needs. Upgrade on the Pricing page to unlock unlimited features.",
+    "tiers_free_title": "Free Plan",
+    "tiers_free_desc": "Baseline limit of 50 items. Expandable up to 200 items by sharing your invite code with friends (+10 capacity slots per friend).",
+    "tiers_manager_title": "Manager Plan",
+    "tiers_manager_desc": "Costs $4.99/mo. Removes closet size limits entirely, unlocks advanced stats, calendar synchronization, and Trend Scout ranking filters.",
+    "tiers_pro_title": "Professional Plan",
+    "tiers_pro_desc": "Costs $9.99/mo. Built for style experts and fashion creators. Allows registration in the stylist directory and creation of fashion campaigns.",
+    "tiers_how_to_upgrade_title": "How to upgrade:",
+    "tiers_step1": "Go to your Profile settings page.",
+    "tiers_step2": "Scroll down to the System Preferences section.",
+    "tiers_step3": "Locate Closet & Subscription Limits and click on the Pricing Page link.",
+    "tiers_step4": "Select your preferred plan and complete checkout securely."
   },
   "campaigns": {
     "status": {
