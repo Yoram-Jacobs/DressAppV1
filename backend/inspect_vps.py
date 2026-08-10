@@ -1,14 +1,8 @@
-import asyncio
-from app.db.database import get_db
+import inspect
+from app.services.credit_manager import deduct_user_credits, check_and_increment_daily_request
 
-async def main():
-    db = get_db()
-    users = await db.users.find().to_list(100)
-    for u in users:
-        print("EMAIL:", u.get("email"))
-        print("SUB:", u.get("subscription"))
-        print("AI_CONFIG:", u.get("ai_configuration"))
-        print("-" * 40)
-
-if __name__ == "__main__":
-    asyncio.run(main())
+print("DEDUCT:")
+print(inspect.getsource(deduct_user_credits))
+print("-" * 50)
+print("CHECK:")
+print(inspect.getsource(check_and_increment_daily_request))
