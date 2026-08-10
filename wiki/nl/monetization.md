@@ -7,13 +7,13 @@ Dit document biedt een uitgebreid architectonisch overzicht, een gebruikershandl
 ## 1. Samenvatting & Waardecreatie
 
 ### Hoofdlijnenoverzicht
-DressApp implementeert een hybride model van SaaS-abonnementen en een prepaid gebruikskredietsysteem:
-1. **Abonnementen (SaaS)**: Vaste tariefplannen (Free, Manager, Professional) die kledingkastcapaciteit, dagelijkse AI-stylingquota und geavanceerde functies (bijv. moderatie van advertentiecampagnes) bepalen.
-2. **Prepaid Kredietpakketten (Dienstverlening)**: Gedetailleerde verbruiksgebaseerde credits voor geavanceerde AI-bewerkingen (bijv. vragen aan de Virtuele Stylist en fotosegmentatie). Deze credits maken gebruik van een verouderingssysteem om gratis en betaalde pools te onderscheiden.
-3. **Virale Groeicyclus**: Een verwijzingsprogramma waarmee Free-gebruikers hun basiskledingkastcapaciteit organisch kunnen uitbreiden door uitnodigingslinks te delen.
-4. **Gelokaliseerde betalingen (Atzmai Gateway)**: Ingebouwde ondersteuning voor Israëlische betalingen (Bit, lokale creditcards) in ILS/USD naast wereldwijde PayPal-betalingen.
+DressApp implementeert een hybride model van SaaS-abonnementen en een dagelijks verbruiksbeperkingssysteem (utility gating):
+1. **Abonnementen (SaaS)**: Vaste tariefplannen (Free, Manager, Professional) die kledingkastcapaciteit, dagelijkse AI-stylingquota en geavanceerde functies (bijv. aanmaken van advertentiecampagnes) bepalen.
+2. **Dagelijkse quota-limieten (Free-abonnement)**: Beperkt AI-gebruik op het Free-abonnement, wat gebruikers beperkt tot 10 dagelijkse aanvragen. De aftreklogica en het verloop van de 30-dagen-tegoeden gelden *alleen* voor Free- en proefaccounts (Trial).
+3. **Virale groeicyclus**: Een verwijzingsprogramma waarmee Free-gebruikers hun basiskledingkastcapaciteit organisch kunnen uitbreiden door uitnodigingslinks te delen.
+4. **Gelokaliseerde betalingen (Atzmai Gateway)**: Ingebouwde ondersteuning voor Israëlische betalingen (Bit, lokale creditcards) in ILS (Shekel). Omdat Atzmai alleen ILS ondersteunt, worden USD-prijzen omgerekend via een live wisselkoers-API.
 
-### Architectonische Stroom
+### Architectonische stroom
 
 ```mermaid
 graph TD
@@ -33,7 +33,7 @@ graph TD
     
     %% Paid Subscription Checkout
     User -->|4. Post /atzmai/subscribe| Gateway
-    Gateway -->|5. Create Intent| AtzmaiAPI
+    Gateway -->|5. Create Intent (ILS)| AtzmaiAPI
     AtzmaiAPI -->|6. Return Payment URL| Gateway
     Gateway -->|7. Return Payment URL| User
     User -->|8. User Approves Payment| AtzmaiAPI
@@ -53,33 +53,29 @@ graph TD
 
 | Plan | Price (Monthly) | Closet Capacity | AI Credits Allocation | Key Features |
 | :--- | :--- | :--- | :--- | :--- |
-| **Free Plan** | $0.00 / maand | Basis van 50 items | 10 gratis dagelijkse credits (vervallen na 30 dagen) | Basisorganisatie, communityondersteuning, verwijzingsuitbreidingen (+10 slots per registratie tot 1000 items) |
+| **Free Plan** | $0.00 / maand | Basis van 50 items | 10 gratis dagelijkse credits (vervallen na 30 dagen) | Basisorganisatie, communityondersteuning, verwijzingsuitbreidingen (+10 slots per registratie tot maximaal 200 items) |
 | **Manager (Pro)** | $4.99 / maand | Onbeperkt | Onbeperkt aantal dagelijkse bewerkingen | 14 dagen gratis proefperiode, initiële toewijzing van 50 credits, verkopen & verhuren op de marktplaats, Trend Scout, geplande meldingen |
-| **Professional** | $9.99 / maand | Onbeperkt | Onbeperkt aantal dagelijkse bewerkingen | 30 dagen gratis proefperiode, initiële toewijzing van 300 credits, alle Manager-functies, ondersteuning voor het maken van advertentiecampagnes in de feed |
+| **Professional** | $9.99 / maand | Onbeperkt | Onbeperkt aantal dagelijkse bewerkingen | 30 dagen gratis proefperiode, initiële toewijzing van 300 credits, alle Manager-functies, ondersteuning voor het aanmaken van advertentiecampagnes (tarief van $1/dag, max. 3 gelijktijdige campagnes) |
 
-### Prepaid AI-kredietpakketten
+### Prepaid AI-kredietpakketten (Vervallen - Obsolete)
+* Prepaid opwaardeerpakketten voor credits worden **niet langer ondersteund**.
+* Om serviceonderbrekingen te voorkomen, moeten Free-gebruikers upgraden naar een Manager- of Professional-abonnement.
 
-Als gebruikers hun stylingcredits opgebruiken, kunnen ze extra pakketten aanschaffen om serviceonderbrekingen te voorkomen:
-
-* **Pakket van 10 credits**: $1.99 / 10.00 ILS
-* **Pakket van 25 credits**: $3.99 / 25.00 ILS
-* **Pakket van 50 credits**: $7.99 / 50.00 ILS
-* **Pakket van 100 credits**: $15.99 / 100.00 ILS
-* **Aangepast opwaardeerbedrag**: Door de gebruiker opgegeven ILS-bedrag (minimale drempel van 5.00 ILS voor validatie van de Atzmai-gateway).
-
-### Kredietverval & Verbruiksprioriteit (FIFO-logica)
-* **Betaalde credits**: Gekocht via opwaardeerpakketten. Betaalde credits **vervallen nooit**.
-* **Gratis credits**: Dagelijks verstrekt of via proefperiodetoewijzingen. Gratis credits **vervallen 30 dagen na aanmaak**.
-* **Aftrekprioriteit**: Wanneer een AI-verzoek wordt gedaan, controleert en verbruikt de engine automatisch credits uit de **oudste vervallende gratis pakketten eerst**, voordat er betaalde credits worden aangesproken.
+### Kredietverloop & Verbruiksprioriteit (FIFO-logica)
+* **Regel**: Kredietverloop (30 dagen) en FIFO (first-in-first-out) verbruiksprioriteit gelden **alleen voor de Free- en proefabonnementen (Trial)**.
+* **Betaalde abonnementen**: Gebruikers met een actief Manager- of Professional-abonnement ontvangen onbeperkte dagelijkse AI-bewerkingen en zijn niet onderworpen aan kredietmetingen, verloop of controles op aftrekprioriteit.
 
 ---
 
 ## 3. Gelokaliseerde betalingen & Facturering (Atzmai Gateway)
 
-Voor accounts in Israël integreert DressApp met de **Atzmai-betalingsgateway** om lokale transacties in ILS (Shekels) of USD te verwerken:
-1. **Betalingsmethoden**: Ondersteunt Bit mobiele betalingsomleidingslinks en reguliere Israëlische creditcards.
-2. **Abonnement Automatische Incasso's**: Ondersteunt maandelijkse/jaarlijkse automatische incasso-instellingen voor terugkerende Pro- en Business-abonnementen.
-3. **Webhook-verificatie**: Legt betalingscallbacks vast op `POST /api/v1/atzmai/webhook`, valideert overeenkomende records in de `atzmai_topups`-collectie en wijzigt de transactiestatus in `captured`.
+Voor accounts in Israël integreert DressApp met de **Atzmai-betalingsgateway** om lokale transacties in ILS (Shekel) te verwerken:
+1. **Verwerking uitsluitend in ILS**: De Atzmai gateway verwerkt lokale betalingen uitsluitend in ILS.
+2. **Valutaomrekening**: In USD uitgedrukte abonnementen en campagnekosten worden vóór het genereren van de link dynamisch omgerekend naar ILS via een live wisselkoers-API (terugvallend op een statische koers van 3,70 als deze onbereikbaar is).
+3. **Webhook-verificatie & Campagnefacturering**:
+   - Algemene transactietrackings via `atzmai_topups` is vervallen.
+   - `atzmai_topups` blijft echter actief voor het vastleggen en verifiëren van **dagelijkse campagnebetalingen (tarief van $1/dag)**.
+   - Bij een succesvolle transactie wordt de `last_daily_payment_date` van de campagne bijgewerkt naar de huidige datum.
 4. **Geautomatiseerde PDF-boekhouding**: Na succesvolle vastlegging vraagt de backend de Atzmai-facturerings-API om officiële PDF-ontvangstbewijzen en facturen te genereren en te downloaden. Deze worden als e-mailbijlage rechtstreeks naar de koper verzonden.
 
 ---
@@ -88,15 +84,9 @@ Voor accounts in Israël integreert DressApp met de **Atzmai-betalingsgateway** 
 
 ### Gegevensschemadefinities (Data Schema Definitions)
 
-Het MongoDB-schema in [schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) houdt de abonnementsgegevens en kredietpakketten van gebruikers bij:
+Het MongoDB-schema in [schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) houdt de abonnementsgegevens en kledingkastcapaciteit van gebruikers bij:
 
 ```python
-class CreditBucket(BaseModel):
-    amount: int
-    type: Literal["free", "paid"]
-    created_at: str  # ISO timestamp
-    expires_at: str | None = None  # None means infinite (paid credits)
-
 class SubscriptionInfo(BaseModel):
     is_active: bool = False
     plan_type: Literal["free", "monthly", "yearly"] = "free"
@@ -109,14 +99,13 @@ class SubscriptionInfo(BaseModel):
 
 class User(BaseDoc):
     subscription: SubscriptionInfo = Field(default_factory=SubscriptionInfo)
-    credit_buckets: List[CreditBucket] = Field(default_factory=list)
     closet_capacity_bonus: int = 0
 ```
 
 ### Handhaving van kledingkastlimiet ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
-Tijdens het uploaden van items bewaakt het systeem de databaselimieten:
+Tijdens het uploaden van items bewaakt het systeem de databaselimieten met een harde limiet van 200 items voor verwijzingen:
 ```python
-capacity_limit = 50 + user.get("closet_capacity_bonus", 0)
+capacity_limit = min(200, 50 + user.get("closet_capacity_bonus", 0))
 if current_count >= capacity_limit and not user.get("subscription", {}).get("is_active", False):
     raise HTTPException(
         status_code=402,
@@ -127,21 +116,19 @@ if current_count >= capacity_limit and not user.get("subscription", {}).get("is_
     )
 ```
 
-### Kredietaftrekalgoritme ([credit.py](file:///C:/DressApp_AG/backend/app/models/credit.py))
-Credits worden verbruikt op basis van een FIFO (first-in-first-out) prioriteitswachtrij:
+### Valutaomrekeningslogica ([atzmai_client.py](file:///C:/DressApp_AG/backend/app/services/atzmai_client.py))
+Zet USD-bedragen dynamisch om naar ILS voordat payloads naar Atzmai worden verzonden:
 ```python
-def spend_credits(buckets: List[CreditBucket], required_amount: int) -> Tuple[bool, List[dict]]:
-    # Sort active buckets: 
-    # Priority 0: Free expiring soonest
-    # Priority 1: Free other
-    # Priority 2: Paid (never expires)
-    active_buckets = []
-    for idx, b in enumerate(buckets):
-        if b.type == "free" and b.expires_at and now > b.expires_at:
-            continue
-        priority = (0, b.expires_at) if b.type == "free" and b.expires_at else (1, b.created_at) if b.type == "free" else (2, b.created_at)
-        active_buckets.append((priority, idx, b))
-    
-    active_buckets.sort(key=lambda x: x[0])
-    # ... deduct required_amount from sorted list ...
+async def get_usd_to_ils_rate() -> float:
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get("https://open.er-api.com/v6/latest/USD", timeout=5.0)
+            if resp.status_code == 200:
+                data = resp.json()
+                rate = data.get("rates", {}).get("ILS")
+                if rate:
+                    return float(rate)
+    except Exception:
+        pass
+    return 3.70
 ```

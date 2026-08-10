@@ -7,11 +7,11 @@
 ## 1. エグゼクティブサマリー＆価値提案
 
 ### ハイレベル概要
-DressAppは、定額制のSaaSサブスクリプションとプリペイド式のユーティリティクレジットモデルを組み合わせたハイブリッドモデルを採用しています：
-1. **サブスクリプションプラン（SaaS）**：クローゼットの収納容量、1日のAIスタイリング制限、および高度な機能（例：広告キャンペーンの管理など）を制御する定額プラン（Free、Manager、Professional）。
-2. **プリペイド式クレジットバケット（ユーティリティ）**：高度なAI操作（例：バーチャルスタイリストへの問い合わせや写真のセグメンテーションなど）のための、消費量に基づいた詳細なクレジット。これらのクレジットは、無料プールと有料プールを区別するために有効期限管理システムを使用しています。
+DressAppは、定額制のSaaSサブスクリプションと日々の利用制限モデル（daily utility gating model）を組み合わせたハイブリッドモデルを採用しています：
+1. **サブスクリプションプラン（SaaS）**：クローゼットの収納容量、1日のAIスタイリング制限、および高度な機能（例：広告キャンペーンの作成など）を制御する定額プラン（Free、Manager、Professional）。
+2. **日々のクォータ制限（Freeプラン）**：Freeプランのユーザーは1日あたり10リクエストにAI利用が制限されます。消費ロジックと30日間のバケット有効期限は、Freeおよびトライアル（Trial）アカウントに*のみ*適用されます。
 3. **バイラル成長ループ**：Freeプランのユーザーが、招待リンクを共有することでクローゼットの基本容量をオーガニックに拡張できる紹介プログラム。
-4. **ローカライズされた決済（Atzmaiゲートウェイ）**：グローバルなPayPal決済に加え、イスラエルのローカル決済（Bit、ローカルクレジットカード）のILS/USD建てでのネイティブサポート。
+4. **ローカライズされた決済（Atzmaiゲートウェイ）**：イスラエルのローカル決済（Bit、ローカルクレジットカード）のILS（シェケル）建てでのネイティブサポート。AtzmaiはILSのみをサポートしているため、USD価格はライブ為替レートAPIを使用して自動的に変換されます。
 
 ### アーキテクチャフロー
 
@@ -33,7 +33,7 @@ graph TD
     
     %% Paid Subscription Checkout
     User -->|4. Post /atzmai/subscribe| Gateway
-    Gateway -->|5. Create Intent| AtzmaiAPI
+    Gateway -->|5. Create Intent (ILS)| AtzmaiAPI
     AtzmaiAPI -->|6. Return Payment URL| Gateway
     Gateway -->|7. Return Payment URL| User
     User -->|8. User Approves Payment| AtzmaiAPI
@@ -53,33 +53,29 @@ graph TD
 
 | Plan | Price (Monthly) | Closet Capacity | AI Credits Allocation | Key Features |
 | :--- | :--- | :--- | :--- | :--- |
-| **Free Plan** | 月額 $0.00 | 基本50アイテム | 毎日10無料クレジット（30日間有効） | 基本的な整理、コミュニティサポート、紹介による容量拡張（登録1件につき+10スロット、最大1000アイテムまで） |
+| **Free Plan** | 月額 $0.00 | 基本50アイテム | 毎日10無料クレジット（30日間有効） | 基本的な整理、コミュニティサポート、紹介による容量拡張（登録1件につき+10スロット、最大200アイテムまで） |
 | **Manager (Pro)** | 月額 $4.99 | 無制限 | 1日あたりの操作無制限 | 14日間の無料トライアル、初期割り当て50クレジット、マーケットプレイスでの販売＆レンタル、Trend Scout、スケジュール通知 |
-| **Professional** | 月額 $9.99 | 無制限 | 1日あたりの操作無制限 | 30日間の無料トライアル、初期割り当て300クレジット、Managerプランのすべての機能、フィード内での広告キャンペーン作成サポート |
+| **Professional** | 月額 $9.99 | 無制限 | 1日あたりの操作無制限 | 30日間の無料トライアル、初期割り当て300クレジット、Managerプランのすべての機能、広告キャンペーン作成のサポート（1日あたり $1 の手数料、同時に最大3キャンペーンまで） |
 
-### プリペイドAIクレジットパック
-
-ユーザーがスタイリングクレジットを使い果たした場合、サービスの停止を避けるために追加のパッケージを購入できます：
-
-* **10クレジットパック**：$1.99 / 10.00 ILS
-* **25クレジットパック**：$3.99 / 25.00 ILS
-* **50クレジットパック**：$7.99 / 50.00 ILS
-* **100クレジットパック**：$15.99 / 100.00 ILS
-* **カスタムチャージ金額**：ユーザー指定のILS金額（Atzmaiゲートウェイの検証用に最低5.00 ILSのしきい値があります）。
+### プリペイドAIクレジットパック（廃止 - Obsolete）
+* プリペイド式のクレジットチャージパッケージは**サポートされなくなりました**。
+* サービスの停止を避けるため、FreeプランのユーザーはManagerまたはProfessionalサブスクリプションプランにアップグレードする必要があります。
 
 ### クレジットの有効期限と消費優先順位（FIFOロジック）
-* **有料クレジット**：チャージパック経由で購入されたものです。有料クレジットには**有効期限はありません**。
-* **無料クレジット**：毎日付与されるか、またはトライアルの割り当てを通じて付与されます。無料クレジットは**作成から30日後に失効します**。
-* **消費優先順位**：AIリクエストが行われると、エンジンは有料クレジットから消費する前に、**有効期限が最も近い最も古い無料バケットから優先的にクレジットを確認・消費**します。
+* **ルール**：クレジットの有効期限（30日間）およびFIFO（先入れ先出し）の消費優先順位ロジックは、**Freeおよびトライアル（Trial）サブスクリプションプランにのみ適用されます**。
+* **有料プラン**：有効なManagerまたはProfessionalプランをご利用中のユーザーは、1日あたりのAI操作を無制限に行うことができ、クレジットメーター、有効期限、または消費優先順位チェックの対象外となります。
 
 ---
 
 ## 3. ローカライズされた決済＆請求（Atzmaiゲートウェイ）
 
-イスラエルに拠点を置くアカウントの場合、DressAppは**Atzmai決済ゲートウェイ**と連携し、ローカルの取引をILS（シェケル）またはUSDで処理します：
-1. **決済手段**：Bitモバイル決済リダイレクトリンクおよび通常のイスラエルクレジットカードをサポートしています。
-2. **サブスクリプション口座振替**：ProおよびBusinessの継続的なサブスクリプション請求のための、月次/年次の口座振替設定をサポートしています。
-3. **Webhook検証**：`POST /api/v1/atzmai/webhook` で決済コールバックをキャプチャし、`atzmai_topups` コレクション内の一致するレコードを検証して、取引ステータスを `captured` に変更します。
+イスラエルに拠点を置くアカウントの場合、DressAppは**Atzmai決済ゲートウェイ**と連携し、ローカルの取引をILS（シェケル）で処理します：
+1. **ILS専用の処理**：Atzmaiゲートウェイは、ローカル決済をILSのみで処理します。
+2. **通貨換算**：USD建てのサブスクリプションおよびキャンペーン料金は、リンク生成前にライブ為替レートAPIを使用して動的にILSに換算されます（APIにアクセスできない場合は、固定の 3.70 レートにフォールバックします）。
+3. **Webhook検証＆キャンペーン請求**：
+   - `atzmai_topups` による一般的な取引追跡は廃止されました。
+   - ただし、`atzmai_topups` は**日々のキャンペーン決済（1日あたり $1 の手数料）**のキャプチャおよび検証用としてアクティブな状態を維持します。
+   - キャプチャに成功すると、キャンペーンの `last_daily_payment_date` が現在の日付に更新されます。
 4. **自動PDF記帳**：決済のキャプチャに成功すると、バックエンドはAtzmai請求APIに問い合わせて、公式の領収書および請求書PDFを生成・ダウンロードします。これらはメール添付ファイルとして購入者に直接送信されます。
 
 ---
@@ -88,15 +84,9 @@ graph TD
 
 ### データスキーマ定義（Data Schema Definitions）
 
-[schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py)にあるMongoDBスキーマは、ユーザーのサブスクリプション情報とクレジットバケットを追跡します：
+[schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py)にあるMongoDBスキーマは、ユーザーのサブスクリプション情報とクローゼット容量を追跡します：
 
 ```python
-class CreditBucket(BaseModel):
-    amount: int
-    type: Literal["free", "paid"]
-    created_at: str  # ISO timestamp
-    expires_at: str | None = None  # None means infinite (paid credits)
-
 class SubscriptionInfo(BaseModel):
     is_active: bool = False
     plan_type: Literal["free", "monthly", "yearly"] = "free"
@@ -109,14 +99,13 @@ class SubscriptionInfo(BaseModel):
 
 class User(BaseDoc):
     subscription: SubscriptionInfo = Field(default_factory=SubscriptionInfo)
-    credit_buckets: List[CreditBucket] = Field(default_factory=list)
     closet_capacity_bonus: int = 0
 ```
 
 ### クローゼット容量制限の適用 ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
-アイテムのアップロード中、システムはデータベース制限を監視します：
+アイテムのアップロード中、システムはデータベース制限を監視します（紹介枠による上限は200アイテムに制限されます）：
 ```python
-capacity_limit = 50 + user.get("closet_capacity_bonus", 0)
+capacity_limit = min(200, 50 + user.get("closet_capacity_bonus", 0))
 if current_count >= capacity_limit and not user.get("subscription", {}).get("is_active", False):
     raise HTTPException(
         status_code=402,
@@ -127,21 +116,19 @@ if current_count >= capacity_limit and not user.get("subscription", {}).get("is_
     )
 ```
 
-### クレジット消費アルゴリズム ([credit.py](file:///C:/DressApp_AG/backend/app/models/credit.py))
-クレジットは、FIFO（先入れ先出し）の優先度キューを使用して消費されます：
+### 通貨換算ロジック ([atzmai_client.py](file:///C:/DressApp_AG/backend/app/services/atzmai_client.py))
+Atzmaiにペイロードを送信する前に、USD金額を動的にILSに換算します：
 ```python
-def spend_credits(buckets: List[CreditBucket], required_amount: int) -> Tuple[bool, List[dict]]:
-    # Sort active buckets: 
-    # Priority 0: Free expiring soonest
-    # Priority 1: Free other
-    # Priority 2: Paid (never expires)
-    active_buckets = []
-    for idx, b in enumerate(buckets):
-        if b.type == "free" and b.expires_at and now > b.expires_at:
-            continue
-        priority = (0, b.expires_at) if b.type == "free" and b.expires_at else (1, b.created_at) if b.type == "free" else (2, b.created_at)
-        active_buckets.append((priority, idx, b))
-    
-    active_buckets.sort(key=lambda x: x[0])
-    # ... deduct required_amount from sorted list ...
+async def get_usd_to_ils_rate() -> float:
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get("https://open.er-api.com/v6/latest/USD", timeout=5.0)
+            if resp.status_code == 200:
+                data = resp.json()
+                rate = data.get("rates", {}).get("ILS")
+                if rate:
+                    return float(rate)
+    except Exception:
+        pass
+    return 3.70
 ```
