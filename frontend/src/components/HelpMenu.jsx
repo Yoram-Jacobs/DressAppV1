@@ -749,7 +749,7 @@ export default function HelpMenu() {
                   {t('help.tiers_p1', { defaultValue: 'DressApp offers flexible subscription tiers tailored to your closet size and styling needs. Upgrade on the Pricing page to unlock unlimited features.' })}
                 </p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div className="p-4 rounded-xl border border-border bg-secondary/5 space-y-2">
                     <h3 className="font-bold text-sm text-foreground">{t('help.tiers_free_title', { defaultValue: 'Free Plan' })}</h3>
                     <p className="text-xs text-muted-foreground leading-relaxed">
