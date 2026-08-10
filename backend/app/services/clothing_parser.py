@@ -746,18 +746,17 @@ _NMS_IOU_THRESHOLD: float = 0.45
 def _suppress_overlapping_garments(
     by_label: dict[str, dict[str, Any]],
 ) -> dict[str, dict[str, Any]]:
-    """Patch 12g (Aug 2026) — inter-label NMS and footwear fragmentation resolution.
+    """Patch 12h (Aug 2026) — Dilated pixel & Bounding Box NMS.
 
-    Removes / merges per-label detections that occupy substantially the
-    same pixels but were classified under different SegFormer labels.
-
-    Fixes:
-    1. **Phantom-inside-real** (e.g. long coat fires both ``Upper-clothes`` and ``Dress``).
-    2. **Footwear fragmentation** (e.g. standalone shoe photos firing phantom ``Hat``,
-       ``Bag``, ``Accessory``, or ``Shoes`` fragments on shoe patterns/laces).
+    Fixes SegFormer per-pixel argmax 0-intersection bug. Because raw SegFormer
+    argmax masks are mutually exclusive, raw ``inter`` is always 0. By computing
+    bounding box containment + dilated mask intersection, we detect sub-part
+    fragments (like phantom Hat/Bag on shoes or split garments) and merge them.
     """
     if not by_label:
         return by_label
+
+    from scipy import ndimage
 
     nms_items: list[tuple[str, dict[str, Any], int]] = []
     passthrough: dict[str, dict[str, Any]] = {}
@@ -779,40 +778,67 @@ def _suppress_overlapping_garments(
     # Sort largest → smallest so we compare candidates against dominant items
     nms_items.sort(key=lambda t: t[2], reverse=True)
 
+    def _bbox(m: np.ndarray) -> tuple[int, int, int, int] | None:
+        ys, xs = np.where(m)
+        if not len(ys):
+            return None
+        return int(ys.min()), int(xs.min()), int(ys.max()), int(xs.max())
+
     kept: list[tuple[str, dict[str, Any], int]] = []
     suppressed: list[tuple[str, str, str, float, float]] = []
     for lbl, item, area in nms_items:
         merged = False
         dropped = False
         item_cat = item.get("category")
-        for kept_idx, (kept_lbl, kept_item, kept_area) in enumerate(kept):
-            inter = int(np.logical_and(item["mask"], kept_item["mask"]).sum())
-            if inter == 0:
-                continue
-            union = kept_area + area - inter
-            iou = inter / union if union > 0 else 0.0
-            containment = inter / float(area) if area > 0 else 0.0
-            kept_cat = kept_item.get("category")
+        bb_item = _bbox(item["mask"])
+        dilated_item = ndimage.binary_dilation(item["mask"], iterations=10)
 
-            # Footwear special rule: any fragment overlapping footwear by >= 25% is merged into footwear
-            is_footwear_overlap = (kept_cat == "footwear" or item_cat == "footwear") and (containment >= 0.25 or iou >= 0.20)
-            is_general_overlap = containment >= _NMS_CONTAINMENT_THRESHOLD or iou >= _NMS_IOU_THRESHOLD
+        for kept_idx, (kept_lbl, kept_item, kept_area) in enumerate(kept):
+            kept_cat = kept_item.get("category")
+            bb_kept = _bbox(kept_item["mask"])
+
+            # 1. Dilated pixel intersection & containment
+            dilated_kept = ndimage.binary_dilation(kept_item["mask"], iterations=10)
+            pixel_inter = int(np.logical_and(dilated_item, dilated_kept).sum())
+            pixel_containment = pixel_inter / float(area) if area > 0 else 0.0
+
+            # 2. Bounding box containment & IoU
+            bbox_containment = 0.0
+            bbox_iou = 0.0
+            if bb_item and bb_kept:
+                y1, x1, y2, x2 = bb_item
+                Y1, X1, Y2, X2 = bb_kept
+                iy = max(0, min(y2, Y2) - max(y1, Y1))
+                ix = max(0, min(x2, X2) - max(x1, X1))
+                i_area = iy * ix
+                a_item = max(1, (y2 - y1) * (x2 - x1))
+                a_kept = max(1, (Y2 - Y1) * (X2 - X1))
+                bbox_containment = i_area / float(a_item)
+                bbox_iou = i_area / float(a_item + a_kept - i_area)
+
+            # Footwear rule: any fragment overlapping footwear (dilated >= 10% or bbox containment >= 35%) is footwear
+            is_footwear_overlap = (kept_cat == "footwear" or item_cat == "footwear") and (
+                pixel_containment >= 0.10 or bbox_containment >= 0.35 or bbox_iou >= 0.20
+            )
+
+            is_general_overlap = (
+                pixel_containment >= 0.40 or bbox_containment >= 0.60 or bbox_iou >= 0.45
+            )
 
             if not (is_footwear_overlap or is_general_overlap):
                 continue
 
-            # Merge mask into kept_item if same category OR if footwear overlap
-            if item_cat == kept_cat or is_footwear_overlap:
-                kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
-                kept[kept_idx] = (
-                    kept_lbl,
-                    kept_item,
-                    int(kept_item["mask"].sum()),
-                )
-                merged = True
+            # Merge smaller into kept_item
+            kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
+            kept[kept_idx] = (
+                kept_lbl,
+                kept_item,
+                int(kept_item["mask"].sum()),
+            )
+            merged = True
 
             suppressed.append(
-                (lbl, kept_lbl, item_cat or "?", iou, containment)
+                (lbl, kept_lbl, item_cat or "?", bbox_iou, bbox_containment)
             )
             dropped = True
             break
