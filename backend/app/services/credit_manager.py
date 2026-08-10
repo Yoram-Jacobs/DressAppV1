@@ -392,7 +392,7 @@ class TokenMeter:
         return self.credits_consumed
 
     async def _deduct_credits(self, db_connection: Any = None) -> bool:
-        db = db_connection or get_db()
+        db = db_connection if db_connection is not None else get_db()
         return await check_and_increment_daily_request(db, self.user_id)
 
     async def _save_token_usage(self, input_tokens: int, output_tokens: int) -> None:
@@ -511,7 +511,7 @@ async def deduct_user_credits(
         user_id = user.get("id")
         if not user_id:
             return False
-        db = db_connection or get_db()
+        db = db_connection if db_connection is not None else get_db()
         return await check_and_increment_daily_request(db, user_id)
     except Exception as e:
         logger.error(f"Error checking/deducting user daily request: {str(e)}")
