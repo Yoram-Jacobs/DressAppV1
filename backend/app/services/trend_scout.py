@@ -141,56 +141,85 @@ BUCKETS: list[dict[str, Any]] = [
 ]
 
 
-LOCALIZED_STARTER_URLS: dict[str, dict[str, list[str]]] = {
-    "IL": {
-        "ss26-runway": [
-            "https://fashionforward.mako.co.il/",
-            "https://fashionforward.mako.co.il/news/"
-        ],
-        "street": [
-            "https://fashionforward.mako.co.il/"
-        ],
-        "sustainability": [
-            "https://fashionforward.mako.co.il/news/"
-        ],
-        "influencers": [
-            "https://fashionforward.mako.co.il/celebs/"
-        ],
-        "second_hand": [
-            "https://fashionforward.mako.co.il/"
-        ],
-        "recycling": [
-            "https://fashionforward.mako.co.il/"
-        ],
-        "news_flash": [
-            "https://fashionforward.mako.co.il/news/"
-        ]
-    },
-    "JP": {
-        "ss26-runway": [
-            "https://www.elle.com/jp/runway/"
-        ],
-        "street": [
-            "https://hypebeast.com/jp/fashion"
-        ],
-        "sustainability": [
-            "https://www.elle.com/jp/fashion/"
-        ],
-        "influencers": [
-            "https://www.elle.com/jp/culture/celebs/"
-        ],
-        "second_hand": [
-            "https://hypebeast.com/jp/tags/vintage"
-        ],
-        "recycling": [
-            "https://www.elle.com/jp/fashion/"
-        ],
-        "news_flash": [
-            "https://hypebeast.com/jp/fashion",
-            "https://www.elle.com/jp/fashion/"
-        ]
-    }
+COUNTRY_NAME_MAP: dict[str, str] = {
+    "IL": "Israel",
+    "JP": "Japan",
+    "US": "United States",
+    "GB": "United Kingdom",
+    "FR": "France",
+    "DE": "Germany",
+    "IT": "Italy",
+    "ES": "Spain",
+    "CA": "Canada",
+    "AU": "Australia",
+    "KR": "South Korea",
+    "CN": "China",
+    "BR": "Brazil",
+    "RU": "Russia",
+    "IN": "India",
+    "MX": "Mexico",
+    "ZA": "South Africa",
 }
+
+SEARCH_TEMPLATES: dict[str, list[str]] = {
+    "ss26-runway": [
+        "site:vogue.com/runway OR site:elle.com/runway runway fashion trends 2026",
+        "{country} runway fashion designer collection trends 2026",
+        "spring summer 2026 runway fashion show highlights {country}"
+    ],
+    "street": [
+        "site:instagram.com OR site:tiktok.com street style fashion trends 2026",
+        "site:instagram.com OR site:tiktok.com OR site:facebook.com street style fashion {country}",
+        "streetwear trends 2026 {country} instagram tiktok"
+    ],
+    "sustainability": [
+        "site:vogue.com OR site:whowhatwear.com sustainable fashion resale upcycling",
+        "sustainable fashion {country} eco friendly clothing brand upcycling",
+        "site:instagram.com OR site:facebook.com sustainable fashion resale {country}"
+    ],
+    "influencers": [
+        "site:instagram.com OR site:tiktok.com fashion influencer outfit trends 2026",
+        "site:instagram.com OR site:tiktok.com OR site:twitter.com {country} fashion influencer hype",
+        "top fashion creators instagram tiktok {country} dressing style"
+    ],
+    "second_hand": [
+        "site:highsnobiety.com OR site:hypebeast.com vintage second hand clothing marketplace trends",
+        "best online vintage clothing shops resale platforms 2026 {country}",
+        "site:facebook.com vintage second hand clothing group marketplace {country}"
+    ],
+    "recycling": [
+        "clothing recycling repair upcycling diy wardrobe ideas 2026",
+        "clothing recycling upcycling repair {country}",
+        "site:instagram.com clothing repair upcycling wardrobe {country}"
+    ],
+    "news_flash": [
+        "site:hypebeast.com OR site:harpersbazaar.com breaking fashion industry news collaboration launch 2026",
+        "breaking fashion news brand collaboration {country}",
+        "site:twitter.com OR site:facebook.com breaking fashion brand news {country}"
+    ]
+}
+
+def get_search_queries(bucket_slug: str, country_code: str | None) -> list[str]:
+    country = COUNTRY_NAME_MAP.get((country_code or "").upper(), "") if country_code else ""
+    templates = SEARCH_TEMPLATES.get(bucket_slug, ["fashion trends 2026"])
+    
+    queries = []
+    for t in templates:
+        if "{country}" in t:
+            if country:
+                queries.append(t.format(country=country))
+        else:
+            queries.append(t)
+            
+    if not queries:
+        queries = [t.replace("{country}", "").strip() for t in templates]
+        
+    import urllib.parse
+    urls = []
+    for q in queries:
+        encoded = urllib.parse.quote_plus(q)
+        urls.append(f"https://search.yahoo.com/search?q={encoded}")
+    return urls
 
 
 SYSTEM_PROMPT = (
@@ -219,7 +248,7 @@ SYSTEM_PROMPT = (
 # ---------------------------------------------------------------------------
 async def browse_web(url: str) -> str:
     """Agent tool to fetch and extract text and inline links from a webpage."""
-    from urllib.parse import urljoin
+    from urllib.parse import urljoin, urlparse, unquote
     try:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -230,6 +259,9 @@ async def browse_web(url: str) -> str:
             resp = await client.get(url, follow_redirects=True)
             resp.raise_for_status()
             soup = BeautifulSoup(resp.text, 'html.parser')
+            
+            is_yahoo = "search.yahoo.com" in url
+            
             for tag in soup(["script", "style", "nav", "footer", "header", "noscript"]):
                 tag.extract()
             
@@ -237,13 +269,32 @@ async def browse_web(url: str) -> str:
                 href = a["href"].strip()
                 if not href or href.startswith("#") or href.startswith("javascript:"):
                     continue
-                absolute_url = urljoin(url, href)
+                
+                if is_yahoo and "r.search.yahoo.com" in href and "/RU=" in href:
+                    parsed = urlparse(href)
+                    path_parts = parsed.path.split("/")
+                    decoded_url = None
+                    for part in path_parts:
+                        if part.startswith("RU="):
+                            decoded_url = unquote(part[3:])
+                            break
+                    if decoded_url:
+                        absolute_url = decoded_url
+                    else:
+                        absolute_url = urljoin(url, href)
+                else:
+                    absolute_url = urljoin(url, href)
+                    
                 link_text = a.get_text(strip=True)
                 if link_text:
                     a.replace_with(f" [{link_text}]({absolute_url}) ")
                     
             text = soup.get_text(separator=' ', strip=True)
             text = " ".join(text.split())
+            
+            if is_yahoo and len(text) < 500:
+                return "Failed to fetch Yahoo search page: Anti-bot challenge or empty results."
+                
             return text[:4000]
     except Exception as exc:
         return f"Failed to fetch {url}: {exc}"
@@ -531,19 +582,17 @@ async def _generate_one(bucket: dict[str, Any], client_type: str = "desktop", co
     if not settings.GEMINI_API_KEY:
         raise RuntimeError("No GEMINI_API_KEY set — cannot run Trend-Scout")
     
-    starter_urls = bucket.get("starter_urls", ["https://hypebeast.com/fashion"])
-    if country_code and country_code.upper() in LOCALIZED_STARTER_URLS:
-        starter_urls = LOCALIZED_STARTER_URLS[country_code.upper()].get(bucket["slug"], starter_urls)
+    starter_urls = get_search_queries(bucket["slug"], country_code)
         
     urls_list_str = ", ".join(starter_urls)
     history = [
         f"Task: {bucket['prompt']}",
-        f"You MUST start by calling action 'browse_web' on one of the following starter URLs to find recent articles: {urls_list_str}",
-        "Important: Do not finish without first browsing. The source_url in your final card must be a specific article deep link (e.g. https://www.vogue.com/article/something) rather than a general homepage. The source_url MUST be one of the exact article URLs found within the browsed page content."
+        f"You MUST start by calling action 'browse_web' on one of the following dynamic Yahoo Search URLs to discover recent articles or social media updates: {urls_list_str}",
+        "Important: Do not finish without first browsing. The source_url in your final card must be a specific article deep link or social media post (e.g. https://www.instagram.com/p/something) rather than a general homepage. The source_url MUST be one of the exact URLs found within the browsed search result page content or deep page content."
     ]
     if country_code:
         history.append(
-            f"Note: You are scraping localized sources for country '{country_code.upper()}'. Read the local content, but your final card output MUST be in English. Focus on trends, styles, designers, or stores relevant to '{country_code.upper()}'."
+            f"Note: You are scraping localized Yahoo Search results for country '{country_code.upper()}'. Read the local content, but your final card output MUST be in English. Focus on trends, styles, designers, or stores relevant to '{country_code.upper()}'."
         )
     
     browsed_urls = []
