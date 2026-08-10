@@ -29,7 +29,7 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
 | **Outfit Canvas & 2D Avatar** | Adaptive dual-canvas interactive avatar (real-body photo cutout with U2-Net matting vs dynamic SVG vector mannequin `DynamicAvatar.jsx`) with calibrated landmark positioning (`top-[14.5%]` collar-to-neckline and `top-[36.5%]` waistband-to-waistline), scikit-learn ANSUR II physical sizing predictor, proportional scaling, and interactive layer click details. |
 | **Wardrobe Scheduler** | Automated daily push notifications with 3 styled outfit recommendations generated from your closet history, preventing wear repetition. |
 | **State & Network Optimization** | `useSyncExternalStore` thread-safe state architecture across Stylist, Daily Suggestions, Closet, and Marketplace, with in-flight deduplication, 15-min caching, and `visibilitychange` tab revalidation (0 idle background GET requests). |
-| **Monetization & Limits**| Gated closet space (150-item baseline limit for Free users) with a paid Pro upgrade path via PayPal Subscriptions REST API (mock-testing supported) or free expansion (+10 slots) via invite referral loops. |
+| **Monetization & Limits**| Gated closet space (150-item baseline limit for Free users) with a paid Pro upgrade path via PayPal Subscriptions REST API (mock-testing supported) or free expansion (+10 slots) via invite referral loops. Pre-paid credit bucket billing (10 free credits daily with 30-day expiry, and purchased credit packs that never expire) with soft/hard exhaustion thresholds and a pause-and-resume execution pattern. |
 
 ---
 

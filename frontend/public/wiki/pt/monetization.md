@@ -1,131 +1,147 @@
-Aqui está a tradução da documentação do DressApp para o Português, seguindo todas as suas regras:
+# Motor de monetização e cobrança do DressApp
 
-# Mecanismo de Monetização e Faturamento do DressApp
-
-Este documento fornece uma visão geral arquitetônica abrangente, manual do usuário e análise aprofundada da tecnologia de monetização, faturamento de assinaturas e limites de três níveis no DressApp.
+Este documento fornece uma visão geral arquitetônica abrangente, manual do usuário e análise tecnológica detalhada da monetização, cobrança de assinaturas e mecânicas do loop de crescimento viral no DressApp.
 
 ---
 
-## 1. Resumo Executivo e Proposta de Valor
+## 1. Resumo executivo e proposta de valor
 
-### Visão Geral de Alto Nível
-O DressApp implementa um modelo de monetização de três níveis projetado para atender a diferentes arquétipos de usuários:
-1.  **Nível Gratuito (Free Tier)**:
-    *   **Custo**: $0 / mês (sem necessidade de cartão de crédito).
-    *   **Limites**: Até 50 itens no guarda-roupa e até 10 operações diárias de IA.
-    *   **Recursos**: Organização básica do guarda-roupa, suporte da comunidade. Restrito à venda/aluguel no marketplace (apenas troca/doação). O acesso ao Trend Scout e às Campanhas está desativado.
-2.  **Nível Gerente (Manager Tier)**:
-    *   **Custo**: $5 / mês ou $50 / ano.
-    *   **Limites**: Itens ilimitados no guarda-roupa e solicitações ilimitadas de IA diárias.
-    *   **Recursos**: Opções do Marketplace (Vender, Trocar, Alugar, Doar), Trend Scout, Agendador e notificações push, Suporte prioritário. A criação de Campanhas está desativada.
-3.  **Nível Profissional (Professional Tier)**:
-    *   **Custo**: $10 / mês ou $100 / ano.
-    *   **Limites**: Itens ilimitados no guarda-roupa e solicitações ilimitadas de IA diárias.
-    *   **Recursos**: Todos os recursos incluídos, suporte dedicado e suporte completo para criação de Campanhas Publicitárias.
+### Visão geral de alto nível
+O DressApp implementa um modelo híbrido de assinatura SaaS e sistema de créditos de utilidade pré-pagos:
+1. **Planos de assinatura (SaaS)**: Tarifas planas (Free, Manager, Professional) que controlam a capacidade de armazenamento do guarda-roupa, cotas diárias de estilização por IA e funções avançadas (por exemplo, moderação de campanhas publicitárias).
+2. **Pacotes de créditos pré-pagos (Utilidade)**: Créditos granulares baseados no consumo para operações avançadas de IA (por exemplo, consultas ao Estilista Virtual e segmentação de fotos). Esses créditos utilizam um sistema de expiração para diferenciar os saldos gratuitos e pagos.
+3. **Loop de crescimento viral**: Um programa de indicação que permite aos usuários do plano Free expandir sua capacidade básica de guarda-roupa de forma orgânica, compartilhando links de convite.
+4. **Pagamentos localizados (Gateway Atzmai)**: Suporte nativo para pagamentos israelenses (Bit, cartões de crédito locais) em ILS/USD, além de pagamentos globais via PayPal.
 
-### Fluxo Arquitetural
+### Fluxo de arquitetura
 
 ```mermaid
 graph TD
     User([User App Client])
-    Gateway[Payments API Gateway /paypal]
+    Gateway[Payments API Gateway /atzmai]
+    Auth[Auth Router /auth/register]
     Closet[Closet Router /closet/item]
-    Campaigns[Campaigns Router /campaigns]
     DB[(MongoDB Atlas)]
+    AtzmaiAPI[Atzmai Payment API]
     PayPalAPI[PayPal Subscriptions API]
 
     %% Closet Upload Limit Gating
     User -->|1. Upload Garment| Closet
     Closet -->|2. Check Item Count & Subscription| DB
     DB -->|3. Return Count + SubscriptionInfo| Closet
-    Closet -.->|If Exceeded: HTTP 402| User
+    Closet -.->|If Exceeded & Sub Inactive: HTTP 402| User
     
     %% Paid Subscription Checkout
-    User -->|4. Post /paypal/subscribe| Gateway
-    Gateway -->|5. Create Intent| PayPalAPI
-    PayPalAPI -->|6. Return Approve URL| Gateway
-    Gateway -->|7. Return Approve URL| User
-    User -->|8. User Approves Payment| PayPalAPI
-    User -->|9. Post /paypal/subscribe/capture| Gateway
-    Gateway -->|10. Verify Activation| PayPalAPI
-    Gateway -->|11. Write Active Sub & Tier| DB
+    User -->|4. Post /atzmai/subscribe| Gateway
+    Gateway -->|5. Create Intent| AtzmaiAPI
+    AtzmaiAPI -->|6. Return Payment URL| Gateway
+    Gateway -->|7. Return Payment URL| User
+    User -->|8. User Approves Payment| AtzmaiAPI
+    AtzmaiAPI -->|9. Trigger Webhook| Gateway
+    Gateway -->|10. Capture Transaction| DB
     
-    %% Campaigns Gating
-    User -->|12. Create Campaign| Campaigns
-    Campaigns -->|13. Check Tier| DB
-    Campaigns -.->|If Not Professional: HTTP 403| User
+    %% Viral Referral Mechanics
+    User -->|11. Register with referrer_id| Auth
+    Auth -->|12. Increment closet_capacity_bonus| DB
 ```
 
 ---
 
-## 2. Manual Abrangente do Usuário
+## 2. Planos de assinatura e topologia de preços
 
-### Topologia da Interface Visual
-A página de perfil do usuário ([Profile.jsx](file:///C:/DressApp_AG/frontend/src/pages/Profile.jsx)) hospeda o widget de Gerenciamento de Assinatura na seção **Assinatura e Limites**, exibindo contagens de itens (limite de 0 a 50 para o plano Gratuito), status do nível do plano ativo e próximas datas de renovação.
-A página de preços ([Pricing.jsx](file:///C:/DressApp_AG/frontend/src/pages/Pricing.jsx)) exibe cartões comparando os planos Gratuito, Gerente e Profissional, bem como uma lista de verificação detalhada da grade de recursos.
+### Planos de preços
 
-### Passo a Passo de Modos e Fluxos de Trabalho
+| Plan | Price (Monthly) | Closet Capacity | AI Credits Allocation | Key Features |
+| :--- | :--- | :--- | :--- | :--- |
+| **Free Plan** | $0.00 / mês | Limite básico de 50 itens | 10 créditos gratuitos diários (expiram em 30 dias) | Organização básica, suporte comunitário, expansões de indicação (+10 slots por cadastro até 1000 itens) |
+| **Manager (Pro)** | $4.99 / mês | Ilimitado | Operações diárias ilimitadas | Avaliação gratuita de 14 dias, alocação inicial de 50 créditos, venda e aluguel no marketplace, Trend Scout, notificações programadas |
+| **Professional** | $9.99 / mês | Ilimitado | Operações diárias ilimitadas | Avaliação gratuita de 30 dias, alocação inicial de 300 créditos, todos os recursos do Manager, suporte para criar campanhas publicitárias no feed |
 
-#### A. Atualizando sua Assinatura (Fluxo Pago)
-1.  **Iniciando a Atualização**: O usuário seleciona o plano desejado (Gerente ou Profissional) e a frequência de cobrança (Mensal ou Anual) e clica em **Atualizar Plano**.
-2.  **Registro do Pedido**: O cliente emite uma solicitação `POST /paypal/subscribe`. O backend entra em contato com o PayPal, gera um ID de assinatura e retorna uma `approve_url`.
-3.  **Processamento do Pagamento**: O navegador do cliente redireciona para a página de checkout do PayPal Sandbox (ou é tratado via gateway Mock Atzmai/PayPal). O usuário faz login e aprova o contrato de faturamento.
-4.  **Redirecionamento e Captura**: O PayPal redireciona o navegador de volta para `/pricing?sub_status=success&token=SUBSCRIPTION_ID`.
-5.  **Ativação**: O cliente detecta os parâmetros de pesquisa, emite `POST /paypal/subscribe/capture/{subscription_id}` e atualiza a sessão do usuário. O nível do plano ativo é atualizado imediatamente na UI.
+### Pacotes de créditos de IA pré-pagos
+
+Se os usuários esgotarem seus créditos de estilização, eles poderão comprar pacotes adicionais para evitar interrupções no serviço:
+
+* **Pacote de 10 créditos**: $1.99 / 10.00 ILS
+* **Pacote de 25 créditos**: $3.99 / 25.00 ILS
+* **Pacote de 50 créditos**: $7.99 / 50.00 ILS
+* **Pacote de 100 créditos**: $15.99 / 100.00 ILS
+* **Valor de recarga personalizado**: Valor em ILS especificado pelo usuário (limite mínimo de 5.00 ILS para validação do gateway Atzmai).
+
+### Expiração de créditos e prioridade de consumo (Lógica FIFO)
+* **Créditos pagos**: Adquiridos através de pacotes de recarga. Os créditos pagos **nunca expiram**.
+* **Créditos gratuitos**: Concedidos diariamente ou através de alocações de avaliação. Os créditos gratuitos **expiram 30 dias após a criação**.
+* **Prioridade de dedução**: Quando uma solicitação de IA é feita, o mecanismo verifica e consome automaticamente os créditos dos **pacotes gratuitos mais antigos a expirar primeiro**, antes de retirar dos créditos pagos.
 
 ---
 
-## 3. Análise Aprofundada da Pilha de Tecnologia e Capacidades
+## 3. Pagamentos localizados e faturamento (Gateway Atzmai)
 
-### Definições de Esquema de Dados
-O esquema MongoDB em [schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) armazena o status de faturamento e o nível ativo do usuário:
+Para contas sediadas em Israel, o DressApp se integra ao **gateway de pagamentos Atzmai** para processar transações locais em ILS (Shekels) ou USD:
+1. **Métodos de pagamento**: Suporta links de redirecionamento para pagamentos móveis via Bit e cartões de crédito israelenses comuns.
+2. **Débitos diretos de assinatura**: Suporta configurações de débito direto mensal/anual para cobranças recorrentes dos planos Pro e Business.
+3. **Verificação de Webhook**: Captura retornos de chamada (callbacks) de pagamento em `POST /api/v1/atzmai/webhook`, valida registros correspondentes na coleção `atzmai_topups` e altera o estado da transação para `captured`.
+4. **Contabilidade em PDF automatizada**: Após a captura bem-sucedida, o backend consulta a API de faturamento do Atzmai para gerar e baixar PDFs oficiais de recibos e faturas. Eles são enviados como anexos de e-mail diretamente ao comprador.
+
+---
+
+## 4. Stack de tecnologia e análise profunda de recursos
+
+### Definições de esquema de dados (Data Schema Definitions)
+
+O esquema do MongoDB em [schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) rastreia as assinaturas dos usuários e os pacotes de créditos:
 
 ```python
+class CreditBucket(BaseModel):
+    amount: int
+    type: Literal["free", "paid"]
+    created_at: str  # ISO timestamp
+    expires_at: str | None = None  # None means infinite (paid credits)
+
 class SubscriptionInfo(BaseModel):
     is_active: bool = False
     plan_type: Literal["free", "monthly", "yearly"] = "free"
     tier: Literal["free", "manager", "professional"] = "free"
+    stripe_subscription_id: str | None = None
     paypal_subscription_id: str | None = None
-    expires_at: str | None = None              # ISO timestamp
-    cancelled_at: str | None = None            # ISO timestamp
+    atzmai_subscription_id: str | None = None
+    expires_at: str | None = None
+    cancelled_at: str | None = None
 
 class User(BaseDoc):
-    # ... other profile documents ...
     subscription: SubscriptionInfo = Field(default_factory=SubscriptionInfo)
+    credit_buckets: List[CreditBucket] = Field(default_factory=list)
+    closet_capacity_bonus: int = 0
 ```
 
-### Roteamento da API e Ações Restritas
-
-#### Limite de Itens do Guarda-Roupa ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
-Durante a inserção de itens, o sistema verifica os limites para usuários Grátis:
+### Execução de limites de guarda-roupa ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
+Durante o envio de peças, o sistema protege os limites do banco de dados:
 ```python
-sub = user.get("subscription") or {}
-is_active = sub.get("is_active", False)
-plan_type = sub.get("plan_type", "free")
-tier = sub.get("tier", "free")
-
-user_tier = "free"
-if is_active and plan_type != "free":
-    user_tier = tier
-
-if user_tier == "free":
-    item_count = await db.closet_items.count_documents({"owner_id": user_id, "status": {"$ne": "deleted"}})
-    if item_count >= 50:
-        raise HTTPException(status_code=402, detail="Closet capacity limit (50 items) exceeded. Please upgrade.")
+capacity_limit = 50 + user.get("closet_capacity_bonus", 0)
+if current_count >= capacity_limit and not user.get("subscription", {}).get("is_active", False):
+    raise HTTPException(
+        status_code=402,
+        detail={
+            "code": "closet_capacity_exceeded",
+            "message": f"You have reached your free closet capacity of {capacity_limit} items. Upgrade to Manager or Professional to add more items."
+        }
+    )
 ```
 
-#### Limite de Operações Diárias de IA ([credit_manager.py](file:///C:/DressApp_AG/backend/app/services/credit_manager.py))
-Para usuários do nível Gratuito, as operações de IA incrementam uma contagem diária rastreada em `user.ai_configuration.daily_request_count`. Quando atinge 10, as solicitações são bloqueadas com HTTP 402.
-
-#### Restrição do Marketplace ([listings.py](file:///C:/DressApp_AG/backend/app/api/v1/listings.py))
-Se um usuário está no nível Gratuito, listagens criadas com a intenção `"for_sale"` ou `"rent"` são rejeitadas:
+### Algoritmo de dedução de créditos ([credit.py](file:///C:/DressApp_AG/backend/app/models/credit.py))
+Os créditos são consumidos utilizando a fila de prioridades FIFO (first-in-first-out):
 ```python
-if user_tier == "free" and listing.intent in ["for_sale", "rent"]:
-    raise HTTPException(status_code=403, detail="Free plan users can only Swap or Donate garments. Upgrade to list for sale or rent.")
+def spend_credits(buckets: List[CreditBucket], required_amount: int) -> Tuple[bool, List[dict]]:
+    # Sort active buckets: 
+    # Priority 0: Free expiring soonest
+    # Priority 1: Free other
+    # Priority 2: Paid (never expires)
+    active_buckets = []
+    for idx, b in enumerate(buckets):
+        if b.type == "free" and b.expires_at and now > b.expires_at:
+            continue
+        priority = (0, b.expires_at) if b.type == "free" and b.expires_at else (1, b.created_at) if b.type == "free" else (2, b.created_at)
+        active_buckets.append((priority, idx, b))
+    
+    active_buckets.sort(key=lambda x: x[0])
+    # ... deduct required_amount from sorted list ...
 ```
-
-#### Restrição de Campanhas ([campaigns.py](file:///C:/DressApp_AG/backend/app/api/v1/campaigns.py))
-Os endpoints de criação de Campanhas restringem ações, a menos que o nível de assinatura ativa seja Profissional:
-```python
-if user_tier != "professional":
-    raise HTTPException(status_code=403, detail="Ad Campaign creation is only available on the Professional plan.")

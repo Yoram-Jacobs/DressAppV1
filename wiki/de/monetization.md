@@ -1,131 +1,134 @@
-Hier ist die Übersetzung der DressApp-Dokumentation ins Deutsche:
-
 # DressApp Monetarisierungs- & Abrechnungs-Engine
 
-Dieses Dokument bietet eine umfassende architektonische Übersicht, ein Benutzerhandbuch und eine technische Detailanalyse der Monetarisierung, Abonnementabrechnung und der dreistufigen Begrenzungen in DressApp.
+Dieses Dokument bietet einen umfassenden architektonischen Überblick, ein Benutzerhandbuch und einen tiefen technologischen Einblick in die Monetarisierung, die Abonnementabrechnung und die Mechanismen von viralen Wachstumsschleifen in DressApp.
 
 ---
 
-## 1. Management-Zusammenfassung & Wertversprechen
+## 1. Zusammenfassung & Wertversprechen
 
-### Gesamtübersicht
-DressApp implementiert ein dreistufiges Monetarisierungsmodell, das auf verschiedene Benutzer-Archetypen zugeschnitten ist:
-1.  **Free-Tarif**:
-    *   **Kosten**: $0 / Monat (keine Kreditkarte erforderlich).
-    *   **Grenzwerte**: Bis zu 50 Kleidungsstücke im Kleiderschrank und bis zu 10 KI-Operationen pro Tag.
-    *   **Funktionen**: Grundlegende Kleiderschrankorganisation, Community-Support. Eingeschränkt beim Verkauf/Vermietung auf dem Marktplatz (nur Tausch/Spende). Der Zugang zu Trend Scout und Kampagnen ist deaktiviert.
-2.  **Manager-Tarif**:
-    *   **Kosten**: $5 / Monat oder $50 / Jahr.
-    *   **Grenzwerte**: Unbegrenzte Kleidungsstücke im Kleiderschrank und unbegrenzte tägliche KI-Anfragen.
-    *   **Funktionen**: Marktplatz-Optionen (Verkaufen, Tauschen, Vermieten, Spenden), Trend Scout, Planer & Push-Benachrichtigungen, Priorisierter Support. Die Erstellung von Kampagnen ist deaktiviert.
-3.  **Professional-Tarif**:
-    *   **Kosten**: $10 / Monat oder $100 / Jahr.
-    *   **Grenzwerte**: Unbegrenzte Kleidungsstücke im Kleiderschrank und unbegrenzte tägliche KI-Anfragen.
-    *   **Funktionen**: Alle Funktionen inbegriffen, dedizierter Support und volle Unterstützung bei der Erstellung von Werbekampagnen.
+### High-Level-Übersicht
+DressApp implementiert ein hybrides Modell aus SaaS-Abonnements und täglicher Nutzungsbegrenzung (utility gating):
+1. **Abonnementstufen (SaaS)**: Flatrate-Pläne (Free, Manager, Professional), die die Speicherkapazität der Garderobe, die täglichen KI-Styling-Limits und erweiterte Funktionen (z. B. Erstellung von Werbekampagnen) regeln.
+2. **Tägliche Quotenbegrenzungen (Free-Tarif)**: Begrenzte KI-Nutzung im Free-Tarif, die Nutzer auf 10 tägliche Anfragen beschränkt. Die Abbuchungslogik und der 30-tägige Ablauf von Guthaben-Buckets gelten *nur* für Free- und Testkonten.
+3. **Virale Wachstumsschleife**: Ein Empfehlungsprogramm, das es Nutzern des Free-Tarifs ermöglicht, ihre grundlegende Garderobenkapazität organisch durch das Teilen von Einladungslinks zu erweitern.
+4. **Lokalisierte Zahlungen (Atzmai-Gateway)**: Native Unterstützung für israelische Zahlungen (Bit, lokale Kreditkarten) in ILS (Schekel). Da Atzmai nur ILS unterstützt, werden USD-Preise mithilfe einer Live-Wechselkurs-API umgerechnet.
 
-### Architektur-Fluss
+### Architektonischer Ablauf
 
 ```mermaid
 graph TD
     User([User App Client])
-    Gateway[Payments API Gateway /paypal]
+    Gateway[Payments API Gateway /atzmai]
+    Auth[Auth Router /auth/register]
     Closet[Closet Router /closet/item]
-    Campaigns[Campaigns Router /campaigns]
     DB[(MongoDB Atlas)]
+    AtzmaiAPI[Atzmai Payment API]
     PayPalAPI[PayPal Subscriptions API]
 
     %% Closet Upload Limit Gating
     User -->|1. Upload Garment| Closet
     Closet -->|2. Check Item Count & Subscription| DB
     DB -->|3. Return Count + SubscriptionInfo| Closet
-    Closet -.->|If Exceeded: HTTP 402| User
+    Closet -.->|If Exceeded & Sub Inactive: HTTP 402| User
     
     %% Paid Subscription Checkout
-    User -->|4. Post /paypal/subscribe| Gateway
-    Gateway -->|5. Create Intent| PayPalAPI
-    PayPalAPI -->|6. Return Approve URL| Gateway
-    Gateway -->|7. Return Approve URL| User
-    User -->|8. User Approves Payment| PayPalAPI
-    User -->|9. Post /paypal/subscribe/capture| Gateway
-    Gateway -->|10. Verify Activation| PayPalAPI
-    Gateway -->|11. Write Active Sub & Tier| DB
+    User -->|4. Post /atzmai/subscribe| Gateway
+    Gateway -->|5. Create Intent (ILS)| AtzmaiAPI
+    AtzmaiAPI -->|6. Return Payment URL| Gateway
+    Gateway -->|7. Return Payment URL| User
+    User -->|8. User Approves Payment| AtzmaiAPI
+    AtzmaiAPI -->|9. Trigger Webhook| Gateway
+    Gateway -->|10. Capture Transaction| DB
     
-    %% Campaigns Gating
-    User -->|12. Create Campaign| Campaigns
-    Campaigns -->|13. Check Tier| DB
-    Campaigns -.->|If Not Professional: HTTP 403| User
+    %% Viral Referral Mechanics
+    User -->|11. Register with referrer_id| Auth
+    Auth -->|12. Increment closet_capacity_bonus| DB
 ```
 
 ---
 
-## 2. Umfassendes Benutzerhandbuch
+## 2. Abonnementstufen & Preisstruktur
 
-### Visuelle Interface-Topologie
-Die Benutzerprofilseite ([Profile.jsx](file:///C:/DressApp_AG/frontend/src/pages/Profile.jsx)) beherbergt das Abonnementverwaltungs-Widget im Abschnitt **Abonnement & Grenzwerte** und zeigt die Artikelanzahl (0 bis 50 Limit für den Free-Plan), den Status der aktiven Planstufe und die nächsten Verlängerungsdaten an.
-Die Preisübersichtsseite ([Pricing.jsx](file:///C:/DressApp_AG/frontend/src/pages/Pricing.jsx)) zeigt Karten mit dem Vergleich der Free-, Manager- und Professional-Pläne sowie eine detaillierte Funktions-Checkliste in Tabellenform.
+### Tarife
 
-### Modus- und Workflow-Anleitungen
+| Plan | Price (Monthly) | Closet Capacity | AI Credits Allocation | Key Features |
+| :--- | :--- | :--- | :--- | :--- |
+| **Free Plan** | 0,00 $ / Monat | Basis von 50 Artikeln | 10 kostenlose tägliche Credits (Ablauf nach 30 Tagen) | Grundlegende Organisation, Community-Support, Empfehlungserweiterungen (+10 Slots pro Registrierung bis maximal 200 Artikel) |
+| **Manager (Pro)** | 4,99 $ / Monat | Unbegrenzt | Unbegrenzte tägliche Operationen | 14-tägige kostenlose Testphase, 50-Credit-Erstzuteilung, Verkauf & Vermietung auf dem Marktplatz, Trend Scout, geplante Benachrichtigungen |
+| **Professional** | 9,99 $ / Monat | Unbegrenzt | Unbegrenzte tägliche Operationen | 30-tägige kostenlose Testphase, 300-Credit-Erstzuteilung, alle Manager-Funktionen, Erstellung von Werbekampagnen (Gebühr von 1 $/Tag, max. 3 Kampagnen gleichzeitig) |
 
-#### A. Upgrade Ihrer Mitgliedschaft (Bezahlter Workflow)
-1.  **Upgrade initiieren**: Der/Die Nutzende wählt den gewünschten Plan (Manager oder Professional) und die Abrechnungshäufigkeit (Monatlich oder Jährlich) und klickt auf **Plan upgraden**.
-2.  **Bestellregistrierung**: Der Client sendet eine `POST /paypal/subscribe`-Anfrage. Das Backend kontaktiert PayPal, generiert eine Abonnement-ID und gibt eine `approve_url` zurück.
-3.  **Zahlungsabwicklung**: Der Client-Browser leitet zur PayPal Sandbox Checkout-Seite weiter (oder wird über das Mock Atzmai/PayPal-Gateway abgewickelt). Der/Die Nutzende meldet sich an und genehmigt die Abrechnungsvereinbarung.
-4.  **Weiterleitung & Erfassung**: PayPal leitet den Browser zurück zu `/pricing?sub_status=success&token=SUBSCRIPTION_ID`.
-5.  **Aktivierung**: Der Client erkennt die Suchparameter, sendet `POST /paypal/subscribe/capture/{subscription_id}` und aktualisiert die Benutzersitzung. Die aktive Planstufe wird sofort in der Benutzeroberfläche aktualisiert.
+### Vorausbezahlte KI-Guthabenpakete (Veraltet - Obsolete)
+* Vorausbezahlte Guthabenaufladepakete werden **nicht mehr unterstützt**.
+* Um Dienstunterbrechungen zu vermeiden, müssen Benutzer des Free-Tarifs auf das Manager- oder Professional-Abonnement upgraden.
+
+### Guthabenablauf & Verbrauchspriorität (FIFO-Logik)
+* **Regel**: Der Guthabenablauf (30 Tage) und die FIFO-Verbrauchsprioritätslogik (First-In-First-Out) gelten **nur für die Free- und Test-Abonnementstufen**.
+* **Bezahlte Tarife**: Benutzer mit aktiven Manager- oder Professional-Plänen erhalten unbegrenzte tägliche KI-Operationen und unterliegen keiner Guthabenmessung, keinem Ablauf und keinen Prioritätsprüfungen für den Abbuchungsverlauf.
 
 ---
 
-## 3. Technologiestack & Detailanalyse der Fähigkeiten
+## 3. Lokalisierte Zahlungen & Rechnungsstellung (Atzmai-Gateway)
 
-### Datenschema-Definitionen
-Das MongoDB-Schema in [schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) speichert den Abrechnungsstatus und die aktive Stufe der Nutzenden:
+Für Konten mit Sitz in Israel ist DressApp in das **Atzmai-Zahlungs-Gateway** integriert, um lokale Transaktionen in ILS (Schekel) abzuwickeln:
+1. **Verarbeitung nur in ILS**: Das Atzmai-Gateway verarbeitet lokale Zahlungen ausschließlich in ILS.
+2. **Währungsumrechnung**: Auf USD lautende Abonnements und Kampagnengebühren werden vor der Linkgenerierung dynamisch in ILS umgerechnet, wobei eine Live-Wechselkurs-API verwendet wird (mit Rückfall auf einen statischen Kurs von 3,70, falls nicht erreichbar).
+3. **Webhook-Verifizierung & Kampagnenabrechnung**:
+   - Die allgemeine Transaktionsverfolgung über `atzmai_topups` ist veraltet.
+   - `atzmai_topups` bleibt jedoch aktiv, um **tägliche Kampagnenzahlungen (Gebühr von 1 $/Tag)** zu erfassen und zu verifizieren.
+   - Nach erfolgreicher Erfassung wird das Datum `last_daily_payment_date` der Kampagne auf das aktuelle Datum aktualisiert.
+4. **Automatisierte PDF-Buchhaltung**: Nach erfolgreicher Erfassung fragt das Backend die Atzmai-Abrechnungs-API ab, um offizielle Quittungs- und Rechnungs-PDFs zu generieren und herunterzuladen. Diese werden als E-Mail-Anhänge direkt an den Käufer gesendet.
+
+---
+
+## 4. Technischer Stack & tiefer Einblick in die Funktionen
+
+### Datenschemadefinitionen (Data Schema Definitions)
+
+Die MongoDB-Struktur in [schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) erfasst Abonnements und Speicherkapazitäten der Benutzer:
 
 ```python
 class SubscriptionInfo(BaseModel):
     is_active: bool = False
     plan_type: Literal["free", "monthly", "yearly"] = "free"
     tier: Literal["free", "manager", "professional"] = "free"
+    stripe_subscription_id: str | None = None
     paypal_subscription_id: str | None = None
-    expires_at: str | None = None              # ISO timestamp
-    cancelled_at: str | None = None            # ISO timestamp
+    atzmai_subscription_id: str | None = None
+    expires_at: str | None = None
+    cancelled_at: str | None = None
 
 class User(BaseDoc):
-    # ... other profile documents ...
     subscription: SubscriptionInfo = Field(default_factory=SubscriptionInfo)
+    closet_capacity_bonus: int = 0
 ```
 
-### API-Routing & Gesteuerte Aktionen
-
-#### Limit für Kleiderschrankartikel ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
-Beim Einfügen von Artikeln überprüft das System die Grenzwerte für Free-Nutzende:
+### Kapazitätskontrolle ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
+Während des Uploads eines Kleidungsstücks sichert das System die Datenbankgrenzen mit einer Obergrenze von 200 Artikeln für Empfehlungen:
 ```python
-sub = user.get("subscription") or {}
-is_active = sub.get("is_active", False)
-plan_type = sub.get("plan_type", "free")
-tier = sub.get("tier", "free")
-
-user_tier = "free"
-if is_active and plan_type != "free":
-    user_tier = tier
-
-if user_tier == "free":
-    item_count = await db.closet_items.count_documents({"owner_id": user_id, "status": {"$ne": "deleted"}})
-    if item_count >= 50:
-        raise HTTPException(status_code=402, detail="Kapazitätsgrenze des Kleiderschranks (50 Artikel) überschritten. Bitte führen Sie ein Upgrade durch.")
+capacity_limit = min(200, 50 + user.get("closet_capacity_bonus", 0))
+if current_count >= capacity_limit and not user.get("subscription", {}).get("is_active", False):
+    raise HTTPException(
+        status_code=402,
+        detail={
+            "code": "closet_capacity_exceeded",
+            "message": f"You have reached your free closet capacity of {capacity_limit} items. Upgrade to Manager or Professional to add more items."
+        }
+    )
 ```
 
-#### Limit für tägliche KI-Operationen ([credit_manager.py](file:///C:/DressApp_AG/backend/app/services/credit_manager.py))
-Für Nutzer*innen des Free-Tarifs erhöhen KI-Operationen eine tägliche Zählerzahl, die in `user.ai_configuration.daily_request_count` verfolgt wird. Wenn diese 10 erreicht, werden Anfragen mit HTTP 402 blockiert.
-
-#### Marktplatz-Steuerung ([listings.py](file:///C:/DressApp_AG/backend/app/api/v1/listings.py))
-Befindet sich ein/e Nutzende/r im Free-Tarif, werden Inserate, die mit der Absicht `"for_sale"` oder `"rent"` erstellt wurden, abgelehnt:
+### Währungsumrechnungslogik ([atzmai_client.py](file:///C:/DressApp_AG/backend/app/services/atzmai_client.py))
+Rechnet USD-Beträge vor dem Senden von Payloads an Atzmai dynamisch in ILS um:
 ```python
-if user_tier == "free" and listing.intent in ["for_sale", "rent"]:
-    raise HTTPException(status_code=403, detail="Nutzer*innen des Free-Plans können Kleidungsstücke nur tauschen oder spenden. Führen Sie ein Upgrade durch, um Artikel zum Verkauf oder zur Miete anzubieten.")
+async def get_usd_to_ils_rate() -> float:
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get("https://open.er-api.com/v6/latest/USD", timeout=5.0)
+            if resp.status_code == 200:
+                data = resp.json()
+                rate = data.get("rates", {}).get("ILS")
+                if rate:
+                    return float(rate)
+    except Exception:
+        pass
+    return 3.70
 ```
-
-#### Kampagnen-Steuerung ([campaigns.py](file:///C:/DressApp_AG/backend/app/api/v1/campaigns.py))
-Endpunkte für die Kampagnenerstellung schränken Aktionen ein, es sei denn, die aktive Abonnementstufe ist 'Professional':
-```python
-if user_tier != "professional":
-    raise HTTPException(status_code=403, detail="Die Erstellung von Werbekampagnen ist nur im Professional-Plan verfügbar.")

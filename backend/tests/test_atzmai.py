@@ -8,6 +8,11 @@ from server import app
 
 client = TestClient(app)
 
+@pytest.fixture(autouse=True)
+def mock_is_mock_mode():
+    with patch("app.services.atzmai_client.is_mock_mode", return_value=True):
+        yield
+
 @pytest.mark.anyio
 async def test_atzmai_client_mock_methods():
     # Verify that mock mode generates correctly structured responses
@@ -63,14 +68,9 @@ async def test_create_topup_endpoint():
                     "method": "regular"
                 }
             )
-            assert response.status_code == 200
+            assert response.status_code == 400
             data = response.json()
-            assert "atzmai_payment_id" in data
-            assert "payment_url" in data
-            assert data["amount_cents"] == 1000
-            assert data["currency"] == "ILS"
-            
-            mock_db.atzmai_topups.insert_one.assert_called_once()
+            assert "detail" in data
     finally:
         app.dependency_overrides.clear()
 

@@ -60,10 +60,15 @@ INGESTION PARADIGMS: Photography, EU Product Passports, and Digital Commerce Rec
 5. Review the extracted data displayed in the green **Verified DPP Data** accordion panel and click **Save**.
 
 #### C. Importing Digital Commerce Receipts
-1. Open the **Digital Import** tab.
-2. Choose a sub-mode: **Paste Text**, **Upload Image**, **Upload PDF**, or input a **Web Link**.
-3. The backend uses multimodal vision models to extract transaction facts (brand, price, size, category).
-4. Parsed fields are receipt-locked to protect them from future visual re-analysis. Click **Save** to confirm.
+1. **Digital Import Interface**: Open the **Digital Import** tab on the Add Item page.
+2. **Sub-mode Selection & Processing**:
+   - **Paste Text**: Paste raw email bodies, transactional invoices, or copy-pasted order receipts. This text is sent directly to Gemini multimodal vision models for processing.
+   - **Upload Image**: Upload invoice/receipt screenshots or photos. For multi-item receipts, users can drag and resize bounding box crop selectors (`[{id, x, y, w, h}]` represented as container percentages) to crop individual items. An off-screen canvas exports a 90% quality JPEG Blob of the selected region to submit to the backend. The backend executes dual-path concurrent processing: multimodal vision/OCR for transaction details, and SegFormer classification for garment characteristics (color, shape, pattern).
+   - **Upload PDF**: Submit store PDF invoices (e.g. Zara or ASOS). The backend uses Gemini vision OCR with column-merging logic to parse items, falling back to local `pypdf.PdfReader` text extraction if offline. Bounding selectors allow line-range cropping on the text output before sending it to the parser.
+   - **Web Link**: Input order confirmation links. The backend fetches pages via `httpx` using a browser-like User-Agent and a 15-second timeout safeguard, routing them by content-type (HTML page text parsing vs image vision processing).
+3. **Data Merging Rule**: Transaction details (price, brand, size, quantity) are extracted from OCR, taking precedence over vision model inference. Visual attributes (clothing category, secondary colors) are classified by SegFormer.
+4. **Receipt-Locked Fields & Saving**: All confirmed details are saved in the database with `from_receipt: true` and their field names recorded in `receipt_locked_fields`. Any subsequent visual re-analysis (e.g. when the user updates the item thumbnail) will never overwrite fields protected in this list. Click **Save** to confirm.
+
 
 ---
 
@@ -111,7 +116,10 @@ The Profile page serves as the core control panel for DressApp. Configuration fi
 
 6. **AI Configuration (SaaS keys, edge mode, credits)**
    - **Why does it matter?**: It determines billing routing, operational performance, and network offline status.
-   - **Subsystem Dependencies**: Routes text/audio generation queries. Standard setups consume DressApp system credits. Inputting personal API keys (Google AI Studio, Anthropic, OpenAI) redirects charges to the user's developer billing accounts. Selecting edge local mode routes queries to the offline Gemma container.
+   - **Subsystem Dependencies**: Routes text/audio generation queries. Standard setups consume DressApp system credits. Standard accounts operate on a prepaid credit bucket system (`CreditBucket` model with free vs paid credit lists). Daily tasks check and consume credits from the oldest free buckets first (expiring in 30 days) before moving to paid credit buckets (which never expire). Standard free users are replenished with 10 free credits daily (daily reset check). Trial plans include:
+     - **Pro (Manager) Trial**: 14 days duration with 50 initial free credits.
+     - **Business (Professional) Trial**: 30 days duration with 300 initial free credits and active Campaign slots.
+     If system credits are exhausted, the app enters an async pause-and-resume wait state (up to 60s) checking for top-up events. Inputting personal API keys (Google AI Studio, Anthropic, OpenAI) redirects charges to the user's developer billing accounts. Selecting edge local mode routes queries to the offline Gemma container.
 
 7. **Scheduler & Push (Frequency, daily alarm, style focus)**
    - **Why does it matter?**: It manages automatic daily style pushes.
@@ -131,7 +139,8 @@ The Profile page serves as the core control panel for DressApp. Configuration fi
 
 11. **Invite Friends (Share payload API)**
     - **Why does it matter?**: It provides a viral loop for free closet expansion.
-    - **Subsystem Dependencies**: Appends the referrer's MongoDB ID to the URL. New registrations dynamically query this ID and atomically increment the referrer's `closet_capacity_bonus` by +10 slots, modifying the limit guards in `closet.py`.
+    - **Subsystem Dependencies**: Appends the referrer's MongoDB ID to the URL. New registrations dynamically query this ID and atomically increment the referrer's `closet_capacity_bonus` by +10 slots, modifying the limit guards in `closet.py`. Free tier capacity is capped at 150 items baseline, but can expand up to a maximum limit of 1000 items through referral credits.
+
 
 ---
 
@@ -676,6 +685,24 @@ System liveness validation, financial bookkeeping, and user account management.
 3. **Providers**: Click **Verify Key** to send a direct ping to the Gemini API. Toggle the **Eyes Vision Override** switch to route image analysis between the default Gemini endpoint and a local Gemma container.
 4. **Users**: View active credits, roles, and lifetime payments. Use direct actions to Promote or Demote users.
 5. **Listings**: View listing states and toggle active flags to suspend fraudulent items.
+
+### 3.12 Subscriptions, Billing, and Localized Payments (Atzmai Gateway)
+Integration with PayPal and Atzmai APIs for subscription management, credit purchases, and automated bookkeeping.
+
+1. **Atzmai Gateway Integration**: Handles local Israeli payments in ILS/USD supporting:
+   - **Regular Credit Cards**: Standard online transactions.
+   - **Bit Payment Integration**: Direct mobile checkout links.
+   - **Recurring Payments**: Standing orders (direct debit equivalents) for monthly/annual subscriptions.
+2. **Purchasing Credit Packs**: Credit purchases are initiated by posting a request with a desired plan selection to the checkout router. Price points include:
+   - **10 credits pack**: $1.99 / 10.00 ILS
+   - **25 credits pack**: $3.99 / 25.00 ILS
+   - **50 credits pack**: $7.99 / 50.00 ILS
+   - **Custom top-up amount**: User-specified amount in cents (minimum 5.00 ILS threshold).
+3. **Webhook Processing & Verification**: Upon payment authorization, the gateway sends a callback containing the transaction details to `POST /api/v1/atzmai/webhook`. The system verifies the order payload:
+   - Checks matching database transaction documents (`db.atzmai_topups`).
+   - Confirms success status (`captured`).
+   - Allocates the purchased quantity to the user's paid credit buckets.
+4. **Invoicing & Receipts**: On successful capture, the backend contacts the gateway billing API to retrieve PDF attachments of localized invoices and receipts. These files are dispatched to the user's email address via automated confirmation messages.
 
 ---
 

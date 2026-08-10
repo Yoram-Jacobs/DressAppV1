@@ -41,9 +41,15 @@ Adding your wardrobe items to DressApp is fast and easy:
 3. The app imports brand details, fabric composition, washing instructions, and sustainability scores automatically.
 
 #### Option C: Import Shopping Receipts
-1. Tap **Digital Import**.
-2. Paste receipt text, upload an order confirmation screenshot, or upload a PDF receipt from stores like Zara or Asos.
-3. The AI extracts brand, price, and item category automatically.
+1. Tap **Add Item** and open the **Digital Import** tab.
+2. Select how you want to import your receipt:
+   - **Paste Text**: Paste the confirmation text directly from your email.
+   - **Upload File**: Upload a receipt image, invoice screenshot, or a PDF file (like Zara or ASOS store invoices).
+   - **Web Link**: Paste the web link to your order confirmation page.
+3. **Select Individual Clothes**: If your receipt image lists multiple clothes, click and drag box selectors directly over each item to crop them out one by one.
+4. Tap **Extract Selected Items**. The AI will automatically read the brand name, price, purchase size, and category.
+5. **Receipt-Locked Fields**: Once saved, all commercial details from the receipt (like price, brand, and size) are locked. If you later upload a photo to update the clothing's thumbnail, these verified details will never be accidentally modified by the AI.
+
 
 ---
 
@@ -255,7 +261,31 @@ The extension works on most e-commerce sites, including:
 
 ---
 
+### Step 10: Subscriptions, Tiers, and Prepaid Credits
+
+Manage your subscription limits and purchase extra AI styling credits:
+
+1. **Monetization Tiers**:
+   - **Free Plan**: $0.00 / month. Stores up to 150 closet items. Includes 10 free daily AI credits (which expire after 30 days). You can expand your closet capacity by sharing your invite link (+10 clothing slots per friend registration, up to a maximum limit of 1000 items).
+   - **Manager (Pro) Plan**: $4.99 / month. Stores unlimited closet items and includes unlimited daily AI operations. Comes with a 14-day free trial and a 50-credit initial allocation.
+   - **Professional (Business) Plan**: $9.99 / month. Designed for professional stylists, containing all Manager features plus support for creating ad campaigns in the feed. Comes with a 30-day free trial and a 300-credit initial allocation.
+2. **Prepaid Credit Packs**:
+   If you run out of credits, you can purchase additional packs to prevent service interruptions:
+   - **10 credits pack**: $1.99
+   - **25 credits pack**: $3.99
+   - **50 credits pack**: $7.99
+   - **100 credits pack**: $15.99
+   - **Custom amount**: Purchase any custom quantity (minimum amount of 5.00 ILS).
+   - **Note**: Paid credits never expire, whereas daily free credits expire in 30 days. The system automatically consumes your oldest expiring free credits first before using paid credits.
+3. **Localized Local Payments (Atzmai Gateway)**:
+   For users in Israel, you can pay easily in ILS (Shekels) or USD using **Bit** or Israeli credit cards. Supports single purchases or recurring direct debit subscriptions.
+4. **Automated Receipts & Invoices**:
+   After any purchase, you will receive a thank-you email with official invoice and receipt PDFs generated from the gateway.
+
+---
+
 ## 3. Quick Troubleshooting & Tips
+
 
 - **Free Tier Closet Capacity**: Free accounts store up to 150 items. Upgrade to **Pro** ($4.99/month) or invite friends (+10 extra slots per friend invite) for unlimited space!
 - **Voice Typing Not Working**: Make sure microphone permissions are allowed in your browser settings (Chrome or Safari recommended).

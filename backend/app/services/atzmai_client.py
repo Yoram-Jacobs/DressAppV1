@@ -31,6 +31,20 @@ def is_mock_mode() -> bool:
         or settings.ATZMAI_CLIENT_SECRET == "clientSecret"
     )
 
+async def get_usd_to_ils_rate() -> float:
+    """Fetch USD to ILS exchange rate using a public API. Fallback to 3.70."""
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get("https://open.er-api.com/v6/latest/USD", timeout=5.0)
+            if resp.status_code == 200:
+                data = resp.json()
+                rate = data.get("rates", {}).get("ILS")
+                if rate:
+                    return float(rate)
+    except Exception as e:
+        logger.warning(f"Failed to fetch live USD to ILS exchange rate: {e}. Using fallback 3.70.")
+    return 3.70
+
 async def generate_payment_link(
     items: List[Dict[str, Any]],
     customer_name: str,
@@ -43,6 +57,19 @@ async def generate_payment_link(
     atzmai_client_id: Optional[str] = None,
     currency: str = "USD",
 ) -> Dict[str, Any]:
+    if currency.upper() == "USD":
+        rate = await get_usd_to_ils_rate()
+        logger.info(f"Converting USD to ILS at rate {rate} for generate_payment_link")
+        new_items = []
+        for item in items:
+            new_items.append({
+                **item,
+                "amount": round(item.get("amount", 0) * rate, 2),
+                "description": f"{item.get('description', '')} (Converted USD->ILS)"
+            })
+        items = new_items
+        currency = "ILS"
+
     if is_mock_mode():
         import urllib.parse
         payment_id = f"mock_atz_{uuid.uuid4().hex[:16]}"
@@ -111,6 +138,12 @@ async def generate_recurring_payment_link(
     atzmai_client_id: Optional[str] = None,
     currency: str = "USD",
 ) -> Dict[str, Any]:
+    if currency.upper() == "USD":
+        rate = await get_usd_to_ils_rate()
+        logger.info(f"Converting USD to ILS at rate {rate} for generate_recurring_payment_link")
+        amount = round(amount * rate, 2)
+        currency = "ILS"
+
     if is_mock_mode():
         import urllib.parse
         payment_id = f"mock_atz_rec_{uuid.uuid4().hex[:16]}"
@@ -176,6 +209,12 @@ async def generate_bit_payment_link(
     atzmai_client_id: Optional[str] = None,
     currency: str = "USD",
 ) -> Dict[str, Any]:
+    if currency.upper() == "USD":
+        rate = await get_usd_to_ils_rate()
+        logger.info(f"Converting USD to ILS at rate {rate} for generate_bit_payment_link")
+        amount = round(amount * rate, 2)
+        currency = "ILS"
+
     if is_mock_mode():
         import urllib.parse
         payment_id = f"mock_atz_bit_{uuid.uuid4().hex[:16]}"

@@ -1,129 +1,147 @@
-# DressApp 収益化 & 請求エンジン
+# DressAppのマネタイズ＆請求エンジン
 
-このドキュメントでは、DressAppにおける収益化、サブスクリプション請求、および3段階の利用制限に関する包括的なアーキテクチャ概要、ユーザーマニュアル、および技術的な詳細を提供します。
+このドキュメントでは、DressAppにおけるマネタイズ、サブスクリプション請求、およびバイラル成長ループの仕組みについて、包括的なアーキテクチャの概要、ユーザーマニュアル、および技術的な深掘りを提供します。
 
 ---
 
-## 1. 経営層向け要約 & 価値提案
+## 1. エグゼクティブサマリー＆価値提案
 
-### 概要
-DressAppは、様々なユーザー像に合わせて設計された3段階の収益化モデルを導入しています。
-1.  **Free Tier**:
-    *   **費用**: 月額 $0（クレジットカード不要）。
-    *   **制限**: クローゼットアイテムは最大50点、AI操作は1日あたり最大10回まで。
-    *   **機能**: 基本的なクローゼット管理、コミュニティサポート。マーケットプレイスでの販売/レンタルは制限されます（交換/寄付のみ）。Trend ScoutおよびCampaignsへのアクセスは無効です。
-2.  **Manager Tier**:
-    *   **費用**: 月額 $5 または 年額 $50。
-    *   **制限**: クローゼットアイテムは無制限、AIリクエストは1日あたり無制限。
-    *   **機能**: マーケットプレイスオプション（販売、交換、レンタル、寄付）、Trend Scout、スケジューラー & プッシュ通知、優先サポート。キャンペーン作成は無効です。
-3.  **Professional Tier**:
-    *   **費用**: 月額 $10 または 年額 $100。
-    *   **制限**: クローゼットアイテムは無制限、AIリクエストは1日あたり無制限。
-    *   **機能**: すべての機能が含まれます。専用サポートと、広告キャンペーンのフル作成サポートが提供されます。
+### ハイレベル概要
+DressAppは、定額制のSaaSサブスクリプションとプリペイド式のユーティリティクレジットモデルを組み合わせたハイブリッドモデルを採用しています：
+1. **サブスクリプションプラン（SaaS）**：クローゼットの収納容量、1日のAIスタイリング制限、および高度な機能（例：広告キャンペーンの管理など）を制御する定額プラン（Free、Manager、Professional）。
+2. **プリペイド式クレジットバケット（ユーティリティ）**：高度なAI操作（例：バーチャルスタイリストへの問い合わせや写真のセグメンテーションなど）のための、消費量に基づいた詳細なクレジット。これらのクレジットは、無料プールと有料プールを区別するために有効期限管理システムを使用しています。
+3. **バイラル成長ループ**：Freeプランのユーザーが、招待リンクを共有することでクローゼットの基本容量をオーガニックに拡張できる紹介プログラム。
+4. **ローカライズされた決済（Atzmaiゲートウェイ）**：グローバルなPayPal決済に加え、イスラエルのローカル決済（Bit、ローカルクレジットカード）のILS/USD建てでのネイティブサポート。
 
 ### アーキテクチャフロー
 
 ```mermaid
 graph TD
     User([User App Client])
-    Gateway[Payments API Gateway /paypal]
+    Gateway[Payments API Gateway /atzmai]
+    Auth[Auth Router /auth/register]
     Closet[Closet Router /closet/item]
-    Campaigns[Campaigns Router /campaigns]
     DB[(MongoDB Atlas)]
+    AtzmaiAPI[Atzmai Payment API]
     PayPalAPI[PayPal Subscriptions API]
 
     %% Closet Upload Limit Gating
     User -->|1. Upload Garment| Closet
     Closet -->|2. Check Item Count & Subscription| DB
     DB -->|3. Return Count + SubscriptionInfo| Closet
-    Closet -.->|If Exceeded: HTTP 402| User
+    Closet -.->|If Exceeded & Sub Inactive: HTTP 402| User
     
     %% Paid Subscription Checkout
-    User -->|4. Post /paypal/subscribe| Gateway
-    Gateway -->|5. Create Intent| PayPalAPI
-    PayPalAPI -->|6. Return Approve URL| Gateway
-    Gateway -->|7. Return Approve URL| User
-    User -->|8. User Approves Payment| PayPalAPI
-    User -->|9. Post /paypal/subscribe/capture| Gateway
-    Gateway -->|10. Verify Activation| PayPalAPI
-    Gateway -->|11. Write Active Sub & Tier| DB
+    User -->|4. Post /atzmai/subscribe| Gateway
+    Gateway -->|5. Create Intent| AtzmaiAPI
+    AtzmaiAPI -->|6. Return Payment URL| Gateway
+    Gateway -->|7. Return Payment URL| User
+    User -->|8. User Approves Payment| AtzmaiAPI
+    AtzmaiAPI -->|9. Trigger Webhook| Gateway
+    Gateway -->|10. Capture Transaction| DB
     
-    %% Campaigns Gating
-    User -->|12. Create Campaign| Campaigns
-    Campaigns -->|13. Check Tier| DB
-    Campaigns -.->|If Not Professional: HTTP 403| User
+    %% Viral Referral Mechanics
+    User -->|11. Register with referrer_id| Auth
+    Auth -->|12. Increment closet_capacity_bonus| DB
 ```
 
 ---
 
-## 2. 総合ユーザーマニュアル
+## 2. サブスクリプションプランと料金体系
 
-### ビジュアルインターフェーストポロジー
-ユーザープロフィールページ（[Profile.jsx](file:///C:/DressApp_AG/frontend/src/pages/Profile.jsx)）には、「**Subscription & Limits**」セクションの下にサブスクリプション管理ウィジェットがあり、アイテム数（Freeプランでは0〜50点の制限）、アクティブなプランティアのステータス、および次回の更新日が表示されます。
-価格ページ（[Pricing.jsx](file:///C:/DressApp_AG/frontend/src/pages/Pricing.jsx)）には、Free、Manager、Professionalプランを比較するカードと、詳細な機能グリッドチェックリストが表示されます。
+### 料金プラン
 
-### モードとワークフローのチュートリアル
+| Plan | Price (Monthly) | Closet Capacity | AI Credits Allocation | Key Features |
+| :--- | :--- | :--- | :--- | :--- |
+| **Free Plan** | 月額 $0.00 | 基本50アイテム | 毎日10無料クレジット（30日間有効） | 基本的な整理、コミュニティサポート、紹介による容量拡張（登録1件につき+10スロット、最大1000アイテムまで） |
+| **Manager (Pro)** | 月額 $4.99 | 無制限 | 1日あたりの操作無制限 | 14日間の無料トライアル、初期割り当て50クレジット、マーケットプレイスでの販売＆レンタル、Trend Scout、スケジュール通知 |
+| **Professional** | 月額 $9.99 | 無制限 | 1日あたりの操作無制限 | 30日間の無料トライアル、初期割り当て300クレジット、Managerプランのすべての機能、フィード内での広告キャンペーン作成サポート |
 
-#### A. メンバーシップのアップグレード（有料フロー）
-1.  **アップグレードの開始**: ユーザーは希望するプラン（ManagerまたはProfessional）と請求頻度（月払いまたは年払い）を選択し、「**Upgrade Plan**」をクリックします。
-2.  **注文登録**: クライアントは`POST /paypal/subscribe`リクエストを発行します。バックエンドはPayPalに連絡し、サブスクリプションIDを生成して`approve_url`を返します。
-3.  **支払い処理**: クライアントブラウザはPayPal Sandboxのチェックアウトページにリダイレクトされます（またはMock Atzmai/PayPalゲートウェイ経由で処理されます）。ユーザーはログインし、請求契約を承認します。
-4.  **リダイレクトとキャプチャ**: PayPalはブラウザを`/pricing?sub_status=success&token=SUBSCRIPTION_ID`にリダイレクトします。
-5.  **アクティベーション**: クライアントは検索パラメータを検出し、`POST /paypal/subscribe/capture/{subscription_id}`を発行し、ユーザーセッションを更新します。アクティブなプランティアはUIで即座に更新されます。
+### プリペイドAIクレジットパック
+
+ユーザーがスタイリングクレジットを使い果たした場合、サービスの停止を避けるために追加のパッケージを購入できます：
+
+* **10クレジットパック**：$1.99 / 10.00 ILS
+* **25クレジットパック**：$3.99 / 25.00 ILS
+* **50クレジットパック**：$7.99 / 50.00 ILS
+* **100クレジットパック**：$15.99 / 100.00 ILS
+* **カスタムチャージ金額**：ユーザー指定のILS金額（Atzmaiゲートウェイの検証用に最低5.00 ILSのしきい値があります）。
+
+### クレジットの有効期限と消費優先順位（FIFOロジック）
+* **有料クレジット**：チャージパック経由で購入されたものです。有料クレジットには**有効期限はありません**。
+* **無料クレジット**：毎日付与されるか、またはトライアルの割り当てを通じて付与されます。無料クレジットは**作成から30日後に失効します**。
+* **消費優先順位**：AIリクエストが行われると、エンジンは有料クレジットから消費する前に、**有効期限が最も近い最も古い無料バケットから優先的にクレジットを確認・消費**します。
 
 ---
 
-## 3. 技術スタックと機能の詳細
+## 3. ローカライズされた決済＆請求（Atzmaiゲートウェイ）
 
-### データスキーマの定義
-[schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py)内のMongoDBスキーマは、ユーザーの請求ステータスとアクティブなティアを保持します。
+イスラエルに拠点を置くアカウントの場合、DressAppは**Atzmai決済ゲートウェイ**と連携し、ローカルの取引をILS（シェケル）またはUSDで処理します：
+1. **決済手段**：Bitモバイル決済リダイレクトリンクおよび通常のイスラエルクレジットカードをサポートしています。
+2. **サブスクリプション口座振替**：ProおよびBusinessの継続的なサブスクリプション請求のための、月次/年次の口座振替設定をサポートしています。
+3. **Webhook検証**：`POST /api/v1/atzmai/webhook` で決済コールバックをキャプチャし、`atzmai_topups` コレクション内の一致するレコードを検証して、取引ステータスを `captured` に変更します。
+4. **自動PDF記帳**：決済のキャプチャに成功すると、バックエンドはAtzmai請求APIに問い合わせて、公式の領収書および請求書PDFを生成・ダウンロードします。これらはメール添付ファイルとして購入者に直接送信されます。
+
+---
+
+## 4. 技術スタックと機能の深掘り
+
+### データスキーマ定義（Data Schema Definitions）
+
+[schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py)にあるMongoDBスキーマは、ユーザーのサブスクリプション情報とクレジットバケットを追跡します：
 
 ```python
+class CreditBucket(BaseModel):
+    amount: int
+    type: Literal["free", "paid"]
+    created_at: str  # ISO timestamp
+    expires_at: str | None = None  # None means infinite (paid credits)
+
 class SubscriptionInfo(BaseModel):
     is_active: bool = False
     plan_type: Literal["free", "monthly", "yearly"] = "free"
     tier: Literal["free", "manager", "professional"] = "free"
+    stripe_subscription_id: str | None = None
     paypal_subscription_id: str | None = None
-    expires_at: str | None = None              # ISO timestamp
-    cancelled_at: str | None = None            # ISO timestamp
+    atzmai_subscription_id: str | None = None
+    expires_at: str | None = None
+    cancelled_at: str | None = None
 
 class User(BaseDoc):
-    # ... other profile documents ...
     subscription: SubscriptionInfo = Field(default_factory=SubscriptionInfo)
+    credit_buckets: List[CreditBucket] = Field(default_factory=list)
+    closet_capacity_bonus: int = 0
 ```
 
-### APIルーティングとゲート付きアクション
-
-#### クローゼットアイテムの制限 ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
-アイテム挿入時、システムはFreeユーザーに対する制限を検証します。
+### クローゼット容量制限の適用 ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
+アイテムのアップロード中、システムはデータベース制限を監視します：
 ```python
-sub = user.get("subscription") or {}
-is_active = sub.get("is_active", False)
-plan_type = sub.get("plan_type", "free")
-tier = sub.get("tier", "free")
-
-user_tier = "free"
-if is_active and plan_type != "free":
-    user_tier = tier
-
-if user_tier == "free":
-    item_count = await db.closet_items.count_documents({"owner_id": user_id, "status": {"$ne": "deleted"}})
-    if item_count >= 50:
-        raise HTTPException(status_code=402, detail="Closet capacity limit (50 items) exceeded. Please upgrade.")
+capacity_limit = 50 + user.get("closet_capacity_bonus", 0)
+if current_count >= capacity_limit and not user.get("subscription", {}).get("is_active", False):
+    raise HTTPException(
+        status_code=402,
+        detail={
+            "code": "closet_capacity_exceeded",
+            "message": f"You have reached your free closet capacity of {capacity_limit} items. Upgrade to Manager or Professional to add more items."
+        }
+    )
 ```
 
-#### 1日あたりのAI操作制限 ([credit_manager.py](file:///C:/DressApp_AG/backend/app/services/credit_manager.py))
-Freeティアのユーザーの場合、AI操作は`user.ai_configuration.daily_request_count`で追跡される1日あたりのカウントを増やします。これが10に達すると、リクエストはHTTP 402でブロックされます。
-
-#### マーケットプレイスのゲート設定 ([listings.py](file:///C:/DressApp_AG/backend/app/api/v1/listings.py))
-ユーザーがFreeティアの場合、`"for_sale"`または`"rent"`の意図で作成された出品は拒否されます。
+### クレジット消費アルゴリズム ([credit.py](file:///C:/DressApp_AG/backend/app/models/credit.py))
+クレジットは、FIFO（先入れ先出し）の優先度キューを使用して消費されます：
 ```python
-if user_tier == "free" and listing.intent in ["for_sale", "rent"]:
-    raise HTTPException(status_code=403, detail="Free plan users can only Swap or Donate garments. Upgrade to list for sale or rent.")
+def spend_credits(buckets: List[CreditBucket], required_amount: int) -> Tuple[bool, List[dict]]:
+    # Sort active buckets: 
+    # Priority 0: Free expiring soonest
+    # Priority 1: Free other
+    # Priority 2: Paid (never expires)
+    active_buckets = []
+    for idx, b in enumerate(buckets):
+        if b.type == "free" and b.expires_at and now > b.expires_at:
+            continue
+        priority = (0, b.expires_at) if b.type == "free" and b.expires_at else (1, b.created_at) if b.type == "free" else (2, b.created_at)
+        active_buckets.append((priority, idx, b))
+    
+    active_buckets.sort(key=lambda x: x[0])
+    # ... deduct required_amount from sorted list ...
 ```
-
-#### キャンペーンのゲート設定 ([campaigns.py](file:///C:/DressApp_AG/backend/app/api/v1/campaigns.py))
-アクティブなサブスクリプションティアがProfessionalでない限り、キャンペーン作成エンドポイントはアクションを制限します。
-```python
-if user_tier != "professional":
-    raise HTTPException(status_code=403, detail="Ad Campaign creation is only available on the Professional plan.")

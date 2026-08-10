@@ -1,129 +1,134 @@
-# מנוע מונטיזציה וחיוב של DressApp
+# מנוע המונטיזציה והחיוב של DressApp
 
-מסמך זה מספק סקירה אדריכלית מקיפה, מדריך למשתמש, וצלילה טכנולוגית מעמיקה של מנוע המונטיזציה, חיוב המנויים, ומגבלות שלוש השכבות (three-tier limits) ב-DressApp.
+מסמך זה מספק סקירה ארכיטקטונית מקיפה, מדריך למשתמש וצלילת עומק טכנולוגית לחיוב מנויים, מונטיזציה ומכניקת לולאות צמיחה ב-DressApp.
 
 ---
 
 ## 1. תקציר מנהלים והצעת ערך
 
 ### סקירה כללית
-DressApp מיישמת מודל מונטיזציה בן שלוש שכבות שנועד להתאים לארכיטיפים שונים של משתמשים:
-1.  **שכבת חינם (Free Tier)**:
-    *   **עלות**: $0 לחודש (אין צורך בכרטיס אשראי).
-    *   **מגבלות**: עד 50 פריטי ארון בגדים ועד 10 פעולות AI יומיות.
-    *   **תכונות**: ארגון ארון בגדים בסיסי, תמיכה קהילתית. מוגבל ממכירה/השכרה ב-marketplace (החלפה/תרומה בלבד). גישה ל-Trend Scout ולקמפיינים מושבתת.
-2.  **שכבת מנהל (Manager Tier)**:
-    *   **עלות**: $5 לחודש או $50 לשנה.
-    *   **מגבלות**: פריטי ארון בגדים ללא הגבלה ובקשות AI יומיות ללא הגבלה.
-    *   **תכונות**: אפשרויות Marketplace (מכירה, החלפה, השכרה, תרומה), Trend Scout, תזמון והתראות דחיפה, תמיכה בעדיפות. יצירת קמפיינים מושבתת.
-3.  **שכבת מקצוען (Professional Tier)**:
-    *   **עלות**: $10 לחודש או $100 לשנה.
-    *   **מגבלות**: פריטי ארון בגדים ללא הגבלה ובקשות AI יומיות ללא הגבלה.
-    *   **תכונות**: כל התכונות כלולות, תמיכה ייעודית, ותמיכה מלאה ביצירת קמפייני פרסום.
+DressApp מפעילה מודל היברידי של מנוי SaaS ומנגנון הגבלת שירות יומי (utility gating):
+1. **מסלולי מנוי (SaaS)**: תוכניות במחיר קבוע (Free‏, Manager‏, Professional) המנהלות את קיבולת האחסון של הארון, מכסות עיצוב יומיות ב-AI ותכונות מתקדמות (כגון יצירת קמפיינים פרסומיים).
+2. **מגבלות מכסה יומית (מסלול Free)**: שימוש מוגבל ב-AI במסלול Free, המגביל את המשתמשים ל-10 בקשות ביום. לוגיקת הניכוי ופוג תוקף יתרות של 30 יום חלים על חשבונות Free וחשבונות ניסיון *בלבד*.
+3. **לולאת צמיחה ויראלית**: תוכנית הפניות המאפשרת למשתמשי מסלול Free להרחיב את קיבולת הארון הבסיסית שלהם באופן אורגני על ידי שיתוף קישורי הזמנה.
+4. **תשלומים מקומיים (שער Atzmai)**: תמיכה מובנית בתשלומים ישראליים (Bit, כרטיסי אשראי מקומיים) ב-ILS (שקלים). מכיוון ששער Atzmai תומך רק ב-ILS, מחירי USD מומרים באמצעות API של שערי חליפין בזמן אמת.
 
-### זרימה ארכיטקטונית
+### תזרים ארכיטקטוני
 
 ```mermaid
 graph TD
     User([User App Client])
-    Gateway[Payments API Gateway /paypal]
+    Gateway[Payments API Gateway /atzmai]
+    Auth[Auth Router /auth/register]
     Closet[Closet Router /closet/item]
-    Campaigns[Campaigns Router /campaigns]
     DB[(MongoDB Atlas)]
+    AtzmaiAPI[Atzmai Payment API]
     PayPalAPI[PayPal Subscriptions API]
 
     %% Closet Upload Limit Gating
     User -->|1. Upload Garment| Closet
     Closet -->|2. Check Item Count & Subscription| DB
     DB -->|3. Return Count + SubscriptionInfo| Closet
-    Closet -.->|If Exceeded: HTTP 402| User
+    Closet -.->|If Exceeded & Sub Inactive: HTTP 402| User
     
     %% Paid Subscription Checkout
-    User -->|4. Post /paypal/subscribe| Gateway
-    Gateway -->|5. Create Intent| PayPalAPI
-    PayPalAPI -->|6. Return Approve URL| Gateway
-    Gateway -->|7. Return Approve URL| User
-    User -->|8. User Approves Payment| PayPalAPI
-    User -->|9. Post /paypal/subscribe/capture| Gateway
-    Gateway -->|10. Verify Activation| PayPalAPI
-    Gateway -->|11. Write Active Sub & Tier| DB
+    User -->|4. Post /atzmai/subscribe| Gateway
+    Gateway -->|5. Create Intent (ILS)| AtzmaiAPI
+    AtzmaiAPI -->|6. Return Payment URL| Gateway
+    Gateway -->|7. Return Payment URL| User
+    User -->|8. User Approves Payment| AtzmaiAPI
+    AtzmaiAPI -->|9. Trigger Webhook| Gateway
+    Gateway -->|10. Capture Transaction| DB
     
-    %% Campaigns Gating
-    User -->|12. Create Campaign| Campaigns
-    Campaigns -->|13. Check Tier| DB
-    Campaigns -.->|If Not Professional: HTTP 403| User
+    %% Viral Referral Mechanics
+    User -->|11. Register with referrer_id| Auth
+    Auth -->|12. Increment closet_capacity_bonus| DB
 ```
 
 ---
 
-## 2. מדריך למשתמש מקיף
+## 2. מסלולי מנוי ומבנה תמחור
 
-### טופולוגיית ממשק חזותי
-דף פרופיל המשתמש ([Profile.jsx](file:///C:/DressApp_AG/frontend/src/pages/Profile.jsx)) מארח את ווידג'ט ה-Subscription Management תחת סעיף **Subscription & Limits**, המציג את ספירת הפריטים (מגבלה של 0 עד 50 עבור תוכנית Free), סטטוס שכבת התוכנית הפעילה, ותאריכי חידוש עתידיים.
-דף התמחור ([Pricing.jsx](file:///C:/DressApp_AG/frontend/src/pages/Pricing.jsx)) מציג כרטיסים המשווים את תוכניות ה-Free, Manager ו-Professional, כמו גם רשימת בדיקה מפורטת של תכונות.
+### תוכניות תמחור
 
-### הליכי מצב ותהליכי עבודה
+| Plan | Price (Monthly) | Closet Capacity | AI Credits Allocation | Key Features |
+| :--- | :--- | :--- | :--- | :--- |
+| **Free Plan** | $0.00 לחודש | 50 פריטים בבסיס | 10 נקודות ללא עלות יומיות (פגות תוך 30 יום) | ארגון בסיסי, תמיכת קהילה, הרחבת הפניות (+10 מקומות לכל הרשמה עד 200 פריטים לכל היותר) |
+| **Manager (Pro)** | $4.99 לחודש | ללא הגבלה | פעולות יומיות ללא הגבלה | 14 ימי ניסיון בחינם, הקצאה ראשונית של 50 נקודות, מכירה והשכרה במרקטפלייס, Trend Scout, התראות מתוזמנות |
+| **Professional** | $9.99 לחודש | ללא הגבלה | פעולות יומיות ללא הגבלה | 30 ימי ניסיון בחינם, הקצאה ראשונית של 300 נקודות, כל תכונות Manager, תמיכה ביצירת קמפיינים פרסומיים (עמלה של $1 ליום, מקסימום 3 קמפיינים במקביל) |
 
-#### א. שדרוג חברותך (זרימת תשלום)
-1.  **ייזום שדרוג**: המשתמש בוחר את התוכנית הרצויה לו (Manager או Professional) ותדירות חיוב (חודשית או שנתית) ולוחץ על **Upgrade Plan**.
-2.  **רישום הזמנה**: ה-client מנפיק בקשת `POST /paypal/subscribe`. ה-backend יוצר קשר עם PayPal, מייצר ID מנוי, ומחזיר `approve_url`.
-3.  **עיבוד תשלום**: דפדפן ה-client מפנה לדף התשלום של PayPal Sandbox (או מטופל דרך Mock Atzmai/PayPal gateway). המשתמש מתחבר ומאשר את הסכם החיוב.
-4.  **הפניה מחדש ולכידה**: PayPal מפנה את הדפדפן בחזרה ל-`/pricing?sub_status=success&token=SUBSCRIPTION_ID`.
-5.  **הפעלה**: ה-client מזהה את פרמטרי החיפוש, מנפיק `POST /paypal/subscribe/capture/{subscription_id}`, ומרענן את סשן המשתמש. שכבת התוכנית הפעילה מתעדכנת מיד ב-UI.
+### חבילות נקודות AI מראש (לא רלוונטי - Obsolete)
+* חבילות טעינת נקודות מראש **אינן נתמכות עוד**.
+* כדי למנוע הפרעות בשירות, על משתמשי מסלול Free לשדרг למסלול המנוי Manager או Professional.
+
+### תוקף נקודות ועדיפות צריכה (לוגיקת FIFO)
+* **כלל**: תוקף נקודות (30 יום) ולוגיקת עדיפות צריכה FIFO (הראשון שנכנס הוא הראשון שיוצא) חלים **רק על מסלולי המנוי Free ו-Trial**.
+* **תוכניות בתשלום**: משתמשים במסלולי Manager או Professional פעילים מקבלים פעולות AI יומיות ללא הגבלה ואינם כפופмы למדידת נקודות, פקיעת תוקף או בדיקות עדיפות ניכוי.
 
 ---
 
-## 3. ערימת טכנולוגיה וצלילה מעמיקה ביכולות
+## 3. תשלומים מקומיים וחשבוניות (שער Atzmai)
 
-### הגדרות סכימת נתונים
-סכימת ה-MongoDB ב-[schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) מכילה את סטטוס החיוב של המשתמש ואת השכבה הפעילה:
+עבור חשבונות הממוקמים בישראל, DressApp מתממשקת עם **שער התשלום Atzmai** כדי לעבד עסקאות מקומיות ב-ILS (שקלים):
+1. **עיבוד ב-ILS בלבד**: שער Atzmai מעבד תשלומים מקומיים ב-ILS בלבד.
+2. **המרת מטבע**: מנויים ועמלות קמפיינים הנקובים ב-USD מומרים באופן דינמי ל-ILS לפני הפקת הקישור באמצעות API של שערי חליפין בזמן אמת (עם מעבר לשער קבוע של 3.70 אם ה-API אינו זמין).
+3. **אימות Webhook וחיוב קמפיינים**:
+   - מעקב עסקאות כללי באמצעות `atzmai_topups` אינו פעיל עוד.
+   - עם זאת, `atzmai_topups` נותר פעיל עבור קליטה ואימות של **תשلوמי קמפיין יומיים (עמלה של $1 ליום)**.
+   - עם קליטה מוצלחת, השדה `last_daily_payment_date` של הקמפיין מעודכן לתאריך הנוכחי.
+4. **הנהלת חשבונות ממוחשבת ב-PDF**: עם קליטה מוצלחת (capture), השרת פונה ל-API של Atzmai להפקה והורדה של קבצי PDF רשמיים של קבלה וחשבונית. אלה נשלחים כקבצים מצורפים בדוא"ל ישירות לרוכשים.
+
+---
+
+## 4. מפרט טכנולוגי וצלילת עומק ליכולות
+
+### הגדרות סכמת נתונים (Data Schema Definitions)
+
+הסכמה של MongoDB ב-[schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) עוקבת אחר מנויי המשתמשים וקיבולת הארון:
 
 ```python
 class SubscriptionInfo(BaseModel):
     is_active: bool = False
     plan_type: Literal["free", "monthly", "yearly"] = "free"
     tier: Literal["free", "manager", "professional"] = "free"
+    stripe_subscription_id: str | None = None
     paypal_subscription_id: str | None = None
-    expires_at: str | None = None              # ISO timestamp
-    cancelled_at: str | None = None            # ISO timestamp
+    atzmai_subscription_id: str | None = None
+    expires_at: str | None = None
+    cancelled_at: str | None = None
 
 class User(BaseDoc):
-    # ... other profile documents ...
     subscription: SubscriptionInfo = Field(default_factory=SubscriptionInfo)
+    closet_capacity_bonus: int = 0
 ```
 
-### ניתוב API ופעולות מגודרות
-
-#### מגבלת פריטי ארון בגדים ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
-במהלך הוספת פריט, המערכת מאמתת מגבלות עבור משתמשי Free:
+### אכיפת מגבלות הארון ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
+אצל העלאת פריטים, המערכת מגנה על מגבלות מסד הנתונים עם מגבלה קשיחה של 200 פריטים עבור הפניות:
 ```python
-sub = user.get("subscription") or {}
-is_active = sub.get("is_active", False)
-plan_type = sub.get("plan_type", "free")
-tier = sub.get("tier", "free")
-
-user_tier = "free"
-if is_active and plan_type != "free":
-    user_tier = tier
-
-if user_tier == "free":
-    item_count = await db.closet_items.count_documents({"owner_id": user_id, "status": {"$ne": "deleted"}})
-    if item_count >= 50:
-        raise HTTPException(status_code=402, detail="Closet capacity limit (50 items) exceeded. Please upgrade.")
+capacity_limit = min(200, 50 + user.get("closet_capacity_bonus", 0))
+if current_count >= capacity_limit and not user.get("subscription", {}).get("is_active", False):
+    raise HTTPException(
+        status_code=402,
+        detail={
+            "code": "closet_capacity_exceeded",
+            "message": f"You have reached your free closet capacity of {capacity_limit} items. Upgrade to Manager or Professional to add more items."
+        }
+    )
 ```
 
-#### מגבלת פעולות AI יומיות ([credit_manager.py](file:///C:/DressApp_AG/backend/app/services/credit_manager.py))
-עבור משתמשי שכבת Free, פעולות AI מגדילות ספירה יומית העוקבת אחר `user.ai_configuration.daily_request_count`. כאשר היא מגיעה ל-10, בקשות נחסמות עם HTTP 402.
-
-#### גידור Marketplace ([listings.py](file:///C:/DressApp_AG/backend/app/api/v1/listings.py))
-אם משתמש נמצא בשכבת Free, רישומים שנוצרו עם כוונה `"for_sale"` או `"rent"` נדחים:
+### לוגיקת המרת מטבע ([atzmai_client.py](file:///C:/DressApp_AG/backend/app/services/atzmai_client.py))
+ממירה סכומי USD ל-ILS באופן דינמי לפני שליחת הנתונים ל-Atzmai:
 ```python
-if user_tier == "free" and listing.intent in ["for_sale", "rent"]:
-    raise HTTPException(status_code=403, detail="Free plan users can only Swap or Donate garments. Upgrade to list for sale or rent.")
+async def get_usd_to_ils_rate() -> float:
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get("https://open.er-api.com/v6/latest/USD", timeout=5.0)
+            if resp.status_code == 200:
+                data = resp.json()
+                rate = data.get("rates", {}).get("ILS")
+                if rate:
+                    return float(rate)
+    except Exception:
+        pass
+    return 3.70
 ```
-
-#### גידור קמפיינים ([campaigns.py](file:///C:/DressApp_AG/backend/app/api/v1/campaigns.py))
-נקודות קצה ליצירת קמפיינים מגבילות פעולות אלא אם שכבת המנוי הפעילה היא Professional:
-```python
-if user_tier != "professional":
-    raise HTTPException(status_code=403, detail="Ad Campaign creation is only available on the Professional plan.")

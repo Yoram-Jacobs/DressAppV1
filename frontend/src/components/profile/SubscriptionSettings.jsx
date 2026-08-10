@@ -24,7 +24,7 @@ export function SubscriptionSettings() {
   const expiresAt = sub.expires_at ? new Date(sub.expires_at).toLocaleDateString() : '';
 
   const userTier = (isActive && planType !== 'free') ? tier : 'free';
-  const capacity = userTier === 'free' ? (50 + (user?.closet_capacity_bonus || 0)) : 999999;
+  const capacity = userTier === 'free' ? Math.min(200, 50 + (user?.closet_capacity_bonus || 0)) : 999999;
 
   const handleUpgrade = async (type) => {
     if (busy) return;

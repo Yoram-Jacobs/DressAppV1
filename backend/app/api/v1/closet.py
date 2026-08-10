@@ -287,7 +287,7 @@ async def create_item(
             
     if user_tier == "free":
         current_count = await db.closet_items.count_documents({"user_id": user["id"]})
-        capacity_limit = 50 + user.get("closet_capacity_bonus", 0)
+        capacity_limit = min(200, 50 + user.get("closet_capacity_bonus", 0))
         if current_count >= capacity_limit:
             raise HTTPException(
                 status_code=402,
@@ -4597,7 +4597,7 @@ async def upload_group_member(
             
     if user_tier == "free":
         current_count = await db.closet_items.count_documents({"user_id": user["id"]})
-        capacity_limit = 50 + user.get("closet_capacity_bonus", 0)
+        capacity_limit = min(200, 50 + user.get("closet_capacity_bonus", 0))
         if current_count >= capacity_limit:
             raise HTTPException(
                 status_code=402,

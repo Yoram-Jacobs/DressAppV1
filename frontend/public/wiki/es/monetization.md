@@ -1,131 +1,134 @@
-Aquí tienes la traducción de la documentación de DressApp al español, siguiendo todas las reglas especificadas:
+# Motor de monetización y facturación de DressApp
 
-# Motor de Monetización y Facturación de DressApp
-
-Este documento ofrece una descripción arquitectónica exhaustiva, un manual de usuario y un análisis tecnológico profundo de la monetización, la facturación por suscripción y los límites de tres niveles en DressApp.
+Este documento proporciona una visión general integral de la arquitectura, el manual del usuario y el análisis tecnológico detallado de la monetización, la facturación de suscripciones y la mecánica del ciclo de crecimiento viral en DressApp.
 
 ---
 
-## 1. Resumen Ejecutivo y Propuesta de Valor
+## 1. Resumen ejecutivo y propuesta de valor
 
-### Descripción General
-DressApp implementa un modelo de monetización de tres niveles diseñado para adaptarse a diferentes arquetipos de usuario:
-1.  **Nivel Gratuito**:
-    *   **Costo**: $0 / mes (no se requiere tarjeta de crédito).
-    *   **Límites**: Hasta 50 artículos en el armario y hasta 10 operaciones diarias de IA.
-    *   **Características**: Organización básica del armario, soporte comunitario. Restricciones para vender/alquilar en el mercado (solo intercambio/donación). El acceso a Trend Scout y Campañas está deshabilitado.
-2.  **Nivel Manager**:
-    *   **Costo**: $5 / mes o $50 / año.
-    *   **Límites**: Artículos ilimitados en el armario y solicitudes diarias ilimitadas de IA.
-    *   **Características**: Opciones de mercado (Vender, Intercambiar, Alquilar, Donar), Trend Scout, Programador y notificaciones push, Soporte prioritario. La creación de Campañas está deshabilitada.
-3.  **Nivel Profesional**:
-    *   **Costo**: $10 / mes o $100 / año.
-    *   **Límites**: Artículos ilimitados en el armario y solicitudes diarias ilimitadas de IA.
-    *   **Características**: Todas las características incluidas, soporte dedicado y soporte completo para la creación de Campañas publicitarias.
+### Perspectiva general de alto nivel
+DressApp implementa un modelo híbrido de suscripción SaaS y un sistema de limitación de uso diario (utility gating):
+1. **Planes de suscripción (SaaS)**: Tarifas planas (Free, Manager, Professional) que controlan la capacidad de almacenamiento del armario, las cuotas diarias de estilismo con IA y las funciones avanzadas (p. ej., creación de campañas publicitarias).
+2. **Límites de cuota diaria (Plan Free)**: Uso limitado de IA en el plan Free, que restringe a los usuarios a 10 solicitudes diarias. La lógica de deducción y el vencimiento de los paquetes de 30 días se aplican *únicamente* a las cuentas Free y de prueba (Trial).
+3. **Ciclo de crecimiento viral**: Un programa de recomendación que permite a los usuarios del plan Free expandir su capacidad básica de armario de forma orgánica compartiendo enlaces de invitación.
+4. **Pagos localizados (Pasarela Atzmai)**: Soporte nativo para pagos israelíes (Bit, tarjetas de crédito locales) en ILS (shékels). Dado que Atzmai solo admite ILS, los precios en USD se convierten utilizando una API de tipo de cambio en vivo.
 
-### Flujo Arquitectónico
+### Flujo de arquitectura
 
 ```mermaid
 graph TD
     User([User App Client])
-    Gateway[Payments API Gateway /paypal]
+    Gateway[Payments API Gateway /atzmai]
+    Auth[Auth Router /auth/register]
     Closet[Closet Router /closet/item]
-    Campaigns[Campaigns Router /campaigns]
     DB[(MongoDB Atlas)]
+    AtzmaiAPI[Atzmai Payment API]
     PayPalAPI[PayPal Subscriptions API]
 
     %% Closet Upload Limit Gating
     User -->|1. Upload Garment| Closet
     Closet -->|2. Check Item Count & Subscription| DB
     DB -->|3. Return Count + SubscriptionInfo| Closet
-    Closet -.->|If Exceeded: HTTP 402| User
+    Closet -.->|If Exceeded & Sub Inactive: HTTP 402| User
     
     %% Paid Subscription Checkout
-    User -->|4. Post /paypal/subscribe| Gateway
-    Gateway -->|5. Create Intent| PayPalAPI
-    PayPalAPI -->|6. Return Approve URL| Gateway
-    Gateway -->|7. Return Approve URL| User
-    User -->|8. User Approves Payment| PayPalAPI
-    User -->|9. Post /paypal/subscribe/capture| Gateway
-    Gateway -->|10. Verify Activation| PayPalAPI
-    Gateway -->|11. Write Active Sub & Tier| DB
+    User -->|4. Post /atzmai/subscribe| Gateway
+    Gateway -->|5. Create Intent (ILS)| AtzmaiAPI
+    AtzmaiAPI -->|6. Return Payment URL| Gateway
+    Gateway -->|7. Return Payment URL| User
+    User -->|8. User Approves Payment| AtzmaiAPI
+    AtzmaiAPI -->|9. Trigger Webhook| Gateway
+    Gateway -->|10. Capture Transaction| DB
     
-    %% Campaigns Gating
-    User -->|12. Create Campaign| Campaigns
-    Campaigns -->|13. Check Tier| DB
-    Campaigns -.->|If Not Professional: HTTP 403| User
+    %% Viral Referral Mechanics
+    User -->|11. Register with referrer_id| Auth
+    Auth -->|12. Increment closet_capacity_bonus| DB
 ```
 
 ---
 
-## 2. Manual de Usuario Exhaustivo
+## 2. Planes de suscripción y topología de precios
 
-### Topología de la Interfaz Visual
-La página de perfil de usuario ([Profile.jsx](file:///C:/DressApp_AG/frontend/src/pages/Profile.jsx)) alberga el widget de Gestión de Suscripciones en la sección **Suscripción y Límites**, mostrando el recuento de artículos (límite de 0 a 50 para el plan Gratuito), el estado del nivel del plan activo y las próximas fechas de renovación.
-La página de precios ([Pricing.jsx](file:///C:/DressApp_AG/frontend/src/pages/Pricing.jsx)) muestra tarjetas que comparan los planes Gratuito, Manager y Profesional, así como una lista de verificación detallada de características.
+### Planes de precios
 
-### Recorridos por Modos y Flujos de Trabajo
+| Plan | Price (Monthly) | Closet Capacity | AI Credits Allocation | Key Features |
+| :--- | :--- | :--- | :--- | :--- |
+| **Free Plan** | $0.00 / mes | 50 elementos base | 10 créditos diarios gratuitos (expiran en 30 días) | Organización básica, soporte de la comunidad, expansiones por recomendaciones (+10 espacios por registro hasta un máximo de 200 elementos) |
+| **Manager (Pro)** | $4.99 / mes | Ilimitado | Operaciones diarias ilimitadas | Prueba gratuita de 14 días, asignación inicial de 50 créditos, venta y alquiler en el mercado, Trend Scout, notificaciones programadas |
+| **Professional** | $9.99 / mes | Ilimitado | Operaciones diarias ilimitadas | Prueba gratuita de 30 días, asignación inicial de 300 créditos, todas las funciones de Manager, soporte para crear campañas publicitarias (tarifa de $1/día, máx. 3 campañas simultáneas) |
 
-#### A. Actualización de su Membresía (Flujo de Pago)
-1.  **Inicio de la Actualización**: El usuario selecciona su plan deseado (Manager o Profesional) y la frecuencia de facturación (Mensual o Anual) y hace clic en **Actualizar Plan**.
-2.  **Registro de Pedido**: El cliente emite una solicitud `POST /paypal/subscribe`. El backend se comunica con PayPal, genera un ID de suscripción y devuelve una `approve_url`.
-3.  **Procesamiento de Pago**: El navegador del cliente redirige a la página de pago de PayPal Sandbox (o es manejado a través de una pasarela Mock Atzmai/PayPal). El usuario inicia sesión y aprueba el acuerdo de facturación.
-4.  **Redirección y Captura**: PayPal redirige el navegador de vuelta a `/pricing?sub_status=success&token=SUBSCRIPTION_ID`.
-5.  **Activación**: El cliente detecta los parámetros de búsqueda, emite `POST /paypal/subscribe/capture/{subscription_id}` y actualiza la sesión del usuario. El nivel del plan activo se actualiza inmediatamente en la interfaz de usuario.
+### Paquetes de créditos prepagados de IA (Obsoleto - Obsolete)
+* Los paquetes de recarga de créditos prepagados **ya no son compatibles**.
+* Para evitar interrupciones en el servicio, los usuarios del plan Free deben actualizar a un plan de suscripción Manager o Professional.
+
+### Vencimiento de créditos y prioridad de consumo (Lógica FIFO)
+* **Regla**: El vencimiento de los créditos (30 días) y la lógica de prioridad de consumo FIFO (primero en entrar, primero en salir) se aplican **únicamente a los planes de suscripción Free y de prueba (Trial)**.
+* **Planes de pago**: Los usuarios con planes Manager o Professional activos reciben operaciones diarias de IA ilimitadas y no están sujetos a la medición de créditos, su vencimiento o comprobaciones de prioridad de deducción.
 
 ---
 
-## 3. Análisis Profundo de la Pila Tecnológica y Capacidades
+## 3. Pagos localizados y facturación (Pasarela Atzmai)
 
-### Definiciones del Esquema de Datos
-El esquema de MongoDB en [schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) contiene el estado de facturación y el nivel activo del usuario:
+Para las cuentas con sede en Israel, DressApp se integra con la **pasarela de pagos Atzmai** para procesar transacciones locales en ILS (shékels):
+1. **Procesamiento exclusivo en ILS**: La pasarela Atzmai procesa los pagos locales exclusivamente en ILS.
+2. **Conversión de moneda**: Las suscripciones y las tarifas de campañas denominadas en USD se convierten dinámicamente a ILS antes de generar el enlace, utilizando una API de tipo de cambio en vivo (volviendo a una tarifa estática de 3.70 si no está disponible).
+3. **Verificación por Webhook y facturación de campañas**:
+   - El seguimiento general de transacciones a través de `atzmai_topups` es obsoleto.
+   - Sin embargo, `atzmai_topups` sigue activa para capturar y verificar los **pagos de campañas diarios (tarifa de $1/día)**.
+   - Tras una captura exitosa, la fecha `last_daily_payment_date` de la campaña se actualiza a la fecha actual.
+4. **Contabilidad automatizada en PDF**: Tras una captura exitosa, el backend consulta la API de facturación de Atzmai para generar y descargar los archivos PDF de facturas y recibos oficiales. Estos se envían como archivos adjuntos por correo electrónico directamente al comprador.
+
+---
+
+## 4. Pila tecnológica y análisis profundo de capacidades
+
+### Definición de esquemas de datos (Data Schema Definitions)
+
+El esquema de MongoDB en [schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) realiza un seguimiento de las suscripciones de los usuarios y la capacidad del armario:
 
 ```python
 class SubscriptionInfo(BaseModel):
     is_active: bool = False
     plan_type: Literal["free", "monthly", "yearly"] = "free"
     tier: Literal["free", "manager", "professional"] = "free"
+    stripe_subscription_id: str | None = None
     paypal_subscription_id: str | None = None
-    expires_at: str | None = None              # ISO timestamp
-    cancelled_at: str | None = None            # ISO timestamp
+    atzmai_subscription_id: str | None = None
+    expires_at: str | None = None
+    cancelled_at: str | None = None
 
 class User(BaseDoc):
-    # ... other profile documents ...
     subscription: SubscriptionInfo = Field(default_factory=SubscriptionInfo)
+    closet_capacity_bonus: int = 0
 ```
 
-### Enrutamiento de la API y Acciones Restringidas
-
-#### Límite de Artículos del Armario ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
-Durante la inserción de artículos, el sistema verifica los límites para los usuarios del nivel Gratuito:
+### Aplicación de límites del armario ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
+Durante la carga de prendas, el sistema protege los límites de la base de datos con un límite estricto de 200 elementos para recomendaciones:
 ```python
-sub = user.get("subscription") or {}
-is_active = sub.get("is_active", False)
-plan_type = sub.get("plan_type", "free")
-tier = sub.get("tier", "free")
-
-user_tier = "free"
-if is_active and plan_type != "free":
-    user_tier = tier
-
-if user_tier == "free":
-    item_count = await db.closet_items.count_documents({"owner_id": user_id, "status": {"$ne": "deleted"}})
-    if item_count >= 50:
-        raise HTTPException(status_code=402, detail="Closet capacity limit (50 items) exceeded. Please upgrade.")
+capacity_limit = min(200, 50 + user.get("closet_capacity_bonus", 0))
+if current_count >= capacity_limit and not user.get("subscription", {}).get("is_active", False):
+    raise HTTPException(
+        status_code=402,
+        detail={
+            "code": "closet_capacity_exceeded",
+            "message": f"You have reached your free closet capacity of {capacity_limit} items. Upgrade to Manager or Professional to add more items."
+        }
+    )
 ```
 
-#### Límite Diario de Operaciones de IA ([credit_manager.py](file:///C:/DressApp_AG/backend/app/services/credit_manager.py))
-Para los usuarios del nivel Gratuito, las operaciones de IA incrementan un contador diario registrado en `user.ai_configuration.daily_request_count`. Cuando este alcanza 10, las solicitudes son bloqueadas con HTTP 402.
-
-#### Restricción del Marketplace ([listings.py](file:///C:/DressApp_AG/backend/app/api/v1/listings.py))
-Si un usuario está en el nivel Gratuito, las publicaciones creadas con intención `"for_sale"` o `"rent"` son rechazadas:
+### Lógica de conversión de moneda ([atzmai_client.py](file:///C:/DressApp_AG/backend/app/services/atzmai_client.py))
+Convierte montos de USD a ILS dinámicamente antes de enviar payloads a Atzmai:
 ```python
-if user_tier == "free" and listing.intent in ["for_sale", "rent"]:
-    raise HTTPException(status_code=403, detail="Free plan users can only Swap or Donate garments. Upgrade to list for sale or rent.")
+async def get_usd_to_ils_rate() -> float:
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get("https://open.er-api.com/v6/latest/USD", timeout=5.0)
+            if resp.status_code == 200:
+                data = resp.json()
+                rate = data.get("rates", {}).get("ILS")
+                if rate:
+                    return float(rate)
+    except Exception:
+        pass
+    return 3.70
 ```
-
-#### Restricción de Campañas ([campaigns.py](file:///C:/DressApp_AG/backend/app/api/v1/campaigns.py))
-Los puntos finales de creación de Campañas restringen las acciones a menos que el nivel de suscripción activo sea Profesional:
-```python
-if user_tier != "professional":
-    raise HTTPException(status_code=403, detail="Ad Campaign creation is only available on the Professional plan.")

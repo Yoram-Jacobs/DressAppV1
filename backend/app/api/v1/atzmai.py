@@ -75,6 +75,10 @@ async def create_atzmai_topup(
     req: Request,
     user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
+    raise HTTPException(
+        status_code=400,
+        detail="Prepaid credit packs are no longer supported. Please upgrade to Manager or Professional tier for unlimited operations."
+    )
     currency = payload.currency.upper()
     if payload.pack == "custom":
         amount_cents = int(payload.custom_amount_cents or 0)
@@ -346,6 +350,30 @@ async def atzmai_webhook(payload: AtzmaiCallbackPayload) -> dict[str, Any]:
                     )
                 )
                 
+        elif tx_type == "campaign_daily":
+            # Campaign daily running payment capture
+            campaign_id = topup.get("campaign_id")
+            today = datetime.now(timezone.utc).date().isoformat()
+            await db.experts_campaigns.update_one(
+                {"id": campaign_id},
+                {"$set": {
+                    "billing.last_daily_payment_date": today,
+                    "billing.payment_status": "paid",
+                    "updated_at": _now_iso()
+                }}
+            )
+            if user_record:
+                import asyncio
+                asyncio.create_task(
+                    trigger_success_email(
+                        user_record=user_record,
+                        amount_cents=amount_cents,
+                        currency=currency,
+                        credits_purchased=0,
+                        atzmai_payment_id=atzmai_payment_id
+                    )
+                )
+
         elif tx_type == "subscription":
             # Subscription upgrade
             tier = topup.get("tier", "manager")

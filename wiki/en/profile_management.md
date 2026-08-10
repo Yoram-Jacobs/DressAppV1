@@ -10,7 +10,7 @@ The **Profile & Settings** page (`https://dressapp.co/me`) serves as the central
 ## Prerequisites
 - An active DressApp account.
 - (Optional) Device camera permissions for full-body photo upload.
-- (Optional) Location permissions for local stylist campaign targeting and weather forecasting.
+- (Optional) Location permissions for local stylist campaign targeting, cultural restrictions and weather forecasting.
 
 ---
 
@@ -111,8 +111,7 @@ If you signed in with Google before DressApp requested access to your **People A
 Manages system-level settings, subscriptions, and AI integrations:
 
 - **AI Configuration**:
-  - *Standard Mode*: Uses system-managed Gemini Flash 2.x endpoints.
-  - *Custom API Keys Mode*: Connect custom Google Gemini, Anthropic, OpenAI, or DeepSeek API keys via a guided setup modal.
+    - *Custom API Keys Mode*: Connect custom Google Gemini, Anthropic, OpenAI, or DeepSeek API keys via a guided setup modal.
 - **Subscription & Closet Limits**:
   - View current account tier (**Free**: 50-item limit vs **Manager** or **Professional**: Unlimited items).
   - Upgrade via PayPal Subscriptions REST API (Manager: $5/month or $50/year; Professional: $10/month or $100/year).

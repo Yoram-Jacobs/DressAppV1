@@ -259,7 +259,10 @@ async def topup_history(
 async def create_topup(
     payload: TopupIn, user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
-    _require_configured()
+    raise HTTPException(
+        status_code=400,
+        detail="Prepaid credit packs are no longer supported. Please upgrade to Manager or Professional tier for unlimited operations."
+    )
     currency = payload.currency.upper()
     if payload.pack == "custom":
         amount_cents = int(payload.custom_amount_cents or 0)
@@ -304,8 +307,10 @@ async def create_topup(
 async def capture_topup(
     topup_id: str, user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
-    _require_configured()
-    db = get_db()
+    raise HTTPException(
+        status_code=400,
+        detail="Prepaid credit packs are no longer supported. Please upgrade to Manager or Professional tier for unlimited operations."
+    )
     topup = await db.credit_topups.find_one(
         {"id": topup_id, "user_id": user["id"]}, {"_id": 0}
     )

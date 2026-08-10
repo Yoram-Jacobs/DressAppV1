@@ -1,129 +1,134 @@
-# محرك تحقيق الدخل والفواتير في DressApp
+# محرك تحقيق الدخل والفوترة في DressApp
 
-يقدم هذا المستند نظرة عامة معمارية شاملة، ودليل مستخدم، وتغطية تقنية متعمقة لتحقيق الدخل، وفوترة الاشتراكات، والقيود ذات المستويات الثلاثة في DressApp.
+تقدم هذه الوثيقة نظرة عامة شاملة على الهندسة البرمجية، ودليل المستخدم، والتعمق التقني لآليات تحقيق الدخل، وفواتير الاشتراكات، وحلقات النمو في DressApp.
 
 ---
 
-## 1. ملخص تنفيذي وعرض القيمة
+## 1. الملخص التنفيذي ونموذج القيمة المضافة
 
 ### نظرة عامة عالية المستوى
-تطبق DressApp نموذج تحقيق دخل ثلاثي المستويات مصمم ليناسب أنواع المستخدمين المختلفة:
-1.  **الطبقة المجانية (Free Tier)**:
-    *   **التكلفة**: 0 دولار أمريكي شهريًا (لا تتطلب بطاقة ائتمان).
-    *   **الحدود**: ما يصل إلى 50 قطعة في الخزانة وما يصل إلى 10 عمليات ذكاء اصطناعي يوميًا.
-    *   **الميزات**: تنظيم أساسي للخزانة، دعم المجتمع. محظور من البيع/التأجير في السوق (التبديل/التبرع فقط). الوصول إلى Trend Scout والحملات (Campaigns) معطل.
-2.  **طبقة المدير (Manager Tier)**:
-    *   **التكلفة**: 5 دولارات أمريكية شهريًا أو 50 دولارًا أمريكيًا سنويًا.
-    *   **الحدود**: عدد غير محدود من قطع الخزانة وعدد غير محدود من طلبات الذكاء الاصطناعي اليومية.
-    *   **الميزات**: خيارات السوق (البيع، التبديل، التأجير، التبرع)، Trend Scout، الجدولة والإشعارات الفورية، الدعم ذو الأولوية. إنشاء الحملات (Campaigns) معطل.
-3.  **الطبقة الاحترافية (Professional Tier)**:
-    *   **التكلفة**: 10 دولارات أمريكية شهريًا أو 100 دولار أمريكي سنويًا.
-    *   **الحدود**: عدد غير محدود من قطع الخزانة وعدد غير محدود من طلبات الذكاء الاصطناعي اليومية.
-    *   **الميزات**: جميع الميزات متضمنة، دعم مخصص، ودعم كامل لإنشاء حملات إعلانية (Ad Campaigns).
+يعتمد DressApp نموذجًا هجينًا يجمع بين اشتراك SaaS ونظام حظر الخدمة اليومي (utility gating):
+1. **فئات الاشتراكات (SaaS)**: خطط ذات أسعار ثابتة (Free، Manager، Professional) تحكم سعة تخزين خزانة الملابس، وحصص التنسيق اليومية بالذكاء الاصطناعي، والميزات المتقدمة (مثل إنشاء حملات الإعلانات).
+2. **حدود الحصص اليومية (الفئة المجانية)**: استخدام مقيد للذكاء الاصطناعي في الخطة المجانية، مما يقصر المستخدمين على 10 طلبات يومية. ينطبق منطق الخصم وانتهاء صلاحية الفئات لمدة 30 يومًا على الحسابات المجانية والتجريبية *فقط*.
+3. **حلقة النمو الفيروسي**: برنامج إحالة يسمح لمستخدمي الفئة المجانية بتوسيع سعة خزانة الملابس الأساسية بشكل عضوي من خلال مشاركة روابط الدعوة.
+4. **المدفوعات المحلية (بوابة Atzmai)**: دعم أصيل للمدفوعات الإسرائيلية (Bit، وبطاقات الائتمان المحلية) بالـ ILS (الشيكل). نظرًا لأن Atzmai تدعم الـ ILS فقط، يتم تحويل أسعار الـ USD باستخدام واجهة برمجة تطبيقات لأسعار الصرف المباشرة.
 
-### التدفق المعماري
+### التدفق الهندسي (Architectural Flow)
 
 ```mermaid
 graph TD
     User([User App Client])
-    Gateway[Payments API Gateway /paypal]
+    Gateway[Payments API Gateway /atzmai]
+    Auth[Auth Router /auth/register]
     Closet[Closet Router /closet/item]
-    Campaigns[Campaigns Router /campaigns]
     DB[(MongoDB Atlas)]
+    AtzmaiAPI[Atzmai Payment API]
     PayPalAPI[PayPal Subscriptions API]
 
     %% Closet Upload Limit Gating
     User -->|1. Upload Garment| Closet
     Closet -->|2. Check Item Count & Subscription| DB
     DB -->|3. Return Count + SubscriptionInfo| Closet
-    Closet -.->|If Exceeded: HTTP 402| User
+    Closet -.->|If Exceeded & Sub Inactive: HTTP 402| User
     
     %% Paid Subscription Checkout
-    User -->|4. Post /paypal/subscribe| Gateway
-    Gateway -->|5. Create Intent| PayPalAPI
-    PayPalAPI -->|6. Return Approve URL| Gateway
-    Gateway -->|7. Return Approve URL| User
-    User -->|8. User Approves Payment| PayPalAPI
-    User -->|9. Post /paypal/subscribe/capture| Gateway
-    Gateway -->|10. Verify Activation| PayPalAPI
-    Gateway -->|11. Write Active Sub & Tier| DB
+    User -->|4. Post /atzmai/subscribe| Gateway
+    Gateway -->|5. Create Intent (ILS)| AtzmaiAPI
+    AtzmaiAPI -->|6. Return Payment URL| Gateway
+    Gateway -->|7. Return Payment URL| User
+    User -->|8. User Approves Payment| AtzmaiAPI
+    AtzmaiAPI -->|9. Trigger Webhook| Gateway
+    Gateway -->|10. Capture Transaction| DB
     
-    %% Campaigns Gating
-    User -->|12. Create Campaign| Campaigns
-    Campaigns -->|13. Check Tier| DB
-    Campaigns -.->|If Not Professional: HTTP 403| User
+    %% Viral Referral Mechanics
+    User -->|11. Register with referrer_id| Auth
+    Auth -->|12. Increment closet_capacity_bonus| DB
 ```
 
 ---
 
-## 2. دليل المستخدم الشامل
+## 2. فئات الاشتراكات وهيكل التسעير
 
-### بنية الواجهة المرئية
-تستضيف صفحة ملف تعريف المستخدم ([Profile.jsx](file:///C:/DressApp_AG/frontend/src/pages/Profile.jsx)) أداة إدارة الاشتراكات (Subscription Management widget) ضمن قسم **الاشتراكات والحدود (Subscription & Limits)**، حيث تعرض عدد العناصر (حد 0 إلى 50 للخطة المجانية)، وحالة مستوى الخطة النشطة، وتواريخ التجديد التالية.
-تعرض صفحة التسعير ([Pricing.jsx](file:///C:/DressApp_AG/frontend/src/pages/Pricing.jsx)) بطاقات تقارن بين الخطط المجانية والمدير والاحترافية، بالإضافة إلى قائمة مراجعة تفصيلية لشبكة الميزات.
+### خطط التسعير
 
-### شروحات الأوضاع وسير العمل
+| Plan | Price (Monthly) | Closet Capacity | AI Credits Allocation | Key Features |
+| :--- | :--- | :--- | :--- | :--- |
+| **Free Plan** | $0.00 / month | 50 عنصرًا أساسيًا | 10 أرصدة مجانية يوميًا (تنتهي صلاحيتها خلال 30 يومًا) | التنظيم الأساسي، دعم المجتمع، توسيع الإحالات (+10 فتحات لكل تسجيل حتى 200 عنصر كحد أقصى) |
+| **Manager (Pro)** | $4.99 / month | غير محدود | عمليات يومية غير محدودة | فترة تجريبية مجانية لمدة 14 يومًا، تخصيص أولي قدره 50 رصيدًا، البيع والتأجير في السوق، Trend Scout، التنبيهات المجدولة |
+| **Professional** | $9.99 / month | غير محدود | عمليات يومية غير محدودة | فترة تجريبية مجانية لمدة 30 يومًا، تخصيص أولي قدره 300 رصيدًا، جميع ميزات Manager، دعم إنشاء حملات إعلانية (رسوم $1/يوميًا، بحد أقصى 3 حملات متزامنة) |
 
-#### أ. ترقية عضويتك (سير العمل المدفوع)
-1.  **بدء الترقية**: يختار المستخدم خطته المرغوبة (Manager أو Professional) وتكرار الفوترة (شهري أو سنوي) ثم ينقر على **ترقية الخطة (Upgrade Plan)**.
-2.  **تسجيل الطلب**: يرسل العميل طلب `POST /paypal/subscribe`. يتصل الواجهة الخلفية (backend) بـ PayPal، ويقوم بإنشاء معرف اشتراك (subscription ID)، ويعيد `approve_url`.
-3.  **معالجة الدفع**: يعيد متصفح العميل التوجيه إلى صفحة الدفع الخاصة بـ PayPal Sandbox (أو يتم التعامل معها عبر بوابة Mock Atzmai/PayPal). يقوم المستخدم بتسجيل الدخول ويوافق على اتفاقية الفوترة.
-4.  **إعادة التوجيه والاستيلاء**: يعيد PayPal توجيه المتصفح مرة أخرى إلى `/pricing?sub_status=success&token=SUBSCRIPTION_ID`.
-5.  **التفعيل**: يكتشف العميل معلمات البحث (search params)، ويرسل `POST /paypal/subscribe/capture/{subscription_id}`، ويقوم بتحديث جلسة المستخدم. يتم تحديث مستوى الخطة النشطة فورًا في واجهة المستخدم.
+### حزم أرصدة الذكاء الاصطناعي المدفوعة مسبقًا (مهجورة - Obsolete)
+* لم تعد حزم شحن الرصيد المدفوع مسبقًا **مدعومة**.
+* لتجنب انقطاع الخدمة، يجب على مستخدمي الخطة المجانية الترقية إلى خطة اشتراك Manager أو Professional.
+
+### صلاحية الرصيد وأولوية الاستهلاك (منطق الوارد أولاً يصرف أولاً - FIFO)
+* **القاعدة**: تنطبق صلاحية الرصيد (30 يومًا) ومنطق أولوية الاستهلاك FIFO (الوارد أولاً يصرف أولاً) على **فئتي الاشتراك المجاني والتجريبي فقط**.
+* **الخطط المدفوعة**: يتلقى المستخدمون في خطط Manager أو Professional النشطة عمليات ذكاء اصطناعي يومية غير محدودة، ولا يخضعون لقياس الرصيد أو انتهاء الصلاحية أو فحوصات أولوية السحب.
 
 ---
 
-## 3. حزمة التقنيات والغوص العميق في القدرات
+## 3. المدفوعات المحلية والفوترة (بوابة Atzmai)
 
-### تعريفات مخطط البيانات
-يحتوي مخطط MongoDB في [schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) على حالة الفوترة الخاصة بالمستخدم والمستوى النشط:
+بالنسبة للحسابات المقيمة في إسرائيل، يتكامل DressApp مع **بوابة دفع Atzmai** لمعالجة المعاملات المحلية بالـ ILS (الشيكل):
+1. **المعالجة بالـ ILS فقط**: تعالج بوابة Atzmai المدفوعات المحلية بالـ ILS حصريًا.
+2. **تحويل العملات**: يتم تحويل الاشتراكات ورسوم الحملات المقومة بالـ USD ديناميكيًا إلى ILS قبل توليد الرابط باستخدام واجهة برمجة تطبيقات لأسعار الصرف المباشرة (مع الرجوع إلى سعر ثابت قدره 3.70 إذا تعذر الوصول إليها).
+3. **التحقق من Webhook وفوترة الحملات**:
+   - يعتبر التتبع العام للمعاملات عبر `atzmai_topups` ملغى.
+   - ومع ذلك، تظل `atzmai_topups` نشطة لالتقاط والتحقق من **مدفوعات الحملة اليومية (رسوم بقيمة $1/يوميًا)**.
+   - عند نجاح عملية الالتقاط، يتم تحديث تاريخ `last_daily_payment_date` للحملة إلى التاريخ الحالي.
+4. **مسك الدفاتر المؤتمت بصيغة PDF**: عند نجاح عملية الالتقاط (capture), يستعلم النظام الخلفي عن واجهة برمجة تطبيقات فوترة Atzmai لإنشاء وتنزيل ملفات PDF الرسمية للفواتير والإيصالات. يتم إرسالها كمرفقات بريد إلكتروني مباشرة إلى المشتري.
+
+---
+
+## 4. المكونات التقنية والتعمق في القدرات
+
+### تعريفات مخطط البيانات (Data Schema Definitions)
+
+يتتبع مخطط MongoDB في [schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) اشتراكات المستخدم وسعة خزانة الملابس:
 
 ```python
 class SubscriptionInfo(BaseModel):
     is_active: bool = False
     plan_type: Literal["free", "monthly", "yearly"] = "free"
     tier: Literal["free", "manager", "professional"] = "free"
+    stripe_subscription_id: str | None = None
     paypal_subscription_id: str | None = None
-    expires_at: str | None = None              # ISO timestamp
-    cancelled_at: str | None = None            # ISO timestamp
+    atzmai_subscription_id: str | None = None
+    expires_at: str | None = None
+    cancelled_at: str | None = None
 
 class User(BaseDoc):
-    # ... other profile documents ...
     subscription: SubscriptionInfo = Field(default_factory=SubscriptionInfo)
+    closet_capacity_bonus: int = 0
 ```
 
-### توجيه API والإجراءات المقيدة
-
-#### حدود عناصر الخزانة ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
-أثناء إدراج العنصر، يتحقق النظام من الحدود للمستخدمين المجانيين:
+### فرض قيود خزانة الملابس ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
+أثناء تحميل العناصر، يحمي النظام قيود قاعدة البيانات بحد أقصى 200 عنصر للإحالات:
 ```python
-sub = user.get("subscription") or {}
-is_active = sub.get("is_active", False)
-plan_type = sub.get("plan_type", "free")
-tier = sub.get("tier", "free")
-
-user_tier = "free"
-if is_active and plan_type != "free":
-    user_tier = tier
-
-if user_tier == "free":
-    item_count = await db.closet_items.count_documents({"owner_id": user_id, "status": {"$ne": "deleted"}})
-    if item_count >= 50:
-        raise HTTPException(status_code=402, detail="Closet capacity limit (50 items) exceeded. Please upgrade.")
+capacity_limit = min(200, 50 + user.get("closet_capacity_bonus", 0))
+if current_count >= capacity_limit and not user.get("subscription", {}).get("is_active", False):
+    raise HTTPException(
+        status_code=402,
+        detail={
+            "code": "closet_capacity_exceeded",
+            "message": f"You have reached your free closet capacity of {capacity_limit} items. Upgrade to Manager or Professional to add more items."
+        }
+    )
 ```
 
-#### حدود عمليات الذكاء الاصطناعي اليومية ([credit_manager.py](file:///C:/DressApp_AG/backend/app/services/credit_manager.py))
-بالنسبة لمستخدمي الطبقة المجانية، تزيد عمليات الذكاء الاصطناعي من عدد يومي يتم تتبعه في `user.ai_configuration.daily_request_count`. عند وصوله إلى 10، يتم حظر الطلبات برمز HTTP 402.
-
-#### تقييد الوصول إلى السوق ([listings.py](file:///C:/DressApp_AG/backend/app/api/v1/listings.py))
-إذا كان المستخدم في الطبقة المجانية، يتم رفض القوائم التي تم إنشاؤها بقصد `"for_sale"` أو `"rent"`:
+### منطق تحويل العملات ([atzmai_client.py](file:///C:/DressApp_AG/backend/app/services/atzmai_client.py))
+يحول مبالغ الـ USD إلى ILS ديناميكيًا قبل إرسال البيانات إلى Atzmai:
 ```python
-if user_tier == "free" and listing.intent in ["for_sale", "rent"]:
-    raise HTTPException(status_code=403, detail="Free plan users can only Swap or Donate garments. Upgrade to list for sale or rent.")
+async def get_usd_to_ils_rate() -> float:
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get("https://open.er-api.com/v6/latest/USD", timeout=5.0)
+            if resp.status_code == 200:
+                data = resp.json()
+                rate = data.get("rates", {}).get("ILS")
+                if rate:
+                    return float(rate)
+    except Exception:
+        pass
+    return 3.70
 ```
-
-#### تقييد الوصول إلى الحملات ([campaigns.py](file:///C:/DressApp_AG/backend/app/api/v1/campaigns.py))
-تقوم نقاط نهاية إنشاء الحملات بتقييد الإجراءات ما لم يكن مستوى الاشتراك النشط هو Professional:
-```python
-if user_tier != "professional":
-    raise HTTPException(status_code=403, detail="Ad Campaign creation is only available on the Professional plan.")

@@ -212,8 +212,10 @@ async def create_purchase(
     payload: AiCreditPurchaseIn,
     user: dict = Depends(get_current_user),
 ) -> Dict[str, Any]:
-    """Create Atzmai payment link for credit pack purchase (adds paid credit bucket upon capture)."""
-    import uuid
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Prepaid AI credit packs are no longer supported. Please upgrade to Manager or Professional tier for unlimited AI operations."
+    )
     from app.services import atzmai_client
     
     currency = payload.currency.upper()
@@ -307,8 +309,10 @@ async def capture_purchase(
     purchase_id: str,
     user: dict = Depends(get_current_user),
 ) -> Dict[str, Any]:
-    """Capture Atzmai transaction and add credit bucket (paid credits, never expires)."""
-    db = get_db()
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Prepaid AI credit packs are no longer supported. Please upgrade to Manager or Professional tier for unlimited AI operations."
+    )
     from app.services import atzmai_client
     
     purchase = await db.ai_credit_purchases.find_one(

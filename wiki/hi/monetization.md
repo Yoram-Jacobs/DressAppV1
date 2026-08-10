@@ -1,131 +1,147 @@
-यहाँ DressApp markdown डॉक्यूमेंटेशन का हिंदी अनुवाद दिया गया है:
+# DressApp मुद्रीकरण और बिलिंग इंजन
 
-# ड्रेसऐप मुद्रीकरण और बिलिंग इंजन
-
-यह दस्तावेज़ ड्रेसऐप में मुद्रीकरण, सदस्यता बिलिंग और तीन-स्तरीय सीमाओं का एक व्यापक वास्तुशिल्प अवलोकन, उपयोगकर्ता पुस्तिका और प्रौद्योगिकी पर गहन जानकारी प्रदान करता है।
+यह दस्तावेज़ DressApp में मुद्रीकरण, सब्सक्रिप्शन बिलिंग और वायरल विकास-लूप यांत्रिकी का एक व्यापक वास्तुशिल्प अवलोकन, उपयोगकर्ता मैनुअल और तकनीकी गहराई से विश्लेषण प्रदान करता है।
 
 ---
 
 ## 1. कार्यकारी सारांश और मूल्य प्रस्ताव
 
-### उच्च-स्तरीय अवलोकन
-ड्रेसऐप विभिन्न उपयोगकर्ता पुराप्ररूपों (archetypes) के अनुकूल एक तीन-स्तरीय मुद्रीकरण मॉडल लागू करता है:
-1.  **फ्री टियर**:
-    *   **लागत**: $0 / महीना (क्रेडिट कार्ड की आवश्यकता नहीं)।
-    *   **सीमाएँ**: 50 अलमारी आइटम तक और प्रतिदिन 10 AI संचालन तक।
-    *   **विशेषताएँ**: मूल अलमारी संगठन, सामुदायिक सहायता। मार्केटप्लेस पर बेचने/किराए पर देने से प्रतिबंधित (केवल अदला-बदली/दान)। ट्रेंड स्काउट और कैंपेन तक पहुंच अक्षम है।
-2.  **मैनेजर टियर**:
-    *   **लागत**: $5 / महीना या $50 / वर्ष।
-    *   **सीमाएँ**: असीमित अलमारी आइटम और असीमित दैनिक AI अनुरोध।
-    *   **विशेषताएँ**: मार्केटप्लेस विकल्प (बेचना, अदला-बदली, किराए पर देना, दान करना), ट्रेंड स्काउट, शेड्यूलर और पुश नोटिफिकेशन, प्राथमिकता सहायता। कैंपेन बनाना अक्षम है।
-3.  **प्रोफेशनल टियर**:
-    *   **लागत**: $10 / महीना या $100 / वर्ष।
-    *   **सीमाएँ**: असीमित अलमारी आइटम और असीमित दैनिक AI अनुरोध।
-    *   **विशेषताएँ**: सभी सुविधाएँ शामिल, समर्पित सहायता, और पूर्ण विज्ञापन कैंपेन निर्माण सहायता।
+### उच्च-स्तरीय अवलोकन (High-Level Overview)
+DressApp एक हाइब्रिड SaaS सब्सक्रिप्शन और प्रीपेड उपयोगिता क्रेडिट मॉडल को लागू करता है:
+1. **सब्सक्रिप्शन टियर (SaaS)**: फ्लैट-रेट प्लान (Free, Manager, Professional) जो अलमारी भंडारण क्षमता, दैनिक AI स्टाइलिंग कोटा और उन्नत सुविधाओं (जैसे, विज्ञापन अभियान मॉडरेशन) को नियंत्रित करते हैं।
+2. **प्रीपेड क्रेडिट बकेट (उपयोगिता)**: उन्नत AI संचालन (जैसे, वर्चुअल स्टाइलिस्ट प्रश्न और फोटो विभाजन) के लिए विस्तृत खपत-आधारित क्रेडिट। ये क्रेडिट मुफ़्त और सशुल्क पूल में अंतर करने के लिए एक एजिंग सिस्टम का उपयोग करते हैं।
+3. **वायरल विकास लूप**: एक रेफ़रल कार्यक्रम जो Free टियर उपयोगकर्ताओं को आमंत्रण लिंक साझा करके व्यवस्थित रूप से अपनी आधारभूत अलमारी क्षमता का विस्तार करने की अनुमति देता है।
+4. **स्थानीयकृत भुगतान (Atzmai गेटवे)**: वैश्विक PayPal भुगतानों के साथ ILS/USD में स्थानीय इजरायली भुगतानों (Bit, स्थानीय क्रेडिट कार्ड) के लिए देशी समर्थन।
 
-### वास्तुशिल्प प्रवाह
+### वास्तुशिल्प प्रवाह (Architectural Flow)
 
 ```mermaid
 graph TD
     User([User App Client])
-    Gateway[Payments API Gateway /paypal]
+    Gateway[Payments API Gateway /atzmai]
+    Auth[Auth Router /auth/register]
     Closet[Closet Router /closet/item]
-    Campaigns[Campaigns Router /campaigns]
     DB[(MongoDB Atlas)]
+    AtzmaiAPI[Atzmai Payment API]
     PayPalAPI[PayPal Subscriptions API]
 
     %% Closet Upload Limit Gating
     User -->|1. Upload Garment| Closet
     Closet -->|2. Check Item Count & Subscription| DB
     DB -->|3. Return Count + SubscriptionInfo| Closet
-    Closet -.->|If Exceeded: HTTP 402| User
+    Closet -.->|If Exceeded & Sub Inactive: HTTP 402| User
     
     %% Paid Subscription Checkout
-    User -->|4. Post /paypal/subscribe| Gateway
-    Gateway -->|5. Create Intent| PayPalAPI
-    PayPalAPI -->|6. Return Approve URL| Gateway
-    Gateway -->|7. Return Approve URL| User
-    User -->|8. User Approves Payment| PayPalAPI
-    User -->|9. Post /paypal/subscribe/capture| Gateway
-    Gateway -->|10. Verify Activation| PayPalAPI
-    Gateway -->|11. Write Active Sub & Tier| DB
+    User -->|4. Post /atzmai/subscribe| Gateway
+    Gateway -->|5. Create Intent| AtzmaiAPI
+    AtzmaiAPI -->|6. Return Payment URL| Gateway
+    Gateway -->|7. Return Payment URL| User
+    User -->|8. User Approves Payment| AtzmaiAPI
+    AtzmaiAPI -->|9. Trigger Webhook| Gateway
+    Gateway -->|10. Capture Transaction| DB
     
-    %% Campaigns Gating
-    User -->|12. Create Campaign| Campaigns
-    Campaigns -->|13. Check Tier| DB
-    Campaigns -.->|If Not Professional: HTTP 403| User
+    %% Viral Referral Mechanics
+    User -->|11. Register with referrer_id| Auth
+    Auth -->|12. Increment closet_capacity_bonus| DB
 ```
 
 ---
 
-## 2. व्यापक उपयोगकर्ता पुस्तिका
+## 2. सब्सक्रिप्शन टियर और मूल्य निर्धारण टोपोलॉजी
 
-### विज़ुअल इंटरफ़ेस टोपोलॉजी
-उपयोगकर्ता प्रोफ़ाइल पृष्ठ ([Profile.jsx](file:///C:/DressApp_AG/frontend/src/pages/Profile.jsx)) **सदस्यता और सीमाएँ** अनुभाग के अंतर्गत सदस्यता प्रबंधन विजेट की मेजबानी करता है, जिसमें आइटम गणना (फ्री प्लान के लिए 0 से 50 की सीमा), सक्रिय प्लान टियर स्थिति, और अगली नवीनीकरण तिथियाँ प्रदर्शित होती हैं।
-मूल्य निर्धारण पृष्ठ ([Pricing.jsx](file:///C:/DressApp_AG/frontend/src/pages/Pricing.jsx)) फ्री, मैनेजर और प्रोफेशनल प्लान की तुलना करने वाले कार्ड, साथ ही एक विस्तृत सुविधा ग्रिड चेकलिस्ट प्रदर्शित करता है।
+### मूल्य निर्धारण योजनाएं
 
-### मोड और कार्यप्रवाह विवरण
+| Plan | Price (Monthly) | Closet Capacity | AI Credits Allocation | Key Features |
+| :--- | :--- | :--- | :--- | :--- |
+| **Free Plan** | $0.00 / माह | 50 आइटम बेसलाइन | 10 मुफ़्त दैनिक क्रेडिट (30 दिनों में समाप्त होने वाले) | बुनियादी संगठन, सामुदायिक सहायता, रेफ़रल विस्तार (+10 स्लॉट प्रति पंजीकरण, अधिकतम 1000 आइटम तक) |
+| **Manager (Pro)** | $4.99 / माह | असीमित | असीमित दैनिक संचालन | 14-दिन का निःशुल्क ट्रायल, 50-क्रेडिट प्रारंभिक आवंटन, बाज़ार में बिक्री और किराए पर देना, Trend Scout, निर्धारित सूचनाएं |
+| **Professional** | $9.99 / माह | असीमित | असीमित दैनिक संचालन | 30-दिन का निःशुल्क ट्रायल, 300-क्रेडिट प्रारंभिक आवंटन, सभी Manager सुविधाएँ, फ़ीड में विज्ञापन अभियान बनाने का समर्थन |
 
-#### A. अपनी सदस्यता को अपग्रेड करना (भुगतान प्रवाह)
-1.  **अपग्रेड शुरू करना**: उपयोगकर्ता अपनी वांछित योजना (मैनेजर या प्रोफेशनल) और बिलिंग आवृत्ति (मासिक या वार्षिक) का चयन करता है और **प्लान अपग्रेड करें** पर क्लिक करता है।
-2.  **ऑर्डर पंजीकरण**: क्लाइंट एक `POST /paypal/subscribe` अनुरोध जारी करता है। बैकएंड PayPal से संपर्क करता है, एक सदस्यता ID उत्पन्न करता है, और एक `approve_url` लौटाता है।
-3.  **भुगतान प्रसंस्करण**: क्लाइंट ब्राउज़र PayPal Sandbox चेकआउट पृष्ठ पर रीडायरेक्ट करता है (या Mock Atzmai/PayPal गेटवे के माध्यम से नियंत्रित होता है)। उपयोगकर्ता लॉग इन करता है और बिलिंग समझौते को स्वीकृति देता है।
-4.  **रीडायरेक्शन और कैप्चर**: PayPal ब्राउज़र को वापस `/pricing?sub_status=success&token=SUBSCRIPTION_ID` पर रीडायरेक्ट करता है।
-5.  **सक्रियण**: क्लाइंट खोज पैरामीटर का पता लगाता है, `POST /paypal/subscribe/capture/{subscription_id}` जारी करता है, और उपयोगकर्ता सत्र को रीफ्रेश करता है। सक्रिय प्लान टियर UI में तुरंत अपडेट हो जाता है।
+### प्रीपेड AI क्रेडिट पैक
+
+यदि उपयोगकर्ताओं के स्टाइलिंग क्रेडिट समाप्त हो जाते हैं, तो वे सेवा व्यवधान से बचने के लिए अतिरिक्त पैकेज खरीद सकते हैं:
+
+* **10 क्रेडिट पैक**: $1.99 / 10.00 ILS
+* **25 क्रेडिट पैक**: $3.99 / 25.00 ILS
+* **50 क्रेडिट पैक**: $7.99 / 50.00 ILS
+* **100 क्रेडिट पैक**: $15.99 / 100.00 ILS
+* **कस्टम टॉप-अप राशि**: उपयोगकर्ता द्वारा निर्दिष्ट ILS राशि (Atzmai गेटवे सत्यापन के लिए न्यूनतम 5.00 ILS सीमा)।
+
+### क्रेडिट समाप्ति और खपत प्राथमिकता (FIFO लॉजिक)
+* **सशुल्क क्रेडिट**: टॉप-अप पैक के माध्यम से खरीदे गए। सशुल्क क्रेडिट **कभी समाप्त नहीं होते**।
+* **मुफ़्त क्रेडिट**: दैनिक या ट्रायल आवंटन के माध्यम से प्रदान किए जाते हैं। मुफ़्त क्रेडिट **निर्माण के 30 दिन बाद समाप्त हो जाते हैं**।
+* **क्रेडिट कटौती प्राथमिकता**: जब एक AI अनुरोध किया जाता है, तो इंजन सशुल्क क्रेडिट से लेने से पहले **सबसे पुराने समाप्त होने वाले मुफ़्त बकेट से क्रेडिट** की स्वचालित रूप से जांच करता है और उनका उपभोग करता है।
 
 ---
 
-## 3. प्रौद्योगिकी स्टैक और क्षमता पर गहन जानकारी
+## 3. स्थानीयकृत भुगतान और चालान (Atzmai गेटवे)
 
-### डेटा स्कीमा परिभाषाएँ
-[schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) में MongoDB स्कीमा उपयोगकर्ता की बिलिंग स्थिति और सक्रिय टियर को रखता है:
+इजरायल में स्थित खातों के लिए, DressApp स्थानीय लेनदेन को ILS (शेकेल) या USD में संसाधित करने के लिए **Atzmai भुगतान गेटवे** के साथ एकीकृत होता है:
+1. **भुगतान विधियां**: Bit मोबाइल चेकआउट रीडायरेक्ट लिंक और नियमित इजरायली क्रेडिट कार्ड का समर्थन करता है।
+2. **सब्सक्रिप्शन डायरेक्ट डेबिट**: आवर्ती Pro और Business सब्सक्रिप्शन के लिए मासिक/वार्षिक प्रत्यक्ष डेबिट सेटअप का समर्थन करता है।
+3. **वेबहुक सत्यापन**: `POST /api/v1/atzmai/webhook` पर भुगतान कॉलबैक को कैप्चर करता है, `atzmai_topups` संग्रह में मिलान रिकॉर्ड को मान्य करता है, और लेनदेन की स्थिति को `captured` में बदलता है।
+4. **स्वचालित PDF बहीखाता**: सफल कैप्चर पर, बैकएंड आधिकारिक चालान और रसीद PDF उत्पन्न करने और डाउनलोड करने के लिए Atzmai बिलिंग API से पूछताछ करता है। ये सीधे खरीदार को ईमेल अनुलग्नक के रूप में भेजे जाते हैं।
+
+---
+
+## 4. तकनीकी स्टैक और क्षमता गहन-विश्लेषण
+
+### डेटा स्कीमा परिभाषाएं (Data Schema Definitions)
+
+[schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) में MongoDB स्कीमा उपयोगकर्ता सदस्यता और क्रेडिट बकेट को ट्रैक करता है:
 
 ```python
+class CreditBucket(BaseModel):
+    amount: int
+    type: Literal["free", "paid"]
+    created_at: str  # ISO timestamp
+    expires_at: str | None = None  # None means infinite (paid credits)
+
 class SubscriptionInfo(BaseModel):
     is_active: bool = False
     plan_type: Literal["free", "monthly", "yearly"] = "free"
     tier: Literal["free", "manager", "professional"] = "free"
+    stripe_subscription_id: str | None = None
     paypal_subscription_id: str | None = None
-    expires_at: str | None = None              # ISO timestamp
-    cancelled_at: str | None = None            # ISO timestamp
+    atzmai_subscription_id: str | None = None
+    expires_at: str | None = None
+    cancelled_at: str | None = None
 
 class User(BaseDoc):
-    # ... other profile documents ...
     subscription: SubscriptionInfo = Field(default_factory=SubscriptionInfo)
+    credit_buckets: List[CreditBucket] = Field(default_factory=list)
+    closet_capacity_bonus: int = 0
 ```
 
-### API रूटिंग और गेटेड क्रियाएँ
-
-#### अलमारी आइटम सीमा ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
-आइटम डालते समय, सिस्टम फ्री उपयोगकर्ताओं के लिए सीमाओं को सत्यापित करता है:
+### अलमारी सीमा प्रवर्तन ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
+आइटम अपलोड के दौरान, सिस्टम डेटाबेस सीमाओं की सुरक्षा करता है:
 ```python
-sub = user.get("subscription") or {}
-is_active = sub.get("is_active", False)
-plan_type = sub.get("plan_type", "free")
-tier = sub.get("tier", "free")
-
-user_tier = "free"
-if is_active and plan_type != "free":
-    user_tier = tier
-
-if user_tier == "free":
-    item_count = await db.closet_items.count_documents({"owner_id": user_id, "status": {"$ne": "deleted"}})
-    if item_count >= 50:
-        raise HTTPException(status_code=402, detail="Closet capacity limit (50 items) exceeded. Please upgrade.")
+capacity_limit = 50 + user.get("closet_capacity_bonus", 0)
+if current_count >= capacity_limit and not user.get("subscription", {}).get("is_active", False):
+    raise HTTPException(
+        status_code=402,
+        detail={
+            "code": "closet_capacity_exceeded",
+            "message": f"You have reached your free closet capacity of {capacity_limit} items. Upgrade to Manager or Professional to add more items."
+        }
+    )
 ```
 
-#### दैनिक AI संचालन सीमा ([credit_manager.py](file:///C:/DressApp_AG/backend/app/services/credit_manager.py))
-फ्री टियर उपयोगकर्ताओं के लिए, AI संचालन `user.ai_configuration.daily_request_count` में ट्रैक की गई दैनिक गणना को बढ़ाता है। जब यह 10 तक पहुंच जाता है, तो अनुरोधों को HTTP 402 के साथ ब्लॉक कर दिया जाता है।
-
-#### मार्केटप्लेस गेटिंग ([listings.py](file:///C:/DressApp_AG/backend/app/api/v1/listings.py))
-यदि कोई उपयोगकर्ता फ्री टियर पर है, तो `"for_sale"` या `"rent"` के इरादे से बनाई गई लिस्टिंग अस्वीकृत कर दी जाती हैं:
+### क्रेडिट कटौती एल्गोरिदम ([credit.py](file:///C:/DressApp_AG/backend/app/models/credit.py))
+क्रेडिट FIFO (प्रथम-इन-प्रथम-आउट) प्राथमिकता कतार का उपयोग करके खर्च किए जाते हैं:
 ```python
-if user_tier == "free" and listing.intent in ["for_sale", "rent"]:
-    raise HTTPException(status_code=403, detail="Free plan users can only Swap or Donate garments. Upgrade to list for sale or rent.")
+def spend_credits(buckets: List[CreditBucket], required_amount: int) -> Tuple[bool, List[dict]]:
+    # Sort active buckets: 
+    # Priority 0: Free expiring soonest
+    # Priority 1: Free other
+    # Priority 2: Paid (never expires)
+    active_buckets = []
+    for idx, b in enumerate(buckets):
+        if b.type == "free" and b.expires_at and now > b.expires_at:
+            continue
+        priority = (0, b.expires_at) if b.type == "free" and b.expires_at else (1, b.created_at) if b.type == "free" else (2, b.created_at)
+        active_buckets.append((priority, idx, b))
+    
+    active_buckets.sort(key=lambda x: x[0])
+    # ... deduct required_amount from sorted list ...
 ```
-
-#### कैंपेन गेटिंग ([campaigns.py](file:///C:/DressApp_AG/backend/app/api/v1/campaigns.py))
-कैंपेन निर्माण एंडपॉइंट्स क्रियाओं को प्रतिबंधित करते हैं जब तक कि सक्रिय सदस्यता टियर प्रोफेशनल न हो:
-```python
-if user_tier != "professional":
-    raise HTTPException(status_code=403, detail="Ad Campaign creation is only available on the Professional plan.")
