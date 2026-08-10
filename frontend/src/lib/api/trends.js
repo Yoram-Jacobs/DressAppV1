@@ -1,4 +1,4 @@
-﻿import { client } from './client.js';
+import { client } from './client.js';
 
 export const trends = {
   // trend-scout
@@ -15,6 +15,6 @@ export const trends = {
   trendsRunNowDev: (force = true) =>
     client.post('/trends/run-now-dev', null, { params: { force } }).then((r) => r.data),
   // Admin-only force refresh
-  trendsRefreshAdmin: (force = true) =>
-    client.post('/trends/run-now', null, { params: { force } }).then((r) => r.data),
+  trendsRefreshAdmin: (force = true, country = null) =>
+    client.post('/trends/run-now', null, { params: { force, ...(country ? { country } : {}) } }).then((r) => r.data),
 };
