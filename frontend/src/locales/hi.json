@@ -2366,13 +2366,8 @@
     "shopping_assistant_step6": "आइटम ड्राफ्ट को सीधे अपने ऐप पर आयात करने के लिए **क्लोसेट में जोड़ें** पर क्लिक करें।",
     "import_wardrobe_title": "अपना वॉर्डरोब आयात करें",
     "import_wardrobe_p1": "पहले से किसी अन्य ऐप में अपना वॉर्डरोब ट्रैक कर रहे हैं? बस कुछ क्लिक में अपने आइटम को DressApp में आयात करें। हम कई लोकप्रिय वॉर्डरोब और आउटफिट प्लानिंग ऐप्स से आयाम का समर्थन करते हैं।",
-<<<<<<< HEAD
-    "import_wardrobe_step1": "DressApp में **क्लोसेट** पेज खोलें।",
-    "import_wardrobe_step2": "**आयात** बटन पर क्लिक करें (या मेनू में आयात विकल्प देखें)।",
-=======
     "import_wardrobe_step1": "ऑनबोर्डिंग संदेश।",
     "import_wardrobe_step2": "प्रोफ़ाइल पृष्ठ पर नीचे स्क्रॉल करें और 'वार्डरोब आयात करें' पर क्लिक करें।",
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
     "import_wardrobe_step3": "उस ऐप को चुनें जिससे आप आयात कर रहे हैं (जैसे Cladwell, Stylebook, Acloset, SmartCloset, या CSV फ़ाइल)।",
     "import_wardrobe_step4": "पुराने ऐप से अपना डेटा निर्यात करने और DressApp में अपलोड करने के लिए ऑन-स्क्रीन निर्देशों का पालन करें।",
     "import_wardrobe_step5": "DressApp आपके आयातित आइटम को स्वचालित रूप से वर्गीकृत और व्यवस्थित करेगा।",
@@ -2803,8 +2798,6 @@
   "privacy": {
     "title": "Privacy Policy",
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
-<<<<<<< HEAD
-=======
   },
   "pricing": {
     "title": "सदस्यता मूल्य निर्धारण योजनाएं",
@@ -2937,6 +2930,5 @@
     "perYear": "प्रति वर्ष",
     "billedMonthly": "मासिक बिलिंग (${{price}})",
     "billedAnnually": "वार्षिक बिलिंग (${{price}})"
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
   }
 }

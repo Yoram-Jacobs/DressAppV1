@@ -17,7 +17,8 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { isRtl } from '@/lib/i18n';
 import { api } from '@/lib/api';
-
+import React, { lazy, Suspense, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 // Synchronously loaded core routes for zero-latency initial load
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';

@@ -44,25 +44,6 @@ export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(val) => { if (!val) onClose(); }}>
-<<<<<<< HEAD
-      <DialogContent className="startingmodal">
-        <div className="topsvgicon"><Sparkles/></div>
-        <h6>
-          {isMigrateUser
-            ? t('login_reminder.migrateTitle', { defaultValue: 'Import Your Closet to Start Styling!' })
-            : t('login_reminder.newTitle', { defaultValue: 'Your Closet is Empty — Let\'s Add Your First Item!' })}
-        </h6>
-        <p>
-          {isMigrateUser
-            ? t('login_reminder.migrateSub', { defaultValue: 'Adding your garments is essential for the AI Stylist, Outfit Canvas, and Recommendations to perform properly. Complete your migration or add items manually.' })
-            : t('login_reminder.newSub', { defaultValue: 'Your closet currently has 0 items. Adding your garments allows the AI Stylist to generate tailored daily recommendations, packing lists, and weather outfits.' })}
-        </p>
-        {/* Help doc link */}
-        <div className="text-center">
-          <a href="#help" onClick={handleOpenHelpDoc} data-testid="login-reminder-help-link" className='helpinfo'>
-            <HelpCircle />{t('login_reminder.helpDocLink', { defaultValue: 'Learn how adding clothes works in DressApp' })}
-          </a>
-=======
       <DialogContent className="max-w-md rounded-2xl p-6 bg-card border border-border shadow-2xl">
         <div className="space-y-4">
           <div className="mx-auto w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center">
@@ -154,7 +135,6 @@ export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
               </div>
             )}
           </div>
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
         </div>
         {/* Action Buttons */}
         {isMigrateUser ? (

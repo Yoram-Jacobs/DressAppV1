@@ -2366,13 +2366,8 @@
     "shopping_assistant_step6": "[**クローゼットに追加**] をクリックして、アイテムの下書きをアプリに直接インポートします。",
     "import_wardrobe_title": "ワードローブをインポート",
     "import_wardrobe_p1": "別のアプリでワードローブを管理していますか？数クリックでアイテムをDressAppにインポートできます。多くの人気ワードローブ・コーディネートアプリからのインポートに対応しています。",
-<<<<<<< HEAD
-    "import_wardrobe_step1": "DressAppの**クローゼット**ページを開きます。",
-    "import_wardrobe_step2": "**インポート**ボタンをクリックします（またはメニューからインポートオプションを選択）。",
-=======
     "import_wardrobe_step1": "オンボーディングメッセージ。",
     "import_wardrobe_step2": "プロフィールページを下にスクロールし、[ワードローブインポート] を押します。",
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
     "import_wardrobe_step3": "インポート元のアプリを選択します（例：Cladwell、Stylebook、Acloset、SmartCloset、またはCSVファイル）。",
     "import_wardrobe_step4": "画面の指示に従って、古いアプリからデータをエクスポートし、DressAppにアップロードします。",
     "import_wardrobe_step5": "DressAppがインポートされたアイテムを自動的に分類・整理します。",
@@ -2804,8 +2799,6 @@
   "privacy": {
     "title": "Privacy Policy",
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
-<<<<<<< HEAD
-=======
   },
   "pricing": {
     "title": "メンバーシップ料金プラン",
@@ -2938,6 +2931,5 @@
     "perYear": "年額",
     "billedMonthly": "毎月請求 (${{price}})",
     "billedAnnually": "毎年請求 (${{price}})"
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
   }
 }

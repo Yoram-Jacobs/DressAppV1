@@ -96,12 +96,9 @@
     "@craco/craco": "^7.1.0",
     "@eslint/js": "9.23.0",
     "@playwright/test": "^1.62.0",
-<<<<<<< HEAD
-=======
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.1",
     "eslint-plugin-import": "2.31.0",

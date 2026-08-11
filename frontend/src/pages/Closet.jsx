@@ -880,7 +880,7 @@ export default function Closet() {
           </div>
           <div className='row gx-4 gy-4'>
             <div className='col-md-12'>
-              <div className='card custm-card'>
+              <div className='card custm-card border-0'>
                 <div className='card-body'>
                   <form onSubmit={onSearch} data-testid="closet-filter-bar" className="closet-search-panel">
                     <div className="closet-search-field">

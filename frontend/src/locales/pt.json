@@ -2366,13 +2366,8 @@
     "shopping_assistant_step6": "Clique em **Adicionar ao armário** para importar o rascunho do item diretamente para o seu aplicativo.",
     "import_wardrobe_title": "Importar seu guarda-roupa",
     "import_wardrobe_p1": "Já mantém seu guarda-roupa em outro aplicativo? Importe seus itens para o DressApp com apenas alguns cliques. Oferecemos suporte a importações de uma ampla variedade de populares aplicativos de guarda-roupa e planejamento de looks.",
-<<<<<<< HEAD
-    "import_wardrobe_step1": "Abra a página **Armário** no DressApp.",
-    "import_wardrobe_step2": "Clique no botão **Importar** (ou procure a opção de importação no menu).",
-=======
     "import_wardrobe_step1": "Mensagem de integração.",
     "import_wardrobe_step2": "Role a página de perfil para baixo e toque em 'Importar guarda-roupa'.",
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
     "import_wardrobe_step3": "Selecione o aplicativo de onde está importando (por exemplo, Cladwell, Stylebook, Acloset, SmartCloset ou um arquivo CSV).",
     "import_wardrobe_step4": "Siga as instruções na tela para exportar seus dados do aplicativo antigo e enviá-los ao DressApp.",
     "import_wardrobe_step5": "O DressApp classificará e organizará automaticamente seus itens importados.",
@@ -2803,8 +2798,6 @@
   "privacy": {
     "title": "Privacy Policy",
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
-<<<<<<< HEAD
-=======
   },
   "pricing": {
     "title": "Planos de Assinatura",
@@ -2937,6 +2930,5 @@
     "perYear": "/ano",
     "billedMonthly": "cobrado mensalmente (${{price}})",
     "billedAnnually": "cobrado anualmente (${{price}})"
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
   }
 }

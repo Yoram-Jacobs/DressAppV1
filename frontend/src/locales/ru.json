@@ -2366,13 +2366,8 @@
     "shopping_assistant_step6": "Нажмите **Добавить в шкаф**, чтобы импортировать черновик товара прямо в приложение.",
     "import_wardrobe_title": "Импорт гардероба",
     "import_wardrobe_p1": "Уже ведёте гардероб в другом приложении? Импортируйте свои вещи в DressApp всего за несколько кликов. Мы поддерживаем импорт из широкого спектра популярных приложений для гардероба и планирования образов.",
-<<<<<<< HEAD
-    "import_wardrobe_step1": "Откройте страницу **Шкаф** в DressApp.",
-    "import_wardrobe_step2": "Нажмите кнопку **Импорт** (или найдите опцию импорта в меню).",
-=======
     "import_wardrobe_step1": "Приветственное сообщение.",
     "import_wardrobe_step2": "Прокрутите страницу профиля вниз и нажмите «Импорт гардероба».",
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
     "import_wardrobe_step3": "Выберите приложение, из которого импортируете (например, Cladwell, Stylebook, Acloset, SmartCloset или файл CSV).",
     "import_wardrobe_step4": "Следуйте инструкциям на экране, чтобы экспортировать данные из старого приложения и загрузить их в DressApp.",
     "import_wardrobe_step5": "DressApp автоматически классифицирует и организует ваши импортированные вещи.",
@@ -2803,8 +2798,6 @@
   "privacy": {
     "title": "Privacy Policy",
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
-<<<<<<< HEAD
-=======
   },
   "pricing": {
     "title": "Тарифные Планы Подписки",
@@ -2937,6 +2930,5 @@
     "perYear": "/год",
     "billedMonthly": "оплата ежемесячно (${price})",
     "billedAnnually": "оплата ежегодно (${price})"
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
   }
 }

@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/auth';
 import { useLocation as useAppLocation } from '@/lib/location';
 import { api } from '@/lib/api';
 import { ExploreBackButton } from '@/components/ExploreBackButton';
-
+import { Crown } from 'lucide-react';
 const PAGE_SIZE = 12; // 3x3 grid per page — chahe to 6/12 kar sakte hain
 const FALLBACK_IMAGE =
   'https://i.pinimg.com/736x/17/50/e9/1750e9027cf70bc488293df0f91daa1d.jpg';
@@ -34,7 +34,7 @@ export default function TrendScout() {
   const isActive = sub.is_active || false;
   const planType = sub.plan_type || 'free';
   const tier = sub.tier || 'free';
-  
+
   const userTier = (isActive && planType !== 'free') ? tier : 'free';
   const isBlocked = userTier === 'free';
 
@@ -55,6 +55,28 @@ export default function TrendScout() {
     fetchTrends();
   }, [language, country, isBlocked]);
 
+
+  // naya data aane par page 1 par reset
+  useEffect(() => {
+    setPage(1);
+  }, [trends]);
+
+
+  const totalPages = trends ? Math.max(1, Math.ceil(trends.length / PAGE_SIZE)) : 1;
+
+  const paginatedTrends = useMemo(() => {
+    if (!trends) return [];
+    const start = (page - 1) * PAGE_SIZE;
+    return trends.slice(start, start + PAGE_SIZE);
+  }, [trends, page]);
+
+  const goToPage = (p) => {
+    if (p < 1 || p > totalPages) return;
+    setPage(p);
+    document
+      .querySelector('.trend-scout-section')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
   if (isBlocked) {
     return (
       <div className="container-px max-w-2xl mx-auto pt-16 pb-24 text-center">
@@ -80,27 +102,6 @@ export default function TrendScout() {
       </div>
     );
   }
-
-  // naya data aane par page 1 par reset
-  useEffect(() => {
-    setPage(1);
-  }, [trends]);
-
-  const totalPages = trends ? Math.max(1, Math.ceil(trends.length / PAGE_SIZE)) : 1;
-
-  const paginatedTrends = useMemo(() => {
-    if (!trends) return [];
-    const start = (page - 1) * PAGE_SIZE;
-    return trends.slice(start, start + PAGE_SIZE);
-  }, [trends, page]);
-
-  const goToPage = (p) => {
-    if (p < 1 || p > totalPages) return;
-    setPage(p);
-    document
-      .querySelector('.trend-scout-section')
-      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
 
   return (
     <>

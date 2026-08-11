@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { Plus, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -40,80 +39,79 @@ export function WeightedList({
   const remove = (i) => onChange(safe.filter((_, j) => j !== i));
   const add = () => onChange([...safe, { name: '', pct: 0 }]);
   const heading = labelKey ? t(labelKey) : label;
+
+  const sumClass =
+    sum === 100
+      ? 'weighted-sum weighted-sum-ok'
+      : sum > 100
+        ? 'weighted-sum weighted-sum-over'
+        : 'weighted-sum weighted-sum-neutral';
+
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <Label className="caps-label text-muted-foreground">{heading}</Label>
-        <span
-          className={`text-[10px] font-mono ${
-            sum === 100
-              ? 'text-emerald-700'
-              : sum > 100
-              ? 'text-rose-700'
-              : 'text-muted-foreground'
-          }`}
-        >
-          {sum}%
-        </span>
-      </div>
-      <div className="mt-1 space-y-1.5" data-testid={testid}>
-        {safe.map((it, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <Input
-              id={`${testid}-name-${i}`}
-              value={it.name || ''}
-              onChange={(e) => update(i, { name: e.target.value })}
-              placeholder={placeholder}
-              disabled={disabled}
-              className="flex-1 rounded-xl h-9"
-              data-testid={`${testid}-name-${i}`}
-              aria-label={`${heading} item name ${i + 1}`}
-            />
-            <Input
-              id={`${testid}-pct-${i}`}
-              type="number"
-              min="0"
-              max="100"
-              value={it.pct ?? ''}
-              onChange={(e) =>
-                update(i, {
-                  pct:
-                    e.target.value === ''
-                      ? null
-                      : Math.max(0, Math.min(100, Number(e.target.value))),
-                })
-              }
-              className="w-16 rounded-xl h-9 text-end"
-              disabled={disabled}
-              data-testid={`${testid}-pct-${i}`}
-              aria-label={`${heading} item percentage ${i + 1}`}
-            />
-            <span className="text-xs text-muted-foreground">%</span>
-            <button
-              type="button"
-              onClick={() => remove(i)}
-              disabled={disabled}
-              className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-secondary"
-              aria-label={t('addItem.removeEntryAria', {
-                label: it.name || heading,
-              })}
-              data-testid={`${testid}-remove-${i}`}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ))}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={add}
-          disabled={disabled}
-          className="text-xs h-8 rounded-lg"
-          data-testid={`${testid}-add`}
-        >
-          <Plus className="h-3 w-3 me-1" /> {t('addItem.addAction')}
-        </Button>
+    <div className="weighted-list">
+      <div className="field-set">
+        <div className='weighted-list-header'>
+          <Label>{heading}</Label>
+          <span className={sumClass}>{sum}%</span>
+        </div>
+        <div className="weighted-list-rows" data-testid={testid}>
+          {safe.map((it, i) => (
+            <div key={i} className="weighted-row">
+              <Input
+                id={`${testid}-name-${i}`}
+                value={it.name || ''}
+                onChange={(e) => update(i, { name: e.target.value })}
+                placeholder={placeholder}
+                disabled={disabled}
+                className="createlisting-input"
+                data-testid={`${testid}-name-${i}`}
+                aria-label={`${heading} item name ${i + 1}`}
+              />
+              <Input
+                id={`${testid}-pct-${i}`}
+                type="number"
+                min="0"
+                max="100"
+                value={it.pct ?? ''}
+                onChange={(e) =>
+                  update(i, {
+                    pct:
+                      e.target.value === ''
+                        ? null
+                        : Math.max(0, Math.min(100, Number(e.target.value))),
+                  })
+                }
+                className="createlisting-input"
+                disabled={disabled}
+                data-testid={`${testid}-pct-${i}`}
+                aria-label={`${heading} item percentage ${i + 1}`}
+              />
+              <span className="weighted-pct-symbol">%</span>
+              <button
+                type="button"
+                onClick={() => remove(i)}
+                disabled={disabled}
+                className="weighted-remove-btn"
+                aria-label={t('addItem.removeEntryAria', {
+                  label: it.name || heading,
+                })}
+                data-testid={`${testid}-remove-${i}`}
+              >
+                <Trash2 className="icon-xs" />
+              </button>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={add}
+            disabled={disabled}
+            className="weighted-add-btn"
+            data-testid={`${testid}-add`}
+          >
+            {t('addItem.addAction')}
+          </button>
+        </div>
       </div>
     </div>
   );

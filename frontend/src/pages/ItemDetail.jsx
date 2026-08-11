@@ -128,8 +128,8 @@ const PATTERN_OPTIONS = [
 const FORMALITY_OPTIONS = ['casual', 'smart-casual', 'business', 'formal'];
 const INTENT_OPTIONS = ['own', 'for_sale', 'donate', 'swap', 'rent'];
 const ALL_CURRENCY_OPTIONS = [
-  'USD', 'EUR', 'GBP', 'ILS', 'CAD', 'AUD', 'JPY', 'INR', 'RUB', 'CNY', 
-  'BRL', 'MXN', 'CHF', 'AED', 'SAR', 'ZAR', 'SGD', 'HKD', 'SEK', 'NOK', 
+  'USD', 'EUR', 'GBP', 'ILS', 'CAD', 'AUD', 'JPY', 'INR', 'RUB', 'CNY',
+  'BRL', 'MXN', 'CHF', 'AED', 'SAR', 'ZAR', 'SGD', 'HKD', 'SEK', 'NOK',
   'TRY', 'NZD', 'KRW'
 ];
 
@@ -137,7 +137,7 @@ const getDefaultCurrency = () => {
   try {
     const locale = (navigator.language || 'en-US').toUpperCase();
     const country = locale.split('-')[1];
-    
+
     const countryToCurrency = {
       US: 'USD', IL: 'ILS', GB: 'GBP', JP: 'JPY', IN: 'INR', RU: 'RUB',
       CN: 'CNY', TW: 'TWD', HK: 'HKD', CA: 'CAD', AU: 'AUD', NZ: 'NZD',
@@ -216,13 +216,13 @@ function toFormState(item, user = null) {
   // older items that pre-date the weighted taxonomy.
   const normalisedColors = Array.isArray(item.colors)
     ? item.colors
-        .filter((c) => c && (c.name || c.pct != null))
-        .map((c) => ({ name: c.name || '', pct: c.pct ?? null }))
+      .filter((c) => c && (c.name || c.pct != null))
+      .map((c) => ({ name: c.name || '', pct: c.pct ?? null }))
     : [];
   const normalisedMaterials = Array.isArray(item.fabric_materials)
     ? item.fabric_materials
-        .filter((c) => c && (c.name || c.pct != null))
-        .map((c) => ({ name: c.name || '', pct: c.pct ?? null }))
+      .filter((c) => c && (c.name || c.pct != null))
+      .map((c) => ({ name: c.name || '', pct: c.pct ?? null }))
     : [];
   const rawSize = item.size || '';
   // Prefill missing size with the user's stored measurement for the
@@ -338,53 +338,62 @@ function ChipList({ value, onChange, placeholder, disabled, testidPrefix }) {
     setDraft('');
   };
   return (
-    <div
-      className="flex flex-wrap gap-1.5 items-center rounded-xl border border-border bg-background px-2 py-1.5 min-h-10"
-      data-testid={`${testidPrefix}-chiplist`}
-    >
-      {value.map((v) => (
-        <Badge
-          key={v}
-          variant="secondary"
-          className="rounded-full text-[11px] inline-flex items-center gap-1"
-          data-testid={`${testidPrefix}-chip-${v}`}
-        >
-          {v}
-          {!disabled && (
-            <button
-              type="button"
-              onClick={() => onChange(value.filter((x) => x !== v))}
-              className="hover:text-destructive"
-              aria-label={`Remove ${v}`}
+    <div data-testid={`${testidPrefix}-chiplist`} className="createlisting-chiplist">
+      {value.length > 0 && (
+        <div className="createlisting-chips">
+          {value.map((v) => (
+            <Badge
+              key={v}
+              className="createlisting-chip"
+              data-testid={`${testidPrefix}-chip-${v}`}
             >
-              <X className="h-3 w-3" />
-            </button>
-          )}
-        </Badge>
-      ))}
-      <Input
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') { e.preventDefault(); add(); }
-        }}
-        placeholder={placeholder}
-        disabled={disabled}
-        className="h-7 text-xs border-0 shadow-none flex-1 min-w-24 focus-visible:ring-0 px-1"
-        data-testid={`${testidPrefix}-input`}
-      />
-      {!disabled && draft.trim() && (
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          onClick={add}
-          className="h-7 px-2 text-xs"
-          data-testid={`${testidPrefix}-add`}
-        >
-          <Plus className="h-3 w-3" />
-        </Button>
+              {v}
+
+              {!disabled && (
+                <button
+                  type="button"
+                  onClick={() => onChange(value.filter((x) => x !== v))}
+                  className="createlisting-chip-remove"
+                  aria-label={`Remove ${v}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </Badge>
+          ))}
+        </div>
       )}
+
+      <div className="createlisting-input-row">
+        <Input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              add();
+            }
+          }}
+          placeholder={placeholder}
+          disabled={disabled}
+          className="createlisting-input"
+          data-testid={`${testidPrefix}-input`}
+        />
+
+        {!disabled && (
+          <button
+            type="button"
+            variant="ghost"
+            onClick={add}
+            disabled={!draft.trim()}
+            className="createlisting-add-btn"
+            data-testid={`${testidPrefix}-add`}
+            aria-label="Add tag"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -429,11 +438,10 @@ function PillMultiSelect({ value, options, onChange, testidPrefix, format }) {
             type="button"
             onClick={() => toggle(opt)}
             data-testid={`${testidPrefix}-pill-${opt}`}
-            className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-              on
-                ? 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] border-[hsl(var(--accent))]'
-                : 'bg-card border-border hover:bg-secondary'
-            }`}
+            className={`rounded-full border px-3 py-1 text-xs transition-colors ${on
+              ? 'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] border-[hsl(var(--accent))]'
+              : 'bg-card border-border hover:bg-secondary'
+              }`}
           >
             {format ? format(opt) : opt}
           </button>
@@ -678,11 +686,11 @@ export default function ItemDetail() {
         }
       }
       setGroupItemsState(unique);
-      
+
       const hostItem = unique.find(x => x.group_role === 'host' || x.id === x.group_id) || unique[0] || item;
       setHostIdState(hostItem ? hostItem.id : item.id);
       setActiveViewIdState(hostItem ? hostItem.id : item.id);
-      
+
       setDeletedGroupMemberIds(new Set());
       setAddedGroupMembers([]);
       setNewUploadedMembers([]);
@@ -820,14 +828,14 @@ export default function ItemDetail() {
   /* ------------------- save / discard ------------------- */
   const executeSavePipeline = () => {
     setSaving(true);
-    
+
     // 1. Optimistic update of frontend's closet state immediately
     const storeItems = closetStore.getSnapshot().items || [];
     const activeHostId = hostIdState || id;
-    
+
     // Find host in the store
     const hostItem = storeItems.find(it => it.id === activeHostId) || item;
-    
+
     // Update host fields with current form values
     const updatedHost = {
       ...hostItem,
@@ -836,7 +844,7 @@ export default function ItemDetail() {
       group_role: 'host',
       updated_at: new Date().toISOString()
     };
-    
+
     // Compile members list
     const remainingMembers = [];
     const dbMembers = [item, ...(item.group_members || [])];
@@ -849,7 +857,7 @@ export default function ItemDetail() {
         });
       }
     }
-    
+
     for (const added of addedGroupMembers) {
       remainingMembers.push({
         ...added,
@@ -857,7 +865,7 @@ export default function ItemDetail() {
         group_role: 'member'
       });
     }
-    
+
     for (const upload of newUploadedMembers) {
       remainingMembers.push({
         id: upload.id,
@@ -878,15 +886,15 @@ export default function ItemDetail() {
         updated_at: new Date().toISOString()
       });
     }
-    
+
     updatedHost.group_members = remainingMembers;
-    
+
     // Apply changes locally to the store immediately!
     closetStore.upsert(updatedHost);
     for (const m of remainingMembers) {
       closetStore.upsert(m);
     }
-    
+
     // Restore deleted group members to the closet grid
     for (const removeId of deletedGroupMemberIds) {
       const removedItem = groupItemsState.find(it => it.id === removeId) || storeItems.find(it => it.id === removeId);
@@ -901,15 +909,15 @@ export default function ItemDetail() {
     }
 
     toast.success(t('itemDetail.group.savingInBackground', { defaultValue: 'Saving changes in background...' }));
-    
+
     // Redirect user immediately so they see the refreshed modifications
     if (location.state?.fromOutfits) {
-      nav('/stylist', { 
-        replace: true, 
-        state: { 
-          tab: 'shuffle', 
-          selectedOutfitId: location.state.returnToOutfitId 
-        } 
+      nav('/stylist', {
+        replace: true,
+        state: {
+          tab: 'shuffle',
+          selectedOutfitId: location.state.returnToOutfitId
+        }
       });
     } else {
       nav('/closet');
@@ -922,7 +930,7 @@ export default function ItemDetail() {
     // 2. Perform database updates in the background
     const savePromise = (async () => {
       let currentHostId = id;
-      
+
       if (groupIsDirty) {
         const payload = {
           new_host_id: (hostIdState !== null && hostIdState !== initialHostId) ? hostIdState : null,
@@ -942,7 +950,7 @@ export default function ItemDetail() {
       if (Object.keys(patch).length > 0) {
         await api.updateItem(currentHostId, patch);
       }
-      
+
       const finalHost = await api.getItem(currentHostId);
       return finalHost;
     })();
@@ -1021,13 +1029,13 @@ export default function ItemDetail() {
   const onDiscard = () => {
     if (!item) return;
     setForm(toFormState(item, user));
-    
+
     // Reset group edits
     setDeletedGroupMemberIds(new Set());
     setAddedGroupMembers([]);
     setNewUploadedMembers([]);
     setHostIdState(initialHostId);
-    
+
     toast.message(t('itemDetail.changesDiscarded'));
   };
 
@@ -1134,17 +1142,17 @@ export default function ItemDetail() {
       } else {
         toast.warning(
           res?.detail
-            || t('item.reshootRejected', {
-                 defaultValue: 'Restored photo was rejected — keeping the original.',
-               }),
+          || t('item.reshootRejected', {
+            defaultValue: 'Restored photo was rejected — keeping the original.',
+          }),
         );
       }
     } catch (err) {
       toast.error(
         err?.response?.data?.detail
-          || t('item.reshootError', {
-               defaultValue: 'Could not restore photo. Please try again.',
-             }),
+        || t('item.reshootError', {
+          defaultValue: 'Could not restore photo. Please try again.',
+        }),
       );
     } finally {
       setReshootingPhoto(false);
@@ -1258,1133 +1266,1154 @@ export default function ItemDetail() {
 
   /* ========================= RENDER ========================= */
   return (
-    <div className="container-px max-w-5xl mx-auto pt-4 md:pt-8 pb-24">
-      {/* Floating Action Bar */}
-      <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-border bg-card/90 backdrop-blur-lg shadow-xl md:bottom-8 max-w-[calc(100vw-2rem)] shrink-0 animate-[slideUp_0.2s_ease-out]">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => {
-            if (location.state?.fromOutfits) {
-              nav('/stylist', { 
-                replace: true, 
-                state: { 
-                  tab: 'shuffle', 
-                  selectedOutfitId: location.state.returnToOutfitId 
-                } 
-              });
-            } else if (window.history.state && window.history.state.idx > 0) {
-              nav(-1);
-            } else {
-              nav('/closet', { replace: true });
-            }
-          }}
-          className="rounded-full h-9 w-9 flex items-center justify-center"
-          data-testid="item-back"
-          title={t('common.back')}
-          aria-label={t('common.back')}
-        >
-          <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
-        </Button>
-        
-        <div className="h-4 w-[1px] bg-border mx-0.5" />
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onDiscard}
-          disabled={!isDirty || saving}
-          className="rounded-full h-9 w-9 flex items-center justify-center"
-          data-testid="item-edit-discard-button"
-          title={t('itemDetail.edit.discard')}
-          aria-label={t('itemDetail.edit.discard')}
-        >
-          <Undo2 className="h-4 w-4" />
-        </Button>
-
-        <Button
-          type="button"
-          onClick={onSave}
-          disabled={!isDirty || saving}
-          size="icon"
-          className="rounded-full h-9 w-9 flex items-center justify-center"
-          data-testid="item-edit-save-button"
-          title={saving ? t('itemDetail.edit.saving') : t('itemDetail.edit.save')}
-          aria-label={saving ? t('itemDetail.edit.saving') : t('itemDetail.edit.save')}
-        >
-          {saving ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
-        </Button>
-
-        {isDirty && (
-          <Badge
-            variant="outline"
-            className="rounded-full text-[9px] px-2 h-5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 whitespace-nowrap"
-            data-testid="item-edit-dirty-badge"
-          >
-            {Object.keys(patch).length}
-          </Badge>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-        {/* ---------- Image column ---------- */}
-        <div className="md:col-span-3 space-y-4">
-          <Card className="rounded-[calc(var(--radius)+6px)] overflow-hidden shadow-editorial relative">
-            <AspectRatio ratio={3 / 4} className="bg-secondary">
-              {preferredImage ? (
-                <img
-                  src={preferredImage}
-                  alt={form.title || item.title}
-                  className="w-full h-full object-contain"
-                  data-testid="item-detail-main-image"
-                />
-              ) : (
-                <div
-                  className="w-full h-full flex flex-col items-center justify-center gap-3 text-muted-foreground bg-gradient-to-br from-muted/50 to-muted/20 p-6 text-center"
-                  data-testid="item-detail-no-image"
-                >
-                  {item.dpp_data ? (
-                    <>
-                      <QrCode className="h-10 w-10 text-[hsl(var(--accent))]/70" />
-                      <div className="text-sm max-w-xs">
-                        {t('itemDetail.photo.placeholderHint')}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-sm">{t('itemDetail.noImage')}</div>
-                  )}
-                  <Button
-                    type="button"
-                    variant="default"
-                    size="sm"
-                    className="rounded-xl mt-1"
-                    onClick={openCameraCapture}
-                    disabled={uploadingPhoto}
-                    data-testid="item-detail-take-photo-btn"
-                  >
-                    {uploadingPhoto ? (
-                      <Loader2 className="h-4 w-4 me-2 animate-spin" />
-                    ) : (
-                      <Camera className="h-4 w-4 me-2" />
-                    )}
-                    {t('itemDetail.photo.takeLabel', { defaultValue: 'Take photo' })}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="rounded-xl"
-                    onClick={onPickPhoto}
-                    disabled={uploadingPhoto}
-                    data-testid="item-detail-add-photo-btn"
-                  >
-                    <Images className="h-4 w-4 me-2" />
-                    {t('itemDetail.photo.addLabel')}
-                  </Button>
-                </div>
-              )}
-            </AspectRatio>
-            {/* Replace photo controls (subtle pill row, shown only when an image exists).
-                Mirrors the no-image state's two-button choice so the user always has
-                "Take photo" (camera) and "Choose from library" (gallery) at hand.
-                Phase O.6 adds an optional third pill: "Repair photo" — only shown
-                when the one-pass /analyze response advised it (and the user hasn't
-                already accepted a reshoot for this item). */}
-            {preferredImage && (
-              <div className="absolute bottom-3 end-3 inline-flex items-center gap-1.5 flex-wrap justify-end">
-                {showRepairPhotoCta && (
-                  <button
-                    type="button"
-                    onClick={onReshootPhoto}
-                    disabled={reshootingPhoto || uploadingPhoto}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(var(--accent))]/95 text-[hsl(var(--accent-foreground))] backdrop-blur border border-[hsl(var(--accent))]/70 px-2.5 py-1 text-[11px] font-medium hover:bg-[hsl(var(--accent))] transition-colors disabled:opacity-60 shadow-editorial"
-                    data-testid="item-detail-repair-photo-btn"
-                    aria-label={t('item.repairPhoto', { defaultValue: 'Repair photo' })}
-                  >
-                    {reshootingPhoto ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-3 w-3" />
-                    )}
-                    {reshootingPhoto
-                      ? t('item.repairingPhoto', { defaultValue: 'Restoring…' })
-                      : t('item.repairPhoto', { defaultValue: 'Repair photo' })}
-                  </button>
-                )}                <button
-                  type="button"
-                  onClick={openCameraCapture}
-                  disabled={uploadingPhoto}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-background/90 backdrop-blur border border-border px-2.5 py-1 text-[11px] font-medium hover:bg-secondary transition-colors disabled:opacity-60"
-                  data-testid="item-detail-take-photo-replace-btn"
-                  aria-label={t('itemDetail.photo.takeLabel', { defaultValue: 'Take photo' })}
-                >
-                  {uploadingPhoto ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <Camera className="h-3 w-3" />
-                  )}
-                  {t('itemDetail.photo.takeLabel', { defaultValue: 'Take photo' })}
-                </button>
-                <button
-                  type="button"
-                  onClick={onPickPhoto}
-                  disabled={uploadingPhoto}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-background/90 backdrop-blur border border-border px-2.5 py-1 text-[11px] font-medium hover:bg-secondary transition-colors disabled:opacity-60"
-                  data-testid="item-detail-replace-photo-btn"
-                  aria-label={t('itemDetail.photo.replaceLabel')}
-                >
-                  <Images className="h-3 w-3" />
-                  {t('itemDetail.photo.replaceLabel')}
-                </button>
-              </div>
-            )}
-            {/* Hidden inputs — one for the library picker, one for direct
-                camera capture. Separate elements (rather than flipping a
-                single input's ``capture`` attr) avoid race conditions on
-                Android where the wrong dialog can open. */}
-            <input
-              ref={photoInputRef}
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              data-testid="item-detail-photo-input"
-              onChange={onPhotoFileChosen}
-            />
-            <input
-              ref={cameraInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="sr-only"
-              data-testid="item-detail-camera-input"
-              onChange={onPhotoFileChosen}
-            />
-            {hasReconstruction && (
-              <>
-                <div
-                  className="absolute top-3 start-3 inline-flex items-center gap-1.5 rounded-full bg-background/90 backdrop-blur border border-border px-2.5 py-1 text-[11px] font-semibold"
-                  data-testid="item-detail-repaired-badge"
-                >
-                  <Wand2 className="h-3 w-3 text-[hsl(var(--accent))]" />
-                  {showingOriginal
-                    ? t('itemDetail.repair.showingOriginal')
-                    : t('itemDetail.repair.showingRepaired')}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowingOriginal((s) => !s)}
-                  className="absolute top-3 end-3 inline-flex items-center gap-1.5 rounded-full bg-background/90 backdrop-blur border border-border px-2.5 py-1 text-[11px] font-medium hover:bg-secondary transition-colors"
-                  data-testid="item-detail-toggle-reconstruction"
-                >
-                  <RefreshCw className="h-3 w-3" />
-                  {showingOriginal
-                    ? t('itemDetail.repair.showRepaired')
-                    : t('itemDetail.repair.showOriginal')}
-                </button>
-              </>
-            )}
-            <div className="absolute bottom-3 start-3 hidden md:flex items-center gap-2">
-              <SourceTagBadge source={item.source} intent={item.marketplace_intent} />
-              <Badge
-                variant="outline"
-                className="rounded-full text-[10px] bg-background/90 backdrop-blur"
-              >
-                {labelForCategory(form.category, t)}
-              </Badge>
+    <>
+      {/* banner-start */}
+      <section className="closet-banner">
+        <div className="container-fluid">
+          <div className="closet-banner__content">
+            <div className="closet-banner__title-row">
+              <h1 className="hero-title">Your Wardrobe, Organized & Ready</h1>
+              <p className="hero-description">View, edit, and manage every clothing item in your wardrobe with detailed information, smart analysis, and AI-powered styling insights.</p>
             </div>
-          </Card>
+          </div>
+        </div>
+      </section>
+      <section className="itemdetail-sec">
+        <div className="container-fluid">
+          <div className='row gx-3 gy-3'>
+            <div className='col-md-6'>
+              <div className='card custm-card'>
+                <div className="row gx-3 gy-3">
+                  {/* item-image */}
+                  <div className='col-md-12'>
+                    <div className="photo-card">
+                      <div className="photo-aspect-ratio">
+                        {preferredImage ? (
+                          <img
+                            src={preferredImage}
+                            alt={form.title || item.title}
+                            className="photo-image"
+                            data-testid="item-detail-main-image"
+                          />
+                        ) : (
+                          <div className="photo-empty-state" data-testid="item-detail-no-image">
+                            {item.dpp_data ? (
+                              <>
+                                <QrCode className="photo-empty-icon" />
+                                <div className="photo-empty-hint">
+                                  {t("itemDetail.photo.placeholderHint")}
+                                </div>
+                              </>
+                            ) : (
+                              <div className="photo-empty-text">{t("itemDetail.noImage")}</div>
+                            )}
 
-          {/* Wardrobe Insights / Wear Stats */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial overflow-hidden" data-testid="item-insights-card">
-            <CardContent className="p-5 space-y-3">
-              <div className="caps-label text-muted-foreground">{t('itemDetail.stats.label', { defaultValue: 'Wardrobe Insights' })}</div>
-              <div className="grid grid-cols-2 gap-4 pt-1">
-                <div className="space-y-1">
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('itemDetail.stats.timesWorn', { defaultValue: 'Times Worn' })}</div>
-                  <div className="text-2xl font-display font-semibold text-[hsl(var(--accent))]">
-                    {item.wear_count || 0}
-                  </div>
-                </div>
-                {item.price_cents > 0 && (
-                  <div className="space-y-1">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('itemDetail.stats.costPerWear', { defaultValue: 'Cost per Wear' })}</div>
-                    <div className="text-2xl font-display font-semibold">
-                      {new Intl.NumberFormat(i18n.language, { style: 'currency', currency: item.currency || 'USD' }).format(
-                        ((item.price_cents || 0) / 100) / (item.wear_count || 1)
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                            <button
+                              type="button"
+                              className="btn btn-primary btn-sm"
+                              onClick={openCameraCapture}
+                              disabled={uploadingPhoto}
+                              data-testid="item-detail-take-photo-btn"
+                            >
+                              {uploadingPhoto ? (
+                                <Loader2 className="icon-sm icon-spin" />
+                              ) : (
+                                <Camera className="icon-sm" />
+                              )}
+                              {t("itemDetail.photo.takeLabel", { defaultValue: "Take photo" })}
+                            </button>
 
-          {/* Garment Views (Item Group) picker */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial overflow-hidden" data-testid="item-group-views-card">
-            <CardContent className="p-5 space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <div className="caps-label text-muted-foreground truncate max-w-[200px]" title={(() => {
-                  const hostItem = currentGroupItems.find(x => x.group_role === 'host' || x.id === hostIdState) || currentGroupItems[0] || item;
-                  return hostItem ? (hostItem.title || hostItem.name || 'Garment Views') : 'Garment Views';
-                })()}>
-                  {(() => {
-                    const hostItem = currentGroupItems.find(x => x.group_role === 'host' || x.id === hostIdState) || currentGroupItems[0] || item;
-                    return hostItem ? (hostItem.title || hostItem.name || t('profile.sections.photos')) : t('profile.sections.photos');
-                  })()}
-                </div>
-                {item.group_id && (
-                  <Badge variant="secondary" className="rounded-full text-[10px] flex-shrink-0">
-                    {t('profile.sections.photos')}
-                  </Badge>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground mb-4">
-                {t('closet.subtitle')}
-              </p>
-
-              {/* Member Action Bar */}
-              <div className="h-10 mb-4 flex items-center gap-3">
-                {activeViewIdState && activeViewIdState !== hostIdState && currentGroupItems.some(x => x.id === activeViewIdState) ? (
-                  <>
-                    <Button
-                      type="button"
-                      onClick={() => onSetFront(activeViewIdState)}
-                      disabled={saving}
-                      className="flex-1 bg-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/90 text-white h-10"
-                    >
-                      <BadgeCheck className="h-4 w-4 me-2" />
-                      {t('common.apply')}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      onClick={() => onDeleteMember(activeViewIdState)}
-                      disabled={saving}
-                      className="flex-1 h-10"
-                    >
-                      <Trash2 className="h-4 w-4 me-2" />
-                      {t('addItem.remove')}
-                    </Button>
-                  </>
-                ) : (
-                  <div className="flex-1 text-center text-xs text-muted-foreground italic flex items-center justify-center h-full">
-                    {t('common.edit')}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-start gap-3 overflow-x-auto pb-2 pt-1 scrollbar-thin">
-                {currentGroupItems.map((gItem) => {
-                  const isActive = gItem.id === activeViewIdState;
-                  const isHost = gItem.id === hostIdState;
-
-                  return (
-                    <div
-                      key={gItem.id}
-                      className="flex flex-col items-center gap-1.5"
-                    >
-                      <div
-                        onClick={() => {
-                          setActiveViewIdState(gItem.id);
-                        }}
-                        className={`relative flex-shrink-0 group w-20 h-24 rounded-lg overflow-hidden border-2 cursor-pointer transition-all shadow-sm ${
-                          isActive
-                            ? 'border-emerald-500 ring-2 ring-emerald-500/20'
-                            : 'border-border hover:border-muted-foreground'
-                        }`}
-                      >
-                        <img
-                          src={bestImageUrl(gItem)}
-                          alt={gItem.title || 'Garment view'}
-                          className="w-full h-full object-cover"
-                        />
-
-                        {isHost && (
-                          <div className="absolute inset-x-0 bottom-0 bg-background/80 backdrop-blur-[2px] py-0.5 text-center">
-                            <span className="text-[9px] font-semibold text-[hsl(var(--accent))]">
-                              {t('itemDetail.group.front', { defaultValue: 'Front (Main)' })}
-                            </span>
+                            <button
+                              type="button"
+                              className="btn btn-outline btn-sm"
+                              onClick={onPickPhoto}
+                              disabled={uploadingPhoto}
+                              data-testid="item-detail-add-photo-btn"
+                            >
+                              <Images className="icon-sm" />
+                              {t("itemDetail.photo.addLabel")}
+                            </button>
                           </div>
                         )}
                       </div>
 
-                      {(() => {
-                        const tags = Array.isArray(gItem.tags) ? gItem.tags : [];
-                        const isFront = tags.some(t => String(t).toLowerCase() === 'front');
-                        const isBack = tags.some(t => String(t).toLowerCase() === 'back');
-                        const isProfile = tags.some(t => String(t).toLowerCase() === 'profile');
-                        
-                        let tagText = '';
-                        let tagKey = '';
-                        if (isFront) {
-                          tagText = 'Front';
-                          tagKey = 'itemDetail.group.front';
-                        } else if (isBack) {
-                          tagText = 'Back';
-                          tagKey = 'itemDetail.group.back';
-                        } else if (isProfile) {
-                          tagText = 'Profile';
-                          tagKey = 'itemDetail.group.profile';
-                        }
-                        
-                        if (!tagText) return <div className="h-4" />;
-                        return (
-                          <span 
-                            className="text-[10px] font-medium text-muted-foreground"
-                            data-testid={`view-tag-${tagText.toLowerCase()}`}
+                      {/* Replace photo controls — sirf tab dikhte hain jab image already ho.
+                          "Take photo" + "Choose from library" hamesha available, aur
+                          "Repair photo" tab dikhta h jab /analyze response ne suggest kiya ho. */}
+                      {preferredImage && (
+                        <div className="photo-replace-row">
+                          {showRepairPhotoCta && (
+                            <button
+                              type="button"
+                              onClick={onReshootPhoto}
+                              disabled={reshootingPhoto || uploadingPhoto}
+                              className="pill pill-accent"
+                              data-testid="item-detail-repair-photo-btn"
+                              aria-label={t("item.repairPhoto", { defaultValue: "Repair photo" })}
+                            >
+                              {reshootingPhoto ? (
+                                <Loader2 className="icon-xs icon-spin" />
+                              ) : (
+                                <Sparkles className="icon-xs" />
+                              )}
+                              {reshootingPhoto
+                                ? t("item.repairingPhoto", { defaultValue: "Restoring…" })
+                                : t("item.repairPhoto", { defaultValue: "Repair photo" })}
+                            </button>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={openCameraCapture}
+                            disabled={uploadingPhoto}
+                            className="pill pill-default"
+                            data-testid="item-detail-take-photo-replace-btn"
+                            aria-label={t("itemDetail.photo.takeLabel", { defaultValue: "Take photo" })}
                           >
-                            {t(tagKey, { defaultValue: tagText })}
-                          </span>
-                        );
-                      })()}
-                    </div>
-                  );
-                })}
+                            {uploadingPhoto ? (
+                              <Loader2 className="icon-xs icon-spin" />
+                            ) : (
+                              <Camera className="icon-xs" />
+                            )}
+                            {t("itemDetail.photo.takeLabel", { defaultValue: "Take photo" })}
+                          </button>
 
-                {/* Upload Member Button */}
-                <button
-                  type="button"
-                  onClick={() => setAddOpen(true)}
-                  disabled={uploadingPhoto}
-                  className="relative flex-shrink-0 w-20 h-24 rounded-lg border-2 border-dashed border-border hover:border-muted-foreground flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground transition-colors bg-secondary/20 hover:bg-secondary/40"
-                  data-testid="add-member-view-btn"
-                >
-                  {uploadingPhoto ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <>
-                      <Plus className="h-5 w-5" />
-                      <span className="text-[10px] font-medium">{t('addItem.addPhotos')}</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Hidden file input for members */}
-              <input
-                ref={memberPhotoInputRef}
-                type="file"
-                accept="image/*"
-                className="sr-only"
-                onChange={onMemberPhotoFileChosen}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Dialog for adding/picking closet items */}
-          <Dialog open={addOpen} onOpenChange={setAddOpen}>
-            <DialogContent className="max-w-lg rounded-2xl p-6 glassmorphic border border-white/20 max-h-[90dvh] flex flex-col">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                  <Images className="h-5 w-5 text-primary" />
-                  {t('addItem.addPhotos')}
-                </DialogTitle>
-                <DialogDescription className="sr-only">
-                  {t('closet.subtitle')}
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="flex-1 flex flex-col min-h-0 space-y-6 mt-4">
-                {/* Option 1: Upload New View */}
-                <div className="space-y-2 shrink-0">
-                  <h3 className="text-sm font-semibold text-foreground">{t('scanner.tabFile')}</h3>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      setAddOpen(false);
-                      onAddMemberPhoto();
-                    }}
-                    disabled={uploadingPhoto}
-                    className="w-full justify-start rounded-xl py-4 border-dashed h-auto"
-                    variant="outline"
-                  >
-                    <Camera className="h-5 w-5 me-3 shrink-0 text-muted-foreground" />
-                    <span className="text-start text-xs sm:text-sm whitespace-normal">{t('addItem.uploadPhotos')}</span>
-                  </Button>
-                </div>
-
-                {/* Option 2: Select from Closet */}
-                <div className="flex-1 flex flex-col min-h-0 space-y-3">
-                  <div className="flex items-center justify-between shrink-0">
-                    <h3 className="text-sm font-semibold text-foreground">{t('home.openCloset')}</h3>
-                    <span className="text-xs text-muted-foreground">
-                      {t('closet.selectedCount', { count: filteredCandidates.length })}
-                    </span>
-                  </div>
-
-                  {/* Search bar inside picker */}
-                  <div className="relative shrink-0">
-                    <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder={t('closet.searchPlaceholder')}
-                      value={closetSearch}
-                      onChange={(e) => setClosetSearch(e.target.value)}
-                      className="ps-9 rounded-xl bg-secondary/50 focus-visible:ring-1 focus-visible:ring-emerald-500"
-                    />
-                  </div>
-
-                  {/* Candidates Grid */}
-                  <div className="flex-1 overflow-y-auto pe-1 space-y-2 scrollbar-thin min-h-0">
-                    {filteredCandidates.length === 0 ? (
-                      <div className="text-center py-8 text-sm text-muted-foreground">
-                        {t('common.noResults')}
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {filteredCandidates.map((cItem) => (
-                          <div
-                            key={cItem.id}
-                            onClick={() => handleSelectClosetItem(cItem.id)}
-                            className="group flex flex-col rounded-xl border border-border overflow-hidden cursor-pointer hover:border-emerald-500 hover:ring-2 hover:ring-emerald-500/20 transition-all bg-card shadow-sm"
+                          <button
+                            type="button"
+                            onClick={onPickPhoto}
+                            disabled={uploadingPhoto}
+                            className="pill pill-default"
+                            data-testid="item-detail-replace-photo-btn"
+                            aria-label={t("itemDetail.photo.replaceLabel")}
                           >
-                            <div className="aspect-[3/4] bg-secondary relative overflow-hidden flex items-center justify-center">
-                              <img
-                                src={bestImageUrl(cItem)}
-                                alt={cItem.title || 'Closet item'}
-                                className="w-full h-full object-contain transition-transform group-hover:scale-105"
-                              />
-                            </div>
-                            <div className="p-2 text-start border-t border-border/50 bg-background/50">
-                              <p className="text-[10px] font-semibold text-foreground truncate">
-                                {cItem.title || cItem.name}
-                              </p>
-                              <p className="text-[8px] text-muted-foreground truncate mt-0.5">
-                                {labelForCategory(cItem.category, t)}
-                              </p>
-                            </div>
+                            <Images className="icon-xs" />
+                            {t("itemDetail.photo.replaceLabel")}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Hidden inputs — ek library picker k liye, ek direct camera capture k liye.
+                          Alag elements rakhe h taaki Android pe galat dialog na khule. */}
+                      <input
+                        ref={photoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="input-hidden"
+                        data-testid="item-detail-photo-input"
+                        onChange={onPhotoFileChosen}
+                      />
+                      <input
+                        ref={cameraInputRef}
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        className="input-hidden"
+                        data-testid="item-detail-camera-input"
+                        onChange={onPhotoFileChosen}
+                      />
+
+                      {hasReconstruction && (
+                        <>
+                          <div className="badge-repaired" data-testid="item-detail-repaired-badge">
+                            <Wand2 className="icon-xs icon-accent" />
+                            {showingOriginal
+                              ? t("itemDetail.repair.showingOriginal")
+                              : t("itemDetail.repair.showingRepaired")}
                           </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setShowingOriginal((s) => !s)}
+                            className="pill pill-default toggle-reconstruction-btn"
+                            data-testid="item-detail-toggle-reconstruction"
+                          >
+                            <RefreshCw className="icon-xs" />
+                            {showingOriginal
+                              ? t("itemDetail.repair.showRepaired")
+                              : t("itemDetail.repair.showOriginal")}
+                          </button>
+                        </>
+                      )}
+
+                      <div className="bottom-left-badges">
+                        <SourceTagBadge source={item.source} intent={item.marketplace_intent} />
+                        <span className="badge-outline">{labelForCategory(form.category, t)}</span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Wardrobe Insights / Wear Stats */}
+                  <div className='col-md-12' data-testid="item-insights-card">
+                    <div className='custm-head'>
+                      <i className="fa-solid fa-arrows-rotate"></i>
+                      <div className=''>
+                        <h6>{t('itemDetail.stats.label', { defaultValue: 'Wardrobe Insights' })}</h6>
+                        <p>{t('itemDetail.stats.timesWorn', { defaultValue: 'Times Worn' })}:-{item.wear_count || 0}</p>
+                      </div>
+                    </div>
+                    <div className='custm-body'>
+                      {item.price_cents > 0 && (
+                        <div className="space-y-1">
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t('itemDetail.stats.costPerWear', { defaultValue: 'Cost per Wear' })}</div>
+                          <div className="text-2xl font-display font-semibold">
+                            {new Intl.NumberFormat(i18n.language, { style: 'currency', currency: item.currency || 'USD' }).format(
+                              ((item.price_cents || 0) / 100) / (item.wear_count || 1)
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* Garment Views (Item Group) picker */}
+                  <div className='col-md-12' data-testid="item-group-views-card">
+                    <div className='custm-body'>
+                      <div className="caps-label text-muted-foreground truncate max-w-[200px]" title={(() => {
+                        const hostItem = currentGroupItems.find(x => x.group_role === 'host' || x.id === hostIdState) || currentGroupItems[0] || item;
+                        return hostItem ? (hostItem.title || hostItem.name || 'Garment Views') : 'Garment Views';
+                      })()}>
+                        {(() => {
+                          const hostItem = currentGroupItems.find(x => x.group_role === 'host' || x.id === hostIdState) || currentGroupItems[0] || item;
+                          return hostItem ? (hostItem.title || hostItem.name || t('profile.sections.photos')) : t('profile.sections.photos');
+                        })()}
+                      </div>
+                      {item.group_id && (
+                        <Badge variant="secondary" className="rounded-full text-[10px] flex-shrink-0">
+                          {t('profile.sections.photos')}
+                        </Badge>
+                      )}
+                      <p className="text-xs text-muted-foreground mb-4">
+                        {t('closet.subtitle')}
+                      </p>
+                      {/* Member Action Bar */}
+                      <div className="h-10 mb-4 flex items-center gap-3">
+                        {activeViewIdState && activeViewIdState !== hostIdState && currentGroupItems.some(x => x.id === activeViewIdState) ? (
+                          <>
+                            <Button
+                              type="button"
+                              onClick={() => onSetFront(activeViewIdState)}
+                              disabled={saving}
+                              className="flex-1 bg-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/90 text-white h-10"
+                            >
+                              <BadgeCheck className="h-4 w-4 me-2" />
+                              {t('common.apply')}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              onClick={() => onDeleteMember(activeViewIdState)}
+                              disabled={saving}
+                              className="flex-1 h-10"
+                            >
+                              <Trash2 className="h-4 w-4 me-2" />
+                              {t('addItem.remove')}
+                            </Button>
+                          </>
+                        ) : (
+                          <div className="flex-1 text-center text-xs text-muted-foreground italic flex items-center justify-center h-full">
+                            {t('common.edit')}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-start gap-3 overflow-x-auto pb-2 pt-1 scrollbar-thin">
+                        {currentGroupItems.map((gItem) => {
+                          const isActive = gItem.id === activeViewIdState;
+                          const isHost = gItem.id === hostIdState;
+
+                          return (
+                            <div
+                              key={gItem.id}
+                              className="flex flex-col items-center gap-1.5"
+                            >
+                              <div
+                                onClick={() => {
+                                  setActiveViewIdState(gItem.id);
+                                }}
+                                className={`relative flex-shrink-0 group w-20 h-24 rounded-lg overflow-hidden border-2 cursor-pointer transition-all shadow-sm ${isActive
+                                  ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+                                  : 'border-border hover:border-muted-foreground'
+                                  }`}
+                              >
+                                <img
+                                  src={bestImageUrl(gItem)}
+                                  alt={gItem.title || 'Garment view'}
+                                  className="w-full h-full object-cover"
+                                />
+
+                                {isHost && (
+                                  <div className="absolute inset-x-0 bottom-0 bg-background/80 backdrop-blur-[2px] py-0.5 text-center">
+                                    <span className="text-[9px] font-semibold text-[hsl(var(--accent))]">
+                                      {t('itemDetail.group.front', { defaultValue: 'Front (Main)' })}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {(() => {
+                                const tags = Array.isArray(gItem.tags) ? gItem.tags : [];
+                                const isFront = tags.some(t => String(t).toLowerCase() === 'front');
+                                const isBack = tags.some(t => String(t).toLowerCase() === 'back');
+                                const isProfile = tags.some(t => String(t).toLowerCase() === 'profile');
+
+                                let tagText = '';
+                                let tagKey = '';
+                                if (isFront) {
+                                  tagText = 'Front';
+                                  tagKey = 'itemDetail.group.front';
+                                } else if (isBack) {
+                                  tagText = 'Back';
+                                  tagKey = 'itemDetail.group.back';
+                                } else if (isProfile) {
+                                  tagText = 'Profile';
+                                  tagKey = 'itemDetail.group.profile';
+                                }
+
+                                if (!tagText) return <div className="h-4" />;
+                                return (
+                                  <span
+                                    className="text-[10px] font-medium text-muted-foreground"
+                                    data-testid={`view-tag-${tagText.toLowerCase()}`}
+                                  >
+                                    {t(tagKey, { defaultValue: tagText })}
+                                  </span>
+                                );
+                              })()}
+                            </div>
+                          );
+                        })}
+
+                        {/* Upload Member Button */}
+                        <button
+                          type="button"
+                          onClick={() => setAddOpen(true)}
+                          disabled={uploadingPhoto}
+                          className="relative flex-shrink-0 w-20 h-24 rounded-lg border-2 border-dashed border-border hover:border-muted-foreground flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground transition-colors bg-secondary/20 hover:bg-secondary/40"
+                          data-testid="add-member-view-btn"
+                        >
+                          {uploadingPhoto ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                          ) : (
+                            <>
+                              <Plus className="h-5 w-5" />
+                              <span className="text-[10px] font-medium">{t('addItem.addPhotos')}</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      {/* Hidden file input for members */}
+                      <input
+                        ref={memberPhotoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        onChange={onMemberPhotoFileChosen}
+                      />
+                    </div>
+                  </div>
+                  {/* Dialog for adding/picking closet items */}
+                  <Dialog open={addOpen} onOpenChange={setAddOpen}>
+                    <DialogContent className="max-w-lg rounded-2xl p-6 glassmorphic border border-white/20 max-h-[90dvh] flex flex-col">
+                      <DialogHeader>
+                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                          <Images className="h-5 w-5 text-primary" />
+                          {t('addItem.addPhotos')}
+                        </DialogTitle>
+                        <DialogDescription className="sr-only">
+                          {t('closet.subtitle')}
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      <div className="flex-1 flex flex-col min-h-0 space-y-6 mt-4">
+                        {/* Option 1: Upload New View */}
+                        <div className="space-y-2 shrink-0">
+                          <h3 className="text-sm font-semibold text-foreground">{t('scanner.tabFile')}</h3>
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              setAddOpen(false);
+                              onAddMemberPhoto();
+                            }}
+                            disabled={uploadingPhoto}
+                            className="w-full justify-start rounded-xl py-4 border-dashed h-auto"
+                            variant="outline"
+                          >
+                            <Camera className="h-5 w-5 me-3 shrink-0 text-muted-foreground" />
+                            <span className="text-start text-xs sm:text-sm whitespace-normal">{t('addItem.uploadPhotos')}</span>
+                          </Button>
+                        </div>
+
+                        {/* Option 2: Select from Closet */}
+                        <div className="flex-1 flex flex-col min-h-0 space-y-3">
+                          <div className="flex items-center justify-between shrink-0">
+                            <h3 className="text-sm font-semibold text-foreground">{t('home.openCloset')}</h3>
+                            <span className="text-xs text-muted-foreground">
+                              {t('closet.selectedCount', { count: filteredCandidates.length })}
+                            </span>
+                          </div>
+
+                          {/* Search bar inside picker */}
+                          <div className="relative shrink-0">
+                            <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              placeholder={t('closet.searchPlaceholder')}
+                              value={closetSearch}
+                              onChange={(e) => setClosetSearch(e.target.value)}
+                              className="ps-9 rounded-xl bg-secondary/50 focus-visible:ring-1 focus-visible:ring-emerald-500"
+                            />
+                          </div>
+
+                          {/* Candidates Grid */}
+                          <div className="flex-1 overflow-y-auto pe-1 space-y-2 scrollbar-thin min-h-0">
+                            {filteredCandidates.length === 0 ? (
+                              <div className="text-center py-8 text-sm text-muted-foreground">
+                                {t('common.noResults')}
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                {filteredCandidates.map((cItem) => (
+                                  <div
+                                    key={cItem.id}
+                                    onClick={() => handleSelectClosetItem(cItem.id)}
+                                    className="group flex flex-col rounded-xl border border-border overflow-hidden cursor-pointer hover:border-emerald-500 hover:ring-2 hover:ring-emerald-500/20 transition-all bg-card shadow-sm"
+                                  >
+                                    <div className="aspect-[3/4] bg-secondary relative overflow-hidden flex items-center justify-center">
+                                      <img
+                                        src={bestImageUrl(cItem)}
+                                        alt={cItem.title || 'Closet item'}
+                                        className="w-full h-full object-contain transition-transform group-hover:scale-105"
+                                      />
+                                    </div>
+                                    <div className="p-2 text-start border-t border-border/50 bg-background/50">
+                                      <p className="text-[10px] font-semibold text-foreground truncate">
+                                        {cItem.title || cItem.name}
+                                      </p>
+                                      <p className="text-[8px] text-muted-foreground truncate mt-0.5">
+                                        {labelForCategory(cItem.category, t)}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  {/* Variant carousel (existing) */}
+                  {item.variants && item.variants.length > 0 && (
+                    <div>
+                      <div className="caps-label text-muted-foreground mb-2">
+                        {t('itemDetail.variants')}
+                      </div>
+                      <div className="flex gap-3 overflow-x-auto pb-2" data-testid="item-variant-carousel">
+                        {item.variants.map((v, i) => (
+                          <a key={i} href={v.url} target="_blank" rel="noreferrer" className="flex-shrink-0 w-28">
+                            <div className="aspect-[3/4] rounded-xl overflow-hidden border border-border">
+                              <img src={v.url} alt={v.prompt} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="text-[11px] text-muted-foreground mt-1 truncate">{v.prompt}</div>
+                          </a>
                         ))}
                       </div>
-                    )}
+                    </div>
+                  )}
+                  {/* DPP provenance panel (Phase V6) — shown when an item was imported via QR scan */}
+                  <DppPanel dppData={item.dpp_data} />
+                  {/* Clean background card (Phase V Fix 2) */}
+                  <div className='col-md-12'>
+                    <div className='custm-head'>
+                      <i className="fa-solid fa-wand-magic-sparkles"></i>
+                      <div className=''>
+                        <h6>{t('itemDetail.cleanBackground.label')}</h6>
+                        <p>{t('itemDetail.edit.sectionCleanBgDesc', { defaultValue: 'Remove background using non-generative matting models' })}</p>
+                      </div>
+                    </div>
+                    <div className='custm-body buttonstyle'>
+                      <p className="itemdesc">{t('itemDetail.cleanBackground.subtitle')}</p>
+                      <Button
+                        onClick={onCleanBackground}
+                        disabled={cleaningBackground}
+                        className="custm-btn w-100"
+                        data-testid="item-clean-bg-button"
+                      >
+                        {cleaningBackground ? (
+                          <><Loader2 className="h-4 w-4 me-2 animate-spin" />{t('itemDetail.cleanBackground.running')}</>
+                        ) : (
+                          <><Wand2 className="h-4 w-4 me-2" />{hasReconstruction ? t('itemDetail.cleanBackground.retryCta') : t('itemDetail.cleanBackground.cta')}</>
+                        )}
+                      </Button>
+                      {cleaningBackground && (
+                        <div className="space-y-2" data-testid="item-clean-bg-progress">
+                          <Progress
+                            value={cleanBackgroundProgress}
+                            className="h-2 w-full"
+                            data-testid="item-clean-bg-progress-bar"
+                          />
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-[11px] text-muted-foreground italic">
+                              {t('itemDetail.cleanBackground.progressHint')}
+                            </p>
+                            <span
+                              className="text-[11px] tabular-nums text-muted-foreground"
+                              data-testid="item-clean-bg-progress-pct"
+                            >
+                              {Math.round(cleanBackgroundProgress)}%
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      <span className='titleitemtag'>{t('itemDetail.cleanBackground.disclaimer')}</span>
+                    </div>
+                  </div>
+                  {/* Re-analyse card — runs The Eyes against the item's stored
+                      image and rewrites the analysis-derived fields (title,
+                      taxonomy, colour/material percentages, condition, …).
+                      Useful after a "Replace photo" upload (which intentionally
+                      skips auto-analysis), or to recover from a bad first
+                      analysis without re-uploading. */}
+                  <div className='col-md-12'>
+                    <div className='custm-head'>
+                      <i className="fa-solid fa-arrows-rotate"></i>
+                      <div className=''>
+                        <h6>{t('itemDetail.reanalyze.label')}</h6>
+                        <p> {t('itemDetail.edit.sectionReanalyseDesc', { defaultValue: 'Re-run analysis to extract details from the image' })}</p>
+                      </div>
+                    </div>
+                    <div className='custm-body buttonstyle'>
+                      <p className="itemdesc">{t('itemDetail.reanalyze.subtitle')}</p>
+                      <Button
+                        onClick={onReanalyze}
+                        disabled={analyzing}
+                        className="custm-btn2 w-100"
+                        variant="outline"
+                        data-testid="item-reanalyze-button"
+                      >
+                        {analyzing ? (
+                          <>
+                            <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                            {t('itemDetail.reanalyze.running')}
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-4 w-4 me-2" />
+                            {t('itemDetail.reanalyze.cta')}
+                          </>
+                        )}
+                      </Button>
+                      {analyzing && (
+                        <div className="space-y-2" data-testid="item-reanalyze-progress">
+                          <Progress
+                            value={analyzeProgress}
+                            className="h-2 w-full"
+                            data-testid="item-reanalyze-progress-bar"
+                          />
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-[11px] text-muted-foreground italic">
+                              {t('itemDetail.reanalyze.progressHint')}
+                            </p>
+                            <span
+                              className="text-[11px] tabular-nums text-muted-foreground"
+                              data-testid="item-reanalyze-progress-pct"
+                            >
+                              {Math.round(analyzeProgress)}%
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      <span className='titleitemtag'> {t('itemDetail.reanalyze.disclaimer')}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          {/* Variant carousel (existing) */}
-          {item.variants && item.variants.length > 0 && (
-            <div>
-              <div className="caps-label text-muted-foreground mb-2">
-                {t('itemDetail.variants')}
-              </div>
-              <div className="flex gap-3 overflow-x-auto pb-2" data-testid="item-variant-carousel">
-                {item.variants.map((v, i) => (
-                  <a key={i} href={v.url} target="_blank" rel="noreferrer" className="flex-shrink-0 w-28">
-                    <div className="aspect-[3/4] rounded-xl overflow-hidden border border-border">
-                      <img src={v.url} alt={v.prompt} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="text-[11px] text-muted-foreground mt-1 truncate">{v.prompt}</div>
-                  </a>
-                ))}
               </div>
             </div>
-          )}
-
-          {/* DPP provenance panel (Phase V6) — shown when an item was imported via QR scan */}
-          <DppPanel dppData={item.dpp_data} />
-
-          {/* Clean background card (Phase V Fix 2) */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(325_80%_65%)]" data-testid="item-clean-bg-card">
-            <CardContent className="p-5 space-y-3">
-              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
-                <div className="p-2 rounded-xl bg-[hsl(325_80%_95%)] text-[hsl(325_80%_50%)] dark:bg-[hsl(325_30%_18%)] dark:text-[hsl(325_80%_70%)] shrink-0">
-                  <Wand2 className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
-                    {t('itemDetail.cleanBackground.label')}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
-                    {t('itemDetail.edit.sectionCleanBgDesc', { defaultValue: 'Remove background using non-generative matting models' })}
-                  </span>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {t('itemDetail.cleanBackground.subtitle')}
-              </p>
-              <Button
-                onClick={onCleanBackground}
-                disabled={cleaningBackground}
-                className="w-full rounded-xl"
-                data-testid="item-clean-bg-button"
-              >
-                {cleaningBackground ? (
-                  <><Loader2 className="h-4 w-4 me-2 animate-spin" />{t('itemDetail.cleanBackground.running')}</>
-                ) : (
-                  <><Wand2 className="h-4 w-4 me-2" />{hasReconstruction ? t('itemDetail.cleanBackground.retryCta') : t('itemDetail.cleanBackground.cta')}</>
-                )}
-              </Button>
-              {cleaningBackground && (
-                <div className="space-y-2" data-testid="item-clean-bg-progress">
-                  <Progress
-                    value={cleanBackgroundProgress}
-                    className="h-2 w-full"
-                    data-testid="item-clean-bg-progress-bar"
-                  />
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-[11px] text-muted-foreground italic">
-                      {t('itemDetail.cleanBackground.progressHint')}
-                    </p>
-                    <span
-                      className="text-[11px] tabular-nums text-muted-foreground"
-                      data-testid="item-clean-bg-progress-pct"
-                    >
-                      {Math.round(cleanBackgroundProgress)}%
-                    </span>
+            <div className='col-md-6' data-testid="item-edit-form">
+              <div className='card custm-card'>
+                <div className="row gx-3 gy-3">
+                  {/* Identity-card */}
+                  <div className='col-md-12'>
+                    <div className='custm-head'>
+                      <i className="fa-solid fa-tags"></i>
+                      <div className=''>
+                        <h6>{t('itemDetail.edit.sectionIdentity')}</h6>
+                        <p>{t('itemDetail.edit.sectionIdentityDesc', { defaultValue: 'Item title, name, brand, and description details' })}</p>
+                      </div>
+                    </div>
+                    <div className='custm-body'>
+                      <div className='row gx-3 gy-3'>
+                        <div className="col-md-12">
+                          <div className="field-set">
+                            <label htmlFor="f-title">{t('itemDetail.edit.title')}</label>
+                            <Input
+                              id="f-title"
+                              value={form.title}
+                              onChange={(e) => setField('title', e.target.value)}
+                              className={`createlisting-input ${!form.title ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
+                              data-testid="item-edit-field-title"
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-12">
+                          <div className="field-set">
+                            <label htmlFor="f-name">{t('itemDetail.edit.name')}</label>
+                            <Input
+                              id="f-name"
+                              value={form.name}
+                              onChange={(e) => setField('name', e.target.value)}
+                              className={`createlisting-input ${!form.name ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
+                              data-testid="item-edit-field-name"
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-12">
+                          <div className="field-set">
+                            <label htmlFor="f-brand">{t('itemDetail.edit.brand')}</label>
+                            <Input
+                              id="f-brand"
+                              value={form.brand}
+                              onChange={(e) => setField('brand', e.target.value)}
+                              className={`createlisting-input ${!form.brand ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
+                              data-testid="item-edit-field-brand"
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-12">
+                          <div className="field-set">
+                            <label htmlFor="f-caption">{t('itemDetail.edit.caption')}</label>
+                            <Textarea
+                              id="f-caption"
+                              value={form.caption}
+                              onChange={(e) => setField('caption', e.target.value)}
+                              rows={2}
+                              className={`createlisting-textarea resize-none ${!form.caption ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
+                              data-testid="item-edit-field-caption"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Taxonomy-card */}
+                  <div className='col-md-12'>
+                    <div className='custm-head'>
+                      <i class="fa-solid fa-sliders"></i>
+                      <div className=''>
+                        <h6>{t('itemDetail.edit.sectionTaxonomy')}</h6>
+                        <p>{t('itemDetail.edit.sectionTaxonomyDesc', { defaultValue: 'Category, item type, gender, and aesthetic styles' })}</p>
+                      </div>
+                    </div>
+                    <div className='custm-body'>
+                      <div className='row gx-3 gy-3'>
+                        <div className="col-md-6">
+                          <div className="field-set">
+                            <label htmlFor="f-title">{t('itemDetail.edit.category')}</label>
+                            <NullableSelect
+                              value={form.category}
+                              onChange={(v) => setField('category', v || 'Top')}
+                              options={CATEGORY_OPTIONS}
+                              placeholder={t('itemDetail.edit.category')}
+                              testid="item-edit-field-category"
+                              format={(o) => labelForCategory(o, t)}
+                              className={`createlisting-select ${!form.category ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}`}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="field-set">
+                            <label htmlFor="f-sub">{t('itemDetail.edit.subCategory')}</label>
+                            <Input
+                              id="f-sub"
+                              value={form.sub_category}
+                              onChange={(e) => setField('sub_category', e.target.value)}
+                              className={`createlisting-input ${!form.sub_category ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
+                              data-testid="item-edit-field-sub_category"
+                            />
+                            <LocalizedHint raw={form.sub_category} translated={labelForSubCategory(form.sub_category, t)} />
+                          </div>
+                        </div>
+                        <div className="col-md-12">
+                          <div className="field-set">
+                            <label htmlFor="f-itemtype">{t('itemDetail.edit.itemType')}</label>
+                            <Input
+                              id="f-itemtype"
+                              value={form.item_type}
+                              onChange={(e) => setField('item_type', e.target.value)}
+                              className={`createlisting-input ${!form.item_type ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
+                              data-testid="item-edit-field-item_type"
+                            />
+                            <LocalizedHint raw={form.item_type} translated={labelForItemType(form.item_type, t)} />
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="field-set">
+                            <label>{t('itemDetail.edit.gender')}</label>
+                            <NullableSelect
+                              value={form.gender}
+                              onChange={(v) => setField('gender', v)}
+                              options={GENDER_OPTIONS}
+                              placeholder="—"
+                              testid="item-edit-field-gender"
+                              format={(o) => labelForGender(o, t)}
+                              className={`createlisting-select ${!form.gender ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}`}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="field-set">
+                            <label>{t('itemDetail.edit.dressCode')}</label>
+                            <NullableSelect
+                              value={form.dress_code}
+                              onChange={(v) => setField('dress_code', v)}
+                              options={DRESS_CODE_OPTIONS}
+                              placeholder="—"
+                              testid="item-edit-field-dress_code"
+                              format={(o) => labelForDressCode(o, t)}
+                              className={`createlisting-select ${!form.dress_code ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}`}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-12">
+                          <div className="field-set">
+                            <label>{t('itemDetail.edit.season')}</label>
+                            <PillMultiSelect
+                              value={form.season}
+                              options={SEASON_OPTIONS}
+                              onChange={(v) => setField('season', v)}
+                              testidPrefix="item-edit-field-season"
+                              format={(o) => labelForSeason(o, t)}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-12">
+                          <div className="field-set">
+                            <label htmlFor="f-tradition">{t('itemDetail.edit.tradition')}</label>
+                            <Input
+                              id="f-tradition"
+                              value={form.tradition}
+                              onChange={(e) => setField('tradition', e.target.value)}
+                              className={`createlisting-input ${!form.tradition ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
+                              placeholder={t('itemDetail.edit.traditionPlaceholder')}
+                              data-testid="item-edit-field-tradition"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Composition-card */}
+                  <div className='col-md-12'>
+                    <div className='custm-head'>
+                      <i className="fa-solid fa-palette"></i>
+                      <div className=''>
+                        <h6>{t('itemDetail.edit.sectionComposition')}</h6>
+                        <p> {t('itemDetail.edit.sectionCompositionDesc', { defaultValue: 'Garment size, colors, patterns, and fabric materials' })}</p>
+                      </div>
+                    </div>
+                    <div className='custm-body'>
+                      <div className='row gx-3 gy-3'>
+                        <div className="col-md-6">
+                          <div className="field-set">
+                            <label htmlFor="f-size">{t('itemDetail.edit.size')}</label>
+                            <Input
+                              id="f-size"
+                              value={form.size}
+                              onChange={(e) => setField('size', e.target.value)}
+                              className={`createlisting-input ${!form.size ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
+                              data-testid="item-edit-field-size"
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="field-set">
+                            <label htmlFor="f-color">{t('itemDetail.edit.color')}</label>
+                            <Input
+                              id="f-color"
+                              value={form.color}
+                              onChange={(e) => setField('color', e.target.value)}
+                              className={`createlisting-input ${!form.color ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
+                              data-testid="item-edit-field-color"
+                            />
+                            <LocalizedHint raw={form.color} translated={labelForColor(form.color, t)} />
+                          </div>
+                        </div>
+                        <div className="col-md-12">
+                          <div className="field-set">
+                            <label>{t('itemDetail.edit.pattern')}</label>
+                            <NullableSelect
+                              value={form.pattern}
+                              onChange={(v) => setField('pattern', v)}
+                              options={PATTERN_OPTIONS}
+                              placeholder="—"
+                              testid="item-edit-field-pattern"
+                              format={(o) => labelForPattern(o, t)}
+                              className={`createlisting-select ${!form.pattern
+                                ? 'border-red-400 dark:border-red-900 focus:ring-red-500'
+                                : ''
+                                }`}
+                            />
+                          </div>
+                        </div>
+                        <div className='col-md-12'>
+                          {/* Weighted taxonomies — these are what The Eyes actually
+                          populates with percentages, so the user can see and
+                          tweak the colour palette / fabric composition that
+                          drives Stylist matching and Marketplace search. */}
+                          <WeightedList
+                            labelKey="addItem.color"
+                            items={form.colors}
+                            onChange={(v) => setField('colors', v)}
+                            placeholder={t('addItem.colorSlotPlaceholder')}
+                            testid="item-edit-colors"
+                          />
+                          <WeightedList
+                            labelKey="addItem.material"
+                            items={form.fabric_materials}
+                            onChange={(v) => setField('fabric_materials', v)}
+                            placeholder={t('addItem.fabricSlotPlaceholder')}
+                            testid="item-edit-fabrics"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Quality */}
+                  <div className='col-md-12'>
+                    <div className='custm-head'>
+                      <i className="fa-solid fa-ruler"></i>
+                      <div className=''>
+                        <h6> {t('itemDetail.edit.sectionQuality')}</h6>
+                        <p> {t('itemDetail.edit.sectionQualityDesc', { defaultValue: 'Garment state, wear condition, and repair advice' })}</p>
+                      </div>
+                    </div>
+                    <div className='custm-body'>
+                      <div className='row gx-3 gy-3'>
+                        <div className="col-md-4">
+                          <div className="field-set">
+                            <label>{t('itemDetail.edit.state')}</label>
+                            <NullableSelect
+                              value={form.state}
+                              onChange={(v) => setField('state', v)}
+                              options={STATE_OPTIONS}
+                              placeholder="—"
+                              testid="item-edit-field-state"
+                              format={(o) => labelForState(o, t)}
+                              className={`createlisting-select ${!form.state
+                                ? 'border-red-400 dark:border-red-900 focus:ring-red-500'
+                                : ''
+                                }`}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-4">
+                          <div className="field-set">
+                            <label>{t('itemDetail.edit.condition')}</label>
+                            <NullableSelect
+                              value={form.condition}
+                              onChange={(v) => setField('condition', v)}
+                              options={CONDITION_OPTIONS}
+                              placeholder="—"
+                              testid="item-edit-field-condition"
+                              format={(o) => labelForCondition(o, t)}
+                              className={`createlisting-select ${!form.condition
+                                ? 'border-red-400 dark:border-red-900 focus:ring-red-500'
+                                : ''
+                                }`}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-4">
+                          <div className="field-set">
+                            <label>{t('itemDetail.edit.qualityTier')}</label>
+                            <NullableSelect
+                              value={form.quality}
+                              onChange={(v) => setField('quality', v)}
+                              options={QUALITY_OPTIONS}
+                              placeholder="—"
+                              testid="item-edit-field-quality"
+                              format={(o) => labelForQuality(o, t)}
+                              className={`createlisting-select ${!form.quality
+                                ? 'border-red-400 dark:border-red-900 focus:ring-red-500'
+                                : ''
+                                }`}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-12">
+                          <div className="field-set">
+                            <label htmlFor="f-repair">{t('itemDetail.edit.repairAdvice')}</label>
+                            <Textarea
+                              id="f-repair"
+                              value={form.repair_advice}
+                              onChange={(e) => setField('repair_advice', e.target.value)}
+                              rows={2}
+                              className={`createlisting-textarea resize-none ${!form.repair_advice ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
+                              data-testid="item-edit-field-repair_advice"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Pricing & intent */}
+                  <div className='col-md-12'>
+                    <div className='custm-head'>
+                      <i className="fa-solid fa-credit-card"></i>
+                      <div className=''>
+                        <h6>{t('itemDetail.edit.sectionPricing')}</h6>
+                        <p>{t('itemDetail.edit.sectionPricingDesc', { defaultValue: 'Item purchase or retail pricing and transaction intent' })}</p>
+                      </div>
+                    </div>
+                    <div className='custm-body'>
+                      <div className='row gx-3 gy-3'>
+                        <div className="col-md-4">
+                          <div className="field-set">
+                            <label htmlFor="f-price">{`${t('itemDetail.edit.priceCents', { defaultValue: 'Price' })} (${form.currency || 'USD'})`}</label>
+                            <Input
+                              id="f-price"
+                              type="number"
+                              min="0"
+                              step="1"
+                              inputMode="numeric"
+                              value={form.price_cents === '' || form.price_cents == null || form.price_cents === 0 ? '' : form.price_cents}
+                              onChange={(e) => {
+                                const raw = e.target.value;
+                                if (raw && !/^\d*$/.test(raw)) return;
+                                setField(
+                                  'price_cents',
+                                  raw === '' ? 0 : Math.max(0, parseInt(raw, 10) || 0),
+                                );
+                              }}
+                              placeholder="0"
+                              className={`createlisting-input ${!form.price_cents ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
+                              data-testid="item-edit-field-price_cents"
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-4">
+                          <div className="field-set">
+                            <label>{t('itemDetail.edit.currency')}</label>
+                            <NullableSelect
+                              value={form.currency}
+                              onChange={(v) => setField('currency', v || 'USD')}
+                              options={ALL_CURRENCY_OPTIONS}
+                              placeholder={t('addItem.currencyPlaceholder', { defaultValue: 'USD' })}
+                              testid="item-edit-field-currency"
+                              format={(o) => o}
+                              className={`createlisting-select ${!form.currency
+                                ? 'border-red-400 dark:border-red-900 focus:ring-red-500'
+                                : ''
+                                }`}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-4">
+                          <div className="field-set">
+                            <label>{t('itemDetail.edit.intent')}</label>
+                            <NullableSelect
+                              value={form.marketplace_intent}
+                              onChange={(v) => setField('marketplace_intent', v || 'own')}
+                              options={INTENT_OPTIONS}
+                              placeholder={t('addItem.sourceTagPlaceholder', { defaultValue: 'own' })}
+                              testid="item-edit-field-marketplace_intent"
+                              format={(o) => labelForIntent(o, t)}
+                              className={`createlisting-select ${!form.marketplace_intent
+                                ? 'border-red-400 dark:border-red-900 focus:ring-red-500'
+                                : ''
+                                }`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Organization */}
+                  <div className='col-md-12'>
+                    <div className='custm-head'>
+                      <i className="fa-solid fa-credit-card"></i>
+                      <div className=''>
+                        <h6>{t('itemDetail.edit.sectionOrganization')}</h6>
+                        <p>{t('itemDetail.edit.sectionOrganizationDesc', { defaultValue: 'Outfit formality level, tags, and cultural styling notes' })}</p>
+                      </div>
+                    </div>
+                    <div className='custm-body'>
+                      <div className='row gx-3 gy-3'>
+                        <div className="col-md-12">
+                          <div className="field-set">
+                            <label>{t('itemDetail.edit.tags')}</label>
+                            <ChipList
+                              value={form.tags}
+                              onChange={(v) => setField('tags', v)}
+                              placeholder={t('itemDetail.edit.tagPlaceholder')}
+                              testidPrefix="item-edit-field-tags"
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-12">
+                          <div className="field-set">
+                            <label>{t('itemDetail.edit.culturalTags')}</label>
+                            <ChipList
+                              value={form.cultural_tags}
+                              onChange={(v) => setField('cultural_tags', v)}
+                              placeholder={t('itemDetail.edit.culturalTagPlaceholder')}
+                              testidPrefix="item-edit-field-cultural_tags"
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-12">
+                          <div className="field-set">
+                            <label htmlFor="f-notes">{t('itemDetail.edit.notes')}</label>
+                            <Textarea
+                              id="f-notes"
+                              value={form.notes}
+                              onChange={(e) => setField('notes', e.target.value)}
+                              rows={3}
+                              className={`createlisting-textarea resize-none ${!form.notes ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
+                              data-testid="item-edit-field-notes"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Bottom actions */}
+                  <div className='col-md-12'>
+                    <div className="custombtnmain buttonstyle">
+                      <Link to={`/market/create?itemId=${item.id}`} className="custm-btn w-100" data-testid="item-list-for-sale" >
+                        <Store className="h-4 w-4 me-2" />
+                        {t('itemDetail.listForSale')}
+                      </Link>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" className="delete-btn w-100" data-testid="item-delete-button">
+                            <Trash2 className="h-4 w-4 me-2" />
+                            {t('common.delete')}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>{t('itemDetail.removeTitle')}</AlertDialogTitle>
+                            <AlertDialogDescription>{t('itemDetail.removeBody')}</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>{t('common.cancel', { defaultValue: 'Cancel' })}</AlertDialogCancel>
+                            <AlertDialogAction onClick={onDelete} data-testid="item-delete-confirm">
+                              {t('common.delete')}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
                 </div>
-              )}
-              <p className="text-[10px] text-muted-foreground/80 italic">
-                {t('itemDetail.cleanBackground.disclaimer')}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Re-analyse card — runs The Eyes against the item's stored
-              image and rewrites the analysis-derived fields (title,
-              taxonomy, colour/material percentages, condition, …).
-              Useful after a "Replace photo" upload (which intentionally
-              skips auto-analysis), or to recover from a bad first
-              analysis without re-uploading. */}
-          <Card
-            className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(199_89%_65%)]"
-            data-testid="item-reanalyze-card"
-          >
-            <CardContent className="p-5 space-y-3">
-              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
-                <div className="p-2 rounded-xl bg-[hsl(199_89%_95%)] text-[hsl(199_89%_48%)] dark:bg-[hsl(199_30%_18%)] dark:text-[hsl(199_89%_70%)] shrink-0">
-                  <RefreshCw className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
-                    {t('itemDetail.reanalyze.label')}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
-                    {t('itemDetail.edit.sectionReanalyseDesc', { defaultValue: 'Re-run analysis to extract details from the image' })}
-                  </span>
-                </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                {t('itemDetail.reanalyze.subtitle')}
-              </p>
-              <Button
-                onClick={onReanalyze}
-                disabled={analyzing}
-                className="w-full rounded-xl"
-                variant="outline"
-                data-testid="item-reanalyze-button"
-              >
-                {analyzing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 me-2 animate-spin" />
-                    {t('itemDetail.reanalyze.running')}
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 me-2" />
-                    {t('itemDetail.reanalyze.cta')}
-                  </>
-                )}
-              </Button>
-              {analyzing && (
-                <div className="space-y-2" data-testid="item-reanalyze-progress">
-                  <Progress
-                    value={analyzeProgress}
-                    className="h-2 w-full"
-                    data-testid="item-reanalyze-progress-bar"
-                  />
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-[11px] text-muted-foreground italic">
-                      {t('itemDetail.reanalyze.progressHint')}
-                    </p>
-                    <span
-                      className="text-[11px] tabular-nums text-muted-foreground"
-                      data-testid="item-reanalyze-progress-pct"
-                    >
-                      {Math.round(analyzeProgress)}%
-                    </span>
-                  </div>
-                </div>
-              )}
-              <p className="text-[10px] text-muted-foreground/80 italic">
-                {t('itemDetail.reanalyze.disclaimer')}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* ---------- Edit form column ---------- */}
-        <div className="md:col-span-2 space-y-4" data-testid="item-edit-form">
-
-          {/* Identity */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(271_81%_65%)]">
-            <CardContent className="p-5 space-y-3">
-              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
-                <div className="p-2 rounded-xl bg-[hsl(271_81%_95%)] text-[hsl(271_81%_56%)] dark:bg-[hsl(271_30%_18%)] dark:text-[hsl(271_81%_70%)] shrink-0">
-                  <Tag className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
-                    {t('itemDetail.edit.sectionIdentity')}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
-                    {t('itemDetail.edit.sectionIdentityDesc', { defaultValue: 'Item title, name, brand, and description details' })}
-                  </span>
-                </div>
-              </div>
-              <Field label={t('itemDetail.edit.title')} htmlFor="f-title" required>
-                <Input
-                  id="f-title"
-                  value={form.title}
-                  onChange={(e) => setField('title', e.target.value)}
-                  className={`rounded-xl ${!form.title ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
-                  data-testid="item-edit-field-title"
-                />
-              </Field>
-              <Field label={t('itemDetail.edit.name')} htmlFor="f-name">
-                <Input
-                  id="f-name"
-                  value={form.name}
-                  onChange={(e) => setField('name', e.target.value)}
-                  className={`rounded-xl ${!form.name ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
-                  data-testid="item-edit-field-name"
-                />
-              </Field>
-              <Field label={t('itemDetail.edit.brand')} htmlFor="f-brand">
-                <Input
-                  id="f-brand"
-                  value={form.brand}
-                  onChange={(e) => setField('brand', e.target.value)}
-                  className={`rounded-xl ${!form.brand ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
-                  data-testid="item-edit-field-brand"
-                />
-              </Field>
-              <Field label={t('itemDetail.edit.caption')} htmlFor="f-caption">
-                <Textarea
-                  id="f-caption"
-                  value={form.caption}
-                  onChange={(e) => setField('caption', e.target.value)}
-                  rows={2}
-                  className={`rounded-xl resize-none ${!form.caption ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
-                  data-testid="item-edit-field-caption"
-                />
-              </Field>
-            </CardContent>
-          </Card>
-
-          {/* Taxonomy */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(250_95%_70%)]">
-            <CardContent className="p-5 space-y-3">
-              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
-                <div className="p-2 rounded-xl bg-[hsl(250_95%_95%)] text-[hsl(250_95%_56%)] dark:bg-[hsl(250_30%_18%)] dark:text-[hsl(250_95%_75%)] shrink-0">
-                  <Sliders className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
-                    {t('itemDetail.edit.sectionTaxonomy')}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
-                    {t('itemDetail.edit.sectionTaxonomyDesc', { defaultValue: 'Category, item type, gender, and aesthetic styles' })}
-                  </span>
-                </div>
-              </div>
-              <Field label={t('itemDetail.edit.category')}>
-                <NullableSelect
-                  value={form.category}
-                  onChange={(v) => setField('category', v || 'Top')}
-                  options={CATEGORY_OPTIONS}
-                  placeholder={t('itemDetail.edit.category')}
-                  testid="item-edit-field-category"
-                  format={(o) => labelForCategory(o, t)}
-                  className={!form.category ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
-                />
-              </Field>
-              <Field label={t('itemDetail.edit.subCategory')} htmlFor="f-sub">
-                <Input
-                  id="f-sub"
-                  value={form.sub_category}
-                  onChange={(e) => setField('sub_category', e.target.value)}
-                  className={`rounded-xl ${!form.sub_category ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
-                  data-testid="item-edit-field-sub_category"
-                />
-                <LocalizedHint raw={form.sub_category} translated={labelForSubCategory(form.sub_category, t)} />
-              </Field>
-              <Field label={t('itemDetail.edit.itemType')} htmlFor="f-itemtype">
-                <Input
-                  id="f-itemtype"
-                  value={form.item_type}
-                  onChange={(e) => setField('item_type', e.target.value)}
-                  className={`rounded-xl ${!form.item_type ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
-                  data-testid="item-edit-field-item_type"
-                />
-                <LocalizedHint raw={form.item_type} translated={labelForItemType(form.item_type, t)} />
-              </Field>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label={t('itemDetail.edit.gender')}>
-                  <NullableSelect
-                    value={form.gender}
-                    onChange={(v) => setField('gender', v)}
-                    options={GENDER_OPTIONS}
-                    placeholder="—"
-                    testid="item-edit-field-gender"
-                    format={(o) => labelForGender(o, t)}
-                    className={!form.gender ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
-                  />
-                </Field>
-                <Field label={t('itemDetail.edit.dressCode')}>
-                  <NullableSelect
-                    value={form.dress_code}
-                    onChange={(v) => setField('dress_code', v)}
-                    options={DRESS_CODE_OPTIONS}
-                    placeholder="—"
-                    testid="item-edit-field-dress_code"
-                    format={(o) => labelForDressCode(o, t)}
-                    className={!form.dress_code ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
-                  />
-                </Field>
-              </div>
-              <Field label={t('itemDetail.edit.season')}>
-                <PillMultiSelect
-                  value={form.season}
-                  options={SEASON_OPTIONS}
-                  onChange={(v) => setField('season', v)}
-                  testidPrefix="item-edit-field-season"
-                  format={(o) => labelForSeason(o, t)}
-                />
-              </Field>
-              <Field label={t('itemDetail.edit.tradition')} htmlFor="f-tradition">
-                <Input
-                  id="f-tradition"
-                  value={form.tradition}
-                  onChange={(e) => setField('tradition', e.target.value)}
-                  className={`rounded-xl ${!form.tradition ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
-                  placeholder={t('itemDetail.edit.traditionPlaceholder')}
-                  data-testid="item-edit-field-tradition"
-                />
-              </Field>
-            </CardContent>
-          </Card>
-
-          {/* Composition */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(187_92%_60%)]">
-            <CardContent className="p-5 space-y-3">
-              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
-                <div className="p-2 rounded-xl bg-[hsl(187_92%_95%)] text-[hsl(187_92%_45%)] dark:bg-[hsl(187_30%_18%)] dark:text-[hsl(187_92%_65%)] shrink-0">
-                  <Palette className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
-                    {t('itemDetail.edit.sectionComposition')}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
-                    {t('itemDetail.edit.sectionCompositionDesc', { defaultValue: 'Garment size, colors, patterns, and fabric materials' })}
-                  </span>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label={t('itemDetail.edit.size')} htmlFor="f-size">
-                  <Input
-                    id="f-size"
-                    value={form.size}
-                    onChange={(e) => setField('size', e.target.value)}
-                    className={`rounded-xl ${!form.size ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
-                    data-testid="item-edit-field-size"
-                  />
-                </Field>
-                <Field label={t('itemDetail.edit.color')} htmlFor="f-color">
-                  <Input
-                    id="f-color"
-                    value={form.color}
-                    onChange={(e) => setField('color', e.target.value)}
-                    className={`rounded-xl ${!form.color ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
-                    data-testid="item-edit-field-color"
-                  />
-                  <LocalizedHint raw={form.color} translated={labelForColor(form.color, t)} />
-                </Field>
-
-                <Field label={t('itemDetail.edit.pattern')}>
-                  <NullableSelect
-                    value={form.pattern}
-                    onChange={(v) => setField('pattern', v)}
-                    options={PATTERN_OPTIONS}
-                    placeholder="—"
-                    testid="item-edit-field-pattern"
-                    format={(o) => labelForPattern(o, t)}
-                    className={!form.pattern ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
-                  />
-                </Field>
-              </div>
-
-              {/* Weighted taxonomies — these are what The Eyes actually
-                  populates with percentages, so the user can see and
-                  tweak the colour palette / fabric composition that
-                  drives Stylist matching and Marketplace search. */}
-              <WeightedList
-                labelKey="addItem.color"
-                items={form.colors}
-                onChange={(v) => setField('colors', v)}
-                placeholder={t('addItem.colorSlotPlaceholder')}
-                testid="item-edit-colors"
-              />
-              <WeightedList
-                labelKey="addItem.material"
-                items={form.fabric_materials}
-                onChange={(v) => setField('fabric_materials', v)}
-                placeholder={t('addItem.fabricSlotPlaceholder')}
-                testid="item-edit-fabrics"
-              />
-            </CardContent>
-          </Card>
-
-          {/* Quality */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(142_72%_50%)]">
-            <CardContent className="p-5 space-y-3">
-              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
-                <div className="p-2 rounded-xl bg-[hsl(142_72%_95%)] text-[hsl(142_72%_33%)] dark:bg-[hsl(142_30%_18%)] dark:text-[hsl(142_72%_55%)] shrink-0">
-                  <Ruler className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
-                    {t('itemDetail.edit.sectionQuality')}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
-                    {t('itemDetail.edit.sectionQualityDesc', { defaultValue: 'Garment state, wear condition, and repair advice' })}
-                  </span>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <Field label={t('itemDetail.edit.state')}>
-                  <NullableSelect
-                    value={form.state}
-                    onChange={(v) => setField('state', v)}
-                    options={STATE_OPTIONS}
-                    placeholder="—"
-                    testid="item-edit-field-state"
-                    format={(o) => labelForState(o, t)}
-                    className={!form.state ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
-                  />
-                </Field>
-                <Field label={t('itemDetail.edit.condition')}>
-                  <NullableSelect
-                    value={form.condition}
-                    onChange={(v) => setField('condition', v)}
-                    options={CONDITION_OPTIONS}
-                    placeholder="—"
-                    testid="item-edit-field-condition"
-                    format={(o) => labelForCondition(o, t)}
-                    className={!form.condition ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
-                  />
-                </Field>
-                <Field label={t('itemDetail.edit.qualityTier')}>
-                  <NullableSelect
-                    value={form.quality}
-                    onChange={(v) => setField('quality', v)}
-                    options={QUALITY_OPTIONS}
-                    placeholder="—"
-                    testid="item-edit-field-quality"
-                    format={(o) => labelForQuality(o, t)}
-                    className={!form.quality ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
-                  />
-                </Field>
-              </div>
-              <Field label={t('itemDetail.edit.repairAdvice')} htmlFor="f-repair">
-                <Textarea
-                  id="f-repair"
-                  value={form.repair_advice}
-                  onChange={(e) => setField('repair_advice', e.target.value)}
-                  rows={2}
-                  className={`rounded-xl resize-none ${!form.repair_advice ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
-                  data-testid="item-edit-field-repair_advice"
-                />
-              </Field>
-            </CardContent>
-          </Card>
-
-          {/* Pricing & intent */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(174_44%_50%)]">
-            <CardContent className="p-5 space-y-3">
-              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
-                <div className="p-2 rounded-xl bg-[hsl(174_44%_93%)] text-[hsl(174_44%_33%)] dark:bg-[hsl(174_30%_18%)] dark:text-[hsl(174_44%_60%)] shrink-0">
-                  <CreditCard className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
-                    {t('itemDetail.edit.sectionPricing')}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
-                    {t('itemDetail.edit.sectionPricingDesc', { defaultValue: 'Item purchase or retail pricing and transaction intent' })}
-                  </span>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <Field
-                  label={`${t('itemDetail.edit.priceCents', { defaultValue: 'Price' })} (${form.currency || 'USD'})`}
-                  htmlFor="f-price"
-                >
-                  <Input
-                    id="f-price"
-                    type="number"
-                    min="0"
-                    step="1"
-                    inputMode="numeric"
-                    value={form.price_cents === '' || form.price_cents == null || form.price_cents === 0 ? '' : form.price_cents}
-                    onChange={(e) => {
-                      const raw = e.target.value;
-                      if (raw && !/^\d*$/.test(raw)) return;
-                      setField(
-                        'price_cents',
-                        raw === '' ? 0 : Math.max(0, parseInt(raw, 10) || 0),
-                      );
-                    }}
-                    placeholder="0"
-                    className={`rounded-xl ${!form.price_cents ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
-                    data-testid="item-edit-field-price_cents"
-                  />
-                </Field>
-                <Field label={t('itemDetail.edit.currency')}>
-                  <NullableSelect
-                    value={form.currency}
-                    onChange={(v) => setField('currency', v || 'USD')}
-                    options={ALL_CURRENCY_OPTIONS}
-                    placeholder={t('addItem.currencyPlaceholder', { defaultValue: 'USD' })}
-                    testid="item-edit-field-currency"
-                    format={(o) => o}
-                    className={!form.currency ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
-                  />
-                </Field>
-                <Field label={t('itemDetail.edit.intent')}>
-                  <NullableSelect
-                    value={form.marketplace_intent}
-                    onChange={(v) => setField('marketplace_intent', v || 'own')}
-                    options={INTENT_OPTIONS}
-                    placeholder={t('addItem.sourceTagPlaceholder', { defaultValue: 'own' })}
-                    testid="item-edit-field-marketplace_intent"
-                    format={(o) => labelForIntent(o, t)}
-                    className={!form.marketplace_intent ? 'border-red-400 dark:border-red-900 focus:ring-red-500' : ''}
-                  />
-                </Field>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Organization */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(346_87%_60%)]">
-            <CardContent className="p-5 space-y-3">
-              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
-                <div className="p-2 rounded-xl bg-[hsl(346_87%_95%)] text-[hsl(346_87%_53%)] dark:bg-[hsl(346_30%_18%)] dark:text-[hsl(346_87%_70%)] shrink-0">
-                  <Ruler className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
-                    {t('itemDetail.edit.sectionOrganization')}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
-                    {t('itemDetail.edit.sectionOrganizationDesc', { defaultValue: 'Outfit formality level, tags, and cultural styling notes' })}
-                  </span>
-                </div>
-              </div>
-
-              <Field label={t('itemDetail.edit.tags')}>
-                <ChipList
-                  value={form.tags}
-                  onChange={(v) => setField('tags', v)}
-                  placeholder={t('itemDetail.edit.tagPlaceholder')}
-                  testidPrefix="item-edit-field-tags"
-                />
-              </Field>
-              <Field label={t('itemDetail.edit.culturalTags')}>
-                <ChipList
-                  value={form.cultural_tags}
-                  onChange={(v) => setField('cultural_tags', v)}
-                  placeholder={t('itemDetail.edit.culturalTagPlaceholder')}
-                  testidPrefix="item-edit-field-cultural_tags"
-                />
-              </Field>
-              <Field label={t('itemDetail.edit.notes')} htmlFor="f-notes">
-                <Textarea
-                  id="f-notes"
-                  value={form.notes}
-                  onChange={(e) => setField('notes', e.target.value)}
-                  rows={3}
-                  className={`rounded-xl resize-none ${!form.notes ? 'border-red-400 dark:border-red-900 focus-visible:ring-red-500' : ''}`}
-                  data-testid="item-edit-field-notes"
-                />
-              </Field>
-            </CardContent>
-          </Card>
-
-
-
-          {/* Bottom actions */}
-          <div className="grid grid-cols-2 gap-3">
-            <Button asChild variant="secondary" className="rounded-xl" data-testid="item-list-for-sale">
-              <Link to={`/market/create?itemId=${item.id}`}>
-                <Store className="h-4 w-4 me-2" />{t('itemDetail.listForSale')}
-              </Link>
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" className="rounded-xl" data-testid="item-delete-button">
-                  <Trash2 className="h-4 w-4 me-2" />{t('common.delete')}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>{t('itemDetail.removeTitle')}</AlertDialogTitle>
-                  <AlertDialogDescription>{t('itemDetail.removeBody')}</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>{t('common.cancel', { defaultValue: 'Cancel' })}</AlertDialogCancel>
-                  <AlertDialogAction onClick={onDelete} data-testid="item-delete-confirm">
-                    {t('common.delete')}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            </div>
           </div>
-        </div>
-      </div>
-
-      {/* Taxonomy gatekeeper warning dialog */}
-      <AlertDialog open={gatekeeperOpen} onOpenChange={setGatekeeperOpen}>
-        <AlertDialogContent data-testid="item-edit-gatekeeper-dialog">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t('itemDetail.gatekeeper.title', { defaultValue: 'Mismatched Properties Warning' })}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('itemDetail.gatekeeper.body', { 
-                defaultValue: 'This host item and its group members have mismatched properties: {{mismatches}}. Are you sure you want to save these changes?',
-                mismatches: gatekeeperMismatches.map(field => getTaxonomyFieldLabel(field)).join(', ')
-              })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel data-testid="item-edit-gatekeeper-cancel" onClick={() => setGatekeeperOpen(false)}>
-              {t('itemDetail.gatekeeper.cancel', { defaultValue: 'Cancel' })}
-            </AlertDialogCancel>
-            <AlertDialogAction
+          {/* Taxonomy gatekeeper warning dialog */}
+          < AlertDialog open={gatekeeperOpen} onOpenChange={setGatekeeperOpen} >
+            <AlertDialogContent data-testid="item-edit-gatekeeper-dialog">
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {t('itemDetail.gatekeeper.title', { defaultValue: 'Mismatched Properties Warning' })}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t('itemDetail.gatekeeper.body', {
+                    defaultValue: 'This host item and its group members have mismatched properties: {{mismatches}}. Are you sure you want to save these changes?',
+                    mismatches: gatekeeperMismatches.map(field => getTaxonomyFieldLabel(field)).join(', ')
+                  })}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel data-testid="item-edit-gatekeeper-cancel" onClick={() => setGatekeeperOpen(false)}>
+                  {t('itemDetail.gatekeeper.cancel', { defaultValue: 'Cancel' })}
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    setGatekeeperOpen(false);
+                    executeSavePipeline();
+                  }}
+                  data-testid="item-edit-gatekeeper-confirm"
+                  className="bg-primary text-primary-foreground hover:opacity-90"
+                >
+                  {t('itemDetail.gatekeeper.confirm', { defaultValue: 'Save anyway' })}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog >
+          {/* Floating Action Bar */}
+          < div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-border bg-card/90 backdrop-blur-lg shadow-xl md:bottom-8 max-w-[calc(100vw-2rem)] shrink-0 animate-[slideUp_0.2s_ease-out]" >
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => {
-                setGatekeeperOpen(false);
-                executeSavePipeline();
+                if (location.state?.fromOutfits) {
+                  nav('/stylist', {
+                    replace: true,
+                    state: {
+                      tab: 'shuffle',
+                      selectedOutfitId: location.state.returnToOutfitId
+                    }
+                  });
+                } else if (window.history.state && window.history.state.idx > 0) {
+                  nav(-1);
+                } else {
+                  nav('/closet', { replace: true });
+                }
               }}
-              data-testid="item-edit-gatekeeper-confirm"
-              className="bg-primary text-primary-foreground hover:opacity-90"
+              className="rounded-full h-9 w-9 flex items-center justify-center"
+              data-testid="item-back"
+              title={t('common.back')}
+              aria-label={t('common.back')}
             >
-              {t('itemDetail.gatekeeper.confirm', { defaultValue: 'Save anyway' })}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      <ScrollToTop />
-    </div>
+              <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+            </Button>
+
+            <div className="h-4 w-[1px] bg-border mx-0.5" />
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={onDiscard}
+              disabled={!isDirty || saving}
+              className="rounded-full h-9 w-9 flex items-center justify-center"
+              data-testid="item-edit-discard-button"
+              title={t('itemDetail.edit.discard')}
+              aria-label={t('itemDetail.edit.discard')}
+            >
+              <Undo2 className="h-4 w-4" />
+            </Button>
+
+            <Button
+              type="button"
+              onClick={onSave}
+              disabled={!isDirty || saving}
+              size="icon"
+              className="rounded-full h-9 w-9 flex items-center justify-center"
+              data-testid="item-edit-save-button"
+              title={saving ? t('itemDetail.edit.saving') : t('itemDetail.edit.save')}
+              aria-label={saving ? t('itemDetail.edit.saving') : t('itemDetail.edit.save')}
+            >
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+            </Button>
+
+            {
+              isDirty && (
+                <Badge
+                  variant="outline"
+                  className="rounded-full text-[9px] px-2 h-5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 whitespace-nowrap"
+                  data-testid="item-edit-dirty-badge"
+                >
+                  {Object.keys(patch).length}
+                </Badge>
+              )
+            }
+          </div >
+        </div>
+      </section >
+    </>
   );
 }
 

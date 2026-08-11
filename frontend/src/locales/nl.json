@@ -2366,13 +2366,8 @@
     "shopping_assistant_step6": "Klik op **Toevoegen aan kast** om het itemconcept rechtstreeks naar uw app te importeren.",
     "import_wardrobe_title": "Importeer je garderobe",
     "import_wardrobe_p1": "Beheer je je garderobe al in een andere app? Importeer je items met een paar klikken naar DressApp. We ondersteunen imports van een breed scala aan populaire garderobe- en outfitplanning-apps.",
-<<<<<<< HEAD
-    "import_wardrobe_step1": "Open de **Kast**-pagina in DressApp.",
-    "import_wardrobe_step2": "Klik op de knop **Importeren** (of zoek naar de importoptie in het menu).",
-=======
     "import_wardrobe_step1": "Onboardingbericht.",
     "import_wardrobe_step2": "Scrol omlaag op de profielpagina en klik op 'Garderobe importeren'.",
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
     "import_wardrobe_step3": "Selecteer de app waaruit je importeert (bijv. Cladwell, Stylebook, Acloset, SmartCloset of een CSV-bestand).",
     "import_wardrobe_step4": "Volg de instructies op het scherm om je gegevens uit de oude app te exporteren en naar DressApp te uploaden.",
     "import_wardrobe_step5": "DressApp zal je geïmporteerde items automatisch classificeren en organiseren.",
@@ -2803,8 +2798,6 @@
   "privacy": {
     "title": "Privacy Policy",
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
-<<<<<<< HEAD
-=======
   },
   "pricing": {
     "title": "Abonnementen & Tarieven",
@@ -2937,6 +2930,5 @@
     "perYear": "/jr",
     "billedMonthly": "maandelijks gefactureerd (${{price}})",
     "billedAnnually": "jaarlijks gefactureerd (${{price}})"
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
   }
 }

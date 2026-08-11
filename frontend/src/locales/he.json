@@ -2406,13 +2406,8 @@
     "shopping_assistant_step6": "לחץ על **הוסף לארון** כדי לייבא את טיוטת הפריט ישירות לאפליקציה שלך.",
     "import_wardrobe_title": "ייבא את הארון שלך",
     "import_wardrobe_p1": "כבר עוקבים אחרי הארון שלך באפליקציה אחרת? ייבא את הפריטים שלך ל-DressApp בלחיצה אחת. אנו תומכים בייבא ממגוון רחב של אפליקציות פופולריות לארון ולתלבושות.",
-<<<<<<< HEAD
-    "import_wardrobe_step1": "פתח את דף **הארון** ב-DressApp.",
-    "import_wardrobe_step2": "לחץ על כפתור **ייבוא** (או חפש את אפשרות הייבוא בתפריט).",
-=======
     "import_wardrobe_step1": "הודעת תחילת עבודה.",
     "import_wardrobe_step2": "גלילה מטה בדף הפרופיל ולחיצה על 'ייבוא מלתחה'.",
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
     "import_wardrobe_step3": "בחר את האפליקציה שממנה אתה מייבא (למשל, Cladwell, Stylebook, Acloset, SmartCloset או קובץ CSV).",
     "import_wardrobe_step4": "עקב אחר ההוראות שעל המסך כדי לייצא את הנתונים מהאפליקציה הישנה ולהעלות אותם ל-DressApp.",
     "import_wardrobe_step5": "DressApp יסווג ויארגן אוטומטית את הפריטים המיובאים שלך.",
@@ -2843,8 +2838,6 @@
   "privacy": {
     "title": "Privacy Policy",
     "description": "DressApp privacy policy — how we collect, use, and protect your data."
-<<<<<<< HEAD
-=======
   },
   "pricing": {
     "title": "תוכניות מנוי וחברות",
@@ -2977,6 +2970,5 @@
     "perYear": "לשנה",
     "billedMonthly": "חיוב חודשי (${{price}})",
     "billedAnnually": "חיוב שנתי (${{price}})"
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
   }
 }
