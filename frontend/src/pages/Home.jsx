@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/auth';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { useLocation as useAppLocation } from '@/lib/location';
+import { useTrendScoutStore } from '@/lib/trendScoutStore';
 import { api } from '@/lib/api';
 import { AdTicker } from '@/components/AdTicker';
 import { LanguagePicker } from '@/components/LanguagePicker';
@@ -70,9 +71,8 @@ export default function Home() {
   const closet = useClosetStore();
   const loc = useAppLocation();
   const isAdmin = (user?.roles || []).includes('admin');
+  const trendStore = useTrendScoutStore();
   const [counts, setCounts] = useState(null);
-  const [trends, setTrends] = useState(null); // null = loading, [] = empty, [...]
-  const [trendDate, setTrendDate] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
   // Localised fallback cards — rebuilt whenever the active language
@@ -112,24 +112,17 @@ export default function Home() {
       .toString()
       .toUpperCase() || null;
 
-  // Pulled into a callback so the admin "🔄 refresh" button can re-fetch
-  // the same trends without duplicating logic. The ``setTrends(null)``
-  // gate keeps the skeletons visible during the LLM run (~5–10 s).
-  const fetchTrends = async () => {
+  // Resolve trends and date from the global store
+  const trends = trendStore.loading && !trendStore.cards.length
+    ? null
+    : (trendStore.cards || []).slice(0, 4);
+  const trendDate = trendStore.cards?.[0]?.date || null;
+
+  const fetchTrends = async (force = false) => {
     try {
-      // Top 4 personalized cards. The backend uses our auth header to
-      // rank a wider candidate pool against the user's demographics
-      // and slices to limit=4 — we don't need to send any extra
-      // ranking hints from the client.
-      const res = await api.fashionScoutFeed(4, { language, country });
-      if (res?.cards?.length) {
-        setTrends(res.cards);
-        setTrendDate(res.cards[0]?.date || null);
-      } else {
-        setTrends([]);
-      }
+      await trendStore.prewarm({ language, country, force });
     } catch {
-      setTrends([]);
+      // Handled in store, keep safe fallback
     }
   };
 
@@ -142,18 +135,15 @@ export default function Home() {
   const refreshTrends = async () => {
     if (refreshing) return;
     setRefreshing(true);
-    setTrends(null); // restore skeletons while we wait
     try {
       await api.trendsRefreshAdmin(true, country);
-      await fetchTrends();
+      await fetchTrends(true);
       toast.success(t('home.trendsRefreshed', { defaultValue: 'Trends refreshed' }));
     } catch (err) {
       toast.error(
         err?.response?.data?.detail
           || t('home.trendsRefreshFailed', { defaultValue: 'Could not refresh trends' }),
       );
-      // Recover the stale view so the section isn't stuck on skeletons.
-      await fetchTrends();
     } finally {
       setRefreshing(false);
     }
@@ -173,12 +163,16 @@ export default function Home() {
         });
       } catch { setCounts({ closet: closet.total || 0, market: 0 }); }
     })();
-    fetchTrends();
     // We intentionally only run this once per mount; closet.total
     // updates flow through the dedicated effect below so the chip
     // stays accurate after add/delete.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    fetchTrends();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language, country]);
 
   // Keep the closet chip in sync with store mutations from elsewhere
   // in the app (AddItem, ItemDetail delete, etc.) without a refetch.

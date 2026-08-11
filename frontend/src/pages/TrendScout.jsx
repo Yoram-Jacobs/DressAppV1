@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
 import { useLocation as useAppLocation } from '@/lib/location';
+import { useTrendScoutStore } from '@/lib/trendScoutStore';
 import { api } from '@/lib/api';
 import { ExploreBackButton } from '@/components/ExploreBackButton';
 
@@ -35,7 +36,7 @@ export default function TrendScout() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const loc = useAppLocation();
-  const [trends, setTrends] = useState(null); // null = loading, [] = empty, [...]
+  const trendStore = useTrendScoutStore();
 
   const language = (user?.preferred_language || i18n.language || 'en')
     .split('-')[0]
@@ -53,23 +54,15 @@ export default function TrendScout() {
   const userTier = (isActive && planType !== 'free') ? tier : 'free';
   const isBlocked = userTier === 'free';
 
+  // Resolve trends from global store
+  const trends = trendStore.loading && !trendStore.cards.length
+    ? null
+    : (trendStore.cards || []);
+
   useEffect(() => {
     if (isBlocked) return;
-    const fetchTrends = async () => {
-      try {
-        // Load up to 50 personalized trends since user signed in
-        const res = await api.fashionScoutFeed(50, { language, country });
-        if (res?.cards?.length) {
-          setTrends(res.cards);
-        } else {
-          setTrends([]);
-        }
-      } catch {
-        setTrends([]);
-      }
-    };
-    fetchTrends();
-  }, [language, country, isBlocked]);
+    trendStore.prewarm({ language, country });
+  }, [language, country, isBlocked, trendStore]);
 
   if (isBlocked) {
     return (
