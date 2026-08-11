@@ -958,7 +958,7 @@ export default function ItemDetail() {
             }
           }
         }
-        await closetStore.incrementalSync();
+        await closetStore.incrementalSync({ force: true });
         closetStore.triggerRepair();
         toast.success(t('common.success'));
       })

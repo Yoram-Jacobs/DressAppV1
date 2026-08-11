@@ -304,12 +304,12 @@ export const closetStore = {
    *
    * Returns the number of items added/updated.
    */
-  async incrementalSync() {
+  async incrementalSync({ force = false } = {}) {
     if (!_state.lastFullSync || _state.items.length === 0) {
       // Never fully populated — incremental makes no sense yet.
       return this.prewarm();
     }
-    if (Date.now() - _state.lastIncSync < MIN_INCREMENTAL_SYNC_INTERVAL_MS) {
+    if (!force && Date.now() - _state.lastIncSync < MIN_INCREMENTAL_SYNC_INTERVAL_MS) {
       return 0;
     }
     const since = new Date(_state.lastIncSync).toISOString();
