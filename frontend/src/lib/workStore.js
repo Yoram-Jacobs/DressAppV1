@@ -56,7 +56,7 @@ let _pollerHandle = null;
 /** Patch pending items in the local closet cache when polish tracking ends. */
 function _syncClosetPolishTerminal(id, status) {
   try {
-    const live = (closetStore.getSnapshot().items || []).find((it) => it.id === id);
+    const live = (closetStore.getSnapshot().items || []).find((it) => it && it.id === id);
     if (!live || (live.clean_image_status !== 'pending' && live.group_analysis_status !== 'pending')) return;
     closetStore.upsert({ 
       ...live, 

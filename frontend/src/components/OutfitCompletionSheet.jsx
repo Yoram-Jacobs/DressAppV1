@@ -112,10 +112,10 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
   // reshuffle priority without leaving Closet.
   const [orderedAnchors, setOrderedAnchors] = useState([]);
 
-  const allClosetItems = closetStore.getSnapshot().items || [];
+  const allClosetItems = (closetStore.getSnapshot().items || []).filter(Boolean);
   const getGroupItems = (item) => {
     if (!item || !item.group_id) return [item];
-    return allClosetItems.filter(it => it.group_id === item.group_id);
+    return allClosetItems.filter(it => it && it.group_id === item.group_id);
   };
   const isSet = (item) => {
     if (!item) return false;
@@ -308,8 +308,8 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
                               const gItems = getGroupItems(a);
                               setOrderedAnchors((prev) => {
                                 const next = [...prev];
-                                const existingIds = new Set(next.filter(item => item.id !== a.id).map(item => item.id));
-                                const uniqueGItems = gItems.filter(item => !existingIds.has(item.id));
+                                const existingIds = new Set(next.filter(item => item && item.id !== a.id).map(item => item.id));
+                                const uniqueGItems = gItems.filter(item => item && !existingIds.has(item.id));
                                 next.splice(idx, 1, ...uniqueGItems);
                                 return next;
                               });
