@@ -959,7 +959,6 @@ export default function ItemDetail() {
           }
         }
         await closetStore.incrementalSync({ force: true });
-        closetStore.triggerRepair();
         toast.success(t('common.success'));
       })
       .catch((err) => {
@@ -1190,7 +1189,6 @@ export default function ItemDetail() {
     // closet ops from "tap-and-wait-2s" into "tap-and-done".
     const snapshot = item;
     closetStore.remove(id);
-    closetStore.triggerRepair();
     toast.success(t('itemDetail.deleted'));
     if (location.state?.fromOutfits) {
       nav('/stylist', { replace: true, state: { tab: 'shuffle' } });

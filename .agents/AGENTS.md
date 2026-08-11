@@ -68,3 +68,5 @@ Every subject in the help tree (`HelpMenu.jsx`) follows a **two-layer structure*
 | `/pricing` | [pricing-strategist](skills/pricing-strategist/SKILL.md) | Pricing plan design, tier recommendations, credit system architecture |
 | `/pricing-info` | [pricing](skills/pricing/SKILL.md) | AI credit management, billing, and subscription operations |
 | `/billing` | [billing](skills/billing/SKILL.md) | Billing and payment processing services |
+| `/Investor-pitch` | [investor-pitch](skills/investor-pitch/SKILL.md) | Craft clear, credible, and compelling investor pitches and competitor breakdowns for DressApp |
+

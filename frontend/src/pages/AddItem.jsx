@@ -2462,7 +2462,6 @@ export default function AddItem() {
       if (failures.length) {
         closetStore.recordSaveFailures(failures);
       }
-      closetStore.triggerRepair();
     };
     // Don't await — let it run in the background. The Closet page
     // is a separate React tree at this point.

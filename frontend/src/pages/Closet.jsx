@@ -807,7 +807,6 @@ export default function Closet() {
     });
     if (failedIds.length === 0) {
       toast.success(`${ids.length} item${ids.length === 1 ? '' : 's'} deleted`);
-      store.triggerRepair();
       return;
     }
     // Roll back the failed ones so the UI matches reality again.
@@ -818,7 +817,6 @@ export default function Closet() {
     const okCount = ids.length - failedIds.length;
     if (okCount > 0) {
       toast.message(`Deleted ${okCount}, failed ${failedIds.length}`);
-      store.triggerRepair();
     } else {
       toast.error(t('pages.closet.could_not_delete_the_selected'));
     }
