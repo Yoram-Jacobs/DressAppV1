@@ -337,7 +337,7 @@ def _looks_already_cropped(detections: list[dict[str, Any]]) -> bool:
     has_human = False
     has_head = any(d.get("has_human_head", False) for d in detections)
     garment_kinds = {
-        d.get("kind", "garment").lower()
+        (d.get("category") or d.get("kind") or "garment").lower()
         for d in detections
         if _area(d["bbox"]) >= frame_area * 0.03
     }
@@ -389,7 +389,7 @@ def _looks_already_cropped(detections: list[dict[str, Any]]) -> bool:
 
     # Signal 2: several detections of the same kind, all clustered inside
     # a small area (collar / sleeve / hem hallucinations).
-    kinds = {(d.get("kind") or "garment").lower() for d in detections}
+    kinds = {(d.get("category") or d.get("kind") or "garment").lower() for d in detections}
     if len(kinds) > 1:
         return False
     return union <= frame_area * _SUBPART_UNION_FRAC

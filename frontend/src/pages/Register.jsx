@@ -1,60 +1,12 @@
-import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { LanguagePicker } from '@/components/LanguagePicker';
 
 export default function Register() {
   const { t } = useTranslation();
-  const nav = useNavigate();
-  const { register } = useAuth();
-  const [form, setForm] = useState({ email: '', password: '', display_name: '' });
-  const [busy, setBusy] = useState(false);
-
-  const submit = async (e) => {
-    e.preventDefault();
-    if (form.password.length < 8) {
-      toast.error(t('auth.registerFailed'));
-      return;
-    }
-    setBusy(true);
-    try {
-      const referrerId = sessionStorage.getItem('referrer_id') || null;
-      const lang = (localStorage.getItem('dressapp.lang') || 'en').toLowerCase().split('-')[0];
-      const DEFAULT_VOICES = {
-        en: 'en_US-ryan-medium',
-        es: 'es_ES-carl-medium',
-        fr: 'fr_FR-gilles-low',
-        de: 'de_DE-thorsten-medium',
-        it: 'it_IT-riccardo-medium',
-        pt: 'pt_BR-faber-medium',
-        ru: 'ru_RU-dmitri-medium',
-        zh: 'zh_CN-huayan-medium',
-        ja: 'ja_JP-koko-medium',
-        ar: 'ar_JO-kareem-low',
-        hi: 'hi_IN-rohan-medium',
-        he: 'he_IL-hebrew-medium',
-      };
-      const voiceId = DEFAULT_VOICES[lang] || 'en_US-ryan-medium';
-      await register({
-        ...form,
-        referrer_id: referrerId,
-        preferred_language: lang,
-        preferred_voice_id: voiceId,
-      });
-      toast.success(t('brand'));
-      nav('/home');
-    } catch (err) {
-      toast.error(err?.response?.data?.detail || t('auth.registerFailed'));
-    } finally { setBusy(false); }
-  };
 
   return (
     <div className="min-h-[100dvh] grid md:grid-cols-2 relative">
@@ -80,36 +32,6 @@ export default function Register() {
                 testId="register-google-button"
               />
             </div>
-
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-px bg-border flex-1" />
-              <div className="caps-label text-muted-foreground">{t('common.or')}</div>
-              <div className="h-px bg-border flex-1" />
-            </div>
-
-            <form onSubmit={submit} className="space-y-4" data-testid="register-form">
-              <div>
-                <Label htmlFor="name">{t('auth.displayName')}</Label>
-                <Input id="name" value={form.display_name}
-                  onChange={(e) => setForm({ ...form, display_name: e.target.value })}
-                  data-testid="register-name-input" placeholder={t('auth.namePlaceholder', { defaultValue: 'Alex' })} />
-              </div>
-              <div>
-                <Label htmlFor="email">{t('auth.email')}</Label>
-                <Input id="email" type="email" required value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  data-testid="register-email-input" placeholder={t('auth.emailPlaceholder')} />
-              </div>
-              <div>
-                <Label htmlFor="pw">{t('auth.password')}</Label>
-                <Input id="pw" type="password" required minLength={8} value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  data-testid="register-password-input" />
-              </div>
-              <Button type="submit" disabled={busy} className="w-full rounded-xl" data-testid="register-submit-button">
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t('auth.register')}
-              </Button>
-            </form>
             <p className="mt-6 text-sm text-muted-foreground text-center">
               {t('auth.alreadyHaveAccount')}{' '}
               <Link to="/login" className="text-[hsl(var(--accent))] underline underline-offset-4" data-testid="register-login-link">

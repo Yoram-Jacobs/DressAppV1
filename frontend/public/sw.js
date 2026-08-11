@@ -1,5 +1,13 @@
 /* DressApp Service Worker for Web Push notifications (Phase Scheduler) */
 
+self.addEventListener('install', function(event) {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', function(event) {
+  event.waitUntil(clients.claim());
+});
+
 self.addEventListener('push', function(event) {
   if (event.data) {
     try {
@@ -9,6 +17,7 @@ self.addEventListener('push', function(event) {
         icon: '/favicon-48x48.png',
         badge: '/favicon-16x16.png',
         vibrate: [100, 50, 100],
+        tag: data.tag || 'dressapp-notification',
         data: { url: data.url || '/stylist?tab=match' }
       };
       

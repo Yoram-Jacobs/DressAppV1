@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Literal
+from typing import Any, Literal, List
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -32,7 +32,6 @@ TxStatus = Literal[
     "pending", "paid", "refunded", "failed", "disputed",
     "accepted", "denied", "shipped", "completed",
 ]
-TxKind = Literal["buy", "swap", "donate", "rent"]
 Formality = Literal["casual", "smart-casual", "business", "formal"]
 Condition = Literal["new", "like_new", "good", "fair"]
 # Rich closet-item enums (used by AddItem flow + The Eyes analyzer)
@@ -84,10 +83,24 @@ class GoogleOAuthTokens(BaseModel):
 class SubscriptionInfo(BaseModel):
     is_active: bool = False
     plan_type: Literal["free", "monthly", "yearly"] = "free"
+    tier: Literal["free", "pro", "business", "manager", "professional"] = "free"
     stripe_subscription_id: str | None = None
     paypal_subscription_id: str | None = None
     expires_at: str | None = None
     cancelled_at: str | None = None
+
+
+from app.models.credit import (
+    CreditType,
+    CreditBucket,
+    get_total_credits,
+    get_aging_credit_buckets as _get_aging_credit_buckets,
+    add_credit_bucket as _add_credit_bucket,
+    spend_credits as _spend_credits
+)
+
+
+
 
 
 class User(BaseDoc):
@@ -102,6 +115,7 @@ class User(BaseDoc):
     style_profile: StyleProfile = Field(default_factory=StyleProfile)
     cultural_context: CulturalContext = Field(default_factory=CulturalContext)
     google_oauth: GoogleOAuthTokens | None = None
+    google_calendar_tokens: dict[str, Any] | None = None
     stripe_account_id: str | None = None
     stripe_onboarding_complete: bool = False
     roles: list[str] = Field(default_factory=lambda: ["user"])
@@ -172,6 +186,72 @@ class User(BaseDoc):
     # --- AI Stylist Scheduler Settings (Phase Scheduler) ---
     scheduler_settings: dict[str, Any] | None = None
     web_push_subscriptions: list[dict] = Field(default_factory=list)
+
+    # --- Phase 4P: AI Credits System - Credit Buckets (replaces simple ai_credits)
+    # List of credit buckets. Each bucket has an amount, type (free/paid),
+    # creation date, and expiry (None for paid/never-expiring credits).
+    # We use LIFO/FIFO ordering based on creation order - oldest first gets spent first.
+    credit_buckets: List[CreditBucket] = Field(default_factory=list)
+
+    # --- Legacy compatibility field (kept for backward compatibility) ----
+    # This is computed from credit_buckets; do not update directly.
+    _ai_credits_computed: int | None = None  # Internal use only
+
+    # --- Phase AS-3: Free tier credit management (enhanced with buckets) ---
+    # Free AI credits daily allocation (these go into free buckets with expiry)
+    free_ai_credits_daily: int = Field(default_factory=lambda: 10)
+
+    # --- Calendar and Scheduling ---
+    calendar_events: list[dict[str, Any]] = Field(default_factory=list)
+
+    @property
+    def total_credits(self) -> int:
+        """Get total available credits across all non-expired buckets."""
+        return get_total_credits(self.credit_buckets)
+
+    def get_aging_credit_buckets(self) -> List[CreditBucket]:
+        """
+        Get credit buckets sorted by age (oldest first) for consumption.
+        """
+        return _get_aging_credit_buckets(self.credit_buckets)
+
+    def add_credit_bucket(self, amount: int, credit_type: CreditType, days_until_expiry: int | None = None) -> None:
+        """Add a new credit bucket to the user's credit history."""
+        _add_credit_bucket(self.credit_buckets, amount, credit_type, days_until_expiry)
+        self._ai_credits_computed = None
+
+    def spend_credits(self, required_amount: int, operation: str | None = None) -> tuple[bool, List[dict]]:
+        """
+        Spend credits from the oldest buckets first. Returns (success, details of what was spent).
+        """
+        success, details = _spend_credits(self.credit_buckets, required_amount, operation)
+        if success:
+            self._ai_credits_computed = None
+        return success, details
+
+
+    def get_credit_usage_summary(self) -> dict[str, Any]:
+        """Return a summary of credit usage by type and age."""
+        now = _now_iso()
+        free_total = 0
+        paid_total = 0
+        free_expired = 0
+        
+        for bucket in self.credit_buckets:
+            if bucket.type == "free":
+                free_total += bucket.amount
+                if bucket.expires_at and now > bucket.expires_at:
+                    free_expired += bucket.amount
+            else:
+                paid_total += bucket.amount
+        
+        return {
+            "free_available": free_total - free_expired,
+            "free_expired": free_expired,
+            "paid": paid_total,
+            "total": self.total_credits,
+            "bucket_count": len(self.credit_buckets)
+        }
 
 
 # ------------------------- Closet items -------------------------
@@ -476,7 +556,7 @@ class Transaction(BaseDoc):
     seller_id: str
     # ``kind`` lets old buy transactions stay untouched (default "buy")
     # while swap + donate transactions opt into their own state machine.
-    kind: TxKind = "buy"
+    kind: Literal["buy", "swap", "donate", "rent"] = "buy"
     currency: str = "USD"
     financial: TransactionFinancial
     stripe: StripePointer = Field(default_factory=StripePointer)
@@ -511,138 +591,6 @@ class StylistMessage(BaseDoc):
     context: dict[str, Any] = Field(default_factory=dict)
     assistant_payload: dict[str, Any] | None = None
     tts_audio_ref: str | None = None
-    latency_ms: dict[str, int] = Field(default_factory=dict)
-
-
-# ---------------- Stylist response (public API contract) ----------------
-class OutfitItem(BaseModel):
-    closet_item_id: str | None = None
-    role: str  # 'top', 'bottom', 'outerwear', 'shoes', 'accessory'
-    description: str | None = None
-
-
-class OutfitRecommendation(BaseModel):
-    name: str
-    items: list[OutfitItem] = Field(default_factory=list)
-    why: str
-    confidence: float = 0.8
-
-
-class StylistAdvice(BaseModel):
-    transcript: str | None = None
-    segmented_image_url: str | None = None
-    infilled_image_url: str | None = None
-    weather_summary: str | None = None
-    calendar_summary: str | None = None
-    outfit_recommendations: list[OutfitRecommendation] = Field(default_factory=list)
-    reasoning_summary: str
-    shopping_suggestions: list[str] = Field(default_factory=list)
-    do_dont: list[str] = Field(default_factory=list)
-    tts_audio_base64: str | None = None
-    latency_ms: dict[str, int] = Field(default_factory=dict)
-    # --- Phase S: horizon expansion ----------------------------------
-    # Populated by ``stylist_widen.widen_stylist_response`` when the
-    # primary advice references items the user doesn't own (or the user
-    # explicitly toggled "Search wider"). All optional / empty by default
-    # so old chat clients keep rendering normally.
-    marketplace_suggestions: list["MarketplaceSuggestion"] = Field(default_factory=list)
-    fashion_scout_picks: list[dict[str, Any]] = Field(default_factory=list)
-    generated_examples: list[dict[str, Any]] = Field(default_factory=list)
-    widened_for: list[str] = Field(default_factory=list)
-    applied_preferences: list[str] = Field(default_factory=list)
-
-
-# --------------------- Phase R: Outfit Composer (Stylist Power-Up) ---------------------
-# Schema design notes:
-# - These are returned alongside the existing StylistAdvice contract so old
-#   chat clients keep working; the canvas is opt-in via a tap-to-expand UI.
-# - Persisted inside ``StylistMessage.assistant_payload`` under the key
-#   ``outfit_canvas`` so the canvas survives chat history + sharing.
-# - Marketplace + pro suggestions are *included* in the canvas envelope
-#   rather than separate API calls so the UI renders atomically — fewer
-#   round-trips, no flicker.
-
-OutfitSlotRole = Literal[
-    "top", "bottom", "dress", "outerwear", "shoes", "accessory", "bag", "headwear"
-]
-
-
-class CandidateGarment(BaseModel):
-    """One uploaded image after garment_vision analysis + dedup grouping."""
-
-    candidate_id: str  # uuid for client cross-references
-    source: Literal["upload", "closet"] = "upload"
-    image_data_url: str | None = None  # small data URL preview (<= 60 KB)
-    closet_item_id: str | None = None  # set when source='closet'
-    title: str | None = None
-    category: str | None = None
-    sub_category: str | None = None
-    color: str | None = None
-    pattern: str | None = None
-    material: str | None = None
-    brand: str | None = None
-    formality: str | None = None
-    season: str | None = None
-    tags: list[str] = Field(default_factory=list)
-    quality_score: float = 0.0  # internal — composer's confidence the analysis is good
-    brief_match_score: float = 0.0  # 0..1 — how well candidate fits the user's brief
-    dedup_group_id: str | None = None  # candidates sharing this id are near-duplicates
-
-
-class OutfitSlot(BaseModel):
-    role: OutfitSlotRole
-    candidate_id: str | None = None  # references CandidateGarment.candidate_id
-    rationale: str | None = None
-    is_gap: bool = False  # True when no candidate fills this slot — drives marketplace strip
-
-
-class RejectedCandidate(BaseModel):
-    candidate_id: str
-    reason: Literal[
-        "duplicate", "wrong_category", "color_clash",
-        "wrong_formality", "wrong_season", "off_brief", "low_quality"
-    ]
-    detail: str | None = None
-    kept_candidate_id: str | None = None  # for 'duplicate' — points at the surviving twin
-
-
-class MarketplaceSuggestion(BaseModel):
-    listing_id: str
-    title: str
-    image_url: str | None = None
-    price_cents: int | None = None
-    currency: str | None = None
-    seller_display_name: str | None = None
-    fills_slot: OutfitSlotRole | None = None
-    match_score: float = 0.0
-    why: str | None = None
-
-
-class ProfessionalSuggestion(BaseModel):
-    professional_id: str
-    display_name: str
-    profession: str | None = None
-    avatar_url: str | None = None
-    location: str | None = None
-    why_suggested: str  # human-readable rationale, e.g. "Alterations needed for the wedding suit"
-    triggered_by: list[str] = Field(default_factory=list)  # which keywords/signals fired
-
-
-class OutfitCanvas(BaseModel):
-    """Top-level structured response for the Stylist Composer."""
-
-    canvas_id: str
-    schema_version: int = 1
-    brief: str
-    language: str = "en"
-    summary: str  # short text summary shown as a chat bubble
-    detailed_rationale: str | None = None
-    slots: list[OutfitSlot] = Field(default_factory=list)
-    candidates: list[CandidateGarment] = Field(default_factory=list)
-    rejected: list[RejectedCandidate] = Field(default_factory=list)
-    marketplace_suggestions: list[MarketplaceSuggestion] = Field(default_factory=list)
-    professional_suggestion: ProfessionalSuggestion | None = None
-    model_used: str | None = None
     latency_ms: dict[str, int] = Field(default_factory=dict)
 
 
@@ -709,22 +657,27 @@ class CreditTopup(BaseDoc):
     pack: str | None = None  # "10" | "25" | "50" | "custom"
 
 
-# --------------------- AI Stylist Scheduler (Phase Scheduler) ---------------------
-class SavedOutfit(BaseDoc):
+class AiCreditPurchase(BaseDoc):
     user_id: str
-    name: str
-    source_workflow: Literal["scheduled", "event"]
-    prompt: str | None = None
-    garments: list[dict[str, Any]] = Field(default_factory=list)
-    usage: dict[str, Any] = Field(default_factory=dict) # {date, time, location, event_name}
+    pack: str
+    credits_amount: int
+    amount_cents: int
+    currency: str = "USD"
+    status: str = "pending"
+    paypal_order_id: str | None = None
+    paypal_capture_id: str | None = None
+    captured_at: str | None = None
+    payer_email: str | None = None
 
 
-class SimulatedNotification(BaseDoc):
-    user_id: str
-    title: str
-    body: str
-    read: bool = False
-    payload: dict[str, Any] | None = None
+class CreditUsageResponse(BaseModel):
+    available_credits: int
+    daily_usage: int
+    monthly_usage: int
+    daily_limit: int
+    monthly_limit: int
+    can_use: bool
+    upgrade_required: bool
 
 
 # --------------------- DressApp Suitcase ---------------------
@@ -757,159 +710,3 @@ class SuitcaseArchive(BaseDoc):
     local_fashion_stores: list[dict[str, Any]] = Field(default_factory=list)
     missing_items: list[dict[str, Any]] = Field(default_factory=list)
 
-
-# --------------------- Experts Campaign Platform ---------------------
-CampaignStatus = Literal[
-    "draft", "pending_approval", "approved", "active",
-    "rejected", "expired", "cancelled", "paused", "payment_failed"
-]
-CampaignSaleType = Literal[
-    "discount", "service_promotion", "product_promotion",
-    "limited_time_offer", "flash_sale", "seasonal"
-]
-CampaignAudienceTarget = Literal[
-    "women", "men", "kids", "luxury", "casual",
-    "sustainable_fashion", "streetwear", "all"
-]
-CampaignNotificationTiming = Literal[
-    "immediately_after_approval", "on_start_date", "custom"
-]
-CampaignNotificationStatus = Literal[
-    "scheduled", "sent", "delivered", "opened",
-    "clicked", "failed", "cancelled"
-]
-
-
-class CampaignLocation(BaseModel):
-    country: str | None = None
-    city: str | None = None
-    lat: float | None = None
-    lon: float | None = None
-    radius_km: float = 25.0
-
-
-class CampaignAudience(BaseModel):
-    targets: list[CampaignAudienceTarget] = Field(default_factory=lambda: ["all"])
-    age_min: int | None = None
-    age_max: int | None = None
-    interests: list[str] = Field(default_factory=list)
-
-
-class CampaignNotificationConfig(BaseModel):
-    master_enabled: bool = False
-    channels: list[str] = Field(default_factory=list)  # ["push", "email"]
-    timing: CampaignNotificationTiming = "immediately_after_approval"
-    custom_datetime: str | None = None  # ISO — only when timing=custom
-    push_sent: bool = False
-    email_sent: bool = False
-    push_sent_at: str | None = None
-    email_sent_at: str | None = None
-
-
-class CampaignAnalytics(BaseModel):
-    views: int = 0
-    clicks: int = 0
-    push_opens: int = 0
-    saves: int = 0
-    shares: int = 0
-    conversions: int = 0
-    unique_users_reached: int = 0
-
-
-class CampaignBilling(BaseModel):
-    """Financial metadata for a campaign: fee, PayPal order, payment status."""
-    fee_per_day_cents: int = 100          # USD, $1.00 per day
-    currency: str = "USD"
-    total_days: int = 0
-    total_fee_cents: int = 0
-    paypal_order_id: str | None = None    # set when expert submits + PayPal SDK completes
-    paypal_capture_id: str | None = None  # set after capture
-    payer_email: str | None = None
-    paid_at: str | None = None
-    payment_status: str = "unpaid"        # unpaid | pending | paid | failed | voided
-    extension_history: list[dict] = Field(default_factory=list)
-    # Paused time tracking
-    paused_periods: list[dict] = Field(default_factory=list)  # [{paused_at, resumed_at, days}]
-    total_paused_days: int = 0
-
-
-class ExpertCampaign(BaseDoc):
-    """Expert-owned local promotional campaign (Experts Campaign Platform)."""
-
-    # Identity
-    expert_id: str
-    business_name: str
-
-    # Basic
-    title: str
-    short_description: str
-    long_description: str | None = None
-    category: str  # e.g. "Boutique", "Tailor", "Stylist"
-    cover_image_url: str | None = None
-    gallery_images: list[str] = Field(default_factory=list)
-
-    # Promotion
-    discount_pct: int | None = Field(default=None, ge=0, le=100)
-    coupon_code: str | None = None
-    sale_type: CampaignSaleType = "discount"
-    limited_time_offer: bool = False
-
-    # Dates
-    start_date: str | None = None   # ISO date
-    end_date: str | None = None     # ISO date
-
-    # Location
-    location: CampaignLocation = Field(default_factory=CampaignLocation)
-
-    # Audience
-    audience: CampaignAudience = Field(default_factory=CampaignAudience)
-
-    # Workflow
-    status: CampaignStatus = "draft"
-    admin_approved: bool = False
-    rejection_reason: str | None = None
-    submitted_at: str | None = None
-    approved_at: str | None = None
-    approved_by: str | None = None  # admin user_id
-    activated_at: str | None = None
-    expired_at: str | None = None
-
-    # Notifications
-    notifications: CampaignNotificationConfig = Field(default_factory=CampaignNotificationConfig)
-
-    # Analytics
-    analytics: CampaignAnalytics = Field(default_factory=CampaignAnalytics)
-
-    # Saved by user list (user_ids)
-    saved_by: list[str] = Field(default_factory=list)
-
-    # Pause tracking
-    paused_at: str | None = None          # ISO timestamp of last pause
-
-    # Billing
-    billing: CampaignBilling = Field(default_factory=CampaignBilling)
-
-
-class CampaignApprovalLog(BaseDoc):
-    """Audit log entry for campaign approval/rejection actions."""
-
-    campaign_id: str
-    admin_id: str
-    action: Literal["approved", "rejected", "edited", "message_sent"]
-    reason: str | None = None
-    notes: str | None = None
-
-
-class CampaignNotificationRecord(BaseDoc):
-    """Per-user, per-channel delivery tracking record."""
-
-    campaign_id: str
-    user_id: str
-    channel: Literal["push", "email"]  # extensible to sms, whatsapp, in_app
-    scheduled_at: str | None = None
-    sent_at: str | None = None
-    status: CampaignNotificationStatus = "scheduled"
-    opened: bool = False
-    clicked: bool = False
-    failed: bool = False
-    failure_reason: str | None = None

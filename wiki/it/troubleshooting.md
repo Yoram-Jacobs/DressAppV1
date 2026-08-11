@@ -1,25 +1,25 @@
-# Risoluzione dei problemi e limiti
+# Risoluzione dei problemi & Limiti
 
-Correzioni rapide per comportamenti, limiti e impostazioni comuni delle app.
+Soluzioni rapide per comportamenti, limiti e impostazioni comuni dell'app.
 
 ## Panoramica
-Trova soluzioni rapide per autorizzazioni della fotocamera, velocità di caricamento lente, domande sui limiti dell'account e trascrizioni della chat vocale.
+Trova soluzioni rapide per le autorizzazioni della fotocamera, le velocità di caricamento lente, le domande sui limiti dell'account e le trascrizioni della chat vocale.
 
 ## Prerequisiti
-- Connessione Internet.
+- Connessione a Internet.
 
 ## Passo dopo passo
-1. **Blocco fotocamera**: se la fotocamera non si avvia, vai alle impostazioni del browser, seleziona DressApp e ripristina le autorizzazioni della fotocamera.
-2. **Caricamenti bloccati**: se il caricamento si blocca su più foto, attendi che la coda sequenziale in background le elabori una per una.
-3. **Armadio pieno**: gli utenti gratuiti hanno un limite di 150 articoli. Iscriviti al livello Pro o invita un amico (+10 slot per iscrizione).
-4. **Errori API**: se le funzionalità AI non funzionano, verifica le chiavi personalizzate di Google AI Studio nella pagina del tuo profilo.
+1. **Fotocamera bloccata**: Se la fotocamera non si avvia, vai alle impostazioni del browser, seleziona DressApp e ripristina le autorizzazioni della fotocamera.
+2. **Caricamenti bloccati**: Se il caricamento si blocca su più foto, attendi che la coda sequenziale in background le elabori una alla volta.
+3. **Armadio pieno**: Gli utenti gratuiti sono limitati a un livello base di 50 articoli. Abbonati al livello Manager o Professional nella **pagina dei prezzi** (`/pricing`), o invita un amico per ottenere +10 slot per registrazione (fino a un massimo di 200 articoli).
+4. **Errori API**: Se le funzionalità di IA falliscono, verifica le tue chiavi Google AI Studio personalizzate nella pagina del tuo profilo.
 
 ## Risultati attesi
-Risoluzione rapida di permessi e configurazioni senza richiedere ticket di supporto tecnico.
+Risoluzione rapida di autorizzazioni e configurazioni senza richiedere l'apertura di ticket di supporto tecnico.
 
 ## Risoluzione dei problemi
-- **Problemi relativi al database**: se gli elementi non sono sincronizzati, disconnettersi e accedere nuovamente per aggiornare le sessioni dei token.
-- **Problemi di layout RTL**: se gli overlay arabo/ebraico si sovrappongono, aggiorna il browser alla versione più recente.
+- **Problemi con il database**: Se gli articoli non sono sincronizzati, disconnettiti e accedi di nuovo per aggiornare le sessioni dei token.
+- **Problemi di layout RTL**: Se le sovrapposizioni in arabo/ebraico si sovrappongono, aggiorna il browser alla versione più recente.
 
 ## Limitazioni
-- I limiti delle piattaforme vengono applicati rigorosamente per proteggere le risorse del server.
+- I limiti della piattaforma sono applicati rigorosamente per proteggere le risorse del server.

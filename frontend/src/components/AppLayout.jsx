@@ -107,6 +107,8 @@ export const AppLayout = () => {
       navigator.serviceWorker.ready.then(async (reg) => {
         try {
           let sub = await reg.pushManager.getSubscription();
+          const res = await api.getVapidKey();
+          const pubKey = urlBase64ToUint8Array(res.public_key);
 
           const registerSub = async (subscription) => {
             try {
@@ -115,6 +117,29 @@ export const AppLayout = () => {
               console.warn('Failed to register web push on server', err);
             }
           };
+
+          // If there is an existing subscription, verify if its key matches the current VAPID public key
+          if (sub && sub.options && sub.options.applicationServerKey) {
+            try {
+              const currentSubKey = new Uint8Array(sub.options.applicationServerKey);
+              let match = currentSubKey.length === pubKey.length;
+              if (match) {
+                for (let i = 0; i < pubKey.length; i++) {
+                  if (currentSubKey[i] !== pubKey[i]) {
+                    match = false;
+                    break;
+                  }
+                }
+              }
+              if (!match) {
+                console.log("VAPID public key changed. Unsubscribing old subscription...");
+                await sub.unsubscribe();
+                sub = null;
+              }
+            } catch (e) {
+              console.warn("Error checking VAPID key mismatch:", e);
+            }
+          }
 
           if (sub) {
             await registerSub(sub);
@@ -126,8 +151,6 @@ export const AppLayout = () => {
               const permission = await Notification.requestPermission();
               if (permission !== 'granted') return;
             }
-            const res = await api.getVapidKey();
-            const pubKey = urlBase64ToUint8Array(res.public_key);
             sub = await reg.pushManager.subscribe({
               userVisibleOnly: true,
               applicationServerKey: pubKey,

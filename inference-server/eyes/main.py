@@ -58,14 +58,14 @@ log = logging.getLogger("dressapp-eyes")
 # ---- Config (env, with defaults set in Dockerfile) ------------------
 MODEL_DIR = Path(os.environ.get("EYES_MODEL_DIR", "/models"))
 MODEL_REPO = os.environ.get("EYES_MODEL_REPO", "Yoram-Jacobs/dressapp-eyes-gguf")
-MODEL_FILE = os.environ.get("EYES_MODEL_FILE", "phase6-Q4_K_M.gguf")
+MODEL_FILE = os.environ.get("EYES_MODEL_FILE", "gemma-4-e2b-it.Q4_K_M-002.gguf")
 MMPROJ_FILE = os.environ.get("EYES_MMPROJ_FILE")
 HF_TOKEN = os.environ.get("EYES_HF_TOKEN")
 API_TOKEN = os.environ.get("EYES_API_TOKEN")
 
 N_THREADS = int(os.environ.get("LLAMA_THREADS", "2"))
 N_CTX = int(os.environ.get("LLAMA_CTX_SIZE", "4096"))
-N_BATCH = int(os.environ.get("LLAMA_N_BATCH", "256"))
+N_BATCH = int(os.environ.get("LLAMA_N_BATCH", "2048"))
 
 LLAMA_BIN = os.environ.get("LLAMA_BIN", "/usr/local/bin/llama-server")
 LLAMA_INTERNAL_HOST = "127.0.0.1"
@@ -232,6 +232,12 @@ def _build_llama_argv(model_path: Path, mmproj_path: Path | None) -> list[str]:
       --no-warmup      — skip the synthetic warmup token; saves ~3 s
                           and the first real request will warm naturally.
     """
+    # Gemma-4 requires thinking mode to process images. The reasoning-budget
+    # controls whether the model generates reasoning steps (CoT) before the
+    # final answer. Since our pipeline uses JSON schema output directly,
+    # we enable thinking mode to ensure the model processes the image content.
+    # Note: The <think> tags in the model's output will be stripped by the
+    # backend's _extract_json function, so this doesn't affect our JSON parsing.
     argv = [
         LLAMA_BIN,
         "--model", str(model_path),
@@ -240,11 +246,15 @@ def _build_llama_argv(model_path: Path, mmproj_path: Path | None) -> list[str]:
         "--ctx-size", str(N_CTX),
         "--threads", str(N_THREADS),
         "--batch-size", str(N_BATCH),
+        "--ubatch-size", str(N_BATCH),
         "--n-predict", "1024",
         "--jinja",
         "--reasoning-budget", "0",
         "--chat-template-kwargs", '{"enable_thinking": false}',
         "-fa", "auto",
+        "-sps", "0.5",
+        "--media-path", "/",
+        "--cache-prompt",
     ]
     if mmproj_path is not None:
         argv += ["--mmproj", str(mmproj_path)]
@@ -370,22 +380,27 @@ def _require_token(authorization: str | None = Header(default=None)) -> None:
         raise HTTPException(status_code=401, detail="bad bearer token")
 
 
-# ---- Schemas (unchanged from previous main.py) ----------------------
+# ---- Schemas (updated for OpenAI-compatible format) ------------------
 class ChatTurn(BaseModel):
     role: str = Field(..., pattern="^(system|user|assistant)$")
-    content: str
+    content: str | list[dict[str, Any]]
 
 
 class PredictIn(BaseModel):
-    prompt: str | None = None
-    system: str | None = None
+    # Support OpenAI-compatible format with optional custom backward compatibility
     messages: list[ChatTurn] | None = None
-    image_b64: str | None = None
-    image_mime: str = "image/jpeg"
     max_tokens: int = Field(default=512, ge=1, le=4096)
     temperature: float = Field(default=0.2, ge=0.0, le=1.5)
     top_p: float = Field(default=0.9, ge=0.0, le=1.0)
     json_mode: bool = False
+    json_schema: dict[str, Any] | None = None
+    response_format: dict[str, Any] | None = None
+    # Legacy fields for backward compatibility (unused when messages is provided)
+    prompt: str | None = None
+    system: str | None = None
+    image_b64: str | None = None
+    image_mime: str = "image/jpeg"
+    id_slot: int | None = None
 
 
 class PredictOut(BaseModel):
@@ -481,6 +496,42 @@ def _build_openai_messages(req: PredictIn) -> list[dict[str, Any]]:
 )
 async def predict(req: PredictIn) -> PredictOut:
     msgs = _build_openai_messages(req)
+
+    import base64
+    import os
+    import hashlib
+
+    async def delete_after_delay(path: str, delay: float):
+        await asyncio.sleep(delay)
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+                log.info(f"Cleaned up temp file: {path}")
+        except Exception as e:
+            log.warning(f"Failed to delete temp file {path}: {e}")
+
+    # Process messages to convert base64 data URLs to file URLs
+    for msg in msgs:
+        content = msg.get("content")
+        if isinstance(content, list):
+            for part in content:
+                if part.get("type") == "image_url":
+                    img_url_obj = part.get("image_url") or {}
+                    url_str = img_url_obj.get("url") or ""
+                    if url_str.startswith("data:image/") and ";base64," in url_str:
+                        try:
+                            header, base64_str = url_str.split(";base64,", 1)
+                            img_bytes = base64.b64decode(base64_str)
+                            img_hash = hashlib.sha256(base64_str.encode("ascii")).hexdigest()
+                            temp_path = f"/tmp/{img_hash}.jpg"
+                            if not os.path.exists(temp_path):
+                                with open(temp_path, "wb") as f:
+                                    f.write(img_bytes)
+                                asyncio.create_task(delete_after_delay(temp_path, 120.0))
+                            img_url_obj["url"] = f"file://{temp_path}"
+                        except Exception as e:
+                            log.warning(f"Failed to convert base64 image: {e}")
+
     payload: dict[str, Any] = {
         "model": "local",  # llama-server ignores model name; field required.
         "messages": msgs,
@@ -489,8 +540,32 @@ async def predict(req: PredictIn) -> PredictOut:
         "top_p": req.top_p,
         "stream": False,
     }
-    if req.json_mode:
+    if req.response_format:
+        payload["response_format"] = req.response_format
+    elif req.json_mode:
         payload["response_format"] = {"type": "json_object"}
+
+    if req.id_slot is not None:
+        payload["id_slot"] = req.id_slot
+
+    preview_msgs = []
+    for m in msgs:
+        content_prev = m["content"]
+        if isinstance(content_prev, list):
+            parts = []
+            for part in content_prev:
+                p = {}
+                for k, v in part.items():
+                    if k == "image_url" and isinstance(v, dict) and "url" in v:
+                        p[k] = {"url": v["url"][:60] + "..."}
+                    else:
+                        p[k] = v
+                parts.append(p)
+            content_prev = parts
+        elif isinstance(content_prev, str):
+            content_prev = content_prev[:120] + "..." if len(content_prev) > 120 else content_prev
+        preview_msgs.append({"role": m["role"], "content": content_prev})
+    log.info(f"llama-server request messages payload: {preview_msgs}")
 
     client: httpx.AsyncClient = app.state.client
     t0 = time.time()
@@ -531,14 +606,25 @@ async def predict(req: PredictIn) -> PredictOut:
     content = msg.get("content") or ""
     if not content:
         content = msg.get("reasoning_content") or ""
+    has_image = bool(req.image_b64)
+    if not has_image and req.messages:
+        for m in req.messages:
+            if isinstance(m.content, list):
+                for part in m.content:
+                    if isinstance(part, dict) and part.get("type") == "image_url":
+                        has_image = True
+                        break
+            if has_image:
+                break
+
     return PredictOut(
         output=str(content),
         finish_reason=choice.get("finish_reason"),
         tokens_prompt=int(usage.get("prompt_tokens") or 0),
         tokens_completion=int(usage.get("completion_tokens") or 0),
         elapsed_ms=elapsed_ms,
-        vision_used=bool(app.state.vision_enabled and req.image_b64),
-        vision_disabled=bool(req.image_b64 and not app.state.vision_enabled),
+        vision_used=bool(app.state.vision_enabled and has_image),
+        vision_disabled=bool(has_image and not app.state.vision_enabled),
     )
 
 

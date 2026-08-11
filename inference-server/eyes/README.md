@@ -1,7 +1,7 @@
 # DressApp Eyes — Hetzner deploy
 
 Self-hosted FastAPI wrapper around the fine-tuned **Gemma-4 E2B**
-GGUF (`phase6-Q4_K_M.gguf` + `mmproj-Gemma4E2B-f16.gguf`) used by
+GGUF (`gemma-4-e2b-it.Q4_K_M-002.gguf` + `gemma-4-e2b-it.BF16-mmproj.gguf`) used by
 the DressApp closet pipeline. Replaces the Qwen-VL leg of
 `backend/app/services/garment_vision.py` when `EYES_PROVIDER=gemma`.
 
@@ -76,8 +76,8 @@ directory. Put your trained Q4 + mmproj artefacts there:
 sudo mkdir -p /srv/AI-Stylist/eyes_gguf
 # scp your two GGUF files into that directory (from Google Drive or
 # your local machine):
-#   - phase6-Q4_K_M.gguf            (~3.4 GB main model)
-#   - mmproj-Gemma4E2B-f16.gguf     (~600 MB vision projector, optional
+#   - gemma-4-e2b-it.Q4_K_M-002.gguf            (~3.4 GB main model)
+#   - gemma-4-e2b-it.BF16-mmproj.gguf     (~986 MB vision projector, optional
 #                                    until Phase 2 vision)
 sudo chmod 644 /srv/AI-Stylist/eyes_gguf/*.gguf
 ls -la /srv/AI-Stylist/eyes_gguf/
@@ -106,7 +106,7 @@ EYES_LLAMA_THREADS=4
 
 # Optional: enables the LLaVA vision handler once mmproj is in place.
 # Set to the basename of the mmproj file in /srv/AI-Stylist/eyes_gguf/.
-EYES_MMPROJ_FILE=mmproj-Gemma4E2B-f16.gguf
+EYES_MMPROJ_FILE=gemma-4-e2b-it.BF16-mmproj.gguf
 ```
 
 > **No `EYES_HF_TOKEN`.** It is not in this list because DressApp does
@@ -152,12 +152,12 @@ docker compose -f deploy/docker-compose.yml logs -f eyes
 You should see, in order:
 
 ```
-eyes  | downloading model: Yoram-Jacobs/dressapp-eyes-gguf/phase6-Q4_K_M.gguf
-eyes  | downloaded /models/phase6-Q4_K_M.gguf (3.42 GB) in ~90s
+eyes  | downloading model: Yoram-Jacobs/dressapp-eyes-gguf/gemma-4-e2b-it.Q4_K_M-002.gguf
+eyes  | downloaded /models/gemma-4-e2b-it.Q4_K_M-002.gguf (3.42 GB) in ~90s
 eyes  | gguf metadata: {'general.architecture': 'gemma4', ...}
 eyes  | spawning: /usr/local/bin/llama-server --model /models/...
 eyes  | <llama-server's own log: model load, KV cache size, threads>
-eyes  | ready: model=phase6-Q4_K_M.gguf vision=False
+eyes  | ready: model=gemma-4-e2b-it.Q4_K_M-002.gguf vision=False
 eyes  | INFO:     Uvicorn running on http://0.0.0.0:7860
 ```
 
@@ -187,7 +187,7 @@ Qwen-VL.
 # 1. Health (no auth required)
 docker compose -f deploy/docker-compose.yml exec backend \
   curl -fsS http://eyes:7860/healthz
-# Expect: {"status":"ok","model":"phase6-Q4_K_M.gguf","vision_enabled":false,...}
+# Expect: {"status":"ok","model":"gemma-4-e2b-it.Q4_K_M-002.gguf","vision_enabled":false,...}
 
 # 2. Inference (auth required)
 TOKEN=$(grep ^EYES_API_TOKEN= deploy/.env | cut -d= -f2-)
@@ -230,7 +230,7 @@ When the vision projector exists in the model repo:
 
 ```
 # add to deploy/.env
-EYES_MMPROJ_FILE=mmproj-Gemma4E2B-f16.gguf
+EYES_MMPROJ_FILE=gemma-4-e2b-it.BF16-mmproj.gguf
 ```
 
 Then `docker compose up -d eyes`. The container detects the env var,

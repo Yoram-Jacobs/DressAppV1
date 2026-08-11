@@ -41,9 +41,15 @@ Adding your wardrobe items to DressApp is fast and easy:
 3. The app imports brand details, fabric composition, washing instructions, and sustainability scores automatically.
 
 #### Option C: Import Shopping Receipts
-1. Tap **Digital Import**.
-2. Paste receipt text, upload an order confirmation screenshot, or upload a PDF receipt from stores like Zara or Asos.
-3. The AI extracts brand, price, and item category automatically.
+1. Tap **Add Item** and open the **Digital Import** tab.
+2. Select how you want to import your receipt:
+   - **Paste Text**: Paste the confirmation text directly from your email.
+   - **Upload File**: Upload a receipt image, invoice screenshot, or a PDF file (like Zara or ASOS store invoices).
+   - **Web Link**: Paste the web link to your order confirmation page.
+3. **Select Individual Clothes**: If your receipt image lists multiple clothes, click and drag box selectors directly over each item to crop them out one by one.
+4. Tap **Extract Selected Items**. The AI will automatically read the brand name, price, purchase size, and category.
+5. **Receipt-Locked Fields**: Once saved, all commercial details from the receipt (like price, brand, and size) are locked. If you later upload a photo to update the clothing's thumbnail, these verified details will never be accidentally modified by the AI.
+
 
 ---
 
@@ -68,9 +74,10 @@ Personalize your virtual avatar and style preferences:
    - Upload a full-body photo for realistic try-ons, or use the dynamic 2D vector mannequin.
    - Select your exact **Skin Tone** from the interactive color palette.
    - Click **Remove Photo** anytime to instantly revert to the vector mannequin.
-4. **Automatic Body Measurement Predictor**:
+4. **Automatic Body Measurement & Sizing Predictor**:
    - Enter just 4 basic numbers: **Height**, **Weight**, **Waist**, and **Foot Length**.
-   - DressApp automatically predicts your shoulders, chest, hip, sleeve, and inseam measurements to save you time!
+   - DressApp automatically predicts your shoulders, chest, hip, sleeve, and inseam measurements.
+   - It also translates these metrics into recommended retail standard sizes: **Shirt Size**, **Pants Size**, **Shoe Size**, and **Dress/Bra Size** (for women), automatically pre-filling them in your profile.
 5. **Style Profile**: Set your favorite aesthetics, preferred color palettes, and modesty preferences (*Casual/Relaxed*, *Moderate*, *Conservative*).
 
 ---
@@ -115,8 +122,173 @@ Buy, sell, trade, or rent pre-loved clothing:
 
 ---
 
+### Step 8: Import Your Wardrobe from Other Apps
+
+Already have your clothes organized in another app? DressApp can import them automatically so you don't have to re-photograph everything!
+
+**Supported Apps:**
+- Whering
+- Acloset
+- Stylebook
+- Smartli
+- BeautyAI
+- Or any other app (you can type the name)
+
+#### How to Import (Desktop Only)
+
+1. **Open Profile**: Go to your Profile page and click the **"Import Wardrobe"** button.
+2. **Choose Your App**: Select your competitor app from the grid, or type in a custom app name.
+3. **Log In**: A new browser tab will open to your competitor's login page. Log in to your account there.
+4. **Install the Bookmarklet**: You'll see a "Share & Start Agent" button. Drag it to your browser's bookmarks bar (the bar below the address bar).
+5. **Go to Your Wardrobe**: In the competitor app, navigate to your wardrobe or closet view where all your clothes are displayed.
+6. **Start the Import**: Click the bookmarklet button you just installed.
+7. **Sit Back and Relax**: The agent will automatically:
+   - Scroll through your wardrobe
+   - Detect and capture each garment image
+   - Stream the captured items back to DressApp in batches
+8. **AI Does the Work**: Each captured garment is automatically analyzed by our AI Stylist, which identifies:
+   - What type of item it is (shirt, pants, dress, etc.)
+   - The colors
+   - The fabric/material
+   - The brand (if visible)
+   - What season and occasion it's best for
+   - How formal or casual it is
+9. **Review Your Items**: Once the import finishes, check your Closet tab to see all your newly imported items. You can edit any details as needed.
+
+#### Important Tips
+
+- **Desktop Only**: Wardrobe import only works on desktop computers (not phones or tablets). This is because it needs special browser features that aren't available on mobile.
+- **Keep DressApp Open**: Don't close the DressApp tab while the import is running. You can close the competitor app tab once the import starts.
+- **No Duplicates**: The system automatically detects and prevents importing the same item twice.
+- **Quality Control**: Items that can't be clearly identified (obscured images, non-clothing items) are automatically filtered out.
+- **Server-Side Processing**: Once the import starts, the AI analysis happens on our servers. Even if you close your browser, the analysis will continue.
+
+#### Troubleshooting Import
+
+- **Bookmarklet not showing?** Make sure your bookmarks bar is visible. Press Ctrl+Shift+B (Windows) or Cmd+Shift+B (Mac) to show it.
+- **Items not appearing?** Try refreshing the competitor page and starting the bookmarklet again.
+- **Import stalls?** Check that all wardrobe items are fully visible in the browser window. The tool works best when it can see complete garment cards.
+- **Need to re-analyze items?** Contact support and we can re-run the AI analysis on your imported items.
+
+---
+
+### Step 9: Shopping Assistant Browser Extension
+
+Never worry about picking the wrong size again! DressApp's Shopping Assistant works directly on popular stores like SHEIN, AliExpress, and more to give you personalized size recommendations.
+
+#### What Does It Do?
+
+When you're shopping online, the extension automatically:
+- **Scans size charts** on product pages
+- **Compares** the chart to your saved body measurements
+- **Recommends** the perfect size for you with confidence scores
+
+#### How to Install
+
+**Option A: Chrome Extension (Recommended)**
+1. Visit [dressapp.co/extension/connect](https://dressapp.co/extension/connect)
+2. Click **"Connect to DressApp"** to link your account
+3. The extension installs automatically in Chrome
+4. Look for the DressApp icon in your browser toolbar
+
+**Option B: Mobile Bookmarklet**
+1. On your phone, go to your DressApp Profile page
+2. Find the **Shopping Assistant** section
+3. Copy the bookmarklet code
+4. Add it to your mobile browser's bookmarks
+
+#### How to Use
+
+1. **Visit any supported store** (SHEIN, AliExpress, Zara, Asos, etc.)
+2. **Look for the DressApp button** - you'll see:
+   - A floating button in the bottom-left corner (`* DressApp`)
+   - OR an inline button next to the size selector (`* DressApp size`)
+3. **Click the button** - the extension automatically:
+   - Scans the page for size charts
+   - Analyzes the chart using AI
+   - Shows your personalized size recommendation
+4. **See your result** - a card appears showing:
+   - Your recommended size (e.g., "Size 38")
+   - Confidence level (e.g., "90% confident")
+   - Which measurements matched (bust, waist, etc.)
+   - Alternative sizes if you prefer a looser or tighter fit
+
+#### Manual Crop (If Auto-Detection Doesn't Work)
+
+Sometimes size charts are hidden or in unusual formats. No problem!
+
+1. Click the DressApp button
+2. If no chart is found automatically, you'll see **"Drag a box around the size chart"**
+3. **Click and drag** to draw a box around the size chart area
+4. Adjust the box using the resize handles if needed
+5. Click **Apply** (or press Enter)
+6. The extension analyzes the cropped area and shows your recommendation
+
+#### What You'll See
+
+**Size Recommendation Card:**
+- Recommended size with confidence percentage
+- Why this size fits your measurements
+- Alternative sizes (e.g., "M for a snug fit" or "L for a relaxed fit")
+
+**Warning Cards:**
+- If your profile measurements seem unusual, you'll get a friendly heads-up
+- If you're not logged in, you'll be prompted to connect your account
+
+#### Troubleshooting
+
+- **No DressApp button visible?** Refresh the page and wait a few seconds for the extension to load.
+- **"No clear match" message?** Try drawing a tighter box around just the size chart area.
+- **"DressApp was just updated"?** Refresh the page to load the latest version.
+- **Permission requests?** The extension may ask for permission to read the page - this is normal and required to analyze size charts.
+
+#### Supported Stores
+
+The extension works on most e-commerce sites, including:
+- SHEIN
+- AliExpress
+- Zara
+- Asos
+- H&M
+- And many more!
+
+#### Privacy & Security
+
+- Your body measurements are stored securely in your DressApp account
+- The extension only reads size chart data from product pages
+- No personal shopping data is shared with third parties
+- You can disconnect the extension anytime from your DressApp profile
+
+---
+
+### Step 10: Subscriptions, Tiers, and Prepaid Credits
+
+Manage your subscription limits and purchase extra AI styling credits:
+
+1. **Monetization Tiers**:
+   - **Free Plan**: $0.00 / month. Stores up to 150 closet items. Includes 10 free daily AI credits (which expire after 30 days). You can expand your closet capacity by sharing your invite link (+10 clothing slots per friend registration, up to a maximum limit of 1000 items).
+   - **Manager (Pro) Plan**: $4.99 / month. Stores unlimited closet items and includes unlimited daily AI operations. Comes with a 14-day free trial and a 50-credit initial allocation.
+   - **Professional (Business) Plan**: $9.99 / month. Designed for professional stylists, containing all Manager features plus support for creating ad campaigns in the feed. Comes with a 30-day free trial and a 300-credit initial allocation.
+2. **Prepaid Credit Packs**:
+   If you run out of credits, you can purchase additional packs to prevent service interruptions:
+   - **10 credits pack**: $1.99
+   - **25 credits pack**: $3.99
+   - **50 credits pack**: $7.99
+   - **100 credits pack**: $15.99
+   - **Custom amount**: Purchase any custom quantity (minimum amount of 5.00 ILS).
+   - **Note**: Paid credits never expire, whereas daily free credits expire in 30 days. The system automatically consumes your oldest expiring free credits first before using paid credits.
+3. **Localized Local Payments (Atzmai Gateway)**:
+   For users in Israel, you can pay easily in ILS (Shekels) or USD using **Bit** or Israeli credit cards. Supports single purchases or recurring direct debit subscriptions.
+4. **Automated Receipts & Invoices**:
+   After any purchase, you will receive a thank-you email with official invoice and receipt PDFs generated from the gateway.
+
+---
+
 ## 3. Quick Troubleshooting & Tips
+
 
 - **Free Tier Closet Capacity**: Free accounts store up to 150 items. Upgrade to **Pro** ($4.99/month) or invite friends (+10 extra slots per friend invite) for unlimited space!
 - **Voice Typing Not Working**: Make sure microphone permissions are allowed in your browser settings (Chrome or Safari recommended).
 - **Background Removal**: For the cleanest photo cutouts, photograph clothing against a contrasting wall or bedsheet.
+- **Wardrobe Import Issues**: Make sure you're using a desktop browser (Chrome or Safari recommended). The import feature doesn't work on mobile devices.
+- **Shopping Assistant Not Working?** Try refreshing the page. Make sure you're logged into your DressApp account and the extension is enabled in your browser settings.

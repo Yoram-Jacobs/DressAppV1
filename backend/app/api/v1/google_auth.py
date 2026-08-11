@@ -214,6 +214,43 @@ async def google_oauth_disconnect(
     return {"status": "disconnected"}
 
 
+@auth_router.get("/re-consent")
+async def google_re_consent(
+    request: Request,
+    user: dict = Depends(get_current_user),
+    with_calendar: bool = Query(
+        default=False,
+        description="When true, also requests calendar.readonly scope.",
+    ),
+) -> dict[str, Any]:
+    """Generate a new Google authorization URL that forces re-consent with
+    the full scope set (including People API scopes for demographics).
+
+    This is needed for users who signed in BEFORE the People API scopes
+    were added — their existing tokens don't have the permissions needed
+    to fetch birthday, phone, address, or gender from Google.
+    """
+    if not calendar_service.enabled:
+        raise HTTPException(503, "Google OAuth not configured on server")
+
+    state = _build_state(
+        user["id"],
+        purpose="google-oauth-link",
+        extra={"reconsent": True},
+    )
+
+    scopes = SCOPES if with_calendar else LOGIN_SCOPES
+    try:
+        url = calendar_service.build_authorization_url(
+            state,
+            request=request,
+            scopes=scopes,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(503, str(exc)) from exc
+    return {"authorization_url": url, "with_calendar": bool(with_calendar)}
+
+
 # -------------------- 2) Sign in / Sign up with Google (NEW) --------------------
 def _frontend_origin(request: Request) -> str:
     """Resolve the public frontend origin for the post-login redirect.
@@ -391,12 +428,55 @@ async def _handle_login_callback(
     if not access_token:
         return _login_error_redirect(origin, "no_access_token")
 
+    # Log granted scopes for diagnostics — helps identify if People API
+    # scopes were silently skipped by Google (restricted scope issue).
+    granted_scopes = (tokens.get("scope") or "").split()
+    people_scopes_needed = [
+        "https://www.googleapis.com/auth/user.birthday.read",
+        "https://www.googleapis.com/auth/user.phonenumbers.read",
+        "https://www.googleapis.com/auth/user.addresses.read",
+        "https://www.googleapis.com/auth/user.gender.read",
+    ]
+    missing = [s for s in people_scopes_needed if s not in granted_scopes]
+    if missing:
+        logger.warning(
+            "google sign-in: People API scopes NOT granted — missing=%s granted=%s. "
+            "Demographics will not be auto-filled. Verify the OAuth consent screen "
+            "is published in Google Cloud Console.",
+            missing,
+            granted_scopes,
+        )
+    else:
+        logger.info(
+            "google sign-in: all People API scopes granted — scopes=%s",
+            granted_scopes,
+        )
+
     # 2) Fetch userinfo (email is the join key).
     try:
         userinfo = await calendar_service.fetch_userinfo(access_token)
     except Exception:  # noqa: BLE001
         logger.exception("Google sign-in userinfo fetch failed")
         return _login_error_redirect(origin, "userinfo_failed")
+
+    # Fetch extended profile (optional/non-blocking)
+    extended_profile = {}
+    try:
+        extended_profile = await calendar_service.fetch_people_profile(access_token)
+        if not extended_profile:
+            # People API returned empty — likely missing scopes. Log the
+            # granted scopes so the admin can diagnose from logs.
+            granted = (tokens.get("scope") or "").split()
+            logger.warning(
+                "google sign-in: People API returned empty for user email=%s — "
+                "granted_scopes=%s. If user.birthday.read / user.gender.read / "
+                "user.phonenumbers.read / user.addresses.read are not in the list, "
+                "the OAuth consent screen needs to be verified in Google Cloud Console.",
+                email,
+                granted,
+            )
+    except Exception as e:
+        logger.warning("Google sign-in People API fetch failed: %s", e)
 
     email = (userinfo.get("email") or "").lower()
     if not email:
@@ -426,6 +506,31 @@ async def _handle_login_callback(
             patch["avatar_url"] = userinfo["picture"]
         if userinfo.get("locale") and not user_doc.get("locale"):
             patch["locale"] = userinfo["locale"]
+            
+        # Autofill extended contact info from Google People API if empty or missing
+        if extended_profile.get("date_of_birth") and (not user_doc.get("date_of_birth") or user_doc.get("date_of_birth") == ""):
+            patch["date_of_birth"] = extended_profile["date_of_birth"]
+        if extended_profile.get("phone") and (not user_doc.get("phone") or user_doc.get("phone") == ""):
+            patch["phone"] = extended_profile["phone"]
+        if extended_profile.get("sex") and (not user_doc.get("sex") or user_doc.get("sex") == ""):
+            patch["sex"] = extended_profile["sex"]
+
+        if extended_profile.get("address"):
+            google_addr = extended_profile["address"]
+            existing_addr = user_doc.get("address") or {}
+            
+            addr_patch = {}
+            for sub_k in ["line1", "line2", "city", "region", "postal_code", "country"]:
+                g_val = google_addr.get(sub_k)
+                e_val = existing_addr.get(sub_k)
+                if g_val and (not e_val or e_val == ""):
+                    addr_patch[sub_k] = g_val
+            
+            if addr_patch:
+                merged_addr = dict(existing_addr)
+                merged_addr.update(addr_patch)
+                patch["address"] = merged_addr
+
         # Re-apply admin allow-list on every Google login — same idempotent
         # behaviour as email/password login.
         new_roles = apply_admin_role(user_doc.get("roles"), email)
@@ -447,21 +552,24 @@ async def _handle_login_callback(
             first_name=userinfo.get("given_name"),
             last_name=userinfo.get("family_name"),
             locale=userinfo.get("locale") or "en-US",
+            date_of_birth=extended_profile.get("date_of_birth"),
+            phone=extended_profile.get("phone"),
+            address=extended_profile.get("address"),
+            sex=extended_profile.get("sex"),
         )
+        # Provision 10 free credits (expiring in 30 days) on signup as per pricing spec
+        new_user.add_credit_bucket(amount=10, credit_type="free", days_until_expiry=30)
         user_doc = new_user.model_dump()
         user_doc["roles"] = apply_admin_role(user_doc.get("roles"), email)
         await repos.insert(db.users, user_doc)
         logger.info("google sign-in: created new user email=%s id=%s", email, new_user.id)
 
-    # 4) Optionally persist calendar tokens (only if the user opted in).
-    if with_calendar:
-        try:
-            await calendar_service.persist_tokens_for_user(user_doc["id"], tokens)
-        except Exception:  # noqa: BLE001
-            # Don't fail the whole sign-in if calendar persistence trips —
-            # surface a soft warning via the URL hash so the frontend can
-            # show a toast.
-            logger.exception("Calendar token persist failed during sign-in")
+    # 4) Persist tokens for the user to mark as Google-connected and enable profile sync.
+    try:
+        await calendar_service.persist_tokens_for_user(user_doc["id"], tokens)
+    except Exception:  # noqa: BLE001
+        logger.exception("Google token persist failed during sign-in")
+        if with_calendar:
             jwt_token = create_access_token(
                 user_doc["id"], {"email": user_doc["email"]}
             )
@@ -503,3 +611,122 @@ async def calendar_upcoming(
 ) -> dict[str, Any]:
     events = await calendar_service.get_events_for_user(user, hours_ahead=hours_ahead)
     return {"events": events, "count": len(events)}
+
+
+@auth_router.post("/sync-profile")
+async def sync_profile_from_google(
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Retrieve user's extended profile details (birthday, phone, address) from Google People API."""
+    tokens = user.get("google_calendar_tokens") or {}
+    if not tokens.get("access_token"):
+        raise HTTPException(status_code=400, detail="Google account not connected.")
+
+    # Check if People API scopes were granted — if not, the People API
+    # calls will silently return empty data, confusing the user.
+    granted_scopes = (tokens.get("scope") or "").split()
+    people_scopes = [
+        "https://www.googleapis.com/auth/user.birthday.read",
+        "https://www.googleapis.com/auth/user.phonenumbers.read",
+        "https://www.googleapis.com/auth/user.addresses.read",
+        "https://www.googleapis.com/auth/user.gender.read",
+    ]
+    missing_people = [s for s in people_scopes if s not in granted_scopes]
+    if missing_people:
+        logger.warning(
+            "sync-profile: People API scopes missing for user %s — missing=%s. "
+            "Returning re-consent prompt.",
+            user["id"],
+            missing_people,
+        )
+        raise HTTPException(
+            status_code=403,
+            detail="missing_people_scopes",
+        )
+
+    try:
+        from google.auth.transport.requests import Request as GoogleAuthRequest
+        from google.oauth2.credentials import Credentials
+        from app.services.calendar_service import GOOGLE_TOKEN_URL
+        
+        scope_val = tokens.get("scope")
+        if isinstance(scope_val, str):
+            token_scopes = scope_val.split(" ")
+        else:
+            token_scopes = tokens.get("scopes") or SCOPES
+            
+        creds = Credentials(
+            token=tokens.get("access_token"),
+            refresh_token=tokens.get("refresh_token"),
+            token_uri=GOOGLE_TOKEN_URL,
+            client_id=calendar_service.client_id,
+            client_secret=calendar_service.client_secret,
+            scopes=token_scopes,
+        )
+        if not creds.valid and creds.refresh_token:
+            creds.refresh(GoogleAuthRequest())
+            db = get_db()
+            await db.users.update_one(
+                {"id": user["id"]},
+                {
+                    "$set": {
+                        "google_calendar_tokens.access_token": creds.token,
+                        "google_calendar_tokens.expires_at": (
+                            datetime.now(timezone.utc) + timedelta(minutes=50)
+                        ).isoformat(),
+                    }
+                },
+            )
+        access_token = creds.token
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Failed to refresh Google credentials: {exc}")
+        
+    extended_profile = await calendar_service.fetch_people_profile(access_token)
+    if not extended_profile:
+        raise HTTPException(status_code=400, detail="No profile details could be retrieved from Google.")
+        
+    db = get_db()
+    patch = {}
+    
+    # Merge Date of Birth
+    dob = extended_profile.get("date_of_birth")
+    if dob:
+        patch["date_of_birth"] = dob
+        
+    # Merge Phone
+    phone = extended_profile.get("phone")
+    if phone:
+        patch["phone"] = phone
+        
+    # Merge Gender
+    sex = extended_profile.get("sex")
+    if sex:
+        patch["sex"] = sex
+        
+    # Merge Address fields defensively
+    if extended_profile.get("address"):
+        google_addr = extended_profile["address"]
+        existing_addr = user.get("address") or {}
+        
+        # Build merged address dict
+        merged_addr = {}
+        for sub_k in ["line1", "line2", "city", "region", "postal_code", "country"]:
+            # Google value takes precedence if present, otherwise keep existing
+            merged_addr[sub_k] = google_addr.get(sub_k) or existing_addr.get(sub_k) or ""
+            
+        patch["address"] = merged_addr
+        
+    if patch:
+        patch["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db.users.update_one({"id": user["id"]}, {"$set": patch})
+        
+    # Retrieve final merged values to return to frontend
+    updated_user = await db.users.find_one({"id": user["id"]}, {"_id": 0}) or {}
+    
+    return {
+        "success": True,
+        "date_of_birth": updated_user.get("date_of_birth") or dob,
+        "phone": updated_user.get("phone") or phone,
+        "address": updated_user.get("address") or extended_profile.get("address"),
+        "sex": updated_user.get("sex") or sex,
+    }

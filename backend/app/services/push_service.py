@@ -84,30 +84,62 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
                 else:
                     web_push_body = clean_body + " · Tap to view recommendations."
 
+    # Write VAPID private key to a temp file if it's PEM format (starts with ---)
+    # or contains newlines, because pywebpush from_string expects DER format.
+    private_key_input = settings.VAPID_PRIVATE_KEY
+    if private_key_input:
+        private_key_input = private_key_input.strip('"').replace("\\n", "\n")
+
+    vapid_key_param = private_key_input
+    temp_key_file = None
+    if private_key_input and "-----BEGIN" in private_key_input:
+        import tempfile
+        import os
+        try:
+            fd, path = tempfile.mkstemp()
+            with os.fdopen(fd, 'w') as f:
+                f.write(private_key_input)
+            temp_key_file = path
+            vapid_key_param = path
+        except Exception as e:
+            logger.error("Failed to create temporary VAPID key file: %s", e)
+
     payload_dict = {
         "title": title,
         "body": web_push_body,
-        "url": "/stylist?tab=match"
+        "url": (payload or {}).get("url") or "/stylist?tab=match",
+        "tag": (payload or {}).get("tag") or "daily-suggestions"
     }
 
     payload_data_str = json.dumps(payload_dict)
 
-    # Send web push to each registered subscription endpoint
+    # Deduplicate subscription list by endpoint to prevent sending duplicate notifications
+    # to the exact same subscription string
+    unique_subs = []
+    seen_endpoints = set()
     for sub in subscriptions:
+        endpoint = sub.get("endpoint")
+        if endpoint and endpoint not in seen_endpoints:
+            seen_endpoints.add(endpoint)
+            unique_subs.append(sub)
+
+    # Send web push to each registered subscription endpoint
+    for sub in unique_subs:
         try:
             # pywebpush blocks synchronously, but since it is a fast HTTP call we can wrap it or call it inline.
             # In a production environment, this could be delegated to a task runner.
             webpush(
                 subscription_info=sub,
                 data=payload_data_str,
-                vapid_private_key=settings.VAPID_PRIVATE_KEY,
+                vapid_private_key=vapid_key_param,
                 vapid_claims={"sub": f"mailto:{settings.VAPID_CLAIM_EMAIL}"}
             )
             logger.info("Sent Web Push successfully to endpoint=%s", sub.get("endpoint")[:45] + "...")
         except WebPushException as ex:
             # Handle expired / gone subscription endpoints (404 Not Found or 410 Gone)
-            if ex.response is not None and ex.response.status_code in (404, 410):
-                logger.info("Subscription endpoint has expired (HTTP %d). Removing from user.", ex.response.status_code)
+            # or unauthorized / forbidden endpoints (401, 403) due to VAPID key mismatch
+            if ex.response is not None and ex.response.status_code in (401, 403, 404, 410):
+                logger.info("Subscription endpoint has expired or has VAPID mismatch (HTTP %d). Removing from user.", ex.response.status_code)
                 await db.users.update_one(
                     {"id": user_id},
                     {"$pull": {"web_push_subscriptions": {"endpoint": sub["endpoint"]}}}
@@ -116,5 +148,12 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
                 logger.error("WebPushException sending notification: %s", ex)
         except Exception as e:
             logger.error("General error sending Web Push notification: %s", e)
+
+    if temp_key_file:
+        try:
+            import os
+            os.unlink(temp_key_file)
+        except Exception as e:
+            logger.error("Failed to unlink temporary VAPID key file: %s", e)
 
     return {k: v for k, v in doc.items() if k != "_id"}

@@ -1,25 +1,28 @@
-# DressApp Monetization & Billing Engine
+# Механизм монетизации и выставления счетов DressApp
 
-This document provides a comprehensive architectural overview, user manual, and technology deep-dive of the monetization, subscription billing, and growth-loop mechanics in DressApp.
+Этот документ представляет собой всесторонний архитектурный обзор, руководство пользователя и глубокий технический анализ механизмов монетизации, биллинга подписок и вирусных циклов роста в DressApp.
 
 ---
 
-## 1. Executive Summary & Value Proposition
+## 1. Резюме и ценностное предложение
 
-### High-Level Overview
-DressApp implements a hybrid freemium and growth-loop monetization model. Free tier users are allocated a baseline closet capacity of **150 garments**. When limits are reached, the platform gates new garment uploads behind a **402 Payment Required** guard, offering two distinct paths to expansion:
-1.  **Pro Subscription (Paid)**: A premium subscription (Monthly at $4.99 or Yearly at $29.99) powered by a native **PayPal Subscriptions REST API** integration.
-2.  **Viral Growth Loop (Free)**: A referral program where inviting friends grants the referrer **+10 capacity slots** per registered signup, expanding their baseline closet indefinitely.
+### Общее описание
+DressApp использует гибридную модель SaaS-подписок и ежедневного ограничения использования (utility gating):
+1. **Тарифные планы подписки (SaaS)**: Тарифы с фиксированной оплатой (Free, Manager, Professional), которые определяют емкость хранения гардероба, ежедневные лимиты на стилизацию ИИ и доступ к расширенным функциям (например, создание рекламных кампаний).
+2. **Лимиты ежедневной квоты (Бесплатный тариф Free)**: Ограниченное использование ИИ на бесплатном тарифе Free, при котором пользователи могут совершать не более 10 запросов в день. Логика списания и 30-дневный срок действия баланса ИИ применяются *только* к учетным записям Free и Trial (пробный период).
+3. **Вирусный цикл роста**: Реферальная программа, позволяющая пользователям бесплатного тарифа Free органически расширять базовую емкость своего гардероба, делясь ссылками-приглашениями.
+4. **Локальные платежи (Шлюз Atzmai)**: Встроенная поддержка платежей в Израиле (Bit, местные кредитные карты) в ILS (шекелях). Поскольку Atzmai поддерживает только ILS, цены в USD конвертируются с использованием API актуального обменного курса в режиме реального времени.
 
-### Architectural Flow
+### Архитектурный поток
 
 ```mermaid
 graph TD
     User([User App Client])
-    Gateway[Payments API Gateway /paypal]
+    Gateway[Payments API Gateway /atzmai]
     Auth[Auth Router /auth/register]
     Closet[Closet Router /closet/item]
     DB[(MongoDB Atlas)]
+    AtzmaiAPI[Atzmai Payment API]
     PayPalAPI[PayPal Subscriptions API]
 
     %% Closet Upload Limit Gating
@@ -29,120 +32,103 @@ graph TD
     Closet -.->|If Exceeded & Sub Inactive: HTTP 402| User
     
     %% Paid Subscription Checkout
-    User -->|4. Post /paypal/subscribe| Gateway
-    Gateway -->|5. Create Intent| PayPalAPI
-    PayPalAPI -->|6. Return Approve URL| Gateway
-    Gateway -->|7. Return Approve URL| User
-    User -->|8. User Approves Payment| PayPalAPI
-    User -->|9. Post /paypal/subscribe/capture| Gateway
-    Gateway -->|10. Verify Activation| PayPalAPI
-    Gateway -->|11. Write Active Sub| DB
+    User -->|4. Post /atzmai/subscribe| Gateway
+    Gateway -->|5. Create Intent (ILS)| AtzmaiAPI
+    AtzmaiAPI -->|6. Return Payment URL| Gateway
+    Gateway -->|7. Return Payment URL| User
+    User -->|8. User Approves Payment| AtzmaiAPI
+    AtzmaiAPI -->|9. Trigger Webhook| Gateway
+    Gateway -->|10. Capture Transaction| DB
     
     %% Viral Referral Mechanics
-    User -->|12. Register with referrer_id| Auth
-    Auth -->|13. Increment closet_capacity_bonus| DB
+    User -->|11. Register with referrer_id| Auth
+    Auth -->|12. Increment closet_capacity_bonus| DB
 ```
-
-### User Value Proposition
-*   **Frictionless Upgrade Path**: Premium features (unlimited closet space and priority GPU background matting) can be unlocked instantly.
-*   **Organic Limit Expansion**: Users who do not wish to pay can increase their limits simply by sharing a link, keeping the core utility accessible to viral advocates.
-*   **PayPal Mock-Testing Mode**: Developers and staging testers can evaluate the end-to-end checkout flow without any real credit cards or active merchant billing plans.
 
 ---
 
-## 2. Comprehensive User Manual
+## 2. Тарифные планы подписки и структура цен
 
-### Visual Interface Topology
-The user profile page ([Profile.jsx](file:///C:/DressApp_AG/frontend/src/pages/Profile.jsx)) hosts the Subscription Management widget under the **Subscription & Limits** section:
+### Тарифы
 
-```
-+-------------------------------------------------------------------+
-|  [Crown] SUBSCRIPTION & LIMITS                                    v|
-+-------------------------------------------------------------------+
-|  Free Plan: 85 / 150 items used                                   |
-|                                                                   |
-|  Closet Capacity                             85 / 150 items       |
-|  [=======================>.....................................]  |
-|                                                                   |
-|  +----------------------------+   +----------------------------+  |
-|  | Monthly Plan               |   | Annual Plan   [BEST VALUE] |  |
-|  | Flexible billing cycle.    |   | Save 50% vs monthly rate.  |  |
-|  |                            |   |                            |  |
-|  | $4.99 / month              |   | $29.99 / year              |  |
-|  |                            |   |                            |  |
-|  | [ Upgrade Monthly ]        |   | [ Upgrade Annual ]         |  |
-|  +----------------------------+   +----------------------------+  |
-|                                                                   |
-|  Refer Friends (Get +10 slots per signup):                        |
-|  [ Copy Invite Link ]                                             |
-+-------------------------------------------------------------------+
-```
+| Plan | Price (Monthly) | Closet Capacity | AI Credits Allocation | Key Features |
+| :--- | :--- | :--- | :--- | :--- |
+| **Free Plan** | 0,00 $ / месяц | Базовый лимит: 50 вещей | 10 бесплатных ежедневных кредитов (срок действия 30 дней) | Базовая организация, поддержка сообщества, реферальное расширение (+10 слотов за каждую регистрацию, максимум до 200 вещей) |
+| **Manager (Pro)** | 4,99 $ / месяц | Безлимитно | Безлимитные ежедневные операции | 14-дневный бесплатный пробный период, начальный пакет из 50 кредитов, продажа и аренда на маркетплейсе, Trend Scout, запланированные уведомления |
+| **Professional** | 9,99 $ / месяц | Безлимитно | Безлимитные ежедневные операции | 30-дневный бесплатный пробный период, начальный пакет из 300 кредитов, все функции тарифа Manager, поддержка создания рекламных кампаний (плата 1 $/день, макс. 3 кампании одновременно) |
 
-### Mode & Workflow Walkthroughs
+### Предоплаченные пакеты кредитов ИИ (Устарело - Obsolete)
+* Предоплаченные пакеты пополнения баланса ИИ **больше не поддерживаются**.
+* Чтобы избежать перерывов в обслуживании, пользователям бесплатного тарифа Free необходимо перейти на тарифный план Manager или Professional.
 
-#### A. Upgrading to DressApp Pro (Paid Flow)
-1.  **Initiating Upgrade**: The user selects their plan (Monthly or Annual) and clicks **Upgrade**.
-2.  **Order Registration**: The client issues a `POST /paypal/subscribe` request. The backend contacts PayPal, generates a subscription ID, and returns an `approve_url`.
-3.  **Payment Processing**: The client browser redirects to the PayPal Sandbox checkout page (or is intercepted locally in mock mode). The user logs in and approves the billing agreement.
-4.  **Redirection & Capture**: PayPal redirects the browser back to `/me?sub_status=success&token=SUBSCRIPTION_ID`.
-5.  **Activation**: The client detects the search params, issues `POST /paypal/subscribe/capture/{subscription_id}`, and refreshes the user session. The limits indicator vanishes and displays **Active Premium**.
-
-#### B. Referral Loop Activation (Free Flow)
-1.  **Invite Share**: The user clicks **Copy Invite Link**, which appends their database ID to the URL: `https://dressapp.co/register?ref=USER_ID`.
-2.  **Tracking & Referral Staging**: When the referred friend visits the register URL, the client-side router caches the `ref` token in `sessionStorage` under the key `referrer_id`.
-3.  **Registration Bridge**: Upon submitting the registration form, the payload includes the staged `referrer_id`.
-4.  **Reward Grant**: The backend registers the new account, finds the referrer, and atomically increments their `closet_capacity_bonus` by `10`.
+### Истечение срока действия кредитов и приоритет списания (Логика FIFO)
+* **Правило**: Истечение срока действия кредитов (30 дней) и логика приоритета списания FIFO (первым пришел — первым ушел) применяются **только к тарифным планам Free и Trial (пробный период)**.
+* **Платные тарифы**: Пользователи с активной подпиской Manager или Professional получают неограниченное количество ежедневных операций ИИ и не подлежат учету кредитов, истечению их срока действия или проверкам приоритета списания.
 
 ---
 
-## 3. Technology Stack & Capability Deep-Dive
+## 3. Локальные платежи и выставление счетов (Шлюз Atzmai)
 
-### Data Schema Definitions
-The MongoDB schema in [schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) holds the user's billing status:
+Для учетных записей, зарегистрированных в Израиле, DressApp интегрируется с **платежным шлюзом Atzmai** для обработки местных транзакций в ILS (шекелях):
+1. **Обработка только в ILS**: Шлюз Atzmai обрабатывает местные платежи исключительно в ILS.
+2. **Конвертация валюты**: Стоимость подписок и рекламных кампаний в USD динамически конвертируется в ILS перед созданием ссылки с использованием API актуального обменного курса (с возвратом к фиксированному курсу 3,70, если API недоступен).
+3. **Webhook-верификация и биллинг кампаний**:
+   - Общее отслеживание транзакций через `atzmai_topups` устарело.
+   - Тем не менее, `atzmai_topups` остается активным для фиксации и проверки **ежедневных платежей за кампании (плата 1 $/день)**.
+   - При успешном списании средств дата `last_daily_payment_date` кампании обновляется на текущую дату.
+4. **Автоматический документооборот в PDF**: После успешного подтверждения транзакции бэкенд запрашивает биллинговый API Atzmai для генерации и скачивания официальных PDF-файлов квитанций и счетов-фактур. Они отправляются покупателю напрямую в виде вложений к электронному письму.
+
+---
+
+## 4. Технологический стек и детальный разбор кода
+
+### Определение схем данных (Data Schema Definitions)
+
+Схема MongoDB в [schemas.py](file:///C:/DressApp_AG/backend/app/models/schemas.py) отслеживает подписки пользователей и емкость гардероба:
 
 ```python
 class SubscriptionInfo(BaseModel):
     is_active: bool = False
     plan_type: Literal["free", "monthly", "yearly"] = "free"
-    stripe_subscription_id: str | None = None  # Legacy support
+    tier: Literal["free", "manager", "professional"] = "free"
+    stripe_subscription_id: str | None = None
     paypal_subscription_id: str | None = None
-    expires_at: str | None = None              # ISO timestamp
-    cancelled_at: str | None = None            # ISO timestamp
+    atzmai_subscription_id: str | None = None
+    expires_at: str | None = None
+    cancelled_at: str | None = None
 
 class User(BaseDoc):
-    # ... other profile documents ...
     subscription: SubscriptionInfo = Field(default_factory=SubscriptionInfo)
-    closet_capacity_bonus: int = 0             # Earned via referrals
+    closet_capacity_bonus: int = 0
 ```
 
-### API Routing & Gateway Contracts
-
-#### Gated Endpoints ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
-During item insertion, the system verifies limits using:
+### Контроль ограничений емкости гардероба ([closet.py](file:///C:/DressApp_AG/backend/app/api/v1/closet.py))
+При загрузке вещей система контролирует соблюдение лимитов базы данных с жестким ограничением в 200 вещей для рефералов:
 ```python
-capacity = 150 + user.get("closet_capacity_bonus", 0)
-item_count = await db.closet_items.count_documents({"owner_id": user_id, "status": {"$ne": "deleted"}})
-
-if item_count >= capacity and not user.get("subscription", {}).get("is_active", False):
-    raise HTTPException(status_code=402, detail="Closet capacity limit exceeded. Upgrade required.")
+capacity_limit = min(200, 50 + user.get("closet_capacity_bonus", 0))
+if current_count >= capacity_limit and not user.get("subscription", {}).get("is_active", False):
+    raise HTTPException(
+        status_code=402,
+        detail={
+            "code": "closet_capacity_exceeded",
+            "message": f"You have reached your free closet capacity of {capacity_limit} items. Upgrade to Manager or Professional to add more items."
+        }
+    )
 ```
 
-#### Billing Actions ([payments.py](file:///C:/DressApp_AG/backend/app/api/v1/payments.py))
-*   `POST /paypal/subscribe`: Reads plan configurations based on request payload and requests a billing agreement token from PayPal.
-*   `POST /paypal/subscribe/capture/{subscription_id}`: Retrieves subscription details from the PayPal API, extracts the start date and plan frequency, calculates the expiration timestamp, and saves the active status in the database.
-*   `POST /paypal/subscribe/cancel`: Contacts PayPal to terminate the billing agreement and marks the subscription object in MongoDB as scheduled for termination upon expiry.
-
-### Mock Integration Framework ([paypal_client.py](file:///C:/DressApp_AG/backend/app/services/paypal_client.py))
-To simplify local and staging environment testing, the integration uses `PAYPAL_MOCK_MODE=true`:
+### Логика конвертации валюты ([atzmai_client.py](file:///C:/DressApp_AG/backend/app/services/atzmai_client.py))
+Динамически конвертирует суммы в USD в ILS перед отправкой запроса платежному шлюзу Atzmai:
 ```python
-if _is_mock_token(token) or plan_id.startswith("P-MOCK"):
-    mock_sub_id = f"MOCK-SUB-{uuid.uuid4().hex[:14].upper()}"
-    # Instead of navigating to PayPal, redirect immediately to return_url with mock token
-    checkout_href = f"{return_url}&token={mock_sub_id}" if return_url else ...
-    return {
-        "id": mock_sub_id,
-        "status": "APPROVAL_PENDING",
-        "links": [{"href": checkout_href, "rel": "approve", "method": "GET"}]
-    }
+async def get_usd_to_ils_rate() -> float:
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get("https://open.er-api.com/v6/latest/USD", timeout=5.0)
+            if resp.status_code == 200:
+                data = resp.json()
+                rate = data.get("rates", {}).get("ILS")
+                if rate:
+                    return float(rate)
+    except Exception:
+        pass
+    return 3.70
 ```
-This bypasses external dependencies entirely, making end-to-end checkout testing accessible instantly to local developers.

@@ -737,122 +737,112 @@ async def _call_self_hosted(
 # bag in front of a dress, shoes overlapping the hem of trousers are
 # all legitimate overlaps that the user expects to see as separate
 # cards in their closet.
-_NMS_CATEGORIES: frozenset[str] = frozenset({"top", "bottom", "dress"})
+_NMS_CATEGORIES: frozenset[str] = frozenset({"top", "bottom", "dress", "outerwear", "footwear", "accessory", "headwear"})
 
-# Two thresholds, OR-combined:
-#   * containment of smaller-in-larger — catches "phantom inside real"
-#     (e.g. SegFormer's tight Upper-clothes mask fully inside its
-#     looser Dress mask on a long coat).
-#   * IoU — catches "two overlapping masks of similar size" (e.g.
-#     a pair of trousers split by a shadow into two adjacent blobs).
-# Empirically 0.70 / 0.50 fire on the coat / split-trousers cases in
-# the test closet without firing on legitimately-overlapping garments
-# like a tucked-in shirt + visible waistband.
-_NMS_CONTAINMENT_THRESHOLD: float = 0.70
-_NMS_IOU_THRESHOLD: float = 0.50
+_NMS_CONTAINMENT_THRESHOLD: float = 0.65
+_NMS_IOU_THRESHOLD: float = 0.45
 
 
 def _suppress_overlapping_garments(
     by_label: dict[str, dict[str, Any]],
 ) -> dict[str, dict[str, Any]]:
-    """Patch 12 (May 2026) — inter-label NMS for SegFormer outputs.
+    """Patch 12h (Aug 2026) — Dilated pixel & Bounding Box NMS.
 
-    Removes / merges per-label detections that occupy substantially the
-    same pixels but were classified under different SegFormer labels.
-
-    Two cases this fixes
-    --------------------
-    1. **Phantom-inside-real** (e.g. long coat fires both ``Upper-clothes``
-       and ``Dress`` — the tight Upper-clothes mask sits entirely inside
-       the looser Dress mask). Containment-of-smaller-in-larger ≥
-       ``_NMS_CONTAINMENT_THRESHOLD`` → drop the smaller.
-
-    2. **Split-by-shadow** (e.g. trousers fire ``Pants`` on the upper
-       half and ``Skirt`` on the lower half because a shadow band
-       confused the per-pixel classifier). IoU is low but containment
-       on the smaller half is also low — instead this is caught by
-       same-category masks that *don't* overlap much being unioned
-       (see below).
-
-    Algorithm
-    ---------
-    * Sort garment-class entries (top / bottom / dress) by descending
-      mask area.
-    * For each smaller entry, compare against every larger entry kept
-      so far:
-        - If ``containment ≥ 0.70`` OR ``IoU ≥ 0.50``:
-            - **Same category** → union the smaller mask into the
-              larger and drop the smaller (handles "Pants" + "Skirt"
-              both = "bottom" overlapping a single trouser).
-            - **Different category** → drop the smaller (handles
-              "Upper-clothes" inside "Dress").
-
-    Accessories, footwear, and headwear are passed through untouched.
-
-    Idempotent and safe on empty / single-entry input.
+    Fixes SegFormer per-pixel argmax 0-intersection bug. Because raw SegFormer
+    argmax masks are mutually exclusive, raw ``inter`` is always 0. By computing
+    bounding box containment + dilated mask intersection, we detect sub-part
+    fragments (like phantom Hat/Bag on shoes or split garments) and merge them.
     """
     if not by_label:
         return by_label
 
+    from scipy import ndimage
+
     nms_items: list[tuple[str, dict[str, Any], int]] = []
     passthrough: dict[str, dict[str, Any]] = {}
     for lbl, item in by_label.items():
-        if item.get("category") in _NMS_CATEGORIES:
-            try:
-                area = int(item["mask"].sum())
-            except Exception:  # noqa: BLE001
-                area = 0
-            if area > 0:
-                nms_items.append((lbl, item, area))
-            # else: zero-area item drops on the floor — useless anyway.
+        try:
+            area = int(item["mask"].sum())
+        except Exception:  # noqa: BLE001
+            area = 0
+        if area > 0:
+            nms_items.append((lbl, item, area))
         else:
             passthrough[lbl] = item
 
-    # No or one garment-class detection → nothing to suppress.
     if len(nms_items) < 2:
         for lbl, item, _ in nms_items:
             passthrough[lbl] = item
         return passthrough
 
-    # Sort largest → smallest so we always compare new candidates
-    # against the already-kept "winners".
+    # Sort largest → smallest so we compare candidates against dominant items
     nms_items.sort(key=lambda t: t[2], reverse=True)
+
+    def _bbox(m: np.ndarray) -> tuple[int, int, int, int] | None:
+        ys, xs = np.where(m)
+        if not len(ys):
+            return None
+        return int(ys.min()), int(xs.min()), int(ys.max()), int(xs.max())
 
     kept: list[tuple[str, dict[str, Any], int]] = []
     suppressed: list[tuple[str, str, str, float, float]] = []
     for lbl, item, area in nms_items:
         merged = False
         dropped = False
+        item_cat = item.get("category")
+        bb_item = _bbox(item["mask"])
+        dilated_item = ndimage.binary_dilation(item["mask"], iterations=10)
+
         for kept_idx, (kept_lbl, kept_item, kept_area) in enumerate(kept):
-            inter = int(np.logical_and(item["mask"], kept_item["mask"]).sum())
-            if inter == 0:
+            kept_cat = kept_item.get("category")
+            bb_kept = _bbox(kept_item["mask"])
+
+            # 1. Dilated pixel intersection & containment
+            dilated_kept = ndimage.binary_dilation(kept_item["mask"], iterations=10)
+            pixel_inter = int(np.logical_and(dilated_item, dilated_kept).sum())
+            pixel_containment = pixel_inter / float(area) if area > 0 else 0.0
+
+            # 2. Bounding box containment & IoU
+            bbox_containment = 0.0
+            bbox_iou = 0.0
+            if bb_item and bb_kept:
+                y1, x1, y2, x2 = bb_item
+                Y1, X1, Y2, X2 = bb_kept
+                iy = max(0, min(y2, Y2) - max(y1, Y1))
+                ix = max(0, min(x2, X2) - max(x1, X1))
+                i_area = iy * ix
+                a_item = max(1, (y2 - y1) * (x2 - x1))
+                a_kept = max(1, (Y2 - Y1) * (X2 - X1))
+                bbox_containment = i_area / float(a_item)
+                bbox_iou = i_area / float(a_item + a_kept - i_area)
+
+            # Footwear rule: any fragment overlapping footwear (dilated >= 10% or bbox containment >= 35%) is footwear
+            is_footwear_overlap = (kept_cat == "footwear" or item_cat == "footwear") and (
+                pixel_containment >= 0.10 or bbox_containment >= 0.35 or bbox_iou >= 0.20
+            )
+
+            is_general_overlap = (
+                pixel_containment >= 0.40 or bbox_containment >= 0.60 or bbox_iou >= 0.45
+            )
+
+            if not (is_footwear_overlap or is_general_overlap):
                 continue
-            union = kept_area + area - inter
-            iou = inter / union if union > 0 else 0.0
-            # Containment of the smaller (= ``item``) inside the larger
-            # (= ``kept_item``). Larger-first sort guarantees this.
-            containment = inter / area if area > 0 else 0.0
-            if containment < _NMS_CONTAINMENT_THRESHOLD and iou < _NMS_IOU_THRESHOLD:
-                continue
-            same_category = item.get("category") == kept_item.get("category")
-            if same_category:
-                # Union the smaller into the larger and drop the smaller.
-                kept_item["mask"] = np.maximum(
-                    kept_item["mask"], item["mask"]
-                )
-                # Refresh area on the kept entry so subsequent comparisons
-                # see the post-union mask.
-                kept[kept_idx] = (
-                    kept_lbl,
-                    kept_item,
-                    int(kept_item["mask"].sum()),
-                )
-                merged = True
+
+            # Merge smaller into kept_item
+            kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
+            kept[kept_idx] = (
+                kept_lbl,
+                kept_item,
+                int(kept_item["mask"].sum()),
+            )
+            merged = True
+
             suppressed.append(
-                (lbl, kept_lbl, item.get("category") or "?", iou, containment)
+                (lbl, kept_lbl, item_cat or "?", bbox_iou, bbox_containment)
             )
             dropped = True
             break
+
         if not (merged or dropped):
             kept.append((lbl, item, area))
 
@@ -1014,19 +1004,20 @@ async def parse_garments(image_bytes: bytes) -> list[dict[str, Any]]:
     # 2) Collapse Left-shoe + Right-shoe into a single "Shoes" item —
     #    users think of them as one pair, and `_looks_already_cropped`
     #    handles single-item footwear photos more cleanly this way.
-    left = by_label.pop("Left-shoe", None)
-    right = by_label.pop("Right-shoe", None)
-    if left or right:
-        pair_masks = [x["mask"] for x in (left, right) if x]
-        combined = pair_masks[0]
-        for m in pair_masks[1:]:
-            combined = np.maximum(combined, m)
-        by_label["Shoes"] = {
-            "label": "Shoes",
-            "category": "footwear",
-            "score": 0.95,
-            "mask": combined,
-        }
+    shoe_keys = [k for k in list(by_label.keys()) if k.startswith(("Left-shoe", "Right-shoe", "Shoes"))]
+    if shoe_keys:
+        pair_items = [by_label.pop(k) for k in shoe_keys]
+        pair_masks = [x["mask"] for x in pair_items if x and x.get("mask") is not None]
+        if pair_masks:
+            combined = pair_masks[0]
+            for m in pair_masks[1:]:
+                combined = np.maximum(combined, m)
+            by_label["Shoes"] = {
+                "label": "Shoes",
+                "category": "footwear",
+                "score": 0.95,
+                "mask": combined,
+            }
 
     # 2a) Patch 12e (May 2026) — Option B2 pair recovery for footwear.
     #     When the unified Shoes mask is anatomically lopsided (one

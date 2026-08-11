@@ -2,12 +2,10 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { BrandLogo } from '@/components/BrandLogo';
@@ -16,22 +14,9 @@ import { LanguagePicker } from '@/components/LanguagePicker';
 export default function Login() {
   const { t } = useTranslation();
   const nav = useNavigate();
-  const { login, devBypass } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { devBypass } = useAuth();
   const [busy, setBusy] = useState(false);
   const [withCalendar, setWithCalendar] = useState(false);
-
-  const submit = async (e) => {
-    e.preventDefault();
-    setBusy(true);
-    try {
-      await login(email, password);
-      nav('/home');
-    } catch (err) {
-      toast.error(err?.response?.data?.detail || t('auth.signInFailed'));
-    } finally { setBusy(false); }
-  };
 
   const dev = async () => {
     setBusy(true);
@@ -103,41 +88,12 @@ export default function Login() {
               </label>
             </div>
 
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-px bg-border flex-1" />
-              <div className="caps-label text-muted-foreground">{t('common.or')}</div>
-              <div className="h-px bg-border flex-1" />
-            </div>
-
-            <form onSubmit={submit} className="space-y-4" data-testid="login-form">
-              <div>
-                <Label htmlFor="email">{t('auth.email')}</Label>
-                <Input id="email" type="email" autoComplete="email" required
-                  value={email} onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t('auth.emailPlaceholder')} data-testid="login-email-input" />
-              </div>
-              <div>
-                <Label htmlFor="password">{t('auth.password')}</Label>
-                <Input id="password" type="password" autoComplete="current-password" required
-                  value={password} onChange={(e) => setPassword(e.target.value)}
-                  data-testid="login-password-input" />
-              </div>
-              <Button type="submit" disabled={busy} className="w-full rounded-xl" data-testid="login-submit-button">
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t('auth.signIn')}
-              </Button>
-            </form>
-
             <Button type="button" variant="ghost" onClick={dev} disabled={busy}
               className="w-full rounded-xl mt-4 text-muted-foreground hover:text-foreground" data-testid="login-dev-bypass-button">
               <Sparkles className="h-4 w-4 me-2" /> {t('auth.continueAsDev')}
             </Button>
 
-            <p className="mt-6 text-sm text-muted-foreground text-center">
-              {t('auth.noAccount')}{' '}
-              <Link to="/register" className="text-[hsl(var(--accent))] underline underline-offset-4" data-testid="login-register-link">
-                {t('auth.createOne')}
-              </Link>
-            </p>
+
           </CardContent>
         </Card>
       </div>

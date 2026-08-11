@@ -19,6 +19,7 @@ async def _call_gemma_space(
     timeout: float | None = None,
     json_schema: dict[str, Any] | None = None,
     think: bool = False,
+    id_slot: int | None = None,
 ) -> str:
     """Phase O.3 — call the self-hosted Gemma-4 E2B HF Space.
 
@@ -47,23 +48,32 @@ async def _call_gemma_space(
     if not space_url:
         raise RuntimeError("EYES_GEMMA_SPACE_URL not configured.")
 
+    # Build OpenAI-compatible messages with multimodal format
+    # Gemma-4 expects image_url content part according to the eyes container
+    messages = []
+    
+    # System message
+    messages.append({"role": "system", "content": system_prompt})
+    
+    # User message with image and text (OpenAI multimodal format)
+    # Image must precede text for optimal attention mapping
+    user_content = [
+        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_b64_jpeg}"}},
+        {"type": "text", "text": user_text}
+    ]
+    messages.append({"role": "user", "content": user_content})
+    
+    # Build the payload in OpenAI-compatible format for the eyes proxy
     payload: dict[str, Any] = {
-        "system": system_prompt,
-        "prompt": user_text,
-        "image_b64": image_b64_jpeg,
-        "image_mime": "image/jpeg",
+        "messages": messages,
         "max_tokens": int(max_tokens),
         "temperature": float(temperature),
-        # Trigger llama.cpp grammar-constrained JSON when the Space
-        # supports it; older builds ignore the flag harmlessly.
         "json_mode": True,
-        # Switchable reasoning. The current dressapp-eyes container
-        # launches llama-server with enable_thinking=false; we still
-        # send the flag every call so a future proxy build can honour
-        # per-request overrides without redeploys.
         "enable_thinking": bool(think),
-        "think": bool(think),  # alias for forward-compat
+        "think": bool(think),
     }
+    if id_slot is not None:
+        payload["id_slot"] = id_slot
     if json_schema is not None:
         # The dressapp-eyes proxy should forward this to llama-server's
         # OpenAI-compatible response_format. Unknown to older proxies
@@ -444,6 +454,7 @@ _LANG_NAMES = {
     "zh": "Chinese (Simplified)",
     "ja": "Japanese",
     "hi": "Hindi",
+    "nl": "Dutch",
 }
 
 
@@ -953,3 +964,276 @@ _SEGFORMER_KIND_HUMAN_LABEL: dict[str, str] = {
     "accessory": "Accessories (belt / scarf / sunglasses / bag)",
     "headwear": "Accessories (hat / cap / beanie)",
 }
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Patch M23 (Aug 2026) — Gemma per-attribute streaming
+#
+# Problem: one 2400-token Gemma call takes 82-111 s on the CPU-only VPS.
+# After 111 s the stream silently dies (Caddy idle timeout).
+#
+# Solution: split the 17 fields into 5 focused attribute groups and send
+# one /predict request per group.  Each group outputs 50-250 tokens
+# (~8-22 s on CPU) and the result is immediately yielded to the NDJSON
+# stream so the frontend can update form fields progressively.
+#
+# Total wall time: ~60-75 s (sequential, 5 calls) vs 82-111 s (single).
+# Time to first field: ~8-14 s vs 82-111 s.
+# No silent kill: each call finishes well within any proxy idle timeout.
+# ─────────────────────────────────────────────────────────────────────
+
+# Each entry: (group_name, field_names, max_output_tokens, system_snippet)
+# Groups are ordered so fast enum-heavy groups fire first.
+ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
+    (
+        "identity",
+        ["name", "title", "category", "sub_category", "item_type"],
+        280,
+        (
+            'Identify the garment:\n'
+            '- name: 2-5 unique, distinguishing words (e.g. "heavyweight boxy tee", "hooded windbreaker")\n'
+            '- title: short fallback title matching name (e.g. "Boxy Tee", "Windbreaker Jacket")\n'
+            '- category: Top | Bottom | Outerwear | Full Body | Footwear | Accessories | Underwear\n'
+            '- sub_category: e.g. Shirt, Pants, Jacket, Dress, Sneakers\n'
+            '- item_type: specific type, e.g. Oxford shirt, Bomber jacket, Parka'
+        )
+    ),
+    (
+        "visual",
+        ["colors", "pattern", "fabric_materials"],
+        320,
+        (
+            'Analyze visual properties:\n'
+            '- colors: list of [{"name": "color name", "pct": 0-100}] summing to 100\n'
+            '- pattern: solid | striped | plaid | floral | herringbone | polka | paisley | geometric | abstract\n'
+            '- fabric_materials: list of [{"name": "fabric", "pct": 0-100}] summing to 100 (infer composition)'
+        )
+    ),
+    (
+        "context",
+        ["gender", "dress_code", "season", "tradition"],
+        120,
+        (
+            'Analyze context of use:\n'
+            '- gender: men | women | unisex | kids\n'
+            '- dress_code: casual | smart-casual | business | formal | athletic | loungewear\n'
+            '- season: array of spring, summer, fall, winter, all\n'
+            '- tradition: cultural/religious style if clearly visible (e.g. arabic, jewish, indian), else null'
+        )
+    ),
+    (
+        "condition",
+        ["state", "condition", "quality", "size", "brand"],
+        160,
+        (
+            'Analyze physical condition:\n'
+            '- state: new | used\n'
+            '- condition: bad | fair | good | excellent\n'
+            '- quality: budget | mid | premium | luxury\n'
+            '- size: readable size label/tag in photo, else null\n'
+            '- brand: legibly visible brand name, else null'
+        )
+    ),
+    (
+        "narrative",
+        ["caption", "price_cents", "repair_advice", "tags"],
+        520,
+        (
+            'Generate narrative fields:\n'
+            '- caption: ONE confident vivid sentence (max 240 chars) describing silhouette and key details. No hedging!\n'
+            '- price_cents: estimated resale value in USD cents as integer, or null\n'
+            '- repair_advice: short actionable restoration tip if condition is bad, else null\n'
+            '- tags: array of 3 to 8 searchable keywords'
+        )
+    ),
+]
+
+# Text-heavy groups that need language localisation for free-text fields.
+_TEXT_GROUPS = {"identity", "narrative"}
+
+
+async def call_gemma_space_stream_attributes(
+    *,
+    image_b64_jpeg: str,
+    language: str | None = None,
+    timeout_per_group: float | None = None,
+    segformer_label: str | None = None,
+    segformer_category: str | None = None,
+    request_id: str | None = None,
+    id_slot: int | None = None,
+    is_single_item: bool = False,
+) -> "AsyncIterator[tuple[str, list[str], dict[str, Any]]]":
+    """Patch M23 — per-attribute streaming for Gemma on CPU.
+
+    Sends one focused /predict request per attribute group and yields
+    ``(group_name, field_names, partial_dict)`` as each call resolves.
+
+    Callers ``async for`` over this generator and emit an NDJSON
+    ``{"type": "field", ...}`` frame for each yielded tuple, so the
+    frontend can progressively fill the Add-Item form while the next
+    group is still being processed by the model.
+
+    The 5-group split reduces the single 2400-token call (82-111 s) to
+    5 calls of 50-280 tokens each (~8-22 s per group), cutting the
+    total wall time to ~60-75 s while giving the user visible results
+    within ~10 s.
+
+    On any individual group failure the generator yields an empty dict
+    for that group and continues — the final assembled analysis will
+    simply be missing those fields, which is better than failing the
+    entire analysis.
+    """
+    # Per-group timeout: default to max(45s, EYES_GEMMA_TIMEOUT_S/3).
+    # 45 s is generous for 280 tokens at 35 ms/token (~10 s generation
+    # + ~30 s image prefill overhead worst-case on a cold CPU).
+    tpg: float = timeout_per_group or max(
+        45.0, float(settings.EYES_GEMMA_TIMEOUT_S) / 3.0
+    )
+
+    lang_code = (language or "en").lower()
+    lang_name = _LANG_NAMES.get(lang_code, lang_code) if lang_code != "en" else None
+
+    for group_name, field_names, max_tokens, sys_snippet in ATTRIBUTE_GROUPS:
+        # Build stitched system prompt: Header + Style Rules (Common & Identical across groups to hit cache)
+        first_part = "You are The Eyes — DressApp's visual garment analyst. Your job is to describe the garment in the photo in exhaustive, merchandisable detail for an Add-Item form. Be confident, concise, and never invent brand names or details that are not visible.\n"
+        if request_id:
+            first_part = f"Request ID: {request_id}\n\n" + first_part
+
+        sys_parts = [
+            first_part,
+            "Style Rules:\n"
+            "- CONFIDENCE: Do not hedge (do not use 'seems', 'appears', 'looks like', 'probably'). State observations directly.\n"
+            "- VOICE: Thoughtful, professional editor. No markdown, emojis, or sales pitch."
+        ]
+        
+        # Inject category restriction based on SegFormer detection (ONLY if NOT is_single_item)
+        if segformer_category and not is_single_item:
+            mapped_cat = None
+            if segformer_category == "top":
+                mapped_cat = "Top or Outerwear"
+            elif segformer_category == "bottom":
+                mapped_cat = "Bottom"
+            elif segformer_category == "dress":
+                mapped_cat = "Full Body (Dress)"
+            elif segformer_category == "footwear":
+                mapped_cat = "Footwear"
+            elif segformer_category in ("headwear", "accessory"):
+                mapped_cat = "Accessories"
+            
+            if mapped_cat:
+                sys_parts.append(
+                    f"- CATEGORY RESTRICTION: The garment in the photo has been pre-classified as Category: '{mapped_cat}' (SegFormer label: '{segformer_label}'). "
+                    f"You MUST classify this garment under Category: '{mapped_cat}' and describe subcategory and item types that strictly belong to this category (e.g., do not describe pants, shorts, or skirts if the category is Top)."
+                )
+
+        # Add target language rule if applicable
+        if lang_name:
+            sys_parts.append(f"- LANGUAGE: All free-text values must be written in fluent {lang_name}.")
+        
+        sys_parts.append("Return ONLY the JSON object. No markdown, no commentary.")
+        system_prompt = "\n".join(sys_parts)
+
+        # Build group-specific user query (contains the changing group guidelines/fields)
+        user_text = f"Analyse this garment photo and return JSON for the following fields: {', '.join(field_names)}.\n\nSpecific guidelines for these fields:\n{sys_snippet}"
+        if request_id:
+            user_text = f"Analyse this garment photo (Request ID: {request_id}) and return JSON for the following fields: {', '.join(field_names)}.\n\nSpecific guidelines for these fields:\n{sys_snippet}"
+
+        # Build strict JSON schema for this group to grammar-constrain Gemma.
+        import copy
+        properties = {}
+        for name in field_names:
+            if name in _GARMENT_OBJECT_SCHEMA["properties"]:
+                prop = copy.deepcopy(_GARMENT_OBJECT_SCHEMA["properties"][name])
+                
+                # Constrain category enum based on SegFormer pre-classification (ONLY if NOT is_single_item)
+                if name == "category" and segformer_category and not is_single_item:
+                    if segformer_category == "top":
+                        prop["enum"] = ["Top", "Outerwear"]
+                    elif segformer_category == "bottom":
+                        prop["enum"] = ["Bottom"]
+                    elif segformer_category == "dress":
+                        prop["enum"] = ["Full Body"]
+                    elif segformer_category == "footwear":
+                        prop["enum"] = ["Footwear"]
+                    elif segformer_category in ("headwear", "accessory"):
+                        prop["enum"] = ["Accessories"]
+
+                # Enforce maxLength on string fields to prevent repetition loops
+                if isinstance(prop, dict):
+                    p_type = prop.get("type")
+                    if p_type == "string" and "maxLength" not in prop and "enum" not in prop:
+                        prop["maxLength"] = 16 if name == "size" else 36
+                    elif isinstance(p_type, list) and "string" in p_type and "maxLength" not in prop:
+                        prop["maxLength"] = 16 if name == "size" else 36
+                    
+                    # Nested array properties (colors, fabric_materials, tags, season)
+                    if p_type == "array" and "items" in prop:
+                        if name == "season":
+                            prop["maxItems"] = 4
+                        elif name == "colors":
+                            prop["maxItems"] = 4
+                        elif name == "fabric_materials":
+                            prop["maxItems"] = 3
+                        elif name == "tags":
+                            prop["maxItems"] = 6
+
+                        items_schema = prop["items"]
+                        if isinstance(items_schema, dict):
+                            i_type = items_schema.get("type")
+                            if i_type == "string" and "maxLength" not in items_schema:
+                                items_schema["maxLength"] = 24
+                            elif i_type == "object" and "properties" in items_schema:
+                                for sub_p_name, sub_p in items_schema["properties"].items():
+                                    if isinstance(sub_p, dict) and sub_p.get("type") == "string":
+                                        sub_p["maxLength"] = 24
+                
+                properties[name] = prop
+
+        group_schema = {
+            "type": "object",
+            "properties": properties,
+            "required": field_names,
+            "additionalProperties": False,
+        }
+
+        try:
+            raw = await _call_gemma_space(
+                system_prompt=system_prompt,
+                user_text=user_text,
+                image_b64_jpeg=image_b64_jpeg,
+                max_tokens=max_tokens,
+                temperature=0.0,
+                timeout=tpg,
+                json_schema=group_schema,
+                id_slot=id_slot,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "M23: Gemma attribute group %r failed: %s",
+                group_name,
+                repr(exc)[:200],
+            )
+            yield group_name, field_names, {}
+            continue
+
+        try:
+            parsed = _extract_json(raw)
+            # Model may occasionally wrap results in a list — take first.
+            if isinstance(parsed, list) and parsed:
+                parsed = parsed[0]
+            if not isinstance(parsed, dict):
+                parsed = {}
+            # Keep only the fields this group owns; discard hallucinated keys.
+            filtered = {k: v for k, v in parsed.items() if k in field_names}
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "M23: Gemma attribute group %r parse error: %s",
+                group_name,
+                repr(exc)[:200],
+            )
+            filtered = {}
+
+        logger.debug(
+            "M23: Gemma group %r → keys=%s", group_name, list(filtered.keys()),
+        )
+        yield group_name, field_names, filtered

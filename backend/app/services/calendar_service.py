@@ -41,14 +41,26 @@ SCOPES = [
     "openid",
     "email",
     "profile",
-    "https://www.googleapis.com/auth/calendar.readonly",
+    "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/user.birthday.read",
+    "https://www.googleapis.com/auth/user.phonenumbers.read",
+    "https://www.googleapis.com/auth/user.addresses.read",
+    "https://www.googleapis.com/auth/user.gender.read",
 ]
 
 # Lean scope set used by the new "Sign in with Google" flow when the user
 # does NOT tick the "Also connect my calendar" checkbox. Keeping calendar
 # off this set makes the consent screen friendlier and avoids surprising
 # users with calendar access on a plain login.
-LOGIN_SCOPES = ["openid", "email", "profile"]
+LOGIN_SCOPES = [
+    "openid",
+    "email",
+    "profile",
+    "https://www.googleapis.com/auth/user.birthday.read",
+    "https://www.googleapis.com/auth/user.phonenumbers.read",
+    "https://www.googleapis.com/auth/user.addresses.read",
+    "https://www.googleapis.com/auth/user.gender.read",
+]
 
 
 def _public_base_url(request: Any) -> str | None:
@@ -231,6 +243,57 @@ class CalendarService:
         resp.raise_for_status()
         return resp.json()
 
+    async def fetch_people_profile(self, access_token: str) -> dict[str, Any]:
+        """Fetch extended profile details (birthday, phone, address, gender) from Google People API."""
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                "https://people.googleapis.com/v1/people/me?personFields=birthdays,phoneNumbers,addresses,genders",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+        if resp.status_code != 200:
+            logger.warning("Google People API request failed status=%d body=%s", resp.status_code, resp.text[:200])
+            return {}
+        
+        data = resp.json()
+        profile = {}
+        
+        # 1. Parse Birthday (yyyy-MM-dd)
+        birthdays = data.get("birthdays", [])
+        if birthdays:
+            b_date = birthdays[0].get("date", {})
+            year = b_date.get("year") or 1990
+            month = b_date.get("month")
+            day = b_date.get("day")
+            if month and day:
+                profile["date_of_birth"] = f"{year:04d}-{month:02d}-{day:02d}"
+        
+        # 2. Parse Phone Number
+        phones = data.get("phoneNumbers", [])
+        if phones:
+            profile["phone"] = phones[0].get("value")
+            
+        # 3. Parse Address
+        addresses = data.get("addresses", [])
+        if addresses:
+            addr = addresses[0]
+            profile["address"] = {
+                "line1": addr.get("streetAddress") or "",
+                "line2": addr.get("extendedAddress") or "",
+                "city": addr.get("city") or addr.get("locality") or "",
+                "region": addr.get("region") or "",
+                "postal_code": addr.get("postalCode") or "",
+                "country": addr.get("country") or "",
+            }
+
+        # 4. Parse Gender ("male" or "female")
+        genders = data.get("genders", [])
+        if genders:
+            val = (genders[0].get("value") or "").lower()
+            if val in {"male", "female"}:
+                profile["sex"] = val
+            
+        return profile
+
     # -------------------- persistence helpers --------------------
     @staticmethod
     def _tokens_to_doc(tokens: dict[str, Any], email: str | None) -> dict[str, Any]:
@@ -260,6 +323,32 @@ class CalendarService:
             except Exception as exc:  # noqa: BLE001
                 logger.warning("Failed to fetch Google userinfo: %s", exc)
         doc = self._tokens_to_doc(tokens, userinfo.get("email"))
+
+        # Log granted scopes so we can diagnose missing People API access.
+        granted_scopes = (doc.get("scope") or "").split()
+        people_scopes = [
+            "https://www.googleapis.com/auth/user.birthday.read",
+            "https://www.googleapis.com/auth/user.phonenumbers.read",
+            "https://www.googleapis.com/auth/user.addresses.read",
+            "https://www.googleapis.com/auth/user.gender.read",
+        ]
+        missing_people = [s for s in people_scopes if s not in granted_scopes]
+        if missing_people:
+            logger.warning(
+                "persist_tokens_for_user: People API scopes MISSING for user %s — "
+                "granted=%s missing=%s. The OAuth consent screen may not be verified "
+                "in Google Cloud Console, or the user did not consent to these scopes.",
+                user_id,
+                granted_scopes,
+                missing_people,
+            )
+        else:
+            logger.info(
+                "persist_tokens_for_user: All People API scopes granted for user %s — scopes=%s",
+                user_id,
+                granted_scopes,
+            )
+
         db = get_db()
         # Preserve the previously stored refresh_token if Google didn't send a
         # new one (Google only returns refresh_token on first consent).
@@ -380,13 +469,19 @@ class CalendarService:
         self, user_id: str, tokens: dict[str, Any]
     ) -> Any:
         """Build an authenticated googleapiclient service; refresh if needed."""
+        scope_val = tokens.get("scope")
+        if isinstance(scope_val, str):
+            token_scopes = scope_val.split(" ")
+        else:
+            token_scopes = tokens.get("scopes") or SCOPES
+            
         creds = Credentials(
             token=tokens.get("access_token"),
             refresh_token=tokens.get("refresh_token"),
             token_uri=GOOGLE_TOKEN_URL,
             client_id=self.client_id,
             client_secret=self.client_secret,
-            scopes=SCOPES,
+            scopes=token_scopes,
         )
         if not creds.valid and creds.refresh_token:
             # The library does a sync HTTP call; this is acceptable here.
@@ -467,6 +562,119 @@ class CalendarService:
             "start": start,
             "formality_hint": formality or CalendarService.infer_formality(title),
         }
+
+    async def create_calendar_event(
+        self, user: dict, summary: str, description: str, date_str: str, time_str: str | None
+    ) -> dict[str, Any] | None:
+        """Create a calendar event for a saved outfit on the user's primary Google Calendar."""
+        tokens = user.get("google_calendar_tokens") or {}
+        if not tokens.get("refresh_token"):
+            logger.info("create_calendar_event: no refresh token for user %s", user.get("id"))
+            return None
+
+        try:
+            service = await self._build_service(user["id"], tokens)
+            time_part = time_str or "09:00"
+            if len(time_part) == 5:
+                time_part += ":00"
+            dt_str = f"{date_str}T{time_part}"
+            try:
+                dt = datetime.fromisoformat(dt_str)
+            except ValueError:
+                dt = datetime.strptime(date_str, "%Y-%m-%d")
+                dt = dt.replace(hour=9, minute=0)
+
+            event_body = {
+                "summary": summary,
+                "description": description,
+                "start": {
+                    "dateTime": dt.isoformat(),
+                    "timeZone": "UTC",
+                },
+                "end": {
+                    "dateTime": (dt + timedelta(hours=1)).isoformat(),
+                    "timeZone": "UTC",
+                },
+            }
+
+            import asyncio
+            loop = asyncio.get_running_loop()
+            event = await loop.run_in_executor(
+                None,
+                lambda: service.events().insert(calendarId="primary", body=event_body).execute()
+            )
+            logger.info("Successfully created calendar event %s for user %s", event.get("id"), user.get("id"))
+            return event
+        except Exception as exc:
+            logger.error("Failed to create calendar event for user %s: %s", user.get("id"), exc)
+            return None
+
+    async def update_calendar_event(
+        self, user: dict, event_id: str, summary: str, description: str, date_str: str, time_str: str | None
+    ) -> dict[str, Any] | None:
+        """Update an existing calendar event on the user's primary Google Calendar."""
+        tokens = user.get("google_calendar_tokens") or {}
+        if not tokens.get("refresh_token"):
+            return None
+
+        try:
+            service = await self._build_service(user["id"], tokens)
+            time_part = time_str or "09:00"
+            if len(time_part) == 5:
+                time_part += ":00"
+            dt_str = f"{date_str}T{time_part}"
+            try:
+                dt = datetime.fromisoformat(dt_str)
+            except ValueError:
+                dt = datetime.strptime(date_str, "%Y-%m-%d")
+                dt = dt.replace(hour=9, minute=0)
+
+            event_body = {
+                "summary": summary,
+                "description": description,
+                "start": {
+                    "dateTime": dt.isoformat(),
+                    "timeZone": "UTC",
+                },
+                "end": {
+                    "dateTime": (dt + timedelta(hours=1)).isoformat(),
+                    "timeZone": "UTC",
+                },
+            }
+
+            import asyncio
+            loop = asyncio.get_running_loop()
+            event = await loop.run_in_executor(
+                None,
+                lambda: service.events().patch(calendarId="primary", eventId=event_id, body=event_body).execute()
+            )
+            logger.info("Successfully updated calendar event %s for user %s", event_id, user.get("id"))
+            return event
+        except Exception as exc:
+            logger.error("Failed to update calendar event %s for user %s: %s", event_id, user.get("id"), exc)
+            return None
+
+    async def delete_calendar_event(
+        self, user: dict, event_id: str
+    ) -> bool:
+        """Delete a calendar event from the user's primary Google Calendar."""
+        tokens = user.get("google_calendar_tokens") or {}
+        if not tokens.get("refresh_token"):
+            return False
+
+        try:
+            service = await self._build_service(user["id"], tokens)
+            import asyncio
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(
+                None,
+                lambda: service.events().delete(calendarId="primary", eventId=event_id).execute()
+            )
+            logger.info("Successfully deleted calendar event %s for user %s", event_id, user.get("id"))
+            return True
+        except Exception as exc:
+            logger.error("Failed to delete calendar event %s for user %s: %s", event_id, user.get("id"), exc)
+            return False
 
 
 calendar_service = CalendarService()

@@ -130,7 +130,30 @@ async def list_users(
         .skip(skip)
         .limit(limit)
     )
-    async for doc in cursor:
+    user_docs = [doc async for doc in cursor]
+    user_ids = [d["id"] for d in user_docs]
+    today_str = datetime.now(timezone.utc).date().isoformat()
+
+    total_counts = {}
+    daily_counts = {}
+    if user_ids:
+        # Total requests aggregate
+        pipeline_total = [
+            {"$match": {"user_id": {"$in": user_ids}}},
+            {"$group": {"_id": "$user_id", "count": {"$sum": 1}}}
+        ]
+        async for row in db.token_usage.aggregate(pipeline_total):
+            total_counts[row["_id"]] = row["count"]
+
+        # Daily requests aggregate
+        pipeline_daily = [
+            {"$match": {"user_id": {"$in": user_ids}, "created_at": {"$gte": today_str}}},
+            {"$group": {"_id": "$user_id", "count": {"$sum": 1}}}
+        ]
+        async for row in db.token_usage.aggregate(pipeline_daily):
+            daily_counts[row["_id"]] = row["count"]
+
+    for doc in user_docs:
         # add lightweight per-user counts
         doc["closet_count"] = await db.closet_items.count_documents(
             {"user_id": doc["id"]}
@@ -156,6 +179,10 @@ async def list_users(
         async for t_doc in db.credit_topups.find({"user_id": doc["id"], "status": "captured"}):
             total_payment_cents += t_doc.get("amount_cents", 0)
         doc["billing_history_sum"] = total_payment_cents / 100.0
+
+        # Add total_requests and daily_requests
+        doc["total_requests"] = total_counts.get(doc["id"], 0)
+        doc["daily_requests"] = daily_counts.get(doc["id"], 0)
 
         items.append(doc)
     return {"items": items, "total": total, "skip": skip, "limit": limit}
@@ -900,3 +927,154 @@ async def admin_edit_campaign(
     })
     doc = await db.experts_campaigns.find_one({"id": campaign_id}, {"_id": 0})
     return _strip_campaign(doc)
+
+
+# -------------------- Eyes provider toggle --------------------
+# These two routes are the missing link between the DeveloperPanel
+# frontend toggle (Profile → Developer / Internal) and the
+# eyes_override service that backs vision/service.py routing.
+#
+# GET  /admin/eyes  — read active provider + wiring sanity flags
+# POST /admin/eyes  — flip/clear the DB-backed provider override
+
+
+class _EyesSetBody(BaseModel):
+    provider: str | None = Field(
+        None,
+        description="'gemma' | 'gemini' | null (null clears the override)",
+    )
+
+
+@router.get("/eyes")
+async def eyes_status(admin: dict = Depends(require_admin)) -> dict[str, Any]:
+    """Return the current Eyes provider resolution + wiring sanity flags.
+
+    Response shape mirrors ``eyes_override.status()`` and also injects
+    the most recent ``garment-vision`` activity record so the
+    DeveloperPanel "Last analyze call" badge has data.
+    """
+    from app.services import eyes_override
+
+    result = await eyes_override.status()
+    # Enrich with the last garment-vision provider_activity record so
+    # the "Last analyze call" panel badge shows latency / ok / error.
+    summary = provider_activity.summary()
+    result["last_call"] = summary.get("garment-vision")
+    return result
+
+
+@router.post("/eyes")
+async def eyes_set(
+    body: _EyesSetBody,
+    admin: dict = Depends(require_admin),
+) -> dict[str, Any]:
+    """Flip or clear the runtime Eyes provider override.
+
+    Writes to ``config.{_id: 'eyes_provider'}`` in Mongo. The change
+    propagates to all backend analyse calls within ~5 s (the
+    eyes_override cache TTL). Pass ``provider: null`` to clear the
+    override and revert to the env-default.
+    """
+    from app.services import eyes_override
+
+    try:
+        result = await eyes_override.set_override(
+            body.provider,
+            by_email=admin.get("email"),
+        )
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+    # Enrich with last activity record (same as GET) so the UI can
+    # refresh from the POST response without a second round-trip.
+    summary = provider_activity.summary()
+    result["last_call"] = summary.get("garment-vision")
+    return result
+
+
+@router.get("/reports")
+async def admin_reports(_: dict = Depends(require_admin)) -> dict[str, Any]:
+    """Retrieve detailed charts data, subscription breakdowns, and AI utilization logs."""
+    db = get_db()
+    
+    # 1. Subscription Tiers Breakdown
+    free_count = await db.users.count_documents({
+        "$or": [
+            {"subscription.is_active": False},
+            {"subscription.plan_type": "free"},
+            {"subscription.tier": "free"}
+        ]
+    })
+    manager_count = await db.users.count_documents({
+        "subscription.is_active": True,
+        "subscription.plan_type": {"$ne": "free"},
+        "subscription.tier": "manager"
+    })
+    professional_count = await db.users.count_documents({
+        "subscription.is_active": True,
+        "subscription.plan_type": {"$ne": "free"},
+        "subscription.tier": "professional"
+    })
+
+    # 2. Closet stats
+    items_count = await db.closet_items.count_documents({})
+    users_count = await db.users.count_documents({})
+    avg_items = (items_count / users_count) if users_count > 0 else 0
+
+    # 3. AI operations monitoring
+    ai_users_cursor = db.users.find({}, {"ai_configuration.daily_request_count": 1})
+    total_daily_ops = 0
+    users_with_ops = 0
+    async for u in ai_users_cursor:
+        ops = (u.get("ai_configuration") or {}).get("daily_request_count", 0)
+        if ops > 0:
+            total_daily_ops += ops
+            users_with_ops += 1
+
+    # 4. Recent Revenue transactions from credit_topups (which holds subscription checkout receipts)
+    pipeline = [
+        {"$match": {"status": "captured"}},
+        {
+            "$group": {
+                "_id": {
+                    "year": {"$year": {"$dateFromString": {"dateString": "$created_at"}}},
+                    "month": {"$month": {"$dateFromString": {"dateString": "$created_at"}}}
+                },
+                "total_cents": {"$sum": "$amount_cents"},
+                "count": {"$sum": 1}
+            }
+        },
+        {"$sort": {"_id.year": -1, "_id.month": -1}},
+        {"$limit": 6}
+    ]
+    revenue_history = []
+    try:
+        async for row in db.credit_topups.aggregate(pipeline):
+            year = row["_id"]["year"]
+            month = row["_id"]["month"]
+            revenue_history.append({
+                "month": f"{year}-{month:02d}",
+                "amount": row["total_cents"] / 100.0,
+                "count": row["count"]
+            })
+    except Exception as e:
+        logger.error(f"Failed to aggregate revenue history: {e}")
+
+    return {
+        "subscriptions": {
+            "free": free_count,
+            "manager": manager_count,
+            "professional": professional_count,
+            "total_active_paid": manager_count + professional_count
+        },
+        "closet": {
+            "total_items": items_count,
+            "avg_items_per_user": round(avg_items, 1)
+        },
+        "ai_monitoring": {
+            "total_daily_ops": total_daily_ops,
+            "active_ai_users_today": users_with_ops
+        },
+        "revenue_history": revenue_history
+    }
+

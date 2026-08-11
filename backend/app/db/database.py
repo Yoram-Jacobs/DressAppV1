@@ -129,6 +129,11 @@ async def ensure_indexes() -> None:
     await db.credit_topups.create_index(
         [("paypal_order_id", 1)], unique=True, sparse=True
     )
+    # Phase 4P — AI credit purchases
+    await db.ai_credit_purchases.create_index([("user_id", 1), ("created_at", -1)])
+    await db.ai_credit_purchases.create_index(
+        [("paypal_order_id", 1)], unique=True, sparse=True
+    )
     # Wave 2: swap + donate transactions never touch PayPal, so
     # ``paypal.order_id`` is explicitly null for them. ``sparse=True``
     # alone doesn't skip null values (only missing fields), so we use a
@@ -153,6 +158,9 @@ async def ensure_indexes() -> None:
     # --- AI Stylist Scheduler (Phase Scheduler) ---
     await db.outfits.create_index([("user_id", 1), ("created_at", -1)])
     await db.simulated_notifications.create_index([("user_id", 1), ("created_at", -1)])
+
+    # --- token usage indexing for Admin panel queries ---
+    await db.token_usage.create_index([("user_id", 1), ("created_at", -1)])
 
     # Backfill missing listing locations from seller home_location
     try:

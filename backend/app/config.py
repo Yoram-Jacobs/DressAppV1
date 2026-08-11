@@ -52,6 +52,7 @@ class Settings:
     # --- infra ---
     MONGO_URL: str = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
     DB_NAME: str = os.environ.get("DB_NAME", "dressapp")
+    APP_PUBLIC_URL: str = os.environ.get("APP_PUBLIC_URL", "http://localhost:3000").rstrip("/")
     VAPID_PUBLIC_KEY: str = os.environ.get("VAPID_PUBLIC_KEY", "")
     VAPID_PRIVATE_KEY: str = os.environ.get("VAPID_PRIVATE_KEY", "")
     VAPID_CLAIM_EMAIL: str = os.environ.get("VAPID_CLAIM_EMAIL", "info@dressapp.co")
@@ -269,7 +270,7 @@ class Settings:
 
 
     # --- OpenWeatherMap ---
-    OPENWEATHER_API_KEY: str | None = os.environ.get("OPENWEATHER_API_KEY")
+    OPENWEATHER_API_KEY: str | None = os.environ.get("OPENWEATHER_API_KEY") or os.environ.get("OPENWEATHERMAP_API_KEY")
 
     # --- Stripe (legacy; Phase 4P swaps to PayPal) ---
     STRIPE_SECRET_KEY: str | None = os.environ.get("STRIPE_SECRET_KEY") or None
@@ -328,6 +329,12 @@ class Settings:
     PAYPAL_PLATFORM_FEE_PERCENT: float = float(
         os.environ.get("PAYPAL_PLATFORM_FEE_PERCENT", "7")
     )
+
+    # --- Atzmai Sachir (Payment Gate) ---
+    ATZMAI_API_KEY: str = os.environ.get("ATZMAI_API_KEY", "test_api_key_public")
+    ATZMAI_CLIENT_SECRET: str = os.environ.get("ATZMAI_CLIENT_SECRET", "clientSecret")
+    ATZMAI_BASE_URL: str = os.environ.get("ATZMAI_BASE_URL", "https://externalapi.atzmai.botlee.com/api")
+    ATZMAI_AGENT_ID: int = int(os.environ.get("ATZMAI_AGENT_ID", "123"))
 
     # --- Phase V: Clothing parser + matting (commercial-safe, MIT models) ---
     # Primary clothing segmentation model (per-class parser).
@@ -507,27 +514,30 @@ class Settings:
 
     @property
     def paypal_client_id(self) -> str | None:
-        return (
+        val = (
             self.PAYPAL_LIVE_CLIENT_ID
             if self.PAYPAL_ENV == "live"
             else self.PAYPAL_SANDBOX_CLIENT_ID
         )
+        return val or os.environ.get("PAYPAL_CLIENT_ID") or None
 
     @property
     def paypal_secret(self) -> str | None:
-        return (
+        val = (
             self.PAYPAL_LIVE_SECRET
             if self.PAYPAL_ENV == "live"
             else self.PAYPAL_SANDBOX_SECRET
         )
+        return val or os.environ.get("PAYPAL_CLIENT_SECRET") or os.environ.get("PAYPAL_SECRET") or None
 
     @property
     def paypal_webhook_id(self) -> str | None:
-        return (
+        val = (
             self.PAYPAL_LIVE_WEBHOOK_ID
             if self.PAYPAL_ENV == "live"
             else self.PAYPAL_SANDBOX_WEBHOOK_ID
         )
+        return val or os.environ.get("PAYPAL_WEBHOOK_ID") or None
 
     @property
     def paypal_api_base(self) -> str:

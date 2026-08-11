@@ -6,7 +6,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Home, Shirt, Sparkles, Store, LogOut, Settings, Receipt, Shield, UserRound, Megaphone, HelpCircle } from 'lucide-react';
+import { Home, Shirt, Sparkles, Store, LogOut, Settings, Receipt, Shield, UserRound, Megaphone, HelpCircle, CreditCard } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -27,6 +27,7 @@ export const TopNav = () => {
     { to: '/stylist', icon: Sparkles, key: 'stylist', label: t('nav.stylist') },
     { to: '/market', icon: Store, key: 'market', label: t('nav.market') },
     { to: '/experts', icon: UserRound, key: 'experts', label: t('nav.experts') },
+    { to: '/pricing', icon: CreditCard, key: 'pricing', label: t('nav.pricing', { defaultValue: 'Pricing' }) },
   ];
   useEffect(() => {
     const handleScroll = () => {

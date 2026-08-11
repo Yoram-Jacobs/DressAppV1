@@ -10,7 +10,7 @@ The **Profile & Settings** page (`https://dressapp.co/me`) serves as the central
 ## Prerequisites
 - An active DressApp account.
 - (Optional) Device camera permissions for full-body photo upload.
-- (Optional) Location permissions for local stylist campaign targeting and weather forecasting.
+- (Optional) Location permissions for local stylist campaign targeting, cultural restrictions and weather forecasting.
 
 ---
 
@@ -52,6 +52,20 @@ Contains 9 expandable accordion panels managing your personal identity, sizing, 
 - **Personal Status**: Select *Single*, *Married*, *Divorced*, or *Widowed*.
 - **Occupation**: Free-text entry (e.g. *Student*, *Marketing Manager*, *Barista*). Feeds the Trend Scout personalization ranker to prioritize relevant style news.
 
+#### Summarized Guide: Syncing Missing Google Profile Data (People API Re-Consent)
+If you signed in with Google before DressApp requested access to your **People API** profile details (phone, address, gender, date of birth), those fields may remain empty. You can sync them in one click:
+
+1. **Open the Contact or Demographics accordion** — you'll see a **"Sync from Google"** button (refresh icon) next to the section title.
+2. **Click "Sync from Google"** — if the required People API scopes weren't granted during your original sign-in, DressApp detects this and shows an info toast: *"Google needs your permission to access profile details. You will be redirected to Google to grant access."*
+3. **Grant consent on Google's screen** — you're redirected to Google's OAuth consent screen. Check the boxes for **Profile info** (name, email, photo) and **Contact info** (phone, address, gender, birthday).
+4. **Automatic return & auto-fill** — after consent, Google redirects you back to DressApp. The `syncGoogleProfile()` function runs automatically, calling the backend `/auth/google/sync-profile` endpoint which:
+   - Fetches your phone, address, gender, and date of birth from Google People API
+   - Populates the empty fields in the **Contact** (phone, address) and **Demographics** (sex, date of birth) panels
+   - Saves the updates to your profile instantly
+5. **Done** — your profile is now complete without manual typing.
+
+> **Note**: The "Sync from Google" button also appears in the page header (next to the main "Sync Google Profile" button) and works the same way — it syncs all available Google profile data at once.
+
 #### Panel D: Preferences & Measurement Units
 - **Weight Unit**: Toggle between Kilograms (`kg`) and Pounds (`lb`).
 - **Length Unit**: Toggle between Centimeters (`cm`) and Inches (`in`).
@@ -74,7 +88,14 @@ Contains 9 expandable accordion panels managing your personal identity, sizing, 
 #### Panel G: Body Measurements & Sizing (ANSUR II Sizing Predictor)
 - **Onboarding / Fresh Start Mode**: Enter 4 basic inputs: **Height**, **Weight**, **Waist Circumference**, and **Foot Length**. The built-in scikit-learn ANSUR II multi-output regression model automatically predicts 6 structural measurements:
   - *Shoulders*, *Chest / Bust*, *Hip*, *Sleeve Length*, *Inseam*, and *Outseam*.
-- **Detailed Edit Mode**: Fine-tune all 15 sizing parameters (including Shirt Size, Pants Size, Shoe Size, Bra Size, Dress Size) and Hair attributes (*Length, Type, Color, Style*).
+- **Automatic Size Translation**: Once the structural measurements are predicted, deterministic sizing algorithms instantly populate **all standard retail sizes** down to the shoe size:
+  - *Casual Shirt Size* (XS–XXL based on chest circumference)
+  - *Pants Waist Size* (inches, converted from waist cm)
+  - *US Shoe Size* (Men's/Women's formulas from foot length)
+  - *Women's Dress Size* (US 0–14+ based on waist)
+  - *Women's Bra Size* (band + cup calculated from bust/underbust)
+- **Detailed Edit Mode**: After the auto-fill, fine-tune all 15 sizing parameters (including Shirt Size, Pants Size, Shoe Size, Bra Size, Dress Size) and Hair attributes (*Length, Type, Color, Style*).
+- **Live Unit Toggle**: Switch between *kg/cm* and *lb/in* — all values convert instantly without re-prediction.
 
 #### Panel H: Professional & Expert Directory Registration
 - **Professional Stylist Toggle**: Register as a verified fashion professional (stylist, tailor, designer).
@@ -93,9 +114,10 @@ Manages system-level settings, subscriptions, and AI integrations:
   - *Standard Mode*: Uses system-managed Gemini Flash 2.x endpoints.
   - *Custom API Keys Mode*: Connect custom Google Gemini, Anthropic, OpenAI, or DeepSeek API keys via a guided setup modal.
 - **Subscription & Closet Limits**:
-  - View current account tier (**Free**: 150-item limit vs **Pro**: Unlimited items).
-  - Upgrade via PayPal Subscriptions REST API ($4.99/month or $29.99/year).
-  - Copy **Referral Link**: Grants +10 closet capacity slots for each friend who registers.
+  - View current account tier (**Free**: 50-item limit vs **Manager** or **Professional**: Unlimited items).
+  - Access the **Pricing page** (`/pricing` or click on your plan card) to view the tier comparison table, select a plan, and subscribe.
+  - Upgrade via PayPal Subscriptions REST API (Manager: $4.99/month; Professional: $9.99/month) or the Atzmai Gateway for local ILS transactions.
+  - Copy **Referral Link**: Grants +10 closet capacity slots for each friend who registers (up to 200 items max).
 - **Scheduler & Push Reminders**:
   - Toggle morning outfit proposal notifications.
   - Set frequency (*Everyday*, *Every Other Day*, *Twice a Week*, *On Weekday*), time (e.g., *07:00*), and dress-code style demands (*Casual*, *Formal*, *Athletic*, *Custom*).
@@ -132,5 +154,5 @@ Manages system-level settings, subscriptions, and AI integrations:
 ---
 
 ## Limitations
-- Free tier account space is capped at 150 items unless expanded via referral bonus (+10 slots per invite) or Pro subscription.
+- Free tier account space is capped at 50 items unless expanded via referral bonus (+10 slots per invite up to 200 items max) or upgrading to the Manager or Professional tier.
 - Custom API key mode requires valid keys with remaining quota from the respective provider.

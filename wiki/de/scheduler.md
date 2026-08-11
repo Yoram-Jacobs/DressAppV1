@@ -1,28 +1,36 @@
-# Morgenplan und Push-Benachrichtigungen
+# Morgenplan & Push-Benachrichtigungen
 
-Automatisieren Sie Ihre morgendliche Stilauswahl mit Cron-Outfit-Benachrichtigungen.
+Starten Sie Ihren Tag mit automatischen, wettergerechten Stilempfehlungen, die direkt auf Ihr Gerät geliefert werden.
 
 ## Übersicht
-Der Garderobenplaner liefert benutzerdefinierte Push-Benachrichtigungen am Morgen mit drei gestylten Outfit-Layouts. Es koordiniert Wetteraktualisierungen und Kalenderereignisse, um Ihren Look frisch zu halten und wiederholte Abnutzungsmuster zu verhindern.
+Der Morgenplaner automatisiert Ihre Outfit-Auswahl, indem er jeden Morgen maßgeschneiderte Stilvorschläge liefert. Er prüft die lokale Wettervorhersage und Ihre täglichen Aktivitäten (über Google Kalender), um drei passende Optionen zu generieren. Tippen Sie auf die Benachrichtigung, um die Optionen auf Ihrem persönlichen Avatar anzuzeigen, Ihre bevorzugte Wahl zu speichern und sofort die Wetterkompatibilitätswerte anzuzeigen.
 
 ## Voraussetzungen
-- Push-Benachrichtigungsberechtigungen in Ihrem Gerätebrowser zulässig.
-- Bewahren Sie Gegenstände in Ihrem Schrank auf (mindestens ein Oberteil, ein Unterteil und Schuhe).
-- Benutzerdefinierte Gemini-API-Schlüssel (empfohlen).
+- **Benachrichtigungen erlaubt**: Push-Benachrichtigungen müssen in Ihren Geräte- oder Browsereinstellungen für DressApp aktiviert sein.
+- **Garderobenartikel**: Sie müssen mindestens ein Oberteil, ein Unterteil und ein Paar Schuhe in Ihren Kleiderschrank hochgeladen haben.
+- **Google Kalender**: Ein verknüpftes Google Kalender-Konto (optional, aber empfohlen, um Vorschläge ereignisabhängig zu machen).
+- **Gemini-Schlüssel**: Ein in Ihren Einstellungen konfigurierter benutzerdefinierter Gemini-API-Schlüssel.
 
-## Schritt für Schritt
-1. **Benachrichtigungen aktivieren**: Gehen Sie zu Profildetails -> Planer & Push. Schalten Sie **Benachrichtigungen aktivieren** um.
-2. **Zeitpunkt festlegen**: Wählen Sie aus, wann Sie Ihre tägliche Benachrichtigung erhalten möchten (z. B. 07:30 Uhr).
-3. **Kalendersynchronisierung**: Verknüpfen Sie Google Kalender, damit das System Ihre täglichen Aktivitäten kennt.
-4. **Vorschlag erhalten**: Tippen Sie auf die Benachrichtigung, um die Outfit-Liste zu öffnen.
-5. **Tragen bestätigen**: Wählen Sie ein Layout aus, um es in Ihrem täglichen Tagebuch zu speichern.
+## Schritt-für-Schritt-Anleitung
+1. **Benachrichtigungen aktivieren**: Gehen Sie zu **Profileinstellungen** -> **Planer & Push**. Stellen Sie den Benachrichtigungsschalter auf „Aktiviert“.
+2. **Uhrzeit einstellen**: Stellen Sie die genaue Stunde und Minute ein, zu der Sie Ihren Vorschlag erhalten möchten (z. B. 07:30 Uhr).
+3. **Kalender verknüpfen**: Verbinden Sie unter Kalendereinstellungen Ihr Google Kalender-Konto, damit die KI Ihren Zeitplan kennt.
+4. **Vorschlag öffnen**: Wenn der morgendliche Push-Alarm eintrifft, klicken Sie darauf. Sie werden direkt zum Tab **Täglicher Vorschlag** (Match) unter **Stylist** weitergeleitet.
+5. **Optionen anzeigen**: Die Auswahl **Outfit planen** öffnet sich automatisch und zeigt Ihre drei gestylten Kombinationen direkt auf Ihrem Avatar an.
+6. **Speichern und Überprüfen**: Tippen Sie auf einen der täglichen Vorschläge, um ihn in Ihrem Kalender zu planen. Die App speichert das Outfit und öffnet sofort ein Detailfenster, das die Wetterkompatibilitätswerte anzeigt (Farbharmonie, Temperaturanpassung und Stilkonstanz).
 
 ## Erwartete Ergebnisse
-Eine Push-Benachrichtigung, die zu Ihrem geplanten Zeitpunkt eintrifft und optimierte Stiloptionen anzeigt.
+Täglich wird eine Benachrichtigung zu der von Ihnen gewählten Zeit zugestellt. Durch Klicken darauf wird die App geöffnet, es werden drei Optionen auf Ihrem Avatar angezeigt und Sie können eine davon mit vollständigen Kompatibilitätsdetails in Ihrem Kalender speichern.
 
 ## Fehlerbehebung
-- **Es kommen keine Benachrichtigungen an**: Überprüfen Sie, ob Ihr Browser/Betriebssystem über stummgeschaltete Benachrichtigungsberechtigungen für DressApp verfügt.
-- **Vorgeschlagene Outfits wiederholen**: Füllen Sie Ihr Kleidungstagebuch im Kalender aus; Der Rotationsalgorithmus erfordert Verlaufsprotokolle, um Wiederholungen zu filtern.
+- **Keine Benachrichtigungen erhalten**: 
+  - Stellen Sie sicher, dass Benachrichtigungen für die DressApp-Website in den Website-Einstellungen Ihres Browsers oder in den Einstellungen Ihres Betriebssystems zugelassen sind.
+  - Stellen Sie sicher, dass sich Ihr Gerät während der geplanten Benachrichtigungszeit nicht im Modus „Bitte nicht stören“ oder „Fokus“ befindet.
+- **Fehlende Kleidungsstücke auf dem Avatar**: 
+  - Stellen Sie sicher, dass sich Kleidungsstücke aus allen Basiskategorien (Oberteile, Unterteile, Schuhe) in Ihrem Kleiderschrank befinden, damit der Planer den Avatar richtig einkleiden kann.
+- **Generische Empfehlungen**: 
+  - Verknüpfen Sie Ihren Google Kalender, damit die Vorschläge auf Ihre spezifischen täglichen Ereignisse abgestimmt sind.
 
 ## Einschränkungen
-- Benachrichtigungen erfordern eine stabile Hintergrund-Internetverbindung auf dem Server.
+- Sie können maximal ein Outfit pro Tag in Ihrem Kalender planen.
+- Wetteraktualisierungen erfordern eine aktive Internetverbindung auf dem Server.

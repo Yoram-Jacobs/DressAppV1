@@ -213,7 +213,10 @@ async def stylist_endpoint(
         from app.db.database import get_db
         from app.services.billing_service import deduct_user_credits
         db = get_db()
-        await deduct_user_credits(db, user, cost=1)
+        if not await deduct_user_credits(db, user, cost=1):
+            raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
+    except HTTPException:
+        raise
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     except RuntimeError as exc:
@@ -503,7 +506,8 @@ async def planner_scout_endpoint(
     
     # 1. Billing check & deduction
     from app.services.billing_service import deduct_user_credits
-    await deduct_user_credits(db, user, cost=1)
+    if not await deduct_user_credits(db, user, cost=1):
+        raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
 
     # 2. Weather fetching (soft-fail)
     from app.services.weather_service import weather_service

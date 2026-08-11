@@ -98,9 +98,12 @@ The Profile page serves as the core control panel for DressApp. Configuration fi
    - **Why does it matter?**: It customizes the communication tone and routes notification alerts.
    - **Subsystem Dependencies**: The user's name is dynamically parsed into emails and system-level pushes. The phone number serves as a fallback registry for scheduled alerts. The occupation parameter is fed to the stylist LLM and Trend Scout personalization ranker to customize proposals.
 
-4. **Body Measurements & Sizing (ANSUR II Regression Model)**
-   - **Why does it matter?**: It eliminates sizing guesswork, allowing external retail size comparison and accurate virtual layering.
-   - **Subsystem Dependencies**: Entering 4 basic parameters (**Height**, **Weight**, **Waist**, **Foot Length**) triggers the scikit-learn ANSUR II regression model (`body_predictor.py`) to auto-predict 6 structural dimensions (*Shoulders*, *Chest*, *Hip*, *Sleeve*, *Inseam*, *Outseam*). Measurements are queried directly by the **Shopping Assistant** Chrome Extension content scripts to read size tables on partner websites (Zara, Asos) and recommend sizes.
+4. **Body Measurements & Sizing (ANSUR II Regression Model & Sizing Predictor)**
+   - **Why does it matter?**: It eliminates sizing guesswork, allowing automatic retail size calculation, external retail size comparison, and accurate virtual layering.
+   - **Subsystem Dependencies**: Entering 4 basic parameters (**Height**, **Weight**, **Waist**, **Foot Length**) triggers the scikit-learn ANSUR II regression model (`body_predictor.py`) to auto-predict 6 structural dimensions (*Shoulders*, *Chest*, *Hip*, *Sleeve*, *Inseam*, *Outseam*). 
+     - **Deterministic Size Translation**: Once continuous measurements are predicted, the backend sizing engine dynamically converts them into retail clothing sizes: **Shirt Size** (XS-XXL based on chest), **Pants Size** (Waist in inches), **Shoe Size** (US US Men/Women and EU standards based on foot length and gender), **Dress Size** (US 0-14+ based on chest, waist, and hips), and **Bra Size** (Band + Cup based on chest and estimated underbust).
+     - **Auto-Population**: These recommended retail sizes are automatically populated in the *Detailed Edit Mode* fields inside the profile dashboard.
+     - **Integrations**: Measurements are queried directly by the **Shopping Assistant** Chrome Extension content scripts to read size tables on partner websites (Zara, Asos) and recommend sizes.
 
 5. **Lifestyle (Status, Sex)**
    - **Why does it matter?**: It tailors default recommendations and scores content algorithms.
@@ -220,15 +223,15 @@ System liveness validation, financial bookkeeping, and user account management.
 - **DPP Verified Badge**: Scanning valid passports displays the green information card with sustainability details.
 - **Avatar Outerwear**: Outerwear displays correctly layered over tops on the 2D avatar canvas without clipping headwear/shoes.
 - **Voice Response**: Virtual Stylist text outputs play spoken audio automatically with a visible waveform indicator.
-- **Subscriptions**: Activating Pro immediately removes the 150-item limit warning.
+- **Subscriptions**: Upgrading to a Manager or Professional plan immediately removes the closet capacity limit warning.
 
 ---
 
 ## 5. Troubleshooting
 
 ### HTTP 402 Payment Required
-- **Problem**: Ingestion blocked. You have reached the maximum baseline limit of 150 closet items.
-- **Solution**: Go to Profile -> Subscription and upgrade to Pro, or share your invite link to get +10 slots per registration.
+- **Problem**: Ingestion blocked. You have reached the baseline limit of 50 closet items (or up to 200 items with referral bonuses).
+- **Solution**: Go to the **Pricing page** (`/pricing`) and subscribe to the Manager or Professional plan, or share your invite link to get +10 slots per registration (up to 200 items max).
 
 ### SSRF Blocked / DNS Error on DPP
 - **Problem**: Scanned QR passport URL fails to parse.

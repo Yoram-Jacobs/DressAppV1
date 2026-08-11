@@ -1,28 +1,36 @@
-# Programação matinal e alertas push
+# Programação Matinal e Alertas Push
 
-Automatize suas escolhas de estilo matinal com alertas de roupas cron.
+Comece o seu dia com recomendações de estilo automáticas e adequadas ao clima, entregues diretamente no seu dispositivo.
 
-## Visão geral
-O Wardrobe Scheduler oferece notificações push matinais personalizadas contendo três layouts de roupas estilizados. Ele coordena atualizações meteorológicas e eventos do calendário para manter sua aparência renovada e evitar padrões de desgaste repetidos.
+## Visão Geral
+O Programador Matinal automatiza a seleção do seu visual, fornecendo sugestões de estilo personalizadas todas as manhãs. Ele verifica a previsão do tempo local e as suas atividades diárias (via Google Agenda) para gerar três opções de combinação. Toque na notificação para ver as opções no seu avatar pessoal, salvar a sua escolha favorita e visualizar instantaneamente as pontuações de compatibilidade com o clima.
 
 ## Pré-requisitos
-- Permissões de notificação push permitidas no navegador do seu dispositivo.
-- Itens guardados em seu armário (pelo menos uma parte superior, inferior e calçado).
-- Chaves API Gemini personalizadas (recomendado).
+- **Notificações permitidas**: As notificações push devem estar ativas para o DressApp nas configurações do seu dispositivo ou navegador.
+- **Itens no armário**: Você deve ter pelo menos uma peça superior, uma peça inferior e um calçado enviados para o seu armário.
+- **Google Agenda**: Uma conta vinculada do Google Agenda (opcional, mas recomendada para que as sugestões considerem os seus eventos).
+- **Chave do Gemini**: Uma chave de API personalizada do Gemini configurada em suas definições.
 
-## Passo a passo
-1. **Ativar alertas**: Vá para Detalhes do perfil -> Agendador e Push. Ative **Ativar notificações**.
-2. **Definir horário**: Escolha a que horas deseja receber seu alerta diário (por exemplo, 07h30).
-3. **Sincronização de calendário**: vincule o Google Agenda para que o sistema conheça suas atividades diárias.
-4. **Receber sugestão**: Toque na notificação para abrir a lista de roupas.
-5. **Confirmar uso**: selecione um layout para salvá-lo em seu diário.
+## Instruções Passo a Passo
+1. **Ativar alertas**: Vá para **Configurações do perfil** -> **Programador e Push**. Mude o botão de notificação para ativado.
+2. **Definir horário**: Defina a hora e o minuto exatos em que deseja receber a sua sugestão (por exemplo, 07:30).
+3. **Vincular agenda**: Em Configurações de agenda, conecte a sua conta do Google Agenda para que a IA conheça a sua programação.
+4. **Abrir sugestão**: Quando o alerta push matinal chegar, clique nele. Você será direcionado diretamente para a guia **Sugestão Diária** (Match) em **Estilista** (Stylist).
+5. **Visualizar opções**: O seletor **Agendar visual** será aberto automaticamente, mostrando as suas três combinações de estilo aplicadas diretamente no seu avatar.
+6. **Salvar e revisar**: Toque em qualquer uma das sugestões diárias para agendá-la no seu calendário. O aplicativo salvará o visual e abrirá imediatamente um painel de detalhes mostrando as métricas de compatibilidade com o clima (harmonia de cores, ajuste de temperatura e consistência de estilo).
 
-## Resultados esperados
-Uma notificação push chegando no horário programado mostrando opções de estilo otimizadas.
+## Resultados Esperados
+Uma notificação é entregue diariamente no horário escolhido. Clicar nela abre o aplicativo, exibe três opções no seu avatar e permite que você salve uma no seu calendário com todos os detalhes de compatibilidade.
 
-## Solução de problemas
-- **Nenhuma notificação chegando**: Verifique se seu navegador/sistema operacional desativou as permissões de notificação para DressApp.
-- **Repetir roupas sugeridas**: Preencha seu diário de uso dentro do calendário; o algoritmo de rotação requer registros de histórico para filtrar repetições.
+## Resolução de Problemas
+- **Nenhuma notificação chega**: 
+  - Certifique-se de que as notificações estão permitidas para o site do DressApp nas configurações do site do seu navegador ou nas configurações do seu sistema operacional.
+  - Verifique se o seu dispositivo não está no modo "Não perturbe" ou "Foco" durante o horário agendado da notificação.
+- **Falta de itens de vestuário no avatar**: 
+  - Certifique-se de ter roupas em todas as categorias básicas (peças superiores, peças inferiores, sapatos) no seu guarda-roupa para que o programador consiga vestir o avatar corretamente.
+- **Recomendações genéricas**: 
+  - Vincule o seu Google Agenda para que as sugestões correspondam aos seus eventos diários específicos.
 
 ## Limitações
-- As notificações requerem uma conexão estável à Internet em segundo plano no servidor.
+- Você pode agendar até um visual por dia em seu calendário.
+- As atualizações meteorológicas exigem uma conexão ativa de internet no servidor.

@@ -238,6 +238,7 @@ def _enforce_segformer_category(
     *,
     segformer_kind: str | None,
     label: str | None = None,
+    is_single_item: bool = False,
 ) -> dict[str, Any] | None:
     """Anchor Gemini's category classification to the SegFormer kind.
 
@@ -261,6 +262,8 @@ def _enforce_segformer_category(
     analysis is a no-op.
     """
     if not isinstance(analysis, dict):
+        return analysis
+    if is_single_item:
         return analysis
     if not segformer_kind:
         return analysis

@@ -39,6 +39,7 @@ export default function HelpMenu() {
     ] : [
       { id: 'campaigns', label: t('help.campaigns_help_title'), icon: Megaphone, wiki: 'campaigns' },
     ]),
+    { id: 'tiers', label: t('help.tiers_title', { defaultValue: 'Subscription Tiers' }), icon: Wallet, wiki: 'monetization' },
     { id: 'troubleshooting', label: t('help.trouble_title'), icon: HelpCircle, wiki: 'troubleshooting' },
   ];
 
@@ -306,50 +307,85 @@ export default function HelpMenu() {
             ) : (
               <>
                 {activeTab === 'overview' && (
-                  <div className="sidecontent">
-                    <h6><BookOpen />{t('help.overview_title')}</h6>
-                    <p>{t('help.overview_p1')}</p>
-                    <p>{t('help.overview_p2')}</p>
-                    <p>{t('help.overview_p3')}</p>
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <BookOpen className="h-6 w-6" /> {t('help.overview_title')}
+                    </h2>
+                    <p className="text-base leading-relaxed text-muted-foreground">{t('help.overview_p1')}</p>
+                    <p className="text-base leading-relaxed text-muted-foreground">{t('help.overview_p2')}</p>
+                    <p className="text-base leading-relaxed text-muted-foreground">{t('help.overview_p3')}</p>
                   </div>
                 )}
+
                 {activeTab === 'prerequisites' && (
-                  <div className="sidecontent">
-                    <h6><ClipboardList />{t('help.prereq_title')}</h6>
-                    <p>{t('help.prereq_p1')}</p>
-                    <ul>
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <ClipboardList className="h-6 w-6" /> {t('help.prereq_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.prereq_p1')}</p>
+                    <ul className="space-y-3 pl-1 pr-1">
                       {[
                         t('help.prereq_item1'),
                         t('help.prereq_item2'),
                         t('help.prereq_item3')
                       ].map((item, idx) => (
-                        <li key={idx} className='helplist'>
-                          <span>{idx + 1}</span>{item}
+                        <li key={idx} className="flex items-start gap-3">
+                          <span className="h-6 w-6 shrink-0 rounded-full bg-secondary flex items-center justify-center text-xs font-semibold text-foreground">{idx + 1}</span>
+                          <span className="text-muted-foreground pt-0.5">{item}</span>
                         </li>
                       ))}
-                      <li className="helplist">
-                        <span>4</span>
-                        {t('help.geminiKeyStep', { defaultValue: 'A Gemini API Key. Get it for free on <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" >Google AI Studio</a>.' })}
+                      <li className="flex items-start gap-3">
+                        <span className="h-6 w-6 shrink-0 rounded-full bg-secondary flex items-center justify-center text-xs font-semibold text-foreground">4</span>
+                        <span className="text-muted-foreground pt-0.5">
+                          {t('help.geminiKeyStep', { defaultValue: 'A Gemini API Key. Get it for free on <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">Google AI Studio</a>.' })}
+                        </span>
                       </li>
                     </ul>
                   </div>
                 )}
+
                 {activeTab === 'adding-clothes' && (
-                  <div className="sidecontent">
-                    <h6><Camera /> {t('help.add_clothes_title')}</h6>
-                    <p>{t('help.add_clothes_p1')}</p>
-                    <div className="">
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <Camera className="h-6 w-6" />
+                      {t('help.add_clothes_title')}
+                    </h2>
+
+                    <p className="text-muted-foreground">
+                      {t('help.add_clothes_p1')}
+                    </p>
+
+                    <div className="space-y-3">
                       {[
                         t('help.add_clothes_step1'),
                         t('help.add_clothes_step2'),
                         t('help.add_clothes_step3'),
                         t('help.add_clothes_step4'),
                         t('help.add_clothes_step5'),
-                        t('help.add_clothes_step6')
+                        t('help.add_clothes_step6'),
                       ].map((text, idx) => (
-                        <div key={idx} className="helplist">
-                          <span>{idx + 1}</span>
-                          {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-foreground font-semibold">{part}</strong> : part)}
+                        <div
+                          key={idx}
+                          className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30"
+                        >
+                          <span className="font-bold text-primary text-lg shrink-0">
+                            {idx + 1}
+                          </span>
+
+                          <p className="text-sm text-muted-foreground pt-0.5">
+                            {text.split('**').map((part, i) =>
+                              i % 2 === 1 ? (
+                                <strong
+                                  key={i}
+                                  className="text-foreground font-semibold"
+                                >
+                                  {part}
+                                </strong>
+                              ) : (
+                                part
+                              )
+                            )}
+                          </p>
                         </div>
                       ))}
                     </div>
@@ -421,30 +457,30 @@ export default function HelpMenu() {
                 )}
 
                 {activeTab === 'profile-matters' && (
-  <div className="sidecontent">
-    <h6><User /> {t('help.profile_title')}</h6>
-    <p>{t('help.profile_p1')}</p>
-    <div className="profile-items-wrapper">
-      {Array.from({ length: 16 }, (_, i) => i + 1)
-        .map((num) => ({
-          title: t(`help.profile_item${num}_title`, { defaultValue: '' }),
-          desc: t(`help.profile_item${num}_desc`, { defaultValue: '' }),
-        }))
-        .filter((item) => item.title && item.desc)
-        .map((item, idx) => (
-          <div key={idx} className="profile-item-box">
-            <h4 className="profile-item-title">{item.title}</h4>
-            <p className={cn("profile-item-desc", isRtl ? "profile-item-desc-rtl" : "profile-item-desc-ltr")}>
-              <strong className="profile-item-label">
-                {isRtl ? (i18n.language === 'he' ? 'למה זה משנה:' : 'لماذا يهم:') : 'Why it matters:'}
-              </strong>{' '}
-              {item.desc}
-            </p>
-          </div>
-        ))}
-    </div>
-  </div>
-)}
+                  <div className="sidecontent">
+                    <h6><User /> {t('help.profile_title')}</h6>
+                    <p>{t('help.profile_p1')}</p>
+                    <div className="profile-items-wrapper">
+                      {Array.from({ length: 16 }, (_, i) => i + 1)
+                        .map((num) => ({
+                          title: t(`help.profile_item${num}_title`, { defaultValue: '' }),
+                          desc: t(`help.profile_item${num}_desc`, { defaultValue: '' }),
+                        }))
+                        .filter((item) => item.title && item.desc)
+                        .map((item, idx) => (
+                          <div key={idx} className="profile-item-box">
+                            <h4 className="profile-item-title">{item.title}</h4>
+                            <p className={cn("profile-item-desc", isRtl ? "profile-item-desc-rtl" : "profile-item-desc-ltr")}>
+                              <strong className="profile-item-label">
+                                {isRtl ? (i18n.language === 'he' ? 'למה זה משנה:' : 'لماذا يهم:') : 'Why it matters:'}
+                              </strong>{' '}
+                              {item.desc}
+                            </p>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
                 {activeTab === 'wardrobe-stats' && (
                   <div className="space-y-4">
                     <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
@@ -744,6 +780,249 @@ export default function HelpMenu() {
                   </div>
                 )}
 
+                {activeTab === 'marketplace' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <ShoppingBag className="h-6 w-6" /> {t('help.market_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.market_p1')}</p>
+                    <div className="space-y-3">
+                      {[
+                        t('help.market_step1'),
+                        t('help.market_step2')
+                      ].map((text, idx) => (
+                        <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
+                          <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>
+                          <p className="text-sm text-muted-foreground pt-0.5">
+                            {text.split(':').map((part, i) => i === 0 ? <strong key={i} className="text-foreground font-semibold">{part}:</strong> : part)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'shopping-assistant' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <Chrome className="h-6 w-6" /> {t('help.shopping_assistant_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.shopping_assistant_p1')}</p>
+                    <div className="space-y-3">
+                      {[
+                        t('help.shopping_assistant_step1'),
+                        t('help.shopping_assistant_step2'),
+                        t('help.shopping_assistant_step3'),
+                        t('help.shopping_assistant_step4'),
+                        t('help.shopping_assistant_step5'),
+                        t('help.shopping_assistant_step6')
+                      ].map((text, idx) => (
+                        <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
+                          <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>
+                          <p className="text-sm text-muted-foreground pt-0.5">
+                            {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-foreground font-semibold">{part}</strong> : part)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'import-wardrobe' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <Search className="h-6 w-6" /> {t('help.import_wardrobe_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.import_wardrobe_p1')}</p>
+                    <div className="space-y-3">
+                      {[
+                        t('help.import_wardrobe_step1'),
+                        t('help.import_wardrobe_step2'),
+                        t('help.import_wardrobe_step3'),
+                        t('help.import_wardrobe_step4'),
+                        t('help.import_wardrobe_step5'),
+                        t('help.import_wardrobe_step6')
+                      ].map((text, idx) => (
+                        <div key={idx} className="flex gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
+                          <span className="font-bold text-primary text-lg shrink-0">{idx + 1}</span>
+                          <p className="text-sm text-muted-foreground pt-0.5">
+                            {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i} className="text-foreground font-semibold">{part}</strong> : part)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'trend-scout' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <TrendingUp className="h-6 w-6" /> {t('help.trend_scout_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.trend_scout_p1')}</p>
+                    <div className="space-y-3">
+                      {[
+                        { title: t('help.trend_feed_title'), desc: t('help.trend_feed_desc') },
+                        { title: t('help.trend_buckets_title'), desc: t('help.trend_buckets_desc') }
+                      ].map((item, idx) => (
+                        <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                          <h4 className="font-semibold text-sm">{item.title}</h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'experts' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <UserRound className="h-6 w-6" /> {t('help.experts_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.experts_p1')}</p>
+                    <div className="space-y-3">
+                      {[
+                        { title: t('help.experts_dir_title'), desc: t('help.experts_dir_desc') },
+                        { title: t('help.experts_search_title'), desc: t('help.experts_search_desc') },
+                        { title: t('help.experts_contact_title'), desc: t('help.experts_contact_desc') }
+                      ].map((item, idx) => (
+                        <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                          <h4 className="font-semibold text-sm">{item.title}</h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'campaigns' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <Megaphone className="h-6 w-6" /> {t('help.campaigns_help_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.campaigns_help_p1')}</p>
+                    <div className="space-y-3">
+                      {[
+                        { title: t('help.campaigns_feed_help_title'), desc: t('help.campaigns_feed_help_desc') },
+                        { title: t('help.campaigns_maps_help_title'), desc: t('help.campaigns_maps_help_desc') },
+                        { title: t('help.campaigns_save_help_title'), desc: t('help.campaigns_save_help_desc') }
+                      ].map((item, idx) => (
+                        <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                          <h4 className="font-semibold text-sm">{item.title}</h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'expert-campaigns' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <Megaphone className="h-6 w-6" /> {t('help.expert_campaigns_help_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.expert_campaigns_help_p1')}</p>
+                    <div className="space-y-3">
+                      {[
+                        { title: t('help.expert_campaigns_status_title'), desc: t('help.expert_campaigns_status_desc') },
+                        { title: t('help.expert_campaigns_extend_title'), desc: t('help.expert_campaigns_extend_desc') },
+                        { title: t('help.expert_campaigns_pause_title'), desc: t('help.expert_campaigns_pause_desc') },
+                        { title: t('help.expert_campaigns_delete_title'), desc: t('help.expert_campaigns_delete_desc') }
+                      ].map((item, idx) => (
+                        <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                          <h4 className="font-semibold text-sm">{item.title}</h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'create-campaign' && (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <Sparkles className="h-6 w-6" /> {t('help.create_campaign_help_title')}
+                    </h2>
+                    <p className="text-muted-foreground">{t('help.create_campaign_help_p1')}</p>
+                    <div className="space-y-3">
+                      {[
+                        { title: t('help.create_campaign_button_title'), desc: t('help.create_campaign_button_desc') },
+                        { title: t('help.create_campaign_step_title'), desc: t('help.create_campaign_step_desc') },
+                        { title: t('help.create_campaign_fee_title'), desc: t('help.create_campaign_fee_desc') },
+                        { title: t('help.create_campaign_submit_title'), desc: t('help.create_campaign_submit_desc') }
+                      ].map((item, idx) => (
+                        <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
+                          <h4 className="font-semibold text-sm">{item.title}</h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'tiers' && (
+                  <div className="space-y-6">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <Wallet className="h-6 w-6" /> {t('help.tiers_title', { defaultValue: 'Subscription Tiers' })}
+                    </h2>
+                    <p className="text-base leading-relaxed text-muted-foreground">
+                      {t('help.tiers_p1', { defaultValue: 'DressApp offers flexible subscription tiers tailored to your closet size and styling needs. Upgrade on the Pricing page to unlock unlimited features.' })}
+                    </p>
+
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="p-4 rounded-xl border border-border bg-secondary/5 space-y-2">
+                        <h3 className="font-bold text-sm text-foreground">{t('help.tiers_free_title', { defaultValue: 'Free Plan' })}</h3>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          {t('help.tiers_free_desc', { defaultValue: 'Baseline limit of 50 items. Expandable up to 200 items by sharing your invite code with friends (+10 capacity slots per friend).' })}
+                        </p>
+                      </div>
+
+                      <div className="p-4 rounded-xl border border-primary/30 bg-primary/5 space-y-2">
+                        <h3 className="font-bold text-sm text-primary">{t('help.tiers_manager_title', { defaultValue: 'Manager Plan' })}</h3>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          {t('help.tiers_manager_desc', { defaultValue: 'Costs $4.99/mo. Removes closet size limits entirely, unlocks advanced stats, calendar synchronization, and Trend Scout ranking filters.' })}
+                        </p>
+                      </div>
+
+                      <div className="p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 space-y-2">
+                        <h3 className="font-bold text-sm text-purple-600 dark:text-purple-400">{t('help.tiers_pro_title', { defaultValue: 'Professional Plan' })}</h3>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          {t('help.tiers_pro_desc', { defaultValue: 'Costs $9.99/mo. Built for style experts and fashion creators. Allows registration in the stylist directory and creation of fashion campaigns.' })}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-xl border border-border bg-secondary/10 space-y-2">
+                      <h4 className="font-semibold text-xs text-foreground uppercase tracking-wider">{t('help.tiers_how_to_upgrade_title', { defaultValue: 'How to upgrade:' })}</h4>
+                      <ol className="list-decimal pl-4 text-xs text-muted-foreground space-y-1">
+                        <li>{t('help.tiers_step1', { defaultValue: 'Go to your Profile settings page.' })}</li>
+                        <li>{t('help.tiers_step2', { defaultValue: 'Scroll down to the System Preferences section.' })}</li>
+                        <li>{t('help.tiers_step3', { defaultValue: 'Locate Closet & Subscription Limits and click on the Pricing Page link.' })}</li>
+                        <li>{t('help.tiers_step4', { defaultValue: 'Select your preferred plan and complete checkout securely.' })}</li>
+                      </ol>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'troubleshooting' && (
+                  <div className="space-y-6">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
+                      <AlertTriangle className="h-6 w-6" /> {t('help.trouble_title')}
+                    </h2>
+
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 space-y-2">
+                        <h4 className="font-semibold text-sm flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                          <ShieldAlert className="h-4 w-4 shrink-0" />
+                          {t('help.trouble_full_q')}
+                        </h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{t('help.trouble_full_why')}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{t('help.trouble_full_fix')}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Wiki Link Footer */}
                 {activeSection && (
                   <div className={cn("sidebarbtn")}>
@@ -771,6 +1050,6 @@ export default function HelpMenu() {
           </ScrollArea>
         </div>
       </div>
-    </div>
+    </div >
   );
 }

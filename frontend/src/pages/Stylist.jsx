@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useStoreState } from '@/lib/createSimpleStore';
 import { stylistUIStore } from '@/lib/stylistUIStore';
 import { useTranslation } from 'react-i18next';
@@ -126,6 +126,32 @@ const getOutfitPiecesMap = (o) => {
     o.garments.forEach((g) => {
       if (g && g.role) {
         map[g.role] = { image_url: g.image_url };
+      }
+    });
+  }
+  return map;
+};
+
+const getRecommendationPiecesMap = (rec, closetItems) => {
+  const map = {};
+  if (Array.isArray(rec?.items)) {
+    rec.items.forEach((item) => {
+      if (item && item.role) {
+        const closetItem = closetItems.find(c => c.id === item.closet_item_id);
+        if (closetItem) {
+          map[item.role] = { 
+            id: closetItem.id,
+            closet_item_id: closetItem.id,
+            image_url: closetItem.image_url,
+            clean_image_url: closetItem.clean_image_url,
+            cutout_url: closetItem.cutout_url,
+            segmented_image_url: closetItem.segmented_image_url,
+            thumbnail_data_url: closetItem.thumbnail_data_url,
+            reconstructed_image_url: closetItem.reconstructed_image_url,
+            original_image_url: closetItem.original_image_url,
+            image_variants: closetItem.image_variants,
+          };
+        }
       }
     });
   }
@@ -291,7 +317,8 @@ export default function Stylist() {
   const [calendarModalOpen, setCalendarModalOpen] = useStoreState(stylistUIStore, 'calendarModalOpen');
   const [schedulingDate, setSchedulingDate] = useStoreState(stylistUIStore, 'schedulingDate');
   const [currentCalendarMonth, setCurrentCalendarMonth] = useStoreState(stylistUIStore, 'currentCalendarMonth');
-  const { items: closetItems } = useClosetStore();
+
+  const { items: closetItems } = useClosetStore({ prewarm: true });
   const [isEditingOutfit, setIsEditingOutfit] = useStoreState(stylistUIStore, 'isEditingOutfit');
   const [editOutfitName, setEditOutfitName] = useStoreState(stylistUIStore, 'editOutfitName');
   const [editOutfitDescription, setEditOutfitDescription] = useStoreState(stylistUIStore, 'editOutfitDescription');
@@ -338,9 +365,36 @@ export default function Stylist() {
       if (targetOutfit) {
         setSelectedOutfitForDetail(targetOutfit);
         setHasAutoSelected(true);
+      } else {
+        const checkDateHasSuggestions = (dateStr) => {
+          const matches = (notifications || []).filter(n => {
+            try {
+              const payload = n.payload || {};
+              if (payload.target_date) {
+                return payload.target_date === dateStr;
+              }
+              const notifDate = new Date(n.created_at);
+              const y = notifDate.getFullYear();
+              const m = String(notifDate.getMonth() + 1).padStart(2, '0');
+              const d = String(notifDate.getDate()).padStart(2, '0');
+              return `${y}-${m}-${d}` === dateStr;
+            } catch (e) {
+              return n.created_at?.slice(0, 10) === dateStr;
+            }
+          });
+          return matches.length > 0;
+        };
+
+        if (checkDateHasSuggestions(tomorrowStr)) {
+          setSchedulingDate(tomorrowStr);
+          setHasAutoSelected(true);
+        } else if (checkDateHasSuggestions(todayStr)) {
+          setSchedulingDate(todayStr);
+          setHasAutoSelected(true);
+        }
       }
     }
-  }, [activeTab, outfits, selectedOutfitForDetail, hasAutoSelected]);
+  }, [activeTab, outfits, selectedOutfitForDetail, hasAutoSelected, notifications, setSchedulingDate, setHasAutoSelected]);
 
   const deleteOutfit = async (id) => {
     try {
@@ -606,6 +660,45 @@ export default function Stylist() {
     return 'bg-gradient-to-r from-rose-500 to-red-400';
   };
 
+  const dailyRecommendations = useMemo(() => {
+    if (!schedulingDate || !notifications) return [];
+    const targetDateStr = schedulingDate;
+    const matches = notifications.filter(n => {
+      try {
+        const payload = n.payload || {};
+        if (payload.target_date) {
+          return payload.target_date === targetDateStr;
+        }
+        const notifDate = new Date(n.created_at);
+        const y = notifDate.getFullYear();
+        const m = String(notifDate.getMonth() + 1).padStart(2, '0');
+        const d = String(notifDate.getDate()).padStart(2, '0');
+        const localNotifDateStr = `${y}-${m}-${d}`;
+        return localNotifDateStr === targetDateStr && n.payload;
+      } catch (e) {
+        return n.created_at?.slice(0, 10) === targetDateStr && n.payload;
+      }
+    });
+    
+    if (matches.length === 0) return [];
+    
+    // Sort matches by created_at descending (latest first)
+    matches.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    const latestNotif = matches[0];
+    
+    const recs = [];
+    const payload = latestNotif.payload || {};
+    const list = payload.outfit_recommendations || payload.proposals || [];
+    list.forEach((rec, idx) => {
+      recs.push({
+        ...rec,
+        notifId: latestNotif.id,
+        recIndex: idx,
+      });
+    });
+    return recs;
+  }, [schedulingDate, notifications]);
+
   const detailMetrics = selectedOutfitForDetail ? calculateOutfitMetrics(selectedOutfitForDetail) : null;
   const overallMatchingGrade = detailMetrics ? Math.round(
     (detailMetrics.color + detailMetrics.pattern + detailMetrics.fit + detailMetrics.weather + detailMetrics.event + detailMetrics.location) / 6
@@ -613,7 +706,7 @@ export default function Stylist() {
 
   const handleSaveOutfitToDate = async (notifId, recIndex, targetDate) => {
     const notif = notifications.find(n => n.id === notifId);
-    const rec = notif?.payload?.outfit_recommendations?.[recIndex];
+    const rec = notif?.payload?.outfit_recommendations?.[recIndex] || notif?.payload?.proposals?.[recIndex];
     if (!rec) return;
 
     const isEvent = (notif?.title || '').toLowerCase().includes('get ready');
@@ -653,10 +746,13 @@ export default function Stylist() {
 
     try {
       const saved = await api.saveOutfit(body);
-      upsert(saved?.outfit || saved);
+      const savedOutfit = saved?.outfit || saved;
+      upsert(savedOutfit);
       toast.success(t('stylist.outfitSaved', { defaultValue: 'Outfit saved and scheduled!' }));
+      return savedOutfit;
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('stylist.saveFailed', { defaultValue: 'Failed to save outfit.' }));
+      return null;
     }
   };
 

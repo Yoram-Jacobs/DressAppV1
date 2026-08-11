@@ -204,6 +204,24 @@ async def create_campaign(
     body: CampaignCreateIn,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
+    sub = user.get("subscription") or {}
+    is_active = sub.get("is_active", False)
+    plan_type = sub.get("plan_type", "free")
+    tier = sub.get("tier", "free")
+    
+    user_tier = "free"
+    if is_active and plan_type != "free":
+        if tier in ["pro", "manager"]:
+            user_tier = "manager"
+        elif tier in ["business", "professional"]:
+            user_tier = "professional"
+            
+    if user_tier != "professional":
+        raise HTTPException(
+            status_code=403,
+            detail="Campaigns are only available on the Professional plan. Please upgrade your plan to create campaigns."
+        )
+
     if not _is_expert(user):
         raise HTTPException(403, "Only verified Experts may create campaigns")
 
@@ -778,6 +796,10 @@ async def cancel_campaign(
     billing_update = {}
     if (campaign.get("billing") or {}).get("payment_status") == "pending":
         billing_update["billing.payment_status"] = "voided"
+
+    if campaign.get("status") in ("active", "paused"):
+        from app.services.campaign_service import bill_ended_campaign
+        await bill_ended_campaign(campaign, db)
 
     update_fields = {"status": "cancelled", "updated_at": _now_iso()}
     update_fields.update(billing_update)

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any
 
 from app.db.database import get_db
@@ -320,9 +320,12 @@ def _get_scheduler_stylist_service(user: dict[str, Any]):
 async def generate_scheduled_proposals(
     user: dict[str, Any],
     style_dress_for: str | None = None,
-    weather: dict[str, Any] | None = None
+    weather: dict[str, Any] | None = None,
+    calendar_events: list[dict[str, Any]] | None = None
 ) -> dict[str, Any]:
     """Generate 3 scheduled outfit proposals using the rotation prioritized items."""
+    user = dict(user)
+    user.pop("_id", None)
     user_id = user["id"]
     raw_closet = await get_rotation_prioritized_closet(user_id, limit=40)
     
@@ -349,10 +352,22 @@ async def generate_scheduled_proposals(
         for item in prioritized_closet
     )
 
+    # Determine target day and date for the outfit selection
+    user_timezone = (user.get("scheduler_settings") or {}).get("timezone") or "UTC"
+    try:
+        from zoneinfo import ZoneInfo
+        local_now = datetime.now(timezone.utc).astimezone(ZoneInfo(user_timezone))
+    except Exception:
+        local_now = datetime.now(timezone.utc)
+    is_next_day = local_now.hour >= 12
+    target_date = local_now + timedelta(days=1) if is_next_day else local_now
+    target_day_name = target_date.strftime("%A")
+    target_date_str = target_date.strftime("%Y-%m-%d")
+
     style_prompt = style_dress_for or "casual/daily dress"
     
     prompt = (
-        f"Generate EXACTLY 3 different outfit recommendations for tomorrow. "
+        f"Generate EXACTLY 3 different outfit recommendations for {target_day_name} ({target_date_str}). "
         f"The user's preset preference is: {style_prompt}.\n\n"
         f"CRITICAL REQUIREMENT: Every outfit recommendation MUST be a COMPLETE outfit consisting of: 1) Either (a 'top' AND a 'bottom') OR a 'dress', and 2) 'shoes' (footwear). NEVER recommend an outfit consisting of only a single T-shirt, top, or bottom without shoes and pants, unless the closet literally lacks those categories.\n\n"
         f"You MUST select items ONLY from the user's closet list below. Under no circumstances should you recommend items that the user does not own or that have a null closet_item_id. Every recommended item must map to a valid closet item ID from the list below.\n\n"
@@ -397,6 +412,7 @@ async def generate_scheduled_proposals(
         user_text=prompt,
         image_base64=None,
         weather=weather,
+        calendar_events=calendar_events,
         user_profile=user,
         closet_summary=prioritized_closet,
         user_preferences_block=prefs_block,
@@ -442,6 +458,8 @@ async def generate_event_proposals(
     event_name: str | None = None
 ) -> dict[str, Any]:
     """Generate 3 outfit proposals for a special event, incorporating marketplace search if closet matches are poor."""
+    user = dict(user)
+    user.pop("_id", None)
     user_id = user["id"]
     prioritized_closet = await get_rotation_prioritized_closet(user_id, limit=40)
     

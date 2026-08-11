@@ -13,13 +13,18 @@
 | `users`            | Auth + profile + style preferences + OAuth tokens    | `email` (unique), `stripe_account_id`                                                |
 | `closet_items`     | User's wardrobe items                                | `user_id`, `source`, `category`, text index on `tags`                                |
 | `listings`         | Marketplace items (subset of closet_items or retail) | `source`, `status`, `seller_id`, `category`, 2dsphere on `location`                   |
-| `transactions`     | Money ledger for marketplace sales                   | `buyer_id`, `seller_id`, `listing_id`, `status`, `stripe_checkout_session_id`        |
+| `transactions`     | Money ledger for marketplace sales                   | `buyer_id`, `seller_id`, `listing_id`, `status`, `paypal.order_id` (unique, partial) |
 | `stylist_sessions` | Per-user agent memory (Durable Object equivalent)    | `user_id` (unique)                                                                    |
 | `stylist_messages` | Conversation turns within a session                  | `(session_id, created_at)` compound                                                    |
 | `embeddings`       | Vector store for items / outfits / text queries      | `entity_type`, `entity_id`; **Atlas Vector Search** on `vector`                       |
 | `cultural_rules`   | Regional / religious / occasion constraints          | `(region, religion, occasion)` compound                                                |
 | `trend_reports`    | Daily Trend-Scout summaries                          | `date`, `category`                                                                    |
 | `outfits`          | Saved AI-generated outfits for later reuse           | `user_id`, `created_at`                                                                |
+| `ad_campaigns`     | Expert promotion ad campaigns                        | `(owner_id, created_at)`, `(status, target_country, target_region)`                 |
+| `user_credits`     | Prepaid ad credits per user & currency               | `(user_id, currency)` (unique)                                                       |
+| `credit_topups`    | Paid ad credits deposit ledger                       | `(user_id, created_at)`, `paypal_order_id` (unique)                                  |
+| `ai_credit_purchases` | Paid AI credit purchases (never expire)            | `(user_id, created_at)`, `paypal_order_id` (unique)                                  |
+| `suitcases`        | Travel packing assistant lists and outfits           | `user_id`                                                                           |
 
 ---
 
@@ -57,6 +62,15 @@
   "stripe_account_id": "acct_xxx",          // Stripe Connect Express (seller side)
   "stripe_onboarding_complete": false,
   "roles": ["user"],                        // 'admin' for backoffice
+  "credit_buckets": [                       // Prepaid credits buckets list
+    {
+      "amount": 10,
+      "type": "free",                       // free | paid
+      "created_at": "2026-08-09T00:00:00Z",
+      "expires_at": "2026-09-08T00:00:00Z"  // 30-day expiry for free credits, null for paid
+    }
+  ],
+  "free_ai_credits_daily": 10,
   "created_at": "2025-01-01T00:00:00Z",
   "updated_at": "2025-01-01T00:00:00Z"
 }
@@ -177,6 +191,10 @@ One document per marketplace payment. Gross, Stripe fees, platform fees and sell
     "transfer_id": "tr_...",
     "destination_account": "acct_xxx"         // seller's Stripe Connect account
   },
+  "paypal": {
+    "order_id": "order_xxx",
+    "payout_item_id": "payout_xxx"
+  },
   "status": "paid",                           // pending | paid | refunded | failed | disputed
   "paid_at": "2025-01-01T00:00:00Z",
   "refunded_at": null,
@@ -267,7 +285,7 @@ One per user — holds persistent agent memory.
 }
 ```
 
-**Atlas Vector Search index** (to be created in Phase 2):
+**Atlas Vector Search index**:
 
 ```json
 {
@@ -281,8 +299,6 @@ One per user — holds persistent agent memory.
   }
 }
 ```
-
-Fallback (if Atlas Vector Search not available on the MongoDB instance): cosine similarity computed in-process with a small FAISS index hydrated on startup.
 
 ---
 
@@ -305,8 +321,6 @@ Fallback (if Atlas Vector Search not available on the MongoDB instance): cosine 
 }
 ```
 
-The stylist prompt merges the user's `cultural_context` with matching `cultural_rules` as hard constraints.
-
 ---
 
 ## 8. `trend_reports`
@@ -315,13 +329,16 @@ The stylist prompt merges the user's `cultural_context` with matching `cultural_
 {
   "id": "uuid",
   "date": "2025-01-01",
-  "category": "womens_ss25",
+  "bucket": "womens_ss25",
   "headline": "Butter yellow dominates Milan",
   "summary_md": "...",
   "sources": ["https://vogue.com/...", "https://bof.com/..."],
   "key_items": [
     { "name": "butter-yellow tailored blazer", "expected_price_band": "mid" }
   ],
+  "language": "en",
+  "country_code": "US",
+  "origin_id": null,
   "generated_by": "trend-scout-agent@1.0",
   "created_at": "2025-01-01T06:00:00Z"
 }
@@ -354,21 +371,175 @@ The stylist prompt merges the user's `cultural_context` with matching `cultural_
 
 ---
 
+## 11. `ad_campaigns`
+
+```json
+{
+  "id": "uuid",
+  "owner_id": "uuid",
+  "name": "Summer Boutique Promo",
+  "profession": "stylist",
+  "creative": {
+    "headline": "Personal Styling Consultation",
+    "body": "Book a 1-on-1 session with a professional stylist today.",
+    "image_url": "https://...",
+    "cta_label": "Book Now",
+    "cta_url": "https://..."
+  },
+  "daily_budget_cents": 100,                 // $1.00 USD/day PayPal budget
+  "bid_cents": 10,
+  "start_date": "2026-08-01T00:00:00Z",
+  "end_date": "2026-08-31T23:59:59Z",
+  "target_country": "US",
+  "target_region": "New York",
+  "status": "active",                        // draft | active | paused | ended | disabled
+  "status_reason": null,
+  "currency": "USD",
+  "impressions": 1420,
+  "clicks": 98,
+  "spent_cents": 980,
+  "created_at": "2026-08-01T00:00:00Z",
+  "updated_at": "2026-08-09T12:00:00Z"
+}
+```
+
+---
+
+## 12. `suitcases`
+
+```json
+{
+  "id": "uuid",
+  "user_id": "uuid",
+  "destinations": "Lisbon, Portugal",
+  "purpose": "Summer Vacation",
+  "preferred_style": "casual",
+  "departure_time": "2026-08-15T08:00:00Z",
+  "return_time": "2026-08-22T20:00:00Z",
+  "notes": "Warm weather, expect some light wind at night.",
+  "status": "active",                        // gathering | reviewing | active | completed
+  "outfits": [
+    {
+      "date": "2026-08-15",
+      "items": [
+        { "closet_item_id": "uuid", "role": "top" },
+        { "closet_item_id": "uuid", "role": "bottom" }
+      ]
+    }
+  ],
+  "packing_list": [
+    { "item_id": "uuid", "packed": true, "name": "White Linen Shirt" }
+  ],
+  "missing_notes": null,
+  "local_fashion_stores": [],
+  "missing_items": [],
+  "created_at": "2026-08-09T10:00:00Z",
+  "updated_at": "2026-08-09T10:30:00Z"
+}
+```
+
+---
+
+## 13. `ai_credit_purchases`
+
+```json
+{
+  "id": "uuid",
+  "user_id": "uuid",
+  "pack": "50_credits",
+  "credits_amount": 50,
+  "amount_cents": 799,
+  "currency": "USD",
+  "status": "captured",                      // pending | captured | failed
+  "paypal_order_id": "order_xxx",
+  "paypal_capture_id": "capture_xxx",
+  "payer_email": "buyer@example.com",
+  "captured_at": "2026-08-09T11:00:00Z",
+  "created_at": "2026-08-09T10:55:00Z",
+  "updated_at": "2026-08-09T11:00:00Z"
+}
+```
+
+---
+
+## 14. `user_credits` & `credit_topups`
+
+Prepaid ad credits (USD) used to pay for daily ad campaigns.
+
+`user_credits` (per-user balance):
+```json
+{
+  "id": "uuid",
+  "user_id": "uuid",
+  "currency": "USD",
+  "balance_cents": 5000,
+  "created_at": "2026-08-01T00:00:00Z",
+  "updated_at": "2026-08-09T11:00:00Z"
+}
+```
+
+`credit_topups` (deposit ledger):
+```json
+{
+  "id": "uuid",
+  "user_id": "uuid",
+  "amount_cents": 2000,
+  "currency": "USD",
+  "status": "captured",
+  "paypal_order_id": "order_yyy",
+  "paypal_capture_id": "capture_yyy",
+  "payer_email": "buyer@example.com",
+  "captured_at": "2026-08-01T00:05:00Z",
+  "created_at": "2026-08-01T00:00:00Z",
+  "updated_at": "2026-08-01T00:05:00Z"
+}
+```
+
+---
+
 ## 10. Index creation (idempotent bootstrap on FastAPI startup)
 
 ```python
 await db.users.create_index("email", unique=True)
-await db.users.create_index("stripe_account_id")
+await db.users.create_index("stripe_account_id", sparse=True)
+await db.users.create_index(
+    [("professional.is_professional", 1), ("professional.approval_status", 1)],
+    sparse=True,
+)
+await db.users.create_index([("professional.profession", 1)], sparse=True)
 await db.closet_items.create_index([("user_id", 1), ("source", 1), ("category", 1)])
 await db.closet_items.create_index([("tags", "text"), ("title", "text"), ("brand", "text")])
 await db.listings.create_index([("source", 1), ("status", 1), ("category", 1)])
-await db.listings.create_index([("location", "2dsphere")])
+await db.listings.create_index([("seller_id", 1), ("status", 1)])
+await db.listings.create_index([("location", "2dsphere")], sparse=True)
 await db.transactions.create_index([("buyer_id", 1), ("created_at", -1)])
 await db.transactions.create_index([("seller_id", 1), ("created_at", -1)])
-await db.transactions.create_index("stripe.checkout_session_id", unique=True, sparse=True)
-await db.stylist_sessions.create_index("user_id", unique=True)
+await db.transactions.create_index(
+    [("paypal.order_id", 1)],
+    unique=True,
+    partialFilterExpression={"paypal.order_id": {"$type": "string"}},
+)
+await db.transactions.create_index([("paypal.payout_item_id", 1)], sparse=True)
+await db.paypal_events.create_index([("id", 1)], unique=True)
+await db.stylist_sessions.create_index([("user_id", 1), ("last_active_at", -1)])
 await db.stylist_messages.create_index([("session_id", 1), ("created_at", -1)])
 await db.embeddings.create_index([("entity_type", 1), ("entity_id", 1)], unique=True)
 await db.cultural_rules.create_index([("region", 1), ("religion", 1), ("occasion", 1)])
-await db.trend_reports.create_index([("date", -1), ("category", 1)])
+await db.trend_reports.create_index([("date", -1), ("bucket", 1)])
+await db.trend_reports.create_index(
+    [("bucket", 1), ("date", 1), ("language", 1), ("country_code", 1)], unique=True, sparse=True
+)
+await db.trend_reports.create_index(
+    [("origin_id", 1), ("language", 1), ("country_code", 1)], unique=True, sparse=True
+)
+await db.ad_campaigns.create_index([("owner_id", 1), ("created_at", -1)])
+await db.ad_campaigns.create_index([("status", 1), ("target_country", 1), ("target_region", 1)])
+await db.user_credits.create_index([("user_id", 1), ("currency", 1)], unique=True)
+await db.credit_topups.create_index([("user_id", 1), ("created_at", -1)])
+await db.credit_topups.create_index([("paypal_order_id", 1)], unique=True, sparse=True)
+await db.ai_credit_purchases.create_index([("user_id", 1), ("created_at", -1)])
+await db.ai_credit_purchases.create_index([("paypal_order_id", 1)], unique=True, sparse=True)
+await db.outfits.create_index([("user_id", 1), ("created_at", -1)])
+await db.simulated_notifications.create_index([("user_id", 1), ("created_at", -1)])
+await db.token_usage.create_index([("user_id", 1), ("created_at", -1)])
 ```

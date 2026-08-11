@@ -63,6 +63,7 @@ async def _send(
     html: str,
     *,
     reply_to: str | None = None,
+    attachments: list | None = None,
 ) -> dict[str, Any]:
     if not is_configured():
         logger.warning("email skipped — RESEND_API_KEY not set: subj=%r", subject)
@@ -78,6 +79,8 @@ async def _send(
     }
     if reply_to:
         params["reply_to"] = reply_to
+    if attachments:
+        params["attachments"] = attachments
     try:
         result = await asyncio.to_thread(resend.Emails.send, params)
         eid = result.get("id") if isinstance(result, dict) else None
@@ -282,7 +285,7 @@ expect dispatch within 3 working days.</p>
 
 async def sale_buyer(
     *, to: str, buyer: dict, seller: dict, item: dict, gross_cents: int, currency: str,
-    is_rental: bool = False,
+    is_rental: bool = False, attachments: list | None = None,
 ) -> dict:
     buyer_name = buyer.get("display_name") or buyer.get("name") or "there"
     gross = f"{currency} {gross_cents/100:.2f}"
@@ -312,7 +315,7 @@ Reach out to them directly if you need to coordinate delivery:</p>
 {_contact_block(contact_label, seller)}
 {_btn("View transaction in DressApp", f"{_APP_URL}/transactions")}
 """
-    return await _send(to, subject, _wrap(body, preheader=preheader))
+    return await _send(to, subject, _wrap(body, preheader=preheader), attachments=attachments)
 
 
 async def swap_request(
@@ -397,7 +400,8 @@ async def donation_both(
 
 
 async def send_thank_you_payment(
-    *, to: str, user: dict, amount_cents: int, currency: str, credits_purchased: int, transaction_id: str
+    *, to: str, user: dict, amount_cents: int, currency: str, credits_purchased: int, transaction_id: str,
+    attachments: list | None = None,
 ) -> dict:
     lang = (user.get("preferred_language") or "en").lower().split("-")[0]
     
@@ -563,7 +567,7 @@ async def send_thank_you_payment(
   </tr>
 </table>
 """
-    return await _send(to, t_data["subject"], _wrap(body_html, preheader=t_data["subject"]))
+    return await _send(to, t_data["subject"], _wrap(body_html, preheader=t_data["subject"]), attachments=attachments)
 
 
 async def send_deletion_email(*, to: str, display_name: str) -> dict:
@@ -576,6 +580,7 @@ async def send_deletion_email(*, to: str, display_name: str) -> dict:
 {_btn("Sign in to start a new experience", f"{_APP_URL}/login", color=_ACCENT)}
 """
     return await _send(to, subject, _wrap(body, preheader="Your DressApp account has been successfully deleted."))
+
 
 
 async def campaign_submission_alert(
@@ -636,3 +641,134 @@ async def campaign_submission_alert(
         subject,
         _wrap(body, preheader=f"New campaign from {expert_name} — {category} · {location_str}"),
     )
+
+
+async def fetch_invoice_and_receipt_attachments(amount_cents: int) -> list:
+    """Fetch invoice and receipt PDF attachment paths from Atzmai Sachir API for the given transaction amount."""
+    from app.services import atzmai_client
+    from app.config import settings
+    
+    agent_id = settings.ATZMAI_AGENT_ID
+    attachments = []
+    try:
+        # Fetch latest invoices
+        inv_resp = await atzmai_client.get_invoices(agent_id, size=5)
+        inv_list = inv_resp.get("body", {}).get("list", [])
+        if inv_list:
+            latest_inv = inv_list[0]
+            # Match by amount if possible
+            for inv in inv_list:
+                if abs(inv.get("totalAmount", 0) * 100 - amount_cents) < 5:
+                    latest_inv = inv
+                    break
+            
+            invoice_num = latest_inv.get("number")
+            if invoice_num:
+                pdf_resp = await atzmai_client.get_invoice_pdf(agent_id, invoice_num)
+                pdf_url = pdf_resp.get("body", {}).get("url")
+                if pdf_url:
+                    attachments.append({
+                        "path": pdf_url,
+                        "filename": f"invoice_{invoice_num}.pdf"
+                    })
+                    
+        # Fetch latest receipts
+        rec_resp = await atzmai_client.get_receipts(agent_id, size=5)
+        rec_list = rec_resp.get("body", {}).get("list", [])
+        if rec_list:
+            latest_rec = rec_list[0]
+            # Match by amount if possible
+            for rec in rec_list:
+                if abs(rec.get("totalAmount", 0) * 100 - amount_cents) < 5:
+                    latest_rec = rec
+                    break
+            
+            receipt_num = latest_rec.get("number")
+            if receipt_num:
+                pdf_resp = await atzmai_client.get_receipt_pdf(agent_id, receipt_num)
+                pdf_url = pdf_resp.get("body", {}).get("url")
+                if pdf_url:
+                    attachments.append({
+                        "path": pdf_url,
+                        "filename": f"receipt_{receipt_num}.pdf"
+                    })
+    except Exception as e:
+        logger.error(f"Failed to fetch invoice/receipt PDFs from Atzmai: {e}")
+        
+    return attachments
+
+
+async def send_campaign_billing_invoice(
+    *,
+    to: str,
+    user: dict,
+    campaign: dict,
+    amount_cents: int,
+    currency: str,
+    active_days: int,
+    transaction_id: str,
+    attachments: list | None = None,
+) -> dict:
+    """Send a billing email with invoice to the expert when their campaign ends."""
+    lang = (user.get("preferred_language") or "en").lower().split("-")[0]
+    campaign_title = campaign.get("title", "Fashion Campaign")
+    
+    matrix = {
+        "en": {
+            "subject": f"Invoice for your fashion campaign - {campaign_title}",
+            "header": "Fashion Campaign Invoice",
+            "body": f"We have compiled the final billing for your campaign '{campaign_title}' which has now ended. Your campaign was active for {active_days} days. We have successfully processed your payment of {currency} {amount_cents/100:.2f} via Atzmai.",
+            "details": "Invoice Details",
+            "txn_id": "Transaction ID",
+            "campaign": "Campaign Title",
+            "days": "Active Days",
+            "amount": "Total Charged",
+            "status": "Payment Status",
+            "completed": "Paid & Settled"
+        },
+        "he": {
+            "subject": f"חשבונית עבור קמפיין האופנה שלך - {campaign_title}",
+            "header": "חשבונית קמפיין אופנה",
+            "body": f"הפקנו את החיוב הסופי עבור הקמפיין שלך '{campaign_title}' שהסתיים כעת. הקמפיין היה פעיל במשך {active_days} ימים. עיבדנו בהצלחה את התשלום שלך בסך {currency} {amount_cents/100:.2f} באמצעות Atzmai.",
+            "details": "פרטי החשבונית",
+            "txn_id": "מזהה עסקה",
+            "campaign": "שם הקמפיין",
+            "days": "ימים פעילים",
+            "amount": "סה\"כ לתשלום",
+            "status": "סטטוס תשלום",
+            "completed": "שולם בהצלחה"
+        }
+    }
+    
+    t_data = matrix.get(lang) or matrix["en"]
+    
+    body_html = f"""\
+<h1 style="margin:0 0 14px;font-size:22px;">{t_data['header']}</h1>
+<p>{t_data['body']}</p>
+<div style="font-size:12px;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-top:18px;margin-bottom:8px;font-weight:bold;">
+  {t_data['details']}
+</div>
+<table role="presentation" cellpadding="0" cellspacing="0" style="border:1px solid #eee;border-radius:10px;padding:16px;width:100%;background:#fafafa;font-size:14px;line-height:1.6;">
+  <tr>
+    <td style="padding-bottom:8px;color:#666;width:140px;">{t_data['campaign']}:</td>
+    <td style="padding-bottom:8px;font-weight:600;">{campaign_title}</td>
+  </tr>
+  <tr>
+    <td style="padding-bottom:8px;color:#666;">{t_data['days']}:</td>
+    <td style="padding-bottom:8px;font-weight:600;">{active_days} days</td>
+  </tr>
+  <tr>
+    <td style="padding-bottom:8px;color:#666;">{t_data['txn_id']}:</td>
+    <td style="padding-bottom:8px;font-weight:600;font-family:monospace;">{transaction_id}</td>
+  </tr>
+  <tr>
+    <td style="padding-bottom:8px;color:#666;">{t_data['amount']}:</td>
+    <td style="padding-bottom:8px;font-weight:600;">{currency} {amount_cents/100:.2f}</td>
+  </tr>
+  <tr>
+    <td>{t_data['status']}:</td>
+    <td style="color:#1F6F6B;font-weight:600;">{t_data['completed']}</td>
+  </tr>
+</table>
+"""
+    return await _send(to, t_data["subject"], _wrap(body_html, preheader=t_data["subject"]), attachments=attachments)

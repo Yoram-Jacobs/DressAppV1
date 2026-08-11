@@ -69,7 +69,7 @@ _token_cache = _TokenCache()
 
 def is_configured() -> bool:
     """Cheap check used by route guards to return a friendly 503."""
-    return bool(settings.paypal_client_id and settings.paypal_secret)
+    return bool((settings.paypal_client_id and settings.paypal_secret) or settings.PAYPAL_MOCK_MODE)
 
 
 async def _get_access_token() -> str:

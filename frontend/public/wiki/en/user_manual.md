@@ -223,15 +223,15 @@ System liveness validation, financial bookkeeping, and user account management.
 - **DPP Verified Badge**: Scanning valid passports displays the green information card with sustainability details.
 - **Avatar Outerwear**: Outerwear displays correctly layered over tops on the 2D avatar canvas without clipping headwear/shoes.
 - **Voice Response**: Virtual Stylist text outputs play spoken audio automatically with a visible waveform indicator.
-- **Subscriptions**: Activating Pro immediately removes the 150-item limit warning.
+- **Subscriptions**: Upgrading to a Manager or Professional plan immediately removes the closet capacity limit warning.
 
 ---
 
 ## 5. Troubleshooting
 
 ### HTTP 402 Payment Required
-- **Problem**: Ingestion blocked. You have reached the maximum baseline limit of 150 closet items.
-- **Solution**: Go to Profile -> Subscription and upgrade to Pro, or share your invite link to get +10 slots per registration.
+- **Problem**: Ingestion blocked. You have reached the baseline limit of 50 closet items (or up to 200 items with referral bonuses).
+- **Solution**: Go to the **Pricing page** (`/pricing`) and subscribe to the Manager or Professional plan, or share your invite link to get +10 slots per registration (up to 200 items max).
 
 ### SSRF Blocked / DNS Error on DPP
 - **Problem**: Scanned QR passport URL fails to parse.

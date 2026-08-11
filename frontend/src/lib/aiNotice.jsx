@@ -25,7 +25,11 @@ export function showAiKeyWarningToast(navigate) {
         }}
         className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline self-start mt-1 cursor-pointer"
       >
+<<<<<<< HEAD
         <span>{t('aiNotice.configureKey', { defaultValue: 'Configure API Key in Profile' })}</span>
+=======
+        <span>{t('stylist.goToSettings', { defaultValue: 'Configure in Settings' })}</span>
+>>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
         <ArrowRight className="h-3.5 w-3.5" />
       </button>
     </div>,

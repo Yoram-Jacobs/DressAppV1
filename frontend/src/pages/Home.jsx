@@ -186,7 +186,7 @@ export default function Home() {
     setRefreshing(true);
     setTrends(null); // restore skeletons while we wait
     try {
-      await api.trendsRefreshAdmin(true);
+      await api.trendsRefreshAdmin(true, country);
       await fetchTrends();
       toast.success(t('home.trendsRefreshed', { defaultValue: 'Trends refreshed' }));
     } catch (err) {

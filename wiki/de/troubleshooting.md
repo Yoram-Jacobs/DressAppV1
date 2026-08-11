@@ -1,25 +1,25 @@
-# Fehlerbehebung und Einschränkungen
+# Fehlerbehebung & Limits
 
-Schnelle Korrekturen für häufiges App-Verhalten, Einschränkungen und Einstellungen.
+Schnelle Lösungen für häufiges App-Verhalten, Grenzwerte und Einstellungen.
 
 ## Übersicht
-Finden Sie schnelle Lösungen für Kameraberechtigungen, langsame Upload-Geschwindigkeiten, Fragen zu Kontolimits und Voice-Chat-Transkriptionen.
+Finden Sie schnelle Lösungen für Kameraberechtigungen, langsame Upload-Geschwindigkeiten, Fragen zu Kontolimits und Transkriptionen von Sprach-Chats.
 
 ## Voraussetzungen
 - Internetverbindung.
 
-## Schritt für Schritt
-1. **Kamerablockierung**: Wenn die Kamera nicht startet, gehen Sie zu den Browsereinstellungen, wählen Sie DressApp und setzen Sie die Kameraberechtigungen zurück.
-2. **Angehaltene Uploads**: Wenn der Ladevorgang bei mehreren Fotos einfriert, warten Sie, bis die sequentielle Hintergrundwarteschlange sie einzeln verarbeitet.
-3. **Der Schrank ist voll**: Kostenlose Benutzer haben eine Obergrenze von 150 Artikeln. Abonnieren Sie die Pro-Stufe oder laden Sie einen Freund ein (+10 Slots pro Anmeldung).
-4. **API-Fehler**: Wenn AI-Funktionen fehlschlagen, überprüfen Sie Ihre benutzerdefinierten Google AI Studio-Schlüssel auf Ihrer Profilseite.
+## Schritt-für-Schritt-Anleitung
+1. **Kamerablockierung**: Wenn die Kamera nicht startet, gehen Sie zu den Browsereinstellungen, wählen Sie DressApp aus und setzen Sie die Kameraberechtigungen zurück.
+2. **Stockende Uploads**: Wenn das Laden bei mehreren Fotos einfriert, warten Sie, bis die sequenzielle Hintergrundwarteschlange diese nacheinander verarbeitet hat.
+3. **Kleiderschrank voll**: Kostenlose Nutzer sind auf ein Basislimit von 50 Artikeln beschränkt. Abonnieren Sie die Manager- oder Professional-Stufe auf der **Preisseite** (`/pricing`), oder laden Sie einen Freund ein, um +10 Plätze pro Registrierung zu erhalten (bis zu maximal 200 Artikel).
+4. **API-Fehler**: Wenn KI-Funktionen fehlschlagen, überprüfen Sie Ihre benutzerdefinierten Google AI Studio-Schlüssel auf Ihrer Profilseite.
 
 ## Erwartete Ergebnisse
-Schnelle Lösung von Berechtigungen und Konfigurationen, ohne dass Tickets für den technischen Support erforderlich sind.
+Schnelle Lösung von Berechtigungs- und Konfigurationsproblemen, ohne dass technische Support-Tickets erforderlich sind.
 
 ## Fehlerbehebung
-- **Datenbankprobleme**: Wenn Elemente nicht synchron sind, melden Sie sich ab und wieder an, um die Token-Sitzungen zu aktualisieren.
-- **Probleme mit dem RTL-Layout**: Wenn sich arabische/hebräische Überlagerungen überschneiden, aktualisieren Sie Ihren Browser auf die neueste Version.
+- **Datenbankprobleme**: Wenn Artikel nicht synchronisiert sind, melden Sie sich ab und wieder an, um die Token-Sitzungen zu aktualisieren.
+- **RTL-Layoutprobleme**: Wenn sich arabische/hebräische Overlays überschneiden, aktualisieren Sie Ihren Browser auf die neueste Version.
 
 ## Einschränkungen
-- Plattformbeschränkungen werden strikt eingehalten, um die Serverressourcen zu schützen.
+- Plattformgrenzen werden strikt durchgesetzt, um Serverressourcen zu schützen.

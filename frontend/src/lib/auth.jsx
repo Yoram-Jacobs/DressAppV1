@@ -32,22 +32,6 @@ export function AuthProvider({ children }) {
     }
   }, [refresh]);
 
-  const login = async (email, password) => {
-    const res = await api.login({ email, password });
-    tokenStore.set(res.access_token);
-    userStore.set(res.user);
-    setUser(res.user);
-    return res.user;
-  };
-
-  const register = async (body) => {
-    const res = await api.register(body);
-    tokenStore.set(res.access_token);
-    userStore.set(res.user);
-    setUser(res.user);
-    return res.user;
-  };
-
   const devBypass = async () => {
     const res = await api.devBypass();
     tokenStore.set(res.access_token);
@@ -69,7 +53,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, register, devBypass, logout, refresh, updateUserLocal }}
+      value={{ user, loading, devBypass, logout, refresh, updateUserLocal }}
     >
       {children}
     </AuthContext.Provider>

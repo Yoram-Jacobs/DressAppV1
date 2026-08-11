@@ -23,17 +23,37 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/trends", tags=["trends"])
 
 
+def check_trend_scout_access(user: dict) -> None:
+    sub = user.get("subscription") or {}
+    is_active = sub.get("is_active", False)
+    plan_type = sub.get("plan_type", "free")
+    tier = sub.get("tier", "free")
+    
+    user_tier = "free"
+    if is_active and plan_type != "free":
+        if tier in ["pro", "manager"]:
+            user_tier = "manager"
+        elif tier in ["business", "professional"]:
+            user_tier = "professional"
+            
+    if user_tier == "free":
+        raise HTTPException(
+            status_code=403,
+            detail="Trend Scout is only available on Manager or Professional tiers. Please upgrade your plan."
+        )
+
+
 @router.get("/latest")
 async def get_latest_trends(
     per_bucket: int = Query(default=1, ge=1, le=5),
-    user: dict | None = Depends(get_current_user_optional),
+    user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Public-safe read: newest card(s) per bucket for the Home page feed."""
+    check_trend_scout_access(user)
     country = None
-    if user:
-        user_countries = _country_codes(user)
-        if user_countries:
-            country = next(iter(user_countries))
+    user_countries = _country_codes(user)
+    if user_countries:
+        country = next(iter(user_countries))
     cards = await latest_trend_cards(limit_per_bucket=per_bucket, country=country)
     return {"cards": cards, "count": len(cards)}
 
@@ -86,7 +106,7 @@ async def get_fashion_scout_feed(
     language: str | None = Query(default=None, max_length=8),
     country: str | None = Query(default=None, max_length=4),
     personalized: bool = Query(default=True),
-    user: dict | None = Depends(get_current_user_optional),
+    user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Newest-first flat feed for the Stylist right-panel news-flash.
 
@@ -100,12 +120,13 @@ async def get_fashion_scout_feed(
     never returns a 500 to the user — we degrade to an empty feed
     instead and log the underlying cause for support triage.
     """
+    check_trend_scout_access(user)
     try:
         cards = await fashion_scout_feed(
             limit=limit,
             language=language,
             country=country,
-            user=user if (user and personalized) else None,
+            user=user if personalized else None,
         )
     except Exception as exc:  # noqa: BLE001
         logger.exception(

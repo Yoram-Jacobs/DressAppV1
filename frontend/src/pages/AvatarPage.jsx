@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
+import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Save, Camera, Image as ImgIcon, Trash2, Sliders, CheckCircle2, UserCheck, Palette } from 'lucide-react';
@@ -69,13 +69,10 @@ export default function AvatarPage() {
   const fetchParams = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const res = await axios.get('/api/v1/avatar/params', {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
+      const res = await api.getAvatarParams();
 
-      if (res.data?.measurements) {
-        const m = res.data.measurements;
+      if (res.measurements) {
+        const m = res.measurements;
         setMeasurements({
           height: Number(m.height) || 168,
           shoulders: Number(m.shoulders) || 38,
@@ -84,16 +81,16 @@ export default function AvatarPage() {
           hip: Number(m.hips || m.hip) || 94,
           armLength: Number(m.arm_length || m.armLength) || 58,
           inseam: Number(m.inseam) || 76,
-          gender: String(m.gender || res.data.gender || 'female').toLowerCase()
+          gender: String(m.gender || res.gender || 'female').toLowerCase()
         });
       }
 
-      if (res.data?.skin_tone) {
-        setSkinColor(res.data.skin_tone);
+      if (res.skin_tone) {
+        setSkinColor(res.skin_tone);
       }
 
-      if (res.data?.body_photo_url) {
-        setBodyPhotoUrl(res.data.body_photo_url);
+      if (res.body_photo_url) {
+        setBodyPhotoUrl(res.body_photo_url);
         setAvatarMode('photo');
       }
     } catch (err) {
@@ -136,7 +133,6 @@ export default function AvatarPage() {
   const handleSaveProfile = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
       const payload = {
         sex: measurements.gender,
         skin_tone: skinColor,
@@ -153,9 +149,7 @@ export default function AvatarPage() {
         }
       };
 
-      await axios.patch('/api/v1/users/me', payload, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
+      await api.patchMe(payload);
 
       toast.success(t('pages.avatarPage.avatar_saved_successfully', { defaultValue: 'Digital avatar profile saved successfully!' }));
     } catch (err) {
