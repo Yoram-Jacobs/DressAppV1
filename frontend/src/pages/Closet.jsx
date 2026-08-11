@@ -673,7 +673,7 @@ export default function Closet() {
       clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.items]);
+  }, [pendingIds.join(',')]);
 
   const fetchSemantic = useCallback(async (text) => {
     setSemanticLoading(true);
