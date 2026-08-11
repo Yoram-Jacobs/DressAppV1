@@ -14,7 +14,6 @@ import { useLocation } from '@/lib/location';
 
 /**
  * CampaignFeed — infinite-scroll grid of active campaigns.
- *
  * Geo-aware: reads viewer's country + city from LocationProvider.
  * Sort: newest | nearest | ending_soon | highest_discount
  */
@@ -29,7 +28,6 @@ export function CampaignFeed() {
   const [initialLoad, setInitialLoad] = useState(true);
   const sentinelRef = useRef(null);
   const LIMIT = 12;
-
   const country = loc?.country_code || loc?.country || undefined;
   const city = loc?.city || undefined;
 

@@ -19,7 +19,7 @@ import { expertsStore } from '@/lib/expertsStore';
 import { useCachedList } from '@/lib/createCachedStore';
 import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
 import { CampaignFeed } from '@/components/CampaignFeed';
-
+import noexpert from "../assets/img/noexpert.svg";
 
 /**
  * Experts directory — public-facing list of self-certified fashion pros.
@@ -253,10 +253,18 @@ export default function ExpertsDirectory() {
                   ))}
                 </div>
               ) : items.length === 0 ? (
-                <div className="empty-state" data-testid="experts-empty">
-                  <UserRound />
-                  <h3 className="empty-title">{t("experts.emptyTitle")}</h3>
-                  <p className="empty-body">{t("experts.emptyBody")}</p>
+                <div className="card closet-empty-card" data-testid="experts-empty">
+                  <div className='card-body'>
+                    <div className="closet-empty-card__visual mb-0">
+                      <img src={noexpert} />
+                    </div>
+                    <div className="closet-empty-card__content">
+                      <div className='text-center'>
+                        <h2>{t("experts.emptyTitle")}</h2>
+                        <p>{t("experts.emptyBody")}</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="row gx-3 gy-3" data-testid="experts-grid">
@@ -291,7 +299,7 @@ export default function ExpertsDirectory() {
 
         {/* Regional ad ticker at the bottom */}
         <AdTicker placement="experts" className="mt-6" />
-        <ExploreBackButton />
+        {/* <ExploreBackButton /> */}
       </section>
     </>
   );

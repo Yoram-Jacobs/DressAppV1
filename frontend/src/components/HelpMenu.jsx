@@ -355,7 +355,6 @@ export default function HelpMenu() {
                     </div>
                   </div>
                 )}
-
                 {activeTab === 'closet-page' && (
                   <div className="sidecontent">
                     <h6><Grid /> {t('help.closet_page_title')}</h6>
@@ -375,7 +374,6 @@ export default function HelpMenu() {
                     </div>
                   </div>
                 )}
-
                 {activeTab === 'ai-stylist' && (
                   <div className="sidecontent">
                     <h6><Mic /> {t('help.stylist_title')}</h6>
@@ -400,7 +398,7 @@ export default function HelpMenu() {
                 )}
                 {activeTab === 'scheduler-push' && (
                   <div className="sidecontent">
-                    <h6><Bell/> {t('help.scheduler_push_title')}</h6>
+                    <h6><Bell /> {t('help.scheduler_push_title')}</h6>
                     <p>{t('help.scheduler_push_p1')}</p>
                     <div className="">
                       {[
@@ -413,9 +411,9 @@ export default function HelpMenu() {
                       ].map((text, idx) => (
                         <div key={idx} className="helplist">
                           <span>{idx + 1}</span>
-                          
-                            {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i}>{part}</strong> : part)}
-                    
+
+                          {text.split('**').map((part, i) => i % 2 === 1 ? <strong key={i}>{part}</strong> : part)}
+
                         </div>
                       ))}
                     </div>
@@ -423,36 +421,30 @@ export default function HelpMenu() {
                 )}
 
                 {activeTab === 'profile-matters' && (
-                  <div className="space-y-6">
-                    <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                      <User className="h-6 w-6" /> {t('help.profile_title')}
-                    </h2>
-                    <p className="text-muted-foreground">{t('help.profile_p1')}</p>
-                    <div className="space-y-4">
-                      {Array.from({ length: 16 }, (_, i) => i + 1)
-                        .map((num) => ({
-                          title: t(`help.profile_item${num}_title`, { defaultValue: '' }),
-                          desc: t(`help.profile_item${num}_desc`, { defaultValue: '' }),
-                        }))
-                        .filter((item) => item.title && item.desc)
-                        .map((item, idx) => (
-                          <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/5 space-y-2">
-                            <h4 className="font-semibold text-foreground text-sm flex items-center gap-2">
-                              <Info className="h-4 w-4 text-primary shrink-0" />
-                              {item.title}
-                            </h4>
-                            <p className={cn("text-xs text-muted-foreground leading-relaxed", isRtl ? "pr-6" : "pl-6")}>
-                              <strong className="text-primary/90 font-medium">
-                                {isRtl ? (i18n.language === 'he' ? 'למה זה משנה:' : 'لماذا يهم:') : 'Why it matters:'}
-                              </strong>{' '}
-                              {item.desc}
-                            </p>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                )}
-
+  <div className="sidecontent">
+    <h6><User /> {t('help.profile_title')}</h6>
+    <p>{t('help.profile_p1')}</p>
+    <div className="profile-items-wrapper">
+      {Array.from({ length: 16 }, (_, i) => i + 1)
+        .map((num) => ({
+          title: t(`help.profile_item${num}_title`, { defaultValue: '' }),
+          desc: t(`help.profile_item${num}_desc`, { defaultValue: '' }),
+        }))
+        .filter((item) => item.title && item.desc)
+        .map((item, idx) => (
+          <div key={idx} className="profile-item-box">
+            <h4 className="profile-item-title">{item.title}</h4>
+            <p className={cn("profile-item-desc", isRtl ? "profile-item-desc-rtl" : "profile-item-desc-ltr")}>
+              <strong className="profile-item-label">
+                {isRtl ? (i18n.language === 'he' ? 'למה זה משנה:' : 'لماذا يهم:') : 'Why it matters:'}
+              </strong>{' '}
+              {item.desc}
+            </p>
+          </div>
+        ))}
+    </div>
+  </div>
+)}
                 {activeTab === 'wardrobe-stats' && (
                   <div className="space-y-4">
                     <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
