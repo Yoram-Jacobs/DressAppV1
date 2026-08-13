@@ -1289,20 +1289,36 @@ export default function AddItem() {
     // chosen behaviour (option 2B). Track the count so the final
     // toast can mention them.
     if (isBatch) {
-      // A photo is a duplicate if the backend returned a match keyed
-      // by EITHER its sha256 OR its phash. Build the lookup against
-      // both fingerprints so we can correlate back to the surviving
-      // file list.
-      const dupShas = new Set(matches.map((m) => m.sha256).filter(Boolean));
-      const dupPhashes = new Set(matches.map((m) => m.phash).filter(Boolean));
-      const survivors = fingerprints
-        .filter(
-          (fp) =>
-            !(fp.sha256 && dupShas.has(fp.sha256)) &&
-            !(fp.phash && dupPhashes.has(fp.phash)),
-        )
-        .map((fp) => fp.file);
-      const skipped = files.length - survivors.length;
+      // Filter out closet duplicates and also deduplicate intra-batch items sequentially.
+      const dupShas = new Set();
+      const dupPhashes = new Set();
+      matches.forEach((m) => {
+        if (m.existing?.id && !m.existing.id.startsWith('batch-')) {
+          if (m.sha256) dupShas.add(m.sha256);
+          if (m.phash) dupPhashes.add(m.phash);
+        }
+      });
+
+      const seenShas = new Set();
+      const seenPhashes = new Set();
+      const survivors = [];
+      for (const fp of fingerprints) {
+        const isClosetDup =
+          (fp.sha256 && dupShas.has(fp.sha256)) ||
+          (fp.phash && dupPhashes.has(fp.phash));
+        if (isClosetDup) continue;
+
+        const isBatchDup =
+          (fp.sha256 && seenShas.has(fp.sha256)) ||
+          (fp.phash && seenPhashes.has(fp.phash));
+        if (isBatchDup) continue;
+
+        if (fp.sha256) seenShas.add(fp.sha256);
+        if (fp.phash) seenPhashes.add(fp.phash);
+        survivors.push(fp);
+      }
+
+      const skipped = fingerprints.length - survivors.length;
       if (!survivors.length) {
         toast.message(
           t('addItem.preflight.allDuplicatesSkippedBatch', {
@@ -1312,7 +1328,7 @@ export default function AddItem() {
         );
         return;
       }
-      return handleBatchBackground(survivors.map(f => fingerprints.find(x => x.file === f)), skipped);
+      return handleBatchBackground(survivors, skipped);
     }
 
     // INTERACTIVE path (≤5 photos): open the scrollable confirm
@@ -1525,6 +1541,12 @@ export default function AddItem() {
           fields: cardLike.fields,
           potentialDuplicate: frame.potential_duplicate,
           pendingBatchSave: true,
+          sourceSha256: cardLike.sourceSha256 || null,
+          sourcePhash: cardLike.sourcePhash || null,
+          sourceColorSig: cardLike.sourceColorSig || null,
+          sourceFilename: cardLike.sourceFilename || null,
+          sourceSizeBytes: cardLike.sourceSizeBytes || null,
+          isDuplicate: true,
         };
         setCards((prev) => [...prev, dupCard]);
         setBgBatch((b) => b ? { ...b, pendingDuplicates: (b.pendingDuplicates || 0) + 1, processed: b.processed + 1 } : b);
@@ -1666,6 +1688,12 @@ export default function AddItem() {
         reconstructionAdvised: false,
         deferMatte: !!meta.defer_matte,
         _streamSlot: meta._slot,
+        sourceSha256: originalCard.sourceSha256 || null,
+        sourcePhash: originalCard.sourcePhash || null,
+        sourceColorSig: originalCard.sourceColorSig || null,
+        sourceFilename: originalCard.sourceFilename || null,
+        sourceSizeBytes: originalCard.sourceSizeBytes || null,
+        isDuplicate: !!originalCard.isDuplicate,
       });
 
       const handleDetect = (frame) => {
@@ -3015,7 +3043,7 @@ export default function AddItem() {
                     </span>
                   </h4>
                   
-                  <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin">
+                  <div className="space-y-4 max-h-[500px] overflow-y-auto pe-1 scrollbar-thin">
                     {extractedItems.map((item, idx) => (
                       <div 
                         key={item.id} 
@@ -3077,7 +3105,7 @@ export default function AddItem() {
                         </div>
                         
                         {/* Actions Pane */}
-                        <div className="flex flex-row md:flex-col justify-center gap-2 border-t md:border-t-0 md:border-l border-border/30 pt-3 md:pt-0 md:pl-4 min-w-[120px]">
+                        <div className="flex flex-row md:flex-col justify-center gap-2 border-t md:border-t-0 md:border-s border-border/30 pt-3 md:pt-0 md:ps-4 min-w-[120px]">
                           {/* Attach Image Button */}
                           <Button
                             variant="outline"
@@ -3312,7 +3340,7 @@ export default function AddItem() {
                     className="rounded-xl border-border focus-visible:ring-[hsl(var(--accent))]"
                   />
                   
-                  <ScrollArea className="h-[250px] pr-2">
+                  <ScrollArea className="h-[250px] pe-2">
                     <div className="space-y-2">
                       {closetItemsFiltered.map((it) => (
                         <div
