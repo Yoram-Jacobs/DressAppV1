@@ -33,8 +33,6 @@ export const stylistUIStore = createSimpleStore({
 }, {
   storageKey: 'dressapp_stylist_store',
   persistKeys: [
-    'messages',
-    'sessions',
     'activeSessionId',
     'notifications',
     'calendarStartDate',
