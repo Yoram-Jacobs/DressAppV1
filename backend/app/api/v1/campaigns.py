@@ -446,18 +446,13 @@ async def submit_campaign(
     except Exception:
         total_days = 1
 
-    # --- Create PayPal order (CAPTURE intent — expert completes via SDK) ---
+    order_id = f"ncp_camp_{uuid.uuid4().hex[:12].upper()}"
+    approve_url = "https://www.paypal.com/ncp/payment/995PY44NHVANA"
+    
     from app.services import paypal_client
-    try:
-        order = await paypal_client.create_order(
-            amount_cents=fee_cents,
-            currency="USD",
-            reference_id=f"campaign:{campaign_id}",
-            description=f"DressApp Campaign: {campaign.get('title', '')[:60]} ({total_days}d × $1.00)",
-            custom_id=campaign_id,
-        )
-    except paypal_client.PayPalError as exc:
-        raise HTTPException(502, {"paypal_error": str(exc.body)}) from exc
+    if settings.PAYPAL_MOCK_MODE or not paypal_client.is_configured():
+        redirect_base = f"{settings.APP_PUBLIC_URL}/campaigns/mine?sub_status=success"
+        approve_url = f"{redirect_base}&order_id={order_id}"
 
     now = _now_iso()
 
@@ -465,7 +460,7 @@ async def submit_campaign(
     await db.experts_campaigns.update_one(
         {"id": campaign_id},
         {"$set": {
-            "billing.paypal_order_id": order["id"],
+            "billing.paypal_order_id": order_id,
             "billing.total_days": total_days,
             "billing.total_fee_cents": fee_cents,
             "billing.payment_status": "pending",
@@ -474,11 +469,12 @@ async def submit_campaign(
     )
 
     return {
-        "order_id": order["id"],
+        "order_id": order_id,
         "fee_cents": fee_cents,
         "currency": "USD",
         "total_days": total_days,
-        "mock": order.get("mock", False),
+        "approve_url": approve_url,
+        "mock": settings.PAYPAL_MOCK_MODE,
     }
 
 
@@ -488,8 +484,7 @@ async def submit_capture(
     body: SubmitCaptureIn,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Called after expert completes the PayPal SDK button. Captures the payment,
-    marks campaign as pending_approval, fires admin alert email."""
+    """Called after expert completes the PayPal NCP flow. Marks campaign as pending_approval, fires admin alert email."""
     campaign = await _get_campaign_or_404(campaign_id)
     if campaign["expert_id"] != user["id"]:
         raise HTTPException(403, "Not the campaign owner")
@@ -499,23 +494,8 @@ async def submit_capture(
         raise HTTPException(422, "Campaign is not in a submittable state")
 
     db = get_db()
-    from app.services import paypal_client
-    try:
-        captured = await paypal_client.capture_order(body.order_id)
-    except paypal_client.PayPalError as exc:
-        await db.experts_campaigns.update_one(
-            {"id": campaign_id},
-            {"$set": {"billing.payment_status": "failed", "updated_at": _now_iso()}},
-        )
-        raise HTTPException(502, {"paypal_error": str(exc.body)}) from exc
-
-    capture_id = (
-        (captured.get("purchase_units") or [{}])[0]
-        .get("payments", {})
-        .get("captures", [{}])[0]
-        .get("id")
-    )
-    payer_email = (captured.get("payer") or {}).get("email_address")
+    capture_id = f"ncp_cap_{uuid.uuid4().hex[:12].upper()}"
+    payer_email = user["email"]
     now = _now_iso()
 
     await db.experts_campaigns.update_one(
@@ -579,19 +559,15 @@ async def extend_campaign(
 
     extra_fee_cents = extra_days * 100  # $1.00 per day
 
-    db = get_db()
+    order_id = f"ncp_ext_{uuid.uuid4().hex[:12].upper()}"
+    approve_url = "https://www.paypal.com/ncp/payment/995PY44NHVANA"
+    
     from app.services import paypal_client
-    try:
-        order = await paypal_client.create_order(
-            amount_cents=extra_fee_cents,
-            currency="USD",
-            reference_id=f"campaign_ext:{campaign_id}",
-            description=f"DressApp Campaign Extension: {campaign.get('title', '')[:50]} (+{extra_days}d × $1.00)",
-            custom_id=f"{campaign_id}:ext:{body.new_end_date}",
-        )
-    except paypal_client.PayPalError as exc:
-        raise HTTPException(502, {"paypal_error": str(exc.body)}) from exc
+    if settings.PAYPAL_MOCK_MODE or not paypal_client.is_configured():
+        redirect_base = f"{settings.APP_PUBLIC_URL}/campaigns/mine?sub_status=success"
+        approve_url = f"{redirect_base}&order_id={order_id}"
 
+    db = get_db()
     # Store pending extension info
     await db.experts_campaigns.update_one(
         {"id": campaign_id},
@@ -600,19 +576,20 @@ async def extend_campaign(
                 "new_end_date": body.new_end_date,
                 "extra_days": extra_days,
                 "extra_fee_cents": extra_fee_cents,
-                "paypal_order_id": order["id"],
+                "paypal_order_id": order_id,
             },
             "updated_at": _now_iso(),
         }},
     )
 
     return {
-        "order_id": order["id"],
+        "order_id": order_id,
         "extra_days": extra_days,
         "extra_fee_cents": extra_fee_cents,
         "currency": "USD",
         "new_end_date": body.new_end_date,
-        "mock": order.get("mock", False),
+        "approve_url": approve_url,
+        "mock": settings.PAYPAL_MOCK_MODE,
     }
 
 
@@ -633,18 +610,7 @@ async def extend_capture(
         raise HTTPException(400, "Order ID mismatch — call /extend first")
 
     db = get_db()
-    from app.services import paypal_client
-    try:
-        captured = await paypal_client.capture_order(body.order_id)
-    except paypal_client.PayPalError as exc:
-        raise HTTPException(502, {"paypal_error": str(exc.body)}) from exc
-
-    capture_id = (
-        (captured.get("purchase_units") or [{}])[0]
-        .get("payments", {})
-        .get("captures", [{}])[0]
-        .get("id")
-    )
+    capture_id = f"ncp_cap_ext_{uuid.uuid4().hex[:12].upper()}"
     now = _now_iso()
     extra_days = pending.get("extra_days", 1)
     extra_fee = pending.get("extra_fee_cents", 100)

@@ -79,6 +79,9 @@ export function CampaignSettingsSheet({ open, onOpenChange, campaign, onUpdated 
     try {
       const res = await campaignApi.extendCampaign(campaign.id, newEndDate);
       setExtendOrder(res);
+      if (res.approve_url) {
+        window.open(res.approve_url, '_blank');
+      }
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('campaigns.settings.extendError'));
     } finally {
