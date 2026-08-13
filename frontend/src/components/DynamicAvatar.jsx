@@ -67,15 +67,27 @@ export default function DynamicAvatar({
 
     // Anatomical Ellipse Divisor (~2.65) to convert circumferences to flat front widths
     const DIVISOR = 2.65;
-    const wShoulders = (numSh * 1.1) * (isMale ? 1.05 : 0.95);
-    const wChest = ((numCh / DIVISOR) * 1.05) * (isMale ? 1.02 : 1.0);
-    const wWaist = ((numW / DIVISOR) * 1.0) * (isMale ? 0.98 : 0.90);
-    const wHip = ((numHip / DIVISOR) * 1.05) * (isMale ? 0.93 : 1.05);
-    const wNeck = isMale ? 13 : 10;
+    
+    // Male and Female shape parameters
+    const wShoulders = isMale ? (numSh * 1.25) : (numSh * 1.0);
+    const wChest = isMale ? ((numCh / DIVISOR) * 1.1) : ((numCh / DIVISOR) * 0.95);
+    const wWaist = isMale ? ((numW / DIVISOR) * 1.02) : ((numW / DIVISOR) * 0.82);
+    const wHip = isMale ? ((numHip / DIVISOR) * 0.92) : ((numHip / DIVISOR) * 1.08);
+    const wNeck = isMale ? 14 : 9.5;
+
+    // Leg widths (thicker legs, realistic proportions)
+    const wOuterKnee = isMale ? (wHip * 0.65) : (wHip * 0.58);
+    const wInnerKnee = isMale ? 10.5 : 9.5;
+    
+    const wOuterAnkle = isMale ? 21 : 18.5;
+    const wInnerAnkle = isMale ? 9.5 : 8.0;
+    
+    const wFootTip = isMale ? 24 : 20;
+    const wFootHeel = isMale ? 10 : 8.5;
 
     // Arm widths
-    const wUpperArm = isMale ? 11 : 8.5;
-    const wForearm = isMale ? 8.5 : 6.5;
+    const wUpperArm = isMale ? 12 : 8.5;
+    const wForearm = isMale ? 9.5 : 6.8;
 
     // --- Build Body Contours Path with Cubic Bezier Curves (C & S) ---
     const pNeckR = `${X0 + wNeck},${yChin}`;
@@ -83,21 +95,21 @@ export default function DynamicAvatar({
     const pChestR = `${X0 + wChest},${yChest}`;
     const pWaistR = `${X0 + wWaist},${yWaist}`;
     const pHipR = `${X0 + wHip},${yHip}`;
-    const pOuterKneeR = `${X0 + wHip * 0.52},${yKnees}`;
-    const pOuterAnkleR = `${X0 + 15},${yAnkles}`;
-    const pFootTipR = `${X0 + 17},${yFeet}`;
-    const pFootHeelR = `${X0 + 7},${yFeet}`;
-    const pInnerAnkleR = `${X0 + 6},${yAnkles}`;
-    const pInnerKneeR = `${X0 + 7.5},${yKnees}`;
+    const pOuterKneeR = `${X0 + wOuterKnee},${yKnees}`;
+    const pOuterAnkleR = `${X0 + wOuterAnkle},${yAnkles}`;
+    const pFootTipR = `${X0 + wFootTip},${yFeet}`;
+    const pFootHeelR = `${X0 + wFootHeel},${yFeet}`;
+    const pInnerAnkleR = `${X0 + wInnerAnkle},${yAnkles}`;
+    const pInnerKneeR = `${X0 + wInnerKnee},${yKnees}`;
     const pCrotch = `${X0},${yCrotch}`;
 
     // Left side (Viewer's left = -X)
-    const pInnerKneeL = `${X0 - 7.5},${yKnees}`;
-    const pInnerAnkleL = `${X0 - 6},${yAnkles}`;
-    const pFootHeelL = `${X0 - 7},${yFeet}`;
-    const pFootTipL = `${X0 - 17},${yFeet}`;
-    const pOuterAnkleL = `${X0 - 15},${yAnkles}`;
-    const pOuterKneeL = `${X0 - wHip * 0.52},${yKnees}`;
+    const pInnerKneeL = `${X0 - wInnerKnee},${yKnees}`;
+    const pInnerAnkleL = `${X0 - wInnerAnkle},${yAnkles}`;
+    const pFootHeelL = `${X0 - wFootHeel},${yFeet}`;
+    const pFootTipL = `${X0 - wFootTip},${yFeet}`;
+    const pOuterAnkleL = `${X0 - wOuterAnkle},${yAnkles}`;
+    const pOuterKneeL = `${X0 - wOuterKnee},${yKnees}`;
     const pHipL = `${X0 - wHip},${yHip}`;
     const pWaistL = `${X0 - wWaist},${yWaist}`;
     const pChestL = `${X0 - wChest},${yChest}`;
@@ -107,25 +119,25 @@ export default function DynamicAvatar({
     // Path string assembling Bezier curves
     const bodyPath = [
       `M ${pNeckR}`,
-      `C ${X0 + wNeck + (wShoulders - wNeck) * 0.6},${yChin + neckHeight * 0.7} ${X0 + wShoulders * 0.9},${yShoulders - 2} ${pShoulderR}`,
-      `C ${X0 + wShoulders * 0.95},${yShoulders + (yChest - yShoulders) * 0.6} ${X0 + wChest + 2},${yChest - 5} ${pChestR}`,
-      `C ${X0 + wChest - 1},${yChest + (yWaist - yChest) * 0.5} ${X0 + wWaist + (isMale ? 1 : -2)},${yWaist - 8} ${pWaistR}`,
-      `C ${X0 + wWaist + (isMale ? 2 : 5)},${yWaist + (yHip - yWaist) * 0.4} ${X0 + wHip + 1},${yHip - 8} ${pHipR}`,
-      `C ${X0 + wHip},${yHip + (yKnees - yHip) * 0.3} ${X0 + wHip * 0.65},${yKnees - 15} ${pOuterKneeR}`,
-      `C ${X0 + wHip * 0.42},${yKnees + 20} ${X0 + 18},${yAnkles - 15} ${pOuterAnkleR}`,
+      `C ${X0 + wNeck + (wShoulders - wNeck) * 0.6},${yChin + neckHeight * 0.5} ${X0 + wShoulders * 0.8},${yShoulders - 2} ${pShoulderR}`,
+      `C ${X0 + wShoulders + 2},${yShoulders + 10} ${X0 + wChest + 2},${yChest - 5} ${pChestR}`,
+      `C ${X0 + wChest - (isMale ? 1 : 3)},${yChest + (yWaist - yChest) * 0.5} ${X0 + wWaist + (isMale ? 2 : -2)},${yWaist - 8} ${pWaistR}`,
+      `C ${X0 + wWaist + (isMale ? 1 : 4)},${yWaist + (yHip - yWaist) * 0.5} ${X0 + wHip + (isMale ? 1 : 2)},${yHip - 8} ${pHipR}`,
+      `C ${X0 + wHip - (isMale ? 1 : 2)},${yHip + (yKnees - yHip) * 0.4} ${X0 + wOuterKnee + 3},${yKnees - 12} ${pOuterKneeR}`,
+      `C ${X0 + wOuterKnee + (isMale ? 2 : 1)},${yKnees + 15} ${X0 + wOuterAnkle + 3},${yAnkles - 15} ${pOuterAnkleR}`,
       `L ${pFootTipR} L ${pFootHeelR}`,
       `L ${pInnerAnkleR}`,
-      `C ${X0 + 6},${yAnkles - 20} ${X0 + 7},${yKnees + 20} ${pInnerKneeR}`,
-      `C ${X0 + 8},${yKnees - 20} ${X0 + 3},${yCrotch + 15} ${pCrotch}`,
-      `C ${X0 - 3},${yCrotch + 15} ${X0 - 8},${yKnees - 20} ${pInnerKneeL}`,
-      `C ${X0 - 7},${yKnees + 20} ${X0 - 6},${yAnkles - 20} ${pInnerAnkleL}`,
+      `C ${X0 + wInnerAnkle + (isMale ? 1.5 : 1)},${yAnkles - 15} ${X0 + wInnerKnee + 1},${yKnees + 15} ${pInnerKneeR}`,
+      `C ${X0 + wInnerKnee - (isMale ? 1.5 : 1)},${yKnees - 15} ${X0 + 3.5},${yCrotch + 10} ${pCrotch}`,
+      `C ${X0 - 3.5},${yCrotch + 10} ${X0 - wInnerKnee + (isMale ? 1.5 : 1)},${yKnees - 15} ${pInnerKneeL}`,
+      `C ${X0 - wInnerKnee - 1},${yKnees + 15} ${X0 - wInnerAnkle - (isMale ? 1.5 : 1)},${yAnkles - 15} ${pInnerAnkleL}`,
       `L ${pFootHeelL} L ${pFootTipL} L ${pOuterAnkleL}`,
-      `C ${X0 - 18},${yAnkles - 15} ${X0 - wHip * 0.42},${yKnees + 20} ${pOuterKneeL}`,
-      `C ${X0 - wHip * 0.65},${yKnees - 15} ${X0 - wHip},${yHip + (yKnees - yHip) * 0.3} ${pHipL}`,
-      `C ${X0 - wHip - 1},${yHip - 8} ${X0 - wWaist - (isMale ? 2 : 5)},${yWaist + (yHip - yWaist) * 0.4} ${pWaistL}`,
-      `C ${X0 - wWaist - (isMale ? 1 : -2)},${yWaist - 8} ${X0 - wChest + 1},${yChest + (yWaist - yChest) * 0.5} ${pChestL}`,
-      `C ${X0 - wChest - 2},${yChest - 5} ${X0 - wShoulders * 0.95},${yShoulders + (yChest - yShoulders) * 0.6} ${pShoulderL}`,
-      `C ${X0 - wShoulders * 0.9},${yShoulders - 2} ${X0 - wNeck - (wShoulders - wNeck) * 0.6},${yChin + neckHeight * 0.7} ${pNeckL}`,
+      `C ${X0 - wOuterAnkle - 3},${yAnkles - 15} ${X0 - wOuterKnee - (isMale ? 2 : 1)},${yKnees + 15} ${pOuterKneeL}`,
+      `C ${X0 - wOuterKnee - 3},${yKnees - 12} ${X0 - wHip + (isMale ? 1 : 2)},${yHip + (yKnees - yHip) * 0.4} ${pHipL}`,
+      `C ${X0 - wHip - (isMale ? 1 : 2)},${yHip - 8} ${X0 - wWaist - (isMale ? 1 : 4)},${yWaist + (yHip - yWaist) * 0.5} ${pWaistL}`,
+      `C ${X0 - wWaist - (isMale ? 2 : -2)},${yWaist - 8} ${X0 - wChest + (isMale ? 1 : 3)},${yChest + (yWaist - yChest) * 0.5} ${pChestL}`,
+      `C ${X0 - wChest - 2},${yChest - 5} ${X0 - wShoulders - 2},${yShoulders + 10} ${pShoulderL}`,
+      `C ${X0 - wShoulders * 0.8},${yShoulders - 2} ${X0 - wNeck - (wShoulders - wNeck) * 0.6},${yChin + neckHeight * 0.5} ${pNeckL}`,
       `Z`
     ].join(' ');
 
@@ -151,12 +163,20 @@ export default function DynamicAvatar({
     ].join(' ');
 
     // Head Contour Path
-    const headWidth = (headHeight * 0.72);
-    const headPath = [
+    const headWidth = (headHeight * 0.68);
+    const headPath = isMale ? [
       `M ${X0 - headWidth},${yHeadTop + headHeight * 0.45}`,
-      `C ${X0 - headWidth},${yHeadTop - 5} ${X0 + headWidth},${yHeadTop - 5} ${X0 + headWidth},${yHeadTop + headHeight * 0.45}`,
-      `C ${X0 + headWidth},${yHeadTop + headHeight * 0.8} ${X0 + wNeck + 1},${yChin} ${X0},${yChin}`,
-      `C ${X0 - wNeck - 1},${yChin} ${X0 - headWidth},${yHeadTop + headHeight * 0.8} ${X0 - headWidth},${yHeadTop + headHeight * 0.45}`,
+      `C ${X0 - headWidth},${yHeadTop - 2} ${X0 + headWidth},${yHeadTop - 2} ${X0 + headWidth},${yHeadTop + headHeight * 0.45}`,
+      `C ${X0 + headWidth},${yHeadTop + headHeight * 0.68} ${X0 + wNeck * 0.95},${yHeadTop + headHeight * 0.85} ${X0 + wNeck * 0.65},${yHeadTop + headHeight * 0.94}`,
+      `C ${X0 + wNeck * 0.38},${yChin} ${X0 - wNeck * 0.38},${yChin} ${X0 - wNeck * 0.65},${yHeadTop + headHeight * 0.94}`,
+      `C ${X0 - wNeck * 0.95},${yHeadTop + headHeight * 0.85} ${X0 - headWidth},${yHeadTop + headHeight * 0.68} ${X0 - headWidth},${yHeadTop + headHeight * 0.45}`,
+      `Z`
+    ].join(' ') : [
+      `M ${X0 - headWidth},${yHeadTop + headHeight * 0.42}`,
+      `C ${X0 - headWidth},${yHeadTop - 4} ${X0 + headWidth},${yHeadTop - 4} ${X0 + headWidth},${yHeadTop + headHeight * 0.42}`,
+      `C ${X0 + headWidth},${yHeadTop + headHeight * 0.62} ${X0 + wNeck * 0.9},${yHeadTop + headHeight * 0.8} ${X0 + wNeck * 0.55},${yHeadTop + headHeight * 0.92}`,
+      `C ${X0 + wNeck * 0.3},${yChin} ${X0 - wNeck * 0.3},${yChin} ${X0 - wNeck * 0.55},${yHeadTop + headHeight * 0.92}`,
+      `C ${X0 - wNeck * 0.9},${yHeadTop + headHeight * 0.8} ${X0 - headWidth},${yHeadTop + headHeight * 0.62} ${X0 - headWidth},${yHeadTop + headHeight * 0.42}`,
       `Z`
     ].join(' ');
 
@@ -171,7 +191,12 @@ export default function DynamicAvatar({
       yWaist,
       yHip,
       yCrotch,
-      yFeet
+      yFeet,
+      headHeight,
+      headWidth,
+      yHeadTop,
+      yChin,
+      isMale
     };
   }, [height, shoulders, chest, waist, hip, armLength, inseam, gender]);
 
@@ -215,6 +240,35 @@ export default function DynamicAvatar({
           <path d={geometry.bodyPath} fill="url(#mannequinShading)" stroke="none" />
           <path d={geometry.headPath} fill="url(#mannequinShading)" stroke="none" />
         </g>
+
+        {/* Stylized Hair Overlay to make heads look premium and realistically structured */}
+        {geometry.isMale ? (
+          <path
+            d={`M 100,${geometry.yHeadTop - 1}
+                C ${100 - geometry.headWidth - 1},${geometry.yHeadTop - 1} ${100 - geometry.headWidth - 2},${geometry.yHeadTop + geometry.headHeight * 0.3} ${100 - geometry.headWidth - 2},${geometry.yHeadTop + geometry.headHeight * 0.42}
+                C ${100 - geometry.headWidth + 1},${geometry.yHeadTop + geometry.headHeight * 0.35} ${100 - geometry.headWidth * 0.6},${geometry.yHeadTop + geometry.headHeight * 0.18} ${100 - geometry.headWidth * 0.35},${geometry.yHeadTop + geometry.headHeight * 0.28}
+                C 100,${geometry.yHeadTop + 4} 100,${geometry.yHeadTop + 4} ${100 + geometry.headWidth * 0.35},${geometry.yHeadTop + geometry.headHeight * 0.28}
+                C ${100 + geometry.headWidth * 0.6},${geometry.yHeadTop + geometry.headHeight * 0.18} ${100 + geometry.headWidth - 1},${geometry.yHeadTop + geometry.headHeight * 0.35} ${100 + geometry.headWidth + 2},${geometry.yHeadTop + geometry.headHeight * 0.42}
+                C ${100 + geometry.headWidth + 2},${geometry.yHeadTop + geometry.headHeight * 0.3} ${100 + geometry.headWidth + 1},${geometry.yHeadTop - 1} 100,${geometry.yHeadTop - 1}
+                Z`}
+            fill="currentColor"
+            className="text-black/15 dark:text-white/20 pointer-events-none"
+          />
+        ) : (
+          <path
+            d={`M 100,${geometry.yHeadTop - 1}
+                C ${100 - geometry.headWidth - 2},${geometry.yHeadTop - 1} ${100 - geometry.headWidth - 4},${geometry.yHeadTop + geometry.headHeight * 0.4} ${100 - geometry.headWidth - 4},${geometry.yHeadTop + geometry.headHeight * 0.72}
+                C ${100 - geometry.headWidth - 4},${geometry.yHeadTop + geometry.headHeight * 0.85} ${100 - geometry.headWidth + 2},${geometry.yHeadTop + geometry.headHeight * 0.8} ${100 - geometry.headWidth + 2},${geometry.yHeadTop + geometry.headHeight * 0.65}
+                C ${100 - geometry.headWidth + 2},${geometry.yHeadTop + geometry.headHeight * 0.42} ${100 - geometry.headWidth * 0.6},${geometry.yHeadTop + geometry.headHeight * 0.2} ${100 - geometry.headWidth * 0.3},${geometry.yHeadTop + geometry.headHeight * 0.35}
+                C 100,${geometry.yHeadTop + 6} 100,${geometry.yHeadTop + 6} ${100 + geometry.headWidth * 0.3},${geometry.yHeadTop + geometry.headHeight * 0.35}
+                C ${100 + geometry.headWidth * 0.6},${geometry.yHeadTop + geometry.headHeight * 0.2} ${100 + geometry.headWidth - 2},${geometry.yHeadTop + geometry.headHeight * 0.42} ${100 + geometry.headWidth - 2},${geometry.yHeadTop + geometry.headHeight * 0.65}
+                C ${100 + geometry.headWidth - 2},${geometry.yHeadTop + geometry.headHeight * 0.8} ${100 + geometry.headWidth + 4},${geometry.yHeadTop + geometry.headHeight * 0.85} ${100 + geometry.headWidth + 4},${geometry.yHeadTop + geometry.headHeight * 0.72}
+                C ${100 + geometry.headWidth + 4},${geometry.yHeadTop + geometry.headHeight * 0.4} ${100 + geometry.headWidth + 2},${geometry.yHeadTop - 1} 100,${geometry.yHeadTop - 1}
+                Z`}
+            fill="currentColor"
+            className="text-black/15 dark:text-white/20 pointer-events-none"
+          />
+        )}
 
         {/* Collarbone Feature Line */}
         <g stroke="currentColor" strokeWidth="0.5" className="text-black/15 dark:text-white/20 fill-none">

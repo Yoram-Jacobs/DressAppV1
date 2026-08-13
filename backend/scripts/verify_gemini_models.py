@@ -1,13 +1,13 @@
-"""Prove the post-migration wiring really hits Gemini 2.5 Pro + Nano Banana.
+"""Prove the post-migration wiring really hits Gemini 3.5 Flash-Lite + Nano Banana.
 
 Three live calls:
 
-1. ``GeminiStylistService.advise(...)`` — must call **gemini-2.5-pro**
+1. ``GeminiStylistService.advise(...)`` — must call **gemini-3.5-flash-lite**
    (settings.DEFAULT_STYLIST_MODEL).
 2. ``GeminiImageService.generate(prompt=...)`` — must call **nano banana**
    (settings.GEMINI_IMAGE_MODEL = 'gemini-2.5-flash-image').
 3. ``GarmentVisionService.analyze(image_bytes=...)`` — must call
-   **gemini-2.5-flash** (settings.GARMENT_VISION_MODEL).
+   **gemini-3.5-flash-lite** (settings.GARMENT_VISION_MODEL).
 
 Each call prints the model the SDK actually saw via a tiny SDK
 instrumentation wrapper, plus the elapsed time so you can compare
@@ -38,13 +38,23 @@ print("=" * 70)
 
 
 # Instrument google.genai so we can see the exact model string every
-# call is targeting — this is the only honest way to prove the
-# pony-mock accusation is true or false.
+# call is targeting.
 from google.genai import models as _genai_models  # noqa: E402
+
+try:
+    import google.genai._interactions.resources.interactions as _interact_module
+    _AsyncInteractionsClass = _interact_module.AsyncInteractionsResource
+except ImportError:
+    try:
+        import google.genai._gaos.google_genai as _gaos_genai
+        _AsyncInteractionsClass = _gaos_genai.AsyncGeminiNextGenInteractions
+    except ImportError:
+        _AsyncInteractionsClass = None
 
 _orig_gen = _genai_models.AsyncModels.generate_content
 _orig_gen_stream = _genai_models.AsyncModels.generate_content_stream
 _orig_gen_sync = _genai_models.Models.generate_content
+_orig_interact_async = getattr(_AsyncInteractionsClass, "create", None) if _AsyncInteractionsClass else None
 _calls: list[dict] = []
 
 
@@ -69,14 +79,25 @@ def _traced_gen_sync(self, *, model, contents, config=None, **kw):
     return _orig_gen_sync(self, model=model, contents=contents, config=config, **kw)
 
 
+async def _traced_interact_async(self, *, model, input, **kw):
+    t0 = time.perf_counter()
+    _calls.append({"kind": "async-interaction", "model": model, "ts": t0})
+    print(f"  [SDK CALL] async interactions.create  model={model!r}")
+    if _orig_interact_async:
+        return await _orig_interact_async(self, model=model, input=input, **kw)
+    return None
+
+
 _genai_models.AsyncModels.generate_content = _traced_gen
 _genai_models.AsyncModels.generate_content_stream = _traced_stream
 _genai_models.Models.generate_content = _traced_gen_sync
+if _AsyncInteractionsClass and _orig_interact_async:
+    _AsyncInteractionsClass.create = _traced_interact_async
 
 
 # ---------------------------------------------------------------- 1. STYLIST
 async def test_stylist() -> bool:
-    print("\n[1/3] Stylist (must hit gemini-2.5-pro) ...")
+    print(f"\n[1/3] Stylist (must hit {settings.DEFAULT_STYLIST_MODEL}) ...")
     try:
         from app.services.gemini_stylist import gemini_stylist_service
         if gemini_stylist_service is None:
@@ -105,7 +126,7 @@ async def test_stylist() -> bool:
 
 # ---------------------------------------------------------- 2. NANO BANANA
 async def test_nano_banana() -> bool:
-    print("\n[2/3] Nano Banana (must hit gemini-2.5-flash-image) ...")
+    print(f"\n[2/3] Nano Banana (must hit {settings.GEMINI_IMAGE_MODEL}) ...")
     try:
         from app.services.gemini_image_service import GeminiImageService
         svc = GeminiImageService()
@@ -132,11 +153,11 @@ async def test_nano_banana() -> bool:
 
 # ----------------------------------------------------- 3. GARMENT VISION
 async def test_garment_vision() -> bool:
-    print("\n[3/3] GarmentVision Eyes (must hit gemini-2.5-flash) ...")
+    print(f"\n[3/3] GarmentVision Eyes (must hit {settings.GARMENT_VISION_MODEL}) ...")
     try:
         from app.services.vision import GarmentVisionService
         svc = GarmentVisionService()
-        img = Path("/app/inference-server/eyes/test_images/0001.jpg").read_bytes()
+        img = (Path(__file__).resolve().parent.parent.parent / "inference-server/eyes/test_images/0001.jpg").read_bytes()
         t0 = time.perf_counter()
         result = await svc.analyze(img)
         dt = (time.perf_counter() - t0) * 1000
@@ -161,12 +182,12 @@ async def main() -> int:
     print("\n" + "=" * 70)
     print("SUMMARY")
     print("=" * 70)
-    print(f"  Stylist (Pro)        : {'PASS' if results[0] else 'FAIL'}")
+    print(f"  Stylist              : {'PASS' if results[0] else 'FAIL'}")
     print(f"  Nano Banana          : {'PASS' if results[1] else 'FAIL'}")
     print(f"  Garment Vision Eyes  : {'PASS' if results[2] else 'FAIL'}")
     print("\nTrace of every model string the SDK actually saw this run:")
     for c in _calls:
-        print(f"  - kind={c['kind']:14} model={c['model']!r}")
+        print(f"  - kind={c['kind']:20} model={c['model']!r}")
     print("=" * 70)
     return 0 if all(results) else 1
 

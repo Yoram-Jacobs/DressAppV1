@@ -820,7 +820,7 @@ async def _via_gemini_vision(
         client.vision(
             system=system_prompt,
             user_parts=[user_text, image_bytes],
-            model="gemini-2.5-flash",
+            model="gemini-3.5-flash-lite",
         ),
         timeout=timeout_s,
     )
@@ -927,7 +927,7 @@ async def analyze_chart(
                 error=None if parsed else "non-JSON or empty Gemini reply",
                 extra={
                     "provider": "gemini",
-                    "model": "gemini-2.5-flash",
+                    "model": "gemini-3.5-flash-lite",
                     "op": "size-chart",
                 },
             )
@@ -982,7 +982,7 @@ async def analyze_chart(
                     client.text(
                         user_text=user_prompt,
                         system=_SYSTEM_PROMPT,
-                        model="gemini-2.5-flash",
+                        model="gemini-3.5-flash-lite",
                         response_mime_type="application/json",
                     ),
                     timeout=30.0,

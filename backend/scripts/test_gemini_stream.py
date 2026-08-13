@@ -30,7 +30,7 @@ from app.services.gemini_client import GeminiClient  # noqa: E402
 
 
 TEST_IMAGE = Path("/app/inference-server/eyes/test_images/0001.jpg")
-MODEL = os.environ.get("TEST_GEMINI_MODEL", "gemini-2.5-flash")
+MODEL = os.environ.get("TEST_GEMINI_MODEL", "gemini-3.5-flash-lite")
 
 SYSTEM = (
     "You are a garment analyst. Look at the image and return a single "

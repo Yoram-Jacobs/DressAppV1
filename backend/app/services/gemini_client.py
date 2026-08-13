@@ -44,6 +44,7 @@ into native calls.
 from __future__ import annotations
 
 import asyncio
+import base64
 import io
 import logging
 from typing import Any, AsyncIterator, Iterable
@@ -67,8 +68,8 @@ except Exception as _exc:  # noqa: BLE001
 
 # Default model used when the caller doesn't specify one. Matches the
 # historical Gemini Flash routing through Emergent / litellm.
-DEFAULT_TEXT_MODEL = "gemini-2.5-flash"
-DEFAULT_VISION_MODEL = "gemini-2.5-flash"
+DEFAULT_TEXT_MODEL = "gemini-3.5-flash-lite"
+DEFAULT_VISION_MODEL = "gemini-3.5-flash-lite"
 
 # A type alias for "anything that can become a Part" — accepted by
 # :meth:`GeminiClient.vision` / ``stream_vision``.
@@ -107,50 +108,58 @@ def _resolve_api_key(explicit: str | None) -> str:
     return key
 
 
-def _coerce_parts(parts: Iterable[Any]) -> list[Any]:
-    """Translate the wrapper's lightweight content syntax into SDK Parts.
-
-    See :data:`ContentPart` for the accepted shapes. We expand each
-    entry into the SDK's ``types.Part`` so the caller never has to
-    import ``google.genai.types`` directly.
-    """
+def _coerce_interactions_input(parts: Iterable[Any]) -> list[dict[str, Any]]:
+    """Translate the wrapper's lightweight content syntax into Interactions API input content blocks."""
     _require_sdk()
-    out: list[Any] = []
+    out: list[dict[str, Any]] = []
     for entry in parts:
         if entry is None:
             continue
-        # Pre-built SDK part / PIL Image / anything truthy that isn't a
-        # primitive — pass through. The SDK natively accepts PIL.Image,
-        # ``types.Part``, and even raw dicts.
         if isinstance(entry, str):
-            out.append(entry)
-            continue
-        if isinstance(entry, (bytes, bytearray)):
-            out.append(
-                _genai_types.Part.from_bytes(
-                    data=bytes(entry), mime_type="image/jpeg",
-                )
-            )
-            continue
-        if (
+            out.append({"type": "text", "text": entry})
+        elif isinstance(entry, (bytes, bytearray)):
+            b64_data = base64.b64encode(entry).decode("utf-8")
+            out.append({
+                "type": "image",
+                "mime_type": "image/jpeg",
+                "data": b64_data,
+            })
+        elif (
             isinstance(entry, tuple)
             and len(entry) == 2
             and isinstance(entry[0], (bytes, bytearray))
             and isinstance(entry[1], str)
         ):
             blob, mime = entry
-            out.append(
-                _genai_types.Part.from_bytes(
-                    data=bytes(blob), mime_type=mime or "image/jpeg",
-                )
-            )
-            continue
-        out.append(entry)
+            b64_data = base64.b64encode(blob).decode("utf-8")
+            out.append({
+                "type": "image",
+                "mime_type": mime or "image/jpeg",
+                "data": b64_data,
+            })
+        elif isinstance(entry, dict) and "type" in entry:
+            out.append(entry)
+        else:
+            # Pre-built SDK part or similar
+            txt = getattr(entry, "text", None)
+            if txt:
+                out.append({"type": "text", "text": txt})
+            else:
+                inline = getattr(entry, "inline_data", None)
+                if inline and getattr(inline, "data", None):
+                    b64_data = base64.b64encode(inline.data).decode("utf-8")
+                    out.append({
+                        "type": "image",
+                        "mime_type": getattr(inline, "mime_type", "image/jpeg"),
+                        "data": b64_data,
+                    })
+                else:
+                    out.append(entry)
     return out
 
 
 class GeminiClient:
-    """Async wrapper around ``google.genai.Client``.
+    """Async wrapper around ``google.genai.Client`` using Interactions API.
 
     Construct once per service (cheap, thread-safe). The wrapper holds
     a single SDK client and exposes three call surfaces:
@@ -169,6 +178,41 @@ class GeminiClient:
         self.api_key = _resolve_api_key(api_key)
         self._client = _genai.Client(api_key=self.api_key)
 
+    def _build_interactions_kwargs(
+        self,
+        *,
+        system: str | None,
+        temperature: float | None,
+        max_tokens: int | None,
+        response_mime_type: str | None,
+        response_schema: dict[str, Any] | None,
+    ) -> dict[str, Any]:
+        kwargs: dict[str, Any] = {}
+        if system:
+            kwargs["system_instruction"] = system
+
+        gen_config: dict[str, Any] = {}
+        if temperature is not None:
+            gen_config["temperature"] = float(temperature)
+        if max_tokens is not None:
+            gen_config["max_output_tokens"] = int(max_tokens)
+        if gen_config:
+            kwargs["generation_config"] = gen_config
+
+        if response_mime_type or response_schema:
+            fmt = {
+                "type": "text",
+                "mime_type": response_mime_type or "application/json"
+            }
+            if response_schema:
+                if hasattr(response_schema, "model_json_schema"):
+                    fmt["schema"] = response_schema.model_json_schema()
+                else:
+                    fmt["schema"] = response_schema
+            kwargs["response_format"] = [fmt]
+
+        return kwargs
+
     # ------------------------------------------------------------------ text
     async def text(
         self,
@@ -182,17 +226,17 @@ class GeminiClient:
         response_schema: dict[str, Any] | None = None,
     ) -> str:
         """Text-only completion. Returns the model's response text."""
-        cfg = self._make_config(
+        kwargs = self._build_interactions_kwargs(
             system=system,
             temperature=temperature,
             max_tokens=max_tokens,
             response_mime_type=response_mime_type,
             response_schema=response_schema,
         )
-        resp = await self._client.aio.models.generate_content(
+        resp = await self._client.aio.interactions.create(
             model=_normalise_model(model),
-            contents=[user_text],
-            config=cfg,
+            input=user_text,
+            **kwargs,
         )
         return _coerce_text(resp)
 
@@ -214,18 +258,18 @@ class GeminiClient:
         as image/jpeg), ``(bytes, mime_type)`` tuples, or any SDK
         ``types.Part``. Order is preserved.
         """
-        cfg = self._make_config(
+        kwargs = self._build_interactions_kwargs(
             system=system,
             temperature=temperature,
             max_tokens=max_tokens,
             response_mime_type=response_mime_type,
             response_schema=response_schema,
         )
-        contents = _coerce_parts(user_parts)
-        resp = await self._client.aio.models.generate_content(
+        contents = _coerce_interactions_input(user_parts)
+        resp = await self._client.aio.interactions.create(
             model=_normalise_model(model),
-            contents=contents,
-            config=cfg,
+            input=contents,
+            **kwargs,
         )
         return _coerce_text(resp)
 
@@ -243,60 +287,29 @@ class GeminiClient:
     ) -> AsyncIterator[str]:
         """Streaming multimodal completion. Yields text deltas.
 
-        The native SDK uses ``client.aio.models.generate_content_stream``
-        which returns an *awaitable* that resolves to an async iterator
-        of chunks. We unwrap that here and yield ``chunk.text`` strings
-        so the caller can do simple ``async for delta in stream``.
-
-        Falsy/empty deltas are filtered (the trailing finish-chunk often
-        has no text).
+        Consumes a stream of SSE events and yields text step.deltas.
         """
-        cfg = self._make_config(
+        kwargs = self._build_interactions_kwargs(
             system=system,
             temperature=temperature,
             max_tokens=max_tokens,
             response_mime_type=response_mime_type,
             response_schema=response_schema,
         )
-        contents = _coerce_parts(user_parts)
-        stream = await self._client.aio.models.generate_content_stream(
+        contents = _coerce_interactions_input(user_parts)
+        stream = await self._client.aio.interactions.create(
             model=_normalise_model(model),
-            contents=contents,
-            config=cfg,
+            input=contents,
+            stream=True,
+            **kwargs,
         )
-        async for chunk in stream:
-            delta = _coerce_text(chunk)
-            if delta:
-                yield delta
-
-    # -------------------------------------------------------------- internals
-    def _make_config(
-        self,
-        *,
-        system: str | None,
-        temperature: float | None,
-        max_tokens: int | None,
-        response_mime_type: str | None,
-        response_schema: dict[str, Any] | None,
-    ) -> Any:
-        """Build a ``types.GenerateContentConfig`` from kwargs.
-
-        Unset fields are dropped so the SDK applies its own defaults.
-        ``response_mime_type="application/json"`` is the standard
-        JSON-mode hint.
-        """
-        kwargs: dict[str, Any] = {}
-        if system:
-            kwargs["system_instruction"] = system
-        if temperature is not None:
-            kwargs["temperature"] = float(temperature)
-        if max_tokens is not None:
-            kwargs["max_output_tokens"] = int(max_tokens)
-        if response_mime_type:
-            kwargs["response_mime_type"] = response_mime_type
-        if response_schema is not None:
-            kwargs["response_schema"] = response_schema
-        return _genai_types.GenerateContentConfig(**kwargs)
+        async for event in stream:
+            if event.event_type == "step.delta" and event.delta:
+                dtype = getattr(event.delta, "type", None) or (event.delta.get("type") if isinstance(event.delta, dict) else None)
+                if dtype == "text":
+                    text = getattr(event.delta, "text", None) or (event.delta.get("text") if isinstance(event.delta, dict) else None)
+                    if text:
+                        yield text
 
 
 # ---------------------------------------------------------------------- helpers
@@ -305,7 +318,7 @@ def _normalise_model(model: str) -> str:
 
     Old code passed ``"gemini/gemini-2.5-flash"`` so litellm would route
     through Google's GenAI API. The native SDK only wants the bare
-    model id (``"gemini-2.5-flash"``).
+    model id (``"gemini-3.5-flash-lite"``).
     """
     if not model:
         return DEFAULT_TEXT_MODEL
@@ -317,21 +330,21 @@ def _normalise_model(model: str) -> str:
 
 
 def _coerce_text(resp: Any) -> str:
-    """Pull the text payload out of a GenAI response/chunk.
+    """Pull the text payload out of an Interaction response.
 
-    The SDK normally exposes a ``.text`` shortcut that joins all text
-    parts on the first candidate. When that's empty (vision-only
-    responses, finish chunks) we walk the candidates ourselves so a
-    streaming caller doesn't drop a JSON fragment because the SDK
-    returned None for ``.text`` on a transitional chunk.
+    Retrieves output_text from the interaction object. Falls back to walk candidates if needed.
     """
     if resp is None:
         return ""
+    if hasattr(resp, "output_text"):
+        return resp.output_text
+    if isinstance(resp, dict) and "output_text" in resp:
+        return resp["output_text"]
+
     text = getattr(resp, "text", None)
     if text:
         return text
-    # Walk candidates → content.parts → part.text. Mirrors the SDK's
-    # internal ``.text`` accessor but tolerates partial chunks.
+    # Walk candidates → content.parts → part.text.
     candidates = getattr(resp, "candidates", None) or []
     out: list[str] = []
     for cand in candidates:

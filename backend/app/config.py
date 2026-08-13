@@ -94,7 +94,7 @@ class Settings:
         or os.environ.get("GOOGLE_API_KEY")  # accept the canonical google-genai name too
         or None
     )
-    DEFAULT_STYLIST_MODEL: str = os.environ.get("DEFAULT_STYLIST_MODEL", "gemini-2.5-flash")
+    DEFAULT_STYLIST_MODEL: str = os.environ.get("DEFAULT_STYLIST_MODEL", "gemini-3.5-flash-lite")
     DEFAULT_STYLIST_PROVIDER: str = os.environ.get("DEFAULT_STYLIST_PROVIDER", "gemini")
 
     # --- Phase O: Stylist brain provider ---
@@ -167,7 +167,7 @@ class Settings:
         "GARMENT_VISION_PROVIDER", "gemini"
     )
     GARMENT_VISION_MODEL: str = os.environ.get(
-        "GARMENT_VISION_MODEL", "gemini-2.5-flash"
+        "GARMENT_VISION_MODEL", "gemini-3.5-flash-lite"
     )
     # When set, the HF path hits this OpenAI-compatible endpoint URL
     # instead of going through HF Inference Providers routing. Use this
@@ -239,7 +239,7 @@ class Settings:
     # file has no effect.
     # Per-crop analyzer used inside the multi-item outfit pipeline.
     GARMENT_VISION_CROP_MODEL: str = os.environ.get(
-        "GARMENT_VISION_CROP_MODEL", "gemini-2.5-flash"
+        "GARMENT_VISION_CROP_MODEL", "gemini-3.5-flash-lite"
     )
     # Detection stays on Gemini Flash until we upgrade to a fine-tuned
     # vision model that does boxes well.
@@ -247,7 +247,7 @@ class Settings:
         "GARMENT_VISION_DETECT_PROVIDER", "gemini"
     )
     GARMENT_VISION_DETECT_MODEL: str = os.environ.get(
-        "GARMENT_VISION_DETECT_MODEL", "gemini-2.5-flash"
+        "GARMENT_VISION_DETECT_MODEL", "gemini-3.5-flash-lite"
     )
     # Hard cap on how many items we analyse per uploaded photo.
     GARMENT_VISION_MAX_ITEMS: int = int(

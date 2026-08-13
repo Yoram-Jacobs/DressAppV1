@@ -126,7 +126,7 @@ async def audit(
                 "Respond with strict JSON only — no prose, no code fences."
             ),
             user_parts=[_AUDIT_PROMPT, original_image, montage],
-            model="gemini-2.5-flash",
+            model="gemini-3.5-flash-lite",
             response_mime_type="application/json",
         )
         parsed = _extract_json(raw or "") or default

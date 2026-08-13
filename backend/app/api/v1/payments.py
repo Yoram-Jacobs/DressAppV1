@@ -386,7 +386,7 @@ async def capture_topup(
                     "ai_configuration.credits_used_this_month": 0,
                     "ai_configuration.provider_mode": ai_config.get("provider_mode") or "standard",
                     "ai_configuration.selected_provider": ai_config.get("selected_provider") or "google_ai",
-                    "ai_configuration.selected_model": ai_config.get("selected_model") or "gemini-2.5-flash",
+                    "ai_configuration.selected_model": ai_config.get("selected_model") or "gemini-3.5-flash-lite",
                 }
             }
         )

@@ -42,7 +42,7 @@ export default function TrendScout() {
     .split('-')[0]
     .toLowerCase();
   const country =
-    (loc?.country_code || user?.home_location?.country_code || '')
+    (user?.address?.country_code || user?.home_location?.country_code || '')
       .toString()
       .toUpperCase() || null;
 
