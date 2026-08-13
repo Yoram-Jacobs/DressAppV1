@@ -16,7 +16,7 @@ from app.config import settings
 from app.services import vision as garment_vision
 
 async def test_gatekeeper():
-    img_path = r"C:\DressApp_AG\inference-server\eyes\Garments\DSC00516.jpg"
+    img_path = "test_garment.jpg"
     print(f"Testing {img_path}")
     with open(img_path, "rb") as f:
         image_bytes = f.read()

@@ -1989,6 +1989,85 @@ class GarmentVisionService:
             logger.warning("_is_single_item check failed: %s", repr(exc)[:160])
             return False
 
+    async def _gatekeep_image(self, image_bytes: bytes) -> int:
+        """Fast pre-check to count garments and route the pipeline."""
+        import io
+        import asyncio
+        from PIL import Image, ImageOps
+        try:
+            # Resize image to tiny thumbnail (512x512) to make the Gemini upload extremely fast
+            with Image.open(io.BytesIO(image_bytes)) as img:
+                img = ImageOps.exif_transpose(img)
+                img.thumbnail((512, 512))
+                if img.mode != "RGB":
+                    img = img.convert("RGB")
+                out = io.BytesIO()
+                img.save(out, format="JPEG", quality=80)
+                small_bytes = out.getvalue()
+
+            client = self._get_gemini()
+            system_prompt = (
+                "You are a visual gatekeeper. Your job is to count the number of distinct clothing garments, "
+                "shoes, or accessories clearly visible in this image. "
+                "Ignore tags, hangers, or background objects."
+            )
+            model = self.detect_model
+            
+            schema = {
+                "type": "object",
+                "properties": {
+                    "items_seen": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Briefly list the clothing garments you see (e.g. ['yellow t-shirt'])"
+                    },
+                    "count": {
+                        "type": "integer",
+                        "description": "The final count of clothing items (0, 1, or more)"
+                    }
+                },
+                "required": ["items_seen", "count"]
+            }
+            
+            # Put a strict 12-second timeout so it never hangs the pipeline indefinitely,
+            # but gives the LLM enough time to respond under load.
+            async def _call_vision():
+                return await client.vision(
+                    system=system_prompt,
+                    user_parts=["Analyze the image and return the count of garments.", small_bytes],
+                    model=model,
+                    response_mime_type="application/json",
+                    response_schema=schema,
+                )
+                
+            resp = await asyncio.wait_for(_call_vision(), timeout=12.0)
+            
+            try:
+                import json
+                clean_resp = resp.strip()
+                if clean_resp.startswith("```json"):
+                    clean_resp = clean_resp[7:]
+                elif clean_resp.startswith("```"):
+                    clean_resp = clean_resp[3:]
+                if clean_resp.endswith("```"):
+                    clean_resp = clean_resp[:-3]
+                clean_resp = clean_resp.strip()
+                
+                data = json.loads(clean_resp)
+                count = int(data.get("count", 2))
+                logger.info("_gatekeep_image parsed successfully. Model: %s. Count: %d, Items seen: %s", model, count, data.get("items_seen"))
+                return count
+            except Exception as e:
+                logger.warning("_gatekeep_image failed to parse JSON: %s. Raw response: %s", e, resp)
+                return 2 # Fallback to SegFormer if unparseable
+        except asyncio.TimeoutError:
+            logger.warning("_gatekeep_image timed out after 12s, falling back to SegFormer")
+            return 2
+        except Exception as exc:
+            import traceback
+            logger.warning("_gatekeep_image check failed: %s\n%s", repr(exc)[:160], traceback.format_exc())
+            return 2
+
     async def analyze_outfits_stream(
         self,
         images_bytes_list: list[bytes],
@@ -2014,9 +2093,18 @@ class GarmentVisionService:
         # 1. Detect on all photos concurrently
         async def _detect_and_crop(idx: int, img_bytes: bytes) -> tuple[int, list[tuple[dict[str, Any], bytes, str]]]:
             try:
-                detections = await self.detect_items(img_bytes)
+                count = await self._gatekeep_image(img_bytes)
+                if count == 0:
+                    logger.info("Gatekeeper: photo %d has 0 garments — dropping it", idx)
+                    return idx, []
+                elif count == 1:
+                    logger.info("Gatekeeper: photo %d has 1 garment — bypassing SegFormer and routing to whole-image crop", idx)
+                    detections = [{"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment"}]
+                else:
+                    logger.info("Gatekeeper: photo %d has %d garments — running SegFormer detect_items", idx, count)
+                    detections = await self.detect_items(img_bytes)
             except Exception as exc:
-                logger.warning("analyze_outfits_stream: detect_items failed for idx %d: %s", idx, repr(exc)[:160])
+                logger.warning("analyze_outfits_stream: detect_items / gatekeep failed for idx %d: %s", idx, repr(exc)[:160])
                 return idx, []
 
             try:
