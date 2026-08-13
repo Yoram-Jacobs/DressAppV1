@@ -366,70 +366,7 @@ export default function AddItem() {
     }
   }, [importFile]);
 
-  // Background matting / polishing of cards in review/edit state.
-  // Whenever a card becomes status === 'ready' (analysis complete), has cropBase64,
-  // has deferMatte === true, and has not yet started/finished polishing,
-  // we trigger api.polishCrop in the background so the user sees the clean cutout.
-  useEffect(() => {
-    const toPolish = cards.find(
-      (c) =>
-        c.status === 'ready' &&
-        c.cropBase64 &&
-        (c.deferMatte || (c.fields?.category && c.fields.category !== c.lastPolishedCategory)) &&
-        c.polishStatus !== 'pending'
-    );
-    if (toPolish) {
-      const targetCategory = toPolish.fields?.category || toPolish.label;
-      setCards((prev) =>
-        prev.map((c) =>
-          c.id === toPolish.id
-            ? {
-                ...c,
-                polishStatus: 'pending',
-                lastPolishedCategory: targetCategory,
-              }
-            : c
-        )
-      );
 
-      api.polishCrop({
-        image_base64: toPolish.cropBase64,
-        category: targetCategory,
-      })
-        .then((res) => {
-          if (res.image_base64) {
-            setCards((prev) =>
-              prev.map((c) =>
-                c.id === toPolish.id
-                  ? {
-                      ...c,
-                      polishStatus: 'success',
-                      previewUrl: res.image_base64,
-                      cropBase64: res.image_base64,
-                      // Polish finished successfully before save! Clear deferMatte.
-                      deferMatte: false,
-                    }
-                  : c
-              )
-            );
-          } else {
-            setCards((prev) =>
-              prev.map((c) =>
-                c.id === toPolish.id ? { ...c, polishStatus: 'error' } : c
-              )
-            );
-          }
-        })
-        .catch((err) => {
-          console.error('Failed to polish crop:', err);
-          setCards((prev) =>
-            prev.map((c) =>
-              c.id === toPolish.id ? { ...c, polishStatus: 'error' } : c
-            )
-          );
-        });
-    }
-  }, [cards]);
   const receiptFileInputRef = useRef(null);
   // Background batch state — shown instead of cards when user uploads
   // more than BG_THRESHOLD photos at once. Auto-analyzes + auto-saves

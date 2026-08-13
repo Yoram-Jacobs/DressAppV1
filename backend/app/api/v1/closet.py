@@ -1450,10 +1450,10 @@ async def polish_crop(
     payload: PolishCropIn,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Run full rembg + SegFormer matting on an already-cropped image from the AddItem review screen.
+    """Run Nano Banana image reconstruction and completion on the crop.
 
-    This is called by the client *in the background* as soon as an item is
-    scanned/analyzed, allowing the user to see the polished cutout before saving.
+    This is called by the client to complete or reconstruct a bad, distorted,
+    or low-resolution image using Gemini Nano Banana.
     """
     try:
         # Strip data URL prefix if present
@@ -1464,51 +1464,26 @@ async def polish_crop(
     except Exception as exc:
         raise HTTPException(400, f"Invalid image_base64: {exc}") from exc
 
-    if not settings.AUTO_MATTE_CROPS:
-        return {"image_base64": payload.image_base64, "applied": False}
+    from app.services.reconstruction import reconstruct
 
-    from app.services import background_matting
-    from app.services import clothing_parser as _cp
+    # Call the Nano Banana reconstructor
+    try:
+        out = await reconstruct(
+            raw_bytes,
+            {"category": payload.category or "garment"},
+            reasons=["polish_crop"],
+            validate=False,
+        )
+        if out and out.get("image_b64"):
+            mime = out.get("mime_type", "image/png")
+            return {
+                "image_base64": f"data:{mime};base64,{out['image_b64']}",
+                "applied": True,
+            }
+    except Exception as exc:
+        logger.warning("polish_crop Nano Banana reconstruction failed: %s", exc)
 
-    # Run rembg and SegFormer concurrently
-    bg_task = asyncio.create_task(background_matting.remove_background(raw_bytes))
-    cp_task = asyncio.create_task(_cp.parse_garments(raw_bytes))
-    await asyncio.gather(bg_task, cp_task, return_exceptions=True)
-
-    result = bg_task.result() if not bg_task.exception() else {}
-    garments = cp_task.result() if not cp_task.exception() else []
-
-    if not result or not result.get("image_png"):
-        return {"image_base64": payload.image_base64, "applied": False}
-
-    refined_png = result["image_png"]
-    if settings.USE_LOCAL_CLOTHING_PARSER:
-        seg_mask = None
-        human_mask = None
-        try:
-            seg_mask, human_mask = _pick_segformer_mask_for_category(
-                garments, payload.category
-            )
-        except Exception as exc:
-            logger.info("polish_crop SegFormer mask pick skipped: %s", exc)
-
-        if seg_mask is not None:
-            try:
-                maybe_refined = _cp.apply_alpha_intersection(
-                    result["image_png"],
-                    seg_mask,
-                    category=payload.category,
-                    human_mask=human_mask,
-                    is_padded_canvas=True,
-                )
-                if maybe_refined:
-                    refined_png = maybe_refined
-            except Exception as exc:
-                logger.info("polish_crop apply_alpha_intersection failed: %s", exc)
-
-    # Encode back to base64
-    out_b64 = base64.b64encode(refined_png).decode("utf-8")
-    return {"image_base64": f"data:image/png;base64,{out_b64}", "applied": True}
+    return {"image_base64": payload.image_base64, "applied": False}
 
 
 # Patch M17 (May 2026) — Module-level config for the keepalive heartbeat
