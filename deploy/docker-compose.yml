@@ -71,6 +71,7 @@ services:
       dockerfile: Dockerfile
     image: dressapp-eyes:latest
     container_name: dressapp-eyes
+    profiles: ["disabled"]
 
     restart: unless-stopped
     environment:
