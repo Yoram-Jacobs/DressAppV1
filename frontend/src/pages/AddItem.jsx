@@ -2543,7 +2543,13 @@ export default function AddItem() {
         multiple
         className="sr-only"
         data-testid="add-item-file-input"
-        onChange={(e) => { handleFiles(e.target.files); e.target.value = ''; }}
+        onChange={(e) => {
+          const files = Array.from(e.target.files || []);
+          e.target.value = '';
+          if (files.length > 0) {
+            handleFiles(files);
+          }
+        }}
       />
       {/* Native camera capture — on mobile, `capture="environment"` opens
           the rear camera directly; on desktop, falls back to a file
@@ -2555,7 +2561,13 @@ export default function AddItem() {
         capture="environment"
         className="sr-only"
         data-testid="add-item-camera-input"
-        onChange={(e) => { handleFiles(e.target.files); e.target.value = ''; }}
+        onChange={(e) => {
+          const files = Array.from(e.target.files || []);
+          e.target.value = '';
+          if (files.length > 0) {
+            handleFiles(files);
+          }
+        }}
       />
 
       {/* Phase Z2 — pre-flight duplicate dialog. Pops up BEFORE any
