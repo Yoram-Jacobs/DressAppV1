@@ -111,9 +111,11 @@ The Item Details page utilizes an asymmetrical two-column layout tailored for de
 * Non-generative matting runs in the background. A progress bar updates in real time.
 * If a matting session was run previously, the action button text changes to **Clean again** (fully localized) so users can retry the background separation.
 
-#### 3. Re-analyse Photo
-* Invokes "The Eyes" vision engine on the backend to evaluate the garment image.
-* Automatically refills classification fields (category, subcategory, colors, materials) while preserving user-defined fields (size, price, notes).
+#### 3. Re-analyse Photo & AI Eyes Assistant
+* **Conversational AI Prompt Box**: Users can type or dictate custom requests to **The Eyes** regarding the photo and attributes (e.g., *"Remove the shoes"*, *"Complete the hole where the hand was"*, *"Remove the metal studs from the jacket's front"*, *"Refine fabric to 100% cashmere"*).
+* **Nano Banana Inpainting & Editing**: Visual modification requests trigger **Nano Banana** (`gemini-2.5-flash-image`), displaying an instant preview card in chat with an **Apply as Garment Photo** action.
+* **Clarification Engine**: If instructions are ambiguous, The Eyes asks conversational clarifying questions before processing.
+* **1-Click Full Re-analyse**: Quickly reruns complete vision parsing to refill classification fields while preserving manual fields (size, price, notes).
 
 #### 4. Taxonomy & Composition Editor
 * Weighted Lists allow users to specify percentages for color palettes (e.g., Black 100%) and materials (e.g., Polyester 80%, Rayon 20%).
