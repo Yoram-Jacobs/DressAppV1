@@ -46,15 +46,36 @@ export const GoogleAuthButton = ({
   const onClick = async () => {
     setBusy(true);
     try {
-      const { authorization_url } = await api.googleLoginStart({
+      const res = await api.googleLoginStart({
         withCalendar,
         next,
       });
-      // Full-page redirect — Google's consent screen takes over from here.
-      window.location.assign(authorization_url);
+      if (res?.authorization_url) {
+        window.location.assign(res.authorization_url);
+        return;
+      }
     } catch (err) {
+      console.warn('googleLoginStart via client failed, trying direct fetch:', err);
+      try {
+        const qs = new URLSearchParams();
+        if (withCalendar) qs.set('with_calendar', 'true');
+        if (next) qs.set('next', next);
+        const qStr = qs.toString();
+        const fRes = await fetch(`/api/v1/auth/google/login/start${qStr ? `?${qStr}` : ''}`, {
+          method: 'GET',
+          headers: { Accept: 'application/json' },
+        });
+        if (fRes.ok) {
+          const data = await fRes.json();
+          if (data?.authorization_url) {
+            window.location.assign(data.authorization_url);
+            return;
+          }
+        }
+      } catch (fallbackErr) {
+        console.error('googleLoginStart direct fetch error:', fallbackErr);
+      }
       setBusy(false);
-      console.error('googleLoginStart failed', err);
       const msg = err?.response?.data?.detail || err?.message || 'Failed to connect to Google sign-in. Please check your network.';
       toast.error(msg);
     }

@@ -129,7 +129,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "443:443/udp"  # HTTP/3
     environment:
       DOMAIN: ${DOMAIN}
       CADDY_ACME_EMAIL: ${CADDY_ACME_EMAIL}
