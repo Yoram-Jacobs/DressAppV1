@@ -16,7 +16,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 
 class UpdateUserIn(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
     display_name: str | None = None
     avatar_url: str | None = None
     locale: str | None = None
