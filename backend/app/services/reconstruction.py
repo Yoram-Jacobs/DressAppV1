@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 # A bbox side within this many normalised units of the frame edge is
 # considered "touching" (the detector couldn't see beyond the frame).
-_EDGE_TOUCH_MARGIN = 30  # on the 0..1000 Gemini scale = 3% of frame.
+_EDGE_TOUCH_MARGIN = 40  # on the 0..1000 Gemini scale = 4% of frame.
 
 # Category priors for expected crop aspect ratio (height / width).
 # Used to catch the "squareish dress crop" case where the detector
@@ -95,14 +95,27 @@ def should_reconstruct(
     quality_status = analysis.get("image_quality_status")
     if quality_status:
         q_norm = quality_status.strip().lower()
-        if q_norm == "complete":
-            return False, ["quality_checker:complete"]
         if q_norm in ("needs_completion", "completion"):
             reason_txt = analysis.get("image_quality_reason") or "needs_completion"
             return True, ["quality_checker:needs_completion", f"reason:{reason_txt}"]
         if q_norm in ("needs_reconstruction", "reconstruction", "full_reconstruction"):
             reason_txt = analysis.get("image_quality_reason") or "needs_reconstruction"
             return True, ["quality_checker:needs_reconstruction", f"reason:{reason_txt}"]
+        if q_norm == "complete":
+            # Safety check: if the bounding box touches an image boundary on a sub-crop (area_frac < 0.85),
+            # the crop is physically cut off by the camera frame, so override to needs_completion.
+            if bbox_norm and len(bbox_norm) == 4:
+                try:
+                    ymin, xmin, ymax, xmax = [int(v) for v in bbox_norm]
+                    area_frac = (max(1, xmax - xmin) * max(1, ymax - ymin)) / (1000.0 * 1000.0)
+                    if area_frac < 0.85 and (
+                        ymin <= _EDGE_TOUCH_MARGIN or xmin <= _EDGE_TOUCH_MARGIN or 
+                        ymax >= 1000 - _EDGE_TOUCH_MARGIN or xmax >= 1000 - _EDGE_TOUCH_MARGIN
+                    ):
+                        return True, ["quality_checker:edge_touch_completion", "reason:Frame boundary cut off"]
+                except (TypeError, ValueError):
+                    pass
+            return False, ["quality_checker:complete"]
 
     # 2. Fallback: Geometric BBox heuristics (when quality checker is absent / legacy)
     if not bbox_norm or len(bbox_norm) != 4:
