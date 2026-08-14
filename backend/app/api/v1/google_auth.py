@@ -459,6 +459,8 @@ async def _handle_login_callback(
         logger.exception("Google sign-in userinfo fetch failed")
         return _login_error_redirect(origin, "userinfo_failed")
 
+    email = (userinfo.get("email") or "").lower()
+
     # Fetch extended profile (optional/non-blocking)
     extended_profile = {}
     try:
@@ -477,8 +479,6 @@ async def _handle_login_callback(
             )
     except Exception as e:
         logger.warning("Google sign-in People API fetch failed: %s", e)
-
-    email = (userinfo.get("email") or "").lower()
     if not email:
         return _login_error_redirect(origin, "no_email")
     if not userinfo.get("verified_email", True):

@@ -17,6 +17,13 @@
     }
 }
 
+# Redirect www → bare domain so mobile users who type or follow
+# www.dressapp.co links land on the canonical origin. Without this,
+# Caddy has no server block for www and returns a TLS error.
+www.{$DOMAIN} {
+    redir https://{$DOMAIN}{uri} permanent
+}
+
 {$DOMAIN} {
     # Match everything except API routes for compression to avoid proxy buffering on chunked streaming responses
     @not_api {

@@ -1,11 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { toast } from "sonner";
 import "@/index.css";
 import "@/lib/i18n";
 import App from "@/App";
-
-toast.success = () => {};
 
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
