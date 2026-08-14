@@ -2407,10 +2407,11 @@ async def list_items(
         # successfully produced. If the thumbnail pipeline failed for
         # this item, keep one image URL so the grid still has something
         # to show (the user would otherwise see an empty card).
+        # We preserve reconstructed_image_url so the UI always has access
+        # to the high-fidelity AI-repaired image.
         if isinstance(it.get("thumbnail_data_url"), str):
             it.pop("original_image_url", None)
             it.pop("segmented_image_url", None)
-            it.pop("reconstructed_image_url", None)
     total = await repos.count(db.closet_items, query)
     # Surface the response shape in logs so deployment/cache issues are
     # immediately diagnosable. If a user reports "I have 311 items but

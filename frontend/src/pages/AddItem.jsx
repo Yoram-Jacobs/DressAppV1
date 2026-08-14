@@ -2413,7 +2413,11 @@ export default function AddItem() {
           // so the cross-page floater + the completion toast
           // ("You have news in your closet") fire when the last one
           // drains, regardless of which page the user is on.
-          if (r.value.clean_image_status === 'pending') {
+          if (
+            r.value.clean_image_status === 'pending' ||
+            r.value.needs_reconstruction ||
+            r.value.reconstruction_metadata?.deferred
+          ) {
             polishCandidates.push(r.value);
           }
         } else {
