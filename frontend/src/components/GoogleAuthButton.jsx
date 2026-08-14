@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { api } from '@/lib/api';
 
 /**
@@ -32,12 +33,6 @@ const GoogleGlyph = ({ className = 'h-4 w-4' }) => (
  * "Continue with Google" button. Resolves the Google OAuth start URL from
  * the backend, then does a full-page redirect — no popup, no PKCE library
  * needed.
- *
- * Props:
- *   • withCalendar (bool, default false) — also requests calendar.readonly.
- *   • next (string)                       — relative path to land on after sign-in.
- *   • label (string)                      — visible button text.
- *   • testId (string)                     — data-testid override.
  */
 export const GoogleAuthButton = ({
   withCalendar = false,
@@ -59,13 +54,9 @@ export const GoogleAuthButton = ({
       window.location.assign(authorization_url);
     } catch (err) {
       setBusy(false);
-      // Surface a console hint so the user knows the backend isn't wired up.
       console.error('googleLoginStart failed', err);
-      // eslint-disable-next-line no-alert
-      alert(
-        err?.response?.data?.detail ||
-          'Google sign-in is not configured on this server.'
-      );
+      const msg = err?.response?.data?.detail || err?.message || 'Failed to connect to Google sign-in. Please check your network.';
+      toast.error(msg);
     }
   };
 
