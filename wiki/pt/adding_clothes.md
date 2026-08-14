@@ -1,28 +1,42 @@
-# Ingerindo e Adicionando Roupas
+# Digitalização e Adição de Roupas
 
-Digitalize seu armário físico em segundos usando nossos múltiplos paradigmas de importação.
+Digitalize seu guarda-roupa físico em segundos com escaneamento multimodal por IA, remoção inteligente de fundo e restauração automática de imagens.
 
-## Visão geral
-Ingira roupas usando fotos de câmera ao vivo, uploads de arquivos, tags QR de passaportes de produtos digitais (DPP) ou recibos digitais (extração de OCR).
+## Visão Geral
+Adicione roupas usando fotos da câmera ao vivo, upload em lote da galeria, tags QR de Passaporte Digital do Produto (DPP) ou recibos digitais (OCR de notas fiscais). A IA integrada remove o fundo automaticamente, identifica atributos de moda, avalia a integridade do recorte e reconstrói peças ocluídas ou cortadas.
 
 ## Pré-requisitos
-- Fotos nítidas e bem iluminadas de roupas individuais.
-- Recibos digitais em PDF ou imagem.
-- Acesso à câmera para leitura de códigos QR.
+- Fotos nítidas e bem iluminadas das peças (selfies no espelho, fotos de look de corpo inteiro ou fotos flat-lay).
+- Permissão de acesso à câmera para fotografar peças e ler códigos QR.
+- Recibos digitais ou capturas de tela de pedidos (PDF / PNG / JPEG) para compras online.
 
-## Passo a passo
-1. **Upload interativo**: tire uma foto ou arraste arquivos para a guia **Câmera e upload**.
-2. **Live Matting**: A IA segmenta a roupa, remove fundos e preenche automaticamente mais de 20 campos (tamanho, cores, tecidos).
-3. **Ajustes de categoria**: Se a categoria automática estiver incorreta, atualize-a no menu suspenso; o recorte é automaticamente polido novamente para a nova categoria.
-4. **Importação de recibo digital**: alterne para a guia **Importação digital** para analisar faturas de pedidos on-line, bloqueando os campos de transação automaticamente.
-5. **DPP Scan**: Toque em **Scan QR** para ler instantaneamente a composição do fabricante e informações sobre cuidados.
+## Passo a Passo
 
-## Resultados esperados
-As roupas aparecem instantaneamente no seu armário com recortes limpos e transparentes e atributos de pesquisa totalmente indexados.
+1. **Captura e Envio Interativo**:
+   - Toque em **Add Item** (Adicionar Item) &rarr; selecione **Take Photo** (Tirar Foto) ou envie uma ou mais fotos do seu dispositivo.
+   - O detector de duplicados integrado verifica instantaneamente se você já enviou a mesma peça anteriormente.
+2. **Segmentação por IA e Detecção de Múltiplos Itens**:
+   - O modelo de visão isola peças distintas (jaquetas, blusas, saias, calças, calçados e acessórios) em uma única passagem.
+3. **Verificador de Qualidade e Restauração Automática**:
+   - O Quality Checker do Gemini inspeciona cada item recortado:
+     - **Complete (Completo)**: Peças intactas e sem oclusões têm o fundo removido diretamente.
+     - **Image Completion (Complementação de Imagem)**: Se a peça tiver contornos faltando, oclusões (por bolsas ou braços) ou golas/barras cortadas, a IA expande e recria o tecido ausente automaticamente.
+     - **Full Studio Reconstruction (Reconstrução Completa em Estúdio)**: Peças muito cortadas (como sapatos mostrando apenas a ponta) são totalmente reconstruídas em fotos de catálogo de estúdio impecáveis.
+4. **Etiquetagem Automática de Metadados**:
+   - A IA extrai mais de 20 atributos de moda (cores, composição do tecido, subcategoria, dress code, marca e estado de conservação).
+5. **Recibos Digitais e Etiquetas DPP**:
+   - Mude para **Digital Import** (Importação Digital) para ler e-mails de confirmação de compra ou faturas, fixando o preço pago e o tamanho verificado.
+   - Toque em **Scan QR (DPP)** na etiqueta da peça para importar dados de cadeia de suprimentos e instruções de lavagem do Passaporte Digital do Produto da UE.
+6. **Salvar no Closet**:
+   - Toque em **Save** (Salvar). Os itens aparecem imediatamente na grade do seu Closet, enquanto as restaurações generativas são finalizadas em segundo plano.
 
-## Solução de problemas
-- **Contorno de corte duplo**: certifique-se de que a roupa esteja plana e fotografada contra uma parede ou chão sólido contrastante.
-- **Falha no OCR do recibo**: realce manualmente os campos de texto do recibo usando os seletores de sobreposição ajustáveis.
+## Resultados Esperados
+Cada peça aparece no seu guarda-roupa digital como uma foto centralizada e limpa de estúdio, com filtros de busca indexados e etiquetas ricas de taxonomia.
+
+## Solução de Problemas
+- **Peças cortadas ou parciais nas fotos**: A IA detecta cortes automaticamente e reconstrói as peças; você também pode tocar em **Repair Photo** (Reparar Foto) no cartão de detalhes do item para acionar a regeneração manual em estúdio.
+- **Iluminação e Contraste**: Para obter os melhores resultados em roupas escuras, fotografe contra fundos contrastantes e claros.
+- **Divergências no OCR de Recibos**: Use o seletor de área interativo na imagem do recibo para delimitar manualmente a linha exata do produto.
 
 ## Limitações
-- Os uploads únicos são limitados a 45 segundos; uploads em lotes grandes (>5 itens) são direcionados para filas sequenciais em segundo plano para evitar tempos limite.
+- Uploads em lote de alta resolução (>5 itens) são processados por meio de filas assíncronas em segundo plano para assegurar alta performance sem timeout no navegador.

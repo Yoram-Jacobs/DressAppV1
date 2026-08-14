@@ -1,79 +1,97 @@
-# GarmentVision — The DressApp Eyes Pipeline
+# GarmentVision — DressAppの視覚認識および再構築パイプライン
 
-> **Module:** `backend/app/services/vision/`  
-> **Status:** Production (live on preview + `dressapp-eyes` self-host).  
-> **Owner role:** Turns a single photo of a person (or a flat-lay) into N clean, individually-tagged closet items. Everything downstream — the closet grid, the stylist, the marketplace listings — assumes GarmentVision did its job.
+> **モジュール:** `backend/app/services/vision/` & `backend/app/services/reconstruction.py`  
+> **ステータス:** 本番稼働中（VPS + `dressapp-eyes` セルフホスト上で稼働）。  
+> **役割:** ユーザーの写真（鏡越しのセルフィー、コーディネートスナップ、平置き写真）を高精度にセグメンテーション、タグ付けし、AIによって美しいクローゼットアイテムへと再構築します。
 
 ---
 
-## 1. Executive Summary & Value Proposition
+## 1. エグゼクティブサマリーと提供価値
 
-### High-Level Overview
-GarmentVision is the optical nervous system of DressApp. It is a highly optimized, multi-stage pipeline designed to take any user-uploaded image—from a mirror selfie to a professional catalog flat-lay—and extract perfectly segmented, intelligently tagged wardrobe items. Recently refactored into the robust `vision` micro-architecture, it anchors its intelligence in a hybrid approach: fast, deterministic object detection via SegFormer combined with the deep, multi-modal reasoning of Gemini 2.5 Flash.
+### 全体概要
+GarmentVisionは、DressAppの光学インテリジェンスの基幹です。一般的なユーザー写真からクリーンでフォトリアルなワードローブアイテムを自動生成する、エンドツーエンドの多段階ビジョンパイプラインです。ハイブリッドAIアーキテクチャを採用し、高速な決定論的セグメンテーション（SegFormer `b3_clothes`）と背景透過処理（`u2netp` / rembg）に、マルチモーダル推論（Gemini）および生成型画像修復（Nano Banana / `gemini-2.5-flash-image`）を融合させています。
 
-### Architectural Flow
+ユーザー写真内の服が髪、バッグ、腕で遮られていたり、カメラのフレームで切れている場合、GarmentVisionの **AI品質チェッカー（AI Quality Checker）** が欠損を検知し、**画像補完（Image Completion）**（裾、袖、襟などの欠落部分をインペイント／アウトペイント）または **フルスタジオ再構築（Full Studio Reconstruction）**（一部しか写っていないアイテムを完璧なECカタログ風写真へと再生成）を自動起動します。
+
+### アーキテクチャフロー
 
 ```mermaid
 graph TD
-    A[User Uploads Photo] --> B[Detection: clothing_parser.py]
-    B -->|Masks & BBoxes| C[Useful-Detection Filter]
-    C -->|BBox JPEGs| D[Matting: u2netp Rembg]
-    D -->|Alpha Cutouts| E[LLM Analysis: Gemini 2.5 Flash]
-    E -->|JSON Metadata| F[Canvas Normalization: fit_crop_to_card]
-    F --> G[Frontend Client: NDJSON Stream]
+    A[ユーザーがコーディネート写真をアップロード] --> B[決定論的検出: SegFormer / clothing_parser.py]
+    B -->|マスク & バウンディングボックス| C[有効検出フィルター & 肌領域除去]
+    C -->|BBoxクロップ| D[LLM解析 & 品質チェック: The Eyes / llm.py]
+    D -->|image_quality_status & メタデータ| E[判定エンジン: should_reconstruct]
+    
+    E -->|complete| F[標準マット処理: rembg]
+    E -->|needs_completion| G[Nano Banana インペイント / アウトペイント: gemini-2.5-flash-image]
+    E -->|needs_reconstruction| H[Nano Banana スタジオ生成: gemini-2.5-flash-image]
+    
+    F --> I[キャンバス正規化: 3:4 カードフィット]
+    G --> I
+    H --> I
+    I --> J[フロントエンドクライアント: NDJSONストリーム & workStoreバックグラウンドポーラー]
+    J --> K[MongoDB永続化 & クローゼットグリッド同期]
 ```
 
-### User Value Proposition
-- **Frictionless Onboarding:** A user can upload a single full-outfit photo and instantly populate their digital closet with multiple distinct items.
-- **Flawless Visual Presentation:** Every extracted garment is meticulously centered and scaled onto a transparent 3:4 portrait canvas, preserving visual preferences without aggressive cropping or zooming. 
-- **Intelligent Taxonomy:** Items are meticulously categorized. Recent updates prioritize the LLM-derived `sub_category` over generic labels, ensuring a sneaker is labeled exactly as a sneaker, not misconstrued as a generic accessory or bag.
-- **Seamless Frontend Experience:** Extracted items instantly populate the user's closet grid via lazy database synchronization, eliminating loading spinners and preserving the fluidity of the UX.
+### ユーザーへの提供価値
+- **シームレスな複数アイテム同時取り込み:** 全身セルフィーを1枚アップロードするだけで、ジャケット、トップス、スカート、パンツ、靴、アクセサリーを数秒で個別に自動分離。
+- **スタジオ品質の美しい仕上がり:** 腕やバッグで隠れた部分を自動補完。靴のつま先やコートの端など欠損したアイテムも完全なスタジオ平置き写真として再構築。
+- **インテリジェントな画質チェッカー:** 「The Eyes」が切り抜き・遮蔽・欠損エッジを自動判定し、手動での写真編集の手間をゼロに。
+- **非同期ホットパス最適化:** コストの高い生成型再構築をバックグラウンドタスクで実行することで、初期の写真取り込みを5秒未満に抑え軽快なUXを維持。
 
 ---
 
-## 2. Comprehensive User Manual
+## 2. 包括的ユーザーマニュアル
 
-### Visual Interface Topology
+### ビジュアルインターフェース構成
 ```text
-[ GarmentVision UI Flow ]
-┌────────────────────────────────────────────────────────┐
-│  [ Camera / Gallery Upload ]                           │
-│       │                                                │
-│       ▼                                                │
-│  [ Item Processing Skeleton Loaders ]                  │
-│  (Displays immediate placeholders while streaming)     │
-│       │                                                │
-│       ▼                                                │
-│  [ Closet Grid populated with new Garment Cards ]      │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │  [Crop PNG]  │  │  [Crop PNG]  │  │  [Crop PNG]  │  │
-│  │  Sneakers    │  │  T-Shirt     │  │  Denim Jeans │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
-└────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│  [ 服を追加 — カメラ & アップロード ]                                  │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │  [ライブカメラ / ファイルドロップゾーン]                          │  │
+│  │  「全身写真、平置き写真、またはレシートを撮影・アップロード」     │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+│                                                                        │
+│  [ 処理ストリーム: 検出 & 品質チェック ]                               │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐         │
+│  │ アウター切り抜き│  │ ボトムス切り抜き│  │ フットウェア切り抜き    │
+│  │ [インペイント要]│  │ [アウトペイント]│  │ [再構築が必要] │         │
+│  │ 「ライダース」  │  │ 「チュールスカート」│「ヒールミュール」│       │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘         │
+│                                                                        │
+│  [ 保存済みクローゼットグリッド: workStoreによるリアルタイム自動更新 ] │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐         │
+│  │ 完全なジャケット│  │ 復元されたスカート│スタジオ靴写真   │         │
+│  │ (袖の完全復元)  │  │ (裾・サイドの復元)│(ヒール付きペア) │         │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘         │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Workflow Walkthroughs
-- **Single Photo Upload:** The user selects a photo. The image is passed to the backend, bypassing immediate blocking database writes. The frontend stores the returned cut-out image locally via `closetStore`, providing immediate visual feedback, while the background syncs the rich metadata and AWS S3 blobs.
-- **Taxonomy Validation:** If the user reviews an item and attempts to group it with items of clashing categories (e.g., merging a "Top" with a "Footwear"), the Gatekeeper Dialog intercepts the action, providing a graceful warning and preventing taxonomy corruption.
-
-### Error Handling & Feedback
-- **Phantom Guards:** If an extracted mask contains less than 5% solid alpha pixels, GarmentVision silently drops the ghost detection to prevent empty white cards from littering the closet.
-- **LLM Taxonomy Enforcement:** If the vision-language model hallucinates an impossible category (e.g., labeling a coat's tail as a "Bottom"), the system forcefully overrides the hallucination using the deterministic SegFormer anchor, ensuring taxonomy integrity.
+### モードとワークフローの手順
+1. **インタラクティブな撮影と一括取り込み:**
+   - **アイテムを追加（Add Item）** をタップ &rarr; 1つ以上の衣類が写った写真を撮影またはアップロード。
+   - 重複アップロードを即座に検出するため、リアルタイムの事前重複チェック（`crypto.subtle` SHA-256 および平均知覚ハッシュ）を実行。
+2. **AI品質評価:**
+   - SegFormerが切り抜きをセグメント化するのと並行して、Geminiの品質チェッカーが各衣類を検査：
+     - `complete`: アイテム全体が遮蔽なく中央に写っている。そのまま保持。
+     - `needs_completion`: 一部が隠れている、端が切れている、襟や裾が欠損している。AIインペイント／アウトペイントキューへ投入。
+     - `needs_reconstruction`: アイテムの大部分が切れている（例：靴のつま先のみ）。フルスタジオ生成キューへ投入。
+3. **シームレスなバックグラウンド補完:**
+   - **保存（Save）** をタップすると、衣類は即座にクローゼットグリッドに表示されます。
+   - UIをブロックすることなく、バックグラウンドタスクが生成型画像補完を実行。完了次第、`workStore` がカードをリアルタイムに更新します。
 
 ---
 
-## 3. Technology Stack & Capability Deep-Dive
+## 3. テクノロジースタックと機能詳細
 
-### Core Orchestration & AI/Logic
-The pipeline spans multiple precision-engineered layers within `backend/app/services/vision/`:
-- **Deterministic Detection (`clothing_parser.py` & `geometry.py`):** Uses SegFormer (`b3_clothes`) to identify up to 18 distinct fashion classes. It applies complex heuristics like human-skin subtraction (masking out faces and limbs) and morphological bridging (re-connecting detached bag straps).
-- **Intelligent Normalization (`image.py`):** The `_fit_crop_to_card` function is the guardian of visual aesthetics. It dynamically scales the extracted crop to fit within a 900x1200 canvas. Recent updates introduced a 0.90 safety margin, ensuring the item has breathing room and is **never** clipped or stretched, preserving the exact visual integrity of the user's garment.
-- **Multi-Modal Reasoning (`llm.py` & `validation.py`):** Batches the resulting crops and feeds them into Gemini 2.5 Flash. The prompt engineering heavily prioritizes `sub_category` extraction, guaranteeing precise, granular tagging (e.g., "Crew-neck t-shirt" rather than just "Top").
+### コアオーケストレーション & AI/ロジック
+- **セグメンテーションエンジン (`clothing_parser.py`):** ATR / LIPファッションデータセットでファインチューニングされたSegFormerを用いて最大18クラスを認識。スキンマスク減算およびモルフォロジー演算によるストラップ結合を適用。
+- **品質チェッカープロンプティング (`llm.py`):** `image_quality_status`、`image_quality_reason`、`reconstruction_prompt` を必須とする構造化JSON出力スキーマ。
+- **判定エンジン (`reconstruction.py`):** 画像端判定ガード（`_EDGE_TOUCH_MARGIN = 40`）を組み合わせ、写真の境界で切れている衣類が誤って完全（complete）と判定されるのを防止。
+- **生成型修復エンジン (`gemini_image_service.py`):**
+  - **インペイント / アウトペイント (`edit`):** クロップデータと構造化プロンプトを `gemini-2.5-flash-image` に渡し、生地の質感・柄・色を維持しながら欠損部分を自然に拡張。
+  - **スタジオ生成 (`generate`):** 詳細なメタデータ（衣類タイプ、素材、色、金具、ネックライン）をプロンプトとして `gemini-2.5-flash-image` に渡し、オフホワイト背景の高品質なカタログ写真を生成。
 
-### Data & Context Pipelines
-- **Streaming NDJSON:** To circumvent Kubernetes ingress timeouts and provide an ultra-responsive UI, the pipeline utilizes asynchronous generators, streaming analyzed chunks to the frontend as soon as the LLM emits them.
-- **Lazy Database Sync:** Emphasizing extreme frontend snappiness, the client intercepts the processed item images and writes them to local storage (`closetStore.js`) immediately. The heavy-lifting S3 uploads and MongoDB inserts happen behind the scenes, effectively reducing perceived latency to zero.
-
-### Frontend & Client Architecture
-- **State Optimism:** The frontend actively retains the original, beautifully cut-out images returned by the `/analyze` endpoint, ignoring any stale cache responses that might temporarily revert the card to the un-cropped original photo during the lazy sync phase.
-- **Dynamic Labeling:** Product cards strictly map their visual titles to the LLM-derived `sub_category`, directly resolving previous edge cases where SegFormer's broad bounding boxes caused mislabeling (e.g., tagging layered outfits as bags).
+### フロントエンド同期 (`workStore.js` & `itemImage.js`)
+- **一元的な画像解決 (`itemImage.js`):** `bestImageUrl()` が `reconstructed_image_url` を最優先とし、AI修復後の画像が一時的な切り抜きサムネイルを即座に上書き。
+- **ページ間ポーリング (`workStore.js`):** ページ遷移をまたいでバックグラウンドの再構築タスクをグローバルに追跡し、更新ドキュメントを `closetStore` へ自動反映。

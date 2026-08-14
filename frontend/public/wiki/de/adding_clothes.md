@@ -1,28 +1,42 @@
 # Kleidung aufnehmen und hinzufügen
 
-Digitalisieren Sie Ihren physischen Kleiderschrank in Sekundenschnelle mithilfe unserer vielfältigen Importparadigmen.
+Digitalisieren Sie Ihre physische Garderobe in Sekundenschnelle mit multimodaler KI-Erkennung, intelligenter Hintergrundentfernung und automatischer Bildrekonstruktion.
 
 ## Übersicht
-Erfassen Sie Kleidung mithilfe von Live-Kameraaufnahmen, Datei-Uploads, QR-Tags für digitale Produktpässe (DPP) oder digitalen Belegen (OCR-Extraktion).
+Erfassen Sie Kleidung über Live-Kameraaufnahmen, Galerie-Uploads mehrerer Bilder, QR-Codes digitaler Produktpässe (DPP) oder digitale Belege (Rechnungs-OCR). Die integrierte KI schneidet Hintergründe automatisch frei, versieht Kleidungsstücke mit Modeattributen, bewertet die Vollständigkeit des Zuschnitts und rekonstruiert verdeckte oder abgeschnittene Artikel.
 
 ## Voraussetzungen
-- Klare, gut beleuchtete Fotos einzelner Kleidungsstücke.
-- Digitale Quittungen im PDF- oder Bildformat.
-- Kamerazugriff zum Scannen von QR-Codes.
+- Klare, gut beleuchtete Fotos von Kleidungsstücken (Spiegelselfies, Ganzkörper-Outfitfotos oder Flat-Lays).
+- Kamerazugriff zum Scannen physischer Artikel und QR-Codes.
+- Digitale Quittungen oder Rechnungs-Screenshots (PDF / PNG / JPEG) für Online-Käufe.
 
 ## Schritt für Schritt
-1. **Interaktiver Upload**: Machen Sie ein Foto oder ziehen Sie Dateien in die Registerkarte **Kamera & Upload**.
-2. **Live Matting**: Die KI segmentiert das Kleidungsstück, entfernt Hintergründe und füllt automatisch mehr als 20 Felder (Größe, Farben, Stoffe) aus.
-3. **Kategorieanpassungen**: Wenn die automatische Kategorie falsch ist, aktualisieren Sie sie im Dropdown-Menü. Der Ausschnitt wird automatisch für die neue Kategorie neu poliert.
-4. **Digitaler Quittungsimport**: Wechseln Sie zur Registerkarte **Digitaler Import**, um Online-Bestellrechnungen zu analysieren und Transaktionsfelder automatisch zu sperren.
-5. **DPP-Scan**: Tippen Sie auf **QR scannen**, um sofort Angaben zur Zusammensetzung und Pflege des Herstellers zu lesen.
+
+1. **Interaktiver Upload & Aufnahme**:
+   - Tippen Sie auf **Artikel hinzufügen** &rarr; wählen Sie **Foto aufnehmen** oder laden Sie ein oder mehrere Outfit-Fotos von Ihrem Gerät hoch.
+   - Die integrierte Duplikaterkennung prüft sofort, ob Sie dasselbe Kleidungsstück bereits hochgeladen haben.
+2. **KI-Segmentierung & Multi-Item-Erkennung**:
+   - Das Vision-Modell isoliert verschiedene Kleidungsstücke (Jacken, Oberteile, Röcke, Hosen, Schuhe, Accessoires) in einem einzigen Durchlauf.
+3. **KI-Qualitätsprüfung & Automatische Bildreparatur**:
+   - Der visuelle Qualitätsprüfer von Gemini inspiziert jeden zugeschnittenen Artikel:
+     - **Vollständig**: Intakte, unverdeckte Kleidungsstücke werden direkt freigestellt.
+     - **Bildvervollständigung**: Weist ein Artikel fehlende Seitenkonturen, Verdeckungen (durch Taschen/Arme) oder abgeschnittene Säume/Kragen auf, führt die KI automatisch ein Outpainting durch und ergänzt den fehlenden Stoff.
+     - **Vollständige Studio-Rekonstruktion**: Stark abgeschnittene Artikel (wie Schuhe, bei denen nur die Kappe sichtbar ist) werden vollständig in makellose Studio-Katalogfotos umgewandelt.
+4. **Automatisches Metadaten-Tagging**:
+   - Die KI extrahiert über 20 Modeattribute (Farben, Stoffzusammensetzung, Unterkategorie, Dresscode, Marke und Zustand).
+5. **Digitale Belege & DPP-Tags**:
+   - Wechseln Sie zu **Digitaler Import**, um Bestellbestätigungs-E-Mails oder Rechnungen zu analysieren und Kaufpreise sowie verifizierte Größen zu hinterlegen.
+   - Tippen Sie auf **QR scannen (DPP)** auf dem Etikett, um Lieferketteninformationen und Pflegehinweise des EU-Produktpasses zu importieren.
+6. **Im Kleiderschrank speichern**:
+   - Tippen Sie auf **Speichern**. Artikel erscheinen sofort im Kleiderschrank-Grid, während generative Vervollständigungen nahtlos im Hintergrund finalisiert werden.
 
 ## Erwartete Ergebnisse
-Kleidungsstücke erscheinen sofort in Ihrem Kleiderschrank mit sauberen, transparenten Ausschnitten und vollständig indizierten Suchattributen.
+Jedes Kleidungsstück erscheint in Ihrer digitalen Garderobe als zentriertes, sauberes Foto in Studioqualität mit vollständig indizierten Suchattributen und umfassenden Taxonomie-Tags.
 
 ## Fehlerbehebung
-- **Doppelter Umriss**: Stellen Sie sicher, dass das Kleidungsstück flach liegt und vor einer kontrastierenden festen Wand oder dem Boden fotografiert wird.
-- **Quittungs-OCR schlägt fehl**: Markieren Sie die Quittungstextfelder manuell mithilfe der anpassbaren Overlay-Auswahl.
+- **Abgeschnittene / Unvollständige Kleidungsstücke**: Die KI erkennt Bildkantenabschnitte automatisch und rekonstruiert sie; Sie können auch auf jeder Artikeldetailkarte auf **Foto reparieren** tippen, um eine manuelle Studio-Neugenerierung auszulösen.
+- **Beleuchtung & Kontrast**: Für beste Ergebnisse bei dunklen Kleidungsstücken fotografieren Sie diese vor kontrastierenden Hintergründen.
+- **Fehlerhafte Quittungs-OCR**: Verwenden Sie die interaktive Box-Auswahl auf Quittungsbildern, um einzelne Produktzeilen manuell festzulegen.
 
 ## Einschränkungen
-- Einzelne Uploads sind auf 45 Sekunden begrenzt; Große Batch-Uploads (>5 Elemente) werden an sequentielle Hintergrundwarteschlangen weitergeleitet, um Zeitüberschreitungen zu vermeiden.
+- Hochauflösende Stapel-Uploads (>5 Artikel) werden über asynchrone Hintergrundwarteschlangen verarbeitet, um eine reaktionsschnelle Leistung ohne Browser-Timeouts zu gewährleisten.
