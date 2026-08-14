@@ -3853,6 +3853,17 @@ async def complete_outfit(
 
 
 # ------------------------- Phase Q: Wardrobe Reconstructor -------------------------
+class ItemChatTurn(BaseModel):
+    role: str = "user"
+    content: str = ""
+
+
+class ItemChatAnalyseIn(BaseModel):
+    message: str
+    history: list[ItemChatTurn] = []
+    fill_empty_only: bool = False
+
+
 class RepairItemIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     # Optional free-form hint (typed or transcribed from Phase M voice)
@@ -4358,6 +4369,201 @@ async def reanalyze_item(
     # This ensures the user must explicitly click the Save icon on the frontend to persist re-analysis edits.
     updated_item = {**item, **update_doc}
     return {"item": updated_item, "analysis": analysis}
+
+
+
+@router.post("/{item_id}/chat-analyse")
+async def chat_analyse_item(
+    item_id: str,
+    payload: ItemChatAnalyseIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Conversational Re-analyse & AI Eyes Assistant.
+
+    Processes natural language instructions regarding the garment photo or metadata:
+    1. Image modification & inpainting (e.g. 'Remove the shoes', 'Complete the hole where the hand was', 'Remove the metal studs from the jacket') -> Invokes Nano Banana (gemini-2.5-flash-image)
+    2. Clarifications -> Returns assistant questions if instruction is underspecified
+    3. Metadata revision -> Updates form attributes according to instructions
+    4. General garment styling/details Q&A
+    """
+    db = get_db()
+    item = await repos.find_one(
+        db.closet_items, {"id": item_id, "user_id": user["id"]}
+    )
+    if not item:
+        raise HTTPException(404, "Item not found")
+
+    user_msg = (payload.message or "").strip()
+    if not user_msg:
+        raise HTTPException(400, "Message cannot be empty")
+
+    variants = item.get("image_variants") or {}
+    image_url: str | None = (
+        item.get("reconstructed_image_url")
+        or item.get("segmented_image_url")
+        or item.get("cutout_url")
+        or item.get("clean_image_url")
+        or (variants.get("webp") or {}).get("large")
+        or (variants.get("webp") or {}).get("medium")
+        or variants.get("original")
+        or item.get("original_image_url")
+        or item.get("image_url")
+    )
+    if not image_url:
+        raise HTTPException(400, "Item has no stored image. Please attach a photo first.")
+
+    raw = await _read_image_bytes_from_url(image_url)
+    if not raw:
+        raise HTTPException(400, "Stored image is empty or could not be retrieved.")
+
+    user_lang = (user or {}).get("preferred_language") or "en"
+
+    # Build conversation context for Gemini
+    from app.services.gemini_client import GeminiClient
+
+    gemini_client = None
+    if settings.GEMINI_API_KEY:
+        try:
+            gemini_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+        except Exception as exc:
+            logger.warning("Failed to initialize GeminiClient: %s", exc)
+
+    if not gemini_client:
+        raise HTTPException(503, "AI Eyes assistant is temporarily unavailable.")
+
+    history_str = ""
+    for turn in payload.history[-6:]:
+        role = "User" if turn.role == "user" else "The Eyes"
+        history_str += f"{role}: {turn.content}\n"
+
+    system_prompt = (
+        "You are 'The Eyes', DressApp's intelligent garment vision and wardrobe analysis assistant.\n"
+        "The user is viewing their garment in the wardrobe and providing an instruction or question regarding the photo or attributes.\n\n"
+        f"Garment Context:\n"
+        f"- Title: {item.get('title') or 'Unknown'}\n"
+        f"- Category: {item.get('category') or 'Unknown'} / {item.get('sub_category') or ''}\n"
+        f"- Colors: {item.get('colors') or item.get('color') or 'Unknown'}\n"
+        f"- Materials: {item.get('fabric_materials') or item.get('material') or 'Unknown'}\n"
+        f"- Pattern: {item.get('pattern') or 'Unknown'}\n"
+        f"- Condition: {item.get('condition') or 'Unknown'}\n"
+        f"- Quality: {item.get('quality') or 'Unknown'}\n\n"
+        "Your task: Analyze the user's message and determine the correct action from the following 4 options:\n\n"
+        "1. 'image_edit': The user is asking to modify, inpaint, remove, or reconstruct elements in the photo.\n"
+        "   Examples: 'Remove the shoes', 'Complete the hole where the hand was', 'Remove the metal studs from the jacket\\'s front', 'Remove the hanger', 'Repair the cut-off sleeve', 'Fill the gap in the hem'.\n"
+        "   - Set action: 'image_edit'\n"
+        "   - Set image_edit_prompt: A concise, highly specific inpainting / reconstruction directive for the image generative model to edit the garment cleanly against a neutral studio background, preserving all other details, fabric texture, and silhouette.\n"
+        "   - Set reply: A brief, friendly confirmation in the user's language describing what you are modifying.\n\n"
+        "2. 'clarification': The user's request for image modification or editing is ambiguous or missing crucial specifics.\n"
+        "   - Set action: 'clarification'\n"
+        "   - Set reply: A polite, direct question asking for the needed clarification.\n\n"
+        "3. 'metadata_update': The user is asking to update or re-classify attributes, materials, colors, brand, or category.\n"
+        "   - Set action: 'metadata_update'\n"
+        "   - Set metadata_updates: A dict of key-value changes (e.g. title, category, colors, fabric_materials, condition, etc.)\n"
+        "   - Set reply: A brief explanation of the updated fields.\n\n"
+        "4. 'answered': The user is asking a general styling, care, matching, or information question.\n"
+        "   - Set action: 'answered'\n"
+        "   - Set reply: A helpful, expert styling/garment response in the user's language.\n\n"
+        "IMPORTANT: You MUST respond in valid JSON format with keys:\n"
+        "{\n"
+        '  "action": "image_edit" | "clarification" | "metadata_update" | "answered",\n'
+        '  "reply": "string",\n'
+        '  "image_edit_prompt": "string or null",\n'
+        '  "metadata_updates": { ... } or null\n'
+        "}"
+    )
+
+    user_parts = [
+        raw,
+        f"Conversation History:\n{history_str}\nUser Prompt: {user_msg}\nPlease respond in language: {user_lang} (except JSON keys).",
+    ]
+
+    try:
+        decision_raw = await gemini_client.vision(
+            user_parts=user_parts,
+            system=system_prompt,
+            response_mime_type="application/json",
+        )
+        decision = json.loads(decision_raw)
+    except Exception as exc:
+        logger.warning("Gemini decision parsing failed in chat_analyse: %s", exc)
+        # Fallback heuristic
+        low_msg = user_msg.lower()
+        if any(k in low_msg for k in ["remove", "complete", "fix", "hole", "stud", "shoe", "sleeve", "hand", "background", "erase", "repair"]):
+            decision = {
+                "action": "image_edit",
+                "reply": f"Processing image modification: {user_msg}",
+                "image_edit_prompt": user_msg,
+            }
+        else:
+            decision = {
+                "action": "answered",
+                "reply": "Understood. Let me know if you want me to edit the photo or refine the details.",
+            }
+
+    action = decision.get("action") or "answered"
+    reply = decision.get("reply") or ""
+    image_url_out = None
+    updated_doc: dict[str, Any] = {}
+
+    if action == "image_edit":
+        if gemini_image_service is None:
+            reply = "Image editing is currently unavailable on this server. Please ensure Nano Banana is configured."
+            action = "clarification"
+        else:
+            try:
+                from app.services.billing_service import deduct_user_credits
+                await deduct_user_credits(db, user, cost=1)
+
+                edit_prompt = decision.get("image_edit_prompt") or user_msg
+                edit_res = await gemini_image_service.edit(
+                    raw,
+                    edit_prompt,
+                    garment_metadata={
+                        "title": item.get("title"),
+                        "category": item.get("category"),
+                        "color": item.get("color"),
+                        "material": item.get("material"),
+                        "pattern": item.get("pattern"),
+                        "brand": item.get("brand"),
+                    },
+                )
+                mime = edit_res.get("mime_type", "image/png")
+                image_url_out = f"data:{mime};base64,{edit_res['image_b64']}"
+
+                # Update in-memory reconstructed_image_url
+                updated_doc["reconstructed_image_url"] = image_url_out
+                updated_doc["reconstruction_metadata"] = {
+                    "method": "nano_banana_chat",
+                    "prompt": edit_prompt,
+                    "model": edit_res.get("model_used"),
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                }
+            except Exception as edit_exc:
+                logger.warning("Nano Banana chat edit failed: %s", edit_exc)
+                reply = f"I attempted to modify the image ({user_msg}), but Nano Banana encountered an issue. Please try again or refine your prompt."
+                action = "clarification"
+
+    elif action == "metadata_update":
+        meta_updates = decision.get("metadata_updates") or {}
+        for k, v in meta_updates.items():
+            if k in (
+                "title", "name", "category", "sub_category", "item_type", "brand",
+                "gender", "dress_code", "season", "tradition", "colors", "color",
+                "fabric_materials", "material", "pattern", "state", "condition",
+                "quality", "repair_advice", "tags"
+            ):
+                updated_doc[k] = v
+
+    # Build preview item in memory (do not overwrite DB until user clicks Save)
+    updated_item = {**item, **updated_doc}
+
+    return {
+        "reply": reply,
+        "action_taken": action,
+        "image_url": image_url_out,
+        "updated_fields": updated_doc if updated_doc else None,
+        "item": updated_item,
+    }
 
 
 

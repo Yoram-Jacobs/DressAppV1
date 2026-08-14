@@ -33,6 +33,11 @@ import {
   CreditCard,
   Ruler,
   Briefcase,
+  Send,
+  Bot,
+  User as UserIcon,
+  Check,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollToTop } from '@/components/ScrollToTop';
@@ -552,6 +557,15 @@ export default function ItemDetail() {
   // is a single non-streaming POST that takes ~10–20 s on the VPS.
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeProgress, setAnalyzeProgress] = useState(0);
+
+  // AI Eyes Assistant Chat state for Re-analyse photo
+  const [reanalyzePrompt, setReanalyzePrompt] = useState('');
+  const [reanalyzeChatHistory, setReanalyzeChatHistory] = useState([]);
+  const [reanalyzeChatBusy, setReanalyzeChatBusy] = useState(false);
+  const [reanalyzeChatProgress, setReanalyzeChatProgress] = useState(0);
+  const [reanalyzeDictating, setReanalyzeDictating] = useState(false);
+  const reanalyzeRecRef = useRef(null);
+
   const photoInputRef = useRef(null);
   // Phase Z3 — separate hidden input for direct-camera capture, mirrors
   // the Add-Item UX. ``capture="environment"`` opens the rear camera
@@ -1072,6 +1086,113 @@ export default function ItemDetail() {
         setAnalyzeProgress(0);
       }, 350);
     }
+  };
+
+  /* ------------------- Re-analyse AI Chat & Prompt Box ------------------- */
+  const startPromptDictation = () => {
+    if (!sttSupported.current) return;
+    const rec = createRecognition({
+      lang: (user?.preferred_language || 'en').toLowerCase(),
+      onInterim: () => {},
+      onFinal: (finalText) => {
+        if (finalText) {
+          setReanalyzePrompt((prev) =>
+            prev ? `${prev} ${finalText}`.slice(0, 240) : finalText.slice(0, 240),
+          );
+        }
+      },
+      onEnd: () => {
+        setReanalyzeDictating(false);
+        reanalyzeRecRef.current = null;
+      },
+      onError: () => toast.error(t('stylist.micDenied')),
+    });
+    if (!rec) return;
+    reanalyzeRecRef.current = rec;
+    rec.start();
+    setReanalyzeDictating(true);
+  };
+
+  const stopPromptDictation = () => {
+    try { reanalyzeRecRef.current?.stop?.(); } catch { /* ignore */ }
+  };
+
+  const onSendReanalyzePrompt = async (customPrompt) => {
+    const text = (typeof customPrompt === 'string' ? customPrompt : reanalyzePrompt).trim();
+    if (!text || reanalyzeChatBusy) return;
+
+    const userTurn = { role: 'user', content: text };
+    const updatedHistory = [...reanalyzeChatHistory, userTurn];
+    setReanalyzeChatHistory(updatedHistory);
+    setReanalyzePrompt('');
+    setReanalyzeChatBusy(true);
+    setReanalyzeChatProgress(5);
+
+    const ticker = setInterval(() => {
+      setReanalyzeChatProgress((p) => {
+        if (p >= 92) return 92;
+        const next = p + Math.max(1, Math.round((92 - p) * 0.08));
+        return Math.min(92, next);
+      });
+    }, 300);
+
+    try {
+      const isReceiptItem =
+        item?.from_receipt ||
+        (Array.isArray(item?.receipt_locked_fields) && item.receipt_locked_fields.length > 0);
+
+      const res = await api.chatAnalyseItem(id, {
+        message: text,
+        history: updatedHistory.map((h) => ({ role: h.role, content: h.content })),
+        fill_empty_only: isReceiptItem,
+      });
+
+      if (res?.item && (res.action_taken === 'metadata_update' || res.updated_fields)) {
+        setForm(toFormState(res.item, user));
+        toast.success(t('itemDetail.reanalyze.success') + " · Press Save to keep changes.");
+      }
+
+      const assistantTurn = {
+        role: 'assistant',
+        content: res.reply || t('itemDetail.reanalyze.success'),
+        action_taken: res.action_taken,
+        image_url: res.image_url,
+        updated_fields: res.updated_fields,
+      };
+
+      setReanalyzeChatHistory((prev) => [...prev, assistantTurn]);
+
+      if (res.action_taken === 'image_edit' && res.image_url) {
+        toast.success(t('itemDetail.reanalyze.nanoBananaBadge') + "! Preview ready in chat.");
+      }
+    } catch (err) {
+      const errMsg = err?.response?.data?.detail || t('itemDetail.reanalyze.error');
+      toast.error(errMsg);
+      setReanalyzeChatHistory((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: errMsg,
+          error: true,
+        },
+      ]);
+    } finally {
+      clearInterval(ticker);
+      setReanalyzeChatProgress(100);
+      setTimeout(() => {
+        setReanalyzeChatBusy(false);
+        setReanalyzeChatProgress(0);
+      }, 350);
+    }
+  };
+
+  const onApplyReconstructedImage = (imgUrl) => {
+    if (!imgUrl) return;
+    setForm((prev) => ({
+      ...prev,
+      reconstructed_image_url: imgUrl,
+    }));
+    toast.success(t('itemDetail.reanalyze.imageApplied'));
   };
 
 
@@ -1851,46 +1972,253 @@ export default function ItemDetail() {
               Useful after a "Replace photo" upload (which intentionally
               skips auto-analysis), or to recover from a bad first
               analysis without re-uploading. */}
+          {/* Re-analyse & AI Eyes Assistant card — runs The Eyes against the
+              item's stored image and executes conversational prompt instructions
+              (e.g., "Remove the shoes", "Complete the hole where the hand was",
+              "Remove the metal studs from the jacket's front"), calling Nano
+              Banana image generation as needed. */}
           <Card
             className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(199_89%_65%)]"
             data-testid="item-reanalyze-card"
           >
-            <CardContent className="p-5 space-y-3">
-              <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
+            <CardContent className="p-5 space-y-3.5">
+              <div className="flex items-center gap-3 mb-1 pb-2 border-b border-border/45">
                 <div className="p-2 rounded-xl bg-[hsl(199_89%_95%)] text-[hsl(199_89%_48%)] dark:bg-[hsl(199_30%_18%)] dark:text-[hsl(199_89%_70%)] shrink-0">
                   <RefreshCw className="h-5 w-5" />
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
                     {t('itemDetail.reanalyze.label')}
                   </span>
                   <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
-                    {t('itemDetail.edit.sectionReanalyseDesc', { defaultValue: 'Re-run analysis to extract details from the image' })}
+                    {t('itemDetail.reanalyze.subtitle')}
                   </span>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                {t('itemDetail.reanalyze.subtitle')}
-              </p>
-              <Button
-                onClick={onReanalyze}
-                disabled={analyzing}
-                className="w-full rounded-xl"
-                variant="outline"
-                data-testid="item-reanalyze-button"
-              >
-                {analyzing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 me-2 animate-spin" />
-                    {t('itemDetail.reanalyze.running')}
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 me-2" />
-                    {t('itemDetail.reanalyze.cta')}
-                  </>
+
+              {/* Conversational Message Thread */}
+              {reanalyzeChatHistory.length > 0 && (
+                <div
+                  className="max-h-80 overflow-y-auto space-y-2.5 p-3 rounded-xl bg-muted/20 border border-border/40 text-xs"
+                  data-testid="item-reanalyze-chat-thread"
+                >
+                  {reanalyzeChatHistory.map((msg, idx) => (
+                    <div key={idx} className="space-y-1">
+                      {msg.role === 'user' ? (
+                        <div className="flex justify-end">
+                          <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-none px-3.5 py-2 max-w-[85%] shadow-sm leading-relaxed">
+                            {msg.content}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-start space-y-1.5 max-w-[92%]">
+                          <div className="flex items-center gap-1.5">
+                            <Badge variant="outline" className="text-[10px] h-4 px-1.5 gap-1 bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200">
+                              <Sparkles className="h-2.5 w-2.5" />
+                              {t('itemDetail.reanalyze.eyesBadge', { defaultValue: 'The Eyes' })}
+                            </Badge>
+                            {msg.action_taken === 'image_edit' && (
+                              <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
+                                {t('itemDetail.reanalyze.nanoBananaBadge')}
+                              </Badge>
+                            )}
+                            {msg.action_taken === 'metadata_update' && (
+                              <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
+                                {t('itemDetail.reanalyze.refreshedAttributes', { defaultValue: 'Refreshed attributes' })}
+                              </Badge>
+                            )}
+                          </div>
+                          <div
+                            className={`rounded-2xl rounded-tl-none p-3 shadow-sm border leading-relaxed space-y-2 w-full ${
+                              msg.error
+                                ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900 text-red-900 dark:text-red-200'
+                                : 'bg-card border-border/60 text-foreground'
+                            }`}
+                          >
+                            <p className="whitespace-pre-wrap">{msg.content}</p>
+
+                            {/* Generated Image Preview Card */}
+                            {msg.image_url && (
+                              <div className="mt-2 rounded-lg border border-border/60 bg-muted/40 p-2 space-y-2">
+                                <div className="relative aspect-square max-h-48 w-full flex items-center justify-center bg-background rounded overflow-hidden">
+                                  <img
+                                    src={msg.image_url}
+                                    alt="Reconstructed preview"
+                                    className="h-full w-full object-contain"
+                                  />
+                                </div>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant={form.reconstructed_image_url === msg.image_url ? "secondary" : "default"}
+                                  className="w-full text-xs h-7 rounded-lg"
+                                  onClick={() => onApplyReconstructedImage(msg.image_url)}
+                                  data-testid="item-reanalyze-apply-photo-btn"
+                                >
+                                  {form.reconstructed_image_url === msg.image_url ? (
+                                    <>
+                                      <Check className="h-3.5 w-3.5 me-1.5 text-emerald-500" />
+                                      {t('itemDetail.reanalyze.applied', { defaultValue: 'Applied' })}
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Sparkles className="h-3.5 w-3.5 me-1.5" />
+                                      {t('itemDetail.reanalyze.applyImage')}
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            )}
+
+                            {/* Updated Metadata Chips */}
+                            {msg.updated_fields && (
+                              <div className="flex flex-wrap gap-1 pt-1">
+                                {Object.keys(msg.updated_fields).map((k) => (
+                                  <span key={k} className="text-[9px] px-1.5 py-0.5 rounded bg-muted font-medium text-muted-foreground">
+                                    ✓ {k}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Quick Prompt Starters / Chips */}
+              <div className="space-y-1.5">
+                <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider block">
+                  {t('itemDetail.reanalyze.promptStarters')}
+                </span>
+                <div className="flex flex-wrap gap-1.5" data-testid="item-reanalyze-prompt-chips">
+                  <button
+                    type="button"
+                    onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptRemoveShoes'))}
+                    disabled={reanalyzeChatBusy || analyzing}
+                    className="text-[11px] px-2.5 py-1 rounded-lg bg-secondary/80 hover:bg-secondary text-secondary-foreground transition-colors border border-border/40 disabled:opacity-50"
+                  >
+                    🪄 {t('itemDetail.reanalyze.promptRemoveShoes')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptCompleteHole'))}
+                    disabled={reanalyzeChatBusy || analyzing}
+                    className="text-[11px] px-2.5 py-1 rounded-lg bg-secondary/80 hover:bg-secondary text-secondary-foreground transition-colors border border-border/40 disabled:opacity-50"
+                  >
+                    ✂️ {t('itemDetail.reanalyze.promptCompleteHole')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptRemoveStuds'))}
+                    disabled={reanalyzeChatBusy || analyzing}
+                    className="text-[11px] px-2.5 py-1 rounded-lg bg-secondary/80 hover:bg-secondary text-secondary-foreground transition-colors border border-border/40 disabled:opacity-50"
+                  >
+                    💎 {t('itemDetail.reanalyze.promptRemoveStuds')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptFixMaterials'))}
+                    disabled={reanalyzeChatBusy || analyzing}
+                    className="text-[11px] px-2.5 py-1 rounded-lg bg-secondary/80 hover:bg-secondary text-secondary-foreground transition-colors border border-border/40 disabled:opacity-50"
+                  >
+                    🔍 {t('itemDetail.reanalyze.promptFixMaterials')}
+                  </button>
+                </div>
+              </div>
+
+              {/* Prompt Input Box */}
+              <div className="relative flex items-center gap-1.5 border border-border/70 rounded-xl bg-background p-1.5 focus-within:ring-2 focus-within:ring-ring">
+                <Input
+                  value={reanalyzePrompt}
+                  onChange={(e) => setReanalyzePrompt(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      onSendReanalyzePrompt();
+                    }
+                  }}
+                  placeholder={t('itemDetail.reanalyze.promptPlaceholder')}
+                  disabled={reanalyzeChatBusy || analyzing}
+                  className="border-0 shadow-none focus-visible:ring-0 text-xs px-2 py-1 h-8 bg-transparent"
+                  data-testid="item-reanalyze-prompt-input"
+                />
+                {sttSupported.current && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className={`h-7 w-7 rounded-lg shrink-0 ${
+                      reanalyzeDictating
+                        ? 'text-red-500 animate-pulse bg-red-50 dark:bg-red-950/40'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                    onClick={reanalyzeDictating ? stopPromptDictation : startPromptDictation}
+                    disabled={reanalyzeChatBusy || analyzing}
+                    title="Voice prompt"
+                    data-testid="item-reanalyze-mic-btn"
+                  >
+                    <Mic className="h-3.5 w-3.5" />
+                  </Button>
                 )}
-              </Button>
+                <Button
+                  type="button"
+                  size="icon"
+                  className="h-7 w-7 rounded-lg shrink-0 bg-primary text-primary-foreground"
+                  onClick={() => onSendReanalyzePrompt()}
+                  disabled={!reanalyzePrompt.trim() || reanalyzeChatBusy || analyzing}
+                  data-testid="item-reanalyze-send-btn"
+                >
+                  {reanalyzeChatBusy ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Send className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+              </div>
+
+              {/* Chat & Nano Banana progress bar */}
+              {reanalyzeChatBusy && (
+                <div className="space-y-1.5" data-testid="item-reanalyze-chat-progress">
+                  <Progress value={reanalyzeChatProgress} className="h-1.5 w-full" />
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                      {t('itemDetail.reanalyze.eyesThinking')}
+                    </span>
+                    <span className="tabular-nums">{Math.round(reanalyzeChatProgress)}%</span>
+                  </div>
+                </div>
+              )}
+
+              {/* 1-Click Full Re-analyse fallback */}
+              <div className="pt-2 flex items-center justify-between gap-2 border-t border-border/40">
+                <Button
+                  onClick={onReanalyze}
+                  disabled={analyzing || reanalyzeChatBusy}
+                  size="sm"
+                  variant="ghost"
+                  className="text-xs h-7 text-muted-foreground hover:text-foreground px-2"
+                  data-testid="item-reanalyze-button"
+                >
+                  {analyzing ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 me-1.5 animate-spin" />
+                      {t('itemDetail.reanalyze.running')}
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5 me-1.5" />
+                      {t('itemDetail.reanalyze.quickReanalyze')}
+                    </>
+                  )}
+                </Button>
+                <p className="text-[10px] text-muted-foreground/80 italic text-end">
+                  {t('itemDetail.reanalyze.disclaimer')}
+                </p>
+              </div>
               {analyzing && (
                 <div className="space-y-2" data-testid="item-reanalyze-progress">
                   <Progress
@@ -1911,9 +2239,6 @@ export default function ItemDetail() {
                   </div>
                 </div>
               )}
-              <p className="text-[10px] text-muted-foreground/80 italic">
-                {t('itemDetail.reanalyze.disclaimer')}
-              </p>
             </CardContent>
           </Card>
         </div>

@@ -200,6 +200,14 @@ export const closet = {
       .post(`/closet/${itemId}/reanalyze`, null, { timeout: 90000, params })
       .then((r) => r.data);
   },
+  chatAnalyseItem: (itemId, { message, history = [], fill_empty_only = false } = {}) =>
+    client
+      .post(`/closet/${itemId}/chat-analyse`, {
+        message,
+        history,
+        fill_empty_only,
+      }, { timeout: 90000 })
+      .then((r) => r.data),
 
   // --- image import & processing ---
   fetchImageUrl: (url) =>
