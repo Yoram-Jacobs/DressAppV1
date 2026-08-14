@@ -99,6 +99,21 @@
   "tags": ["oxford", "office", "layerable"],
   "original_image_url": "s3://.../raw.jpg",
   "segmented_image_url": "s3://.../segmented.png",
+  "clean_image_url": "data:image/png;base64,...",
+  "clean_image_status": "ready",              // "pending" | "ready" | "failed"
+  "reconstructed_image_url": "data:image/png;base64,...",
+  "reconstruction_metadata": {
+    "method": "completion",                  // "completion" | "reconstruction"
+    "model": "gemini-2.5-flash-image",
+    "prompt": "...",
+    "reasons": ["quality_checker:needs_completion", "reason:..."],
+    "deferred": true
+  },
+  "image_quality_status": "needs_completion", // "complete" | "needs_completion" | "needs_reconstruction"
+  "image_quality_reason": "Missing right hem and occluded collar",
+  "reconstruction_prompt": "Complete the missing right hem and collar...",
+  "thumbnail_data_url": "data:image/webp;base64,...",
+  "placeholder_data_url": "data:image/webp;base64,...",
   "embedding_id": "uuid",                    // FK → embeddings.id
   "purchase_price_cents": 3500,
   "purchase_currency": "USD",
@@ -107,6 +122,12 @@
   "last_worn_at": "2024-12-20T08:00:00Z",
   "notes": "Slightly small in shoulders",
   "retail_metadata": null,                   // populated when source='Retail'
+  "dpp_data": null,                          // EU Digital Product Passport payload
+  "source_sha256": "...",                    // in-browser SHA-256 duplicate fingerprint
+  "source_phash": "...",                     // 64-bit perceptual visual hash
+  "source_color_sig": "...",                 // 24-byte RGB color signature
+  "is_duplicate": false,
+  "from_receipt": false,
   "created_at": "2025-01-01T00:00:00Z",
   "updated_at": "2025-01-01T00:00:00Z"
 }

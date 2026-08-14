@@ -49,8 +49,12 @@ INGESTION PARADIGMS: Photography, EU Product Passports, and Digital Commerce Rec
 3. The client computes the image's SHA-256 and horizontal difference-hash (dHash) in-browser (~100-180ms) to check against your existing closet.
 4. If a match is found, the **Duplicate Preflight Dialog** opens showing matching previews. Select **Skip** or **Add anyway**.
 5. Once accepted, the server starts an NDJSON stream. A placeholders preview frame displays within 5-7 seconds, allowing you to edit the item details immediately while the backend completes tagging.
-6. Verify auto-detected tags (color, fabric, fit, pattern, occasion). If the cutout shape is incorrect, change the **Category** dropdown; this triggers SegFormer to automatically re-crop the garment.
-7. Click **Save** to optimistically paint the item in the closet grid immediately (~16ms) while background WebP thumbnail generation concludes.
+6. **AI Quality Checker & Automatic Generative Repair**: Gemini's visual Quality Checker inspects each cropped garment for occlusions (bags, arms, hair) and camera frame cutoffs:
+   - **Complete**: Intact, unoccluded garments are matted directly.
+   - **Image Completion**: If an item has missing side contours, occluded sections, or clipped hems/collars, `gemini-2.5-flash-image` (Nano Banana) automatically outpaints and completes the missing fabric into a full, symmetrical piece.
+   - **Full Studio Reconstruction**: Severely cut-off items (such as shoes showing only toe caps) are fully regenerated into pristine studio catalog photographs.
+7. Verify auto-detected tags (color, fabric, fit, pattern, occasion). If the cutout shape is incorrect, change the **Category** dropdown; this triggers SegFormer to automatically re-crop the garment.
+8. Click **Save** to optimistically paint the item in the closet grid immediately (~16ms) while background generative reconstructions and WebP thumbnails conclude in the background.
 
 #### B. Scanning EU Digital Product Passports (DPP)
 1. Tap the **Scan QR (DPP)** button on the Add Item page.
