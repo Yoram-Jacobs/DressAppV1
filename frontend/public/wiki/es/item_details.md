@@ -1,15 +1,15 @@
-# Item Details Architecture & User Guide
+# Detalles de la Prenda: Arquitectura y Guía de Usuario
 
-This document provides a comprehensive technical overview and operational guide for the **Item Details** page (`ItemDetail.jsx`) within DressApp. It covers the user experience structure, API communication flows, AI processing utilities, validation schemas, and internationalization details.
+Este documento ofrece una descripción técnica completa y una guía operativa para la página de **Detalles de la Prenda** (`ItemDetail.jsx`) en DressApp.
 
 ---
 
-## 1. Executive Summary & Value Proposition
+## 1. Resumen Ejecutivo y Propuesta de Valor
 
-### High-Level Overview
-The **Item Details** panel is the central hub for managing individual garments within a user's digital wardrobe. It functions as a context-aware editor that bridges raw visual media (photos) with semantic metadata (category, fabric composition, color weights, brand, formality level, and notes). It enables users to refine automated AI-ingestion outputs, trigger background removal (matting), run vision model re-analyses, and configure marketplace listing options.
+### Visión General
+El panel de **Detalles de la Prenda** es el centro de control para gestionar cada artículo del armario digital, combinando fotos y metadatos con edición generativa mediante **Nano Banana** (`gemini-2.5-flash-image`).
 
-### Architectural Flow
+### Flujo Arquitectónico
 
 ```mermaid
 graph TD
@@ -20,37 +20,33 @@ graph TD
     Page -->|2. Populate state| FormState[formState / toFormState]
     FormState -->|Renders| Cards[Editor Cards & Floating Action Bar]
     
-    %% AI actions
     Cards -->|Clean Background| Matting[Matting AI /onCleanBackground]
-    Matting -->|Non-generative matting| MattingAPI[Matting Endpoint]
+    Cards -->|AI Chat & Re-analyse| EyesAgent[The Eyes /chat-analyse]
+    EyesAgent -->|Multimodal Gemini Vision| DecisionEngine{Intent Decision}
     
-    Cards -->|Re-analyse Photo| VisionEngine[The Eyes /onReanalyze]
-    VisionEngine -->|Extract metadata| VisionAPI[Vision Analysis Endpoint]
+    DecisionEngine -->|Image Edit| NanoBanana[Nano Banana gemini-2.5-flash-image]
+    NanoBanana -->|Inpainted Image| ImagePreview[Live Preview & Apply Button]
+    DecisionEngine -->|Metadata Update| AttributeRefill[Form State Refill & Badges]
+    DecisionEngine -->|Clarification| ChatBubble[Assistant Clarifying Question]
+    DecisionEngine -->|General Q&A| StylingAdvice[Styling & Care Response]
     
-    %% Data manipulation & Saving
-    Cards -->|Tweak inputs| EmptyValidation{Is Empty?}
-    EmptyValidation -->|Yes| RedFrame[Red Outline Highlight border-red-400]
-    EmptyValidation -->|No| NormalFrame[Normal Input Outline]
-    
-    Cards -->|Save changes| Gatekeeper{Taxonomy Gatekeeper Alert}
-    Gatekeeper -->|Confirm| SaveAPI[updateItem API /onSave]
-    Gatekeeper -->|Cancel| EditContinue[Resume Editing]
+    Cards -->|Save changes| SaveAPI[updateItem API /onSave]
     SaveAPI -->|Success| Toast[Sonner Success Toast]
 ```
 
-### User Value Proposition
-* **Precision Wardrobe Refining**: Simple, structured cards group attributes logically, preventing input fatigue.
-* **Non-Generative AI Cutouts**: Clean background matting isolates the garment without adding hallucinated/invented details.
-* **Auto-Categorization & Re-analysis**: Corrects noisy ingestion results with one click using "The Eyes" vision engine.
-* **Optimistic Performance**: Background auto-saving and visual confirmations reduce wait times.
-* **Universal Localization**: Seamless RTL direction mirroring and fully translated labels/hints powered by `i18next`.
+### Propuesta de Valor
+* **Editor IA Conversacional**: Envía instrucciones a **The Eyes** (*"Quitar los zapatos"*, *"Completar el hueco"*).
+* **Inpainting Nano Banana**: Repara áreas recortadas u ocluidas con alta fidelidad.
+* **Diálogos de Aclaración**: Preguntas inteligentes ante solicitudes ambiguas.
+* **Organización Precisa**: Estructura modular de atributos.
+* **Eliminación de Fondo No Generativa**: Aislamiento fiel sin distorsiones.
+* **13 Idiomas Sincronizados**: Soporte total con i18next.
 
 ---
 
-## 2. Comprehensive User Manual
+## 2. Manual de Usuario
 
-### Visual Interface Topology
-The Item Details page utilizes an asymmetrical two-column layout tailored for desktop and mobile viewports:
+### Topología de la Interfaz
 
 ```
 +--------------------------------------------------------------------------+
@@ -58,98 +54,52 @@ The Item Details page utilizes an asymmetrical two-column layout tailored for de
 +------------------------------------+-------------------------------------+
 | LEFT COLUMN (Visual & AI Actions)  | RIGHT COLUMN (Metadata Editor)      |
 |                                    |                                     |
-| +--------------------------------+ | +---------------------------------+ |
-| |        GARMENT PHOTO           | | | IDENTITY CARD                   | |
-| |  [Replace Photo] [Camera Slot] | | | - Title (Required)             | |
-| +--------------------------------+ | | - Friendly Name                 | |
-|                                    | | - Brand / Caption               | |
-| +--------------------------------+ | +---------------------------------+ |
-| | CLEAN BACKGROUND CARD          | |                                     |
-| | - Matting AI Trigger Button    | | +---------------------------------+ |
-| | - Progress Bar (Faithful Cut)  | | | TAXONOMY CARD                   | |
-| +--------------------------------+ | | - Category / Sub-category        | |
-|                                    | | - Item Type / Gender             | |
-| +--------------------------------+ | | - Dress Code                     | |
-| | RE-ANALYSE PHOTO CARD          | | | - Season Multi-Select           | |
-| | - Vision Refill Trigger Button | | | - Tradition (with Dictation)    | |
-| +--------------------------------+ | +---------------------------------+ |
-|                                    |                                     |
-| +--------------------------------+ | +---------------------------------+ |
-| | DPP PROVENANCE PANEL           | | | COMPOSITION CARD                | |
-| | - Digital Product Passport Data| | | - Size / Main Color / Pattern   | |
-| +--------------------------------+ | | - Weighted Colors list          | |
-|                                    | | - Weighted Fabrics list         | |
-|                                    | +---------------------------------+ |
-|                                    |                                     |
-|                                    | +---------------------------------+ |
-|                                    | | QUALITY & WEAR CARD             | |
-|                                    | | - State / Condition / Tier      | |
-|                                    | | - Repair Advice Notes           | |
-|                                    | +---------------------------------+ |
-|                                    |                                     |
-|                                    | +---------------------------------+ |
-|                                    | | PRICING & INTENT CARD           | |
-|                                    | | - Price / Currency / Intent     | |
-|                                    | +---------------------------------+ |
-|                                    |                                     |
-|                                    | +---------------------------------+ |
-|                                    | | ORGANIZATION CARD               | |
-|                                    | | - Formality / Tags / Notes      | |
-|                                    | +---------------------------------+ |
+| [ GARMENT PHOTO & CAMERA ]         | [ IDENTITY CARD ]                   |
+| [ CLEAN BACKGROUND CARD ]          | [ TAXONOMY CARD ]                   |
+| [ RE-ANALYSE & AI EYES CHAT ]      | [ COMPOSITION CARD ]                |
+|   - Quick Prompts & Chat Box       | [ QUALITY & WEAR CARD ]             |
+|   - Live Nano Banana Preview       | [ PRICING & INTENT CARD ]           |
+| [ DPP PROVENANCE PANEL ]           | [ ORGANIZATION CARD ]               |
 +------------------------------------+-------------------------------------+
-| [ List For Sale ]                                           [ Delete ]   |
-+--------------------------------------------------------------------------+
 ```
 
-### Mode & Workflow Walkthroughs
+### Flujos de Trabajo
 
-#### 1. Photo replacement and camera capture
-* Users can replace the garment photo using the `memberPhotoInputRef` slot. 
-* Clicking **Replace Photo** opens the native file selector. Clicking **Take Photo** accesses mobile devices' cameras directly via `capture="user"`.
+#### 1. Reemplazo de foto y captura
+* Subida de fotos desde galería o cámara.
 
-#### 2. Clean Background
-* Non-generative matting runs in the background. A progress bar updates in real time.
-* If a matting session was run previously, the action button text changes to **Clean again** (fully localized) so users can retry the background separation.
+#### 2. Limpiar Fondo
+* Matting alfa no generativo en segundo plano.
 
-#### 3. Re-analyse Photo
-* Invokes "The Eyes" vision engine on the backend to evaluate the garment image.
-* Automatically refills classification fields (category, subcategory, colors, materials) while preserving user-defined fields (size, price, notes).
+#### 3. Reanalizar Foto y Asistente IA (The Eyes)
+* **Caja de Prompt IA**: Escribe o dicta solicitudes en lenguaje natural.
+* **Sugerencias Rápidas**: Chips de 1 toque para acciones comunes.
+* **Inpainting Nano Banana**: Vista previa con botón **"Aplicar como foto de prenda"**.
+* **Reanálisis en 1 Clic**: Botón de respaldo rápido.
 
-#### 4. Taxonomy & Composition Editor
-* Weighted Lists allow users to specify percentages for color palettes (e.g., Black 100%) and materials (e.g., Polyester 80%, Rayon 20%).
-* Form inputs dynamically display a red border (`border-red-400 dark:border-red-900`) if they are left empty, providing clear feedback on missing attributes.
+#### 4. Editor de Taxonomía y Composición
+* Listas ponderadas de colores y telas con resaltado de validación.
 
-#### 5. Speech-To-Text Dictation
-* Fields such as **Tradition** support voice dictation. Clicking the microphone icon activates the Web Speech API browser listener. The microphone turns red, records audio, translates it to text, and writes it directly to the input field.
-
----
-
-## 3. Modals & Dialogs
-
-### 1. Closet Item Picker Dialog (`addOpen`)
-* **Purpose**: Allows users to associate other wardrobe garments with this item (e.g., matching suits, inner linings, or sets).
-* **Structure**: A scrollable list of other closet items with checkboxes.
-* **Layout**: Displays inside a glassmorphic container (`glassmorphic border-white/20`) configured to scale on mobile screens (`max-h-[90dvh]`).
-
-### 2. Taxonomy Gatekeeper Warning Dialog (`gatekeeperOpen`)
-* **Purpose**: Prevents unintended layout misclassifications. Triggers if the user changes the garment's root Category (e.g., Top to Bottom) or changes the item Type to something mismatching the parent category.
-* **User Options**:
-  * **Confirm**: Proceeds with the category change and adapts metadata fields.
-  * **Cancel**: Aborts change and restores original category state.
-
-### 3. Delete Confirmation Alert Dialog (`AlertDialog`)
-* **Purpose**: Prevents accidental garment deletion.
-* **Actions**:
-  * **Cancel**: Dismisses dialog.
-  * **Delete**: Removes the item using an optimistic UI update, instantly navigating the user back to the Closet while the delete request is processed in the background.
+#### 5. Dictado por Voz
+* Web Speech API adaptada al idioma del usuario.
 
 ---
 
-## 4. Technology Stack & Capability Deep-Dive
+## 3. Diálogos y Modales
 
-### Data & State Pipelines
-* **Form Synchronization**: Handled via local React state (`form` object). Changes trigger `setField(key, value)`.
-* **Auto-Save Mechanism**: Unsaved fields are monitored. Upon navigating away, changes are automatically committed to the backend to prevent data loss.
-* **i18next Localization & RTL Integration**:
-  * Text alignment, direction, and padding flip dynamically based on the global direction config (`i18n.dir()`).
-  * Floating action elements mirror coordinates (e.g., using logical CSS values or standardizing floating offsets) to stay centered and clear of navigation tabs in both Hebrew/Arabic (RTL) and English (LTR) modes.
+### 1. Selector de Prendas Vinculadas (`addOpen`)
+* Vinculación de conjuntos o forros.
+
+### 2. Alerta de Taxonomía (`gatekeeperOpen`)
+* Prevención de cambios de categoría accidentales.
+
+### 3. Confirmación de Eliminación (`AlertDialog`)
+* Eliminación protegida con actualización optimista.
+
+---
+
+## 4. Pila Tecnológica y Motores IA
+
+* **Pipeline Multimodal (`POST /api/v1/closet/{item_id}/chat-analyse`)**.
+* **Motor Nano Banana (`gemini-2.5-flash-image`)**.
+* **Sincronización en 13 idiomas**.

@@ -8,7 +8,7 @@ When the user invokes this workflow, you must follow these instructions:
 1. **Thorough Investigation**: Conduct a deep investigation of all the files in the given directories and subdirectories (`C:\DressApp_AG` and `D:\ai\Emergent\Appendix\docs`) before crafting or updating the user manual.
 2. **Comprehensive Coverage**: Ensure the manual covers all major DressApp capabilities, details, and requirements, including:
    - System Overview & Tech Stack (FARM stack, python dependencies, React SPA).
-   - Ingestion Pipeline (Camera, file upload, in-browser dHash/SHA-256 duplicate checks, NDJSON streaming review, category-aware dynamic re-refinement, digital receipts import, AI Visual Quality Checker, generative Image Completion for occlusions/cutoffs, and full AI Studio Reconstruction).
+   - Ingestion Pipeline & Garment Editor (Camera, file upload, in-browser dHash/SHA-256 duplicate checks, NDJSON streaming review, category-aware dynamic re-refinement, digital receipts import, AI Visual Quality Checker, generative Image Completion for occlusions/cutoffs, full AI Studio Reconstruction, and Conversational Re-analyse AI Prompt Box with Nano Banana inpainting/editing).
    - Digital Product Passport (DPP) scanner and verified badge panel.
    - Conversational AI Stylist & STT/TTS pipelines (local Gemma4 edge, Gemini Flash fallback, client Web Speech, and mobile offline Piper ONNX).
    - Profile & Preferences page (physical metrics, style rules, AI configuration, Google Calendar, location services, and language setup).

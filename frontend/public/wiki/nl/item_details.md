@@ -1,155 +1,177 @@
-# Itemdetails Architectuur en gebruikershandleiding
+# Item Details Architecture & User Guide
 
-Dit document biedt een uitgebreid technisch overzicht en een operationele handleiding voor de **Item Details** pagina (`ItemDetail.jsx`) binnen DressApp. Het behandelt de structuur van de gebruikerservaring, API-communicatiestromen, AI-verwerkingshulpprogramma's, validatieschema's en internationaliseringsdetails.
+This document provides a comprehensive technical overview and operational guide for the **Item Details** page (`ItemDetail.jsx`) within DressApp. It covers the user experience structure, API communication flows, AI processing utilities, Nano Banana image editing pipeline, validation schemas, and internationalization details.
 
 ---
 
-## 1. Samenvatting en waardevoorstel
+## 1. Executive Summary & Value Proposition
 
-### Overzicht op hoog niveau
-Het paneel **Itemdetails** is de centrale hub voor het beheren van individuele kledingstukken in de digitale garderobe van een gebruiker. Het functioneert als een contextbewuste editor die ruwe visuele media (foto's) overbrugt met semantische metadata (categorie, stofsamenstelling, kleurgewichten, merk, formaliteitsniveau en notities). Het stelt gebruikers in staat om geautomatiseerde AI-opname-uitvoer te verfijnen, achtergrondverwijdering (matting) te activeren, heranalyses van visiemodellen uit te voeren en marktplaatsvermeldingsopties te configureren.
+### High-Level Overview
+The **Item Details** panel is the central command center for managing individual garments within a user's digital wardrobe. It bridges raw visual media (photos) with semantic metadata (category, fabric composition, color weights, brand, formality level, and notes). It enables users to refine automated AI-ingestion outputs, trigger non-generative background removal (matting), run conversational vision re-analyses, execute generative inpainting and object removal with **Nano Banana** (`gemini-2.5-flash-image`), and configure circular marketplace listing options.
 
-### Architecturale stroom
+### Architectural Flow
 
-```Zeemeermin
-grafiek TD
-    Gebruiker([Gebruiker]) -->|Navigeert door /items/:id| Pagina[ItemDetail.jsx]
-    Pagina -->|1. haalItem| API[Backend REST API]
-    API -->|Leest| DB[(MongoDB)]
+```mermaid
+graph TD
+    User([User]) -->|Navigates /items/:id| Page[ItemDetail.jsx]
+    Page -->|1. fetchItem| API[Backend REST API]
+    API -->|Reads| DB[(MongoDB)]
     
-    Pagina -->|2. Bevolkingsstaat| FormulierState[formState / naarFormulierState]
-    FormState -->|Renders| Kaarten [Editorkaarten en zwevende actiebalk]
+    Page -->|2. Populate state| FormState[formState / toFormState]
+    FormState -->|Renders| Cards[Editor Cards & Floating Action Bar]
     
-    %% AI-acties
-    Kaarten -->|Achtergrond opschonen| Matten[Matting AI /onCleanBackground]
-    Matten -->|Niet-generatieve matten| MattingAPI[Matting-eindpunt]
+    %% AI actions
+    Cards -->|Clean Background| Matting[Matting AI /onCleanBackground]
+    Matting -->|Non-generative rembg + SegFormer| MattingAPI[Matting Endpoint]
     
-    Kaarten -->|Foto opnieuw analyseren| VisionEngine[De ogen /onReanalyze]
-    VisionEngine -->|Metagegevens extraheren| VisionAPI[Visieanalyse-eindpunt]
+    Cards -->|AI Chat & Re-analyse| EyesAgent[The Eyes /chat-analyse]
+    EyesAgent -->|Multimodal Gemini Vision| DecisionEngine{Intent Decision}
     
-    %% Gegevensmanipulatie en -besparing
-    Kaarten -->|Ingangen aanpassen| EmptyValidation{Is leeg?}
-    Lege validatie -->|Ja| RedFrame[Red Outline Highlight-rand-rood-400]
-    LegeValidatie -->|Nee| NormalFrame[Normaal invoeroverzicht]
+    DecisionEngine -->|Image Edit| NanoBanana[Nano Banana gemini-2.5-flash-image]
+    NanoBanana -->|Inpainted / Reconstructed Image| ImagePreview[Live Preview & Apply Button]
     
-    Kaarten -->|Wijzigingen opslaan| Poortwachter{Taxonomie Poortwachterwaarschuwing}
-    Poortwachter -->|Bevestigen| SaveAPI[updateItem API /onSave]
-    Poortwachter -->|Annuleren| BewerkenDoorgaan[Bewerken hervatten]
-    SaveAPI -->|Succes| Toast[Sonner Succes Toast]
+    DecisionEngine -->|Metadata Update| AttributeRefill[Form State Refill & Badges]
+    DecisionEngine -->|Clarification| ChatBubble[Assistant Clarifying Question]
+    DecisionEngine -->|General Q&A| StylingAdvice[Styling & Care Response]
+    
+    %% Data manipulation & Saving
+    Cards -->|Tweak inputs| EmptyValidation{Is Empty?}
+    EmptyValidation -->|Yes| RedFrame[Red Outline Highlight border-red-400]
+    EmptyValidation -->|No| NormalFrame[Normal Input Outline]
+    
+    Cards -->|Save changes| Gatekeeper{Taxonomy Gatekeeper Alert}
+    Gatekeeper -->|Confirm| SaveAPI[updateItem API /onSave]
+    Gatekeeper -->|Cancel| EditContinue[Resume Editing]
+    SaveAPI -->|Success| Toast[Sonner Success Toast]
 ```
 
-### Waardepropositie voor gebruikers
-* **Precisiegarderobeverfijning**: eenvoudige, gestructureerde kaarten groeperen attributen logisch, waardoor invoermoeheid wordt voorkomen.
-* **Niet-generatieve AI-uitsparingen**: Schone achtergrondmatten isoleren het kledingstuk zonder hallucinerende/verzonnen details toe te voegen.
-* **Automatische categorisatie en heranalyse**: corrigeert luidruchtige opnameresultaten met één klik met behulp van de vision-engine "The Eyes".
-* **Optimistische prestaties**: automatisch opslaan op de achtergrond en visuele bevestigingen verkorten de wachttijden.
-* **Universele lokalisatie**: Naadloze RTL-richtingspiegeling en volledig vertaalde labels/hints mogelijk gemaakt door `i18next`.
+### User Value Proposition
+* **Interactive AI Garment Editor**: Users can prompt **The Eyes** in natural language to modify photos (*"Remove the shoes"*, *"Complete the hole where the hand was"*, *"Remove metal studs"*).
+* **Studio-Grade Generative Inpainting**: **Nano Banana** repairs occluded or cropped fabrics, preserving texture, silhouette, and pattern fidelity without whole-image hallucinations.
+* **Smart Clarification Dialogues**: The Eyes asks focused questions when instructions are ambiguous, avoiding unnecessary credit usage.
+* **Precision Wardrobe Refining**: Simple, structured cards group attributes logically, preventing input fatigue.
+* **Non-Generative Alpha Matting**: Clean background matting isolates the garment faithfully with zero generative distortions.
+* **Universal 13-Locale Localization**: Seamless RTL direction mirroring and fully translated labels/hints powered by `i18next`.
 
 ---
 
-## 2. Uitgebreide gebruikershandleiding
+## 2. Comprehensive User Manual
 
-### Visuele interfacetopologie
-De pagina Artikeldetails maakt gebruik van een asymmetrische lay-out met twee kolommen, afgestemd op desktop- en mobiele viewports:
+### Visual Interface Topology
+The Item Details page utilizes an asymmetrical two-column layout tailored for desktop and mobile viewports:
 
 ```
-+------------------------------------------------------------------+
-|  <- (Terug) (Ongedaan maken) (Opslaan) (Omhoog) |
-+--------------------------------+---------------------------------+
-| LINKERKOLOM (Visuele en AI-acties) | RECHTERKOLOM (Metagegevenseditor) |
++--------------------------------------------------------------------------+
+|  <- (Back)                                         (Undo) (Save) (Up)    |
++------------------------------------+-------------------------------------+
+| LEFT COLUMN (Visual & AI Actions)  | RIGHT COLUMN (Metadata Editor)      |
 |                                    |                                     |
-| +-------------------------------+ | +-------------------------------+ |
-| |        KLEDINGFOTO | | | IDENTITEITSKAART | |
-| |  [Vervang foto] [Camerasleuf] | | | - Titel (vereist) | |
-| +-------------------------------+ | | - Beschrijvende naam | |
-|                                    | | - Merk / bijschrift | |
-| +-------------------------------+ | +-------------------------------+ |
-| | SCHONE ACHTERGRONDKAART | |                                     |
-| | - Matting AI-triggerknop | | +-------------------------------+ |
-| | - Voortgangsbalk (trouwe snit) | | | TAXONOMIEKAART | |
-| +-------------------------------+ | | - Categorie / Subcategorie | |
-|                                    | | - Artikeltype / Geslacht | |
-| +-------------------------------+ | | - Dresscode | |
-| | HER-ANALYSE FOTOKAART | | | - Seizoen Multi-Select | |
-| | - Triggerknop voor het bijvullen van Vision | | | - Traditie (met dictaat) | |
-| +-------------------------------+ | +-------------------------------+ |
+| +--------------------------------+ | +---------------------------------+ |
+| |        GARMENT PHOTO           | | | IDENTITY CARD                   | |
+| |  [Replace Photo] [Camera Slot] | | | - Title (Required)             | |
+| +--------------------------------+ | | - Friendly Name                 | |
+|                                    | | - Brand / Caption               | |
+| +--------------------------------+ | +---------------------------------+ |
+| | CLEAN BACKGROUND CARD          | |                                     |
+| | - Matting AI Trigger Button    | | +---------------------------------+ |
+| | - Progress Bar (Faithful Cut)  | | | TAXONOMY CARD                   | |
+| +--------------------------------+ | | - Category / Sub-category        | |
+|                                    | | - Item Type / Gender             | |
+| +--------------------------------+ | | - Dress Code                     | |
+| | RE-ANALYSE & AI EYES CHAT CARD | | | - Season Multi-Select           | |
+| | - Message Thread & Preview     | | | - Tradition (with Dictation)    | |
+| | - Quick Prompt Starters (Chips)| | +---------------------------------+ |
+| | - Natural Language Prompt Box  | |                                     |
+| | - Speech-to-Text Mic Button    | | +---------------------------------+ |
+| | - 1-Click Full Re-analyse Btn  | | | COMPOSITION CARD                | |
+| +--------------------------------+ | | - Size / Main Color / Pattern   | |
+|                                    | | - Weighted Colors list          | |
+| +--------------------------------+ | | - Weighted Fabrics list         | |
+| | DPP PROVENANCE PANEL           | | +---------------------------------+ |
+| | - Digital Product Passport Data| |                                     |
+| +--------------------------------+ | +---------------------------------+ |
+|                                    | | QUALITY & WEAR CARD             | |
+|                                    | | - State / Condition / Tier      | |
+|                                    | | - Repair Advice Notes           | |
+|                                    | +---------------------------------+ |
 |                                    |                                     |
-| +-------------------------------+ | +-------------------------------+ |
-| | DPP HERKOMSTPANEEL | | | SAMENSTELLING KAART | |
-| | - Digitale productpaspoortgegevens| | | - Maat / Hoofdkleur / Patroon | |
-| +-------------------------------+ | | - Gewogen kleurenlijst | |
-|                                    | | - Lijst met verzwaarde stoffen | |
-|                                    | +-------------------------------+ |
+|                                    | +---------------------------------+ |
+|                                    | | PRICING & INTENT CARD           | |
+|                                    | | - Price / Currency / Intent     | |
+|                                    | +---------------------------------+ |
 |                                    |                                     |
-|                                    | +-------------------------------+ |
-|                                    | | KWALITEIT & SLIJTAGEKAART | |
-|                                    | | - Staat / Conditie / Niveau | |
-|                                    | | - Reparatieadvies Opmerkingen | |
-|                                    | +-------------------------------+ |
-|                                    |                                     |
-|                                    | +-------------------------------+ |
-|                                    | | PRIJZEN & INTENTIEKAART | |
-|                                    | | - Prijs / Valuta / Intentie | |
-|                                    | +-------------------------------+ |
-|                                    |                                     |
-|                                    | +-------------------------------+ |
-|                                    | | ORGANISATIEKAART | |
-|                                    | | - Formaliteit / Tags / Notities | |
-|                                    | +-------------------------------+ |
-+--------------------------------+---------------------------------+
-| [Lijst te koop] ​​[Verwijderen] |
-+------------------------------------------------------------------+
+|                                    | +---------------------------------+ |
+|                                    | | ORGANIZATION CARD               | |
+|                                    | | - Formality / Tags / Notes      | |
+|                                    | +---------------------------------+ |
++------------------------------------+-------------------------------------+
+| [ List For Sale ]                                           [ Delete ]   |
++--------------------------------------------------------------------------+
 ```
 
-### Modus- en workflow-walkthroughs
+### Mode & Workflow Walkthroughs
 
-#### 1. Fotovervanging en camera-opname
-* Gebruikers kunnen de kledingfoto vervangen met behulp van de `memberPhotoInputRef`-sleuf. 
-* Als u op **Foto vervangen** klikt, wordt de oorspronkelijke bestandskiezer geopend. Als u op **Maak foto** klikt, krijgt u rechtstreeks toegang tot de camera's van mobiele apparaten via `capture="user"`.
+#### 1. Photo Replacement & Camera Capture
+* Users can replace the garment photo using the `memberPhotoInputRef` slot. 
+* Clicking **Replace Photo** opens the native file selector. Clicking **Take Photo** accesses mobile devices' cameras directly via `capture="environment"`.
 
-#### 2. Schone achtergrond
-* Niet-generatieve matten lopen op de achtergrond. Een voortgangsbalk wordt in realtime bijgewerkt.
-* Als er eerder een matsessie is uitgevoerd, verandert de tekst van de actieknop in **Opnieuw opschonen** (volledig gelokaliseerd), zodat gebruikers de achtergrondscheiding opnieuw kunnen proberen.
+#### 2. Clean Background (Non-Generative Alpha Matting)
+* Non-generative matting runs in the background. A progress bar updates in real time.
+* If a matting session was run previously, the action button text changes to **Clean again** (fully localized) so users can retry the background separation.
 
-#### 3. Analyseer de foto opnieuw
-* Roept de vision-engine "The Eyes" op de backend aan om de afbeelding van het kledingstuk te evalueren.
-* Vult automatisch classificatievelden aan (categorie, subcategorie, kleuren, materialen) met behoud van door de gebruiker gedefinieerde velden (grootte, prijs, opmerkingen).
+#### 3. Re-analyse Photo & AI Eyes Conversational Assistant
+* **Natural Language Prompting**: Type or dictate prompts directly into the prompt box:
+  * *"Remove the shoes"*
+  * *"Complete the hole where the hand was"*
+  * *"Remove the metal studs from the jacket's front"*
+  * *"Refine fabric composition to 100% cashmere"*
+* **Quick Prompt Starters**: Instant chips allow 1-tap requests (🪄 *Remove shoes*, ✂️ *Complete hole*, 💎 *Remove studs*, 🔍 *Refine fabric*).
+* **Nano Banana Inpainting**: Generative requests invoke `gemini-2.5-flash-image`, rendering an in-chat preview card with an **"Apply as garment photo"** button.
+* **Attribute Synchronization**: When metadata updates are requested, The Eyes automatically refreshes form fields with visual confirmation badges.
+* **1-Click Full Re-analyse**: A dedicated button at the bottom of the card runs a classic 1-click auto-analysis fallback.
 
-#### 4. Taxonomie- en compositie-editor
-* Met gewogen lijsten kunnen gebruikers percentages opgeven voor kleurenpaletten (bijvoorbeeld zwart 100%) en materialen (bijvoorbeeld polyester 80%, rayon 20%).
-* Formulierinvoer geeft dynamisch een rode rand weer (`border-red-400 dark:border-red-900`) als ze leeg worden gelaten, wat duidelijke feedback geeft over ontbrekende attributen.
+#### 4. Taxonomy & Composition Editor
+* Weighted Lists allow users to specify percentages for color palettes (e.g., Black 100%) and materials (e.g., Polyester 80%, Rayon 20%).
+* Form inputs dynamically display a red border (`border-red-400 dark:border-red-900`) if they are left empty, providing clear feedback on missing attributes.
 
-#### 5. Spraak-naar-tekst-dictaat
-* Velden zoals **Traditie** ondersteunen spraakdictatie. Als u op het microfoonpictogram klikt, wordt de Web Speech API-browserlistener geactiveerd. De microfoon wordt rood, neemt audio op, vertaalt deze naar tekst en schrijft deze rechtstreeks naar het invoerveld.
-
----
-
-## 3. Modalen en dialogen
-
-### 1. Dialoogvenster Kastitemkiezer (`addOpen`)
-* **Doel**: Hiermee kunnen gebruikers andere kledingstukken aan dit item koppelen (bijvoorbeeld bijpassende pakken, binnenvoeringen of sets).
-* **Structuur**: een schuifbare lijst met andere kastitems met selectievakjes.
-* **Lay-out**: wordt weergegeven in een glasmorfe container (`glassmorphic border-white/20`) die is geconfigureerd om te schalen op mobiele schermen (`max-h-[90dvh]`).
-
-### 2. Taxonomie Gatekeeper-waarschuwingsdialoogvenster (`gatekeeperOpen`)
-* **Doel**: Voorkomt onbedoelde verkeerde classificaties van de lay-out. Wordt geactiveerd als de gebruiker de hoofdcategorie van het kledingstuk wijzigt (bijvoorbeeld van boven naar beneden) of het itemtype wijzigt in iets dat niet overeenkomt met de bovenliggende categorie.
-* **Gebruikersopties**:
-  * **Bevestigen**: gaat door met de categoriewijziging en past de metadatavelden aan.
-  * **Annuleren**: breekt de wijziging af en herstelt de oorspronkelijke categoriestatus.
-
-### 3. Dialoogvenster Bevestigingswaarschuwing verwijderen (`AlertDialog`)
-* **Doel**: Voorkomt dat kledingstukken per ongeluk worden verwijderd.
-* **Acties**:
-  * **Annuleren**: Dialoogvenster sluiten.
-  * **Verwijderen**: verwijdert het item met behulp van een optimistische UI-update, waardoor de gebruiker onmiddellijk terug naar de kast wordt genavigeerd terwijl het verwijderverzoek op de achtergrond wordt verwerkt.
+#### 5. Speech-To-Text Dictation
+* Prompt box and metadata fields (like **Tradition**) support voice dictation. Clicking the microphone icon activates the Web Speech API browser listener with localized language detection (`user.preferred_language`).
 
 ---
 
-## 4. Technologiestapel en mogelijkheden Deep-Dive
+## 3. Modals & Dialogs
 
-### Gegevens- en statuspijplijnen
-* **Formuliersynchronisatie**: afgehandeld via lokale React-status (`formulier`-object). Wijzigingen activeren `setField(key, value)`.
-* **Automatisch opslagmechanisme**: niet-opgeslagen velden worden gecontroleerd. Wanneer u weg navigeert, worden wijzigingen automatisch doorgevoerd in de backend om gegevensverlies te voorkomen.
-* **i18next lokalisatie en RTL-integratie**:
-  * Tekstuitlijning, richting en opvulling worden dynamisch omgedraaid op basis van de globale richtingsconfiguratie (`i18n.dir()`).
-  * Zwevende actie-elementen spiegelen coördinaten (bijvoorbeeld door logische CSS-waarden te gebruiken of zwevende offsets te standaardiseren) om gecentreerd te blijven en uit de buurt van navigatietabbladen te blijven in zowel de Hebreeuws/Arabische (RTL) als Engelse (LTR) modi.
+### 1. Closet Item Picker Dialog (`addOpen`)
+* **Purpose**: Allows users to associate other wardrobe garments with this item (e.g., matching suits, inner linings, or sets).
+* **Structure**: A scrollable list of other closet items with checkboxes.
+* **Layout**: Displays inside a glassmorphic container (`glassmorphic border-white/20`) configured to scale on mobile screens (`max-h-[90dvh]`).
+
+### 2. Taxonomy Gatekeeper Warning Dialog (`gatekeeperOpen`)
+* **Purpose**: Prevents unintended layout misclassifications. Triggers if the user changes the garment's root Category (e.g., Top to Bottom) or changes the item Type to something mismatching the parent category.
+* **User Options**:
+  * **Confirm**: Proceeds with the category change and adapts metadata fields.
+  * **Cancel**: Aborts change and restores original category state.
+
+### 3. Delete Confirmation Alert Dialog (`AlertDialog`)
+* **Purpose**: Prevents accidental garment deletion.
+* **Actions**:
+  * **Cancel**: Dismisses dialog.
+  * **Delete**: Removes the item using an optimistic UI update, instantly navigating the user back to the Closet while the delete request is processed in the background.
+
+---
+
+## 4. Technology Stack & Capability Deep-Dive
+
+### Microservice & AI Orchestration
+* **Multimodal Decision Pipeline (`POST /api/v1/closet/{item_id}/chat-analyse`)**:
+  - Uses `GeminiClient` (`Interactions API`) to evaluate image bytes, metadata context, and conversation history.
+  - Automatically routes to `image_edit`, `clarification`, `metadata_update`, or `answered`.
+* **Nano Banana Inpainting Engine (`GeminiImageService.edit`)**:
+  - Employs `gemini-2.5-flash-image` with visual conditioning from original/segmented pixels.
+  - Deducts 1 AI credit via `deduct_user_credits` on image generation calls.
+* **Form & State Management**:
+  - Handled via local React state (`form` object). Changes trigger `setField(key, value)`.
+  - Preview images remain in-memory until the user explicitly clicks the **Save** button to persist to MongoDB.
+* **Universal 13-Locale Synchronization**:
+  - Complete JSON coverage across `en`, `he`, `ar`, `de`, `fr`, `es`, `it`, `nl`, `pt`, `ru`, `hi`, `ja`, and `zh`.
+  - Full RTL direction mirroring with Tailwind logical spacing (`ms-auto`, `me-1.5`, `start/end`).

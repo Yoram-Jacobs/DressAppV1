@@ -54,6 +54,18 @@ Adding your wardrobe items to DressApp is fast and easy:
 4. Tap **Extract Selected Items**. The AI will automatically read the brand name, price, purchase size, and category.
 5. **Receipt-Locked Fields**: Once saved, all commercial details from the receipt (like price, brand, and size) are locked. If you later upload a photo to update the clothing's thumbnail, these verified details will never be accidentally modified by the AI.
 
+#### Option D: Edit & Modify Photos with The Eyes & Nano Banana
+1. Open any garment in your closet to open the **Item Details** editor.
+2. Scroll to the **Re-analyse Photo & AI Eyes Assistant** card.
+3. **Chat or Dictate Instructions**: Type or tap the microphone to speak what you want to change:
+   - *"Remove the shoes"*
+   - *"Complete the hole where the hand was"*
+   - *"Remove the metal studs from the jacket's front"*
+   - *"Refine fabric composition to 100% cashmere"*
+4. **Quick Prompt Chips**: Tap quick starters (🪄 *Remove shoes*, ✂️ *Complete hole*, 💎 *Remove studs*, 🔍 *Refine fabric*) for instant 1-tap edits.
+5. **Nano Banana Studio Inpainting**: When you ask for image changes, **Nano Banana** creates a clean, photorealistic image preview right inside the chat.
+6. Tap **Apply as garment photo** and hit **Save** to keep your updated look!
+
 
 ---
 
