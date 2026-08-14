@@ -69,6 +69,19 @@ INGESTION PARADIGMS: Photography, EU Product Passports, and Digital Commerce Rec
 3. **Data Merging Rule**: Transaction details (price, brand, size, quantity) are extracted from OCR, taking precedence over vision model inference. Visual attributes (clothing category, secondary colors) are classified by SegFormer.
 4. **Receipt-Locked Fields & Saving**: All confirmed details are saved in the database with `from_receipt: true` and their field names recorded in `receipt_locked_fields`. Any subsequent visual re-analysis (e.g. when the user updates the item thumbnail) will never overwrite fields protected in this list. Click **Save** to confirm.
 
+#### D. Conversational Re-Analyse & Generative Image Inpainting (The Eyes & Nano Banana)
+1. **Interactive Prompt Box**: Open any garment in your closet to access the **Item Details** editor, and locate the **Re-analyse Photo & AI Eyes Assistant** card.
+2. **Conversational Instructions**: Type natural language requests or tap the microphone icon to dictate prompt instructions:
+   - *"Remove the shoes"*
+   - *"Complete the hole where the hand was"*
+   - *"Remove the metal studs from the jacket's front"*
+   - *"Refine fabric composition to 100% cashmere"*
+3. **Quick Prompt Chips**: Tap quick starter chips (🪄 *Remove shoes*, ✂️ *Complete hole*, 💎 *Remove studs*, 🔍 *Refine fabric*) for instant 1-tap edits.
+4. **Nano Banana Inpainting (`gemini-2.5-flash-image`)**:
+   - The multimodal decision engine classifies visual edit requests and executes targeted inpainting against the original/segmented pixels.
+   - Nano Banana reconstructs the missing or occluded regions, rendering a photorealistic preview card directly in the chat thread.
+5. **Interactive Application**: Tap **Apply as garment photo** to update the in-memory garment photo, then click **Save** in the action bar to persist the new image to MongoDB.
+
 
 ---
 
