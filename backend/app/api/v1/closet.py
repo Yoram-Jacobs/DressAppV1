@@ -4386,6 +4386,9 @@ async def repair_item_image(
         "pattern": item.get("pattern"),
         "brand": item.get("brand"),
         "dress_code": item.get("dress_code"),
+        "image_quality_status": item.get("image_quality_status"),
+        "image_quality_reason": item.get("image_quality_reason"),
+        "reconstruction_prompt": item.get("reconstruction_prompt"),
     }
 
     # Weave the user's hint into the prompt path. The reconstruction

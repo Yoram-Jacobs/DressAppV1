@@ -421,6 +421,9 @@ class GarmentAnalysis(BaseModel):
     price_cents: int | None = None
     repair_advice: str | None = None
     tags: list[str] = Field(default_factory=list)
+    image_quality_status: str | None = None
+    image_quality_reason: str | None = None
+    reconstruction_prompt: str | None = None
     model_used: str | None = None
     raw: dict[str, Any] | None = None
 

@@ -69,17 +69,16 @@ def should_reconstruct(
 ) -> tuple[bool, list[str]]:
     """Decide whether a crop should be sent to the reconstructor.
 
+    Uses Gemini's visual Quality Checker (``image_quality_status``) as the primary
+    decision maker, falling back to geometric bbox heuristics if unpopulated.
+
     Args:
         analysis: the GarmentAnalysis JSON produced by The Eyes
-          (must contain at least ``category``; optional
-          ``sub_category`` / ``item_type``).
+          (contains ``image_quality_status``, ``image_quality_reason``,
+          ``category``, etc.).
         bbox_norm: ``[ymin, xmin, ymax, xmax]`` on the 0..1000 Gemini
-          scale. ``None`` means "no bbox available", which is the case
-          for single-upload items — we return ``(False, [])`` because
-          we have no frame context to judge quality.
-        frame_size: (w, h) of the original uploaded image. Only used for
-          shape metadata; the heuristics here operate on normalised
-          bbox coordinates.
+          scale.
+        frame_size: (w, h) of the original uploaded image.
 
     Returns:
         ``(needs_repair, reasons)`` — ``reasons`` is a list of short
@@ -88,22 +87,24 @@ def should_reconstruct(
     del frame_size  # reserved for future pixel-level checks
     reasons: list[str] = []
 
-    # Patch M16 (May 2026) — Hard kill switch for the auto-reconstruction
-    # pipeline. When ``settings.ENABLE_RECONSTRUCTION`` is ``false``
-    # (the new default), short-circuit before any heuristic runs so
-    # NEITHER the inline ``_analyse_one_crop`` call nor the deferred
-    # ``_run_background_reconstruction`` BackgroundTask ever fires.
-    # Live closet screenshots after Patch M14 showed that the SegFormer
-    # + rembg + ``apply_alpha_intersection`` triad alone already
-    # produces acceptable per-garment cutouts; Nano Banana was buying
-    # us 20-40 s of latency + API cost per crop for marginal visible
-    # quality gain. The manual "Repair Photo" CTA is intentionally NOT
-    # gated here — that's an explicit user request, handled in its own
-    # endpoint.
     from app.config import settings as _settings
     if not _settings.ENABLE_RECONSTRUCTION:
         return False, reasons
 
+    # 1. Primary: Visual Quality Checker assessment from Gemini / The Eyes
+    quality_status = analysis.get("image_quality_status")
+    if quality_status:
+        q_norm = quality_status.strip().lower()
+        if q_norm == "complete":
+            return False, ["quality_checker:complete"]
+        if q_norm in ("needs_completion", "completion"):
+            reason_txt = analysis.get("image_quality_reason") or "needs_completion"
+            return True, ["quality_checker:needs_completion", f"reason:{reason_txt}"]
+        if q_norm in ("needs_reconstruction", "reconstruction", "full_reconstruction"):
+            reason_txt = analysis.get("image_quality_reason") or "needs_reconstruction"
+            return True, ["quality_checker:needs_reconstruction", f"reason:{reason_txt}"]
+
+    # 2. Fallback: Geometric BBox heuristics (when quality checker is absent / legacy)
     if not bbox_norm or len(bbox_norm) != 4:
         return False, reasons
 
@@ -154,6 +155,10 @@ def should_reconstruct(
 
 def _build_reconstruction_prompt(analysis: dict[str, Any]) -> str:
     """Compose a high-fidelity product-shot prompt from an analysis."""
+    custom_prompt = analysis.get("reconstruction_prompt")
+    if custom_prompt and isinstance(custom_prompt, str) and len(custom_prompt.strip()) > 10:
+        return custom_prompt.strip()[:1000]
+
     bits: list[str] = []
     for key in ("color", "material", "pattern", "sub_category", "item_type"):
         v = analysis.get(key)
@@ -186,19 +191,8 @@ async def reconstruct(
 ) -> dict[str, Any] | None:
     """Run the Nano Banana reconstructor on a crop and return a data payload.
 
-    The returned dict has:
-        image_b64:       base64 PNG of the repaired image
-        mime_type:       image/png
-        prompt:          the composed text prompt used
-        model:           model id used for the reconstruction
-        reasons:         which heuristics triggered repair
-        validated:       True if the post-gen sanity check accepted the
-                         result; False if we rejected it (caller should
-                         fall back to the original crop).
-        rejected_reason: optional explanation when ``validated=False``.
-
-    On a pipeline-level failure we return ``None`` and log a warning —
-    the caller must keep using the original crop.
+    Routes between image completion (edit) and full reconstruction (generate)
+    based on the Quality Checker status.
     """
     # Reconstruction now runs only on Nano Banana (`gemini-2.5-flash-image`).
     # The legacy HF FLUX.1-schnell fallback was retired in May 2026 — if no
@@ -229,31 +223,61 @@ async def reconstruct(
         logger.warning("Reconstruction pre-matting failed: %s", repr(matte_exc))
 
     prompt = _build_reconstruction_prompt(analysis)
-    try:
-        out = await image_service.edit(
-            crop_bytes,
-            prompt,
-            garment_metadata={
-                "title": analysis.get("title"),
-                "category": analysis.get("category"),
-                "sub_category": analysis.get("sub_category"),
-                "color": analysis.get("color"),
-                "material": analysis.get("material"),
-                "pattern": analysis.get("pattern"),
-                "brand": analysis.get("brand"),
-            },
-        )
-    except Exception as exc:  # noqa: BLE001
-        logger.warning(
-            "Reconstruction edit failed (engine=%s), falling back to text-to-image generation: %s",
-            using,
-            repr(exc)[:200],
-        )
+    quality_status = (analysis.get("image_quality_status") or "").strip().lower()
+
+    # Route: Full reconstruction from scratch vs inpainting completion
+    if quality_status in ("needs_reconstruction", "reconstruction", "full_reconstruction"):
         try:
             out = await image_service.generate(prompt)
         except Exception as gen_exc:
-            logger.error("Reconstruction fallback text-to-image generation also failed: %s", repr(gen_exc))
-            return None
+            logger.warning(
+                "Full reconstruction generate failed, attempting image edit fallback: %s",
+                repr(gen_exc)[:200],
+            )
+            try:
+                out = await image_service.edit(
+                    crop_bytes,
+                    prompt,
+                    garment_metadata={
+                        "title": analysis.get("title"),
+                        "category": analysis.get("category"),
+                        "sub_category": analysis.get("sub_category"),
+                        "color": analysis.get("color"),
+                        "material": analysis.get("material"),
+                        "pattern": analysis.get("pattern"),
+                        "brand": analysis.get("brand"),
+                    },
+                )
+            except Exception as edit_exc:
+                logger.error("Reconstruction edit fallback also failed: %s", repr(edit_exc))
+                return None
+    else:
+        # Default or "needs_completion": inpaint/outpaint missing edges/collars/sleeves
+        try:
+            out = await image_service.edit(
+                crop_bytes,
+                prompt,
+                garment_metadata={
+                    "title": analysis.get("title"),
+                    "category": analysis.get("category"),
+                    "sub_category": analysis.get("sub_category"),
+                    "color": analysis.get("color"),
+                    "material": analysis.get("material"),
+                    "pattern": analysis.get("pattern"),
+                    "brand": analysis.get("brand"),
+                },
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "Reconstruction edit failed (engine=%s), falling back to text-to-image generation: %s",
+                using,
+                repr(exc)[:200],
+            )
+            try:
+                out = await image_service.generate(prompt)
+            except Exception as gen_exc:
+                logger.error("Reconstruction fallback text-to-image generation also failed: %s", repr(gen_exc))
+                return None
     image_b64 = out.get("image_b64")
     if not image_b64:
         return None

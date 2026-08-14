@@ -188,8 +188,14 @@ SYSTEM_PROMPT = (
     '  "quality": "budget"|"mid"|"premium"|"luxury",\n'
     '  "size": string|null,                // only if a label/tag is readable, else null\n'
     '  "price_cents": integer|null,        // estimated resale value in USD cents, only if confident; else null\n'
-    '  "repair_advice": string|null,       // a short, warm, actionable tip if condition==\"bad\" (e.g. \"Minor pilling on the sleeves \u2014 a fabric shaver will restore the surface.\"); null otherwise\n'
-    '  "tags": string[]                    // 3\u20138 searchable keywords\n'
+    '  "repair_advice": string|null,       // a short, warm, actionable tip if condition=="bad" (e.g. "Minor pilling on the sleeves — a fabric shaver will restore the surface."); null otherwise\n'
+    '  "tags": string[],                   // 3–8 searchable keywords\n'
+    '  "image_quality_status": "complete"|"needs_completion"|"needs_reconstruction", // Quality Checker assessment of the cropped image:\n'
+    '                                                                              // • "complete": Clean, unoccluded, whole garment without missing parts or severe cutoffs. Leave as is.\n'
+    '                                                                              // • "needs_completion": Mostly intact, but specific edges, collar/neckline (e.g. covered by hair), sleeves, side panels (e.g. occluded by hands/bags), or hem are cut off. Needs image completion to outpaint/inpaint missing parts while preserving visible fabric and shape.\n'
+    '                                                                              // • "needs_reconstruction": Severely truncated, severed (e.g. only shoe tips visible, tiny sliver), or heavily degraded/amputated so that inpainting is insufficient and a full new photorealistic generation from scratch is required.\n'
+    '  "image_quality_reason": string|null, // Diagnostic note in English describing what is missing/occluded (e.g. "Collar and right lapel occluded by hair; left sleeve cut by edge" or "Only toe caps visible, heels and openings missing"). Null if "complete".\n'
+    '  "reconstruction_prompt": string|null // Nano Banana prompt. If "needs_completion": describe instructions for completing missing edges/collars/sleeves on an off-white background while preserving garment texture and design. If "needs_reconstruction": complete editorial product photograph prompt for the entire item on an off-white background. Null if "complete".\n'
     "}\n\n"
     "Style rules for the free-text fields (`name`, `title`, `caption`, "
     "`tags`, `repair_advice`):\n"
@@ -900,6 +906,12 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
             "minItems": 0,
             "maxItems": 16,
         },
+        "image_quality_status": {
+            "type": ["string", "null"],
+            "enum": ["complete", "needs_completion", "needs_reconstruction", None],
+        },
+        "image_quality_reason": {"type": ["string", "null"]},
+        "reconstruction_prompt": {"type": ["string", "null"]},
         # ── Phase O.6 — single-pass region info ───────────────────────
         # Optional spatial metadata. Only populated when the caller is
         # the single-pass pipeline (``EYES_ONE_PASS=true``). Legacy

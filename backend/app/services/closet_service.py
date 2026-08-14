@@ -409,7 +409,8 @@ async def run_background_matte_and_analyze(
         "title", "name", "caption", "category", "sub_category", "item_type",
         "brand", "gender", "dress_code", "season", "tradition", "colors",
         "fabric_materials", "pattern", "state", "condition", "quality",
-        "repair_advice", "tags",
+        "repair_advice", "tags", "image_quality_status", "image_quality_reason",
+        "reconstruction_prompt",
     )
 
     item_doc = await repos.find_one(db.closet_items, {"id": item_id})
@@ -508,6 +509,8 @@ async def run_background_reconstruction(
     data_url = f"data:{mime};base64,{recon_b64}"
     meta = {
         "method": "reconstruction",
+        "quality_status": analysis.get("image_quality_status"),
+        "quality_reason": analysis.get("image_quality_reason"),
         "model": result.get("model"),
         "prompt": result.get("prompt"),
         "reasons": reasons,
