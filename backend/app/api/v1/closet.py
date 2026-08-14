@@ -1049,17 +1049,23 @@ async def analyze_item_image(
             elif b64_or_url.startswith("data:image/"):
                 try:
                     header, encoded = b64_or_url.split(",", 1)
-                    raw_list.append(base64.b64decode(encoded))
+                    raw_list.append(base64.b64decode(encoded.strip()))
                 except Exception as exc:
                     raise HTTPException(400, f"Invalid data URL in array: {exc}") from exc
             else:
                 try:
-                    raw_list.append(base64.b64decode(b64_or_url, validate=True))
+                    clean_b64 = b64_or_url
+                    if "," in clean_b64:
+                        clean_b64 = clean_b64.split(",", 1)[1]
+                    raw_list.append(base64.b64decode(clean_b64.strip()))
                 except Exception as exc:
                     raise HTTPException(400, f"Invalid image_base64 in array: {exc}") from exc
     elif payload.image_base64:
         try:
-            raw_list.append(base64.b64decode(payload.image_base64, validate=True))
+            clean_b64 = payload.image_base64
+            if "," in clean_b64:
+                clean_b64 = clean_b64.split(",", 1)[1]
+            raw_list.append(base64.b64decode(clean_b64.strip()))
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(400, f"Invalid image_base64: {exc}") from exc
     elif payload.image_url:

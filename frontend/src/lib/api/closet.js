@@ -70,89 +70,131 @@ export const closet = {
     const url = `${baseUrl}/api/v1/closet/analyze`;
     const token = tokenStore.get();
     return (async () => {
-      const resp = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'text/event-stream, application/x-ndjson',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(body),
-      });
-      if (!resp.ok) {
-        let detail = `HTTP ${resp.status}`;
-        try {
-          const j = await resp.json();
-          detail = j?.detail || j?._error || detail;
-        } catch (_e) {
-          /* keep generic detail */
-        }
-        const err = new Error(detail);
-        err.response = { status: resp.status, data: { detail } };
-        throw err;
-      }
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let buffer = '';
-      const emittedItems = [];
-      let detectMeta = null;
-      let doneCount = 0;
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const newlineIdx = buffer.lastIndexOf('\n');
-        if (newlineIdx < 0) continue;
-        const lines = buffer.slice(0, newlineIdx).split('\n');
-        buffer = buffer.slice(newlineIdx + 1);
-        for (const raw of lines) {
-          const line = raw.trim();
-          if (!line) continue;
-          let frame;
+      try {
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'text/event-stream, application/x-ndjson',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(body),
+        });
+        if (!resp.ok) {
+          let detail = `HTTP ${resp.status}`;
           try {
-            frame = JSON.parse(line);
+            const j = await resp.json();
+            detail = j?.detail || j?._error || detail;
           } catch (_e) {
-            continue;
+            /* keep generic detail */
           }
-          switch (frame.type) {
-            case 'detect':
-              detectMeta = frame;
-              callbacks.onDetect?.(frame);
-              break;
-            case 'item':
-              emittedItems[frame.index] = frame;
-              callbacks.onItem?.(frame);
-              break;
-            case 'item_skip':
-              callbacks.onItemSkip?.(frame);
-              break;
-            case 'field':
-              callbacks.onField?.(frame);
-              break;
-            case 'done':
-              doneCount = frame.count || 0;
-              callbacks.onDone?.(frame);
-              break;
-            case 'error': {
-              const err = new Error(frame.message || 'Analyze failed');
-              err.response = {
-                status: frame.status || 503,
-                data: { detail: frame.message },
-              };
-              callbacks.onError?.(frame);
+          const err = new Error(detail);
+          err.response = { status: resp.status, data: { detail } };
+          throw err;
+        }
+        const reader = resp.body?.getReader();
+        if (!reader) {
+          throw new Error('Streaming response body not readable');
+        }
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+        const emittedItems = [];
+        let detectMeta = null;
+        let doneCount = 0;
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const newlineIdx = buffer.lastIndexOf('\n');
+          if (newlineIdx < 0) continue;
+          const lines = buffer.slice(0, newlineIdx).split('\n');
+          buffer = buffer.slice(newlineIdx + 1);
+          for (const raw of lines) {
+            const line = raw.trim();
+            if (!line) continue;
+            let frame;
+            try {
+              frame = JSON.parse(line);
+            } catch (_e) {
+              continue;
+            }
+            switch (frame.type) {
+              case 'detect':
+                detectMeta = frame;
+                callbacks.onDetect?.(frame);
+                break;
+              case 'item':
+                emittedItems[frame.index] = frame;
+                callbacks.onItem?.(frame);
+                break;
+              case 'item_skip':
+                callbacks.onItemSkip?.(frame);
+                break;
+              case 'field':
+                callbacks.onField?.(frame);
+                break;
+              case 'done':
+                doneCount = frame.count || 0;
+                callbacks.onDone?.(frame);
+                break;
+              case 'error': {
+                const err = new Error(frame.message || 'Analyze failed');
+                err.response = {
+                  status: frame.status || 503,
+                  data: { detail: frame.message },
+                };
+                callbacks.onError?.(frame);
+                throw err;
+              }
+              default:
+                break;
+            }
+          }
+        }
+        const items = emittedItems.filter(Boolean);
+        return {
+          items,
+          count: doneCount || items.length,
+          detect: detectMeta,
+        };
+      } catch (streamErr) {
+        console.warn('[analyzeItemImage] Stream failed, falling back to standard axios POST:', streamErr);
+        // Fallback to standard axios POST
+        return client
+          .post('/closet/analyze', body, { timeout: 180000 })
+          .then((r) => {
+            const data = r.data || {};
+            if (data && data._status && Number(data._status) >= 400) {
+              const err = new Error(data._error || 'Analyze failed');
+              err.response = { status: Number(data._status), data };
               throw err;
             }
-            default:
-              break;
-          }
-        }
+            if (data.items_meta) {
+              callbacks.onDetect?.({ type: 'detect', items_meta: data.items_meta });
+            }
+            if (Array.isArray(data.items)) {
+              data.items.forEach((it, idx) => {
+                callbacks.onItem?.({
+                  type: 'item',
+                  index: idx,
+                  item: it,
+                  analysis: it,
+                  fields: it,
+                });
+              });
+            } else if (data.analysis) {
+              callbacks.onItem?.({
+                type: 'item',
+                index: 0,
+                item: data.analysis,
+                analysis: data.analysis,
+                fields: data.analysis,
+              });
+            }
+            callbacks.onDone?.(data);
+            return data;
+          });
       }
-      const items = emittedItems.filter(Boolean);
-      return {
-        items,
-        count: doneCount || items.length,
-        detect: detectMeta,
-      };
     })();
   },
 
