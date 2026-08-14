@@ -2126,7 +2126,7 @@ class GarmentVisionService:
                         self._bbox_crop_useful, img_bytes, [best_det], is_single_item=True,
                     )
                     for det, _, _ in raw_crops:
-                        det["defer_matte"] = settings.AUTO_MATTE_CROPS
+                        det["defer_matte"] = False
                         det["is_single_item"] = True
                     fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
                     return idx, fast_crops
@@ -2138,7 +2138,7 @@ class GarmentVisionService:
                         self._bbox_crop_useful, img_bytes, [best_det], is_single_item=True,
                     )
                     for det, _, _ in raw_crops:
-                        det["defer_matte"] = settings.AUTO_MATTE_CROPS
+                        det["defer_matte"] = False
                         det["is_single_item"] = True
                     fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
                     return idx, fast_crops

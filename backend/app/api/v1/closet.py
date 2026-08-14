@@ -458,10 +458,10 @@ async def create_item(
     # frontend echoes it here so we queue the same background task as
     # the one-pass path. Either flag triggers the same code.
     #
-    # Phase R (July 2026) — receipt-import items with an image get the
-    # full matte + Gemini analysis chain. Those without an image skip
-    # all pipeline work — the receipt fields are the complete data.
-    needs_bg_matte = (payload.from_one_pass or payload.defer_matte) and (payload.crop_base64 or payload.image_base64)
+    # Standard closet uploads already receive their clean crop from
+    # the analyzer. We do not run post-save background rembg matting on
+    # standard items to prevent unwanted image artifacts/over-cropping.
+    needs_bg_matte = False
 
     # Resolve the raw bytes for the background task once, shared by all branches.
     raw_for_bg: bytes | None = None
