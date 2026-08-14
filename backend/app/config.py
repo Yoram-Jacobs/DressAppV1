@@ -467,7 +467,7 @@ class Settings:
     #   * Restores the legacy behaviour (use together with
     #     ``DEFER_RECONSTRUCTION_ON_ANALYZE`` to control sync vs. async).
     ENABLE_RECONSTRUCTION: bool = (
-        os.environ.get("ENABLE_RECONSTRUCTION", "false").lower() == "true"
+        os.environ.get("ENABLE_RECONSTRUCTION", "true").lower() == "true"
     )
     # Feature-flag for the local SegFormer inference path in
     # clothing_parser.py. Default tracks torch+transformers availability:

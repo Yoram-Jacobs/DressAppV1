@@ -187,6 +187,9 @@ const blankFields = () => ({
   marketplace_intent: 'own',
   repair_advice: '',
   tags: [],
+  image_quality_status: '',
+  image_quality_reason: '',
+  reconstruction_prompt: '',
 });
 
 /** Coerce analyze payload into a plain, editable form dict.
@@ -1774,6 +1777,9 @@ export default function AddItem() {
                   deferMatte: !!frame.defer_matte,
                   needsReconstruction: !!frame.needs_reconstruction,
                   reconstructionReasons: frame.reconstruction_reasons || [],
+                  imageQualityStatus: frame.analysis?.image_quality_status || null,
+                  imageQualityReason: frame.analysis?.image_quality_reason || null,
+                  reconstructionPrompt: frame.analysis?.reconstruction_prompt || null,
                   reconstructedUrl,
                   reconstructedB64: recValidated ? rec.image_b64 : null,
                   reconstructionMeta: recValidated
@@ -2029,6 +2035,9 @@ export default function AddItem() {
                   deferMatte: frame.defer_matte !== undefined ? !!frame.defer_matte : c.deferMatte,
                   needsReconstruction: !!frame.needs_reconstruction,
                   reconstructionReasons: frame.reconstruction_reasons || [],
+                  imageQualityStatus: frame.analysis?.image_quality_status || null,
+                  imageQualityReason: frame.analysis?.image_quality_reason || null,
+                  reconstructionPrompt: frame.analysis?.reconstruction_prompt || null,
                   reconstructedUrl,
                   reconstructedB64: recValidated ? rec.image_b64 : null,
                   reconstructionMeta: recValidated
@@ -4342,6 +4351,11 @@ function buildCreatePayload(card, inSuitcase = false) {
     // /analyze flow with rembg deferred. The backend queues
     // ``_run_background_matte`` either way.
     defer_matte: card.deferMatte ? true : undefined,
+    needs_reconstruction: card.needsReconstruction ? true : undefined,
+    reconstruction_reasons: (card.reconstructionReasons && card.reconstructionReasons.length) ? card.reconstructionReasons : undefined,
+    image_quality_status: f.image_quality_status || card.imageQualityStatus || undefined,
+    image_quality_reason: f.image_quality_reason || card.imageQualityReason || undefined,
+    reconstruction_prompt: f.reconstruction_prompt || card.reconstructionPrompt || undefined,
   };
   // Strip undefined to keep payload clean (Pydantic `extra=forbid` still accepts unset fields).
   return Object.fromEntries(Object.entries(body).filter(([, v]) => v !== undefined));

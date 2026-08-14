@@ -188,6 +188,9 @@ class CreateItemIn(BaseModel):
     # ``defer_matte`` / ``_run_background_matte`` pattern.
     needs_reconstruction: bool = False
     reconstruction_reasons: list[str] = []
+    image_quality_status: str | None = None
+    image_quality_reason: str | None = None
+    reconstruction_prompt: str | None = None
     # Phase R (July 2026) — digital receipt import provenance.
     # When True, this item was created from a parsed digital receipt.
     # If an image is also supplied, the background task runs the full
@@ -361,6 +364,9 @@ async def create_item(
         notes=payload.notes,
         retail_metadata=payload.retail_metadata,
         reconstruction_metadata=payload.reconstruction_metadata,
+        image_quality_status=payload.image_quality_status,
+        image_quality_reason=payload.image_quality_reason,
+        reconstruction_prompt=payload.reconstruction_prompt,
         dpp_data=payload.dpp_data,
         # Phase Z2 — photo fingerprint passthrough (used by the
         # pre-flight duplicate check). All optional; legacy clients
@@ -550,6 +556,9 @@ async def create_item(
             ),
             "title": payload.title,
             "name": payload.name,
+            "image_quality_status": payload.image_quality_status,
+            "image_quality_reason": payload.image_quality_reason,
+            "reconstruction_prompt": payload.reconstruction_prompt,
         }
         background_tasks.add_task(
             _run_background_reconstruction,
