@@ -105,74 +105,62 @@ const getDefaultCurrency = () => {
 };
 
 const fileToBase64 = async (file, maxSide = 800, quality = 0.6) => {
-  try {
-    let img = null;
-    if (typeof createImageBitmap === 'function') {
-      try {
-        img = await createImageBitmap(file, { imageOrientation: 'from-image' });
-      } catch (_) {}
-    }
-    
-    if (!img) {
-      img = await new Promise((resolve, reject) => {
-        const i = new Image();
-        const objectUrl = URL.createObjectURL(file);
-        i.onload = () => {
-          URL.revokeObjectURL(objectUrl);
-          resolve(i);
-        };
-        i.onerror = (e) => {
-          URL.revokeObjectURL(objectUrl);
-          reject(e);
-        };
-        i.src = objectUrl;
-      });
-    }
-
-    let { width, height } = img;
-    if (width > maxSide || height > maxSide) {
-      if (width > height) {
-        height = Math.round((height * maxSide) / width);
-        width = maxSide;
-      } else {
-        width = Math.round((width * maxSide) / height);
-        height = maxSide;
+  return new Promise((resolve, reject) => {
+    if (!file) return resolve(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      if (typeof dataUrl !== 'string') {
+        return reject(new Error('Failed to read image as data URL'));
       }
-    }
-
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    
-    // Fill white background in case it's a transparent image being saved as JPEG
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, width, height);
-    ctx.drawImage(img, 0, 0, width, height);
-    
-    // Free memory
-    if (img.close) img.close();
-    else img.src = '';
-
-    const outDataUrl = canvas.toDataURL('image/jpeg', quality);
-    canvas.width = 0;
-    canvas.height = 0;
-
-    const comma = outDataUrl.indexOf(',');
-    return comma >= 0 ? outDataUrl.slice(comma + 1) : outDataUrl;
-  } catch (canvasErr) {
-    // Robust fallback: read file directly via FileReader as base64
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result || '';
-        const comma = result.indexOf(',');
-        resolve(comma >= 0 ? result.slice(comma + 1) : result);
+      const img = new Image();
+      img.onload = () => {
+        let width = img.naturalWidth || img.width || 0;
+        let height = img.naturalHeight || img.height || 0;
+        if (!width || !height) {
+          const comma = dataUrl.indexOf(',');
+          return resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
+        }
+        if (width > maxSide || height > maxSide) {
+          if (width > height) {
+            height = Math.round((height * maxSide) / width);
+            width = maxSide;
+          } else {
+            width = Math.round((width * maxSide) / height);
+            height = maxSide;
+          }
+        }
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            const comma = dataUrl.indexOf(',');
+            return resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
+          }
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+          const outDataUrl = canvas.toDataURL('image/jpeg', quality);
+          canvas.width = 0;
+          canvas.height = 0;
+          const comma = outDataUrl.indexOf(',');
+          resolve(comma >= 0 ? outDataUrl.slice(comma + 1) : outDataUrl);
+        } catch (_) {
+          const comma = dataUrl.indexOf(',');
+          resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
+        }
       };
-      reader.onerror = (err) => reject(err);
-      reader.readAsDataURL(file);
-    });
-  }
+      img.onerror = () => {
+        const comma = dataUrl.indexOf(',');
+        resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
+      };
+      img.src = dataUrl;
+    };
+    reader.onerror = (err) => reject(err);
+    reader.readAsDataURL(file);
+  });
 };
 
 const fmtCents = (cents, cur = 'USD') =>
