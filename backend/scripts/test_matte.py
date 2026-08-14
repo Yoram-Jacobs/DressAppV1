@@ -19,7 +19,8 @@ async def main():
     print(f"Original input size: {len(img_bytes)} bytes")
     matted = await svc._whole_image_matte(img_bytes)
     if matted:
-        print(f"Matted output: {len(matted)} bytes, PNG header: {matted[:8] == b'\x89PNG\r\n\x1a\n'}")
+        is_png = bool(matted.startswith(b"\x89PNG"))
+        print(f"Matted output: {len(matted)} bytes, is_png={is_png}")
     else:
         print("Matted returned None")
 
