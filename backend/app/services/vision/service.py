@@ -691,26 +691,13 @@ class GarmentVisionService:
         )
         crop_bytes = image_bytes
         crop_mime = "image/jpeg"
+        defer_matte = False
 
-        defer_matte = settings.AUTO_MATTE_CROPS
-        if settings.AUTO_MATTE_CROPS and detections:
-            best_det = max(
-                detections,
-                key=lambda d: (
-                    max(0, d["bbox"][2] - d["bbox"][0])
-                    * max(0, d["bbox"][3] - d["bbox"][1])
-                ),
-            )
-            raw_crops = await asyncio.to_thread(
-                self._bbox_crop_useful, image_bytes, [best_det], is_single_item=True,
-            )
-            out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
-            if out:
-                d_meta, crop_bytes, crop_mime = out[0]
-                defer_matte = d_meta.get("defer_matte", False)
-            elif raw_crops:
-                d_meta, crop_bytes, crop_mime = raw_crops[0]
-                defer_matte = d_meta.get("defer_matte", False)
+        if settings.AUTO_MATTE_CROPS:
+            matted = await self._whole_image_matte(image_bytes)
+            if matted:
+                crop_bytes = matted
+                crop_mime = "image/png"
 
         single = await self.analyze(
             image_bytes, language=language, think=think,
@@ -2119,39 +2106,51 @@ class GarmentVisionService:
                         )
                     else:
                         best_det = {"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment"}
-                    
-                    # Crop the image to the detected garment bounds so it isn't
-                    # floating in a huge frame, and so fast_matte works correctly.
-                    raw_crops = await asyncio.to_thread(
-                        self._bbox_crop_useful, img_bytes, [best_det], is_single_item=True,
-                    )
-                    for det, _, _ in raw_crops:
-                        det["defer_matte"] = False
-                        det["is_single_item"] = True
-                    fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
-                    return idx, fast_crops
+
+                    det = {
+                        "label": best_det.get("label") or "garment",
+                        "kind": best_det.get("kind") or "garment",
+                        "bbox": best_det.get("bbox", [0, 0, 1000, 1000]),
+                        "defer_matte": False,
+                    }
+                    if settings.AUTO_MATTE_CROPS:
+                        matted = await self._whole_image_matte(img_bytes)
+                        if matted:
+                            return idx, [(det, matted, "image/png")]
+                    return idx, [(det, img_bytes, "image/jpeg")]
 
                 useful = self._filter_useful_detections(detections, cap)
                 if not useful:
                     best_det = {"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment"}
-                    raw_crops = await asyncio.to_thread(
-                        self._bbox_crop_useful, img_bytes, [best_det], is_single_item=True,
-                    )
-                    for det, _, _ in raw_crops:
-                        det["defer_matte"] = False
-                        det["is_single_item"] = True
-                    fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
-                    return idx, fast_crops
+                    det = {
+                        "label": "garment",
+                        "kind": "garment",
+                        "bbox": [0, 0, 1000, 1000],
+                        "defer_matte": False,
+                    }
+                    if settings.AUTO_MATTE_CROPS:
+                        matted = await self._whole_image_matte(img_bytes)
+                        if matted:
+                            return idx, [(det, matted, "image/png")]
+                    return idx, [(det, img_bytes, "image/jpeg")]
 
                 raw_crops = await asyncio.to_thread(self._bbox_crop_useful, img_bytes, useful)
-                
-                # Apply fast, no-"Polishing" matting using the SegFormer mask directly.
-                # This bypasses the heavy rembg background task (Polishing) while
-                # still providing cutouts, which scales safely for 6+ batch uploads.
-
-
                 fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
-                return idx, fast_crops
+                
+                final_crops = []
+                for det, cbytes, mime in fast_crops:
+                    det["defer_matte"] = False
+                    if mime != "image/png" and settings.AUTO_MATTE_CROPS:
+                        try:
+                            from app.services import background_matting
+                            matted = await background_matting.matte_crop(cbytes)
+                            if matted:
+                                cbytes = matted
+                                mime = "image/png"
+                        except Exception as exc:
+                            logger.info("rembg crop matte failed: %s", exc)
+                    final_crops.append((det, cbytes, mime))
+                return idx, final_crops
             except Exception as exc:
                 logger.warning("analyze_outfits_stream: crop/matte failed for idx %d: %s", idx, repr(exc)[:160])
                 return idx, []
