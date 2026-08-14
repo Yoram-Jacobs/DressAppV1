@@ -107,9 +107,8 @@ services:
       context: ..
       dockerfile: deploy/Dockerfile.frontend
       args:
-        # Baked into the bundle at build time — MUST match the public URL
-        # (same origin since Caddy proxies /api/* back to the backend).
-        REACT_APP_BACKEND_URL: https://${DOMAIN}
+        # Same-origin deployment: empty string lets the frontend use relative /api/v1 URLs
+        REACT_APP_BACKEND_URL: ""
     image: dressapp-frontend:latest
     container_name: dressapp-frontend
     restart: unless-stopped

@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
+const rawBackendUrl = (process.env.REACT_APP_BACKEND_URL || '').trim();
+const BACKEND_URL = (rawBackendUrl && !rawBackendUrl.endsWith('://') && rawBackendUrl !== 'https://' && rawBackendUrl !== 'http://')
+  ? rawBackendUrl.replace(/\/+$/, '')
+  : '';
 export const API_BASE = `${BACKEND_URL}/api/v1`;
 
 const STORAGE_TOKEN = 'dressapp.token';

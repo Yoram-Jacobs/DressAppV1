@@ -66,7 +66,10 @@ export const closet = {
         });
     }
 
-    const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+    const rawBackendUrl = (process.env.REACT_APP_BACKEND_URL || '').trim();
+    const baseUrl = (rawBackendUrl && !rawBackendUrl.endsWith('://') && rawBackendUrl !== 'https://' && rawBackendUrl !== 'http://')
+      ? rawBackendUrl.replace(/\/+$/, '')
+      : '';
     const url = `${baseUrl}/api/v1/closet/analyze`;
     const token = tokenStore.get();
     return (async () => {
