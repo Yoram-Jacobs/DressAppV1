@@ -105,66 +105,74 @@ const getDefaultCurrency = () => {
 };
 
 const fileToBase64 = async (file, maxSide = 800, quality = 0.6) => {
-  let img = null;
-  if (typeof createImageBitmap === 'function') {
-    try {
-      img = await createImageBitmap(file, { imageOrientation: 'from-image' });
-    } catch (_) {}
-  }
-  
-  if (!img) {
-    img = await new Promise((resolve, reject) => {
-      const i = new Image();
-      const objectUrl = URL.createObjectURL(file);
-      i.onload = () => {
-        URL.revokeObjectURL(objectUrl);
-        resolve(i);
+  try {
+    let img = null;
+    if (typeof createImageBitmap === 'function') {
+      try {
+        img = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      } catch (_) {}
+    }
+    
+    if (!img) {
+      img = await new Promise((resolve, reject) => {
+        const i = new Image();
+        const objectUrl = URL.createObjectURL(file);
+        i.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          resolve(i);
+        };
+        i.onerror = (e) => {
+          URL.revokeObjectURL(objectUrl);
+          reject(e);
+        };
+        i.src = objectUrl;
+      });
+    }
+
+    let { width, height } = img;
+    if (width > maxSide || height > maxSide) {
+      if (width > height) {
+        height = Math.round((height * maxSide) / width);
+        width = maxSide;
+      } else {
+        width = Math.round((width * maxSide) / height);
+        height = maxSide;
+      }
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    
+    // Fill white background in case it's a transparent image being saved as JPEG
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(img, 0, 0, width, height);
+    
+    // Free memory
+    if (img.close) img.close();
+    else img.src = '';
+
+    const outDataUrl = canvas.toDataURL('image/jpeg', quality);
+    canvas.width = 0;
+    canvas.height = 0;
+
+    const comma = outDataUrl.indexOf(',');
+    return comma >= 0 ? outDataUrl.slice(comma + 1) : outDataUrl;
+  } catch (canvasErr) {
+    // Robust fallback: read file directly via FileReader as base64
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result || '';
+        const comma = result.indexOf(',');
+        resolve(comma >= 0 ? result.slice(comma + 1) : result);
       };
-      i.onerror = (e) => {
-        URL.revokeObjectURL(objectUrl);
-        reject(e);
-      };
-      i.src = objectUrl;
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
     });
   }
-
-  let { width, height } = img;
-  if (width > maxSide || height > maxSide) {
-    if (width > height) {
-      height = Math.round((height * maxSide) / width);
-      width = maxSide;
-    } else {
-      width = Math.round((width * maxSide) / height);
-      height = maxSide;
-    }
-  }
-
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  
-  // Fill white background in case it's a transparent image being saved as JPEG
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, 0, width, height);
-  
-  ctx.drawImage(img, 0, 0, width, height);
-  
-  // Free memory
-  if (img.close) img.close();
-  else img.src = '';
-
-  // Use webp if supported by the browser, fallback to jpeg.
-  // Actually, standardizing on jpeg is safer for the backend since webp support in some older backend libraries can be spotty.
-  // The request says "(e.g. jpeg/webp)", so jpeg is standard.
-  const outDataUrl = canvas.toDataURL('image/jpeg', quality);
-  
-  // Clear canvas memory
-  canvas.width = 0;
-  canvas.height = 0;
-
-  const comma = outDataUrl.indexOf(',');
-  return comma >= 0 ? outDataUrl.slice(comma + 1) : outDataUrl;
 };
 
 const fmtCents = (cents, cur = 'USD') =>
@@ -460,10 +468,18 @@ export default function AddItem() {
     onFiles: (files) => handleFiles(files),
   });
 
-  // Hydrate from a DPP scan (e.g. user hit "Scan QR" in TopNav → we're
-  // now opening AddItem with ?source=dpp and a draft in sessionStorage).
+  // Hydrate from a DPP scan or auto-open Camera when navigated with ?source=camera
   useEffect(() => {
-    if (searchParams.get('source') !== 'dpp') return;
+    const src = searchParams.get('source');
+    if (src === 'camera') {
+      searchParams.delete('source');
+      setSearchParams(searchParams, { replace: true });
+      setTimeout(() => {
+        openCamera();
+      }, 150);
+      return;
+    }
+    if (src !== 'dpp') return;
     let raw = null;
     try {
       raw = sessionStorage.getItem('dpp_draft');
@@ -1166,28 +1182,16 @@ export default function AddItem() {
 
 
   const handleFiles = async (fileList) => {
-    const files = Array.from(fileList || []).filter(f => {
+    const rawList = Array.from(fileList || []);
+    const files = rawList.filter(f => {
       const type = f.type || '';
       const name = f.name || '';
-      return type.startsWith('image/') || /\.(jpe?g|png|webp|heic|heif)$/i.test(name);
+      return !type || type.startsWith('image/') || /\.(jpe?g|png|webp|heic|heif|bmp|gif)$/i.test(name);
     });
     if (!files.length) return;
 
     // ----------------------------------------------------------------
     // Phase Z3 — pre-flight duplicate detection (client-side).
-    //
-    // Compute the SHA-256 / aHash / colour-sig of every selected file
-    // in-browser (~150–250 ms per file in parallel) then check them
-    // against the locally-cached closet snapshot (``closetStore``)
-    // using ``findDuplicatesInCloset`` — a 1:1 port of the backend's
-    // ``is_duplicate_match``. Either prompts the user (≤5 photos) or
-    // silently drops the duplicates (>5 photos, batch path) before
-    // any analyze / Gemini / SegFormer cost is incurred.
-    //
-    // Previous version round-tripped to ``POST /closet/preflight``
-    // for the same information that was already in the cache —
-    // 300–1500 ms of pure overhead. Endpoint is now deprecated, kept
-    // mounted as a fallback for older clients.
     // ----------------------------------------------------------------
     const fingerprints = [];
     for (const rawF of files) {
@@ -1196,21 +1200,26 @@ export default function AddItem() {
         if (!b64) continue;
         
         // Convert base64 to Blob synchronously to bypass CSP connection blocks on data URLs
-        const byteCharacters = atob(b64);
-        const byteArrays = [];
-        const sliceSize = 512;
-        for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-          const slice = byteCharacters.slice(offset, offset + sliceSize);
-          const byteNumbers = new Array(slice.length);
-          for (let i = 0; i < slice.length; i++) {
-            byteNumbers[i] = slice.charCodeAt(i);
+        let blob;
+        try {
+          const byteCharacters = atob(b64);
+          const byteArrays = [];
+          const sliceSize = 512;
+          for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+            const slice = byteCharacters.slice(offset, offset + sliceSize);
+            const byteNumbers = new Array(slice.length);
+            for (let i = 0; i < slice.length; i++) {
+              byteNumbers[i] = slice.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            byteArrays.push(byteArray);
           }
-          const byteArray = new Uint8Array(byteNumbers);
-          byteArrays.push(byteArray);
+          blob = new Blob(byteArrays, { type: 'image/jpeg' });
+        } catch (_) {
+          blob = rawF;
         }
-        const blob = new Blob(byteArrays, { type: 'image/jpeg' });
         
-        // Use a safe File constructor wrapper that falls back to Blob to avoid TypeError: File constructor is not supported on certain WebView/mobile browsers
+        // Use a safe File constructor wrapper that falls back to Blob to avoid TypeError on certain WebView/mobile browsers
         let f;
         try {
           f = new File([blob], rawF.name || 'image.jpg', { type: 'image/jpeg' });
@@ -1238,12 +1247,17 @@ export default function AddItem() {
           phash,
           color_sig,
           filename: rawF.name || null,
-          size_bytes: blob.size,
+          size_bytes: blob.size || rawF.size || 0,
           _b64: b64,
         });
       } catch (err) {
         console.error('[handleFiles] Error processing image file:', rawF.name, err);
       }
+    }
+
+    if (!fingerprints.length) {
+      toast.error(t('addItem.uploadFailed', { defaultValue: 'Failed to process image. Please try again.' }));
+      return;
     }
 
     let matches = [];
