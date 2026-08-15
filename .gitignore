@@ -30,6 +30,12 @@ next-env.d.ts
 dist/
 dist
 
+# Docker Compose local overrides — NEVER deploy to production.
+# docker-compose.override.yml is auto-merged by Docker Compose and
+# would bake http://localhost:8001 into the frontend bundle.
+deploy/docker-compose.override.yml
+deploy/docker-compose.local.yml
+
 # Environment files (comprehensive coverage)
 
 *token.json*
