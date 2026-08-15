@@ -567,6 +567,63 @@ export default function ItemDetail() {
   const reanalyzeRecRef = useRef(null);
 
   const photoInputRef = useRef(null);
+  const downscaleImageFileToB64 = (file, maxSide = 1600, quality = 0.85) => {
+    return new Promise((resolve, reject) => {
+      if (!file) return resolve('');
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result;
+        if (typeof dataUrl !== 'string') {
+          return resolve('');
+        }
+        const img = new Image();
+        img.onload = () => {
+          let width = img.naturalWidth || img.width || 0;
+          let height = img.naturalHeight || img.height || 0;
+          if (!width || !height) {
+            const comma = dataUrl.indexOf(',');
+            return resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
+          }
+          if (width > maxSide || height > maxSide) {
+            if (width > height) {
+              height = Math.round((height * maxSide) / width);
+              width = maxSide;
+            } else {
+              width = Math.round((width * maxSide) / height);
+              height = maxSide;
+            }
+          }
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              const comma = dataUrl.indexOf(',');
+              return resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
+            }
+            ctx.drawImage(img, 0, 0, width, height);
+            const outDataUrl = canvas.toDataURL('image/jpeg', quality);
+            canvas.width = 0;
+            canvas.height = 0;
+            const comma = outDataUrl.indexOf(',');
+            resolve(comma >= 0 ? outDataUrl.slice(comma + 1) : outDataUrl);
+          } catch (_) {
+            const comma = dataUrl.indexOf(',');
+            resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
+          }
+        };
+        img.onerror = () => {
+          const comma = dataUrl.indexOf(',');
+          resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
+        };
+        img.src = dataUrl;
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    });
+  };
+
   // Phase Z3 — separate hidden input for direct-camera capture, mirrors
   // the Add-Item UX. ``capture="environment"`` opens the rear camera
   // on mobile; on desktop it harmlessly falls back to a file picker so
@@ -585,15 +642,10 @@ export default function ItemDetail() {
     setUploadingPhoto(true);
     const loadingId = toast.loading(t('itemDetail.photo.running'));
     try {
-      const imageBase64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(file);
-      });
+      const imageBase64 = await downscaleImageFileToB64(file, 1600, 0.85);
       const res = await api.setItemPhoto(id, {
         imageBase64,
-        imageMime: file.type || 'image/jpeg',
+        imageMime: 'image/jpeg',
         // Per UX spec: "Replace photo" must just swap in the raw
         // upload — don't auto-run the cutout/analysis pipeline. The
         // user then explicitly chooses to "Clean background" and/or
@@ -774,20 +826,15 @@ export default function ItemDetail() {
     if (!file) return;
     setUploadingPhoto(true);
     try {
-      const imageBase64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(file);
-      });
-      const original_image_url = `data:${file.type || 'image/jpeg'};base64,${imageBase64}`;
+      const imageBase64 = await downscaleImageFileToB64(file, 1600, 0.85);
+      const original_image_url = `data:image/jpeg;base64,${imageBase64}`;
       const tempId = `temp-upload-${Date.now()}`;
       setNewUploadedMembers((prev) => [
         ...prev,
         {
           id: tempId,
           image_base64: imageBase64,
-          image_mime: file.type || 'image/jpeg',
+          image_mime: 'image/jpeg',
           original_image_url: original_image_url,
         },
       ]);
