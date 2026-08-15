@@ -31,7 +31,7 @@ SYNONYMS = {
     "חורף": ["חורף", "winter", "winter wear", "snow", "cold"],
 }
 
-def matches_style_func(item: dict, style_dress_for: str | None) -> bool:
+def matches_style_func(item: dict, style_dress_for: str | None, has_exact_tag_match: bool = False) -> bool:
     if not style_dress_for:
         return True
     
@@ -41,6 +41,17 @@ def matches_style_func(item: dict, style_dress_for: str | None) -> bool:
         
     tags = [t.lower() for t in (item.get("tags") or [])]
     custom_tags = [t.lower() for t in (item.get("custom_tags") or [])]
+    
+    # First priority: exact case-insensitive tag match
+    if style_dress_for_clean in tags or style_dress_for_clean in custom_tags:
+        return True
+        
+    # If there is at least one exact tag match in the closet, and this item isn't it,
+    # then this item does NOT match (exact tag match is required when available).
+    if has_exact_tag_match:
+        return False
+        
+    # Only when no items in the entire closet have an exact tag match, understand demand meaning/intent (fallback)
     dress_code = str(item.get("dress_code") or "").lower()
     title = str(item.get("title") or item.get("name") or "").lower()
     
@@ -159,6 +170,17 @@ async def get_rotation_prioritized_closet(
                     final_items.extend(g_members)
         items = final_items
 
+    # Check if there is at least one exact case-insensitive tag match in the user's closet
+    has_exact_tag_match = False
+    if style_dress_for:
+        style_clean = style_dress_for.strip().lower()
+        for it in items:
+            it_tags = [t.lower() for t in (it.get("tags") or [])]
+            it_custom = [t.lower() for t in (it.get("custom_tags") or [])]
+            if style_clean in it_tags or style_clean in it_custom:
+                has_exact_tag_match = True
+                break
+
     # Determine target season
     target_season = None
     if weather:
@@ -184,7 +206,7 @@ async def get_rotation_prioritized_closet(
 
     # Rotation sort key: matches criteria first, then un-suggested/un-worn, oldest suggested, lowest wear
     def sort_key(item: dict[str, Any]) -> tuple:
-        matches_style = matches_style_func(item, style_dress_for)
+        matches_style = matches_style_func(item, style_dress_for, has_exact_tag_match)
         matches_season = matches_season_func(item, target_season)
         
         last_sug = item.get("last_suggested_at") or ""
@@ -457,6 +479,7 @@ async def generate_scheduled_proposals(
     )
     
     # Slim down closet items to prevent sending massive base64 image strings and embeddings to the LLM
+    # Slim down closet items to prevent sending massive base64 image strings and embeddings to the LLM
     prioritized_closet = [
         {
             "id": item["id"],
@@ -469,13 +492,14 @@ async def generate_scheduled_proposals(
             "material": item.get("material"),
             "dress_code": item.get("dress_code"),
             "season": item.get("season"),
+            "tags": item.get("tags") or [],
         }
         for item in raw_closet
     ]
     
     # We will query Gemini with customized rotation options
     closet_summary_str = "\n".join(
-        f"- ID: {item['id']} | Title: {item.get('title')} | Category: {item.get('category')} | Color: {item.get('color')} | Brand: {item.get('brand')}"
+        f"- ID: {item['id']} | Title: {item.get('title')} | Category: {item.get('category')} | Tags: {item.get('tags')} | Color: {item.get('color')} | Brand: {item.get('brand')}"
         for item in prioritized_closet
     )
 
@@ -496,6 +520,7 @@ async def generate_scheduled_proposals(
     prompt = (
         f"Generate EXACTLY 3 different outfit recommendations for {target_day_name} ({target_date_str}). "
         f"The user's preset preference is: {style_prompt}.\n\n"
+        f"CRITICAL TAG PREFERENCE: If the closet items list below contains garments with the tag '{style_prompt}' (case-insensitive), you MUST prioritize selecting those items for the outfits. Only when no matching tags are found or to complete the outfit (e.g. if there are no shoes with that tag), you may select other items matching the intent/style of the preference.\n\n"
         f"CRITICAL REQUIREMENT: Every outfit recommendation MUST be a COMPLETE outfit consisting of: 1) Either (a 'top' AND a 'bottom') OR a 'dress', and 2) 'shoes' (footwear). NEVER recommend an outfit consisting of only a single T-shirt, top, or bottom without shoes and pants, unless the closet literally lacks those categories.\n\n"
         f"You MUST select items ONLY from the user's closet list below. Under no circumstances should you recommend items that the user does not own or that have a null closet_item_id. Every recommended item must map to a valid closet item ID from the list below.\n\n"
         f"User's Closet Items:\n"
