@@ -4180,7 +4180,6 @@ async def set_item_photo(
         "clean_image_url": None,
         "clean_image_status": None,
         "image_variants": None,
-        "thumbnail_data_url": None,
     }
     if segmented_data_url:
         update_doc["segmented_image_url"] = segmented_data_url
@@ -4457,7 +4456,7 @@ async def chat_analyse_item(
         "1. 'image_edit': The user is asking to modify, inpaint, remove, or reconstruct elements in the photo.\n"
         "   Examples: 'Remove the shoes', 'Complete the hole where the hand was', 'Remove the metal studs from the jacket\\'s front', 'Remove the hanger', 'Repair the cut-off sleeve', 'Fill the gap in the hem'.\n"
         "   - Set action: 'image_edit'\n"
-        "   - Set image_edit_prompt: A concise, highly specific inpainting / reconstruction directive for the image generative model to edit the garment cleanly against a neutral studio background, preserving all other details, fabric texture, and silhouette.\n"
+        "   - Set image_edit_prompt: A concise, highly specific inpainting / reconstruction directive for the image generative model to edit and isolate the garment cleanly against a solid pure white background (#FFFFFF) with bright high-key lighting, filling the frame and preserving all fabric texture, color fidelity, and silhouette details without dark vignettes or black backgrounds.\n"
         "   - Set reply: A brief, friendly confirmation in the user's language describing what you are modifying.\n\n"
         "2. 'clarification': The user's request for image modification or editing is ambiguous or missing crucial specifics.\n"
         "   - Set action: 'clarification'\n"
