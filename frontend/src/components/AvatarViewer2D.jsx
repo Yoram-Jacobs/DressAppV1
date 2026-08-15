@@ -211,7 +211,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
             )}
             {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[36.5%] left-1/2 w-[62%] h-[5%] z-21', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-center', 'contain')}
             {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), 'top-[14.5%] left-1/2 w-[86%] h-[42%] z-22 drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'object-top', 'contain')}
-            {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), 'bottom-[0.5%] left-1/2 w-[66%] h-[14%] z-15', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
+            {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), 'bottom-[0.5%] left-1/2 w-[76%] h-[18%] z-15', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
           </div>
         ) : (
           <DynamicAvatar
@@ -243,7 +243,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
 
             {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[36.5%] left-1/2 w-[62%] h-[5%] z-21', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-center', 'contain')}
             {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), 'top-[14.5%] left-1/2 w-[86%] h-[42%] z-22 drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'object-top', 'contain')}
-            {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), 'bottom-[0.5%] left-1/2 w-[66%] h-[14%] z-15', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
+            {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), 'bottom-[0.5%] left-1/2 w-[76%] h-[18%] z-15', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
 
             {garments.bag && garments.bag.url && (
               <motion.div
