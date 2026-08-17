@@ -1,0 +1,55 @@
+# EAS Build archive exclusions
+# EAS installs node_modules fresh on Linux build servers.
+# Uploading Windows node_modules causes native binary mismatches (llama.rn, turbo, etc.)
+
+# ─── node_modules (all levels) ────────────────────────────────────────────────
+node_modules/
+apps/web/node_modules/
+packages/*/node_modules/
+
+# ─── Non-mobile parts of the monorepo (not needed for Android/iOS build) ─────
+# These directories contain large assets and backend code that bloat the archive.
+backend/
+inference-server/
+apps/web/
+apps/android-twa/
+
+# ─── Mobile build outputs ─────────────────────────────────────────────────────
+android/
+ios/
+dist/
+web-build/
+.expo/
+apps/mobile/android/
+apps/mobile/ios/
+apps/mobile/.expo/
+
+# ─── Dev / CI artifacts ───────────────────────────────────────────────────────
+.git/
+.turbo/
+*.log
+*.map
+*.tgz
+
+# ─── OS / editor files ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ─── Test files (not needed at build time) ────────────────────────────────────
+**/__tests__/
+**/*.test.ts
+**/*.test.tsx
+**/*.test.mjs
+**/*.spec.ts
+
+# ─── Large model weights (served from HuggingFace, never bundled) ─────────────
+*.gguf
+*.bin
+*.onnx
+*.joblib
+model_weights/
+
+# ─── Large media files tracked in git but not needed for the build ────────────
+inference-server/eyes/Garments/

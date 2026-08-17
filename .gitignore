@@ -1727,3 +1727,24 @@ Eyes_V4_local/
 # Large model weights directory
 Eyes-GGUF/
 
+# ── Monorepo / Turborepo ─────────────────────────────────────────────────────
+.turbo/
+
+# ── Expo / React Native ──────────────────────────────────────────────────────
+apps/mobile/.expo/
+apps/mobile/ios/
+apps/mobile/android/
+apps/mobile/web-build/
+apps/mobile/*.jks
+apps/mobile/*.p8
+apps/mobile/*.p12
+apps/mobile/*.key
+apps/mobile/*.mobileprovision
+apps/mobile/.env
+apps/mobile/.env.local
+apps/mobile/.env.production
+
+# Large binary assets — served from disk/HuggingFace, not needed in git
+inference-server/eyes/Garments/
+backend/ml_models/
+*.joblib
