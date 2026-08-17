@@ -42,7 +42,6 @@
     "expo-updates": "~0.28.18",
     "expo-web-browser": "~14.2.0",
     "i18next": "^26.0.6",
-    "llama.rn": "^0.13.0-rc.0",
     "lucide-react-native": "^1.31.0",
     "moti": "^0.30.0",
     "nativewind": "^4.1.23",
