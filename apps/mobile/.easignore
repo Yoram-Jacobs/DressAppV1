@@ -9,10 +9,13 @@ packages/*/node_modules/
 
 # ─── Non-mobile parts of the monorepo (not needed for Android/iOS build) ─────
 # These directories contain large assets and backend code that bloat the archive.
+# NOTE: paths with a middle separator get anchored to the project dir in gitignore
+# semantics, so we use **/ prefix to match at any depth from the archive root.
 backend/
 inference-server/
-apps/web/
-apps/android-twa/
+**/apps/web/
+**/apps/android-twa/
+wiki/
 
 # ─── Mobile build outputs ─────────────────────────────────────────────────────
 android/
