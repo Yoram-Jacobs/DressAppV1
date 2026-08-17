@@ -1,93 +1,112 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-
 export const Footer = () => {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="footer">
-      <div className="container-fluid">
-        <div className="row g-5">
-          <div className="col-md-3 col-12">
-            <div className="footer-main">
+    <footer className="bg-black text-white">
+      <div className="w-full px-[40px] pt-[80px] pb-[20px]">
+        {/* Footer Main */}
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-12 lg:gap-8">
+          {/* Brand / Description */}
+          <div className="lg:col-span-3">
+            <div className="flex flex-col">
               <Link
-                className="navbar-brand navbar-brand-custom"
                 to="/home"
-                style={{ color: "#fff" }}
+                className="inline-block w-fit text-2xl font-extrabold tracking-tight text-white no-underline transition-opacity duration-200 hover:opacity-80"
               >
-                Dress<span>App</span>
+                Dress<span className="text-primary-brand ms-2">App</span>
               </Link>
 
-              <p>
+              <p className="mt-5 max-w-sm text-sm leading-7 text-white/60">
                 {t("footer.description", {
                   defaultValue:
                     "The next-generation autonomous wardrobe catalog system utilizing predictive AI algorithms for optimal styling and high-end carbon consciousness.",
                 })}
               </p>
 
-              <div className="d-flex">
+              {/* Social Links */}
+              <div className="mt-6 flex items-center gap-3">
                 <a
                   href="https://instagram.com"
-                  className="social-link"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-white/70 no-underline  transition-smooth hover:-translate-y-[3px] hover:bg-primary-brand"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Instagram"
                 >
-                  <i className="bi bi-instagram" />
+                  <i className="bi bi-instagram text-base" />
                 </a>
 
                 <a
                   href="https://x.com"
-                  className="social-link"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-white/70 no-underline transition-smooth hover:-translate-y-[3px] hover:bg-primary-brand"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="X"
                 >
-                  <i className="bi bi-twitter-x" />
+                  <i className="bi bi-twitter-x text-base" />
                 </a>
 
                 <a
                   href="https://pinterest.com"
-                  className="social-link"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-white/70 no-underline transition-smooth hover:-translate-y-[3px] hover:bg-primary-brand"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Pinterest"
                 >
-                  <i className="bi bi-pinterest" />
+                  <i className="bi bi-pinterest text-base" />
                 </a>
 
                 <a
                   href="https://linkedin.com"
-                  className="social-link"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-white/70 no-underline transition-smooth hover:-translate-y-[3px] hover:bg-primary-brand"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn"
                 >
-                  <i className="bi bi-linkedin" />
+                  <i className="bi bi-linkedin text-base" />
                 </a>
               </div>
             </div>
           </div>
 
-          <div className="col-md-2 col-6">
-            <h5>{t("footer.company", { defaultValue: "Company" })}</h5>
+          {/* Company */}
+          <div className="lg:col-span-2">
+            <h5 className="mb-5 text-sm text-white">
+              {t("footer.company", {
+                defaultValue: "Company",
+              })}
+            </h5>
 
-            <ul>
+            <ul className="m-0 list-none space-y-3 p-0">
               <li>
-                <Link to="/about">
-                  {t("footer.aboutUs", { defaultValue: "About Us" })}
+                <Link
+                  to="/about"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
+                  {t("footer.aboutUs", {
+                    defaultValue: "About Us",
+                  })}
                 </Link>
               </li>
 
               <li>
-                <Link to="/careers">
-                  {t("footer.careers", { defaultValue: "Careers" })}
+                <Link
+                  to="/careers"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
+                  {t("footer.careers", {
+                    defaultValue: "Careers",
+                  })}
                 </Link>
               </li>
 
               <li>
-                <Link to="/sustainability">
+                <Link
+                  to="/sustainability"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
                   {t("footer.sustainabilityReport", {
                     defaultValue: "Sustainability Report",
                   })}
@@ -95,19 +114,32 @@ export const Footer = () => {
               </li>
 
               <li>
-                <Link to="/press-kit">
-                  {t("footer.pressKit", { defaultValue: "Press Kit" })}
+                <Link
+                  to="/press-kit"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
+                  {t("footer.pressKit", {
+                    defaultValue: "Press Kit",
+                  })}
                 </Link>
               </li>
             </ul>
           </div>
 
-          <div className="col-md-2 col-6">
-            <h5>{t("footer.features", { defaultValue: "Features" })}</h5>
+          {/* Features */}
+          <div className="lg:col-span-2">
+            <h5 className="mb-5 text-sm text-white">
+              {t("footer.features", {
+                defaultValue: "Features",
+              })}
+            </h5>
 
-            <ul>
+            <ul className="m-0 list-none space-y-3 p-0">
               <li>
-                <Link to="/closet">
+                <Link
+                  to="/closet"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
                   {t("footer.digitalCloset", {
                     defaultValue: "Digital Closet",
                   })}
@@ -115,7 +147,10 @@ export const Footer = () => {
               </li>
 
               <li>
-                <Link to="/stylist">
+                <Link
+                  to="/stylist"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
                   {t("footer.aiStylistChat", {
                     defaultValue: "AI Stylist Chat",
                   })}
@@ -123,7 +158,10 @@ export const Footer = () => {
               </li>
 
               <li>
-                <Link to="/trends">
+                <Link
+                  to="/trends"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
                   {t("footer.trendScout", {
                     defaultValue: "Trend Scout",
                   })}
@@ -131,7 +169,10 @@ export const Footer = () => {
               </li>
 
               <li>
-                <Link to="/suitcase">
+                <Link
+                  to="/suitcase"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
                   {t("footer.travelCapsule", {
                     defaultValue: "Travel Capsule",
                   })}
@@ -140,22 +181,31 @@ export const Footer = () => {
             </ul>
           </div>
 
-          <div className="col-md-2 col-6">
-            <h5>
+          {/* Marketplace */}
+          <div className="lg:col-span-2">
+            <h5 className="mb-5 text-sm text-white">
               {t("footer.marketplace", {
                 defaultValue: "Marketplace",
               })}
             </h5>
 
-            <ul>
+            <ul className="m-0 list-none space-y-3 p-0">
               <li>
-                <Link to="/market">
-                  {t("footer.buySell", { defaultValue: "Buy & Sell" })}
+                <Link
+                  to="/market"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
+                  {t("footer.buySell", {
+                    defaultValue: "Buy & Sell",
+                  })}
                 </Link>
               </li>
 
               <li>
-                <Link to="/market">
+                <Link
+                  to="/market"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
                   {t("footer.directSwaps", {
                     defaultValue: "Direct Swaps",
                   })}
@@ -163,7 +213,10 @@ export const Footer = () => {
               </li>
 
               <li>
-                <Link to="/donations">
+                <Link
+                  to="/donations"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
                   {t("footer.donationsTracker", {
                     defaultValue: "Donations Tracker",
                   })}
@@ -171,7 +224,10 @@ export const Footer = () => {
               </li>
 
               <li>
-                <Link to="/zero-waste">
+                <Link
+                  to="/zero-waste"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
                   {t("footer.zeroWastePolicy", {
                     defaultValue: "Zero Waste Policy",
                   })}
@@ -180,12 +236,20 @@ export const Footer = () => {
             </ul>
           </div>
 
-          <div className="col-md-3 col-6">
-            <h5>{t("footer.support", { defaultValue: "Support" })}</h5>
+          {/* Support */}
+          <div className="lg:col-span-3">
+            <h5 className="mb-5 text-sm text-white">
+              {t("footer.support", {
+                defaultValue: "Support",
+              })}
+            </h5>
 
-            <ul>
+            <ul className="m-0 list-none space-y-3 p-0">
               <li>
-                <Link to="/help">
+                <Link
+                  to="/help"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
                   {t("footer.helpCenter", {
                     defaultValue: "Help Center",
                   })}
@@ -193,7 +257,10 @@ export const Footer = () => {
               </li>
 
               <li>
-                <Link to="/dpp-api">
+                <Link
+                  to="/dpp-api"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
                   {t("footer.dppApiSpecs", {
                     defaultValue: "DPP API Specs",
                   })}
@@ -201,7 +268,10 @@ export const Footer = () => {
               </li>
 
               <li>
-                <Link to="/privacy">
+                <Link
+                  to="/privacy"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
                   {t("footer.privacyPolicy", {
                     defaultValue: "Privacy Policy",
                   })}
@@ -209,7 +279,10 @@ export const Footer = () => {
               </li>
 
               <li>
-                <Link to="/terms">
+                <Link
+                  to="/terms"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
                   {t("footer.termsOfUse", {
                     defaultValue: "Terms of Use",
                   })}
@@ -219,8 +292,9 @@ export const Footer = () => {
           </div>
         </div>
 
-        <div className="footer-bottom">
-          <p>
+        {/* Footer Bottom */}
+        <div className="mt-[80px] flex flex-col gap-4 border-t border-white/10 pt-[20px] md:flex-row md:items-center md:justify-between">
+          <p className="m-0 text-xs leading-6 text-white/50">
             © {currentYear} DressApp Inc.{" "}
             {t("footer.rights", {
               defaultValue:
@@ -228,21 +302,21 @@ export const Footer = () => {
             })}
           </p>
 
-          <div className="d-flex gap-3 mt-3 mt-md-0">
+          <div className="flex flex-wrap items-center gap-3">
             <Link
               to="/privacy"
-              className="text-white-50 text-decoration-none"
+              className="text-xs text-white/50 no-underline transition-smooth duration-200 hover:text-white"
             >
               {t("footer.privacyPolicy", {
                 defaultValue: "Privacy Policy",
               })}
             </Link>
 
-            <span className="text-white-50">|</span>
+            <span className="text-xs text-white/30">|</span>
 
             <Link
               to="/eu-transparency"
-              className="text-white-50 text-decoration-none"
+              className="text-xs text-white/50 no-underline transition-smooth duration-200 hover:text-white"
             >
               {t("footer.euTransparency", {
                 defaultValue: "EU Transparency Compliance",

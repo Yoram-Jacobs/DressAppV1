@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,18 +8,8 @@ body,
 #root {
   height: 100%;
 }
-
-body {
-  font-family: "Plus Jakarta Sans", sans-serif;
-  background-color: var(--light-bg);
-  color: var(--text-color);
-  overflow-x: hidden;
-  letter-spacing: 0;
-  -webkit-font-smoothing: antialiased;
-}
-
 .font-display {
-  font-family: var(--font-display);
+  font-family: "Plus Jakarta Sans", sans-serif;
   letter-spacing: -0.02em;
 }
 .caps-label {
@@ -39,8 +29,8 @@ body {
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 12%;
 
-    --primary: 240 10% 12%;
-    --primary-foreground: 40 20% 98%;
+    --primary: 153 49% 24%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 40 15% 93%;
     --secondary-foreground: 240 10% 12%;
@@ -51,7 +41,7 @@ body {
     --accent: 174 44% 33%;
     --accent-foreground: 0 0% 100%;
 
-    --brand: 271 81% 56%;
+    --brand: 153 49% 24%;
     --brand-foreground: 0 0% 100%;
 
     --accent-green: 142 71% 45%;
@@ -62,44 +52,80 @@ body {
 
     --border: 240 6% 90%;
     --input: 240 6% 90%;
-    --ring: 271 81% 56%;
+    --ring: 153 49% 24%;
 
     --radius: 1.25rem;
 
-    --chart-1: 271 81% 56%;
+    --chart-1: 153 49% 24%;
     --chart-2: 142 71% 45%;
     --chart-3: 240 10% 12%;
     --chart-4: 240 5% 94%;
     --chart-5: 240 6% 90%;
 
-    --persimmon: 18 78% 56%;
-    --sea-glass: 170 30% 80%;
-    --sand: 40 20% 90%;
+    /* Existing style.css theme */
+    --primary-color: #1f5c45;
+    --primary-hover: #174533;
+    --dark-color: #000000;
+    --text-color: #666666;
+    --light-bg: #f7f7f2;
+    --white: #ffffff;
+    --accent-beige: #f5eee9;
+
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.5);
+
+    --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+    --shadow-subtle: 0 4px 30px rgba(0, 0, 0, 0.03);
+    --shadow-medium: 0 10px 40px rgba(0, 0, 0, 0.08);
+    --shadow-luxury: 0 20px 50px rgba(0, 0, 0, 0.12);
+
+    --header-height: 78px;
+    --primary-shadow: rgba(31, 92, 69, 0.06);
   }
+
   .dark {
     --background: 240 10% 8%;
     --foreground: 40 20% 98%;
+
     --card: 240 10% 10%;
     --card-foreground: 40 20% 98%;
+
     --popover: 240 10% 10%;
     --popover-foreground: 40 20% 98%;
+
     --primary: 40 20% 98%;
     --primary-foreground: 240 10% 10%;
+
     --secondary: 240 8% 14%;
     --secondary-foreground: 40 20% 98%;
+
     --muted: 240 8% 14%;
     --muted-foreground: 240 5% 72%;
+
     --accent: 174 46% 38%;
     --accent-foreground: 40 20% 98%;
-    --brand: 271 85% 62%;
+
+    --brand: 153 49% 30%;
     --brand-foreground: 0 0% 100%;
+
     --accent-green: 142 75% 50%;
     --accent-lilac: 270 50% 20%;
+
     --destructive: 0 62% 42%;
     --destructive-foreground: 0 0% 100%;
+
     --border: 240 8% 18%;
     --input: 240 8% 18%;
-    --ring: 271 85% 62%;
+    --ring: 153 49% 30%;
+
+    --primary-color: #1f5c45;
+    --primary-hover: #2b7659;
+    --dark-color: #ffffff;
+    --text-color: #d0d0d0;
+    --light-bg: #101915;
+    --white: #ffffff;
+    --accent-beige: #241f1c;
   }
 }
 
@@ -357,4 +383,27 @@ img {
 /* Fix Radix UI ScrollArea viewport table layout expansion bug on mobile */
 [data-radix-scroll-area-viewport] > div {
   display: block !important;
+}
+
+/* ========================surbhi(12-08-26)============================= */
+@layer utilities {
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+
+  .animate-reveal-png-icon {
+    animation: revealPngIcon 0.9s ease forwards;
+  }
+}
+
+@keyframes revealPngIcon {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
+  }
+
+  100% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
 }

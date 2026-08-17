@@ -1,43 +1,82 @@
 /* global setTimeout, clearTimeout */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useTranslation, Trans } from 'react-i18next';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { useTranslation, Trans } from "react-i18next";
 import {
-  Plus, Search, Trash2, CheckCircle2, Circle, X, CheckSquare,
-  Square, Loader2, ListChecks, Sparkles, Wand2, QrCode, Star,
-  AlertTriangle, Tag, Luggage, Layers3
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+  Plus,
+  Search,
+  Trash2,
+  CheckCircle2,
+  Circle,
+  X,
+  CheckSquare,
+  Square,
+  Loader2,
+  ListChecks,
+  Sparkles,
+  Wand2,
+  QrCode,
+  Star,
+  AlertTriangle,
+  Tag,
+  Luggage,
+  Layers3,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { SourceTagBadge } from '@/components/SourceTagBadge';
-import { OutfitCompletionSheet } from '@/components/OutfitCompletionSheet';
-import { HashRepairChip } from '@/components/closet/HashRepairChip';
-import { ThumbRepairChip } from '@/components/closet/ThumbRepairChip';
-import { api } from '@/lib/api';
-import { bestImageUrl, isCleanImagePending } from '@/lib/itemImage';
-import ProgressiveImage from '@/components/ui/ProgressiveImage';
-import ImageWithPlaceholder from '@/components/ImageWithPlaceholder';
-import { labelForCategory, labelForSource, labelForIntent, labelForColor, getTaxonomyMismatches } from '@/lib/taxonomy';
-import { useClosetStore } from '@/lib/useClosetStore';
-import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
-import { closetStore } from '@/lib/closetStore';
-import { workStore } from '@/lib/workStore';
-import { toast } from 'sonner';
-import { ScrollToTop } from '@/components/ScrollToTop';
+} from "@/components/ui/alert-dialog";
+import { SourceTagBadge } from "@/components/SourceTagBadge";
+import { OutfitCompletionSheet } from "@/components/OutfitCompletionSheet";
+import { HashRepairChip } from "@/components/closet/HashRepairChip";
+import { ThumbRepairChip } from "@/components/closet/ThumbRepairChip";
+import { api } from "@/lib/api";
+import { bestImageUrl, isCleanImagePending } from "@/lib/itemImage";
+import ProgressiveImage from "@/components/ui/ProgressiveImage";
+import ImageWithPlaceholder from "@/components/ImageWithPlaceholder";
+import {
+  labelForCategory,
+  labelForSource,
+  labelForIntent,
+  labelForColor,
+  getTaxonomyMismatches,
+} from "@/lib/taxonomy";
+import { useClosetStore } from "@/lib/useClosetStore";
+import { useLocalStorageSync } from "@/lib/useLocalStorageSync";
+import { closetStore } from "@/lib/closetStore";
+import { workStore } from "@/lib/workStore";
+import { toast } from "sonner";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import closet4 from "../assets/img/closet4.png";
-const CATEGORIES = ['all', 'top', 'bottom', 'outerwear', 'shoes', 'accessory', 'dress'];
+import ClosetBanner from "../assets/img/inner6.webp";
+const CATEGORIES = [
+  "all",
+  "top",
+  "bottom",
+  "outerwear",
+  "shoes",
+  "accessory",
+  "dress",
+];
 // Filter dropdown options. We replaced the catch-all "Shared" with the
 // three concrete marketplace intents so users can drill straight to
 // items by their actual marketplace decision.
@@ -45,34 +84,35 @@ const CATEGORIES = ['all', 'top', 'bottom', 'outerwear', 'shoes', 'accessory', '
 // Values in {Private, Retail} key on the closet item's ``source`` field;
 // values in {for_sale, swap, donate} key on ``marketplace_intent``.
 // "all" means no filter.
-const SOURCES = ['all', 'Private', 'for_sale', 'swap', 'donate', 'Retail'];
-const _SOURCE_VALUES = new Set(['Private', 'Shared', 'Retail']);
-const _INTENT_VALUES = new Set(['for_sale', 'swap', 'donate']);
+const SOURCES = ["all", "Private", "for_sale", "swap", "donate", "Retail"];
+const _SOURCE_VALUES = new Set(["Private", "Shared", "Retail"]);
+const _INTENT_VALUES = new Set(["for_sale", "swap", "donate"]);
 
 // Category synonyms — keep parity with the backend's matcher in
 // closet.list_items so client-side filtering yields the same set of
 // items as a server-side ``?category=`` would. This matters because
 // we now filter the in-memory store rather than re-fetching.
 const _CATEGORY_SYNONYMS = {
-  top: new Set(['top', 'tops']),
-  bottom: new Set(['bottom', 'bottoms']),
-  outerwear: new Set(['outerwear']),
-  shoes: new Set(['shoes', 'footwear']),
-  accessory: new Set(['accessory', 'accessories']),
-  dress: new Set(['dress', 'dresses', 'full body']),
+  top: new Set(["top", "tops"]),
+  bottom: new Set(["bottom", "bottoms"]),
+  outerwear: new Set(["outerwear"]),
+  shoes: new Set(["shoes", "footwear"]),
+  accessory: new Set(["accessory", "accessories"]),
+  dress: new Set(["dress", "dresses", "full body"]),
 };
 
 function _matchesCategory(item, requested) {
-  if (!requested || requested === 'all') return true;
+  if (!requested || requested === "all") return true;
   const synonyms = _CATEGORY_SYNONYMS[requested] || new Set([requested]);
-  const cat = (item?.category || '').toLowerCase();
+  const cat = (item?.category || "").toLowerCase();
   return synonyms.has(cat);
 }
 
 function _matchesSource(item, requested) {
-  if (!requested || requested === 'all') return true;
+  if (!requested || requested === "all") return true;
   if (_SOURCE_VALUES.has(requested)) return item?.source === requested;
-  if (_INTENT_VALUES.has(requested)) return item?.marketplace_intent === requested;
+  if (_INTENT_VALUES.has(requested))
+    return item?.marketplace_intent === requested;
   return true;
 }
 
@@ -83,13 +123,21 @@ function _matchesSearch(item, q) {
   // Mirror backend $text loosely: match any substring across the
   // user-visible string fields. Cheap on a 300-item closet.
   const haystack = [
-    item?.title, item?.name, item?.category, item?.sub_category,
-    item?.color, item?.brand, item?.material,
-  ].filter(Boolean).join(' ').toLowerCase();
+    item?.title,
+    item?.name,
+    item?.category,
+    item?.sub_category,
+    item?.color,
+    item?.brand,
+    item?.material,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
   return haystack.includes(needle);
 }
 
-const INITIAL_FILTERS = { category: 'all', source: 'all', search: '' };
+const INITIAL_FILTERS = { category: "all", source: "all", search: "" };
 
 export default function Closet() {
   const { t } = useTranslation();
@@ -97,12 +145,19 @@ export default function Closet() {
   // means navigating to /closet paints **instantly** (no network) —
   // the prewarm in AppLayout has already populated the snapshot.
   const store = useClosetStore();
-  const [filters, setFilters] = useLocalStorageSync('dressapp.closet.filters', INITIAL_FILTERS);
-  const activeFilters = (filters && typeof filters === 'object' && !Array.isArray(filters))
-    ? { ...INITIAL_FILTERS, ...filters }
-    : INITIAL_FILTERS;
+  const [filters, setFilters] = useLocalStorageSync(
+    "dressapp.closet.filters",
+    INITIAL_FILTERS,
+  );
+  const activeFilters =
+    filters && typeof filters === "object" && !Array.isArray(filters)
+      ? { ...INITIAL_FILTERS, ...filters }
+      : INITIAL_FILTERS;
   // Search mode: 'keyword' uses Mongo text search, 'meaning' calls FashionCLIP.
-  const [searchMode, setSearchMode] = useLocalStorageSync('dressapp.closet.searchMode', 'keyword');
+  const [searchMode, setSearchMode] = useLocalStorageSync(
+    "dressapp.closet.searchMode",
+    "keyword",
+  );
   const [semanticActive, setSemanticActive] = useState(false);
   const [semanticItems, setSemanticItems] = useState([]);
   const [semanticIndexed, setSemanticIndexed] = useState(0);
@@ -112,23 +167,33 @@ export default function Closet() {
   // memo so re-renders triggered by other state (selection, etc.)
   // don't re-walk a 300-item list unnecessarily.
   const filteredItems = useMemo(() => {
-    if (semanticActive) return semanticItems.filter((it) => it && it.group_role !== 'member');
+    if (semanticActive)
+      return semanticItems.filter((it) => it && it.group_role !== "member");
     return (store.items || []).filter(
       (it) =>
         it &&
-        it.group_role !== 'member' &&
+        it.group_role !== "member" &&
         _matchesCategory(it, activeFilters.category) &&
         _matchesSource(it, activeFilters.source) &&
         _matchesSearch(it, activeFilters.search),
     );
-  }, [store.items, activeFilters.category, activeFilters.source, activeFilters.search, semanticActive, semanticItems]);
+  }, [
+    store.items,
+    activeFilters.category,
+    activeFilters.source,
+    activeFilters.search,
+    semanticActive,
+    semanticItems,
+  ]);
 
   const items = filteredItems;
   const total = semanticActive
     ? semanticItems.length
-    : (activeFilters.category === 'all' && activeFilters.source === 'all' && !activeFilters.search
+    : activeFilters.category === "all" &&
+        activeFilters.source === "all" &&
+        !activeFilters.search
       ? store.total
-      : filteredItems.length);
+      : filteredItems.length;
   // Show the skeleton in either of two cases:
   //   * the store is mid-prewarm and we have no cached items yet
   //     (very first visit after sign-in), OR
@@ -147,7 +212,7 @@ export default function Closet() {
 
   // Grouping state
   const [groupOpen, setGroupOpen] = useState(false);
-  const [groupHostId, setGroupHostId] = useState('');
+  const [groupHostId, setGroupHostId] = useState("");
   const [grouping, setGrouping] = useState(false);
   const [gatekeeperOpen, setGatekeeperOpen] = useState(false);
   const [gatekeeperMismatches, setGatekeeperMismatches] = useState([]);
@@ -155,19 +220,29 @@ export default function Closet() {
 
   // Group tagging state
   const [tagOpen, setTagOpen] = useState(false);
-  const [tagInput, setTagInput] = useState('');
+  const [tagInput, setTagInput] = useState("");
   const [tagging, setTagging] = useState(false);
 
   const getTaxonomyFieldLabel = (field) => {
     switch (field) {
-      case 'category': return t('itemDetail.edit.category', { defaultValue: 'Category' });
-      case 'sub_category': return t('itemDetail.edit.subCategory', { defaultValue: 'Sub-category' });
-      case 'brand': return t('itemDetail.edit.brand', { defaultValue: 'Brand' });
-      case 'gender': return t('itemDetail.edit.gender', { defaultValue: 'Gender' });
-      case 'dress_code': return t('itemDetail.edit.dressCode', { defaultValue: 'Dress Code' });
-      case 'season': return t('itemDetail.edit.season', { defaultValue: 'Season' });
-      case 'tradition': return t('itemDetail.edit.tradition', { defaultValue: 'Tradition' });
-      default: return field;
+      case "category":
+        return t("itemDetail.edit.category", { defaultValue: "Category" });
+      case "sub_category":
+        return t("itemDetail.edit.subCategory", {
+          defaultValue: "Sub-category",
+        });
+      case "brand":
+        return t("itemDetail.edit.brand", { defaultValue: "Brand" });
+      case "gender":
+        return t("itemDetail.edit.gender", { defaultValue: "Gender" });
+      case "dress_code":
+        return t("itemDetail.edit.dressCode", { defaultValue: "Dress Code" });
+      case "season":
+        return t("itemDetail.edit.season", { defaultValue: "Season" });
+      case "tradition":
+        return t("itemDetail.edit.tradition", { defaultValue: "Tradition" });
+      default:
+        return field;
     }
   };
 
@@ -197,7 +272,7 @@ export default function Closet() {
     if (!element) return;
     const cardEl = element.closest('[data-testid="closet-item-card"]');
     if (cardEl) {
-      const targetId = cardEl.getAttribute('data-item-id');
+      const targetId = cardEl.getAttribute("data-item-id");
       if (targetId && targetId !== draggedIdRef.current) {
         setDragOverId(targetId);
         return;
@@ -213,9 +288,9 @@ export default function Closet() {
     const handleDragOverGlobal = (e) => {
       dragCurrentYRef.current = e.clientY;
     };
-    window.addEventListener('dragover', handleDragOverGlobal);
+    window.addEventListener("dragover", handleDragOverGlobal);
     return () => {
-      window.removeEventListener('dragover', handleDragOverGlobal);
+      window.removeEventListener("dragover", handleDragOverGlobal);
     };
   }, []);
 
@@ -228,7 +303,7 @@ export default function Closet() {
       }
 
       const threshold = window.innerHeight / 6; // 1/6 of screen height
-      const speed = 12;      // scroll speed
+      const speed = 12; // scroll speed
 
       if (isTouchDraggingRef.current) {
         const touchY = touchCurrentPosRef.current.y;
@@ -281,17 +356,16 @@ export default function Closet() {
         e.preventDefault();
       }
     };
-    window.addEventListener('touchmove', preventDefault, { passive: false });
+    window.addEventListener("touchmove", preventDefault, { passive: false });
     return () => {
-      window.removeEventListener('touchmove', preventDefault);
+      window.removeEventListener("touchmove", preventDefault);
     };
   }, [isTouchDragging]);
 
-
   const handleDragStart = (e, id) => {
     setDraggedId(id);
-    e.dataTransfer.setData('text/plain', id);
-    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData("text/plain", id);
+    e.dataTransfer.effectAllowed = "move";
   };
 
   const handleDragOver = (e, id) => {
@@ -315,48 +389,60 @@ export default function Closet() {
   const handleDrop = (e, targetId) => {
     e.preventDefault();
     setDragOverId(null);
-    const sourceId = e.dataTransfer.getData('text/plain') || draggedId;
+    const sourceId = e.dataTransfer.getData("text/plain") || draggedId;
     setDraggedId(null);
     if (!sourceId || sourceId === targetId) return;
-    const sourceItem = (store.items || []).find(it => it && it.id === sourceId);
-    const targetItem = (store.items || []).find(it => it && it.id === targetId);
+    const sourceItem = (store.items || []).find(
+      (it) => it && it.id === sourceId,
+    );
+    const targetItem = (store.items || []).find(
+      (it) => it && it.id === targetId,
+    );
     const backupSource = sourceItem ? { ...sourceItem } : null;
     const backupTarget = targetItem ? { ...targetItem } : null;
     const runGrouping = () => {
       if (sourceItem && targetItem) {
         const groupId = targetItem.group_id || targetId;
-        store.upsert({ ...targetItem, group_id: groupId, group_role: 'host' });
-        store.upsert({ ...sourceItem, group_id: groupId, group_role: 'member' });
+        store.upsert({ ...targetItem, group_id: groupId, group_role: "host" });
+        store.upsert({
+          ...sourceItem,
+          group_id: groupId,
+          group_role: "member",
+        });
       }
 
-      api.groupItems({ host_id: targetId, member_id: sourceId })
+      api
+        .groupItems({ host_id: targetId, member_id: sourceId })
         .then(async (res) => {
-          if (res.status === 'success') {
+          if (res.status === "success") {
             if (res.host) store.upsert(res.host);
             if (res.member) store.upsert(res.member);
             await store.incrementalSync();
             workStore.registerPolishItems([targetId, sourceId]);
-            toast.success(t('common.success'));
+            toast.success(t("common.success"));
           } else {
             if (backupSource) store.upsert(backupSource);
             if (backupTarget) store.upsert(backupTarget);
-            toast.error(t('common.error'));
+            toast.error(t("common.error"));
           }
         })
         .catch((err) => {
-          console.error('Failed to group items:', err);
+          console.error("Failed to group items:", err);
           if (backupSource) store.upsert(backupSource);
           if (backupTarget) store.upsert(backupTarget);
-          toast.error(err?.response?.data?.detail || t('common.error'));
+          toast.error(err?.response?.data?.detail || t("common.error"));
         });
     };
 
     const normCategory = (cat) => {
-      const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');
-      if (s === 'top' || s === 'tops') return 'top';
-      if (s === 'bottom' || s === 'bottoms') return 'bottom';
-      if (s === 'footwear' || s === 'shoes') return 'footwear';
-      if (s === 'accessory' || s === 'accessories') return 'accessories';
+      const s = String(cat || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "_");
+      if (s === "top" || s === "tops") return "top";
+      if (s === "bottom" || s === "bottoms") return "bottom";
+      if (s === "footwear" || s === "shoes") return "footwear";
+      if (s === "accessory" || s === "accessories") return "accessories";
       return s;
     };
     const sourceCategory = normCategory(sourceItem?.category);
@@ -368,7 +454,7 @@ export default function Closet() {
       if (mismatches.length > 0) {
         setGatekeeperMismatches(mismatches);
         setGatekeeperPendingAction({
-          onApprove: runGrouping
+          onApprove: runGrouping,
         });
         setGatekeeperOpen(true);
       } else {
@@ -452,8 +538,12 @@ export default function Closet() {
     setIsTouchDragging(false);
 
     if (targetId && sourceId && sourceId !== targetId) {
-      const sourceItem = (store.items || []).find(it => it && it.id === sourceId);
-      const targetItem = (store.items || []).find(it => it && it.id === targetId);
+      const sourceItem = (store.items || []).find(
+        (it) => it && it.id === sourceId,
+      );
+      const targetItem = (store.items || []).find(
+        (it) => it && it.id === targetId,
+      );
 
       const backupSource = sourceItem ? { ...sourceItem } : null;
       const backupTarget = targetItem ? { ...targetItem } : null;
@@ -461,38 +551,50 @@ export default function Closet() {
       const runGrouping = () => {
         if (sourceItem && targetItem) {
           const groupId = targetItem.group_id || targetId;
-          store.upsert({ ...targetItem, group_id: groupId, group_role: 'host' });
-          store.upsert({ ...sourceItem, group_id: groupId, group_role: 'member' });
+          store.upsert({
+            ...targetItem,
+            group_id: groupId,
+            group_role: "host",
+          });
+          store.upsert({
+            ...sourceItem,
+            group_id: groupId,
+            group_role: "member",
+          });
         }
 
-        api.groupItems({ host_id: targetId, member_id: sourceId })
+        api
+          .groupItems({ host_id: targetId, member_id: sourceId })
           .then(async (res) => {
-            if (res.status === 'success') {
+            if (res.status === "success") {
               if (res.host) store.upsert(res.host);
               if (res.member) store.upsert(res.member);
               await store.incrementalSync();
               workStore.registerPolishItems([targetId, sourceId]);
-              toast.success(t('common.success'));
+              toast.success(t("common.success"));
             } else {
               if (backupSource) store.upsert(backupSource);
               if (backupTarget) store.upsert(backupTarget);
-              toast.error(t('common.error'));
+              toast.error(t("common.error"));
             }
           })
           .catch((err) => {
-            console.error('Failed to group items:', err);
+            console.error("Failed to group items:", err);
             if (backupSource) store.upsert(backupSource);
             if (backupTarget) store.upsert(backupTarget);
-            toast.error(err?.response?.data?.detail || t('common.error'));
+            toast.error(err?.response?.data?.detail || t("common.error"));
           });
       };
 
       const normCategory = (cat) => {
-        const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');
-        if (s === 'top' || s === 'tops') return 'top';
-        if (s === 'bottom' || s === 'bottoms') return 'bottom';
-        if (s === 'footwear' || s === 'shoes') return 'footwear';
-        if (s === 'accessory' || s === 'accessories') return 'accessories';
+        const s = String(cat || "")
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, "_");
+        if (s === "top" || s === "tops") return "top";
+        if (s === "bottom" || s === "bottoms") return "bottom";
+        if (s === "footwear" || s === "shoes") return "footwear";
+        if (s === "accessory" || s === "accessories") return "accessories";
         return s;
       };
       const sourceCategory = normCategory(sourceItem?.category);
@@ -504,7 +606,7 @@ export default function Closet() {
         if (mismatches.length > 0) {
           setGatekeeperMismatches(mismatches);
           setGatekeeperPendingAction({
-            onApprove: runGrouping
+            onApprove: runGrouping,
           });
           setGatekeeperOpen(true);
         } else {
@@ -564,14 +666,14 @@ export default function Closet() {
   //      ``incrementalSync()`` and give up.
   // ──────────────────────────────────────────────────────────────────
   const pollAttemptRef = useRef(0);
-  const pollSignatureRef = useRef('');
+  const pollSignatureRef = useRef("");
   useEffect(() => {
     const pendingIds = (store.items || [])
-      .filter((it) => it && it.clean_image_status === 'pending')
+      .filter((it) => it && it.clean_image_status === "pending")
       .map((it) => it.id);
     if (pendingIds.length === 0) {
       pollAttemptRef.current = 0;
-      pollSignatureRef.current = '';
+      pollSignatureRef.current = "";
       return undefined;
     }
 
@@ -588,13 +690,13 @@ export default function Closet() {
     // Backoff schedule (ms). After we exhaust the array, polling
     // continues at the final entry (18 s) up to POLL_MAX_ATTEMPTS.
     const POLL_STEPS_MS = [3000, 4000, 6000, 9000, 12000, 18000];
-    const POLL_MAX_ATTEMPTS = 30;   // ~5 minutes wall clock at the tail.
+    const POLL_MAX_ATTEMPTS = 30; // ~5 minutes wall clock at the tail.
 
     // Reset per-pass counter ONLY when the pending-id SET changes
     // (new items appeared / set shrank). We don't reset on every
     // items mutation \u2014 upsert-from-poll changes items[] but not the
     // pending set, and resetting there would defeat the backoff.
-    const pendingSignature = pendingIds.slice().sort().join(',');
+    const pendingSignature = pendingIds.slice().sort().join(",");
     if (pollSignatureRef.current !== pendingSignature) {
       pollSignatureRef.current = pendingSignature;
       pollAttemptRef.current = 0;
@@ -604,10 +706,7 @@ export default function Closet() {
     let timer;
 
     const scheduleNext = () => {
-      const idx = Math.min(
-        pollAttemptRef.current,
-        POLL_STEPS_MS.length - 1,
-      );
+      const idx = Math.min(pollAttemptRef.current, POLL_STEPS_MS.length - 1);
       timer = setTimeout(tick, POLL_STEPS_MS[idx]);
     };
 
@@ -620,7 +719,7 @@ export default function Closet() {
       const liveItems = (closetStore.getSnapshot().items || []).filter(Boolean);
       const stillPending = pendingIds.filter((id) =>
         liveItems.find(
-          (it) => it && it.id === id && it.clean_image_status === 'pending',
+          (it) => it && it.id === id && it.clean_image_status === "pending",
         ),
       );
       if (stillPending.length === 0) {
@@ -636,11 +735,13 @@ export default function Closet() {
       if (pollAttemptRef.current >= POLL_MAX_ATTEMPTS) {
         // eslint-disable-next-line no-console
         console.info(
-          'closet poll giving up after %d attempts (%d still pending)',
+          "closet poll giving up after %d attempts (%d still pending)",
           POLL_MAX_ATTEMPTS,
           stillPending.length,
         );
-        closetStore.incrementalSync().catch(() => { /* best-effort */ });
+        closetStore.incrementalSync().catch(() => {
+          /* best-effort */
+        });
         return;
       }
 
@@ -680,12 +781,14 @@ export default function Closet() {
       setSemanticIndexed(res.indexed || 0);
       setSemanticActive(true);
       if (sItems.length === 0) {
-        toast.message(t('pages.closet.no_meaningful_matches_found_u2014'));
+        toast.message(t("pages.closet.no_meaningful_matches_found_u2014"));
       }
     } catch (err) {
-      toast.error(err?.response?.data?.detail || 'Semantic search failed.');
+      toast.error(err?.response?.data?.detail || "Semantic search failed.");
       setSemanticActive(false);
-    } finally { setSemanticLoading(false); }
+    } finally {
+      setSemanticLoading(false);
+    }
   }, []);
 
   // Mount: incremental sync only (the eager prewarm in AppLayout
@@ -693,20 +796,22 @@ export default function Closet() {
   // any network — they re-filter the in-memory list. This is the
   // core of the "don't fully reload on navigation" UX win.
   useEffect(() => {
-    store.incrementalSync().catch(() => { });
+    store.incrementalSync().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Refresh on focus / visibility — picks up changes the user made
   // in another tab. Throttled inside the store itself.
   useEffect(() => {
-    const onFocus = () => { store.incrementalSync().catch(() => { }); };
-    window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') onFocus();
+    const onFocus = () => {
+      store.incrementalSync().catch(() => {});
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") onFocus();
     });
     return () => {
-      window.removeEventListener('focus', onFocus);
+      window.removeEventListener("focus", onFocus);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -714,18 +819,20 @@ export default function Closet() {
   // Debounced semantic-search trigger; keyword search is now purely
   // client-side over the store snapshot, so no network involvement.
   useEffect(() => {
-    if (searchMode !== 'meaning') return undefined;
-    const q = (activeFilters.search || '').trim();
+    if (searchMode !== "meaning") return undefined;
+    const q = (activeFilters.search || "").trim();
     if (!q) return undefined;
-    const handle = setTimeout(() => { fetchSemantic(q); }, 300);
+    const handle = setTimeout(() => {
+      fetchSemantic(q);
+    }, 300);
     return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFilters.search, searchMode]);
 
   const onSearch = (e) => {
     e.preventDefault();
-    const q = (activeFilters.search || '').trim();
-    if (searchMode === 'meaning' && q) {
+    const q = (activeFilters.search || "").trim();
+    if (searchMode === "meaning" && q) {
       fetchSemantic(q);
     } else {
       fetchItems();
@@ -736,27 +843,34 @@ export default function Closet() {
   // re-fetches without needing an extra trip through Enter / Search.
   const clearSearch = () => {
     setSemanticActive(false);
-    setFilters((f) => ({ ...(f || {}), search: '' }));
+    setFilters((f) => ({ ...(f || {}), search: "" }));
     // Let the debounced effect handle the actual re-fetch on the
     // next tick so we don't double-fire.
   };
 
   const clearSemantic = () => {
     setSemanticActive(false);
-    setFilters((f) => ({ ...(f || {}), search: '' }));
+    setFilters((f) => ({ ...(f || {}), search: "" }));
     fetchItems();
   };
 
   const empty = !loading && items.length === 0;
 
   // ------- selection helpers -------
-  const enterSelect = () => { setSelectMode(true); setSelected(new Set()); };
-  const cancelSelect = () => { setSelectMode(false); setSelected(new Set()); };
+  const enterSelect = () => {
+    setSelectMode(true);
+    setSelected(new Set());
+  };
+  const cancelSelect = () => {
+    setSelectMode(false);
+    setSelected(new Set());
+  };
 
   const toggleOne = useCallback((id) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }, []);
@@ -766,8 +880,10 @@ export default function Closet() {
   };
   const clearSelection = () => setSelected(new Set());
 
-  const allVisibleSelected = items.length > 0 && selected.size >= items.length
-    && items.every((i) => selected.has(i.id));
+  const allVisibleSelected =
+    items.length > 0 &&
+    selected.size >= items.length &&
+    items.every((i) => selected.has(i.id));
 
   const handleDelete = async () => {
     if (selected.size === 0) return;
@@ -793,16 +909,18 @@ export default function Closet() {
     // surface a spinner if needed (most users will already be doing
     // something else by the time this resolves).
     setDeleting(true);
-    const results = await Promise.allSettled(ids.map((id) => api.deleteItem(id)));
+    const results = await Promise.allSettled(
+      ids.map((id) => api.deleteItem(id)),
+    );
     setDeleting(false);
 
     const failedIds = ids.filter((_, idx) => {
       const res = results[idx];
       // 404 means it's already gone; treat as success so we don't revert it
-      return res.status === 'rejected' && res.reason?.response?.status !== 404;
+      return res.status === "rejected" && res.reason?.response?.status !== 404;
     });
     if (failedIds.length === 0) {
-      toast.success(`${ids.length} item${ids.length === 1 ? '' : 's'} deleted`);
+      toast.success(`${ids.length} item${ids.length === 1 ? "" : "s"} deleted`);
       store.triggerRepair();
       return;
     }
@@ -816,7 +934,7 @@ export default function Closet() {
       toast.message(`Deleted ${okCount}, failed ${failedIds.length}`);
       store.triggerRepair();
     } else {
-      toast.error(t('pages.closet.could_not_delete_the_selected'));
+      toast.error(t("pages.closet.could_not_delete_the_selected"));
     }
   };
 
@@ -830,42 +948,157 @@ export default function Closet() {
   // Keyboard shortcut: Esc exits selection mode
   useEffect(() => {
     if (!selectMode) return undefined;
-    const onKey = (e) => { if (e.key === 'Escape') cancelSelect(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const onKey = (e) => {
+      if (e.key === "Escape") cancelSelect();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [selectMode]);
 
   return (
     <>
-      {/* banner-start */}
-      <section className="closet-banner">
-        <div className="container-fluid">
-          <div className="closet-banner__content">
-            {/* <div className="hero-eyebrow">
-              <Sparkles size={14} />
-              {t("closet.subtitle")}
-            </div> */}
-            <div className="closet-banner__title-row">
-              <h1 className="hero-title">{t("closet.title")}</h1>
-              <div className="closet-banner__count" data-testid="closet-total">
-                {typeof total === "number" || typeof total === "string" ? total : 0}
-                <span>Items</span>
+      {/* closet banner */}
+      <section
+        className="
+    relative isolate overflow-hidden
+    bg-cover bg-center bg-no-repeat
+     mt-[var(--header-height)]
+  "
+        style={{
+          backgroundImage: `url(${ClosetBanner})`,
+        }}
+      >
+        {/* Dark gradient overlay */}
+        <div
+          className="
+      absolute inset-0 -z-0
+      bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
+    "
+        />
+
+        <div className="relative z-10 w-full">
+          <div
+            className="
+        px-10 py-20
+        max-[991px]:px-[35px] max-[991px]:py-[45px]
+        max-[767px]:px-5 max-[767px]:py-[38px]
+        max-[480px]:px-4 max-[480px]:py-8
+      "
+          >
+            <div className="max-w-[520px]">
+              {/* Title */}
+              <h1
+                className="
+            m-0 mb-5
+            text-[40px] leading-[50px]
+            font-bold
+            tracking-normal
+            text-white
+            max-[767px]:text-[42px]
+            max-[480px]:text-[35px]
+          "
+              >
+                {t("closet.title")}
+              </h1>
+
+              {/* Item count */}
+              <div
+                data-testid="closet-total"
+                className="
+            inline-flex
+            items-center justify-center
+            gap-[5px]
+            rounded-full
+            border border-[#666]
+            px-[15px] py-[5px]
+            text-[12px]
+            font-bold
+            text-white
+          "
+              >
+                {typeof total === "number" || typeof total === "string"
+                  ? total
+                  : 0}
+
+                <span className="text-[#666]">Items</span>
               </div>
-              <p className="hero-description">Organize your wardrobe, explore every piece and create better outfits effortlessly.</p>
-              <div className='planmain'>
-                <Link to="/closet/add" data-testid="closet-empty-add-button" className='custm-btn'><i class="fa-solid fa-plus me-2"></i>{t('closet.addItem')}</Link>
-                <Link to="/suitcase" className="trip-plain" data-testid="closet-suitcase-link" title={t('suitcase.title', { defaultValue: 'Suitcase' })}>
-                  <Luggage />
-                  {/* <span>{t('suitcase.title', { defaultValue: "Suitcase" })}</span> */}
+
+              {/* Description */}
+              <p
+                className="
+            my-5
+            max-w-[450px]
+            text-[14px]
+            leading-6
+            tracking-[0.5px]
+            text-white/60
+            max-[767px]:max-w-full
+            max-[767px]:mt-[15px]
+          "
+              >
+                Organize your wardrobe, explore every piece and create better
+                outfits effortlessly.
+              </p>
+
+              {/* Buttons */}
+              <div className="flex items-center gap-2">
+                {/* Add item */}
+                <Link
+                  to="/closet/add"
+                  data-testid="closet-empty-add-button"
+                  className="
+              inline-flex
+              items-center
+              justify-center
+              rounded-full
+              bg-[var(--primary-color)]
+              px-5 py-3.5
+              text-[14px]
+              font-bold
+              leading-none
+              text-white
+              no-underline
+              shadow-[var(--primary-shadow)]
+              transition-all duration-300
+              hover:-translate-y-[2px]
+              hover:bg-[var(--primary-hover)]
+              hover:text-white
+            "
+                >
+                  <i className="fa-solid fa-plus mr-2" />
+                  {t("closet.addItem")}
+                </Link>
+
+                {/* Suitcase */}
+                <Link
+                  to="/suitcase"
+                  data-testid="closet-suitcase-link"
+                  title={t("suitcase.title", {
+                    defaultValue: "Suitcase",
+                  })}
+                  className="
+              flex
+              h-10 w-10
+              shrink-0
+              items-center justify-center
+              rounded-full
+              border border-[#666]
+              text-white/60
+              no-underline
+              transition-all duration-300
+              hover:border-[var(--primary-color)]
+              hover:text-[var(--primary-color)]
+            "
+                >
+                  <Luggage className="h-5 w-5" />
                 </Link>
               </div>
             </div>
           </div>
         </div>
       </section>
-      <section className="closet-in-section">
-        <div className="container-fluid">
-          {/* Phase Z2.3 + Z2.6 — two ambient progress chips, side-by-side.
+      <section className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[5px] max-[991px]:py-[40px]">
+        {/* Phase Z2.3 + Z2.6 — two ambient progress chips, side-by-side.
               ``HashRepairChip`` ticks during the duplicate-detector
               tune-up (fires first after prewarm). ``ThumbRepairChip``
               ticks during the post-Z2.6 stale-thumbnail regeneration
@@ -874,90 +1107,216 @@ export default function Closet() {
               seconds after completion. Chained, not concurrent, so
               the user reads them as a coherent sequence. The flex
               wrap keeps phones happy when both chips are visible. */}
-          <div className="mt-2 flex flex-wrap items-center gap-2 min-h-5">
-            <HashRepairChip progress={store.repairProgress} />
-            <ThumbRepairChip progress={store.thumbProgress} />
-          </div>
-          <div className='row gx-4 gy-4'>
-            <div className='col-md-12'>
-              <div className='card custm-card border-0'>
-                <div className='card-body'>
-                  <form onSubmit={onSearch} data-testid="closet-filter-bar" className="closet-search-panel">
-                    <div className="closet-search-field">
-                      {searchMode === 'meaning' ? (
-                        <Sparkles className="closet-search-field__icon text-[hsl(var(--accent))]" />
-                      ) : (
-                        <Search className="closet-search-field__icon" />
-                      )}
-                      <Input
-                        value={activeFilters.search || ''}
-                        onChange={(e) => setFilters((f) => ({ ...(f || {}), search: e.target.value }))}
-                        placeholder={
-                          searchMode === 'meaning'
-                            ? t('closet.semanticHint')
-                            : t('closet.searchPlaceholder')
-                        }
-                        className="form-control closet-search-input"
-                        data-testid="closet-search-input"
-                      />
-                      {/* Clear (x) button — only appears when there's text, so
-                          the in-input mode switch stays visible when the field
-                          is empty. Sits to the left of the Keyword/Meaning pill. */}
-                      {activeFilters.search && (
-                        <button
-                          type="button"
-                          onClick={clearSearch}
-                          aria-label={t('closet.clearSearch', { defaultValue: 'Clear search' })}
-                          data-testid="closet-search-clear"
-                          className="closet-search-clear"
-                        >
-                          <X />
-                        </button>
-                      )}
-                    </div>
-                    <Select value={activeFilters.category} onValueChange={(v) => setFilters((f) => ({ ...(f || {}), category: v }))}>
-                      <SelectTrigger className="closet-filter-select" data-testid="closet-category-select">
-                        <SelectValue placeholder={t('closet.category')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CATEGORIES.map((c) => (
-                          <SelectItem key={c} value={c}>{labelForCategory(c, t)}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select value={activeFilters.source} onValueChange={(v) => setFilters((f) => ({ ...(f || {}), source: v }))}>
-                      <SelectTrigger className="closet-filter-select" data-testid="closet-source-select">
-                        <SelectValue placeholder={labelForSource('all', t)} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SOURCES.map((s) => (
-                          <SelectItem key={s} value={s}>
-                            {/* Intent values get the marketplace-intent label
-                                (e.g. "For sale"); source values use the
-                                Private/Shared/Retail labels. */}
-                            {_INTENT_VALUES.has(s) ? labelForIntent(s, t) : labelForSource(s, t)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {/* In-input mode switch */}
-                    <div className="closet-search-mode" role="radiogroup" aria-label={t('common.search')}>
-                      <button type="button" onClick={() => setSearchMode('keyword')} aria-pressed={searchMode === 'keyword'}
-                        data-testid="closet-search-mode-keyword" className={searchMode === 'keyword' ? 'active' : ''}>
-                        {t('closet.keywordSearch')}
-                      </button>
-                      <button type="button" aria-pressed={searchMode === 'meaning'} data-testid="closet-search-mode-meaning"
-                        className={searchMode === 'meaning' ? 'active' : ''} onClick={() => setSearchMode('meaning')}>
-                        <Sparkles /> {t('closet.meaningSearch')}
-                      </button>
-                    </div>
-                    <Button type="submit" className="custm-btn" data-testid="closet-search-button">{t('common.search')}</Button>
-                  </form>
-                </div>
+        <div className="mt-2 flex flex-wrap items-center gap-2 min-h-5">
+          <HashRepairChip progress={store.repairProgress} />
+          <ThumbRepairChip progress={store.thumbProgress} />
+        </div>
+        <div className="w-full">
+          <div className="rounded-[12px] border-0 bg-white p-[20px] shadow-sm mb-[20px]">
+            <form
+              onSubmit={onSearch}
+              data-testid="closet-filter-bar"
+              className="flex flex-col gap-3 lg:flex-row lg:items-center"
+            >
+              {/* Search Field */}
+              <div className="relative min-w-0 flex-1">
+                {searchMode === "meaning" ? (
+                  <Sparkles className="absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-[hsl(var(--accent))]" />
+                ) : (
+                  <Search className="absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-gray-500" />
+                )}
+
+                <Input
+                  value={activeFilters.search || ""}
+                  onChange={(e) =>
+                    setFilters((f) => ({
+                      ...(f || {}),
+                      search: e.target.value,
+                    }))
+                  }
+                  placeholder={
+                    searchMode === "meaning"
+                      ? t("closet.semanticHint")
+                      : t("closet.searchPlaceholder")
+                  }
+                  data-testid="closet-search-input"
+                  className="
+                      h-11 w-full rounded-[8px]
+                      border border-gray-200
+                      bg-white pl-10 pr-10
+                      text-sm text-gray-900
+                      shadow-none outline-none
+                      placeholder:text-gray-400
+                      focus:border-primary-brand
+                      focus:outline-none
+                      focus:ring-0
+                      focus-visible:outline-none
+                      focus-visible:ring-0
+                      "
+                />
+
+                {/* Clear Search */}
+                {activeFilters.search && (
+                  <button
+                    type="button"
+                    onClick={clearSearch}
+                    aria-label={t("closet.clearSearch", {
+                      defaultValue: "Clear search",
+                    })}
+                    data-testid="closet-search-clear"
+                    className="
+                            absolute right-3 top-1/2 z-10
+                            flex h-6 w-6 -translate-y-1/2
+                            items-center justify-center
+                            rounded-full text-gray-400
+                            transition-colors
+                            hover:bg-gray-100 hover:text-gray-700
+                          ">
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
-            </div>
-            {/* Always render the floater, but change contents based on selectMode */}
-            {/* <div className='col-md-12'>
+
+              {/* Category Select */}
+              <Select
+                value={activeFilters.category}
+                onValueChange={(v) =>
+                  setFilters((f) => ({
+                    ...(f || {}),
+                    category: v,
+                  }))
+                }
+              >
+                <SelectTrigger
+                  data-testid="closet-category-select"
+                  className="
+                          h-11 w-full rounded-[8px] border border-gray-200
+                          bg-white px-3 text-sm
+                          lg:w-[130px]
+                        "
+                >
+                  <SelectValue placeholder={t("closet.category")} />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {CATEGORIES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {labelForCategory(c, t)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Source Select */}
+              <Select
+                value={activeFilters.source}
+                onValueChange={(v) =>
+                  setFilters((f) => ({
+                    ...(f || {}),
+                    source: v,
+                  }))
+                }
+              >
+                <SelectTrigger
+                  data-testid="closet-source-select"
+                  className="
+                          h-11 w-full rounded-[8px] border border-gray-200
+                          bg-white px-3 text-sm
+                          lg:w-[140px]
+                        "
+                >
+                  <SelectValue placeholder={labelForSource("all", t)} />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {SOURCES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {_INTENT_VALUES.has(s)
+                        ? labelForIntent(s, t)
+                        : labelForSource(s, t)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Keyword / Meaning Toggle */}
+              <div
+                className="
+                              flex h-11 shrink-0 items-center
+                              rounded-[8px] bg-primary-shadow p-1
+                              ring-1 ring-gray-100
+                            "
+                role="radiogroup"
+                aria-label={t("common.search")}
+              >
+                <button
+                  type="button"
+                  onClick={() => setSearchMode("keyword")}
+                  aria-pressed={searchMode === "keyword"}
+                  data-testid="closet-search-mode-keyword"
+                  className={`
+                                  h-full rounded-[8px] px-3 text-xs font-medium
+                                  transition-all duration-200
+                                  ${
+                                    searchMode === "keyword"
+                                      ? "bg-white text-gray-900 shadow-sm"
+                                      : "text-gray-500 hover:text-gray-800"
+                                  }
+                                `}
+                >
+                  {t("closet.keywordSearch")}
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={searchMode === "meaning"}
+                  data-testid="closet-search-mode-meaning"
+                  onClick={() => setSearchMode("meaning")}
+                  className={`
+                                  flex h-full items-center gap-1.5
+                                  rounded-[8px] px-3 text-xs font-medium
+                                  transition-all duration-200
+                                  ${
+                                    searchMode === "meaning"
+                                      ? "bg-white text-primary-brand shadow-sm"
+                                      : "text-gray-500 hover:text-gray-800"
+                                  }
+                                `}
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {t("closet.meaningSearch")}
+                </button>
+              </div>
+
+              {/* Search Button */}
+              <Button
+                type="submit"
+                data-testid="closet-search-button"
+                className="
+                                inline-flex
+                                items-center
+                                justify-center
+                                rounded-[8px]
+                                bg-[var(--primary-color)]
+                                px-[20px] py-[20px]
+                                text-[12px]
+                                font-bold
+                                leading-[22px]
+                                text-white
+                                no-underline
+                                shadow-[var(--primary-shadow)]
+                                transition-smooth
+                                hover:-translate-y-[2px]
+                                hover:bg-[var(--primary-hover)]
+                                hover:text-white
+                              "
+              >
+                {t("common.search")}
+              </Button>
+            </form>
+          </div>
+        </div>
+        {/* Always render the floater, but change contents based on selectMode */}
+        {/* <div className='col-md-12'>
               <div className="">
                 {!selectMode ? (
                   <>
@@ -1081,518 +1440,722 @@ export default function Closet() {
                 )}
               </div>
             </div> */}
-            {/* Semantic-results banner \u2014 only shown after a successful meaning search */}
-            {semanticActive && (
+        {/* Semantic-results banner \u2014 only shown after a successful meaning search */}
+        {semanticActive && (
+          <div
+            className="mt-4 flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-2xl border border-border bg-[hsl(var(--accent))]/10"
+            data-testid="closet-semantic-banner"
+          >
+            <div className="flex items-center gap-2 text-sm">
+              <Sparkles className="h-4 w-4 text-[hsl(var(--accent))]" />
+              <span>
+                <Trans
+                  i18nKey="pages.closet.semantic_matches"
+                  defaultValue="Showing <0>{{count}}</0> semantic matches across <1>{{total}}</1> indexed items."
+                  values={{ count: items.length, total: semanticIndexed }}
+                  components={[
+                    <span key="count" className="font-medium" />,
+                    <span key="total" className="font-medium" />,
+                  ]}
+                />
+              </span>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearSemantic}
+              className="rounded-lg"
+              data-testid="closet-semantic-clear"
+            >
+              <X className="h-4 w-4 me-1.5" />{" "}
+              {t("pages.closet.back_to_full_closet")}
+            </Button>
+          </div>
+        )}
+        {loading && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-5">
+            {Array.from({ length: 8 }).map((_, i) => (
               <div
-                className="mt-4 flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-2xl border border-border bg-[hsl(var(--accent))]/10"
-                data-testid="closet-semantic-banner"
+                key={i}
+                className="rounded-[calc(var(--radius)+6px)] overflow-hidden"
               >
-                <div className="flex items-center gap-2 text-sm">
-                  <Sparkles className="h-4 w-4 text-[hsl(var(--accent))]" />
-                  <span>
-                    <Trans
-                      i18nKey="pages.closet.semantic_matches"
-                      defaultValue="Showing <0>{{count}}</0> semantic matches across <1>{{total}}</1> indexed items."
-                      values={{ count: items.length, total: semanticIndexed }}
-                      components={[
-                        <span key="count" className="font-medium" />,
-                        <span key="total" className="font-medium" />
-                      ]}
-                    />
-                  </span>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearSemantic}
-                  className="rounded-lg"
-                  data-testid="closet-semantic-clear"
-                >
-                  <X className="h-4 w-4 me-1.5" /> {t('pages.closet.back_to_full_closet')}
-                </Button>
+                <Skeleton className="aspect-[3/4] w-full" />
+                <Skeleton className="h-4 w-3/4 mt-3" />
+                <Skeleton className="h-3 w-1/2 mt-2" />
               </div>
-            )}
-            {loading && (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-5">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="rounded-[calc(var(--radius)+6px)] overflow-hidden">
-                    <Skeleton className="aspect-[3/4] w-full" />
-                    <Skeleton className="h-4 w-3/4 mt-3" />
-                    <Skeleton className="h-3 w-1/2 mt-2" />
-                  </div>
-                ))}
-              </div>
-            )}
-            {empty && (
-              <div className='col-md-12'>
-                <div className="card closet-empty-card" data-testid="closet-empty-state">
-                  <div className='card-body'>
-                    <div className='row'>
-                      <div className='col-md-12'>
-                        <div className="closet-empty-card__visual">
-                          <img src={closet4} alt={t('pages.closet.flat_lay_empty_state')} />
-                        </div>
-                        <div className="closet-empty-card__content">
-                          <div className='text-center'>
-                            {/* <span className="closet-empty-card__label">
-                          {t('closet.startHere', {
-                            defaultValue: 'Start your collection',
-                          })}
-                        </span> */}
-                            <h2>{t('closet.emptyTitle', {
-                              defaultValue: 'Your closet is empty',
-                            })}
-                            </h2>
-                            <p>{t('closet.emptySub', {
-                              defaultValue:
-                                'Add your first clothing item and let AI help you discover amazing outfit combinations.',
-                            })}
-                            </p>
-                            <div className="closet-empty-features">
-                              <div className="closet-empty-feature">
-                                <Sparkles />
-                                <span>
-                                  {t('closet.autoCategory', {
-                                    defaultValue: 'Auto-categorize with AI',
-                                  })}
-                                </span>
-                              </div>
-                              <div className="closet-empty-feature">
-                                <Wand2 />
-                                <span>
-                                  {t('closet.detectDetails', {
-                                    defaultValue: 'Detect colors and patterns',
-                                  })}
-                                </span>
-                              </div>
-                              <div className="closet-empty-feature">
-                                <Layers3 />
-                                <span>
-                                  {t('closet.smartSuggestions', {
-                                    defaultValue: 'Smart outfit suggestions',
-                                  })}
-                                </span>
-                              </div>
-                            </div>
-                            <Link to="/closet/add" className='custm-btn' asChild data-testid="closet-empty-add-button">
-                              <i class="fa-solid fa-plus me-2"></i>{t('closet.addItem', { defaultValue: 'Add Your First Item', })}
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              // <div className="mt-10 text-center max-w-md mx-auto" data-testid="closet-empty-state">
-              //   <div className="mx-auto w-40 h-40 rounded-full bg-secondary/70 mb-6 overflow-hidden">
-              //     <img
-              //       src="https://images.unsplash.com/photo-1654773125909-6d73f0c12407?w=600&q=80"
-              //       alt={t('pages.closet.flat_lay_empty_state')}
-              //       className="w-full h-full object-cover"
-              //     />
-              //   </div>
-              //   <h2 className="font-display text-2xl">{t('closet.emptyTitle')}</h2>
-              //   <p className="text-sm text-muted-foreground mt-2">
-              //     {t('closet.emptySub')}
-              //   </p>
-              //   <Button asChild className="mt-5 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group" data-testid="closet-empty-add-button">
-              //     <Link to="/closet/add"><Plus className="h-4 w-4 me-2 text-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] transition-all duration-200" /> <span className="text-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] transition-all duration-200">{t('closet.addItem')}</span></Link>
-              //   </Button>
-              // </div>
-            )}
-            {!loading && items.length > 0 && (
-              <div className="closet-grid" data-testid="closet-grid">
-                {items.map((it) => {
-                  const isSelected = selected.has(it.id);
-
-                  if (selectMode) {
-                    return (
-                      <button
-                        key={it.id}
-                        type="button"
-                        onClick={(e) => onCardClick(e, it)}
-                        aria-pressed={isSelected}
-                        aria-label={`${isSelected ? 'Deselect' : 'Select'} ${it.title || 'item'}`}
-                        data-testid="closet-item-card"
-                        data-selected={isSelected}
-                        onContextMenu={(e) => e.preventDefault()}
-                        className={`closet-card closet-card-button ${isSelected ? 'closet-card-selected' : ''}`}
-                        style={{ WebkitTouchCallout: 'none', touchAction: isTouchDragging ? 'none' : 'pan-y' }}
-                      >
-                        <ItemCardInner item={it} isSelected={isSelected} showCheckbox score={it._score} />
-                      </button>
-                    );
-                  }
-
-                  return (
-                    <Link
-                      key={it.id}
-                      to={`/closet/${it.id}`}
-                      className={`closet-card ${draggedId === it.id ? 'closet-card-dragging' : ''} ${dragOverId === it.id ? 'closet-card-dragover' : ''}`}
-                      style={{ WebkitTouchCallout: 'none', touchAction: isTouchDragging ? 'none' : 'pan-y' }}
-                      data-testid="closet-item-card"
-                      data-item-id={it.id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, it.id)}
-                      onDragEnd={handleDragEnd}
-                      onDragOver={(e) => handleDragOver(e, it.id)}
-                      onDragLeave={(e) => handleDragLeave(e, it.id)}
-                      onDrop={(e) => handleDrop(e, it.id)}
-                      onTouchStart={(e) => handleTouchStart(e, it.id)}
-                      onTouchMove={handleTouchMove}
-                      onTouchEnd={handleTouchEnd}
-                      onContextMenu={(e) => e.preventDefault()}
-                    >
-                      <ItemCardInner item={it} score={it._score} />
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Confirm delete dialog */}
-            <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-              <AlertDialogContent data-testid="closet-delete-confirm-dialog">
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    {t('closet.confirmDeleteTitle')}
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t('closet.confirmDeleteBody', { count: selected.size })}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel data-testid="closet-delete-cancel">{t('common.cancel', { defaultValue: 'Cancel' })}</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    data-testid="closet-delete-confirm"
-                    className="bg-[hsl(var(--destructive,0_84%_60%))] text-white hover:opacity-90"
-                  >
-                    {deleting ? (
-                      <Loader2 className="h-4 w-4 me-1.5 animate-spin" />
-                    ) : (
-                      <Trash2 className="h-4 w-4 me-1.5" />
-                    )}
-                    {t('common.delete')}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            {/* Grouping confirmation dialog */}
-            <AlertDialog open={groupOpen} onOpenChange={setGroupOpen}>
-              <AlertDialogContent data-testid="closet-group-confirm-dialog">
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    {t('closet.groupConfirmTitle', { defaultValue: 'Group Selected Items' })}
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t('closet.groupConfirmBody', { defaultValue: 'Choose which item will be the primary (host) item. All other selected items will be grouped under it.' })}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-
-                <div className="py-4">
-                  <label className="caps-label text-xs text-muted-foreground block mb-2">
-                    {t('closet.primaryItemLabel', { defaultValue: 'Primary Item' })}
-                  </label>
-                  <Select value={groupHostId} onValueChange={setGroupHostId}>
-                    <SelectTrigger className="w-full rounded-xl">
-                      <SelectValue placeholder={t('closet.selectPrimaryPlaceholder', { defaultValue: 'Select primary item...' })} />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
-                      {Array.from(selected).map((id) => {
-                        const item = (store.items || []).find((it) => it && it.id === id);
-                        return (
-                          <SelectItem key={id} value={id}>
-                            <div className="flex items-center gap-2">
-                              <span className="truncate">{item?.name || item?.title || id}</span>
-                            </div>
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <AlertDialogFooter>
-                  <AlertDialogCancel data-testid="closet-group-cancel" onClick={() => setGroupOpen(false)}>
-                    {t('common.cancel', { defaultValue: 'Cancel' })}
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={async (e) => {
-                      e.preventDefault();
-                      if (!groupHostId) return;
-                      const hostId = groupHostId;
-                      const memberIds = Array.from(selected).filter(id => id !== hostId);
-
-                      const hostItem = (store.items || []).find(it => it && it.id === hostId);
-                      const memberItems = memberIds.map(mid => (store.items || []).find(it => it && it.id === mid)).filter(Boolean);
-
-                      const normCategory = (cat) => {
-                        const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');
-                        if (s === 'top' || s === 'tops') return 'top';
-                        if (s === 'bottom' || s === 'bottoms') return 'bottom';
-                        if (s === 'footwear' || s === 'shoes') return 'footwear';
-                        if (s === 'accessory' || s === 'accessories') return 'accessories';
-                        return s;
-                      };
-                      const allItemsInGroup = [hostItem, ...memberItems].filter(Boolean);
-                      const categories = new Set(allItemsInGroup.map(it => normCategory(it.category)));
-                      const isBulkSet = categories.size > 1;
-
-                      const mismatchesSet = new Set();
-                      if (!isBulkSet) {
-                        for (const m of memberItems) {
-                          const diffs = getTaxonomyMismatches(hostItem, m);
-                          for (const d of diffs) {
-                            mismatchesSet.add(d);
-                          }
-                        }
-                      }
-                      const mismatches = Array.from(mismatchesSet);
-
-                      const runBulkGrouping = async () => {
-                        setGrouping(true);
-                        const backups = [
-                          { id: hostId, data: hostItem ? { ...hostItem } : null },
-                          ...memberIds.map(mid => {
-                            const it = (store.items || []).find(x => x && x.id === mid);
-                            return { id: mid, data: it ? { ...it } : null };
-                          })
-                        ];
-
-                        const groupId = hostItem?.group_id || hostId;
-                        if (hostItem) {
-                          store.upsert({ ...hostItem, group_id: groupId, group_role: 'host' });
-                        }
-                        memberItems.forEach(it => {
-                          store.upsert({ ...it, group_id: groupId, group_role: 'member' });
-                        });
-
-                        setSelected(new Set());
-                        setSelectMode(false);
-
-                        try {
-                          const responses = await Promise.all(
-                            memberIds.map(mid => api.groupItems({ host_id: hostId, member_id: mid }))
-                          );
-                          const allSuccess = responses.every(res => res.status === 'success');
-                          if (allSuccess) {
-                            responses.forEach(res => {
-                              if (res.host) store.upsert(res.host);
-                              if (res.member) store.upsert(res.member);
-                            });
-                            await store.incrementalSync();
-                            workStore.registerPolishItems([hostId, ...memberIds]);
-                            toast.success(t('common.success'));
-                          } else {
-                            backups.forEach(b => {
-                              if (b.data) store.upsert(b.data);
-                            });
-                            toast.error(t('common.error'));
-                          }
-                        } catch (err) {
-                          console.error('Failed to group items:', err);
-                          backups.forEach(b => {
-                            if (b.data) store.upsert(b.data);
-                          });
-                          toast.error(err?.response?.data?.detail || t('common.error'));
-                        } finally {
-                          setGrouping(false);
-                        }
-                      };
-
-                      if (mismatches.length > 0) {
-                        setGroupOpen(false);
-                        setGatekeeperMismatches(mismatches);
-                        setGatekeeperPendingAction({
-                          onApprove: runBulkGrouping
-                        });
-                        setGatekeeperOpen(true);
-                      } else {
-                        await runBulkGrouping();
-                      }
-                    }}
-                    disabled={grouping || !groupHostId}
-                    data-testid="closet-group-confirm"
-                    className="bg-primary text-primary-foreground hover:opacity-90"
-                  >
-                    {grouping ? (
-                      <Loader2 className="h-4 w-4 me-1.5 animate-spin" />
-                    ) : (
-                      <ListChecks className="h-4 w-4 me-1.5" />
-                    )}
-                    {t('closet.confirmGroup', { defaultValue: 'Group' })}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            {/* Taxonomy gatekeeper warning dialog */}
-            <AlertDialog open={gatekeeperOpen} onOpenChange={setGatekeeperOpen}>
-              <AlertDialogContent data-testid="closet-gatekeeper-dialog">
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    {t('closet.gatekeeper.title', { defaultValue: 'Mismatched Properties Warning' })}
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t('closet.gatekeeper.body', {
-                      defaultValue: 'The items you are grouping have mismatched properties: {{mismatches}}. Are you sure you want to group them?',
-                      mismatches: gatekeeperMismatches.map(field => getTaxonomyFieldLabel(field)).join(', ')
-                    })}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel data-testid="closet-gatekeeper-cancel" onClick={() => {
-                    setGatekeeperOpen(false);
-                    setGatekeeperPendingAction(null);
-                  }}>
-                    {t('closet.gatekeeper.cancel', { defaultValue: 'Cancel' })}
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => {
-                      setGatekeeperOpen(false);
-                      if (gatekeeperPendingAction?.onApprove) {
-                        gatekeeperPendingAction.onApprove();
-                      }
-                      setGatekeeperPendingAction(null);
-                    }}
-                    data-testid="closet-gatekeeper-confirm"
-                    className="bg-primary text-primary-foreground hover:opacity-90"
-                  >
-                    {t('closet.gatekeeper.confirm', { defaultValue: 'Group anyway' })}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            {/* Group tagging dialog */}
-            <AlertDialog open={tagOpen} onOpenChange={setTagOpen}>
-              <AlertDialogContent data-testid="closet-tag-dialog">
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    {t('closet.tagConfirmTitle', { defaultValue: 'Tag Selected Items' })}
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t('closet.tagConfirmBody', { defaultValue: 'Enter tags separated by commas to add them to all selected garments.' })}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <div className="py-4">
-                  <Input
-                    type="text"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    placeholder={t('closet.customTagPlaceholder', { defaultValue: 'e.g. Work, GYM, Swimwear' })}
-                    className="rounded-xl"
-                    data-testid="closet-tag-input"
+            ))}
+          </div>
+        )}
+        {empty && (
+          <div className="w-full">
+            <div
+              className="flex w-full items-center justify-center rounded-[12px] mt-[20px] bg-white px-4 py-10 sm:py-12 md:py-14"
+              data-testid="closet-empty-state"
+            >
+              <div className="flex w-full max-w-4xl flex-col items-center text-center">
+                {/* Image */}
+                <div className="mb-4 flex justify-center">
+                  <img
+                    src={closet4}
+                    alt={t("pages.closet.flat_lay_empty_state")}
+                    className="h-auto w-[220px] object-contain sm:w-[250px] md:w-[280px]"
                   />
                 </div>
-                <AlertDialogFooter>
-                  <AlertDialogCancel data-testid="closet-tag-cancel" onClick={() => setTagOpen(false)}>
-                    {t('common.cancel', { defaultValue: 'Cancel' })}
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={async (e) => {
-                      e.preventDefault();
-                      const newTags = tagInput.split(',').map(t => t.trim()).filter(Boolean);
-                      if (newTags.length === 0) {
-                        setTagOpen(false);
-                        return;
-                      }
-                      setTagging(true);
 
-                      // 1. First, add the new tags to the selected frontend Closet items
-                      const selectedIds = Array.from(selected);
-                      selectedIds.forEach((id) => {
-                        const item = (store.items || []).find((it) => it && it.id === id);
-                        if (item) {
-                          const existingTags = Array.isArray(item.tags) ? item.tags : [];
-                          const mergedTags = Array.from(new Set([...existingTags, ...newTags]));
-                          closetStore.upsert({ ...item, tags: mergedTags });
-                        }
-                      });
+                {/* Content */}
+                <div className="flex w-full flex-col items-center">
+                  {/* Heading */}
+                  <h2 className="mb-1 text-2xl font-bold tracking-tight text-black sm:text-[28px]">
+                    {t("closet.emptyTitle", {
+                      defaultValue: "Your closet is empty",
+                    })}
+                  </h2>
 
-                      // Clear selection and close/exit select mode
-                      setSelected(new Set());
-                      setSelectMode(false);
-                      setTagOpen(false);
+                  {/* Description */}
+                  <p className="mb-4 max-w-xl text-sm leading-6 text-gray-500 sm:text-[15px]">
+                    {t("closet.emptySub", {
+                      defaultValue:
+                        "Add your first clothing item and let AI help you discover amazing outfit combinations.",
+                    })}
+                  </p>
 
-                      // 2. Update the DB in the background
-                      try {
-                        const tagPromises = selectedIds.map(async (id) => {
-                          const item = (store.items || []).find((it) => it && it.id === id);
-                          if (!item) return;
-                          const existingTags = Array.isArray(item.tags) ? item.tags : [];
-                          const mergedTags = Array.from(new Set([...existingTags, ...newTags]));
-                          await api.patchItem(id, { tags: mergedTags });
-                        });
-                        await Promise.all(tagPromises);
-                        toast.success(t('closet.tagsAppliedSuccess', { defaultValue: 'Tags applied successfully' }));
-                        // Background sync to sync everything with the backend state
-                        await store.incrementalSync();
-                      } catch (err) {
-                        console.error('Failed to update tags in background:', err);
-                        toast.error(t('closet.tagsAppliedError', { defaultValue: 'Some tags failed to sync to the server' }));
-                      } finally {
-                        setTagging(false);
-                      }
-                    }}
-                    disabled={tagging}
-                    data-testid="closet-tag-confirm"
-                    className="bg-primary text-primary-foreground hover:opacity-90"
+                  {/* Features */}
+                  <div className="mb-5 flex flex-col items-center justify-center gap-3 text-sm text-gray-600 sm:flex-row sm:gap-8">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-[18px] w-[18px] text-primary-brand" />
+                      <span>
+                        {t("closet.autoCategory", {
+                          defaultValue: "Auto-categorize with AI",
+                        })}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Wand2 className="h-[18px] w-[18px] text-primary-brand" />
+                      <span>
+                        {t("closet.detectDetails", {
+                          defaultValue: "Detect colors and patterns",
+                        })}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Layers3 className="h-[18px] w-[18px] text-primary-brand" />
+                      <span>
+                        {t("closet.smartSuggestions", {
+                          defaultValue: "Smart outfit suggestions",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Add Item Button */}
+                  <Link
+                    to="/closet/add"
+                    data-testid="closet-empty-add-button"
+                    className="
+               inline-flex
+              items-center
+              justify-center
+              rounded-full
+              bg-[var(--primary-color)]
+              px-5 py-3.5
+              text-[14px]
+              font-bold
+              leading-none
+              text-white
+              no-underline
+              shadow-[var(--primary-shadow)]
+              transition-all duration-300
+              hover:-translate-y-[2px]
+              hover:bg-[var(--primary-hover)]
+              hover:text-white
+            "
                   >
-                    {tagging ? (
-                      <Loader2 className="h-4 w-4 me-1.5 animate-spin" />
-                    ) : (
-                      <Tag className="h-4 w-4 me-1.5" />
-                    )}
-                    {t('closet.tagSelected', { defaultValue: 'Tag' })}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            {/* Phase Z4 — post-"Save all" failures dialog. Reads
+                    <i className="fa-solid fa-plus mr-2"></i>
+
+                    {t("closet.addItem", {
+                      defaultValue: "Add Your First Item",
+                    })}
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+          // <div className="mt-10 text-center max-w-md mx-auto" data-testid="closet-empty-state">
+          //   <div className="mx-auto w-40 h-40 rounded-full bg-secondary/70 mb-6 overflow-hidden">
+          //     <img
+          //       src="https://images.unsplash.com/photo-1654773125909-6d73f0c12407?w=600&q=80"
+          //       alt={t('pages.closet.flat_lay_empty_state')}
+          //       className="w-full h-full object-cover"
+          //     />
+          //   </div>
+          //   <h2 className="font-display text-2xl">{t('closet.emptyTitle')}</h2>
+          //   <p className="text-sm text-muted-foreground mt-2">
+          //     {t('closet.emptySub')}
+          //   </p>
+          //   <Button asChild className="mt-5 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group" data-testid="closet-empty-add-button">
+          //     <Link to="/closet/add"><Plus className="h-4 w-4 me-2 text-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] transition-all duration-200" /> <span className="text-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] transition-all duration-200">{t('closet.addItem')}</span></Link>
+          //   </Button>
+          // </div>
+        )}
+        {!loading && items.length > 0 && (
+          <div
+            className="
+                  grid w-full
+                  grid-cols-5
+                  gap-4
+                  sm:grid-cols-3
+                  lg:grid-cols-4
+                  xl:grid-cols-5
+                "
+            data-testid="closet-grid"
+          >
+            {items.map((it) => {
+              const isSelected = selected.has(it.id);
+
+              if (selectMode) {
+                return (
+                  <button
+                    key={it.id}
+                    type="button"
+                    onClick={(e) => onCardClick(e, it)}
+                    aria-pressed={isSelected}
+                    aria-label={`${isSelected ? "Deselect" : "Select"} ${
+                      it.title || "item"
+                    }`}
+                    data-testid="closet-item-card"
+                    data-selected={isSelected}
+                    onContextMenu={(e) => e.preventDefault()}
+                    className={`
+              relative block w-full cursor-pointer
+              overflow-hidden rounded-2xl
+              border bg-white p-0 text-left
+              shadow-none
+              transition-all duration-200
+              focus:outline-none
+              focus-visible:ring-2
+              focus-visible:ring-[hsl(var(--accent))]
+              focus-visible:ring-offset-2
+
+              ${
+                isSelected
+                  ? `
+                    border-[hsl(var(--accent))]
+                    ring-2 ring-[hsl(var(--accent))]/20
+                  `
+                  : `
+                    border-gray-200
+                    hover:border-gray-300
+                  `
+              }
+            `}
+                    style={{
+                      WebkitTouchCallout: "none",
+                      touchAction: isTouchDragging ? "none" : "pan-y",
+                    }}
+                  >
+                    <ItemCardInner
+                      item={it}
+                      isSelected={isSelected}
+                      showCheckbox
+                      score={it._score}
+                    />
+                  </button>
+                );
+              }
+
+              return (
+                <Link
+                  key={it.id}
+                  to={`/closet/${it.id}`}
+                  className={`h-full
+                      relative block w-full
+                      overflow-hidden rounded-[12px]
+                      bg-white
+                      hover:shadow-xl
+                      transition-smooth
+                      hover:-translate-y-0.5
+                      hover:border-gray-300
+
+                    ${draggedId === it.id ? "scale-[0.98] opacity-50" : ""}
+
+                    ${
+                      dragOverId === it.id
+                        ? `
+                          border-[hsl(var(--accent))]
+                          ring-2 ring-[hsl(var(--accent))]/20
+                        `
+                        : ""
+                    }
+                  `}
+                  style={{
+                    WebkitTouchCallout: "none",
+                    touchAction: isTouchDragging ? "none" : "pan-y",
+                  }}
+                  data-testid="closet-item-card"
+                  data-item-id={it.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, it.id)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={(e) => handleDragOver(e, it.id)}
+                  onDragLeave={(e) => handleDragLeave(e, it.id)}
+                  onDrop={(e) => handleDrop(e, it.id)}
+                  onTouchStart={(e) => handleTouchStart(e, it.id)}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  <ItemCardInner item={it} score={it._score} />
+                </Link>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Confirm delete dialog */}
+        <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <AlertDialogContent data-testid="closet-delete-confirm-dialog">
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {t("closet.confirmDeleteTitle")}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("closet.confirmDeleteBody", { count: selected.size })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel data-testid="closet-delete-cancel">
+                {t("common.cancel", { defaultValue: "Cancel" })}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                disabled={deleting}
+                data-testid="closet-delete-confirm"
+                className="bg-[hsl(var(--destructive,0_84%_60%))] text-white hover:opacity-90"
+              >
+                {deleting ? (
+                  <Loader2 className="h-4 w-4 me-1.5 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4 me-1.5" />
+                )}
+                {t("common.delete")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        {/* Grouping confirmation dialog */}
+        <AlertDialog open={groupOpen} onOpenChange={setGroupOpen}>
+          <AlertDialogContent data-testid="closet-group-confirm-dialog">
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {t("closet.groupConfirmTitle", {
+                  defaultValue: "Group Selected Items",
+                })}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("closet.groupConfirmBody", {
+                  defaultValue:
+                    "Choose which item will be the primary (host) item. All other selected items will be grouped under it.",
+                })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <div className="py-4">
+              <label className="caps-label text-xs text-muted-foreground block mb-2">
+                {t("closet.primaryItemLabel", {
+                  defaultValue: "Primary Item",
+                })}
+              </label>
+              <Select value={groupHostId} onValueChange={setGroupHostId}>
+                <SelectTrigger className="w-full rounded-xl">
+                  <SelectValue
+                    placeholder={t("closet.selectPrimaryPlaceholder", {
+                      defaultValue: "Select primary item...",
+                    })}
+                  />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  {Array.from(selected).map((id) => {
+                    const item = (store.items || []).find(
+                      (it) => it && it.id === id,
+                    );
+                    return (
+                      <SelectItem key={id} value={id}>
+                        <div className="flex items-center gap-2">
+                          <span className="truncate">
+                            {item?.name || item?.title || id}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                data-testid="closet-group-cancel"
+                onClick={() => setGroupOpen(false)}
+              >
+                {t("common.cancel", { defaultValue: "Cancel" })}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={async (e) => {
+                  e.preventDefault();
+                  if (!groupHostId) return;
+                  const hostId = groupHostId;
+                  const memberIds = Array.from(selected).filter(
+                    (id) => id !== hostId,
+                  );
+
+                  const hostItem = (store.items || []).find(
+                    (it) => it && it.id === hostId,
+                  );
+                  const memberItems = memberIds
+                    .map((mid) =>
+                      (store.items || []).find((it) => it && it.id === mid),
+                    )
+                    .filter(Boolean);
+
+                  const normCategory = (cat) => {
+                    const s = String(cat || "")
+                      .trim()
+                      .toLowerCase()
+                      .replace(/\s+/g, "_");
+                    if (s === "top" || s === "tops") return "top";
+                    if (s === "bottom" || s === "bottoms") return "bottom";
+                    if (s === "footwear" || s === "shoes") return "footwear";
+                    if (s === "accessory" || s === "accessories")
+                      return "accessories";
+                    return s;
+                  };
+                  const allItemsInGroup = [hostItem, ...memberItems].filter(
+                    Boolean,
+                  );
+                  const categories = new Set(
+                    allItemsInGroup.map((it) => normCategory(it.category)),
+                  );
+                  const isBulkSet = categories.size > 1;
+
+                  const mismatchesSet = new Set();
+                  if (!isBulkSet) {
+                    for (const m of memberItems) {
+                      const diffs = getTaxonomyMismatches(hostItem, m);
+                      for (const d of diffs) {
+                        mismatchesSet.add(d);
+                      }
+                    }
+                  }
+                  const mismatches = Array.from(mismatchesSet);
+
+                  const runBulkGrouping = async () => {
+                    setGrouping(true);
+                    const backups = [
+                      {
+                        id: hostId,
+                        data: hostItem ? { ...hostItem } : null,
+                      },
+                      ...memberIds.map((mid) => {
+                        const it = (store.items || []).find(
+                          (x) => x && x.id === mid,
+                        );
+                        return { id: mid, data: it ? { ...it } : null };
+                      }),
+                    ];
+
+                    const groupId = hostItem?.group_id || hostId;
+                    if (hostItem) {
+                      store.upsert({
+                        ...hostItem,
+                        group_id: groupId,
+                        group_role: "host",
+                      });
+                    }
+                    memberItems.forEach((it) => {
+                      store.upsert({
+                        ...it,
+                        group_id: groupId,
+                        group_role: "member",
+                      });
+                    });
+
+                    setSelected(new Set());
+                    setSelectMode(false);
+
+                    try {
+                      const responses = await Promise.all(
+                        memberIds.map((mid) =>
+                          api.groupItems({
+                            host_id: hostId,
+                            member_id: mid,
+                          }),
+                        ),
+                      );
+                      const allSuccess = responses.every(
+                        (res) => res.status === "success",
+                      );
+                      if (allSuccess) {
+                        responses.forEach((res) => {
+                          if (res.host) store.upsert(res.host);
+                          if (res.member) store.upsert(res.member);
+                        });
+                        await store.incrementalSync();
+                        workStore.registerPolishItems([hostId, ...memberIds]);
+                        toast.success(t("common.success"));
+                      } else {
+                        backups.forEach((b) => {
+                          if (b.data) store.upsert(b.data);
+                        });
+                        toast.error(t("common.error"));
+                      }
+                    } catch (err) {
+                      console.error("Failed to group items:", err);
+                      backups.forEach((b) => {
+                        if (b.data) store.upsert(b.data);
+                      });
+                      toast.error(
+                        err?.response?.data?.detail || t("common.error"),
+                      );
+                    } finally {
+                      setGrouping(false);
+                    }
+                  };
+
+                  if (mismatches.length > 0) {
+                    setGroupOpen(false);
+                    setGatekeeperMismatches(mismatches);
+                    setGatekeeperPendingAction({
+                      onApprove: runBulkGrouping,
+                    });
+                    setGatekeeperOpen(true);
+                  } else {
+                    await runBulkGrouping();
+                  }
+                }}
+                disabled={grouping || !groupHostId}
+                data-testid="closet-group-confirm"
+                className="bg-primary text-primary-foreground hover:opacity-90"
+              >
+                {grouping ? (
+                  <Loader2 className="h-4 w-4 me-1.5 animate-spin" />
+                ) : (
+                  <ListChecks className="h-4 w-4 me-1.5" />
+                )}
+                {t("closet.confirmGroup", { defaultValue: "Group" })}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        {/* Taxonomy gatekeeper warning dialog */}
+        <AlertDialog open={gatekeeperOpen} onOpenChange={setGatekeeperOpen}>
+          <AlertDialogContent data-testid="closet-gatekeeper-dialog">
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {t("closet.gatekeeper.title", {
+                  defaultValue: "Mismatched Properties Warning",
+                })}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("closet.gatekeeper.body", {
+                  defaultValue:
+                    "The items you are grouping have mismatched properties: {{mismatches}}. Are you sure you want to group them?",
+                  mismatches: gatekeeperMismatches
+                    .map((field) => getTaxonomyFieldLabel(field))
+                    .join(", "),
+                })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                data-testid="closet-gatekeeper-cancel"
+                onClick={() => {
+                  setGatekeeperOpen(false);
+                  setGatekeeperPendingAction(null);
+                }}
+              >
+                {t("closet.gatekeeper.cancel", { defaultValue: "Cancel" })}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  setGatekeeperOpen(false);
+                  if (gatekeeperPendingAction?.onApprove) {
+                    gatekeeperPendingAction.onApprove();
+                  }
+                  setGatekeeperPendingAction(null);
+                }}
+                data-testid="closet-gatekeeper-confirm"
+                className="bg-primary text-primary-foreground hover:opacity-90"
+              >
+                {t("closet.gatekeeper.confirm", {
+                  defaultValue: "Group anyway",
+                })}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        {/* Group tagging dialog */}
+        <AlertDialog open={tagOpen} onOpenChange={setTagOpen}>
+          <AlertDialogContent data-testid="closet-tag-dialog">
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {t("closet.tagConfirmTitle", {
+                  defaultValue: "Tag Selected Items",
+                })}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("closet.tagConfirmBody", {
+                  defaultValue:
+                    "Enter tags separated by commas to add them to all selected garments.",
+                })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="py-4">
+              <Input
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                placeholder={t("closet.customTagPlaceholder", {
+                  defaultValue: "e.g. Work, GYM, Swimwear",
+                })}
+                className="rounded-xl"
+                data-testid="closet-tag-input"
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                data-testid="closet-tag-cancel"
+                onClick={() => setTagOpen(false)}
+              >
+                {t("common.cancel", { defaultValue: "Cancel" })}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={async (e) => {
+                  e.preventDefault();
+                  const newTags = tagInput
+                    .split(",")
+                    .map((t) => t.trim())
+                    .filter(Boolean);
+                  if (newTags.length === 0) {
+                    setTagOpen(false);
+                    return;
+                  }
+                  setTagging(true);
+
+                  // 1. First, add the new tags to the selected frontend Closet items
+                  const selectedIds = Array.from(selected);
+                  selectedIds.forEach((id) => {
+                    const item = (store.items || []).find(
+                      (it) => it && it.id === id,
+                    );
+                    if (item) {
+                      const existingTags = Array.isArray(item.tags)
+                        ? item.tags
+                        : [];
+                      const mergedTags = Array.from(
+                        new Set([...existingTags, ...newTags]),
+                      );
+                      closetStore.upsert({ ...item, tags: mergedTags });
+                    }
+                  });
+
+                  // Clear selection and close/exit select mode
+                  setSelected(new Set());
+                  setSelectMode(false);
+                  setTagOpen(false);
+
+                  // 2. Update the DB in the background
+                  try {
+                    const tagPromises = selectedIds.map(async (id) => {
+                      const item = (store.items || []).find(
+                        (it) => it && it.id === id,
+                      );
+                      if (!item) return;
+                      const existingTags = Array.isArray(item.tags)
+                        ? item.tags
+                        : [];
+                      const mergedTags = Array.from(
+                        new Set([...existingTags, ...newTags]),
+                      );
+                      await api.patchItem(id, { tags: mergedTags });
+                    });
+                    await Promise.all(tagPromises);
+                    toast.success(
+                      t("closet.tagsAppliedSuccess", {
+                        defaultValue: "Tags applied successfully",
+                      }),
+                    );
+                    // Background sync to sync everything with the backend state
+                    await store.incrementalSync();
+                  } catch (err) {
+                    console.error("Failed to update tags in background:", err);
+                    toast.error(
+                      t("closet.tagsAppliedError", {
+                        defaultValue: "Some tags failed to sync to the server",
+                      }),
+                    );
+                  } finally {
+                    setTagging(false);
+                  }
+                }}
+                disabled={tagging}
+                data-testid="closet-tag-confirm"
+                className="bg-primary text-primary-foreground hover:opacity-90"
+              >
+                {tagging ? (
+                  <Loader2 className="h-4 w-4 me-1.5 animate-spin" />
+                ) : (
+                  <Tag className="h-4 w-4 me-1.5" />
+                )}
+                {t("closet.tagSelected", { defaultValue: "Tag" })}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        {/* Phase Z4 — post-"Save all" failures dialog. Reads
           ``store.lastSaveFailures`` (populated by AddItem.saveAll's
           background-sync reconciler when one or more parallel
           createItem calls reject). Shows the user a single warning
           with every failed photo's thumbnail + filename so they
           know exactly what didn't make it into the cloud closet. */}
-            <SaveFailuresDialog
-              failures={store.lastSaveFailures || []}
-              onDismiss={() => closetStore.dismissSaveFailures()}
-            />
-            {/* Phase P: Outfit Completion sheet */}
-            <OutfitCompletionSheet
-              open={completionOpen}
-              onOpenChange={setCompletionOpen}
-              anchorIds={Array.from(selected)}
-              anchorsHint={completionAnchors}
-            />
-            {/* Touch drag preview overlay */}
-            {isTouchDragging && draggedId && (
-              <div
-                className="fixed pointer-events-none z-50 w-16 h-20 rounded-lg overflow-hidden border-2 border-emerald-500 shadow-lg opacity-90"
-                style={{
-                  left: touchPos.x - 32,
-                  top: touchPos.y - 40,
-                  transform: 'scale(1.15)',
-                  boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
-                }}
-              >
-                {(() => {
-                  const draggedItem = (store.items || []).find(x => x && x.id === draggedId);
-                  return draggedItem ? (
-                    <img
-                      src={bestImageUrl(draggedItem)}
-                      alt={t('addItem.preflight.noThumb')}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : null;
-                })()}
-              </div>
-            )}
+        <SaveFailuresDialog
+          failures={store.lastSaveFailures || []}
+          onDismiss={() => closetStore.dismissSaveFailures()}
+        />
+        {/* Phase P: Outfit Completion sheet */}
+        <OutfitCompletionSheet
+          open={completionOpen}
+          onOpenChange={setCompletionOpen}
+          anchorIds={Array.from(selected)}
+          anchorsHint={completionAnchors}
+        />
+        {/* Touch drag preview overlay */}
+        {isTouchDragging && draggedId && (
+          <div
+            className="fixed pointer-events-none z-50 w-16 h-20 rounded-lg overflow-hidden border-2 border-emerald-500 shadow-lg opacity-90"
+            style={{
+              left: touchPos.x - 32,
+              top: touchPos.y - 40,
+              transform: "scale(1.15)",
+              boxShadow: "0 8px 16px rgba(0,0,0,0.3)",
+            }}
+          >
+            {(() => {
+              const draggedItem = (store.items || []).find(
+                (x) => x && x.id === draggedId,
+              );
+              return draggedItem ? (
+                <img
+                  src={bestImageUrl(draggedItem)}
+                  alt={t("addItem.preflight.noThumb")}
+                  className="w-full h-full object-cover"
+                />
+              ) : null;
+            })()}
           </div>
-        </div>
+        )}
       </section>
     </>
   );
@@ -1604,25 +2167,29 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
   const groupItems = useMemo(() => {
     if (!item.group_id) return [];
     const allItems = (closetStore.getSnapshot().items || []).filter(Boolean);
-    return allItems.filter(it => it && it.group_id === item.group_id);
+    return allItems.filter((it) => it && it.group_id === item.group_id);
   }, [item.group_id]);
 
   const isSet = useMemo(() => {
     if (groupItems.length <= 1) return false;
     const normCategory = (cat) => {
-      const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');
-      if (s === 'top' || s === 'tops') return 'top';
-      if (s === 'bottom' || s === 'bottoms') return 'bottom';
-      if (s === 'footwear' || s === 'shoes') return 'footwear';
-      if (s === 'accessory' || s === 'accessories') return 'accessories';
+      const s = String(cat || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "_");
+      if (s === "top" || s === "tops") return "top";
+      if (s === "bottom" || s === "bottoms") return "bottom";
+      if (s === "footwear" || s === "shoes") return "footwear";
+      if (s === "accessory" || s === "accessories") return "accessories";
       return s;
     };
-    const categories = new Set(groupItems.filter(Boolean).map(it => normCategory(it.category)));
+    const categories = new Set(
+      groupItems.filter(Boolean).map((it) => normCategory(it.category)),
+    );
     return categories.size > 1;
   }, [groupItems]);
 
   return (
-
     // <AspectRatio ratio={3 / 4} className="bg-secondary relative">
     //   {(() => {
     //     const thumbUrl = bestImageUrl(item);
@@ -1803,11 +2370,19 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
     //   )}
     // </CardContent>
 
-    <Card className={`item-card ${isSelected ? 'item-card-selected' : ''}`}>
-      <div className="item-card-media">
+    <Card
+      className={`h-full relative overflow-hidden rounded-[12px] border border-gray-200 bg-white shadow-none transition-smooth ${
+        isSelected
+          ? "border-[hsl(var(--accent))] ring-2 ring-[hsl(var(--accent))]/20"
+          : ""
+      }`}
+    >
+      {/* IMAGE / MEDIA */}
+      <div className="relative h-[280px] w-full overflow-hidden bg-white">
         {(() => {
           const thumbUrl = bestImageUrl(item);
           const polishing = isCleanImagePending(item);
+
           if (thumbUrl) {
             return (
               <>
@@ -1816,141 +2391,214 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
                   originalSrc={thumbUrl}
                   alt={item.title}
                   objectFit="contain"
-                  className="item-card-image"
+                  className="h-full w-full object-contain select-none"
                   draggable={false}
-                  style={{ WebkitTouchCallout: 'none' }}
+                  style={{ WebkitTouchCallout: "none" }}
                   data-testid="closet-item-thumb"
                 />
+
                 {polishing && (
                   <div
-                    className="item-card-polishing-wrap"
+                    className="absolute left-3 top-3 z-20"
                     data-testid="closet-item-polishing"
                   >
                     <Badge
                       variant="outline"
-                      className="item-card-polishing-badge"
+                      className="rounded-full border-gray-300 bg-white/90 px-2.5 py-1 text-[11px] font-medium text-gray-700 shadow-none backdrop-blur-sm"
                     >
-                      {t('item.polishingPhoto', { defaultValue: 'Polishing photo…' })}
+                      {t("item.polishingPhoto", {
+                        defaultValue: "Polishing photo…",
+                      })}
                     </Badge>
                   </div>
                 )}
               </>
             );
           }
+
           if (item.dpp_data) {
             return (
               <div
-                className="item-card-dpp-placeholder"
+                className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gray-50"
                 data-testid="closet-item-dpp-placeholder"
               >
-                <QrCode className="item-card-dpp-icon" />
-                <span className="caps-label item-card-dpp-label">{t('closet.dpp', { defaultValue: 'DPP' })}</span>
+                <QrCode className="h-10 w-10 text-gray-400" />
+
+                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-500">
+                  {t("closet.dpp", {
+                    defaultValue: "DPP",
+                  })}
+                </span>
               </div>
             );
           }
+
           return (
-            <div className="item-card-no-image caps-label">
-              {t('market.noImage')}
+            <div className="flex h-full w-full items-center justify-center bg-gray-50 text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-400">
+              {t("market.noImage")}
             </div>
           );
         })()}
-        {typeof score === 'number' && (
-          <span className="badge custm-badge" data-testid="closet-item-score">
+
+        {/* SCORE */}
+        {typeof score === "number" && (
+          <span
+            className="absolute right-3 top-3 z-20 inline-flex items-center gap-1 rounded-full bg-[hsl(var(--accent))] px-2.5 py-1 text-[11px] font-semibold text-white"
+            data-testid="closet-item-score"
+          >
             <Sparkles size={12} />
             {Math.round(score * 100)}%
           </span>
         )}
+
+        {/* CHECKBOX */}
         {showCheckbox && (
           <div
-            className={`item-card-check ${isSelected ? 'item-card-check-selected' : ''}`}
+            className={`absolute left-3 top-3 z-20 flex h-6 w-6 items-center justify-center rounded-full ${
+              isSelected ? "text-[hsl(var(--accent))]" : "text-gray-300"
+            }`}
             aria-hidden="true"
-            data-testid={isSelected ? 'closet-item-selected-mark' : 'closet-item-unselected-mark'}
+            data-testid={
+              isSelected
+                ? "closet-item-selected-mark"
+                : "closet-item-unselected-mark"
+            }
           >
             {isSelected ? (
-              <CheckCircle2 className="item-card-check-icon" />
+              <CheckCircle2 className="h-6 w-6" />
             ) : (
-              <Circle className="item-card-check-icon item-card-check-icon-hidden" />
+              <Circle className="h-6 w-6 opacity-70" />
             )}
           </div>
         )}
 
+        {/* SELECTED OVERLAY */}
         {showCheckbox && isSelected && (
-          <div className="item-card-select-overlay" />
+          <div className="pointer-events-none absolute inset-0 z-10 bg-[hsl(var(--accent))]/5" />
         )}
 
+        {/* DUPLICATE */}
         {item.is_duplicate && (
           <div
-            className={`item-card-duplicate-star ${typeof score === 'number' ? 'item-card-duplicate-star-lower' : ''}`}
-            title={t('closet.duplicateBadge', {
+            className={`absolute right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white bg-white/90 text-gray-700 shadow-none backdrop-blur-sm ${
+              typeof score === "number" ? "top-12" : "top-3"
+            }`}
+            title={t("closet.duplicateBadge", {
               defaultValue:
-                'Marked as a duplicate — kept on purpose, hidden from outfit suggestions.',
+                "Marked as a duplicate — kept on purpose, hidden from outfit suggestions.",
             })}
             data-testid="closet-item-duplicate-star"
           >
-            <Star className="item-card-duplicate-icon" />
+            <Star className="h-4 w-4" />
           </div>
         )}
 
+        {/* PENDING SYNC */}
         {item._pendingSync && (
           <div
-            className="item-card-pending-sync"
+            className="absolute bottom-3 left-3 z-20 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-700 backdrop-blur-sm"
             data-testid="closet-item-pending-sync"
             aria-live="polite"
-            aria-label={t('closet.pendingSync', { defaultValue: 'Syncing…' })}
+            aria-label={t("closet.pendingSync", {
+              defaultValue: "Syncing…",
+            })}
           >
-            <span className="item-card-pending-sync-dot-wrap">
-              <span className="item-card-pending-sync-ping" />
-              <Sparkles className="item-card-pending-sync-icon" />
+            <span className="relative flex h-4 w-4 items-center justify-center">
+              <span className="absolute h-4 w-4 animate-ping rounded-full bg-[hsl(var(--accent))]/30" />
+
+              <Sparkles className="relative z-10 h-3.5 w-3.5 text-[hsl(var(--accent))]" />
             </span>
-            <span className="item-card-pending-sync-label">
-              {t('closet.pendingSync', { defaultValue: 'Syncing' })}
+
+            <span>
+              {t("closet.pendingSync", {
+                defaultValue: "Syncing",
+              })}
             </span>
           </div>
         )}
       </div>
 
-      <CardContent className="item-card-content">
-        <div className="item-card-header-row">
-          <div className="item-card-title">{item.title}</div>
-          <div className="item-card-header-badges">
+      {/* CONTENT */}
+      <CardContent className="p-4">
+        {/* TITLE + BADGES */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1 text-sm font-semibold leading-5 text-[#14161B]">
+            {item.title}
+          </div>
+
+          <div className="flex shrink-0 items-center gap-1.5">
             {isSet && (
-              <Badge variant="secondary" className="item-card-outfit-badge">
-                {t('closet.outfitSet', { defaultValue: 'Outfit set' })}
+              <Badge
+                variant="secondary"
+                className="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-gray-600 shadow-none"
+              >
+                {t("closet.outfitSet", {
+                  defaultValue: "Outfit set",
+                })}
               </Badge>
             )}
-            <SourceTagBadge source={item.source} intent={item.marketplace_intent} className="item-card-source-badge" />
+
+            <SourceTagBadge
+              source={item.source}
+              intent={item.marketplace_intent}
+              className="rounded-full"
+            />
           </div>
         </div>
-        <div className="item-card-sub-row">
-          <span className="item-card-sub-text">
-            {isSet ? (
-              (() => {
-                const sorted = [...groupItems].sort((a, b) => (a.group_role === 'host' ? -1 : 1));
-                const categoryNames = sorted.map(it => labelForCategory(it.category, t));
-                return categoryNames.join(' · ');
-              })()
-            ) : (
-              [labelForCategory(item.category, t), labelForColor(item.color, t)].filter(Boolean).join(' · ')
-            )}
+
+        {/* CATEGORY / COLOR + WEAR COUNT */}
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span className="min-w-0 truncate text-xs text-gray-500">
+            {isSet
+              ? (() => {
+                  const sorted = [...groupItems].sort((a, b) =>
+                    a.group_role === "host" ? -1 : 1,
+                  );
+
+                  const categoryNames = sorted.map((it) =>
+                    labelForCategory(it.category, t),
+                  );
+
+                  return categoryNames.join(" · ");
+                })()
+              : [
+                  labelForCategory(item.category, t),
+                  labelForColor(item.color, t),
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
           </span>
-          {typeof item.wear_count === 'number' && (
+
+          {typeof item.wear_count === "number" && (
             <span
-              className="item-card-wear-badge"
-              title={t('item.timesWorn', { count: item.wear_count, defaultValue: `Worn ${item.wear_count} times` })}
+              className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600"
+              title={t("item.timesWorn", {
+                count: item.wear_count,
+                defaultValue: `Worn ${item.wear_count} times`,
+              })}
             >
-              {t('item.wearsCount', { count: item.wear_count, defaultValue: `${item.wear_count} wear${item.wear_count === 1 ? '' : 's'}` })}
+              {t("item.wearsCount", {
+                count: item.wear_count,
+                defaultValue: `${item.wear_count} wear${
+                  item.wear_count === 1 ? "" : "s"
+                }`,
+              })}
             </span>
           )}
         </div>
 
+        {/* COMPLETE LISTING */}
         {item.auto_listing_needs_completion && item.auto_listing_id && (
           <Link
             to={`/marketplace/listing/${item.auto_listing_id}/edit`}
             data-testid="closet-item-complete-listing-cta"
-            className="item-card-complete-cta"
+            className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[hsl(var(--accent))] transition-colors hover:opacity-80"
           >
-            <Sparkles className="item-card-complete-cta-icon" />
-            {t('closet.completeListingCta', { defaultValue: 'Complete listing' })}
+            <Sparkles className="h-3.5 w-3.5" />
+
+            {t("closet.completeListingCta", {
+              defaultValue: "Complete listing",
+            })}
           </Link>
         )}
       </CardContent>
@@ -1977,7 +2625,9 @@ function SaveFailuresDialog({ failures, onDismiss }) {
   return (
     <AlertDialog
       open={open}
-      onOpenChange={(o) => { if (!o) onDismiss(); }}
+      onOpenChange={(o) => {
+        if (!o) onDismiss();
+      }}
     >
       <AlertDialogContent
         className="max-w-md"
@@ -1986,7 +2636,7 @@ function SaveFailuresDialog({ failures, onDismiss }) {
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-amber-500" aria-hidden />
-            {t('closet.saveFailuresTitle', {
+            {t("closet.saveFailuresTitle", {
               count: failures.length,
               defaultValue:
                 failures.length === 1
@@ -1995,9 +2645,9 @@ function SaveFailuresDialog({ failures, onDismiss }) {
             })}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            {t('closet.saveFailuresBody', {
+            {t("closet.saveFailuresBody", {
               defaultValue:
-                'These items couldn\u2019t be saved to your closet. Please try uploading them again.',
+                "These items couldn\u2019t be saved to your closet. Please try uploading them again.",
             })}
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -2025,11 +2675,11 @@ function SaveFailuresDialog({ failures, onDismiss }) {
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <div
-                  className="truncate text-sm font-medium"
-                  title={f.title}
-                >
-                  {f.title || t('closet.saveFailuresUnnamed', { defaultValue: 'Untitled item' })}
+                <div className="truncate text-sm font-medium" title={f.title}>
+                  {f.title ||
+                    t("closet.saveFailuresUnnamed", {
+                      defaultValue: "Untitled item",
+                    })}
                 </div>
                 {f.filename && (
                   <div
@@ -2057,11 +2707,10 @@ function SaveFailuresDialog({ failures, onDismiss }) {
             onClick={onDismiss}
             data-testid="closet-save-failures-dismiss"
           >
-            {t('common.gotIt', { defaultValue: 'Got it' })}
+            {t("common.gotIt", { defaultValue: "Got it" })}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 }
-

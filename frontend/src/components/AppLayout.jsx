@@ -34,7 +34,6 @@ import OnboardingMigrationModal from '@/components/OnboardingMigrationModal';
 import LoginClosetReminderModal from '@/components/LoginClosetReminderModal';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { useState } from 'react';
-
 export const AppLayout = () => {
   const { t } = useTranslation();
   const { user, loading, refresh } = useAuth();

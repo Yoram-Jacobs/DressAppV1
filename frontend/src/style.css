@@ -1,19 +1,12 @@
 /* ===================================surbhi-css-file(28-07-26)=================================== */
 :root {
-  --primary-color: #1f5c45;
-  --primary-hover: #174533;
-  --dark-color: #000;
-  --text-color: #666;
-  --light-bg: #f7f7f2;
-  --white: #ffffff;
-  --accent-beige: #f5eee9;
   --glass-bg: rgba(255, 255, 255, 0.85);
   --glass-border: rgba(255, 255, 255, 0.5);
   --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   --shadow-subtle: 0 4px 30px rgba(0, 0, 0, 0.03);
   --shadow-medium: 0 10px 40px rgba(0, 0, 0, 0.08);
   --shadow-luxury: 0 20px 50px rgba(0, 0, 0, 0.12);
-  --header-height: 78px;
+  --header-height: 85px;
   --primary-shadow: #1f5c450f;
 }
 
@@ -634,11 +627,8 @@ a {
 }
 
 .tracking-wider {
-  color: var(--primary-color);
-  font-size: 12px;
+  color: var(--white);
   font-weight: 900;
-  line-height: 24px;
-  margin-bottom: 5px;
 }
 
 .wardmain {
@@ -1164,18 +1154,7 @@ footer ul li {
   margin-bottom: 12px;
 }
 
-footer ul li a {
-  color: #999;
-  text-decoration: none;
-  transition: var(--transition-smooth);
-  font-size: 14px;
-  font-weight: 600;
-}
 
-footer ul li a:hover {
-  color: var(--primary-color);
-  padding-left: 5px;
-}
 
 .footer-bottom {
   border-top: 1px solid rgba(255, 255, 255, 0.08);

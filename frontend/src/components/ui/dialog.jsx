@@ -2,18 +2,28 @@ import { useTranslation } from 'react-i18next';
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
+
 import { cn } from "@/lib/utils"
+
 const Dialog = DialogPrimitive.Root
+
 const DialogTrigger = DialogPrimitive.Trigger
+
 const DialogPortal = DialogPrimitive.Portal
+
 const DialogClose = DialogPrimitive.Close
+
 const DialogOverlay = React.forwardRef(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
-    className={`dialog-overlay ${className}`}
+    className={cn(
+      "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      className
+    )}
     {...props} />
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
+
 const DialogContent = React.forwardRef(({ className, children, ...props }, ref) => {
   const { t } = useTranslation();
   return (
@@ -21,15 +31,16 @@ const DialogContent = React.forwardRef(({ className, children, ...props }, ref) 
       <DialogOverlay />
       <DialogPrimitive.Content
         ref={ref}
-       className={`dialog-content ${className}`}
+        className={cn(
+          "fixed left-[50%] top-[50%] z-50 grid rounded-[12px] w-full max-w-[calc(100vw-2rem)] sm:max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
+          className
+        )}
         {...props}>
         {children}
         <DialogPrimitive.Close
-          className="dialog-close-btn"  aria-label={t("common.close", {
-              defaultValue: "Close",
-            })}>
-          <X  size={18}/>
-          <span className="visually-hidden">{t('common.close', { defaultValue: 'Close' })}</span>
+          className="absolute end-2 top-2 bg-primary-shadow rounded-full flex items-center justify-center w-10 h-10 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+          <X className="h-6 w-6 text-primary-brand" />
+          <span className="sr-only">{t('common.close', { defaultValue: 'Close' })}</span>
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPortal>
@@ -42,7 +53,7 @@ const DialogHeader = ({
   ...props
 }) => (
   <div
-      className={`dialog-header ${className}`}
+    className={cn("flex flex-col space-y-1.5 text-center sm:text-start", className)}
     {...props} />
 )
 DialogHeader.displayName = "DialogHeader"
@@ -52,7 +63,7 @@ const DialogFooter = ({
   ...props
 }) => (
   <div
-    className={`dialog-footer ${className}`}
+    className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)}
     {...props} />
 )
 DialogFooter.displayName = "DialogFooter"
@@ -60,7 +71,7 @@ DialogFooter.displayName = "DialogFooter"
 const DialogTitle = React.forwardRef(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={`dialog-title ${className}`}
+    className={cn("text-[18px] font-bold text-dark-brand leading-none tracking-tight", className)}
     {...props} />
 ))
 DialogTitle.displayName = DialogPrimitive.Title.displayName
@@ -68,7 +79,7 @@ DialogTitle.displayName = DialogPrimitive.Title.displayName
 const DialogDescription = React.forwardRef(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={`dialog-description ${className}`}
+    className={cn("text-[14px] font-semibold text-text-brand", className)}
     {...props} />
 ))
 DialogDescription.displayName = DialogPrimitive.Description.displayName

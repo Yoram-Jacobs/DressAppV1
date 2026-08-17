@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
+import { useEffect, useMemo, useState, useRef } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import {
   Sparkles,
   CloudSun,
@@ -17,18 +17,18 @@ import {
   Recycle,
   Newspaper,
   Plus,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/lib/auth';
-import { useClosetStore } from '@/lib/useClosetStore';
-import { useLocation as useAppLocation } from '@/lib/location';
-import { api } from '@/lib/api';
-import { AdTicker } from '@/components/AdTicker';
-import { LanguagePicker } from '@/components/LanguagePicker';
-import { toast } from 'sonner';
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/auth";
+import { useClosetStore } from "@/lib/useClosetStore";
+import { useLocation as useAppLocation } from "@/lib/location";
+import { api } from "@/lib/api";
+import { AdTicker } from "@/components/AdTicker";
+import { LanguagePicker } from "@/components/LanguagePicker";
+import { toast } from "sonner";
 import cloudyImg from "../assets/img/cloudy.png";
 import Calender from "../assets/img/calendar.png";
 import Capture from "../assets/img/capture.png";
@@ -65,12 +65,12 @@ import WOW from "wowjs";
 // renderer below can read ONE consistent set of fields. The actual strings
 // live in ``home.fallbackTrends.fbN`` in every locale JSON — see
 // ``buildFallbackTrends(t)`` in the component below.
-const FALLBACK_TREND_KEYS = ['fb1', 'fb2', 'fb3'];
+const FALLBACK_TREND_KEYS = ["fb1", "fb2", "fb3"];
 
 const FALLBACK_TREND_BUCKETS = {
-  fb1: 'ss26-runway',
-  fb2: 'street',
-  fb3: 'sustainability',
+  fb1: "ss26-runway",
+  fb2: "street",
+  fb3: "sustainability",
 };
 
 // Per-bucket visual treatment for Trend-Scout cards.
@@ -84,32 +84,28 @@ const FALLBACK_TREND_BUCKETS = {
 // the article is about. The source link below the body lets readers
 // jump to the actual article when one is provided.
 const BUCKET_VISUALS = {
-  'ss26-runway': { Icon: Crown, tone: 'bg-secondary/60' },
-  street: { Icon: Footprints, tone: 'bg-secondary/60' },
-  sustainability: { Icon: Leaf, tone: 'bg-secondary/60' },
-  influencers: { Icon: Users, tone: 'bg-secondary/60' },
-  second_hand: { Icon: Recycle, tone: 'bg-secondary/60' },
-  recycling: { Icon: Recycle, tone: 'bg-secondary/60' },
-  news_flash: { Icon: Newspaper, tone: 'bg-secondary/60' },
+  "ss26-runway": { Icon: Crown, tone: "bg-secondary/60" },
+  street: { Icon: Footprints, tone: "bg-secondary/60" },
+  sustainability: { Icon: Leaf, tone: "bg-secondary/60" },
+  influencers: { Icon: Users, tone: "bg-secondary/60" },
+  second_hand: { Icon: Recycle, tone: "bg-secondary/60" },
+  recycling: { Icon: Recycle, tone: "bg-secondary/60" },
+  news_flash: { Icon: Newspaper, tone: "bg-secondary/60" },
 };
-const DEFAULT_BUCKET_VISUAL = { Icon: Sparkles, tone: 'bg-secondary/60' };
+const DEFAULT_BUCKET_VISUAL = { Icon: Sparkles, tone: "bg-secondary/60" };
 
 export default function Home() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const closet = useClosetStore();
   const loc = useAppLocation();
-  const isAdmin = (user?.roles || []).includes('admin');
+  const isAdmin = (user?.roles || []).includes("admin");
   const [counts, setCounts] = useState(null);
   const [trends, setTrends] = useState(null); // null = loading, [] = empty, [...]
   const [trendDate, setTrendDate] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
-  const slides = [
-    slide1,
-    slide2,
-    slide3,
-  ];
+  const slides = [slide1, slide2, slide3];
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % slides.length);
@@ -128,13 +124,13 @@ export default function Home() {
         id: `fb-${idx + 1}`,
         bucket: FALLBACK_TREND_BUCKETS[key],
         label: t(`home.fallbackTrends.${key}.label`, {
-          defaultValue: '',
+          defaultValue: "",
         }),
         headline: t(`home.fallbackTrends.${key}.headline`, {
-          defaultValue: '',
+          defaultValue: "",
         }),
         summary: t(`home.fallbackTrends.${key}.summary`, {
-          defaultValue: '',
+          defaultValue: "",
         }),
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -146,11 +142,11 @@ export default function Home() {
   // surfaces hit the same cache key. The endpoint also picks up the
   // logged-in user automatically (auth header) and re-ranks the
   // candidate pool by the viewer's gender/profession/occupation.
-  const language = (user?.preferred_language || i18n.language || 'en')
-    .split('-')[0]
+  const language = (user?.preferred_language || i18n.language || "en")
+    .split("-")[0]
     .toLowerCase();
   const country =
-    (loc?.country_code || user?.home_location?.country_code || '')
+    (loc?.country_code || user?.home_location?.country_code || "")
       .toString()
       .toUpperCase() || null;
 
@@ -188,11 +184,15 @@ export default function Home() {
     try {
       await api.trendsRefreshAdmin(true, country);
       await fetchTrends();
-      toast.success(t('home.trendsRefreshed', { defaultValue: 'Trends refreshed' }));
+      toast.success(
+        t("home.trendsRefreshed", { defaultValue: "Trends refreshed" }),
+      );
     } catch (err) {
       toast.error(
-        err?.response?.data?.detail
-        || t('home.trendsRefreshFailed', { defaultValue: 'Could not refresh trends' }),
+        err?.response?.data?.detail ||
+          t("home.trendsRefreshFailed", {
+            defaultValue: "Could not refresh trends",
+          }),
       );
       // Recover the stale view so the section isn't stuck on skeletons.
       await fetchTrends();
@@ -207,12 +207,14 @@ export default function Home() {
         // populated by AppLayout's prewarm) — no extra round-trip.
         // Marketplace count is still server-side because we don't
         // store all listings client-side.
-        const market = await api.listListings({ limit: 1, status: 'active' });
+        const market = await api.listListings({ limit: 1, status: "active" });
         setCounts({
           closet: closet.total || (closet.items?.length ?? 0),
           market: market.total || 0,
         });
-      } catch { setCounts({ closet: closet.total || 0, market: 0 }); }
+      } catch {
+        setCounts({ closet: closet.total || 0, market: 0 });
+      }
     })();
     fetchTrends();
     // We intentionally only run this once per mount; closet.total
@@ -244,7 +246,8 @@ export default function Home() {
 
       slidesPerView: 1.15,
       spaceBetween: 15,
-      loop: true,
+
+      loop: false,
       speed: 800,
 
       autoplay: {
@@ -261,12 +264,17 @@ export default function Home() {
       breakpoints: {
         576: {
           slidesPerView: 2,
+          spaceBetween: 15,
         },
+
         992: {
           slidesPerView: 3,
+          spaceBetween: 15,
         },
+
         1200: {
           slidesPerView: 4,
+          spaceBetween: 15,
         },
       },
     });
@@ -376,7 +384,7 @@ export default function Home() {
       image: closet1,
     },
   ];
-  const firstName = (user?.display_name || user?.email || '').split(/\s|@/)[0];
+  const firstName = (user?.display_name || user?.email || "").split(/\s|@/)[0];
   // --- WOW.js Scroll Animations
   useEffect(() => {
     const wow = new WOW.WOW({
@@ -392,81 +400,469 @@ export default function Home() {
   return (
     <>
       {/* banner-start */}
-      <section className="hero-section" id="home">
-        <div className="container-fluid p-0">
-          <div className="row g-0 align-items-center">
-            <div className="col-md-5">
-              <div className="hero-content-col">
-                <div className="">
-                  <span className="hero-eyebrow wow fadeInDown" data-wow-duration="0.9s"><i
-                    className="bi bi-stars"></i> AI wardrobe assistant for everyday
-                    styling</span>
-                  <h1 className="hero-title wow fadeInLeft" data-wow-delay="0.15s" data-testid="home-greeting">
-                    {t('home.greeting')} <span>{firstName || t('home.greetingFallback')}</span>
-                  </h1>
-                  <p className="hero-description wow fadeInLeft" data-wow-delay="0.3s">
-                    {t('home.stylistWarmed')}
-                  </p>
-                  <div className="hero-actions wow fadeInUp" data-wow-delay="0.45s">
-                    <Button asChild className="custm-btn" data-testid="home-ask-stylist-cta">
-                      <Link to="/stylist"><i className="bi bi-stars me-2"></i>{t('home.askStylist')}</Link>
-                    </Button>
-                    <Button asChild variant="secondary" className="btn-premium-secondary" data-testid="home-closet-cta">
-                      <Link to="/closet">{t('home.openCloset')}<i className="fa-solid fa-arrow-right ms-2"></i></Link>
-                    </Button>
+      <section
+        id="home"
+        className="relative  mt-[var(--header-height)] overflow-hidden bg-accent-beige"
+      >
+        <div className="grid w-full grid-cols-1 lg:grid-cols-12">
+          {/* ================= LEFT CONTENT ================= */}
+          <div
+            className="
+                          flex
+                          min-h-[calc(100vh-var(--header-height))]
+                          items-center
+                          px-5
+                          py-12
+                          sm:px-8
+                          sm:py-16
+                          lg:col-span-5
+                          lg:min-h-[calc(100vh-var(--header-height))]
+                          lg:px-10
+                          xl:px-14"
+          >
+            <motion.div
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 1 }}
+              className="w-full"
+            >
+              {/* Eyebrow */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.65,
+                  delay: 0,
+                  ease: "easeOut",
+                }}
+                className="
+      mb-5
+      inline-flex
+      items-center
+      gap-2
+      font-sans
+      text-[11px]
+      font-bold
+      uppercase
+      tracking-[1.5px]
+      text-[var(--primary-color)]
+      sm:text-xs
+    "
+              >
+                <Sparkles className="h-4 w-4 shrink-0" />
+
+                <span>
+                  {t("home.aiWardrobeAssistant", {
+                    defaultValue: "AI wardrobe assistant for everyday styling",
+                  })}
+                </span>
+              </motion.div>
+
+              {/* Heading */}
+              <motion.h1
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{
+                  duration: 0.7,
+                  delay: 0.08,
+                  ease: "easeOut",
+                }}
+                className="
+      mb-5
+      font-sans
+      text-[42px]
+      leading-[1.05]
+      tracking-[0.8px]
+      text-black
+      sm:text-5xl
+      md:text-6xl
+      lg:text-[60px]
+      xl:text-[80px]
+      xl:leading-[90px]
+      font-extrabold
+    "
+                data-testid="home-greeting"
+              >
+                {t("home.greeting")}{" "}
+                <span className="text-[var(--primary-color)]">
+                  {firstName || t("home.greetingFallback")}
+                </span>
+              </motion.h1>
+
+              {/* Description */}
+              <motion.p
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{
+                  duration: 0.65,
+                  delay: 0.16,
+                  ease: "easeOut",
+                }}
+                className="
+      mb-7
+      max-w-[570px]
+      font-sans
+      text-[15px]
+      leading-7
+      tracking-[0.2px]
+      text-[#666]
+      sm:text-base
+    "
+              >
+                {t("home.stylistWarmed")}
+              </motion.p>
+
+              {/* CTA */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.65,
+                  delay: 0.24,
+                  ease: "easeOut",
+                }}
+                className="
+      flex
+      flex-col
+      gap-3
+      sm:flex-row
+      sm:items-center
+      sm:gap-4
+    "
+              >
+                <Button
+                  asChild
+                  data-testid="home-ask-stylist-cta"
+                  className="
+        h-auto
+        rounded-full
+        border-0
+        bg-[var(--primary-color)]
+        px-7
+        py-3.5
+        font-sans
+        text-sm
+        font-medium
+        text-white
+        shadow-none
+        transition-all
+        duration-300
+        hover:-translate-y-0.5
+        hover:bg-[var(--primary-hover)]
+        hover:text-white
+        hover:shadow-[0_10px_30px_rgba(31,92,69,0.22)]
+      "
+                >
+                  <Link
+                    to="/stylist"
+                    className="inline-flex items-center justify-center gap-2"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    {t("home.askStylist")}
+                  </Link>
+                </Button>
+
+                <Button
+                  asChild
+                  variant="secondary"
+                  data-testid="home-closet-cta"
+                  className="
+        h-auto
+        rounded-full
+        border
+        border-black/10
+        bg-white
+        px-7
+        py-3.5
+        font-sans
+        text-sm
+        font-semibold
+        text-[var(--dark-color)]
+        shadow-none
+        transition-all
+        duration-300
+        hover:-translate-y-0.5
+        hover:bg-white
+        hover:text-[var(--primary-color)]
+        hover:shadow-[var(--shadow-medium)]
+      "
+                >
+                  <Link
+                    to="/closet"
+                    className="inline-flex items-center justify-center gap-2"
+                  >
+                    {t("home.openCloset")}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </motion.div>
+            </motion.div>
+          </div>
+
+          {/* ================= RIGHT IMAGE ================= */}
+          <div
+            className="
+        relative
+        min-h-[560px]
+        lg:col-span-7
+        lg:min-h-[calc(100vh-var(--header-height))]
+      "
+          >
+            {/* ================= IMAGE SLIDER ================= */}
+            <div className="relative h-full min-h-[560px] overflow-hidden lg:min-h-[calc(100vh-var(--header-height))]">
+              {slides.map((image, index) => (
+                <div
+                  key={image}
+                  className={`
+              absolute
+              inset-0
+              transition-all
+              duration-[1200ms]
+              ease-out
+              ${
+                activeSlide === index
+                  ? "scale-100 opacity-100"
+                  : "scale-[1.04] opacity-0"
+              }
+            `}
+                >
+                  <img
+                    src={image}
+                    alt={t("home.fashionSlideAlt", {
+                      number: index + 1,
+                      defaultValue: `Fashion slide ${index + 1}`,
+                    })}
+                    className="
+                h-full
+                w-full
+                object-cover
+                object-center
+              "
+                  />
+                </div>
+              ))}
+
+              {/* Image overlay */}
+              <div
+                className="
+            pointer-events-none
+            absolute
+            inset-0
+            bg-[linear-gradient(180deg,rgba(0,0,0,0.10)_0%,rgba(0,0,0,0)_40%,rgba(0,0,0,0.50)_100%),linear-gradient(90deg,rgba(0,0,0,0.18),transparent_50%)]
+          "
+              />
+
+              {/* ================= WEATHER CARD ================= */}
+              <div
+                className="
+            absolute
+            left-3
+            top-3
+            z-10
+            flex
+            max-w-[calc(100%-24px)]
+            items-center
+            gap-3
+            rounded-sm
+            border
+            border-white/15
+            bg-black/20
+            p-3
+            text-white
+            shadow-lg
+            backdrop-blur-xl
+            sm:left-5
+            sm:top-5
+            sm:p-4
+          "
+              >
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
+                  <img
+                    src={cloudyImg}
+                    alt={t("home.weatherIconAlt", {
+                      defaultValue: "Weather",
+                    })}
+                    className="h-9 w-auto object-contain"
+                  />
+                </div>
+
+                <div className="min-w-0">
+                  <div className="mb-0.5 font-sans text-[10px] font-bold uppercase tracking-[0.12em] text-white/65 sm:text-[11px]">
+                    {t("home.tomorrow", {
+                      defaultValue: "Tomorrow",
+                    })}
+                  </div>
+
+                  <div className="font-sans text-[11px] font-semibold text-white/90 sm:text-xs">
+                    {t("home.weatherSummary", {
+                      defaultValue: "18°C · Light Rain",
+                    })}
+                  </div>
+
+                  <div className="font-sans text-[10px] text-white/65 sm:text-[11px]">
+                    {t("home.aiReadyOutfit", {
+                      defaultValue: "AI Ready Outfit",
+                    })}
                   </div>
                 </div>
               </div>
-            </div>
-            <div className="col-lg-7 hero-media-col">
-              <div className="hero-lifestyle-container">
-                {/* weather image */}
-                <div className="floating-widget hero-weather-card wow fadeInRight" data-wow-delay="0.3s">
-                  <div className="hero-widget-icon">
-                    <img src={cloudyImg} alt="Cloudy" />
-                  </div>
-                  <div>
-                    <div className="hero-widget-kicker">Tomorrow</div>
-                    <div className="hero-widget-title">18 deg C - Light Rain</div>
-                    <div className="hero-widget-copy">AI Ready Outfit</div>
-                  </div>
+
+              {/* ================= AI LOOK LABEL ================= */}
+              <div
+                className="
+            absolute
+            right-3
+            top-3
+            z-10
+            rounded-full
+            border
+            border-white/20
+            bg-white/90
+            px-3
+            py-1.5
+            font-sans
+            text-[9px]
+            font-bold
+            uppercase
+            tracking-[0.1em]
+            text-[var(--primary-color)]
+            shadow-sm
+            sm:right-5
+            sm:top-5
+            sm:px-3.5
+            sm:py-2
+            sm:text-[10px]
+          "
+              >
+                {t("home.aiStyledLook", {
+                  defaultValue: "AI Styled Look",
+                })}
+              </div>
+
+              {/* ================= SLIDER DOTS ================= */}
+              <div
+                className="
+            absolute
+            bottom-[105px]
+            left-1/2
+            z-10
+            flex
+            -translate-x-1/2
+            items-center
+            gap-1.5
+            sm:bottom-[105px]
+            sm:right-7
+            sm:left-auto
+            sm:translate-x-0
+          "
+                aria-label={t("home.fashionBannerSlider", {
+                  defaultValue: "Fashion banner slider",
+                })}
+              >
+                {slides.map((_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    aria-label={t("home.showSlide", {
+                      number: index + 1,
+                      defaultValue: `Show slide ${index + 1}`,
+                    })}
+                    aria-current={activeSlide === index}
+                    onClick={() => setActiveSlide(index)}
+                    className={`
+                h-1.5
+                rounded-full
+                border-0
+                p-0
+                transition-all
+                duration-300
+                ${activeSlide === index ? "w-7 bg-white" : "w-1.5 bg-white/50"}
+              `}
+                  />
+                ))}
+              </div>
+
+              {/* ================= EDITORIAL META ================= */}
+              <div
+                className="
+            absolute
+            bottom-5
+            right-4
+            z-10
+            max-w-[190px]
+            text-right
+            text-white
+            sm:right-5
+          "
+              >
+                <span className="mb-1 block font-sans text-[9px] font-semibold uppercase tracking-[0.08em] text-white/65 sm:text-[10px]">
+                  {t("home.fashionEditorPreview", {
+                    defaultValue: "Fashion Editor Preview",
+                  })}
+                </span>
+
+                <strong className="block font-sans text-xs font-semibold leading-5 text-white sm:text-sm">
+                  {t("home.capsuleLooks", {
+                    defaultValue: "Capsule looks curated for your day",
+                  })}
+                </strong>
+              </div>
+
+              {/* ================= TODAY'S OUTFIT ================= */}
+              <div
+                className="
+            absolute
+            bottom-3
+            left-3
+            z-10
+            max-w-[calc(100%-24px)]
+            rounded-sm
+            border
+            border-white/15
+            bg-black/20
+            p-3
+            text-white
+            shadow-lg
+            backdrop-blur-xl
+            sm:bottom-5
+            sm:left-5
+            sm:p-4
+          "
+              >
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <span className="font-sans text-[10px] font-semibold text-white/75 sm:text-[11px]">
+                    {t("home.todaySuggestion", {
+                      defaultValue: "Today's Suggestion",
+                    })}
+                  </span>
+
+                  <span className="rounded-full bg-white/20 px-2 py-1 font-sans text-[9px] font-bold text-white">
+                    98% Match
+                  </span>
                 </div>
-                <div className="floating-widget widget-outfit wow fadeInLeft" data-wow-delay="0.5s">
-                  <div className="hero-outfit-header">
-                    <span>Today's Suggestion</span>
-                    <span className="badge bg-success-subtle text-success">98%
-                      Match</span>
+
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl sm:h-11 sm:w-11">
+                    <img
+                      src={Calender}
+                      alt={t("home.outfitPreviewAlt", {
+                        defaultValue: "Today's outfit",
+                      })}
+                      className="h-8 w-auto object-contain sm:h-9"
+                    />
                   </div>
-                  <div className="hero-outfit-body">
-                    <div className="hero-outfit-icon">
-                      <img src={Calender} alt="Cloudy" />
-                    </div>
-                    <div>
-                      <h6>Nordic Autumn Layer</h6>
-                      <p>Navy Blazer + Knit Sweater</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="hero-editorial-img-wrapper hero-fashion-slider wow fadeIn" data-wow-delay="0.2s">
-                  {slides.map((image, index) => (
-                    <div key={image} className={`hero-slide ${activeSlide === index ? "active" : ""}`}>
-                      <img src={image} alt={`Fashion slide ${index + 1}`} />
-                    </div>
-                  ))}
-                  <div className="hero-slider-dots" aria-label="Fashion banner slider">
-                    {slides.map((_, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        className={activeSlide === index ? "active" : ""}
-                        aria-label={`Show slide ${index + 1}`}
-                        onClick={() => setActiveSlide(index)}
-                      />
-                    ))}
-                  </div>
-                  <div className="hero-editorial-meta">
-                    <span>Fashion Editor Preview</span>
-                    <strong>Capsule looks curated for your day</strong>
+
+                  <div className="min-w-0">
+                    <h6 className="m-0 truncate font-sans text-[10px] font-bold text-white/90 sm:text-[11px]">
+                      {t("home.nordicAutumnLayer", {
+                        defaultValue: "Nordic Autumn Layer",
+                      })}
+                    </h6>
+
+                    <p className="m-0 truncate font-sans text-[9px] leading-4 text-white/65 sm:text-[10px]">
+                      {t("home.navyBlazerKnit", {
+                        defaultValue: "Navy Blazer + Knit Sweater",
+                      })}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -475,133 +871,321 @@ export default function Home() {
         </div>
       </section>
       {/* how-it-works-section-start */}
-      <section className="howworks-section" id="how-it-works">
-        <div className="container-fluid">
-          <div className="section-heading text-center wow fadeInDown">
-            <span className="section-tag">Seamless Process</span>
-            <h2>Revolutionizing Wardrobe Management</h2>
-            <p style={{ margin: "0 auto" }}>Getting beautifully dressed is now a four-step modern workflow managed by
-              advanced Artificial
-              Intelligence.</p>
+      <section
+        id="how-it-works"
+        className="w-full px-[40px] py-[80px] bg-white"
+      >
+        <div className="w-full">
+          {/* Section Heading */}
+          <div className="mx-auto mb-[42px] max-w-[700px] text-center">
+            <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand">
+              <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
+              Seamless Process
+            </span>
+
+            <h2 className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]">
+              Revolutionizing Wardrobe Management
+            </h2>
+
+            <p className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand">
+              Getting beautifully dressed is now a four-step modern workflow
+              managed by advanced Artificial Intelligence.
+            </p>
           </div>
-          <div className="howworks-row">
-            <div className="hw-item wow fadeInUp" data-wow-delay="0.1s">
-              <div className="hw-card">
-                <span className="hw-ghost-num">01</span>
-                <div className="hw-icon"><img src={Capture} alt="capture cloth" /></div>
-                <h4>Capture Clothes</h4>
-                <p>Snap a quick photo of your actual garments. Works beautifully
-                  with all lightings and backgrounds.</p>
-              </div>
-              <span className="hw-arrow"><i className="bi bi-arrow-right"></i></span>
-            </div>
-            <div className="hw-item wow fadeInUp" data-wow-delay="0.25s">
-              <div className="hw-card">
-                <span className="hw-ghost-num">02</span>
-                <div className="hw-icon"><img src={Analysis} alt="attribute analysis" /></div>
-                <h4>AI Attribute Analysis</h4>
-                <p>Our vision models detect colors, pattern, fabrics, cuts, and
-                  categories instantly and automatically.</p>
-              </div>
-              <span className="hw-arrow"><i className="bi bi-arrow-right"></i></span>
-            </div>
-            <div className="hw-item wow fadeInUp" data-wow-delay="0.4s">
-              <div className="hw-card">
-                <span className="hw-ghost-num">03</span>
-                <div className="hw-icon"><img src={Closet} alt="smart closet" /></div>
-                <h4>Build Smart Closet</h4>
-                <p>Your clothing catalogs itself elegantly into categorization
-                  systems like Zara/COS online designs.</p>
-              </div>
-              <span className="hw-arrow"><i className="bi bi-arrow-right"></i></span>
-            </div>
-            <div className="hw-item wow fadeInUp" data-wow-delay="0.55s">
-              <div className="hw-card">
-                <span className="hw-ghost-num">04</span>
-                <div className="hw-icon"><img src={Effect} alt="daily style" />
-                  <h4>Get Styled Daily</h4>
-                  <p>Receive daily styled outfits contextualized to your precise
-                    geolocation weather and calendar meetings.</p>
+
+          {/* How Works Row */}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+            {/* Card 01 */}
+            <div className="relative">
+              <div className="group relative h-full min-h-[209px] overflow-hidden rounded-[12px] bg-primary-shadow px-[30px] py-[30px] transition-smooth hover:-translate-y-[3px] hover:shadow-[var(--primary-shadow)]">
+                {/* Ghost Number */}
+                <span className="pointer-events-none absolute right-[18px] top-[8px] select-none text-[72px] font-extrabold leading-none text-[#66666617]">
+                  01
+                </span>
+
+                {/* Icon */}
+                <div className="relative z-[1] mb-[22px] flex h-[48px] w-[48px] items-center justify-center">
+                  <img
+                    src={Capture}
+                    alt="capture cloth"
+                    className="h-[48px] w-[48px] object-contain transition-smooth group-hover:animate-reveal-png-icon"
+                  />
                 </div>
+
+                <h4 className="relative z-[1] mb-[12px] text-[16px] font-bold leading-[1.3] text-black">
+                  Capture Clothes
+                </h4>
+
+                <p className="relative z-[1] m-0 max-w-[350px] text-[14px] leading-[1.7] text-[#68706e]">
+                  Snap a quick photo of your actual garments. Works beautifully
+                  with all lightings and backgrounds.
+                </p>
               </div>
 
+              {/* Arrow */}
+              <span className="absolute -right-[20px] top-1/2 z-[5] hidden h-[40px] w-[40px] -translate-y-1/2 items-center justify-center rounded-full bg-primary-brand text-white shadow-[var(--primary-shadow)] lg:flex">
+                <i className="bi bi-arrow-right text-[16px]" />
+              </span>
+            </div>
+
+            {/* Card 02 */}
+            <div className="relative">
+              <div className="group relative h-full min-h-[209px] overflow-hidden rounded-[12px] bg-primary-shadow px-[30px] py-[30px] transition-smooth hover:-translate-y-[3px] hover:shadow-[var(--primary-shadow)]">
+                {/* Ghost Number */}
+                <span className="pointer-events-none absolute right-[18px] top-[8px] select-none text-[72px] font-extrabold leading-none text-[#66666617]">
+                  02
+                </span>
+
+                {/* Icon */}
+                <div className="relative z-[1] mb-[22px] flex h-[48px] w-[48px] items-center justify-center">
+                  <img
+                    src={Analysis}
+                    alt="attribute analysis"
+                    className="h-[48px] w-[48px] object-contain transition-smooth group-hover:animate-reveal-png-icon"
+                  />
+                </div>
+
+                <h4 className="relative z-[1] mb-[12px] text-[16px] font-bold leading-[1.3] text-black">
+                  AI Attribute Analysis
+                </h4>
+
+                <p className="relative z-[1] m-0 max-w-[350px] text-[14px] leading-[1.7] text-[#68706e]">
+                  Our vision models detect colors, pattern, fabrics, cuts, and
+                  categories instantly and automatically.
+                </p>
+              </div>
+
+              {/* Arrow */}
+              <span className="absolute -right-[20px] top-1/2 z-[5] hidden h-[40px] w-[40px] -translate-y-1/2 items-center justify-center rounded-full bg-primary-brand text-white shadow-[var(--primary-shadow)] lg:flex">
+                <i className="bi bi-arrow-right text-[16px]" />
+              </span>
+            </div>
+
+            {/* Card 03 */}
+            <div className="relative">
+              <div className="group relative h-full min-h-[209px] overflow-hidden rounded-[12px] bg-primary-shadow px-[30px] py-[30px] transition-smooth hover:-translate-y-[3px] hover:shadow-[var(--primary-shadow)]">
+                {/* Ghost Number */}
+                <span className="pointer-events-none absolute right-[18px] top-[8px] select-none text-[72px] font-extrabold leading-none text-[#66666617]">
+                  03
+                </span>
+
+                {/* Icon */}
+                <div className="relative z-[1] mb-[22px] flex h-[48px] w-[48px] items-center justify-center">
+                  <img
+                    src={Closet}
+                    alt="smart closet"
+                    className="h-[48px] w-[48px] object-contain transition-smooth group-hover:animate-reveal-png-icon"
+                  />
+                </div>
+
+                <h4 className="relative z-[1] mb-[12px] text-[16px] font-bold leading-[1.3] text-black">
+                  Build Smart Closet
+                </h4>
+
+                <p className="relative z-[1] m-0 max-w-[350px] text-[14px] leading-[1.7] text-[#68706e]">
+                  Your clothing catalogs itself elegantly into categorization
+                  systems like Zara/COS online designs.
+                </p>
+              </div>
+
+              {/* Arrow */}
+              <span className="absolute -right-[20px] top-1/2 z-[5] hidden h-[40px] w-[40px] -translate-y-1/2 items-center justify-center rounded-full bg-primary-brand text-white shadow-[var(--primary-shadow)] lg:flex">
+                <i className="bi bi-arrow-right text-[16px]" />
+              </span>
+            </div>
+
+            {/* Card 04 */}
+            <div className="relative">
+              <div className="group relative h-full min-h-[209px] overflow-hidden rounded-[12px] bg-primary-shadow px-[30px] py-[30px] transition-smooth hover:-translate-y-[3px] hover:shadow-[var(--primary-shadow)]">
+                {/* Ghost Number */}
+                <span className="pointer-events-none absolute right-[18px] top-[8px] select-none text-[72px] font-extrabold leading-none text-[#66666617]">
+                  04
+                </span>
+
+                {/* Icon */}
+                <div className="relative z-[1] mb-[22px] flex h-[48px] w-[48px] items-center justify-center">
+                  <img
+                    src={Effect}
+                    alt="daily style"
+                    className="h-[48px] w-[48px] object-contain transition-smooth group-hover:animate-reveal-png-icon"
+                  />
+                </div>
+
+                <h4 className="relative z-[1] mb-[12px] text-[16px] font-bold leading-[1.3] text-black">
+                  Get Styled Daily
+                </h4>
+
+                <p className="relative z-[1] m-0 max-w-[350px] text-[14px] leading-[1.7] text-[#68706e]">
+                  Receive daily styled outfits contextualized to your precise
+                  geolocation weather and calendar meetings.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
       {/* closet-section-start */}
-      <section className="closet-rail-section" id="closet">
-        <div className="container-fluid">
-          <div className="row align-items-center gx-3">
-            <div className="col-md-4">
-              <div className="section-heading wow fadeInLeft">
-                <span className="section-tag">Your Digital Wardrobe</span>
-                <h2>Every Piece Finds Its Place</h2>
-                <p>Photograph anything you own — DressApp reads the fabric, the cut, the colour,
-                  and files it away like a stylist would: tagged, catalogued, ready to be pulled the moment
-                  you need it.</p>
-                <p>No more forgotten drawers. Search by keyword, or just describe a feeling —
-                  "something warm for a rainy Monday" — and the right piece finds its way back to you.</p>
-                <a href="/closet" className="custm-btn">Start Building Your Closet<i className="fa-solid fa-arrow-right ms-2"></i></a>
+      <section
+        id="closet"
+        className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[5px] max-[991px]:py-[40px]"
+      >
+        <div className="w-full">
+          <div className="grid grid-cols-1 items-center gap-x-3 md:grid-cols-12">
+            {/* Left Content */}
+            <div className="md:col-span-4">
+              <div className="mx-auto mb-[42px] max-w-[700px]">
+                {/* Section Tag */}
+                <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand">
+                  <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
+                  Your Digital Wardrobe
+                </span>
+                <h2 className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]">
+                  Every Piece Finds Its Place
+                </h2>
+                <p className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand  mb-5">
+                  Photograph anything you own — DressApp reads the fabric, the
+                  cut, the colour, and files it away like a stylist would:
+                  tagged, catalogued, ready to be pulled the moment you need it.
+                </p>
+                <p className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand mb-5">
+                  No more forgotten drawers. Search by keyword, or just describe
+                  a feeling — "something warm for a rainy Monday" — and the
+                  right piece finds its way back to you.
+                </p>
+                {/* Button */}
+                <a
+                  href="/closet"
+                  className="mt-2 inline-flex items-center justify-center rounded-[50px] border-none bg-[var(--primary-color)] px-[30px] py-[20px] text-[14px] font-bold leading-none text-[var(--white)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-[var(--white)] hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+                >
+                  Start Building Your Closet
+                  <i className="fa-solid fa-arrow-right ml-2" />
+                </a>
               </div>
             </div>
-            <div className="col-md-8">
-              <div className="rail-visual wow fadeInRight" data-wow-delay="0.2s">
-                <div className="rail-bar-wrap">
-                  <div className="rail-bar"></div>
-                  <span className="rail-count-badge"><i className="bi bi-stars"></i> 3 new this week</span>
+            {/* Right Visual */}
+            <div className="md:col-span-8">
+              <div className="relative w-full pt-[30px]">
+                {/* Rail */}
+                <div className="relative flex items-center">
+                  <div className="h-[3px] w-full rounded-[3px] bg-[var(--dark-color)]" />
+                  {/* Count Badge */}
+                  <span className="absolute right-0 top-[-46px] inline-flex items-center gap-[6px] rounded-full border border-[#e5e5e5] bg-white px-4 py-2 text-[0.72rem] font-semibold text-[var(--dark-color)] shadow-[0_10px_25px_-12px_rgba(23,20,15,0.25)]">
+                    <i className="bi bi-stars text-[var(--primary-color)]" />3
+                    new this week
+                  </span>
                 </div>
-                <div className="garment-row">
-                  <div className="garment garment-1">
-                    <div className="hanger-hook"></div>
-                    <div className="garment-card">
-                      <img src={closet1} alt="Navy blazer" />
+                {/* Garments */}
+                <div className="flex items-start justify-between gap-6 max-[991px]:gap-[14px] max-[575px]:flex-wrap max-[575px]:justify-center">
+                  {/* Garment 1 */}
+                  <div className="group relative flex flex-1 flex-col items-center transition-transform duration-300 ease-in hover:-translate-y-2 max-[575px]:basis-[45%]">
+                    <div className="h-[26px] w-[2px] bg-[var(--dark-color)]" />
+                    <div className="aspect-[4/5] w-full max-w-[190px] overflow-hidden rounded-[14px] border-[6px] border-white bg-white shadow-[0_22px_40px_-18px_rgba(23,20,15,0.35)] max-[991px]:max-w-[140px]">
+                      <img
+                        src={closet1}
+                        alt="Navy blazer"
+                        className="block h-full w-full object-cover"
+                      />
                     </div>
-                    <div className="swing-tag">
-                      <span className="tag-cat">Outerwear</span>
-                      <span className="tag-name">Navy Tech Blazer</span>
-                      <span className="tag-meta">No. 014 — Waterproof</span>
+                    <div className="relative mt-[22px] w-[88%] rounded-[8px] border border-[#e5e5e5] bg-white px-[14px] pb-3 pt-[10px] text-left shadow-[0_12px_22px_-14px_rgba(23,20,15,0.25)] max-[991px]:px-[10px] max-[991px]:pb-[10px] max-[991px]:pt-2">
+                      <span className="absolute left-1/2 top-[-22px] h-[22px] w-px -translate-x-1/2 bg-[repeating-linear-gradient(to_bottom,var(--dark-color)_0,var(--dark-color)_3px,transparent_3px,transparent_6px)]" />
+                      <span className="absolute left-1/2 top-[-3px] h-[6px] w-[6px] -translate-x-1/2 rounded-full bg-[var(--primary-color)]" />
+                      <span className="mb-[3px] block text-[0.62rem] font-bold uppercase tracking-[0.08em] text-[var(--primary-color)]">
+                        Outerwear
+                      </span>
+                      <span className="block text-[0.92rem] font-bold leading-[1.3] text-[var(--dark-color)] max-[991px]:text-[0.8rem]">
+                        Navy Tech Blazer
+                      </span>
+                      <span className="mt-1 block text-[0.65rem] text-[var(--text-color)]">
+                        No. 014 — Waterproof
+                      </span>
                     </div>
                   </div>
-                  <div className="garment garment-2">
-                    <div className="hanger-hook"></div>
-                    <div className="garment-card">
-                      <img src={closet2} alt="Grey knit sweater" />
+                  {/* Garment 2 */}
+                  <div className="group relative flex flex-1 flex-col items-center transition-transform duration-300 ease-in hover:-translate-y-2 max-[575px]:basis-[45%]">
+                    <div className="h-[26px] w-[2px] bg-[var(--dark-color)]" />
+                    <div className="aspect-[4/5] w-full max-w-[190px] overflow-hidden rounded-[14px] border-[6px] border-white bg-white shadow-[0_22px_40px_-18px_rgba(23,20,15,0.35)] max-[991px]:max-w-[140px]">
+                      <img
+                        src={closet2}
+                        alt="Grey knit sweater"
+                        className="block h-full w-full object-cover"
+                      />
                     </div>
-                    <div className="swing-tag">
-                      <span className="tag-cat">Knitwear</span>
-                      <span className="tag-name">Merino Crewneck</span>
-                      <span className="tag-meta">No. 027 — Ash Grey</span>
+                    <div className="relative mt-[22px] w-[88%] rounded-[8px] border border-[#e5e5e5] bg-white px-[14px] pb-3 pt-[10px] text-left shadow-[0_12px_22px_-14px_rgba(23,20,15,0.25)] max-[991px]:px-[10px] max-[991px]:pb-[10px] max-[991px]:pt-2">
+                      <span className="absolute left-1/2 top-[-22px] h-[22px] w-px -translate-x-1/2 bg-[repeating-linear-gradient(to_bottom,var(--dark-color)_0,var(--dark-color)_3px,transparent_3px,transparent_6px)]" />
+                      <span className="absolute left-1/2 top-[-3px] h-[6px] w-[6px] -translate-x-1/2 rounded-full bg-[var(--primary-color)]" />
+                      <span className="mb-[3px] block text-[0.62rem] font-bold uppercase tracking-[0.08em] text-[var(--primary-color)]">
+                        Knitwear
+                      </span>
+                      <span className="block text-[0.92rem] font-bold leading-[1.3] text-[var(--dark-color)] max-[991px]:text-[0.8rem]">
+                        Merino Crewneck
+                      </span>
+                      <span className="mt-1 block text-[0.65rem] text-[var(--text-color)]">
+                        No. 027 — Ash Grey
+                      </span>
                     </div>
                   </div>
-                  <div className="garment garment-3">
-                    <div className="hanger-hook"></div>
-                    <div className="garment-card">
-                      <img src={closet3} alt="White dress shirt" />
+                  {/* Garment 3 */}
+                  <div className="group relative flex flex-1 flex-col items-center transition-transform duration-300 ease-in hover:-translate-y-2 max-[575px]:basis-[45%]">
+                    <div className="h-[26px] w-[2px] bg-[var(--dark-color)]" />
+                    <div className="aspect-[4/5] w-full max-w-[190px] overflow-hidden rounded-[14px] border-[6px] border-white bg-white shadow-[0_22px_40px_-18px_rgba(23,20,15,0.35)] max-[991px]:max-w-[140px]">
+                      <img
+                        src={closet3}
+                        alt="White dress shirt"
+                        className="block h-full w-full object-cover"
+                      />
                     </div>
-                    <div className="swing-tag">
-                      <span className="tag-cat">Top Layer</span>
-                      <span className="tag-name">Cotton Dress Shirt</span>
-                      <span className="tag-meta">No. 041 — Chalk White</span>
+                    <div className="relative mt-[22px] w-[88%] rounded-[8px] border border-[#e5e5e5] bg-white px-[14px] pb-3 pt-[10px] text-left shadow-[0_12px_22px_-14px_rgba(23,20,15,0.25)] max-[991px]:px-[10px] max-[991px]:pb-[10px] max-[991px]:pt-2">
+                      <span className="absolute left-1/2 top-[-22px] h-[22px] w-px -translate-x-1/2 bg-[repeating-linear-gradient(to_bottom,var(--dark-color)_0,var(--dark-color)_3px,transparent_3px,transparent_6px)]" />
+                      <span className="absolute left-1/2 top-[-3px] h-[6px] w-[6px] -translate-x-1/2 rounded-full bg-[var(--primary-color)]" />
+                      <span className="mb-[3px] block text-[0.62rem] font-bold uppercase tracking-[0.08em] text-[var(--primary-color)]">
+                        Top Layer
+                      </span>
+                      <span className="block text-[0.92rem] font-bold leading-[1.3] text-[var(--dark-color)] max-[991px]:text-[0.8rem]">
+                        Cotton Dress Shirt
+                      </span>
+                      <span className="mt-1 block text-[0.65rem] text-[var(--text-color)]">
+                        No. 041 — Chalk White
+                      </span>
                     </div>
                   </div>
                 </div>
-                <div className="recent-strip">
-                  <span className="recent-label">Recently added</span>
-                  <div className="recent-thumbs">
-                    <div className="recent-thumb">
-                      <img src={added1} alt="Sneakers" />
+                {/* Recently Added */}
+                <div className="mt-[56px] flex flex-wrap items-center gap-[18px] border-t border-dashed border-[#e5e5e5] pt-[26px] max-[575px]:mt-0 max-[575px]:flex-col max-[575px]:items-start max-[575px]:border-0">
+                  <span className="whitespace-nowrap text-[0.68rem] font-bold uppercase tracking-[0.08em] text-[var(--text-color)]">
+                    Recently added
+                  </span>
+                  <div className="flex items-center">
+                    <div className="h-[52px] w-[52px] overflow-hidden rounded-[12px] border-[3px] border-[var(--accent-beige)] bg-white shadow-[0_6px_14px_-6px_rgba(23,20,15,0.3)]">
+                      <img
+                        src={added1}
+                        alt="Sneakers"
+                        className="block h-full w-full object-cover"
+                      />
                     </div>
-                    <div className="recent-thumb">
-                      <img src={added2} alt="Denim jeans" />
+                    <div className="-ml-[14px] h-[52px] w-[52px] overflow-hidden rounded-[12px] border-[3px] border-[var(--accent-beige)] bg-white shadow-[0_6px_14px_-6px_rgba(23,20,15,0.3)]">
+                      <img
+                        src={added2}
+                        alt="Denim jeans"
+                        className="block h-full w-full object-cover"
+                      />
                     </div>
-                    <div className="recent-thumb">
-                      <img src={added3} alt="Leather bag" />
+                    <div className="-ml-[14px] h-[52px] w-[52px] overflow-hidden rounded-[12px] border-[3px] border-[var(--accent-beige)] bg-white shadow-[0_6px_14px_-6px_rgba(23,20,15,0.3)]">
+                      <img
+                        src={added3}
+                        alt="Leather bag"
+                        className="block h-full w-full object-cover"
+                      />
                     </div>
-                    <div className="recent-thumb">
-                      <img src={added4} alt="Scarf" />
+                    <div className="-ml-[14px] h-[52px] w-[52px] overflow-hidden rounded-[12px] border-[3px] border-[var(--accent-beige)] bg-white shadow-[0_6px_14px_-6px_rgba(23,20,15,0.3)]">
+                      <img
+                        src={added4}
+                        alt="Scarf"
+                        className="block h-full w-full object-cover"
+                      />
                     </div>
-                    <div className="recent-thumb recent-thumb-more">+18</div>
+                    <div className="-ml-[14px] flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-[12px] border-[3px] border-[var(--accent-beige)] bg-[var(--dark-color)] text-[0.68rem] font-bold text-[var(--accent-beige)] shadow-[0_6px_14px_-6px_rgba(23,20,15,0.3)]">
+                      +18
+                    </div>
                   </div>
                 </div>
               </div>
@@ -609,183 +1193,344 @@ export default function Home() {
           </div>
         </div>
       </section>
-      {/*stylist-section-start */}
-      <section className="ai-stylist-section" id="stylist">
-        <div className="container-fluid">
-          <div className="row gx-4 gy-4 align-items-center">
-            <div className="col-md-6">
-              <div className="chat-container wow fadeInLeft">
-                <div className="chat-topbar">
-                  <div className="chat-brand">
-                    <div className="chat-brand-icon">
-                      <i className="bi bi-stars"></i>
+      {/* stylist-section-start */}
+      <section
+        id="stylist"
+        className="w-full overflow-hidden bg-white px-[40px] py-[80px] max-[991px]:px-[20px] max-[991px]:py-[50px]"
+      >
+        <div className="w-full">
+          <div className="grid grid-cols-1 items-center gap-x-8 gap-y-8 md:grid-cols-2">
+            {/* Chat */}
+            <div>
+              <div className="relative overflow-hidden rounded-[18px] border border-black/[0.06] bg-white p-5 shadow-[var(--primary-shadow)] transition-smooth shadow-[0_20px_45px_rgba(23,20,15,0.12)]">
+                {/* Chat Topbar */}
+                <div className="mb-5">
+                  <div className="flex items-center justify-between gap-4 max-[575px]:flex-col max-[575px]:items-start">
+                    {/* Brand */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--primary-color)] text-white">
+                        <i className="bi bi-stars text-[18px]" />
+                      </div>
+
+                      <div>
+                        <h5 className="m-0 text-[14px] font-bold leading-[1.3] text-[var(--dark-color)]">
+                          DressApp AI Personal Stylist
+                        </h5>
+
+                        <span className="mt-1 flex items-center gap-1.5 text-[11px] text-[var(--text-color)]">
+                          <span className="h-[7px] w-[7px] rounded-full bg-[#3ca76b]" />
+                          Active &amp; Ready to Consult
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <h5 className="chat-brand-title">DressApp AI Personal Stylist</h5>
-                      <span className="chat-status">
-                        <span className="status-dot"></span> Active &amp; Ready to Consult
+
+                    {/* Tabs */}
+                    <div className="flex items-center gap-1 rounded-full bg-accent-beige p-1 max-[575px]:w-full">
+                      <span className="rounded-full bg-white px-3 py-1.5 text-[12px] font-bold text-[var(--primary-color)] shadow-sm">
+                        Chat
+                      </span>
+
+                      <span className="px-3 py-1.5 text-[12px] font-bold text-[var(--text-color)]">
+                        Outfit Planner
+                      </span>
+
+                      <span className="px-3 py-1.5 text-[12px] font-bold text-[var(--text-color)]">
+                        Daily Suggestion
                       </span>
                     </div>
                   </div>
-                  <div className="chat-tabs">
-                    <span className="chat-tab chat-tab-active">Chat</span>
-                    <span className="chat-tab">Outfit Planner</span>
-                    <span className="chat-tab">Daily Suggestion</span>
-                  </div>
                 </div>
-                <div className="chat-bubble chat-bubble-user">
+
+                {/* User Message */}
+                <div className="mb-3 ml-auto w-fit max-w-[75%] rounded-[12px] rounded-br-[0px] bg-[var(--primary-color)] px-4 py-3 text-[12px] leading-[1.5] text-white">
                   "What should I wear tomorrow?"
                 </div>
-                <div className="chat-bubble chat-bubble-ai">
-                  "Tomorrow is forecast for <strong>18°C with light morning rain</strong> and your calendar
-                  notes a <strong>10 AM Business Meeting</strong>. I recommend structuring a clean
-                  professional look built with technical weather protection."
+
+                {/* AI Message */}
+                <div className="mb-4 max-w-[90%] rounded-[12px] rounded-bl-[0px] font-semibold bg-accent-beige px-4 py-3 text-[12px] leading-[1.6] text-[var(--text-color)]">
+                  "Tomorrow is forecast for{" "}
+                  <strong className="font-bold text-[var(--dark-color)]">
+                    18°C with light morning rain
+                  </strong>{" "}
+                  and your calendar notes a{" "}
+                  <strong className="font-bold text-[var(--dark-color)]">
+                    10 AM Business Meeting
+                  </strong>
+                  . I recommend structuring a clean professional look built with
+                  technical weather protection."
                 </div>
-                <div className="d-flex flex-column gap-3 mt-4">
-                  <div className="stylist-recommendation-card">
-                    <div className="recom-img">
-                      <img src={closet1} alt="Navy Tech Blazer" />
+
+                {/* Recommendations */}
+                <div className="mt-4 flex flex-col gap-3">
+                  {/* Recommendation 1 */}
+                  <div className="flex items-center gap-3 rounded-[12px] border border-black/[0.06] bg-white p-3 transition-smooth shadow-sm">
+                    <div className="h-[62px] w-[62px] shrink-0 overflow-hidden rounded-[9px] bg-[#f1f5f4]">
+                      <img
+                        src={closet1}
+                        alt="Navy Tech Blazer"
+                        className="h-full w-full object-cover"
+                      />
                     </div>
-                    <div>
-                      <span className="tracking-wider">Outerwear</span>
-                      <h6 className="mb-0 fw-bold">Navy Tech Blazer (Waterproof)</h6>
-                      <p>Matches formal meetings, repels light drizzle.</p>
+
+                    <div className="min-w-0">
+                      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--primary-color)]">
+                        Outerwear
+                      </span>
+
+                      <h6 className="m-0 text-[13px] font-bold leading-[1.35] text-[var(--dark-color)]">
+                        Navy Tech Blazer (Waterproof)
+                      </h6>
+
+                      <p className="mt-1 mb-0 text-[11px] leading-[1.4] text-[var(--text-color)]">
+                        Matches formal meetings, repels light drizzle.
+                      </p>
                     </div>
                   </div>
-                  <div className="stylist-recommendation-card">
-                    <div className="recom-img">
-                      <img src={closet2} alt="White Dress Shirt" />
+
+                  {/* Recommendation 2 */}
+                  <div className="flex items-center gap-3 rounded-[12px] border border-black/[0.06] bg-white p-3 transition-smooth shadow-sm">
+                    <div className="h-[62px] w-[62px] shrink-0 overflow-hidden rounded-[9px] bg-[#f1f5f4]">
+                      <img
+                        src={closet2}
+                        alt="White Dress Shirt"
+                        className="h-full w-full object-cover"
+                      />
                     </div>
-                    <div>
-                      <span className="tracking-wider">Top Layer</span>
-                      <h6 className="mb-0 fw-bold">Organic Cotton White Dress Shirt</h6>
-                      <p>Crisp, clean, professional base styling.</p>
+
+                    <div className="min-w-0">
+                      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--primary-color)]">
+                        Top Layer
+                      </span>
+
+                      <h6 className="m-0 text-[13px] font-bold leading-[1.35] text-[var(--dark-color)]">
+                        Organic Cotton White Dress Shirt
+                      </h6>
+
+                      <p className="mt-1 mb-0 text-[11px] leading-[1.4] text-[var(--text-color)]">
+                        Crisp, clean, professional base styling.
+                      </p>
                     </div>
                   </div>
                 </div>
-                <div className="chat-chips">
-                  <span className="chip"><i className="bi bi-stars"></i> Daily Suggestion</span>
-                  <span className="chip"><i className="bi bi-calendar-event"></i> Plan Event Outfit</span>
-                  <span className="chip"><i className="bi bi-graph-up"></i> Trend-Scout</span>
+
+                {/* Chat Chips */}
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.07] bg-primary-shadow px-3 py-1.5 text-[10px] font-semibold text-[var(--text-color)] transition-smooth hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]">
+                    <i className="bi bi-stars text-[var(--primary-color)]" />
+                    Daily Suggestion
+                  </span>
+
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.07] bg-primary-shadow px-3 py-1.5 text-[10px] font-semibold text-[var(--text-color)] transition-smooth hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]">
+                    <i className="bi bi-calendar-event text-[var(--primary-color)]" />
+                    Plan Event Outfit
+                  </span>
+
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.07] bg-primary-shadow px-3 py-1.5 text-[10px] font-semibold text-[var(--text-color)] transition-smooth hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]">
+                    <i className="bi bi-graph-up text-[var(--primary-color)]" />
+                    Trend-Scout
+                  </span>
                 </div>
-                <div className="chat-input-bar">
-                  <button type="button" className="chat-icon-btn">
-                    <i className="bi bi-image"></i>
+
+                {/* Input */}
+                <div className="mt-5 flex items-center gap-2 rounded-full border border-black/[0.08] bg-accent-beige p-1.5">
+                  <button
+                    type="button"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--text-color)] transition-smooth hover:bg-white hover:text-[var(--primary-color)]"
+                    aria-label="Add image"
+                  >
+                    <i className="bi bi-image" />
                   </button>
+
                   <input
                     type="text"
-                    className="chat-input"
                     placeholder="Tell your stylist what you need…"
+                    className="min-w-0 flex-1 border-0 bg-transparent px-1 text-[12px] text-[var(--dark-color)] outline-none placeholder:text-black/40 focus:ring-0"
                   />
-                  <button type="button" className="chat-icon-btn">
-                    <i className="bi bi-mic"></i>
+
+                  <button
+                    type="button"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--text-color)] transition-smooth hover:bg-white hover:text-[var(--primary-color)]"
+                    aria-label="Use microphone"
+                  >
+                    <i className="bi bi-mic" />
                   </button>
-                  <button type="submit" className="chat-send-btn">
-                    <i className="bi bi-send-fill"></i>
+
+                  <button
+                    type="submit"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--primary-color)] text-white shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)]"
+                    aria-label="Send message"
+                  >
+                    <i className="bi bi-send-fill text-[11px]" />
                   </button>
                 </div>
               </div>
             </div>
-            <div className="col-md-6">
-              <div className="section-heading wow fadeInRight">
-                <span className="section-tag">Empathetic Design Intelligence</span>
-                <h2>The AI Stylist That Understands Life</h2>
-                <p>Your fashion choices shouldn't exist in a vacuum. DressApp connects directly to
-                  your calendar feeds and precise localized weather forecasts to design optimal outfits every
-                  day.</p>
-                <p>Never step out under-dressed for high stakes business sessions or
-                  unprepared for sudden rainfall. It feels like having a world-Name sartorial advisor living
-                  in
-                  your phone, with complete access to what you own.</p>
-                <a href="/stylist" className="custm-btn"><i className="bi bi-stars me-2"></i>Ask the stylist</a>
+
+            {/* Right Content */}
+            <div>
+              <div className="max-w-[560px]">
+                {/* Section Tag */}
+                <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand">
+                  <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
+                  Empathetic Design Intelligence
+                </span>
+
+                <h2 className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]">
+                  The AI Stylist That Understands Life
+                </h2>
+
+                <p className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand mb-5">
+                  Your fashion choices shouldn't exist in a vacuum. DressApp
+                  connects directly to your calendar feeds and precise localized
+                  weather forecasts to design optimal outfits every day.
+                </p>
+
+                <p className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand mb-5">
+                  Never step out under-dressed for high stakes business sessions
+                  or unprepared for sudden rainfall. It feels like having a
+                  world-Name sartorial advisor living in your phone, with
+                  complete access to what you own.
+                </p>
+
+                {/* CTA */}
+                <a
+                  href="/stylist"
+                  className="inline-flex items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+                >
+                  <i className="bi bi-stars mr-2" />
+                  Ask the stylist
+                </a>
               </div>
             </div>
           </div>
         </div>
       </section>
       {/* marketplace-section-start */}
-      <section className="marketplace-section" id="marketplace">
-        <div className="container-fluid">
-          <div className="section-heading mb-5 wow fadeInDown">
-            <span className="section-tag">Zero Waste Initiative</span>
-            <h2>Circular Wardrobe Marketplace</h2>
-            <div className="view-more">
-              <p>Buy, sell, or donate. Our integrated marketplace allows you to monetize under-utilized garments natively from your digital closet.</p>
-              <div className="marketplace-inline-stats">
-                <div className="marketplace-inline-item">
-                  <span className="marketplace-inline-icon">
-                    <i className="bi bi-shop-window"></i>
+      <section
+        id="marketplace"
+        className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[20px] max-[991px]:py-[50px]"
+      >
+        <div className="w-full">
+          {/* Section Heading */}
+          <div className="mb-8">
+            <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand">
+              <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
+              Zero Waste Initiative
+            </span>
+
+            <h2 className="mb-0 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]">
+              Circular Wardrobe Marketplace
+            </h2>
+
+            <div className="flex items-center justify-between gap-8 max-[991px]:flex-col max-[991px]:items-start">
+              <p className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand  mb-0">
+                Buy, sell, or donate. Our integrated marketplace allows you to
+                monetize under-utilized garments natively from your digital
+                closet.
+              </p>
+
+              {/* Inline Stats */}
+              <div className="flex shrink-0 items-center gap-5 max-[767px]:w-full max-[767px]:flex-wrap bg-white p-4 rounded-[12px]">
+                {/* Active Listings */}
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--primary-shadow)] text-[var(--primary-color)]">
+                    <i className="bi bi-shop-window text-[17px]" />
                   </span>
-                  <span className="marketplace-inline-text">
-                    <strong>{counts?.market ?? 0}</strong>
+
+                  <span className="flex flex-col text-[12px] font-semibold leading-[1.3] text-[var(--text-color)]">
+                    <strong className="text-[15px] font-black text-[var(--dark-color)]">
+                      {counts?.market ?? 0}
+                    </strong>
                     Active listings
                   </span>
                 </div>
-                <span className="marketplace-inline-divider"></span>
-                <div className="marketplace-inline-item">
-                  <span className="marketplace-inline-icon">
-                    <i className="bi bi-arrow-repeat"></i>
+
+                {/* Divider */}
+                <span className="h-10 w-px bg-black/10 max-[767px]:hidden" />
+
+                {/* Buy / Swap / Donate */}
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--primary-shadow)] text-[var(--primary-color)]">
+                    <i className="bi bi-arrow-repeat text-[17px]" />
                   </span>
-                  <span className="marketplace-inline-text">
+
+                  <span className="flex flex-col text-[12px] font-semibold leading-[1.3] text-[var(--text-color)]">
                     Buy, swap
-                    <small>or donate</small>
+                    <small className="text-[11px] text-[var(--text-color)]">
+                      or donate
+                    </small>
                   </span>
                 </div>
-                <Link to="/market" className="marketplace-inline-link">
+
+                {/* Explore */}
+                <Link
+                  to="/market"
+                  className="inline-flex items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+                >
                   Explore Marketplace
+                  <i className="bi bi-arrow-right ml-2" />
                 </Link>
               </div>
             </div>
           </div>
-          <div ref={marketSwiperRef} className="swiper market-swiper wow fadeInUp">
+
+          {/* Marketplace Swiper */}
+          <div ref={marketSwiperRef} className="swiper market-swiper relative">
             <div className="swiper-wrapper">
               {marketplaceItems.map((item) => (
-                <div className="swiper-slide" key={item.id}>
-                  <div className="market-card">
-                    <div className="market-img-wrapper">
-                      <span className="market-badge-premium">
-                        {item.badge}
-                      </span>
-
+                <div className="swiper-slide h-full" key={item.id}>
+                  <div className="group overflow-hidden rounded-[12px] border border-black/[0.06] my-[20px] bg-white transition-smooth hover:-translate-y-[5px] hover:shadow-md">
+                    {/* Image */}
+                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-white">
                       <img
                         src={item.image}
                         alt={item.title}
+                        className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
                       />
+
+                      {/* Premium Badge */}
+                      <span className="absolute left-3 top-3 rounded-full bg-[var(--primary-color)] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-white shadow-[var(--primary-shadow)]">
+                        {item.badge}
+                      </span>
                     </div>
 
-                    <div className="market-details">
-                      <div className="d-flex justify-content-between align-items-center gap-3">
-                        <h6>{item.title}</h6>
+                    {/* Details */}
+                    <div className="p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <h6 className="m-0 min-w-0 truncate text-[15px] font-black leading-[1.3] text-[var(--dark-color)]">
+                          {item.title}
+                        </h6>
 
-                        <span className="fw-bold text-dark">
+                        <span className="shrink-0 text-[15px] font-black text-[var(--dark-color)]">
                           {item.price}
                         </span>
                       </div>
 
-                      <p>
+                      <p className="mt-2 mb-4 text-[12px] font-semibold leading-[1.6] text-[var(--text-color)]">
                         Condition: {item.condition}
                         <br />
                         Located in {item.location}
                       </p>
 
-                      <div className="market-actions">
+                      {/* Actions */}
+                      <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          className="btn-market-action"
+                          className="flex-1 rounded-[50px] border border-[var(--primary-color)] bg-[var(--primary-color)] px-3 py-2.5 text-[12px] font-bold text-white transition-smooth hover:-translate-y-[1px] hover:bg-[var(--primary-hover)]"
                         >
                           Buy
                         </button>
 
                         <button
                           type="button"
-                          className="btn-market-action"
+                          className="flex-1 rounded-[50px] border border-black/10 bg-white px-3 py-2.5 text-[12px] font-bold text-[var(--dark-color)] transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
                         >
                           Swap
                         </button>
 
                         <button
                           type="button"
-                          className="btn-market-action"
+                          className="flex-1 rounded-[50px] border border-black/10 bg-white px-3 py-2.5 text-[12px] font-bold text-[var(--dark-color)] transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
                         >
                           Donate
                         </button>
@@ -796,25 +1541,29 @@ export default function Home() {
               ))}
             </div>
 
+            {/* Previous Button */}
             <button
               type="button"
-              className="swiper-button-prev market-swiper-prev"
+              className="swiper-button-prev market-swiper-prev !left-2 !top-1/2 !m-0 !flex !h-10 !w-10 !-translate-y-1/2 !items-center !justify-center !rounded-full !border !border-black/10 !bg-primary-brand !text-[var(--dark-color)] !shadow-[0_8px_20px_rgba(23,20,15,0.15)] after:!hidden transition-smooth hover:!bg-dark-brand hover:!text-white"
               aria-label="Previous marketplace slide"
             >
-              <i className="bi bi-chevron-left"></i>
+              <i className="bi bi-chevron-left text-[14px]" />
             </button>
 
+            {/* Next Button */}
             <button
               type="button"
-              className="swiper-button-next market-swiper-next"
+              className="swiper-button-next market-swiper-next !right-2 !top-1/2 !m-0 !flex !h-10 !w-10 !-translate-y-1/2 !items-center !justify-center !rounded-full !border !border-black/10 !bg-primary-brand !text-[var(--dark-color)] !shadow-[0_8px_20px_rgba(23,20,15,0.15)] after:!hidden transition-smooth hover:!bg-dark-brand hover:!text-white"
               aria-label="Next marketplace slide"
             >
-              <i className="bi bi-chevron-right"></i>
+              <i className="bi bi-chevron-right text-[14px]" />
             </button>
           </div>
-          <div className="text-center mt-5">
-            <p className="text-white small d-inline-flex align-items-center gap-2 px-3 py-2 bg-dark rounded-pill">
-              <i className="bi bi-info-circle text-success"></i>
+
+          {/* Fee Information */}
+          <div className="mt-12 flex justify-center">
+            <p className="m-0 inline-flex items-center gap-2 rounded-full bg-[var(--dark-color)] px-4 py-2 text-[12px] font-medium text-white">
+              <i className="bi bi-info-circle text-[var(--primary-color)]" />
               Transparent 7% platform fee after payment processing. Zero hidden
               charges.
             </p>
@@ -822,102 +1571,141 @@ export default function Home() {
         </div>
       </section>
       {/* ai-fashion-editor-section */}
-      <section className="ai-editor-section" id="ai-editor">
-        <div className="container-fluid">
-          <div className="row gx-4 gy-4 align-items-center flex-md-row-reverse">
-            <div className="col-md-7">
-              <div className="editor-mockup wow fadeInRight">
-                <div className="editor-mockup-topbar">
-                  <div className="chat-brand">
-                    <h5>
-                      <i className="bi bi-magic me-2"></i>
+      <section
+        id="ai-editor"
+        className="w-full overflow-hidden bg-white px-[40px] py-[80px] max-[991px]:px-[20px] max-[991px]:py-[50px]"
+      >
+        <div className="w-full">
+          <div className="grid grid-cols-1 items-center gap-x-8 gap-y-8 md:grid-cols-12">
+            {/* Editor - Right Side */}
+            <div className="md:col-span-7 md:order-2">
+              <div className="relative overflow-hidden rounded-[18px] border border-black/[0.06] bg-white shadow-[var(--primary-shadow)] transition-smooth shadow-[0_20px_45px_rgba(23,20,15,0.12)]">
+                {/* Editor Topbar */}
+                <div className="flex items-center justify-between gap-4 border-b border-black/[0.06] px-5 py-4 max-[575px]:flex-col max-[575px]:items-start">
+                  <div>
+                    <h5 className="m-0 flex items-center text-[14px] font-black text-[var(--dark-color)]">
+                      <i className="bi bi-magic mr-2 text-[var(--primary-color)]" />
                       AI Styled Fashion Editor
                     </h5>
-                    <p>Rendering live preview</p>
+
+                    <p className="mt-1 mb-0 text-[11px] font-medium text-[var(--text-color)]">
+                      Rendering live preview
+                    </p>
                   </div>
-                  <span className="editor-export-btn">
-                    <i className="bi bi-download"></i>
-                    {" "}Export Look
-                  </span>
+
+                  {/* Export */}
+                  <button
+                    type="button"
+                    className="inline-flex items-center rounded-full border border-black/[0.08] bg-white px-4 py-2 text-[11px] font-bold text-[var(--dark-color)] transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
+                  >
+                    <i className="bi bi-download mr-2" />
+                    Export Look
+                  </button>
                 </div>
-                <div className="editor-body">
-                  <div className="editor-canvas">
+
+                {/* Editor Body */}
+                <div className="grid grid-cols-1 gap-0 md:grid-cols-[1.35fr_0.65fr]">
+                  {/* Canvas */}
+                  <div className="relative min-h-[450px] overflow-hidden bg-[#f2eee8] max-[767px]:min-h-[400px]">
                     <img
                       src={editor}
                       alt="AI styled outfit preview"
+                      className="block h-full min-h-[500px] w-full object-cover object-center max-[767px]:min-h-[400px]"
                     />
-                    <span className="editor-canvas-badge">
-                      <i className="bi bi-stars"></i>
-                      {" "}AI Match 96%
+
+                    {/* AI Match Badge */}
+                    <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/90 px-3 py-1.5 text-[10px] font-black text-[var(--primary-color)] shadow-[0_8px_20px_rgba(23,20,15,0.12)] backdrop-blur-sm">
+                      <i className="bi bi-stars" />
+                      AI Match 96%
                     </span>
                   </div>
-                  <div className="editor-tools">
-                    <div className="editor-tab-row">
-                      <span className="editor-tab editor-tab-active">Top</span>
-                      <span className="editor-tab">Bottom</span>
-                      <span className="editor-tab">Shoes</span>
-                      <span className="editor-tab">Accessory</span>
+
+                  {/* Editor Tools */}
+                  <div className="flex flex-col bg-white p-5">
+                    {/* Tabs */}
+                    <div className="mb-6 flex items-center gap-1 overflow-x-auto border-b border-black/[0.06]">
+                      <span className="whitespace-nowrap border-b-2 border-[var(--primary-color)] px-3 pb-2.5 text-[11px] font-black text-[var(--primary-color)]">
+                        Top
+                      </span>
+
+                      <span className="whitespace-nowrap px-3 pb-2.5 text-[11px] font-semibold text-[var(--text-color)] transition-smooth hover:text-[var(--primary-color)]">
+                        Bottom
+                      </span>
+
+                      <span className="whitespace-nowrap px-3 pb-2.5 text-[11px] font-semibold text-[var(--text-color)] transition-smooth hover:text-[var(--primary-color)]">
+                        Shoes
+                      </span>
+
+                      <span className="whitespace-nowrap px-3 pb-2.5 text-[11px] font-semibold text-[var(--text-color)] transition-smooth hover:text-[var(--primary-color)]">
+                        Accessory
+                      </span>
                     </div>
+
                     {/* Fabric Tone */}
-                    <div className="editor-control-block">
-                      <span className="editor-control-label">
+                    <div className="mb-6">
+                      <span className="mb-3 block text-[11px] font-black uppercase tracking-[0.08em] text-[var(--dark-color)]">
                         Fabric Tone
                       </span>
-                      <div className="editor-swatch-row">
-                        <span
-                          className="editor-color-swatch active"
-                          style={{ background: "#1f5c45" }}
-                        />
-                        <span
-                          className="editor-color-swatch"
-                          style={{ background: "#2c2c2c" }}
-                        />
-                        <span
-                          className="editor-color-swatch"
-                          style={{ background: "#c9a876" }}
-                        />
-                        <span
-                          className="editor-color-swatch"
-                          style={{ background: "#8a9aa8" }}
-                        />
-                        <span
-                          className="editor-color-swatch"
-                          style={{ background: "#f5eee9" }}
-                        />
+
+                      <div className="flex items-center gap-2.5">
+                        <span className="h-8 w-8 cursor-pointer rounded-full border-[3px] border-white bg-[#1f5c45] shadow-[0_0_0_1px_var(--primary-color)] transition-smooth hover:scale-110" />
+
+                        <span className="h-8 w-8 cursor-pointer rounded-full border-[3px] border-white bg-[#2c2c2c] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] transition-smooth hover:scale-110" />
+
+                        <span className="h-8 w-8 cursor-pointer rounded-full border-[3px] border-white bg-[#c9a876] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] transition-smooth hover:scale-110" />
+
+                        <span className="h-8 w-8 cursor-pointer rounded-full border-[3px] border-white bg-[#8a9aa8] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] transition-smooth hover:scale-110" />
+
+                        <span className="h-8 w-8 cursor-pointer rounded-full border-[3px] border-white bg-[#f5eee9] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] transition-smooth hover:scale-110" />
                       </div>
                     </div>
+
                     {/* Style Intensity */}
-                    <div className="editor-control-block">
-                      <span className="editor-control-label">
-                        Style Intensity
-                      </span>
-                      <div className="editor-range-track">
-                        <div className="editor-range-fill"></div>
-                        <span className="editor-range-handle"></span>
+                    <div className="mb-6">
+                      <div className="mb-3 flex items-center justify-between">
+                        <span className="text-[11px] font-black uppercase tracking-[0.08em] text-[var(--dark-color)]">
+                          Style Intensity
+                        </span>
+
+                        <span className="text-[10px] font-semibold text-[var(--text-color)]">
+                          72%
+                        </span>
+                      </div>
+
+                      <div className="relative h-[5px] w-full rounded-full bg-[#e8e8e5]">
+                        <div className="absolute left-0 top-0 h-full w-[72%] rounded-full bg-[var(--primary-color)]" />
+
+                        <span className="absolute left-[72%] top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-white bg-[var(--primary-color)] shadow-[0_2px_8px_rgba(0,0,0,0.2)]" />
                       </div>
                     </div>
+
                     {/* Silhouette */}
-                    <div className="editor-control-block">
-                      <span className="editor-control-label">
+                    <div className="mb-6">
+                      <span className="mb-3 block text-[11px] font-black uppercase tracking-[0.08em] text-[var(--dark-color)]">
                         Silhouette Fit
                       </span>
-                      <div className="d-flex gap-2">
-                        <span className="editor-chip">
+
+                      <div className="flex flex-wrap gap-2">
+                        <span className="cursor-pointer rounded-full border border-black/[0.08] bg-white px-3 py-1.5 text-[10px] font-semibold text-[var(--text-color)] transition-smooth hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]">
                           Slim
                         </span>
-                        <span className="editor-chip editor-chip-active">
+
+                        <span className="cursor-pointer rounded-full border border-[var(--primary-color)] bg-[var(--primary-color)] px-3 py-1.5 text-[10px] font-bold text-white">
                           Relaxed
                         </span>
-                        <span className="editor-chip">
+
+                        <span className="cursor-pointer rounded-full border border-black/[0.08] bg-white px-3 py-1.5 text-[10px] font-semibold text-[var(--text-color)] transition-smooth hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]">
                           Oversized
                         </span>
                       </div>
                     </div>
+
+                    {/* Regenerate */}
                     <button
                       type="button"
-                      className="custm-btn w-100 justify-content-center"
+                      className="mt-auto flex w-full items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-5 py-3.5 text-[13px] font-black text-white shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
                     >
-                      <i className="bi bi-stars me-2"></i>
+                      <i className="bi bi-stars mr-2" />
                       Regenerate with AI
                     </button>
                   </div>
@@ -925,243 +1713,552 @@ export default function Home() {
               </div>
             </div>
             {/* Left Side Content */}
-            <div className="col-md-5">
-              <div className="section-heading wow fadeInLeft">
-
-                <span className="section-tag">
+            <div className="md:col-span-5 md:order-1">
+              <div className="max-w-[540px]">
+                {/* Section Tag */}
+                <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand">
+                  <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
                   Visual Styling Studio
                 </span>
 
-                <h2>
+                <h2 className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]">
                   Your AI Styled Fashion Editor
                 </h2>
 
-                <p>
+                <p className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand mb-5">
                   Drag, swap, and recolor real garments from your closet on a
-                  live model canvas. The editor understands fit, fabric,
-                  and colour theory, so every combination it suggests
-                  already looks intentional.
+                  live model canvas. The editor understands fit, fabric, and
+                  colour theory, so every combination it suggests already looks
+                  intentional.
                 </p>
 
-                <p>
-                  Nudge the style intensity slider for a bolder edit,
-                  lock in a silhouette, and let the AI regenerate
-                  accessories and layering in real time — no design
-                  experience required.
+                <p className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand mb-5">
+                  Nudge the style intensity slider for a bolder edit, lock in a
+                  silhouette, and let the AI regenerate accessories and layering
+                  in real time — no design experience required.
                 </p>
 
-                <a href="#" className="custm-btn">
-                  <i className="bi bi-magic me-2"></i>
+                {/* CTA */}
+                <a
+                  href="#"
+                  className="inline-flex items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+                >
+                  <i className="bi bi-magic mr-2" />
                   Open Fashion Editor
                 </a>
-
               </div>
             </div>
-
           </div>
         </div>
       </section>
       {/* experts-section */}
-      <section className="experts-spotlight-section" id="experts">
-        <div className="container-fluid">
-          <div className="section-heading wow fadeInDown">
-            <span className="section-tag">Meet The Specialists</span>
-            <a href="/experts"><h2>Talk To A Real Style Expert</h2></a>
-            <div className="view-more">
-              <p>Book a 1:1 session with a certified DressApp stylist whenever the AI needs a
-                human, editorial finishing touch.</p>
-              <a href="/experts" className="custm-btn">View All Experts<i className="fa-solid fa-arrow-right ms-2"></i></a>
+      <section
+        id="experts"
+        className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[20px] max-[991px]:py-[50px]"
+      >
+        <div className="w-full">
+          {/* Section Heading */}
+          <div className="mb-12">
+            <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand">
+              <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
+              Meet The Specialists
+            </span>
+
+            <a href="/experts" className="block no-underline">
+              <h2 className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]">
+                Talk To A Real Style Expert
+              </h2>
+            </a>
+
+            <div className="flex items-center justify-between gap-8 max-[767px]:flex-col max-[767px]:items-start">
+              <p className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand">
+                Book a 1:1 session with a certified DressApp stylist whenever
+                the AI needs a human, editorial finishing touch.
+              </p>
+
+              <a
+                href="/experts"
+                className="inline-flex shrink-0 items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[15px] text-[14px] font-bold leading-[24px] text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+              >
+                View All Experts
+                <i className="fa-solid fa-arrow-right ml-2" />
+              </a>
             </div>
           </div>
-          <div className="row gx-4 gy-4 mt-0">
-            <div className="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
-              <div className="expert-pro-card">
-                <div className="expert-avatar-wrap">
-                  <img src={expert1} alt="Amelia Novak" className="expert-avatar" />
-                  <span className="expert-avatar-badge"><i className="bi bi-patch-check-fill"></i></span>
+
+          {/* Experts Grid */}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Expert 1 */}
+            <div>
+              <div className="group h-full rounded-[18px] border border-black/[0.06] bg-white p-6 text-center shadow-[0_15px_35px_-18px_rgba(23,20,15,0.3)] transition-smooth hover:-translate-y-[5px] hover:shadow-[0_20px_45px_rgba(23,20,15,0.12)]">
+                {/* Avatar */}
+                <div className="relative mx-auto mb-5 h-[105px] w-[105px]">
+                  <img
+                    src={expert1}
+                    alt="Amelia Novak"
+                    className="h-full w-full rounded-full object-cover ring-4 ring-[var(--primary-shadow)]"
+                  />
+
+                  <span className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[var(--primary-color)] text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                    <i className="bi bi-patch-check-fill text-[13px]" />
+                  </span>
                 </div>
-                <h5>Amelia Novak</h5>
-                <span className="expert-spec-tag">Senior Fashion Stylist</span>
-                <div className="expert-rating-row">
-                  <i className="bi bi-star-fill"></i>
+
+                <h5 className="m-0 mb-2 text-[17px] font-black text-[var(--dark-color)]">
+                  Amelia Novak
+                </h5>
+
+                <span className="inline-flex rounded-full bg-[var(--primary-shadow)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.05em] text-[var(--primary-color)]">
+                  Senior Fashion Stylist
+                </span>
+
+                {/* Rating */}
+                <div className="mt-4 flex items-center justify-center gap-1.5 text-[13px] font-bold text-[var(--dark-color)]">
+                  <i className="bi bi-star-fill text-[#d8a84e]" />
                   <span>4.9</span>
-                  <span className="expert-rating-count">(120 sessions)</span>
+                  <span className="font-medium text-[var(--text-color)]">
+                    (120 sessions)
+                  </span>
                 </div>
-                <p className="expert-bio">Editorial-ready looks for high-stakes professional settings.</p>
-                <a href="#" className="expert-book-btn">Book Session <i className="bi bi-arrow-right"></i></a>
+
+                <p className="my-4 text-[13px] font-medium leading-[22px] text-[var(--text-color)]">
+                  Editorial-ready looks for high-stakes professional settings.
+                </p>
+
+                <a
+                  href="#"
+                  className="inline-flex items-center justify-center gap-2 rounded-[50px] border border-[var(--primary-color)] bg-white px-5 py-2.5 text-[12px] font-bold text-[var(--primary-color)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-color)] hover:text-white"
+                >
+                  Book Session
+                  <i className="bi bi-arrow-right" />
+                </a>
               </div>
             </div>
-            <div className="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.25s">
-              <div className="expert-pro-card">
-                <div className="expert-avatar-wrap">
-                  <img src={expert2} alt="Marcus Lee" className="expert-avatar" />
-                  <span className="expert-avatar-badge"><i className="bi bi-patch-check-fill"></i></span>
+
+            {/* Expert 2 */}
+            <div>
+              <div className="group h-full rounded-[18px] border border-black/[0.06] bg-white p-6 text-center shadow-[0_15px_35px_-18px_rgba(23,20,15,0.3)] transition-smooth hover:-translate-y-[5px] hover:shadow-[0_20px_45px_rgba(23,20,15,0.12)]">
+                <div className="relative mx-auto mb-5 h-[105px] w-[105px]">
+                  <img
+                    src={expert2}
+                    alt="Marcus Lee"
+                    className="h-full w-full rounded-full object-cover ring-4 ring-[var(--primary-shadow)]"
+                  />
+
+                  <span className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[var(--primary-color)] text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                    <i className="bi bi-patch-check-fill text-[13px]" />
+                  </span>
                 </div>
-                <h5>Marcus Lee</h5>
-                <span className="expert-spec-tag">Menswear Consultant</span>
-                <div className="expert-rating-row">
-                  <i className="bi bi-star-fill"></i>
+
+                <h5 className="m-0 mb-2 text-[17px] font-black text-[var(--dark-color)]">
+                  Marcus Lee
+                </h5>
+
+                <span className="inline-flex rounded-full bg-[var(--primary-shadow)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.05em] text-[var(--primary-color)]">
+                  Menswear Consultant
+                </span>
+
+                <div className="mt-4 flex items-center justify-center gap-1.5 text-[13px] font-bold text-[var(--dark-color)]">
+                  <i className="bi bi-star-fill text-[#d8a84e]" />
                   <span>4.8</span>
-                  <span className="expert-rating-count">(96 sessions)</span>
+                  <span className="font-medium text-[var(--text-color)]">
+                    (96 sessions)
+                  </span>
                 </div>
-                <p className="expert-bio">Sharp, modern tailoring advice for the everyday gentleman.</p>
-                <a href="#" className="expert-book-btn">Book Session <i className="bi bi-arrow-right"></i></a>
+
+                <p className="my-4 text-[13px] font-medium leading-[22px] text-[var(--text-color)]">
+                  Sharp, modern tailoring advice for the everyday gentleman.
+                </p>
+
+                <a
+                  href="#"
+                  className="inline-flex items-center justify-center gap-2 rounded-[50px] border border-[var(--primary-color)] bg-white px-5 py-2.5 text-[12px] font-bold text-[var(--primary-color)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-color)] hover:text-white"
+                >
+                  Book Session
+                  <i className="bi bi-arrow-right" />
+                </a>
               </div>
             </div>
-            <div className="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.4s">
-              <div className="expert-pro-card">
-                <div className="expert-avatar-wrap">
-                  <img src={expert3} alt="Sofia Reyes" className="expert-avatar" />
-                  <span className="expert-avatar-badge"><i className="bi bi-patch-check-fill"></i></span>
+
+            {/* Expert 3 */}
+            <div>
+              <div className="group h-full rounded-[18px] border border-black/[0.06] bg-white p-6 text-center shadow-[0_15px_35px_-18px_rgba(23,20,15,0.3)] transition-smooth hover:-translate-y-[5px] hover:shadow-[0_20px_45px_rgba(23,20,15,0.12)]">
+                <div className="relative mx-auto mb-5 h-[105px] w-[105px]">
+                  <img
+                    src={expert3}
+                    alt="Sofia Reyes"
+                    className="h-full w-full rounded-full object-cover ring-4 ring-[var(--primary-shadow)]"
+                  />
+
+                  <span className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[var(--primary-color)] text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                    <i className="bi bi-patch-check-fill text-[13px]" />
+                  </span>
                 </div>
-                <h5>Sofia Reyes</h5>
-                <span className="expert-spec-tag">Sustainable Fashion Advisor</span>
-                <div className="expert-rating-row">
-                  <i className="bi bi-star-fill"></i>
+
+                <h5 className="m-0 mb-2 text-[17px] font-black text-[var(--dark-color)]">
+                  Sofia Reyes
+                </h5>
+
+                <span className="inline-flex rounded-full bg-[var(--primary-shadow)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.05em] text-[var(--primary-color)]">
+                  Sustainable Fashion Advisor
+                </span>
+
+                <div className="mt-4 flex items-center justify-center gap-1.5 text-[13px] font-bold text-[var(--dark-color)]">
+                  <i className="bi bi-star-fill text-[#d8a84e]" />
                   <span>5.0</span>
-                  <span className="expert-rating-count">(148 sessions)</span>
+                  <span className="font-medium text-[var(--text-color)]">
+                    (148 sessions)
+                  </span>
                 </div>
-                <p className="expert-bio">Building a conscious wardrobe without compromising on style.</p>
-                <a href="#" className="expert-book-btn">Book Session <i className="bi bi-arrow-right"></i></a>
+
+                <p className="my-4 text-[13px] font-medium leading-[22px] text-[var(--text-color)]">
+                  Building a conscious wardrobe without compromising on style.
+                </p>
+
+                <a
+                  href="#"
+                  className="inline-flex items-center justify-center gap-2 rounded-[50px] border border-[var(--primary-color)] bg-white px-5 py-2.5 text-[12px] font-bold text-[var(--primary-color)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-color)] hover:text-white"
+                >
+                  Book Session
+                  <i className="bi bi-arrow-right" />
+                </a>
               </div>
             </div>
-            <div className="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.55s">
-              <div className="expert-pro-card">
-                <div className="expert-avatar-wrap">
-                  <img src={expert4} alt="Priya Sharma" className="expert-avatar" />
-                  <span className="expert-avatar-badge"><i className="bi bi-patch-check-fill"></i></span>
+
+            {/* Expert 4 */}
+            <div>
+              <div className="group h-full rounded-[18px] border border-black/[0.06] bg-white p-6 text-center shadow-[0_15px_35px_-18px_rgba(23,20,15,0.3)] transition-smooth hover:-translate-y-[5px] hover:shadow-[0_20px_45px_rgba(23,20,15,0.12)]">
+                <div className="relative mx-auto mb-5 h-[105px] w-[105px]">
+                  <img
+                    src={expert4}
+                    alt="Priya Sharma"
+                    className="h-full w-full rounded-full object-cover ring-4 ring-[var(--primary-shadow)]"
+                  />
+
+                  <span className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[var(--primary-color)] text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                    <i className="bi bi-patch-check-fill text-[13px]" />
+                  </span>
                 </div>
-                <h5>Priya Sharma</h5>
-                <span className="expert-spec-tag">Occasion Wear Expert</span>
-                <div className="expert-rating-row">
-                  <i className="bi bi-star-fill"></i>
+
+                <h5 className="m-0 mb-2 text-[17px] font-black text-[var(--dark-color)]">
+                  Priya Sharma
+                </h5>
+
+                <span className="inline-flex rounded-full bg-[var(--primary-shadow)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.05em] text-[var(--primary-color)]">
+                  Occasion Wear Expert
+                </span>
+
+                <div className="mt-4 flex items-center justify-center gap-1.5 text-[13px] font-bold text-[var(--dark-color)]">
+                  <i className="bi bi-star-fill text-[#d8a84e]" />
                   <span>4.9</span>
-                  <span className="expert-rating-count">(87 sessions)</span>
+                  <span className="font-medium text-[var(--text-color)]">
+                    (87 sessions)
+                  </span>
                 </div>
-                <p className="expert-bio">Show-stopping looks for weddings, galas, and celebrations.</p>
-                <a href="#" className="expert-book-btn">Book Session <i className="bi bi-arrow-right"></i></a>
+
+                <p className="my-4 text-[13px] font-medium leading-[22px] text-[var(--text-color)]">
+                  Show-stopping looks for weddings, galas, and celebrations.
+                </p>
+
+                <a
+                  href="#"
+                  className="inline-flex items-center justify-center gap-2 rounded-[50px] border border-[var(--primary-color)] bg-white px-5 py-2.5 text-[12px] font-bold text-[var(--primary-color)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-color)] hover:text-white"
+                >
+                  Book Session
+                  <i className="bi bi-arrow-right" />
+                </a>
               </div>
             </div>
           </div>
         </div>
       </section>
       {/* trend-scout-section-start */}
-      <section className="trend-section">
-        <div className="container-fluid">
-          <div className="section-heading wow fadeInDown">
-            <span className="section-tag">Fashion Intelligence</span>
-
-            <Link to="/trends">
-              <h2>The Trend Scout</h2>
+      <section
+        className="relative overflow-hidden bg-white px-[40px] py-[80px]"
+        id="trend-scout"
+      >
+        <div className="w-full">
+          {/* Section Heading */}
+          <div className="mb-12">
+            {/* Tag */}
+            <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand">
+              <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
+              Fashion Intelligence
+            </span>
+            {/* Heading + View More */}
+            <Link to="/trends" className="no-underline">
+              <h2 className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]">
+                The Trend Scout
+              </h2>
             </Link>
-
-            <div className="view-more">
-              <p>
-                Get styled ahead of the global curve. Discover real-time stylistic
-                shifts curated by computational trend models.
+            <div className="flex items-end justify-between gap-8">
+              <p className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand">
+                Get styled ahead of the global curve. Discover real-time
+                stylistic shifts curated by computational trend models.
               </p>
-
+              {/* View More */}
               <Link
                 to="/trends"
                 data-testid="home-trend-scout-title-link"
-                className="custm-btn"
+                className="
+                inline-flex shrink-0 items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[15px] text-[14px] font-bold leading-[24px] text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
               >
                 View More
-                <i className="fa-solid fa-arrow-right ms-2" />
+                <i className="fa-solid fa-arrow-right ml-2" />
               </Link>
             </div>
+
+            {/* Mobile View More */}
+            <Link
+              to="/trends"
+              className="
+          mt-5 inline-flex items-center gap-2
+          rounded-full bg-[#1F6F6B]
+          px-6 py-3
+          text-sm font-bold text-white
+          no-underline
+          transition-all duration-300
+          hover:-translate-y-1
+          hover:bg-[#185c59]
+          md:hidden
+        "
+            >
+              View More
+              <i className="fa-solid fa-arrow-right text-sm" />
+            </Link>
           </div>
 
+          {/* Swiper */}
           <div
             ref={trendSwiperRef}
-            className="swiper trend-swiper wow fadeInUp"
+            className="swiper trend-swiper relative !overflow-visible pb-2.5"
           >
             <div className="swiper-wrapper">
               {trends === null
                 ? Array.from({ length: 4 }).map((_, i) => (
-                  <div className="swiper-slide" key={i}>
-                    <Skeleton className="h-100 w-100 rounded-4" />
-                  </div>
-                ))
+                    <div className="swiper-slide h-auto" key={i}>
+                      <Skeleton className="h-full min-h-[300px] w-full rounded-xl" />
+                    </div>
+                  ))
                 : (trends.length > 0 ? trends : FALLBACK_TRENDS).map(
-                  (card, i) => {
-                    const prettyBucket = (bucket) =>
-                      (bucket || "")
-                        .replace(/[-_]+/g, " ")
-                        .replace(/\b\w/g, (char) => char.toUpperCase());
+                    (card, i) => {
+                      const prettyBucket = (bucket) =>
+                        (bucket || "")
+                          .replace(/[-_]+/g, " ")
+                          .replace(/\b\w/g, (char) => char.toUpperCase());
 
-                    const localisedBucket = card.bucket
-                      ? t(`trends.bucket.${card.bucket}`, {
-                        defaultValue: "",
-                      })
-                      : "";
+                      const localisedBucket = card.bucket
+                        ? t(`trends.bucket.${card.bucket}`, {
+                            defaultValue: "",
+                          })
+                        : "";
 
-                    const chip =
-                      localisedBucket ||
-                      card.label ||
-                      prettyBucket(card.bucket) ||
-                      card.tag;
+                      const chip =
+                        localisedBucket ||
+                        card.label ||
+                        prettyBucket(card.bucket) ||
+                        card.tag;
 
-                    const headline = card.headline || card.title;
-                    const body = card.summary || card.body || card.blurb;
-                    const sourceUrl = card.source_url;
+                      const headline = card.headline || card.title;
+                      const body = card.summary || card.body || card.blurb;
+                      const sourceUrl = card.source_url;
+                      const image =
+                        card.image_url ||
+                        "https://i.pinimg.com/736x/17/50/e9/1750e9027cf70bc488293df0f91daa1d.jpg";
 
-                    const image =
-                      card.image_url ||
-                      "https://i.pinimg.com/736x/17/50/e9/1750e9027cf70bc488293df0f91daa1d.jpg";
-
-                    return (
-                      <div className="swiper-slide" key={card.id || i}>
+                      return (
                         <div
-                          className="trend-card"
-                          style={{
-                            backgroundImage: `url(${image})`,
-                          }}
+                          className="swiper-slide !h-auto"
+                          key={card.id || i}
                         >
-                          <div className="trend-card-content">
-                            <span className="trend-tag">{chip}</span>
+                          {/* Card */}
+                          <div
+                            className="
+                        group
+                        relative
+                        flex
+                        aspect-square
+                        flex-col
+                        justify-end
+                        overflow-hidden
+                        rounded-xl
+                        bg-cover
+                        bg-top
+                        p-5
+                        transition-all
+                        duration-300
+                        ease-out
+                        hover:-translate-y-2
+                        hover:shadow-[0_20px_45px_rgba(23,20,15,0.12)]
+                      "
+                            style={{
+                              backgroundImage: `url(${image})`,
+                            }}
+                          >
+                            {/* Gradient */}
+                            <div
+                              className="
+                          pointer-events-none
+                          absolute inset-0
+                          z-[1]
+                          bg-gradient-to-t
+                          from-black
+                          via-black/0
+                          to-transparent
+                          transition-all
+                          duration-300
+                          group-hover:from-black
+                          group-hover:via-black/30
+                        "
+                            />
 
-                            <h3>{headline}</h3>
-
-                            {body && <p>{body}</p>}
-
-                            {sourceUrl && (
-                              <a
-                                href={sourceUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="trend-btn"
+                            {/* Content */}
+                            <div className="relative z-[2]">
+                              {/* Tag */}
+                              <span
+                                className="
+                            mb-2.5
+                            inline-block
+                            rounded-full
+                            bg-black
+                            px-2 py-1
+                            text-xs
+                            font-extrabold
+                            tracking-[0.5px]
+                            text-white
+                          "
                               >
-                                {t("home.trendReadSource", {
-                                  defaultValue: "Read Editorial",
-                                })}
+                                {chip}
+                              </span>
 
-                                <i className="bi bi-arrow-right ms-2" />
-                              </a>
-                            )}
+                              {/* Title */}
+                              <h3
+                                className="
+                            mb-0
+                            text-[16px]
+                            font-extrabold
+                            leading-[26px]
+                            text-white
+                          "
+                              >
+                                {headline}
+                              </h3>
+
+                              {/* Description */}
+                              {body && (
+                                <p
+                                  className="
+                              mb-0
+                              text-[14px]
+                              leading-[24px]
+                              text-white
+                            "
+                                >
+                                  {body}
+                                </p>
+                              )}
+
+                              {/* Source */}
+                              {sourceUrl && (
+                                <a
+                                  href={sourceUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="
+                              mt-2.5
+                              inline-flex
+                              items-center
+                              gap-1.5
+                              text-[0.85rem]
+                              font-medium
+                              text-white
+                              no-underline
+                              opacity-80
+                              transition-all
+                              duration-300
+                              group-hover:gap-3
+                              group-hover:opacity-100
+                            "
+                                >
+                                  {t("home.trendReadSource", {
+                                    defaultValue: "Read Editorial",
+                                  })}
+
+                                  <i className="bi bi-arrow-right" />
+                                </a>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  }
-                )}
+                      );
+                    },
+                  )}
             </div>
 
-            <button
-              type="button"
-              className="swiper-button-prev trend-swiper-prev"
-              aria-label="Previous trend"
-            >
-              <i className="bi bi-chevron-left" />
-            </button>
+            {/* Navigation ONLY when MORE THAN 4 cards */}
+            {trends &&
+              (trends.length > 0 ? trends.length : FALLBACK_TRENDS.length) >
+                4 && (
+                <>
+                  {/* Previous */}
+                  <button
+                    type="button"
+                    className="
+                trend-swiper-prev
+                !absolute
+                !left-0
+                !top-1/2
+                !z-20
+                !m-0
+                !flex
+                !h-11
+                !w-11
+                !-translate-y-1/2
+                !items-center
+                !justify-center
+                !rounded-full
+                !border-0
+                !bg-[#1F6F6B]
+                !text-white
+                !shadow-md
+                after:!hidden
+                md:!-left-4
+              "
+                    aria-label="Previous trend"
+                  >
+                    <i className="bi bi-chevron-left text-sm" />
+                  </button>
 
-            <button
-              type="button"
-              className="swiper-button-next trend-swiper-next"
-              aria-label="Next trend"
-            >
-              <i className="bi bi-chevron-right" />
-            </button>
+                  {/* Next */}
+                  <button
+                    type="button"
+                    className="
+                trend-swiper-next
+                !absolute
+                !right-0
+                !top-1/2
+                !z-20
+                !m-0
+                !flex
+                !h-11
+                !w-11
+                !-translate-y-1/2
+                !items-center
+                !justify-center
+                !rounded-full
+                !border-0
+                !bg-[#1F6F6B]
+                !text-white
+                !shadow-md
+                after:!hidden
+                md:!-right-4
+              "
+                    aria-label="Next trend"
+                  >
+                    <i className="bi bi-chevron-right text-sm" />
+                  </button>
+                </>
+              )}
           </div>
         </div>
       </section>
