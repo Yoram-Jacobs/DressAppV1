@@ -1,0 +1,71 @@
+{
+  "expo": {
+    "name": "DressApp",
+    "slug": "dressapp",
+    "owner": "krembo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FAF8F5"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "co.dressapp.mobile",
+      "buildNumber": "1"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FAF8F5"
+      },
+      "package": "co.dressapp.mobile",
+      "versionCode": 1,
+      "targetSdkVersion": 36,
+      "compileSdkVersion": 36,
+      "minSdkVersion": 26
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e46e33b6-54a8-493a-9817-41f2daa6ead3"
+      }
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow DressApp to access your camera to photograph your clothes."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow DressApp to access your photos to add clothes to your closet."
+        }
+      ],
+      "expo-font",
+      "expo-secure-store",
+      "expo-av",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#2d8f7f",
+          "sounds": [],
+          "iosDisplayInForeground": true,
+          "androidMode": "default",
+          "androidCollapsedTitle": "DressApp"
+        }
+      ]
+    ],
+    "scheme": "dressapp",
+    "newArchEnabled": false
+  }
+}
