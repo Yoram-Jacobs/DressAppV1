@@ -282,6 +282,24 @@ def _login_error_redirect(origin: str, reason: str) -> RedirectResponse:
     return RedirectResponse(target)
 
 
+def _smart_error_redirect(
+    origin: str,
+    reason: str,
+    state_data: dict[str, Any] | None = None,
+) -> RedirectResponse:
+    """Route errors to the mobile custom scheme when the flow was initiated
+    from the React Native app (``state_data['mobile']`` is True), otherwise
+    to the standard web ``/auth/callback`` page.
+
+    Using ``dressapp://auth/callback#error=…`` lets ``openAuthSessionAsync``
+    intercept the redirect so the LoginScreen can surface the error via
+    Alert.alert instead of leaving the user on a Chrome Custom Tab.
+    """
+    if state_data and state_data.get("mobile"):
+        return RedirectResponse(f"dressapp://auth/callback#error={reason}")
+    return _login_error_redirect(origin, reason)
+
+
 @auth_router.get("/login/start")
 async def google_login_start(
     request: Request,
@@ -414,6 +432,8 @@ async def _handle_login_callback(
     with_calendar = bool(state_data.get("with_calendar"))
     next_path = state_data.get("next") or "/home"
 
+    is_mobile = bool(state_data.get("mobile"))
+
     # 1) Exchange the auth code.
     try:
         tokens = await calendar_service.exchange_code(
@@ -427,11 +447,11 @@ async def _handle_login_callback(
         from urllib.parse import quote_plus
 
         reason = quote_plus(f"token_exchange_failed: {str(exc)[:160]}")
-        return RedirectResponse(f"{origin}{LOGIN_FRONTEND_PATH}#error={reason}")
+        return _smart_error_redirect(origin, reason, state_data)
 
     access_token = tokens.get("access_token")
     if not access_token:
-        return _login_error_redirect(origin, "no_access_token")
+        return _smart_error_redirect(origin, "no_access_token", state_data)
 
     # Log granted scopes for diagnostics — helps identify if People API
     # scopes were silently skipped by Google (restricted scope issue).
@@ -462,7 +482,7 @@ async def _handle_login_callback(
         userinfo = await calendar_service.fetch_userinfo(access_token)
     except Exception:  # noqa: BLE001
         logger.exception("Google sign-in userinfo fetch failed")
-        return _login_error_redirect(origin, "userinfo_failed")
+        return _smart_error_redirect(origin, "userinfo_failed", state_data)
 
     email = (userinfo.get("email") or "").lower()
 
@@ -485,11 +505,11 @@ async def _handle_login_callback(
     except Exception as e:
         logger.warning("Google sign-in People API fetch failed: %s", e)
     if not email:
-        return _login_error_redirect(origin, "no_email")
+        return _smart_error_redirect(origin, "no_email", state_data)
     if not userinfo.get("verified_email", True):
         # Most Google accounts are verified; reject unverified to prevent
         # account-takeover via email collision.
-        return _login_error_redirect(origin, "email_unverified")
+        return _smart_error_redirect(origin, "email_unverified", state_data)
 
     db = get_db()
     existing = await db.users.find_one({"email": email}, {"_id": 0})
