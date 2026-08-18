@@ -45,6 +45,14 @@ const { getDefaultConfig } = require('expo/metro-config');
 const path = require('path');
 const { existsSync } = require('fs');
 
+// ── llama.rn stub ─────────────────────────────────────────────────────────────
+// llama.rn is a peerDependency of @dressapp/eyes-native but is NOT installed on
+// the EAS build server (its NDK-heavy postinstall is not viable in CI).
+// We redirect Metro to a graceful JS stub so the bundle succeeds.
+// At runtime, EyesEngine.load() rejects and ClosetAddScreen falls back to the
+// server-side Eyes endpoint automatically — no user-visible crash.
+const LLAMA_STUB = path.resolve(__dirname, 'stubs/llama-stub.js');
+
 // Monorepo root (two levels up from apps/mobile)
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, '../..');
@@ -60,57 +68,24 @@ config.watchFolders = (config.watchFolders ?? []).filter(
   (f) => existsSync(f) && !f.includes('node_modules'),
 );
 
-// ── Singleton React packages — always resolve from apps/mobile/node_modules ──
-// These packages maintain global state (hooks, context, etc.) and MUST exist
-// as a single instance in the bundle. Pin them to the app's own node_modules
-// so the same physical file is used regardless of which workspace package
-// triggers the import.
-const REACT_SINGLETONS = [
-  'react',
-  'react-native',
-  'react-dom',
-  'react-is',
-  'scheduler',
-];
-
 config.resolver = {
   ...config.resolver,
   // Allow Metro to resolve packages from the monorepo root node_modules.
   // This covers Yarn-hoisted packages that live at root rather than apps/mobile.
-  // NOTE: nodeModulesPaths is for RESOLUTION; watchFolders is for HOT-RELOAD.
-  //       These two are intentionally decoupled here.
   nodeModulesPaths: [
     path.resolve(projectRoot, 'node_modules'),
     path.resolve(workspaceRoot, 'node_modules'),
   ],
-  // Platform-specific file resolution:
-  // Metro picks .native.js over .js automatically for React Native targets.
-  // This is how streamNdjson.native.js is selected over streamNdjson.js.
+  // Platform-specific file resolution.
   sourceExts: [
     ...config.resolver.sourceExts,
-    // Ensure .cjs files from workspace packages are handled
     'cjs',
   ],
-  // Force singleton packages to always resolve from apps/mobile/node_modules.
-  // This prevents multiple React instances when workspace packages (packages/*)
-  // are imported: without this fix they resolve React from root node_modules
-  // (v19.2.8) while app code uses apps/mobile/node_modules (v19.0.0).
-  resolveRequest: (context, moduleName, platform) => {
-    const base = moduleName.split('/')[0];
-    if (REACT_SINGLETONS.includes(base)) {
-      const localPath = path.resolve(projectRoot, 'node_modules', moduleName);
-      if (existsSync(localPath) || existsSync(localPath + '.js') || existsSync(localPath + '/index.js')) {
-        return context.resolveRequest(
-          {
-            ...context,
-            originModulePath: path.join(projectRoot, '_singleton_pin.js'),
-          },
-          moduleName,
-          platform,
-        );
-      }
-    }
-    return context.resolveRequest(context, moduleName, platform);
+  // Stub packages that are native-only / not installed on the EAS build server.
+  // These stubs satisfy the import at bundle-time and reject gracefully at runtime.
+  extraNodeModules: {
+    // llama.rn: NDK-heavy; not installed in CI. EyesEngine falls back to server.
+    'llama.rn': LLAMA_STUB,
   },
 };
 
