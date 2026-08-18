@@ -25,8 +25,8 @@
       },
       "package": "co.dressapp.mobile",
       "versionCode": 1,
-      "targetSdkVersion": 36,
-      "compileSdkVersion": 36,
+      "targetSdkVersion": 35,
+      "compileSdkVersion": 35,
       "minSdkVersion": 26
     },
     "web": {

@@ -49,7 +49,6 @@
     "react-hook-form": "^7.56.2",
     "react-i18next": "^17.0.4",
     "react-native": "0.79.6",
-    "react-native-iap": "^12.16.1",
     "react-native-paper": "^5.13.1",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
@@ -73,7 +72,6 @@
           "@dressapp/i18n",
           "@dressapp/types",
           "expo-av",
-          "react-native-iap",
           "moti",
           "react-native-webview"
         ],
