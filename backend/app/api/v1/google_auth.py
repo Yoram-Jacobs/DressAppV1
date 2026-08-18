@@ -293,6 +293,10 @@ async def google_login_start(
         default=None,
         description="Optional frontend path to redirect to after sign-in. Only relative paths are honoured.",
     ),
+    mobile: bool = Query(
+        default=False,
+        description="When true (sent by the React Native app), the post-login redirect uses dressapp://auth/callback instead of the web /auth/callback so the Custom Tab hands control back to the app.",
+    ),
 ) -> dict[str, Any]:
     """Public endpoint that returns the Google authorization URL for the
     *sign-in / sign-up* flow. No DressApp credentials required.
@@ -310,6 +314,7 @@ async def google_login_start(
         extra={
             "with_calendar": bool(with_calendar),
             "next": safe_next,
+            "mobile": bool(mobile),
         },
     )
 
@@ -582,11 +587,17 @@ async def _handle_login_callback(
             )
             return RedirectResponse(f"{origin}{LOGIN_FRONTEND_PATH}#{params}")
 
-    # 5) Mint our own JWT and hand it back to the frontend in the hash.
+    # 5) Mint our own JWT and hand it back to the client.
     jwt_token = create_access_token(
         user_doc["id"], {"email": user_doc["email"]}
     )
     params = urlencode({"token": jwt_token, "next": next_path})
+
+    # Mobile clients (React Native + openAuthSessionAsync) need a custom-scheme
+    # redirect so Chrome Custom Tab signals the app to close and returns the URL.
+    # Web clients get the standard web /auth/callback fragment.
+    if state_data.get("mobile"):
+        return RedirectResponse(f"dressapp://auth/callback#{params}")
     return RedirectResponse(f"{origin}{LOGIN_FRONTEND_PATH}#{params}")
 
 
