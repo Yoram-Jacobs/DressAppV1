@@ -20,6 +20,7 @@ Three flows live here:
 from __future__ import annotations
 
 import logging
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from urllib.parse import urlencode
@@ -277,6 +278,32 @@ def _frontend_origin(request: Request) -> str:
     return f"{scheme}://{host}" if host else ""
 
 
+# ---------------------------------------------------------------------------
+# Idempotency cache — protects against Chrome Custom Tab retrying the
+# /callback URL after it fires the dressapp:// intent to Android.  The
+# second hit finds the Google auth code already consumed → invalid_grant.
+# Keyed by the raw state JWT string (unique per sign-in attempt).
+# ---------------------------------------------------------------------------
+_EXCHANGE_CACHE: dict[str, tuple[str, float]] = {}
+_EXCHANGE_CACHE_TTL = 300.0   # seconds — covers any realistic Chrome retry
+_EXCHANGE_CACHE_MAX = 500     # safety cap on memory usage
+
+
+def _cleanup_exchange_cache() -> None:
+    """Evict expired entries; trim to half capacity when above the limit."""
+    now = time.time()
+    expired = [
+        k for k, (_, ts) in _EXCHANGE_CACHE.items()
+        if now - ts > _EXCHANGE_CACHE_TTL
+    ]
+    for k in expired:
+        _EXCHANGE_CACHE.pop(k, None)
+    if len(_EXCHANGE_CACHE) > _EXCHANGE_CACHE_MAX:
+        trim = list(_EXCHANGE_CACHE.keys())[: len(_EXCHANGE_CACHE) // 2]
+        for k in trim:
+            _EXCHANGE_CACHE.pop(k, None)
+
+
 def _login_error_redirect(origin: str, reason: str) -> RedirectResponse:
     target = f"{origin}{LOGIN_FRONTEND_PATH}#error={reason}"
     return RedirectResponse(target)
@@ -433,6 +460,21 @@ async def _handle_login_callback(
     next_path = state_data.get("next") or "/home"
 
     is_mobile = bool(state_data.get("mobile"))
+
+    # --- Idempotency guard (Chrome Custom Tab retry protection) ---
+    # Chrome sometimes re-requests the backend callback after firing the
+    # dressapp:// intent to Android.  If we already processed this state
+    # JWT successfully, return the cached redirect immediately without
+    # hitting Google's token endpoint a second time.
+    _cleanup_exchange_cache()
+    if state in _EXCHANGE_CACHE:
+        cached_url, cached_at = _EXCHANGE_CACHE[state]
+        if time.time() - cached_at < _EXCHANGE_CACHE_TTL:
+            logger.info(
+                "google sign-in: returning cached redirect (Chrome retry) "
+                "state_jti=%.12s", state[-12:]
+            )
+            return RedirectResponse(cached_url)
 
     # 1) Exchange the auth code.
     try:
@@ -605,6 +647,8 @@ async def _handle_login_callback(
                     "warning": "calendar_persist_failed",
                 }
             )
+            if is_mobile:
+                return RedirectResponse(f"dressapp://auth/callback#{params}")
             return RedirectResponse(f"{origin}{LOGIN_FRONTEND_PATH}#{params}")
 
     # 5) Mint our own JWT and hand it back to the client.
@@ -616,9 +660,19 @@ async def _handle_login_callback(
     # Mobile clients (React Native + openAuthSessionAsync) need a custom-scheme
     # redirect so Chrome Custom Tab signals the app to close and returns the URL.
     # Web clients get the standard web /auth/callback fragment.
-    if state_data.get("mobile"):
-        return RedirectResponse(f"dressapp://auth/callback#{params}")
-    return RedirectResponse(f"{origin}{LOGIN_FRONTEND_PATH}#{params}")
+    if is_mobile:
+        final_url = f"dressapp://auth/callback#{params}"
+    else:
+        final_url = f"{origin}{LOGIN_FRONTEND_PATH}#{params}"
+
+    # Cache the successful result so a Chrome retry of the same callback
+    # returns the same redirect without re-exchanging the (now invalid) code.
+    _EXCHANGE_CACHE[state] = (final_url, time.time())
+    logger.info(
+        "google sign-in: success email=%s mobile=%s — redirect cached",
+        email, is_mobile,
+    )
+    return RedirectResponse(final_url)
 
 
 # -------------------- 3) calendar routes --------------------
