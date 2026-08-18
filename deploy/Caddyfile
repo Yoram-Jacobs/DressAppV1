@@ -13,8 +13,15 @@
     # Uncomment to use staging Let's Encrypt while testing:
     # acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
     servers {
-        protocols h1 h3
+        protocols h1 h2
     }
+}
+
+# Redirect www → bare domain so mobile users who type or follow
+# www.dressapp.co links land on the canonical origin. Without this,
+# Caddy has no server block for www and returns a TLS error.
+www.{$DOMAIN} {
+    redir https://{$DOMAIN}{uri} permanent
 }
 
 {$DOMAIN} {

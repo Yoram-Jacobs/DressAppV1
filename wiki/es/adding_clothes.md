@@ -1,28 +1,42 @@
-# Ingerir y agregar ropa
+# Digitalizar y Añadir Ropa
 
-Digitaliza tu closet físico en segundos usando nuestros múltiples paradigmas de importación.
+Digitaliza tu armario físico en segundos gracias al escaneo con IA multimodal, recorte inteligente de fondos y reconstrucción automática de imágenes.
 
-## Descripción general
-Ingiera ropa mediante instantáneas de cámaras en vivo, carga de archivos, etiquetas QR de pasaportes de productos digitales (DPP) o recibos digitales (extracción OCR).
+## Descripción General
+Añade ropa mediante fotos en vivo de la cámara, subidas múltiples desde la galería, etiquetas QR del Pasaporte Digital de Producto (DPP) o recibos digitales (OCR de facturas). La IA integrada recorta automáticamente los fondos, clasifica los atributos de moda, evalúa la integridad del recorte y reconstruye prendas cubiertas o cortadas.
 
-## Requisitos previos
-- Fotografías claras y bien iluminadas de prendas individuales.
-- Recibos digitales en PDF o imagen.
-- Acceso a la cámara para escanear códigos QR.
+## Requisitos Previos
+- Fotos claras y bien iluminadas de las prendas (selfies en el espejo, fotos de conjunto de cuerpo entero o tomas planas / flat-lays).
+- Acceso a la cámara para escanear artículos físicos y códigos QR.
+- Recibos digitales o capturas de facturas (PDF / PNG / JPEG) para compras de comercio electrónico.
 
-## Paso a paso
-1. **Carga interactiva**: tome una foto o arrastre archivos a la pestaña **Cámara y carga**.
-2. **Live Matting**: La IA segmenta la prenda, elimina fondos y completa automáticamente más de 20 campos (talla, colores, telas).
-3. **Ajustes de categoría**: si la categoría automática es incorrecta, actualícela en el menú desplegable; el recorte se vuelve a pulir automáticamente para la nueva categoría.
-4. **Importación de recibos digitales**: cambie a la pestaña **Importación digital** para analizar facturas de pedidos en línea y bloquear los campos de transacción automáticamente.
-5. **Escaneo DPP**: toque **Escanear QR** para leer instantáneamente la composición del fabricante y los datos de cuidado.
+## Paso a Paso
 
-## Resultados esperados
-Las prendas aparecen instantáneamente en tu armario con recortes limpios y transparentes y atributos de búsqueda completamente indexados.
+1. **Subida y Captura Interactivas**:
+   - Pulsa en **Añadir elemento** &rarr; selecciona **Tomar foto** o sube una o varias fotos de atuendos desde tu dispositivo.
+   - La detección de duplicados integrada comprueba al instante si ya habías subido la misma prenda.
+2. **Segmentación por IA y Detección de Múltiples Prendas**:
+   - El modelo de visión aísla prendas individuales (chaquetas, partes superiores, faldas, pantalones, calzado, accesorios) en una sola pasada.
+3. **Comprobador de Calidad por IA y Reparación Automática de Imágenes**:
+   - El Comprobador de Calidad visual de Gemini inspecciona cada elemento recortado:
+     - **Completo**: Las prendas intactas y despejadas se recortan directamente.
+     - **Compleción de Imagen**: Si a una prenda le faltan contornos laterales, tiene partes cubiertas (por bolsos o brazos) o cuellos/dobladillos cortados, la IA realiza un outpainting automático para completar la tela faltante.
+     - **Reconstrucción Completa de Estudio**: Las prendas fuertemente cortadas (como zapatos en los que solo se ve la punta) se reconstruyen íntegramente en fotos de catálogo con calidad de estudio.
+4. **Etiquetado Automático de Metadatos**:
+   - La IA extrae más de 20 atributos de moda (colores, composición textil, subcategoría, código de vestimenta, marca y estado).
+5. **Recibos Digitales y Etiquetas DPP**:
+   - Cambia a la pestaña **Importación Digital** para analizar correos de confirmación de pedido o facturas, registrando precios de compra y tallas verificadas.
+   - Pulsa en **Escanear QR (DPP)** en la etiqueta para importar los datos de trazabilidad y pautas de cuidado del Pasaporte Digital de Producto de la UE.
+6. **Guardar en el Armario**:
+   - Pulsa en **Guardar**. Las prendas aparecerán de inmediato en la cuadrícula de tu armario, mientras que las compleciones generativas se finalizan en segundo plano de manera transparente.
 
-## Solución de problemas
-- **Contorno de doble corte**: asegúrese de que la prenda esté plana y fotografiada contra una pared o piso sólido que contraste.
-- **El OCR del recibo falla**: resalte manualmente los campos de texto del recibo usando los selectores de superposición ajustables.
+## Resultados Esperados
+Cada prenda aparece en tu armario digital como una fotografía centrada, limpia y con calidad de estudio, con atributos de búsqueda completamente indexados y etiquetas taxonómicas enriquecidas.
+
+## Resolución de Problemas
+- **Prendas Cortadas / Parciales en las Fotos**: La IA detecta automáticamente los límites recortados y los reconstruye; también puedes pulsar en **Reparar foto** en la tarjeta de detalle de cualquier prenda para solicitar una regeneración de estudio manual.
+- **Iluminación y Contraste**: Para obtener mejores resultados con prendas oscuras, toma las fotografías sobre fondos contrastantes.
+- **Discrepancias en el OCR del Recibo**: Utiliza el selector interactivo de cajas sobre la imagen del recibo para designar manualmente las líneas de productos correspondientes.
 
 ## Limitaciones
-- Las cargas individuales tienen un límite de 45 segundos; Las cargas por lotes grandes (>5 elementos) se dirigen a colas secuenciales en segundo plano para evitar tiempos de espera.
+- Las subidas masivas de alta resolución (>5 prendas) se procesan a través de colas asíncronas en segundo plano para garantizar un rendimiento óptimo sin tiempo de espera excesivo en el navegador.

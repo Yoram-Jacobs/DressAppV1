@@ -386,7 +386,7 @@ async def capture_topup(
                     "ai_configuration.credits_used_this_month": 0,
                     "ai_configuration.provider_mode": ai_config.get("provider_mode") or "standard",
                     "ai_configuration.selected_provider": ai_config.get("selected_provider") or "google_ai",
-                    "ai_configuration.selected_model": ai_config.get("selected_model") or "gemini-2.5-flash",
+                    "ai_configuration.selected_model": ai_config.get("selected_model") or "gemini-3.5-flash-lite",
                 }
             }
         )
@@ -444,50 +444,40 @@ async def listing_buy_create(
     total_cents = list_price_cents + shipping_cents
     currency = listing["financial_metadata"].get("currency", "USD").upper()
 
-    from app.services import atzmai_client
-    amount_units = total_cents / 100.0
+    from app.services import paypal_client
     description = f"{listing.get('title','DressApp item')}"[:127]
-    phone = user.get("phone", "0500000000") or "0500000000"
-    email = user["email"]
-    customer_name = f"{user.get('first_name', 'User')} {user.get('last_name', '')}".strip() or "User"
-    
-    # Resolve callback and redirect URLs dynamically
     redirect_url = f"{settings.APP_PUBLIC_URL}/transactions?sub_status=success&token={listing_id}"
-    callback_url = f"{settings.APP_PUBLIC_URL}/api/v1/atzmai/webhook"
+    cancel_url = f"{settings.APP_PUBLIC_URL}/transactions?sub_status=cancel&token={listing_id}"
 
     try:
-        items = [{"amount": amount_units, "description": description}]
-        resp = await atzmai_client.generate_payment_link(
-            items=items,
-            customer_name=customer_name,
-            email=email,
-            phone=phone,
-            language="he",
-            redirect_url=redirect_url,
-            fail_redirect_url=redirect_url,
-            callback_url=callback_url,
-            atzmai_client_id=user["id"],
+        order = await paypal_client.create_order(
+            amount_cents=total_cents,
             currency=currency,
+            reference_id=f"listing:{listing_id}",
+            description=description,
+            return_url=redirect_url,
+            cancel_url=cancel_url,
+            custom_id=listing_id,
         )
-    except atzmai_client.AtzmaiError as exc:
-        raise HTTPException(502, {"atzmai_error": str(exc.body)}) from exc
+    except paypal_client.PayPalError as exc:
+        raise HTTPException(502, {"paypal_error": str(exc.body)}) from exc
 
-    body_data = resp.get("body") or {}
-    atzmai_payment_id = body_data.get("atzmai_payment_id")
-    payment_url = body_data.get("url")
-
-    if not atzmai_payment_id or not payment_url:
-        raise HTTPException(502, "Invalid response from Atzmai payment gateway")
+    paypal_order_id = order["id"]
+    payment_url = next(
+        (link["href"] for link in order.get("links", []) if link["rel"] == "approve"),
+        None,
+    )
+    if not payment_url and order.get("mock"):
+        payment_url = redirect_url + f"&order_id={paypal_order_id}"
 
     tx_id = f"tx_{uuid.uuid4().hex[:16]}"
     financial = _platform_fee_math(list_price_cents)
     financial.gross_cents = total_cents  # bookkeeping: total charged to buyer
     kind = "rent" if listing.get("mode") == "rent" else "buy"
     
-    # Insert into atzmai_topups for webhook tracking
     topup_doc = {
         "id": tx_id,
-        "atzmai_payment_id": atzmai_payment_id,
+        "atzmai_payment_id": paypal_order_id,
         "user_id": user["id"],
         "amount_cents": total_cents,
         "currency": currency,
@@ -508,7 +498,7 @@ async def listing_buy_create(
         "kind": kind,
         "currency": currency,
         "financial": financial.model_dump(),
-        "paypal": {"order_id": atzmai_payment_id},
+        "paypal": {"order_id": paypal_order_id},
         "status": "pending",
         "shipping_fee_cents": shipping_cents,
         "created_at": _now_iso(),
@@ -517,7 +507,7 @@ async def listing_buy_create(
     await db.transactions.insert_one(tx_doc)
     
     return {
-        "order_id": atzmai_payment_id,
+        "order_id": paypal_order_id,
         "transaction_id": tx_id,
         "amount_cents": total_cents,
         "list_price_cents": list_price_cents,
@@ -533,7 +523,7 @@ async def listing_buy_capture(
     order_id: str,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    from app.services import atzmai_client
+    from app.services import paypal_client
     db = get_db()
     tx = await db.transactions.find_one(
         {"paypal.order_id": order_id, "listing_id": listing_id, "buyer_id": user["id"]},
@@ -546,11 +536,16 @@ async def listing_buy_capture(
 
     topup = await db.atzmai_topups.find_one({"atzmai_payment_id": order_id})
     if not topup:
-        raise HTTPException(404, "Atzmai transaction not found")
+        raise HTTPException(404, "Payment record not found")
 
-    is_captured = topup.get("status") == "captured" or atzmai_client.is_mock_mode()
+    try:
+        captured = await paypal_client.capture_order(order_id)
+    except paypal_client.PayPalError as exc:
+        raise HTTPException(502, {"paypal_error": str(exc.body)}) from exc
+
+    is_captured = captured.get("status") == "COMPLETED" or captured.get("mock", False)
     
-    if is_captured and topup.get("status") != "captured":
+    if is_captured:
         await db.atzmai_topups.update_one(
             {"atzmai_payment_id": order_id},
             {"$set": {"status": "captured", "updated_at": _now_iso()}}
@@ -559,7 +554,13 @@ async def listing_buy_capture(
     if not is_captured:
         raise HTTPException(400, "Listing payment has not been captured yet")
 
-    capture_id = f"atz_cap_{uuid.uuid4().hex[:12]}"
+    capture_id = (
+        (captured.get("purchase_units") or [{}])[0]
+        .get("payments", {})
+        .get("captures", [{}])[0]
+        .get("id")
+    ) or f"pay_cap_{uuid.uuid4().hex[:12]}"
+    
     await db.transactions.update_one(
         {"id": tx["id"]},
         {
@@ -573,7 +574,6 @@ async def listing_buy_capture(
             }
         },
     )
-    # Mark listing sold
     await db.listings.update_one(
         {"id": listing_id},
         {"$set": {"status": "sold", "updated_at": _now_iso()}},
@@ -690,9 +690,6 @@ async def create_subscription_order(
     payload: SubscribeIn,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    from app.services import atzmai_client
-    from datetime import datetime, timezone
-    
     tier = payload.tier
     if tier == "pro":
         tier = "manager"
@@ -707,48 +704,31 @@ async def create_subscription_order(
         "professional": {"monthly": 10.00, "yearly": 100.00}
     }
     amount = prices.get(tier, prices["manager"])[payload.plan_type]
+
+    # Map pre-configured PayPal NCP hosted checkout links
+    ncp_urls = {
+        ("manager", "monthly"): "https://www.paypal.com/ncp/payment/CDSS5445B87P4",
+        ("manager", "yearly"): "https://www.paypal.com/ncp/payment/CZ7L985TNX7EA",
+        ("professional", "monthly"): "https://www.paypal.com/ncp/payment/F3WXF38MHU4YS",
+        ("professional", "yearly"): "https://www.paypal.com/ncp/payment/JC738F2H9FCNU",
+    }
     
-    start_date = datetime.now(timezone.utc).strftime("%d/%m/%Y")
-    description = f"DressApp {tier.upper()} Plan ({payload.plan_type.capitalize()})"
-    phone = user.get("phone", "0500000000") or "0500000000"
-    email = user["email"]
-    customer_name = f"{user.get('first_name', 'User')} {user.get('last_name', '')}".strip() or "User"
-    recurring_period = 4 if payload.plan_type == "yearly" else 3
-    payments_count = 12 if payload.plan_type == "yearly" else 999
+    payment_url = ncp_urls.get((tier, payload.plan_type), ncp_urls[("manager", "monthly")])
     
     # Resolve callback and redirect URLs dynamically
     redirect_url = payload.return_url or f"{settings.APP_PUBLIC_URL}/profile?sub_status=success"
-    callback_url = f"{settings.APP_PUBLIC_URL}/api/v1/atzmai/webhook"
     
-    try:
-        resp = await atzmai_client.generate_recurring_payment_link(
-            amount=amount,
-            description=description,
-            email=email,
-            phone=phone,
-            customer_name=customer_name,
-            recurring_period=recurring_period,
-            payments_count=payments_count,
-            start_date=start_date,
-            redirect_url=redirect_url,
-            callback_url=callback_url,
-            atzmai_client_id=user["id"],
-            currency="USD",
-        )
-    except atzmai_client.AtzmaiError as exc:
-        raise HTTPException(502, {"atzmai_error": str(exc.body)}) from exc
-        
-    body_data = resp.get("body") or {}
-    atzmai_payment_id = body_data.get("atzmai_payment_id")
-    payment_url = body_data.get("url")
+    paypal_sub_id = f"ncp_{uuid.uuid4().hex[:14].upper()}"
 
-    if not atzmai_payment_id or not payment_url:
-        raise HTTPException(502, "Invalid response from Atzmai payment gateway")
-        
+    # If mock mode, bypass real redirect for testing flow convenience
+    from app.services import paypal_client
+    if settings.PAYPAL_MOCK_MODE or not paypal_client.is_configured():
+        payment_url = f"{redirect_url}&token={paypal_sub_id}" if "?" in redirect_url else f"{redirect_url}?token={paypal_sub_id}"
+
     db = get_db()
     topup_doc = {
         "id": f"sub_{uuid.uuid4().hex[:16]}",
-        "atzmai_payment_id": atzmai_payment_id,
+        "atzmai_payment_id": paypal_sub_id,
         "user_id": user["id"],
         "amount_cents": int(amount * 100),
         "currency": "USD",
@@ -764,7 +744,7 @@ async def create_subscription_order(
     await db.atzmai_topups.insert_one(topup_doc)
     
     return {
-        "subscription_id": atzmai_payment_id,
+        "subscription_id": paypal_sub_id,
         "status": "APPROVAL_PENDING",
         "approve_url": payment_url,
     }
@@ -775,7 +755,6 @@ async def capture_subscription(
     subscription_id: str,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    from app.services import atzmai_client
     from datetime import datetime, timezone, timedelta
     
     db = get_db()
@@ -783,8 +762,8 @@ async def capture_subscription(
     if not topup:
         raise HTTPException(404, "Subscription transaction not found")
         
-    # In mock mode, auto-capture it
-    is_captured = topup.get("status") == "captured" or atzmai_client.is_mock_mode()
+    # In mock mode or hosted NCP checkout, auto-capture it
+    is_captured = topup.get("status") == "captured" or settings.PAYPAL_MOCK_MODE
     
     if is_captured and topup.get("status") != "captured":
         await db.atzmai_topups.update_one(
@@ -851,7 +830,7 @@ async def capture_subscription(
 async def cancel_subscription_endpoint(
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    from app.services import atzmai_client
+    from app.services import paypal_client
     
     sub_info = user.get("subscription") or {}
     sub_id = sub_info.get("atzmai_subscription_id") or sub_info.get("paypal_subscription_id")

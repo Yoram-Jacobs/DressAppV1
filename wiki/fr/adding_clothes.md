@@ -1,28 +1,42 @@
-# Ingestion et ajout de vêtements
+# Numériser et Ajouter des Vêtements
 
-Numérisez votre garde-robe physique en quelques secondes grâce à nos multiples paradigmes d'importation.
+Numérisez votre garde-robe physique en quelques secondes grâce au scan IA multimodal, au détourage intelligent et à la reconstruction automatique d'image.
 
 ## Aperçu
-Ingérez des vêtements à l'aide de clichés de caméra en direct, de téléchargements de fichiers, de balises QR de passeports de produits numériques (DPP) ou de reçus numériques (extraction OCR).
+Ajoutez des vêtements à l'aide de prises de vue en direct, de téléversements multiples depuis votre galerie, de QR codes de Passeport Numérique de Produit (DPP) ou de reçus numériques (OCR de facture). L'IA intégrée détoure automatiquement l'arrière-plan, étiquette les attributs de mode, évalue la complétude du cadrage et reconstruit les vêtements masqués ou coupés.
 
-## Conditions préalables
-- Des photos claires et bien éclairées de vêtements individuels.
-- Reçus numériques PDF ou image.
-- Accès à la caméra pour scanner les codes QR.
+## Prérequis
+- Photos nettes et bien éclairées de vos vêtements (selfies miroir, photos de tenue en pied ou flat-lays).
+- Accès à la caméra pour scanner les articles physiques et les QR codes.
+- Reçus numériques ou captures d'écran de factures (PDF / PNG / JPEG) pour vos achats e-commerce.
 
-## Étape par étape
-1. **Téléchargement interactif** : prenez une photo ou faites glisser des fichiers dans l'onglet **Appareil photo et téléchargement**.
-2. **Live Matting** : L'IA segmente le vêtement, supprime les arrière-plans et remplit automatiquement plus de 20 champs (taille, couleurs, tissus).
-3. **Ajustements de catégorie** : si la catégorie automatique est incorrecte, mettez-la à jour dans la liste déroulante ; la découpe est automatiquement repolie pour la nouvelle catégorie.
-4. **Importation de reçus numériques** : passez à l'onglet **Importation numérique** pour analyser les factures de commande en ligne et verrouiller automatiquement les champs de transaction.
-5. **DPP Scan** : appuyez sur **Scan QR** pour lire instantanément la composition et les informations d'entretien du fabricant.
+## Étape par Étape
 
-## Résultats attendus
-Les vêtements apparaissent instantanément dans votre placard avec des découpes nettes et transparentes et des attributs de recherche entièrement indexés.
+1. **Téléversement & Prise de Vue Interactifs** :
+   - Appuyez sur **Ajouter un article** &rarr; choisissez **Prendre une photo** ou téléversez une ou plusieurs photos de tenue depuis votre appareil.
+   - La détection de doublons intégrée vérifie instantanément si vous avez déjà téléversé le même vêtement.
+2. **Segmentation IA & Détection Multi-Articles** :
+   - Le modèle de vision isole chaque vêtement distinct (vestes, hauts, jupes, pantalons, chaussures, accessoires) en une seule passe.
+3. **Contrôle Qualité IA & Réparation Automatique d'Image** :
+   - Le Contrôleur de Qualité visuel de Gemini inspecte chaque élément détouré :
+     - **Complet** : Les vêtements intacts et sans obstacle sont détourés directement.
+     - **Complétion d'Image** : Si un article a des contours manquants, des zones masquées (par un sac ou un bras) ou des ourlets/cols coupés, l'IA effectue un outpainting automatique pour recréer le tissu manquant.
+     - **Reconstruction Studio Complète** : Les articles très tronqués (comme des chaussures dont seul le bout est visible) sont entièrement reconstruits en photos de catalogue de qualité studio.
+4. **Étiquetage Automatique des Métadonnées** :
+   - L'IA extrait plus de 20 attributs de mode (couleurs, composition textile, sous-catégorie, code vestimentaire, marque et état).
+5. **Reçus Numériques & Tags DPP** :
+   - Passez à l'onglet **Import Numérique** pour analyser les e-mails de confirmation de commande ou les factures, en verrouillant le prix d'achat et les tailles vérifiées.
+   - Appuyez sur **Scanner QR (DPP)** sur l'étiquette pour importer les informations de traçabilité et les conseils d'entretien du Passeport Numérique Européen.
+6. **Enregistrer dans le Dressing** :
+   - Appuyez sur **Enregistrer**. Les articles apparaissent immédiatement dans la grille de votre dressing, tandis que les complétions génératives se finalisent harmonieusement en arrière-plan.
 
-## Dépannage
-- **Contour à double coupe** : assurez-vous que le vêtement est plat et photographié contre un mur ou un sol solide contrastant.
-- **Échec de l'OCR du reçu** : mettez en surbrillance manuelle les champs de texte du reçu à l'aide des sélecteurs de superposition réglables.
+## Résultats Attendus
+Chaque vêtement s'affiche dans votre garde-robe numérique sous forme d'une photographie centrée, nette et de qualité studio, dotée d'attributs de recherche indexés et d'une taxonomie riche.
+
+## Résolution des Problèmes
+- **Vêtements Coupés / Partiels sur les Photos** : L'IA détecte automatiquement les limites rognées et les reconstruit ; vous pouvez également appuyer sur **Réparer la photo** sur la fiche détaillée d'un article pour déclencher manuellement une régénération studio.
+- **Éclairage & Contraste** : Pour des résultats optimaux avec des vêtements sombres, photographiez-les sur un fond clair et contrasté.
+- **Écarts d'OCR sur les Reçus** : Utilisez le sélecteur de zone interactif sur l'image du reçu pour désigner manuellement les lignes de produits correspondantes.
 
 ## Limites
-- Les téléchargements uniques sont limités à 45 secondes ; les téléchargements par lots volumineux (> 5 éléments) sont acheminés vers des files d'attente séquentielles en arrière-plan pour éviter les délais d'attente.
+- Les téléversements groupés haute résolution (>5 articles) sont traités via des files d'attente asynchrones en arrière-plan pour garantir une fluidité parfaite sans expiration de session dans le navigateur.

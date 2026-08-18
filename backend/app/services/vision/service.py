@@ -691,26 +691,13 @@ class GarmentVisionService:
         )
         crop_bytes = image_bytes
         crop_mime = "image/jpeg"
+        defer_matte = False
 
-        defer_matte = settings.AUTO_MATTE_CROPS
-        if settings.AUTO_MATTE_CROPS and detections:
-            best_det = max(
-                detections,
-                key=lambda d: (
-                    max(0, d["bbox"][2] - d["bbox"][0])
-                    * max(0, d["bbox"][3] - d["bbox"][1])
-                ),
-            )
-            raw_crops = await asyncio.to_thread(
-                self._bbox_crop_useful, image_bytes, [best_det], is_single_item=True,
-            )
-            out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
-            if out:
-                d_meta, crop_bytes, crop_mime = out[0]
-                defer_matte = d_meta.get("defer_matte", False)
-            elif raw_crops:
-                d_meta, crop_bytes, crop_mime = raw_crops[0]
-                defer_matte = d_meta.get("defer_matte", False)
+        if settings.AUTO_MATTE_CROPS:
+            matted = await self._whole_image_matte(image_bytes)
+            if matted:
+                crop_bytes = matted
+                crop_mime = "image/png"
 
         single = await self.analyze(
             image_bytes, language=language, think=think,
@@ -1989,6 +1976,85 @@ class GarmentVisionService:
             logger.warning("_is_single_item check failed: %s", repr(exc)[:160])
             return False
 
+    async def _gatekeep_image(self, image_bytes: bytes) -> int:
+        """Fast pre-check to count garments and route the pipeline."""
+        import io
+        import asyncio
+        from PIL import Image, ImageOps
+        try:
+            # Resize image to tiny thumbnail (512x512) to make the Gemini upload extremely fast
+            with Image.open(io.BytesIO(image_bytes)) as img:
+                img = ImageOps.exif_transpose(img)
+                img.thumbnail((512, 512))
+                if img.mode != "RGB":
+                    img = img.convert("RGB")
+                out = io.BytesIO()
+                img.save(out, format="JPEG", quality=80)
+                small_bytes = out.getvalue()
+
+            client = self._get_gemini()
+            system_prompt = (
+                "You are a visual gatekeeper. Your job is to count the number of distinct clothing garments, "
+                "shoes, or accessories clearly visible in this image. "
+                "Ignore tags, hangers, or background objects."
+            )
+            model = self.detect_model
+            
+            schema = {
+                "type": "object",
+                "properties": {
+                    "items_seen": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Briefly list the clothing garments you see (e.g. ['yellow t-shirt'])"
+                    },
+                    "count": {
+                        "type": "integer",
+                        "description": "The final count of clothing items (0, 1, or more)"
+                    }
+                },
+                "required": ["items_seen", "count"]
+            }
+            
+            # Put a strict 12-second timeout so it never hangs the pipeline indefinitely,
+            # but gives the LLM enough time to respond under load.
+            async def _call_vision():
+                return await client.vision(
+                    system=system_prompt,
+                    user_parts=["Analyze the image and return the count of garments.", small_bytes],
+                    model=model,
+                    response_mime_type="application/json",
+                    response_schema=schema,
+                )
+                
+            resp = await asyncio.wait_for(_call_vision(), timeout=12.0)
+            
+            try:
+                import json
+                clean_resp = resp.strip()
+                if clean_resp.startswith("```json"):
+                    clean_resp = clean_resp[7:]
+                elif clean_resp.startswith("```"):
+                    clean_resp = clean_resp[3:]
+                if clean_resp.endswith("```"):
+                    clean_resp = clean_resp[:-3]
+                clean_resp = clean_resp.strip()
+                
+                data = json.loads(clean_resp)
+                count = int(data.get("count", 2))
+                logger.info("_gatekeep_image parsed successfully. Model: %s. Count: %d, Items seen: %s", model, count, data.get("items_seen"))
+                return count
+            except Exception as e:
+                logger.warning("_gatekeep_image failed to parse JSON: %s. Raw response: %s", e, resp)
+                return 2 # Fallback to SegFormer if unparseable
+        except asyncio.TimeoutError:
+            logger.warning("_gatekeep_image timed out after 12s, falling back to SegFormer")
+            return 2
+        except Exception as exc:
+            import traceback
+            logger.warning("_gatekeep_image check failed: %s\n%s", repr(exc)[:160], traceback.format_exc())
+            return 2
+
     async def analyze_outfits_stream(
         self,
         images_bytes_list: list[bytes],
@@ -2014,9 +2080,18 @@ class GarmentVisionService:
         # 1. Detect on all photos concurrently
         async def _detect_and_crop(idx: int, img_bytes: bytes) -> tuple[int, list[tuple[dict[str, Any], bytes, str]]]:
             try:
-                detections = await self.detect_items(img_bytes)
+                count = await self._gatekeep_image(img_bytes)
+                if count == 0:
+                    logger.info("Gatekeeper: photo %d has 0 garments — dropping it", idx)
+                    return idx, []
+                elif count == 1:
+                    logger.info("Gatekeeper: photo %d has 1 garment — bypassing SegFormer and routing to whole-image crop", idx)
+                    detections = [{"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment"}]
+                else:
+                    logger.info("Gatekeeper: photo %d has %d garments — running SegFormer detect_items", idx, count)
+                    detections = await self.detect_items(img_bytes)
             except Exception as exc:
-                logger.warning("analyze_outfits_stream: detect_items failed for idx %d: %s", idx, repr(exc)[:160])
+                logger.warning("analyze_outfits_stream: detect_items / gatekeep failed for idx %d: %s", idx, repr(exc)[:160])
                 return idx, []
 
             try:
@@ -2031,39 +2106,51 @@ class GarmentVisionService:
                         )
                     else:
                         best_det = {"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment"}
-                    
-                    # Crop the image to the detected garment bounds so it isn't
-                    # floating in a huge frame, and so fast_matte works correctly.
-                    raw_crops = await asyncio.to_thread(
-                        self._bbox_crop_useful, img_bytes, [best_det], is_single_item=True,
-                    )
-                    for det, _, _ in raw_crops:
-                        det["defer_matte"] = settings.AUTO_MATTE_CROPS
-                        det["is_single_item"] = True
-                    fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
-                    return idx, fast_crops
+
+                    det = {
+                        "label": best_det.get("label") or "garment",
+                        "kind": best_det.get("kind") or "garment",
+                        "bbox": best_det.get("bbox", [0, 0, 1000, 1000]),
+                        "defer_matte": False,
+                    }
+                    if settings.AUTO_MATTE_CROPS:
+                        matted = await self._whole_image_matte(img_bytes)
+                        if matted:
+                            return idx, [(det, matted, "image/png")]
+                    return idx, [(det, img_bytes, "image/jpeg")]
 
                 useful = self._filter_useful_detections(detections, cap)
                 if not useful:
                     best_det = {"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment"}
-                    raw_crops = await asyncio.to_thread(
-                        self._bbox_crop_useful, img_bytes, [best_det], is_single_item=True,
-                    )
-                    for det, _, _ in raw_crops:
-                        det["defer_matte"] = settings.AUTO_MATTE_CROPS
-                        det["is_single_item"] = True
-                    fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
-                    return idx, fast_crops
+                    det = {
+                        "label": "garment",
+                        "kind": "garment",
+                        "bbox": [0, 0, 1000, 1000],
+                        "defer_matte": False,
+                    }
+                    if settings.AUTO_MATTE_CROPS:
+                        matted = await self._whole_image_matte(img_bytes)
+                        if matted:
+                            return idx, [(det, matted, "image/png")]
+                    return idx, [(det, img_bytes, "image/jpeg")]
 
                 raw_crops = await asyncio.to_thread(self._bbox_crop_useful, img_bytes, useful)
-                
-                # Apply fast, no-"Polishing" matting using the SegFormer mask directly.
-                # This bypasses the heavy rembg background task (Polishing) while
-                # still providing cutouts, which scales safely for 6+ batch uploads.
-
-
                 fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
-                return idx, fast_crops
+                
+                final_crops = []
+                for det, cbytes, mime in fast_crops:
+                    det["defer_matte"] = False
+                    if mime != "image/png" and settings.AUTO_MATTE_CROPS:
+                        try:
+                            from app.services import background_matting
+                            matted = await background_matting.matte_crop(cbytes)
+                            if matted:
+                                cbytes = matted
+                                mime = "image/png"
+                        except Exception as exc:
+                            logger.info("rembg crop matte failed: %s", exc)
+                    final_crops.append((det, cbytes, mime))
+                return idx, final_crops
             except Exception as exc:
                 logger.warning("analyze_outfits_stream: crop/matte failed for idx %d: %s", idx, repr(exc)[:160])
                 return idx, []

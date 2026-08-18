@@ -770,7 +770,7 @@ export default function Closet() {
       clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.items]);
+  }, [((store.items || []).filter((it) => it && it.clean_image_status === 'pending').map((it) => it.id).sort().join(','))]);
 
   const fetchSemantic = useCallback(async (text) => {
     setSemanticLoading(true);
@@ -920,8 +920,7 @@ export default function Closet() {
       return res.status === "rejected" && res.reason?.response?.status !== 404;
     });
     if (failedIds.length === 0) {
-      toast.success(`${ids.length} item${ids.length === 1 ? "" : "s"} deleted`);
-      store.triggerRepair();
+      toast.success(`${ids.length} item${ids.length === 1 ? '' : 's'} deleted`);
       return;
     }
     // Roll back the failed ones so the UI matches reality again.
@@ -932,7 +931,6 @@ export default function Closet() {
     const okCount = ids.length - failedIds.length;
     if (okCount > 0) {
       toast.message(`Deleted ${okCount}, failed ${failedIds.length}`);
-      store.triggerRepair();
     } else {
       toast.error(t("pages.closet.could_not_delete_the_selected"));
     }

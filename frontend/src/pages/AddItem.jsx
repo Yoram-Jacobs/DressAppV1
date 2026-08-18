@@ -219,66 +219,62 @@ const getDefaultCurrency = () => {
 };
 
 const fileToBase64 = async (file, maxSide = 800, quality = 0.6) => {
-  let img = null;
-  if (typeof createImageBitmap === "function") {
-    try {
-      img = await createImageBitmap(file, { imageOrientation: "from-image" });
-    } catch (_) {}
-  }
-
-  if (!img) {
-    img = await new Promise((resolve, reject) => {
-      const i = new Image();
-      const objectUrl = URL.createObjectURL(file);
-      i.onload = () => {
-        URL.revokeObjectURL(objectUrl);
-        resolve(i);
+  return new Promise((resolve, reject) => {
+    if (!file) return resolve(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      if (typeof dataUrl !== "string") {
+        return reject(new Error("Failed to read image as data URL"));
+      }
+      const img = new Image();
+      img.onload = () => {
+        let width = img.naturalWidth || img.width || 0;
+        let height = img.naturalHeight || img.height || 0;
+        if (!width || !height) {
+          const comma = dataUrl.indexOf(",");
+          return resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
+        }
+        if (width > maxSide || height > maxSide) {
+          if (width > height) {
+            height = Math.round((height * maxSide) / width);
+            width = maxSide;
+          } else {
+            width = Math.round((width * maxSide) / height);
+            height = maxSide;
+          }
+        }
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            const comma = dataUrl.indexOf(",");
+            return resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
+          }
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+          const outDataUrl = canvas.toDataURL("image/jpeg", quality);
+          canvas.width = 0;
+          canvas.height = 0;
+          const comma = outDataUrl.indexOf(",");
+          resolve(comma >= 0 ? outDataUrl.slice(comma + 1) : outDataUrl);
+        } catch (_) {
+          const comma = dataUrl.indexOf(",");
+          resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
+        }
       };
-      i.onerror = (e) => {
-        URL.revokeObjectURL(objectUrl);
-        reject(e);
+      img.onerror = () => {
+        const comma = dataUrl.indexOf(",");
+        resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
       };
-      i.src = objectUrl;
-    });
-  }
-
-  let { width, height } = img;
-  if (width > maxSide || height > maxSide) {
-    if (width > height) {
-      height = Math.round((height * maxSide) / width);
-      width = maxSide;
-    } else {
-      width = Math.round((width * maxSide) / height);
-      height = maxSide;
-    }
-  }
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-
-  // Fill white background in case it's a transparent image being saved as JPEG
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fillRect(0, 0, width, height);
-
-  ctx.drawImage(img, 0, 0, width, height);
-
-  // Free memory
-  if (img.close) img.close();
-  else img.src = "";
-
-  // Use webp if supported by the browser, fallback to jpeg.
-  // Actually, standardizing on jpeg is safer for the backend since webp support in some older backend libraries can be spotty.
-  // The request says "(e.g. jpeg/webp)", so jpeg is standard.
-  const outDataUrl = canvas.toDataURL("image/jpeg", quality);
-
-  // Clear canvas memory
-  canvas.width = 0;
-  canvas.height = 0;
-
-  const comma = outDataUrl.indexOf(",");
-  return comma >= 0 ? outDataUrl.slice(comma + 1) : outDataUrl;
+      img.src = dataUrl;
+    };
+    reader.onerror = (err) => reject(err);
+    reader.readAsDataURL(file);
+  });
 };
 
 const fmtCents = (cents, cur = "USD") =>
@@ -316,6 +312,9 @@ const blankFields = () => ({
   marketplace_intent: "own",
   repair_advice: "",
   tags: [],
+  image_quality_status: "",
+  image_quality_reason: "",
+  reconstruction_prompt: "",
 });
 
 /** Coerce analyze payload into a plain, editable form dict.
@@ -526,73 +525,6 @@ export default function AddItem() {
     }
   }, [importFile]);
 
-  // Background matting / polishing of cards in review/edit state.
-  // Whenever a card becomes status === 'ready' (analysis complete), has cropBase64,
-  // has deferMatte === true, and has not yet started/finished polishing,
-  // we trigger api.polishCrop in the background so the user sees the clean cutout.
-  useEffect(() => {
-    const toPolish = cards.find(
-      (c) =>
-        c.status === "ready" &&
-        c.cropBase64 &&
-        (c.deferMatte ||
-          (c.fields?.category &&
-            c.fields.category !== c.lastPolishedCategory)) &&
-        c.polishStatus !== "pending",
-    );
-    if (toPolish) {
-      const targetCategory = toPolish.fields?.category || toPolish.label;
-      setCards((prev) =>
-        prev.map((c) =>
-          c.id === toPolish.id
-            ? {
-                ...c,
-                polishStatus: "pending",
-                lastPolishedCategory: targetCategory,
-              }
-            : c,
-        ),
-      );
-
-      api
-        .polishCrop({
-          image_base64: toPolish.cropBase64,
-          category: targetCategory,
-        })
-        .then((res) => {
-          if (res.image_base64) {
-            setCards((prev) =>
-              prev.map((c) =>
-                c.id === toPolish.id
-                  ? {
-                      ...c,
-                      polishStatus: "success",
-                      previewUrl: res.image_base64,
-                      cropBase64: res.image_base64,
-                      // Polish finished successfully before save! Clear deferMatte.
-                      deferMatte: false,
-                    }
-                  : c,
-              ),
-            );
-          } else {
-            setCards((prev) =>
-              prev.map((c) =>
-                c.id === toPolish.id ? { ...c, polishStatus: "error" } : c,
-              ),
-            );
-          }
-        })
-        .catch((err) => {
-          console.error("Failed to polish crop:", err);
-          setCards((prev) =>
-            prev.map((c) =>
-              c.id === toPolish.id ? { ...c, polishStatus: "error" } : c,
-            ),
-          );
-        });
-    }
-  }, [cards]);
   const receiptFileInputRef = useRef(null);
   // Background batch state — shown instead of cards when user uploads
   // more than BG_THRESHOLD photos at once. Auto-analyzes + auto-saves
@@ -705,10 +637,18 @@ export default function AddItem() {
       onFiles: (files) => handleFiles(files),
     });
 
-  // Hydrate from a DPP scan (e.g. user hit "Scan QR" in TopNav → we're
-  // now opening AddItem with ?source=dpp and a draft in sessionStorage).
+  // Hydrate from a DPP scan or auto-open Camera when navigated with ?source=camera
   useEffect(() => {
-    if (searchParams.get("source") !== "dpp") return;
+    const src = searchParams.get("source");
+    if (src === "camera") {
+      searchParams.delete("source");
+      setSearchParams(searchParams, { replace: true });
+      setTimeout(() => {
+        openCamera();
+      }, 150);
+      return;
+    }
+    if (src !== "dpp") return;
     let raw = null;
     try {
       raw = sessionStorage.getItem("dpp_draft");
@@ -1559,30 +1499,20 @@ export default function AddItem() {
   };
 
   const handleFiles = async (fileList) => {
-    const files = Array.from(fileList || []).filter((f) => {
+    const rawList = Array.from(fileList || []);
+    const files = rawList.filter((f) => {
       const type = f.type || "";
       const name = f.name || "";
       return (
-        type.startsWith("image/") || /\.(jpe?g|png|webp|heic|heif)$/i.test(name)
+        !type ||
+        type.startsWith("image/") ||
+        /\.(jpe?g|png|webp|heic|heif|bmp|gif)$/i.test(name)
       );
     });
     if (!files.length) return;
 
     // ----------------------------------------------------------------
     // Phase Z3 — pre-flight duplicate detection (client-side).
-    //
-    // Compute the SHA-256 / aHash / colour-sig of every selected file
-    // in-browser (~150–250 ms per file in parallel) then check them
-    // against the locally-cached closet snapshot (``closetStore``)
-    // using ``findDuplicatesInCloset`` — a 1:1 port of the backend's
-    // ``is_duplicate_match``. Either prompts the user (≤5 photos) or
-    // silently drops the duplicates (>5 photos, batch path) before
-    // any analyze / Gemini / SegFormer cost is incurred.
-    //
-    // Previous version round-tripped to ``POST /closet/preflight``
-    // for the same information that was already in the cache —
-    // 300–1500 ms of pure overhead. Endpoint is now deprecated, kept
-    // mounted as a fallback for older clients.
     // ----------------------------------------------------------------
     const fingerprints = [];
     for (const rawF of files) {
@@ -1591,25 +1521,30 @@ export default function AddItem() {
         if (!b64) continue;
 
         // Convert base64 to Blob synchronously to bypass CSP connection blocks on data URLs
-        const byteCharacters = atob(b64);
-        const byteArrays = [];
-        const sliceSize = 512;
-        for (
-          let offset = 0;
-          offset < byteCharacters.length;
-          offset += sliceSize
-        ) {
-          const slice = byteCharacters.slice(offset, offset + sliceSize);
-          const byteNumbers = new Array(slice.length);
-          for (let i = 0; i < slice.length; i++) {
-            byteNumbers[i] = slice.charCodeAt(i);
+        let blob;
+        try {
+          const byteCharacters = atob(b64);
+          const byteArrays = [];
+          const sliceSize = 512;
+          for (
+            let offset = 0;
+            offset < byteCharacters.length;
+            offset += sliceSize
+          ) {
+            const slice = byteCharacters.slice(offset, offset + sliceSize);
+            const byteNumbers = new Array(slice.length);
+            for (let i = 0; i < slice.length; i++) {
+              byteNumbers[i] = slice.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            byteArrays.push(byteArray);
           }
-          const byteArray = new Uint8Array(byteNumbers);
-          byteArrays.push(byteArray);
+          blob = new Blob(byteArrays, { type: "image/jpeg" });
+        } catch (_) {
+          blob = rawF;
         }
-        const blob = new Blob(byteArrays, { type: "image/jpeg" });
 
-        // Use a safe File constructor wrapper that falls back to Blob to avoid TypeError: File constructor is not supported on certain WebView/mobile browsers
+        // Use a safe File constructor wrapper that falls back to Blob to avoid TypeError on certain WebView/mobile browsers
         let f;
         try {
           f = new File([blob], rawF.name || "image.jpg", {
@@ -1639,7 +1574,7 @@ export default function AddItem() {
           phash,
           color_sig,
           filename: rawF.name || null,
-          size_bytes: blob.size,
+          size_bytes: blob.size || rawF.size || 0,
           _b64: b64,
         });
       } catch (err) {
@@ -1649,6 +1584,15 @@ export default function AddItem() {
           err,
         );
       }
+    }
+
+    if (!fingerprints.length) {
+      toast.error(
+        t("addItem.uploadFailed", {
+          defaultValue: "Failed to process image. Please try again.",
+        }),
+      );
+      return;
     }
 
     let matches = [];
@@ -1697,20 +1641,36 @@ export default function AddItem() {
     // chosen behaviour (option 2B). Track the count so the final
     // toast can mention them.
     if (isBatch) {
-      // A photo is a duplicate if the backend returned a match keyed
-      // by EITHER its sha256 OR its phash. Build the lookup against
-      // both fingerprints so we can correlate back to the surviving
-      // file list.
-      const dupShas = new Set(matches.map((m) => m.sha256).filter(Boolean));
-      const dupPhashes = new Set(matches.map((m) => m.phash).filter(Boolean));
-      const survivors = fingerprints
-        .filter(
-          (fp) =>
-            !(fp.sha256 && dupShas.has(fp.sha256)) &&
-            !(fp.phash && dupPhashes.has(fp.phash)),
-        )
-        .map((fp) => fp.file);
-      const skipped = files.length - survivors.length;
+      // Filter out closet duplicates and also deduplicate intra-batch items sequentially.
+      const dupShas = new Set();
+      const dupPhashes = new Set();
+      matches.forEach((m) => {
+        if (m.existing?.id && !m.existing.id.startsWith("batch-")) {
+          if (m.sha256) dupShas.add(m.sha256);
+          if (m.phash) dupPhashes.add(m.phash);
+        }
+      });
+
+      const seenShas = new Set();
+      const seenPhashes = new Set();
+      const survivors = [];
+      for (const fp of fingerprints) {
+        const isClosetDup =
+          (fp.sha256 && dupShas.has(fp.sha256)) ||
+          (fp.phash && dupPhashes.has(fp.phash));
+        if (isClosetDup) continue;
+
+        const isBatchDup =
+          (fp.sha256 && seenShas.has(fp.sha256)) ||
+          (fp.phash && seenPhashes.has(fp.phash));
+        if (isBatchDup) continue;
+
+        if (fp.sha256) seenShas.add(fp.sha256);
+        if (fp.phash) seenPhashes.add(fp.phash);
+        survivors.push(fp);
+      }
+
+      const skipped = fingerprints.length - survivors.length;
       if (!survivors.length) {
         toast.message(
           t("addItem.preflight.allDuplicatesSkippedBatch", {
@@ -1720,10 +1680,7 @@ export default function AddItem() {
         );
         return;
       }
-      return handleBatchBackground(
-        survivors.map((f) => fingerprints.find((x) => x.file === f)),
-        skipped,
-      );
+      return handleBatchBackground(survivors, skipped);
     }
 
     // INTERACTIVE path (≤5 photos): open the scrollable confirm
@@ -2142,6 +2099,12 @@ export default function AddItem() {
         reconstructionAdvised: false,
         deferMatte: !!meta.defer_matte,
         _streamSlot: meta._slot,
+        sourceSha256: originalCard.sourceSha256 || null,
+        sourcePhash: originalCard.sourcePhash || null,
+        sourceColorSig: originalCard.sourceColorSig || null,
+        sourceFilename: originalCard.sourceFilename || null,
+        sourceSizeBytes: originalCard.sourceSizeBytes || null,
+        isDuplicate: !!originalCard.isDuplicate,
       });
 
       const handleDetect = (frame) => {
@@ -2226,6 +2189,12 @@ export default function AddItem() {
                   deferMatte: !!frame.defer_matte,
                   needsReconstruction: !!frame.needs_reconstruction,
                   reconstructionReasons: frame.reconstruction_reasons || [],
+                  imageQualityStatus:
+                    frame.analysis?.image_quality_status || null,
+                  imageQualityReason:
+                    frame.analysis?.image_quality_reason || null,
+                  reconstructionPrompt:
+                    frame.analysis?.reconstruction_prompt || null,
                   reconstructedUrl,
                   reconstructedB64: recValidated ? rec.image_b64 : null,
                   reconstructionMeta: recValidated
@@ -2506,6 +2475,12 @@ export default function AddItem() {
                       : c.deferMatte,
                   needsReconstruction: !!frame.needs_reconstruction,
                   reconstructionReasons: frame.reconstruction_reasons || [],
+                  imageQualityStatus:
+                    frame.analysis?.image_quality_status || null,
+                  imageQualityReason:
+                    frame.analysis?.image_quality_reason || null,
+                  reconstructionPrompt:
+                    frame.analysis?.reconstruction_prompt || null,
                   reconstructedUrl,
                   reconstructedB64: recValidated ? rec.image_b64 : null,
                   reconstructionMeta: recValidated
@@ -2930,7 +2905,11 @@ export default function AddItem() {
           // so the cross-page floater + the completion toast
           // ("You have news in your closet") fire when the last one
           // drains, regardless of which page the user is on.
-          if (r.value.clean_image_status === "pending") {
+          if (
+            r.value.clean_image_status === "pending" ||
+            r.value.needs_reconstruction ||
+            r.value.reconstruction_metadata?.deferred
+          ) {
             polishCandidates.push(r.value);
           }
         } else {
@@ -2954,7 +2933,6 @@ export default function AddItem() {
       if (failures.length) {
         closetStore.recordSaveFailures(failures);
       }
-      closetStore.triggerRepair();
     };
     // Don't await — let it run in the background. The Closet page
     // is a separate React tree at this point.
@@ -3853,12 +3831,14 @@ export default function AddItem() {
                   {/* Extracted Ingestion List */}
                   {extractedItems.length > 0 && (
                     <div className="w-full flex flex-col mt-8 border-t border-border/40 pt-6 text-left">
+                      {/* Header */}
                       <h4 className="font-display text-base font-semibold mb-4 flex items-center justify-between">
                         <span>
                           {t("addItem.import.extractedListTitle", {
                             defaultValue: "Parsed Receipt Items",
                           })}
                         </span>
+
                         <span className="text-xs text-muted-foreground">
                           {extractedItems.filter((i) => i.selected).length} /{" "}
                           {extractedItems.length}{" "}
@@ -3868,8 +3848,9 @@ export default function AddItem() {
                         </span>
                       </h4>
 
-                      <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin">
-                        {extractedItems.map((item, idx) => (
+                      {/* Items */}
+                      <div className="space-y-4 max-h-[500px] overflow-y-auto pe-1 scrollbar-thin">
+                        {extractedItems.map((item) => (
                           <div
                             key={item.id}
                             className={cn(
@@ -3889,7 +3870,7 @@ export default function AddItem() {
                               />
                             </div>
 
-                            {/* Image Preview / Plus Button */}
+                            {/* Image */}
                             <div className="relative w-20 h-24 bg-secondary/10 rounded-xl overflow-hidden shrink-0 border border-border/40 flex items-center justify-center self-center">
                               {item.base64Image ? (
                                 <img
@@ -3909,7 +3890,7 @@ export default function AddItem() {
                               )}
                             </div>
 
-                            {/* Item Details Inputs */}
+                            {/* Details */}
                             <div className="flex-1 min-w-0 grid grid-cols-2 gap-3 pt-6 md:pt-0">
                               <div className="col-span-2">
                                 <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
@@ -3917,6 +3898,7 @@ export default function AddItem() {
                                     defaultValue: "Title",
                                   })}
                                 </Label>
+
                                 <Input
                                   value={item.name}
                                   onChange={(e) =>
@@ -3929,12 +3911,14 @@ export default function AddItem() {
                                   className="h-9 rounded-lg text-xs"
                                 />
                               </div>
+
                               <div>
                                 <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
                                   {t("addItem.import.fieldBrand", {
                                     defaultValue: "Brand",
                                   })}
                                 </Label>
+
                                 <Input
                                   value={item.brand}
                                   onChange={(e) =>
@@ -3947,12 +3931,14 @@ export default function AddItem() {
                                   className="h-9 rounded-lg text-xs"
                                 />
                               </div>
+
                               <div>
                                 <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
                                   {t("addItem.import.fieldPrice", {
                                     defaultValue: "Price ($)",
                                   })}
                                 </Label>
+
                                 <Input
                                   type="number"
                                   step="0.01"
@@ -3969,9 +3955,9 @@ export default function AddItem() {
                               </div>
                             </div>
 
-                            {/* Actions Pane */}
-                            <div className="flex flex-row md:flex-col justify-center gap-2 border-t md:border-t-0 md:border-l border-border/30 pt-3 md:pt-0 md:pl-4 min-w-[120px]">
-                              {/* Attach Image Button */}
+                            {/* Actions */}
+                            <div className="flex flex-row md:flex-col justify-center gap-2 border-t md:border-t-0 md:border-s border-border/30 pt-3 md:pt-0 md:ps-4 min-w-[120px]">
+                              {/* Attach Photo */}
                               <Button
                                 variant="outline"
                                 size="xs"
@@ -3982,14 +3968,14 @@ export default function AddItem() {
                                 className="flex-1 md:flex-initial rounded-lg text-[10px] font-semibold h-8 flex items-center justify-center gap-1.5"
                               >
                                 <Plus className="h-3 w-3" />
+
                                 {t("addItem.import.attachPhoto", {
                                   defaultValue: "Attach Photo",
                                 })}
                               </Button>
 
-                              {/* Link Closet Item Button */}
+                              {/* Closet Link */}
                               {item.closetItem ? (
-                                // Linked state — show thumbnail chip
                                 <div className="flex flex-col items-center gap-1 mt-0.5">
                                   <button
                                     type="button"
@@ -4012,6 +3998,7 @@ export default function AddItem() {
                                     ) : (
                                       <Shirt className="h-6 w-6 text-[hsl(var(--accent))]/60" />
                                     )}
+
                                     <span className="absolute inset-0 flex items-end justify-center pb-1 bg-gradient-to-t from-black/50 to-transparent">
                                       <span className="text-[8px] font-bold text-white leading-none text-center px-0.5 truncate max-w-full">
                                         {t("addItem.import.linked", {
@@ -4020,6 +4007,7 @@ export default function AddItem() {
                                       </span>
                                     </span>
                                   </button>
+
                                   <button
                                     type="button"
                                     onClick={() =>
@@ -4031,6 +4019,7 @@ export default function AddItem() {
                                       defaultValue: "Change",
                                     })}
                                   </button>
+
                                   <button
                                     type="button"
                                     onClick={() => handleUnlinkItem(item.id)}
@@ -4052,6 +4041,7 @@ export default function AddItem() {
                                   className="flex-1 md:flex-initial rounded-lg text-[10px] font-semibold h-8 flex items-center justify-center gap-1.5"
                                 >
                                   <Folder className="h-3 w-3" />
+
                                   {t("addItem.import.linkCloset", {
                                     defaultValue: "Link Closet",
                                   })}
@@ -4062,6 +4052,7 @@ export default function AddItem() {
                         ))}
                       </div>
 
+                      {/* Bottom Actions */}
                       <div className="flex justify-end gap-3 mt-6">
                         <Button
                           variant="outline"
@@ -4073,6 +4064,7 @@ export default function AddItem() {
                             defaultValue: "Clear List",
                           })}
                         </Button>
+
                         <Button
                           type="button"
                           onClick={handleSaveExtractedItems}
@@ -4098,324 +4090,173 @@ export default function AddItem() {
                           )}
                         </Button>
                       </div>
-
-                      {/* ── Phase R — Receipt ingest analysis overlay ──────────────────── */}
-                      <AnimatePresence>
-                        {ingestPhase && (
-                          <motion.div
-                            key="ingest-overlay"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl"
-                            style={{
-                              background: "hsl(var(--background) / 0.92)",
-                              backdropFilter: "blur(12px)",
-                              WebkitBackdropFilter: "blur(12px)",
-                            }}
-                          >
-                            <div className="relative flex items-center justify-center mb-8">
-                              <motion.div
-                                className="absolute rounded-full border-2 border-[hsl(var(--accent))]/30"
-                                style={{ width: 120, height: 120 }}
-                                animate={{
-                                  scale: [1, 1.18, 1],
-                                  opacity: [0.4, 0.1, 0.4],
-                                }}
-                                transition={{
-                                  duration: 2.2,
-                                  repeat: Infinity,
-                                  ease: "easeInOut",
-                                }}
-                              />
-                              <motion.div
-                                className="absolute rounded-full border border-[hsl(var(--accent))]/20"
-                                style={{ width: 90, height: 90 }}
-                                animate={{
-                                  scale: [1, 1.12, 1],
-                                  opacity: [0.3, 0.05, 0.3],
-                                }}
-                                transition={{
-                                  duration: 2.2,
-                                  repeat: Infinity,
-                                  ease: "easeInOut",
-                                  delay: 0.3,
-                                }}
-                              />
-                              <svg
-                                width="80"
-                                height="80"
-                                viewBox="0 0 80 80"
-                                className="-rotate-90"
-                              >
-                                <circle
-                                  cx="40"
-                                  cy="40"
-                                  r="34"
-                                  fill="none"
-                                  stroke="hsl(var(--border))"
-                                  strokeWidth="4"
-                                />
-                                <motion.circle
-                                  cx="40"
-                                  cy="40"
-                                  r="34"
-                                  fill="none"
-                                  stroke="hsl(var(--accent))"
-                                  strokeWidth="4"
-                                  strokeLinecap="round"
-                                  strokeDasharray={2 * Math.PI * 34}
-                                  animate={{
-                                    strokeDashoffset:
-                                      ingestPhase === "syncing"
-                                        ? 0
-                                        : ingestProgress.total > 0
-                                          ? 2 *
-                                            Math.PI *
-                                            34 *
-                                            (1 -
-                                              ingestProgress.done /
-                                                ingestProgress.total)
-                                          : 2 * Math.PI * 34,
-                                  }}
-                                  transition={{
-                                    duration: 0.5,
-                                    ease: "easeOut",
-                                  }}
-                                />
-                              </svg>
-                              <div className="absolute flex items-center justify-center">
-                                {ingestPhase === "syncing" ? (
-                                  <motion.div
-                                    animate={{ rotate: 360 }}
-                                    transition={{
-                                      duration: 1.2,
-                                      repeat: Infinity,
-                                      ease: "linear",
-                                    }}
-                                  >
-                                    <RefreshCw className="h-7 w-7 text-[hsl(var(--accent))]" />
-                                  </motion.div>
-                                ) : (
-                                  <Sparkles className="h-7 w-7 text-[hsl(var(--accent))]" />
-                                )}
-                              </div>
-                            </div>
-
-                            <AnimatePresence mode="wait">
-                              <motion.p
-                                key={ingestPhase}
-                                initial={{ opacity: 0, y: 6 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -6 }}
-                                transition={{ duration: 0.25 }}
-                                className="text-base font-semibold text-foreground mb-1 text-center"
-                              >
-                                {ingestPhase === "syncing"
-                                  ? t("addItem.import.ingestSyncing", {
-                                      defaultValue: "Syncing to your Closet…",
-                                    })
-                                  : t("addItem.import.ingestCataloguing", {
-                                      defaultValue:
-                                        "Cataloguing item {{done}} of {{total}}…",
-                                      done: ingestProgress.done + 1,
-                                      total: ingestProgress.total,
-                                    })}
-                              </motion.p>
-                            </AnimatePresence>
-
-                            <p className="text-xs text-muted-foreground text-center max-w-[240px]">
-                              {ingestPhase === "syncing"
-                                ? t("addItem.import.ingestSyncingHint", {
-                                    defaultValue:
-                                      "Refreshing your wardrobe — almost there.",
-                                  })
-                                : t("addItem.import.ingestAnalysisHint", {
-                                    defaultValue:
-                                      "Running rembg & Gemini Vision in the background.",
-                                  })}
-                            </p>
-
-                            {ingestPhase === "saving" &&
-                              ingestProgress.total > 0 && (
-                                <motion.div
-                                  initial={{ opacity: 0, scale: 0.85 }}
-                                  animate={{ opacity: 1, scale: 1 }}
-                                  className="mt-5 px-4 py-1.5 rounded-full bg-[hsl(var(--accent))]/10 border border-[hsl(var(--accent))]/20 text-xs font-mono text-[hsl(var(--accent))]"
-                                >
-                                  {ingestProgress.done} / {ingestProgress.total}
-                                </motion.div>
-                              )}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
                     </div>
                   )}
-                </div>
 
-                {/* Hidden file input for item attachment */}
-                <input
-                  type="file"
-                  ref={itemImageInputRef}
-                  accept="image/*"
-                  onChange={handleItemImageChange}
-                  className="sr-only"
-                />
+                  {/* Hidden file input for item attachment */}
+                  <input
+                    type="file"
+                    ref={itemImageInputRef}
+                    accept="image/*"
+                    onChange={handleItemImageChange}
+                    className="sr-only"
+                  />
 
-                {/* Select Closet Item Dialog */}
-                <Dialog
-                  open={closetModalOpen}
-                  onOpenChange={setClosetModalOpen}
-                >
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle>
-                        {t("addItem.import.selectClosetItem", {
-                          defaultValue: "Link to Closet Item",
-                        })}
-                      </DialogTitle>
-                      <DialogDescription>
-                        {t("addItem.import.selectClosetItemDesc", {
-                          defaultValue:
-                            "Select an existing item in your closet to update its price and brand details.",
-                        })}
-                      </DialogDescription>
-                    </DialogHeader>
+                  {/* Select Closet Item Dialog */}
+                  <Dialog
+                    open={closetModalOpen}
+                    onOpenChange={setClosetModalOpen}
+                  >
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>
+                          {t("addItem.import.selectClosetItem", {
+                            defaultValue: "Link to Closet Item",
+                          })}
+                        </DialogTitle>
+                        <DialogDescription>
+                          {t("addItem.import.selectClosetItemDesc", {
+                            defaultValue:
+                              "Select an existing item in your closet to update its price and brand details.",
+                          })}
+                        </DialogDescription>
+                      </DialogHeader>
 
-                    <div className="space-y-4 py-2">
-                      <Input
-                        type="search"
-                        placeholder={t("common.search", {
-                          defaultValue: "Search closet...",
-                        })}
-                        value={closetSearch}
-                        onChange={(e) => setClosetSearch(e.target.value)}
-                        className="rounded-xl border-border focus-visible:ring-[hsl(var(--accent))]"
-                      />
+                      <div className="space-y-4 py-2">
+                        <Input
+                          type="search"
+                          placeholder={t("common.search", {
+                            defaultValue: "Search closet...",
+                          })}
+                          value={closetSearch}
+                          onChange={(e) => setClosetSearch(e.target.value)}
+                          className="rounded-xl border-border focus-visible:ring-[hsl(var(--accent))]"
+                        />
 
-                      <ScrollArea className="h-[250px] pr-2">
-                        <div className="space-y-2">
-                          {closetItemsFiltered.map((it) => (
-                            <div
-                              key={it.id}
-                              onClick={() => handleLinkItem(it)}
-                              className="flex items-center gap-3 p-2 rounded-xl border border-border/60 hover:border-[hsl(var(--accent))] hover:bg-secondary/40 cursor-pointer transition-colors"
-                            >
-                              <div className="w-10 h-10 rounded-lg bg-secondary/20 overflow-hidden shrink-0 border border-border/40 flex items-center justify-center">
-                                {it.original_image_url || it.clean_image_url ? (
-                                  <img
-                                    src={
-                                      it.original_image_url ||
-                                      it.clean_image_url
-                                    }
-                                    alt={it.title}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <Shirt className="h-5 w-5 text-muted-foreground" />
-                                )}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="text-xs font-semibold text-foreground truncate">
-                                  {it.title}
+                        <ScrollArea className="h-[250px] pr-2">
+                          <div className="space-y-2">
+                            {closetItemsFiltered.map((it) => (
+                              <div
+                                key={it.id}
+                                onClick={() => handleLinkItem(it)}
+                                className="flex items-center gap-3 p-2 rounded-xl border border-border/60 hover:border-[hsl(var(--accent))] hover:bg-secondary/40 cursor-pointer transition-colors"
+                              >
+                                <div className="w-10 h-10 rounded-lg bg-secondary/20 overflow-hidden shrink-0 border border-border/40 flex items-center justify-center">
+                                  {it.original_image_url ||
+                                  it.clean_image_url ? (
+                                    <img
+                                      src={
+                                        it.original_image_url ||
+                                        it.clean_image_url
+                                      }
+                                      alt={it.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <Shirt className="h-5 w-5 text-muted-foreground" />
+                                  )}
                                 </div>
-                                <div className="text-[10px] text-muted-foreground truncate">
-                                  {it.brand ||
-                                    t("addItem.genericBrand", {
-                                      defaultValue: "Generic",
-                                    })}{" "}
-                                  · {it.category}
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-xs font-semibold text-foreground truncate">
+                                    {it.title}
+                                  </div>
+                                  <div className="text-[10px] text-muted-foreground truncate">
+                                    {it.brand ||
+                                      t("addItem.genericBrand", {
+                                        defaultValue: "Generic",
+                                      })}{" "}
+                                    · {it.category}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
-                          {closetItemsFiltered.length === 0 && (
-                            <div className="text-center py-8 text-xs text-muted-foreground">
-                              {t("addItem.import.noMatchingItems", {
-                                defaultValue: "No closet items found.",
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      </ScrollArea>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-
-                {/* Closet Item Detail Pane */}
-                <Dialog
-                  open={!!closetItemDetailPane}
-                  onOpenChange={(open) => {
-                    if (!open) setClosetItemDetailPane(null);
-                  }}
-                >
-                  <DialogContent className="sm:max-w-[380px] p-0 overflow-hidden rounded-2xl">
-                    {closetItemDetailPane && (
-                      <>
-                        {/* Image */}
-                        <div className="w-full aspect-[3/4] bg-secondary/20 relative overflow-hidden">
-                          {closetItemDetailPane.original_image_url ||
-                          closetItemDetailPane.clean_image_url ? (
-                            <img
-                              src={
-                                closetItemDetailPane.original_image_url ||
-                                closetItemDetailPane.clean_image_url
-                              }
-                              alt={closetItemDetailPane.title}
-                              className="w-full h-full object-contain"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Shirt className="h-20 w-20 text-muted-foreground/30" />
-                            </div>
-                          )}
-                          {/* Gradient overlay */}
-                          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background/90 to-transparent pointer-events-none" />
-                        </div>
-                        {/* Details */}
-                        <div className="px-5 pb-5 pt-3 space-y-2">
-                          <h3 className="font-display font-semibold text-base text-foreground leading-tight">
-                            {closetItemDetailPane.title}
-                          </h3>
-                          <div className="flex flex-wrap gap-2">
-                            {closetItemDetailPane.brand && (
-                              <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">
-                                {closetItemDetailPane.brand}
-                              </span>
-                            )}
-                            {closetItemDetailPane.category && (
-                              <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">
-                                {closetItemDetailPane.category}
-                              </span>
-                            )}
-                            {closetItemDetailPane.size && (
-                              <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">
-                                {t("addItem.sizeChipLabel", {
-                                  size: closetItemDetailPane.size,
-                                  defaultValue: "Size {{size}}",
+                            ))}
+                            {closetItemsFiltered.length === 0 && (
+                              <div className="text-center py-8 text-xs text-muted-foreground">
+                                {t("addItem.import.noMatchingItems", {
+                                  defaultValue: "No closet items found.",
                                 })}
-                              </span>
-                            )}
-                            {closetItemDetailPane.color && (
-                              <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">
-                                {closetItemDetailPane.color}
-                              </span>
+                              </div>
                             )}
                           </div>
-                          {closetItemDetailPane.price_cents > 0 && (
-                            <p className="text-sm font-semibold text-[hsl(var(--accent))]">
-                              $
-                              {(closetItemDetailPane.price_cents / 100).toFixed(
-                                2,
+                        </ScrollArea>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Closet Item Detail Pane */}
+                  <Dialog
+                    open={!!closetItemDetailPane}
+                    onOpenChange={(open) => {
+                      if (!open) setClosetItemDetailPane(null);
+                    }}
+                  >
+                    <DialogContent className="sm:max-w-[380px] p-0 overflow-hidden rounded-2xl">
+                      {closetItemDetailPane && (
+                        <>
+                          {/* Image */}
+                          <div className="w-full aspect-[3/4] bg-secondary/20 relative overflow-hidden">
+                            {closetItemDetailPane.original_image_url ||
+                            closetItemDetailPane.clean_image_url ? (
+                              <img
+                                src={
+                                  closetItemDetailPane.original_image_url ||
+                                  closetItemDetailPane.clean_image_url
+                                }
+                                alt={closetItemDetailPane.title}
+                                className="w-full h-full object-contain"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Shirt className="h-20 w-20 text-muted-foreground/30" />
+                              </div>
+                            )}
+                            {/* Gradient overlay */}
+                            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background/90 to-transparent pointer-events-none" />
+                          </div>
+                          {/* Details */}
+                          <div className="px-5 pb-5 pt-3 space-y-2">
+                            <h3 className="font-display font-semibold text-base text-foreground leading-tight">
+                              {closetItemDetailPane.title}
+                            </h3>
+                            <div className="flex flex-wrap gap-2">
+                              {closetItemDetailPane.brand && (
+                                <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">
+                                  {closetItemDetailPane.brand}
+                                </span>
                               )}
-                            </p>
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </DialogContent>
-                </Dialog>
+                              {closetItemDetailPane.category && (
+                                <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">
+                                  {closetItemDetailPane.category}
+                                </span>
+                              )}
+                              {closetItemDetailPane.size && (
+                                <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">
+                                  {t("addItem.sizeChipLabel", {
+                                    size: closetItemDetailPane.size,
+                                    defaultValue: "Size {{size}}",
+                                  })}
+                                </span>
+                              )}
+                              {closetItemDetailPane.color && (
+                                <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">
+                                  {closetItemDetailPane.color}
+                                </span>
+                              )}
+                            </div>
+                            {closetItemDetailPane.price_cents > 0 && (
+                              <p className="text-sm font-semibold text-[hsl(var(--accent))]">
+                                $
+                                {(
+                                  closetItemDetailPane.price_cents / 100
+                                ).toFixed(2)}
+                              </p>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </TabsContent>
             </Tabs>
           ) : (
@@ -4430,18 +4271,51 @@ export default function AddItem() {
                     className="sr-only peer"
                     data-testid="quick-confirm-toggle"
                   />
-                  <label
-                    htmlFor="quick-confirm-mode"
-                    className="relative w-8 h-4 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[hsl(var(--accent))] cursor-pointer"
-                  />
-                  <label
-                    htmlFor="quick-confirm-mode"
-                    className="text-xs font-semibold cursor-pointer select-none text-foreground flex items-center gap-1.5"
-                  >
-                    {t("addItem.quickConfirmMode", {
-                      defaultValue: "Quick Confirm Mode",
-                    })}
-                  </label>
+
+                  <ScrollArea className="h-[250px] pe-2">
+                    <div className="space-y-2">
+                      {closetItemsFiltered.map((it) => (
+                        <div
+                          key={it.id}
+                          onClick={() => handleLinkItem(it)}
+                          className="flex items-center gap-3 p-2 rounded-xl border border-border/60 hover:border-[hsl(var(--accent))] hover:bg-secondary/40 cursor-pointer transition-colors"
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-secondary/20 overflow-hidden shrink-0 border border-border/40 flex items-center justify-center">
+                            {it.original_image_url || it.clean_image_url ? (
+                              <img
+                                src={
+                                  it.original_image_url || it.clean_image_url
+                                }
+                                alt={it.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <Shirt className="h-5 w-5 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-semibold text-foreground truncate">
+                              {it.title}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground truncate">
+                              {it.brand ||
+                                t("addItem.genericBrand", {
+                                  defaultValue: "Generic",
+                                })}{" "}
+                              · {it.category}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {closetItemsFiltered.length === 0 && (
+                        <div className="text-center py-8 text-xs text-muted-foreground">
+                          {t("addItem.import.noMatchingItems", {
+                            defaultValue: "No closet items found.",
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
                 </div>
                 <div className="flex items-center gap-2 justify-end">
                   <Button
@@ -4465,12 +4339,14 @@ export default function AddItem() {
                                 hover:text-white
                                 hover:shadow-[0_10px_30px_rgba(31,92,69,0.22)]"
                     onClick={openCamera}
-                    data-testid="add-item-camera-more-button">
-                    <Camera className="h-4 w-4"/>{t("addItem.takePhoto")}
+                    data-testid="add-item-camera-more-button"
+                  >
+                    <Camera className="h-4 w-4" />
+                    {t("addItem.takePhoto")}
                   </Button>
                   <Button
                     type="button"
-                    size= "sm"
+                    size="sm"
                     className=" h-auto
                                 rounded-full
                                 border
@@ -4490,8 +4366,10 @@ export default function AddItem() {
                                 hover:text-[var(--primary-color)]
                                 hover:shadow-[var(--shadow-medium)]"
                     onClick={pickFilesWithMemory}
-                    data-testid="add-item-upload-more-button">
-                    <Plus className="h-4 w-4" />{t("addItem.addPhotos")}
+                    data-testid="add-item-upload-more-button"
+                  >
+                    <Plus className="h-4 w-4" />
+                    {t("addItem.addPhotos")}
                   </Button>
                   <Button
                     type="button"
@@ -4515,18 +4393,21 @@ export default function AddItem() {
                                 hover:text-[var(--primary-color)]
                                 hover:shadow-[var(--shadow-medium)]"
                     onClick={() => setIsUrlModalOpen(true)}
-                    data-testid="add-item-url-more-button">
-                    <Link2 className="h-4 w-4"/>{t("addItem.uploadUrl", { defaultValue: "URL" })}
+                    data-testid="add-item-url-more-button"
+                  >
+                    <Link2 className="h-4 w-4" />
+                    {t("addItem.uploadUrl", { defaultValue: "URL" })}
                   </Button>
                   <Button
                     type="button"
-                    size= "sm"
+                    size="sm"
                     className="group h-9 w-9 rounded-full bg-accent-beige flex items-center justify-center hover:text-white"
                     onClick={openScanner}
                     title={t("dpp.nav.scanLabel")}
                     aria-label={t("dpp.nav.scanLabel")}
-                    data-testid="add-item-scan-dpp-more-button">
-                    <QrCode className="h-6 w-6 text-primary-brand group-hover:text-white transition-colors"/>
+                    data-testid="add-item-scan-dpp-more-button"
+                  >
+                    <QrCode className="h-6 w-6 text-primary-brand group-hover:text-white transition-colors" />
                   </Button>
                   {(cards.length > 0 || !!bgBatch) && (
                     <div className="" data-testid="add-item-action-bar">
@@ -4577,7 +4458,10 @@ export default function AddItem() {
                   )}
                 </div>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" data-testid="add-item-cards-grid">
+              <div
+                className="grid grid-cols-1 lg:grid-cols-2 gap-4"
+                data-testid="add-item-cards-grid"
+              >
                 {cards.map((card) => (
                   <ItemCard
                     key={card.id}
@@ -4641,12 +4525,18 @@ function ItemCard({
   };
 
   return (
-    <Card className={`rounded-[12px] shadow-editorial overflow-hidden ${saved ? "opacity-75" : ""}`} data-testid="add-item-card">
+    <Card
+      className={`rounded-[12px] shadow-editorial overflow-hidden ${saved ? "opacity-75" : ""}`}
+      data-testid="add-item-card"
+    >
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-[350px_1fr] gap-0 bg-white">
           {/* Photo + scanning */}
           <div className="relative">
-            <div className={`aspect-[3/4] md:aspect-auto md:h-full w-full ${isBusy ? "scanning" : ""}`} data-testid="add-item-card-photo">
+            <div
+              className={`aspect-[3/4] md:aspect-auto md:h-full w-full ${isBusy ? "scanning" : ""}`}
+              data-testid="add-item-card-photo"
+            >
               <img
                 src={previewUrl}
                 alt={
@@ -5159,7 +5049,8 @@ function NameCaption({ idPrefix, fields, onChange, disabled }) {
   return (
     <div className="space-y-3">
       <div>
-        <Label htmlFor={`${idPrefix}-name`}
+        <Label
+          htmlFor={`${idPrefix}-name`}
           className="caps-label text-muted-foreground"
         >
           {t("addItem.itemName")}
@@ -5778,6 +5669,17 @@ function buildCreatePayload(card, inSuitcase = false) {
     // /analyze flow with rembg deferred. The backend queues
     // ``_run_background_matte`` either way.
     defer_matte: card.deferMatte ? true : undefined,
+    needs_reconstruction: card.needsReconstruction ? true : undefined,
+    reconstruction_reasons:
+      card.reconstructionReasons && card.reconstructionReasons.length
+        ? card.reconstructionReasons
+        : undefined,
+    image_quality_status:
+      f.image_quality_status || card.imageQualityStatus || undefined,
+    image_quality_reason:
+      f.image_quality_reason || card.imageQualityReason || undefined,
+    reconstruction_prompt:
+      f.reconstruction_prompt || card.reconstructionPrompt || undefined,
   };
   // Strip undefined to keep payload clean (Pydantic `extra=forbid` still accepts unset fields).
   return Object.fromEntries(

@@ -14,17 +14,104 @@ from app.services import repos
 logger = logging.getLogger(__name__)
 
 
-async def get_rotation_prioritized_closet(user_id: str, limit: int = 40) -> list[dict[str, Any]]:
-    """Fetch closet items prioritized for rotation with balanced category representation.
+SYNONYMS = {
+    "עבודה": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear"],
+    "work": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear"],
+    "business": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear"],
+    "business casual": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear"],
+    "business-casual": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear"],
+    "smart-casual": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "smart casual"],
+    "smart casual": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "smart-casual"],
+    "casual": ["casual", "יומיום", "יומיומי", "קז'ואל", "everyday", "everyday wear"],
+    "יומיום": ["casual", "יומיום", "יומיומי", "קז'ואל", "everyday", "everyday wear"],
+    "יומיומי": ["casual", "יומיום", "יומיומי", "קז'ואל", "everyday", "everyday wear"],
+    "קיץ": ["קיץ", "summer", "summer wear", "poolwear", "beachwear"],
+    "summer": ["קיץ", "summer", "summer wear", "poolwear", "beachwear"],
+    "winter": ["חורף", "winter", "winter wear", "snow", "cold"],
+    "חורף": ["חורף", "winter", "winter wear", "snow", "cold"],
+}
 
-    Filters out duplicates (`is_duplicate=True`) and partitions items into category buckets
-    (top, bottom, footwear, dress, outerwear, accessory). Each bucket is sorted by rotation:
+def matches_style_func(item: dict, style_dress_for: str | None, has_exact_tag_match: bool = False) -> bool:
+    if not style_dress_for:
+        return True
+    
+    style_dress_for_clean = style_dress_for.strip().lower()
+    if style_dress_for_clean == "casual":
+        return True
+        
+    tags = [t.lower() for t in (item.get("tags") or [])]
+    custom_tags = [t.lower() for t in (item.get("custom_tags") or [])]
+    
+    # First priority: exact case-insensitive tag match
+    if style_dress_for_clean in tags or style_dress_for_clean in custom_tags:
+        return True
+        
+    # If there is at least one exact tag match in the closet, and this item isn't it,
+    # then this item does NOT match (exact tag match is required when available).
+    if has_exact_tag_match:
+        return False
+        
+    # Only when no items in the entire closet have an exact tag match, understand demand meaning/intent (fallback)
+    dress_code = str(item.get("dress_code") or "").lower()
+    title = str(item.get("title") or item.get("name") or "").lower()
+    
+    syns = SYNONYMS.get(style_dress_for_clean, [style_dress_for_clean])
+    
+    for s in syns:
+        if s in tags or s in custom_tags:
+            return True
+        if s in dress_code or dress_code in s:
+            return True
+        if s in title:
+            return True
+            
+    if any(style_dress_for_clean in t for t in tags):
+        return True
+    if any(style_dress_for_clean in t for t in custom_tags):
+        return True
+    if style_dress_for_clean in dress_code:
+        return True
+    if style_dress_for_clean in title:
+        return True
+        
+    return False
+
+def matches_season_func(item: dict, target_season: str | None) -> bool:
+    if not target_season:
+        return True
+        
+    item_seasons = item.get("season") or []
+    if isinstance(item_seasons, str):
+        item_seasons = [item_seasons]
+    item_seasons = [s.lower().strip() for s in item_seasons]
+    
+    if "all" in item_seasons:
+        return True
+    if target_season in item_seasons:
+        return True
+        
+    tags = [t.lower() for t in (item.get("tags") or [])]
+    season_syns = SYNONYMS.get(target_season, [target_season])
+    for s in season_syns:
+        if s in tags:
+            return True
+            
+    return False
+
+async def get_rotation_prioritized_closet(
+    user_id: str,
+    limit: int = 40,
+    style_dress_for: str | None = None,
+    weather: dict[str, Any] | None = None
+) -> list[dict[str, Any]]:
+    """Fetch closet items prioritized for rotation, matching tag restrictions and weather/season.
+
+    Filters out duplicates (`is_duplicate=True`) and partitions items into category buckets.
+    Prioritizes items matching the style/tag and target weather season first, then sorts
+    by rotation parameters:
     1. Items never suggested or suggested longest ago (`last_suggested_at` null, then ascending).
     2. Items never worn or worn longest ago (`last_worn_at` null, then ascending).
     3. Wear count ascending (`wear_count` ascending).
-
-    Items are gathered proportionally across categories so that one large category
-    (e.g., 40 tops) never starves other categories (e.g., shorts, shoes).
     """
     db = get_db()
     cursor = db.closet_items.find(
@@ -83,8 +170,45 @@ async def get_rotation_prioritized_closet(user_id: str, limit: int = 40) -> list
                     final_items.extend(g_members)
         items = final_items
 
-    # Rotation sort key: un-suggested/un-worn first, then oldest suggested, then lowest wear count
+    # Check if there is at least one exact case-insensitive tag match in the user's closet
+    has_exact_tag_match = False
+    if style_dress_for:
+        style_clean = style_dress_for.strip().lower()
+        for it in items:
+            it_tags = [t.lower() for t in (it.get("tags") or [])]
+            it_custom = [t.lower() for t in (it.get("custom_tags") or [])]
+            if style_clean in it_tags or style_clean in it_custom:
+                has_exact_tag_match = True
+                break
+
+    # Determine target season
+    target_season = None
+    if weather:
+        temp = weather.get("temp_c")
+        if temp is not None:
+            if temp >= 23:
+                target_season = "summer"
+            elif temp <= 15:
+                target_season = "winter"
+            else:
+                target_season = "spring"
+    
+    if not target_season:
+        # Fallback to current calendar month
+        from datetime import datetime
+        now_month = datetime.now().month
+        if now_month in [5, 6, 7, 8, 9]:
+            target_season = "summer"
+        elif now_month in [11, 12, 1, 2]:
+            target_season = "winter"
+        else:
+            target_season = "spring"
+
+    # Rotation sort key: matches criteria first, then un-suggested/un-worn, oldest suggested, lowest wear
     def sort_key(item: dict[str, Any]) -> tuple:
+        matches_style = matches_style_func(item, style_dress_for, has_exact_tag_match)
+        matches_season = matches_season_func(item, target_season)
+        
         last_sug = item.get("last_suggested_at") or ""
         last_worn = item.get("last_worn_at") or ""
         wear_count = item.get("wear_count") or 0
@@ -92,7 +216,12 @@ async def get_rotation_prioritized_closet(user_id: str, limit: int = 40) -> list
         sug_val = last_sug if last_sug else "0000-00-00"
         worn_val = last_worn if last_worn else "0000-00-00"
         
-        return (sug_val, worn_val, wear_count)
+        # Sort True (1) before False (0), so we negate the boolean int
+        style_and_season_score = -1 if (matches_style and matches_season) else 0
+        style_score = -1 if matches_style else 0
+        season_score = -1 if matches_season else 0
+        
+        return (style_and_season_score, style_score, season_score, sug_val, worn_val, wear_count)
 
     # Partition items into category buckets
     buckets: dict[str, list[dict[str, Any]]] = {
@@ -327,8 +456,29 @@ async def generate_scheduled_proposals(
     user = dict(user)
     user.pop("_id", None)
     user_id = user["id"]
-    raw_closet = await get_rotation_prioritized_closet(user_id, limit=40)
+
+    # If weather is not provided, try to fetch it first so we can use it to filter the candidate closet
+    if weather is None:
+        try:
+            from app.services.weather_service import weather_service
+            home = user.get("home_location") or {}
+            lat = home.get("lat")
+            lng = home.get("lng")
+            lang = user.get("preferred_language") or "en"
+            if lat is not None and lng is not None and weather_service is not None:
+                weather = await weather_service.fetch(float(lat), float(lng), lang=lang)
+        except Exception as w_exc:
+            logger.warning("Failed to fetch weather inside scheduler brain for user %s: %s", user_id, w_exc)
+
+    # Fetch closet items prioritized by tag restriction and weather/season matching
+    raw_closet = await get_rotation_prioritized_closet(
+        user_id,
+        limit=40,
+        style_dress_for=style_dress_for,
+        weather=weather
+    )
     
+    # Slim down closet items to prevent sending massive base64 image strings and embeddings to the LLM
     # Slim down closet items to prevent sending massive base64 image strings and embeddings to the LLM
     prioritized_closet = [
         {
@@ -342,13 +492,14 @@ async def generate_scheduled_proposals(
             "material": item.get("material"),
             "dress_code": item.get("dress_code"),
             "season": item.get("season"),
+            "tags": item.get("tags") or [],
         }
         for item in raw_closet
     ]
     
     # We will query Gemini with customized rotation options
     closet_summary_str = "\n".join(
-        f"- ID: {item['id']} | Title: {item.get('title')} | Category: {item.get('category')} | Color: {item.get('color')} | Brand: {item.get('brand')}"
+        f"- ID: {item['id']} | Title: {item.get('title')} | Category: {item.get('category')} | Tags: {item.get('tags')} | Color: {item.get('color')} | Brand: {item.get('brand')}"
         for item in prioritized_closet
     )
 
@@ -369,6 +520,7 @@ async def generate_scheduled_proposals(
     prompt = (
         f"Generate EXACTLY 3 different outfit recommendations for {target_day_name} ({target_date_str}). "
         f"The user's preset preference is: {style_prompt}.\n\n"
+        f"CRITICAL TAG PREFERENCE: If the closet items list below contains garments with the tag '{style_prompt}' (case-insensitive), you MUST prioritize selecting those items for the outfits. Only when no matching tags are found or to complete the outfit (e.g. if there are no shoes with that tag), you may select other items matching the intent/style of the preference.\n\n"
         f"CRITICAL REQUIREMENT: Every outfit recommendation MUST be a COMPLETE outfit consisting of: 1) Either (a 'top' AND a 'bottom') OR a 'dress', and 2) 'shoes' (footwear). NEVER recommend an outfit consisting of only a single T-shirt, top, or bottom without shoes and pants, unless the closet literally lacks those categories.\n\n"
         f"You MUST select items ONLY from the user's closet list below. Under no circumstances should you recommend items that the user does not own or that have a null closet_item_id. Every recommended item must map to a valid closet item ID from the list below.\n\n"
         f"User's Closet Items:\n"
@@ -388,19 +540,6 @@ async def generate_scheduled_proposals(
         f"  }}>\n"
         f"}}"
     )
-
-    # If weather is not provided, try to fetch it
-    if weather is None:
-        try:
-            from app.services.weather_service import weather_service
-            home = user.get("home_location") or {}
-            lat = home.get("lat")
-            lng = home.get("lng")
-            lang = user.get("preferred_language") or "en"
-            if lat is not None and lng is not None and weather_service is not None:
-                weather = await weather_service.fetch(float(lat), float(lng), lang=lang)
-        except Exception as w_exc:
-            logger.warning("Failed to fetch weather inside scheduler brain for user %s: %s", user_id, w_exc)
 
     from app.services.user_preferences import render_user_preferences
     prefs_block, _ = render_user_preferences(user)

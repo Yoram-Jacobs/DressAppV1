@@ -49,8 +49,12 @@ INGESTION PARADIGMS: Photography, EU Product Passports, and Digital Commerce Rec
 3. The client computes the image's SHA-256 and horizontal difference-hash (dHash) in-browser (~100-180ms) to check against your existing closet.
 4. If a match is found, the **Duplicate Preflight Dialog** opens showing matching previews. Select **Skip** or **Add anyway**.
 5. Once accepted, the server starts an NDJSON stream. A placeholders preview frame displays within 5-7 seconds, allowing you to edit the item details immediately while the backend completes tagging.
-6. Verify auto-detected tags (color, fabric, fit, pattern, occasion). If the cutout shape is incorrect, change the **Category** dropdown; this triggers SegFormer to automatically re-crop the garment.
-7. Click **Save** to optimistically paint the item in the closet grid immediately (~16ms) while background WebP thumbnail generation concludes.
+6. **AI Quality Checker & Automatic Generative Repair**: Gemini's visual Quality Checker inspects each cropped garment for occlusions (bags, arms, hair) and camera frame cutoffs:
+   - **Complete**: Intact, unoccluded garments are matted directly.
+   - **Image Completion**: If an item has missing side contours, occluded sections, or clipped hems/collars, `gemini-2.5-flash-image` (Nano Banana) automatically outpaints and completes the missing fabric into a full, symmetrical piece.
+   - **Full Studio Reconstruction**: Severely cut-off items (such as shoes showing only toe caps) are fully regenerated into pristine studio catalog photographs.
+7. Verify auto-detected tags (color, fabric, fit, pattern, occasion). If the cutout shape is incorrect, change the **Category** dropdown; this triggers SegFormer to automatically re-crop the garment.
+8. Click **Save** to optimistically paint the item in the closet grid immediately (~16ms) while background generative reconstructions and WebP thumbnails conclude in the background.
 
 #### B. Scanning EU Digital Product Passports (DPP)
 1. Tap the **Scan QR (DPP)** button on the Add Item page.
@@ -68,6 +72,19 @@ INGESTION PARADIGMS: Photography, EU Product Passports, and Digital Commerce Rec
    - **Web Link**: Input order confirmation links. The backend fetches pages via `httpx` using a browser-like User-Agent and a 15-second timeout safeguard, routing them by content-type (HTML page text parsing vs image vision processing).
 3. **Data Merging Rule**: Transaction details (price, brand, size, quantity) are extracted from OCR, taking precedence over vision model inference. Visual attributes (clothing category, secondary colors) are classified by SegFormer.
 4. **Receipt-Locked Fields & Saving**: All confirmed details are saved in the database with `from_receipt: true` and their field names recorded in `receipt_locked_fields`. Any subsequent visual re-analysis (e.g. when the user updates the item thumbnail) will never overwrite fields protected in this list. Click **Save** to confirm.
+
+#### D. Conversational Re-Analyse & Generative Image Inpainting (The Eyes & Nano Banana)
+1. **Interactive Prompt Box**: Open any garment in your closet to access the **Item Details** editor, and locate the **Re-analyse Photo & AI Eyes Assistant** card.
+2. **Conversational Instructions**: Type natural language requests or tap the microphone icon to dictate prompt instructions:
+   - *"Remove the shoes"*
+   - *"Complete the hole where the hand was"*
+   - *"Remove the metal studs from the jacket's front"*
+   - *"Refine fabric composition to 100% cashmere"*
+3. **Quick Prompt Chips**: Tap quick starter chips (🪄 *Remove shoes*, ✂️ *Complete hole*, 💎 *Remove studs*, 🔍 *Refine fabric*) for instant 1-tap edits.
+4. **Nano Banana Inpainting (`gemini-2.5-flash-image`)**:
+   - The multimodal decision engine classifies visual edit requests and executes targeted inpainting against the original/segmented pixels.
+   - Nano Banana reconstructs the missing or occluded regions, rendering a photorealistic preview card directly in the chat thread.
+5. **Interactive Application**: Tap **Apply as garment photo** to update the in-memory garment photo, then click **Save** in the action bar to persist the new image to MongoDB.
 
 
 ---

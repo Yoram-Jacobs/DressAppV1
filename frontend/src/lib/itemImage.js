@@ -14,10 +14,10 @@
  */
 export function bestImageUrl(item, opts = {}) {
   if (!item) return null;
-  if (!opts.skipReconstruction) {
-    if (item.thumbnail_data_url) return item.thumbnail_data_url;
-    if (item.reconstructed_image_url) return item.reconstructed_image_url;
+  if (!opts.skipReconstruction && item.reconstructed_image_url) {
+    return item.reconstructed_image_url;
   }
+  if (item.thumbnail_data_url) return item.thumbnail_data_url;
 
   if (item.clean_image_url) return item.clean_image_url;
   if (item.cutout_url) return item.cutout_url;

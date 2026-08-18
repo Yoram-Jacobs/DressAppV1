@@ -87,6 +87,9 @@ module.exports = {
         "dark-brand": "var(--dark-color)",
         "text-brand": "var(--text-color)",
         "primary-shadow": "var(--primary-shadow)",
+        "yellow-brand": "var(--yellow-color)",
+        "yellow-shadow": "var(--yellow-shadow)",
+        "yellow-border": "var(--yellow-border)",
         glass: "var(--glass-bg)",
       },
 

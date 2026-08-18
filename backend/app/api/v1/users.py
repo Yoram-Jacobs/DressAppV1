@@ -16,7 +16,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 
 class UpdateUserIn(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
     display_name: str | None = None
     avatar_url: str | None = None
     locale: str | None = None
@@ -189,7 +189,7 @@ async def update_me(
             "provider_mode": provider_mode,
             "custom_keys": merged_keys,
             "selected_provider": ai_config.get("selected_provider") or existing_config.get("selected_provider") or "google_ai",
-            "selected_model": ai_config.get("selected_model") or existing_config.get("selected_model") or "gemini-2.5-flash",
+            "selected_model": ai_config.get("selected_model") or existing_config.get("selected_model") or "gemini-3.5-flash-lite",
             "current_credits": ai_config.get("current_credits", existing_config.get("current_credits", 1000)),
             "credits_used_this_month": ai_config.get("credits_used_this_month", existing_config.get("credits_used_this_month", 0))
         }

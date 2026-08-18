@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
 import { useLocation as useAppLocation } from '@/lib/location';
+import { useTrendScoutStore } from '@/lib/trendScoutStore';
 import { api } from '@/lib/api';
 import { ExploreBackButton } from '@/components/ExploreBackButton';
 import { Crown } from 'lucide-react';
@@ -19,14 +20,13 @@ export default function TrendScout() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const loc = useAppLocation();
-  const [trends, setTrends] = useState(null); // null = loading, [] = empty, [...]
-  const [page, setPage] = useState(1);
+  const trendStore = useTrendScoutStore();
 
   const language = (user?.preferred_language || i18n.language || 'en')
     .split('-')[0]
     .toLowerCase();
   const country =
-    (loc?.country_code || user?.home_location?.country_code || '')
+    (user?.address?.country_code || user?.home_location?.country_code || '')
       .toString()
       .toUpperCase() || null;
 
@@ -38,22 +38,15 @@ export default function TrendScout() {
   const userTier = (isActive && planType !== 'free') ? tier : 'free';
   const isBlocked = userTier === 'free';
 
+  // Resolve trends from global store
+  const trends = trendStore.loading && !trendStore.cards.length
+    ? null
+    : (trendStore.cards || []);
+
   useEffect(() => {
     if (isBlocked) return;
-    const fetchTrends = async () => {
-      try {
-        const res = await api.fashionScoutFeed(50, { language, country });
-        if (res?.cards?.length) {
-          setTrends(res.cards);
-        } else {
-          setTrends([]);
-        }
-      } catch {
-        setTrends([]);
-      }
-    };
-    fetchTrends();
-  }, [language, country, isBlocked]);
+    trendStore.prewarm({ language, country });
+  }, [language, country, isBlocked, trendStore]);
 
 
   // naya data aane par page 1 par reset

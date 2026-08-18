@@ -314,6 +314,9 @@ class ClosetItem(BaseDoc):
     # Phase Q — Wardrobe Reconstructor
     reconstructed_image_url: str | None = None
     reconstruction_metadata: dict[str, Any] | None = None
+    image_quality_status: str | None = None
+    image_quality_reason: str | None = None
+    reconstruction_prompt: str | None = None
     # Phase O.6 — single-pass Eyes pipeline (background rembg matte).
     # ``clean_image_url`` is populated asynchronously after the item is
     # saved, by a FastAPI BackgroundTask that runs rembg on the raw
@@ -421,6 +424,9 @@ class GarmentAnalysis(BaseModel):
     price_cents: int | None = None
     repair_advice: str | None = None
     tags: list[str] = Field(default_factory=list)
+    image_quality_status: str | None = None
+    image_quality_reason: str | None = None
+    reconstruction_prompt: str | None = None
     model_used: str | None = None
     raw: dict[str, Any] | None = None
 

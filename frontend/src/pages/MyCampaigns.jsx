@@ -126,8 +126,11 @@ export default function MyCampaigns() {
     setSubmitPhase('creating_order');
     setActionId(id);
     try {
-      const res = await campaignApi.submitCampaign(id); // returns {order_id, fee_cents}
+      const res = await campaignApi.submitCampaign(id); // returns {order_id, fee_cents, approve_url}
       setPaypalOrder(res);
+      if (res.approve_url) {
+        window.open(res.approve_url, '_blank');
+      }
       setPaypalOpen(true);
       setSubmitPhase('awaiting_payment');
     } catch (err) {

@@ -188,6 +188,9 @@ class CreateItemIn(BaseModel):
     # ``defer_matte`` / ``_run_background_matte`` pattern.
     needs_reconstruction: bool = False
     reconstruction_reasons: list[str] = []
+    image_quality_status: str | None = None
+    image_quality_reason: str | None = None
+    reconstruction_prompt: str | None = None
     # Phase R (July 2026) — digital receipt import provenance.
     # When True, this item was created from a parsed digital receipt.
     # If an image is also supplied, the background task runs the full
@@ -361,6 +364,9 @@ async def create_item(
         notes=payload.notes,
         retail_metadata=payload.retail_metadata,
         reconstruction_metadata=payload.reconstruction_metadata,
+        image_quality_status=payload.image_quality_status,
+        image_quality_reason=payload.image_quality_reason,
+        reconstruction_prompt=payload.reconstruction_prompt,
         dpp_data=payload.dpp_data,
         # Phase Z2 — photo fingerprint passthrough (used by the
         # pre-flight duplicate check). All optional; legacy clients
@@ -458,10 +464,10 @@ async def create_item(
     # frontend echoes it here so we queue the same background task as
     # the one-pass path. Either flag triggers the same code.
     #
-    # Phase R (July 2026) — receipt-import items with an image get the
-    # full matte + Gemini analysis chain. Those without an image skip
-    # all pipeline work — the receipt fields are the complete data.
-    needs_bg_matte = (payload.from_one_pass or payload.defer_matte) and (payload.crop_base64 or payload.image_base64)
+    # Standard closet uploads already receive their clean crop from
+    # the analyzer. We do not run post-save background rembg matting on
+    # standard items to prevent unwanted image artifacts/over-cropping.
+    needs_bg_matte = False
 
     # Resolve the raw bytes for the background task once, shared by all branches.
     raw_for_bg: bytes | None = None
@@ -550,6 +556,9 @@ async def create_item(
             ),
             "title": payload.title,
             "name": payload.name,
+            "image_quality_status": payload.image_quality_status,
+            "image_quality_reason": payload.image_quality_reason,
+            "reconstruction_prompt": payload.reconstruction_prompt,
         }
         background_tasks.add_task(
             _run_background_reconstruction,
@@ -1040,17 +1049,23 @@ async def analyze_item_image(
             elif b64_or_url.startswith("data:image/"):
                 try:
                     header, encoded = b64_or_url.split(",", 1)
-                    raw_list.append(base64.b64decode(encoded))
+                    raw_list.append(base64.b64decode(encoded.strip()))
                 except Exception as exc:
                     raise HTTPException(400, f"Invalid data URL in array: {exc}") from exc
             else:
                 try:
-                    raw_list.append(base64.b64decode(b64_or_url, validate=True))
+                    clean_b64 = b64_or_url
+                    if "," in clean_b64:
+                        clean_b64 = clean_b64.split(",", 1)[1]
+                    raw_list.append(base64.b64decode(clean_b64.strip()))
                 except Exception as exc:
                     raise HTTPException(400, f"Invalid image_base64 in array: {exc}") from exc
     elif payload.image_base64:
         try:
-            raw_list.append(base64.b64decode(payload.image_base64, validate=True))
+            clean_b64 = payload.image_base64
+            if "," in clean_b64:
+                clean_b64 = clean_b64.split(",", 1)[1]
+            raw_list.append(base64.b64decode(clean_b64.strip()))
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(400, f"Invalid image_base64: {exc}") from exc
     elif payload.image_url:
@@ -1450,10 +1465,10 @@ async def polish_crop(
     payload: PolishCropIn,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Run full rembg + SegFormer matting on an already-cropped image from the AddItem review screen.
+    """Run Nano Banana image reconstruction and completion on the crop.
 
-    This is called by the client *in the background* as soon as an item is
-    scanned/analyzed, allowing the user to see the polished cutout before saving.
+    This is called by the client to complete or reconstruct a bad, distorted,
+    or low-resolution image using Gemini Nano Banana.
     """
     try:
         # Strip data URL prefix if present
@@ -1464,51 +1479,26 @@ async def polish_crop(
     except Exception as exc:
         raise HTTPException(400, f"Invalid image_base64: {exc}") from exc
 
-    if not settings.AUTO_MATTE_CROPS:
-        return {"image_base64": payload.image_base64, "applied": False}
+    from app.services.reconstruction import reconstruct
 
-    from app.services import background_matting
-    from app.services import clothing_parser as _cp
+    # Call the Nano Banana reconstructor
+    try:
+        out = await reconstruct(
+            raw_bytes,
+            {"category": payload.category or "garment"},
+            reasons=["polish_crop"],
+            validate=False,
+        )
+        if out and out.get("image_b64"):
+            mime = out.get("mime_type", "image/png")
+            return {
+                "image_base64": f"data:{mime};base64,{out['image_b64']}",
+                "applied": True,
+            }
+    except Exception as exc:
+        logger.warning("polish_crop Nano Banana reconstruction failed: %s", exc)
 
-    # Run rembg and SegFormer concurrently
-    bg_task = asyncio.create_task(background_matting.remove_background(raw_bytes))
-    cp_task = asyncio.create_task(_cp.parse_garments(raw_bytes))
-    await asyncio.gather(bg_task, cp_task, return_exceptions=True)
-
-    result = bg_task.result() if not bg_task.exception() else {}
-    garments = cp_task.result() if not cp_task.exception() else []
-
-    if not result or not result.get("image_png"):
-        return {"image_base64": payload.image_base64, "applied": False}
-
-    refined_png = result["image_png"]
-    if settings.USE_LOCAL_CLOTHING_PARSER:
-        seg_mask = None
-        human_mask = None
-        try:
-            seg_mask, human_mask = _pick_segformer_mask_for_category(
-                garments, payload.category
-            )
-        except Exception as exc:
-            logger.info("polish_crop SegFormer mask pick skipped: %s", exc)
-
-        if seg_mask is not None:
-            try:
-                maybe_refined = _cp.apply_alpha_intersection(
-                    result["image_png"],
-                    seg_mask,
-                    category=payload.category,
-                    human_mask=human_mask,
-                    is_padded_canvas=True,
-                )
-                if maybe_refined:
-                    refined_png = maybe_refined
-            except Exception as exc:
-                logger.info("polish_crop apply_alpha_intersection failed: %s", exc)
-
-    # Encode back to base64
-    out_b64 = base64.b64encode(refined_png).decode("utf-8")
-    return {"image_base64": f"data:image/png;base64,{out_b64}", "applied": True}
+    return {"image_base64": payload.image_base64, "applied": False}
 
 
 # Patch M17 (May 2026) — Module-level config for the keepalive heartbeat
@@ -2423,10 +2413,11 @@ async def list_items(
         # successfully produced. If the thumbnail pipeline failed for
         # this item, keep one image URL so the grid still has something
         # to show (the user would otherwise see an empty card).
+        # We preserve reconstructed_image_url so the UI always has access
+        # to the high-fidelity AI-repaired image.
         if isinstance(it.get("thumbnail_data_url"), str):
             it.pop("original_image_url", None)
             it.pop("segmented_image_url", None)
-            it.pop("reconstructed_image_url", None)
     total = await repos.count(db.closet_items, query)
     # Surface the response shape in logs so deployment/cache issues are
     # immediately diagnosable. If a user reports "I have 311 items but
@@ -3868,6 +3859,17 @@ async def complete_outfit(
 
 
 # ------------------------- Phase Q: Wardrobe Reconstructor -------------------------
+class ItemChatTurn(BaseModel):
+    role: str = "user"
+    content: str = ""
+
+
+class ItemChatAnalyseIn(BaseModel):
+    message: str
+    history: list[ItemChatTurn] = []
+    fill_empty_only: bool = False
+
+
 class RepairItemIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     # Optional free-form hint (typed or transcribed from Phase M voice)
@@ -4178,7 +4180,6 @@ async def set_item_photo(
         "clean_image_url": None,
         "clean_image_status": None,
         "image_variants": None,
-        "thumbnail_data_url": None,
     }
     if segmented_data_url:
         update_doc["segmented_image_url"] = segmented_data_url
@@ -4376,6 +4377,201 @@ async def reanalyze_item(
 
 
 
+@router.post("/{item_id}/chat-analyse")
+async def chat_analyse_item(
+    item_id: str,
+    payload: ItemChatAnalyseIn,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Conversational Re-analyse & AI Eyes Assistant.
+
+    Processes natural language instructions regarding the garment photo or metadata:
+    1. Image modification & inpainting (e.g. 'Remove the shoes', 'Complete the hole where the hand was', 'Remove the metal studs from the jacket') -> Invokes Nano Banana (gemini-2.5-flash-image)
+    2. Clarifications -> Returns assistant questions if instruction is underspecified
+    3. Metadata revision -> Updates form attributes according to instructions
+    4. General garment styling/details Q&A
+    """
+    db = get_db()
+    item = await repos.find_one(
+        db.closet_items, {"id": item_id, "user_id": user["id"]}
+    )
+    if not item:
+        raise HTTPException(404, "Item not found")
+
+    user_msg = (payload.message or "").strip()
+    if not user_msg:
+        raise HTTPException(400, "Message cannot be empty")
+
+    variants = item.get("image_variants") or {}
+    image_url: str | None = (
+        item.get("reconstructed_image_url")
+        or item.get("segmented_image_url")
+        or item.get("cutout_url")
+        or item.get("clean_image_url")
+        or (variants.get("webp") or {}).get("large")
+        or (variants.get("webp") or {}).get("medium")
+        or variants.get("original")
+        or item.get("original_image_url")
+        or item.get("image_url")
+    )
+    if not image_url:
+        raise HTTPException(400, "Item has no stored image. Please attach a photo first.")
+
+    raw = await _read_image_bytes_from_url(image_url)
+    if not raw:
+        raise HTTPException(400, "Stored image is empty or could not be retrieved.")
+
+    user_lang = (user or {}).get("preferred_language") or "en"
+
+    # Build conversation context for Gemini
+    from app.services.gemini_client import GeminiClient
+
+    gemini_client = None
+    if settings.GEMINI_API_KEY:
+        try:
+            gemini_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+        except Exception as exc:
+            logger.warning("Failed to initialize GeminiClient: %s", exc)
+
+    if not gemini_client:
+        raise HTTPException(503, "AI Eyes assistant is temporarily unavailable.")
+
+    history_str = ""
+    for turn in payload.history[-6:]:
+        role = "User" if turn.role == "user" else "The Eyes"
+        history_str += f"{role}: {turn.content}\n"
+
+    system_prompt = (
+        "You are 'The Eyes', DressApp's intelligent garment vision and wardrobe analysis assistant.\n"
+        "The user is viewing their garment in the wardrobe and providing an instruction or question regarding the photo or attributes.\n\n"
+        f"Garment Context:\n"
+        f"- Title: {item.get('title') or 'Unknown'}\n"
+        f"- Category: {item.get('category') or 'Unknown'} / {item.get('sub_category') or ''}\n"
+        f"- Colors: {item.get('colors') or item.get('color') or 'Unknown'}\n"
+        f"- Materials: {item.get('fabric_materials') or item.get('material') or 'Unknown'}\n"
+        f"- Pattern: {item.get('pattern') or 'Unknown'}\n"
+        f"- Condition: {item.get('condition') or 'Unknown'}\n"
+        f"- Quality: {item.get('quality') or 'Unknown'}\n\n"
+        "Your task: Analyze the user's message and determine the correct action from the following 4 options:\n\n"
+        "1. 'image_edit': The user is asking to modify, inpaint, remove, or reconstruct elements in the photo.\n"
+        "   Examples: 'Remove the shoes', 'Complete the hole where the hand was', 'Remove the metal studs from the jacket\\'s front', 'Remove the hanger', 'Repair the cut-off sleeve', 'Fill the gap in the hem'.\n"
+        "   - Set action: 'image_edit'\n"
+        "   - Set image_edit_prompt: A concise, highly specific inpainting / reconstruction directive for the image generative model to edit and isolate the garment cleanly against a solid pure white background (#FFFFFF) with bright high-key lighting, filling the frame and preserving all fabric texture, color fidelity, and silhouette details without dark vignettes or black backgrounds.\n"
+        "   - Set reply: A brief, friendly confirmation in the user's language describing what you are modifying.\n\n"
+        "2. 'clarification': The user's request for image modification or editing is ambiguous or missing crucial specifics.\n"
+        "   - Set action: 'clarification'\n"
+        "   - Set reply: A polite, direct question asking for the needed clarification.\n\n"
+        "3. 'metadata_update': The user is asking to update or re-classify attributes, materials, colors, brand, or category.\n"
+        "   - Set action: 'metadata_update'\n"
+        "   - Set metadata_updates: A dict of key-value changes (e.g. title, category, colors, fabric_materials, condition, etc.)\n"
+        "   - Set reply: A brief explanation of the updated fields.\n\n"
+        "4. 'answered': The user is asking a general styling, care, matching, or information question.\n"
+        "   - Set action: 'answered'\n"
+        "   - Set reply: A helpful, expert styling/garment response in the user's language.\n\n"
+        "IMPORTANT: You MUST respond in valid JSON format with keys:\n"
+        "{\n"
+        '  "action": "image_edit" | "clarification" | "metadata_update" | "answered",\n'
+        '  "reply": "string",\n'
+        '  "image_edit_prompt": "string or null",\n'
+        '  "metadata_updates": { ... } or null\n'
+        "}"
+    )
+
+    user_parts = [
+        raw,
+        f"Conversation History:\n{history_str}\nUser Prompt: {user_msg}\nPlease respond in language: {user_lang} (except JSON keys).",
+    ]
+
+    try:
+        decision_raw = await gemini_client.vision(
+            user_parts=user_parts,
+            system=system_prompt,
+            response_mime_type="application/json",
+        )
+        decision = json.loads(decision_raw)
+    except Exception as exc:
+        logger.warning("Gemini decision parsing failed in chat_analyse: %s", exc)
+        # Fallback heuristic
+        low_msg = user_msg.lower()
+        if any(k in low_msg for k in ["remove", "complete", "fix", "hole", "stud", "shoe", "sleeve", "hand", "background", "erase", "repair"]):
+            decision = {
+                "action": "image_edit",
+                "reply": f"Processing image modification: {user_msg}",
+                "image_edit_prompt": user_msg,
+            }
+        else:
+            decision = {
+                "action": "answered",
+                "reply": "Understood. Let me know if you want me to edit the photo or refine the details.",
+            }
+
+    action = decision.get("action") or "answered"
+    reply = decision.get("reply") or ""
+    image_url_out = None
+    updated_doc: dict[str, Any] = {}
+
+    if action == "image_edit":
+        if gemini_image_service is None:
+            reply = "Image editing is currently unavailable on this server. Please ensure Nano Banana is configured."
+            action = "clarification"
+        else:
+            try:
+                from app.services.billing_service import deduct_user_credits
+                await deduct_user_credits(db, user, cost=1)
+
+                edit_prompt = decision.get("image_edit_prompt") or user_msg
+                edit_res = await gemini_image_service.edit(
+                    raw,
+                    edit_prompt,
+                    garment_metadata={
+                        "title": item.get("title"),
+                        "category": item.get("category"),
+                        "color": item.get("color"),
+                        "material": item.get("material"),
+                        "pattern": item.get("pattern"),
+                        "brand": item.get("brand"),
+                    },
+                )
+                mime = edit_res.get("mime_type", "image/png")
+                image_url_out = f"data:{mime};base64,{edit_res['image_b64']}"
+
+                # Update in-memory reconstructed_image_url
+                updated_doc["reconstructed_image_url"] = image_url_out
+                updated_doc["reconstruction_metadata"] = {
+                    "method": "nano_banana_chat",
+                    "prompt": edit_prompt,
+                    "model": edit_res.get("model_used"),
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                }
+            except Exception as edit_exc:
+                logger.warning("Nano Banana chat edit failed: %s", edit_exc)
+                reply = f"I attempted to modify the image ({user_msg}), but Nano Banana encountered an issue. Please try again or refine your prompt."
+                action = "clarification"
+
+    elif action == "metadata_update":
+        meta_updates = decision.get("metadata_updates") or {}
+        for k, v in meta_updates.items():
+            if k in (
+                "title", "name", "category", "sub_category", "item_type", "brand",
+                "gender", "dress_code", "season", "tradition", "colors", "color",
+                "fabric_materials", "material", "pattern", "state", "condition",
+                "quality", "repair_advice", "tags"
+            ):
+                updated_doc[k] = v
+
+    # Build preview item in memory (do not overwrite DB until user clicks Save)
+    updated_item = {**item, **updated_doc}
+
+    return {
+        "reply": reply,
+        "action_taken": action,
+        "image_url": image_url_out,
+        "updated_fields": updated_doc if updated_doc else None,
+        "item": updated_item,
+    }
+
+
+
 @router.post("/{item_id}/repair")
 async def repair_item_image(
     item_id: str,
@@ -4411,6 +4607,9 @@ async def repair_item_image(
         "pattern": item.get("pattern"),
         "brand": item.get("brand"),
         "dress_code": item.get("dress_code"),
+        "image_quality_status": item.get("image_quality_status"),
+        "image_quality_reason": item.get("image_quality_reason"),
+        "reconstruction_prompt": item.get("reconstruction_prompt"),
     }
 
     # Weave the user's hint into the prompt path. The reconstruction

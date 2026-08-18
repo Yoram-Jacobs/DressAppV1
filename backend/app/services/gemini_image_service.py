@@ -222,12 +222,12 @@ class GeminiImageService:
                 descriptor_bits.append(str(v))
         descriptor = ", ".join(descriptor_bits) if descriptor_bits else "garment"
         composed = (
-            f"Editorial fashion product photograph of a complete, full-length "
-            f"{descriptor}. {user_prompt}. Studio lighting, plain off-white "
-            "backdrop, garment-only product shot, centered composition, sharp "
-            "focus, photorealistic, preserve fabric texture and pattern "
-            "details, no people, no mannequin body, no text, no logos, "
-            "no watermarks."
+            f"Commercial fashion catalog product photograph of a complete, isolated "
+            f"{descriptor}. {user_prompt}. Centered composition filling the frame, "
+            "pure clean solid white background (#FFFFFF), bright high-key studio lighting, "
+            "crisp edges, photorealistic, preserve all fabric texture, color fidelity, "
+            "and silhouette details, no dark shadows, no dark vignette, no black backdrop, "
+            "no people, no mannequin body, no text, no logos, no watermarks."
         )
         return composed[:1000]
 

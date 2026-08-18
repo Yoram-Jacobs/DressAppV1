@@ -30,10 +30,14 @@ Adding your wardrobe items to DressApp is fast and easy:
 
 #### Option A: Take or Upload Photos
 1. Tap **Add Item** from the bottom menu.
-2. Choose **Take Photo** to take a picture of your garment on a hanger or flat surface, or **Upload Photos** from your gallery.
-3. The app automatically checks if you already added the same item. If a duplicate is detected, you can skip or add it anyway.
-4. DressApp automatically removes the photo background and fills in details like color, category, fabric, and occasion.
-5. Tap **Save** to add the garment to your closet grid instantly.
+2. Choose **Take Photo** to take a picture of your garment (or a full-body outfit), or **Upload Photos** from your gallery.
+3. The app automatically checks if you already added the same item (instant duplicate warning).
+4. **AI Multi-Item Cropping**: If your photo contains a full outfit, DressApp automatically separates the jacket, top, skirt/pants, and shoes into separate cards.
+5. **AI Quality Checker & Automatic Image Completion**:
+   - The AI inspects each cropped item to see if it is complete or cut off.
+   - **Image Completion**: If parts of a garment are occluded by your arms, bags, hair, or cut off by the photo edges (such as a skirt with a cropped hem or a jacket occluded by a bag), the AI automatically out-paints and completes the missing fabric into a full, symmetrical piece.
+   - **Studio Reconstruction**: If an item is severely cut off (like shoes where only the toe caps are visible), the AI automatically reconstructs the full pair into a clean catalog product photo.
+6. Tap **Save** to add the garments to your closet grid. Generative completions finish smoothly in the background while you continue using the app.
 
 #### Option B: Scan Product Passport QR Codes
 1. Tap **Scan QR (DPP)** on the Add Item page.
@@ -49,6 +53,18 @@ Adding your wardrobe items to DressApp is fast and easy:
 3. **Select Individual Clothes**: If your receipt image lists multiple clothes, click and drag box selectors directly over each item to crop them out one by one.
 4. Tap **Extract Selected Items**. The AI will automatically read the brand name, price, purchase size, and category.
 5. **Receipt-Locked Fields**: Once saved, all commercial details from the receipt (like price, brand, and size) are locked. If you later upload a photo to update the clothing's thumbnail, these verified details will never be accidentally modified by the AI.
+
+#### Option D: Edit & Modify Photos with The Eyes & Nano Banana
+1. Open any garment in your closet to open the **Item Details** editor.
+2. Scroll to the **Re-analyse Photo & AI Eyes Assistant** card.
+3. **Chat or Dictate Instructions**: Type or tap the microphone to speak what you want to change:
+   - *"Remove the shoes"*
+   - *"Complete the hole where the hand was"*
+   - *"Remove the metal studs from the jacket's front"*
+   - *"Refine fabric composition to 100% cashmere"*
+4. **Quick Prompt Chips**: Tap quick starters (🪄 *Remove shoes*, ✂️ *Complete hole*, 💎 *Remove studs*, 🔍 *Refine fabric*) for instant 1-tap edits.
+5. **Nano Banana Studio Inpainting**: When you ask for image changes, **Nano Banana** creates a clean, photorealistic image preview right inside the chat.
+6. Tap **Apply as garment photo** and hit **Save** to keep your updated look!
 
 
 ---

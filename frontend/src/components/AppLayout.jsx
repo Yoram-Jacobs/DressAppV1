@@ -37,8 +37,8 @@ import { useState } from 'react';
 export const AppLayout = () => {
   const { t } = useTranslation();
   const { user, loading, refresh } = useAuth();
-  const { items } = useClosetStore();
   const [show, setShow] = useState(false);
+  const { items, lastFullSync } = useClosetStore();
   const [dismissedLoginReminder, setDismissedLoginReminder] = useState(() => {
     return sessionStorage.getItem('dressapp_dismissed_login_reminder') === 'true';
   });
@@ -179,7 +179,7 @@ export const AppLayout = () => {
   if (!user) return <Navigate to="/login" replace />;
 
   const showOnboardingMigration = user && !user.migration_flag;
-  const showLoginReminder = user && user.migration_flag && items.length === 0 && !dismissedLoginReminder && !showOnboardingMigration;
+  const showLoginReminder = user && user.migration_flag && lastFullSync > 0 && items.length === 0 && !dismissedLoginReminder && !showOnboardingMigration;
 
   return (
     <div className="page-shell">

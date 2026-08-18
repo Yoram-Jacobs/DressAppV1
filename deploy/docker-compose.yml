@@ -71,6 +71,7 @@ services:
       dockerfile: Dockerfile
     image: dressapp-eyes:latest
     container_name: dressapp-eyes
+    profiles: ["disabled"]
 
     restart: unless-stopped
     environment:
@@ -106,9 +107,8 @@ services:
       context: ..
       dockerfile: deploy/Dockerfile.frontend
       args:
-        # Baked into the bundle at build time — MUST match the public URL
-        # (same origin since Caddy proxies /api/* back to the backend).
-        REACT_APP_BACKEND_URL: https://${DOMAIN}
+        # Same-origin deployment: empty string lets the frontend use relative /api/v1 URLs
+        REACT_APP_BACKEND_URL: ""
     image: dressapp-frontend:latest
     container_name: dressapp-frontend
     restart: unless-stopped
@@ -129,7 +129,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "443:443/udp"  # HTTP/3
     environment:
       DOMAIN: ${DOMAIN}
       CADDY_ACME_EMAIL: ${CADDY_ACME_EMAIL}
@@ -157,5 +156,3 @@ volumes:
 networks:
   dress:
     driver: bridge
-    driver_opts:
-      com.docker.network.driver.mtu: 1280

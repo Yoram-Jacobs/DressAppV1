@@ -65,11 +65,25 @@ export function SchedulerSettings() {
     if (busy) return;
     setBusy(true);
     try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        toast.error(t('profile.pushNotSupported', { defaultValue: 'Push notifications are not supported on this device/browser.' }));
+        return;
+      }
       const reg = await navigator.serviceWorker.ready;
       if (checked) {
+        if ('Notification' in window && Notification.permission !== 'granted') {
+          const permission = await Notification.requestPermission();
+          if (permission !== 'granted') {
+            toast.error(t('profile.pushPermissionDenied', { defaultValue: 'Notification permission was not granted by your browser.' }));
+            return;
+          }
+        }
         let sub = await reg.pushManager.getSubscription();
         if (!sub) {
           const res = await api.getVapidKey();
+          if (!res?.public_key) {
+            throw new Error('VAPID public key unavailable on server');
+          }
           const pubKey = urlBase64ToUint8Array(res.public_key);
           sub = await reg.pushManager.subscribe({
             userVisibleOnly: true,
@@ -89,8 +103,8 @@ export function SchedulerSettings() {
         toast.success(t('profile.browserPushNotificationsDisabled', { defaultValue: 'Browser push notifications disabled.' }));
       }
     } catch (err) {
-      console.error(err);
-      toast.error(t('profile.failedToTogglePushNotifications', { defaultValue: 'Failed to toggle push notifications.' }));
+      console.error('[handlePushToggle] error:', err);
+      toast.error(err?.response?.data?.detail || err?.message || t('profile.failedToTogglePushNotifications', { defaultValue: 'Failed to toggle push notifications.' }));
     } finally {
       setBusy(false);
     }
@@ -102,6 +116,7 @@ export function SchedulerSettings() {
     try {
       const updated = await api.patchMe({
         scheduler_settings: {
+          ...(user?.scheduler_settings || {}),
           enabled,
           frequency,
           weekday,
@@ -109,7 +124,7 @@ export function SchedulerSettings() {
           style_option: styleOption,
           custom_style: customStyle,
           style_dress_for: styleOption === 'custom' ? customStyle : styleOption,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         },
       });
       updateUserLocal(updated);
@@ -117,7 +132,8 @@ export function SchedulerSettings() {
       setTimeout(() => setSaved(false), 2000);
       toast.success(t('profile.aiStylistSchedulerSettingsUpdated', { defaultValue: 'AI Stylist Scheduler settings updated.' }));
     } catch (err) {
-      toast.error(err?.response?.data?.detail || t('common.error', { defaultValue: 'Failed to save changes.' }));
+      console.error('[SchedulerSettings] save error:', err);
+      toast.error(err?.response?.data?.detail || err?.message || t('common.error', { defaultValue: 'Failed to save changes.' }));
     } finally {
       setBusy(false);
     }

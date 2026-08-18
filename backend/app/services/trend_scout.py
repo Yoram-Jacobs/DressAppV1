@@ -165,49 +165,50 @@ SEARCH_TEMPLATES: dict[str, list[str]] = {
     "ss26-runway": [
         "site:vogue.com/runway OR site:elle.com/runway runway fashion trends 2026",
         "{country} runway fashion designer collection trends 2026",
-        "spring summer 2026 runway fashion show highlights {country}"
+        "spring summer 2026 runway fashion show highlights {country} wmagazine thecut"
     ],
     "street": [
-        "site:instagram.com OR site:tiktok.com street style fashion trends 2026",
-        "site:instagram.com OR site:tiktok.com OR site:facebook.com street style fashion {country}",
-        "streetwear trends 2026 {country} instagram tiktok"
+        "instagram tiktok street style fashion trends 2026 whowhatwear refinery29",
+        "instagram tiktok facebook street style fashion {country} dazed i-d",
+        "streetwear trends 2026 {country} instagram tiktok highsnobiety hypebeast"
     ],
     "sustainability": [
-        "site:vogue.com OR site:whowhatwear.com sustainable fashion resale upcycling",
+        "sustainable fashion resale upcycling vogue whowhatwear refinery29 fashionista",
         "sustainable fashion {country} eco friendly clothing brand upcycling",
-        "site:instagram.com OR site:facebook.com sustainable fashion resale {country}"
+        "instagram facebook sustainable fashion resale {country} thecut"
     ],
     "influencers": [
-        "site:instagram.com OR site:tiktok.com fashion influencer outfit trends 2026",
-        "site:instagram.com OR site:tiktok.com OR site:twitter.com {country} fashion influencer hype",
-        "top fashion creators instagram tiktok {country} dressing style"
+        "instagram tiktok fashion influencer outfit trends 2026 whowhatwear refinery29",
+        "instagram tiktok twitter {country} fashion influencer hype dazed",
+        "top fashion creators instagram tiktok {country} dressing style fashionista"
     ],
     "second_hand": [
-        "site:highsnobiety.com OR site:hypebeast.com vintage second hand clothing marketplace trends",
-        "best online vintage clothing shops resale platforms 2026 {country}",
-        "site:facebook.com vintage second hand clothing group marketplace {country}"
+        "vintage second hand clothing marketplace trends highsnobiety hypebeast grailed",
+        "best online vintage clothing shops resale platforms 2026 {country} fashionista",
+        "facebook vintage second hand clothing group marketplace {country} refinery29"
     ],
     "recycling": [
-        "clothing recycling repair upcycling diy wardrobe ideas 2026",
-        "clothing recycling upcycling repair {country}",
-        "site:instagram.com clothing repair upcycling wardrobe {country}"
+        "clothing recycling repair upcycling diy wardrobe ideas 2026 whowhatwear",
+        "clothing recycling upcycling repair {country} fashionista",
+        "instagram clothing repair upcycling wardrobe {country} refinery29"
     ],
     "news_flash": [
-        "site:hypebeast.com OR site:harpersbazaar.com breaking fashion industry news collaboration launch 2026",
-        "breaking fashion news brand collaboration {country}",
-        "site:twitter.com OR site:facebook.com breaking fashion brand news {country}"
+        "breaking fashion industry news collaboration launch 2026 hypebeast harpersbazaar gq wmagazine",
+        "breaking fashion news brand collaboration {country} thecut",
+        "twitter facebook breaking fashion brand news {country} dazed i-d"
     ]
 }
 
-def get_search_queries(bucket_slug: str, country_code: str | None) -> list[str]:
+def get_search_queries(bucket_slug: str, country_code: str | None, city: str | None = None) -> list[str]:
     country = COUNTRY_NAME_MAP.get((country_code or "").upper(), "") if country_code else ""
     templates = SEARCH_TEMPLATES.get(bucket_slug, ["fashion trends 2026"])
     
     queries = []
     for t in templates:
         if "{country}" in t:
-            if country:
-                queries.append(t.format(country=country))
+            place = f"{city} {country}" if (city and country) else (country or city or "")
+            if place:
+                queries.append(t.format(country=place).strip())
         else:
             queries.append(t)
             
@@ -228,7 +229,9 @@ SYSTEM_PROMPT = (
     "Write for a reader who already dresses well and wants ONE actionable insight per card.\n\n"
     "Rules for sources:\n"
     "- NEVER use 'Vogue Business' (which is subscription-walled). Instead, use 'Vogue Runway' for Vogue runway/fashion articles.\n"
-    "- The source_url in your final card MUST be one of the exact article URLs found within the browsed page content (in markdown format, e.g. [title](url)).\n\n"
+    "- NEVER use search engine domains (e.g. yahoo.com, google.com) or social media homepages (e.g. instagram.com, tiktok.com, facebook.com, twitter.com) as the final source_url. All final cards must link to actual content articles or specific posts.\n"
+    "- You MUST browse at least one actual deep fashion article/post link from the search results to get real content before calling 'finish'. Do not finish with only Yahoo Search results in history.\n"
+    "- The source_url in your final card MUST be the exact deep article/post URL found within the browsed page content (in markdown format, e.g. [title](url)).\n\n"
     "Output contract: return ONLY a JSON object.\n"
     'If you need to search a website, return: {"action": "browse_web", "url": "<https URL>"}.\n'
     'Once you have enough context, return: {"action": "finish", "card": {\n'
@@ -564,10 +567,14 @@ def rank_cards_for_user(
         return score
 
     def _sort_key(card: dict[str, Any]) -> tuple:
-        # Primary: descending score. Secondary: ISO date desc.
-        # ``sorted`` is stable, so equal-score cards keep their input
-        # ordering — we ensure that ordering is recency-first below.
-        return (-_score(card),)
+        # Primary: ISO date desc (newest first). Secondary: descending score.
+        d_str = card.get("date") or "0000-00-00"
+        d_val = 0
+        try:
+            d_val = int(d_str.replace("-", ""))
+        except ValueError:
+            pass
+        return (-d_val, -_score(card))
 
     # Two-pass sort to keep recency stable as the secondary key.
     by_recency = sorted(
@@ -578,11 +585,11 @@ def rank_cards_for_user(
     return sorted(by_recency, key=_sort_key)
 
 
-async def _generate_one(bucket: dict[str, Any], client_type: str = "desktop", country_code: str | None = None) -> dict[str, Any] | None:
+async def _generate_one(bucket: dict[str, Any], client_type: str = "desktop", country_code: str | None = None, city: str | None = None) -> dict[str, Any] | None:
     if not settings.GEMINI_API_KEY:
         raise RuntimeError("No GEMINI_API_KEY set — cannot run Trend-Scout")
     
-    starter_urls = get_search_queries(bucket["slug"], country_code)
+    starter_urls = get_search_queries(bucket["slug"], country_code, city)
         
     urls_list_str = ", ".join(starter_urls)
     history = [
@@ -638,7 +645,7 @@ async def _generate_one(bucket: dict[str, Any], client_type: str = "desktop", co
                 raw = await gemini_client.text(
                     system=SYSTEM_PROMPT,
                     user_text=user_text,
-                    model="gemini-2.5-flash",
+                    model="gemini-3.5-flash-lite",
                     response_mime_type="application/json",
                 )
             except Exception as exc:  # noqa: BLE001
@@ -749,6 +756,14 @@ async def run_trend_scout(*, force: bool = False, client_type: str = "desktop", 
     db = get_db()
     today = date.today().isoformat()
     
+    city = None
+    if user:
+        for source_key in ("address", "home_location"):
+            source = user.get(source_key) or {}
+            if isinstance(source, dict) and source.get("city"):
+                city = source["city"]
+                break
+                
     if not country_code and user:
         user_countries = _country_codes(user)
         if user_countries:
@@ -762,7 +777,7 @@ async def run_trend_scout(*, force: bool = False, client_type: str = "desktop", 
         if not force and await _already_today(bucket["slug"], country_code):
             skipped.append(bucket["slug"])
             continue
-        card = await _generate_one(bucket, client_type=client_type, country_code=country_code)
+        card = await _generate_one(bucket, client_type=client_type, country_code=country_code, city=city)
         if not card:
             continue
         doc = {
@@ -1101,7 +1116,7 @@ async def _translate_card(
         raw = await client.text(
             system=system_prompt,
             user_text=payload_text,
-            model="gemini-2.5-flash",
+            model="gemini-3.5-flash-lite",
             response_mime_type="application/json",
         )
     except Exception as exc:  # noqa: BLE001

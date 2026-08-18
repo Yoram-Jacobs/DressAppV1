@@ -63,7 +63,7 @@ async def generate_session_title(text: str, language: str = "en", api_key: str |
         raw = await client.text(
             system=system_msg,
             user_text=text[:400],
-            model="gemini-2.5-flash",
+            model="gemini-3.5-flash-lite",
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning("Session title generation failed: %s", exc)

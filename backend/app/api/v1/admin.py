@@ -169,7 +169,7 @@ async def list_users(
 
         # add AI configuration and billing fields
         ai_config = doc.get("ai_configuration") or {}
-        doc["selected_model"] = ai_config.get("selected_model") or "gemini-2.5-flash"
+        doc["selected_model"] = ai_config.get("selected_model") or "gemini-3.5-flash-lite"
         doc["credits_quota"] = ai_config.get("current_credits", 1000)
         doc["credits_used"] = ai_config.get("credits_used_this_month", 0)
         doc["dressapp_fee"] = doc["credits_used"] * 0.005
@@ -533,7 +533,7 @@ async def llm_usage(_: dict = Depends(require_admin)) -> dict[str, Any]:
             "backend": "google-direct",
             "usage": {
                 "status": "Active & Validated",
-                "model": "gemini-2.5-flash",
+                "model": "gemini-3.5-flash-lite",
                 "provider": "google-direct"
             },
             "manage_url": "https://aistudio.google.com/apikey",

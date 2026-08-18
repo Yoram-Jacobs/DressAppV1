@@ -438,7 +438,7 @@ async def activate_scheduled_campaigns() -> None:
 async def bill_ended_campaign(campaign: dict[str, Any], db: Any) -> None:
     """Bill the expert when their campaign is completed (either expired or cancelled)."""
     try:
-        from app.services import atzmai_client
+        from app.config import settings
         from app.services.email_service import send_campaign_billing_invoice, fetch_invoice_and_receipt_attachments
         import uuid
         import math
@@ -468,21 +468,19 @@ async def bill_ended_campaign(campaign: dict[str, Any], db: Any) -> None:
             logger.warning(f"Could not find expert {expert_id} for campaign {campaign_id} billing.")
             return
             
-        # Convert $1/day to ILS
-        rate = await atzmai_client.get_usd_to_ils_rate()
+        # Convert $1/day directly (currency is USD)
         amount_usd = active_days * 1.00
-        amount_ils = round(amount_usd * rate, 2)
-        amount_cents = int(amount_ils * 100)
+        amount_cents = int(amount_usd * 100)
         
-        # Create Atzmai transaction doc
-        atzmai_payment_id = f"mock_end_{uuid.uuid4().hex[:12]}"
+        # Create transaction doc
+        paypal_payment_id = f"ncp_end_{uuid.uuid4().hex[:12].upper()}"
         topup_doc = {
             "id": f"camp_pay_{uuid.uuid4().hex[:12]}",
-            "atzmai_payment_id": atzmai_payment_id,
+            "atzmai_payment_id": paypal_payment_id,
             "user_id": expert_id,
             "campaign_id": campaign_id,
             "amount_cents": amount_cents,
-            "currency": "ILS",
+            "currency": "USD",
             "type": "campaign_final",
             "status": "pending",
             "created_at": datetime.now(timezone.utc).isoformat(),
@@ -490,47 +488,46 @@ async def bill_ended_campaign(campaign: dict[str, Any], db: Any) -> None:
         }
         await db.atzmai_topups.insert_one(topup_doc)
         
-        # In mock mode, auto-capture it
-        if atzmai_client.is_mock_mode():
-            await db.atzmai_topups.update_one(
-                {"atzmai_payment_id": atzmai_payment_id},
-                {"$set": {"status": "captured", "captured_at": datetime.now(timezone.utc).isoformat()}}
-            )
+        # Auto-capture mock campaign billing
+        await db.atzmai_topups.update_one(
+            {"atzmai_payment_id": paypal_payment_id},
+            {"$set": {"status": "captured", "captured_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        # Update campaign billing fields
+        await db.experts_campaigns.update_one(
+            {"id": campaign_id},
+            {"$set": {
+                "billing.payment_status": "paid",
+                "billing.total_active_days": active_days,
+                "billing.total_fee_cents": amount_cents,
+                "billing.final_payment_id": paypal_payment_id,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        # Send invoice + receipt PDFs
+        attachments = []
+        try:
+            attachments = await fetch_invoice_and_receipt_attachments(amount_cents)
+        except Exception as e:
+            logger.error(f"Failed to fetch attachments: {e}")
             
-            # Update campaign billing fields
-            await db.experts_campaigns.update_one(
-                {"id": campaign_id},
-                {"$set": {
-                    "billing.payment_status": "paid",
-                    "billing.total_active_days": active_days,
-                    "billing.total_fee_cents": amount_cents,
-                    "billing.final_payment_id": atzmai_payment_id,
-                    "updated_at": datetime.now(timezone.utc).isoformat()
-                }}
+        try:
+            await send_campaign_billing_invoice(
+                to=expert["email"],
+                user=expert,
+                campaign=campaign,
+                amount_cents=amount_cents,
+                currency="USD",
+                active_days=active_days,
+                transaction_id=paypal_payment_id,
+                attachments=attachments
             )
+            logger.info(f"Campaign final invoice and email sent for campaign {campaign_id}")
+        except Exception as e:
+            logger.error(f"Failed to send campaign billing email: {e}")
             
-            # Send invoice + receipt PDFs
-            attachments = []
-            try:
-                attachments = await fetch_invoice_and_receipt_attachments(amount_cents)
-            except Exception as e:
-                logger.error(f"Failed to fetch attachments: {e}")
-                
-            try:
-                await send_campaign_billing_invoice(
-                    to=expert["email"],
-                    user=expert,
-                    campaign=campaign,
-                    amount_cents=amount_cents,
-                    currency="ILS",
-                    active_days=active_days,
-                    transaction_id=atzmai_payment_id,
-                    attachments=attachments
-                )
-                logger.info(f"Campaign final invoice and email sent for campaign {campaign_id}")
-            except Exception as e:
-                logger.error(f"Failed to send campaign billing email: {e}")
-                
     except Exception as e:
         logger.error(f"Error in bill_ended_campaign: {e}")
 

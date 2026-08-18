@@ -154,93 +154,131 @@ export function findDuplicatesInCloset(fingerprints, closetItems) {
   if (!Array.isArray(fingerprints) || fingerprints.length === 0) {
     return { matches: [] };
   }
-  if (!Array.isArray(closetItems) || closetItems.length === 0) {
-    return { matches: [] };
-  }
-
-  // Filter to candidates with at least one usable hash. Saves the
-  // tight inner-loop from re-checking blank items every iteration.
-  const candidates = closetItems.filter(
-    (it) => it && (it.source_sha256 || it.source_phash),
-  );
-  if (candidates.length === 0) return { matches: [] };
-
-  // Pre-index by sha256 for the O(1) exact-byte pass — most matches
-  // in practice come from this path (genuine re-uploads).
-  const byShaSha = new Map();
-  for (const it of candidates) {
-    if (it.source_sha256) byShaSha.set(it.source_sha256, it);
-  }
 
   const matches = [];
   const seen = new Set();
-  for (const p of fingerprints) {
+
+  // 1. First Pass: check for duplicates WITHIN the upload batch itself.
+  // We sequentialise the list by building a list of "survivors" (unique items in this batch).
+  const batchSurvivors = [];
+  for (let i = 0; i < fingerprints.length; i++) {
+    const p = fingerprints[i];
     if (!p) continue;
-    let existing = null;
 
-    // Pass 1 — exact byte match.
-    if (p.sha256 && byShaSha.has(p.sha256)) {
-      existing = byShaSha.get(p.sha256);
-    }
-
-    // Pass 2 — shape + colour. Pick the best (lowest-Hamming) match
-    // so the dialog shows the strongest visual neighbour, not just
-    // the first acceptable one.
-    if (!existing && p.phash) {
-      let bestDist = HAMMING_THRESHOLD + 1;
-      for (const it of candidates) {
-        if (
-          !isDuplicateMatch({
-            shaA: p.sha256,
-            shaB: it.source_sha256,
-            phashA: p.phash,
-            phashB: it.source_phash,
-            colorA: p.color_sig,
-            colorB: it.source_color_sig,
-          })
-        ) {
-          continue;
-        }
-        const d = hammingDistance(p.phash, it.source_phash);
-        if (d < bestDist) {
-          bestDist = d;
-          existing = it;
-        }
+    let batchDupOf = null;
+    for (const prevFp of batchSurvivors) {
+      if (
+        isDuplicateMatch({
+          shaA: p.sha256,
+          shaB: prevFp.sha256,
+          phashA: p.phash,
+          phashB: prevFp.phash,
+          colorA: p.color_sig,
+          colorB: prevFp.color_sig,
+        })
+      ) {
+        batchDupOf = prevFp;
+        break;
       }
     }
 
-    if (!existing) continue;
+    if (batchDupOf) {
+      const key = `${p.sha256 || ''}|${p.phash || ''}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        // Construct a pseudo-closet item showing the first photo's info
+        matches.push({
+          sha256: p.sha256 || null,
+          phash: p.phash || null,
+          filename: p.filename || null,
+          size_bytes: typeof p.size_bytes === 'number' ? p.size_bytes : null,
+          existing: {
+            id: `batch-${batchDupOf.filename || 'dup'}`,
+            title: `Duplicate of ${batchDupOf.filename || 'another uploaded photo'}`,
+            item_type: 'Batch Photo',
+            thumbnail_data_url: batchDupOf._b64 ? `data:${batchDupOf.file?.type || 'image/jpeg'};base64,${batchDupOf._b64}` : null,
+            is_duplicate: false,
+          },
+        });
+      }
+    } else {
+      batchSurvivors.push(p);
+    }
+  }
 
-    // De-dupe a single incoming photo that hits both passes — e.g.
-    // a bytewise-identical re-upload also has Hamming 0 against
-    // itself. Same key the backend uses, so any downstream code that
-    // grouped by `${sha}|${phash}` keeps working.
-    const key = `${p.sha256 || ''}|${p.phash || ''}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
+  // 2. Second Pass: check the survivors against the existing closet items.
+  const items = Array.isArray(closetItems) ? closetItems : [];
+  const candidates = items.filter(
+    (it) => it && (it.source_sha256 || it.source_phash),
+  );
 
-    matches.push({
-      sha256: p.sha256 || null,
-      phash: p.phash || null,
-      filename: p.filename || null,
-      size_bytes: typeof p.size_bytes === 'number' ? p.size_bytes : null,
-      existing: {
-        id: existing.id,
-        title: existing.title || existing.name || 'Existing item',
-        item_type: existing.item_type || null,
-        sub_category: existing.sub_category || null,
-        color: existing.color || null,
-        // Prefer the cheap thumbnail; fall back through the heavier
-        // URLs so the dialog always has something to render. Mirrors
-        // the backend's exact precedence.
-        thumbnail_data_url:
-          existing.thumbnail_data_url
-          || existing.segmented_image_url
-          || existing.original_image_url
-          || null,
-        is_duplicate: !!existing.is_duplicate,
-      },
-    });
+  if (candidates.length > 0) {
+    const byShaSha = new Map();
+    for (const it of candidates) {
+      if (it.source_sha256) byShaSha.set(it.source_sha256, it);
+    }
+
+    for (const p of batchSurvivors) {
+      let existing = null;
+
+      // Pass 1 — exact byte match.
+      if (p.sha256 && byShaSha.has(p.sha256)) {
+        existing = byShaSha.get(p.sha256);
+      }
+
+      // Pass 2 — shape similarity.
+      if (!existing && p.phash) {
+        let bestDist = HAMMING_THRESHOLD + 1;
+        for (const it of candidates) {
+          if (
+            !isDuplicateMatch({
+              shaA: p.sha256,
+              shaB: it.source_sha256,
+              phashA: p.phash,
+              phashB: it.source_phash,
+              colorA: p.color_sig,
+              colorB: it.source_color_sig,
+            })
+          ) {
+            continue;
+          }
+          const d = hammingDistance(p.phash, it.source_phash);
+          if (d < bestDist) {
+            bestDist = d;
+            existing = it;
+          }
+        }
+      }
+
+      if (!existing) continue;
+
+      const key = `${p.sha256 || ''}|${p.phash || ''}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      matches.push({
+        sha256: p.sha256 || null,
+        phash: p.phash || null,
+        filename: p.filename || null,
+        size_bytes: typeof p.size_bytes === 'number' ? p.size_bytes : null,
+        existing: {
+          id: existing.id,
+          title: existing.title || existing.name || 'Existing item',
+          item_type: existing.item_type || null,
+          sub_category: existing.sub_category || null,
+          color: existing.color || null,
+          // Prefer the cheap thumbnail; fall back through the heavier
+          // URLs so the dialog always has something to render. Mirrors
+          // the backend's exact precedence.
+          thumbnail_data_url:
+            existing.thumbnail_data_url
+            || existing.segmented_image_url
+            || existing.original_image_url
+            || null,
+          is_duplicate: !!existing.is_duplicate,
+        },
+      });
+    }
   }
 
   return { matches };

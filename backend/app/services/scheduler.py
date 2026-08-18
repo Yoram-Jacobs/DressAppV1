@@ -366,8 +366,11 @@ async def check_scheduler_triggers() -> None:
                 except Exception as cal_exc:
                     logger.warning("Failed to fetch calendar events for user %s on %s: %s", user_id, target_date_str, cal_exc)
 
-                # Generate outfit proposals
-                style_option = sched.get("style_option") or sched.get("style_dress_for") or "casual"
+                style_option = sched.get("style_dress_for")
+                if not style_option or style_option == "custom":
+                    style_option = sched.get("custom_style") or sched.get("style_option") or "casual"
+                if style_option == "custom":
+                    style_option = "casual"
                 
                 # Sanitize user dict to prevent ObjectId JSON serialization errors
                 user_clean = dict(user)

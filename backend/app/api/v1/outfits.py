@@ -272,18 +272,18 @@ async def webpush_subscribe(
     db = get_db()
     sub_dict = payload.model_dump()
     
-    # Check if subscription already exists to avoid duplicates
-    existing = await db.users.find_one({
-        "id": user["id"],
-        "web_push_subscriptions.endpoint": payload.endpoint
-    })
+    # Atomically remove any duplicate subscription with this endpoint first to avoid duplicates
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$pull": {"web_push_subscriptions": {"endpoint": payload.endpoint}}}
+    )
     
-    if not existing:
-        await db.users.update_one(
-            {"id": user["id"]},
-            {"$push": {"web_push_subscriptions": sub_dict}}
-        )
-        logger.info("Registered web push subscription for user_id=%s", user["id"])
+    # Push the new subscription
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$push": {"web_push_subscriptions": sub_dict}}
+    )
+    logger.info("Registered web push subscription for user_id=%s", user["id"])
     return {"subscribed": True}
 
 
