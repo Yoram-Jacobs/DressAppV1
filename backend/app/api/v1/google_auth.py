@@ -19,6 +19,7 @@ Three flows live here:
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from datetime import datetime, timedelta, timezone
@@ -117,7 +118,12 @@ async def google_oauth_start(
     """Generate the Google authorization URL for the current DressApp user."""
     if not calendar_service.enabled:
         raise HTTPException(503, "Google OAuth not configured on server")
-    state = _build_state(user["id"], purpose="google-oauth-link")
+    redirect_uri = calendar_service.resolve_redirect_uri(request)
+    state = _build_state(
+        user["id"],
+        purpose="google-oauth-link",
+        extra={"redirect_uri": redirect_uri},
+    )
     try:
         url = calendar_service.build_authorization_url(state, request=request)
     except RuntimeError as exc:
@@ -188,8 +194,11 @@ async def _handle_calendar_link_callback(
     if not user_id:
         return RedirectResponse(f"{redirect_base}?calendar=error&reason=missing_user")
 
+    redirect_uri = data.get("redirect_uri")
     try:
-        tokens = await calendar_service.exchange_code(code, request=request)
+        tokens = await calendar_service.exchange_code(
+            code, request=request, redirect_uri=redirect_uri
+        )
     except Exception:  # noqa: BLE001
         logger.exception("Google token exchange failed")
         return RedirectResponse(
@@ -204,6 +213,7 @@ async def _handle_calendar_link_callback(
             f"{redirect_base}?calendar=error&reason=persist_failed"
         )
 
+    logger.info("google-calendar: successfully linked user_id=%s", user_id)
     return RedirectResponse(f"{redirect_base}?calendar=connected")
 
 
@@ -279,14 +289,16 @@ def _frontend_origin(request: Request) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Idempotency cache — protects against Chrome Custom Tab retrying the
-# /callback URL after it fires the dressapp:// intent to Android.  The
-# second hit finds the Google auth code already consumed → invalid_grant.
+# Idempotency cache & in-flight exchange locks — protects against Chrome
+# Custom Tab retrying the /callback URL or duplicate concurrent prefetch hits.
+# The second hit finds the Google auth code already consumed → invalid_grant.
 # Keyed by the raw state JWT string (unique per sign-in attempt).
 # ---------------------------------------------------------------------------
 _EXCHANGE_CACHE: dict[str, tuple[str, float]] = {}
 _EXCHANGE_CACHE_TTL = 300.0   # seconds — covers any realistic Chrome retry
 _EXCHANGE_CACHE_MAX = 500     # safety cap on memory usage
+_EXCHANGE_LOCKS: dict[str, asyncio.Lock] = {}
+_EXCHANGE_LOCKS_GUARD = asyncio.Lock()
 
 
 def _cleanup_exchange_cache() -> None:
@@ -298,10 +310,12 @@ def _cleanup_exchange_cache() -> None:
     ]
     for k in expired:
         _EXCHANGE_CACHE.pop(k, None)
+        _EXCHANGE_LOCKS.pop(k, None)
     if len(_EXCHANGE_CACHE) > _EXCHANGE_CACHE_MAX:
         trim = list(_EXCHANGE_CACHE.keys())[: len(_EXCHANGE_CACHE) // 2]
         for k in trim:
             _EXCHANGE_CACHE.pop(k, None)
+            _EXCHANGE_LOCKS.pop(k, None)
 
 
 def _login_error_redirect(origin: str, reason: str) -> RedirectResponse:
@@ -354,12 +368,17 @@ async def google_login_start(
     if next and next.startswith("/") and not next.startswith("//"):
         safe_next = next
 
+    redirect_uri = calendar_service.resolve_redirect_uri(
+        request, callback_path=LOGIN_CALLBACK_PATH
+    )
+
     state = _build_state(
         purpose="google-oauth-login",
         extra={
             "with_calendar": bool(with_calendar),
             "next": safe_next,
             "mobile": bool(mobile),
+            "redirect_uri": redirect_uri,
         },
     )
 
@@ -476,203 +495,224 @@ async def _handle_login_callback(
             )
             return RedirectResponse(cached_url)
 
-    # 1) Exchange the auth code.
-    try:
-        tokens = await calendar_service.exchange_code(
-            code, request=request, callback_path=callback_path
-        )
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("Google sign-in token exchange failed")
-        # Surface a compact reason so the user can see it in the URL hash
-        # without having to grep backend logs. We URL-quote-plus to avoid
-        # breaking the fragment parser on ``=`` / ``&`` characters.
-        from urllib.parse import quote_plus
+    # Acquire or create per-state lock to serialize concurrent requests for the same state
+    async with _EXCHANGE_LOCKS_GUARD:
+        if state not in _EXCHANGE_LOCKS:
+            _EXCHANGE_LOCKS[state] = asyncio.Lock()
+        state_lock = _EXCHANGE_LOCKS[state]
 
-        reason = quote_plus(f"token_exchange_failed: {str(exc)[:160]}")
-        return _smart_error_redirect(origin, reason, state_data)
+    async with state_lock:
+        if state in _EXCHANGE_CACHE:
+            cached_url, cached_at = _EXCHANGE_CACHE[state]
+            if time.time() - cached_at < _EXCHANGE_CACHE_TTL:
+                logger.info(
+                    "google sign-in: returning cached redirect after awaiting lock "
+                    "state_jti=%.12s", state[-12:]
+                )
+                return RedirectResponse(cached_url)
 
-    access_token = tokens.get("access_token")
-    if not access_token:
-        return _smart_error_redirect(origin, "no_access_token", state_data)
+        pinned_redirect_uri = state_data.get("redirect_uri")
 
-    # Log granted scopes for diagnostics — helps identify if People API
-    # scopes were silently skipped by Google (restricted scope issue).
-    granted_scopes = (tokens.get("scope") or "").split()
-    people_scopes_needed = [
-        "https://www.googleapis.com/auth/user.birthday.read",
-        "https://www.googleapis.com/auth/user.phonenumbers.read",
-        "https://www.googleapis.com/auth/user.addresses.read",
-        "https://www.googleapis.com/auth/user.gender.read",
-    ]
-    missing = [s for s in people_scopes_needed if s not in granted_scopes]
-    if missing:
-        logger.warning(
-            "google sign-in: People API scopes NOT granted — missing=%s granted=%s. "
-            "Demographics will not be auto-filled. Verify the OAuth consent screen "
-            "is published in Google Cloud Console.",
-            missing,
-            granted_scopes,
-        )
-    else:
-        logger.info(
-            "google sign-in: all People API scopes granted — scopes=%s",
-            granted_scopes,
-        )
+        # 1) Exchange the auth code.
+        try:
+            tokens = await calendar_service.exchange_code(
+                code,
+                request=request,
+                callback_path=callback_path,
+                redirect_uri=pinned_redirect_uri,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("Google sign-in token exchange failed (redirect_uri=%s)", pinned_redirect_uri)
+            # Surface a compact reason so the user can see it in the URL hash
+            # without having to grep backend logs. We URL-quote-plus to avoid
+            # breaking the fragment parser on ``=`` / ``&`` characters.
+            from urllib.parse import quote_plus
 
-    # 2) Fetch userinfo (email is the join key).
-    try:
-        userinfo = await calendar_service.fetch_userinfo(access_token)
-    except Exception:  # noqa: BLE001
-        logger.exception("Google sign-in userinfo fetch failed")
-        return _smart_error_redirect(origin, "userinfo_failed", state_data)
+            reason = quote_plus(f"token_exchange_failed: {str(exc)[:160]}")
+            return _smart_error_redirect(origin, reason, state_data)
 
-    email = (userinfo.get("email") or "").lower()
+        access_token = tokens.get("access_token")
+        if not access_token:
+            return _smart_error_redirect(origin, "no_access_token", state_data)
 
-    # Fetch extended profile (optional/non-blocking)
-    extended_profile = {}
-    try:
-        extended_profile = await calendar_service.fetch_people_profile(access_token)
-        if not extended_profile:
-            # People API returned empty — likely missing scopes. Log the
-            # granted scopes so the admin can diagnose from logs.
-            granted = (tokens.get("scope") or "").split()
+        # Log granted scopes for diagnostics — helps identify if People API
+        # scopes were silently skipped by Google (restricted scope issue).
+        granted_scopes = (tokens.get("scope") or "").split()
+        people_scopes_needed = [
+            "https://www.googleapis.com/auth/user.birthday.read",
+            "https://www.googleapis.com/auth/user.phonenumbers.read",
+            "https://www.googleapis.com/auth/user.addresses.read",
+            "https://www.googleapis.com/auth/user.gender.read",
+        ]
+        missing = [s for s in people_scopes_needed if s not in granted_scopes]
+        if missing:
             logger.warning(
-                "google sign-in: People API returned empty for user email=%s — "
-                "granted_scopes=%s. If user.birthday.read / user.gender.read / "
-                "user.phonenumbers.read / user.addresses.read are not in the list, "
-                "the OAuth consent screen needs to be verified in Google Cloud Console.",
-                email,
-                granted,
+                "google sign-in: People API scopes NOT granted — missing=%s granted=%s. "
+                "Demographics will not be auto-filled. Verify the OAuth consent screen "
+                "is published in Google Cloud Console.",
+                missing,
+                granted_scopes,
             )
-    except Exception as e:
-        logger.warning("Google sign-in People API fetch failed: %s", e)
-    if not email:
-        return _smart_error_redirect(origin, "no_email", state_data)
-    if not userinfo.get("verified_email", True):
-        # Most Google accounts are verified; reject unverified to prevent
-        # account-takeover via email collision.
-        return _smart_error_redirect(origin, "email_unverified", state_data)
+        else:
+            logger.info(
+                "google sign-in: all People API scopes granted — scopes=%s",
+                granted_scopes,
+            )
 
-    db = get_db()
-    existing = await db.users.find_one({"email": email}, {"_id": 0})
+        # 2) Fetch userinfo (email is the join key).
+        try:
+            userinfo = await calendar_service.fetch_userinfo(access_token)
+        except Exception:  # noqa: BLE001
+            logger.exception("Google sign-in userinfo fetch failed")
+            return _smart_error_redirect(origin, "userinfo_failed", state_data)
 
-    # 3) Find-or-create the user (auto-link by email per decision 2a).
-    if existing:
-        user_doc = existing
-        patch: dict[str, Any] = {}
-        # Autofill profile fields that are still empty — mirrors the same
-        # logic used by ``calendar_service.persist_tokens_for_user`` so the
-        # behaviour is consistent regardless of which path is taken.
-        if userinfo.get("given_name") and not user_doc.get("first_name"):
-            patch["first_name"] = userinfo["given_name"]
-        if userinfo.get("family_name") and not user_doc.get("last_name"):
-            patch["last_name"] = userinfo["family_name"]
-        if userinfo.get("name") and not user_doc.get("display_name"):
-            patch["display_name"] = userinfo["name"]
-        if userinfo.get("picture") and not user_doc.get("avatar_url"):
-            patch["avatar_url"] = userinfo["picture"]
-        if userinfo.get("locale") and not user_doc.get("locale"):
-            patch["locale"] = userinfo["locale"]
-            
-        # Autofill extended contact info from Google People API if empty or missing
-        if extended_profile.get("date_of_birth") and (not user_doc.get("date_of_birth") or user_doc.get("date_of_birth") == ""):
-            patch["date_of_birth"] = extended_profile["date_of_birth"]
-        if extended_profile.get("phone") and (not user_doc.get("phone") or user_doc.get("phone") == ""):
-            patch["phone"] = extended_profile["phone"]
-        if extended_profile.get("sex") and (not user_doc.get("sex") or user_doc.get("sex") == ""):
-            patch["sex"] = extended_profile["sex"]
+        email = (userinfo.get("email") or "").lower()
 
-        if extended_profile.get("address"):
-            google_addr = extended_profile["address"]
-            existing_addr = user_doc.get("address") or {}
-            
-            addr_patch = {}
-            for sub_k in ["line1", "line2", "city", "region", "postal_code", "country"]:
-                g_val = google_addr.get(sub_k)
-                e_val = existing_addr.get(sub_k)
-                if g_val and (not e_val or e_val == ""):
-                    addr_patch[sub_k] = g_val
-            
-            if addr_patch:
-                merged_addr = dict(existing_addr)
-                merged_addr.update(addr_patch)
-                patch["address"] = merged_addr
+        # Fetch extended profile (optional/non-blocking)
+        extended_profile = {}
+        try:
+            extended_profile = await calendar_service.fetch_people_profile(access_token)
+            if not extended_profile:
+                # People API returned empty — likely missing scopes. Log the
+                # granted scopes so the admin can diagnose from logs.
+                granted = (tokens.get("scope") or "").split()
+                logger.warning(
+                    "google sign-in: People API returned empty for user email=%s — "
+                    "granted_scopes=%s. If user.birthday.read / user.gender.read / "
+                    "user.phonenumbers.read / user.addresses.read are not in the list, "
+                    "the OAuth consent screen needs to be verified in Google Cloud Console.",
+                    email,
+                    granted,
+                )
+        except Exception as e:
+            logger.warning("Google sign-in People API fetch failed: %s", e)
+        if not email:
+            return _smart_error_redirect(origin, "no_email", state_data)
+        if not userinfo.get("verified_email", True):
+            # Most Google accounts are verified; reject unverified to prevent
+            # account-takeover via email collision.
+            return _smart_error_redirect(origin, "email_unverified", state_data)
 
-        # Re-apply admin allow-list on every Google login — same idempotent
-        # behaviour as email/password login.
-        new_roles = apply_admin_role(user_doc.get("roles"), email)
-        if set(new_roles) != set(user_doc.get("roles") or []):
-            patch["roles"] = new_roles
-        if patch:
-            patch["updated_at"] = datetime.now(timezone.utc).isoformat()
-            await db.users.update_one({"id": user_doc["id"]}, {"$set": patch})
-            user_doc.update(patch)
-        logger.info("google sign-in: linked existing user email=%s", email)
-    else:
-        new_user = User(
-            email=email,
-            password_hash=None,
-            display_name=userinfo.get("name")
-            or userinfo.get("given_name")
-            or email.split("@")[0],
-            avatar_url=userinfo.get("picture"),
-            first_name=userinfo.get("given_name"),
-            last_name=userinfo.get("family_name"),
-            locale=userinfo.get("locale") or "en-US",
-            date_of_birth=extended_profile.get("date_of_birth"),
-            phone=extended_profile.get("phone"),
-            address=extended_profile.get("address"),
-            sex=extended_profile.get("sex"),
+        db = get_db()
+        existing = await db.users.find_one({"email": email}, {"_id": 0})
+
+        # 3) Find-or-create the user (auto-link by email per decision 2a).
+        if existing:
+            user_doc = existing
+            patch: dict[str, Any] = {}
+            # Autofill profile fields that are still empty — mirrors the same
+            # logic used by ``calendar_service.persist_tokens_for_user`` so the
+            # behaviour is consistent regardless of which path is taken.
+            if userinfo.get("given_name") and not user_doc.get("first_name"):
+                patch["first_name"] = userinfo["given_name"]
+            if userinfo.get("family_name") and not user_doc.get("last_name"):
+                patch["last_name"] = userinfo["family_name"]
+            if userinfo.get("name") and not user_doc.get("display_name"):
+                patch["display_name"] = userinfo["name"]
+            if userinfo.get("picture") and not user_doc.get("avatar_url"):
+                patch["avatar_url"] = userinfo["picture"]
+            if userinfo.get("locale") and not user_doc.get("locale"):
+                patch["locale"] = userinfo["locale"]
+                
+            # Autofill extended contact info from Google People API if empty or missing
+            if extended_profile.get("date_of_birth") and (not user_doc.get("date_of_birth") or user_doc.get("date_of_birth") == ""):
+                patch["date_of_birth"] = extended_profile["date_of_birth"]
+            if extended_profile.get("phone") and (not user_doc.get("phone") or user_doc.get("phone") == ""):
+                patch["phone"] = extended_profile["phone"]
+            if extended_profile.get("sex") and (not user_doc.get("sex") or user_doc.get("sex") == ""):
+                patch["sex"] = extended_profile["sex"]
+
+            if extended_profile.get("address"):
+                google_addr = extended_profile["address"]
+                existing_addr = user_doc.get("address") or {}
+                
+                addr_patch = {}
+                for sub_k in ["line1", "line2", "city", "region", "postal_code", "country"]:
+                    g_val = google_addr.get(sub_k)
+                    e_val = existing_addr.get(sub_k)
+                    if g_val and (not e_val or e_val == ""):
+                        addr_patch[sub_k] = g_val
+                
+                if addr_patch:
+                    merged_addr = dict(existing_addr)
+                    merged_addr.update(addr_patch)
+                    patch["address"] = merged_addr
+
+            # Re-apply admin allow-list on every Google login — same idempotent
+            # behaviour as email/password login.
+            new_roles = apply_admin_role(user_doc.get("roles"), email)
+            if set(new_roles) != set(user_doc.get("roles") or []):
+                patch["roles"] = new_roles
+            if patch:
+                patch["updated_at"] = datetime.now(timezone.utc).isoformat()
+                await db.users.update_one({"id": user_doc["id"]}, {"$set": patch})
+                user_doc.update(patch)
+            logger.info("google sign-in: linked existing user email=%s", email)
+        else:
+            new_user = User(
+                email=email,
+                password_hash=None,
+                display_name=userinfo.get("name")
+                or userinfo.get("given_name")
+                or email.split("@")[0],
+                avatar_url=userinfo.get("picture"),
+                first_name=userinfo.get("given_name"),
+                last_name=userinfo.get("family_name"),
+                locale=userinfo.get("locale") or "en-US",
+                date_of_birth=extended_profile.get("date_of_birth"),
+                phone=extended_profile.get("phone"),
+                address=extended_profile.get("address"),
+                sex=extended_profile.get("sex"),
+            )
+            # Provision 10 free credits (expiring in 30 days) on signup as per pricing spec
+            new_user.add_credit_bucket(amount=10, credit_type="free", days_until_expiry=30)
+            user_doc = new_user.model_dump()
+            user_doc["roles"] = apply_admin_role(user_doc.get("roles"), email)
+            await repos.insert(db.users, user_doc)
+            logger.info("google sign-in: created new user email=%s id=%s", email, new_user.id)
+
+        # 4) Persist tokens for the user to mark as Google-connected and enable profile sync.
+        try:
+            await calendar_service.persist_tokens_for_user(user_doc["id"], tokens)
+        except Exception:  # noqa: BLE001
+            logger.exception("Google token persist failed during sign-in")
+            if with_calendar:
+                jwt_token = create_access_token(
+                    user_doc["id"], {"email": user_doc["email"]}
+                )
+                params = urlencode(
+                    {
+                        "token": jwt_token,
+                        "next": next_path,
+                        "warning": "calendar_persist_failed",
+                    }
+                )
+                if is_mobile:
+                    return RedirectResponse(f"dressapp://auth/callback#{params}")
+                return RedirectResponse(f"{origin}{LOGIN_FRONTEND_PATH}#{params}")
+
+        # 5) Mint our own JWT and hand it back to the client.
+        jwt_token = create_access_token(
+            user_doc["id"], {"email": user_doc["email"]}
         )
-        # Provision 10 free credits (expiring in 30 days) on signup as per pricing spec
-        new_user.add_credit_bucket(amount=10, credit_type="free", days_until_expiry=30)
-        user_doc = new_user.model_dump()
-        user_doc["roles"] = apply_admin_role(user_doc.get("roles"), email)
-        await repos.insert(db.users, user_doc)
-        logger.info("google sign-in: created new user email=%s id=%s", email, new_user.id)
+        params = urlencode({"token": jwt_token, "next": next_path})
 
-    # 4) Persist tokens for the user to mark as Google-connected and enable profile sync.
-    try:
-        await calendar_service.persist_tokens_for_user(user_doc["id"], tokens)
-    except Exception:  # noqa: BLE001
-        logger.exception("Google token persist failed during sign-in")
-        if with_calendar:
-            jwt_token = create_access_token(
-                user_doc["id"], {"email": user_doc["email"]}
-            )
-            params = urlencode(
-                {
-                    "token": jwt_token,
-                    "next": next_path,
-                    "warning": "calendar_persist_failed",
-                }
-            )
-            if is_mobile:
-                return RedirectResponse(f"dressapp://auth/callback#{params}")
-            return RedirectResponse(f"{origin}{LOGIN_FRONTEND_PATH}#{params}")
+        # Mobile clients (React Native + openAuthSessionAsync) need a custom-scheme
+        # redirect so Chrome Custom Tab signals the app to close and returns the URL.
+        # Web clients get the standard web /auth/callback fragment.
+        if is_mobile:
+            final_url = f"dressapp://auth/callback#{params}"
+        else:
+            final_url = f"{origin}{LOGIN_FRONTEND_PATH}#{params}"
 
-    # 5) Mint our own JWT and hand it back to the client.
-    jwt_token = create_access_token(
-        user_doc["id"], {"email": user_doc["email"]}
-    )
-    params = urlencode({"token": jwt_token, "next": next_path})
-
-    # Mobile clients (React Native + openAuthSessionAsync) need a custom-scheme
-    # redirect so Chrome Custom Tab signals the app to close and returns the URL.
-    # Web clients get the standard web /auth/callback fragment.
-    if is_mobile:
-        final_url = f"dressapp://auth/callback#{params}"
-    else:
-        final_url = f"{origin}{LOGIN_FRONTEND_PATH}#{params}"
-
-    # Cache the successful result so a Chrome retry of the same callback
-    # returns the same redirect without re-exchanging the (now invalid) code.
-    _EXCHANGE_CACHE[state] = (final_url, time.time())
-    logger.info(
-        "google sign-in: success email=%s mobile=%s — redirect cached",
-        email, is_mobile,
-    )
-    return RedirectResponse(final_url)
+        # Cache the successful result so a Chrome retry of the same callback
+        # returns the same redirect without re-exchanging the (now invalid) code.
+        _EXCHANGE_CACHE[state] = (final_url, time.time())
+        logger.info(
+            "google sign-in: success email=%s mobile=%s — redirect cached",
+            email, is_mobile,
+        )
+        return RedirectResponse(final_url)
 
 
 # -------------------- 3) calendar routes --------------------

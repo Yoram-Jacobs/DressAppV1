@@ -136,12 +136,18 @@ class CalendarService:
         ``callback_path`` lets callers pick which backend route Google
         redirects to (calendar-connect vs sign-in-login). When ``None`` we
         keep the original calendar-connect path for backwards compatibility.
-        Note: the env override (``GOOGLE_OAUTH_REDIRECT_URI``) only applies
-        when ``callback_path`` is not provided — sign-in-login uses a
-        different backend route, so it always derives from the request host.
         """
-        if callback_path is None and self.redirect_uri:
-            return self.redirect_uri
+        if self.redirect_uri:
+            # If callback_path is not specified or matches the default unified callback path,
+            # return self.redirect_uri verbatim.
+            if callback_path is None or callback_path == "/api/v1/auth/google/callback":
+                return self.redirect_uri
+            # If a custom callback path was requested (e.g. legacy), extract base origin and append path.
+            from urllib.parse import urlparse
+
+            parsed = urlparse(self.redirect_uri)
+            base = f"{parsed.scheme}://{parsed.netloc}"
+            return f"{base}{callback_path}"
         if request is None:
             return None
         base = _public_base_url(request)
@@ -193,18 +199,23 @@ class CalendarService:
 
     # -------------------- token exchange --------------------
     async def exchange_code(
-        self, code: str, request: Any = None, callback_path: str | None = None
+        self,
+        code: str,
+        request: Any = None,
+        callback_path: str | None = None,
+        redirect_uri: str | None = None,
     ) -> dict[str, Any]:
         """Swap an auth code for access+refresh tokens. Raises on failure.
 
         The ``redirect_uri`` MUST match the one used on authorization —
-        we resolve it the same way here (env override wins, else derived
-        from the current request's host) so the handshake succeeds on
-        preview, staging, prod, and any custom domain.
+        when ``redirect_uri`` is explicitly provided (e.g. from the signed
+        state JWT), we use it directly to guarantee byte-for-byte fidelity.
+        Otherwise we resolve it the standard way.
         """
-        redirect_uri = self.resolve_redirect_uri(
-            request, callback_path=callback_path
-        )
+        if not redirect_uri:
+            redirect_uri = self.resolve_redirect_uri(
+                request, callback_path=callback_path
+            )
         logger.info(
             "Google OAuth token exchange: redirect_uri=%s callback_path=%s",
             redirect_uri,
