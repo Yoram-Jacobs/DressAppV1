@@ -70,9 +70,6 @@ const eb = StyleSheet.create({
 });
 
 // ─── Eyes unload helper (lazy to avoid module-init crash) ─────────────────────
-// We import sharedEyes lazily so that if @dressapp/eyes-native fails to
-// initialise (e.g. missing native module in the bundle), the rest of the
-// app still boots rather than crashing at module load time.
 let _eyesUnload: (() => Promise<void>) | null = null;
 try {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -87,8 +84,8 @@ export default function App() {
   const [scheme, setScheme] = useState(colorScheme);
   const [i18nReady, setI18nReady] = useState(false);
 
-  // Load Google Fonts
-  const [fontsLoaded] = useFonts({
+  // Load Google Fonts — capture fontError so we don't block forever
+  const [fontsLoaded, fontError] = useFonts({
     PlayfairDisplay_400Regular,
     PlayfairDisplay_400Regular_Italic,
     PlayfairDisplay_700Bold,
@@ -104,6 +101,12 @@ export default function App() {
     hydrateLanguage().finally(() => setI18nReady(true));
   }, []);
 
+  // Safety timeout — never block the splash for more than 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => setI18nReady(true), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Unload Eyes model when app goes to background (frees ~4 GB RAM)
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next: AppStateStatus) => {
@@ -114,8 +117,9 @@ export default function App() {
     return () => sub.remove();
   }, []);
 
-  // Hold splash while loading
-  if (!fontsLoaded || !i18nReady) {
+  // Proceed when fonts loaded (or errored) AND i18n is ready
+  const isReady = (fontsLoaded || !!fontError) && i18nReady;
+  if (!isReady) {
     return <View style={styles.splash} />;
   }
 
