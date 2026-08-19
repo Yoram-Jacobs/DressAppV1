@@ -464,16 +464,33 @@ async def _handle_login_callback(
     """
     origin = _frontend_origin(request) or ""
 
+    # --- Best-effort mobile detection (before full state validation) ---
+    # Try to peek at the state JWT to detect mobile=true BEFORE the
+    # full validation, so that error redirects go to dressapp:// instead
+    # of the web. We use options={"verify_exp": False} to avoid rejecting
+    # expired tokens during this peek — the full validation below will
+    # enforce expiry properly.
+    _peek_state: dict[str, Any] | None = None
+    if state:
+        try:
+            _peek_state = jwt.decode(
+                state, settings.JWT_SECRET,
+                algorithms=[settings.JWT_ALGORITHM],
+                options={"verify_exp": False},
+            )
+        except jwt.InvalidTokenError:
+            pass  # best-effort — errors handled below
+
     if error:
         logger.warning("Google sign-in OAuth error: %s", error)
-        return _login_error_redirect(origin, error)
+        return _smart_error_redirect(origin, error, _peek_state)
     if not code or not state:
-        return _login_error_redirect(origin, "missing_params")
+        return _smart_error_redirect(origin, "missing_params", _peek_state)
 
     try:
         state_data = _read_state(state, expected_purpose="google-oauth-login")
     except HTTPException as exc:
-        return _login_error_redirect(origin, exc.detail.replace(" ", "_"))
+        return _smart_error_redirect(origin, exc.detail.replace(" ", "_"), _peek_state)
 
     with_calendar = bool(state_data.get("with_calendar"))
     next_path = state_data.get("next") or "/home"
