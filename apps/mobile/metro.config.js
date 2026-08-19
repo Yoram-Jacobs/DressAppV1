@@ -6,41 +6,52 @@
  * Key design decisions:
  * - Yarn workspaces hoists ALL dependencies to root node_modules/.
  *   apps/mobile/node_modules/ is essentially empty (only .bin/).
- *   Therefore, nodeModulesPaths must prioritize root node_modules.
+ *   Therefore, nodeModulesPaths must list root node_modules.
  * - llama.rn is stubbed via extraNodeModules for EAS builds where
  *   the native NDK package is not installed.
- * - watchFolders includes the packages/ directory so Metro can
- *   resolve @dressapp/* workspace packages.
+ * - watchFolders includes packages/ so Metro can resolve @dressapp/*
+ *   workspace packages. node_modules is NOT watched — Metro resolves
+ *   it through nodeModulesPaths.
+ * - On Windows, __dirname may have a lowercase drive letter (c:\...)
+ *   which Metro internally prefixes with C:\ causing ENOENT. We
+ *   normalize all paths to uppercase drive letter to prevent this.
  */
 
 const { getDefaultConfig } = require('expo/metro-config');
 const path = require('path');
 const { existsSync } = require('fs');
 
-const projectRoot = __dirname;
-const workspaceRoot = path.resolve(projectRoot, '../..');
+// ── Windows drive letter normalization ───────────────────────────────────────
+// Metro on Windows can produce doubled paths (C:\c:\...) when the drive
+// letter is lowercase. Normalize all base paths to uppercase drive letter.
+function normalizePath(p) {
+  if (process.platform === 'win32' && /^[a-z]:/.test(p)) {
+    return p.charAt(0).toUpperCase() + p.slice(1);
+  }
+  return p;
+}
+
+const projectRoot = normalizePath(__dirname);
+const workspaceRoot = normalizePath(path.resolve(projectRoot, '../..'));
 
 const LLAMA_STUB = path.resolve(projectRoot, 'stubs/llama-stub.js');
 
 const config = getDefaultConfig(projectRoot);
 
 // ── Monorepo watchFolders ────────────────────────────────────────────────────
-// Include workspace packages so Metro can resolve @dressapp/* source files.
-// Filter out non-existent paths (apps/web, apps/android-twa absent from EAS).
+// Watch only the packages/ source tree for @dressapp/* workspace packages.
+// Do NOT watch node_modules — Metro resolves those through nodeModulesPaths.
 const packagesDir = path.resolve(workspaceRoot, 'packages');
 config.watchFolders = [
-  ...(config.watchFolders ?? []).filter(
-    (f) => existsSync(f) && !f.includes('node_modules'),
-  ),
   ...(existsSync(packagesDir) ? [packagesDir] : []),
 ];
 
 // ── Module resolution ────────────────────────────────────────────────────────
-// Yarn hoists everything to root node_modules. We list both paths
-// (mobile-local first for any unhoist edge cases, root second).
+// Yarn hoists everything to root node_modules. List root FIRST since
+// that's where all the packages actually live.
 config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
+  path.resolve(projectRoot, 'node_modules'),
 ];
 
 // Source extensions
