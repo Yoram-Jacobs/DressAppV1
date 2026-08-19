@@ -1,6 +1,0 @@
-/* DressApp global app styles. Keep minimal; rely on Tailwind + index.css tokens. */
-.page-shell { min-height: 100dvh; display: flex; flex-direction: column; }
-.container-px { padding-left: 16px; padding-right: 16px; }
-@media (min-width: 768px) {
-  .container-px { padding-left: 24px; padding-right: 24px; }
-}

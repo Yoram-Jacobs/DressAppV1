@@ -1748,3 +1748,12 @@ apps/mobile/.env.production
 inference-server/eyes/Garments/
 backend/ml_models/
 *.joblib
+
+# Temporary agent logs and runs
+.agents/auditor_*
+.agents/challenger_*
+.agents/explorer_*
+.agents/reviewer_*
+.agents/teamwork_preview_*
+.agents/worker_*
+.agents/sentinel/

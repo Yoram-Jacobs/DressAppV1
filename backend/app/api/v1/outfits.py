@@ -258,33 +258,63 @@ async def clear_simulated_notifications(
 
 
 class WebPushSubscriptionIn(BaseModel):
-    endpoint: str
+    # Web Push (VAPID) fields — required for browser push, optional for mobile
+    endpoint: str | None = None
     expirationTime: int | None = None
-    keys: dict[str, str]
-
+    keys: dict[str, str] | None = None
+    # Expo Push Token — supplied by mobile app instead of VAPID fields
+    expo_push_token: str | None = None
 
 @router.post("/webpush/subscribe")
 async def webpush_subscribe(
     payload: WebPushSubscriptionIn,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Register a Web Push subscription for the current user."""
+    """Register a Web Push (VAPID) or Expo push token for the current user.
+
+    Mobile clients send only ``expo_push_token``.
+    Browser clients send ``endpoint`` + ``keys`` (VAPID).
+    Both paths co-exist; one user document can hold both.
+    """
     db = get_db()
-    sub_dict = payload.model_dump()
-    
-    # Atomically remove any duplicate subscription with this endpoint first to avoid duplicates
+
+    # ── Expo push token path (mobile) ──────────────────────────────────────
+    if payload.expo_push_token:
+        token = payload.expo_push_token
+        # Store/update the token atomically (upsert-style: pull then push)
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$pull": {"expo_push_tokens": token}},
+        )
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$push": {"expo_push_tokens": token}},
+        )
+        logger.info("Registered Expo push token for user_id=%s", user["id"])
+        return {"subscribed": True, "provider": "expo"}
+
+    # ── VAPID / Web Push path (browser) ────────────────────────────────────
+    if not payload.endpoint or not payload.keys:
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=422,
+            detail="Either expo_push_token or (endpoint + keys) must be provided.",
+        )
+
+    sub_dict = payload.model_dump(exclude={"expo_push_token"})
+
+    # Atomically remove any duplicate subscription with this endpoint
     await db.users.update_one(
         {"id": user["id"]},
-        {"$pull": {"web_push_subscriptions": {"endpoint": payload.endpoint}}}
+        {"$pull": {"web_push_subscriptions": {"endpoint": payload.endpoint}}},
     )
-    
     # Push the new subscription
     await db.users.update_one(
         {"id": user["id"]},
-        {"$push": {"web_push_subscriptions": sub_dict}}
+        {"$push": {"web_push_subscriptions": sub_dict}},
     )
     logger.info("Registered web push subscription for user_id=%s", user["id"])
-    return {"subscribed": True}
+    return {"subscribed": True, "provider": "vapid"}
 
 
 @router.post("/webpush/unsubscribe")
