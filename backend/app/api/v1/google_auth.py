@@ -28,7 +28,7 @@ from urllib.parse import urlencode
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from app.config import settings
 from app.db.database import get_db
@@ -323,11 +323,41 @@ def _login_error_redirect(origin: str, reason: str) -> RedirectResponse:
     return RedirectResponse(target)
 
 
+def _mobile_scheme_redirect(url: str) -> HTMLResponse:
+    """Return an HTML page that navigates to a custom-scheme URL.
+
+    Chrome Custom Tabs (and most Android browsers) **block HTTP 3xx
+    redirects to non-http(s) schemes** like ``dressapp://`` as a security
+    measure.  A JavaScript ``window.location.href`` assignment or anchor
+    click IS allowed, so we serve a tiny HTML page that performs the
+    redirect client-side.  A ``<noscript>`` fallback link is provided for
+    edge cases where JS is disabled.
+    """
+    import html as _html
+
+    safe_url = _html.escape(url, quote=True)
+    # Use JSON-safe string in JS to prevent injection via token values.
+    import json as _json
+
+    js_url = _json.dumps(url)
+    page = (
+        "<!DOCTYPE html>"
+        "<html><head><meta charset='utf-8'>"
+        "<title>Redirecting to DressApp…</title></head>"
+        "<body style='font-family:sans-serif;text-align:center;padding:60px'>"
+        f"<p>Returning to DressApp…</p>"
+        f"<script>window.location.href={js_url};</script>"
+        f"<noscript><a href=\"{safe_url}\">Tap here to return to DressApp</a></noscript>"
+        "</body></html>"
+    )
+    return HTMLResponse(content=page)
+
+
 def _smart_error_redirect(
     origin: str,
     reason: str,
     state_data: dict[str, Any] | None = None,
-) -> RedirectResponse:
+) -> HTMLResponse | RedirectResponse:
     """Route errors to the mobile custom scheme when the flow was initiated
     from the React Native app (``state_data['mobile']`` is True), otherwise
     to the standard web ``/auth/callback`` page.
@@ -337,7 +367,7 @@ def _smart_error_redirect(
     Alert.alert instead of leaving the user on a Chrome Custom Tab.
     """
     if state_data and state_data.get("mobile"):
-        return RedirectResponse(f"dressapp://auth/callback#error={reason}")
+        return _mobile_scheme_redirect(f"dressapp://auth/callback#error={reason}")
     return _login_error_redirect(origin, reason)
 
 
@@ -510,7 +540,7 @@ async def _handle_login_callback(
                 "google sign-in: returning cached redirect (Chrome retry) "
                 "state_jti=%.12s", state[-12:]
             )
-            return RedirectResponse(cached_url)
+            return _mobile_scheme_redirect(cached_url) if cached_url.startswith("dressapp://") else RedirectResponse(cached_url)
 
     # Acquire or create per-state lock to serialize concurrent requests for the same state
     async with _EXCHANGE_LOCKS_GUARD:
@@ -526,7 +556,7 @@ async def _handle_login_callback(
                     "google sign-in: returning cached redirect after awaiting lock "
                     "state_jti=%.12s", state[-12:]
                 )
-                return RedirectResponse(cached_url)
+                return _mobile_scheme_redirect(cached_url) if cached_url.startswith("dressapp://") else RedirectResponse(cached_url)
 
         pinned_redirect_uri = state_data.get("redirect_uri")
 
@@ -705,7 +735,7 @@ async def _handle_login_callback(
                     }
                 )
                 if is_mobile:
-                    return RedirectResponse(f"dressapp://auth/callback#{params}")
+                    return _mobile_scheme_redirect(f"dressapp://auth/callback#{params}")
                 return RedirectResponse(f"{origin}{LOGIN_FRONTEND_PATH}#{params}")
 
         # 5) Mint our own JWT and hand it back to the client.
@@ -715,8 +745,10 @@ async def _handle_login_callback(
         params = urlencode({"token": jwt_token, "next": next_path})
 
         # Mobile clients (React Native + openAuthSessionAsync) need a custom-scheme
-        # redirect so Chrome Custom Tab signals the app to close and returns the URL.
-        # Web clients get the standard web /auth/callback fragment.
+        # redirect so Chrome Custom Tab hands control back to the app.
+        # IMPORTANT: Chrome blocks HTTP 3xx redirects to non-http(s) schemes
+        # like dressapp://, so we serve a tiny HTML page with a JS redirect.
+        # Web clients get the standard HTTP 307 redirect.
         if is_mobile:
             final_url = f"dressapp://auth/callback#{params}"
         else:
@@ -729,6 +761,8 @@ async def _handle_login_callback(
             "google sign-in: success email=%s mobile=%s — redirect cached",
             email, is_mobile,
         )
+        if is_mobile:
+            return _mobile_scheme_redirect(final_url)
         return RedirectResponse(final_url)
 
 
