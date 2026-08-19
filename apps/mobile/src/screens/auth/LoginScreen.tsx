@@ -29,12 +29,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import { useTranslation } from 'react-i18next';
 
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { api, tokenStore } from '@mobile/lib/api';
-import { emitAuthChange } from '@mobile/hooks/useAuthState';
+import { emitAuthChange } from '@mobile/lib/authEvents';
 import type { AuthStackParamList } from '@mobile/navigation/types';
 
 // Ensure the browser session is dismissed when the app regains focus (iOS).
@@ -66,12 +67,18 @@ export default function LoginScreen() {
         throw new Error('No authorization URL returned from server.');
       }
 
+      // Use Linking.createURL to get the correct return URL for the
+      // current build type (dev client vs standalone vs Expo Go).
+      const returnUrl = Linking.createURL('auth/callback');
+      console.log('[LoginScreen] OAuth returnUrl:', returnUrl);
+      console.log('[LoginScreen] Opening authorization_url:', data.authorization_url.substring(0, 100));
+
       // Opens Google's consent screen in Chrome Custom Tab.
       // Backend (mobile=true) redirects to dressapp://auth/callback#token=...
       // openAuthSessionAsync intercepts the dressapp:// URL and returns it.
       const result = await WebBrowser.openAuthSessionAsync(
         data.authorization_url,
-        'dressapp://auth/callback',
+        returnUrl,
       );
 
       if (result.type === 'success' && result.url) {
@@ -83,7 +90,7 @@ export default function LoginScreen() {
         if (errCode) throw new Error(errCode);
         if (!token)  throw new Error('No token received from sign-in.');
 
-        tokenStore.set(token);
+        await tokenStore.set(token);
         emitAuthChange(true);
       }
       // result.type === 'cancel' | 'dismiss': user closed browser — silent.
