@@ -1,0 +1,48 @@
+# EAS Build archive exclusions — place at MONOREPO ROOT (not apps/mobile)
+# EAS installs node_modules fresh on Linux build servers.
+# Uploading Windows node_modules causes native binary mismatches (llama.rn, turbo, lightningcss, etc.)
+
+# All node_modules — EAS installs from yarn.lock on Linux
+node_modules/
+apps/mobile/node_modules/
+apps/web/node_modules/
+packages/*/node_modules/
+
+# Python environments and backend (not needed for mobile build)
+backend/
+.venv/
+venv/
+*.pyc
+__pycache__/
+
+# Inference server (models served from HuggingFace)
+inference-server/
+
+# Build outputs
+apps/mobile/android/
+apps/mobile/ios/
+apps/mobile/dist/
+apps/mobile/.expo/
+apps/web/build/
+apps/web/dist/
+
+# Dev tools & caches
+.git/
+.turbo/
+*.log
+*.map
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+**/__tests__/
+**/*.test.ts
+**/*.test.tsx
+
+# Large assets not needed for build
+*.gguf
+*.bin
+*.onnx
+D:/

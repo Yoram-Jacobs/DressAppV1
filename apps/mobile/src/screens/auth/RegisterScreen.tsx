@@ -35,7 +35,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { api, tokenStore } from '@mobile/lib/api';
-import { emitAuthChange } from '@mobile/hooks/useAuthState';
+import { emitAuthChange } from '@mobile/lib/authEvents';
 import type { AuthStackParamList } from '@mobile/navigation/types';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -74,7 +74,7 @@ export default function RegisterScreen() {
         if (errCode) throw new Error(errCode);
         if (!token) throw new Error('No token received from sign-up.');
 
-        tokenStore.set(token);
+        await tokenStore.set(token);
         emitAuthChange(true);
       }
     } catch (err: unknown) {

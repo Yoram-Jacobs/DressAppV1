@@ -1,0 +1,7 @@
+/* apps/mobile/global.css
+ * NativeWind v4 requires a CSS entry point.
+ * Design tokens are defined in tailwind.config.js.
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

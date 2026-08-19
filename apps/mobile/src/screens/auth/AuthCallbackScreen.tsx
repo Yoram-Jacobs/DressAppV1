@@ -38,12 +38,13 @@ import { Button } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as WebBrowser from 'expo-web-browser';
 import { useTranslation } from 'react-i18next';
 
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { tokenStore } from '@mobile/lib/api';
-import { emitAuthChange } from '@mobile/hooks/useAuthState';
+import { emitAuthChange } from '@mobile/lib/authEvents';
 import type { AuthStackParamList } from '@mobile/navigation/types';
 
 type CallbackNavProp = NativeStackNavigationProp<AuthStackParamList, 'AuthCallback'>;
@@ -83,8 +84,12 @@ export default function AuthCallbackScreen({ route }: { route?: { params?: Recor
           return true;
         }
         if (token) {
-          tokenStore.set(token);
-          emitAuthChange(true);
+          // If we reached here via Deep Link while openAuthSessionAsync was running,
+          // the browser window might still be open. Force it closed.
+          WebBrowser.dismissBrowser();
+          tokenStore.set(token)?.then(() => {
+            emitAuthChange(true);
+          });
           return true;
         }
       } catch (err: unknown) {
@@ -103,26 +108,29 @@ export default function AuthCallbackScreen({ route }: { route?: { params?: Recor
     }
 
     // 2. Check initial launch URL
+    let timer: any = null;
+
     Linking.getInitialURL().then((initialUrl) => {
       if (initialUrl && processUrlOrParams(initialUrl)) {
         return;
       }
 
       // If no initial URL processed, wait briefly for incoming URL event
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         setErrorMsg((prev) => (prev === null ? 'missing_token' : prev));
       }, 2000);
-
-      return () => clearTimeout(timer);
     });
 
     // 3. Listen for incoming deep link events while app is open
     const subscription = Linking.addEventListener('url', ({ url }) => {
-      processUrlOrParams(url);
+      if (processUrlOrParams(url) && timer) {
+        clearTimeout(timer);
+      }
     });
 
     return () => {
       subscription.remove();
+      if (timer) clearTimeout(timer);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [route?.params]);

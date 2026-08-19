@@ -1,0 +1,12 @@
+{
+  "name": "@dressapp/eyes-native",
+  "version": "1.0.0",
+  "description": "On-device Eyes inference for DressApp — Gemma-4 GGUF via llama.rn",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "private": true,
+  "peerDependencies": {
+    "llama.rn": ">=0.13.0",
+    "expo-file-system": "*"
+  }
+}

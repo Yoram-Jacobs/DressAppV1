@@ -21,11 +21,16 @@ wiki/
 android/
 ios/
 dist/
+dist-debug/
 web-build/
 .expo/
 apps/mobile/android/
 apps/mobile/ios/
 apps/mobile/.expo/
+apps/mobile/dist-debug/
+
+# ─── Agent scratch dirs (not needed for build) ───────────────────────────────
+.agents/
 
 # ─── Dev / CI artifacts ───────────────────────────────────────────────────────
 .git/

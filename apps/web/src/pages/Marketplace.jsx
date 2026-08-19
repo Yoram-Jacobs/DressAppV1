@@ -1,0 +1,548 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useStoreState } from '@/lib/createSimpleStore';
+import { marketplaceUIStore } from '@/lib/marketplaceUIStore';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { SourceTagBadge } from '@/components/SourceTagBadge';
+import { Plus, MapPin } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { StreamingProgressChip } from '@/components/StreamingProgressChip';
+import { api } from '@/lib/api';
+import { labelForCategory, labelForSource, labelForIntent } from '@/lib/taxonomy';
+import { useLocation as useAppLocation } from '@/lib/location';
+import { useAuth } from '@/lib/auth';
+import {
+  browseStore,
+  myListingsStore,
+  transactionsStore,
+  marketplaceProgress,
+} from '@/lib/marketplaceStore';
+import { useMarketplaceProgress } from '@/lib/useMarketplaceProgress';
+import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
+import { useCachedList } from '@/lib/createCachedStore';
+import { toast } from 'sonner';
+import { ScrollToTop } from '@/components/ScrollToTop';
+
+const fmt = (cents, cur = 'USD') =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format((cents || 0) / 100);
+
+// Marketplace filter dropdown.
+//
+// Replaced the catch-all "Shared" with the three concrete marketplace
+// modes so users can drill straight to "Just show me items For sale"
+// or "Just show me Donations".
+//
+// Values in {Retail} key on listing.source; values in
+// {for_sale, swap, donate} key on listing.mode (where ``for_sale`` →
+// ``mode=sell`` on the wire).
+const SOURCES = ['all', 'for_sale', 'swap', 'donate', 'rent', 'Retail'];
+const _INTENT_VALUES = new Set(['for_sale', 'swap', 'donate', 'rent']);
+const _INTENT_TO_MODE = { for_sale: 'sell', swap: 'swap', donate: 'donate', rent: 'rent' };
+const CATEGORIES = ['all', 'top', 'bottom', 'outerwear', 'shoes', 'accessory', 'dress'];
+const RADIUS_OPTIONS = ['any', '5', '25', '50', '200'];
+
+const INITIAL_FILTERS = { source: 'all', category: 'all', radius: 'any' };
+
+export default function Marketplace() {
+  const { t } = useTranslation();
+  const loc = useAppLocation();
+  const [rawFilters, setFilters] = useLocalStorageSync('dressapp.marketplace.filters', INITIAL_FILTERS);
+  const filters = (rawFilters && typeof rawFilters === 'object' && !Array.isArray(rawFilters))
+    ? { ...INITIAL_FILTERS, ...rawFilters }
+    : INITIAL_FILTERS;
+
+  const [activeTab, setActiveTab] = useLocalStorageSync('dressapp.marketplace.activeTab', 'browse');
+
+  // Stable params object — keyed inputs to the cached browse store.
+  // Mirrors the original wire-shape decisions: classic source values
+  // (Retail) hit ``?source=…`` while the new intent values
+  // (for_sale/swap/donate) hit ``?mode=…``. Geo coords are attached
+  // when available so the server can rank by proximity; the radius
+  // filter is honoured only when explicitly chosen.
+  const browseParams = useMemo(() => {
+    const params = {};
+    if (filters.source === 'Retail') {
+      params.source = 'Retail';
+    } else if (_INTENT_VALUES.has(filters.source)) {
+      params.mode = _INTENT_TO_MODE[filters.source];
+    }
+    if (filters.category !== 'all') params.category = filters.category;
+    if (loc?.coords?.lat != null && loc?.coords?.lng != null) {
+      params.lat = loc.coords.lat;
+      params.lng = loc.coords.lng;
+      if (filters.radius !== 'any') params.radius_km = Number(filters.radius);
+    }
+    return params;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.source, filters.category, filters.radius, loc?.coords?.lat, loc?.coords?.lng]);
+
+  const { items, loading, refreshing } = useCachedList(browseStore, browseParams, {
+    // Phase Z2.4 — opt out of the cached store's JSON revalidation
+    // because the streaming useEffect below populates the same slot
+    // via ``upsertItem`` as items arrive. If we let ``useCachedList``
+    // fire its own ``ensure(filters)``, we'd race the JSON fetcher
+    // against the NDJSON stream into the same slot.
+    revalidateOnMount: false,
+  });
+  // ``refreshing`` lets us hint that a stale-while-revalidate refresh
+  // is in flight without blanking the grid; we don't render a spinner
+  // for it today but the value is exposed for future polish.
+  void refreshing;
+
+  // Phase Z2.4 — progressive browse via NDJSON stream. Items appear
+  // as the server emits them, instead of all-at-once at the end of
+  // a JSON round-trip. The store handles abort-on-filter-change for
+  // us; we just kick a new stream every time ``browseParams`` flips.
+  // The grid stays subscribed via ``useCachedList`` above, so each
+  // ``upsertItem`` call inside the stream triggers a paint of one
+  // more card.
+  const { browse: browseProgress, streamBrowse } = useMarketplaceProgress();
+  useEffect(() => {
+    // Keep existing listings on frontend if browseStore already holds fresh items
+    const existing = browseStore.get(browseParams);
+    if (existing && browseStore.isFresh(existing) && existing.items && existing.items.length > 0) {
+      return;
+    }
+
+    let cancelled = false;
+    const ac = new AbortController();
+    (async () => {
+      try {
+        await streamBrowse(browseParams, { signal: ac.signal });
+      } catch (err) {
+        if (!cancelled) {
+          // Surface only non-abort errors. Aborts are expected when
+          // the user changes filters quickly.
+          if (err?.name !== 'AbortError') {
+            // eslint-disable-next-line no-console
+            console.warn('Marketplace browse stream failed', err);
+          }
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+      ac.abort();
+    };
+    // ``streamBrowse`` is stable across renders (bound singleton).
+    // Re-run when the stable filter key changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(browseParams)]);
+
+  return (
+    <div className="container-px max-w-6xl mx-auto pt-6 md:pt-10">
+      <div className="flex items-end justify-between mb-6">
+        <div>
+          <div className="caps-label text-muted-foreground">{t('market.title')}</div>
+          <h1 className="font-display text-3xl sm:text-4xl mt-1">{t('market.hero')}</h1>
+        </div>
+        <Button asChild className="rounded-xl" data-testid="marketplace-create-listing">
+          <Link to="/market/create"><Plus className="h-4 w-4 me-2" /> {t('market.createListing')}</Link>
+        </Button>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="rounded-xl" data-testid="marketplace-tabs">
+          <TabsTrigger value="browse" data-testid="marketplace-tab-browse">{t('market.browse')}</TabsTrigger>
+          <TabsTrigger value="mine" data-testid="marketplace-tab-mine">{t('market.myListings')}</TabsTrigger>
+          <TabsTrigger value="tx" data-testid="marketplace-tab-transactions">{t('market.transactionsTab')}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="browse" className="mt-4">
+          <div className="flex flex-wrap gap-2 mb-4">
+            <Select value={filters.source} onValueChange={(v) => setFilters((f) => ({ ...f, source: v }))}>
+              <SelectTrigger className="w-[140px] rounded-xl" data-testid="market-source-select"><SelectValue /></SelectTrigger>
+              <SelectContent>{SOURCES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {_INTENT_VALUES.has(s) ? labelForIntent(s, t) : labelForSource(s, t)}
+                </SelectItem>
+              ))}</SelectContent>
+            </Select>
+            <Select value={filters.category} onValueChange={(v) => setFilters((f) => ({ ...f, category: v }))}>
+              <SelectTrigger className="w-[140px] rounded-xl" data-testid="market-category-select"><SelectValue /></SelectTrigger>
+              <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{labelForCategory(c, t)}</SelectItem>)}</SelectContent>
+            </Select>
+            {loc?.coords ? (
+              <Select
+                value={filters.radius}
+                onValueChange={(v) => setFilters((f) => ({ ...f, radius: v }))}
+              >
+                <SelectTrigger
+                  className="w-[160px] rounded-xl"
+                  data-testid="market-radius-select"
+                >
+                  <MapPin className="h-3.5 w-3.5 me-1 text-[hsl(var(--accent))]" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {RADIUS_OPTIONS.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r === 'any'
+                        ? t('market.anyDistance')
+                        : t('market.radiusKm', { km: r })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Badge
+                variant="outline"
+                className="text-[11px] rounded-full bg-card"
+                data-testid="market-location-hint"
+              >
+                <MapPin className="h-3 w-3 me-1" />
+                {t('market.needLocationForNearby')}
+              </Badge>
+            )}
+          </div>
+
+          {/* Phase Z2.4 — show skeletons while the stream is in
+              flight AND we haven't received any item yet. Once the
+              first card lands, we paint the grid progressively so
+              the user feels the stream working. */}
+          {(loading || (browseProgress.running && items.length === 0)) && (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i}><Skeleton className="aspect-[3/4] w-full rounded-[calc(var(--radius)+6px)]" /></div>
+              ))}
+            </div>
+          )}
+
+          {/* Empty-state guard now also excludes "stream hasn't
+              finished yet" so the user doesn't see a flash of
+              "No matching listings" while the first card is still
+              en-route. */}
+          {!loading && !browseProgress.running && items.length === 0 && (
+            <div className="text-center py-16" data-testid="marketplace-empty-state">
+              <h2 className="font-display text-2xl">{t('market.noMatching')}</h2>
+              <p className="text-sm text-muted-foreground mt-2">{t('market.noMatchingSub')}</p>
+            </div>
+          )}
+
+          {!loading && items.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" data-testid="marketplace-grid">
+              {items.map((l) => (
+                <Link key={l.id} to={`/market/${l.id}`} data-testid="marketplace-item-card">
+                  <Card className="rounded-[calc(var(--radius)+6px)] overflow-hidden shadow-editorial hover:shadow-editorial-md transition-shadow">
+                    <AspectRatio ratio={3 / 4} className="bg-secondary">
+                      {(l.images || [])[0]
+                        ? <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover" />
+                        : <div className="w-full h-full flex items-center justify-center text-muted-foreground caps-label">{t('market.noImage')}</div>}
+                    </AspectRatio>
+                    <CardContent className="p-3 space-y-2.5">
+                      {/* Brand & Title */}
+                      <div className="min-w-0">
+                        {l.brand && <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{l.brand}</div>}
+                        <div className="font-medium text-sm truncate text-foreground">{l.title}</div>
+                      </div>
+
+                      {/* Common Region: Price, Size, Condition, Intent badge */}
+                      <div className="p-2 rounded-xl bg-secondary/35 border border-border/50 space-y-1.5 shadow-sm">
+                        <div className="flex items-center justify-between gap-1.5">
+                          <span className="font-display text-base text-foreground font-bold">
+                            {fmt(
+                              l.financial_metadata?.list_price_cents,
+                              l.financial_metadata?.currency || l.currency,
+                            )}
+                            {l.mode === 'rent' && ` / ${t('common.day', { defaultValue: 'day' })}`}
+                          </span>
+                          <SourceTagBadge source={l.source} mode={l.mode} className="hidden md:inline-flex" />
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                          <span className="truncate">{l.size ? `${t('addItem.size')}: ${l.size}` : ''}</span>
+                          <span className="capitalize">{l.condition ? t(`taxonomy.condition.${l.condition}`, { defaultValue: l.condition }) : ''}</span>
+                        </div>
+                      </div>
+
+                      {/* Proximity & Seller Net */}
+                      <div className="flex items-center justify-between pt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
+                        {typeof l.distance_km === 'number' ? (
+                          <span className="inline-flex items-center gap-0.5 truncate max-w-[50%]">
+                            <MapPin className="h-2.5 w-2.5 text-[hsl(var(--accent))]" />
+                            {t('market.distanceKmAway', { km: l.distance_km })}
+                          </span>
+                        ) : <span />}
+                        <span className="truncate">
+                          {t('market.netShort', {
+                            amount: fmt(
+                              l.financial_metadata?.estimated_seller_net_cents,
+                              l.financial_metadata?.currency || l.currency,
+                            ),
+                          })}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="mine"><MyListings /></TabsContent>
+        <TabsContent value="tx"><InlineTransactions /></TabsContent>
+      </Tabs>
+      <ScrollToTop />
+    </div>
+  );
+}
+
+function MyListings() {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const [removingId, setRemovingId] = useState(null);
+  // Phase Z2.4 — backfill now streams. ``syncing`` derives from the
+  // shared progress snapshot so multi-tab / repeated clicks behave
+  // consistently.
+  const { backfill: backfillProgress, streamBackfill } = useMarketplaceProgress();
+  const syncing = !!backfillProgress.running;
+
+  // Filter object that drives the cached store. The same shape was
+  // used in the prewarm at AppLayout boot — passing the exact same
+  // ``{seller_id}`` here means the page paints from cache instantly.
+  const sellerFilters = useMemo(
+    () => (user?.id ? { seller_id: user.id } : null),
+    [user?.id],
+  );
+
+  // useCachedList tolerates a missing user (filters=null short-circuits
+  // to an empty cache slot) so we don't have to gate the hook call.
+  const { items, loading } = useCachedList(myListingsStore, sellerFilters || {}, {
+    revalidateOnMount: !!sellerFilters,
+  });
+
+  // Hard-delete the listing AND reset the linked closet item back to
+  // private/own (handled atomically on the backend). The closet card
+  // flips to "Private" on next render so the user gets immediate
+  // feedback that the item is no longer on the marketplace.
+  const removeListing = async (l) => {
+    if (!window.confirm(t('market.confirmRemoveListing', { defaultValue: `Remove "${l.title}" from the marketplace?` }))) return;
+    setRemovingId(l.id);
+    try {
+      await api.deleteListing(l.id);
+      toast.success(t('market.listingRemoved', { defaultValue: 'Removed from marketplace' }));
+      // Optimistic local removal in the cache so the UI flips
+      // immediately. Browse cache may also show this listing, so we
+      // invalidate it for a quiet refetch on next visit.
+      if (sellerFilters) myListingsStore.removeItem(sellerFilters, l.id);
+      browseStore.invalidate();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || t('market.removeFailed', { defaultValue: 'Could not remove listing' }));
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  // One-shot rescue for users whose closet items have a
+  // marketplace_intent set (swap/donate/for_sale) but never made it
+  // to the marketplace — typically because they pre-date the
+  // auto-list pipeline.
+  //
+  // Phase Z2.4 — streams per-candidate progress so the chip ticks
+  // "Listed 12/47 · Skipped 2" live instead of showing a blank
+  // "Syncing…" spinner for a multi-second batch. Idempotent on the
+  // server, so re-running is safe; the new streaming endpoint
+  // invalidates both caches itself on completion (see
+  // ``marketplaceStore.streamBackfill``), so the page sees fresh
+  // data on the next render without an explicit refetch here.
+  const syncMarketplace = async () => {
+    // Track failures so we can surface a per-item toast at the end
+    // without making the chip itself responsible for error noise.
+    const failureMessages = [];
+    try {
+      const done = await streamBackfill({
+        onItem: (ev) => {
+          if (ev?.status === 'failed' && ev?.title) {
+            failureMessages.push(`${ev.title}: ${ev.error || 'failed'}`);
+          }
+        },
+      });
+      if (!done) return; // already running — no-op
+      const candidates = done.candidates || 0;
+      const created = done.created || 0;
+      const skipped = done.skipped || 0;
+      const synced = done.source_synced || 0;
+      if (candidates === 0) {
+        toast.info(t('market.syncNoCandidates', {
+          defaultValue: 'Nothing to sync — no closet items have a marketplace intent set.',
+        }));
+      } else if (created === 0 && synced === 0 && skipped === candidates) {
+        // Pure no-op rerun — keep the UX quiet.
+        toast.info(t('market.syncAlreadyDone', {
+          defaultValue: 'Already synced — every candidate is on the marketplace.',
+        }));
+      } else {
+        toast.success(t('market.syncDone', {
+          defaultValue: `Synced ${candidates} item(s): ${created} listed, ${skipped} already on marketplace${synced ? `, ${synced} re-flagged Shared` : ''}.`,
+        }));
+      }
+      if (failureMessages.length) {
+        toast.error(
+          t('market.syncSomeFailed', {
+            defaultValue: `${failureMessages.length} item(s) couldn't be listed: ${failureMessages[0]}`,
+            count: failureMessages.length,
+          }),
+        );
+      }
+      // The store's streamBackfill already invalidated both caches,
+      // but we force a refetch on the seller view so the new
+      // listings appear immediately rather than on the next visit.
+      if (sellerFilters) {
+        await myListingsStore.ensure(sellerFilters, { force: true });
+      }
+    } catch (err) {
+      toast.error(err?.message || t('market.syncFailed', { defaultValue: 'Could not sync marketplace' }));
+    }
+  };
+
+  if (loading) return <div className="py-10 caps-label text-muted-foreground">{t('market.loading')}</div>;
+
+  return (
+    <div className="space-y-4">
+      {/* Top bar: sync rescue button + count */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-sm text-muted-foreground flex items-center gap-3" data-testid="my-listings-count">
+          <span>
+            {t('market.myListingsCount', { count: items.length, defaultValue: `${items.length} listing${items.length === 1 ? '' : 's'}` })}
+          </span>
+          {/* Phase Z2.4 — ambient streaming chip for the backfill
+              flow. Lives next to the count so it doesn't compete
+              with the primary "Sync" CTA on the right. Renders
+              nothing while idle and fades out automatically a few
+              seconds after completion. */}
+          <StreamingProgressChip
+            progress={backfillProgress}
+            runningLabel={t('market.backfill.running', { defaultValue: 'Listing closet items… {{n}}/{{total}}', n: backfillProgress.scanned || 0, total: backfillProgress.total || '?' })}
+            successLabel={(() => {
+              const parts = [];
+              if (backfillProgress.created > 0) {
+                parts.push(t('market.backfill.created', { defaultValue: '{{n}} listed', n: backfillProgress.created }));
+              }
+              if (backfillProgress.skipped > 0) {
+                parts.push(t('market.backfill.skipped', { defaultValue: '{{n}} already up', n: backfillProgress.skipped }));
+              }
+              if (backfillProgress.source_synced > 0) {
+                parts.push(t('market.backfill.synced', { defaultValue: '{{n}} reflagged', n: backfillProgress.source_synced }));
+              }
+              return parts.join(' · ');
+            })()}
+            failureLabel={t('market.backfill.failed', { defaultValue: 'Couldn’t sync marketplace' })}
+            hasSuccessChanges={(p) =>
+              (p?.created || 0) + (p?.source_synced || 0) > 0 ||
+              ((p?.scanned || 0) > 0 && (p?.skipped || 0) > 0)
+            }
+            testId="market-backfill-chip"
+          />
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-full"
+          onClick={syncMarketplace}
+          disabled={syncing}
+          data-testid="sync-marketplace-btn"
+        >
+          {syncing
+            ? t('market.syncing', { defaultValue: 'Syncing…' })
+            : t('market.syncMarketplace', { defaultValue: 'Sync from closet' })}
+        </Button>
+      </div>
+
+      {items.length === 0 ? (
+        <div className="py-10 text-sm text-muted-foreground">{t('market.noMyListings')}</div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" data-testid="market-my-listings-grid">
+          {items.map((l) => (
+            <Card
+              key={l.id}
+              className="rounded-[calc(var(--radius)+6px)] overflow-hidden shadow-editorial group relative"
+              data-testid={`my-listing-card-${l.id}`}
+            >
+              <Link to={`/market/${l.id}`} className="block">
+                <AspectRatio ratio={3 / 4} className="bg-secondary">
+                  {(l.images || [])[0] ? <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover" /> : null}
+                </AspectRatio>
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="font-medium text-sm truncate">{l.title}</div>
+                    <SourceTagBadge source={l.source} mode={l.mode} className="hidden md:inline-flex" />
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {l.status}
+                  </div>
+                </CardContent>
+              </Link>
+              <div className="px-3 pb-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full rounded-lg text-xs h-8 text-rose-700 hover:text-rose-800 hover:bg-rose-50"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    removeListing(l);
+                  }}
+                  disabled={removingId === l.id}
+                  data-testid={`my-listing-remove-${l.id}`}
+                >
+                  {removingId === l.id
+                    ? t('market.removing', { defaultValue: 'Removing…' })
+                    : t('market.removeListing', { defaultValue: 'Remove listing' })}
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InlineTransactions() {
+  const { t } = useTranslation();
+  const [tab, setTab] = useLocalStorageSync('dressapp.marketplace.inlineTab', 'buyer');
+  const { items, loading } = useCachedList(transactionsStore, { role: tab }, {
+    autoRefresh: true,
+  });
+  return (
+    <div className="pt-2">
+      <div className="flex gap-2 mb-4">
+        {['buyer', 'seller'].map((role) => (
+          <Button key={role} size="sm" variant={tab === role ? 'default' : 'secondary'}
+            onClick={() => setTab(role)} className="rounded-full capitalize" data-testid={`tx-tab-${role}`}>
+            {role === 'buyer' ? t('transactions.buyer') : t('transactions.seller')}
+          </Button>
+        ))}
+      </div>
+      {loading ? <div className="caps-label text-muted-foreground">{t('market.loading')}</div>
+        : items.length === 0 ? <div className="text-sm text-muted-foreground">{t('market.noTx')}</div>
+        : (
+          <div className="space-y-3" data-testid="tx-list">
+            {items.map((tx) => (
+              <Card key={tx.id} className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-sm">{t('transactions.listingShort', { id: tx.listing_id.slice(0, 8) })}</div>
+                    <div className="text-xs text-muted-foreground">{tx.status} · {new Date(tx.created_at).toLocaleString()}</div>
+                  </div>
+                  <div className="text-end">
+                    <div className="font-display text-lg">{fmt(tx.financial?.gross_cents, tx.currency)}</div>
+                    <div className="text-[11px] text-muted-foreground">
+                      {t('market.platformFee')}: {fmt(tx.financial?.platform_fee_cents, tx.currency)} · {t('market.sellerNet')}: {fmt(tx.financial?.seller_net_cents, tx.currency)}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+    </div>
+  );
+}
