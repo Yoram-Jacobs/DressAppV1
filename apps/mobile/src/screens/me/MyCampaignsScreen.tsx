@@ -85,7 +85,7 @@ export function MyCampaignsScreen() {
         setCampaigns((prev) => prev.map((x) => x.id === c.id ? { ...x, status: 'active' } : x));
       }
     } catch (err: unknown) {
-      Alert.alert(t('common.error', 'Error'), (err as { message?: string })?.message ?? 'Action failed');
+      Alert.alert(t('common.error', { defaultValue: 'Error' }), (err as { message?: string })?.message ?? 'Action failed');
     }
   };
 
@@ -102,7 +102,7 @@ export function MyCampaignsScreen() {
         activeOpacity={0.8}
       >
         <View style={[s.cardTop, { flexDirection: isRtl ? 'row-reverse' : 'row' }]}>
-          <Text style={s.cardTitle} numberOfLines={2}>{item.title ?? t('campaigns.untitled', 'Untitled campaign')}</Text>
+          <Text style={s.cardTitle} numberOfLines={2}>{item.title ?? t('campaigns.untitled', { defaultValue: 'Untitled campaign' })}</Text>
           <View style={[s.statusBadge, { backgroundColor: sc.bg }]}>
             <Text style={[s.statusText, { color: sc.text }]}>{item.status?.replace('_', ' ') ?? '—'}</Text>
           </View>
@@ -122,7 +122,7 @@ export function MyCampaignsScreen() {
             onPress={(e) => { e.stopPropagation?.(); handlePauseResume(item); }}
           >
             <Text style={s.actionBtnText}>
-              {item.status === 'active' ? '⏸ ' + t('campaigns.pause', 'Pause') : '▶ ' + t('campaigns.resume', 'Resume')}
+              {item.status === 'active' ? '⏸ ' + t('campaigns.pause', { defaultValue: 'Pause' }) : '▶ ' + t('campaigns.resume', { defaultValue: 'Resume' })}
             </Text>
           </TouchableOpacity>
         )}
@@ -141,9 +141,9 @@ export function MyCampaignsScreen() {
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <View style={[s.header, { flexDirection: isRtl ? 'row-reverse' : 'row' }]}>
-        <Text style={s.headerTitle}>{t('campaigns.my', 'My Campaigns')}</Text>
+        <Text style={s.headerTitle}>{t('campaigns.my', { defaultValue: 'My Campaigns' })}</Text>
         <TouchableOpacity style={s.newBtn} onPress={() => navigation.navigate('CreateCampaign')}>
-          <Text style={s.newBtnText}>＋ {t('campaigns.new', 'New')}</Text>
+          <Text style={s.newBtnText}>＋ {t('campaigns.new', { defaultValue: 'New' })}</Text>
         </TouchableOpacity>
       </View>
       <FlatList
@@ -158,8 +158,8 @@ export function MyCampaignsScreen() {
         ListEmptyComponent={
           <View style={s.center}>
             <Text style={s.emptyIcon}>📋</Text>
-            <Text style={s.emptyTitle}>{t('campaigns.emptyTitle', 'No campaigns yet')}</Text>
-            <Text style={s.emptyBody}>{t('campaigns.emptyBody', 'Create your first expert campaign to reach your audience.')}</Text>
+            <Text style={s.emptyTitle}>{t('campaigns.emptyTitle', { defaultValue: 'No campaigns yet' })}</Text>
+            <Text style={s.emptyBody}>{t('campaigns.emptyBody', { defaultValue: 'Create your first expert campaign to reach your audience.' })}</Text>
           </View>
         }
       />

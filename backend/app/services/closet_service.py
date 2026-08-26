@@ -17,6 +17,7 @@ from app.services import repos
 from app.services import background_matting
 from app.services import clothing_parser as _cp
 from app.services.reconstruction import reconstruct
+from app.services.upload_manager import UploadManager
 from app.services.image_compression import (
     compress_image_bytes,
     compress_b64_image,
@@ -321,18 +322,34 @@ async def run_background_matte(
     try:
         compressed_result = compress_image_bytes(result, max_dim=1024, quality=75)
         temp_img = Image.open(io.BytesIO(compressed_result))
-        mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/jpeg"
-        data_url = f"data:{mime};base64," + base64.b64encode(compressed_result).decode("ascii")
+        mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/webp"
+        ext = "png" if mime == "image/png" else "webp"
     except Exception:
-        data_url = (
-            "data:image/png;base64,"
-            + base64.b64encode(result).decode("ascii")
+        compressed_result = result
+        mime = "image/png"
+        ext = "png"
+
+    # Upload the matte PNG to object storage (R2 in production, local disk in dev).
+    # This stores only a URL in MongoDB instead of a 200-600 KB base64 blob.
+    try:
+        clean_url = await UploadManager.upload_bytes(compressed_result, mime, ext)
+    except Exception as upload_exc:  # noqa: BLE001
+        # Uploading failed — fall back to base64 data-URL so the item still works.
+        logger.warning(
+            "Background matte upload failed for item %s (%s); "
+            "falling back to inline base64",
+            item_id, upload_exc,
         )
+        clean_url = (
+            f"data:{mime};base64,"
+            + base64.b64encode(compressed_result).decode("ascii")
+        )
+
     await db.closet_items.update_one(
         {"id": item_id},
         {
             "$set": {
-                "clean_image_url": data_url,
+                "clean_image_url": clean_url,
                 "clean_image_status": "ready",
                 "updated_at": datetime.now(timezone.utc).isoformat(),
                 "thumbnail_data_url": None,
@@ -344,6 +361,7 @@ async def run_background_matte(
         "(provider=%s faithful=%s %d bytes png)",
         item_id, provider, faithful, len(result),
     )
+
 
 def _apply_defaults(parsed: Dict[str, Any]) -> Dict[str, Any]:
     parsed.setdefault("category", "Top")

@@ -1,0 +1,38 @@
+{
+  "model_version": "ansur2-gbr-v1",
+  "trained_at": "2026-07-19T08:22:52.864245+00:00",
+  "dataset": "ANSUR II (2012) \u2014 US Army Anthropometric Survey",
+  "n_train": 4854,
+  "n_test": 1214,
+  "features": [
+    "height",
+    "weight",
+    "waist",
+    "foot_length",
+    "gender"
+  ],
+  "targets": [
+    "shoulders",
+    "chest",
+    "hip",
+    "sleeve",
+    "inseam",
+    "outseam"
+  ],
+  "mae_scores_cm": {
+    "shoulders": 1.155,
+    "chest": 2.772,
+    "hip": 2.113,
+    "sleeve": 1.39,
+    "inseam": 1.845,
+    "outseam": 2.348,
+    "overall": 1.937
+  },
+  "model_type": "MultiOutputRegressor(GradientBoostingRegressor)",
+  "hyperparameters": {
+    "n_estimators": 300,
+    "max_depth": 5,
+    "learning_rate": 0.05,
+    "subsample": 0.8
+  }
+}

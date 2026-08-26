@@ -1,8 +1,8 @@
 /**
  * apps/mobile/babel.config.js
  *
- * NOTE: jsxImportSource 'nativewind' removed — NativeWind's Metro CSS interop
- * was disabled to fix EAS build compatibility (lightningcss native binary is
+ * NOTE: jsxImportSource 'NativeWind' removed — NativeWind's Metro CSS interop
+ * was disabled to fix EAS build compatibility (LightningCSS native binary is
  * platform-specific). All screens use StyleSheet.create instead of className.
  *
  * All @dressapp/* workspace packages are aliased here so that Babel's

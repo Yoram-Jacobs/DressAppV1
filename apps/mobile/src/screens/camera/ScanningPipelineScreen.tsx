@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useRef } from 'react';
 import { 
   View, 
@@ -6,7 +5,7 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   Image, 
-  I18nManager 
+  I18nManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -19,10 +18,12 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as Lucide from "lucide-react-native";
 
+type NavProp = NativeStackNavigationProp<ClosetStackParamList>;
+
 export function ScanningPipelineScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const navigation = useNavigation<NativeStackNavigationProp<ClosetStackParamList>>();
+  const navigation = useNavigation<NavProp>();
   
   const [permission, requestPermission] = useCameraPermissions();
   const [flash, setFlash] = useState<'on' | 'off'>('off');
@@ -40,10 +41,10 @@ export function ScanningPipelineScreen() {
     return (
       <View style={[styles.root, styles.center, { backgroundColor: colors.background }]}>
         <Text style={[styles.permissionText, { color: colors.foreground }]}>
-          {t('camera.permissionNeeded', 'We need your permission to show the camera')}
+          {t('camera.permissionNeeded', { defaultValue: 'We need your permission to show the camera' })}
         </Text>
         <TouchableOpacity style={[styles.permissionButton, { backgroundColor: colors.primary }]} onPress={requestPermission}>
-          <Text style={styles.permissionButtonText}>{t('camera.grantPermission', 'Grant Permission')}</Text>
+          <Text style={styles.permissionButtonText}>{t('camera.grantPermission', { defaultValue: 'Grant Permission' })}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -66,8 +67,9 @@ export function ScanningPipelineScreen() {
       base64: true,
     });
 
-    if (!result.canceled && result.assets[0]) {
-      setPhoto({ uri: result.assets[0].uri, base64: result.assets[0].base64 || undefined });
+    if (!result.canceled && result.assets && result.assets[0]) {
+      const asset = result.assets[0];
+      setPhoto({ uri: asset.uri, base64: asset.base64 || undefined });
     }
   };
 
@@ -83,10 +85,10 @@ export function ScanningPipelineScreen() {
         <Image source={{ uri: photo.uri }} style={styles.previewImage} />
         <View style={[styles.previewOverlay, { backgroundColor: colors.background }]}>
           <TouchableOpacity style={[styles.actionBtn, { borderColor: colors.border }]} onPress={() => setPhoto(null)}>
-            <Text style={[styles.actionBtnText, { color: colors.foreground }]}>{t('camera.retake', 'Retake')}</Text>
+            <Text style={[styles.actionBtnText, { color: colors.foreground }]}>{t('camera.retake', { defaultValue: 'Retake' })}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]} onPress={handleUsePhoto}>
-            <Text style={[styles.actionBtnText, { color: '#fff' }]}>{t('camera.usePhoto', 'Use Photo')}</Text>
+            <Text style={[styles.actionBtnText, { color: '#fff' }]}>{t('camera.usePhoto', { defaultValue: 'Use Photo' })}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -96,11 +98,12 @@ export function ScanningPipelineScreen() {
   return (
     <SafeAreaView style={styles.root} edges={['bottom', 'top']}>
       <CameraView 
-        style={styles.camera} 
+        style={StyleSheet.absoluteFillObject} 
         facing="back"
         enableTorch={flash === 'on'}
         ref={cameraRef}
-      >
+      />
+      <View style={styles.overlay} pointerEvents="box-none">
         <View style={styles.topControls}>
           <TouchableOpacity style={styles.iconButton} onPress={() => navigation.goBack()}>
             <BackIcon size={28} color="#fff" />
@@ -121,13 +124,17 @@ export function ScanningPipelineScreen() {
           
           <View style={styles.spacer} />
         </View>
-      </CameraView>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000' },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'space-between',
+  },
   center: { justifyContent: 'center', alignItems: 'center', padding: 32 },
   permissionText: { textAlign: 'center', marginBottom: 16, fontSize: 16 },
   permissionButton: { paddingHorizontal: 24, paddingVertical: 8, borderRadius: 8 },

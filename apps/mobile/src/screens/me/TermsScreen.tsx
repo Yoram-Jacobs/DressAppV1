@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, I18nManager, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,7 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as Lucide from "lucide-react-native";
 
 export function TermsScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const navigation = useNavigation();
   const [content, setContent] = useState<string | null>(null);
@@ -18,9 +17,15 @@ export function TermsScreen() {
 
   useEffect(() => {
     async function load() {
+      setLoading(true);
       try {
-        const res = await (api as any).getTermsOfService();
-        setContent(res.text);
+        const lang = i18n.language || 'en';
+        const res = await (api as any).getTermsOfService?.(lang);
+        if (res?.text || res?.content) {
+          setContent(res.text || res.content);
+        } else {
+          setContent(null);
+        }
       } catch (err) {
         setContent(null); // Fallback to static
       } finally {
@@ -28,7 +33,7 @@ export function TermsScreen() {
       }
     }
     load();
-  }, []);
+  }, [i18n.language]);
 
   const BackIcon = I18nManager.isRTL ? Lucide.ArrowRight : Lucide.ArrowLeft;
 
@@ -39,7 +44,7 @@ export function TermsScreen() {
           <BackIcon size={24} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.foreground }]}>
-          {t('terms.title', 'Terms of Service')}
+          {t('terms.title', { defaultValue: 'Terms of Service' })}
         </Text>
       </View>
       
@@ -50,7 +55,7 @@ export function TermsScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <Text style={[styles.lastUpdated, { color: colors.foreground }]}>
-            {t('terms.lastUpdated', 'Last updated: August 2026')}
+            {t('terms.lastUpdated', { defaultValue: 'Last updated: August 2026' })}
           </Text>
 
           {content ? (
@@ -58,38 +63,38 @@ export function TermsScreen() {
           ) : (
             <>
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                {t('terms.section1', '1. Acceptance')}
+                {t('terms.section1', { defaultValue: '1. Acceptance' })}
               </Text>
               <Text style={[styles.body, { color: colors.foreground }]}>
-                {t('terms.section1_body', 'By accessing or using our service, you agree to be bound by these terms...')}
+                {t('terms.section1_body', { defaultValue: 'By accessing or using our service, you agree to be bound by these terms...' })}
               </Text>
 
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                {t('terms.section2', '2. Use of Service')}
+                {t('terms.section2', { defaultValue: '2. Use of Service' })}
               </Text>
               <Text style={[styles.body, { color: colors.foreground }]}>
-                {t('terms.section2_body', 'You must use the service in accordance with all applicable laws and regulations...')}
+                {t('terms.section2_body', { defaultValue: 'You must use the service in accordance with all applicable laws and regulations...' })}
               </Text>
 
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                {t('terms.section3', '3. Intellectual Property')}
+                {t('terms.section3', { defaultValue: '3. Intellectual Property' })}
               </Text>
               <Text style={[styles.body, { color: colors.foreground }]}>
-                {t('terms.section3_body', 'The service and its original content, features, and functionality are owned by DressApp...')}
+                {t('terms.section3_body', { defaultValue: 'The service and its original content, features, and functionality are owned by DressApp...' })}
               </Text>
 
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                {t('terms.section4', '4. Limitation of Liability')}
+                {t('terms.section4', { defaultValue: '4. Limitation of Liability' })}
               </Text>
               <Text style={[styles.body, { color: colors.foreground }]}>
-                {t('terms.section4_body', 'In no event shall DressApp be liable for any indirect, incidental, special, consequential, or punitive damages...')}
+                {t('terms.section4_body', { defaultValue: 'In no event shall DressApp be liable for any indirect, incidental, special, consequential, or punitive damages...' })}
               </Text>
 
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                {t('terms.section5', '5. Governing Law')}
+                {t('terms.section5', { defaultValue: '5. Governing Law' })}
               </Text>
               <Text style={[styles.body, { color: colors.foreground }]}>
-                {t('terms.section5_body', 'These terms shall be governed and construed in accordance with the laws of your jurisdiction...')}
+                {t('terms.section5_body', { defaultValue: 'These terms shall be governed and construed in accordance with the laws of your jurisdiction...' })}
               </Text>
             </>
           )}

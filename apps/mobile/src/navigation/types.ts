@@ -21,6 +21,7 @@ export type ClosetStackParamList = {
   ClosetAdd: { source?: 'camera' | 'manual' };
   DppScanner: undefined;
   Avatar: undefined;
+  SharedOutfit: { outfitId: string };
 };
 
 // ── Stylist Stack ─────────────────────────────────────────────────────────
@@ -28,6 +29,8 @@ export type StylistStackParamList = {
   Stylist: undefined;
   Outfits: undefined;
   Avatar: undefined;
+  SharedOutfit: { outfitId: string };
+  ItemDetail: { itemId: string };
 };
 
 // ── Market Stack ──────────────────────────────────────────────────────────
@@ -37,12 +40,20 @@ export type MarketStackParamList = {
   CreateListing: undefined;
   TransactionLanding: { transactionId: string };
   Transactions: undefined;
+  AdsManager: undefined;
+  MockAtzmaiPayment: { paymentId?: string; amount?: string; description?: string; method?: string };
 };
 
 // ── Me (Profile) Stack ────────────────────────────────────────────────────
 export type MeStackParamList = {
   Profile: undefined;
   WardrobeStats: undefined;
+  Stats: undefined;
+  Outfits: undefined;
+  Avatar: undefined;
+  SharedOutfit: { outfitId: string };
+  ItemDetail: { itemId: string };
+  Stylist: undefined;
   Settings: undefined;
   DeleteAccount: undefined;
   Privacy: undefined;
@@ -51,10 +62,15 @@ export type MeStackParamList = {
   Suitcase: undefined;
   TrendScout: undefined;
   ExpertsDirectory: undefined;
+  Experts: undefined;
   Campaigns: undefined;
   CreateCampaign: undefined;
   CampaignDetail: { campaignId: string };
   EyesDownload: undefined;
+  Admin: undefined;
+  ExtensionConnect: undefined;
+  AdsManager: undefined;
+  MockAtzmaiPayment: { paymentId?: string; amount?: string; description?: string; method?: string };
 };
 
 // ── Main Tabs ─────────────────────────────────────────────────────────────

@@ -36,7 +36,15 @@ import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 // shows "not-supported" status gracefully.
 let sharedEyes: any = null;
 let isDeviceSupported: () => boolean = () => false;
-type DownloadProgress = { phase: string; filename?: string; totalBytes: number; downloadedBytes: number; overallFraction: number };
+type DownloadProgress = {
+  phase: string;
+  filename?: string;
+  bytesTotal: number;
+  bytesLoaded: number;
+  fileFraction: number;
+  overallFraction: number;
+  error?: string;
+};
 try {
   const eyesNative = require('@dressapp/eyes-native');
   sharedEyes = eyesNative.sharedEyes;
@@ -87,17 +95,17 @@ export function EyesDownloadScreen() {
 
   const startDownload = useCallback(async () => {
     setStatus('downloading');
-    const off = sharedEyes.modelDownloader.onProgress((p) => {
+    const off = sharedEyes.modelDownloader.onProgress((p: DownloadProgress) => {
       setProgress(p);
       if (p.phase === 'done')   { setStatus('ready');          off(); }
-      if (p.phase === 'error')  { setStatus('not-downloaded'); off(); Alert.alert(t('common.error', 'Error'), p.error ?? 'Download failed'); }
+      if (p.phase === 'error')  { setStatus('not-downloaded'); off(); Alert.alert(t('common.error', { defaultValue: 'Error' }), p.error ?? 'Download failed'); }
     });
     try {
       await sharedEyes.modelDownloader.download();
     } catch (err: unknown) {
       setStatus('not-downloaded');
       off();
-      Alert.alert(t('common.error', 'Error'), (err as Error)?.message ?? 'Download failed');
+      Alert.alert(t('common.error', { defaultValue: 'Error' }), (err as Error)?.message ?? 'Download failed');
     }
   }, [t]);
 
@@ -105,12 +113,12 @@ export function EyesDownloadScreen() {
 
   const deleteModels = useCallback(() => {
     Alert.alert(
-      t('eyes.deleteTitle', 'Remove on-device model?'),
-      t('eyes.deleteBody', 'This frees ~4.1 GB. You can re-download later. Garment scanning will use the cloud instead.'),
+      t('eyes.deleteTitle', { defaultValue: 'Remove on-device model?' }),
+      t('eyes.deleteBody', { defaultValue: 'This frees ~4.1 GB. You can re-download later. Garment scanning will use the cloud instead.' }),
       [
-        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+        { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
         {
-          text: t('eyes.deleteConfirm', 'Remove'),
+          text: t('eyes.deleteConfirm', { defaultValue: 'Remove' }),
           style: 'destructive',
           onPress: async () => {
             await sharedEyes.unload();
@@ -131,9 +139,9 @@ export function EyesDownloadScreen() {
   const renderProgress = () => {
     if (!progress) return null;
     const phaseName =
-      progress.phase === 'main-model' ? t('eyes.downloadingModel', 'Downloading model weights…')
-        : progress.phase === 'mmproj'    ? t('eyes.downloadingMmproj', 'Downloading vision projector…')
-        : t('eyes.downloadingDone', 'Finalising…');
+      progress.phase === 'main-model' ? t('eyes.downloadingModel', { defaultValue: 'Downloading model weights…' })
+        : progress.phase === 'mmproj'    ? t('eyes.downloadingMmproj', { defaultValue: 'Downloading vision projector…' })
+        : t('eyes.downloadingDone', { defaultValue: 'Finalising…' });
 
     const overallPct = Math.round(progress.overallFraction * 100);
     const filePct    = Math.round(progress.fileFraction    * 100);
@@ -167,24 +175,24 @@ export function EyesDownloadScreen() {
         <View style={s.iconRow}>
           <Text style={s.icon}>👁️</Text>
         </View>
-        <Text style={s.title}>{t('eyes.title', 'Eyes AI — On Device')}</Text>
+        <Text style={s.title}>{t('eyes.title', { defaultValue: 'Eyes AI — On Device' })}</Text>
         <Text style={s.subtitle}>
-          {t('eyes.subtitle', 'Run garment analysis privately on your device — no photos sent to the cloud during scanning.')}
+          {t('eyes.subtitle', { defaultValue: 'Run garment analysis privately on your device — no photos sent to the cloud during scanning.' })}
         </Text>
 
         {/* Status card */}
         {status === 'checking' && (
           <View style={s.card}>
-            <Text style={s.cardText}>{t('common.loading', 'Loading…')}</Text>
+            <Text style={s.cardText}>{t('common.loading', { defaultValue: 'Loading…' })}</Text>
           </View>
         )}
 
         {status === 'not-supported' && (
           <View style={[s.card, s.cardWarning]}>
             <Text style={s.cardIcon}>⚠️</Text>
-            <Text style={s.cardTitle}>{t('eyes.notSupported', 'Device not supported')}</Text>
+            <Text style={s.cardTitle}>{t('eyes.notSupported', { defaultValue: 'Device not supported' })}</Text>
             <Text style={s.cardText}>
-              {t('eyes.notSupportedBody', 'Your device has less than 5 GB of RAM. The model requires ~4.1 GB to run. Cloud analysis is used automatically.')}
+              {t('eyes.notSupportedBody', { defaultValue: 'Your device has less than 5 GB of RAM. The model requires ~4.1 GB to run. Cloud analysis is used automatically.' })}
             </Text>
           </View>
         )}
@@ -192,14 +200,14 @@ export function EyesDownloadScreen() {
         {(status === 'not-downloaded' || status === 'downloading') && (
           <>
             <View style={s.card}>
-              <Text style={s.cardTitle}>{t('eyes.modelTitle', 'Gemma 4 E2B · Q4_K_M')}</Text>
+              <Text style={s.cardTitle}>{t('eyes.modelTitle', { defaultValue: 'Gemma 4 E2B · Q4_K_M' })}</Text>
               <View style={s.specRow}>
-                <View style={s.spec}><Text style={s.specLabel}>{t('eyes.specMain', 'LLM weights')}</Text><Text style={s.specValue}>3.27 GB</Text></View>
-                <View style={s.spec}><Text style={s.specLabel}>{t('eyes.specMmproj', 'Vision encoder')}</Text><Text style={s.specValue}>941 MB</Text></View>
-                <View style={s.spec}><Text style={s.specLabel}>{t('eyes.specTotal', 'Total')}</Text><Text style={s.specValue}>~4.1 GB</Text></View>
+                <View style={s.spec}><Text style={s.specLabel}>{t('eyes.specMain', { defaultValue: 'LLM weights' })}</Text><Text style={s.specValue}>3.27 GB</Text></View>
+                <View style={s.spec}><Text style={s.specLabel}>{t('eyes.specMmproj', { defaultValue: 'Vision encoder' })}</Text><Text style={s.specValue}>941 MB</Text></View>
+                <View style={s.spec}><Text style={s.specLabel}>{t('eyes.specTotal', { defaultValue: 'Total' })}</Text><Text style={s.specValue}>~4.1 GB</Text></View>
               </View>
               <Text style={s.cardNote}>
-                {t('eyes.wifiNote', '⚡ Download over Wi-Fi recommended. Existing partial downloads resume automatically.')}
+                {t('eyes.wifiNote', { defaultValue: '⚡ Download over Wi-Fi recommended. Existing partial downloads resume automatically.' })}
               </Text>
             </View>
 
@@ -207,7 +215,7 @@ export function EyesDownloadScreen() {
               renderProgress()
             ) : (
               <TouchableOpacity style={s.primaryBtn} onPress={startDownload}>
-                <Text style={s.primaryBtnText}>{t('eyes.downloadBtn', 'Download Eyes model')}</Text>
+                <Text style={s.primaryBtnText}>{t('eyes.downloadBtn', { defaultValue: 'Download Eyes model' })}</Text>
               </TouchableOpacity>
             )}
           </>
@@ -217,17 +225,17 @@ export function EyesDownloadScreen() {
           <>
             <View style={[s.card, s.cardReady]}>
               <Text style={s.cardIcon}>✅</Text>
-              <Text style={s.cardTitle}>{t('eyes.readyTitle', 'On-device model ready')}</Text>
+              <Text style={s.cardTitle}>{t('eyes.readyTitle', { defaultValue: 'On-device model ready' })}</Text>
               <Text style={s.cardText}>
-                {t('eyes.readyBody', 'Garment photos are analysed on your device. No photo data leaves the app during scanning.')}
+                {t('eyes.readyBody', { defaultValue: 'Garment photos are analysed on your device. No photo data leaves the app during scanning.' })}
               </Text>
               <View style={s.specRow}>
-                <View style={s.spec}><Text style={s.specLabel}>{t('eyes.specModel', 'Model')}</Text><Text style={s.specValue}>Gemma 4 E2B Q4</Text></View>
-                <View style={s.spec}><Text style={s.specLabel}>{t('eyes.specDisk', 'Disk usage')}</Text><Text style={s.specValue}>~4.1 GB</Text></View>
+                <View style={s.spec}><Text style={s.specLabel}>{t('eyes.specModel', { defaultValue: 'Model' })}</Text><Text style={s.specValue}>Gemma 4 E2B Q4</Text></View>
+                <View style={s.spec}><Text style={s.specLabel}>{t('eyes.specDisk', { defaultValue: 'Disk usage' })}</Text><Text style={s.specValue}>~4.1 GB</Text></View>
               </View>
             </View>
             <TouchableOpacity style={s.dangerBtn} onPress={deleteModels}>
-              <Text style={s.dangerBtnText}>{t('eyes.deleteBtn', 'Remove model (free ~4.1 GB)')}</Text>
+              <Text style={s.dangerBtnText}>{t('eyes.deleteBtn', { defaultValue: 'Remove model (free ~4.1 GB)' })}</Text>
             </TouchableOpacity>
           </>
         )}

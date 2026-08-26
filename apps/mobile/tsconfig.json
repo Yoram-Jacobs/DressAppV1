@@ -7,6 +7,7 @@
       "DOM.Iterable"
     ],
     "strict": true,
+    "allowJs": true,
     "jsx": "react-native",
     "baseUrl": ".",
     "paths": {
@@ -26,10 +27,10 @@
         "../../packages/eyes-native/src/index.ts"
       ],
       "lucide-react-native": [
-        "../../node_modules/lucide-react-native/dist/types/lucide-react-native.d.ts"
+        "../../node_modules/lucide-react-native"
       ],
       "react-native-svg": [
-        "../../node_modules/react-native-svg/src/index.d.ts"
+        "../../node_modules/react-native-svg"
       ]
     },
     "typeRoots": [

@@ -39,11 +39,11 @@ export function TransactionLandingScreen() {
     setActing(true);
     try {
       await api.confirmReceipt(transactionId);
-      Alert.alert(t('market.confirmed', 'Confirmed!'), t('market.receiptConfirmed', 'Receipt confirmed. Thank you!'), [
+      Alert.alert(t('market.confirmed', { defaultValue: 'Confirmed!' }), t('market.receiptConfirmed', { defaultValue: 'Receipt confirmed. Thank you!' }), [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (err: unknown) {
-      Alert.alert(t('common.error', 'Error'), (err as { message?: string })?.message ?? 'Failed to confirm');
+      Alert.alert(t('common.error', { defaultValue: 'Error' }), (err as { message?: string })?.message ?? 'Failed to confirm');
     } finally { setActing(false); }
   };
 
@@ -57,14 +57,14 @@ export function TransactionLandingScreen() {
   return (
     <SafeAreaView style={[s.root, s.center]}>
       <Text style={s.icon}>{statusIcon}</Text>
-      <Text style={s.title}>{tx?.listing_title ?? t('market.transaction', 'Transaction')}</Text>
-      <Text style={s.status}>{t('market.status', 'Status')}: {tx?.status ?? t('market.pending', 'pending')}</Text>
+      <Text style={s.title}>{tx?.listing_title ?? t('market.transaction', { defaultValue: 'Transaction' })}</Text>
+      <Text style={s.status}>{t('market.status', { defaultValue: 'Status' })}: {tx?.status ?? t('market.pending', { defaultValue: 'pending' })}</Text>
       {tx?.amount_cents != null && (
         <Text style={s.amount}>{(tx.amount_cents / 100).toFixed(2)} {tx.currency ?? '€'}</Text>
       )}
       {isPending && tx?.role === 'buyer' && (
         <TouchableOpacity style={[s.confirmBtn, acting && s.confirmBtnDisabled]} onPress={handleConfirm} disabled={acting}>
-          {acting ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.confirmBtnText}>{t('market.confirmReceipt', 'Confirm I received the item')}</Text>}
+          {acting ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.confirmBtnText}>{t('market.confirmReceipt', { defaultValue: 'Confirm I received the item' })}</Text>}
         </TouchableOpacity>
       )}
     </SafeAreaView>

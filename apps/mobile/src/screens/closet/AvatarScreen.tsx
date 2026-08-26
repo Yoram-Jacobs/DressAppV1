@@ -49,10 +49,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import * as Lucide from 'lucide-react-native';
 
 import { useTheme } from '@mobile/theme';
-import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
+import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
+import { useUserStore } from '@mobile/lib/stores';
 import { DynamicAvatarSvg } from '@mobile/components/DynamicAvatarSvg';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -63,249 +65,220 @@ const SKIN_TONE_PALETTE: readonly string[] = [
   '#6D3B1F', '#ECC9A0', '#9CA3AF', '#4B5563',
 ];
 
-interface Measurements {
-  height:    number;
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface Measurements {
+  height: number;
   shoulders: number;
-  chest:     number;
-  waist:     number;
-  hip:       number;
+  chest: number;
+  waist: number;
+  hip: number;
   armLength: number;
-  inseam:    number;
-  gender:    string;
+  inseam: number;
+  gender: string;
 }
 
 const DEFAULT_MEASUREMENTS: Measurements = {
-  height:    168,
+  height: 168,
   shoulders: 38,
-  chest:     88,
-  waist:     68,
-  hip:       94,
+  chest: 88,
+  waist: 68,
+  hip: 94,
   armLength: 58,
-  inseam:    76,
-  gender:    'female',
+  inseam: 76,
+  gender: 'female',
 };
 
-// ─── Lightweight native slider ────────────────────────────────────────────────
-// Built with core PanResponder — no external package needed.
+// ─── Native Slider Component ──────────────────────────────────────────────────
 
 interface NativeSliderProps {
-  value:      number;
-  min:        number;
-  max:        number;
-  step?:      number;
-  onChange:   (v: number) => void;
-  trackColor: string;
-  thumbColor: string;
-  label:      string;
-  unit:       string;
-  labelColor: string;
-  valueColor: string;
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  unit?: string;
+  onChange: (val: number) => void;
+  trackColor?: string;
+  thumbColor?: string;
+  labelColor?: string;
+  valueColor?: string;
 }
 
 function NativeSlider({
-  value, min, max, step = 1,
+  label,
+  value,
+  min,
+  max,
+  step = 1,
+  unit = 'cm',
   onChange,
-  trackColor, thumbColor,
-  label, unit,
-  labelColor, valueColor,
+  trackColor = '#e4e4e7',
+  thumbColor = '#2d8f7f',
+  labelColor = '#000',
+  valueColor = '#2d8f7f',
 }: NativeSliderProps) {
-  const trackWidth = useRef(0);
+  const [trackWidth, setTrackWidth] = useState(0);
+  const trackWidthRef = useRef(0);
+  const valueRef = useRef(value);
+  valueRef.current = value;
 
-  // pan responder that maps X-offset → clamped stepped value
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponder:  () => true,
-        onPanResponderGrant: (e: GestureResponderEvent) => {
-          if (trackWidth.current === 0) return;
-          const x    = e.nativeEvent.locationX;
-          const frac = Math.max(0, Math.min(1, x / trackWidth.current));
-          const raw  = min + frac * (max - min);
-          const snapped = Math.round(raw / step) * step;
-          onChange(Math.max(min, Math.min(max, snapped)));
-        },
-        onPanResponderMove: (
-          _: GestureResponderEvent,
-          gs: PanResponderGestureState,
-        ) => {
-          if (trackWidth.current === 0) return;
-          // Use cumulative dx from the touch-start position
-          const startFrac = (value - min) / (max - min);
-          const startPx   = startFrac * trackWidth.current;
-          const newPx     = startPx + gs.dx;
-          const frac      = Math.max(0, Math.min(1, newPx / trackWidth.current));
-          const raw       = min + frac * (max - min);
-          const snapped   = Math.round(raw / step) * step;
-          onChange(Math.max(min, Math.min(max, snapped)));
-        },
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [min, max, step, value, onChange],
-  );
+  const fraction = Math.max(0, Math.min(1, (value - min) / (max - min)));
 
-  const frac    = (value - min) / (max - min);
-  // Use a numeric percentage (0-100) — DimensionValue accepts `number` as px,
-  // so we box the % string with a cast accepted by RN's ViewStyle.
-  const pctNum  = parseFloat((frac * 100).toFixed(1));
-  const pctStr  = `${pctNum}%` as unknown as import('react-native').DimensionValue;
-
-  const onLayout = (e: LayoutChangeEvent) => {
-    trackWidth.current = e.nativeEvent.layout.width;
+  const handleLayout = (e: LayoutChangeEvent) => {
+    const w = e.nativeEvent.layout.width;
+    setTrackWidth(w);
+    trackWidthRef.current = w;
   };
 
+  const updateFromX = (x: number) => {
+    const tw = trackWidthRef.current;
+    if (tw <= 0) return;
+    const clampedX = Math.max(0, Math.min(tw, x));
+    const rawVal = min + (clampedX / tw) * (max - min);
+    const stepped = Math.round(rawVal / step) * step;
+    const clamped = Math.max(min, Math.min(max, stepped));
+    if (clamped !== valueRef.current) {
+      onChange(clamped);
+    }
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (e: GestureResponderEvent) => {
+        updateFromX(e.nativeEvent.locationX);
+      },
+      onPanResponderMove: (e: GestureResponderEvent) => {
+        updateFromX(e.nativeEvent.locationX);
+      },
+    })
+  ).current;
+
   return (
-    <View style={nsStyles.container}>
-      {/* Header row */}
-      <View style={nsStyles.header}>
-        <Text style={[nsStyles.label, { color: labelColor }]}>{label}</Text>
-        <Text style={[nsStyles.valueText, { color: valueColor }]}>
+    <View style={sliderStyles.container}>
+      <View style={sliderStyles.labelRow}>
+        <Text style={[sliderStyles.label, { color: labelColor }]}>{label}</Text>
+        <Text style={[sliderStyles.value, { color: valueColor }]}>
           {value} {unit}
         </Text>
       </View>
-      {/* Track */}
       <View
-        style={nsStyles.trackHitArea}
-        onLayout={onLayout}
+        style={sliderStyles.trackWrapper}
+        onLayout={handleLayout}
         {...panResponder.panHandlers}
       >
-        <View style={[nsStyles.trackBg, { backgroundColor: trackColor }]}>
+        <View style={[sliderStyles.trackBg, { backgroundColor: trackColor }]} />
+        <View
+          style={[
+            sliderStyles.trackFill,
+            {
+              backgroundColor: thumbColor,
+              width: `${fraction * 100}%`,
+            },
+          ]}
+        />
+        {trackWidth > 0 && (
           <View
             style={[
-              nsStyles.trackFill,
-              { width: pctStr, backgroundColor: thumbColor } as any,
+              sliderStyles.thumb,
+              {
+                backgroundColor: thumbColor,
+                left: Math.max(0, Math.min(trackWidth - 20, fraction * trackWidth - 10)),
+              },
             ]}
           />
-          {/* Thumb */}
-          <View
-            style={[
-              nsStyles.thumb,
-              { left: pctStr, backgroundColor: thumbColor } as any,
-            ]}
-          />
-        </View>
+        )}
       </View>
     </View>
   );
 }
 
-const nsStyles = StyleSheet.create({
+const sliderStyles = StyleSheet.create({
   container: {
-    marginBottom: spacing[4],
+    marginBottom: spacing.md,
   },
-  header: {
+  labelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: spacing[1],
+    marginBottom: 4,
   },
   label: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: fontSizes.xs,
+    fontFamily: fonts.bodyMedium,
+    fontSize: fontSizes.sm,
   },
-  valueText: {
-    fontFamily: fonts.body,
-    fontSize: fontSizes.xs,
+  value: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.sm,
   },
-  trackHitArea: {
+  trackWrapper: {
     height: 36,
     justifyContent: 'center',
   },
   trackBg: {
     height: 6,
-    borderRadius: 3,
-    overflow: 'visible',
-    position: 'relative',
+    borderRadius: radii.full,
+    width: '100%',
   },
   trackFill: {
+    height: 6,
+    borderRadius: radii.full,
     position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    borderRadius: 3,
   },
   thumb: {
-    position: 'absolute',
-    top: '50%',
     width: 20,
     height: 20,
     borderRadius: 10,
-    marginTop: -10,
-    marginLeft: -10,
-    // shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 3,
+    position: 'absolute',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    ...shadows.sm,
   },
 });
 
-// ─── Main Screen ──────────────────────────────────────────────────────────────
-
 export function AvatarScreen() {
-  const { t }      = useTranslation();
+  const { t } = useTranslation();
+  const navigation = useNavigation<any>();
   const { colors } = useTheme();
-  // useNavigation for back-button awareness (not currently called but satisfies task requirement)
-  useNavigation();
   const isRtl = I18nManager.isRTL;
 
-  // ── State ──────────────────────────────────────────────────────────────────
-  const [loading,   setLoading]   = useState(true);
+  const { user, avatarParams, loading, patchUser } = useUserStore();
+
   const [saving,    setSaving]    = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
 
-  const [measurements, setMeasurements] = useState<Measurements>(DEFAULT_MEASUREMENTS);
-  const [skinColor,    setSkinColor]    = useState('#9CA3AF');
-  const [bodyPhotoUrl, setBodyPhotoUrl] = useState<string | null>(null);
-  const [avatarMode,   setAvatarMode]   = useState<'mannequin' | 'photo'>('mannequin');
+  // Initialize from store snapshot
+  const initialMeasurements: Measurements = useMemo(() => {
+    const p = avatarParams?.measurements || avatarParams || user?.avatar_shape_params || user?.body_measurements;
+    if (!p) return DEFAULT_MEASUREMENTS;
+    return {
+      height:    Number(p.height)                    || 168,
+      shoulders: Number(p.shoulders)                 || 38,
+      chest:     Number(p.chest)                     || 88,
+      waist:     Number(p.waist)                     || 68,
+      hip:       Number(p.hips ?? p.hip)             || 94,
+      armLength: Number(p.arm_length ?? p.armLength) || 58,
+      inseam:    Number(p.inseam)                    || 76,
+      gender:    String(p.gender ?? user?.sex ?? 'female').toLowerCase(),
+    };
+  }, [avatarParams, user]);
 
-  // ── Fetch on mount ─────────────────────────────────────────────────────────
-  useEffect(() => {
-    fetchParams();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [measurements, setMeasurements] = useState<Measurements>(initialMeasurements);
+  const [skinColor,    setSkinColor]    = useState(avatarParams?.skin_tone || user?.skin_tone || '#E0AC69');
+  const [bodyPhotoUrl, setBodyPhotoUrl] = useState<string | null>(avatarParams?.body_photo_url || user?.body_photo_url || null);
+  const [avatarMode,   setAvatarMode]   = useState<'mannequin' | 'photo'>(
+    avatarParams?.body_photo_url || user?.body_photo_url ? 'photo' : 'mannequin'
+  );
 
-  const fetchParams = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await api.getAvatarParams();
-
-      if (res?.measurements) {
-        const m = res.measurements;
-        setMeasurements({
-          height:    Number(m.height)                    || 168,
-          shoulders: Number(m.shoulders)                 || 38,
-          chest:     Number(m.chest)                     || 88,
-          waist:     Number(m.waist)                     || 68,
-          hip:       Number(m.hips ?? m.hip)             || 94,
-          armLength: Number(m.arm_length ?? m.armLength) || 58,
-          inseam:    Number(m.inseam)                    || 76,
-          gender:    String(m.gender ?? res.gender ?? 'female').toLowerCase(),
-        });
-      }
-
-      if (res?.skin_tone) {
-        setSkinColor(res.skin_tone);
-      }
-
-      if (res?.body_photo_url) {
-        setBodyPhotoUrl(res.body_photo_url);
-        setAvatarMode('photo');
-      }
-    } catch (err) {
-      console.error('[AvatarScreen] fetchParams error', err);
-      Alert.alert(
-        t('avatar.title', { defaultValue: 'Avatar' }),
-        t('pages.avatarPage.failed_to_load_avatar_parameters', {
-          defaultValue: 'Failed to load avatar parameters.',
-        }),
-      );
-    } finally {
-      setLoading(false);
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('MeTab');
     }
-  }, [t]);
+  };
 
-  // ── Measurement field helper ───────────────────────────────────────────────
   const setField = useCallback(<K extends keyof Measurements>(
     key: K,
     value: Measurements[K],
@@ -313,7 +286,6 @@ export function AvatarScreen() {
     setMeasurements(prev => ({ ...prev, [key]: value }));
   }, []);
 
-  // ── Photo picker ───────────────────────────────────────────────────────────
   const handlePickPhoto = useCallback(async (useCamera: boolean) => {
     setPhotoBusy(true);
     try {
@@ -321,41 +293,25 @@ export function AvatarScreen() {
 
       if (useCamera) {
         const perm = await ImagePicker.requestCameraPermissionsAsync();
-        if (!perm.granted) {
-          Alert.alert(
-            t('avatar.bodyPhoto', { defaultValue: 'Body Photo' }),
-            t('common.cameraPermission', { defaultValue: 'Camera access is required.' }),
-          );
-          return;
-        }
+        if (!perm.granted) return;
         result = await ImagePicker.launchCameraAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
           base64: true,
-          quality: 0.82,
+          quality: 0.8,
         });
       } else {
         const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (!perm.granted) {
-          Alert.alert(
-            t('avatar.bodyPhoto', { defaultValue: 'Body Photo' }),
-            t('common.galleryPermission', { defaultValue: 'Photo library access is required.' }),
-          );
-          return;
-        }
+        if (!perm.granted) return;
         result = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
           base64: true,
-          quality: 0.82,
+          quality: 0.8,
         });
       }
 
       if (!result.canceled && result.assets?.[0]) {
-        const asset    = result.assets[0];
-        const mimeType = asset.mimeType ?? 'image/jpeg';
-        const dataUri  = asset.base64
-          ? `data:${mimeType};base64,${asset.base64}`
-          : (asset.uri ?? null);
-
+        const asset = result.assets[0];
+        const dataUri = asset.base64 ? `data:${asset.mimeType ?? 'image/jpeg'};base64,${asset.base64}` : asset.uri;
         if (dataUri) {
           setBodyPhotoUrl(dataUri);
           setAvatarMode('photo');
@@ -366,18 +322,17 @@ export function AvatarScreen() {
     } finally {
       setPhotoBusy(false);
     }
-  }, [t]);
+  }, []);
 
   const handleRemovePhoto = useCallback(() => {
     setBodyPhotoUrl(null);
     setAvatarMode('mannequin');
   }, []);
 
-  // ── Save ───────────────────────────────────────────────────────────────────
   const handleSave = useCallback(async () => {
     try {
       setSaving(true);
-      await api.patchMe({
+      await patchUser({
         sex:            measurements.gender,
         skin_tone:      skinColor,
         body_photo_url: bodyPhotoUrl,
@@ -393,31 +348,25 @@ export function AvatarScreen() {
         },
       });
       Alert.alert(
-        t('avatar.title', { defaultValue: 'Avatar' }),
-        t('pages.avatarPage.avatar_saved_successfully', {
-          defaultValue: 'Digital avatar profile saved successfully!',
-        }),
+        t('common.success', { defaultValue: 'Saved' }),
+        t('avatar.saveSuccess', { defaultValue: 'Your mannequin profile has been updated.' }),
+        [{ text: t('common.ok', { defaultValue: 'OK' }), onPress: handleBack }]
       );
-    } catch (err) {
-      console.error('[AvatarScreen] save error', err);
+    } catch (err: any) {
       Alert.alert(
-        t('avatar.title', { defaultValue: 'Avatar' }),
-        t('pages.avatarPage.failed_to_save_measurements', {
-          defaultValue: 'Failed to save measurements. Please try again.',
-        }),
+        t('common.error', { defaultValue: 'Error' }),
+        err?.message || t('avatar.saveError', { defaultValue: 'Failed to save changes.' })
       );
     } finally {
       setSaving(false);
     }
   }, [measurements, skinColor, bodyPhotoUrl, t]);
 
-  // ── Derived styles ─────────────────────────────────────────────────────────
   const s = useMemo(() => makeStyles(colors, isRtl), [colors, isRtl]);
 
-  // ── Loading state ──────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <SafeAreaView style={[s.safeArea, s.centered]} edges={['bottom']}>
+      <SafeAreaView style={[s.safeArea, s.centered]} edges={['top', 'bottom']}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={s.loadingText}>
           {t('pages.avatarPage.generating_your_3d_digital_double', {
@@ -428,20 +377,16 @@ export function AvatarScreen() {
     );
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={s.safeArea} edges={['bottom']}>
+    <SafeAreaView style={s.safeArea} edges={['top']}>
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <View style={s.header}>
-        <View style={s.headerLeft}>
+        <TouchableOpacity onPress={handleBack} style={s.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Lucide.ArrowLeft size={22} color={colors.foreground} />
+        </TouchableOpacity>
+        <View style={s.headerCenter}>
           <Text style={s.title} numberOfLines={1}>
             {t('avatar.title', { defaultValue: 'My Digital Avatar' })}
-          </Text>
-          <Text style={s.subtitle} numberOfLines={2}>
-            {t('pages.avatarPage.subtitle_description', {
-              defaultValue:
-                'Calibrate your body measurements or upload a full-body photo.',
-            })}
           </Text>
         </View>
         <TouchableOpacity
@@ -449,11 +394,9 @@ export function AvatarScreen() {
           onPress={handleSave}
           disabled={saving}
           activeOpacity={0.8}
-          accessibilityRole="button"
-          accessibilityLabel={t('avatar.save', { defaultValue: 'Save' })}
         >
           {saving ? (
-            <ActivityIndicator size="small" color={colors.primaryFg} />
+            <ActivityIndicator size="small" color="#FFF" />
           ) : (
             <Text style={s.saveBtnLabel}>
               {t('avatar.save', { defaultValue: 'Save' })}
@@ -462,261 +405,270 @@ export function AvatarScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* ── Two-column body ────────────────────────────────────────────── */}
-      <View style={s.body}>
-        {/* Left column — scrollable controls (flex 6 ≈ 60%) */}
-        <ScrollView
-          style={s.leftCol}
-          contentContainerStyle={s.leftContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* ── Body Photo ─────────────────────────────────────────────── */}
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>
-              {t('avatar.bodyPhoto', { defaultValue: 'Full-Body Photo' })}
-            </Text>
-
-            <View style={s.photoRow}>
-              {/* Thumbnail */}
-              <View style={s.photoThumb}>
-                {bodyPhotoUrl ? (
-                  <Image
-                    source={{ uri: bodyPhotoUrl }}
-                    style={s.thumbImage}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <Text style={s.thumbPlaceholder}>📷</Text>
-                )}
-              </View>
-
-              {/* Buttons */}
-              <View style={s.photoActions}>
-                <TouchableOpacity
-                  style={s.outlineBtn}
-                  onPress={() => handlePickPhoto(true)}
-                  disabled={photoBusy}
-                  activeOpacity={0.75}
-                >
-                  <Text style={s.outlineBtnLabel}>
-                    {t('profile.takePhoto', { defaultValue: 'Camera' })}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={s.outlineBtn}
-                  onPress={() => handlePickPhoto(false)}
-                  disabled={photoBusy}
-                  activeOpacity={0.75}
-                >
-                  <Text style={s.outlineBtnLabel}>
-                    {bodyPhotoUrl
-                      ? t('profile.replacePhoto', { defaultValue: 'Replace' })
-                      : t('avatar.addPhoto',       { defaultValue: 'Gallery' })}
-                  </Text>
-                </TouchableOpacity>
-
-                {bodyPhotoUrl && (
-                  <TouchableOpacity
-                    style={s.removeBtn}
-                    onPress={handleRemovePhoto}
-                    disabled={photoBusy}
-                    activeOpacity={0.75}
-                  >
-                    <Text style={s.removeBtnLabel}>
-                      {t('avatar.removePhoto', { defaultValue: 'Remove' })}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
+      <ScrollView
+        style={s.scroll}
+        contentContainerStyle={s.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* ── 1. Avatar Visual Hero Card ───────────────────────────────── */}
+        <View style={[s.avatarHeroCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={s.previewMetaRow}>
+            <View style={[s.badge, { backgroundColor: colors.secondary }]}>
+              <Lucide.Ruler size={12} color={colors.accent} />
+              <Text style={[s.badgeText, { color: colors.foreground }]}>
+                {measurements.height} cm
+              </Text>
             </View>
+            <View style={[s.badge, { backgroundColor: colors.secondary }]}>
+              <Lucide.User size={12} color={colors.accent} />
+              <Text style={[s.badgeText, { color: colors.foreground }]}>
+                {measurements.gender.toUpperCase()}
+              </Text>
+            </View>
+          </View>
 
-            {/* Mode toggle — only shown when a photo is loaded */}
-            {bodyPhotoUrl && (
-              <View style={s.modeToggleRow}>
-                {(['mannequin', 'photo'] as const).map(mode => (
-                  <TouchableOpacity
-                    key={mode}
-                    style={[s.modePill, avatarMode === mode && s.modePillActive]}
-                    onPress={() => setAvatarMode(mode)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[s.modePillLabel, avatarMode === mode && s.modePillLabelActive]}>
-                      {mode === 'mannequin'
-                        ? t('pages.avatarPage.vector_mannequin', { defaultValue: 'Mannequin' })
-                        : t('pages.avatarPage.real_photo',       { defaultValue: 'Real Photo' })}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+          <View style={s.avatarViewport}>
+            {avatarMode === 'photo' && bodyPhotoUrl ? (
+              <Image
+                source={{ uri: bodyPhotoUrl }}
+                style={s.photoPreview}
+                resizeMode="contain"
+              />
+            ) : (
+              <DynamicAvatarSvg
+                height={measurements.height}
+                shoulders={measurements.shoulders}
+                chest={measurements.chest}
+                waist={measurements.waist}
+                hip={measurements.hip}
+                armLength={measurements.armLength}
+                inseam={measurements.inseam}
+                gender={measurements.gender}
+                skinColor={skinColor}
+                width={200}
+                showGuideLines
+              />
             )}
           </View>
 
-          {/* ── Skin Tone Picker ───────────────────────────────────────── */}
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>
-              {t('avatar.skinTone', { defaultValue: 'Skin Tone' })}
-            </Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={s.skinRow}
-            >
-              {SKIN_TONE_PALETTE.map(color => {
-                const selected = skinColor.toLowerCase() === color.toLowerCase();
-                return (
-                  <TouchableOpacity
-                    key={color}
-                    style={[
-                      s.skinCircle,
-                      { backgroundColor: color },
-                      selected && s.skinCircleSelected,
-                    ]}
-                    onPress={() => setSkinColor(color)}
-                    activeOpacity={0.8}
-                    accessibilityLabel={`Skin tone ${color}`}
-                  />
-                );
-              })}
-            </ScrollView>
-          </View>
-
-          {/* ── Gender Toggle ──────────────────────────────────────────── */}
-          <View style={s.section}>
-            <View style={s.genderRow}>
-              <Text style={s.sectionTitle}>
-                {t('avatar.gender', { defaultValue: 'Gender Model' })}
-              </Text>
-              <View style={s.genderPills}>
-                {(['female', 'male'] as const).map(g => (
-                  <TouchableOpacity
-                    key={g}
-                    style={[
-                      s.genderPill,
-                      measurements.gender === g && s.genderPillActive,
-                    ]}
-                    onPress={() => setField('gender', g)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[
-                      s.genderPillLabel,
-                      measurements.gender === g && s.genderPillLabelActive,
-                    ]}>
-                      {g === 'female'
-                        ? t('pages.avatarPage.female', { defaultValue: 'Female' })
-                        : t('pages.avatarPage.male',   { defaultValue: 'Male' })}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+          {bodyPhotoUrl && (
+            <View style={s.modeToggleRow}>
+              {(['mannequin', 'photo'] as const).map((mode) => (
+                <TouchableOpacity
+                  key={mode}
+                  style={[s.modePill, avatarMode === mode && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+                  onPress={() => setAvatarMode(mode)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[s.modePillLabel, { color: avatarMode === mode ? '#FFF' : colors.foreground }]}>
+                    {mode === 'mannequin'
+                      ? t('pages.avatarPage.vector_mannequin', { defaultValue: 'Mannequin' })
+                      : t('pages.avatarPage.real_photo', { defaultValue: 'Real Photo' })}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
-          </View>
-
-          {/* ── Measurement Sliders ────────────────────────────────────── */}
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>
-              {t('avatar.measurements', { defaultValue: 'Body Measurements' })}
-            </Text>
-
-            <NativeSlider
-              label={t('pages.avatarPage.height', { defaultValue: 'Height' })}
-              value={measurements.height} min={140} max={210} unit="cm"
-              onChange={v => setField('height', v)}
-              trackColor={colors.border} thumbColor={colors.primary}
-              labelColor={colors.foreground} valueColor={colors.accent}
-            />
-            <NativeSlider
-              label={t('pages.avatarPage.shoulders', { defaultValue: 'Shoulder Width' })}
-              value={measurements.shoulders} min={28} max={58} unit="cm"
-              onChange={v => setField('shoulders', v)}
-              trackColor={colors.border} thumbColor={colors.primary}
-              labelColor={colors.foreground} valueColor={colors.accent}
-            />
-            <NativeSlider
-              label={t('pages.avatarPage.chest', { defaultValue: 'Chest Circumference' })}
-              value={measurements.chest} min={65} max={138} unit="cm"
-              onChange={v => setField('chest', v)}
-              trackColor={colors.border} thumbColor={colors.primary}
-              labelColor={colors.foreground} valueColor={colors.accent}
-            />
-            <NativeSlider
-              label={t('pages.avatarPage.waist', { defaultValue: 'Waist Circumference' })}
-              value={measurements.waist} min={54} max={128} unit="cm"
-              onChange={v => setField('waist', v)}
-              trackColor={colors.border} thumbColor={colors.primary}
-              labelColor={colors.foreground} valueColor={colors.accent}
-            />
-            <NativeSlider
-              label={t('pages.avatarPage.hip', { defaultValue: 'Hip Circumference' })}
-              value={measurements.hip} min={68} max={148} unit="cm"
-              onChange={v => setField('hip', v)}
-              trackColor={colors.border} thumbColor={colors.primary}
-              labelColor={colors.foreground} valueColor={colors.accent}
-            />
-            <NativeSlider
-              label={t('pages.avatarPage.arm_length', { defaultValue: 'Arm Length' })}
-              value={measurements.armLength} min={42} max={85} unit="cm"
-              onChange={v => setField('armLength', v)}
-              trackColor={colors.border} thumbColor={colors.primary}
-              labelColor={colors.foreground} valueColor={colors.accent}
-            />
-            <NativeSlider
-              label={t('pages.avatarPage.inseam', { defaultValue: 'Inseam (Leg Length)' })}
-              value={measurements.inseam} min={52} max={100} unit="cm"
-              onChange={v => setField('inseam', v)}
-              trackColor={colors.border} thumbColor={colors.primary}
-              labelColor={colors.foreground} valueColor={colors.accent}
-            />
-          </View>
-
-          {/* Info note */}
-          <View style={s.infoNote}>
-            <Text style={[s.infoNoteText, { color: colors.accent }]}>
-              {t('pages.avatarPage.info_note', {
-                defaultValue:
-                  'Body measurements calibrate virtual garment try-on physics and size recommendations across the app.',
-              })}
-            </Text>
-          </View>
-
-          <View style={{ height: spacing[8] }} />
-        </ScrollView>
-
-        {/* Right column — sticky avatar preview (flex 4 ≈ 40%) */}
-        <View style={[s.rightCol, { backgroundColor: colors.card }]}>
-          <Text style={[s.previewLabel, { color: colors.mutedFg }]}>
-            {measurements.height}cm · {measurements.gender.toUpperCase()}
-          </Text>
-
-          {avatarMode === 'photo' && bodyPhotoUrl ? (
-            <Image
-              source={{ uri: bodyPhotoUrl }}
-              style={s.photoPreview}
-              resizeMode="contain"
-            />
-          ) : (
-            <DynamicAvatarSvg
-              height={measurements.height}
-              shoulders={measurements.shoulders}
-              chest={measurements.chest}
-              waist={measurements.waist}
-              hip={measurements.hip}
-              armLength={measurements.armLength}
-              inseam={measurements.inseam}
-              gender={measurements.gender}
-              skinColor={skinColor}
-              width={120}
-              showGuideLines
-            />
           )}
         </View>
-      </View>
+
+        {/* ── 2. Full-Body Photo Card ──────────────────────────────────── */}
+        <View style={[s.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[s.sectionTitle, { color: colors.foreground }]}>
+            {t('avatar.bodyPhoto', { defaultValue: 'Full-Body Photo' })}
+          </Text>
+          <View style={s.photoRow}>
+            <View style={[s.photoThumb, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+              {bodyPhotoUrl ? (
+                <Image source={{ uri: bodyPhotoUrl }} style={s.thumbImage} resizeMode="cover" />
+              ) : (
+                <Lucide.Camera size={24} color={colors.mutedFg} />
+              )}
+            </View>
+            <View style={s.photoActions}>
+              <TouchableOpacity
+                style={[s.actionBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+                onPress={() => handlePickPhoto(true)}
+                disabled={photoBusy}
+              >
+                <Lucide.Camera size={14} color={colors.foreground} />
+                <Text style={[s.actionBtnText, { color: colors.foreground }]}>
+                  {t('profile.takePhoto', { defaultValue: 'Camera' })}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.actionBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+                onPress={() => handlePickPhoto(false)}
+                disabled={photoBusy}
+              >
+                <Lucide.Image size={14} color={colors.foreground} />
+                <Text style={[s.actionBtnText, { color: colors.foreground }]}>
+                  {bodyPhotoUrl ? t('profile.replacePhoto', { defaultValue: 'Replace' }) : t('avatar.addPhoto', { defaultValue: 'Gallery' })}
+                </Text>
+              </TouchableOpacity>
+              {bodyPhotoUrl && (
+                <TouchableOpacity
+                  style={[s.actionBtn, { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444' }]}
+                  onPress={handleRemovePhoto}
+                  disabled={photoBusy}
+                >
+                  <Lucide.Trash2 size={14} color="#ef4444" />
+                  <Text style={[s.actionBtnText, { color: '#ef4444' }]}>
+                    {t('avatar.removePhoto', { defaultValue: 'Remove' })}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </View>
+
+        {/* ── 3. Skin Tone Palette Card ─────────────────────────────────── */}
+        <View style={[s.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[s.sectionTitle, { color: colors.foreground }]}>
+            {t('avatar.skinTone', { defaultValue: 'Skin Tone' })}
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.skinRow}>
+            {SKIN_TONE_PALETTE.map((color) => {
+              const selected = skinColor.toLowerCase() === color.toLowerCase();
+              return (
+                <TouchableOpacity
+                  key={color}
+                  style={[
+                    s.skinCircle,
+                    { backgroundColor: color, borderColor: selected ? colors.primary : colors.border },
+                    selected && s.skinCircleSelected,
+                  ]}
+                  onPress={() => setSkinColor(color)}
+                  activeOpacity={0.8}
+                />
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        {/* ── 4. Gender Model Card ──────────────────────────────────────── */}
+        <View style={[s.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[s.sectionTitle, { color: colors.foreground }]}>
+            {t('avatar.gender', { defaultValue: 'Gender Model' })}
+          </Text>
+          <View style={s.genderRow}>
+            {(['female', 'male'] as const).map((g) => {
+              const isSel = measurements.gender === g;
+              return (
+                <TouchableOpacity
+                  key={g}
+                  style={[
+                    s.genderBtn,
+                    {
+                      backgroundColor: isSel ? colors.primary : colors.secondary,
+                      borderColor: isSel ? colors.primary : colors.border,
+                    },
+                  ]}
+                  onPress={() => setField('gender', g)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[s.genderBtnText, { color: isSel ? '#FFF' : colors.foreground }]}>
+                    {g === 'female'
+                      ? t('pages.avatarPage.female', { defaultValue: 'Female' })
+                      : t('pages.avatarPage.male', { defaultValue: 'Male' })}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* ── 5. Body Measurement Sliders Card ──────────────────────────── */}
+        <View style={[s.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[s.sectionTitle, { color: colors.foreground }]}>
+            {t('avatar.measurements', { defaultValue: 'Body Measurements' })}
+          </Text>
+
+          <NativeSlider
+            label={t('pages.avatarPage.height', { defaultValue: 'Height' })}
+            value={measurements.height} min={140} max={210} unit="cm"
+            onChange={(v) => setField('height', v)}
+            trackColor={colors.border} thumbColor={colors.primary}
+            labelColor={colors.foreground} valueColor={colors.accent}
+          />
+          <NativeSlider
+            label={t('pages.avatarPage.shoulders', { defaultValue: 'Shoulder Width' })}
+            value={measurements.shoulders} min={28} max={58} unit="cm"
+            onChange={(v) => setField('shoulders', v)}
+            trackColor={colors.border} thumbColor={colors.primary}
+            labelColor={colors.foreground} valueColor={colors.accent}
+          />
+          <NativeSlider
+            label={t('pages.avatarPage.chest', { defaultValue: 'Chest Circumference' })}
+            value={measurements.chest} min={65} max={138} unit="cm"
+            onChange={(v) => setField('chest', v)}
+            trackColor={colors.border} thumbColor={colors.primary}
+            labelColor={colors.foreground} valueColor={colors.accent}
+          />
+          <NativeSlider
+            label={t('pages.avatarPage.waist', { defaultValue: 'Waist Circumference' })}
+            value={measurements.waist} min={54} max={128} unit="cm"
+            onChange={(v) => setField('waist', v)}
+            trackColor={colors.border} thumbColor={colors.primary}
+            labelColor={colors.foreground} valueColor={colors.accent}
+          />
+          <NativeSlider
+            label={t('pages.avatarPage.hip', { defaultValue: 'Hip Circumference' })}
+            value={measurements.hip} min={68} max={148} unit="cm"
+            onChange={(v) => setField('hip', v)}
+            trackColor={colors.border} thumbColor={colors.primary}
+            labelColor={colors.foreground} valueColor={colors.accent}
+          />
+          <NativeSlider
+            label={t('pages.avatarPage.arm_length', { defaultValue: 'Arm Length' })}
+            value={measurements.armLength} min={42} max={85} unit="cm"
+            onChange={(v) => setField('armLength', v)}
+            trackColor={colors.border} thumbColor={colors.primary}
+            labelColor={colors.foreground} valueColor={colors.accent}
+          />
+          <NativeSlider
+            label={t('pages.avatarPage.inseam', { defaultValue: 'Inseam (Leg Length)' })}
+            value={measurements.inseam} min={52} max={100} unit="cm"
+            onChange={(v) => setField('inseam', v)}
+            trackColor={colors.border} thumbColor={colors.primary}
+            labelColor={colors.foreground} valueColor={colors.accent}
+          />
+        </View>
+
+        {/* ── 6. Info Note ─────────────────────────────────────────────── */}
+        <View style={[s.infoCard, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+          <Lucide.Info size={16} color={colors.accent} style={{ marginTop: 2 }} />
+          <Text style={[s.infoText, { color: colors.foreground }]}>
+            {t('pages.avatarPage.info_note', {
+              defaultValue:
+                'Body measurements calibrate virtual garment try-on physics and size recommendations across the app.',
+            })}
+          </Text>
+        </View>
+
+        {/* ── 7. Save CTA Button ───────────────────────────────────────── */}
+        <TouchableOpacity
+          style={[s.bottomSaveBtn, { backgroundColor: colors.primary }]}
+          onPress={handleSave}
+          disabled={saving}
+          activeOpacity={0.8}
+        >
+          {saving ? (
+            <ActivityIndicator size="small" color="#FFF" />
+          ) : (
+            <>
+              <Lucide.Save size={18} color="#FFF" />
+              <Text style={s.bottomSaveBtnText}>
+                {t('pages.avatarPage.save_measurements', { defaultValue: 'Save Profile' })}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
-// Export default as well for any direct imports
 export default AvatarScreen;
 
 // ─── Styles factory ───────────────────────────────────────────────────────────
@@ -725,7 +677,6 @@ type Colors = ReturnType<typeof import('@mobile/theme').useTheme>['colors'];
 
 function makeStyles(colors: Colors, isRtl: boolean) {
   return StyleSheet.create({
-    // Layout
     safeArea: {
       flex: 1,
       backgroundColor: colors.background,
@@ -733,18 +684,17 @@ function makeStyles(colors: Colors, isRtl: boolean) {
     centered: {
       justifyContent: 'center',
       alignItems: 'center',
+      padding: spacing[6],
     },
     loadingText: {
       fontFamily: fonts.body,
       fontSize: fontSizes.sm,
       color: colors.mutedFg,
-      marginTop: spacing[2],
+      marginTop: spacing[3],
       textAlign: 'center',
     },
-
-    // Header
     header: {
-      flexDirection: isRtl ? 'row-reverse' : 'row',
+      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: spacing[4],
@@ -753,27 +703,27 @@ function makeStyles(colors: Colors, isRtl: boolean) {
       borderBottomColor: colors.border,
       backgroundColor: colors.card,
     },
-    headerLeft: {
+    backBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: radii.full,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    headerCenter: {
       flex: 1,
-      marginEnd: spacing[3],
+      marginHorizontal: spacing[2],
     },
     title: {
       fontFamily: fonts.displayBold,
-      fontSize: fontSizes.lg,
+      fontSize: fontSizes.base,
       color: colors.foreground,
-    },
-    subtitle: {
-      fontFamily: fonts.body,
-      fontSize: fontSizes.xs,
-      color: colors.mutedFg,
-      marginTop: spacing[0.5],
     },
     saveBtn: {
       backgroundColor: colors.primary,
       borderRadius: radii.md,
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[2],
-      minWidth: 72,
+      paddingHorizontal: spacing[3.5],
+      paddingVertical: spacing[1.5],
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -782,74 +732,91 @@ function makeStyles(colors: Colors, isRtl: boolean) {
     },
     saveBtnLabel: {
       fontFamily: fonts.bodySemiBold,
-      fontSize: fontSizes.sm,
-      color: colors.primaryFg,
+      fontSize: fontSizes.xs,
+      color: '#FFF',
     },
-
-    // Two-column
-    body: {
+    scroll: {
       flex: 1,
-      flexDirection: isRtl ? 'row-reverse' : 'row',
     },
-    leftCol: {
-      flex: 6,
+    scrollContent: {
+      padding: spacing[4],
+      gap: spacing[4],
+      paddingBottom: spacing[12],
     },
-    leftContent: {
-      paddingHorizontal: spacing[4],
-      paddingTop: spacing[4],
-    },
-
-    // Right: sticky avatar
-    rightCol: {
-      flex: 4,
+    avatarHeroCard: {
+      borderRadius: radii.xl,
+      borderWidth: 1,
+      padding: spacing[4],
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: spacing[4],
-      paddingHorizontal: spacing[2],
-      borderStartWidth: 1,
-      borderStartColor: colors.border,
+      ...shadows.sm,
     },
-    previewLabel: {
-      fontFamily: fonts.body,
-      fontSize: fontSizes.xs,
-      marginBottom: spacing[2],
-      letterSpacing: 0.5,
-    },
-    photoPreview: {
-      width: 120,
-      height: 270,
-      borderRadius: radii.sm,
-    },
-
-    // Section card
-    section: {
-      backgroundColor: colors.card,
-      borderRadius: radii.lg,
-      borderWidth: 1,
-      borderColor: colors.border,
-      padding: spacing[4],
-      marginBottom: spacing[4],
-    },
-    sectionTitle: {
-      fontFamily: fonts.bodySemiBold,
-      fontSize: fontSizes.sm,
-      color: colors.foreground,
+    previewMetaRow: {
+      flexDirection: 'row',
+      gap: spacing[2],
       marginBottom: spacing[3],
     },
-
-    // Photo section
+    badge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[1],
+      borderRadius: radii.full,
+    },
+    badgeText: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: fontSizes.xs,
+    },
+    avatarViewport: {
+      width: '100%',
+      height: 300,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    photoPreview: {
+      width: 180,
+      height: 280,
+      borderRadius: radii.md,
+    },
+    modeToggleRow: {
+      flexDirection: 'row',
+      gap: spacing[2],
+      marginTop: spacing[3],
+    },
+    modePill: {
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[1.5],
+      borderRadius: radii.full,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.secondary,
+    },
+    modePillLabel: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: fontSizes.xs,
+    },
+    section: {
+      borderRadius: radii.xl,
+      borderWidth: 1,
+      padding: spacing[4],
+      gap: spacing[3],
+      ...shadows.sm,
+    },
+    sectionTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: fontSizes.base,
+    },
     photoRow: {
-      flexDirection: isRtl ? 'row-reverse' : 'row',
+      flexDirection: 'row',
       alignItems: 'center',
       gap: spacing[3],
     },
     photoThumb: {
-      width: 56,
-      height: 56,
-      borderRadius: radii.md,
-      backgroundColor: colors.muted,
+      width: 64,
+      height: 64,
+      borderRadius: radii.lg,
       borderWidth: 1,
-      borderColor: colors.border,
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'hidden',
@@ -858,126 +825,85 @@ function makeStyles(colors: Colors, isRtl: boolean) {
       width: '100%',
       height: '100%',
     },
-    thumbPlaceholder: {
-      fontSize: 22,
-    },
     photoActions: {
       flex: 1,
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: spacing[2],
     },
-    outlineBtn: {
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: radii.sm,
-      paddingHorizontal: spacing[3],
-      paddingVertical: spacing[1.5],
-    },
-    outlineBtnLabel: {
-      fontFamily: fonts.bodySemiBold,
-      fontSize: fontSizes.xs,
-      color: colors.foreground,
-    },
-    removeBtn: {
-      borderWidth: 1,
-      borderColor: colors.destructive,
-      borderRadius: radii.sm,
-      paddingHorizontal: spacing[3],
-      paddingVertical: spacing[1.5],
-    },
-    removeBtnLabel: {
-      fontFamily: fonts.bodySemiBold,
-      fontSize: fontSizes.xs,
-      color: colors.destructive,
-    },
-    modeToggleRow: {
-      flexDirection: isRtl ? 'row-reverse' : 'row',
-      marginTop: spacing[3],
-      backgroundColor: colors.muted,
-      borderRadius: radii.sm,
-      padding: spacing[1],
-      gap: spacing[1],
-    },
-    modePill: {
-      flex: 1,
-      borderRadius: radii.sm - 2,
-      paddingVertical: spacing[1.5],
+    actionBtn: {
+      flexDirection: 'row',
       alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[2],
+      borderRadius: radii.lg,
+      borderWidth: 1,
     },
-    modePillActive: {
-      backgroundColor: colors.card,
-    },
-    modePillLabel: {
-      fontFamily: fonts.bodySemiBold,
+    actionBtnText: {
+      fontFamily: fonts.bodyMedium,
       fontSize: fontSizes.xs,
-      color: colors.mutedFg,
     },
-    modePillLabelActive: {
-      color: colors.foreground,
-    },
-
-    // Skin tone
     skinRow: {
-      flexDirection: isRtl ? 'row-reverse' : 'row',
-      gap: spacing[2],
+      flexDirection: 'row',
+      gap: spacing[2.5],
       paddingVertical: spacing[1],
     },
     skinCircle: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      borderWidth: 1.5,
-      borderColor: 'rgba(0,0,0,0.1)',
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      borderWidth: 2,
     },
     skinCircleSelected: {
       borderWidth: 3,
-      borderColor: colors.primary,
+      transform: [{ scale: 1.15 }],
+      ...shadows.sm,
     },
-
-    // Gender toggle
     genderRow: {
-      flexDirection: isRtl ? 'row-reverse' : 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      flexDirection: 'row',
+      gap: spacing[3],
     },
-    genderPills: {
-      flexDirection: isRtl ? 'row-reverse' : 'row',
-      backgroundColor: colors.muted,
-      borderRadius: radii.sm,
-      padding: spacing[1],
-      gap: spacing[1],
-    },
-    genderPill: {
-      borderRadius: radii.sm - 2,
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[1.5],
-    },
-    genderPillActive: {
-      backgroundColor: colors.primary,
-    },
-    genderPillLabel: {
-      fontFamily: fonts.bodySemiBold,
-      fontSize: fontSizes.xs,
-      color: colors.mutedFg,
-    },
-    genderPillLabelActive: {
-      color: colors.primaryFg,
-    },
-
-    // Info note
-    infoNote: {
+    genderBtn: {
+      flex: 1,
+      height: 40,
+      borderRadius: radii.lg,
       borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: radii.md,
-      padding: spacing[3],
-      marginBottom: spacing[4],
-      backgroundColor: colors.muted,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-    infoNoteText: {
+    genderBtnText: {
+      fontFamily: fonts.bodySemiBold,
+      fontSize: fontSizes.sm,
+    },
+    infoCard: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing[2.5],
+      padding: spacing[3.5],
+      borderRadius: radii.lg,
+      borderWidth: 1,
+    },
+    infoText: {
+      flex: 1,
       fontFamily: fonts.body,
       fontSize: fontSizes.xs,
-      lineHeight: fontSizes.xs * 1.55,
+      lineHeight: 18,
+    },
+    bottomSaveBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing[2],
+      height: 48,
+      borderRadius: radii.xl,
+      marginTop: spacing[2],
+      ...shadows.md,
+    },
+    bottomSaveBtnText: {
+      color: '#FFF',
+      fontFamily: fonts.bodyBold,
+      fontSize: fontSizes.base,
     },
   });
 }

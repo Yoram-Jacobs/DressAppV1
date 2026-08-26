@@ -46,15 +46,24 @@ export async function applyRtl(languageCode: string): Promise<void> {
   I18nManager.allowRTL(shouldBeRtl);
   I18nManager.forceRTL(shouldBeRtl);
 
-  // expo-updates is only available in native builds, not in web or Expo Go
   try {
+    if (__DEV__ && Platform.OS !== 'web') {
+      const { DevSettings } = require('react-native');
+      if (DevSettings && typeof DevSettings.reload === 'function') {
+        DevSettings.reload();
+        return;
+      }
+    }
+
     // Dynamic import so metro doesn't bundle expo-updates unnecessarily
     // in environments where it's not available (e.g. bare web).
     const Updates = await import('expo-updates');
-    await Updates.reloadAsync();
+    if (Updates && typeof Updates.reloadAsync === 'function') {
+      await Updates.reloadAsync();
+    }
   } catch (err) {
     if (__DEV__) {
-      console.warn(
+      console.info(
         `[RTL] Language changed to "${languageCode}" (RTL=${shouldBeRtl}). ` +
         'Restart the app to apply the new layout direction. ' +
         `(expo-updates not available: ${err})`

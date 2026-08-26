@@ -6,12 +6,12 @@
  *
  * Flow:
  *  1. expo-camera CameraView with barcode scanning enabled
- *  2. On Lucide.Scan: calls api.importDpp(qrPayload) → { item, dpp_data, source }
+ *  2. On Scan: calls api.importDpp(qrPayload) → { item, dpp_data, source }
  *  3. On success → navigates to ItemDetail of the newly created item
  *     (or goBack() if no item was created — parse error)
  *
  * Accessed via ClosetStack "DppScanner" route, typically triggered
- * from ClosetAdd or a floating "Lucide.Scan DPP" button.
+ * from ClosetAdd or a floating "Scan DPP" button.
  *
  * Navigation: registered in ClosetStack as "DppScanner"
  */
@@ -68,9 +68,9 @@ export function DppScannerScreen() {
         navigation.replace('ItemDetail', { itemId });
       } else {
         // parse_error or no item created
-        const errMsg = data?.parse_error ?? data?.message ?? t('dpp.noItemCreated', 'Could not create item from this QR code.');
+        const errMsg = data?.parse_error ?? data?.message ?? t('dpp.noItemCreated', { defaultValue: 'Could not create item from this QR code.' });
         Alert.alert(
-          t('dpp.scanResult', 'Lucide.Scan result'),
+          t('dpp.scanResult', { defaultValue: 'Scan result' }),
           errMsg,
           [{ text: 'OK', onPress: () => { setScanned(false); lastPayload.current = null; } }],
         );
@@ -78,7 +78,7 @@ export function DppScannerScreen() {
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { detail?: string } }; message?: string })
         ?.response?.data?.detail ?? (err as { message?: string })?.message ?? 'Import failed';
-      Alert.alert(t('common.error', 'Error'), msg, [
+      Alert.alert(t('common.error', { defaultValue: 'Error' }), msg, [
         { text: 'OK', onPress: () => { setScanned(false); lastPayload.current = null; } },
       ]);
     } finally {
@@ -93,13 +93,13 @@ export function DppScannerScreen() {
     return (
       <SafeAreaView style={[s.root, s.center]}>
         <Text style={s.permIcon}>📷</Text>
-        <Text style={s.permTitle}>{t('closetAdd.cameraPermTitle', 'Camera access needed')}</Text>
-        <Text style={s.permBody}>{t('dpp.cameraPermBody', 'Allow camera access to Lucide.Scan Digital Product Passport QR codes.')}</Text>
+        <Text style={s.permTitle}>{t('closetAdd.cameraPermTitle', { defaultValue: 'Camera access needed' })}</Text>
+        <Text style={s.permBody}>{t('dpp.cameraPermBody', { defaultValue: 'Allow camera access to scan Digital Product Passport QR codes.' })}</Text>
         <TouchableOpacity style={s.permBtn} onPress={requestPermission}>
-          <Text style={s.permBtnText}>{t('closetAdd.allowCamera', 'Allow camera')}</Text>
+          <Text style={s.permBtnText}>{t('closetAdd.allowCamera', { defaultValue: 'Allow camera' })}</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.cancelLink}>
-          <Text style={s.cancelLinkText}>{t('common.cancel', 'Cancel')}</Text>
+          <Text style={s.cancelLinkText}>{t('common.cancel', { defaultValue: 'Cancel' })}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -112,40 +112,39 @@ export function DppScannerScreen() {
         facing="back"
         barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
         onBarcodeScanned={scanned ? undefined : onBarcodeScanned}
-      >
-        {/* Dimmed overlay with clear Lucide.Scan window */}
-        <View style={s.overlay}>
-          {/* Top dim */}
-          <View style={[s.dimBand, { backgroundColor: 'rgba(0,0,0,0.55)' }]} />
-          {/* Middle row: left dim | Lucide.Scan box | right dim */}
-          <View style={s.middleRow}>
-            <View style={[s.dimSide, { backgroundColor: 'rgba(0,0,0,0.55)' }]} />
-            <View style={s.scanBox}>
-              {/* Corner brackets */}
-              <View style={[s.corner, s.cornerTL]} />
-              <View style={[s.corner, s.cornerTR]} />
-              <View style={[s.corner, s.cornerBL]} />
-              <View style={[s.corner, s.cornerBR]} />
-              {/* Animated scanning line */}
-              <View style={s.scanLine} />
-            </View>
-            <View style={[s.dimSide, { backgroundColor: 'rgba(0,0,0,0.55)' }]} />
+      />
+      {/* Dimmed overlay with clear scan window */}
+      <View style={s.overlay}>
+        {/* Top dim */}
+        <View style={[s.dimBand, { backgroundColor: 'rgba(0,0,0,0.55)' }]} />
+        {/* Middle row: left dim | scan box | right dim */}
+        <View style={s.middleRow}>
+          <View style={[s.dimSide, { backgroundColor: 'rgba(0,0,0,0.55)' }]} />
+          <View style={s.scanBox}>
+            {/* Corner brackets */}
+            <View style={[s.corner, s.cornerTL]} />
+            <View style={[s.corner, s.cornerTR]} />
+            <View style={[s.corner, s.cornerBL]} />
+            <View style={[s.corner, s.cornerBR]} />
+            {/* Animated scanning line */}
+            <View style={s.scanLine} />
           </View>
-          {/* Bottom dim */}
-          <View style={[s.dimBand, { backgroundColor: 'rgba(0,0,0,0.55)' }]}>
-            <Text style={s.hintText}>{t('dpp.hint', 'Point at a Digital Product Passport QR code')}</Text>
-            {scanning && (
-              <View style={s.processingRow}>
-                <ActivityIndicator color="#fff" size="small" />
-                <Text style={s.processingText}>{t('dpp.processing', 'Reading passport…')}</Text>
-              </View>
-            )}
-            <TouchableOpacity style={s.cancelBtn} onPress={() => navigation.goBack()}>
-              <Text style={s.cancelBtnText}>{t('common.cancel', 'Cancel')}</Text>
-            </TouchableOpacity>
-          </View>
+          <View style={[s.dimSide, { backgroundColor: 'rgba(0,0,0,0.55)' }]} />
         </View>
-      </CameraView>
+        {/* Bottom dim */}
+        <View style={[s.dimBand, { backgroundColor: 'rgba(0,0,0,0.55)' }]}>
+          <Text style={s.hintText}>{t('dpp.hint', { defaultValue: 'Point at a Digital Product Passport QR code' })}</Text>
+          {scanning && (
+            <View style={s.processingRow}>
+              <ActivityIndicator color="#fff" size="small" />
+              <Text style={s.processingText}>{t('dpp.processing', { defaultValue: 'Reading passport…' })}</Text>
+            </View>
+          )}
+          <TouchableOpacity style={s.cancelBtn} onPress={() => navigation.goBack()}>
+            <Text style={s.cancelBtnText}>{t('common.cancel', { defaultValue: 'Cancel' })}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }

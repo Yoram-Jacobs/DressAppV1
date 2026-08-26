@@ -600,7 +600,12 @@ async def create_item(
         # Map our fine-grained GarmentCondition to the simpler Listing condition.
         cond_map = {"excellent": "like_new", "good": "good", "fair": "fair", "bad": "fair"}
         listing_condition = cond_map.get(payload.condition or "", "good")
-        cover_image = doc.get("original_image_url") or doc.get("segmented_image_url")
+        cover_image = (
+            doc.get("clean_image_url")
+            or doc.get("segmented_image_url")
+            or doc.get("original_image_url")
+        )
+
         listing = Listing(
             closet_item_id=doc["id"],
             seller_id=user["id"],
@@ -641,6 +646,15 @@ async def create_item(
         logger.warning("Pre-generating thumbnail in create_item failed: %s", exc)
 
     await repos.insert(db.closet_items, doc)
+    # Drop analysis-phase temporaries immediately after save.
+    # original_image_url (raw upload) and segmented_image_url (SegFormer crop)
+    # are only needed during the /analyze pipeline, which completes before the
+    # user confirms saving. clean_image_url (rembg transparent PNG, set by the
+    # background matte task a few seconds later) is the sole display image.
+    await db.closet_items.update_one(
+        {"id": doc["id"]},
+        {"$unset": {"original_image_url": "", "segmented_image_url": ""}},
+    )
 
     if payload.in_suitcase:
         active_s = await db.suitcases.find_one({"user_id": user["id"], "status": {"$ne": "completed"}})
@@ -778,8 +792,8 @@ async def preflight_duplicates(
             "sub_category": 1,
             "color": 1,
             "thumbnail_data_url": 1,
-            "segmented_image_url": 1,
-            "original_image_url": 1,
+            "clean_image_url": 1,
+            "image_variants": 1,
             "source_sha256": 1,
             "source_phash": 1,
             "source_color_sig": 1,
@@ -828,24 +842,14 @@ async def preflight_duplicates(
             backfill_remaining += 1
             continue
         src = (
-            # Phase Z2.3 — ground-truth-first source priority.
-            # The lazy backfill used to prefer ``thumbnail_data_url``
-            # because it's the cheapest to decode, but that thumbnail
-            # is a ~15 KB downscaled centre-crop produced by
-            # ``_thumbs.backfill_thumbnails``. Phash + colour-sig
-            # computed from THAT image describe "a downscaled blob of
-            # a white-ish thing", not the user's actual upload, and
-            # collide trivially for any two white garments. The
-            # in-store duplicate detector then trusts those poisoned
-            # hashes as ground truth and hallucinates duplicates.
-            #
-            # We now require an authoritative source (original or
-            # full-resolution segmented cutout) and **skip** items
-            # that only have a thumbnail. A None phash is safe
-            # (``is_duplicate_match`` returns False on None); a
-            # thumbnail-derived phash is not.
-            row.get("original_image_url")
-            or row.get("segmented_image_url")
+            # Use the clean-cut rembg image as the authoritative fingerprint
+            # source. This is the image the user sees in the closet and is more
+            # representative than the raw upload or the intermediate SegFormer
+            # crop. Thumbnail-derived hashes are still avoided (see Z2.3 note
+            # above) — clean_image_url is the best single-source ground truth.
+            # Fall back to CDN variants for items where matte hasn't run yet.
+            row.get("clean_image_url")
+            or (row.get("image_variants") or {}).get("original")
         )
         if not src:
             continue
@@ -2021,14 +2025,12 @@ async def _run_reanalyze_items(
         try:
             variants = item_doc.get("image_variants") or {}
             image_url = (
-                item_doc.get("segmented_image_url")
+                item_doc.get("clean_image_url")
                 or item_doc.get("cutout_url")
-                or item_doc.get("clean_image_url")
                 or (variants.get("webp") or {}).get("large")
                 or (variants.get("webp") or {}).get("medium")
                 or item_doc.get("reconstructed_image_url")
                 or variants.get("original")
-                or item_doc.get("original_image_url")
                 or item_doc.get("image_url")
             )
             if not image_url:
@@ -2166,8 +2168,10 @@ async def save_migration_crops(
             brand=payload.app_name,
         )
         doc = item.model_dump()
-        doc["segmented_image_url"] = crop_data_url
-        doc["original_image_url"] = crop_data_url
+        # For imported items the crop is the only available image.
+        # Store it as clean_image_url (the primary display field) so the
+        # item renders immediately in the closet without waiting for rembg.
+        doc["clean_image_url"] = crop_data_url
 
         # Compute phash for future dedup
         try:
@@ -3938,22 +3942,21 @@ async def clean_item_background(
         }
 
     crop_url = (
-        item.get("segmented_image_url")
+        item.get("clean_image_url")
         or (item.get("image_variants") or {}).get("webp", {}).get("large")
         or (item.get("image_variants") or {}).get("webp", {}).get("medium")
-        or item.get("original_image_url")
         or (item.get("image_variants") or {}).get("original")
     )
     if not crop_url:
         raise HTTPException(
             400, "Item has no cropped image to matte. Re-analyze the item first."
         )
-    
     crop_bytes = await _read_image_bytes_from_url(crop_url)
     if not crop_bytes:
         raise HTTPException(
             400, "Failed to retrieve the item image for background matting."
         )
+
 
     from app.services import clothing_parser as _cp
 
@@ -4260,19 +4263,16 @@ async def reanalyze_item(
     if not item:
         raise HTTPException(404, "Item not found")
 
-    # Prefer the matted/segmented crop because that's what's visible to
-    # the user in the closet — analysing the same pixels they're
-    # looking at avoids surprises. Fall back to original or transcoded variants.
+    # Prefer the clean-cut rembg image (what the user sees in the closet).
+    # Fall back through CDN variants and legacy fields for older items.
     variants = item.get("image_variants") or {}
     image_url: str | None = (
-        item.get("segmented_image_url")
+        item.get("clean_image_url")
         or item.get("cutout_url")
-        or item.get("clean_image_url")
         or (variants.get("webp") or {}).get("large")
         or (variants.get("webp") or {}).get("medium")
         or item.get("reconstructed_image_url")
         or variants.get("original")
-        or item.get("original_image_url")
         or item.get("image_url")
     )
     if not image_url:
@@ -4405,13 +4405,11 @@ async def chat_analyse_item(
     variants = item.get("image_variants") or {}
     image_url: str | None = (
         item.get("reconstructed_image_url")
-        or item.get("segmented_image_url")
-        or item.get("cutout_url")
         or item.get("clean_image_url")
+        or item.get("cutout_url")
         or (variants.get("webp") or {}).get("large")
         or (variants.get("webp") or {}).get("medium")
         or variants.get("original")
-        or item.get("original_image_url")
         or item.get("image_url")
     )
     if not image_url:
@@ -4622,14 +4620,12 @@ async def repair_item_image(
             f"{analysis.get('item_type') or ''} — {hint}"
         ).strip(" —")
 
-    # Use the segmented image as the visual conditioning when present so
-    # HF has SOME pixels to look at; otherwise we still fall back to the
-    # original crop or an empty byte string (text-to-image path).
+    # Use the clean-cut rembg image for visual conditioning (what the user sees
+    # in the closet); fall back to CDN variants if matte hasn't run yet.
     crop_url = (
-        item.get("segmented_image_url")
+        item.get("clean_image_url")
         or (item.get("image_variants") or {}).get("webp", {}).get("large")
         or (item.get("image_variants") or {}).get("webp", {}).get("medium")
-        or item.get("original_image_url")
         or (item.get("image_variants") or {}).get("original")
     )
     crop_bytes = await _read_image_bytes_from_url(crop_url) if crop_url else b""
@@ -5834,10 +5830,9 @@ async def edit_item_image(
         raise HTTPException(404, "Item not found")
     variants = item.get("image_variants") or {}
     source_url = (
-        item.get("segmented_image_url")
+        item.get("clean_image_url")
         or (variants.get("webp") or {}).get("large")
         or (variants.get("webp") or {}).get("medium")
-        or item.get("original_image_url")
         or variants.get("original")
     )
     if not source_url:

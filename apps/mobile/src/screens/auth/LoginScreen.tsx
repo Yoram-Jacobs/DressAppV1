@@ -55,51 +55,119 @@ export default function LoginScreen() {
 
   const [busy, setBusy] = useState(false);
 
+  // ── Process OAuth token from URL (either openAuthSessionAsync or OS deep link) ──
+  const processAuthUrl = async (url: string) => {
+    if (!url) return false;
+    try {
+      console.log('[LoginScreen] Processing auth URL:', url);
+      let token: string | null = null;
+      let errCode: string | null = null;
+
+      if (url.includes('#')) {
+        const fragment = url.split('#')[1] ?? '';
+        const params = new URLSearchParams(fragment);
+        token = params.get('token');
+        errCode = params.get('error');
+      }
+      if (!token && url.includes('?')) {
+        const query = url.split('?')[1]?.split('#')[0] ?? '';
+        const params = new URLSearchParams(query);
+        token = params.get('token');
+        errCode = params.get('error');
+      }
+
+      // Regex fallback if query parser missed it
+      if (!token) {
+        const tokenMatch = url.match(/[?&#]token=([^&#]+)/);
+        if (tokenMatch) token = decodeURIComponent(tokenMatch[1]);
+      }
+      if (!errCode) {
+        const errMatch = url.match(/[?&#]error=([^&#]+)/);
+        if (errMatch) errCode = decodeURIComponent(errMatch[1]);
+      }
+
+      if (errCode) {
+        Alert.alert(t('common.error', { defaultValue: 'Error' }), errCode);
+        return true;
+      }
+      if (token) {
+        try {
+          WebBrowser.dismissBrowser();
+        } catch {}
+        await tokenStore.set(token);
+        emitAuthChange(true);
+        return true;
+      }
+    } catch (e) {
+      console.warn('[LoginScreen] processAuthUrl error:', e);
+    }
+    return false;
+  };
+
+  // ── Deep link listener ───────────────────────────────────────────────────
+  React.useEffect(() => {
+    // Check initial cold launch URL
+    Linking.getInitialURL().then((url) => {
+      if (url) processAuthUrl(url);
+    });
+
+    // Listen for incoming URLs while app is open
+    const sub = Linking.addEventListener('url', ({ url }) => {
+      if (url) processAuthUrl(url);
+    });
+
+    return () => sub.remove();
+  }, []);
+
   // ── Google OAuth flow ─────────────────────────────────────────────────────
   const handleGoogleSignIn = async () => {
     if (busy) return;
     setBusy(true);
     try {
-      // BUG FIX: auth.js returns the parsed body directly (not an axios
-      // response wrapper), so `const { data } = ...` gave data=undefined.
       const data = await api.googleLoginStart({ mobile: true });
       if (!data?.authorization_url) {
         throw new Error('No authorization URL returned from server.');
       }
 
-      // Use Linking.createURL to get the correct return URL for the
-      // current build type (dev client vs standalone vs Expo Go).
       const returnUrl = Linking.createURL('auth/callback');
       console.log('[LoginScreen] OAuth returnUrl:', returnUrl);
       console.log('[LoginScreen] Opening authorization_url:', data.authorization_url.substring(0, 100));
 
-      // Opens Google's consent screen in Chrome Custom Tab.
-      // Backend (mobile=true) redirects to dressapp://auth/callback#token=...
-      // openAuthSessionAsync intercepts the dressapp:// URL and returns it.
       const result = await WebBrowser.openAuthSessionAsync(
         data.authorization_url,
         returnUrl,
       );
 
       if (result.type === 'success' && result.url) {
-        const fragment = result.url.split('#')[1] ?? '';
-        const params  = new URLSearchParams(fragment);
-        const token   = params.get('token');
-        const errCode = params.get('error');
-
-        if (errCode) throw new Error(errCode);
-        if (!token)  throw new Error('No token received from sign-in.');
-
-        await tokenStore.set(token);
-        emitAuthChange(true);
+        await processAuthUrl(result.url);
       }
-      // result.type === 'cancel' | 'dismiss': user closed browser — silent.
     } catch (err: unknown) {
       const detail =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
         ?? (err as { message?: string })?.message
-        ?? t('auth.signInError', 'Sign-in failed. Please try again.');
-      Alert.alert(t('common.error', 'Error'), detail);
+        ?? t('auth.signInError', { defaultValue: 'Sign-in failed. Please try again.' });
+      Alert.alert(t('common.error', { defaultValue: 'Error' }), detail);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // ── Guest / Demo Sign In ──────────────────────────────────────────────────
+  const handleGuestSignIn = async () => {
+    setBusy(true);
+    try {
+      const res = await api.devBypass();
+      if (res?.access_token) {
+        await tokenStore.set(res.access_token);
+        emitAuthChange(true);
+      } else {
+        throw new Error('No token received from dev bypass.');
+      }
+    } catch (err: any) {
+      Alert.alert(
+        t('common.error', { defaultValue: 'Error' }),
+        err?.response?.data?.detail || err?.message || t('auth.guestLoginError', { defaultValue: 'Failed to continue as guest.' })
+      );
     } finally {
       setBusy(false);
     }
@@ -123,13 +191,13 @@ export default function LoginScreen() {
             <Text style={s.brandName} accessibilityRole="header">
               DressApp
             </Text>
-            <Text style={s.tagline}>{t('auth.tagline', 'Your AI wardrobe')}</Text>
+            <Text style={s.tagline}>{t('auth.tagline', { defaultValue: 'Your AI wardrobe' })}</Text>
           </View>
 
           {/* ── Card ─────────────────────────────────────────────────── */}
           <View style={s.card}>
-            <Text style={s.heading}>{t('auth.welcomeBack', 'Welcome back')}</Text>
-            <Text style={s.sub}>{t('auth.signInSub', 'Sign in to continue to DressApp')}</Text>
+            <Text style={s.heading}>{t('auth.welcomeBack', { defaultValue: 'Welcome back' })}</Text>
+            <Text style={s.sub}>{t('auth.signInSub', { defaultValue: 'Sign in to continue to DressApp' })}</Text>
 
             {/* Google button */}
             <Button
@@ -145,13 +213,25 @@ export default function LoginScreen() {
               contentStyle={s.googleBtnContent}
               labelStyle={s.googleBtnLabel}
             >
-              {t('auth.continueWithGoogle', 'Continue with Google')}
+              {t('auth.continueWithGoogle', { defaultValue: 'Continue with Google' })}
+            </Button>
+
+            {/* Guest / Explore button */}
+            <Button
+              testID="login-guest-button"
+              mode="contained-tonal"
+              onPress={handleGuestSignIn}
+              disabled={busy}
+              style={{ marginTop: spacing[3], borderRadius: radii.md }}
+              contentStyle={{ height: 44 }}
+            >
+              {t('auth.continueAsGuest', { defaultValue: 'Explore as Guest' })}
             </Button>
 
             {/* Divider */}
             <View style={s.dividerRow}>
               <View style={s.dividerLine} />
-              <Text style={s.dividerText}>{t('common.or', 'or')}</Text>
+              <Text style={s.dividerText}>{t('common.or', { defaultValue: 'or' })}</Text>
               <View style={s.dividerLine} />
             </View>
 
@@ -163,12 +243,12 @@ export default function LoginScreen() {
               labelStyle={s.ghostLabel}
               style={s.ghostBtn}
             >
-              {t('auth.noAccount', "Don't have an account? Register")}
+              {t('auth.noAccount', { defaultValue: "Don't have an account? Register" })}
             </Button>
           </View>
 
           {/* ── Editorial footnote ───────────────────────────────────── */}
-          <Text style={s.editorial}>{t('auth.editorial', '')}</Text>
+          <Text style={s.editorial}>{t('auth.editorial', { defaultValue: '' })}</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

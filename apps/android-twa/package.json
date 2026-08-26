@@ -11,6 +11,9 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@bubblewrap/cli": "^1.24.1"
+    "@bubblewrap/cli": "^1.24.1",
+    "nativewind": "5.0.0-preview.2",
+    "react-native-css": "0.0.0-nightly.5ce6396",
+    "tailwindcss": "^4"
   }
 }

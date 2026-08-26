@@ -124,121 +124,221 @@ async def _cleanup_expired_trials_job() -> None:
 
 def _generate_fallback_advice(
     closet_items: list[dict[str, Any]], 
-    style_dress_for: str,
+    style_dress_for: str | None = None,
     weather_ctx: dict[str, Any] | None = None
 ) -> dict[str, Any]:
-    """Generate outfit recommendations based on closet items and user preferences, with multilingual support."""
-    import re
-    
-    def _check_words(text: str, tags: list[str], target_patterns: list[str]) -> bool:
-        for pat in target_patterns:
-            if any(pat == tag or f" {pat} " in f" {tag} " or tag.startswith(f"{pat} ") or tag.endswith(f"{pat}") for tag in tags):
-                return True
-            if re.search(r'\b' + re.escape(pat) + r'\b', text.lower()):
-                return True
-        return False
-    
-    # Style key normalization
-    style_key = style_dress_for.lower().strip() if style_dress_for else ""
-    
-    # Multilingual synonyms map (simplified)
-    style_synonyms = {
-        "casual": ["casual", "daily"],
-        "formal": ["formal", "business", "dressy"],
-        "sporty": ["sporty", "athletic", "workout"],
-        "work": ["work", "office", "professional"],
-    }
-    syns = style_synonyms.get(style_key, [style_key])
-    
-    # Weather matching
-    temp_c = weather_ctx.get("temp_c") if weather_ctx else None
-    is_rainy = any(w in (weather_ctx.get("condition", "") or "").lower() for w in ["rain", "shower", "storm", "drizzle"]) if weather_ctx else False
-    
-    # Compute matching score for each closet item
-    recs = []
-    
+    """Generate outfit recommendations based on closet items and user preferences, with strict category validation."""
     if not closet_items:
         return {
             "reasoning_summary": "No clothing items available in closet.",
             "outfit_recommendations": []
         }
-        
-    # Find best top, bottom, shoes combinations
-    all_outfits = []
-    
-    for top in closet_items:
-        for bottom in closet_items:
-            if top.get("category") == bottom.get("category"):
-                continue
-            for shoe in closet_items:
-                if shoe.get("category") in ["top", "bottom"] or shoe.get("id") == top.get("id") or shoe.get("id") == bottom.get("id"):
-                    continue
-                
-                # Simple scoring
-                score = 0
-                
-                # Check style match for top
-                for tag in top.get("tags", []):
-                    if any(s in tag.lower() for s in syns):
-                        score += 10
-                        break
-                
-                # Check style match for bottom
-                for tag in bottom.get("tags", []):
-                    if any(s in tag.lower() for s in syns):
-                        score += 10
-                        break
-                
-                # Weather adjustments
-                if temp_c is not None:
-                    if temp_c < 15 and top.get("category") == "jacket":
-                        score += 15
-                    elif temp_c >= 28 and top.get("category") == "tshirt":
-                        score += 10
-                
-                outfit = {
-                    "name": f"Outfit with {top.get('title', 'top')} and {bottom.get('title', 'bottom')}",
-                    "items": [
-                        {"role": "top", "title": top.get("title", "Top"), "closet_item_id": top.get("id")},
-                        {"role": "bottom", "title": bottom.get("title", "Bottom"), "closet_item_id": bottom.get("id")},
-                        {"role": "shoes", "title": shoe.get("title", "Shoes"), "closet_item_id": shoe.get("id")}
-                    ],
-                    "why": f"Recommended based on {style_dress_for} style preference",
-                    "confidence": min(0.95, 0.7 + score / 100),
-                    "_score": score
-                }
-                all_outfits.append(outfit)
 
-    # Sort combinations by score descending
+    from app.services.stylist_scheduler_brain import norm_category, matches_style_func, matches_season_func
+
+    clean_items = []
+    for it in closet_items:
+        c = dict(it)
+        if "_id" in c:
+            c.pop("_id")
+        clean_items.append(c)
+
+    # Determine target season
+    target_season = None
+    if weather_ctx:
+        temp = weather_ctx.get("temp_c")
+        if temp is not None:
+            if temp >= 23:
+                target_season = "summer"
+            elif temp <= 15:
+                target_season = "winter"
+            else:
+                target_season = "spring"
+
+    # Bucket items strictly by normalized category
+    tops = [it for it in clean_items if norm_category(it.get("category")) == "top"]
+    bottoms = [it for it in clean_items if norm_category(it.get("category")) == "bottom"]
+    shoes = [it for it in clean_items if norm_category(it.get("category")) == "shoes"]
+    dresses = [it for it in clean_items if norm_category(it.get("category")) == "dress"]
+    outerwear = [it for it in clean_items if norm_category(it.get("category")) == "outerwear"]
+    accessories = [it for it in clean_items if norm_category(it.get("category")) == "accessory"]
+
+    # Check if there is at least one exact case-insensitive tag match in the user's closet
+    has_exact_tag_match = False
+    if style_dress_for:
+        style_clean = style_dress_for.strip().lower()
+        for it in clean_items:
+            it_tags = [t.lower() for t in (it.get("tags") or [])]
+            it_custom = [t.lower() for t in (it.get("custom_tags") or [])]
+            if style_clean in it_tags or style_clean in it_custom:
+                has_exact_tag_match = True
+                break
+
+    # Score item helper
+    def score_item(it: dict) -> int:
+        score = 0
+        if matches_style_func(it, style_dress_for, has_exact_tag_match):
+            score += 10
+        if matches_season_func(it, target_season):
+            score += 5
+        return score
+
+    # Sort each bucket by score descending
+    tops.sort(key=score_item, reverse=True)
+    bottoms.sort(key=score_item, reverse=True)
+    shoes.sort(key=score_item, reverse=True)
+    dresses.sort(key=score_item, reverse=True)
+    outerwear.sort(key=score_item, reverse=True)
+    accessories.sort(key=score_item, reverse=True)
+
+    all_outfits = []
+
+    # 1. Two-Piece outfits (Top + Bottom + Shoes, with optional Accessory)
+    for top in tops:
+        for bottom in bottoms:
+            if top.get("id") == bottom.get("id"):
+                continue
+            used_ids = {top.get("id"), bottom.get("id")}
+            outfit_shoes = [s for s in shoes if s.get("id") not in used_ids]
+            chosen_shoe = outfit_shoes[0] if outfit_shoes else None
+            if chosen_shoe:
+                used_ids.add(chosen_shoe.get("id"))
+
+            outfit_accs = [a for a in accessories if a.get("id") not in used_ids]
+            chosen_acc = outfit_accs[0] if outfit_accs else None
+
+            score = (
+                score_item(top)
+                + score_item(bottom)
+                + (score_item(chosen_shoe) if chosen_shoe else 0)
+                + (score_item(chosen_acc) if chosen_acc else 0)
+            )
+            items = [
+                {
+                    "role": "top",
+                    "title": top.get("title") or top.get("name") or "Top",
+                    "description": top.get("title") or top.get("name") or "Top",
+                    "closet_item_id": top.get("id")
+                },
+                {
+                    "role": "bottom",
+                    "title": bottom.get("title") or bottom.get("name") or "Bottom",
+                    "description": bottom.get("title") or bottom.get("name") or "Bottom",
+                    "closet_item_id": bottom.get("id")
+                },
+            ]
+            if chosen_shoe:
+                items.append({
+                    "role": "shoes",
+                    "title": chosen_shoe.get("title") or chosen_shoe.get("name") or "Shoes",
+                    "description": chosen_shoe.get("title") or chosen_shoe.get("name") or "Shoes",
+                    "closet_item_id": chosen_shoe.get("id")
+                })
+            if chosen_acc:
+                items.append({
+                    "role": "accessory",
+                    "title": chosen_acc.get("title") or chosen_acc.get("name") or "Accessory",
+                    "description": chosen_acc.get("title") or chosen_acc.get("name") or "Accessory",
+                    "closet_item_id": chosen_acc.get("id")
+                })
+
+            top_title = top.get("title") or top.get("name") or "Top"
+            bottom_title = bottom.get("title") or bottom.get("name") or "Bottom"
+            all_outfits.append({
+                "name": f"Outfit with {top_title} and {bottom_title}",
+                "items": items,
+                "why": f"Recommended based on {style_dress_for or 'casual'} style preference",
+                "confidence": min(0.95, 0.7 + score / 100),
+                "_score": score,
+            })
+
+    # 2. One-Piece outfits (Dress / Overall / Suit / Jumpsuit + Shoes, with optional Accessory)
+    for dress in dresses:
+        used_ids = {dress.get("id")}
+        outfit_shoes = [s for s in shoes if s.get("id") not in used_ids]
+        chosen_shoe = outfit_shoes[0] if outfit_shoes else None
+        if chosen_shoe:
+            used_ids.add(chosen_shoe.get("id"))
+
+        outfit_accs = [a for a in accessories if a.get("id") not in used_ids]
+        chosen_acc = outfit_accs[0] if outfit_accs else None
+
+        score = (
+            score_item(dress) * 2
+            + (score_item(chosen_shoe) if chosen_shoe else 0)
+            + (score_item(chosen_acc) if chosen_acc else 0)
+        )
+        items = [
+            {
+                "role": "dress",
+                "title": dress.get("title") or dress.get("name") or "One-Piece",
+                "description": dress.get("title") or dress.get("name") or "One-Piece",
+                "closet_item_id": dress.get("id")
+            },
+        ]
+        if chosen_shoe:
+            items.append({
+                "role": "shoes",
+                "title": chosen_shoe.get("title") or chosen_shoe.get("name") or "Shoes",
+                "description": chosen_shoe.get("title") or chosen_shoe.get("name") or "Shoes",
+                "closet_item_id": chosen_shoe.get("id")
+            })
+        if chosen_acc:
+            items.append({
+                "role": "accessory",
+                "title": chosen_acc.get("title") or chosen_acc.get("name") or "Accessory",
+                "description": chosen_acc.get("title") or chosen_acc.get("name") or "Accessory",
+                "closet_item_id": chosen_acc.get("id")
+            })
+
+        dress_title = dress.get("title") or dress.get("name") or "Outfit"
+        all_outfits.append({
+            "name": f"Outfit with {dress_title}",
+            "items": items,
+            "why": f"Recommended based on {style_dress_for or 'casual'} style preference",
+            "confidence": min(0.95, 0.7 + score / 100),
+            "_score": score,
+        })
+
     all_outfits.sort(key=lambda x: x["_score"], reverse=True)
 
     seen_combos = set()
+    recs = []
     for o in all_outfits:
-        item_ids = tuple(sorted([item["closet_item_id"] for item in o["items"]]))
-        if item_ids not in seen_combos:
+        item_ids = tuple(sorted([item["closet_item_id"] for item in o["items"] if item.get("closet_item_id")]))
+        if item_ids and item_ids not in seen_combos:
             seen_combos.add(item_ids)
             o.pop("_score", None)
             recs.append(o)
             if len(recs) >= 3:
                 break
-    
-    # Fallback outfit if no combination found
+
+    # Fallback if no full combination found, build the best possible complete outfit
     if not recs:
-        top = closet_items[0] if any(i.get("category") == "top" for i in closet_items) else closet_items[0]
-        bottom = next((i for i in closet_items if i.get("category") == "bottom"), closet_items[1] if len(closet_items) > 1 else closet_items[0])
-        shoe = closet_items[2] if len(closet_items) > 2 else closet_items[0]
+        items = []
+        if tops:
+            t = tops[0]
+            items.append({"role": "top", "title": t.get("title") or "Top", "description": t.get("title") or "Top", "closet_item_id": t["id"]})
+        elif dresses:
+            d = dresses[0]
+            items.append({"role": "dress", "title": d.get("title") or "Dress", "description": d.get("title") or "Dress", "closet_item_id": d["id"]})
         
-        recs.append({
-            "name": "Default outfit recommendation",
-            "items": [
-                {"role": "top", "title": top.get("title", "Top"), "closet_item_id": top.get("id")},
-                {"role": "bottom", "title": bottom.get("title", "Bottom"), "closet_item_id": bottom.get("id")},
-                {"role": "shoes", "title": shoe.get("title", "Shoes"), "closet_item_id": shoe.get("id")}
-            ],
-            "why": "Default outfit based on available items",
-            "confidence": 0.7,
-        })
-    
+        if bottoms and not dresses:
+            b = bottoms[0]
+            items.append({"role": "bottom", "title": b.get("title") or "Bottom", "description": b.get("title") or "Bottom", "closet_item_id": b["id"]})
+
+        if shoes:
+            sh = shoes[0]
+            items.append({"role": "shoes", "title": sh.get("title") or "Shoes", "description": sh.get("title") or "Shoes", "closet_item_id": sh["id"]})
+
+        if items:
+            recs.append({
+                "name": "Daily outfit suggestion",
+                "items": items,
+                "why": "Curated suggestion based on available items in your closet",
+                "confidence": 0.7,
+            })
+
     return {
         "reasoning_summary": f"Here are outfit recommendations curated from your closet for: {style_dress_for or 'casual'}.",
         "outfit_recommendations": recs

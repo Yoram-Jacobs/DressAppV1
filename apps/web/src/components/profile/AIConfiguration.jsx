@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Loader2, Key, Coins, Info, ExternalLink } from 'lucide-react';
 
 const PROVIDERS = [
-  { id: 'google_ai', name: 'Google Gemini', defaultModel: 'gemini-2.5-flash', models: ['gemini-2.5-flash', 'gemini-2.5-pro'] },
+  { id: 'google_ai', name: 'Google Gemini', defaultModel: 'gemini-3.5-flash', models: ['gemini-3.5-flash', 'gemini-3.5-pro'] },
   { id: 'openai', name: 'OpenAI ChatGPT', defaultModel: 'gpt-4o-mini', models: ['gpt-4o-mini', 'gpt-4o'] },
   { id: 'anthropic', name: 'Anthropic Claude', defaultModel: 'claude-3-5-haiku', models: ['claude-3-5-haiku', 'claude-3-5-sonnet'] },
   { id: 'deepseek', name: 'DeepSeek', defaultModel: 'deepseek-chat', models: ['deepseek-chat', 'deepseek-coder'] },

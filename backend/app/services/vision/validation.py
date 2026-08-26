@@ -47,7 +47,20 @@ _VALID_DRESS_CODE = {
 }
 _VALID_PATTERN = {
     "solid", "striped", "plaid", "floral", "herringbone",
-    "polka", "paisley", "geometric", "abstract",
+    "polka", "polka-dot", "polka_dot", "paisley", "geometric",
+    "animal_print", "animal-print", "graphic", "tie_dye", "tie-dye", "abstract",
+}
+_PATTERN_ALIASES = {
+    "polka-dot": "polka_dot",
+    "polka": "polka_dot",
+    "animal-print": "animal_print",
+    "tie-dye": "tie_dye",
+    "print": "graphic",
+    "graphic-print": "graphic",
+    "text": "graphic",
+    "slogan": "graphic",
+    "lettering": "graphic",
+    "logo": "graphic",
 }
 
 
@@ -148,7 +161,9 @@ def _coerce_enums(parsed: dict[str, Any]) -> dict[str, Any]:
     _coerce_enum_field(
         parsed, "quality", _VALID_QUALITY, aliases=_QUALITY_ALIASES,
     )
-    _coerce_enum_field(parsed, "pattern", _VALID_PATTERN)
+    _coerce_enum_field(
+        parsed, "pattern", _VALID_PATTERN, aliases=_PATTERN_ALIASES,
+    )
     _coerce_seasons(parsed)
     return parsed
 

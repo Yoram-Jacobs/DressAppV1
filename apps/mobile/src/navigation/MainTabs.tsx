@@ -13,9 +13,11 @@
  */
 
 import React from 'react';
-import { TouchableOpacity, View, StyleSheet } from 'react-native';
+import { TouchableOpacity, View, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { useTheme } from '@mobile/theme';
 import { fonts } from '@mobile/theme/tokens';
@@ -35,34 +37,58 @@ const Tab = createBottomTabNavigator<MainTabsParamList>();
 const EmptyScreen = () => <View style={{ flex: 1 }} />;
 
 // Floating capture FAB (centre tab placeholder)
-function CaptureFab() {
+function CaptureFab(props: any) {
   const nav = useNavigation<any>();
   const { colors } = useTheme();
   return (
-    <TouchableOpacity
-      style={[styles.fab, { backgroundColor: colors.accent }]}
-      onPress={() =>
-        nav.navigate('ClosetTab', {
-          screen: 'ClosetAdd',
-          params: { source: 'camera' },
-        })
-      }
-      accessibilityRole="button"
-      accessibilityLabel="Add clothing item"
-    >
-      <Icon source="camera" size={28} color="#fff" />
-    </TouchableOpacity>
+    <View style={[props.style, { alignItems: 'center', justifyContent: 'center' }]} pointerEvents="box-none">
+      <TouchableOpacity
+        style={[
+          styles.fab,
+          {
+            backgroundColor: colors.accent,
+            marginBottom: Math.max(props.bottomInset || 0, 4) + 12,
+          },
+        ]}
+        onPress={() =>
+          nav.navigate('ClosetTab', {
+            screen: 'ClosetAdd',
+            params: { source: 'camera' },
+          })
+        }
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel="Add clothing item"
+      >
+        <Icon source="camera" size={26} color="#fff" />
+      </TouchableOpacity>
+    </View>
   );
 }
 
 // Tab icon helper
 function tabIcon(source: string, focused: boolean, color: string) {
-  return <Icon source={focused ? source : `${source}-outline`} size={24} color={color} />;
+  let iconName = source;
+  if (source === 'hanger') {
+    iconName = 'hanger';
+  } else if (source === 'stylist') {
+    iconName = focused ? 'creation' : 'creation-outline';
+  } else if (source === 'market') {
+    iconName = focused ? 'store' : 'store-outline';
+  } else if (source === 'me') {
+    iconName = focused ? 'account' : 'account-outline';
+  } else {
+    iconName = focused ? source : `${source}-outline`;
+  }
+  return <Icon source={iconName} size={22} color={color} />;
 }
 
 // Main Tabs Navigator
 export function MainTabs() {
+  const { t } = useTranslation();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, 0);
 
   return (
     <Tab.Navigator
@@ -74,14 +100,23 @@ export function MainTabs() {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
           borderTopWidth: StyleSheet.hairlineWidth,
-          paddingBottom: 4,
-          paddingTop: 4,
-          height: 60,
+          paddingBottom: bottomInset > 0 ? bottomInset + 4 : 8,
+          paddingTop: 8,
+          height: 60 + bottomInset,
+          elevation: 12,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 6,
         },
         tabBarLabelStyle: {
           fontFamily: fonts.bodyMedium,
-          fontSize: 11,
+          fontSize: 10.5,
           marginTop: 2,
+        },
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          alignItems: 'center',
         },
       }}
     >
@@ -89,7 +124,7 @@ export function MainTabs() {
         name="ClosetTab"
         component={ClosetStack}
         options={{
-          tabBarLabel: 'Closet',
+          tabBarLabel: t('nav.closet', { defaultValue: 'Closet' }),
           tabBarIcon: ({ focused, color }) => tabIcon('hanger', focused, color),
         }}
       />
@@ -97,8 +132,8 @@ export function MainTabs() {
         name="StylistTab"
         component={StylistStack}
         options={{
-          tabBarLabel: 'Stylist',
-          tabBarIcon: ({ focused, color }) => tabIcon('auto-fix', focused, color),
+          tabBarLabel: t('nav.stylist', { defaultValue: 'Stylist' }),
+          tabBarIcon: ({ focused, color }) => tabIcon('stylist', focused, color),
         }}
       />
       <Tab.Screen
@@ -106,7 +141,7 @@ export function MainTabs() {
         component={EmptyScreen}
         options={{
           tabBarLabel: '',
-          tabBarButton: () => <CaptureFab />,
+          tabBarButton: (props) => <CaptureFab {...props} bottomInset={bottomInset} />,
         }}
         listeners={() => ({
           tabPress: (e) => {
@@ -118,16 +153,16 @@ export function MainTabs() {
         name="MarketTab"
         component={MarketStack}
         options={{
-          tabBarLabel: 'Market',
-          tabBarIcon: ({ focused, color }) => tabIcon('store', focused, color),
+          tabBarLabel: t('nav.market', { defaultValue: 'Market' }),
+          tabBarIcon: ({ focused, color }) => tabIcon('market', focused, color),
         }}
       />
       <Tab.Screen
         name="MeTab"
         component={MeStack}
         options={{
-          tabBarLabel: 'Me',
-          tabBarIcon: ({ focused, color }) => tabIcon('account', focused, color),
+          tabBarLabel: t('nav.me', { defaultValue: 'Me' }),
+          tabBarIcon: ({ focused, color }) => tabIcon('me', focused, color),
         }}
       />
     </Tab.Navigator>
@@ -136,16 +171,15 @@ export function MainTabs() {
 
 const styles = StyleSheet.create({
   fab: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
-    elevation: 6,
+    elevation: 8,
   },
 });

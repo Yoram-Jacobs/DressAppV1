@@ -1,0 +1,124 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+
+/* Platform-specific font families */
+@media android {
+  :root {
+    --font-mono: monospace;
+    --font-rounded: normal;
+    --font-serif: serif;
+    --font-sans: normal;
+  }
+}
+
+@media ios {
+  :root {
+    --font-mono: ui-monospace;
+    --font-serif: ui-serif;
+    --font-sans: system-ui;
+    --font-rounded: ui-rounded;
+  }
+}
+
+/* DressApp Theme Colors & Tokens */
+:root {
+  --background: #FAF8F5;
+  --foreground: #1D1D26;
+  --card: #FFFFFF;
+  --card-foreground: #1D1D26;
+  --popover: #FFFFFF;
+  --popover-foreground: #1D1D26;
+  --primary: #1D1D26;
+  --primary-foreground: #FAF8F5;
+  --secondary: #F0EDE8;
+  --secondary-foreground: #1D1D26;
+  --muted: #EDECEE;
+  --muted-foreground: #6F6E77;
+  --accent: #2F7972;
+  --accent-foreground: #FFFFFF;
+  --brand: #8533E8;
+  --brand-foreground: #FFFFFF;
+  --accent-green: #21C15D;
+  --accent-lilac: #E8D4FB;
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --border: #E3E2E6;
+  --input: #E3E2E6;
+  --ring: #8533E8;
+  --persimmon: #E8603C;
+  --sea-glass: #BCE3DE;
+  --sand: #EAE6DE;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #121217;
+    --foreground: #FAF8F5;
+    --card: #17171E;
+    --card-foreground: #FAF8F5;
+    --popover: #17171E;
+    --popover-foreground: #FAF8F5;
+    --primary: #FAF8F5;
+    --primary-foreground: #17171E;
+    --secondary: #21212B;
+    --secondary-foreground: #FAF8F5;
+    --muted: #21212B;
+    --muted-foreground: #B3B2BC;
+    --accent: #378E86;
+    --accent-foreground: #FAF8F5;
+    --brand: #9E56F5;
+    --brand-foreground: #FFFFFF;
+    --accent-green: #29D86B;
+    --accent-lilac: #421869;
+    --destructive: #B91C1C;
+    --destructive-foreground: #FFFFFF;
+    --border: #2B2B36;
+    --input: #2B2B36;
+    --ring: #9E56F5;
+  }
+}
+
+@layer theme {
+  @theme {
+    /* Fonts */
+    --font-display: "Playfair Display", Georgia, serif;
+    --font-body: "Manrope", sans-serif;
+
+    /* Theme colors */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-brand: var(--brand);
+    --color-brand-foreground: var(--brand-foreground);
+    --color-accent-green: var(--accent-green);
+    --color-accent-lilac: var(--accent-lilac);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-persimmon: var(--persimmon);
+    --color-sea-glass: var(--sea-glass);
+    --color-sand: var(--sand);
+
+    /* Radii */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-2xl: 24px;
+    --radius-3xl: 32px;
+  }
+}

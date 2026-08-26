@@ -54,9 +54,47 @@ export const closet = {
         !callbacks.onDone)
     ) {
       return client
-        .post('/closet/analyze', body, { timeout: 180000 })
+        .post('/closet/analyze', body, {
+          timeout: 180000,
+          transformResponse: [
+            (rawData) => {
+              if (typeof rawData === 'string') {
+                const trimmed = rawData.trim();
+                try {
+                  return JSON.parse(trimmed);
+                } catch {
+                  return rawData;
+                }
+              }
+              return rawData;
+            },
+          ],
+        })
         .then((r) => {
-          const data = r.data || {};
+          let data = r.data || {};
+          if (typeof data === 'string') {
+            const lines = data.split('\n').map((l) => l.trim()).filter(Boolean);
+            const items = [];
+            for (const line of lines) {
+              try {
+                const parsed = JSON.parse(line);
+                if (parsed.type === 'item' && parsed.item) {
+                  items.push(parsed.item);
+                } else if (parsed.items && Array.isArray(parsed.items)) {
+                  items.push(...parsed.items);
+                } else if (parsed.type === 'error') {
+                  const err = new Error(parsed.error || 'Analyze failed');
+                  err.response = { status: 400, data: parsed };
+                  throw err;
+                }
+              } catch (_e) {
+                // ignore non-json lines
+              }
+            }
+            if (items.length > 0) {
+              data = { items, count: items.length };
+            }
+          }
           if (data && data._status && Number(data._status) >= 400) {
             const err = new Error(data._error || 'Analyze failed');
             err.response = { status: Number(data._status), data };
@@ -94,10 +132,83 @@ export const closet = {
           err.response = { status: resp.status, data: { detail } };
           throw err;
         }
-        const reader = resp.body?.getReader();
-        if (!reader) {
-          throw new Error('Streaming response body not readable');
+
+        let reader = null;
+        try {
+          reader = resp.body?.getReader ? resp.body.getReader() : null;
+        } catch (_e) {
+          reader = null;
         }
+
+        if (!reader) {
+          // React Native Hermes fallback: stream reader is not polyfilled,
+          // so read complete response text and parse NDJSON / JSON safely.
+          const text = await resp.text();
+          const trimmed = (text || '').trim();
+          let data = null;
+          try {
+            data = JSON.parse(trimmed);
+          } catch (_e) {
+            // NDJSON format
+            const lines = trimmed.split('\n').map((l) => l.trim()).filter(Boolean);
+            const items = [];
+            let detect = null;
+            let count = 0;
+            for (const line of lines) {
+              try {
+                const parsed = JSON.parse(line);
+                if (parsed.type === 'item') {
+                  items.push(parsed);
+                  callbacks.onItem?.(parsed);
+                } else if (parsed.type === 'detect') {
+                  detect = parsed;
+                  callbacks.onDetect?.(parsed);
+                } else if (parsed.type === 'field') {
+                  callbacks.onField?.(parsed);
+                } else if (parsed.type === 'done') {
+                  count = parsed.count || items.length;
+                  callbacks.onDone?.(parsed);
+                } else if (parsed.type === 'error') {
+                  const err = new Error(parsed.message || 'Analyze failed');
+                  err.response = { status: parsed.status || 500, data: parsed };
+                  throw err;
+                } else if (parsed.items && Array.isArray(parsed.items)) {
+                  items.push(...parsed.items);
+                }
+              } catch (parseErr) {
+                if (parseErr.response) throw parseErr;
+              }
+            }
+            data = { items, count: count || items.length, detect };
+          }
+          if (data && data._status && Number(data._status) >= 400) {
+            const err = new Error(data._error || 'Analyze failed');
+            err.response = { status: Number(data._status), data };
+            throw err;
+          }
+          if (data.items_meta) {
+            callbacks.onDetect?.({ type: 'detect', items_meta: data.items_meta });
+          }
+          if (Array.isArray(data.items)) {
+            data.items.forEach((it, idx) => {
+              callbacks.onItem?.(
+                it?.type === 'item'
+                  ? it
+                  : {
+                      type: 'item',
+                      index: idx,
+                      ...it,
+                      item: it,
+                      analysis: it.analysis || it,
+                      fields: it.analysis || it,
+                    }
+              );
+            });
+          }
+          callbacks.onDone?.(data);
+          return data;
+        }
+
         const decoder = new TextDecoder('utf-8');
         let buffer = '';
         const emittedItems = [];
@@ -161,11 +272,43 @@ export const closet = {
         };
       } catch (streamErr) {
         console.warn('[analyzeItemImage] Stream failed, falling back to standard axios POST:', streamErr);
-        // Fallback to standard axios POST
+        // Fallback to standard axios POST with custom response transformer to tolerate leading whitespace keepalive
         return client
-          .post('/closet/analyze', body, { timeout: 180000 })
+          .post('/closet/analyze', body, {
+            timeout: 180000,
+            transformResponse: [
+              (rawData) => {
+                if (typeof rawData === 'string') {
+                  const trimmed = rawData.trim();
+                  try {
+                    return JSON.parse(trimmed);
+                  } catch {
+                    return rawData;
+                  }
+                }
+                return rawData;
+              },
+            ],
+          })
           .then((r) => {
-            const data = r.data || {};
+            let data = r.data || {};
+            if (typeof data === 'string') {
+              const lines = data.split('\n').map((l) => l.trim()).filter(Boolean);
+              const items = [];
+              for (const line of lines) {
+                try {
+                  const parsed = JSON.parse(line);
+                  if (parsed.type === 'item') {
+                    items.push(parsed);
+                  } else if (parsed.items && Array.isArray(parsed.items)) {
+                    items.push(...parsed.items);
+                  }
+                } catch {}
+              }
+              if (items.length > 0) {
+                data = { items, count: items.length };
+              }
+            }
             if (data && data._status && Number(data._status) >= 400) {
               const err = new Error(data._error || 'Analyze failed');
               err.response = { status: Number(data._status), data };
@@ -176,18 +319,24 @@ export const closet = {
             }
             if (Array.isArray(data.items)) {
               data.items.forEach((it, idx) => {
-                callbacks.onItem?.({
-                  type: 'item',
-                  index: idx,
-                  item: it,
-                  analysis: it,
-                  fields: it,
-                });
+                callbacks.onItem?.(
+                  it?.type === 'item'
+                    ? it
+                    : {
+                        type: 'item',
+                        index: idx,
+                        ...it,
+                        item: it,
+                        analysis: it.analysis || it,
+                        fields: it.analysis || it,
+                      }
+                );
               });
             } else if (data.analysis) {
               callbacks.onItem?.({
                 type: 'item',
                 index: 0,
+                ...data,
                 item: data.analysis,
                 analysis: data.analysis,
                 fields: data.analysis,
@@ -293,10 +442,6 @@ export const closet = {
   // --- wardrobe insights ---
   getSustainabilityStats: () =>
     client.get('/closet/stats/sustainability').then((r) => r.data),
-
-  // --- DPP QR import ---
-  importDpp: (qrPayload) =>
-    client.post('/closet/import-dpp', { qr_payload: qrPayload }).then((r) => r.data),
 };
 
 // Re-export streamNdjson for callers that need it directly

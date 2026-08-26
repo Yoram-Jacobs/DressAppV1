@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, I18nManager, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,7 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as Lucide from "lucide-react-native";
 
 export function PrivacyScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const navigation = useNavigation();
   const [content, setContent] = useState<string | null>(null);
@@ -18,9 +17,15 @@ export function PrivacyScreen() {
 
   useEffect(() => {
     async function load() {
+      setLoading(true);
       try {
-        const res = await api.getCampaign();
-        setContent(res.text);
+        const lang = i18n.language || 'en';
+        const res = await (api as any).getPrivacyPolicy?.(lang);
+        if (res?.text || res?.content) {
+          setContent(res.text || res.content);
+        } else {
+          setContent(null);
+        }
       } catch (err) {
         setContent(null); // Fallback to static
       } finally {
@@ -28,7 +33,7 @@ export function PrivacyScreen() {
       }
     }
     load();
-  }, []);
+  }, [i18n.language]);
 
   const BackIcon = I18nManager.isRTL ? Lucide.ArrowRight : Lucide.ArrowLeft;
 
@@ -39,7 +44,7 @@ export function PrivacyScreen() {
           <BackIcon size={24} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.foreground }]}>
-          {t('privacy.title', 'Privacy Policy')}
+          {t('privacy.title', { defaultValue: 'Privacy Policy' })}
         </Text>
       </View>
       
@@ -50,7 +55,7 @@ export function PrivacyScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <Text style={[styles.lastUpdated, { color: colors.foreground }]}>
-            {t('privacy.lastUpdated', 'Last updated: August 2026')}
+            {t('privacy.lastUpdated', { defaultValue: 'Last updated: August 2026' })}
           </Text>
 
           {content ? (
@@ -58,38 +63,38 @@ export function PrivacyScreen() {
           ) : (
             <>
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                {t('privacy.section1', '1. Data Collection')}
+                {t('privacy.section1', { defaultValue: '1. Data Collection' })}
               </Text>
               <Text style={[styles.body, { color: colors.foreground }]}>
-                {t('privacy.section1_body', 'We collect information you provide directly to us...')}
+                {t('privacy.section1_body', { defaultValue: 'We collect information you provide directly to us...' })}
               </Text>
 
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                {t('privacy.section2', '2. Data Use')}
+                {t('privacy.section2', { defaultValue: '2. Data Use' })}
               </Text>
               <Text style={[styles.body, { color: colors.foreground }]}>
-                {t('privacy.section2_body', 'We use the information we collect to provide, maintain, and improve our services...')}
+                {t('privacy.section2_body', { defaultValue: 'We use the information we collect to provide, maintain, and improve our services...' })}
               </Text>
 
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                {t('privacy.section3', '3. Third Parties')}
+                {t('privacy.section3', { defaultValue: '3. Third Parties' })}
               </Text>
               <Text style={[styles.body, { color: colors.foreground }]}>
-                {t('privacy.section3_body', 'We may share information with third-party vendors, consultants, and other service providers...')}
+                {t('privacy.section3_body', { defaultValue: 'We may share information with third-party vendors, consultants, and other service providers...' })}
               </Text>
 
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                {t('privacy.section4', '4. Your Rights')}
+                {t('privacy.section4', { defaultValue: '4. Your Rights' })}
               </Text>
               <Text style={[styles.body, { color: colors.foreground }]}>
-                {t('privacy.section4_body', 'You have the right to access, correct, or delete your personal data...')}
+                {t('privacy.section4_body', { defaultValue: 'You have the right to access, correct, or delete your personal data...' })}
               </Text>
 
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                {t('privacy.section5', '5. Contact')}
+                {t('privacy.section5', { defaultValue: '5. Contact' })}
               </Text>
               <Text style={[styles.body, { color: colors.foreground }]}>
-                {t('privacy.section5_body', 'If you have any questions about this Privacy Policy, please contact us at support@dressapp.co')}
+                {t('privacy.section5_body', { defaultValue: 'If you have any questions about this Privacy Policy, please contact us at support@dressapp.co' })}
               </Text>
             </>
           )}

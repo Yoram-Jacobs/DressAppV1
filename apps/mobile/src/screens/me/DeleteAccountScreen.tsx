@@ -9,9 +9,7 @@ import { TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
-import { api } from '@mobile/lib/api';
-import { emitAuthChange } from '@mobile/hooks/useAuthState';
-import { tokenStore } from '@mobile/lib/api';
+import { api, tokenStore, emitAuthChange } from '@mobile/lib/api';
 
 export function DeleteAccountScreen() {
   const { t } = useTranslation();
@@ -21,12 +19,12 @@ export function DeleteAccountScreen() {
 
   const handleDelete = () => {
     Alert.alert(
-      t('deleteAccount.confirmTitle', 'Delete account'),
-      t('deleteAccount.confirmMsg', 'This will permanently delete your account and all your data. This cannot be undone.'),
+      t('deleteAccount.confirmTitle', { defaultValue: 'Delete account' }),
+      t('deleteAccount.confirmMsg', { defaultValue: 'This will permanently delete your account and all your data. This cannot be undone.' }),
       [
-        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+        { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
         {
-          text: t('deleteAccount.confirm', 'Delete permanently'),
+          text: t('deleteAccount.confirm', { defaultValue: 'Delete permanently' }),
           style: 'destructive',
           onPress: async () => {
             setDeleting(true);
@@ -36,7 +34,7 @@ export function DeleteAccountScreen() {
               emitAuthChange(false);
             } catch (err: unknown) {
               setDeleting(false);
-              Alert.alert(t('common.error', 'Error'), (err as { response?: { data?: { detail?: string } }; message?: string })?.response?.data?.detail ?? 'Failed to delete account');
+              Alert.alert(t('common.error', { defaultValue: 'Error' }), (err as { response?: { data?: { detail?: string } }; message?: string })?.response?.data?.detail ?? 'Failed to delete account');
             }
           },
         },
@@ -49,11 +47,11 @@ export function DeleteAccountScreen() {
   return (
     <SafeAreaView style={[s.root, s.container]}>
       <Text style={s.icon}>⚠️</Text>
-      <Text style={s.title}>{t('deleteAccount.title', 'Delete account')}</Text>
-      <Text style={s.subtitle}>{t('deleteAccount.subtitle', 'This action is permanent and cannot be undone. All your closet items, outfits, and preferences will be deleted.')}</Text>
+      <Text style={s.title}>{t('deleteAccount.title', { defaultValue: 'Delete account' })}</Text>
+      <Text style={s.subtitle}>{t('deleteAccount.subtitle', { defaultValue: 'This action is permanent and cannot be undone. All your closet items, outfits, and preferences will be deleted.' })}</Text>
 
       <TextInput
-        label={t('deleteAccount.passwordLabel', 'Confirm your password (optional)')}
+        label={t('deleteAccount.passwordLabel', { defaultValue: 'Confirm your password (optional)' })}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -71,7 +69,7 @@ export function DeleteAccountScreen() {
       >
         {deleting
           ? <ActivityIndicator color="#fff" size="small" />
-          : <Text style={s.deleteBtnText}>{t('deleteAccount.confirm', 'Delete my account permanently')}</Text>}
+          : <Text style={s.deleteBtnText}>{t('deleteAccount.confirm', { defaultValue: 'Delete my account permanently' })}</Text>}
       </TouchableOpacity>
     </SafeAreaView>
   );

@@ -13,7 +13,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
-import { api } from '@mobile/lib/api';
+import { useMarketplaceStore } from '@mobile/lib/stores';
 import type { MarketStackParamList } from '@mobile/navigation/types';
 
 type TxNavProp = NativeStackNavigationProp<MarketStackParamList, 'Transactions'>;
@@ -23,15 +23,16 @@ interface Transaction {
   status?: string;
   listing_type?: string;
   listing_title?: string;
+  role?: string;
   amount_cents?: number;
   currency?: string;
   created_at?: string;
-  role?: 'buyer' | 'seller';
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  completed: 'hsl(142,71%,45%)',
-  pending:   'hsl(45,93%,47%)',
+  pending:   'hsl(38,92%,50%)',
+  escrow:    'hsl(215,80%,55%)',
+  completed: 'hsl(160,70%,38%)',
   failed:    'hsl(0,72%,52%)',
   cancelled: 'hsl(240,5%,45%)',
 };
@@ -40,19 +41,17 @@ export function TransactionsScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<TxNavProp>();
   const { colors } = useTheme();
-  const [txs, setTxs] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { transactions: txs, loading, fetchTransactions } = useMarketplaceStore({ prewarm: true });
   const [refreshing, setRefreshing] = useState(false);
 
-  const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
     try {
-      const data = await api.listTransactions();
-      setTxs(Array.isArray(data) ? data : (data?.transactions ?? []));
-    } catch { /* silent */ } finally { setLoading(false); setRefreshing(false); }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
+      await fetchTransactions({ force: true });
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchTransactions]);
 
   const s = makeStyles(colors);
   const isRtl = I18nManager.isRTL;
@@ -64,9 +63,9 @@ export function TransactionsScreen() {
       activeOpacity={0.78}
     >
       <View style={s.rowMain}>
-        <Text style={s.rowTitle} numberOfLines={1}>{item.listing_title ?? t('market.transaction', 'Transaction')}</Text>
+        <Text style={s.rowTitle} numberOfLines={1}>{item.listing_title ?? t('market.transaction', { defaultValue: 'Transaction' })}</Text>
         <Text style={s.rowSub}>
-          {item.role === 'buyer' ? t('market.youBought', 'You bought') : t('market.youSold', 'You sold')}
+          {item.role === 'buyer' ? t('market.youBought', { defaultValue: 'You bought' }) : t('market.youSold', { defaultValue: 'You sold' })}
           {item.amount_cents != null ? ` · ${(item.amount_cents / 100).toFixed(2)} ${item.currency ?? '€'}` : ''}
         </Text>
       </View>
@@ -83,15 +82,15 @@ export function TransactionsScreen() {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <Text style={s.headerTitle}>{t('market.transactions', 'Transactions')}</Text>
+      <Text style={s.headerTitle}>{t('market.transactions', { defaultValue: 'Transactions' })}</Text>
       <FlatList
         data={txs}
         renderItem={renderItem}
         keyExtractor={(i) => i.id}
         contentContainerStyle={s.list}
         ItemSeparatorComponent={() => <View style={s.sep} />}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={colors.accent} />}
-        ListEmptyComponent={<View style={s.center}><Text style={s.emptyText}>{t('market.noTransactions', 'No transactions yet.')}</Text></View>}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
+        ListEmptyComponent={<View style={s.center}><Text style={s.emptyText}>{t('market.noTransactions', { defaultValue: 'No transactions yet.' })}</Text></View>}
       />
     </SafeAreaView>
   );

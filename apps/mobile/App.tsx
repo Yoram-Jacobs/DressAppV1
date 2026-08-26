@@ -1,62 +1,94 @@
 /**
  * apps/mobile/App.tsx
  *
- * DressApp — WebView wrapper.
- * Opens https://dressapp.co/home in a full-screen WebView.
- * All auth, navigation, and features are handled by the web app.
+ * DressApp — Native Android Application Entry Point.
+ * Targets Android 16 (API Level 36).
+ * Sets up safe area context, theme provider, paper provider,
+ * custom Google Fonts, language hydration, and the root navigation tree.
  */
 
-import React from 'react';
-import { SafeAreaView, StatusBar, StyleSheet, Platform, BackHandler } from 'react-native';
-import { WebView } from 'react-native-webview';
+import React, { useEffect, useState } from 'react';
+import { View, ActivityIndicator, StyleSheet, LogBox } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 
-const WEB_URL = 'https://dressapp.co/home';
+LogBox.ignoreLogs(['[expo-av]: Expo AV has been deprecated']);
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Provider as PaperProvider } from 'react-native-paper';
+import {
+  useFonts,
+  PlayfairDisplay_400Regular,
+  PlayfairDisplay_400Regular_Italic,
+  PlayfairDisplay_700Bold,
+} from '@expo-google-fonts/playfair-display';
+import {
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+} from '@expo-google-fonts/manrope';
 
-export default function App() {
-  const webViewRef = React.useRef<WebView>(null);
+import { ThemeProvider, useTheme } from './src/theme';
+import { RootNavigator } from './src/navigation/RootNavigator';
+import { hydrateLanguage } from './src/lib/i18n';
+import './src/lib/i18n';
+import './src/global.css';
 
-  // Handle Android back button — go back in WebView history
-  React.useEffect(() => {
-    if (Platform.OS !== 'android') return;
-    const onBack = () => {
-      if (webViewRef.current) {
-        webViewRef.current.goBack();
-        return true; // prevent app exit
-      }
-      return false;
-    };
-    const sub = BackHandler.addEventListener('hardwareBackPress', onBack);
-    return () => sub.remove();
-  }, []);
+function AppContent() {
+  const { isDark, colors } = useTheme();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FAF8F5" />
-      <WebView
-        ref={webViewRef}
-        source={{ uri: WEB_URL }}
-        style={styles.webview}
-        javaScriptEnabled
-        domStorageEnabled
-        startInLoadingState
-        allowsBackForwardNavigationGestures
-        // Allow camera/mic for future features
-        mediaPlaybackRequiresUserAction={false}
-        allowsInlineMediaPlayback
-        // Share cookies between WebView and native
-        sharedCookiesEnabled
-        thirdPartyCookiesEnabled
-      />
-    </SafeAreaView>
+    <>
+      <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} />
+      <PaperProvider>
+        <RootNavigator />
+      </PaperProvider>
+    </>
+  );
+}
+
+export default function App() {
+  const [fontsLoaded, fontError] = useFonts({
+    PlayfairDisplay_400Regular,
+    PlayfairDisplay_400Regular_Italic,
+    PlayfairDisplay_700Bold,
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
+  });
+
+  const [langHydrated, setLangHydrated] = useState(false);
+
+  useEffect(() => {
+    hydrateLanguage().finally(() => {
+      setLangHydrated(true);
+    });
+  }, []);
+
+  if ((!fontsLoaded && !fontError) || !langHydrated) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2d8f7f" />
+      </View>
+    );
+  }
+
+  return (
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  loadingContainer: {
     flex: 1,
     backgroundColor: '#FAF8F5',
-  },
-  webview: {
-    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

@@ -7,7 +7,7 @@
  * Usage:
  *   <ScanningPipelineOverlay visible={isScanning} variant="block" />
  *
- * variant="block"  → centered full overlay (used during camera Lucide.Scan processing)
+ * variant="block"  → centered full overlay (used during camera scan processing)
  * variant="inline" → slim one-liner status bar (used inside form during upload)
  */
 
@@ -35,11 +35,11 @@ export function ScanningPipelineOverlay({ visible = true, variant = 'block' }: P
   const { colors } = useTheme();
 
   const steps = [
-    t('scanning.bounds',    'Detecting Garment Bounds…'),
-    t('scanning.colors',    'Extracting Color Palette…'),
-    t('scanning.silhouette','Analyzing Silhouette…'),
-    t('scanning.materials', 'Inferring Fabric Materials…'),
-    t('scanning.tags',      'Generating Stylist Tags…'),
+    t('scanning.bounds', { defaultValue: 'Detecting Garment Bounds…' }),
+    t('scanning.colors', { defaultValue: 'Extracting Color Palette…' }),
+    t('scanning.silhouette', { defaultValue: 'Analyzing Silhouette…' }),
+    t('scanning.materials', { defaultValue: 'Inferring Fabric Materials…' }),
+    t('scanning.tags', { defaultValue: 'Generating Stylist Tags…' }),
   ];
 
   const [idx, setIdx] = useState(0);
@@ -96,7 +96,7 @@ export function ScanningPipelineOverlay({ visible = true, variant = 'block' }: P
         {steps[idx]}
       </Animated.Text>
       <Text style={[blockS.sub, { color: colors.mutedFg }]}>
-        {t('scanning.sub', 'AI analysis in progress…')}
+        {t('scanning.sub', { defaultValue: 'AI analysis in progress…' })}
       </Text>
     </View>
   );

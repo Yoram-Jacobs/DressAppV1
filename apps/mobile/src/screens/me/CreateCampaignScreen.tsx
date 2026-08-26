@@ -84,14 +84,14 @@ export function CreateCampaignScreen() {
       }
 
       Alert.alert(
-        t('campaigns.submitted', 'Campaign submitted'),
-        t('campaigns.submittedMsg', 'Your campaign is pending approval. We\'ll notify you when it goes live.'),
+        t('campaigns.submitted', { defaultValue: 'Campaign submitted' }),
+        t('campaigns.submittedMsg', { defaultValue: 'Your campaign is pending approval. We\'ll notify you when it goes live.' }),
         [{ text: 'OK', onPress: () => navigation.goBack() }],
       );
     } catch (err: unknown) {
       setStep('form');
       Alert.alert(
-        t('common.error', 'Error'),
+        t('common.error', { defaultValue: 'Error' }),
         (err as { response?: { data?: { detail?: string } }; message?: string })?.response?.data?.detail
           ?? (err as { message?: string })?.message
           ?? 'Failed to create campaign',
@@ -107,8 +107,8 @@ export function CreateCampaignScreen() {
         <ActivityIndicator color={colors.accent} size="large" />
         <Text style={s.loadingText}>
           {step === 'payment'
-            ? t('campaigns.awaitingPayment', 'Awaiting payment approval…')
-            : t('campaigns.creating', 'Creating campaign…')}
+            ? t('campaigns.awaitingPayment', { defaultValue: 'Awaiting payment approval…' })
+            : t('campaigns.creating', { defaultValue: 'Creating campaign…' })}
         </Text>
       </SafeAreaView>
     );
@@ -119,25 +119,25 @@ export function CreateCampaignScreen() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
 
-          <Text style={s.sectionLabel}>{t('campaigns.basics', 'Campaign basics')}</Text>
+          <Text style={s.sectionLabel}>{t('campaigns.basics', { defaultValue: 'Campaign basics' })}</Text>
 
           <Controller control={control} name="title" render={({ field: { onChange, value } }) => (
-            <TextInput label={t('campaigns.titleLabel', 'Campaign title *')} value={value} onChangeText={onChange}
+            <TextInput label={t('campaigns.titleLabel', { defaultValue: 'Campaign title *' })} value={value} onChangeText={onChange}
               mode="outlined" outlineColor={colors.border} activeOutlineColor={colors.accent}
               textColor={colors.foreground} style={s.input} error={!!errors.title} />
           )} />
           {errors.title && <Text style={s.fieldError}>{errors.title.message}</Text>}
 
           <Controller control={control} name="description" render={({ field: { onChange, value } }) => (
-            <TextInput label={t('campaigns.descriptionLabel', 'Description')} value={value} onChangeText={onChange}
+            <TextInput label={t('campaigns.descriptionLabel', { defaultValue: 'Description' })} value={value} onChangeText={onChange}
               mode="outlined" multiline numberOfLines={4} outlineColor={colors.border}
               activeOutlineColor={colors.accent} textColor={colors.foreground} style={s.input} />
           )} />
 
-          <Text style={s.sectionLabel}>{t('campaigns.budgetDates', 'Budget & dates')}</Text>
+          <Text style={s.sectionLabel}>{t('campaigns.budgetDates', { defaultValue: 'Budget & dates' })}</Text>
 
           <Controller control={control} name="budget_cents" render={({ field: { onChange, value } }) => (
-            <TextInput label={t('campaigns.budgetLabel', 'Budget (cents, e.g. 5000 = €50)')}
+            <TextInput label={t('campaigns.budgetLabel', { defaultValue: 'Budget (cents, e.g. 5000 = €50)' })}
               value={value != null ? String(value) : ''} onChangeText={onChange}
               mode="outlined" keyboardType="numeric" outlineColor={colors.border}
               activeOutlineColor={colors.accent} textColor={colors.foreground} style={s.input}
@@ -147,39 +147,39 @@ export function CreateCampaignScreen() {
 
           <View style={s.dateRow}>
             <Controller control={control} name="start_date" render={({ field: { onChange, value } }) => (
-              <TextInput label={t('campaigns.startDate', 'Start (YYYY-MM-DD)')} value={value ?? ''}
+              <TextInput label={t('campaigns.startDate', { defaultValue: 'Start (YYYY-MM-DD)' })} value={value ?? ''}
                 onChangeText={onChange} mode="outlined" outlineColor={colors.border}
                 activeOutlineColor={colors.accent} textColor={colors.foreground}
                 style={[s.input, s.dateInput]} />
             )} />
             <Controller control={control} name="end_date" render={({ field: { onChange, value } }) => (
-              <TextInput label={t('campaigns.endDate', 'End (YYYY-MM-DD)')} value={value ?? ''}
+              <TextInput label={t('campaigns.endDate', { defaultValue: 'End (YYYY-MM-DD)' })} value={value ?? ''}
                 onChangeText={onChange} mode="outlined" outlineColor={colors.border}
                 activeOutlineColor={colors.accent} textColor={colors.foreground}
                 style={[s.input, s.dateInput]} />
             )} />
           </View>
 
-          <Text style={s.sectionLabel}>{t('campaigns.targeting', 'Targeting')}</Text>
+          <Text style={s.sectionLabel}>{t('campaigns.targeting', { defaultValue: 'Targeting' })}</Text>
 
           <Controller control={control} name="target_audience" render={({ field: { onChange, value } }) => (
-            <TextInput label={t('campaigns.targetAudience', 'Target audience')} value={value ?? ''} onChangeText={onChange}
+            <TextInput label={t('campaigns.targetAudience', { defaultValue: 'Target audience' })} value={value ?? ''} onChangeText={onChange}
               mode="outlined" outlineColor={colors.border} activeOutlineColor={colors.accent}
               textColor={colors.foreground} style={s.input} />
           )} />
 
           <Controller control={control} name="location" render={({ field: { onChange, value } }) => (
-            <TextInput label={t('campaigns.location', 'Location (city, country)')} value={value ?? ''}
+            <TextInput label={t('campaigns.location', { defaultValue: 'Location (city, country)' })} value={value ?? ''}
               onChangeText={onChange} mode="outlined" outlineColor={colors.border}
               activeOutlineColor={colors.accent} textColor={colors.foreground} style={s.input} />
           )} />
 
           <TouchableOpacity style={s.submitBtn} onPress={handleSubmit(onSubmit)}>
-            <Text style={s.submitBtnText}>{t('campaigns.createAndSubmit', 'Create & submit for approval')}</Text>
+            <Text style={s.submitBtnText}>{t('campaigns.createAndSubmit', { defaultValue: 'Create & submit for approval' })}</Text>
           </TouchableOpacity>
 
           <Text style={s.note}>
-            {t('campaigns.note', 'Submitting will open a payment screen to fund the campaign. It goes live after admin approval.')}
+            {t('campaigns.note', { defaultValue: 'Submitting will open a payment screen to fund the campaign. It goes live after admin approval.' })}
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>

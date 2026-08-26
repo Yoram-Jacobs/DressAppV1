@@ -43,6 +43,7 @@ class SaveOutfitIn(BaseModel):
     garments: list[GarmentItemIn]
     usage: OutfitUsageIn
     is_fallback: bool | None = None
+    write_to_calendar: bool = False
 
 
 class EventProposalIn(BaseModel):
@@ -128,8 +129,13 @@ async def save_outfit(
             },
         )
 
-    # Write event to Google Calendar if connected and usage is specified
-    if payload.usage and payload.usage.date and user.get("google_calendar_tokens", {}).get("refresh_token"):
+    # Write event to Google Calendar ONLY if explicitly requested and calendar connected
+    if (
+        payload.write_to_calendar
+        and payload.usage
+        and payload.usage.date
+        and user.get("google_calendar_tokens", {}).get("refresh_token")
+    ):
         garment_descriptions = [f"- {g['role']}: {g.get('title') or 'Garment'}" for g in garments]
         desc = (payload.description or "") + "\n\nGarments:\n" + "\n".join(garment_descriptions)
         
@@ -352,6 +358,7 @@ class UpdateOutfitIn(BaseModel):
     name: str | None = None
     description: str | None = None
     usage: UpdateOutfitUsageIn | None = None
+    write_to_calendar: bool | None = None
 
 
 @router.patch("/{outfit_id}")
@@ -396,7 +403,7 @@ async def update_saved_outfit(
         
     res_doc = await db.outfits.find_one({"id": outfit_id, "user_id": user["id"]})
     
-    # Sync update to Google Calendar
+    # Sync update to Google Calendar if already linked to a calendar event, or explicitly requested
     if user.get("google_calendar_tokens", {}).get("refresh_token"):
         final_name = res_doc.get("name") or "Unnamed outfit"
         final_desc = res_doc.get("description") or ""
@@ -420,7 +427,7 @@ async def update_saved_outfit(
                     final_date,
                     final_time
                 )
-            else:
+            elif payload.write_to_calendar:
                 async def _create_and_save_event_id():
                     try:
                         event = await calendar_service.create_calendar_event(

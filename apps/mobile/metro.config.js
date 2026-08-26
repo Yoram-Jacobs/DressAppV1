@@ -18,6 +18,7 @@
  */
 
 const { getDefaultConfig } = require('expo/metro-config');
+const { withNativewind } = require('nativewind/metro');
 const path = require('path');
 const { existsSync } = require('fs');
 
@@ -39,11 +40,10 @@ const LLAMA_STUB = path.resolve(projectRoot, 'stubs/llama-stub.js');
 const config = getDefaultConfig(projectRoot);
 
 // ── Monorepo watchFolders ────────────────────────────────────────────────────
-// Watch only the packages/ source tree for @dressapp/* workspace packages.
-// Do NOT watch node_modules — Metro resolves those through nodeModulesPaths.
-const packagesDir = path.resolve(workspaceRoot, 'packages');
+// Watch workspace root and packages for hoisted monorepo dependencies.
 config.watchFolders = [
-  ...(existsSync(packagesDir) ? [packagesDir] : []),
+  ...(config.watchFolders || []),
+  workspaceRoot,
 ];
 
 // ── Module resolution ────────────────────────────────────────────────────────
@@ -66,4 +66,9 @@ config.resolver.extraNodeModules = {
   'llama.rn': LLAMA_STUB,
 };
 
-module.exports = config;
+module.exports = withNativewind(config, {
+  // inline variables break PlatformColor in CSS variables
+  inlineVariables: false,
+  // We add className support manually
+  globalClassNamePolyfill: false,
+});

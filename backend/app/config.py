@@ -56,6 +56,23 @@ class Settings:
     VAPID_PUBLIC_KEY: str = os.environ.get("VAPID_PUBLIC_KEY", "")
     VAPID_PRIVATE_KEY: str = os.environ.get("VAPID_PRIVATE_KEY", "")
     VAPID_CLAIM_EMAIL: str = os.environ.get("VAPID_CLAIM_EMAIL", "info@dressapp.co")
+
+    # --- Object Storage (Cloudflare R2 / any S3-compatible bucket) -----------
+    # All optional.  When R2_ACCESS_KEY_ID is absent, UploadManager writes to
+    # the local static/uploads/ directory (safe for dev; NOT for production —
+    # Docker containers are ephemeral and files are lost on restart).
+    # Production: populate these in /srv/AI-Stylist/deploy/.env
+    #   R2_ACCESS_KEY_ID      — R2 API token (Access Key ID)
+    #   R2_SECRET_ACCESS_KEY  — R2 API token (Secret Access Key)
+    #   R2_ENDPOINT_URL       — e.g. https://<account_id>.r2.cloudflarestorage.com
+    #   R2_BUCKET_NAME        — e.g. dressapp-media
+    #   R2_PUBLIC_URL         — CDN / r2.dev URL, e.g. https://media.dressapp.co
+    R2_ACCESS_KEY_ID: str | None = os.environ.get("R2_ACCESS_KEY_ID") or None
+    R2_SECRET_ACCESS_KEY: str | None = os.environ.get("R2_SECRET_ACCESS_KEY") or None
+    R2_ENDPOINT_URL: str | None = os.environ.get("R2_ENDPOINT_URL") or None
+    R2_BUCKET_NAME: str = os.environ.get("R2_BUCKET_NAME", "dressapp-media")
+    R2_PUBLIC_URL: str = os.environ.get("R2_PUBLIC_URL", "").rstrip("/")
+
     # CORS default covers BOTH production targets:
     #   * dressapp.co (Hetzner — full-fat ML stack)
     #   * ai-stylist-api.emergent.host (Emergent — lightweight pod, falls

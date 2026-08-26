@@ -7,23 +7,19 @@ import { fonts } from '@mobile/theme/tokens';
 import { StylistScreen } from '@mobile/screens/stylist/StylistScreen';
 import { OutfitsScreen } from '@mobile/screens/closet/OutfitsScreen';
 import { AvatarScreen } from '@mobile/screens/closet/AvatarScreen';
+import { SharedOutfitScreen } from '@mobile/screens/closet/SharedOutfitScreen';
+import { ItemDetailScreen } from '@mobile/screens/closet/ItemDetailScreen';
 
 const Stack = createNativeStackNavigator<StylistStackParamList>();
 
 export function StylistStack() {
-  const { colors } = useTheme();
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.background },
-        headerTintColor: colors.foreground,
-        headerTitleStyle: { fontFamily: fonts.display, fontSize: 18 },
-        headerShadowVisible: false,
-      }}
-    >
-      <Stack.Screen name="Stylist" component={StylistScreen} options={{ title: 'AI Stylist' }} />
-      <Stack.Screen name="Outfits" component={OutfitsScreen} options={{ title: 'Saved Outfits' }} />
-      <Stack.Screen name="Avatar" component={AvatarScreen} options={{ title: 'My Avatar' }} />
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Stylist" component={StylistScreen} />
+      <Stack.Screen name="Outfits" component={OutfitsScreen} />
+      <Stack.Screen name="Avatar" component={AvatarScreen} />
+      <Stack.Screen name="SharedOutfit" component={SharedOutfitScreen} />
+      <Stack.Screen name="ItemDetail" component={ItemDetailScreen} />
     </Stack.Navigator>
   );
 }

@@ -82,8 +82,8 @@ export default function RegisterScreen() {
         (err as { response?: { data?: { detail?: string } } })?.response?.data
           ?.detail ??
         (err as { message?: string })?.message ??
-        t('auth.signInError', 'Sign-up failed. Please try again.');
-      Alert.alert(t('common.error', 'Error'), msg);
+        t('auth.signInError', { defaultValue: 'Sign-up failed. Please try again.' });
+      Alert.alert(t('common.error', { defaultValue: 'Error' }), msg);
     } finally {
       setBusy(false);
     }
@@ -107,16 +107,16 @@ export default function RegisterScreen() {
             <Text style={s.brandName} accessibilityRole="header">
               DressApp
             </Text>
-            <Text style={s.tagline}>{t('auth.tagline', 'Your AI wardrobe')}</Text>
+            <Text style={s.tagline}>{t('auth.tagline', { defaultValue: 'Your AI wardrobe' })}</Text>
           </View>
 
           {/* ── Card ─────────────────────────────────────────────────── */}
           <View style={s.card}>
             <Text style={s.heading}>
-              {t('auth.createAccount', 'Create account')}
+              {t('auth.createAccount', { defaultValue: 'Create account' })}
             </Text>
             <Text style={s.sub}>
-              {t('auth.registerSub', 'Join DressApp — it only takes a second')}
+              {t('auth.registerSub', { defaultValue: 'Join DressApp — it only takes a second' })}
             </Text>
 
             {/* Google sign-up */}
@@ -133,13 +133,13 @@ export default function RegisterScreen() {
               contentStyle={s.googleBtnContent}
               labelStyle={s.googleBtnLabel}
             >
-              {t('auth.continueWithGoogle', 'Continue with Google')}
+              {t('auth.continueWithGoogle', { defaultValue: 'Continue with Google' })}
             </Button>
 
             {/* Back to login */}
             <View style={s.loginRow}>
               <Text style={s.loginPrompt}>
-                {t('auth.alreadyHaveAccount', 'Already have an account?')}{' '}
+                {t('auth.alreadyHaveAccount', { defaultValue: 'Already have an account?' })}{' '}
               </Text>
               <Button
                 testID="register-login-link"
@@ -149,17 +149,14 @@ export default function RegisterScreen() {
                 labelStyle={s.loginLinkLabel}
                 style={s.loginLinkBtn}
               >
-                {t('auth.signInLink', 'Sign in')}
+                {t('auth.signInLink', { defaultValue: 'Sign in' })}
               </Button>
             </View>
           </View>
 
           {/* ── Terms footnote ───────────────────────────────────────── */}
           <Text style={s.terms}>
-            {t(
-              'auth.termsBySigningUp',
-              'By signing up you agree to our Terms of Service and Privacy Policy.',
-            )}
+            {t('auth.termsBySigningUp', { defaultValue: 'By signing up you agree to our Terms of Service and Privacy Policy.' })}
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>

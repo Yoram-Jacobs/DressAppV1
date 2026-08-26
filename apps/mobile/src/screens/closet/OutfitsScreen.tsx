@@ -1,12 +1,13 @@
 /**
  * apps/mobile/src/screens/closet/OutfitsScreen.tsx
  *
- * Saved Outfits — lists outfits saved by the AI Stylist.
- * Core loop:
- *   - api.listSavedOutfits() → render grid of outfit cards
- *   - tap → show outfit items detail (inline expand)
- *   - swipe/long-press → delete via api.deleteSavedOutfit(id)
- *   - pull-to-refresh
+ * Full-featured Saved Outfits & Lookbook Studio.
+ * Complete parity with apps/web/src/pages/Closet.jsx & Stylist.jsx:
+ *   - Correctly resolves garments from backend `item.garments ?? item.items`
+ *   - Collage preview of look garments
+ *   - Expanded canvas with item roles (Top, Bottom, Footwear, Accessory)
+ *   - "Try on Avatar" & "Share Look" integrations
+ *   - Full RTL and i18n support
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
@@ -22,279 +23,586 @@ import {
   Alert,
   ScrollView,
   I18nManager,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import * as Lucide from 'lucide-react-native';
 
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
-import { api } from '@mobile/lib/api';
+import { useOutfitStore } from '@mobile/lib/stores';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { StylistStackParamList } from '@mobile/navigation/types';
 
-// ── Types ──────────────────────────────────────────────────────────────────
-interface OutfitItem {
-  id: string;
+export interface SavedOutfitItem {
+  id?: string;
+  closet_item_id?: string;
+  title?: string;
   name?: string;
+  role?: string;
+  category?: string;
+  sub_category?: string;
   image_url?: string;
   thumbnail_data_url?: string;
-  category?: string;
+  color?: string;
+  colors?: any[];
+  [key: string]: any;
 }
 
-interface SavedOutfit {
+export type OutfitGarment = SavedOutfitItem;
+
+export interface SavedOutfit {
   id: string;
+  _id?: string;
+  user_id?: string;
   name?: string;
+  title?: string;
+  description?: string;
   occasion?: string;
+  style?: string;
+  matching_grade?: number;
+  harmony_grade?: number;
+  total_value?: number;
+  times_worn?: number;
+  date?: string;
   created_at?: string;
-  items?: OutfitItem[];
-  cover_image_url?: string;
+  usage?: {
+    date?: string;
+    time?: string;
+    times_worn?: number;
+    event_name?: string;
+    [key: string]: any;
+  };
+  garments?: SavedOutfitItem[];
+  items?: SavedOutfitItem[];
+  palette?: Array<{ name: string; hex?: string }>;
+  [key: string]: any;
 }
 
-// ── Component ──────────────────────────────────────────────────────────────
 export function OutfitsScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<StylistStackParamList>>();
-  const isRtlLayout = I18nManager.isRTL;
+  const isRtl = I18nManager.isRTL;
 
-  const [outfits, setOutfits] = useState<SavedOutfit[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { items: outfits, loading, prewarm, deleteSavedOutfit } = useOutfitStore({ prewarm: true });
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    setError(null);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
     try {
-      const data = await api.listSavedOutfits();
-      const list: SavedOutfit[] = Array.isArray(data) ? data : (data?.outfits ?? []);
-      setOutfits(list);
-    } catch (err: unknown) {
-      setError((err as { message?: string })?.message ?? 'Failed to load outfits');
+      await prewarm({ force: true });
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    load(true);
-  }, [load]);
+  }, [prewarm]);
 
   const handleDelete = (outfit: SavedOutfit) => {
     Alert.alert(
-      t('outfits.deleteTitle', 'Delete outfit'),
-      t('outfits.deleteMessage', 'Remove this outfit from your saved collection?'),
+      t('outfits.deleteTitle', { defaultValue: 'Delete Outfit' }),
+      t('outfits.deleteMessage', { defaultValue: 'Remove this look from your saved collection?' }),
       [
-        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+        { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
         {
-          text: t('common.delete', 'Delete'),
+          text: t('common.delete', { defaultValue: 'Delete' }),
           style: 'destructive',
           onPress: async () => {
             try {
-              await api.deleteSavedOutfit(outfit.id);
-              setOutfits((prev) => prev.filter((o) => o.id !== outfit.id));
-            } catch (err: unknown) {
-              Alert.alert(t('common.error', 'Error'), (err as { message?: string })?.message ?? 'Failed to delete outfit');
+              await deleteSavedOutfit(outfit.id);
+            } catch (err: any) {
+              Alert.alert(t('common.error', { defaultValue: 'Error' }), err?.message ?? 'Failed to delete outfit');
             }
           },
         },
-      ],
+      ]
     );
   };
 
-
-
-  const s = makeStyles(colors);
+  const handleShare = async (outfit: SavedOutfit) => {
+    try {
+      const shareUrl = `https://dressapp.co/share/outfit/${outfit.id}`;
+      await Share.share({
+        title: outfit.name || t('outfits.defaultLookName', { defaultValue: 'DressApp Look' }),
+        message: t('outfits.shareMessage', {
+          defaultValue: 'Check out my outfit on DressApp: {{name}}! {{url}}',
+          name: outfit.name || t('outfits.defaultLookName', { defaultValue: 'Styled Look' }),
+          url: shareUrl,
+        }),
+        url: shareUrl,
+      });
+    } catch {
+      // Ignore
+    }
+  };
 
   const renderOutfit = ({ item }: { item: SavedOutfit }) => {
     const isExpanded = expanded === item.id;
-    const cover = item.cover_image_url ?? item.items?.[0]?.image_url ?? item.items?.[0]?.thumbnail_data_url;
+
+    // Resolve garments from backend structure
+    const rawGarments = item.garments ?? item.items ?? [];
+    const garments: OutfitGarment[] = rawGarments.map((g: any) => ({
+      id: g.closet_item_id || g.id || String(Math.random()),
+      name: g.title || g.name || g.role || 'Garment',
+      role: g.role || g.category,
+      image_url: g.image_url || g.thumbnail_data_url || g.segmented_image_url,
+    }));
+
+    const piecesCount = garments.length;
+    const displayName =
+      item.name || item.usage?.event_name || (item.created_at ? new Date(item.created_at).toLocaleDateString() : t('outfits.defaultLookName', { defaultValue: 'Saved Look' }));
 
     return (
-      <View style={s.card}>
-        {/* Card header — tap to expand */}
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        {/* Card Header */}
         <TouchableOpacity
-          style={[s.cardHeader, { flexDirection: isRtlLayout ? 'row-reverse' : 'row' }]}
+          style={styles.cardHeader}
           onPress={() => setExpanded(isExpanded ? null : item.id)}
           activeOpacity={0.8}
         >
-          {cover ? (
-            <Image source={{ uri: cover }} style={s.coverThumb} resizeMode="cover" />
-          ) : (
-            <View style={[s.coverThumb, s.coverPlaceholder]}>
-              <Text style={{ fontSize: 22 }}>👗</Text>
-            </View>
-          )}
-          <View style={s.cardMeta}>
-            <Text style={s.outfitName} numberOfLines={1}>
-              {item.name ?? t('outfits.unnamedOutfit', 'Saved outfit')}
-            </Text>
-            {item.occasion ? (
-              <Text style={s.outfitOccasion}>{item.occasion}</Text>
-            ) : null}
-            <Text style={s.outfitItemCount}>
-              {item.items?.length ?? 0} {t('outfits.pieces', 'pieces')}
-            </Text>
+          {/* Garments Preview Thumbnails Grid */}
+          <View style={[styles.thumbCollage, { backgroundColor: colors.secondary }]}>
+            {garments.length > 0 ? (
+              <View style={styles.collageGrid}>
+                {garments.slice(0, 4).map((g, idx) => (
+                  <View key={idx} style={styles.collageItem}>
+                    {g.image_url ? (
+                      <Image source={{ uri: g.image_url }} style={styles.collageImg} resizeMode="contain" />
+                    ) : (
+                      <Lucide.Shirt size={14} color={colors.mutedFg} />
+                    )}
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Lucide.Sparkles size={24} color={colors.accent} />
+            )}
           </View>
-          <View style={s.cardActions}>
+
+          {/* Meta Info */}
+          <View style={styles.cardMeta}>
+            <Text style={[styles.outfitName, { color: colors.foreground }]} numberOfLines={1}>
+              {displayName}
+            </Text>
+            <View style={styles.badgeRow}>
+              {item.occasion ? (
+                <View style={[styles.occasionBadge, { backgroundColor: 'rgba(31, 111, 107, 0.12)' }]}>
+                  <Text style={[styles.occasionText, { color: colors.accent }]} numberOfLines={1}>
+                    {item.occasion}
+                  </Text>
+                </View>
+              ) : null}
+              <Text style={[styles.piecesText, { color: colors.mutedFg }]}>
+                {piecesCount} {t('outfits.pieces', { defaultValue: 'pieces' })}
+              </Text>
+            </View>
+            {item.usage?.date && (
+              <Text style={[styles.dateText, { color: colors.mutedFg }]}>
+                📅 {item.usage.date} {item.usage.time ? `• ${item.usage.time}` : ''}
+              </Text>
+            )}
+          </View>
+
+          {/* Action Icons */}
+          <View style={styles.cardHeaderActions}>
             <TouchableOpacity
-              style={s.deleteBtn}
+              style={styles.headerIconBtn}
               onPress={() => handleDelete(item)}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Text style={s.deleteBtnText}>🗑</Text>
+              <Lucide.Trash2 size={16} color={colors.mutedFg} />
             </TouchableOpacity>
-            <Text style={s.chevron}>{isExpanded ? '▲' : '▼'}</Text>
+
+            <Lucide.ChevronDown
+              size={18}
+              color={colors.mutedFg}
+              style={{ transform: [{ rotate: isExpanded ? '180deg' : '0deg' }] }}
+            />
           </View>
         </TouchableOpacity>
 
-        {/* Expanded items strip */}
-        {isExpanded && item.items && item.items.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={s.itemsStrip}
-          >
-            {item.items.map((piece) => {
-              const thumb = piece.thumbnail_data_url ?? piece.image_url;
-              return (
-                <View key={piece.id} style={s.pieceCard}>
-                  {thumb ? (
-                    <Image source={{ uri: thumb }} style={s.pieceImage} resizeMode="cover" />
-                  ) : (
-                    <View style={[s.pieceImage, s.piecePlaceholder]}>
-                      <Text style={{ fontSize: 18 }}>👕</Text>
-                    </View>
-                  )}
-                  <Text style={s.pieceName} numberOfLines={2}>
-                    {piece.name ?? piece.category ?? '—'}
+        {/* Expanded Garments Canvas Strip */}
+        {isExpanded && (
+          <View style={[styles.expandedSection, { borderTopColor: colors.border, backgroundColor: colors.background }]}>
+            <Text style={[styles.expandedTitle, { color: colors.foreground }]}>
+              {t('outfits.lookGarments', { defaultValue: 'Garments in this Look' })}
+            </Text>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.garmentsScroll}>
+              {garments.map((g, idx) => (
+                <View
+                  key={idx}
+                  style={[styles.garmentPillCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+                >
+                  <View style={[styles.garmentImageWrap, { backgroundColor: colors.secondary }]}>
+                    {g.image_url ? (
+                      <Image source={{ uri: g.image_url }} style={styles.garmentImage} resizeMode="contain" />
+                    ) : (
+                      <Lucide.Shirt size={22} color={colors.mutedFg} />
+                    )}
+                  </View>
+                  <Text style={[styles.garmentName, { color: colors.foreground }]} numberOfLines={1}>
+                    {g.name}
                   </Text>
+                  {g.role ? (
+                    <Text style={[styles.garmentRole, { color: colors.accent }]} numberOfLines={1}>
+                      {g.role}
+                    </Text>
+                  ) : null}
                 </View>
-              );
-            })}
-          </ScrollView>
+              ))}
+            </ScrollView>
+
+            {/* Quick Actions */}
+            <View style={styles.quickActionsRow}>
+              <TouchableOpacity
+                style={[styles.tryOnBtn, { backgroundColor: colors.primary }]}
+                onPress={() => {
+                  (navigation as any).navigate('Stylist', {
+                    tab: 'tryon',
+                    outfit: item,
+                    previousScreen: 'Outfits',
+                    fromScreen: 'Outfits',
+                    previousTab: 'daily',
+                  });
+                }}
+              >
+                <Lucide.UserCheck size={14} color="#FFF" />
+                <Text style={styles.tryOnBtnText}>{t('outfits.tryOnAvatar', { defaultValue: 'Try on Avatar' })}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.shareBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+                onPress={() => handleShare(item)}
+              >
+                <Lucide.Share2 size={14} color={colors.foreground} />
+                <Text style={[styles.shareBtnText, { color: colors.foreground }]}>{t('common.share', { defaultValue: 'Share' })}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         )}
       </View>
     );
   };
 
-  if (loading) {
-    return (
-      <SafeAreaView style={[s.root, s.centered]}>
-        <ActivityIndicator color={colors.accent} size="large" />
-      </SafeAreaView>
-    );
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView style={[s.root, s.centered]}>
-        <Text style={s.errorText}>{error}</Text>
-        <TouchableOpacity style={s.retryBtn} onPress={() => load()}>
-          <Text style={s.retryBtnText}>{t('common.retry', 'Retry')}</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
-    );
-  }
+  const BackIcon = isRtl ? Lucide.ArrowRight : Lucide.ArrowLeft;
 
   return (
-    <SafeAreaView style={s.root} edges={['top']}>
-      <View style={[s.header, { flexDirection: isRtlLayout ? 'row-reverse' : 'row' }]}>
-        <View>
-          <Text style={s.headerTitle}>{t('outfits.title', 'Saved Outfits')}</Text>
-          <Text style={s.headerCount}>{outfits.length} {t('outfits.saved', 'saved')}</Text>
+    <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top']}>
+      {/* Top Bar */}
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <BackIcon size={20} color={colors.foreground} />
+          </TouchableOpacity>
+          <View>
+            <Text style={[styles.headerSuper, { color: colors.accent }]}>
+              {t('outfits.lookbook', { defaultValue: 'LOOKBOOK' })}
+            </Text>
+            <Text style={[styles.headerTitle, { color: colors.foreground }]}>
+              {t('outfits.title', { defaultValue: 'Saved Outfits' })}
+            </Text>
+          </View>
         </View>
+
         <TouchableOpacity
-          style={[s.avatarBtn, { backgroundColor: colors.muted }]}
+          style={[styles.avatarBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
           onPress={() => navigation.navigate('Avatar')}
-          activeOpacity={0.8}
         >
-          <Text style={s.avatarBtnText}>🧍 {t('outfits.myAvatar', 'My Avatar')}</Text>
+          <Lucide.User size={14} color={colors.foreground} />
+          <Text style={[styles.avatarBtnText, { color: colors.foreground }]}>
+            {t('outfits.avatarBtn', { defaultValue: 'Avatar' })}
+          </Text>
         </TouchableOpacity>
       </View>
 
-      {outfits.length === 0 ? (
-        <View style={s.empty}>
-          <Text style={s.emptyIcon}>✨</Text>
-          <Text style={s.emptyTitle}>{t('outfits.emptyTitle', 'No saved outfits yet')}</Text>
-          <Text style={s.emptySub}>
-            {t('outfits.emptySub', "Ask The Stylist Brain to build outfits and they'll appear here.")}
+      {/* Outfits List */}
+      {loading ? (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.mutedFg }]}>
+            {t('outfits.loading', { defaultValue: 'Loading saved looks...' })}
           </Text>
+        </View>
+      ) : outfits.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Lucide.Sparkles size={48} color={colors.mutedFg} />
+          <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
+            {t('outfits.noOutfits', { defaultValue: 'No Saved Outfits Yet' })}
+          </Text>
+          <Text style={[styles.emptyDesc, { color: colors.mutedFg }]}>
+            {t('outfits.emptyDesc', {
+              defaultValue: 'Ask the AI Stylist to generate new looks or compose them from your closet items.',
+            })}
+          </Text>
+          <TouchableOpacity
+            style={[styles.createFirstBtn, { backgroundColor: colors.primary }]}
+            onPress={() => navigation.navigate('Stylist')}
+          >
+            <Lucide.Sparkles size={16} color="#FFF" />
+            <Text style={styles.createFirstBtnText}>
+              {t('outfits.openStylist', { defaultValue: 'Open AI Stylist' })}
+            </Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
           data={outfits}
           renderItem={renderOutfit}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={s.list}
+          contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
-          }
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         />
       )}
     </SafeAreaView>
   );
 }
 
-// ── Styles ─────────────────────────────────────────────────────────────────
-function makeStyles(colors: ReturnType<typeof import('@mobile/theme').useTheme>['colors']) {
-  const isRtl = I18nManager.isRTL;
-  return StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.background },
-    centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    header: {
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing[5],
-      paddingTop: spacing[4],
-      paddingBottom: spacing[2],
-    },
-    headerTitle: { fontFamily: fonts.display, fontSize: fontSizes['2xl'], color: colors.foreground },
-    headerCount: { fontFamily: fonts.body, fontSize: fontSizes.sm, color: colors.mutedFg },
-    list: { padding: spacing[4], gap: spacing[3] },
-    card: {
-      backgroundColor: colors.card,
-      borderRadius: radii.xl,
-      overflow: 'hidden',
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    cardHeader: { alignItems: 'center', gap: spacing[3], padding: spacing[3] },
-    coverThumb: { width: 56, height: 56, borderRadius: radii.md, overflow: 'hidden' },
-    coverPlaceholder: { backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center' },
-    cardMeta: { flex: 1, gap: 2 },
-    outfitName: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.base, color: colors.foreground },
-    outfitOccasion: { fontFamily: fonts.body, fontSize: fontSizes.xs, color: colors.accent },
-    outfitItemCount: { fontFamily: fonts.body, fontSize: fontSizes.xs, color: colors.mutedFg },
-    cardActions: { flexDirection: 'row', alignItems: 'center', gap: spacing[3] },
-    deleteBtn: { padding: spacing[1] },
-    deleteBtnText: { fontSize: 18 },
-    chevron: { fontSize: 12, color: colors.mutedFg },
-    itemsStrip: { paddingHorizontal: spacing[3], paddingBottom: spacing[3], gap: spacing[3] },
-    pieceCard: { width: 80, alignItems: 'center', gap: spacing[1] },
-    pieceImage: { width: 80, height: 100, borderRadius: radii.md, overflow: 'hidden' },
-    piecePlaceholder: { backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center' },
-    pieceName: {
-      fontFamily: fonts.body,
-      fontSize: fontSizes.xs,
-      color: colors.mutedFg,
-      textAlign: 'center',
-    },
-    empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing[8], gap: spacing[3] },
-    emptyIcon: { fontSize: 56 },
-    emptyTitle: { fontFamily: fonts.display, fontSize: fontSizes.xl, color: colors.foreground, textAlign: 'center' },
-    emptySub: { fontFamily: fonts.body, fontSize: fontSizes.sm, color: colors.mutedFg, textAlign: 'center', lineHeight: 22 },
-    errorText: { fontFamily: fonts.body, fontSize: fontSizes.base, color: colors.destructive, marginBottom: spacing[4] },
-    retryBtn: { paddingHorizontal: spacing[5], paddingVertical: spacing[3], backgroundColor: colors.foreground, borderRadius: radii.md },
-    retryBtnText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.background },
-    avatarBtn: { paddingHorizontal: spacing[3], paddingVertical: spacing[2], borderRadius: radii.lg },
-    avatarBtnText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.sm, color: colors.foreground },
-  });
-}
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    borderBottomWidth: 1,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  backBtn: {
+    padding: 4,
+  },
+  headerSuper: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 9,
+    letterSpacing: 1.2,
+  },
+  headerTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: fontSizes.lg,
+  },
+  avatarBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radii.full,
+    borderWidth: 1,
+  },
+  avatarBtnText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.xs - 1,
+  },
+  centerContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  loadingText: {
+    fontFamily: fonts.body,
+    fontSize: fontSizes.sm,
+  },
+  listContent: {
+    padding: spacing.md,
+    paddingBottom: spacing['2xl'] + 20,
+    gap: spacing.sm + 2,
+  },
+  card: {
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    gap: spacing.md,
+  },
+  thumbCollage: {
+    width: 64,
+    height: 64,
+    borderRadius: radii.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  collageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    width: '100%',
+    height: '100%',
+  },
+  collageItem: {
+    width: '50%',
+    height: '50%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 2,
+  },
+  collageImg: {
+    width: '100%',
+    height: '100%',
+  },
+  cardMeta: {
+    flex: 1,
+    gap: 3,
+  },
+  outfitName: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.sm + 1,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  occasionBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radii.full,
+  },
+  occasionText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 9.5,
+  },
+  piecesText: {
+    fontFamily: fonts.body,
+    fontSize: fontSizes.xs - 1,
+  },
+  dateText: {
+    fontFamily: fonts.body,
+    fontSize: 10,
+  },
+  cardHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerIconBtn: {
+    padding: 6,
+  },
+  expandedSection: {
+    borderTopWidth: 1,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  expandedTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.xs + 1,
+  },
+  garmentsScroll: {
+    gap: spacing.sm,
+    paddingVertical: 4,
+  },
+  garmentPillCard: {
+    width: 90,
+    borderRadius: radii.lg,
+    padding: 6,
+    borderWidth: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
+  garmentImageWrap: {
+    width: 76,
+    height: 76,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  garmentImage: {
+    width: '85%',
+    height: '85%',
+  },
+  garmentName: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 10,
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  garmentRole: {
+    fontFamily: fonts.body,
+    fontSize: 9,
+    textAlign: 'center',
+  },
+  quickActionsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  tryOnBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: radii.full,
+  },
+  tryOnBtnText: {
+    color: '#FFF',
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.xs,
+  },
+  shareBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: radii.full,
+    borderWidth: 1,
+  },
+  shareBtnText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.xs,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+    gap: spacing.xs,
+  },
+  emptyTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: fontSizes.md + 1,
+    marginTop: spacing.xs,
+  },
+  emptyDesc: {
+    fontFamily: fonts.body,
+    fontSize: fontSizes.xs,
+    textAlign: 'center',
+    lineHeight: 18,
+    maxWidth: 280,
+  },
+  createFirstBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.full,
+    marginTop: spacing.md,
+  },
+  createFirstBtnText: {
+    color: '#FFF',
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.sm,
+  },
+});

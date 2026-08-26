@@ -32,18 +32,32 @@ class UpdateUserIn(BaseModel):
     company_name: str | None = None
     phone: str | None = None
     date_of_birth: str | None = None
+    birthday: str | None = None
     sex: str | None = None
+    gender: str | None = None
     personal_status: str | None = None
+    marital_status: str | None = None
     address: dict[str, Any] | None = None
+    city: str | None = None
+    country: str | None = None
     units: dict[str, Any] | None = None
     face_photo_url: str | None = None
     body_photo_url: str | None = None
     skin_tone: str | None = None
     body_measurements: dict[str, Any] | None = None
+    measurements: dict[str, Any] | None = None
     hair: dict[str, Any] | None = None
 
     # --- Phase U: Professional ---
     professional: dict[str, Any] | None = None
+    is_stylist: bool | None = None
+    stylist_bio: str | None = None
+    hourly_rate: float | None = None
+    booking_url: str | None = None
+    specialties: list[str] | None = None
+
+    # --- Shopping Assistant ---
+    shopping_assistant: dict[str, Any] | None = None
 
     # --- Phase 4P: PayPal payouts ---
     paypal_receiver_email: str | None = None
@@ -57,6 +71,8 @@ class UpdateUserIn(BaseModel):
 
     # --- AI Stylist Scheduler Settings (Phase Scheduler) ---
     scheduler_settings: dict[str, Any] | None = None
+    scheduler_enabled: bool | None = None
+    morning_notification_time: str | None = None
 
     # --- AI Settings (F3 pay-as-you-go) ---
     ai_configuration: dict[str, Any] | None = None
@@ -76,6 +92,32 @@ async def get_me(user: dict = Depends(get_current_user)) -> dict[str, Any]:
     safe["google_connected"] = bool(user.get("google_oauth"))
     safe["has_password"] = bool(user.get("password_hash"))
     
+    # Normalize aliases so all frontends receive expected keys
+    if "date_of_birth" in safe and "birthday" not in safe:
+        safe["birthday"] = safe["date_of_birth"]
+    if "birthday" in safe and "date_of_birth" not in safe:
+        safe["date_of_birth"] = safe["birthday"]
+    if "sex" in safe and "gender" not in safe:
+        safe["gender"] = safe["sex"]
+    if "gender" in safe and "sex" not in safe:
+        safe["sex"] = safe["gender"]
+    if "personal_status" in safe and "marital_status" not in safe:
+        safe["marital_status"] = safe["personal_status"]
+    if "marital_status" in safe and "personal_status" not in safe:
+        safe["personal_status"] = safe["marital_status"]
+        
+    addr = safe.get("address") or safe.get("home_location") or {}
+    if isinstance(addr, dict):
+        if "city" not in safe and addr.get("city"):
+            safe["city"] = addr.get("city")
+        if "country" not in safe and addr.get("country"):
+            safe["country"] = addr.get("country")
+            
+    if "body_measurements" in safe and "measurements" not in safe:
+        safe["measurements"] = safe["body_measurements"]
+    if "measurements" in safe and "body_measurements" not in safe:
+        safe["body_measurements"] = safe["measurements"]
+
     # Mask API keys to keep them secured
     if "ai_configuration" in safe:
         ai_config = dict(safe["ai_configuration"])
@@ -119,23 +161,7 @@ async def update_migration_flag(
 async def update_me(
     payload: UpdateUserIn, user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
-    """Partial profile update.
-
-    **Important — embedded-document merge semantics.** Mongo's
-    ``$set`` on a nested dict (e.g. ``body_measurements``) wholesale
-    replaces the dict, dropping every field not present in the
-    incoming payload. That's the opposite of what users expect from
-    a "PATCH" — and a real data-loss bug when a frontend form sends
-    only the fields it knows about (e.g. a cropped/pruned body
-    measurements blob from a partial form re-render).
-
-    To make the endpoint safe under all callers, we **deep-merge**
-    every dict-typed field into its existing value instead of
-    overwriting it. Scalar fields keep ``$set`` semantics. Setting
-    a dict field to ``{}`` explicitly is treated as "no change"
-    (use a dedicated reset endpoint if you ever need to fully wipe
-    a sub-document — none currently exists).
-    """
+    """Partial profile update."""
     patch = payload.model_dump(exclude_none=True)
     if "style_profile" in patch and patch["style_profile"] is not None:
         patch["style_profile"] = patch["style_profile"] if isinstance(
@@ -150,6 +176,7 @@ async def update_me(
     # partial PATCH cannot wipe values the frontend wasn't aware of.
     _MERGEABLE_DICT_FIELDS = (
         "body_measurements",
+        "measurements",
         "address",
         "units",
         "hair",
@@ -158,15 +185,44 @@ async def update_me(
         "style_profile",
         "cultural_context",
         "scheduler_settings",
+        "shopping_assistant",
     )
 
     db = get_db()
     set_ops: dict[str, Any] = {}
 
+    # Normalize aliases in incoming patch
+    if "birthday" in patch:
+        set_ops["date_of_birth"] = patch["birthday"]
+        set_ops["birthday"] = patch["birthday"]
+    if "date_of_birth" in patch:
+        set_ops["date_of_birth"] = patch["date_of_birth"]
+        set_ops["birthday"] = patch["date_of_birth"]
+    if "gender" in patch:
+        set_ops["sex"] = patch["gender"]
+        set_ops["gender"] = patch["gender"]
+    if "sex" in patch:
+        set_ops["sex"] = patch["sex"]
+        set_ops["gender"] = patch["sex"]
+    if "marital_status" in patch:
+        set_ops["personal_status"] = patch["marital_status"]
+        set_ops["marital_status"] = patch["marital_status"]
+    if "personal_status" in patch:
+        set_ops["personal_status"] = patch["personal_status"]
+        set_ops["marital_status"] = patch["personal_status"]
+    if "city" in patch:
+        set_ops["city"] = patch["city"]
+        set_ops["address.city"] = patch["city"]
+        set_ops["home_location.city"] = patch["city"]
+    if "country" in patch:
+        set_ops["country"] = patch["country"]
+        set_ops["address.country"] = patch["country"]
+        set_ops["home_location.country"] = patch["country"]
+
     if "ai_configuration" in patch and patch["ai_configuration"] is not None:
         ai_config = patch["ai_configuration"]
         existing_config = user.get("ai_configuration") or {}
-        provider_mode = ai_config.get("provider_mode") or existing_config.get("provider_mode") or "standard"
+        provider_mode = ai_config.get("provider_mode") or existing_config.get("provider_mode") or "custom_keys"
         
         # Merge custom keys
         existing_keys = existing_config.get("custom_keys") or {}
@@ -189,7 +245,7 @@ async def update_me(
             "provider_mode": provider_mode,
             "custom_keys": merged_keys,
             "selected_provider": ai_config.get("selected_provider") or existing_config.get("selected_provider") or "google_ai",
-            "selected_model": ai_config.get("selected_model") or existing_config.get("selected_model") or "gemini-3.5-flash-lite",
+            "selected_model": ai_config.get("selected_model") or existing_config.get("selected_model") or "gemini-3.5-flash",
             "current_credits": ai_config.get("current_credits", existing_config.get("current_credits", 1000)),
             "credits_used_this_month": ai_config.get("credits_used_this_month", existing_config.get("credits_used_this_month", 0))
         }

@@ -182,7 +182,7 @@ SYSTEM_PROMPT = (
     '  "tradition": string|null,           // cultural/religious pattern if clearly present (e.g. "arabic","jewish","indian"), else null\n'
     '  "colors":           [{"name": string, "pct": integer 0..100}, ...],  // sum \u2248 100\n'
     '  "fabric_materials": [{"name": string, "pct": integer 0..100}, ...],  // sum \u2248 100; infer likely composition\n'
-    '  "pattern": string,                  // "solid","striped","plaid","floral","herringbone","polka","paisley","geometric","abstract"\n'
+    '  "pattern": string,                  // "solid","striped","plaid","floral","herringbone","polka_dot","paisley","geometric","animal_print","graphic","tie_dye","abstract"\n'
     '  "state": "new"|"used",\n'
     '  "condition": "bad"|"fair"|"good"|"excellent",\n'
     '  "quality": "budget"|"mid"|"premium"|"luxury",\n'
@@ -212,9 +212,13 @@ SYSTEM_PROMPT = (
     "Imagine the user already owns ten black tees; pick a detail no "
     "other shirt in a closet would share (texture, weight, neckline, "
     "wash, hardware, vibe, era).\n"
-    "  4. VOICE \u2014 thoughtful editor, never salesy, never robotic. "
+    "  4. VOICE — thoughtful editor, never salesy, never robotic. "
     "No emojis, no markdown, no hashtags, no #tags inside text "
-    "fields."
+    "fields.\n"
+    "  5. FIELD RULES:\n"
+    "     • pattern: If the garment has printed text, slogans, artwork, graphics, typography, or illustrations, set pattern=\"graphic\". Only use \"solid\" if there is no graphic or pattern.\n"
+    "     • season: If the piece is versatile and wearable year-round (e.g. standard t-shirt, jeans, hoodie, sneakers), return [\"all\"]. Only restrict to specific seasons if clearly weather-bound (e.g. heavy winter down parka, summer swimwear).\n"
+    "     • gender: Default to \"unisex\" for standard t-shirts, hoodies, and casual pieces unless tailored explicitly for men or women."
 )
 
 
@@ -366,7 +370,8 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
             "type": "string",
             "enum": [
                 "solid", "striped", "plaid", "floral", "herringbone",
-                "polka", "paisley", "geometric", "abstract",
+                "polka", "polka_dot", "paisley", "geometric", "animal_print",
+                "graphic", "tie_dye", "abstract",
             ],
         },
         "state": {"type": "string", "enum": ["new", "used"]},
@@ -885,7 +890,8 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
             "type": "string",
             "enum": [
                 "solid", "striped", "plaid", "floral", "herringbone",
-                "polka", "paisley", "geometric", "abstract",
+                "polka", "polka_dot", "paisley", "geometric", "animal_print",
+                "graphic", "tie_dye", "abstract",
             ],
         },
         "state": {"type": "string", "enum": ["new", "used"]},
@@ -1017,7 +1023,7 @@ ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
         (
             'Analyze visual properties:\n'
             '- colors: list of [{"name": "color name", "pct": 0-100}] summing to 100\n'
-            '- pattern: solid | striped | plaid | floral | herringbone | polka | paisley | geometric | abstract\n'
+            '- pattern: solid | striped | plaid | floral | herringbone | polka_dot | paisley | geometric | animal_print | graphic | tie_dye | abstract\n'
             '- fabric_materials: list of [{"name": "fabric", "pct": 0-100}] summing to 100 (infer composition)'
         )
     ),

@@ -16,8 +16,8 @@ import { CommonActions } from '@react-navigation/native';
 import type { RootStackParamList } from '@mobile/navigation/types';
 import { emitAuthChange } from './authEvents';
 
-const TOKEN_KEY = 'dressapp.token';
-const USER_KEY  = 'dressapp.user';
+export const TOKEN_KEY = 'dressapp.token';
+export const USER_KEY  = 'dressapp.user';
 
 // Weak ref to the navigation container — set by RootNavigator on mount.
 let _navigationRef: NavigationContainerRef<RootStackParamList> | null = null;
@@ -28,21 +28,28 @@ export function setNavigationRef(ref: NavigationContainerRef<RootStackParamList>
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL ?? 'https://dressapp.co';
 
+let _cachedToken: string | null = null;
+
 const { client, API_BASE, tokenStore, userStore } = createApiClient({
-  // ── Token storage (SecureStore — encrypted Keychain/Keystore) ──────────
+  // ── Token storage (SecureStore + In-Memory Cache) ─────────────────────
   getToken: () => {
-    // SecureStore.getItem is synchronous on iOS (Keychain access)
-    // and synchronous-ish on Android (SharedPreferences + Keystore).
-    try { return SecureStore.getItem(TOKEN_KEY) ?? null; } catch { return null; }
+    if (_cachedToken) return _cachedToken;
+    try {
+      _cachedToken = SecureStore.getItem(TOKEN_KEY) ?? null;
+      return _cachedToken;
+    } catch {
+      return null;
+    }
   },
-  setToken: (t: string) => {
-    // Await the write to avoid race conditions on initial load
-    return SecureStore.setItemAsync(TOKEN_KEY, t);
+  setToken: async (t: string) => {
+    _cachedToken = t;
+    await SecureStore.setItemAsync(TOKEN_KEY, t);
+    emitAuthChange(true);
   },
-  clearToken: () => {
-    return SecureStore.deleteItemAsync(TOKEN_KEY).then(() => {
-      emitAuthChange(false);
-    });
+  clearToken: async () => {
+    _cachedToken = null;
+    await SecureStore.deleteItemAsync(TOKEN_KEY);
+    emitAuthChange(false);
   },
 
   // ── User preferences (AsyncStorage — not encrypted, user metadata) ─────
@@ -73,6 +80,7 @@ const { client, API_BASE, tokenStore, userStore } = createApiClient({
 
 export const api = buildApi();
 export { client, API_BASE, tokenStore, userStore };
+export { emitAuthChange } from './authEvents';
 
 // Re-export individual adapters for focused screen imports
 export {

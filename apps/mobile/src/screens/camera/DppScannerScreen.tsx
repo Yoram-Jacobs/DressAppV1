@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   View, 
@@ -8,7 +7,7 @@ import {
   Animated, 
   Dimensions,
   ActivityIndicator,
-  I18nManager
+  I18nManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -17,16 +16,19 @@ import { spacing } from '@mobile/theme/tokens';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ClosetStackParamList } from '../../navigation/types';
-import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import type { BarcodeScanningResult } from 'expo-camera';
 import * as Lucide from "lucide-react-native";
 import { api } from '../../lib/api';
 
 const { height } = Dimensions.get('window');
 
+type NavProp = NativeStackNavigationProp<ClosetStackParamList>;
+
 export function DppScannerScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const navigation = useNavigation<NativeStackNavigationProp<ClosetStackParamList>>();
+  const navigation = useNavigation<NavProp>();
   
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
@@ -38,7 +40,7 @@ export function DppScannerScreen() {
   const modalAnim = useRef(new Animated.Value(height)).current;
 
   useEffect(() => {
-    Animated.loop(
+    const anim = Animated.loop(
       Animated.sequence([
         Animated.timing(scannerAnim, {
           toValue: 1,
@@ -51,7 +53,9 @@ export function DppScannerScreen() {
           useNativeDriver: true,
         }),
       ])
-    ).start();
+    );
+    anim.start();
+    return () => anim.stop();
   }, [scannerAnim]);
 
   const BackIcon = I18nManager.isRTL ? Lucide.ArrowRight : Lucide.ArrowLeft;
@@ -64,10 +68,10 @@ export function DppScannerScreen() {
     return (
       <View style={[styles.root, styles.center, { backgroundColor: colors.background }]}>
         <Text style={[styles.permissionText, { color: colors.foreground }]}>
-          {t('camera.permissionNeeded', 'We need your permission to show the camera')}
+          {t('camera.permissionNeeded', { defaultValue: 'We need your permission to show the camera' })}
         </Text>
         <TouchableOpacity style={[styles.permissionButton, { backgroundColor: colors.primary }]} onPress={requestPermission}>
-          <Text style={styles.permissionButtonText}>{t('camera.grantPermission', 'Grant Permission')}</Text>
+          <Text style={styles.permissionButtonText}>{t('camera.grantPermission', { defaultValue: 'Grant Permission' })}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -125,13 +129,14 @@ export function DppScannerScreen() {
   return (
     <SafeAreaView style={styles.root} edges={['bottom', 'top']}>
       <CameraView 
-        style={styles.camera} 
+        style={StyleSheet.absoluteFillObject} 
         facing="back"
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
         barcodeScannerSettings={{
           barcodeTypes: ['qr', 'ean13', 'ean8', 'code128'],
         }}
-      >
+      />
+      <View style={styles.overlay} pointerEvents="box-none">
         <View style={styles.topControls}>
           <TouchableOpacity style={styles.iconButton} onPress={() => navigation.goBack()}>
             <BackIcon size={28} color="#fff" />
@@ -160,11 +165,11 @@ export function DppScannerScreen() {
               />
             </View>
             <Text style={styles.scanInstructions}>
-              {t('dpp.scanInstructions', 'Lucide.Scan Digital Product Passport QR or Barcode')}
+              {t('dpp.scanInstructions', { defaultValue: 'Scan Digital Product Passport QR or Barcode' })}
             </Text>
           </View>
         )}
-      </CameraView>
+      </View>
 
       <Animated.View style={[
         styles.modalContainer, 
@@ -177,20 +182,20 @@ export function DppScannerScreen() {
           <View style={styles.modalCenter}>
             <ActivityIndicator size="large" color={colors.primary} />
             <Text style={[styles.loadingText, { color: colors.foreground }]}>
-              {t('dpp.analyzing', 'Analyzing Product Data...')}
+              {t('dpp.analyzing', { defaultValue: 'Analyzing Product Data...' })}
             </Text>
           </View>
         ) : productInfo ? (
           <View style={styles.productCard}>
             <View style={styles.modalHandle} />
             <Text style={[styles.modalTitle, { color: colors.foreground }]}>
-              {t('dpp.productInfo', 'Product Passport')}
+              {t('dpp.productInfo', { defaultValue: 'Product Passport' })}
             </Text>
 
             <View style={styles.infoRow}>
               <Lucide.Leaf size={20} color={colors.primary} style={styles.infoIcon} />
               <View>
-                <Text style={[styles.infoLabel, { color: colors.foreground }]}>{t('dpp.material', 'Material')}</Text>
+                <Text style={[styles.infoLabel, { color: colors.foreground }]}>{t('dpp.material', { defaultValue: 'Material' })}</Text>
                 <Text style={[styles.infoValue, { color: colors.foreground }]}>{productInfo.material}</Text>
               </View>
             </View>
@@ -198,7 +203,7 @@ export function DppScannerScreen() {
             <View style={styles.infoRow}>
               <Lucide.MapPin size={20} color={colors.primary} style={styles.infoIcon} />
               <View>
-                <Text style={[styles.infoLabel, { color: colors.foreground }]}>{t('dpp.origin', 'Origin')}</Text>
+                <Text style={[styles.infoLabel, { color: colors.foreground }]}>{t('dpp.origin', { defaultValue: 'Origin' })}</Text>
                 <Text style={[styles.infoValue, { color: colors.foreground }]}>{productInfo.origin}</Text>
               </View>
             </View>
@@ -206,7 +211,7 @@ export function DppScannerScreen() {
             <View style={styles.infoRow}>
               <Lucide.Award size={20} color={colors.primary} style={styles.infoIcon} />
               <View>
-                <Text style={[styles.infoLabel, { color: colors.foreground }]}>{t('dpp.certifications', 'Certifications')}</Text>
+                <Text style={[styles.infoLabel, { color: colors.foreground }]}>{t('dpp.certifications', { defaultValue: 'Certifications' })}</Text>
                 <Text style={[styles.infoValue, { color: colors.foreground }]}>{productInfo.certifications}</Text>
               </View>
             </View>
@@ -214,7 +219,7 @@ export function DppScannerScreen() {
             <View style={styles.infoRow}>
               <Lucide.Activity size={20} color={colors.primary} style={styles.infoIcon} />
               <View>
-                <Text style={[styles.infoLabel, { color: colors.foreground }]}>{t('dpp.carbonScore', 'Carbon Score')}</Text>
+                <Text style={[styles.infoLabel, { color: colors.foreground }]}>{t('dpp.carbonScore', { defaultValue: 'Carbon Score' })}</Text>
                 <Text style={[styles.infoValue, { color: colors.foreground }]}>{productInfo.carbonScore}</Text>
               </View>
             </View>
@@ -224,7 +229,7 @@ export function DppScannerScreen() {
               onPress={hideModal}
             >
               <Lucide.Scan size={20} color="#fff" />
-              <Text style={styles.scanAgainText}>{t('dpp.scanAgain', 'Lucide.Scan Another')}</Text>
+              <Text style={styles.scanAgainText}>{t('dpp.scanAgain', { defaultValue: 'Scan Another' })}</Text>
             </TouchableOpacity>
           </View>
         ) : null}
@@ -235,6 +240,9 @@ export function DppScannerScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000' },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
   center: { justifyContent: 'center', alignItems: 'center', padding: 32 },
   permissionText: { textAlign: 'center', marginBottom: 16, fontSize: 16 },
   permissionButton: { paddingHorizontal: 24, paddingVertical: 8, borderRadius: 8 },

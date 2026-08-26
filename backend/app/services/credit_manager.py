@@ -18,6 +18,7 @@ from pydantic import BaseModel
 
 from app.db.database import get_db
 from app.models.schemas import User, CreditBucket, CreditType, CreditUsageResponse
+from app.models.credit import prune_expired_buckets
 
 logger = logging.getLogger(__name__)
 
@@ -568,7 +569,7 @@ async def refund_user_credits(
         
         await db_connection.users.update_one(
             {"id": user_id},
-            {"$set": {"credit_buckets": [b.dict() for b in u_model.credit_buckets]}}
+            {"$set": {"credit_buckets": [b.dict() for b in prune_expired_buckets(u_model.credit_buckets)]}}
         )
         
         # Log the refund transaction
@@ -605,10 +606,13 @@ async def add_paid_credits(user_id: str, amount: int) -> bool:
         
         user_record["credit_buckets"] = user_record.get("credit_buckets", [])
         user_record["credit_buckets"].append(new_bucket)
-        
+        # Prune zero-amount expired free buckets before writing back.
+        raw_buckets = [CreditBucket(**b) if isinstance(b, dict) else b for b in user_record["credit_buckets"]]
+        clean_buckets = [b.dict() for b in prune_expired_buckets(raw_buckets)]
+
         await db.users.update_one(
             {"id": user_id},
-            {"$set": {"credit_buckets": user_record["credit_buckets"]}}
+            {"$set": {"credit_buckets": clean_buckets}}
         )
         return True
     except Exception as e:
@@ -688,7 +692,7 @@ async def use_ai_c_with_threshold_check(
         if not success:
             return False
         
-        user_record["credit_buckets"] = [b.dict() for b in u_model.credit_buckets]
+        user_record["credit_buckets"] = [b.dict() for b in prune_expired_buckets(u_model.credit_buckets)]
         await db.users.update_one(
             {"id": user_id},
             {"$set": {"credit_buckets": user_record["credit_buckets"]}}

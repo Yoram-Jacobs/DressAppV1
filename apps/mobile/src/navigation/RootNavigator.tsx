@@ -14,45 +14,79 @@
  */
 
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { setNavigationRef } from '@mobile/lib/api';
 import type { RootStackParamList } from './types';
 
 import { AuthStack } from './stacks/AuthStack';
 import { MainTabs } from './MainTabs';
 import { useAuthState } from '@mobile/hooks/useAuthState';
+import { WorkProgressFloater } from '@mobile/components/WorkProgressFloater';
+import { WorkBatchDoneToast } from '@mobile/components/WorkBatchDoneToast';
+import { prewarmAllStores, resetAllStores } from '@mobile/lib/stores';
 
 const Root = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
+  const { t } = useTranslation();
   const navRef = useNavigationContainerRef<RootStackParamList>();
   const { isAuthenticated, isLoading } = useAuthState();
+  const prevAuthRef = React.useRef<boolean | null>(null);
+
+  // Eager prewarm all database loading screens when authenticated
+  useEffect(() => {
+    if (isLoading) return;
+    if (isAuthenticated) {
+      prewarmAllStores().catch(() => {});
+    } else {
+      resetAllStores();
+    }
+  }, [isAuthenticated, isLoading]);
 
   // Wire the API adapter so onUnauthorized can navigate to Auth
   useEffect(() => {
     setNavigationRef(navRef);
   }, [navRef]);
 
-  // Show a visible loading state instead of null (prevents black screen)
+  // Atomically reset navigation stack ONLY when auth state actually transitions
+  useEffect(() => {
+    if (!isLoading && navRef.isReady()) {
+      if (prevAuthRef.current !== null && prevAuthRef.current !== isAuthenticated) {
+        const targetRoute = isAuthenticated ? 'Main' : 'Auth';
+        navRef.reset({
+          index: 0,
+          routes: [{ name: targetRoute }],
+        });
+      }
+      prevAuthRef.current = isAuthenticated;
+    }
+  }, [isAuthenticated, isLoading, navRef]);
+
   if (isLoading) {
     return (
       <View style={styles.loading}>
-        <Text style={styles.loadingText}>Loading…</Text>
+        <ActivityIndicator size="large" color="#2F7972" />
+        <Text style={styles.loadingText}>
+          {t('common.loadingDressApp', { defaultValue: 'Loading DressApp…' })}
+        </Text>
       </View>
     );
   }
 
   return (
     <NavigationContainer ref={navRef}>
-      <Root.Navigator screenOptions={{ headerShown: false }}>
+      <Root.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
         {isAuthenticated ? (
           <Root.Screen name="Main" component={MainTabs} />
         ) : (
           <Root.Screen name="Auth" component={AuthStack} />
         )}
       </Root.Navigator>
+      <WorkProgressFloater />
+      <WorkBatchDoneToast />
     </NavigationContainer>
   );
 }

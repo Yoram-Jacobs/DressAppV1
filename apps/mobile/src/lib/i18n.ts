@@ -29,12 +29,13 @@ const i18n = createI18n({
 export async function hydrateLanguage(): Promise<void> {
   try {
     const stored = await AsyncStorage.getItem(LANG_KEY);
-    if (stored && stored !== i18n.language) {
-      await i18n.changeLanguage(stored);
-      await applyRtl(stored);
+    const targetLang = stored || 'he';
+    if (targetLang !== i18n.language) {
+      await i18n.changeLanguage(targetLang);
+      await applyRtl(targetLang);
     }
   } catch {
-    // ignore — default 'en' stays active
+    // ignore
   }
 }
 

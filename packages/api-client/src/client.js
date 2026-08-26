@@ -40,7 +40,11 @@ export function createApiClient({
   const tokenStore = {
     get: () => (getToken ? (getToken() ?? null) : null),
     set: (t) => setToken?.(t),
-    clear: () => { clearToken?.(); clearUser?.(); },
+    clear: () => {
+      const p1 = clearToken?.();
+      const p2 = clearUser?.();
+      return Promise.all([Promise.resolve(p1), Promise.resolve(p2)]);
+    },
   };
 
   const userStore = {

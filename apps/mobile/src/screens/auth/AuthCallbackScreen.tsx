@@ -77,6 +77,15 @@ export default function AuthCallbackScreen({ route }: { route?: { params?: Recor
 
           token = fragmentParams.get('token') || queryParams.get('token') || undefined;
           errCode = fragmentParams.get('error') || queryParams.get('error') || undefined;
+
+          if (!token) {
+            const tokenMatch = rawUrl.match(/[?&#]token=([^&#]+)/);
+            if (tokenMatch) token = decodeURIComponent(tokenMatch[1]);
+          }
+          if (!errCode) {
+            const errMatch = rawUrl.match(/[?&#]error=([^&#]+)/);
+            if (errMatch) errCode = decodeURIComponent(errMatch[1]);
+          }
         }
 
         if (errCode) {
@@ -84,10 +93,10 @@ export default function AuthCallbackScreen({ route }: { route?: { params?: Recor
           return true;
         }
         if (token) {
-          // If we reached here via Deep Link while openAuthSessionAsync was running,
-          // the browser window might still be open. Force it closed.
-          WebBrowser.dismissBrowser();
-          tokenStore.set(token)?.then(() => {
+          try {
+            WebBrowser.dismissBrowser();
+          } catch {}
+          Promise.resolve(tokenStore.set(token)).then(() => {
             emitAuthChange(true);
           });
           return true;
@@ -108,7 +117,7 @@ export default function AuthCallbackScreen({ route }: { route?: { params?: Recor
     }
 
     // 2. Check initial launch URL
-    let timer: any = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
     Linking.getInitialURL().then((initialUrl) => {
       if (initialUrl && processUrlOrParams(initialUrl)) {
@@ -152,13 +161,10 @@ export default function AuthCallbackScreen({ route }: { route?: { params?: Recor
                 style={s.spinner}
               />
               <Text style={s.heading}>
-                {t('auth.finishingSignIn', 'Finishing sign-in…')}
+                {t('auth.finishingSignIn', { defaultValue: 'Finishing sign-in…' })}
               </Text>
               <Text style={s.sub}>
-                {t(
-                  'auth.finishingSignInSub',
-                  'Hang tight, we\'re setting up your account.',
-                )}
+                {t('auth.finishingSignInSub', { defaultValue: "Hang tight, we're setting up your account." })}
               </Text>
             </>
           ) : (
@@ -168,12 +174,12 @@ export default function AuthCallbackScreen({ route }: { route?: { params?: Recor
               <Text
                 testID="auth-callback-error-icon"
                 style={s.errorIcon}
-                accessibilityLabel={t('auth.signInFailed', 'Sign-in failed')}
+                accessibilityLabel={t('auth.signInFailed', { defaultValue: 'Sign-in failed' })}
               >
                 ⚠️
               </Text>
               <Text style={s.heading}>
-                {t('auth.signInFailed', 'Sign-in failed')}
+                {t('auth.signInFailed', { defaultValue: 'Sign-in failed' })}
               </Text>
               <Text
                 testID="auth-callback-error-message"
@@ -188,7 +194,7 @@ export default function AuthCallbackScreen({ route }: { route?: { params?: Recor
                 style={s.backBtn}
                 labelStyle={s.backBtnLabel}
               >
-                {t('auth.backToLogin', 'Back to sign-in')}
+                {t('auth.backToLogin', { defaultValue: 'Back to sign-in' })}
               </Button>
             </>
           )}

@@ -31,6 +31,42 @@ SYNONYMS = {
     "חורף": ["חורף", "winter", "winter wear", "snow", "cold"],
 }
 
+def norm_category(cat: Any) -> str:
+    """Normalize raw clothing categories into standard taxonomy tokens."""
+    s = str(cat or "").strip().lower().replace(" ", "_").replace("-", "_")
+    if s in (
+        "top", "tops", "shirt", "shirts", "t_shirt", "tshirt", "tshirts",
+        "polo", "sweater", "sweaters", "blouse", "blouses", "hoodie",
+        "hoodies", "tank", "tank_top", "tanktop", "crop_top", "sweatshirt",
+        "cardigan", "knitwear", "topwear"
+    ):
+        return "top"
+    if s in (
+        "bottom", "bottoms", "pants", "shorts", "jeans", "skirt", "skirts",
+        "trousers", "joggers", "leggings", "sweatpants", "chinos", "slacks",
+        "bottomwear"
+    ):
+        return "bottom"
+    if s in (
+        "footwear", "shoes", "shoe", "sneakers", "sneaker", "boots", "boot",
+        "sandals", "sandal", "heels", "heel", "loafers", "loafer", "slides",
+        "slippers", "flats"
+    ):
+        return "shoes"
+    if s in (
+        "dress", "dresses", "jumpsuit", "jumpsuits", "suit", "suits", "overall",
+        "overalls", "dungaree", "dungarees", "full_body", "full_body_suit",
+        "romper", "gown", "tracksuit", "bodysuit", "unitard"
+    ):
+        return "dress"
+    if s in (
+        "outerwear", "jacket", "jackets", "coat", "coats", "blazer",
+        "blazers", "parka", "trench", "vest", "overcoat"
+    ):
+        return "outerwear"
+    return "accessory"
+
+
 def matches_style_func(item: dict, style_dress_for: str | None, has_exact_tag_match: bool = False) -> bool:
     if not style_dress_for:
         return True
@@ -227,7 +263,7 @@ async def get_rotation_prioritized_closet(
     buckets: dict[str, list[dict[str, Any]]] = {
         "top": [],
         "bottom": [],
-        "footwear": [],
+        "shoes": [],
         "dress": [],
         "outerwear": [],
         "accessory": [],
@@ -235,6 +271,8 @@ async def get_rotation_prioritized_closet(
 
     for item in items:
         cat_key = norm_category(item.get("category"))
+        if cat_key not in buckets:
+            cat_key = "accessory"
         buckets[cat_key].append(item)
 
     # Sort each bucket by rotation key
@@ -245,7 +283,7 @@ async def get_rotation_prioritized_closet(
     target_ratios = {
         "top": 0.35,
         "bottom": 0.35,
-        "footwear": 0.15,
+        "shoes": 0.15,
         "dress": 0.05,
         "outerwear": 0.05,
         "accessory": 0.05,
@@ -271,7 +309,7 @@ async def get_rotation_prioritized_closet(
 
     # Second pass: redistribute leftover budget to categories with remaining items
     if leftover_budget > 0:
-        for cat_key in ["top", "bottom", "footwear", "dress", "outerwear", "accessory"]:
+        for cat_key in ["top", "bottom", "shoes", "dress", "outerwear", "accessory"]:
             bucket = buckets[cat_key]
             q = quotas[cat_key]
             remaining_in_bucket = bucket[q:]
@@ -366,61 +404,98 @@ async def check_event_similarities(
                     if note not in why:
                         prop["why"] = (why + f" Note: {note}").strip()
 
+
 def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any]]) -> None:
-    """Ensure proposal contains top/dress, bottom, and shoes if available in closet."""
+    """Ensure proposal contains valid, non-duplicated items with correct roles and complete coverage."""
+    raw_by_id = {c["id"]: c for c in raw_closet if c.get("id")}
     items = prop.get("items") or []
-    roles = {str(i.get("role")).lower() for i in items}
-    
-    def norm_cat(cat):
-        s = str(cat or "").strip().lower().replace(" ", "_")
-        if s in ("top", "tops", "shirt", "t-shirt", "t_shirt", "polo", "sweater", "blouse"): return "top"
-        if s in ("bottom", "bottoms", "pants", "shorts", "jeans", "skirt", "trousers"): return "bottom"
-        if s in ("footwear", "shoes", "sneakers", "boots", "sandals", "shoe"): return "shoes"
-        if s in ("dress", "dresses", "jumpsuit", "suit", "full_body", "full_body_suit"): return "dress"
-        return s
 
-    has_dress = "dress" in roles
-    has_bottom = "bottom" in roles or has_dress
-    has_shoes = "shoes" in roles
+    # 1. Sanitize and correct roles of LLM-returned items based on actual closet category
+    sanitized_items = []
+    seen_ids = set()
+    for it in items:
+        cid = it.get("closet_item_id")
+        if not cid or cid not in raw_by_id:
+            continue
+        if cid in seen_ids:
+            continue
+        seen_ids.add(cid)
 
-    closet_by_role = {}
+        c_item = raw_by_id[cid]
+        true_cat = norm_category(c_item.get("category"))
+        true_role = "shoes" if true_cat in ("footwear", "shoes") else true_cat
+
+        sanitized_items.append({
+            "role": true_role,
+            "description": it.get("description") or c_item.get("title") or c_item.get("name") or true_role.title(),
+            "closet_item_id": cid,
+        })
+
+    # 2. Check roles present
+    roles_present = {it["role"] for it in sanitized_items}
+    has_dress = "dress" in roles_present
+    has_top = "top" in roles_present or has_dress
+    has_bottom = "bottom" in roles_present or has_dress
+    has_shoes = "shoes" in roles_present
+
+    # Group available closet items by normalized role
+    closet_by_role: dict[str, list[dict[str, Any]]] = {}
     for c_item in raw_closet:
-        role = norm_cat(c_item.get("category"))
-        if role not in closet_by_role:
-            closet_by_role[role] = []
-        closet_by_role[role].append(c_item)
+        cat = norm_category(c_item.get("category"))
+        role = "shoes" if cat in ("footwear", "shoes") else cat
+        closet_by_role.setdefault(role, []).append(c_item)
 
     missing_notes = []
 
-    # Hydrate bottom if missing and available
-    if not has_bottom:
-        bottoms = closet_by_role.get("bottom") or []
-        if bottoms:
-            b = bottoms[0]
-            items.append({
-                "role": "bottom",
-                "description": b.get("title") or b.get("name") or "Bottoms",
-                "closet_item_id": b["id"]
+    # Hydrate Top if missing (and no dress)
+    if not has_top:
+        available_tops = [c for c in closet_by_role.get("top", []) if c["id"] not in seen_ids]
+        if available_tops:
+            t_item = available_tops[0]
+            seen_ids.add(t_item["id"])
+            sanitized_items.insert(0, {
+                "role": "top",
+                "description": t_item.get("title") or t_item.get("name") or "Top",
+                "closet_item_id": t_item["id"]
             })
-            logger.info("Hydrated missing bottom %s into proposal", b["id"])
+            logger.info("Hydrated missing top %s into proposal", t_item["id"])
+            has_top = True
+        else:
+            missing_notes.append("top/shirt")
+
+    # Hydrate Bottom if missing (and no dress)
+    if not has_bottom:
+        available_bottoms = [c for c in closet_by_role.get("bottom", []) if c["id"] not in seen_ids]
+        if available_bottoms:
+            b_item = available_bottoms[0]
+            seen_ids.add(b_item["id"])
+            sanitized_items.append({
+                "role": "bottom",
+                "description": b_item.get("title") or b_item.get("name") or "Bottoms",
+                "closet_item_id": b_item["id"]
+            })
+            logger.info("Hydrated missing bottom %s into proposal", b_item["id"])
+            has_bottom = True
         else:
             missing_notes.append("pants/shorts")
 
-    # Hydrate shoes if missing and available
+    # Hydrate Shoes if missing
     if not has_shoes:
-        shoes_list = closet_by_role.get("shoes") or []
-        if shoes_list:
-            sh = shoes_list[0]
-            items.append({
+        available_shoes = [c for c in closet_by_role.get("shoes", []) if c["id"] not in seen_ids]
+        if available_shoes:
+            sh_item = available_shoes[0]
+            seen_ids.add(sh_item["id"])
+            sanitized_items.append({
                 "role": "shoes",
-                "description": sh.get("title") or sh.get("name") or "Shoes",
-                "closet_item_id": sh["id"]
+                "description": sh_item.get("title") or sh_item.get("name") or "Shoes",
+                "closet_item_id": sh_item["id"]
             })
-            logger.info("Hydrated missing shoes %s into proposal", sh["id"])
+            logger.info("Hydrated missing shoes %s into proposal", sh_item["id"])
+            has_shoes = True
         else:
             missing_notes.append("shoes")
 
-    prop["items"] = items
+    prop["items"] = sanitized_items
 
     if missing_notes:
         note_str = f"Note: Please add {' and '.join(missing_notes)} to your closet for a complete outfit suggestion."

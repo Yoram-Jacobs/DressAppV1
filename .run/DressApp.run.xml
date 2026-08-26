@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="DressApp" type="Application" factoryName="Application">
+    <option name="ALTERNATIVE_JRE_PATH" value="Android API 36.1, extension level 20 Platform" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <option name="envFilePaths">
+      <option value="$PROJECT_DIR$/deploy/.env" />
+    </option>
+    <module name="DressApp_AG" />
+    <option name="PROGRAM_PARAMETERS" value="$MODULE_WORKING_DIR$" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

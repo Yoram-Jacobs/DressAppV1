@@ -161,6 +161,14 @@ async def ensure_indexes() -> None:
 
     # --- token usage indexing for Admin panel queries ---
     await db.token_usage.create_index([("user_id", 1), ("created_at", -1)])
+    # TTL: automatically delete token_usage records older than 90 days.
+    # This prevents the collection growing indefinitely (one row per AI call).
+    # 90 days is sufficient for the admin billing dashboard and monthly reports.
+    await db.token_usage.create_index(
+        "created_at",
+        expireAfterSeconds=90 * 24 * 3600,
+        name="token_usage_ttl_90d",
+    )
 
     # Backfill missing listing locations from seller home_location
     try:
