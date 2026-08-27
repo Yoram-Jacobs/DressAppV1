@@ -26,6 +26,7 @@ import { MainTabs } from './MainTabs';
 import { useAuthState } from '@mobile/hooks/useAuthState';
 import { WorkProgressFloater } from '@mobile/components/WorkProgressFloater';
 import { WorkBatchDoneToast } from '@mobile/components/WorkBatchDoneToast';
+import { HelpModal } from '@mobile/components/help';
 import { prewarmAllStores, resetAllStores } from '@mobile/lib/stores';
 
 const Root = createNativeStackNavigator<RootStackParamList>();
@@ -87,6 +88,7 @@ export function RootNavigator() {
       </Root.Navigator>
       <WorkProgressFloater />
       <WorkBatchDoneToast />
+      <HelpModal />
     </NavigationContainer>
   );
 }

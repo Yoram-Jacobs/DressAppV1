@@ -126,9 +126,7 @@ async def stylist_endpoint(
     session: dict | None = None
     if session_id:
         session = await get_session(session_id, user["id"])
-        if not session:
-            raise HTTPException(404, "Session not found")
-    else:
+    if not session:
         session = await get_or_create_active_session(user["id"])
 
     is_first_turn = (session.get("turns") or 0) == 0
@@ -168,15 +166,22 @@ async def stylist_endpoint(
         context={"lat": lat, "lng": lng, "include_calendar": include_calendar},
     )
 
-    # Resolve active user custom API key if configured (both standard and custom_keys modes use the user's custom key)
+    # Resolve user's mandatory API key
     api_key_resolved = None
     ai_config = user.get("ai_configuration") or {}
-    provider_mode = ai_config.get("provider_mode", "standard")
-    if provider_mode in ["standard", "custom_keys"]:
-        encrypted_key = (ai_config.get("custom_keys") or {}).get("google_ai")
-        if encrypted_key:
-            from app.services.auth import decrypt_api_key
+    encrypted_key = (ai_config.get("custom_keys") or {}).get("google_ai")
+    if encrypted_key:
+        from app.services.auth import decrypt_api_key
+        try:
             api_key_resolved = decrypt_api_key(encrypted_key)
+        except Exception:
+            api_key_resolved = None
+
+    if not api_key_resolved:
+        raise HTTPException(
+            status_code=400,
+            detail="A valid Google Gemini API key is required. Please set your key in Profile -> AI Configuration.",
+        )
 
 
 
@@ -227,11 +232,30 @@ async def stylist_endpoint(
         # gets a soft apology instead of a hard error. Especially
         # important when the user asks about something not in the closet.
         logger.exception("Stylist pipeline failed")
-        advice = {
-            "reasoning_summary": (
+        _req_lang = (user_profile.get("preferred_language") or "en").lower()
+        if _req_lang == "he":
+            _fallback_summary = "מצטער — התקשיתי בהרכבת ההמלצה. נסה לנסח מחדש או לבחור פריטים אחרים מהארון."
+        elif _req_lang == "ar":
+            _fallback_summary = "عذرًا — واجهت مشكلة في إعداد التوصية. حاول إعادة الصياغة أو إرفاق صورة."
+        elif _req_lang == "es":
+            _fallback_summary = "Lo siento, tuve problemas para armar esa recomendación. Intenta reformular o adjuntar una foto."
+        elif _req_lang == "fr":
+            _fallback_summary = "Désolé, j'ai eu du mal à élaborer cette recommandation. Essayez de reformuler votre demande."
+        elif _req_lang == "de":
+            _fallback_summary = "Entschuldigung, ich hatte Schwierigkeiten, diese Empfehlung zusammenzustellen. Bitte versuche es erneut."
+        elif _req_lang == "it":
+            _fallback_summary = "Spiacente, ho avuto problemi a creare questa raccomandazione. Prova a riformulare la richiesta."
+        elif _req_lang == "ru":
+            _fallback_summary = "Извините, не удалось составить эту рекомендацию. Попробуйте переформулировать запрос."
+        else:
+            _fallback_summary = (
                 "Sorry — I had trouble putting that recommendation together. "
                 "Try rephrasing, or attach a photo so I can see what you're working with."
-            ),
+            )
+
+        advice = {
+            "reasoning_summary": _fallback_summary,
+            "spoken_reply": _fallback_summary,
             "outfit_recommendations": [],
             "shopping_suggestions": [],
             "do_dont": [],
@@ -394,15 +418,22 @@ async def compose_outfit_endpoint(
     from app.services.user_preferences import render_user_preferences
     prefs_block, applied_prefs = render_user_preferences(user)
 
-    # Resolve active user custom API key if configured
+    # Resolve user's mandatory API key
     api_key_resolved = None
     ai_config = user.get("ai_configuration") or {}
-    provider_mode = ai_config.get("provider_mode", "standard")
-    if provider_mode in ["standard", "custom_keys"]:
-        encrypted_key = (ai_config.get("custom_keys") or {}).get("google_ai")
-        if encrypted_key:
-            from app.services.auth import decrypt_api_key
+    encrypted_key = (ai_config.get("custom_keys") or {}).get("google_ai")
+    if encrypted_key:
+        from app.services.auth import decrypt_api_key
+        try:
             api_key_resolved = decrypt_api_key(encrypted_key)
+        except Exception:
+            api_key_resolved = None
+
+    if not api_key_resolved:
+        raise HTTPException(
+            status_code=400,
+            detail="A valid Google Gemini API key is required. Please set your key in Profile -> AI Configuration.",
+        )
 
     try:
         canvas = await outfit_composer.compose_outfit(
@@ -632,15 +663,22 @@ async def planner_scout_endpoint(
             for g in lst
         ]
 
-    # Resolve user API key
+    # Resolve user's mandatory API key
     api_key_resolved = None
     ai_config = user.get("ai_configuration") or {}
-    provider_mode = ai_config.get("provider_mode", "standard")
-    if provider_mode in ["standard", "custom_keys"]:
-        encrypted_key = (ai_config.get("custom_keys") or {}).get("google_ai")
-        if encrypted_key:
-            from app.services.auth import decrypt_api_key
+    encrypted_key = (ai_config.get("custom_keys") or {}).get("google_ai")
+    if encrypted_key:
+        from app.services.auth import decrypt_api_key
+        try:
             api_key_resolved = decrypt_api_key(encrypted_key)
+        except Exception:
+            api_key_resolved = None
+
+    if not api_key_resolved:
+        raise HTTPException(
+            status_code=400,
+            detail="A valid Google Gemini API key is required. Please set your key in Profile -> AI Configuration.",
+        )
 
     prompt = (
         f"You are the AI Stylist for DressApp.\n"

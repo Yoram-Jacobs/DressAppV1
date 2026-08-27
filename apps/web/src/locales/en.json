@@ -232,7 +232,8 @@
     "deleteSelectedTitle": "Delete Items",
     "deleteSelectedConfirm": "Are you sure you want to delete {{count}} item(s)?",
     "batchDeleteFailed": "Some items could not be deleted. Please try again.",
-    "anchorItems": "Selected Anchor Pieces"
+    "anchorItems": "Selected Anchor Pieces",
+    "loadingWardrobe": "Loading your wardrobe…"
   },
   "addItem": {
     "namePlaceholder": "e.g. Vintage Denim Jacket",
@@ -1854,7 +1855,26 @@
     "countLabel_one": "{{count}} expert",
     "countLabel_other": "{{count}} experts",
     "becomeExpertCta": "Are you a fashion professional? Enable it in your profile.",
-    "loadMore": "Load more"
+    "loadMore": "Load more",
+    "searchPlaceholder": "Search by name, city, specialty…",
+    "email": "Email",
+    "website": "Website",
+    "empty": "No experts listed yet.",
+    "professions": {
+      "all": "All",
+      "stylist": "Stylist",
+      "fashion_stylist": "Fashion Stylist",
+      "tailor": "Tailor",
+      "designer": "Fashion Designer",
+      "fashion_designer": "Fashion Designer",
+      "barber": "Barber",
+      "hair_stylist": "Hair Stylist",
+      "ai_fashion": "AI for Fashion",
+      "ai_for_fashion": "AI for Fashion",
+      "shopper": "Personal Shopper",
+      "consultant": "Wardrobe Consultant",
+      "color": "Color Analyst"
+    }
   },
   "ads": {
     "title": "My ad campaigns",
@@ -2725,7 +2745,8 @@
         "newest": "Newest",
         "nearest": "Nearest",
         "endingSoon": "Ending Soon",
-        "highestDiscount": "Highest Discount"
+        "highestDiscount": "Highest Discount",
+        "title": "Sort Campaigns"
       },
       "empty": {
         "title": "No Campaigns Near You",

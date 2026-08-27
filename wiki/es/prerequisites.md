@@ -9,6 +9,7 @@ Este documento cubre los requisitos de hardware, los permisos del navegador y la
 - Un teléfono inteligente, tableta o PC moderno.
 - Permisos de micrófono (para solicitudes de estilo de voz).
 - Permiso de ubicación (para un estilo que tenga en cuenta el clima local).
+- Una clave API de Gemini. Consíguela gratis en [Google AI Studio](https://aistudio.google.com/).
 
 ## Paso a paso
 1. **Permitir permisos**: acepte indicaciones de la cámara al cargar elementos y indicaciones de ubicación para actualizaciones meteorológicas.

@@ -140,7 +140,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
             groupItems.forEach(gItem => {
               const gSlot = resolveSlot(gItem.category, gItem, gItem);
               res[gSlot] = {
-                url: bestImageUrl(gItem) || gItem.image_data_url || gItem.segmented_image_url || gItem.image_url || gItem.original_image_url,
+                url: bestImageUrl(gItem) || gItem.clean_image_url || gItem.image_data_url || gItem.segmented_image_url || gItem.image_url || gItem.original_image_url,
                 placeholder: gItem.placeholder_data_url || null,
                 id: gItem.id
               };
@@ -150,10 +150,11 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
         }
  
         res[slot] = {
-           url: bestImageUrl(item) || item.image_data_url || item.segmented_image_url || item.image_url || item.original_image_url || item.url,
+           url: bestImageUrl(item) || item.clean_image_url || item.image_data_url || item.segmented_image_url || item.image_url || item.original_image_url || item.url,
            placeholder: item.placeholder_data_url || item.placeholder || null,
            id: item.closet_item_id || item.id || null
         };
+
       }
     });
     return res;

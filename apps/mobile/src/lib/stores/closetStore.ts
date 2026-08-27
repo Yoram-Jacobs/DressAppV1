@@ -76,7 +76,7 @@ const FRESH_MS = 5 * 60 * 1000; // 5 mins
 let _state: ClosetState = {
   items: [],
   total: 0,
-  loading: false,
+  loading: true,
   error: null,
   lastFullSync: 0,
 };

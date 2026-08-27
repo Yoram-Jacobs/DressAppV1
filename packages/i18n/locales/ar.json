@@ -23,6 +23,7 @@
     "insights": "إحصاءات الخزانة"
   },
   "common": {
+    "savePrompt": "اضغط على حفظ للاحتفاظ بالتغييرات.",
     "day": "يوم",
     "garment": "ملابس",
     "save": "حفظ",
@@ -254,7 +255,8 @@
     "deleteSelectedTitle": "حذف العناصر",
     "deleteSelectedConfirm": "هل أنت متأكد من رغبتك في حذف {{count}} عنصر؟",
     "batchDeleteFailed": "تعذر حذف بعض العناصر. يرجى المحاولة مرة أخرى.",
-    "anchorItems": "قطع الأساس المختارة"
+    "anchorItems": "قطع الأساس المختارة",
+    "loadingWardrobe": "جارٍ تحميل خزانة ملابسك…"
   },
   "addItem": {
     "namePlaceholder": "مثال: سترة جينز كلاسيكية",
@@ -483,6 +485,34 @@
     "noReadyCards": "لا توجد بطاقات جاهزة للحفظ."
   },
   "itemDetail": {
+    "reanalyze": {
+      "previewReady": "المعاينة جاهزة في المحادثة.",
+      "imageApplied": "تم التطبيق كصورة للملبس! اضغط على حفظ للتأكيد.",
+      "label": "إعادة تحليل الصورة",
+      "subtitle": "تحدث مع The Eyes لإزالة العناصر غير المرغوب فيها، إكمال الأجزاء المقطوعة، أو تحسين تفاصيل القطعة باستخدام Nano Banana.",
+      "cta": "تحليل",
+      "quickReanalyze": "إعادة تحليل كاملة بنقرة واحدة",
+      "running": "جارٍ التحليل…",
+      "progressHint": "قراءة الصورة وتحديد القطعة وإعادة ملء الحقول التلقائية.",
+      "success": "تم تحديث التحليل",
+      "error": "فشل التحليل. يرجى المحاولة مرة أخرى.",
+      "disclaimer": "يتم استبدال الحقول التلقائية فقط. تظل تعديلاتك اليدوية محفوظة.",
+      "promptPlaceholder": "اسأل The Eyes: 'إزالة الحذاء'، 'إكمال الثقب مكان اليد'، 'إزالة المسامير'…",
+      "send": "إرسال",
+      "promptStarters": "اقتراحات سريعة",
+      "promptRemoveShoes": "إزالة الحذاء",
+      "promptCompleteHole": "إكمال الثقب مكان اليد",
+      "promptRemoveStuds": "إزالة المسامير المعدنية من الأمام",
+      "promptFixMaterials": "تحسين تكوين القماش ولوحة الألوان",
+      "applyImage": "تطبيق كصورة للملابس",
+      "nanoBananaBadge": "تم التوليد بواسطة Nano Banana",
+      "clarificationTitle": "The Eyes بحاجة إلى مزيد من التفاصيل",
+      "eyesThinking": "The Eyes يحلل…",
+      "nanoBananaGenerating": "Nano Banana يقوم بتوليد الصورة…",
+      "applied": "تم التطبيق",
+      "refreshedAttributes": "تم تحديث الخصائص",
+      "eyesBadge": "The Eyes"
+    },
     "back": "العودة إلى الخزانة",
     "editImage": "تعديل الصورة",
     "generateVariant": "إنشاء نسخة",
@@ -511,33 +541,6 @@
     "removeBody": "لا يمكن التراجع عن ذلك.",
     "variantGenerated": "تم إنشاء تنويعة جديدة",
     "editUnavailable": "تعديل الصورة غير متاح",
-    "reanalyze": {
-      "label": "إعادة تحليل الصورة",
-      "subtitle": "تحدث مع The Eyes لإزالة العناصر غير المرغوب فيها، إكمال الأجزاء المقطوعة، أو تحسين تفاصيل القطعة باستخدام Nano Banana.",
-      "cta": "تحليل",
-      "quickReanalyze": "إعادة تحليل كاملة بنقرة واحدة",
-      "running": "جارٍ التحليل…",
-      "progressHint": "قراءة الصورة وتحديد القطعة وإعادة ملء الحقول التلقائية.",
-      "success": "تم تحديث التحليل",
-      "error": "فشل التحليل. يرجى المحاولة مرة أخرى.",
-      "disclaimer": "يتم استبدال الحقول التلقائية فقط. تظل تعديلاتك اليدوية محفوظة.",
-      "promptPlaceholder": "اسأل The Eyes: 'إزالة الحذاء'، 'إكمال الثقب مكان اليد'، 'إزالة المسامير'…",
-      "send": "إرسال",
-      "promptStarters": "اقتراحات سريعة",
-      "promptRemoveShoes": "إزالة الحذاء",
-      "promptCompleteHole": "إكمال الثقب مكان اليد",
-      "promptRemoveStuds": "إزالة المسامير المعدنية من الأمام",
-      "promptFixMaterials": "تحسين تكوين القماش ولوحة الألوان",
-      "applyImage": "تطبيق كصورة للملابس",
-      "imageApplied": "تم التطبيق كصورة للملابس! اضغط حفظ للاحتفاظ بالتغييرات.",
-      "nanoBananaBadge": "تم التوليد بواسطة Nano Banana",
-      "clarificationTitle": "The Eyes بحاجة إلى مزيد من التفاصيل",
-      "eyesThinking": "The Eyes يحلل…",
-      "nanoBananaGenerating": "Nano Banana يقوم بتوليد الصورة…",
-      "applied": "تم التطبيق",
-      "refreshedAttributes": "تم تحديث الخصائص",
-      "eyesBadge": "The Eyes"
-    },
     "photo": {
       "addLabel": "إضافة صورة",
       "takeLabel": "التقاط صورة",
@@ -2019,10 +2022,10 @@
     "syncWeather": "Sync Local Weather & Trends"
   },
   "experts": {
-    "title": "اسأل محترفًا",
+    "title": "اسأل خبيراً",
     "tabExperts": "خبراء",
     "tabCampaigns": "حملات",
-    "subtitle": "تصفّح خبراء الأزياء الموثوقين — مصممين، خياطين، حلاقين — في منطقتك.",
+    "subtitle": "تصفح خبراء الموضة المعتمدين — منسقو أزياء، خياطون، حلاقون، ومصممون — في منطقتك.",
     "filters": {
       "profession": "المهنة",
       "anyProfession": "أي مهنة",
@@ -2049,7 +2052,7 @@
     "findStylist": "Certified Stylists & Pros",
     "stylistsTab": "Stylists & Experts",
     "campaignsTab": "Promotions & Offers",
-    "searchPlaceholder": "Search by name, city, specialty…",
+    "searchPlaceholder": "البحث بالاسم أو المدينة أو التخصص…",
     "noExpertsFound": "No stylists found",
     "noExpertsDesc": "Try clearing your filters or changing your location.",
     "bookingTitle": "Book Styling Session",
@@ -2057,18 +2060,24 @@
     "serviceDesc": "45-minute video consultation reviewing your digital closet, body proportions, and personalized outfit plan.",
     "bookingSent": "Styling request sent! The stylist will reach out to schedule.",
     "sendBookingRequest": "Confirm Booking",
-    "email": "Email",
+    "email": "بريد إلكتروني",
     "instagram": "Instagram",
-    "website": "Website",
-    "empty": "No experts listed yet.",
+    "website": "موقع إلكتروني",
+    "empty": "لا يوجد خبراء مدرجون بعد.",
     "professions": {
-      "all": "All Specialties",
-      "stylist": "Personal Stylist",
-      "consultant": "Wardrobe Consultant",
-      "shopper": "Personal Shopper",
-      "designer": "Fashion Designer",
-      "tailor": "Tailor / Seamstress",
-      "color": "Color Analyst"
+      "all": "الكل",
+      "stylist": "منسق أزياء",
+      "consultant": "مستشار خزانة",
+      "shopper": "متسوق شخصي",
+      "designer": "مصمم أزياء",
+      "tailor": "خياط",
+      "color": "محلل ألوان",
+      "fashion_stylist": "منسق أزياء",
+      "fashion_designer": "مصمم أزياء",
+      "barber": "حلاق",
+      "hair_stylist": "مصفف شعر",
+      "ai_fashion": "الذكاء الاصطناعي للموضة",
+      "ai_for_fashion": "الذكاء الاصطناعي للموضة"
     }
   },
   "ads": {
@@ -3154,7 +3163,8 @@
         "newest": "الأحدث",
         "nearest": "الأقرب",
         "endingSoon": "ينتهي قريباً",
-        "highestDiscount": "أعلى خصم"
+        "highestDiscount": "أعلى خصم",
+        "title": "ترتيب الحملات"
       },
       "empty": {
         "title": "لا توجد حملات بالقرب منك",

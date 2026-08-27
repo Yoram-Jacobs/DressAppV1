@@ -213,32 +213,65 @@ def _generate_fallback_advice(
                 + (score_item(chosen_shoe) if chosen_shoe else 0)
                 + (score_item(chosen_acc) if chosen_acc else 0)
             )
+            top_clean = top.get("clean_image_url") or top.get("reconstructed_image_url") or top.get("cutout_url") or top.get("thumbnail_data_url") or top.get("image_url")
+            bottom_clean = bottom.get("clean_image_url") or bottom.get("reconstructed_image_url") or bottom.get("cutout_url") or bottom.get("thumbnail_data_url") or bottom.get("image_url")
+            
             items = [
                 {
                     "role": "top",
+                    "category": top.get("category") or "Top",
+                    "sub_category": top.get("sub_category") or top.get("item_type") or "",
                     "title": top.get("title") or top.get("name") or "Top",
+                    "name": top.get("name") or top.get("title") or "Top",
                     "description": top.get("title") or top.get("name") or "Top",
+                    "color": top.get("color") or "",
+                    "clean_image_url": top_clean,
+                    "image_url": top_clean,
+                    "thumbnail_data_url": top.get("thumbnail_data_url") or top_clean,
                     "closet_item_id": top.get("id")
                 },
                 {
                     "role": "bottom",
+                    "category": bottom.get("category") or "Bottom",
+                    "sub_category": bottom.get("sub_category") or bottom.get("item_type") or "",
                     "title": bottom.get("title") or bottom.get("name") or "Bottom",
+                    "name": bottom.get("name") or bottom.get("title") or "Bottom",
                     "description": bottom.get("title") or bottom.get("name") or "Bottom",
+                    "color": bottom.get("color") or "",
+                    "clean_image_url": bottom_clean,
+                    "image_url": bottom_clean,
+                    "thumbnail_data_url": bottom.get("thumbnail_data_url") or bottom_clean,
                     "closet_item_id": bottom.get("id")
                 },
             ]
             if chosen_shoe:
+                shoe_clean = chosen_shoe.get("clean_image_url") or chosen_shoe.get("reconstructed_image_url") or chosen_shoe.get("cutout_url") or chosen_shoe.get("thumbnail_data_url") or chosen_shoe.get("image_url")
                 items.append({
                     "role": "shoes",
+                    "category": chosen_shoe.get("category") or "Footwear",
+                    "sub_category": chosen_shoe.get("sub_category") or chosen_shoe.get("item_type") or "",
                     "title": chosen_shoe.get("title") or chosen_shoe.get("name") or "Shoes",
+                    "name": chosen_shoe.get("name") or chosen_shoe.get("title") or "Shoes",
                     "description": chosen_shoe.get("title") or chosen_shoe.get("name") or "Shoes",
+                    "color": chosen_shoe.get("color") or "",
+                    "clean_image_url": shoe_clean,
+                    "image_url": shoe_clean,
+                    "thumbnail_data_url": chosen_shoe.get("thumbnail_data_url") or shoe_clean,
                     "closet_item_id": chosen_shoe.get("id")
                 })
             if chosen_acc:
+                acc_clean = chosen_acc.get("clean_image_url") or chosen_acc.get("reconstructed_image_url") or chosen_acc.get("cutout_url") or chosen_acc.get("thumbnail_data_url") or chosen_acc.get("image_url")
                 items.append({
                     "role": "accessory",
+                    "category": chosen_acc.get("category") or "Accessory",
+                    "sub_category": chosen_acc.get("sub_category") or chosen_acc.get("item_type") or "",
                     "title": chosen_acc.get("title") or chosen_acc.get("name") or "Accessory",
+                    "name": chosen_acc.get("name") or chosen_acc.get("title") or "Accessory",
                     "description": chosen_acc.get("title") or chosen_acc.get("name") or "Accessory",
+                    "color": chosen_acc.get("color") or "",
+                    "clean_image_url": acc_clean,
+                    "image_url": acc_clean,
+                    "thumbnail_data_url": chosen_acc.get("thumbnail_data_url") or acc_clean,
                     "closet_item_id": chosen_acc.get("id")
                 })
 
@@ -268,26 +301,50 @@ def _generate_fallback_advice(
             + (score_item(chosen_shoe) if chosen_shoe else 0)
             + (score_item(chosen_acc) if chosen_acc else 0)
         )
+        dress_clean = dress.get("clean_image_url") or dress.get("reconstructed_image_url") or dress.get("cutout_url") or dress.get("thumbnail_data_url") or dress.get("image_url")
         items = [
             {
                 "role": "dress",
+                "category": dress.get("category") or "Dress",
+                "sub_category": dress.get("sub_category") or dress.get("item_type") or "",
                 "title": dress.get("title") or dress.get("name") or "One-Piece",
+                "name": dress.get("name") or dress.get("title") or "One-Piece",
                 "description": dress.get("title") or dress.get("name") or "One-Piece",
+                "color": dress.get("color") or "",
+                "clean_image_url": dress_clean,
+                "image_url": dress_clean,
+                "thumbnail_data_url": dress.get("thumbnail_data_url") or dress_clean,
                 "closet_item_id": dress.get("id")
             },
         ]
         if chosen_shoe:
+            shoe_clean = chosen_shoe.get("clean_image_url") or chosen_shoe.get("reconstructed_image_url") or chosen_shoe.get("cutout_url") or chosen_shoe.get("thumbnail_data_url") or chosen_shoe.get("image_url")
             items.append({
                 "role": "shoes",
+                "category": chosen_shoe.get("category") or "Footwear",
+                "sub_category": chosen_shoe.get("sub_category") or chosen_shoe.get("item_type") or "",
                 "title": chosen_shoe.get("title") or chosen_shoe.get("name") or "Shoes",
+                "name": chosen_shoe.get("name") or chosen_shoe.get("title") or "Shoes",
                 "description": chosen_shoe.get("title") or chosen_shoe.get("name") or "Shoes",
+                "color": chosen_shoe.get("color") or "",
+                "clean_image_url": shoe_clean,
+                "image_url": shoe_clean,
+                "thumbnail_data_url": chosen_shoe.get("thumbnail_data_url") or shoe_clean,
                 "closet_item_id": chosen_shoe.get("id")
             })
         if chosen_acc:
+            acc_clean = chosen_acc.get("clean_image_url") or chosen_acc.get("reconstructed_image_url") or chosen_acc.get("cutout_url") or chosen_acc.get("thumbnail_data_url") or chosen_acc.get("image_url")
             items.append({
                 "role": "accessory",
+                "category": chosen_acc.get("category") or "Accessory",
+                "sub_category": chosen_acc.get("sub_category") or chosen_acc.get("item_type") or "",
                 "title": chosen_acc.get("title") or chosen_acc.get("name") or "Accessory",
+                "name": chosen_acc.get("name") or chosen_acc.get("title") or "Accessory",
                 "description": chosen_acc.get("title") or chosen_acc.get("name") or "Accessory",
+                "color": chosen_acc.get("color") or "",
+                "clean_image_url": acc_clean,
+                "image_url": acc_clean,
+                "thumbnail_data_url": chosen_acc.get("thumbnail_data_url") or acc_clean,
                 "closet_item_id": chosen_acc.get("id")
             })
 

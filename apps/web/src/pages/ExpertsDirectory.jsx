@@ -352,10 +352,10 @@ function ExpertCard({ expert }) {
 
   const avatar = expert.face_photo_url || expert.avatar_url;
   const expertPhone =
-    biz.phone && biz.phone.trim().length > 3
-      ? biz.phone.trim()
-      : expert.phone
+    expert.phone && expert.phone.trim().length > 3
       ? expert.phone.trim()
+      : biz.phone && biz.phone.trim().length > 3
+      ? biz.phone.trim()
       : null;
 
   return (

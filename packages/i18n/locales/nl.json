@@ -23,6 +23,7 @@
     "insights": "Kastinzichten"
   },
   "common": {
+    "savePrompt": "Druk op Opslaan om de wijzigingen te behouden.",
     "day": "dag",
     "garment": "Kledingstuk",
     "save": "Redden",
@@ -254,7 +255,8 @@
     "deleteSelectedTitle": "Kledingstukken verwijderen",
     "deleteSelectedConfirm": "Weet u zeker dat u {{count}} kledingstuk(ken) wilt verwijderen?",
     "batchDeleteFailed": "Sommige kledingstukken konden niet worden verwijderd. Probeer het opnieuw.",
-    "anchorItems": "Geselecteerde basisstukken"
+    "anchorItems": "Geselecteerde basisstukken",
+    "loadingWardrobe": "Je kledingkast laden…"
   },
   "addItem": {
     "namePlaceholder": "bijv. Vintage spijkerjas",
@@ -483,6 +485,34 @@
     "noReadyCards": "Geen voltooide kaarten om op te slaan."
   },
   "itemDetail": {
+    "reanalyze": {
+      "previewReady": "Voorbeeld klaar in chat.",
+      "imageApplied": "Toegepast als kledingfoto! Klik op Opslaan.",
+      "label": "Foto opnieuw analyseren",
+      "subtitle": "Chat met The Eyes om ongewenste objecten te verwijderen, uitsnedes aan te vullen of kledingdetails te verfijnen met Nano Banana.",
+      "cta": "Analyseren",
+      "quickReanalyze": "1-Klik Volledige Heranalyse",
+      "running": "Analyseren…",
+      "progressHint": "Foto lezen, kledingstuk identificeren en automatische velden herschrijven.",
+      "success": "Analyse vernieuwd",
+      "error": "Analyse mislukt. Probeer het opnieuw.",
+      "disclaimer": "Alleen automatisch ingevulde velden worden overschreven. Handmatige wijzigingen blijven behouden.",
+      "promptPlaceholder": "Vraag The Eyes: 'Verwijder schoenen', 'Vul opening waar hand was', 'Verwijder studs'…",
+      "send": "Versturen",
+      "promptStarters": "Snelle suggesties",
+      "promptRemoveShoes": "Verwijder de schoenen",
+      "promptCompleteHole": "Vul de opening waar de hand was",
+      "promptRemoveStuds": "Verwijder metalen studs aan voorkant",
+      "promptFixMaterials": "Verfijn stof en kleurenpalet",
+      "applyImage": "Toepassen als kledingfoto",
+      "nanoBananaBadge": "Gegenereerd door Nano Banana",
+      "clarificationTitle": "The Eyes heeft meer details nodig",
+      "eyesThinking": "The Eyes analyseert…",
+      "nanoBananaGenerating": "Nano Banana genereert pixels…",
+      "applied": "Toegepast",
+      "refreshedAttributes": "Attributen vernieuwd",
+      "eyesBadge": "The Eyes"
+    },
     "back": "Rug",
     "editImage": "Afbeelding bewerken",
     "generateVariant": "Variant genereren",
@@ -511,33 +541,6 @@
       "rejected": "Het matteren leverde een onaangenaam resultaat op, waarbij de oorspronkelijke uitsnede behouden bleef.",
       "error": "Opschonen van de achtergrond is mislukt. Probeer het opnieuw.",
       "disclaimer": "Maakt gebruik van een niet-generatief matmodel. Uw originele foto wordt nooit vervangen door een verzonnen foto."
-    },
-    "reanalyze": {
-      "label": "Foto opnieuw analyseren",
-      "subtitle": "Chat met The Eyes om ongewenste objecten te verwijderen, uitsnedes aan te vullen of kledingdetails te verfijnen met Nano Banana.",
-      "cta": "Analyseren",
-      "quickReanalyze": "1-Klik Volledige Heranalyse",
-      "running": "Analyseren…",
-      "progressHint": "Foto lezen, kledingstuk identificeren en automatische velden herschrijven.",
-      "success": "Analyse vernieuwd",
-      "error": "Analyse mislukt. Probeer het opnieuw.",
-      "disclaimer": "Alleen automatisch ingevulde velden worden overschreven. Handmatige wijzigingen blijven behouden.",
-      "promptPlaceholder": "Vraag The Eyes: 'Verwijder schoenen', 'Vul opening waar hand was', 'Verwijder studs'…",
-      "send": "Versturen",
-      "promptStarters": "Snelle suggesties",
-      "promptRemoveShoes": "Verwijder de schoenen",
-      "promptCompleteHole": "Vul de opening waar de hand was",
-      "promptRemoveStuds": "Verwijder metalen studs aan voorkant",
-      "promptFixMaterials": "Verfijn stof en kleurenpalet",
-      "applyImage": "Toepassen als kledingfoto",
-      "imageApplied": "Toegepast op kledingfoto! Klik op Opslaan om te bewaren.",
-      "nanoBananaBadge": "Gegenereerd door Nano Banana",
-      "clarificationTitle": "The Eyes heeft meer details nodig",
-      "eyesThinking": "The Eyes analyseert…",
-      "nanoBananaGenerating": "Nano Banana genereert pixels…",
-      "applied": "Toegepast",
-      "refreshedAttributes": "Attributen vernieuwd",
-      "eyesBadge": "The Eyes"
     },
     "photo": {
       "addLabel": "Foto toevoegen",
@@ -2026,10 +2029,10 @@
     "syncWeather": "Sync Local Weather & Trends"
   },
   "experts": {
-    "title": "Vraag het aan een professional",
+    "title": "Vraag een expert",
     "tabExperts": "Experts",
     "tabCampaigns": "Campagnes",
-    "subtitle": "Blader door geverifieerde mode-experts – stylisten, kleermakers, kappers, ontwerpers – in uw regio.",
+    "subtitle": "Vind geverifieerde mode-experts — stylisten, kleermakers, kappers, ontwerpers — in uw regio.",
     "filters": {
       "profession": "Beroep",
       "anyProfession": "Welk beroep dan ook",
@@ -2042,7 +2045,7 @@
     "emptyBody": "Probeer je filters te verbreden, of kom snel terug; er komen elke week nieuwe professionals bij.",
     "contact": "Contact",
     "visitWebsite": "Bezoek website",
-    "callNow": "Telefoongesprek",
+    "callNow": "Bellen",
     "sendEmail": "E-mail",
     "professionLabel": "Beroep",
     "cityLabel": "Gevestigd in",
@@ -2056,7 +2059,7 @@
     "findStylist": "Certified Stylists & Pros",
     "stylistsTab": "Stylists & Experts",
     "campaignsTab": "Promotions & Offers",
-    "searchPlaceholder": "Search by name, city, specialty…",
+    "searchPlaceholder": "Zoek op naam, stad, specialisme…",
     "noExpertsFound": "No stylists found",
     "noExpertsDesc": "Try clearing your filters or changing your location.",
     "bookingTitle": "Book Styling Session",
@@ -2064,18 +2067,24 @@
     "serviceDesc": "45-minute video consultation reviewing your digital closet, body proportions, and personalized outfit plan.",
     "bookingSent": "Styling request sent! The stylist will reach out to schedule.",
     "sendBookingRequest": "Confirm Booking",
-    "email": "Email",
+    "email": "E-mail",
     "instagram": "Instagram",
     "website": "Website",
-    "empty": "No experts listed yet.",
+    "empty": "Nog geen experts geregistreerd.",
     "professions": {
-      "all": "All Specialties",
-      "stylist": "Personal Stylist",
-      "consultant": "Wardrobe Consultant",
-      "shopper": "Personal Shopper",
-      "designer": "Fashion Designer",
-      "tailor": "Tailor / Seamstress",
-      "color": "Color Analyst"
+      "all": "Alles",
+      "stylist": "Stylist",
+      "consultant": "Garderobeconsultant",
+      "shopper": "Personal shopper",
+      "designer": "Modeontwerper",
+      "tailor": "Kleermaker",
+      "color": "Kleurenanalist",
+      "fashion_stylist": "Modestylist",
+      "fashion_designer": "Modeontwerper",
+      "barber": "Barbier",
+      "hair_stylist": "Haarstylist",
+      "ai_fashion": "AI voor Mode",
+      "ai_for_fashion": "AI voor Mode"
     }
   },
   "ads": {
@@ -3168,7 +3177,8 @@
         "newest": "Nieuwste",
         "nearest": "Dichtstbijzijnde",
         "endingSoon": "Eindigt Binnenkort",
-        "highestDiscount": "Hoogste Korting"
+        "highestDiscount": "Hoogste Korting",
+        "title": "Campagnes sorteren"
       },
       "empty": {
         "title": "Geen campagnes bij jou in de buurt",

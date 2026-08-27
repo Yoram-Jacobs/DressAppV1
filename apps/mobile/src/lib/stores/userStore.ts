@@ -10,6 +10,17 @@ import { useSyncExternalStore } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '@mobile/lib/api';
 
+export interface SubscriptionInfo {
+  is_active?: boolean;
+  tier?: string;
+  plan_type?: string;
+  expires_at?: string;
+  cancelled_at?: string;
+  atzmai_subscription_id?: string;
+  paypal_subscription_id?: string;
+  stripe_subscription_id?: string;
+}
+
 export interface UserProfile {
   id?: string;
   _id?: string;
@@ -19,7 +30,9 @@ export interface UserProfile {
   first_name?: string;
   last_name?: string;
   role?: string;
+  subscription?: SubscriptionInfo;
   subscription_tier?: string;
+  closet_capacity_bonus?: number;
   credits?: number;
   location?: string;
   city?: string;
@@ -35,6 +48,23 @@ export interface UserProfile {
     weekday?: string;
   };
   [key: string]: any;
+}
+
+export function getUserTier(user: UserProfile | null | undefined): string {
+  if (!user) return 'free';
+  const sub = user.subscription;
+  if (sub && sub.is_active && sub.tier && sub.tier !== 'free') {
+    return sub.tier.toLowerCase();
+  }
+  if (user.subscription_tier && user.subscription_tier !== 'free') {
+    return user.subscription_tier.toLowerCase();
+  }
+  return 'free';
+}
+
+export function isUserPaid(user: UserProfile | null | undefined): boolean {
+  const tier = getUserTier(user);
+  return tier === 'manager' || tier === 'professional';
 }
 
 interface UserState {

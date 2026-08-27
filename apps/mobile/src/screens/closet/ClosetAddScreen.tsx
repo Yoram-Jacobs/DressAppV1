@@ -684,6 +684,28 @@ export function ClosetAddScreen() {
         );
       } catch (err: any) {
         console.warn('Save item error:', err);
+        const isCapacityErr =
+          err?.response?.status === 402 ||
+          err?.status === 402 ||
+          err?.message?.includes('capacity') ||
+          err?.detail?.code === 'closet_capacity_exceeded';
+        if (isCapacityErr) {
+          setIsSaving(false);
+          Alert.alert(
+            t('addItem.limitReachedTitle', { defaultValue: 'Closet Limit Reached' }),
+            t('addItem.limitReachedMsg', {
+              defaultValue: 'You have reached your free closet capacity limit (50 items). Upgrade to Manager or Professional for unlimited items.',
+            }),
+            [
+              { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
+              {
+                text: t('profile.upgradeBtn', { defaultValue: 'Upgrade Plan' }),
+                onPress: () => navigation.navigate('Pricing' as any),
+              },
+            ]
+          );
+          return;
+        }
       }
     }
 

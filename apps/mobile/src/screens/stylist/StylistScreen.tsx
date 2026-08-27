@@ -31,6 +31,7 @@ import { StylistChatView, StylistOutfitCard } from '@mobile/components/stylist/S
 import { DailySuggestionView } from '@mobile/components/stylist/DailySuggestionView';
 import { OutfitPlannerView, PlannerSlotItem } from '@mobile/components/stylist/OutfitPlannerView';
 import { VirtualTryOnView, TryOnItem } from '@mobile/components/stylist/VirtualTryOnView';
+import { HelpFloater } from '@mobile/components/help';
 
 type StylistTab = 'chat' | 'daily' | 'planner' | 'tryon';
 
@@ -173,15 +174,18 @@ export function StylistScreen() {
           </Text>
         </View>
 
-        <TouchableOpacity
-          style={[styles.savedOutfitsBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
-          onPress={() => navigation.navigate('Outfits')}
-        >
-          <Lucide.BookmarkCheck size={14} color={colors.foreground} />
-          <Text style={[styles.savedOutfitsBtnText, { color: colors.foreground }]}>
-            {t('stylist.savedOutfits', { defaultValue: 'Saved Outfits' })}
-          </Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+          <HelpFloater screenTopic={activeTab === 'planner' ? 'dress-up' : activeTab === 'daily' ? 'scheduler-push' : 'ai-stylist'} />
+          <TouchableOpacity
+            style={[styles.savedOutfitsBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+            onPress={() => navigation.navigate('Outfits')}
+          >
+            <Lucide.BookmarkCheck size={14} color={colors.foreground} />
+            <Text style={[styles.savedOutfitsBtnText, { color: colors.foreground }]}>
+              {t('stylist.savedOutfits', { defaultValue: 'Saved Outfits' })}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Tabs Navigation Bar */}

@@ -232,7 +232,8 @@
     "deleteSelectedTitle": "Elimina capi",
     "deleteSelectedConfirm": "Sei sicuro di voler eliminare {{count}} capo/i?",
     "batchDeleteFailed": "Alcuni capi non sono stati eliminati. Riprova.",
-    "anchorItems": "Capi base selezionati"
+    "anchorItems": "Capi base selezionati",
+    "loadingWardrobe": "Caricamento del tuo guardaroba…"
   },
   "addItem": {
     "namePlaceholder": "es. Giacca di jeans vintage",
@@ -1839,7 +1840,7 @@
     "switchingHint": "Di solito richiede qualche secondo."
   },
   "experts": {
-    "title": "Chiedi a un professionista",
+    "title": "Chiedi a un esperto",
     "tabExperts": "Esperti",
     "tabCampaigns": "Campagne",
     "filters": {
@@ -1862,7 +1863,26 @@
     "countLabel_other": "{{count}} esperti",
     "becomeExpertCta": "Sei un professionista della moda? Attivalo nel tuo profilo.",
     "loadMore": "Carica altri",
-    "subtitle": "Sfoglia esperti di moda verificati — stylist, sarti, barbieri, designer — nella tua regione."
+    "subtitle": "Sfoglia esperti di moda verificati — stilisti, sarti, barbieri, designer — nella tua zona.",
+    "searchPlaceholder": "Cerca per nome, città, specialità…",
+    "email": "Email",
+    "website": "Sito web",
+    "empty": "Nessun esperto ancora registrato.",
+    "professions": {
+      "all": "Tutti",
+      "stylist": "Stilista",
+      "fashion_stylist": "Stilista di moda",
+      "tailor": "Sarto",
+      "designer": "Stilista di moda",
+      "fashion_designer": "Stilista di moda",
+      "barber": "Barbiere",
+      "hair_stylist": "Parrucchiere",
+      "ai_fashion": "IA per la Moda",
+      "ai_for_fashion": "IA per la Moda",
+      "shopper": "Personal shopper",
+      "consultant": "Consulente di guardaroba",
+      "color": "Analista del colore"
+    }
   },
   "ads": {
     "title": "Le mie campagne pubblicitarie",
@@ -2726,7 +2746,8 @@
         "newest": "Più recenti",
         "nearest": "Più vicine",
         "endingSoon": "In scadenza a breve",
-        "highestDiscount": "Sconto maggiore"
+        "highestDiscount": "Sconto maggiore",
+        "title": "Ordina campagne"
       },
       "empty": {
         "title": "Nessuna campagna vicino a te",

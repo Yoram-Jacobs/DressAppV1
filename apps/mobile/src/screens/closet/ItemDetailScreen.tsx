@@ -30,6 +30,9 @@ import {
   Alert,
   TextInput,
   I18nManager,
+  KeyboardAvoidingView,
+  Keyboard,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -101,6 +104,7 @@ interface ItemFormState {
   tags: string[];
   cultural_tags: string[];
   notes: string;
+  formality: string;
   reconstructed_image_url?: string | null;
 }
 
@@ -123,6 +127,10 @@ function toFormState(data: any): ItemFormState {
     ? [{ name: String(data.material || data.fabric).trim(), pct: 100 }]
     : [];
 
+  const validFormality = ['casual', 'smart-casual', 'business', 'formal'].includes(data?.formality)
+    ? data.formality
+    : (['casual', 'smart-casual', 'business', 'formal'].includes(data?.dress_code) ? data.dress_code : 'casual');
+
   return {
     title: data?.title || data?.name || '',
     name: data?.name || data?.title || '',
@@ -132,7 +140,8 @@ function toFormState(data: any): ItemFormState {
     sub_category: data?.sub_category || data?.subcategory || '',
     item_type: data?.item_type || '',
     gender: data?.gender || 'unisex',
-    dress_code: data?.dress_code || data?.formality || 'casual',
+    dress_code: data?.dress_code || validFormality,
+    formality: validFormality,
     season: Array.isArray(data?.season) ? data.season : data?.season ? [data.season] : ['all'],
     tradition: data?.tradition || '',
     size: data?.size || '',
@@ -190,6 +199,35 @@ export function ItemDetailScreen() {
   // Chip input draft states
   const [tagDraft, setTagDraft] = useState('');
   const [culturalTagDraft, setCulturalTagDraft] = useState('');
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        setKeyboardVisible(true);
+        const kh = e?.endCoordinates?.height || 300;
+        setKeyboardHeight(kh);
+        if (activeTab === 'ai') {
+          setTimeout(() => {
+            scrollViewRef.current?.scrollToEnd({ animated: true });
+          }, 150);
+        }
+      }
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+        setKeyboardHeight(0);
+      }
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [activeTab]);
 
   const loadItem = useCallback(async () => {
     if (!itemId) return;
@@ -288,10 +326,18 @@ export function ItemDetailScreen() {
         item?.from_receipt ||
         (Array.isArray(item?.receipt_locked_fields) && item.receipt_locked_fields.length > 0);
 
+      const activeImageUrl =
+        form.reconstructed_image_url ||
+        item?.clean_image_url ||
+        item?.thumbnail_data_url ||
+        item?.original_image_url ||
+        item?.image_url;
+
       const res = await (api as any).chatAnalyseItem(itemId, {
         message: promptText.trim(),
         history: updatedHistory.map((h) => ({ role: h.role, content: h.content })),
         fill_empty_only: isReceiptItem,
+        image_url: activeImageUrl || undefined,
       });
 
       if (res?.item && (res.action_taken === 'metadata_update' || res.updated_fields)) {
@@ -393,7 +439,11 @@ export function ItemDetailScreen() {
         item_type: form.item_type.trim() || undefined,
         gender: form.gender || undefined,
         dress_code: form.dress_code || undefined,
-        formality: form.dress_code || undefined,
+        formality: ['casual', 'smart-casual', 'business', 'formal'].includes(form.formality)
+          ? form.formality
+          : ['casual', 'smart-casual', 'business', 'formal'].includes(form.dress_code)
+          ? form.dress_code
+          : undefined,
         season: form.season.length > 0 ? form.season : undefined,
         tradition: form.tradition.trim() || undefined,
         size: form.size.trim() || undefined,
@@ -424,8 +474,16 @@ export function ItemDetailScreen() {
       );
     } catch (e: any) {
       console.warn('Failed to update garment:', e);
-      const errMsg = e?.response?.data?.detail || e?.message || 'Failed to save changes.';
-      Alert.alert(t('common.error', { defaultValue: 'Error' }), typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
+      const rawDetail = e?.response?.data?.detail;
+      let errMsg = '';
+      if (Array.isArray(rawDetail)) {
+        errMsg = rawDetail.map((d: any) => d.msg || d.message || JSON.stringify(d)).join('\n');
+      } else if (typeof rawDetail === 'string') {
+        errMsg = rawDetail;
+      } else {
+        errMsg = e?.message || t('common.error', { defaultValue: 'Failed to save changes.' });
+      }
+      Alert.alert(t('common.error', { defaultValue: 'Error' }), errMsg);
     } finally {
       setSaving(false);
     }
@@ -581,8 +639,21 @@ export function ItemDetailScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* ── 1. Hero Image Card ──────────────────────────────────────── */}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+      >
+        <ScrollView
+          ref={scrollViewRef}
+          contentContainerStyle={[
+            styles.scroll,
+            keyboardVisible ? { paddingBottom: Math.max(keyboardHeight + 60, 360) } : null,
+          ]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* ── 1. Hero Image Card ──────────────────────────────────────── */}
         <View style={[styles.heroCard, { backgroundColor: isDark ? '#18181b' : '#f4f4f5', borderColor: colors.border }]}>
           {currentImg ? (
             <Image source={{ uri: currentImg }} style={styles.heroImg} resizeMode="contain" />
@@ -751,6 +822,11 @@ export function ItemDetailScreen() {
             onSendPrompt={handleSendPrompt}
             appliedImageUrl={form.reconstructed_image_url}
             onApplyImage={handleApplyReconstructedImage}
+            onFocusInput={() => {
+              setTimeout(() => {
+                scrollViewRef.current?.scrollToEnd({ animated: true });
+              }, 150);
+            }}
           />
         )}
 
@@ -1368,41 +1444,44 @@ export function ItemDetailScreen() {
           </View>
         )}
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* ── Floating Action Toolbar [ Back | Undo | Save ] ─────────────── */}
-      <View style={styles.floatingToolbarWrap} pointerEvents="box-none">
-        <View style={[styles.floatingPill, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <TouchableOpacity onPress={handleBack} style={styles.floatingPillBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Lucide.ArrowLeft size={16} color={colors.foreground} />
-          </TouchableOpacity>
-          <View style={[styles.floatingDivider, { backgroundColor: colors.border }]} />
-          <TouchableOpacity onPress={handleUndo} style={styles.floatingPillBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Lucide.Undo2 size={16} color={colors.mutedFg} />
-          </TouchableOpacity>
-          <View style={[styles.floatingDivider, { backgroundColor: colors.border }]} />
+      {!keyboardVisible && (
+        <View style={styles.floatingToolbarWrap} pointerEvents="box-none">
+          <View style={[styles.floatingPill, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <TouchableOpacity onPress={handleBack} style={styles.floatingPillBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Lucide.ArrowLeft size={16} color={colors.foreground} />
+            </TouchableOpacity>
+            <View style={[styles.floatingDivider, { backgroundColor: colors.border }]} />
+            <TouchableOpacity onPress={handleUndo} style={styles.floatingPillBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Lucide.Undo2 size={16} color={colors.mutedFg} />
+            </TouchableOpacity>
+            <View style={[styles.floatingDivider, { backgroundColor: colors.border }]} />
+            <TouchableOpacity
+              onPress={handleSave}
+              disabled={saving}
+              style={[styles.floatingSaveBtn, { backgroundColor: colors.accent }]}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              {saving ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <Lucide.Save size={16} color="#FFF" />
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Scroll to Top floating button */}
           <TouchableOpacity
-            onPress={handleSave}
-            disabled={saving}
-            style={[styles.floatingSaveBtn, { backgroundColor: colors.accent }]}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={[styles.floatingScrollTopBtn, { backgroundColor: colors.accent }]}
+            onPress={() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })}
+            activeOpacity={0.8}
           >
-            {saving ? (
-              <ActivityIndicator size="small" color="#FFF" />
-            ) : (
-              <Lucide.Save size={16} color="#FFF" />
-            )}
+            <Lucide.ArrowUp size={18} color="#FFF" />
           </TouchableOpacity>
         </View>
-
-        {/* Scroll to Top floating button */}
-        <TouchableOpacity
-          style={[styles.floatingScrollTopBtn, { backgroundColor: colors.accent }]}
-          onPress={() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })}
-          activeOpacity={0.8}
-        >
-          <Lucide.ArrowUp size={18} color="#FFF" />
-        </TouchableOpacity>
-      </View>
+      )}
 
       {/* ── Taxonomy Pickers Modals ────────────────────────────────────── */}
       <TaxonomySelectModal

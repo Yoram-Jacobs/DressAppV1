@@ -133,6 +133,8 @@ function setState(updater: (prev: ExpertsState) => ExpertsState) {
 
 function normalizeExpert(p: any): ExpertItem {
   const dName = p.display_name || `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Style Expert';
+  const rawPhone = p.phone || p.professional?.business?.phone || '';
+  const cleanPhone = typeof rawPhone === 'string' && rawPhone.trim().length > 3 ? rawPhone.trim() : undefined;
   return {
     ...p,
     id: String(p.id || p._id || `expert_${Date.now()}_${Math.random()}`),
@@ -142,7 +144,7 @@ function normalizeExpert(p: any): ExpertItem {
     specialty: p.professional?.profession || p.specialty || 'Fashion Stylist',
     bio: p.professional?.business?.description || p.bio || '',
     email: p.professional?.business?.email || p.email || undefined,
-    phone: p.professional?.business?.phone || p.phone || undefined,
+    phone: cleanPhone,
     instagram: p.instagram || undefined,
     website: p.professional?.business?.website || p.website || undefined,
     city: p.address?.city || p.home_location?.city || p.city || undefined,

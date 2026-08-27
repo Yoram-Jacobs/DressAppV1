@@ -34,6 +34,7 @@ import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { useMarketplaceStore, ListingItem, TransactionItem } from '@mobile/lib/stores/marketplaceStore';
 import { labelForCategory, labelForIntent, labelForCondition } from '@mobile/lib/taxonomy';
+import { HelpFloater } from '@mobile/components/help';
 import type { MarketStackParamList } from '@mobile/navigation/types';
 
 type MarketNavProp = NativeStackNavigationProp<MarketStackParamList, 'Marketplace'>;
@@ -266,14 +267,17 @@ export function MarketplaceScreen() {
           </Text>
         </View>
 
-        <TouchableOpacity
-          style={[s.createBtn, { backgroundColor: colors.primary }]}
-          onPress={() => navigation.navigate('CreateListing')}
-          activeOpacity={0.8}
-        >
-          <Lucide.Plus size={16} color="#FFF" />
-          <Text style={s.createBtnText}>{t('market.sell', { defaultValue: 'List Item' })}</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+          <HelpFloater screenTopic="marketplace" />
+          <TouchableOpacity
+            style={[s.createBtn, { backgroundColor: colors.primary }]}
+            onPress={() => navigation.navigate('CreateListing')}
+            activeOpacity={0.8}
+          >
+            <Lucide.Plus size={16} color="#FFF" />
+            <Text style={s.createBtnText}>{t('market.sell', { defaultValue: 'List Item' })}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Main Tabs (Browse / My Listings / Transactions) */}

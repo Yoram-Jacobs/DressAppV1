@@ -23,6 +23,7 @@
     "insights": "Аналитика гардероба"
   },
   "common": {
+    "savePrompt": "Нажмите Сохранить, чтобы сохранить изменения.",
     "day": "день",
     "save": "Сохранить",
     "saveAll": "Сохранить",
@@ -254,7 +255,8 @@
     "deleteSelectedTitle": "Удалить предметы",
     "deleteSelectedConfirm": "Вы уверены, что хотите удалить {{count}} предмет(ов)?",
     "batchDeleteFailed": "Некоторые предметы не удалось удалить. Попробуйте снова.",
-    "anchorItems": "Выбранные базовые вещи"
+    "anchorItems": "Выбранные базовые вещи",
+    "loadingWardrobe": "Загрузка вашего гардероба…"
   },
   "addItem": {
     "namePlaceholder": "напр., Винтажная джинсовая куртка",
@@ -483,6 +485,34 @@
     "noReadyCards": "Нет готовых карточек для сохранения."
   },
   "itemDetail": {
+    "reanalyze": {
+      "previewReady": "Предпросмотр готов в чате.",
+      "imageApplied": "Применено как фото вещи! Нажмите Сохранить.",
+      "label": "Повторный анализ фото",
+      "subtitle": "Общайтесь с The Eyes, чтобы удалить лишние предметы, восстановить края или уточнить детали одежды с помощью Nano Banana.",
+      "cta": "Анализировать",
+      "quickReanalyze": "Полный повторный анализ в 1 клик",
+      "running": "Анализ…",
+      "progressHint": "Считывание фото, определение вещи и обновление полей автозаполнения.",
+      "success": "Анализ обновлен",
+      "error": "Ошибка анализа. Попробуйте снова.",
+      "disclaimer": "Перезаписываются только автозаполненные поля. Ручные изменения сохраняются.",
+      "promptPlaceholder": "Спросите The Eyes: 'Убрать обувь', 'Дорисовать фрагмент', 'Убрать заклепки'…",
+      "send": "Отправить",
+      "promptStarters": "Быстрые подсказки",
+      "promptRemoveShoes": "Убрать обувь",
+      "promptCompleteHole": "Дорисовать фрагмент, где была рука",
+      "promptRemoveStuds": "Убрать металлические заклепки спереди",
+      "promptFixMaterials": "Уточнить состав ткани и палитру",
+      "applyImage": "Применить как фото вещи",
+      "nanoBananaBadge": "Создано Nano Banana",
+      "clarificationTitle": "The Eyes требуется уточнение",
+      "eyesThinking": "The Eyes анализирует…",
+      "nanoBananaGenerating": "Nano Banana генерирует пиксели…",
+      "applied": "Применено",
+      "refreshedAttributes": "Атрибуты обновлены",
+      "eyesBadge": "The Eyes"
+    },
     "back": "Назад в гардероб",
     "editImage": "Изменить изображение",
     "generateVariant": "Создать вариант",
@@ -510,33 +540,6 @@
       "rejected": "Маттинг дал странный результат — оставляем исходную обрезку.",
       "error": "Не удалось очистить фон. Попробуйте ещё раз.",
       "disclaimer": "Используется негенеративная модель маттинга. Ваше исходное фото никогда не заменяется придуманным."
-    },
-    "reanalyze": {
-      "label": "Повторный анализ фото",
-      "subtitle": "Общайтесь с The Eyes, чтобы удалить лишние предметы, восстановить края или уточнить детали одежды с помощью Nano Banana.",
-      "cta": "Анализировать",
-      "quickReanalyze": "Полный повторный анализ в 1 клик",
-      "running": "Анализ…",
-      "progressHint": "Считывание фото, определение вещи и обновление полей автозаполнения.",
-      "success": "Анализ обновлен",
-      "error": "Ошибка анализа. Попробуйте снова.",
-      "disclaimer": "Перезаписываются только автозаполненные поля. Ручные изменения сохраняются.",
-      "promptPlaceholder": "Спросите The Eyes: 'Убрать обувь', 'Дорисовать фрагмент', 'Убрать заклепки'…",
-      "send": "Отправить",
-      "promptStarters": "Быстрые подсказки",
-      "promptRemoveShoes": "Убрать обувь",
-      "promptCompleteHole": "Дорисовать фрагмент, где была рука",
-      "promptRemoveStuds": "Убрать металлические заклепки спереди",
-      "promptFixMaterials": "Уточнить состав ткани и палитру",
-      "applyImage": "Применить как фото вещи",
-      "imageApplied": "Применено к фото вещи! Нажмите Сохранить.",
-      "nanoBananaBadge": "Создано Nano Banana",
-      "clarificationTitle": "The Eyes требуется уточнение",
-      "eyesThinking": "The Eyes анализирует…",
-      "nanoBananaGenerating": "Nano Banana генерирует пиксели…",
-      "applied": "Применено",
-      "refreshedAttributes": "Атрибуты обновлены",
-      "eyesBadge": "The Eyes"
     },
     "photo": {
       "addLabel": "Добавить фото",
@@ -2033,10 +2036,10 @@
     "switchingHint": "Это обычно занимает несколько секунд."
   },
   "experts": {
-    "title": "Спросить профессионала",
+    "title": "Спросить эксперта",
     "tabExperts": "Эксперты",
     "tabCampaigns": "Кампании",
-    "subtitle": "Найдите проверенных экспертов моды — стилистов, портных, барберов, дизайнеров — в вашем регионе.",
+    "subtitle": "Проверенные эксперты моды — стилисты, портные, барберы, дизайнеры — в вашем регионе.",
     "filters": {
       "profession": "Профессия",
       "anyProfession": "Любая профессия",
@@ -2063,7 +2066,7 @@
     "findStylist": "Certified Stylists & Pros",
     "stylistsTab": "Stylists & Experts",
     "campaignsTab": "Promotions & Offers",
-    "searchPlaceholder": "Search by name, city, specialty…",
+    "searchPlaceholder": "Поиск по имени, городу, специальности…",
     "noExpertsFound": "No stylists found",
     "noExpertsDesc": "Try clearing your filters or changing your location.",
     "bookingTitle": "Book Styling Session",
@@ -2071,18 +2074,24 @@
     "serviceDesc": "45-minute video consultation reviewing your digital closet, body proportions, and personalized outfit plan.",
     "bookingSent": "Styling request sent! The stylist will reach out to schedule.",
     "sendBookingRequest": "Confirm Booking",
-    "email": "Email",
+    "email": "Эл. почта",
     "instagram": "Instagram",
-    "website": "Website",
-    "empty": "No experts listed yet.",
+    "website": "Веб-сайт",
+    "empty": "Эксперты пока не зарегистрированы.",
     "professions": {
-      "all": "All Specialties",
-      "stylist": "Personal Stylist",
-      "consultant": "Wardrobe Consultant",
-      "shopper": "Personal Shopper",
-      "designer": "Fashion Designer",
-      "tailor": "Tailor / Seamstress",
-      "color": "Color Analyst"
+      "all": "Все",
+      "stylist": "Стилист",
+      "consultant": "Консультант по гардеробу",
+      "shopper": "Персональный шопер",
+      "designer": "Дизайнер одежды",
+      "tailor": "Портной",
+      "color": "Колорист",
+      "fashion_stylist": "Модный стилист",
+      "fashion_designer": "Дизайнер одежды",
+      "barber": "Барбер",
+      "hair_stylist": "Парикмахер-стилист",
+      "ai_fashion": "ИИ для моды",
+      "ai_for_fashion": "ИИ для моды"
     }
   },
   "ads": {
@@ -3161,7 +3170,8 @@
         "newest": "Новые",
         "nearest": "Ближайшие",
         "endingSoon": "Скоро заканчиваются",
-        "highestDiscount": "Самая большая скидка"
+        "highestDiscount": "Самая большая скидка",
+        "title": "Сортировка кампаний"
       },
       "empty": {
         "title": "Нет кампаний рядом с вами",

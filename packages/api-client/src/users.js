@@ -6,5 +6,6 @@ export const users = {
   updateMigrationFlag: (body) => client.patch('/users/migration-flag', body).then((r) => r.data),
   saveMigrationCrops: (body) => client.post('/closet/migration/save-crops', body, { timeout: 120000 }).then((r) => r.data),
   deleteAccount: (body) => client.post('/users/me/delete', body).then((r) => r.data),
+  validateApiKey: (body) => client.post('/users/validate-api-key', body).then((r) => r.data),
 };
 

@@ -138,9 +138,10 @@ def ensure_min_resolution(image_bytes: bytes, min_dim: int = 512) -> bytes:
         return image_bytes
 
 async def read_image_bytes_from_url(url: Optional[str]) -> Optional[bytes]:
-    if not isinstance(url, str):
+    if not isinstance(url, str) or not url.strip():
         return None
     
+    url = url.strip()
     result_bytes = None
     if url.startswith("data:"):
         result_bytes = bytes_from_data_url(url)
@@ -156,16 +157,26 @@ async def read_image_bytes_from_url(url: Optional[str]) -> Optional[bytes]:
             except Exception as e:
                 logger.error("Failed to read local uploaded file: %s", e)
                 
-    if not result_bytes:
+    if not result_bytes and not url.startswith("data:"):
         try:
             full_url = url
             if url.startswith("/"):
-                full_url = f"http://localhost:8001{url}"
+                backend_base = os.getenv("BACKEND_INTERNAL_URL") or os.getenv("BACKEND_URL") or "http://localhost:8001"
+                full_url = f"{backend_base.rstrip('/')}{url}"
                 
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
                 resp = await client.get(full_url)
                 if resp.status_code == 200:
                     result_bytes = resp.content
+                elif url.startswith("/"):
+                    for fallback_base in ["http://127.0.0.1:8000", "http://127.0.0.1:8001", "http://localhost:8000"]:
+                        try:
+                            r2 = await client.get(f"{fallback_base}{url}")
+                            if r2.status_code == 200:
+                                result_bytes = r2.content
+                                break
+                        except Exception:
+                            pass
         except Exception as e:
             logger.error("Failed to download image URL %s: %s", url, e)
         

@@ -9,6 +9,7 @@ Dit document behandelt de hardwarevereisten, browsermachtigingen en API-sleuteli
 - Een moderne smartphone, tablet of pc.
 - Microfoonrechten (voor verzoeken om stemstijlen).
 - Locatietoestemming (voor lokale weersbewuste styling).
+- Een Gemini API-sleutel. Krijg deze gratis op [Google AI Studio](https://aistudio.google.com/).
 
 ## Stap voor stap
 1. **Machtigingen toestaan**: accepteer cameraprompts bij het uploaden van items, en locatieprompts voor weerupdates.

@@ -232,7 +232,8 @@
     "deleteSelectedTitle": "Supprimer les vêtements",
     "deleteSelectedConfirm": "Voulez-vous vraiment supprimer {{count}} vêtement(s) ?",
     "batchDeleteFailed": "Certains vêtements n'ont pas pu être supprimés. Veuillez réessayer.",
-    "anchorItems": "Pièces maîtresses sélectionnées"
+    "anchorItems": "Pièces maîtresses sélectionnées",
+    "loadingWardrobe": "Chargement de votre garde-robe…"
   },
   "addItem": {
     "namePlaceholder": "ex. Veste en jean vintage",
@@ -1839,10 +1840,10 @@
     "switchingHint": "Cela prend généralement quelques secondes."
   },
   "experts": {
-    "title": "Consultez un professionnel",
+    "title": "Demander à un expert",
     "tabExperts": "Experts",
     "tabCampaigns": "Campagnes",
-    "subtitle": "Parcourez les experts de la mode vérifiés — stylistes, tailleurs, barbiers, créateurs — dans votre région.",
+    "subtitle": "Parcourez des experts de mode vérifiés — stylistes, tailleurs, barbiers, créateurs — dans votre région.",
     "filters": {
       "profession": "Profession",
       "anyProfession": "Toute profession",
@@ -1862,7 +1863,26 @@
     "countLabel_one": "{{count}} expert",
     "countLabel_other": "{{count}} experts",
     "becomeExpertCta": "Vous êtes professionnel de la mode ? Activez-le dans votre profil.",
-    "loadMore": "Charger plus"
+    "loadMore": "Charger plus",
+    "searchPlaceholder": "Rechercher par nom, ville, spécialité…",
+    "email": "E-mail",
+    "website": "Site web",
+    "empty": "Aucun expert répertorié pour le moment.",
+    "professions": {
+      "all": "Tous",
+      "stylist": "Styliste",
+      "fashion_stylist": "Styliste de mode",
+      "tailor": "Tailleur / Couturier",
+      "designer": "Créateur de mode",
+      "fashion_designer": "Créateur de mode",
+      "barber": "Barbier",
+      "hair_stylist": "Coiffeur styliste",
+      "ai_fashion": "IA pour la mode",
+      "ai_for_fashion": "IA pour la mode",
+      "shopper": "Personal shopper",
+      "consultant": "Conseiller en garde-robe",
+      "color": "Analyste des couleurs"
+    }
   },
   "ads": {
     "title": "Mes campagnes publicitaires",
@@ -2726,7 +2746,8 @@
         "newest": "Plus récentes",
         "nearest": "Plus proches",
         "endingSoon": "Se termine bientôt",
-        "highestDiscount": "Plus forte réduction"
+        "highestDiscount": "Plus forte réduction",
+        "title": "Trier les campagnes"
       },
       "empty": {
         "title": "Aucune campagne près de chez vous",

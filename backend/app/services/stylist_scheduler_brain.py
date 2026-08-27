@@ -406,7 +406,7 @@ async def check_event_similarities(
 
 
 def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any]]) -> None:
-    """Ensure proposal contains valid, non-duplicated items with correct roles and complete coverage."""
+    """Ensure proposal contains valid, non-duplicated items with correct roles and complete coverage, strictly sorted in anatomical order."""
     raw_by_id = {c["id"]: c for c in raw_closet if c.get("id")}
     items = prop.get("items") or []
 
@@ -424,10 +424,25 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
         c_item = raw_by_id[cid]
         true_cat = norm_category(c_item.get("category"))
         true_role = "shoes" if true_cat in ("footwear", "shoes") else true_cat
+        clean_img = (
+            c_item.get("clean_image_url")
+            or c_item.get("reconstructed_image_url")
+            or c_item.get("cutout_url")
+            or c_item.get("thumbnail_data_url")
+            or c_item.get("image_url")
+        )
 
         sanitized_items.append({
             "role": true_role,
+            "category": c_item.get("category") or true_role.title(),
+            "sub_category": c_item.get("sub_category") or c_item.get("item_type") or "",
             "description": it.get("description") or c_item.get("title") or c_item.get("name") or true_role.title(),
+            "title": c_item.get("title") or c_item.get("name") or it.get("description") or true_role.title(),
+            "name": c_item.get("name") or c_item.get("title") or it.get("description") or true_role.title(),
+            "color": c_item.get("color") or (c_item.get("colors") and c_item.get("colors")[0] and (c_item["colors"][0].get("name") if isinstance(c_item["colors"][0], dict) else c_item["colors"][0])) or "",
+            "clean_image_url": clean_img,
+            "image_url": clean_img,
+            "thumbnail_data_url": c_item.get("thumbnail_data_url") or clean_img,
             "closet_item_id": cid,
         })
 
@@ -453,9 +468,23 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
         if available_tops:
             t_item = available_tops[0]
             seen_ids.add(t_item["id"])
-            sanitized_items.insert(0, {
+            t_clean_img = (
+                t_item.get("clean_image_url")
+                or t_item.get("reconstructed_image_url")
+                or t_item.get("cutout_url")
+                or t_item.get("thumbnail_data_url")
+                or t_item.get("image_url")
+            )
+            sanitized_items.append({
                 "role": "top",
+                "category": t_item.get("category") or "Top",
+                "sub_category": t_item.get("sub_category") or t_item.get("item_type") or "",
                 "description": t_item.get("title") or t_item.get("name") or "Top",
+                "title": t_item.get("title") or t_item.get("name") or "Top",
+                "name": t_item.get("name") or t_item.get("title") or "Top",
+                "clean_image_url": t_clean_img,
+                "image_url": t_clean_img,
+                "thumbnail_data_url": t_item.get("thumbnail_data_url") or t_clean_img,
                 "closet_item_id": t_item["id"]
             })
             logger.info("Hydrated missing top %s into proposal", t_item["id"])
@@ -469,9 +498,23 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
         if available_bottoms:
             b_item = available_bottoms[0]
             seen_ids.add(b_item["id"])
+            b_clean_img = (
+                b_item.get("clean_image_url")
+                or b_item.get("reconstructed_image_url")
+                or b_item.get("cutout_url")
+                or b_item.get("thumbnail_data_url")
+                or b_item.get("image_url")
+            )
             sanitized_items.append({
                 "role": "bottom",
-                "description": b_item.get("title") or b_item.get("name") or "Bottoms",
+                "category": b_item.get("category") or "Bottom",
+                "sub_category": b_item.get("sub_category") or b_item.get("item_type") or "",
+                "description": b_item.get("title") or b_item.get("name") or "Bottom",
+                "title": b_item.get("title") or b_item.get("name") or "Bottom",
+                "name": b_item.get("name") or b_item.get("title") or "Bottom",
+                "clean_image_url": b_clean_img,
+                "image_url": b_clean_img,
+                "thumbnail_data_url": b_item.get("thumbnail_data_url") or b_clean_img,
                 "closet_item_id": b_item["id"]
             })
             logger.info("Hydrated missing bottom %s into proposal", b_item["id"])
@@ -485,15 +528,46 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
         if available_shoes:
             sh_item = available_shoes[0]
             seen_ids.add(sh_item["id"])
+            sh_clean_img = (
+                sh_item.get("clean_image_url")
+                or sh_item.get("reconstructed_image_url")
+                or sh_item.get("cutout_url")
+                or sh_item.get("thumbnail_data_url")
+                or sh_item.get("image_url")
+            )
             sanitized_items.append({
                 "role": "shoes",
+                "category": sh_item.get("category") or "Footwear",
+                "sub_category": sh_item.get("sub_category") or sh_item.get("item_type") or "",
                 "description": sh_item.get("title") or sh_item.get("name") or "Shoes",
+                "title": sh_item.get("title") or sh_item.get("name") or "Shoes",
+                "name": sh_item.get("name") or sh_item.get("title") or "Shoes",
+                "clean_image_url": sh_clean_img,
+                "image_url": sh_clean_img,
+                "thumbnail_data_url": sh_item.get("thumbnail_data_url") or sh_clean_img,
                 "closet_item_id": sh_item["id"]
             })
             logger.info("Hydrated missing shoes %s into proposal", sh_item["id"])
             has_shoes = True
         else:
             missing_notes.append("shoes")
+
+    # 3. CRITICAL: Strict Anatomical Layer Sort Order
+    # Top/Dress (1) -> Outerwear (2) -> Bottom (3) -> Shoes/Footwear (4) -> Accessories (5+)
+    ROLE_SORT_ORDER = {
+        "top": 1,
+        "dress": 1,
+        "outerwear": 2,
+        "bottom": 3,
+        "shoes": 4,
+        "footwear": 4,
+        "belt": 5,
+        "headwear": 6,
+        "glasses": 7,
+        "bag": 8,
+        "accessory": 9,
+    }
+    sanitized_items.sort(key=lambda it: ROLE_SORT_ORDER.get(it.get("role", ""), 99))
 
     prop["items"] = sanitized_items
 
@@ -593,11 +667,29 @@ async def generate_scheduled_proposals(
     style_prompt = style_dress_for or "casual/daily dress"
     
     prompt = (
-        f"Generate EXACTLY 3 different outfit recommendations for {target_day_name} ({target_date_str}). "
-        f"The user's preset preference is: {style_prompt}.\n\n"
-        f"CRITICAL TAG PREFERENCE: If the closet items list below contains garments with the tag '{style_prompt}' (case-insensitive), you MUST prioritize selecting those items for the outfits. Only when no matching tags are found or to complete the outfit (e.g. if there are no shoes with that tag), you may select other items matching the intent/style of the preference.\n\n"
-        f"CRITICAL REQUIREMENT: Every outfit recommendation MUST be a COMPLETE outfit consisting of: 1) Either (a 'top' AND a 'bottom') OR a 'dress', and 2) 'shoes' (footwear). NEVER recommend an outfit consisting of only a single T-shirt, top, or bottom without shoes and pants, unless the closet literally lacks those categories.\n\n"
-        f"You MUST select items ONLY from the user's closet list below. Under no circumstances should you recommend items that the user does not own or that have a null closet_item_id. Every recommended item must map to a valid closet item ID from the list below.\n\n"
+        f"You are the Lead Fashion AI Stylist for DressApp.\n"
+        f"Generate EXACTLY 3 complete, distinct, and coordinated outfit recommendations for {target_day_name} ({target_date_str}).\n"
+        f"The user's preset preference is: '{style_prompt}'.\n\n"
+        f"CRITICAL CATEGORY AND ROLE RULES:\n"
+        f"1. A garment's 'role' MUST strictly match its anatomical category:\n"
+        f"   - An item with Category 'Top' / 'Tops' / 'Shirts' MUST have role: 'top'.\n"
+        f"   - An item with Category 'Bottom' / 'Bottoms' / 'Pants' / 'Jeans' / 'Shorts' / 'Skirts' MUST have role: 'bottom'.\n"
+        f"   - An item with Category 'Footwear' / 'Shoes' / 'Sneakers' / 'Boots' / 'Sandals' MUST have role: 'shoes'. NEVER label shoes or footwear as a 'top' or 'bottom'!\n"
+        f"   - An item with Category 'Outerwear' / 'Jackets' / 'Coats' / 'Blazers' MUST have role: 'outerwear'.\n"
+        f"   - An item with Category 'Dress' / 'One-piece' MUST have role: 'dress'.\n"
+        f"   - An item with Category 'Accessories' / 'Bags' / 'Belts' / 'Hats' MUST have role: 'accessory'.\n\n"
+        f"2. ANATOMICAL ORDERING IN ITEMS LIST:\n"
+        f"   - You MUST list the items inside the 'items' array strictly in top-to-bottom order:\n"
+        f"     1st: 'top' (or 'dress')\n"
+        f"     2nd: 'outerwear' (if layered)\n"
+        f"     3rd: 'bottom' (if wearing a top)\n"
+        f"     4th: 'shoes' (footwear)\n"
+        f"     5th: 'accessory' (if any)\n"
+        f"   - NEVER put 'shoes' or footwear as the 1st item in the 'items' array.\n\n"
+        f"3. CRITICAL COMPLETE OUTFIT REQUIREMENT:\n"
+        f"   Every outfit recommendation MUST be a COMPLETE outfit consisting of: 1) Either (a 'top' AND a 'bottom') OR a 'dress', and 2) 'shoes' (footwear). NEVER recommend an outfit consisting of only a single T-shirt, top, or bottom without shoes and pants, unless the closet literally lacks those categories.\n\n"
+        f"4. CRITICAL TAG PREFERENCE: If the closet items list below contains garments with the tag '{style_prompt}' (case-insensitive), prioritize selecting those items. Only when no matching tags are found or to complete the outfit (e.g. if there are no shoes with that tag), select other items matching the intent/style of the preference.\n\n"
+        f"5. You MUST select items ONLY from the user's closet list below. Under no circumstances should you recommend items that the user does not own or that have a null closet_item_id. Every recommended item must map to a valid closet item ID from the list below.\n\n"
         f"User's Closet Items:\n"
         f"{closet_summary_str}\n\n"
         f"Output MUST be in JSON matching this TypeScript type:\n"
@@ -609,7 +701,7 @@ async def generate_scheduled_proposals(
         f"      \"role\": \"top\"|\"bottom\"|\"outerwear\"|\"shoes\"|\"accessory\"|\"dress\",\n"
         f"      \"description\": string, // Use the item's title/description from the list.\n"
         f"      \"closet_item_id\": string // MUST be a valid ID from the closet list above. Cannot be null.\n"
-        f"    }}>\n,"
+        f"    }}>,\n"
         f"    \"why\": string,\n"
         f"    \"confidence\": number\n"
         f"  }}>\n"
@@ -702,7 +794,18 @@ async def generate_event_proposals(
         )
 
     prompt = (
+        f"You are the Lead Fashion AI Stylist for DressApp.\n"
         f"Generate EXACTLY 3 different outfit recommendations for this special event prompt: \"{event_prompt}\".\n\n"
+        f"CRITICAL CATEGORY AND ROLE RULES:\n"
+        f"1. A garment's 'role' MUST strictly match its anatomical category:\n"
+        f"   - An item with Category 'Top' / 'Tops' / 'Shirts' MUST have role: 'top'.\n"
+        f"   - An item with Category 'Bottom' / 'Bottoms' / 'Pants' / 'Jeans' / 'Shorts' / 'Skirts' MUST have role: 'bottom'.\n"
+        f"   - An item with Category 'Footwear' / 'Shoes' / 'Sneakers' / 'Boots' / 'Sandals' MUST have role: 'shoes'. NEVER label shoes as a top or bottom!\n"
+        f"   - An item with Category 'Outerwear' / 'Jackets' / 'Coats' / 'Blazers' MUST have role: 'outerwear'.\n"
+        f"   - An item with Category 'Dress' / 'One-piece' MUST have role: 'dress'.\n"
+        f"   - An item with Category 'Accessories' / 'Bags' / 'Belts' / 'Hats' MUST have role: 'accessory'.\n\n"
+        f"2. ANATOMICAL ORDERING IN ITEMS LIST:\n"
+        f"   - List items strictly top-to-bottom: 'top' (or 'dress'), 'outerwear', 'bottom', 'shoes', 'accessory'.\n\n"
         f"User's Closet Items:\n{closet_summary_str}\n\n"
         f"Available Marketplace Items to purchase (use if closet matches are poor or missing):\n{mkt_summary_str}\n\n"
         f"Rules:\n"
@@ -718,7 +821,7 @@ async def generate_event_proposals(
         f"      \"role\": \"top\"|\"bottom\"|\"outerwear\"|\"shoes\"|\"accessory\"|\"dress\",\n"
         f"      \"description\": string,\n"
         f"      \"closet_item_id\": string | null\n"
-        f"    }}>\n,"
+        f"    }}>,\n"
         f"    \"why\": string,\n"
         f"    \"confidence\": number\n"
         f"  }}>\n"

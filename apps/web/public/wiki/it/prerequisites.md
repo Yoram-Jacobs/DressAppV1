@@ -9,6 +9,7 @@ Questo documento copre i requisiti hardware, le autorizzazioni del browser e le 
 - Uno smartphone, tablet o PC moderno.
 - Autorizzazioni microfono (per richieste di styling vocale).
 - Autorizzazione alla posizione (per uno stile locale sensibile alle condizioni meteorologiche).
+- Una chiave API Gemini. Ottienila gratuitamente su [Google AI Studio](https://aistudio.google.com/).
 
 ## Passo dopo passo
 1. **Consenti autorizzazioni**: accetta i suggerimenti della fotocamera durante il caricamento di elementi e i suggerimenti sulla posizione per gli aggiornamenti meteo.

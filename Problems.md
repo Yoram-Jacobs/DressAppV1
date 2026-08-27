@@ -1,60 +1,43 @@
-# Project Inspection Problems - 2026-08-21
+# Project Inspection Problems - Resolved (2026-08-21)
 
-This document summarizes the current errors and warnings found in the DressApp mobile application's Android configuration. These issues need to be resolved to ensure successful builds and proper IDE functionality.
-
-## AndroidManifest.xml Issues
-
-Located at: `apps/mobile/android/app/src/main/AndroidManifest.xml`
-
-### 1. Unresolved Class References
-- **MainApplication**: The class `.MainApplication` is unresolved. 
-  - *Location*: Line 18
-  - *Context*: `<application android:name=".MainApplication" ...>`
-- **MainActivity**: The class `.MainActivity` is unresolved.
-  - *Location*: Line 26
-  - *Context*: `<activity android:name=".MainActivity" ...>`
-
-*Potential Cause*: Package name mismatch or incorrect source set configuration in the IDE/Gradle.
-
-### 2. Invalid Attribute Placement Errors
-The IDE flags several standard Android attributes as "not allowed here". This may indicate a schema validation issue or structural error in the XML that confuses the analyzer.
-
-- **Queries Tag**: `android:scheme` is flagged as not allowed in `<data android:scheme="https"/>` inside the `<queries>` block. (Line 15)
-- **Application Tag**: The following attributes are flagged as "not allowed here" on the `<application>` tag (Line 18):
-    - `android:icon`
-    - `android:roundIcon`
-    - `android:allowBackup`
-    - `android:supportsRtl`
-    - `android:fullBackupContent`
-    - `android:dataExtractionRules`
-- **Activity Tag**: The following attributes are flagged as "not allowed here" on the `<activity>` tag (Line 26):
-    - `android:configChanges`
-    - `android:launchMode`
-    - `android:windowSoftInputMode`
-    - `android:theme`
-    - `android:screenOrientation`
-
-### 3. Resource Resolution Warnings
-While not explicitly listed as errors, the unresolved attributes often point to missing or unindexed resources:
-- `@string/app_name`
-- `@mipmap/ic_launcher`
-- `@mipmap/ic_launcher_round`
-- `@style/AppTheme`
-- `@xml/secure_store_backup_rules`
-- `@xml/secure_store_data_extraction_rules`
+All issues previously identified in the DressApp mobile application's Android configuration have been analyzed, fixed, and verified.
 
 ---
 
-## Gradle Configuration Warnings
+## Resolved Issues Summary
 
-### build.gradle
-- **Link Reference**: A warning exists on Line 62 regarding a link to React Native CLI documentation.
-  - *Context*: `// See https://github.com/react-native-community/cli/blob/main/docs/commands.md#bundle`
+### 1. `AndroidManifest.xml` Configuration & Schema (RESOLVED)
+- **Root XML Namespaces**: Added `xmlns:tools="http://schemas.android.com/tools"` to `<manifest>` to properly support `tools:` attributes across elements.
+- **AGP 8 Namespace Migration**: Removed the deprecated `package="co.dressapp.mobile"` attribute from `<manifest>`, letting Android Gradle Plugin (AGP 8.8.2) manage the namespace solely via `namespace = 'co.dressapp.mobile'` in `apps/mobile/android/app/build.gradle`.
+- **Class Reference Resolution**: Verified `.MainApplication` and `.MainActivity` match `package co.dressapp.mobile` in `apps/mobile/android/app/src/main/java/co/dressapp/mobile/MainApplication.kt` and `MainActivity.kt`.
+- **XML Schema & Element Validation**: Verified all standard Android manifest elements (`<queries>`, `<intent>`, `<application>`, `<activity>`) are structurally valid according to the Android Manifest Specification.
+
+### 2. Resource Resolution (RESOLVED & VERIFIED)
+Verified all referenced resources exist in `apps/mobile/android/app/src/main/res/`:
+- `@string/app_name` -> Defined in `values/strings.xml` ("DressApp")
+- `@mipmap/ic_launcher` & `@mipmap/ic_launcher_round` -> Present in `mipmap-anydpi-v26/` and density directories (`hdpi`, `mdpi`, `xhdpi`, `xxhdpi`, `xxxhdpi`)
+- `@style/AppTheme` & `@style/Theme.App.SplashScreen` -> Defined in `values/styles.xml`
+- `@xml/secure_store_backup_rules` -> Present in `xml/secure_store_backup_rules.xml`
+- `@xml/secure_store_data_extraction_rules` -> Present in `xml/secure_store_data_extraction_rules.xml`
+- `@color/notification_icon_color` -> Defined in `values/colors.xml`
+- `@drawable/notification_icon` -> Present in all drawable density folders (`drawable-hdpi`, `drawable-mdpi`, etc.)
+
+### 3. Gradle Configuration & Toolchain Alignment (RESOLVED)
+- **AGP & Kotlin Alignment**: Updated root `apps/mobile/android/build.gradle` to AGP `8.8.2` and Kotlin `2.0.21` (with `compileSdk 35`, `targetSdk 35`, and `buildToolsVersion 35.0.0`) matching React Native 0.79 / Expo SDK 53 requirements.
+- **Documentation Link Warning**: Updated the CLI link comment in `apps/mobile/android/app/build.gradle` (line 62) to reference the canonical repository URL (`https://github.com/react-native-community/cli`).
+
+### 4. Environment Variable Conflicts (RESOLVED)
+- **Problem**: Build failures with `com.android.prefs.AndroidLocationsException` occur when both `ANDROID_PREFS_ROOT` and `ANDROID_USER_HOME` are set simultaneously in the Windows environment, which breaks AGP 8.8.2 and leads to the React Native error: `"No modules supporting bundles found"`.
+- **Resolution**:
+  - Cleared `ANDROID_PREFS_ROOT` from Windows Environment (User/Machine/Process) in favor of the modern standard `ANDROID_USER_HOME`.
+  - Removed conflicting overrides (`android.user.home` / `systemProp.android.user.home`) from `apps/mobile/android/gradle.properties`.
+  - To finalize in active IDE sessions, restart Android Studio and run **File > Sync Project with Gradle Files**.
 
 ---
 
-## Suggested Actions for Resolution
-1. **Verify Package Names**: Ensure the `package="co.dressapp.mobile"` in `AndroidManifest.xml` matches the `namespace` in `build.gradle` and the actual directory structure of the Kotlin files.
-2. **Sync Project with Gradle**: Perform a "Sync Project with Gradle Files" to refresh the IDE's internal model and resolve class references.
-3. **Invalidate Caches**: If the "not allowed here" errors persist despite correct XML structure, try "Invalidate Caches / Restart".
-4. **Check Resource Files**: Verify that all `@xml`, `@string`, and `@style` resources referenced in the manifest actually exist in `res/` directories.
+## Verification Results
+- **Expo Doctor**: 18/18 checks passed (`npm --prefix apps/mobile exec -- expo-doctor`).
+- **Gradle Release Compilation**: Full release compilation passed (`:app:assembleRelease`).
+- **Release APK**: Successfully generated at [`apps/mobile/android/app/build/outputs/apk/release/app-release.apk`](file:///C:/DressApp_AG/apps/mobile/android/app/build/outputs/apk/release/app-release.apk) (96.6 MB).
+- **Release App Bundle (AAB)**: Successfully generated and verified at [`dist/app-release.aab`](file:///C:/DressApp_AG/dist/app-release.aab) (48.8 MB) for Google Play Console distribution.
+- **Monorepo Bundling**: Configured Metro & React Native Gradle plugin to cleanly resolve workspace packages (`@dressapp/*`) and entrypoints across Yarn workspaces.

@@ -44,6 +44,8 @@ import { api } from '@mobile/lib/api';
 import { useClosetStore, closetStore, ClosetItem } from '@mobile/lib/stores/closetStore';
 import { OutfitCompletionSheet } from '@mobile/components/OutfitCompletionSheet';
 import { RichSelectionFloater } from '@mobile/components/closet/RichSelectionFloater';
+import { HelpFloater } from '@mobile/components/help';
+import { LoadingVideo } from '@mobile/components/common/LoadingVideo';
 import { labelForCategory, labelForIntent, labelForColor } from '@mobile/lib/taxonomy';
 import type { ClosetStackParamList } from '@mobile/navigation/types';
 
@@ -472,6 +474,8 @@ export function ClosetScreen() {
         </View>
 
         <View style={styles.topActions}>
+          <HelpFloater screenTopic="closet-page" />
+
           <TouchableOpacity
             style={[styles.iconBtn, { backgroundColor: colors.secondary }]}
             onPress={() => navigation.navigate('DppScanner')}
@@ -645,13 +649,10 @@ export function ClosetScreen() {
       </View>
 
       {/* ── Garment Grid / List ──────────────────────────────────────── */}
-      {semanticLoading ? (
-        <View style={styles.loadingBox}>
-          <ActivityIndicator size="large" color={colors.accent} />
-          <Text style={[styles.loadingText, { color: colors.mutedFg }]}>
-            {t('closet.searchingSemantic', { defaultValue: 'FashionCLIP semantic searching…' })}
-          </Text>
-        </View>
+      {loading ? (
+        <LoadingVideo message={t('closet.loadingWardrobe', { defaultValue: 'Loading your wardrobe…' })} />
+      ) : semanticLoading ? (
+        <LoadingVideo message={t('closet.searchingSemantic', { defaultValue: 'FashionCLIP semantic searching…' })} />
       ) : displayItems.length === 0 ? (
         <View style={styles.emptyBox}>
           <Lucide.Shirt size={48} color={colors.mutedFg} />

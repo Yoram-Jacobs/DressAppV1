@@ -68,8 +68,8 @@ export function TrendScoutScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeBucket, setActiveBucket] = useState<string>('all');
 
-  const userTier = (user?.subscription_tier || 'free').toLowerCase();
-  const isPaying = userTier === 'manager' || userTier === 'professional' || userTier === 'pro';
+  const userTier = ((user?.subscription?.is_active && user?.subscription?.tier) || user?.subscription_tier || 'free').toLowerCase();
+  const isPaying = (user?.subscription?.is_active && userTier !== 'free') || userTier === 'manager' || userTier === 'professional' || userTier === 'pro';
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.lg,
   },
   bucketBar: {
-    maxHeight: 50,
+    minHeight: 52,
     borderBottomWidth: 1,
   },
   bucketScroll: {
@@ -273,8 +273,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   bucketPill: {
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[1.5],
+    paddingHorizontal: spacing[3.5],
+    paddingVertical: spacing[2],
     borderRadius: radii.full,
     borderWidth: 1,
   },

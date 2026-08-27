@@ -24,9 +24,11 @@ from app.api.v1 import (
     trends,
     users,
     atzmai,  # Atzmai payment gateway
+    wiki,
 )
 
 api_v1_router = APIRouter(prefix="/v1")
+api_v1_router.include_router(wiki.router)
 api_v1_router.include_router(ai_credits.ai_credits_router)  # AI credits endpoints
 api_v1_router.include_router(ai_credits.pricing_router)     # New pricing information endpoints
 api_v1_router.include_router(ai_credits.quota_router)            # Quota management endpoints

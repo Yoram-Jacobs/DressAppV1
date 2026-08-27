@@ -232,7 +232,8 @@
     "deleteSelectedTitle": "حذف العناصر",
     "deleteSelectedConfirm": "هل أنت متأكد من رغبتك في حذف {{count}} عنصر؟",
     "batchDeleteFailed": "تعذر حذف بعض العناصر. يرجى المحاولة مرة أخرى.",
-    "anchorItems": "قطع الأساس المختارة"
+    "anchorItems": "قطع الأساس المختارة",
+    "loadingWardrobe": "جارٍ تحميل خزانة ملابسك…"
   },
   "addItem": {
     "namePlaceholder": "مثال: سترة جينز كلاسيكية",
@@ -1832,10 +1833,10 @@
     "statusInactive": "ميزة الطقس تستخدم القيم الافتراضية دون اتصال بالإنترنت."
   },
   "experts": {
-    "title": "اسأل محترفًا",
+    "title": "اسأل خبيراً",
     "tabExperts": "خبراء",
     "tabCampaigns": "حملات",
-    "subtitle": "تصفّح خبراء الأزياء الموثوقين — مصممين، خياطين، حلاقين — في منطقتك.",
+    "subtitle": "تصفح خبراء الموضة المعتمدين — منسقو أزياء، خياطون، حلاقون، ومصممون — في منطقتك.",
     "filters": {
       "profession": "المهنة",
       "anyProfession": "أي مهنة",
@@ -1855,7 +1856,26 @@
     "countLabel_one": "خبير واحد",
     "countLabel_other": "{{count}} خبراء",
     "becomeExpertCta": "هل أنت محترف أزياء؟ فعّل ذلك من الملف الشخصي.",
-    "loadMore": "عرض المزيد"
+    "loadMore": "عرض المزيد",
+    "searchPlaceholder": "البحث بالاسم أو المدينة أو التخصص…",
+    "email": "بريد إلكتروني",
+    "website": "موقع إلكتروني",
+    "empty": "لا يوجد خبراء مدرجون بعد.",
+    "professions": {
+      "all": "الكل",
+      "stylist": "منسق أزياء",
+      "fashion_stylist": "منسق أزياء",
+      "tailor": "خياط",
+      "designer": "مصمم أزياء",
+      "fashion_designer": "مصمم أزياء",
+      "barber": "حلاق",
+      "hair_stylist": "مصفف شعر",
+      "ai_fashion": "الذكاء الاصطناعي للموضة",
+      "ai_for_fashion": "الذكاء الاصطناعي للموضة",
+      "shopper": "متسوق شخصي",
+      "consultant": "مستشار خزانة",
+      "color": "محلل ألوان"
+    }
   },
   "ads": {
     "title": "حملاتي الإعلانية",
@@ -2726,7 +2746,8 @@
         "newest": "الأحدث",
         "nearest": "الأقرب",
         "endingSoon": "ينتهي قريباً",
-        "highestDiscount": "أعلى خصم"
+        "highestDiscount": "أعلى خصم",
+        "title": "ترتيب الحملات"
       },
       "empty": {
         "title": "لا توجد حملات بالقرب منك",

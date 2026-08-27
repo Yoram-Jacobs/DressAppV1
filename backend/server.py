@@ -110,6 +110,11 @@ static_dir = ROOT_DIR / "static"
 static_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
+# Mount /wiki to serve documentation
+wiki_dir = ROOT_DIR.parent / "wiki"
+if wiki_dir.exists():
+    app.mount("/wiki", StaticFiles(directory=str(wiki_dir)), name="wiki")
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,

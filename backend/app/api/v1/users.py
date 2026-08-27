@@ -118,6 +118,16 @@ async def get_me(user: dict = Depends(get_current_user)) -> dict[str, Any]:
     if "measurements" in safe and "body_measurements" not in safe:
         safe["body_measurements"] = safe["measurements"]
 
+    # Normalize subscription & tier
+    sub = safe.get("subscription") or {}
+    if isinstance(sub, dict):
+        if sub.get("is_active") and sub.get("tier"):
+            safe["subscription_tier"] = sub.get("tier")
+        else:
+            safe["subscription_tier"] = "free"
+    else:
+        safe["subscription_tier"] = "free"
+
     # Mask API keys to keep them secured
     if "ai_configuration" in safe:
         ai_config = dict(safe["ai_configuration"])
@@ -237,9 +247,24 @@ async def update_me(
                 # Remove key
                 merged_keys.pop(key_name, None)
             else:
+                key_str = str(key_val).strip()
+                if key_name == "google_ai" and key_str:
+                    from app.services.gemini_client import GeminiClient
+                    client = GeminiClient(api_key=key_str)
+                    try:
+                        resp = await client.text("Test connection.", model="gemini-3.5-flash-lite")
+                        if not resp:
+                            raise ValueError("No response from Google Gemini")
+                    except Exception as exc:
+                        logger.warning("Gemini key validation failed during patch: %s", exc)
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"Google Gemini API key is invalid: {exc}",
+                        ) from exc
+
                 # Encrypt new key
                 from app.services.auth import encrypt_api_key
-                merged_keys[key_name] = encrypt_api_key(str(key_val))
+                merged_keys[key_name] = encrypt_api_key(key_str)
                 
         set_ops["ai_configuration"] = {
             "provider_mode": provider_mode,
@@ -397,4 +422,48 @@ async def delete_me(
         logger.error("Failed to send deletion email: %s", exc)
 
     return {"deleted": True}
+
+
+class ValidateApiKeyRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    provider: str = "google_ai"
+    api_key: str
+
+
+@router.post("/validate-api-key")
+async def validate_api_key(
+    payload: ValidateApiKeyRequest,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Test user's API key against the provider before saving."""
+    key = (payload.api_key or "").strip()
+    if not key:
+        raise HTTPException(status_code=400, detail="API key cannot be empty.")
+
+    provider = payload.provider.lower()
+    if provider == "google_ai":
+        from app.services.gemini_client import GeminiClient
+        client = GeminiClient(api_key=key)
+        try:
+            resp = await client.text("Test connection.", model="gemini-3.5-flash-lite")
+            if resp:
+                return {
+                    "valid": True,
+                    "provider": "google_ai",
+                    "message": "Google Gemini API key is valid and connected successfully.",
+                }
+            raise ValueError("Empty response received from Gemini.")
+        except Exception as exc:
+            logger.warning("Google AI key validation failed: %s", exc)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid Google Gemini API key: {exc}",
+            ) from exc
+
+    return {
+        "valid": True,
+        "provider": provider,
+        "message": f"{provider} API key format accepted.",
+    }
+
 

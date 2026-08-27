@@ -269,6 +269,26 @@ _maybe_retry_stale_matte = closet_service.maybe_retry_stale_matte
 _run_background_matte = closet_service.run_background_matte
 _run_background_matte_and_analyze = closet_service.run_background_matte_and_analyze
 _run_background_reconstruction = closet_service.run_background_reconstruction
+
+
+def _get_item_image_url(item: dict[str, Any]) -> str | None:
+    """Extract clean_image_url as the primary image URL from a closet item document with full fallbacks."""
+    if not isinstance(item, dict):
+        return None
+    return (
+        item.get("clean_image_url")
+        or item.get("reconstructed_image_url")
+        or item.get("cutout_url")
+        or item.get("image_url")
+        or item.get("original_image_url")
+        or item.get("thumbnail_data_url")
+        or (item.get("image_variants") or {}).get("webp", {}).get("large")
+        or (item.get("image_variants") or {}).get("webp", {}).get("medium")
+        or (item.get("image_variants") or {}).get("original")
+        or None
+    )
+
+
 @router.post("", status_code=201)
 async def create_item(
     payload: CreateItemIn,
@@ -842,14 +862,8 @@ async def preflight_duplicates(
             backfill_remaining += 1
             continue
         src = (
-            # Use the clean-cut rembg image as the authoritative fingerprint
-            # source. This is the image the user sees in the closet and is more
-            # representative than the raw upload or the intermediate SegFormer
-            # crop. Thumbnail-derived hashes are still avoided (see Z2.3 note
-            # above) — clean_image_url is the best single-source ground truth.
-            # Fall back to CDN variants for items where matte hasn't run yet.
-            row.get("clean_image_url")
-            or (row.get("image_variants") or {}).get("original")
+            # Use clean_image_url as the authoritative single-source ground truth.
+            _get_item_image_url(row)
         )
         if not src:
             continue
@@ -960,7 +974,10 @@ async def preflight_duplicates(
                     "sub_category": existing_match.get("sub_category"),
                     "color": existing_match.get("color"),
                     "thumbnail_data_url": (
-                        existing_match.get("thumbnail_data_url")
+                        existing_match.get("clean_image_url")
+                        or existing_match.get("thumbnail_data_url")
+                        or existing_match.get("cutout_url")
+                        or existing_match.get("image_url")
                         or existing_match.get("segmented_image_url")
                         or existing_match.get("original_image_url")
                     ),
@@ -2511,6 +2528,9 @@ async def repair_hashes_stream(
     proj = {
         "_id": 0,
         "id": 1,
+        "clean_image_url": 1,
+        "cutout_url": 1,
+        "reconstructed_image_url": 1,
         "original_image_url": 1,
         "segmented_image_url": 1,
         "source_phash": 1,
@@ -3065,8 +3085,12 @@ async def backfill_marketplace_listings(
             "id": 1, "title": 1, "description": 1, "category": 1,
             "size": 1, "condition": 1, "state": 1, "location": 1,
             "marketplace_intent": 1, "price_cents": 1,
-            "thumbnail_data_url": 1, "segmented_image_url": 1,
-            "reconstructed_image_url": 1, "original_image_url": 1,
+            "thumbnail_data_url": 1,
+            "clean_image_url": 1,
+            "reconstructed_image_url": 1,
+            "cutout_url": 1,
+            "image_url": 1,
+            "image_variants": 1,
             "auto_listing_id": 1, "source": 1,
         },
     )
@@ -3102,15 +3126,19 @@ async def backfill_marketplace_listings(
         try:
             images: list[str] = []
             for fld in (
-                "thumbnail_data_url",
-                "segmented_image_url",
+                "clean_image_url",
                 "reconstructed_image_url",
+                "cutout_url",
+                "thumbnail_data_url",
+                "image_url",
+                "segmented_image_url",
                 "original_image_url",
             ):
                 url = item.get(fld)
                 if isinstance(url, str) and url:
                     images.append(url)
                     break
+
 
             mode = INTENT_TO_MODE[item["marketplace_intent"]]
             price_cents = (
@@ -3257,8 +3285,12 @@ async def backfill_marketplace_listings_stream(
             "id": 1, "title": 1, "description": 1, "category": 1,
             "size": 1, "condition": 1, "state": 1, "location": 1,
             "marketplace_intent": 1, "price_cents": 1,
-            "thumbnail_data_url": 1, "segmented_image_url": 1,
-            "reconstructed_image_url": 1, "original_image_url": 1,
+            "thumbnail_data_url": 1,
+            "clean_image_url": 1,
+            "reconstructed_image_url": 1,
+            "cutout_url": 1,
+            "image_url": 1,
+            "image_variants": 1,
             "auto_listing_id": 1, "source": 1,
         },
     )
@@ -3382,15 +3414,19 @@ async def backfill_marketplace_listings_stream(
             try:
                 images: list[str] = []
                 for fld in (
-                    "thumbnail_data_url",
-                    "segmented_image_url",
+                    "clean_image_url",
                     "reconstructed_image_url",
+                    "cutout_url",
+                    "thumbnail_data_url",
+                    "image_url",
+                    "segmented_image_url",
                     "original_image_url",
                 ):
                     url = item.get(fld)
                     if isinstance(url, str) and url:
                         images.append(url)
                         break
+
 
                 mode = INTENT_TO_MODE[item["marketplace_intent"]]
                 price_cents = (
@@ -3872,6 +3908,7 @@ class ItemChatAnalyseIn(BaseModel):
     message: str
     history: list[ItemChatTurn] = []
     fill_empty_only: bool = False
+    image_url: str | None = None
 
 
 class RepairItemIn(BaseModel):
@@ -3941,12 +3978,7 @@ async def clean_item_background(
             "reason": "lightweight_deploy_no_matting",
         }
 
-    crop_url = (
-        item.get("clean_image_url")
-        or (item.get("image_variants") or {}).get("webp", {}).get("large")
-        or (item.get("image_variants") or {}).get("webp", {}).get("medium")
-        or (item.get("image_variants") or {}).get("original")
-    )
+    crop_url = _get_item_image_url(item)
     if not crop_url:
         raise HTTPException(
             400, "Item has no cropped image to matte. Re-analyze the item first."
@@ -4263,18 +4295,7 @@ async def reanalyze_item(
     if not item:
         raise HTTPException(404, "Item not found")
 
-    # Prefer the clean-cut rembg image (what the user sees in the closet).
-    # Fall back through CDN variants and legacy fields for older items.
-    variants = item.get("image_variants") or {}
-    image_url: str | None = (
-        item.get("clean_image_url")
-        or item.get("cutout_url")
-        or (variants.get("webp") or {}).get("large")
-        or (variants.get("webp") or {}).get("medium")
-        or item.get("reconstructed_image_url")
-        or variants.get("original")
-        or item.get("image_url")
-    )
+    image_url: str | None = _get_item_image_url(item)
     if not image_url:
         raise HTTPException(
             400,
@@ -4402,16 +4423,7 @@ async def chat_analyse_item(
     if not user_msg:
         raise HTTPException(400, "Message cannot be empty")
 
-    variants = item.get("image_variants") or {}
-    image_url: str | None = (
-        item.get("reconstructed_image_url")
-        or item.get("clean_image_url")
-        or item.get("cutout_url")
-        or (variants.get("webp") or {}).get("large")
-        or (variants.get("webp") or {}).get("medium")
-        or variants.get("original")
-        or item.get("image_url")
-    )
+    image_url: str | None = payload.image_url or _get_item_image_url(item)
     if not image_url:
         raise HTTPException(400, "Item has no stored image. Please attach a photo first.")
 
@@ -4621,13 +4633,8 @@ async def repair_item_image(
         ).strip(" —")
 
     # Use the clean-cut rembg image for visual conditioning (what the user sees
-    # in the closet); fall back to CDN variants if matte hasn't run yet.
-    crop_url = (
-        item.get("clean_image_url")
-        or (item.get("image_variants") or {}).get("webp", {}).get("large")
-        or (item.get("image_variants") or {}).get("webp", {}).get("medium")
-        or (item.get("image_variants") or {}).get("original")
-    )
+    # in the closet); fall back to other image fields if matte hasn't run yet.
+    crop_url = _get_item_image_url(item)
     crop_bytes = await _read_image_bytes_from_url(crop_url) if crop_url else b""
 
     from app.services.billing_service import deduct_user_credits
@@ -4883,7 +4890,11 @@ async def upload_group_member(
 
     if segmented_data_url:
         member_item["segmented_image_url"] = segmented_data_url
+        member_item["clean_image_url"] = segmented_data_url
         member_item["segmentation_model"] = segmentation_model
+    elif original_data_url:
+        member_item["clean_image_url"] = original_data_url
+
 
     # Get FashionCLIP embedding for member item
     if fashion_clip_service is not None:
@@ -5107,7 +5118,11 @@ async def group_edit(
 
         if segmented_data_url:
             member_item["segmented_image_url"] = segmented_data_url
+            member_item["clean_image_url"] = segmented_data_url
             member_item["segmentation_model"] = segmentation_model
+        elif original_data_url:
+            member_item["clean_image_url"] = original_data_url
+
 
         # Get FashionCLIP embedding
         if fashion_clip_service is not None:
@@ -5403,8 +5418,12 @@ async def update_item(
                     group_items.sort(key=lambda x: 0 if x.get("group_role") == "host" else 1)
                     for g_item in group_items:
                         for fld in (
-                            "segmented_image_url",
+                            "clean_image_url",
                             "reconstructed_image_url",
+                            "cutout_url",
+                            "thumbnail_data_url",
+                            "image_url",
+                            "segmented_image_url",
                             "original_image_url",
                         ):
                             url = g_item.get(fld)
@@ -5413,15 +5432,19 @@ async def update_item(
                                 break
                 else:
                     for fld in (
-                        "thumbnail_data_url",
-                        "segmented_image_url",
+                        "clean_image_url",
                         "reconstructed_image_url",
+                        "cutout_url",
+                        "thumbnail_data_url",
+                        "image_url",
+                        "segmented_image_url",
                         "original_image_url",
                     ):
                         url = updated.get(fld)
                         if isinstance(url, str) and url:
                             images.append(url)
                             break
+
                 # Same condition vocab mapping as in create_item /
                 # backfill: GarmentCondition (excellent/good/fair/bad)
                 # → Listing condition (new/like_new/good/fair).
@@ -5828,13 +5851,7 @@ async def edit_item_image(
     )
     if not item:
         raise HTTPException(404, "Item not found")
-    variants = item.get("image_variants") or {}
-    source_url = (
-        item.get("clean_image_url")
-        or (variants.get("webp") or {}).get("large")
-        or (variants.get("webp") or {}).get("medium")
-        or variants.get("original")
-    )
+    source_url = _get_item_image_url(item)
     if not source_url:
         raise HTTPException(400, "No source image on this item")
     source_bytes = await _read_image_bytes_from_url(source_url)

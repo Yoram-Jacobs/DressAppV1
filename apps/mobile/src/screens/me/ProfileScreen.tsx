@@ -50,6 +50,7 @@ import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { api, tokenStore, emitAuthChange } from '@mobile/lib/api';
 import { applyRtl } from '@mobile/lib/rtl';
+import { HelpFloater } from '@mobile/components/help';
 import type { MeStackParamList } from '@mobile/navigation/types';
 
 import {
@@ -101,6 +102,13 @@ export function ProfileScreen() {
 
   // Active accordion section
   const [expandedSection, setExpandedSection] = useState<string | null>('demographics');
+
+  // Accordion groups collapsed state
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({
+    identity: false,
+    subscription: false,
+    more: false,
+  });
 
   // Demographics State
   const [firstName, setFirstName] = useState('');
@@ -195,6 +203,9 @@ export function ProfileScreen() {
   // Subscription State
   const [tierName, setTierName] = useState('Free');
   const [credits, setCredits] = useState(1000);
+  const [subscription, setSubscription] = useState<any>(null);
+  const [closetCount, setClosetCount] = useState<number>(0);
+  const [closetBonus, setClosetBonus] = useState<number>(0);
 
   // Shopping Assistant State
   const [shoppingAssistantEnabled, setShoppingAssistantEnabled] = useState(true);
@@ -312,9 +323,23 @@ export function ProfileScreen() {
         if (cPrefs.max_campaign_distance_km) setCampaignMaxDistance(String(cPrefs.max_campaign_distance_km));
         setCampaignChannels((prev) => ({ ...prev, ...cPrefs }));
 
-        // Subscription
-        setTierName(u.subscription_tier || 'Free');
+        // Subscription & Limits
+        const sub = u.subscription || {};
+        setSubscription(sub);
+        const isActive = Boolean(sub.is_active);
+        const effectiveTier = (isActive && sub.tier && sub.tier !== 'free')
+          ? sub.tier
+          : (u.subscription_tier || 'Free');
+        setTierName(effectiveTier);
         setCredits(u.credits ?? u.ai_configuration?.current_credits ?? 1000);
+        setClosetBonus(u.closet_capacity_bonus || 0);
+
+        // Fetch closet count for limit progress
+        try {
+          const itemsRes = await (api as any).listCloset?.();
+          const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes?.items || []);
+          setClosetCount(itemsList.length);
+        } catch {}
 
         // Shopping
         if (u.shopping_assistant?.enabled !== undefined) setShoppingAssistantEnabled(u.shopping_assistant.enabled);
@@ -335,6 +360,13 @@ export function ProfileScreen() {
 
   const toggleAccordion = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  const toggleGroup = (groupKey: string) => {
+    setCollapsedGroups((prev) => ({
+      ...prev,
+      [groupKey]: !prev[groupKey],
+    }));
   };
 
   const toggleAesthetic = (item: string) => {
@@ -613,6 +645,7 @@ export function ProfileScreen() {
         </View>
 
         <View style={styles.headerActions}>
+          <HelpFloater screenTopic="profile-matters" />
           <TouchableOpacity
             style={[styles.themeToggleBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
             onPress={toggle}
@@ -675,10 +708,38 @@ export function ProfileScreen() {
               )}
 
               <View style={styles.pillsRow}>
-                <View style={[styles.tierPill, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
-                  <Lucide.Crown size={12} color={colors.accent} />
-                  <Text style={[styles.tierPillText, { color: colors.foreground }]}>
-                    {t('profile.planLabel', { defaultValue: '{{tier}} Plan', tier: tierName })}
+                <View
+                  style={[
+                    styles.tierPill,
+                    {
+                      backgroundColor: subscription?.is_active && tierName.toLowerCase() !== 'free'
+                        ? 'rgba(234, 179, 8, 0.15)'
+                        : colors.secondary,
+                      borderColor: subscription?.is_active && tierName.toLowerCase() !== 'free'
+                        ? '#EAB308'
+                        : colors.border,
+                    },
+                  ]}
+                >
+                  <Lucide.Crown
+                    size={12}
+                    color={subscription?.is_active && tierName.toLowerCase() !== 'free' ? '#EAB308' : colors.accent}
+                  />
+                  <Text
+                    style={[
+                      styles.tierPillText,
+                      {
+                        color: subscription?.is_active && tierName.toLowerCase() !== 'free'
+                          ? '#EAB308'
+                          : colors.foreground,
+                        fontFamily: fonts.bodyBold,
+                      },
+                    ]}
+                  >
+                    {t('profile.planLabel', {
+                      defaultValue: '{{tier}} Plan',
+                      tier: tierName ? tierName.charAt(0).toUpperCase() + tierName.slice(1) : 'Free',
+                    })}
                   </Text>
                 </View>
 
@@ -771,593 +832,711 @@ export function ProfileScreen() {
           </View>
         ) : (
           <View style={styles.accordionsWrap}>
-            {/* 1. Identity & Demographics */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            {/* ═════════════════════════════════════════════════════════════════ */}
+            {/* 1. IDENTITY ACCORDION SECTION                                   */}
+            {/* ═════════════════════════════════════════════════════════════════ */}
+            <View style={styles.groupContainer}>
               <TouchableOpacity
-                style={styles.sectionHeader}
-                onPress={() => toggleAccordion('demographics')}
+                style={[styles.groupHeader, { backgroundColor: colors.card, borderColor: colors.border }]}
+                onPress={() => toggleGroup('identity')}
+                activeOpacity={0.8}
               >
-                <View style={styles.sectionTitleRow}>
-                  <Lucide.Fingerprint size={18} color={colors.accent} />
-                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                    {t('profile.sections.demographics', { defaultValue: 'Identity & Demographics' })}
+                <View style={styles.groupHeaderLeft}>
+                  <View style={[styles.groupIconCircle, { backgroundColor: colors.secondary }]}>
+                    <Lucide.UserCheck size={16} color={colors.accent} />
+                  </View>
+                  <Text style={[styles.groupTitle, { color: colors.foreground }]}>
+                    {t('profile.groups.identity', { defaultValue: 'Identity' })}
                   </Text>
+                  <View style={[styles.groupCountBadge, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+                    <Text style={[styles.groupCountText, { color: colors.mutedFg }]}>6</Text>
+                  </View>
                 </View>
-                {expandedSection === 'demographics' ? (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                ) : (
+                {collapsedGroups.identity ? (
                   <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                ) : (
+                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
                 )}
               </TouchableOpacity>
-              {expandedSection === 'demographics' && (
-                <View style={styles.sectionBody}>
-                  <DemographicsSection
-                    firstName={firstName}
-                    setFirstName={setFirstName}
-                    lastName={lastName}
-                    setLastName={setLastName}
-                    displayName={displayName}
-                    setDisplayName={setDisplayName}
-                    email={email}
-                    phone={phone}
-                    setPhone={setPhone}
-                    birthday={birthday}
-                    setBirthday={setBirthday}
-                    gender={gender}
-                    setGender={setGender}
-                    maritalStatus={maritalStatus}
-                    setMaritalStatus={setMaritalStatus}
-                    occupation={occupation}
-                    setOccupation={setOccupation}
-                    city={city}
-                    setCity={setCity}
-                    country={country}
-                    setCountry={setCountry}
-                  />
+
+              {!collapsedGroups.identity && (
+                <View style={styles.groupItems}>
+                  {/* 1.1 Identity & Demographics */}
+                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={styles.sectionHeader}
+                      onPress={() => toggleAccordion('demographics')}
+                    >
+                      <View style={styles.sectionTitleRow}>
+                        <Lucide.Fingerprint size={18} color={colors.accent} />
+                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                          {t('profile.sections.demographics', { defaultValue: 'Identity & Demographics' })}
+                        </Text>
+                      </View>
+                      {expandedSection === 'demographics' ? (
+                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                      ) : (
+                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                      )}
+                    </TouchableOpacity>
+                    {expandedSection === 'demographics' && (
+                      <View style={styles.sectionBody}>
+                        <DemographicsSection
+                          firstName={firstName}
+                          setFirstName={setFirstName}
+                          lastName={lastName}
+                          setLastName={setLastName}
+                          displayName={displayName}
+                          setDisplayName={setDisplayName}
+                          email={email}
+                          phone={phone}
+                          setPhone={setPhone}
+                          birthday={birthday}
+                          setBirthday={setBirthday}
+                          gender={gender}
+                          setGender={setGender}
+                          maritalStatus={maritalStatus}
+                          setMaritalStatus={setMaritalStatus}
+                          occupation={occupation}
+                          setOccupation={setOccupation}
+                          city={city}
+                          setCity={setCity}
+                          country={country}
+                          setCountry={setCountry}
+                        />
+                      </View>
+                    )}
+                  </View>
+
+                  {/* 1.2 Body Measurements & Sizes */}
+                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={styles.sectionHeader}
+                      onPress={() => toggleAccordion('measurements')}
+                    >
+                      <View style={styles.sectionTitleRow}>
+                        <Lucide.Ruler size={18} color={colors.accent} />
+                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                          {t('profile.sections.measurements', { defaultValue: 'Body Measurements & Sizes' })}
+                        </Text>
+                      </View>
+                      {expandedSection === 'measurements' ? (
+                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                      ) : (
+                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                      )}
+                    </TouchableOpacity>
+                    {expandedSection === 'measurements' && (
+                      <View style={styles.sectionBody}>
+                        <MeasurementsSection
+                          height={height}
+                          setHeight={setHeight}
+                          weight={weight}
+                          setWeight={setWeight}
+                          waist={waist}
+                          setWaist={setWaist}
+                          footLength={footLength}
+                          setFootLength={setFootLength}
+                          chest={chest}
+                          setChest={setChest}
+                          hips={hips}
+                          setHips={setHips}
+                          shoulders={shoulders}
+                          setShoulders={setShoulders}
+                          sleeve={sleeve}
+                          setSleeve={setSleeve}
+                          inseam={inseam}
+                          setInseam={setInseam}
+                          outseam={outseam}
+                          setOutseam={setOutseam}
+                          shoeSize={shoeSize}
+                          setShoeSize={setShoeSize}
+                          topSize={topSize}
+                          setTopSize={setTopSize}
+                          bottomSize={bottomSize}
+                          setBottomSize={setBottomSize}
+                          dressSize={dressSize}
+                          setDressSize={setDressSize}
+                          braSize={braSize}
+                          setBraSize={setBraSize}
+                          gender={gender}
+                        />
+                      </View>
+                    )}
+                  </View>
+
+                  {/* 1.3 Avatar & Virtual Fitting */}
+                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={styles.sectionHeader}
+                      onPress={() => toggleAccordion('avatar')}
+                    >
+                      <View style={styles.sectionTitleRow}>
+                        <Lucide.Camera size={18} color="#DB2777" />
+                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                          {t('profile.sections.photosAvatar', { defaultValue: 'Avatar & Virtual Fitting' })}
+                        </Text>
+                      </View>
+                      {expandedSection === 'avatar' ? (
+                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                      ) : (
+                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                      )}
+                    </TouchableOpacity>
+                    {expandedSection === 'avatar' && (
+                      <View style={styles.sectionBody}>
+                        <AvatarSection
+                          facePhotoUrl={facePhotoUrl}
+                          setFacePhotoUrl={setFacePhotoUrl}
+                          bodyPhotoUrl={bodyPhotoUrl}
+                          setBodyPhotoUrl={setBodyPhotoUrl}
+                          skinTone={skinTone}
+                          setSkinTone={setSkinTone}
+                          userGender={gender}
+                          bodyMeasurements={{
+                            height: parseFloat(height) || 168,
+                            chest: parseFloat(chest) || 88,
+                            waist: parseFloat(waist) || 68,
+                            hip: parseFloat(hips) || 94,
+                            shoulders: parseFloat(shoulders) || 38,
+                            inseam: parseFloat(inseam) || 76,
+                            armLength: parseFloat(sleeve) || 58,
+                          }}
+                          onSaveSuccess={() => loadProfile()}
+                        />
+                      </View>
+                    )}
+                  </View>
+
+                  {/* 1.4 Hair & Grooming */}
+                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={styles.sectionHeader}
+                      onPress={() => toggleAccordion('hair')}
+                    >
+                      <View style={styles.sectionTitleRow}>
+                        <Lucide.Scissors size={18} color="#D97706" />
+                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                          {t('profile.sections.hair', { defaultValue: 'Hair & Grooming' })}
+                        </Text>
+                      </View>
+                      {expandedSection === 'hair' ? (
+                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                      ) : (
+                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                      )}
+                    </TouchableOpacity>
+                    {expandedSection === 'hair' && (
+                      <View style={styles.sectionBody}>
+                        <HairSection
+                          hairLength={hairLength}
+                          setHairLength={setHairLength}
+                          hairType={hairType}
+                          setHairType={setHairType}
+                          hairColor={hairColor}
+                          setHairColor={setHairColor}
+                          hairStyle={hairStyle}
+                          setHairStyle={setHairStyle}
+                        />
+                      </View>
+                    )}
+                  </View>
+
+                  {/* 1.5 Style Profile & Aesthetic */}
+                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={styles.sectionHeader}
+                      onPress={() => toggleAccordion('style')}
+                    >
+                      <View style={styles.sectionTitleRow}>
+                        <Lucide.Sparkles size={18} color="#8B5CF6" />
+                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                          {t('profile.sections.styleProfile', { defaultValue: 'Style Profile & Aesthetics' })}
+                        </Text>
+                      </View>
+                      {expandedSection === 'style' ? (
+                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                      ) : (
+                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                      )}
+                    </TouchableOpacity>
+                    {expandedSection === 'style' && (
+                      <View style={styles.sectionBody}>
+                        <StyleProfileSection
+                          selectedAesthetics={selectedAesthetics}
+                          toggleAesthetic={toggleAesthetic}
+                          fitPreference={fitPreference}
+                          setFitPreference={setFitPreference}
+                          colorsToAvoid={colorsToAvoid}
+                          avoidInput={avoidInput}
+                          setAvoidInput={setAvoidInput}
+                          setColorsToAvoid={setColorsToAvoid}
+                          preferredDressCode={preferredDressCode}
+                          setPreferredDressCode={setPreferredDressCode}
+                        />
+                      </View>
+                    )}
+                  </View>
+
+                  {/* 1.6 Professional Directory */}
+                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={styles.sectionHeader}
+                      onPress={() => toggleAccordion('professional')}
+                    >
+                      <View style={styles.sectionTitleRow}>
+                        <Lucide.Briefcase size={18} color="#6366F1" />
+                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                          {t('profile.professional.sectionTitle', { defaultValue: 'Professional Directory' })}
+                        </Text>
+                      </View>
+                      {expandedSection === 'professional' ? (
+                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                      ) : (
+                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                      )}
+                    </TouchableOpacity>
+                    {expandedSection === 'professional' && (
+                      <View style={styles.sectionBody}>
+                        <ProfessionalSection
+                          isStylist={isStylist}
+                          setIsStylist={setIsStylist}
+                          profession={profession}
+                          setProfession={setProfession}
+                          businessName={businessName}
+                          setBusinessName={setBusinessName}
+                          businessAddress={businessAddress}
+                          setBusinessAddress={setBusinessAddress}
+                          businessPhone={businessPhone}
+                          setBusinessPhone={setBusinessPhone}
+                          businessEmail={businessEmail}
+                          setBusinessEmail={setBusinessEmail}
+                          businessWebsite={businessWebsite}
+                          setBusinessWebsite={setBusinessWebsite}
+                          stylistBio={stylistBio}
+                          setStylistBio={setStylistBio}
+                          hourlyRate={hourlyRate}
+                          setHourlyRate={setHourlyRate}
+                          bookingUrl={bookingUrl}
+                          setBookingUrl={setBookingUrl}
+                          specialties={specialties}
+                          toggleSpecialty={toggleSpecialty}
+                        />
+                      </View>
+                    )}
+                  </View>
                 </View>
               )}
             </View>
 
-            {/* 2. Hair & Grooming (NEW) */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            {/* ═════════════════════════════════════════════════════════════════ */}
+            {/* 2. SUBSCRIPTION ACCORDION SECTION                               */}
+            {/* ═════════════════════════════════════════════════════════════════ */}
+            <View style={styles.groupContainer}>
               <TouchableOpacity
-                style={styles.sectionHeader}
-                onPress={() => toggleAccordion('hair')}
+                style={[styles.groupHeader, { backgroundColor: colors.card, borderColor: colors.border }]}
+                onPress={() => toggleGroup('subscription')}
+                activeOpacity={0.8}
               >
-                <View style={styles.sectionTitleRow}>
-                  <Lucide.Scissors size={18} color="#D97706" />
-                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                    {t('profile.sections.hair', { defaultValue: 'Hair & Grooming' })}
+                <View style={styles.groupHeaderLeft}>
+                  <View style={[styles.groupIconCircle, { backgroundColor: 'rgba(234, 179, 8, 0.15)' }]}>
+                    <Lucide.Crown size={16} color="#EAB308" />
+                  </View>
+                  <Text style={[styles.groupTitle, { color: colors.foreground }]}>
+                    {t('profile.groups.subscription', { defaultValue: 'Subscription' })}
                   </Text>
+                  <View style={[styles.groupCountBadge, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+                    <Text style={[styles.groupCountText, { color: colors.mutedFg }]}>5</Text>
+                  </View>
                 </View>
-                {expandedSection === 'hair' ? (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                ) : (
+                {collapsedGroups.subscription ? (
                   <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                ) : (
+                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
                 )}
               </TouchableOpacity>
-              {expandedSection === 'hair' && (
-                <View style={styles.sectionBody}>
-                  <HairSection
-                    hairLength={hairLength}
-                    setHairLength={setHairLength}
-                    hairType={hairType}
-                    setHairType={setHairType}
-                    hairColor={hairColor}
-                    setHairColor={setHairColor}
-                    hairStyle={hairStyle}
-                    setHairStyle={setHairStyle}
-                  />
+
+              {!collapsedGroups.subscription && (
+                <View style={styles.groupItems}>
+                  {/* 2.1 AI Stylist & Model Settings */}
+                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={styles.sectionHeader}
+                      onPress={() => toggleAccordion('ai')}
+                    >
+                      <View style={styles.sectionTitleRow}>
+                        <Lucide.Cpu size={18} color="#3B82F6" />
+                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                          {t('profile.sections.aiConfig', { defaultValue: 'AI Stylist & Model Settings' })}
+                        </Text>
+                      </View>
+                      {expandedSection === 'ai' ? (
+                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                      ) : (
+                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                      )}
+                    </TouchableOpacity>
+                    {expandedSection === 'ai' && (
+                      <View style={styles.sectionBody}>
+                        <AIConfiguration
+                          selectedProvider={selectedProvider}
+                          setSelectedProvider={setSelectedProvider}
+                          selectedModel={selectedModel}
+                          setSelectedModel={setSelectedModel}
+                          preferredVoiceId={preferredVoiceId}
+                          setPreferredVoiceId={setPreferredVoiceId}
+                          customKeys={customKeys}
+                          onSaveApiKey={handleSaveApiKey}
+                          onRemoveApiKey={handleRemoveApiKey}
+                          onSaveConfig={handleSaveConfig}
+                        />
+                      </View>
+                    )}
+                  </View>
+
+                  {/* 2.2 Subscription & AI Credits */}
+                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={styles.sectionHeader}
+                      onPress={() => toggleAccordion('subscription')}
+                    >
+                      <View style={styles.sectionTitleRow}>
+                        <Lucide.Crown
+                          size={18}
+                          color={subscription?.is_active && tierName.toLowerCase() !== 'free' ? '#EAB308' : colors.accent}
+                        />
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                            {t('profile.sections.subscription', { defaultValue: 'Subscription & AI Credits' })}
+                          </Text>
+                          <Text style={[styles.sectionSubtext, { color: colors.mutedFg }]}>
+                            {subscription?.is_active && tierName.toLowerCase() !== 'free'
+                              ? t('profile.subActiveSummary', {
+                                  defaultValue: 'Active: {{plan}} plan (Expires: {{date}})',
+                                  plan: (subscription?.tier || tierName).toUpperCase(),
+                                  date: subscription?.expires_at ? new Date(subscription.expires_at).toLocaleDateString() : '',
+                                })
+                              : t('profile.subFreeSummary', {
+                                  defaultValue: 'Free Plan: {{count}} / {{capacity}} items used',
+                                  count: closetCount,
+                                  capacity: 50 + Math.min(closetBonus, 150),
+                                })}
+                          </Text>
+                        </View>
+                      </View>
+                      {expandedSection === 'subscription' ? (
+                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                      ) : (
+                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                      )}
+                    </TouchableOpacity>
+                    {expandedSection === 'subscription' && (
+                      <View style={styles.sectionBody}>
+                        <SubscriptionSettings
+                          subscription={subscription}
+                          tierName={tierName}
+                          closetCount={closetCount}
+                          closetBonus={closetBonus}
+                          userId={userId}
+                          onManagePricingPress={() => navigation.navigate('Pricing' as any)}
+                          onRefreshProfile={loadProfile}
+                        />
+                      </View>
+                    )}
+                  </View>
+
+                  {/* 2.3 Payout (PayPal) */}
+                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={styles.sectionHeader}
+                      onPress={() => toggleAccordion('payouts')}
+                    >
+                      <View style={styles.sectionTitleRow}>
+                        <Lucide.CreditCard size={18} color="#10B981" />
+                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                          {t('profile.payouts.sectionTitle', { defaultValue: 'Payout (PayPal)' })}
+                        </Text>
+                      </View>
+                      {expandedSection === 'payouts' ? (
+                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                      ) : (
+                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                      )}
+                    </TouchableOpacity>
+                    {expandedSection === 'payouts' && (
+                      <View style={styles.sectionBody}>
+                        <PayoutsSection
+                          paypalEmail={paypalEmail}
+                          setPaypalEmail={setPaypalEmail}
+                        />
+                      </View>
+                    )}
+                  </View>
+
+                  {/* 2.4 Google Calendar Sync */}
+                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={styles.sectionHeader}
+                      onPress={() => toggleAccordion('calendar')}
+                    >
+                      <View style={styles.sectionTitleRow}>
+                        <Lucide.Calendar size={18} color="#2563EB" />
+                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                          {t('calendar.title', { defaultValue: 'Google Calendar Sync' })}
+                        </Text>
+                      </View>
+                      {expandedSection === 'calendar' ? (
+                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                      ) : (
+                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                      )}
+                    </TouchableOpacity>
+                    {expandedSection === 'calendar' && (
+                      <View style={styles.sectionBody}>
+                        <CalendarConnect />
+                      </View>
+                    )}
+                  </View>
+
+                  {/* 2.5 Location and Weather */}
+                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={styles.sectionHeader}
+                      onPress={() => toggleAccordion('location')}
+                    >
+                      <View style={styles.sectionTitleRow}>
+                        <Lucide.MapPin size={18} color="#16A34A" />
+                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                          {t('location.title', { defaultValue: 'Location and Weather' })}
+                        </Text>
+                      </View>
+                      {expandedSection === 'location' ? (
+                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                      ) : (
+                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                      )}
+                    </TouchableOpacity>
+                    {expandedSection === 'location' && (
+                      <View style={styles.sectionBody}>
+                        <LocationCard city={city} country={country} />
+                      </View>
+                    )}
+                  </View>
                 </View>
               )}
             </View>
 
-            {/* 3. Avatar & Virtual Fitting (Face & Body Uploads) */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            {/* ═════════════════════════════════════════════════════════════════ */}
+            {/* 3. MORE ACCORDION SECTION                                       */}
+            {/* ═════════════════════════════════════════════════════════════════ */}
+            <View style={styles.groupContainer}>
               <TouchableOpacity
-                style={styles.sectionHeader}
-                onPress={() => toggleAccordion('avatar')}
+                style={[styles.groupHeader, { backgroundColor: colors.card, borderColor: colors.border }]}
+                onPress={() => toggleGroup('more')}
+                activeOpacity={0.8}
               >
-                <View style={styles.sectionTitleRow}>
-                  <Lucide.Camera size={18} color="#DB2777" />
-                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                    {t('profile.sections.photosAvatar', { defaultValue: 'Avatar & Virtual Fitting' })}
+                <View style={styles.groupHeaderLeft}>
+                  <View style={[styles.groupIconCircle, { backgroundColor: colors.secondary }]}>
+                    <Lucide.MoreHorizontal size={16} color={colors.accent} />
+                  </View>
+                  <Text style={[styles.groupTitle, { color: colors.foreground }]}>
+                    {t('profile.groups.more', { defaultValue: 'More' })}
                   </Text>
+                  <View style={[styles.groupCountBadge, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+                    <Text style={[styles.groupCountText, { color: colors.mutedFg }]}>6</Text>
+                  </View>
                 </View>
-                {expandedSection === 'avatar' ? (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                ) : (
+                {collapsedGroups.more ? (
                   <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                ) : (
+                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
                 )}
               </TouchableOpacity>
-              {expandedSection === 'avatar' && (
-                <View style={styles.sectionBody}>
-                  <AvatarSection
-                    facePhotoUrl={facePhotoUrl}
-                    setFacePhotoUrl={setFacePhotoUrl}
-                    bodyPhotoUrl={bodyPhotoUrl}
-                    setBodyPhotoUrl={setBodyPhotoUrl}
-                    skinTone={skinTone}
-                    setSkinTone={setSkinTone}
-                    userGender={gender}
-                    bodyMeasurements={{
-                      height: parseFloat(height) || 168,
-                      chest: parseFloat(chest) || 88,
-                      waist: parseFloat(waist) || 68,
-                      hip: parseFloat(hips) || 94,
-                      shoulders: parseFloat(shoulders) || 38,
-                      inseam: parseFloat(inseam) || 76,
-                      armLength: parseFloat(sleeve) || 58,
-                    }}
-                    onSaveSuccess={() => loadProfile()}
-                  />
-                </View>
-              )}
-            </View>
 
-            {/* 4. Body Measurements & Sizes */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <TouchableOpacity
-                style={styles.sectionHeader}
-                onPress={() => toggleAccordion('measurements')}
-              >
-                <View style={styles.sectionTitleRow}>
-                  <Lucide.Ruler size={18} color={colors.accent} />
-                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                    {t('profile.sections.measurements', { defaultValue: 'Body Measurements & Sizes' })}
-                  </Text>
-                </View>
-                {expandedSection === 'measurements' ? (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                ) : (
-                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
-                )}
-              </TouchableOpacity>
-              {expandedSection === 'measurements' && (
-                <View style={styles.sectionBody}>
-                  <MeasurementsSection
-                    height={height}
-                    setHeight={setHeight}
-                    weight={weight}
-                    setWeight={setWeight}
-                    waist={waist}
-                    setWaist={setWaist}
-                    footLength={footLength}
-                    setFootLength={setFootLength}
-                    chest={chest}
-                    setChest={setChest}
-                    hips={hips}
-                    setHips={setHips}
-                    shoulders={shoulders}
-                    setShoulders={setShoulders}
-                    sleeve={sleeve}
-                    setSleeve={setSleeve}
-                    inseam={inseam}
-                    setInseam={setInseam}
-                    outseam={outseam}
-                    setOutseam={setOutseam}
-                    shoeSize={shoeSize}
-                    setShoeSize={setShoeSize}
-                    topSize={topSize}
-                    setTopSize={setTopSize}
-                    bottomSize={bottomSize}
-                    setBottomSize={setBottomSize}
-                    dressSize={dressSize}
-                    setDressSize={setDressSize}
-                    braSize={braSize}
-                    setBraSize={setBraSize}
-                    gender={gender}
-                  />
-                </View>
-              )}
-            </View>
+              {!collapsedGroups.more && (
+                <View style={styles.groupItems}>
+                  {/* 3.1 Outfit Scheduler */}
+                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={styles.sectionHeader}
+                      onPress={() => toggleAccordion('scheduler')}
+                    >
+                      <View style={styles.sectionTitleRow}>
+                        <Lucide.Bell size={18} color="#F59E0B" />
+                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                          {t('profile.sections.scheduler', { defaultValue: 'Outfit Scheduler' })}
+                        </Text>
+                      </View>
+                      {expandedSection === 'scheduler' ? (
+                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                      ) : (
+                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                      )}
+                    </TouchableOpacity>
+                    {expandedSection === 'scheduler' && (
+                      <View style={styles.sectionBody}>
+                        <SchedulerSettings
+                          enabled={schedulerEnabled}
+                          setEnabled={setSchedulerEnabled}
+                          time={morningTime}
+                          setTime={setMorningTime}
+                          frequency={schedulerFrequency}
+                          setFrequency={setSchedulerFrequency}
+                          styleOption={schedulerStyleOption}
+                          setStyleOption={setSchedulerStyleOption}
+                          customStyle={schedulerCustomStyle}
+                          setCustomStyle={setSchedulerCustomStyle}
+                          weatherSync={weatherSync}
+                          setWeatherSync={setWeatherSync}
+                          calendarSync={calendarSync}
+                          setCalendarSync={setCalendarSync}
+                        />
+                      </View>
+                    )}
+                  </View>
 
-            {/* 5. Style Profile */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <TouchableOpacity
-                style={styles.sectionHeader}
-                onPress={() => toggleAccordion('style')}
-              >
-                <View style={styles.sectionTitleRow}>
-                  <Lucide.Sparkles size={18} color="#8B5CF6" />
-                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                    {t('profile.sections.styleProfile', { defaultValue: 'Style Profile & Aesthetics' })}
-                  </Text>
-                </View>
-                {expandedSection === 'style' ? (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                ) : (
-                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
-                )}
-              </TouchableOpacity>
-              {expandedSection === 'style' && (
-                <View style={styles.sectionBody}>
-                  <StyleProfileSection
-                    selectedAesthetics={selectedAesthetics}
-                    toggleAesthetic={toggleAesthetic}
-                    fitPreference={fitPreference}
-                    setFitPreference={setFitPreference}
-                    colorsToAvoid={colorsToAvoid}
-                    avoidInput={avoidInput}
-                    setAvoidInput={setAvoidInput}
-                    setColorsToAvoid={setColorsToAvoid}
-                    preferredDressCode={preferredDressCode}
-                    setPreferredDressCode={setPreferredDressCode}
-                  />
-                </View>
-              )}
-            </View>
+                  {/* 3.2 Campaign Notifications */}
+                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={styles.sectionHeader}
+                      onPress={() => toggleAccordion('campaigns')}
+                    >
+                      <View style={styles.sectionTitleRow}>
+                        <Lucide.Megaphone size={18} color="#EC4899" />
+                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                          {t('campaigns.notifications.sectionTitle', { defaultValue: 'Campaign Notifications' })}
+                        </Text>
+                      </View>
+                      {expandedSection === 'campaigns' ? (
+                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                      ) : (
+                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                      )}
+                    </TouchableOpacity>
+                    {expandedSection === 'campaigns' && (
+                      <View style={styles.sectionBody}>
+                        <CampaignNotificationsSection
+                          frequency={campaignFrequency}
+                          setFrequency={setCampaignFrequency}
+                          maxDistance={campaignMaxDistance}
+                          setMaxDistance={setCampaignMaxDistance}
+                          channels={campaignChannels}
+                          toggleChannel={toggleCampaignChannel}
+                        />
+                      </View>
+                    )}
+                  </View>
 
-            {/* 6. AI Stylist & Model Settings */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <TouchableOpacity
-                style={styles.sectionHeader}
-                onPress={() => toggleAccordion('ai')}
-              >
-                <View style={styles.sectionTitleRow}>
-                  <Lucide.Cpu size={18} color="#3B82F6" />
-                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                    {t('profile.sections.aiConfig', { defaultValue: 'AI Stylist & Model Settings' })}
-                  </Text>
-                </View>
-                {expandedSection === 'ai' ? (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                ) : (
-                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
-                )}
-              </TouchableOpacity>
-              {expandedSection === 'ai' && (
-                <View style={styles.sectionBody}>
-                  <AIConfiguration
-                    selectedProvider={selectedProvider}
-                    setSelectedProvider={setSelectedProvider}
-                    selectedModel={selectedModel}
-                    setSelectedModel={setSelectedModel}
-                    preferredVoiceId={preferredVoiceId}
-                    setPreferredVoiceId={setPreferredVoiceId}
-                    customKeys={customKeys}
-                    onSaveApiKey={handleSaveApiKey}
-                    onRemoveApiKey={handleRemoveApiKey}
-                    onSaveConfig={handleSaveConfig}
-                  />
-                </View>
-              )}
-            </View>
+                  {/* 3.3 AI Shopping Assistant */}
+                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={styles.sectionHeader}
+                      onPress={() => toggleAccordion('shopping')}
+                    >
+                      <View style={styles.sectionTitleRow}>
+                        <Lucide.ShoppingBag size={18} color="#EC4899" />
+                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                          {t('profile.sections.shopping', { defaultValue: 'AI Shopping Assistant' })}
+                        </Text>
+                      </View>
+                      {expandedSection === 'shopping' ? (
+                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                      ) : (
+                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                      )}
+                    </TouchableOpacity>
+                    {expandedSection === 'shopping' && (
+                      <View style={styles.sectionBody}>
+                        <ShoppingAssistant
+                          shoppingAssistantEnabled={shoppingAssistantEnabled}
+                          setShoppingAssistantEnabled={setShoppingAssistantEnabled}
+                          monthlyBudget={monthlyBudget}
+                          setMonthlyBudget={setMonthlyBudget}
+                          preferredStores={preferredStores}
+                          storeInput={storeInput}
+                          setStoreInput={setStoreInput}
+                          setPreferredStores={setPreferredStores}
+                          sustainableOnly={sustainableOnly}
+                          setSustainableOnly={setSustainableOnly}
+                        />
+                      </View>
+                    )}
+                  </View>
 
-            {/* 7. Outfit Scheduler */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <TouchableOpacity
-                style={styles.sectionHeader}
-                onPress={() => toggleAccordion('scheduler')}
-              >
-                <View style={styles.sectionTitleRow}>
-                  <Lucide.Bell size={18} color="#F59E0B" />
-                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                    {t('profile.sections.scheduler', { defaultValue: 'Outfit Scheduler' })}
-                  </Text>
-                </View>
-                {expandedSection === 'scheduler' ? (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                ) : (
-                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
-                )}
-              </TouchableOpacity>
-              {expandedSection === 'scheduler' && (
-                <View style={styles.sectionBody}>
-                  <SchedulerSettings
-                    enabled={schedulerEnabled}
-                    setEnabled={setSchedulerEnabled}
-                    time={morningTime}
-                    setTime={setMorningTime}
-                    frequency={schedulerFrequency}
-                    setFrequency={setSchedulerFrequency}
-                    styleOption={schedulerStyleOption}
-                    setStyleOption={setSchedulerStyleOption}
-                    customStyle={schedulerCustomStyle}
-                    setCustomStyle={setSchedulerCustomStyle}
-                    weatherSync={weatherSync}
-                    setWeatherSync={setWeatherSync}
-                    calendarSync={calendarSync}
-                    setCalendarSync={setCalendarSync}
-                  />
-                </View>
-              )}
-            </View>
+                  {/* 3.4 Import Wardrobe */}
+                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={styles.sectionHeader}
+                      onPress={() => toggleAccordion('import')}
+                    >
+                      <View style={styles.sectionTitleRow}>
+                        <Lucide.FolderDown size={18} color="#0EA5E9" />
+                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                          {t('profile.importWardrobe', { defaultValue: 'Import Wardrobe' })}
+                        </Text>
+                      </View>
+                      {expandedSection === 'import' ? (
+                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                      ) : (
+                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                      )}
+                    </TouchableOpacity>
+                    {expandedSection === 'import' && (
+                      <View style={styles.sectionBody}>
+                        <ImportWardrobeSection />
+                      </View>
+                    )}
+                  </View>
 
-            {/* 8. Google Calendar Sync (NEW) */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <TouchableOpacity
-                style={styles.sectionHeader}
-                onPress={() => toggleAccordion('calendar')}
-              >
-                <View style={styles.sectionTitleRow}>
-                  <Lucide.Calendar size={18} color="#2563EB" />
-                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                    {t('calendar.title', { defaultValue: 'Google Calendar Sync' })}
-                  </Text>
-                </View>
-                {expandedSection === 'calendar' ? (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                ) : (
-                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
-                )}
-              </TouchableOpacity>
-              {expandedSection === 'calendar' && (
-                <View style={styles.sectionBody}>
-                  <CalendarConnect />
-                </View>
-              )}
-            </View>
+                  {/* 3.5 Invite Friends */}
+                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={styles.sectionHeader}
+                      onPress={() => toggleAccordion('invite')}
+                    >
+                      <View style={styles.sectionTitleRow}>
+                        <Lucide.UserPlus size={18} color="#8B5CF6" />
+                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                          {t('profile.inviteFriends', { defaultValue: 'Invite Friends' })}
+                        </Text>
+                      </View>
+                      {expandedSection === 'invite' ? (
+                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                      ) : (
+                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                      )}
+                    </TouchableOpacity>
+                    {expandedSection === 'invite' && (
+                      <View style={styles.sectionBody}>
+                        <InviteFriendsSection userId={userId} />
+                      </View>
+                    )}
+                  </View>
 
-            {/* 9. Location (NEW) */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <TouchableOpacity
-                style={styles.sectionHeader}
-                onPress={() => toggleAccordion('location')}
-              >
-                <View style={styles.sectionTitleRow}>
-                  <Lucide.MapPin size={18} color="#16A34A" />
-                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                    {t('location.title', { defaultValue: 'Location' })}
-                  </Text>
-                </View>
-                {expandedSection === 'location' ? (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                ) : (
-                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
-                )}
-              </TouchableOpacity>
-              {expandedSection === 'location' && (
-                <View style={styles.sectionBody}>
-                  <LocationCard city={city} country={country} />
-                </View>
-              )}
-            </View>
-
-            {/* 10. Professional Directory */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <TouchableOpacity
-                style={styles.sectionHeader}
-                onPress={() => toggleAccordion('professional')}
-              >
-                <View style={styles.sectionTitleRow}>
-                  <Lucide.Briefcase size={18} color="#6366F1" />
-                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                    {t('profile.professional.sectionTitle', { defaultValue: 'Professional Directory' })}
-                  </Text>
-                </View>
-                {expandedSection === 'professional' ? (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                ) : (
-                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
-                )}
-              </TouchableOpacity>
-              {expandedSection === 'professional' && (
-                <View style={styles.sectionBody}>
-                  <ProfessionalSection
-                    isStylist={isStylist}
-                    setIsStylist={setIsStylist}
-                    profession={profession}
-                    setProfession={setProfession}
-                    businessName={businessName}
-                    setBusinessName={setBusinessName}
-                    businessAddress={businessAddress}
-                    setBusinessAddress={setBusinessAddress}
-                    businessPhone={businessPhone}
-                    setBusinessPhone={setBusinessPhone}
-                    businessEmail={businessEmail}
-                    setBusinessEmail={setBusinessEmail}
-                    businessWebsite={businessWebsite}
-                    setBusinessWebsite={setBusinessWebsite}
-                    stylistBio={stylistBio}
-                    setStylistBio={setStylistBio}
-                    hourlyRate={hourlyRate}
-                    setHourlyRate={setHourlyRate}
-                    bookingUrl={bookingUrl}
-                    setBookingUrl={setBookingUrl}
-                    specialties={specialties}
-                    toggleSpecialty={toggleSpecialty}
-                  />
-                </View>
-              )}
-            </View>
-
-            {/* 11. Payout (PayPal) (NEW) */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <TouchableOpacity
-                style={styles.sectionHeader}
-                onPress={() => toggleAccordion('payouts')}
-              >
-                <View style={styles.sectionTitleRow}>
-                  <Lucide.CreditCard size={18} color="#10B981" />
-                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                    {t('profile.payouts.sectionTitle', { defaultValue: 'Payout (PayPal)' })}
-                  </Text>
-                </View>
-                {expandedSection === 'payouts' ? (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                ) : (
-                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
-                )}
-              </TouchableOpacity>
-              {expandedSection === 'payouts' && (
-                <View style={styles.sectionBody}>
-                  <PayoutsSection
-                    paypalEmail={paypalEmail}
-                    setPaypalEmail={setPaypalEmail}
-                  />
-                </View>
-              )}
-            </View>
-
-            {/* 12. Campaign Notifications (NEW) */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <TouchableOpacity
-                style={styles.sectionHeader}
-                onPress={() => toggleAccordion('campaigns')}
-              >
-                <View style={styles.sectionTitleRow}>
-                  <Lucide.Megaphone size={18} color="#EC4899" />
-                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                    {t('campaigns.notifications.sectionTitle', { defaultValue: 'Campaign Notifications' })}
-                  </Text>
-                </View>
-                {expandedSection === 'campaigns' ? (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                ) : (
-                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
-                )}
-              </TouchableOpacity>
-              {expandedSection === 'campaigns' && (
-                <View style={styles.sectionBody}>
-                  <CampaignNotificationsSection
-                    frequency={campaignFrequency}
-                    setFrequency={setCampaignFrequency}
-                    maxDistance={campaignMaxDistance}
-                    setMaxDistance={setCampaignMaxDistance}
-                    channels={campaignChannels}
-                    toggleChannel={toggleCampaignChannel}
-                  />
-                </View>
-              )}
-            </View>
-
-            {/* 13. Invite Friends (NEW) */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <TouchableOpacity
-                style={styles.sectionHeader}
-                onPress={() => toggleAccordion('invite')}
-              >
-                <View style={styles.sectionTitleRow}>
-                  <Lucide.UserPlus size={18} color="#8B5CF6" />
-                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                    {t('profile.inviteFriends', { defaultValue: 'Invite Friends' })}
-                  </Text>
-                </View>
-                {expandedSection === 'invite' ? (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                ) : (
-                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
-                )}
-              </TouchableOpacity>
-              {expandedSection === 'invite' && (
-                <View style={styles.sectionBody}>
-                  <InviteFriendsSection userId={userId} />
-                </View>
-              )}
-            </View>
-
-            {/* 14. Import Wardrobe (NEW) */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <TouchableOpacity
-                style={styles.sectionHeader}
-                onPress={() => toggleAccordion('import')}
-              >
-                <View style={styles.sectionTitleRow}>
-                  <Lucide.FolderDown size={18} color="#0EA5E9" />
-                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                    {t('profile.importWardrobe', { defaultValue: 'Import Wardrobe' })}
-                  </Text>
-                </View>
-                {expandedSection === 'import' ? (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                ) : (
-                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
-                )}
-              </TouchableOpacity>
-              {expandedSection === 'import' && (
-                <View style={styles.sectionBody}>
-                  <ImportWardrobeSection />
-                </View>
-              )}
-            </View>
-
-            {/* 15. Subscription & AI Credits */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <TouchableOpacity
-                style={styles.sectionHeader}
-                onPress={() => toggleAccordion('subscription')}
-              >
-                <View style={styles.sectionTitleRow}>
-                  <Lucide.Crown size={18} color={colors.accent} />
-                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                    {t('profile.sections.subscription', { defaultValue: 'Subscription & AI Credits' })}
-                  </Text>
-                </View>
-                {expandedSection === 'subscription' ? (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                ) : (
-                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
-                )}
-              </TouchableOpacity>
-              {expandedSection === 'subscription' && (
-                <View style={styles.sectionBody}>
-                  <SubscriptionSettings
-                    tierName={tierName}
-                    credits={credits}
-                    onManagePricingPress={() => navigation.navigate('Pricing' as any)}
-                  />
-                </View>
-              )}
-            </View>
-
-            {/* 16. Shopping Assistant */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <TouchableOpacity
-                style={styles.sectionHeader}
-                onPress={() => toggleAccordion('shopping')}
-              >
-                <View style={styles.sectionTitleRow}>
-                  <Lucide.ShoppingBag size={18} color="#EC4899" />
-                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                    {t('profile.sections.shopping', { defaultValue: 'AI Shopping Assistant' })}
-                  </Text>
-                </View>
-                {expandedSection === 'shopping' ? (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                ) : (
-                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
-                )}
-              </TouchableOpacity>
-              {expandedSection === 'shopping' && (
-                <View style={styles.sectionBody}>
-                  <ShoppingAssistant
-                    shoppingAssistantEnabled={shoppingAssistantEnabled}
-                    setShoppingAssistantEnabled={setShoppingAssistantEnabled}
-                    monthlyBudget={monthlyBudget}
-                    setMonthlyBudget={setMonthlyBudget}
-                    preferredStores={preferredStores}
-                    storeInput={storeInput}
-                    setStoreInput={setStoreInput}
-                    setPreferredStores={setPreferredStores}
-                    sustainableOnly={sustainableOnly}
-                    setSustainableOnly={setSustainableOnly}
-                  />
-                </View>
-              )}
-            </View>
-
-            {/* 17. Developer Panel */}
-            <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <TouchableOpacity
-                style={styles.sectionHeader}
-                onPress={() => toggleAccordion('developer')}
-              >
-                <View style={styles.sectionTitleRow}>
-                  <Lucide.Terminal size={18} color={colors.mutedFg} />
-                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                    {t('profile.sections.developer', { defaultValue: 'Developer & Cache Tools' })}
-                  </Text>
-                </View>
-                {expandedSection === 'developer' ? (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                ) : (
-                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
-                )}
-              </TouchableOpacity>
-              {expandedSection === 'developer' && (
-                <View style={styles.sectionBody}>
-                  <DeveloperPanel />
+                  {/* 3.6 Developer & Cache Tools */}
+                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={styles.sectionHeader}
+                      onPress={() => toggleAccordion('developer')}
+                    >
+                      <View style={styles.sectionTitleRow}>
+                        <Lucide.Terminal size={18} color={colors.mutedFg} />
+                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                          {t('profile.sections.developer', { defaultValue: 'Developer & Cache Tools' })}
+                        </Text>
+                      </View>
+                      {expandedSection === 'developer' ? (
+                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                      ) : (
+                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                      )}
+                    </TouchableOpacity>
+                    {expandedSection === 'developer' && (
+                      <View style={styles.sectionBody}>
+                        <DeveloperPanel />
+                      </View>
+                    )}
+                  </View>
                 </View>
               )}
             </View>
@@ -1657,6 +1836,49 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.sm,
   },
   accordionsWrap: {
+    gap: spacing.md,
+  },
+  groupContainer: {
+    gap: spacing.xs,
+  },
+  groupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    marginBottom: spacing.xs,
+  },
+  groupHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  groupIconCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  groupTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.md,
+    letterSpacing: 0.3,
+  },
+  groupCountBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radii.full,
+    borderWidth: 1,
+  },
+  groupCountText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: fontSizes.xs,
+  },
+  groupItems: {
     gap: spacing.sm,
   },
   sectionCard: {
@@ -1680,6 +1902,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.bodyBold,
     fontSize: fontSizes.sm,
+  },
+  sectionSubtext: {
+    fontFamily: fonts.body,
+    fontSize: fontSizes.xs - 1,
+    marginTop: 1,
   },
   sectionBody: {
     paddingHorizontal: spacing.md,

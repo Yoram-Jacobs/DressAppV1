@@ -96,6 +96,8 @@ interface AIConfigProps {
   onSaveConfig?: (providerId: string, model: string) => Promise<void>;
 }
 
+import { api } from '@mobile/lib/api';
+
 export function AIConfiguration({
   selectedProvider,
   setSelectedProvider,
@@ -115,6 +117,7 @@ export function AIConfiguration({
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [showKeyText, setShowKeyText] = useState(false);
   const [savingKey, setSavingKey] = useState(false);
+  const [validatingKey, setValidatingKey] = useState(false);
 
   const activeProvider =
     AI_PROVIDERS.find((p) => p.id === selectedProvider) || AI_PROVIDERS[0];
@@ -160,6 +163,42 @@ export function AIConfiguration({
     }
   };
 
+  const handleValidateKey = async () => {
+    const trimmed = apiKeyInput.trim();
+    if (!trimmed) {
+      Alert.alert(
+        t('common.error', { defaultValue: 'Error' }),
+        t('aiConfig.apiKeyRequired', { defaultValue: 'Please enter a valid API key to test.' })
+      );
+      return;
+    }
+    setValidatingKey(true);
+    try {
+      const res = await api.validateApiKey({ provider: selectedProvider, api_key: trimmed });
+      if (res?.valid) {
+        Alert.alert(
+          t('common.success', { defaultValue: 'Success' }),
+          t('profile.apiKeyValidNotice', {
+            defaultValue: 'API Key is valid and connected successfully to Google Gemini!',
+          })
+        );
+      } else {
+        Alert.alert(
+          t('common.error', { defaultValue: 'Invalid API Key' }),
+          res?.message || t('profile.apiKeyInvalidNotice', { defaultValue: 'API Key validation failed. Please check your key from Google AI Studio.' })
+        );
+      }
+    } catch (err: any) {
+      const errMsg =
+        err?.response?.data?.detail ||
+        err?.message ||
+        t('profile.apiKeyInvalidNotice', { defaultValue: 'API Key validation failed. Please check your key from Google AI Studio.' });
+      Alert.alert(t('common.error', { defaultValue: 'Invalid API Key' }), String(errMsg));
+    } finally {
+      setValidatingKey(false);
+    }
+  };
+
   const handleSaveKeySubmit = async () => {
     const trimmed = apiKeyInput.trim();
     if (!trimmed) {
@@ -171,6 +210,12 @@ export function AIConfiguration({
     }
     setSavingKey(true);
     try {
+      // Validate key with the backend before saving
+      const valRes = await api.validateApiKey({ provider: selectedProvider, api_key: trimmed });
+      if (!valRes?.valid) {
+        throw new Error(valRes?.message || 'Invalid API key');
+      }
+
       if (onSaveApiKey) {
         await onSaveApiKey(selectedProvider, trimmed);
       }
@@ -178,14 +223,14 @@ export function AIConfiguration({
       setModalVisible(false);
       Alert.alert(
         t('common.success', { defaultValue: 'Success' }),
-        t('aiConfig.apiKeySaved', { defaultValue: 'API Key saved securely.' })
+        t('aiConfig.apiKeySaved', { defaultValue: 'API Key is valid and saved securely.' })
       );
     } catch (err: any) {
       const errMsg =
         err?.response?.data?.detail ||
         err?.message ||
-        t('aiConfig.apiKeyFailed', { defaultValue: 'Failed to save API key.' });
-      Alert.alert(t('common.error', { defaultValue: 'Error' }), String(errMsg));
+        t('aiConfig.apiKeyFailed', { defaultValue: 'Failed to validate or save API key.' });
+      Alert.alert(t('common.error', { defaultValue: 'Invalid API Key' }), String(errMsg));
     } finally {
       setSavingKey(false);
     }
@@ -483,7 +528,7 @@ export function AIConfiguration({
                 <TouchableOpacity
                   style={[styles.modalRemoveBtn, { borderColor: colors.destructive || '#EF4444' }]}
                   onPress={handleRemoveKey}
-                  disabled={savingKey}
+                  disabled={savingKey || validatingKey}
                 >
                   <Text style={[styles.modalRemoveBtnText, { color: colors.destructive || '#EF4444' }]}>
                     {t('common.remove', { defaultValue: 'Remove' })}
@@ -494,15 +539,27 @@ export function AIConfiguration({
               <TouchableOpacity
                 style={[styles.modalCancelBtn, { borderColor: colors.border }]}
                 onPress={() => setModalVisible(false)}
+                disabled={savingKey || validatingKey}
               >
                 <Text style={[styles.modalCancelBtnText, { color: colors.foreground }]}>
                   {t('common.cancel', { defaultValue: 'Cancel' })}
                 </Text>
               </TouchableOpacity>
+              {apiKeyInput.trim().length > 0 && (
+                <TouchableOpacity
+                  style={[styles.modalCancelBtn, { borderColor: colors.accent, backgroundColor: colors.accent + '15' }]}
+                  onPress={handleValidateKey}
+                  disabled={savingKey || validatingKey}
+                >
+                  <Text style={[styles.modalCancelBtnText, { color: colors.accent, fontFamily: fonts.bodyBold }]}>
+                    {validatingKey ? t('common.testing', { defaultValue: 'Testing...' }) : t('profile.testKey', { defaultValue: 'Test Key' })}
+                  </Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={[styles.modalSubmitBtn, { backgroundColor: colors.accent }]}
                 onPress={handleSaveKeySubmit}
-                disabled={savingKey}
+                disabled={savingKey || validatingKey}
               >
                 <Text style={styles.modalSubmitBtnText}>
                   {savingKey ? t('common.saving', { defaultValue: 'Saving...' }) : t('common.save', { defaultValue: 'Save Key' })}

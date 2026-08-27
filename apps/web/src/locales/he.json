@@ -235,7 +235,8 @@
     "deleteSelectedTitle": "מחיקת פריטים",
     "deleteSelectedConfirm": "האם אתה בטוח שברצונך למחוק {{count}} פריטים?",
     "batchDeleteFailed": "לא ניתן היה למחוק חלק מהפריטים. אנא נסה שוב.",
-    "anchorItems": "פריטי בסיס נבחרים"
+    "anchorItems": "פריטי בסיס נבחרים",
+    "loadingWardrobe": "טעינת המלתחה שלך…"
   },
   "addItem": {
     "namePlaceholder": "לדוגמה: ז'קט ג'ינס וינטג'",
@@ -1874,14 +1875,33 @@
     "emptyBody": "נסה להרחיב את הסינון, או חזור בקרוב — מומחים חדשים מצטרפים כל שבוע.",
     "contact": "יצירת קשר",
     "visitWebsite": "פתח אתר",
-    "callNow": "התקשר",
+    "callNow": "שיחה",
     "sendEmail": "שלח אימייל",
     "professionLabel": "מקצוע",
     "cityLabel": "ממוקם ב",
     "countLabel_one": "{{count}} מומחה",
     "countLabel_other": "{{count}} מומחים",
     "becomeExpertCta": "את/ה מקצוען/ית אופנה? הפעל/י בפרופיל שלך.",
-    "loadMore": "טען עוד"
+    "loadMore": "טען עוד",
+    "searchPlaceholder": "חיפוש לפי שם, עיר, התמחות…",
+    "email": "דוא\"ל",
+    "website": "אתר",
+    "empty": "אין עדיין מומחים ברשימה.",
+    "professions": {
+      "all": "הכל",
+      "stylist": "סטייליסט",
+      "fashion_stylist": "סטייליסט אופנה",
+      "tailor": "חייט",
+      "designer": "מעצב אופנה",
+      "fashion_designer": "מעצב אופנה",
+      "barber": "ספר",
+      "hair_stylist": "מעצב שיער",
+      "ai_fashion": "בינה מלאכותית לאופנה",
+      "ai_for_fashion": "בינה מלאכותית לאופנה",
+      "shopper": "קניין אישי",
+      "consultant": "יועץ מלתחה",
+      "color": "מנתח צבעים"
+    }
   },
   "ads": {
     "title": "קמפיינים שלי",
@@ -2788,7 +2808,8 @@
         "newest": "החדש ביותר",
         "nearest": "הקרוב ביותר",
         "endingSoon": "מסתיימים בקרוב",
-        "highestDiscount": "ההנחה הגבוהה ביותר"
+        "highestDiscount": "ההנחה הגבוהה ביותר",
+        "title": "מיון קמפיינים"
       },
       "empty": {
         "title": "אין קמפיינים בסביבתך",

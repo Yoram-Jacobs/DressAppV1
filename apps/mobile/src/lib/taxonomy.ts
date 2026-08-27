@@ -214,4 +214,36 @@ export const labelForPattern = (code?: string, t?: TFunction): string => {
   return fallback(t, `taxonomy.pattern.${s}`, capitalized);
 };
 
+export const labelForProfession = (code?: string, t?: TFunction): string => {
+  if (!code) return '';
+  if (!t) return code;
+  if (code === 'all' || code === '__all__') return fallback(t, 'closet.filterAll', 'All');
+  const s = slug(code);
+  const canonicalMap: Record<string, string> = {
+    fashion_designer: 'designer',
+    personal_stylist: 'stylist',
+    fashion_stylist: 'stylist',
+    stylist: 'stylist',
+    tailor: 'tailor',
+    seamstress: 'tailor',
+    'tailor_/_seamstress': 'tailor',
+    barber: 'barber',
+    hair_stylist: 'hair_stylist',
+    ai_for_fashion: 'ai_fashion',
+    ai_fashion: 'ai_fashion',
+    personal_shopper: 'shopper',
+    shopper: 'shopper',
+    wardrobe_consultant: 'consultant',
+    consultant: 'consultant',
+    color_analyst: 'color',
+    color: 'color',
+  };
+  const mappedSlug = canonicalMap[s] || s;
+  return fallback(
+    t,
+    `experts.professions.${mappedSlug}`,
+    fallback(t, `experts.professions.${s}`, fallback(t, `taxonomy.professions.${s}`, code))
+  );
+};
+
 

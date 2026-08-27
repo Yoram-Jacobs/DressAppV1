@@ -232,7 +232,8 @@
     "deleteSelectedTitle": "Artikel löschen",
     "deleteSelectedConfirm": "Möchten Sie {{count}} Artikel wirklich löschen?",
     "batchDeleteFailed": "Einige Artikel konnten nicht gelöscht werden. Bitte erneut versuchen.",
-    "anchorItems": "Ausgewählte Basisstücke"
+    "anchorItems": "Ausgewählte Basisstücke",
+    "loadingWardrobe": "Ihre Garderobe wird geladen…"
   },
   "addItem": {
     "namePlaceholder": "z. B. Vintage-Jeansjacke",
@@ -1839,7 +1840,7 @@
     "switchingHint": "Das dauert in der Regel einige Sekunden."
   },
   "experts": {
-    "title": "Frag einen Experten",
+    "title": "Experten fragen",
     "tabExperts": "Experten",
     "tabCampaigns": "Kampagnen",
     "filters": {
@@ -1862,7 +1863,26 @@
     "countLabel_other": "{{count}} Experten",
     "becomeExpertCta": "Sie sind Modefachkraft? Aktivieren Sie es in Ihrem Profil.",
     "loadMore": "Mehr laden",
-    "subtitle": "Entdecke verifizierte Modeexperten – Stylisten, Schneider, Barbiere, Designer – in deiner Region."
+    "subtitle": "Verifizierte Modeexperten durchsuchen — Stylisten, Schneider, Friseure und Designer — in Ihrer Region.",
+    "searchPlaceholder": "Nach Name, Stadt, Fachgebiet suchen…",
+    "email": "E-Mail",
+    "website": "Website",
+    "empty": "Noch keine Experten eingetragen.",
+    "professions": {
+      "all": "Alle",
+      "stylist": "Stylist",
+      "fashion_stylist": "Modestylist",
+      "tailor": "Schneider",
+      "designer": "Modedesigner",
+      "fashion_designer": "Modedesigner",
+      "barber": "Barbier",
+      "hair_stylist": "Haarstylist",
+      "ai_fashion": "KI für Mode",
+      "ai_for_fashion": "KI für Mode",
+      "shopper": "Personal Shopper",
+      "consultant": "Garderobenberater",
+      "color": "Farbberater"
+    }
   },
   "ads": {
     "title": "Meine Werbekampagnen",
@@ -2726,7 +2746,8 @@
         "newest": "Neueste",
         "nearest": "Nächste",
         "endingSoon": "Bald endend",
-        "highestDiscount": "Höchster Rabatt"
+        "highestDiscount": "Höchster Rabatt",
+        "title": "Kampagnen sortieren"
       },
       "empty": {
         "title": "Keine Kampagnen in Ihrer Nähe",

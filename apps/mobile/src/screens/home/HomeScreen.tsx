@@ -37,6 +37,7 @@ import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens'
 import { api } from '@mobile/lib/api';
 import { useClosetStore, useTrendScoutStore, useUserStore, useMarketplaceStore } from '@mobile/lib/stores';
 import { LanguagePicker } from '@mobile/components/LanguagePicker';
+import { HelpFloater } from '@mobile/components/help';
 import { AdTicker } from '@mobile/components/AdTicker';
 import type { MainTabsParamList, ClosetStackParamList } from '@mobile/navigation/types';
 
@@ -144,12 +145,15 @@ export default function HomeScreen() {
           />
         }
       >
-        {/* ── Top Floating Language Picker ───────────────────────────────── */}
+        {/* ── Top Floating Language Picker & Help Floater ───────────────────────────────── */}
         <View style={s.topBar}>
           <View style={s.brandLogoMark}>
             <Text style={[s.brandLogoText, { color: colors.foreground }]}>DressApp</Text>
           </View>
-          <LanguagePicker testIdSuffix="home" />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <LanguagePicker testIdSuffix="home" />
+            <HelpFloater screenTopic="overview" />
+          </View>
         </View>
 
         {/* ── Hero section ───────────────────────────────────────────── */}

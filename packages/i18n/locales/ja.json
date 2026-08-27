@@ -23,6 +23,7 @@
     "insights": "ワードローブ分析"
   },
   "common": {
+    "savePrompt": "変更を保持するには「保存」を押してください。",
     "day": "日",
     "garment": "Garment",
     "save": "保存",
@@ -254,7 +255,8 @@
     "deleteSelectedTitle": "アイテムを削除",
     "deleteSelectedConfirm": "{{count}} 件のアイテムを削除してもよろしいですか？",
     "batchDeleteFailed": "一部のアイテムを削除できませんでした。もう一度お試しください。",
-    "anchorItems": "選択されたベースアイテム"
+    "anchorItems": "選択されたベースアイテム",
+    "loadingWardrobe": "ワードローブを読み込み中…"
   },
   "addItem": {
     "namePlaceholder": "例：ヴィンテージデニムジャケット",
@@ -483,6 +485,34 @@
     "noReadyCards": "保存可能な完了カードがありません。"
   },
   "itemDetail": {
+    "reanalyze": {
+      "previewReady": "チャットにプレビューが準備できました。",
+      "imageApplied": "服の写真として適用されました！保存をクリックしてください。",
+      "label": "写真の再分析",
+      "subtitle": "The Eyes とチャットして不要なオブジェクトの削除、欠損部の補完、Nano Banana を使ったアイテム詳細の調整が行えます。",
+      "cta": "分析する",
+      "quickReanalyze": "1クリック完全再分析",
+      "running": "分析中…",
+      "progressHint": "写真を読み取り、アイテムを特定して自動入力フィールドを更新しています。",
+      "success": "分析を更新しました",
+      "error": "分析に失敗しました。もう一度お試しください。",
+      "disclaimer": "自動入力されたフィールドのみが上書きされます。手動で入力した内容は保持されます。",
+      "promptPlaceholder": "The Eyesに指示: 「靴を削除」「手の部分を補完」「スタッズを削除」…",
+      "send": "送信",
+      "promptStarters": "クイック指示",
+      "promptRemoveShoes": "靴を削除",
+      "promptCompleteHole": "手があった部分を補完",
+      "promptRemoveStuds": "前面の金属スタッズを削除",
+      "promptFixMaterials": "生地の組成とカラーを再調整",
+      "applyImage": "アイテム写真に適用",
+      "nanoBananaBadge": "Nano Banana 生成",
+      "clarificationTitle": "The Eyes: 詳細が必要です",
+      "eyesThinking": "The Eyes が解析中…",
+      "nanoBananaGenerating": "Nano Banana がピクセルを生成中…",
+      "applied": "適用済み",
+      "refreshedAttributes": "属性を更新しました",
+      "eyesBadge": "The Eyes"
+    },
     "back": "クローゼットに戻る",
     "editImage": "画像を編集",
     "generateVariant": "バリエーションを生成",
@@ -510,33 +540,6 @@
       "error": "背景クリーニングに失敗しました。もう一度お試しください。",
       "disclaimer": "非生成型のマッティングモデルを使用します。元の写真が作り込まれたものに置き換わることはありません。",
       "progressHint": "衣類のピクセルを抽出し、オリジナルの細部を保持しています。"
-    },
-    "reanalyze": {
-      "label": "写真の再分析",
-      "subtitle": "The Eyes とチャットして不要なオブジェクトの削除、欠損部の補完、Nano Banana を使ったアイテム詳細の調整が行えます。",
-      "cta": "分析する",
-      "quickReanalyze": "1クリック完全再分析",
-      "running": "分析中…",
-      "progressHint": "写真を読み取り、アイテムを特定して自動入力フィールドを更新しています。",
-      "success": "分析を更新しました",
-      "error": "分析に失敗しました。もう一度お試しください。",
-      "disclaimer": "自動入力されたフィールドのみが上書きされます。手動で入力した内容は保持されます。",
-      "promptPlaceholder": "The Eyesに指示: 「靴を削除」「手の部分を補完」「スタッズを削除」…",
-      "send": "送信",
-      "promptStarters": "クイック指示",
-      "promptRemoveShoes": "靴を削除",
-      "promptCompleteHole": "手があった部分を補完",
-      "promptRemoveStuds": "前面の金属スタッズを削除",
-      "promptFixMaterials": "生地の組成とカラーを再調整",
-      "applyImage": "アイテム写真に適用",
-      "imageApplied": "アイテム写真に適用しました！保存をクリックしてください。",
-      "nanoBananaBadge": "Nano Banana 生成",
-      "clarificationTitle": "The Eyes: 詳細が必要です",
-      "eyesThinking": "The Eyes が解析中…",
-      "nanoBananaGenerating": "Nano Banana がピクセルを生成中…",
-      "applied": "適用済み",
-      "refreshedAttributes": "属性を更新しました",
-      "eyesBadge": "The Eyes"
     },
     "photo": {
       "addLabel": "写真を追加",
@@ -2036,7 +2039,7 @@
     "title": "専門家に相談",
     "tabExperts": "専門家",
     "tabCampaigns": "キャンペーン",
-    "subtitle": "お住まいの地域の認証済みファッション専門家—スタイリスト、テーラー、理容師、デザイナー—をご覧ください。",
+    "subtitle": "お近くの認証済みファッション専門家（スタイリスト、仕立屋、美容師、デザイナー）を探す。",
     "filters": {
       "profession": "職業",
       "anyProfession": "すべての職業",
@@ -2049,7 +2052,7 @@
     "emptyBody": "フィルタを広げるか、後ほどお越しください—毎週新しい専門家が参加しています。",
     "contact": "連絡する",
     "visitWebsite": "ウェブサイトを見る",
-    "callNow": "電話する",
+    "callNow": "電話",
     "sendEmail": "メールを送る",
     "professionLabel": "職業",
     "cityLabel": "活動地域",
@@ -2063,7 +2066,7 @@
     "findStylist": "Certified Stylists & Pros",
     "stylistsTab": "Stylists & Experts",
     "campaignsTab": "Promotions & Offers",
-    "searchPlaceholder": "Search by name, city, specialty…",
+    "searchPlaceholder": "名前、都市、専門分野で検索…",
     "noExpertsFound": "No stylists found",
     "noExpertsDesc": "Try clearing your filters or changing your location.",
     "bookingTitle": "Book Styling Session",
@@ -2071,18 +2074,24 @@
     "serviceDesc": "45-minute video consultation reviewing your digital closet, body proportions, and personalized outfit plan.",
     "bookingSent": "Styling request sent! The stylist will reach out to schedule.",
     "sendBookingRequest": "Confirm Booking",
-    "email": "Email",
+    "email": "メール",
     "instagram": "Instagram",
-    "website": "Website",
-    "empty": "No experts listed yet.",
+    "website": "ウェブサイト",
+    "empty": "登録されている専門家はまだいません。",
     "professions": {
-      "all": "All Specialties",
-      "stylist": "Personal Stylist",
-      "consultant": "Wardrobe Consultant",
-      "shopper": "Personal Shopper",
-      "designer": "Fashion Designer",
-      "tailor": "Tailor / Seamstress",
-      "color": "Color Analyst"
+      "all": "すべて",
+      "stylist": "スタイリスト",
+      "consultant": "ワードローブコンサルタント",
+      "shopper": "パーソナルショッパー",
+      "designer": "ファッションデザイナー",
+      "tailor": "仕立屋 / テーラー",
+      "color": "カラーアナリスト",
+      "fashion_stylist": "ファッションスタイリスト",
+      "fashion_designer": "ファッションデザイナー",
+      "barber": "理容師",
+      "hair_stylist": "ヘアスタイリスト",
+      "ai_fashion": "ファッションAI",
+      "ai_for_fashion": "ファッションAI"
     }
   },
   "ads": {
@@ -3161,7 +3170,8 @@
         "newest": "新着",
         "nearest": "最寄り",
         "endingSoon": "まもなく終了",
-        "highestDiscount": "最高割引"
+        "highestDiscount": "最高割引",
+        "title": "キャンペーンの並び替え"
       },
       "empty": {
         "title": "お近くにキャンペーンはありません",

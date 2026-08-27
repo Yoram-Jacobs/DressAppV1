@@ -23,6 +23,7 @@
     "insights": "Aperçus du dressing"
   },
   "common": {
+    "savePrompt": "Appuyez sur Enregistrer pour conserver les modifications.",
     "day": "jour",
     "save": "Enregistrer",
     "saveAll": "Enregistrer",
@@ -254,7 +255,8 @@
     "deleteSelectedTitle": "Supprimer les vêtements",
     "deleteSelectedConfirm": "Voulez-vous vraiment supprimer {{count}} vêtement(s) ?",
     "batchDeleteFailed": "Certains vêtements n'ont pas pu être supprimés. Veuillez réessayer.",
-    "anchorItems": "Pièces maîtresses sélectionnées"
+    "anchorItems": "Pièces maîtresses sélectionnées",
+    "loadingWardrobe": "Chargement de votre garde-robe…"
   },
   "addItem": {
     "namePlaceholder": "ex. Veste en jean vintage",
@@ -483,6 +485,34 @@
     "noReadyCards": "Aucune carte prête à être enregistrée."
   },
   "itemDetail": {
+    "reanalyze": {
+      "previewReady": "Aperçu prêt dans le chat.",
+      "imageApplied": "Appliqué comme photo du vêtement ! Cliquez sur Enregistrer.",
+      "label": "Réanalyser la photo",
+      "subtitle": "Discutez avec The Eyes pour retirer des objets indésirables, compléter les découpes ou affiner les détails avec Nano Banana.",
+      "cta": "Analyser",
+      "quickReanalyze": "Réanalyse complète en 1 clic",
+      "running": "Analyse en cours…",
+      "progressHint": "Lecture de la photo, identification du vêtement et mise à jour des champs automatiques.",
+      "success": "Analyse actualisée",
+      "error": "Échec de l'analyse. Veuillez réessayer.",
+      "disclaimer": "Seuls les champs remplis automatiquement sont écrasés. Vos modifications manuelles sont conservées.",
+      "promptPlaceholder": "Demandez à The Eyes : 'Retirer les chaussures', 'Combler le trou', 'Retirer les clous'…",
+      "send": "Envoyer",
+      "promptStarters": "Suggestions rapides",
+      "promptRemoveShoes": "Retirer les chaussures",
+      "promptCompleteHole": "Combler le trou où se trouvait la main",
+      "promptRemoveStuds": "Retirer les clous métalliques de l'avant",
+      "promptFixMaterials": "Affiner la composition du tissu et la palette",
+      "applyImage": "Appliquer comme photo du vêtement",
+      "nanoBananaBadge": "Généré par Nano Banana",
+      "clarificationTitle": "The Eyes a besoin de plus de détails",
+      "eyesThinking": "The Eyes analyse…",
+      "nanoBananaGenerating": "Nano Banana génère les pixels…",
+      "applied": "Appliqué",
+      "refreshedAttributes": "Attributs actualisés",
+      "eyesBadge": "The Eyes"
+    },
     "back": "Retour au dressing",
     "editImage": "Modifier l’image",
     "generateVariant": "Générer une variante",
@@ -510,33 +540,6 @@
       "rejected": "Le matting a produit un résultat étrange — conservation du recadrage original.",
       "error": "Échec du nettoyage d'arrière-plan. Veuillez réessayer.",
       "disclaimer": "Utilise un modèle de matting non génératif. Votre photo originale n'est jamais remplacée par une photo inventée."
-    },
-    "reanalyze": {
-      "label": "Réanalyser la photo",
-      "subtitle": "Discutez avec The Eyes pour retirer des objets indésirables, compléter les découpes ou affiner les détails avec Nano Banana.",
-      "cta": "Analyser",
-      "quickReanalyze": "Réanalyse complète en 1 clic",
-      "running": "Analyse en cours…",
-      "progressHint": "Lecture de la photo, identification du vêtement et mise à jour des champs automatiques.",
-      "success": "Analyse actualisée",
-      "error": "Échec de l'analyse. Veuillez réessayer.",
-      "disclaimer": "Seuls les champs remplis automatiquement sont écrasés. Vos modifications manuelles sont conservées.",
-      "promptPlaceholder": "Demandez à The Eyes : 'Retirer les chaussures', 'Combler le trou', 'Retirer les clous'…",
-      "send": "Envoyer",
-      "promptStarters": "Suggestions rapides",
-      "promptRemoveShoes": "Retirer les chaussures",
-      "promptCompleteHole": "Combler le trou où se trouvait la main",
-      "promptRemoveStuds": "Retirer les clous métalliques de l'avant",
-      "promptFixMaterials": "Affiner la composition du tissu et la palette",
-      "applyImage": "Appliquer comme photo du vêtement",
-      "imageApplied": "Appliqué à la photo du vêtement ! Cliquez sur Enregistrer.",
-      "nanoBananaBadge": "Généré par Nano Banana",
-      "clarificationTitle": "The Eyes a besoin de plus de détails",
-      "eyesThinking": "The Eyes analyse…",
-      "nanoBananaGenerating": "Nano Banana génère les pixels…",
-      "applied": "Appliqué",
-      "refreshedAttributes": "Attributs actualisés",
-      "eyesBadge": "The Eyes"
     },
     "photo": {
       "addLabel": "Ajouter une photo",
@@ -2026,10 +2029,10 @@
     "switchingHint": "Cela prend généralement quelques secondes."
   },
   "experts": {
-    "title": "Consultez un professionnel",
+    "title": "Demander à un expert",
     "tabExperts": "Experts",
     "tabCampaigns": "Campagnes",
-    "subtitle": "Parcourez les experts de la mode vérifiés — stylistes, tailleurs, barbiers, créateurs — dans votre région.",
+    "subtitle": "Parcourez des experts de mode vérifiés — stylistes, tailleurs, barbiers, créateurs — dans votre région.",
     "filters": {
       "profession": "Profession",
       "anyProfession": "Toute profession",
@@ -2056,7 +2059,7 @@
     "findStylist": "Certified Stylists & Pros",
     "stylistsTab": "Stylists & Experts",
     "campaignsTab": "Promotions & Offers",
-    "searchPlaceholder": "Search by name, city, specialty…",
+    "searchPlaceholder": "Rechercher par nom, ville, spécialité…",
     "noExpertsFound": "No stylists found",
     "noExpertsDesc": "Try clearing your filters or changing your location.",
     "bookingTitle": "Book Styling Session",
@@ -2064,18 +2067,24 @@
     "serviceDesc": "45-minute video consultation reviewing your digital closet, body proportions, and personalized outfit plan.",
     "bookingSent": "Styling request sent! The stylist will reach out to schedule.",
     "sendBookingRequest": "Confirm Booking",
-    "email": "Email",
+    "email": "E-mail",
     "instagram": "Instagram",
-    "website": "Website",
-    "empty": "No experts listed yet.",
+    "website": "Site web",
+    "empty": "Aucun expert répertorié pour le moment.",
     "professions": {
-      "all": "All Specialties",
-      "stylist": "Personal Stylist",
-      "consultant": "Wardrobe Consultant",
-      "shopper": "Personal Shopper",
-      "designer": "Fashion Designer",
-      "tailor": "Tailor / Seamstress",
-      "color": "Color Analyst"
+      "all": "Tous",
+      "stylist": "Styliste",
+      "consultant": "Conseiller en garde-robe",
+      "shopper": "Personal shopper",
+      "designer": "Créateur de mode",
+      "tailor": "Tailleur / Couturier",
+      "color": "Analyste des couleurs",
+      "fashion_stylist": "Styliste de mode",
+      "fashion_designer": "Créateur de mode",
+      "barber": "Barbier",
+      "hair_stylist": "Coiffeur styliste",
+      "ai_fashion": "IA pour la mode",
+      "ai_for_fashion": "IA pour la mode"
     }
   },
   "ads": {
@@ -3154,7 +3163,8 @@
         "newest": "Plus récentes",
         "nearest": "Plus proches",
         "endingSoon": "Se termine bientôt",
-        "highestDiscount": "Plus forte réduction"
+        "highestDiscount": "Plus forte réduction",
+        "title": "Trier les campagnes"
       },
       "empty": {
         "title": "Aucune campagne près de chez vous",

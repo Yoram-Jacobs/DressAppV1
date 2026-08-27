@@ -69,4 +69,6 @@ Every subject in the help tree (`HelpMenu.jsx`) follows a **two-layer structure*
 | `/pricing-info` | [pricing](skills/pricing/SKILL.md) | AI credit management, billing, and subscription operations |
 | `/billing` | [billing](skills/billing/SKILL.md) | Billing and payment processing services |
 | `/Investor-pitch` | [investor-pitch](skills/investor-pitch/SKILL.md) | Craft clear, credible, and compelling investor pitches and competitor breakdowns for DressApp |
+| `/expo-tailwind-setup` | [expo-tailwind-setup](skills/expo-tailwind-setup/SKILL.md) | Set up Tailwind CSS v4 in Expo with react-native-css and NativeWind v5 for universal styling |
+| `/expo-web-to-native` | [expo-web-to-native](skills/expo-web-to-native/SKILL.md) | Migrate an existing web React app to a native iOS/Android app with Expo |
 

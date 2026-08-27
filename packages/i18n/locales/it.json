@@ -23,6 +23,7 @@
     "insights": "Statistiche guardaroba"
   },
   "common": {
+    "savePrompt": "Premi Salva per conservare le modifiche.",
     "day": "giorno",
     "save": "Salva",
     "saveAll": "Salva",
@@ -254,7 +255,8 @@
     "deleteSelectedTitle": "Elimina capi",
     "deleteSelectedConfirm": "Sei sicuro di voler eliminare {{count}} capo/i?",
     "batchDeleteFailed": "Alcuni capi non sono stati eliminati. Riprova.",
-    "anchorItems": "Capi base selezionati"
+    "anchorItems": "Capi base selezionati",
+    "loadingWardrobe": "Caricamento del tuo guardaroba…"
   },
   "addItem": {
     "namePlaceholder": "es. Giacca di jeans vintage",
@@ -483,6 +485,34 @@
     "noReadyCards": "Nessuna scheda pronta da salvare."
   },
   "itemDetail": {
+    "reanalyze": {
+      "previewReady": "Anteprima pronta in chat.",
+      "imageApplied": "Applicato come foto del capo! Clicca su Salva.",
+      "label": "Rianalizza foto",
+      "subtitle": "Chatta con The Eyes per rimuovere elementi indesiderati, completare ritagli o perfezionare i dettagli con Nano Banana.",
+      "cta": "Analizza",
+      "quickReanalyze": "Rianalisi completa in 1 clic",
+      "running": "Analisi in corso…",
+      "progressHint": "Lettura della foto, identificazione del capo e aggiornamento dei campi automatici.",
+      "success": "Analisi aggiornata",
+      "error": "Analisi non riuscita. Riprova.",
+      "disclaimer": "Vengono sovrascritti solo i campi compilati automaticamente. Le modifiche manuali sono preservate.",
+      "promptPlaceholder": "Chiedi a The Eyes: 'Rimuovi le scarpe', 'Completa il buco', 'Rimuovi le borchie'…",
+      "send": "Invia",
+      "promptStarters": "Suggerimenti rapidi",
+      "promptRemoveShoes": "Rimuovi le scarpe",
+      "promptCompleteHole": "Completa il buco dove c'era la mano",
+      "promptRemoveStuds": "Rimuovi le borchie metalliche dal davanti",
+      "promptFixMaterials": "Perfeziona tessuti e palette colori",
+      "applyImage": "Applica come foto del capo",
+      "nanoBananaBadge": "Generato da Nano Banana",
+      "clarificationTitle": "The Eyes richiede maggiori dettagli",
+      "eyesThinking": "The Eyes sta analizzando…",
+      "nanoBananaGenerating": "Nano Banana sta generando pixel…",
+      "applied": "Applicato",
+      "refreshedAttributes": "Attributi aggiornati",
+      "eyesBadge": "The Eyes"
+    },
     "back": "Torna all’armadio",
     "editImage": "Modifica immagine",
     "generateVariant": "Genera variante",
@@ -510,33 +540,6 @@
       "rejected": "Il matting ha prodotto un risultato anomalo — mantenendo il ritaglio originale.",
       "error": "Pulizia sfondo fallita. Riprova.",
       "disclaimer": "Utilizza un modello di matting non generativo. La tua foto originale non viene mai sostituita con una inventata."
-    },
-    "reanalyze": {
-      "label": "Rianalizza foto",
-      "subtitle": "Chatta con The Eyes per rimuovere elementi indesiderati, completare ritagli o perfezionare i dettagli con Nano Banana.",
-      "cta": "Analizza",
-      "quickReanalyze": "Rianalisi completa in 1 clic",
-      "running": "Analisi in corso…",
-      "progressHint": "Lettura della foto, identificazione del capo e aggiornamento dei campi automatici.",
-      "success": "Analisi aggiornata",
-      "error": "Analisi non riuscita. Riprova.",
-      "disclaimer": "Vengono sovrascritti solo i campi compilati automaticamente. Le modifiche manuali sono preservate.",
-      "promptPlaceholder": "Chiedi a The Eyes: 'Rimuovi le scarpe', 'Completa il buco', 'Rimuovi le borchie'…",
-      "send": "Invia",
-      "promptStarters": "Suggerimenti rapidi",
-      "promptRemoveShoes": "Rimuovi le scarpe",
-      "promptCompleteHole": "Completa il buco dove c'era la mano",
-      "promptRemoveStuds": "Rimuovi le borchie metalliche dal davanti",
-      "promptFixMaterials": "Perfeziona tessuti e palette colori",
-      "applyImage": "Applica come foto del capo",
-      "imageApplied": "Applicato alla foto del capo! Premi Salva per confermare.",
-      "nanoBananaBadge": "Generato da Nano Banana",
-      "clarificationTitle": "The Eyes richiede maggiori dettagli",
-      "eyesThinking": "The Eyes sta analizzando…",
-      "nanoBananaGenerating": "Nano Banana sta generando pixel…",
-      "applied": "Applicato",
-      "refreshedAttributes": "Attributi aggiornati",
-      "eyesBadge": "The Eyes"
     },
     "photo": {
       "addLabel": "Aggiungi foto",
@@ -2033,7 +2036,7 @@
     "switchingHint": "Di solito richiede qualche secondo."
   },
   "experts": {
-    "title": "Chiedi a un professionista",
+    "title": "Chiedi a un esperto",
     "tabExperts": "Esperti",
     "tabCampaigns": "Campagne",
     "filters": {
@@ -2056,14 +2059,14 @@
     "countLabel_other": "{{count}} esperti",
     "becomeExpertCta": "Sei un professionista della moda? Attivalo nel tuo profilo.",
     "loadMore": "Carica altri",
-    "subtitle": "Sfoglia esperti di moda verificati — stylist, sarti, barbieri, designer — nella tua regione.",
+    "subtitle": "Sfoglia esperti di moda verificati — stilisti, sarti, barbieri, designer — nella tua zona.",
     "professional": "Fashion Stylist",
     "bookSession": "Book Session",
     "directory": "Professional Directory",
     "findStylist": "Certified Stylists & Pros",
     "stylistsTab": "Stylists & Experts",
     "campaignsTab": "Promotions & Offers",
-    "searchPlaceholder": "Search by name, city, specialty…",
+    "searchPlaceholder": "Cerca per nome, città, specialità…",
     "noExpertsFound": "No stylists found",
     "noExpertsDesc": "Try clearing your filters or changing your location.",
     "bookingTitle": "Book Styling Session",
@@ -2073,16 +2076,22 @@
     "sendBookingRequest": "Confirm Booking",
     "email": "Email",
     "instagram": "Instagram",
-    "website": "Website",
-    "empty": "No experts listed yet.",
+    "website": "Sito web",
+    "empty": "Nessun esperto ancora registrato.",
     "professions": {
-      "all": "All Specialties",
-      "stylist": "Personal Stylist",
-      "consultant": "Wardrobe Consultant",
-      "shopper": "Personal Shopper",
-      "designer": "Fashion Designer",
-      "tailor": "Tailor / Seamstress",
-      "color": "Color Analyst"
+      "all": "Tutti",
+      "stylist": "Stilista",
+      "consultant": "Consulente di guardaroba",
+      "shopper": "Personal shopper",
+      "designer": "Stilista di moda",
+      "tailor": "Sarto",
+      "color": "Analista del colore",
+      "fashion_stylist": "Stilista di moda",
+      "fashion_designer": "Stilista di moda",
+      "barber": "Barbiere",
+      "hair_stylist": "Parrucchiere",
+      "ai_fashion": "IA per la Moda",
+      "ai_for_fashion": "IA per la Moda"
     }
   },
   "ads": {
@@ -3161,7 +3170,8 @@
         "newest": "Più recenti",
         "nearest": "Più vicine",
         "endingSoon": "In scadenza a breve",
-        "highestDiscount": "Sconto maggiore"
+        "highestDiscount": "Sconto maggiore",
+        "title": "Ordina campagne"
       },
       "empty": {
         "title": "Nessuna campagna vicino a te",

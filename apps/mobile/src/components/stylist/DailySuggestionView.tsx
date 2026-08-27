@@ -38,7 +38,7 @@ interface DailySuggestionViewProps {
 const resolveSlot = (role?: string, category?: string, name?: string, closetItem?: any): string => {
   const cCat = (closetItem?.category || '').toLowerCase().trim();
   const cSub = (closetItem?.sub_category || closetItem?.subcategory || closetItem?.item_type || '').toLowerCase().trim();
-  const r = (role || category || '').toLowerCase().trim().replace(/[s_-]+/g, '_');
+  const r = (role || category || '').toLowerCase().trim().replace(/[\s_-]+/g, '_');
   const n = `${name || ''} ${closetItem?.name || ''} ${closetItem?.title || ''}`.toLowerCase().trim();
 
   // 1. Footwear / Shoes (Checked first so shoes/sneakers are never mistaken for tops or accessories)
@@ -159,12 +159,14 @@ function MiniAvatarOutfit({
       );
       const slot = resolveSlot(g.role, g.category, g.name, closetItem);
       const url =
-        g.image_url ||
-        g.thumbnail_data_url ||
         closetItem?.clean_image_url ||
+        g.clean_image_url ||
+        closetItem?.reconstructed_image_url ||
         closetItem?.cutout_url ||
         closetItem?.thumbnail_data_url ||
-        closetItem?.image_url;
+        g.thumbnail_data_url ||
+        closetItem?.image_url ||
+        g.image_url;
       if (url && slot in map && !map[slot]) {
         map[slot] = url;
       }

@@ -134,10 +134,10 @@ export default function CampaignDetail() {
 
   const locationStr = [location.city, location.country].filter(Boolean).join(', ');
   const expertPhone =
-    expert?.professional?.business?.phone && expert.professional.business.phone.trim().length > 3
-      ? expert.professional.business.phone.trim()
-      : expert?.phone
+    expert?.phone && expert.phone.trim().length > 3
       ? expert.phone.trim()
+      : expert?.professional?.business?.phone && expert.professional.business.phone.trim().length > 3
+      ? expert.professional.business.phone.trim()
       : null;
   const lat = location.lat;
   const lon = location.lon;

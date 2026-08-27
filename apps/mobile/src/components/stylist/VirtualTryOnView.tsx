@@ -298,17 +298,22 @@ export function VirtualTryOnView({
 
       const color = extractColorFromGarment(g, closetItem);
       const subCategory = extractSubcategoryName(g, closetItem, t);
+      const cAny = closetItem as any;
       const imageUrl =
-        g.image_url ||
-        g.thumbnail_data_url ||
-        g.image_data_url ||
-        g.segmented_image_url ||
-        closetItem?.segmented_image_url ||
         closetItem?.clean_image_url ||
-        closetItem?.cutout_url ||
+        g.clean_image_url ||
+        cAny?.reconstructed_image_url ||
+        cAny?.cutout_url ||
         closetItem?.thumbnail_data_url ||
+        g.thumbnail_data_url ||
+        cAny?.image_data_url ||
+        g.image_data_url ||
+        cAny?.segmented_image_url ||
+        g.segmented_image_url ||
         closetItem?.image_url ||
-        closetItem?.original_image_url;
+        g.image_url ||
+        cAny?.original_image_url;
+
 
       return {
         id: targetId || `item_${idx}`,
@@ -617,7 +622,11 @@ export function VirtualTryOnView({
 
             <View style={styles.layersList}>
               {garmentList.map((g: TryOnItem, idx: number) => {
-                const slot = resolveSlot(g.role, g.category, g.name);
+                const targetId = g.closet_item_id || g.id;
+                const closetItem: any = closetItems.find(
+                  (it: any) => it && (it.id === targetId || it._id === targetId || String(it.id) === String(targetId))
+                );
+                const slot = resolveSlot(g.role, g.category, g.name, closetItem);
                 const isVisible = visibleLayers[slot] !== false;
 
                 return (

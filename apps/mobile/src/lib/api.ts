@@ -78,7 +78,17 @@ const { client, API_BASE, tokenStore, userStore } = createApiClient({
   backendUrl: BACKEND_URL,
 });
 
-export const api = buildApi();
+const builtApi = buildApi();
+
+export const api = {
+  ...builtApi,
+  getWiki: async (lang: string, topic: string): Promise<string> => {
+    const res: any = await (client as any).get(`/wiki/${encodeURIComponent(lang)}/${encodeURIComponent(topic)}`, {
+      responseType: 'text',
+    });
+    return typeof res?.data === 'string' ? res.data : JSON.stringify(res?.data || '');
+  },
+};
 export { client, API_BASE, tokenStore, userStore };
 export { emitAuthChange } from './authEvents';
 

@@ -232,7 +232,8 @@
     "deleteSelectedTitle": "वस्त्र हटाएं",
     "deleteSelectedConfirm": "क्या आप वाकई {{count}} आइटम हटाना चाहते हैं?",
     "batchDeleteFailed": "कुछ वस्त्र हटाए नहीं जा सके। कृपया पुनः प्रयास करें।",
-    "anchorItems": "चयनित मुख्य वस्त्र"
+    "anchorItems": "चयनित मुख्य वस्त्र",
+    "loadingWardrobe": "आपकी अलमारी लोड हो रही है…"
   },
   "addItem": {
     "namePlaceholder": "उदा. विंटेज डेनिम जैकेट",
@@ -1839,10 +1840,10 @@
     "switchingHint": "इसमें आमतौर पर कुछ सेकंड लगते हैं।"
   },
   "experts": {
-    "title": "किसी प्रोफेशनल से पूछें",
+    "title": "विशेषज्ञ से पूछें",
     "tabExperts": "विशेषज्ञ",
     "tabCampaigns": "अभियान",
-    "subtitle": "अपने क्षेत्र में सत्यापित फ़ैशन विशेषज्ञ खोजें — स्टाइलिस्ट, दर्जी, नाई, डिज़ाइनर।",
+    "subtitle": "अपने क्षेत्र में सत्यापित फैशन विशेषज्ञों को खोजें — स्टाइलिस्ट, दर्जी, नाई, डिज़ाइनर।",
     "filters": {
       "profession": "पेशा",
       "anyProfession": "कोई भी पेशा",
@@ -1862,7 +1863,26 @@
     "countLabel_one": "{{count}} विशेषज्ञ",
     "countLabel_other": "{{count}} विशेषज्ञ",
     "becomeExpertCta": "क्या आप फ़ैशन प्रोफेशनल हैं? अपनी प्रोफ़ाइल में इसे सक्षम करें।",
-    "loadMore": "और लोड करें"
+    "loadMore": "और लोड करें",
+    "searchPlaceholder": "नाम, शहर या विशेषता से खोजें…",
+    "email": "ईमेल",
+    "website": "वेबसाइट",
+    "empty": "अभी तक कोई विशेषज्ञ सूचीबद्ध नहीं है।",
+    "professions": {
+      "all": "सभी",
+      "stylist": "स्टाइलिस्ट",
+      "fashion_stylist": "फैशन स्टाइलिस्ट",
+      "tailor": "दर्जी",
+      "designer": "फैशन डिज़ाइनर",
+      "fashion_designer": "फैशन डिज़ाइनर",
+      "barber": "नाई",
+      "hair_stylist": "हेयर स्टाइलिस्ट",
+      "ai_fashion": "फैशन के लिए एआई",
+      "ai_for_fashion": "फैशन के लिए एआई",
+      "shopper": "पर्सनल शॉपर",
+      "consultant": "वॉर्डरोब सलाहकार",
+      "color": "कलर एनालिस्ट"
+    }
   },
   "ads": {
     "title": "मेरे विज्ञापन अभियान",
@@ -2726,7 +2746,8 @@
         "newest": "नवीनतम",
         "nearest": "निकटतम",
         "endingSoon": "जल्द समाप्त",
-        "highestDiscount": "उच्चतम छूट"
+        "highestDiscount": "उच्चतम छूट",
+        "title": "अभियान क्रमबद्ध करें"
       },
       "empty": {
         "title": "आपके पास कोई अभियान नहीं है",

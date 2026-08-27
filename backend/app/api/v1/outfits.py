@@ -90,8 +90,19 @@ async def save_outfit(
         if g.closet_item_id:
             item = await db.closet_items.find_one({"id": g.closet_item_id})
             if item:
-                g_dict["title"] = g_dict.get("title") or item.get("title") or item.get("name") or g.role
-                g_dict["image_url"] = g_dict.get("image_url") or item.get("thumbnail_data_url") or item.get("segmented_image_url") or item.get("original_image_url")
+                variants = item.get("image_variants") or {}
+                webp_large = (variants.get("webp") or {}).get("large") if isinstance(variants, dict) else None
+                g_dict["image_url"] = (
+                    g_dict.get("image_url")
+                    or item.get("clean_image_url")
+                    or item.get("reconstructed_image_url")
+                    or item.get("cutout_url")
+                    or webp_large
+                    or item.get("thumbnail_data_url")
+                    or item.get("image_url")
+                    or item.get("segmented_image_url")
+                    or item.get("original_image_url")
+                )
         garments.append(g_dict)
 
     use_count = 1 if (payload.usage and payload.usage.date) else 0

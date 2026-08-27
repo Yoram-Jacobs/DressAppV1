@@ -32,6 +32,7 @@ import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { useOutfitStore } from '@mobile/lib/stores';
+import { LoadingVideo } from '@mobile/components/common/LoadingVideo';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { StylistStackParamList } from '@mobile/navigation/types';
@@ -147,7 +148,8 @@ export function OutfitsScreen() {
       id: g.closet_item_id || g.id || String(Math.random()),
       name: g.title || g.name || g.role || 'Garment',
       role: g.role || g.category,
-      image_url: g.image_url || g.thumbnail_data_url || g.segmented_image_url,
+      image_url: g.clean_image_url || g.image_url || g.thumbnail_data_url || g.cutout_url || g.segmented_image_url,
+
     }));
 
     const piecesCount = garments.length;
@@ -324,12 +326,7 @@ export function OutfitsScreen() {
 
       {/* Outfits List */}
       {loading ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.mutedFg }]}>
-            {t('outfits.loading', { defaultValue: 'Loading saved looks...' })}
-          </Text>
-        </View>
+        <LoadingVideo message={t('outfits.loading', { defaultValue: 'Loading saved looks...' })} />
       ) : outfits.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Lucide.Sparkles size={48} color={colors.mutedFg} />

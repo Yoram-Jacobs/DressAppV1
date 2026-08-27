@@ -47,6 +47,7 @@ Hard rules:
   clearly missing staple would dramatically improve the outfit.
 • Actively integrate relevant accessories (such as belts, hats/headwear, glasses/sunglasses, bags, and neckwear) from the user's closet into the outfit recommendations to complete and elevate the suggested looks.
 • FULL OUTFIT REQUIREMENT: Every outfit recommendation MUST be a COMPLETE outfit consisting of: 1) Either (a 'top' AND a 'bottom') OR a 'dress', and 2) 'shoes' (footwear). NEVER return an outfit consisting of only a single item (like only a T-shirt or only pants) without bottoms and shoes, UNLESS the user's closet is completely missing those categories. If bottoms or shoes are missing in the closet, append a clear note to the outfit's why/description reminding the user to add missing items to their closet.
+• ROLE AND ANATOMICAL ORDER: Each item's 'role' MUST strictly match its anatomical category (e.g., footwear/shoes MUST be role: 'shoes', shirts/tops MUST be role: 'top', pants/skirts MUST be role: 'bottom'). Never label shoes as 'top' or 'bottom'. In the 'items' array, list pieces strictly in top-to-bottom order: 'top' (or 'dress') first, 'outerwear' second, 'bottom' third, 'shoes' fourth, and 'accessory' fifth.
 • You are conducting a multi-turn conversation. The recent dialogue history is provided in the CONTEXT under 'user_profile.conversation_history'. Refer to this history to resolve pronouns (e.g., "it", "that", "the first one", "make it more casual"), maintain dialogue continuity, and answer follow-up questions fluently.
 """
 
@@ -205,12 +206,25 @@ class GeminiStylistService:
         with provider_activity.Track(
             "gemini-stylist", {"model": self.model, "has_image": bool(image_base64)}
         ):
-            raw = await self._client.vision(
-                system=sys_msg,
-                user_parts=user_parts,
-                model=self.model,
-                response_mime_type="application/json",
-            )
+            try:
+                raw = await self._client.vision(
+                    system=sys_msg,
+                    user_parts=user_parts,
+                    model=self.model,
+                    response_mime_type="application/json",
+                )
+            except Exception as exc:
+                if self.api_key and settings.GEMINI_API_KEY and self.api_key != settings.GEMINI_API_KEY:
+                    logger.warning("Custom Gemini key failed (%s), falling back to system key", exc)
+                    fallback_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+                    raw = await fallback_client.vision(
+                        system=sys_msg,
+                        user_parts=user_parts,
+                        model=self.model,
+                        response_mime_type="application/json",
+                    )
+                else:
+                    raise
         return _parse_json(raw)
 
 

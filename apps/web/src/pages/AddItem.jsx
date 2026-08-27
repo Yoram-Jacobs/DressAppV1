@@ -1046,7 +1046,8 @@ export default function AddItem() {
         return {
           ...item,
           closetItem,
-          base64Image: item.base64Image || closetItem.original_image_url || closetItem.clean_image_url || null
+          base64Image: item.base64Image || closetItem.clean_image_url || closetItem.thumbnail_data_url || closetItem.original_image_url || null
+
         };
       }
       return item;
@@ -3155,12 +3156,13 @@ export default function AddItem() {
                                 onClick={() => setClosetItemDetailPane(item.closetItem)}
                                 className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-[hsl(var(--accent))] shadow-md hover:scale-105 active:scale-95 transition-transform bg-secondary/20 flex items-center justify-center cursor-pointer"
                               >
-                                {item.closetItem.original_image_url || item.closetItem.clean_image_url ? (
+                                {item.closetItem.clean_image_url || item.closetItem.thumbnail_data_url || item.closetItem.original_image_url ? (
                                   <img
-                                    src={item.closetItem.original_image_url || item.closetItem.clean_image_url}
+                                    src={item.closetItem.clean_image_url || item.closetItem.thumbnail_data_url || item.closetItem.original_image_url}
                                     alt={item.closetItem.title}
                                     className="w-full h-full object-cover"
                                   />
+
                                 ) : (
                                   <Shirt className="h-6 w-6 text-[hsl(var(--accent))]/60" />
                                 )}
@@ -3376,8 +3378,8 @@ export default function AddItem() {
                           className="flex items-center gap-3 p-2 rounded-xl border border-border/60 hover:border-[hsl(var(--accent))] hover:bg-secondary/40 cursor-pointer transition-colors"
                         >
                           <div className="w-10 h-10 rounded-lg bg-secondary/20 overflow-hidden shrink-0 border border-border/40 flex items-center justify-center">
-                            {it.original_image_url || it.clean_image_url ? (
-                              <img src={it.original_image_url || it.clean_image_url} alt={it.title} className="w-full h-full object-cover" />
+                            {it.clean_image_url || it.thumbnail_data_url || it.original_image_url ? (
+                              <img src={it.clean_image_url || it.thumbnail_data_url || it.original_image_url} alt={it.title} className="w-full h-full object-cover" />
                             ) : (
                               <Shirt className="h-5 w-5 text-muted-foreground" />
                             )}
@@ -3406,9 +3408,9 @@ export default function AddItem() {
                   <>
                     {/* Image */}
                     <div className="w-full aspect-[3/4] bg-secondary/20 relative overflow-hidden">
-                      {closetItemDetailPane.original_image_url || closetItemDetailPane.clean_image_url ? (
+                      {closetItemDetailPane.clean_image_url || closetItemDetailPane.thumbnail_data_url || closetItemDetailPane.original_image_url ? (
                         <img
-                          src={closetItemDetailPane.original_image_url || closetItemDetailPane.clean_image_url}
+                          src={closetItemDetailPane.clean_image_url || closetItemDetailPane.thumbnail_data_url || closetItemDetailPane.original_image_url}
                           alt={closetItemDetailPane.title}
                           className="w-full h-full object-contain"
                         />

@@ -14,6 +14,8 @@ import {
   Modal,
   ScrollView,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';
@@ -90,7 +92,10 @@ export function ItemStylistChat({
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.backdrop}>
+      <KeyboardAvoidingView
+        style={styles.backdrop}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <View style={[styles.container, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
@@ -106,7 +111,11 @@ export function ItemStylistChat({
           </View>
 
           {/* Messages */}
-          <ScrollView style={styles.chatScroll} contentContainerStyle={styles.chatContent}>
+          <ScrollView 
+            style={styles.chatScroll} 
+            contentContainerStyle={styles.chatContent}
+            keyboardShouldPersistTaps="handled"
+          >
             {messages.map((m, idx) => {
               const isUser = m.role === 'user';
               return (
@@ -116,7 +125,7 @@ export function ItemStylistChat({
                     styles.msgBubble,
                     isUser
                       ? [styles.userBubble, { backgroundColor: colors.primary }]
-                      : [styles.assistantBubble, { backgroundColor: colors.secondary }],
+                      : [styles.assistantBubble, { backgroundColor: colors.secondary, borderColor: colors.border }],
                   ]}
                 >
                   <Text
@@ -171,7 +180,7 @@ export function ItemStylistChat({
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

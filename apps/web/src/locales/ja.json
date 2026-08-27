@@ -232,7 +232,8 @@
     "deleteSelectedTitle": "アイテムを削除",
     "deleteSelectedConfirm": "{{count}} 件のアイテムを削除してもよろしいですか？",
     "batchDeleteFailed": "一部のアイテムを削除できませんでした。もう一度お試しください。",
-    "anchorItems": "選択されたベースアイテム"
+    "anchorItems": "選択されたベースアイテム",
+    "loadingWardrobe": "ワードローブを読み込み中…"
   },
   "addItem": {
     "namePlaceholder": "例：ヴィンテージデニムジャケット",
@@ -1842,7 +1843,7 @@
     "title": "専門家に相談",
     "tabExperts": "専門家",
     "tabCampaigns": "キャンペーン",
-    "subtitle": "お住まいの地域の認証済みファッション専門家—スタイリスト、テーラー、理容師、デザイナー—をご覧ください。",
+    "subtitle": "お近くの認証済みファッション専門家（スタイリスト、仕立屋、美容師、デザイナー）を探す。",
     "filters": {
       "profession": "職業",
       "anyProfession": "すべての職業",
@@ -1855,14 +1856,33 @@
     "emptyBody": "フィルタを広げるか、後ほどお越しください—毎週新しい専門家が参加しています。",
     "contact": "連絡する",
     "visitWebsite": "ウェブサイトを見る",
-    "callNow": "電話する",
+    "callNow": "電話",
     "sendEmail": "メールを送る",
     "professionLabel": "職業",
     "cityLabel": "活動地域",
     "countLabel_one": "{{count}}人の専門家",
     "countLabel_other": "{{count}}人の専門家",
     "becomeExpertCta": "ファッション専門家の方ですか?プロフィールで有効にしてください。",
-    "loadMore": "さらに読み込む"
+    "loadMore": "さらに読み込む",
+    "searchPlaceholder": "名前、都市、専門分野で検索…",
+    "email": "メール",
+    "website": "ウェブサイト",
+    "empty": "登録されている専門家はまだいません。",
+    "professions": {
+      "all": "すべて",
+      "stylist": "スタイリスト",
+      "fashion_stylist": "ファッションスタイリスト",
+      "tailor": "仕立屋 / テーラー",
+      "designer": "ファッションデザイナー",
+      "fashion_designer": "ファッションデザイナー",
+      "barber": "理容師",
+      "hair_stylist": "ヘアスタイリスト",
+      "ai_fashion": "ファッションAI",
+      "ai_for_fashion": "ファッションAI",
+      "shopper": "パーソナルショッパー",
+      "consultant": "ワードローブコンサルタント",
+      "color": "カラーアナリスト"
+    }
   },
   "ads": {
     "title": "広告キャンペーン",
@@ -2726,7 +2746,8 @@
         "newest": "新着",
         "nearest": "最寄り",
         "endingSoon": "まもなく終了",
-        "highestDiscount": "最高割引"
+        "highestDiscount": "最高割引",
+        "title": "キャンペーンの並び替え"
       },
       "empty": {
         "title": "お近くにキャンペーンはありません",

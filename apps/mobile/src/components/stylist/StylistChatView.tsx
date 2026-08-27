@@ -24,6 +24,8 @@ import {
   Platform,
   I18nManager,
   Share,
+  KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 import { Audio } from 'expo-av';
 import { useTranslation } from 'react-i18next';
@@ -58,23 +60,16 @@ export interface ChatMessage {
   content: string;
   timestamp?: string;
   outfits?: StylistOutfitCard[];
+  shopping_suggestions?: string[];
+  do_dont?: string[];
 }
-
-const QUICK_PROMPTS = [
-  '✨ Suggest a look for a dinner date',
-  '💼 Casual Friday office outfit',
-  '🌧️ Stylish layering for chilly rain',
-  '👟 What matches my sneakers?',
-  '🎉 Elegant evening cocktail party',
-  '☕ Weekend coffee walk',
-];
 
 interface StylistChatViewProps {
   onSelectOutfitForTryOn?: (outfit: StylistOutfitCard) => void;
 }
 
 export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const isRtl = I18nManager.isRTL;
   const closetStore = useClosetStore();
@@ -99,6 +94,37 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
 
   const scrollRef = useRef<ScrollView>(null);
 
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      () => {
+        setTimeout(() => {
+          scrollRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      }
+    );
+    return () => showSub.remove();
+  }, []);
+
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length === 1 && prev[0].id === 'msg_welcome') {
+        return [
+          {
+            id: 'msg_welcome',
+            role: 'assistant',
+            content: t('stylist.welcomeMsg', {
+              defaultValue:
+                "Hello! I'm your AI Fashion Stylist. Ask me what to wear, request looks for an occasion, or tap a quick prompt below!",
+            }),
+            timestamp: prev[0].timestamp,
+          },
+        ];
+      }
+      return prev;
+    });
+  }, [i18n.language, t]);
+
   // Helper to hydrate outfit recommendations with real closet item images
   const hydrateOutfits = (rawOutfits: any[]): StylistOutfitCard[] => {
     if (!Array.isArray(rawOutfits)) return [];
@@ -119,7 +145,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
 
       return {
         id: o.id || `outfit_${idx}`,
-        name: o.name || 'Curated Look',
+        name: o.name || t('stylist.curatedLook', { defaultValue: 'Curated Look' }),
         occasion: o.occasion || o.target_occasion,
         harmony_score: o.harmony_score || (o.confidence ? Math.round(o.confidence * 100) : 95),
         reasoning: o.why || o.reasoning || o.description,
@@ -140,13 +166,32 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
         if (sId) {
           const history = await api.stylistHistory(sId).catch(() => null);
           if (history?.messages?.length) {
-            const mapped: ChatMessage[] = history.messages.map((m: any, idx: number) => ({
-              id: m.id || `hist_${idx}`,
-              role: m.role,
-              content: m.transcript || m.content || m.text || '',
-              outfits: hydrateOutfits(m.assistant_payload?.outfit_recommendations || m.outfits || []),
-              timestamp: m.created_at ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : undefined,
-            }));
+            const mapped: ChatMessage[] = history.messages.map((m: any, idx: number) => {
+              const rawTxt = m.transcript || m.content || m.text || '';
+              const isFallbackError =
+                rawTxt.toLowerCase().includes('trouble putting that recommendation together') ||
+                rawTxt.toLowerCase().includes('rephrasing') ||
+                rawTxt.includes('התקשיתי בהרכבת ההמלצה') ||
+                rawTxt.includes('مشكلة في إعداد التوصية');
+              const content = isFallbackError
+                ? t('stylist.errorAdvice', {
+                    defaultValue:
+                      "Sorry — I had trouble putting that recommendation together. Try rephrasing, or attach a photo so I can see what you're working with.",
+                  })
+                : rawTxt;
+
+              return {
+                id: m.id || `hist_${idx}`,
+                role: m.role,
+                content,
+                outfits: hydrateOutfits(m.assistant_payload?.outfit_recommendations || m.outfits || []),
+                shopping_suggestions: m.assistant_payload?.shopping_suggestions || [],
+                do_dont: m.assistant_payload?.do_dont || [],
+                timestamp: m.created_at
+                  ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  : undefined,
+              };
+            });
             setMessages(mapped);
           }
         }
@@ -180,34 +225,71 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
     try {
       const formData = new FormData();
       formData.append('text', text);
+      const userLang = (i18n.language || 'en').toLowerCase();
+      formData.append('language', userLang);
+      formData.append('skip_tts', 'true');
+      formData.append('include_calendar', 'true');
       if (sessionId) formData.append('session_id', sessionId);
 
       const res = await api.stylist(formData);
+      if (res?.session?.id) {
+        setSessionId(res.session.id);
+      }
+
       const advice = res?.advice || res;
       const outfitRecs = advice?.outfit_recommendations || res?.outfits || [];
+      const rawText = advice?.spoken_reply || advice?.reasoning_summary || res?.reply || res?.text || '';
+
+      const isFallbackError =
+        rawText.toLowerCase().includes('trouble putting that recommendation together') ||
+        rawText.toLowerCase().includes('rephrasing') ||
+        rawText.includes('התקשיתי בהרכבת ההמלצה') ||
+        rawText.includes('مشكلة في إعداد التوصية');
+
+      const content = isFallbackError
+        ? t('stylist.errorAdvice', {
+            defaultValue:
+              "Sorry — I had trouble putting that recommendation together. Try rephrasing, or attach a photo so I can see what you're working with.",
+          })
+        : rawText || t('stylist.curatedLookHeader', { defaultValue: 'Here is a curated outfit combination from your wardrobe:' });
 
       const assistantMsg: ChatMessage = {
         id: `msg_${Date.now() + 1}`,
         role: 'assistant',
-        content: advice?.spoken_reply || advice?.reasoning_summary || res?.reply || res?.text || "Here is a curated outfit combination from your wardrobe:",
+        content,
         outfits: hydrateOutfits(outfitRecs),
+        shopping_suggestions: advice?.shopping_suggestions || [],
+        do_dont: advice?.do_dont || [],
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err: any) {
       console.warn('Stylist chat error:', err);
-      const errDetail = err?.response?.data?.detail || err?.message;
+      const status = err?.response?.status;
+      const dataDetail = err?.response?.data?.detail;
+      const errMsg = err?.message || String(err);
+      const errorText = dataDetail
+        ? `${status ? `[${status}] ` : ''}${typeof dataDetail === 'string' ? dataDetail : JSON.stringify(dataDetail)}`
+        : `${status ? `[${status}] ` : ''}${errMsg}`;
+
       const fallbackMsg: ChatMessage = {
         id: `msg_${Date.now() + 1}`,
         role: 'assistant',
-        content: errDetail
-          ? `${t('common.error', { defaultValue: 'Error' })}: ${errDetail}`
-          : t('stylist.errorAdvice', { defaultValue: 'Sorry, I had trouble putting that recommendation together. Please try again.' }),
+        content: `${t('common.error', { defaultValue: 'Error' })}: ${errorText}`,
         outfits: [],
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, fallbackMsg]);
+
+      if (typeof dataDetail === 'string' && (dataDetail.includes('API key') || dataDetail.includes('API_KEY'))) {
+        Alert.alert(
+          t('profile.apiKeyRequiredTitle', { defaultValue: 'API Key Required' }),
+          t('profile.apiKeyRequiredMessage', {
+            defaultValue: 'Please enter a valid Google Gemini API key in your Profile -> AI Configuration to use the AI Stylist.',
+          })
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -254,6 +336,10 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
         type: 'audio/m4a',
         name: 'voice.m4a',
       } as unknown as Blob);
+      const userLang = (i18n.language || 'en').toLowerCase();
+      formData.append('language', userLang);
+      formData.append('skip_tts', 'true');
+      formData.append('include_calendar', 'true');
       if (sessionId) formData.append('session_id', sessionId);
 
       setMessages((prev) => [
@@ -261,22 +347,42 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
         {
           id: `msg_${Date.now()}`,
           role: 'user',
-          content: '🎙️ Voice note',
+          content: `🎙️ ${t('stylist.voiceNote', { defaultValue: 'Voice note' })}`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
 
       const res = await api.stylist(formData);
+      if (res?.session?.id) {
+        setSessionId(res.session.id);
+      }
+
       const advice = res?.advice || res;
       const outfitRecs = advice?.outfit_recommendations || res?.outfits || [];
+      const rawText = advice?.spoken_reply || advice?.reasoning_summary || res?.reply || res?.text || '';
+
+      const isFallbackError =
+        rawText.toLowerCase().includes('trouble putting that recommendation together') ||
+        rawText.toLowerCase().includes('rephrasing') ||
+        rawText.includes('התקשיתי בהרכבת ההמלצה') ||
+        rawText.includes('مشكلة في إعداد التوصية');
+
+      const content = isFallbackError
+        ? t('stylist.errorAdvice', {
+            defaultValue:
+              "Sorry — I had trouble putting that recommendation together. Try rephrasing, or attach a photo so I can see what you're working with.",
+          })
+        : rawText || t('stylist.curatedLookHeader', { defaultValue: 'Here is your requested styling recommendation:' });
 
       setMessages((prev) => [
         ...prev,
         {
           id: `msg_${Date.now() + 1}`,
           role: 'assistant',
-          content: advice?.spoken_reply || advice?.reasoning_summary || res?.reply || res?.text || "Here is your requested styling recommendation:",
+          content,
           outfits: hydrateOutfits(outfitRecs),
+          shopping_suggestions: advice?.shopping_suggestions || [],
+          do_dont: advice?.do_dont || [],
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -312,19 +418,20 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
       await api.saveOutfit(body);
       Alert.alert(t('common.success', { defaultValue: 'Saved' }), t('stylist.outfitSaved', { defaultValue: 'Look saved to your collection!' }));
     } catch (err: any) {
-      Alert.alert(
-        t('common.error', { defaultValue: 'Error' }),
-        err?.response?.data?.detail || err?.message || t('stylist.saveFailed', { defaultValue: 'Could not save outfit.' })
-      );
+      Alert.alert(t('common.error', { defaultValue: 'Error' }), err?.response?.data?.detail || t('stylist.saveFailed', { defaultValue: 'Could not save outfit.' }));
     }
   };
 
   return (
-    <View style={styles.container}>
-      {/* Scrollable Message History */}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
       <ScrollView
         ref={scrollRef}
-        contentContainerStyle={styles.messagesScroll}
+        style={styles.messagesScroll}
+        contentContainerStyle={{ paddingBottom: spacing.lg }}
         showsVerticalScrollIndicator={false}
       >
         {messages.map((msg) => {
@@ -335,10 +442,11 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
               style={[
                 styles.messageRow,
                 isUser ? styles.userMessageRow : styles.assistantMessageRow,
+                isRtl ? { flexDirection: isUser ? 'row' : 'row-reverse' } : { flexDirection: isUser ? 'row-reverse' : 'row' },
               ]}
             >
               {!isUser && (
-                <View style={[styles.avatarIconWrap, { backgroundColor: colors.accent }]}>
+                <View style={[styles.avatarIconWrap, { backgroundColor: colors.primary }]}>
                   <Lucide.Sparkles size={14} color="#FFF" />
                 </View>
               )}
@@ -354,7 +462,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                 <Text
                   style={[
                     styles.messageText,
-                    { color: isUser ? '#FFF' : colors.foreground },
+                    { color: isUser ? '#FFF' : colors.foreground, textAlign: isRtl ? 'right' : 'left' },
                   ]}
                 >
                   {msg.content}
@@ -364,7 +472,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                   <Text
                     style={[
                       styles.timestampText,
-                      { color: isUser ? 'rgba(255,255,255,0.7)' : colors.mutedFg },
+                      { color: isUser ? 'rgba(255,255,255,0.7)' : colors.mutedFg, textAlign: isRtl ? 'left' : 'right' },
                     ]}
                   >
                     {msg.timestamp}
@@ -381,13 +489,13 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                           key={oIdx}
                           style={[styles.outfitCard, { backgroundColor: colors.secondary, borderColor: colors.border }]}
                         >
-                          <View style={styles.outfitCardHeader}>
+                          <View style={[styles.outfitCardHeader, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}>
                             <View style={{ flex: 1 }}>
-                              <Text style={[styles.outfitCardName, { color: colors.foreground }]}>
+                              <Text style={[styles.outfitCardName, { color: colors.foreground, textAlign: isRtl ? 'right' : 'left' }]}>
                                 {outfit.name || 'Curated Look'}
                               </Text>
                               {outfit.occasion ? (
-                                <Text style={[styles.outfitOccasion, { color: colors.accent }]}>
+                                <Text style={[styles.outfitOccasion, { color: colors.accent, textAlign: isRtl ? 'right' : 'left' }]}>
                                   {outfit.occasion}
                                 </Text>
                               ) : null}
@@ -402,12 +510,18 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                             ) : null}
                           </View>
 
+                          {outfit.reasoning ? (
+                            <Text style={[styles.outfitReasoning, { color: colors.mutedFg, textAlign: isRtl ? 'right' : 'left' }]}>
+                              {outfit.reasoning}
+                            </Text>
+                          ) : null}
+
                           {/* Garment Thumbnails Row */}
                           {garments.length > 0 && (
                             <ScrollView
                               horizontal
                               showsHorizontalScrollIndicator={false}
-                              contentContainerStyle={styles.garmentThumbsRow}
+                              contentContainerStyle={[styles.garmentThumbsRow, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}
                             >
                               {garments.map((g, gIdx) => {
                                 const img = g.thumbnail_data_url || g.image_url;
@@ -428,7 +542,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                           )}
 
                           {/* Action Buttons */}
-                          <View style={styles.outfitActions}>
+                          <View style={[styles.outfitActions, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}>
                             <TouchableOpacity
                               style={[styles.saveOutfitBtn, { backgroundColor: colors.primary }]}
                               onPress={() => handleSaveOutfit(outfit)}
@@ -456,13 +570,47 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                     })}
                   </View>
                 )}
+
+                {/* Shopping Suggestions if present */}
+                {msg.shopping_suggestions && msg.shopping_suggestions.length > 0 && (
+                  <View style={[styles.shoppingBox, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+                    <View style={[styles.sectionHeaderRow, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}>
+                      <Lucide.ShoppingBag size={14} color={colors.primary} />
+                      <Text style={[styles.sectionHeading, { color: colors.foreground }]}>
+                        {t('stylist.shoppingSuggestions', { defaultValue: 'Shopping Suggestions' })}
+                      </Text>
+                    </View>
+                    {msg.shopping_suggestions.map((item, sIdx) => (
+                      <Text key={sIdx} style={[styles.suggestionItemText, { color: colors.mutedFg, textAlign: isRtl ? 'right' : 'left' }]}>
+                        • {item}
+                      </Text>
+                    ))}
+                  </View>
+                )}
+
+                {/* Do & Don't if present */}
+                {msg.do_dont && msg.do_dont.length > 0 && (
+                  <View style={[styles.doDontBox, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+                    <View style={[styles.sectionHeaderRow, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}>
+                      <Lucide.Sparkles size={14} color={colors.accent} />
+                      <Text style={[styles.sectionHeading, { color: colors.foreground }]}>
+                        {t('stylist.doDont', { defaultValue: 'Styling Tips' })}
+                      </Text>
+                    </View>
+                    {msg.do_dont.map((tip, dIdx) => (
+                      <Text key={dIdx} style={[styles.suggestionItemText, { color: colors.mutedFg, textAlign: isRtl ? 'right' : 'left' }]}>
+                        • {tip}
+                      </Text>
+                    ))}
+                  </View>
+                )}
               </View>
             </View>
           );
         })}
 
         {loading && (
-          <View style={styles.typingRow}>
+          <View style={[styles.typingRow, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}>
             <View style={[styles.avatarIconWrap, { backgroundColor: colors.accent }]}>
               <Lucide.Sparkles size={14} color="#FFF" />
             </View>
@@ -478,7 +626,11 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
 
       {/* Quick Suggestion Chips */}
       <View style={styles.quickPromptsWrapper}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickPromptsRow}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[styles.quickPromptsRow, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}
+        >
           {[
             { id: 'date', label: t('stylist.prompt_date', { defaultValue: '✨ Suggest a look for a dinner date' }) },
             { id: 'work', label: t('stylist.prompt_work', { defaultValue: '💼 Casual Friday office outfit' }) },
@@ -532,7 +684,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
           <Lucide.Send size={16} color={inputQuery.trim() ? '#FFF' : colors.mutedFg} />
         </TouchableOpacity>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -640,6 +792,42 @@ const styles = StyleSheet.create({
     color: '#10B981',
     fontFamily: fonts.bodyBold,
     fontSize: 9,
+  },
+  outfitReasoning: {
+    fontFamily: fonts.body,
+    fontSize: fontSizes.xs,
+    lineHeight: 18,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  shoppingBox: {
+    borderRadius: radii.md,
+    borderWidth: 1,
+    padding: spacing.sm,
+    marginTop: spacing.xs,
+    gap: 4,
+  },
+  doDontBox: {
+    borderRadius: radii.md,
+    borderWidth: 1,
+    padding: spacing.sm,
+    marginTop: spacing.xs,
+    gap: 4,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 2,
+  },
+  sectionHeading: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.xs,
+  },
+  suggestionItemText: {
+    fontFamily: fonts.body,
+    fontSize: fontSizes.xs - 1,
+    lineHeight: 16,
   },
   garmentThumbsRow: {
     gap: 6,

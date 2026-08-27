@@ -9,6 +9,7 @@ Dieses Dokument behandelt die Hardwareanforderungen, Browserberechtigungen und A
 - Ein modernes Smartphone, Tablet oder PC.
 - Mikrofonberechtigungen (für Sprach-Styling-Anfragen).
 - Standortgenehmigung (für lokales wetterbezogenes Styling).
+- Ein Gemini-API-Schlüssel. Kostenlos erhältlich bei [Google AI Studio](https://aistudio.google.com/).
 
 ## Schritt für Schritt
 1. **Berechtigungen zulassen**: Akzeptieren Sie Kameraaufforderungen beim Hochladen von Elementen und Standortaufforderungen für Wetteraktualisierungen.

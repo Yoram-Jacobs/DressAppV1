@@ -1,48 +1,75 @@
-# EAS Build archive exclusions — place at MONOREPO ROOT (not apps/mobile)
-# EAS installs node_modules fresh on Linux build servers.
-# Uploading Windows node_modules causes native binary mismatches (llama.rn, turbo, lightningcss, etc.)
+# EAS Build Ignore File (EAS CLI archive filter)
+# See https://github.com/expo/fyi/blob/main/eas-build-archive.md
 
-# All node_modules — EAS installs from yarn.lock on Linux
-node_modules/
-apps/mobile/node_modules/
-apps/web/node_modules/
-packages/*/node_modules/
+# Monorepo Non-Mobile Subprojects (Saves ~4.5 GB from EAS archive)
+/backend/
+/apps/web/
+/apps/android-twa/
+/inference-server/
+/chrome-extension/
+/deploy/
+/docs/
+/wiki/
+/legal/
+/Eyes-GGUF/
+/agenthub/
 
-# Python environments and backend (not needed for mobile build)
-backend/
-.venv/
+# Python Virtual Environments & Caches
 venv/
-*.pyc
+.venv/
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
 
-# Inference server (models served from HuggingFace)
-inference-server/
+# Local Gradle, Android & Build Artifacts
+.gradle/
+.android/
+.code-review-graph/
+.cache/
+build/
+dist/
+/out/
+*.aab
+*.apk
+*.zip
+*.tar.gz
+*.tar
+*.tgz
+*.pack
+*.deb
+*.dylib
 
-# Build outputs
-apps/mobile/android/
-apps/mobile/ios/
-apps/mobile/dist/
-apps/mobile/.expo/
-apps/web/build/
-apps/web/dist/
-
-# Dev tools & caches
-.git/
-.turbo/
-*.log
-*.map
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Test files
-**/__tests__/
-**/*.test.ts
-**/*.test.tsx
-
-# Large assets not needed for build
-*.gguf
-*.bin
+# Model Weights & Checkpoints
+models/
+*.safetensors
 *.onnx
-D:/
+*.pt
+*.pth
+*.bin
+*.gguf
+
+# IDE & Editor Configs
+.idea/
+.vscode/
+.run/
+.cursor/
+
+# Sensitive Credential & Secrets
+*.pem
+*.key
+*.keystore
+!apps/mobile/android/app/debug.keystore
+credentials.json
+*token.json*
+.env
+.env.*
+*.env
+
+# Logs & Dumps
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dump.rdb

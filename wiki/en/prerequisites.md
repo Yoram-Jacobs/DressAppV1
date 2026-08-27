@@ -9,6 +9,7 @@ This document covers the hardware requirements, browser permissions, and API key
 - A modern smartphone, tablet, or PC.
 - Microphone permissions (for voice styling requests).
 - Location permission (for local weather-aware styling).
+- A Gemini API Key. Get it for free on [Google AI Studio](https://aistudio.google.com/).
 
 ## Step-by-Step
 1. **Allow Permissions**: Accept camera prompts when uploading items, and location prompts for weather updates.

@@ -47,6 +47,7 @@ interface ItemAIAnalysisProps {
   onSendPrompt: (promptText: string) => void;
   appliedImageUrl?: string | null;
   onApplyImage?: (imageUrl: string) => void;
+  onFocusInput?: () => void;
 }
 
 export function ItemAIAnalysisCard({
@@ -60,6 +61,7 @@ export function ItemAIAnalysisCard({
   onSendPrompt,
   appliedImageUrl,
   onApplyImage,
+  onFocusInput,
 }: ItemAIAnalysisProps) {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
@@ -327,17 +329,6 @@ export function ItemAIAnalysisCard({
 
           <TouchableOpacity
             style={[styles.starterChip, { backgroundColor: colors.secondary, borderColor: colors.border }]}
-            onPress={() => handleSend(t('itemDetail.reanalyze.promptRemoveStuds', { defaultValue: 'Remove metal studs from front' }))}
-            disabled={chatBusy || analyzing}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.starterChipText, { color: colors.foreground }]}>
-              💎 {t('itemDetail.reanalyze.promptRemoveStuds', { defaultValue: 'Remove studs' })}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.starterChip, { backgroundColor: colors.secondary, borderColor: colors.border }]}
             onPress={() => handleSend(t('itemDetail.reanalyze.promptFixMaterials', { defaultValue: 'Refine fabric and color palette' }))}
             disabled={chatBusy || analyzing}
             activeOpacity={0.7}
@@ -374,6 +365,7 @@ export function ItemAIAnalysisCard({
           placeholderTextColor={colors.mutedFg}
           value={promptInput}
           onChangeText={setPromptInput}
+          onFocus={onFocusInput}
           editable={!chatBusy && !analyzing}
           onSubmitEditing={() => handleSend()}
         />
@@ -446,7 +438,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontFamily: fonts.body,
-    fontSize: fontSizes['2xs'],
+    fontSize: 10,
     marginTop: 1,
   },
   reAnalyzeBtn: {
@@ -496,7 +488,7 @@ const styles = StyleSheet.create({
   },
   progressHintText: {
     fontFamily: fonts.body,
-    fontSize: fontSizes['2xs'],
+    fontSize: 10,
     flex: 1,
   },
   progressPctText: {
@@ -548,7 +540,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontFamily: fonts.bodyBold,
-    fontSize: fontSizes['2xs'],
+    fontSize: 10,
   },
   assistantBubble: {
     padding: spacing[3],
@@ -602,7 +594,7 @@ const styles = StyleSheet.create({
   },
   fieldChipText: {
     fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes['2xs'],
+    fontSize: 10,
   },
   startersSection: {
     gap: spacing[1.5],
@@ -610,7 +602,7 @@ const styles = StyleSheet.create({
   },
   startersTitle: {
     fontFamily: fonts.bodyBold,
-    fontSize: fontSizes['2xs'],
+    fontSize: 10,
     letterSpacing: 0.5,
   },
   startersGrid: {
@@ -626,7 +618,7 @@ const styles = StyleSheet.create({
   },
   starterChipText: {
     fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes['2xs'],
+    fontSize: 10,
   },
   promptInputRow: {
     flexDirection: 'row',
@@ -653,7 +645,7 @@ const styles = StyleSheet.create({
   },
   disclaimerText: {
     fontFamily: fonts.body,
-    fontSize: fontSizes['2xs'],
+    fontSize: 10,
     fontStyle: 'italic',
     lineHeight: 14,
   },

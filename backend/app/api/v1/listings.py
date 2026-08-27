@@ -188,8 +188,12 @@ async def create_listing(
             group_items.sort(key=lambda x: 0 if x.get("group_role") == "host" else 1)
             for g_item in group_items:
                 for fld in (
-                    "segmented_image_url",
+                    "clean_image_url",
                     "reconstructed_image_url",
+                    "cutout_url",
+                    "thumbnail_data_url",
+                    "image_url",
+                    "segmented_image_url",
                     "original_image_url",
                 ):
                     url = g_item.get(fld)
@@ -198,14 +202,19 @@ async def create_listing(
                         break
         else:
             for fld in (
-                "segmented_image_url",
+                "clean_image_url",
                 "reconstructed_image_url",
+                "cutout_url",
+                "thumbnail_data_url",
+                "image_url",
+                "segmented_image_url",
                 "original_image_url",
             ):
                 url = closet_item.get(fld)
                 if isinstance(url, str) and url:
                     images.append(url)
                     break
+
 
     # Default to seller's home location if not provided
     location = payload.location

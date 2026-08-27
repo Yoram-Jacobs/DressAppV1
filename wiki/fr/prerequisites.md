@@ -9,6 +9,7 @@ Ce document couvre la configuration matérielle requise, les autorisations du na
 - Un smartphone, une tablette ou un PC moderne.
 - Autorisations du microphone (pour les demandes de style vocal).
 - Autorisation de localisation (pour un style local tenant compte de la météo).
+- Une clé API Gemini. Obtenez-la gratuitement sur [Google AI Studio](https://aistudio.google.com/).
 
 ## Étape par étape
 1. **Autoriser les autorisations** : acceptez les invites de la caméra lors du téléchargement d'éléments et les invites de localisation pour les mises à jour météorologiques.

@@ -19,6 +19,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  Linking,
   I18nManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -38,22 +39,68 @@ export function PricingScreen() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const [creditBalance, setCreditBalance] = useState<number>(45);
   const [currentTier, setCurrentTier] = useState<string>('free');
+  const [isSubActive, setIsSubActive] = useState<boolean>(false);
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
   useEffect(() => {
     (api as any).getMe?.().then((me: any) => {
       if (me) {
         if (me.credits != null) setCreditBalance(me.credits);
-        if (me.subscription_tier) setCurrentTier(me.subscription_tier.toLowerCase());
+        const sub = me.subscription || {};
+        const isActive = Boolean(sub.is_active);
+        setIsSubActive(isActive);
+        const effectiveTier = (isActive && sub.tier && sub.tier !== 'free')
+          ? sub.tier.toLowerCase()
+          : (me.subscription_tier || 'free').toLowerCase();
+        setCurrentTier(effectiveTier);
       }
     }).catch(() => {});
   }, []);
 
   const handleSubscribe = (tierKey: string) => {
-    navigation.navigate('MockAtzmaiPayment', {
-      paymentId: `sub_${tierKey}_${Date.now()}`,
-      description: `DressApp ${tierKey.toUpperCase()} Membership`,
-      amount: tierKey === 'manager' ? (billingCycle === 'monthly' ? '9.99' : '95.88') : '24.99',
-    });
+    Alert.alert(
+      t('pricing.choosePaymentMethod', { defaultValue: 'Select Payment Method' }),
+      t('pricing.choosePaymentMethodSub', { defaultValue: 'Choose your preferred payment gateway:' }),
+      [
+        {
+          text: t('pricing.payWithPaypal', { defaultValue: 'PayPal / Credit Card' }),
+          onPress: async () => {
+            setLoadingAction(tierKey);
+            try {
+              const res = await (api as any).createSubscription?.({
+                tier: tierKey,
+                plan_type: billingCycle === 'annual' ? 'yearly' : 'monthly',
+                return_url: 'https://dressapp.co/profile?sub_status=success',
+                cancel_url: 'https://dressapp.co/profile?sub_status=cancelled',
+              });
+              if (res?.approve_url) {
+                Linking.openURL(res.approve_url);
+              } else {
+                Alert.alert(t('common.error', { defaultValue: 'Error' }), t('pricing.errorRedirect', { defaultValue: 'Could not obtain checkout URL.' }));
+              }
+            } catch (err: any) {
+              Alert.alert(t('common.error', { defaultValue: 'Error' }), err?.message || t('pricing.subscribeError', { defaultValue: 'Failed to initiate subscription.' }));
+            } finally {
+              setLoadingAction(null);
+            }
+          },
+        },
+        {
+          text: t('pricing.payWithAtzmai', { defaultValue: 'Atzmai / Bit / Israel' }),
+          onPress: () => {
+            const amount = tierKey === 'manager'
+              ? (billingCycle === 'monthly' ? '4.99' : '50.00')
+              : (billingCycle === 'monthly' ? '9.99' : '100.00');
+            navigation.navigate('MockAtzmaiPayment', {
+              paymentId: `sub_${tierKey}_${Date.now()}`,
+              description: `DressApp ${tierKey.toUpperCase()} Membership (${billingCycle})`,
+              amount,
+            });
+          },
+        },
+        { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
+      ]
+    );
   };
 
   const handleBuyCredits = (packKey: string, amount: string, credits: number) => {
@@ -82,15 +129,16 @@ export function PricingScreen() {
         <View style={[styles.balanceCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.balanceInfo}>
             <Text style={[styles.balanceLabel, { color: colors.mutedFg }]}>
-              {t('pricing.currentBalance', { defaultValue: 'YOUR AI CREDITS' })}
+              {t('pricing.currentBalance', { defaultValue: 'YOUR MEMBERSHIP' })}
             </Text>
-            <Text style={[styles.balanceVal, { color: colors.accent }]}>
-              {creditBalance} <Text style={{ fontSize: 16, color: colors.foreground }}>{t('pricing.credits', { defaultValue: 'credits' })}</Text>
+            <Text style={[styles.balanceVal, { color: isSubActive ? '#EAB308' : colors.accent }]}>
+              {currentTier.toUpperCase()}{' '}
+              {isSubActive && <Text style={{ fontSize: 14, color: colors.mutedFg }}>({t('profile.active', { defaultValue: 'Active' })})</Text>}
             </Text>
           </View>
-          <View style={[styles.tierBadge, { backgroundColor: colors.secondary }]}>
-            <Lucide.Sparkles size={14} color={colors.accent} />
-            <Text style={[styles.tierBadgeText, { color: colors.foreground }]}>
+          <View style={[styles.tierBadge, { backgroundColor: isSubActive ? 'rgba(234, 179, 8, 0.15)' : colors.secondary }]}>
+            <Lucide.Crown size={14} color={isSubActive ? '#EAB308' : colors.accent} />
+            <Text style={[styles.tierBadgeText, { color: isSubActive ? '#EAB308' : colors.foreground }]}>
               {currentTier.toUpperCase()}
             </Text>
           </View>
@@ -123,7 +171,19 @@ export function PricingScreen() {
         </Text>
 
         {/* Tier 1: Free */}
-        <View style={[styles.planCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View
+          style={[
+            styles.planCard,
+            { backgroundColor: colors.card, borderColor: currentTier === 'free' ? colors.accent : colors.border },
+          ]}
+        >
+          {currentTier === 'free' && (
+            <View style={[styles.currentPlanBadge, { backgroundColor: colors.secondary }]}>
+              <Text style={[styles.currentPlanBadgeText, { color: colors.foreground }]}>
+                {t('pricing.currentPlan', { defaultValue: 'Current Plan' })}
+              </Text>
+            </View>
+          )}
           <Text style={[styles.planName, { color: colors.foreground }]}>
             {t('pricing.freeTitle', { defaultValue: 'Free' })}
           </Text>
@@ -132,66 +192,140 @@ export function PricingScreen() {
             {t('pricing.freeDesc', { defaultValue: 'Up to 50 garments, basic AI styling & closet management.' })}
           </Text>
           <View style={styles.featureList}>
-            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ 50 Closet items</Text>
-            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Standard background removal</Text>
-            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ 15 AI stylist chats / month</Text>
+            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ 50 Closet items (expandable to 200 with invites)</Text>
+            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ 10 free daily AI styling operations</Text>
+            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Standard background cutout & tagger</Text>
           </View>
         </View>
 
         {/* Tier 2: Manager (Popular) */}
-        <View style={[styles.planCard, styles.popularCard, { backgroundColor: colors.card, borderColor: colors.accent }]}>
-          <View style={[styles.popularBadge, { backgroundColor: colors.accent }]}>
-            <Text style={styles.popularBadgeText}>{t('pricing.popular', { defaultValue: 'MOST POPULAR' })}</Text>
+        <View
+          style={[
+            styles.planCard,
+            styles.popularCard,
+            {
+              backgroundColor: colors.card,
+              borderColor: currentTier === 'manager' && isSubActive ? '#EAB308' : colors.accent,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.popularBadge,
+              { backgroundColor: currentTier === 'manager' && isSubActive ? '#EAB308' : colors.accent },
+            ]}
+          >
+            <Text style={styles.popularBadgeText}>
+              {currentTier === 'manager' && isSubActive
+                ? t('profile.activeStatus', { defaultValue: 'YOUR ACTIVE PLAN' })
+                : t('pricing.popular', { defaultValue: 'MOST POPULAR' })}
+            </Text>
           </View>
           <Text style={[styles.planName, { color: colors.foreground }]}>
             {t('pricing.managerTitle', { defaultValue: 'Manager' })}
           </Text>
           <Text style={[styles.planPrice, { color: colors.foreground }]}>
-            {billingCycle === 'monthly' ? '$9.99' : '$7.99'}<Text style={styles.perMonth}> / mo</Text>
+            {billingCycle === 'monthly' ? '$4.99' : '$4.17'}
+            <Text style={styles.perMonth}> / mo</Text>
           </Text>
           <Text style={[styles.planDesc, { color: colors.mutedFg }]}>
-            {t('pricing.managerDesc', { defaultValue: 'Unlimited closet, FashionCLIP semantic search, SegFormer HD cutouts & audio stylist.' })}
+            {billingCycle === 'annual'
+              ? t('pricing.managerAnnualDesc', { defaultValue: '$50.00 billed annually (save 20%)' })
+              : t('pricing.managerMonthlyDesc', { defaultValue: '$4.99 billed monthly' })}
           </Text>
           <View style={styles.featureList}>
-            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Unlimited garments & suitcases</Text>
-            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ SegFormer HD cutout & fashion re-analysis</Text>
-            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Full Trend-Scout & Local Fashion News</Text>
-            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ 150 bonus credits refreshed monthly</Text>
+            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Unlimited closet items & suitcases</Text>
+            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Unlimited daily AI operations</Text>
+            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Full Trend Scout & Local Fashion News</Text>
+            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Automatic morning outfit scheduler</Text>
+            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Marketplace buying & selling privileges</Text>
           </View>
           <TouchableOpacity
-            style={[styles.upgradeBtn, { backgroundColor: colors.accent }]}
+            style={[
+              styles.upgradeBtn,
+              {
+                backgroundColor: currentTier === 'manager' && isSubActive ? colors.secondary : colors.accent,
+              },
+            ]}
             onPress={() => handleSubscribe('manager')}
+            disabled={currentTier === 'manager' && isSubActive || Boolean(loadingAction)}
           >
-            <Text style={styles.upgradeBtnText}>
-              {t('pricing.upgradeManager', { defaultValue: 'Upgrade to Manager' })}
-            </Text>
+            {loadingAction === 'manager' ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <Text
+                style={[
+                  styles.upgradeBtnText,
+                  currentTier === 'manager' && isSubActive && { color: colors.foreground },
+                ]}
+              >
+                {currentTier === 'manager' && isSubActive
+                  ? t('pricing.currentActivePlan', { defaultValue: 'Active Plan' })
+                  : t('pricing.upgradeManager', { defaultValue: 'Upgrade to Manager' })}
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
 
         {/* Tier 3: Professional */}
-        <View style={[styles.planCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View
+          style={[
+            styles.planCard,
+            {
+              backgroundColor: colors.card,
+              borderColor: currentTier === 'professional' && isSubActive ? '#EAB308' : colors.border,
+            },
+          ]}
+        >
+          {currentTier === 'professional' && isSubActive && (
+            <View style={[styles.popularBadge, { backgroundColor: '#EAB308' }]}>
+              <Text style={styles.popularBadgeText}>
+                {t('profile.activeStatus', { defaultValue: 'YOUR ACTIVE PLAN' })}
+              </Text>
+            </View>
+          )}
           <Text style={[styles.planName, { color: colors.foreground }]}>
             {t('pricing.professionalTitle', { defaultValue: 'Professional' })}
           </Text>
           <Text style={[styles.planPrice, { color: colors.foreground }]}>
-            {billingCycle === 'monthly' ? '$24.99' : '$19.99'}<Text style={styles.perMonth}> / mo</Text>
+            {billingCycle === 'monthly' ? '$9.99' : '$8.33'}
+            <Text style={styles.perMonth}> / mo</Text>
           </Text>
           <Text style={[styles.planDesc, { color: colors.mutedFg }]}>
-            {t('pricing.professionalDesc', { defaultValue: 'For fashion collectors, creators, sellers, and professional certified stylists.' })}
+            {billingCycle === 'annual'
+              ? t('pricing.proAnnualDesc', { defaultValue: '$100.00 billed annually (save 20%)' })
+              : t('pricing.proMonthlyDesc', { defaultValue: '$9.99 billed monthly' })}
           </Text>
           <View style={styles.featureList}>
             <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Everything in Manager tier</Text>
-            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Certified Stylist Directory Registry badge</Text>
-            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Zero-fee commission marketplace privileges</Text>
-            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ 500 AI credits monthly</Text>
+            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Verified Stylist Directory Registry badge</Text>
+            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Create & manage ad campaigns ($1/day fee)</Text>
+            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Priority AI processing & bespoke lookbooks</Text>
           </View>
           <TouchableOpacity
-            style={[styles.upgradeBtn, { backgroundColor: colors.primary }]}
+            style={[
+              styles.upgradeBtn,
+              {
+                backgroundColor: currentTier === 'professional' && isSubActive ? colors.secondary : colors.primary,
+              },
+            ]}
             onPress={() => handleSubscribe('professional')}
+            disabled={currentTier === 'professional' && isSubActive || Boolean(loadingAction)}
           >
-            <Text style={[styles.upgradeBtnText, { color: colors.primaryFg }]}>
-              {t('pricing.upgradeProfessional', { defaultValue: 'Get Professional' })}
-            </Text>
+            {loadingAction === 'professional' ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <Text
+                style={[
+                  styles.upgradeBtnText,
+                  { color: currentTier === 'professional' && isSubActive ? colors.foreground : colors.primaryFg },
+                ]}
+              >
+                {currentTier === 'professional' && isSubActive
+                  ? t('pricing.currentActivePlan', { defaultValue: 'Active Plan' })
+                  : t('pricing.upgradeProfessional', { defaultValue: 'Get Professional' })}
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -331,6 +465,22 @@ const styles = StyleSheet.create({
   },
   popularCard: {
     borderWidth: 2,
+  },
+  currentPlanBadge: {
+    position: 'absolute',
+    top: -10,
+    right: 16,
+    paddingHorizontal: spacing[3],
+    paddingVertical: 2,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+  },
+  currentPlanBadgeText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 9,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
   },
   popularBadge: {
     position: 'absolute',

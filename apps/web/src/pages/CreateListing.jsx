@@ -154,8 +154,16 @@ export default function CreateListing() {
         currency: 'USD',
       };
       const linked = closet.find((c) => c.id === form.closet_item_id);
-      if (linked?.segmented_image_url || linked?.original_image_url) {
-        body.images = [linked.segmented_image_url || linked.original_image_url];
+      const chosenImg =
+        linked?.clean_image_url ||
+        linked?.reconstructed_image_url ||
+        linked?.cutout_url ||
+        linked?.thumbnail_data_url ||
+        linked?.image_url ||
+        linked?.segmented_image_url ||
+        linked?.original_image_url;
+      if (chosenImg) {
+        body.images = [chosenImg];
       }
       const listing = await api.createListing(body);
       toast.success(t('createListing.created'));
@@ -190,16 +198,19 @@ export default function CreateListing() {
                   </SelectContent>
                 </Select>
                 {/* Visual confirmation of the linked closet item.
-                    Uses the cached thumbnail (the heavy image_urls are
-                    stripped from the closet payload by the backend, so
-                    this is the only preview source we have). */}
+                    Uses the clean image / cached thumbnail. */}
                 {(() => {
                   const linkedItem = closet.find((c) => c.id === form.closet_item_id);
                   if (!linkedItem) return null;
                   const thumb =
+                    linkedItem.clean_image_url ||
                     linkedItem.thumbnail_data_url ||
+                    linkedItem.reconstructed_image_url ||
+                    linkedItem.cutout_url ||
+                    linkedItem.image_url ||
                     linkedItem.segmented_image_url ||
                     linkedItem.original_image_url;
+
                   return (
                     <div
                       className="mt-3 flex items-center gap-3 rounded-xl border border-border p-2"
