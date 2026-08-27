@@ -41,7 +41,7 @@ SCOPES = [
     "openid",
     "email",
     "profile",
-    "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/calendar.readonly",
     "https://www.googleapis.com/auth/user.birthday.read",
     "https://www.googleapis.com/auth/user.phonenumbers.read",
     "https://www.googleapis.com/auth/user.addresses.read",
@@ -577,115 +577,23 @@ class CalendarService:
     async def create_calendar_event(
         self, user: dict, summary: str, description: str, date_str: str, time_str: str | None
     ) -> dict[str, Any] | None:
-        """Create a calendar event for a saved outfit on the user's primary Google Calendar."""
-        tokens = user.get("google_calendar_tokens") or {}
-        if not tokens.get("refresh_token"):
-            logger.info("create_calendar_event: no refresh token for user %s", user.get("id"))
-            return None
-
-        try:
-            service = await self._build_service(user["id"], tokens)
-            time_part = time_str or "09:00"
-            if len(time_part) == 5:
-                time_part += ":00"
-            dt_str = f"{date_str}T{time_part}"
-            try:
-                dt = datetime.fromisoformat(dt_str)
-            except ValueError:
-                dt = datetime.strptime(date_str, "%Y-%m-%d")
-                dt = dt.replace(hour=9, minute=0)
-
-            event_body = {
-                "summary": summary,
-                "description": description,
-                "start": {
-                    "dateTime": dt.isoformat(),
-                    "timeZone": "UTC",
-                },
-                "end": {
-                    "dateTime": (dt + timedelta(hours=1)).isoformat(),
-                    "timeZone": "UTC",
-                },
-            }
-
-            import asyncio
-            loop = asyncio.get_running_loop()
-            event = await loop.run_in_executor(
-                None,
-                lambda: service.events().insert(calendarId="primary", body=event_body).execute()
-            )
-            logger.info("Successfully created calendar event %s for user %s", event.get("id"), user.get("id"))
-            return event
-        except Exception as exc:
-            logger.error("Failed to create calendar event for user %s: %s", user.get("id"), exc)
-            return None
+        """No-op: Google Calendar integration is strictly read-only."""
+        logger.debug("create_calendar_event skipped: Google Calendar scope is read-only")
+        return None
 
     async def update_calendar_event(
         self, user: dict, event_id: str, summary: str, description: str, date_str: str, time_str: str | None
     ) -> dict[str, Any] | None:
-        """Update an existing calendar event on the user's primary Google Calendar."""
-        tokens = user.get("google_calendar_tokens") or {}
-        if not tokens.get("refresh_token"):
-            return None
-
-        try:
-            service = await self._build_service(user["id"], tokens)
-            time_part = time_str or "09:00"
-            if len(time_part) == 5:
-                time_part += ":00"
-            dt_str = f"{date_str}T{time_part}"
-            try:
-                dt = datetime.fromisoformat(dt_str)
-            except ValueError:
-                dt = datetime.strptime(date_str, "%Y-%m-%d")
-                dt = dt.replace(hour=9, minute=0)
-
-            event_body = {
-                "summary": summary,
-                "description": description,
-                "start": {
-                    "dateTime": dt.isoformat(),
-                    "timeZone": "UTC",
-                },
-                "end": {
-                    "dateTime": (dt + timedelta(hours=1)).isoformat(),
-                    "timeZone": "UTC",
-                },
-            }
-
-            import asyncio
-            loop = asyncio.get_running_loop()
-            event = await loop.run_in_executor(
-                None,
-                lambda: service.events().patch(calendarId="primary", eventId=event_id, body=event_body).execute()
-            )
-            logger.info("Successfully updated calendar event %s for user %s", event_id, user.get("id"))
-            return event
-        except Exception as exc:
-            logger.error("Failed to update calendar event %s for user %s: %s", event_id, user.get("id"), exc)
-            return None
+        """No-op: Google Calendar integration is strictly read-only."""
+        logger.debug("update_calendar_event skipped: Google Calendar scope is read-only")
+        return None
 
     async def delete_calendar_event(
         self, user: dict, event_id: str
     ) -> bool:
-        """Delete a calendar event from the user's primary Google Calendar."""
-        tokens = user.get("google_calendar_tokens") or {}
-        if not tokens.get("refresh_token"):
-            return False
-
-        try:
-            service = await self._build_service(user["id"], tokens)
-            import asyncio
-            loop = asyncio.get_running_loop()
-            await loop.run_in_executor(
-                None,
-                lambda: service.events().delete(calendarId="primary", eventId=event_id).execute()
-            )
-            logger.info("Successfully deleted calendar event %s for user %s", event_id, user.get("id"))
-            return True
-        except Exception as exc:
-            logger.error("Failed to delete calendar event %s for user %s: %s", event_id, user.get("id"), exc)
-            return False
+        """No-op: Google Calendar integration is strictly read-only."""
+        logger.debug("delete_calendar_event skipped: Google Calendar scope is read-only")
+        return False
 
 
 calendar_service = CalendarService()
