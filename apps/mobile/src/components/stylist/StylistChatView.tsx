@@ -26,6 +26,7 @@ import {
   Platform,
   I18nManager,
   KeyboardAvoidingView,
+  Keyboard,
   Modal,
 } from 'react-native';
 import { Audio } from 'expo-av';
@@ -114,6 +115,41 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
   });
 
   const scrollRef = useRef<ScrollView>(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const onShow = (e: any) => {
+      setKeyboardVisible(true);
+      const kh = e?.endCoordinates?.height || 280;
+      setKeyboardHeight(kh);
+      setTimeout(() => {
+        scrollRef.current?.scrollToEnd({ animated: true });
+      }, 80);
+      setTimeout(() => {
+        scrollRef.current?.scrollToEnd({ animated: true });
+      }, 250);
+    };
+
+    const onHide = () => {
+      setKeyboardVisible(false);
+      setKeyboardHeight(0);
+    };
+
+    const showSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      onShow
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      onHide
+    );
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   useEffect(() => {
     setMessages((prev) => {
@@ -692,7 +728,10 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
       <ScrollView
         ref={scrollRef}
         style={styles.messagesScroll}
-        contentContainerStyle={{ padding: spacing.md, paddingBottom: spacing.xl }}
+        contentContainerStyle={{
+          padding: spacing.md,
+          paddingBottom: keyboardVisible ? Math.max(keyboardHeight + 20, 320) : spacing.xl,
+        }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
@@ -987,6 +1026,14 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
               ]}
               value={inputQuery}
               onChangeText={setInputQuery}
+              onFocus={() => {
+                setTimeout(() => {
+                  scrollRef.current?.scrollToEnd({ animated: true });
+                }, 80);
+                setTimeout(() => {
+                  scrollRef.current?.scrollToEnd({ animated: true });
+                }, 250);
+              }}
               placeholder={
                 isRecording
                   ? t('stylist.listening', { defaultValue: 'Listening...' })
