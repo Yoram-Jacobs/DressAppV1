@@ -326,30 +326,141 @@ def _login_error_redirect(origin: str, reason: str) -> RedirectResponse:
 def _mobile_scheme_redirect(url: str) -> HTMLResponse:
     """Return an HTML page that navigates to a custom-scheme URL.
 
-    Chrome Custom Tabs (and most Android browsers) **block HTTP 3xx
-    redirects to non-http(s) schemes** like ``dressapp://`` as a security
-    measure.  A JavaScript ``window.location.href`` assignment or anchor
-    click IS allowed, so we serve a tiny HTML page that performs the
-    redirect client-side.  A ``<noscript>`` fallback link is provided for
-    edge cases where JS is disabled.
+    Chrome Custom Tabs (and most Android browsers) block automatic
+    script redirects to non-http(s) schemes like ``dressapp://`` without
+    a user gesture. We provide:
+      1. Immediate JavaScript redirect via window.location.replace
+      2. Programmatic click on an anchor tag
+      3. Android Chrome Intent URL fallback (intent://...)
+      4. A prominent, visible, styled "Open DressApp" button for user tap
     """
     import html as _html
-
-    safe_url = _html.escape(url, quote=True)
-    # Use JSON-safe string in JS to prevent injection via token values.
     import json as _json
 
+    safe_url = _html.escape(url, quote=True)
     js_url = _json.dumps(url)
-    page = (
-        "<!DOCTYPE html>"
-        "<html><head><meta charset='utf-8'>"
-        "<title>Redirecting to DressApp…</title></head>"
-        "<body style='font-family:sans-serif;text-align:center;padding:60px'>"
-        f"<p>Returning to DressApp…</p>"
-        f"<script>window.location.href={js_url};</script>"
-        f"<noscript><a href=\"{safe_url}\">Tap here to return to DressApp</a></noscript>"
-        "</body></html>"
-    )
+
+    # Build Android Intent URI if this is a dressapp:// URL
+    intent_url = ""
+    if url.startswith("dressapp://"):
+        path_and_query = url[len("dressapp://"):]
+        intent_url = f"intent://{path_and_query}#Intent;scheme=dressapp;package=com.project.dressapp;end"
+    safe_intent_url = _html.escape(intent_url, quote=True) if intent_url else safe_url
+    js_intent_url = _json.dumps(intent_url if intent_url else url)
+
+    page = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Returning to DressApp</title>
+  <style>
+    * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    body {{
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #FAF8F5;
+      color: #1A1A1A;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      text-align: center;
+    }}
+    .card {{
+      background: #FFFFFF;
+      border: 1px solid #E5E0D8;
+      border-radius: 20px;
+      padding: 36px 24px;
+      max-width: 380px;
+      width: 100%;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }}
+    .spinner {{
+      width: 44px;
+      height: 44px;
+      border: 4px solid #E5E0D8;
+      border-top-color: #2F7972;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }}
+    @keyframes spin {{
+      to {{ transform: rotate(360deg); }}
+    }}
+    h1 {{
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #1A1A1A;
+    }}
+    p {{
+      font-size: 14px;
+      color: #666666;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }}
+    .btn {{
+      display: block;
+      width: 100%;
+      background-color: #2F7972;
+      color: #FFFFFF !important;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 16px;
+      padding: 14px 20px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(47, 121, 114, 0.3);
+      transition: background-color 0.15s ease-in-out;
+    }}
+    .btn:active {{
+      background-color: #24635D;
+    }}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="spinner"></div>
+    <h1>Signed In Successfully!</h1>
+    <p>Returning to DressApp… If the app does not open automatically, tap below:</p>
+    <a id="btn-open" class="btn" href="{safe_url}">Open DressApp</a>
+  </div>
+
+  <script>
+    (function() {{
+      var url = {js_url};
+      var intentUrl = {js_intent_url};
+
+      function triggerRedirect() {{
+        // 1. Try standard custom scheme
+        try {{
+          window.location.replace(url);
+        }} catch (e) {{}}
+
+        // 2. Try click simulation
+        var btn = document.getElementById('btn-open');
+        if (btn) {{
+          try {{ btn.click(); }} catch(e) {{}}
+        }}
+
+        // 3. For Android Chrome, try intent URI
+        if (/Android/i.test(navigator.userAgent) && intentUrl) {{
+          setTimeout(function() {{
+            try {{
+              window.location.href = intentUrl;
+            }} catch(e) {{}}
+          }}, 300);
+        }}
+      }}
+
+      triggerRedirect();
+    }})();
+  </script>
+</body>
+</html>"""
     return HTMLResponse(content=page)
 
 
