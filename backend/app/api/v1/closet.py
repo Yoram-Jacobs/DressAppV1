@@ -4466,7 +4466,7 @@ async def chat_analyse_item(
         "1. 'image_edit': The user is asking to modify, inpaint, remove, or reconstruct elements in the photo.\n"
         "   Examples: 'Remove the shoes', 'Complete the hole where the hand was', 'Remove the metal studs from the jacket\\'s front', 'Remove the hanger', 'Repair the cut-off sleeve', 'Fill the gap in the hem'.\n"
         "   - Set action: 'image_edit'\n"
-        "   - Set image_edit_prompt: A concise, highly specific inpainting / reconstruction directive for the image generative model to edit and isolate the garment cleanly against a solid pure white background (#FFFFFF) with bright high-key lighting, filling the frame and preserving all fabric texture, color fidelity, and silhouette details without dark vignettes or black backgrounds.\n"
+        "   - Set image_edit_prompt: A concise, highly specific inpainting / reconstruction directive for the image generative model to edit and isolate the garment cleanly against the neutral DressApp card background (#F5F2EB) with soft studio lighting, filling the frame and preserving all fabric texture, color fidelity, and silhouette details without dark vignettes or black backgrounds.\n"
         "   - Set reply: A brief, friendly confirmation in the user's language describing what you are modifying.\n\n"
         "2. 'clarification': The user's request for image modification or editing is ambiguous or missing crucial specifics.\n"
         "   - Set action: 'clarification'\n"
@@ -4518,6 +4518,7 @@ async def chat_analyse_item(
     action = decision.get("action") or "answered"
     reply = decision.get("reply") or ""
     image_url_out = None
+    clean_image_url_out = None
     updated_doc: dict[str, Any] = {}
 
     if action == "image_edit":
@@ -4545,8 +4546,22 @@ async def chat_analyse_item(
                 mime = edit_res.get("mime_type", "image/png")
                 image_url_out = f"data:{mime};base64,{edit_res['image_b64']}"
 
-                # Update in-memory reconstructed_image_url
+                # Unbind generated garment from background (transparent clean cutout)
+                try:
+                    from app.services.background_matting import remove_background
+                    gen_raw_bytes = base64.b64decode(edit_res["image_b64"])
+                    clean_res = await remove_background(gen_raw_bytes)
+                    if clean_res.get("success") and clean_res.get("image_png"):
+                        clean_b64 = base64.b64encode(clean_res["image_png"]).decode("ascii")
+                        clean_image_url_out = f"data:image/png;base64,{clean_b64}"
+                except Exception as mat_exc:
+                    logger.warning("Unbinding background in chat-analyse failed: %s", mat_exc)
+
+                # Update in-memory reconstructed_image_url & clean_image_url
                 updated_doc["reconstructed_image_url"] = image_url_out
+                if clean_image_url_out:
+                    updated_doc["clean_image_url"] = clean_image_url_out
+                    updated_doc["clean_image_status"] = "ready"
                 updated_doc["reconstruction_metadata"] = {
                     "method": "nano_banana_chat",
                     "prompt": edit_prompt,
@@ -4576,6 +4591,7 @@ async def chat_analyse_item(
         "reply": reply,
         "action_taken": action,
         "image_url": image_url_out,
+        "clean_image_url": clean_image_url_out,
         "updated_fields": updated_doc if updated_doc else None,
         "item": updated_item,
     }
@@ -4680,11 +4696,15 @@ async def repair_item_image(
         "user_hint": payload.user_hint,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
-    update_doc = {
+    update_doc: dict[str, Any] = {
         "reconstructed_image_url": data_url,
         "reconstruction_metadata": meta,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
+    if out.get("clean_image_url"):
+        update_doc["clean_image_url"] = out["clean_image_url"]
+        update_doc["clean_image_status"] = "ready"
+
     if not preview:
         await db.closet_items.update_one(
             {"id": item_id},
@@ -4694,6 +4714,9 @@ async def repair_item_image(
     else:
         item["reconstructed_image_url"] = data_url
         item["reconstruction_metadata"] = meta
+        if out.get("clean_image_url"):
+            item["clean_image_url"] = out["clean_image_url"]
+            item["clean_image_status"] = "ready"
         
     return {"item": item, "reconstruction": out, "applied": True}
 
@@ -5258,6 +5281,20 @@ async def update_item(
     patch = payload.model_dump(exclude_none=True)
     if "reconstructed_image_url" in patch and patch["reconstructed_image_url"]:
         patch["reconstructed_image_url"] = compress_image_url_or_b64(patch["reconstructed_image_url"], max_dim=1024, quality=75)
+        # If clean_image_url is not provided, unbind the reconstructed image from its background
+        if not patch.get("clean_image_url"):
+            try:
+                from app.services.background_matting import remove_background
+                recon_val = patch["reconstructed_image_url"]
+                recon_b64 = recon_val.split(",", 1)[1] if "," in recon_val else recon_val
+                raw_recon = base64.b64decode(recon_b64)
+                mat_res = await remove_background(raw_recon)
+                if mat_res.get("success") and mat_res.get("image_png"):
+                    cln_b64 = base64.b64encode(mat_res["image_png"]).decode("ascii")
+                    patch["clean_image_url"] = f"data:image/png;base64,{cln_b64}"
+                    patch["clean_image_status"] = "ready"
+            except Exception as bg_exc:
+                logger.warning("Unbinding background in update_item failed: %s", bg_exc)
     # The `clear_reconstruction` flag is a command, not a value we persist.
     # Pop it + translate into explicit null-sets on the related columns.
     if patch.pop("clear_reconstruction", False):
@@ -5889,19 +5926,37 @@ async def edit_item_image(
     variant_url = (
         f"data:{edit.get('mime_type', 'image/png')};base64,{edit['image_b64']}"
     )
+    # Unbind generated clean image from background (transparent clean cutout)
+    clean_variant_url: str | None = None
+    try:
+        from app.services.background_matting import remove_background
+        gen_bytes = base64.b64decode(edit["image_b64"])
+        matted = await remove_background(gen_bytes)
+        if matted.get("success") and matted.get("image_png"):
+            clean_b64 = base64.b64encode(matted["image_png"]).decode("ascii")
+            clean_variant_url = f"data:image/png;base64,{clean_b64}"
+    except Exception as mat_exc:
+        logger.warning("Unbinding background in edit_item_image failed: %s", mat_exc)
+
     variants = list(item.get("variants") or [])
     variants.append(
         {
             "prompt": prompt,
             "url": variant_url,
+            "clean_url": clean_variant_url,
             "model": edit["model_used"],
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
     )
+    update_doc: dict[str, Any] = {"variants": variants, "reconstructed_image_url": variant_url}
+    if clean_variant_url:
+        update_doc["clean_image_url"] = clean_variant_url
+        update_doc["clean_image_status"] = "ready"
+
     await db.closet_items.update_one(
-        {"id": item_id, "user_id": user["id"]}, {"$set": {"variants": variants}}
+        {"id": item_id, "user_id": user["id"]}, {"$set": update_doc}
     )
-    return {"variant_url": variant_url, "variants": variants}
+    return {"variant_url": variant_url, "clean_url": clean_variant_url, "variants": variants}
 
 
 @router.post("/extract-pdf-text")

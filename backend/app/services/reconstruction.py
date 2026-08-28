@@ -187,7 +187,7 @@ def _build_reconstruction_prompt(analysis: dict[str, Any]) -> str:
     prompt = (
         f"High-fidelity editorial product photograph of a complete, "
         f"full-length {descriptor}"
-        f"{extras_str}. Studio lighting, plain off-white backdrop, "
+        f"{extras_str}. Studio lighting, neutral DressApp card background (#F5F2EB), "
         "garment-only product shot, centered composition, sharp focus, "
         "photorealistic, preserve fabric texture and pattern details, "
         "no text, no logos, no watermarks."
@@ -227,8 +227,8 @@ async def reconstruct(
             # Ensure it is in RGBA mode for alpha compositing
             if matte_img.mode != "RGBA":
                 matte_img = matte_img.convert("RGBA")
-            off_white = Image.new("RGBA", matte_img.size, (245, 245, 245, 255))
-            composited = Image.alpha_composite(off_white, matte_img).convert("RGB")
+            dressapp_card_bg = Image.new("RGBA", matte_img.size, (245, 242, 235, 255))
+            composited = Image.alpha_composite(dressapp_card_bg, matte_img).convert("RGB")
             matted_io = io.BytesIO()
             composited.save(matted_io, format="JPEG", quality=95)
             crop_bytes = matted_io.getvalue()
@@ -324,9 +324,25 @@ async def reconstruct(
                 repr(exc)[:160],
             )
 
+    # Unbind generated garment from background to provide a transparent clean cutout
+    clean_image_b64: str | None = None
+    clean_image_url: str | None = None
+    try:
+        from app.services.background_matting import remove_background
+        import base64 as _b64
+        gen_raw = _b64.b64decode(image_b64)
+        clean_res = await remove_background(gen_raw)
+        if clean_res.get("success") and clean_res.get("image_png"):
+            clean_image_b64 = _b64.b64encode(clean_res["image_png"]).decode("ascii")
+            clean_image_url = f"data:image/png;base64,{clean_image_b64}"
+    except Exception as unbind_exc:
+        logger.warning("Unbinding reconstructed garment from background failed: %s", repr(unbind_exc))
+
     return {
         "image_b64": image_b64,
         "mime_type": out.get("mime_type", "image/png"),
+        "clean_image_b64": clean_image_b64,
+        "clean_image_url": clean_image_url,
         "prompt": prompt,
         "model": out.get("model_used"),
         "engine": using,

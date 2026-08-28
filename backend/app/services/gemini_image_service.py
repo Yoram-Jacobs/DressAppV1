@@ -224,7 +224,7 @@ class GeminiImageService:
         composed = (
             f"Commercial fashion catalog product photograph of a complete, isolated "
             f"{descriptor}. {user_prompt}. Centered composition filling the frame, "
-            "pure clean solid white background (#FFFFFF), bright high-key studio lighting, "
+            "neutral DressApp card background (#F5F2EB / light warm neutral backdrop), studio lighting, "
             "crisp edges, photorealistic, preserve all fabric texture, color fidelity, "
             "and silhouette details, no dark shadows, no dark vignette, no black backdrop, "
             "no people, no mannequin body, no text, no logos, no watermarks."
