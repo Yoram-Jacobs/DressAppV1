@@ -425,7 +425,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <ScrollView
@@ -433,6 +433,8 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
         style={styles.messagesScroll}
         contentContainerStyle={{ paddingBottom: spacing.lg }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
         {messages.map((msg) => {
           const isUser = msg.role === 'user';
@@ -629,6 +631,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={[styles.quickPromptsRow, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}
         >
           {[
