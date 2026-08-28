@@ -66,8 +66,33 @@ function CaptureFab(props: any) {
   );
 }
 
+import { Image } from 'react-native';
+import { useUserStore } from '@mobile/lib/stores';
+
 // Tab icon helper
-function tabIcon(source: string, focused: boolean, color: string) {
+function tabIcon(source: string, focused: boolean, color: string, facePhotoUrl?: string | null) {
+  if (source === 'me' && facePhotoUrl) {
+    return (
+      <View
+        style={{
+          width: 24,
+          height: 24,
+          borderRadius: 12,
+          borderWidth: focused ? 2 : 1,
+          borderColor: focused ? color : 'rgba(0,0,0,0.18)',
+          overflow: 'hidden',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Image
+          source={{ uri: facePhotoUrl }}
+          style={{ width: '100%', height: '100%' }}
+          resizeMode="cover"
+        />
+      </View>
+    );
+  }
   let iconName = source;
   if (source === 'hanger') {
     iconName = 'hanger';
@@ -89,6 +114,15 @@ export function MainTabs() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const bottomInset = Math.max(insets.bottom, 0);
+  const { user } = useUserStore();
+  const facePhotoUrl =
+    user?.face_photo_url ||
+    user?.face_photo ||
+    user?.avatar_url ||
+    user?.photo_url ||
+    user?.picture ||
+    user?.profile_picture ||
+    null;
 
   return (
     <Tab.Navigator
@@ -163,7 +197,7 @@ export function MainTabs() {
         component={MeStack}
         options={{
           tabBarLabel: t('nav.me', { defaultValue: 'Me' }),
-          tabBarIcon: ({ focused, color }) => tabIcon('me', focused, color),
+          tabBarIcon: ({ focused, color }) => tabIcon('me', focused, color, facePhotoUrl),
         }}
       />
     </Tab.Navigator>
