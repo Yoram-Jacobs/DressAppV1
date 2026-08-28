@@ -6,7 +6,7 @@
  *   - Scrollable message history with user and assistant message bubbles
  *   - Quick action shortcuts: Daily Suggestion, Plan Event Outfit, Trend-Scout, Ask a professional
  *   - Image picker with Take Photo (camera), Gallery (photo library), and Wardrobe (closet item)
- *   - Plan Event Outfit modal dialog with Event Name, Location, Date/Time, and Dress Code
+ *   - Plan Event Outfit modal dialog with Date Picker, Time Picker, Event Name, Location, and Dress Code
  *   - Outfit recommendation cards with harmony badges, garment thumbnails, and save actions
  *   - Voice recording with audio mic
  *   - Automatic scroll to bottom on new messages
@@ -108,8 +108,8 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
   const [eventForm, setEventForm] = useState({
     event_name: '',
     location: '',
-    date: '',
-    time: '',
+    date: new Date().toISOString().split('T')[0],
+    time: '19:00',
     prompt: '',
   });
 
@@ -164,6 +164,35 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
     });
   };
 
+  // Helper for preset dates
+  const getPresetDate = (type: 'today' | 'tomorrow' | 'saturday' | 'sunday' | 'nextWeek') => {
+    const d = new Date();
+    if (type === 'today') {
+      return d.toISOString().split('T')[0];
+    }
+    if (type === 'tomorrow') {
+      d.setDate(d.getDate() + 1);
+      return d.toISOString().split('T')[0];
+    }
+    if (type === 'saturday') {
+      const day = d.getDay();
+      const diff = (6 - day + 7) % 7 || 7;
+      d.setDate(d.getDate() + diff);
+      return d.toISOString().split('T')[0];
+    }
+    if (type === 'sunday') {
+      const day = d.getDay();
+      const diff = (7 - day + 7) % 7 || 7;
+      d.setDate(d.getDate() + diff);
+      return d.toISOString().split('T')[0];
+    }
+    if (type === 'nextWeek') {
+      d.setDate(d.getDate() + 7);
+      return d.toISOString().split('T')[0];
+    }
+    return '';
+  };
+
   // Initialize session and load history
   useEffect(() => {
     (async () => {
@@ -181,7 +210,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                 rawTxt.toLowerCase().includes('trouble putting that recommendation together') ||
                 rawTxt.toLowerCase().includes('rephrasing') ||
                 rawTxt.includes('התקשיתי בהרכבת ההמלצה') ||
-                rawTxt.includes('משكلة في إعداد التوصية');
+                rawTxt.includes('مشكلة في إعداد التوصية');
               const content = isFallbackError
                 ? t('stylist.errorAdvice', {
                     defaultValue:
@@ -278,52 +307,52 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
     setAttachedClosetItem(null);
   };
 
-  // Shortcuts
+  // Shortcuts: Daily Suggestion (follows web handleTriggerScheduled logic)
   const handleTriggerDailySuggestion = async () => {
     if (loading) return;
     setLoading(true);
+    const optimisticId = `tmp-sched-${Date.now()}`;
     const userMsg: ChatMessage = {
-      id: `msg_${Date.now()}`,
+      id: optimisticId,
       role: 'user',
-      content: `✨ ${t('stylist.dailySuggestion', { defaultValue: 'Daily Suggestion' })}`,
+      content: t('stylist.triggerScheduledRequest', { defaultValue: "Get tomorrow's scheduled outfit proposals" }),
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     setMessages((prev) => [...prev, userMsg]);
 
     try {
       const res = await api.triggerScheduledProposal();
-      const outfit = res?.outfit || res;
-      const garments = outfit?.garments || outfit?.items || [];
-      const outfitCard: StylistOutfitCard = {
-        id: outfit?.id || `daily_${Date.now()}`,
-        name: outfit?.name || t('stylist.todayProposal', { defaultValue: "Today's Outfit" }),
-        occasion: outfit?.occasion || outfit?.target_occasion || 'Daily',
-        harmony_score: outfit?.harmony_score || 95,
-        reasoning: outfit?.reasoning || outfit?.description || '',
-        garments,
-        items: garments,
-      };
-
+      const advice = res?.advice || res;
+      const outfitRecs = advice?.outfit_recommendations || (advice?.garments ? [advice] : []);
+      const newId = `sched-${Date.now()}`;
       const assistantMsg: ChatMessage = {
-        id: `msg_${Date.now() + 1}`,
+        id: newId,
         role: 'assistant',
         content:
-          outfit?.description ||
+          advice?.reasoning_summary ||
+          advice?.spoken_reply ||
           t('stylist.dailyProposalSuccess', {
             defaultValue: 'Here is your curated look for today based on your local weather and schedule:',
           }),
-        outfits: hydrateOutfits([outfitCard]),
+        outfits: hydrateOutfits(outfitRecs),
+        shopping_suggestions: advice?.shopping_suggestions || [],
+        do_dont: advice?.do_dont || [],
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err: any) {
-      console.warn('Daily proposal fallback to chat:', err);
-      await handleSendText(t('stylist.dailyProposalPrompt', { defaultValue: 'Suggest an outfit for today based on current weather and schedule.' }));
+      console.warn('Daily proposal error:', err);
+      Alert.alert(
+        t('common.error', { defaultValue: 'Error' }),
+        err?.response?.data?.detail || t('stylist.proposalFailed', { defaultValue: 'Failed to generate daily proposals.' })
+      );
+      setMessages((prev) => prev.filter((x) => x.id !== optimisticId));
     } finally {
       setLoading(false);
     }
   };
 
+  // Shortcuts: Plan Event Outfit (follows web handleTriggerEvent logic)
   const handleTriggerEventProposal = async () => {
     if (!eventForm.prompt.trim() || loading) return;
     const { event_name, location, date, time, prompt } = eventForm;
@@ -336,50 +365,64 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
     const timeText = time.trim() ? ` at ${time.trim()}` : '';
     const userText = `Suggest event outfits for "${eventName}"${locText}${dateText}${timeText}. Details: "${prompt.trim()}".`;
 
+    const optimisticId = `tmp-event-${Date.now()}`;
     const userMsg: ChatMessage = {
-      id: `msg_${Date.now()}`,
+      id: optimisticId,
       role: 'user',
       content: userText,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     setMessages((prev) => [...prev, userMsg]);
-    setEventForm({ event_name: '', location: '', date: '', time: '', prompt: '' });
+    setEventForm({
+      event_name: '',
+      location: '',
+      date: new Date().toISOString().split('T')[0],
+      time: '19:00',
+      prompt: '',
+    });
 
     try {
       const res = await api.triggerEventProposal({
-        event_name: event_name.trim() || null,
-        location: location.trim() || null,
+        prompt: prompt.trim(),
         date: date.trim() || null,
         time: time.trim() || null,
-        prompt: prompt.trim(),
+        location: location.trim() || null,
+        event_name: event_name.trim() || null,
       });
 
-      const outfit = res?.outfit || res;
-      const rawRecs = res?.outfit_recommendations || (outfit ? [outfit] : []);
+      const advice = res?.advice || res;
+      const outfitRecs = advice?.outfit_recommendations || (advice?.garments ? [advice] : []);
+      const newId = `event-${Date.now()}`;
       const assistantMsg: ChatMessage = {
-        id: `msg_${Date.now() + 1}`,
+        id: newId,
         role: 'assistant',
         content:
-          res?.reasoning ||
-          outfit?.reasoning ||
+          advice?.reasoning_summary ||
+          advice?.spoken_reply ||
           t('stylist.eventProposalSuccess', { defaultValue: `Here is a curated look for ${eventName}:` }),
         outfits: hydrateOutfits(
-          rawRecs.map((o: any, idx: number) => ({
+          outfitRecs.map((o: any, idx: number) => ({
             id: o.id || `event_outfit_${idx}`,
             name: o.name || eventName,
             occasion: eventName,
             harmony_score: o.harmony_score || 95,
-            reasoning: o.reasoning || o.description || prompt,
+            reasoning: o.why || o.reasoning || o.description || prompt,
             garments: o.garments || o.items || [],
             items: o.garments || o.items || [],
           }))
         ),
+        shopping_suggestions: advice?.shopping_suggestions || [],
+        do_dont: advice?.do_dont || [],
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err: any) {
-      console.warn('Event proposal fallback to chat:', err);
-      await handleSendText(userText);
+      console.warn('Event proposal error:', err);
+      Alert.alert(
+        t('common.error', { defaultValue: 'Error' }),
+        err?.response?.data?.detail || t('stylist.proposalFailed', { defaultValue: 'Failed to generate event proposals.' })
+      );
+      setMessages((prev) => prev.filter((x) => x.id !== optimisticId));
     } finally {
       setLoading(false);
     }
@@ -583,7 +626,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
         rawText.toLowerCase().includes('trouble putting that recommendation together') ||
         rawText.toLowerCase().includes('rephrasing') ||
         rawText.includes('התקשיתי בהרכבת ההמלצה') ||
-        rawText.includes('مشكلة في إعداد التوصية');
+        rawText.includes('משكلة في إعداد التوصية');
 
       const content = isFallbackError
         ? t('stylist.errorAdvice', {
@@ -666,7 +709,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
               ]}
             >
               {!isUser && (
-                <View style={[styles.avatarIconWrap, { backgroundColor: colors.primary }]}>
+                <View style={[styles.avatarIconWrap, { backgroundColor: colors.accent }]}>
                   <Lucide.Sparkles size={14} color="#FFF" />
                 </View>
               )}
@@ -682,7 +725,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                 <Text
                   style={[
                     styles.messageText,
-                    { color: isUser ? '#FFF' : colors.foreground, textAlign: isRtl ? 'right' : 'left' },
+                    { color: isUser ? colors.primaryFg : colors.foreground, textAlign: isRtl ? 'right' : 'left' },
                   ]}
                 >
                   {msg.content}
@@ -699,95 +742,89 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                   </Text>
                 )}
 
-                {/* Outfit Cards in Assistant Message */}
+                {/* Hydrated Outfit Recommendations */}
                 {msg.outfits && msg.outfits.length > 0 && (
                   <View style={styles.outfitsContainer}>
-                    {msg.outfits.map((outfit, oIdx) => {
-                      const garments = outfit.garments ?? outfit.items ?? [];
-                      return (
-                        <View
-                          key={oIdx}
-                          style={[styles.outfitCard, { backgroundColor: colors.secondary, borderColor: colors.border }]}
-                        >
-                          <View style={[styles.outfitCardHeader, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}>
-                            <View style={{ flex: 1 }}>
-                              <Text style={[styles.outfitCardName, { color: colors.foreground, textAlign: isRtl ? 'right' : 'left' }]}>
-                                {outfit.name || 'Curated Look'}
-                              </Text>
-                              {outfit.occasion ? (
-                                <Text style={[styles.outfitOccasion, { color: colors.accent, textAlign: isRtl ? 'right' : 'left' }]}>
-                                  {outfit.occasion}
-                                </Text>
-                              ) : null}
-                            </View>
-
-                            {outfit.harmony_score ? (
-                              <View style={styles.harmonyPill}>
-                                <Text style={styles.harmonyText}>
-                                  {t('stylist.harmonyPercent', { score: outfit.harmony_score, defaultValue: `${outfit.harmony_score}% Harmony` })}
-                                </Text>
-                              </View>
-                            ) : null}
-                          </View>
-
-                          {outfit.reasoning ? (
-                            <Text style={[styles.outfitReasoning, { color: colors.mutedFg, textAlign: isRtl ? 'right' : 'left' }]}>
-                              {outfit.reasoning}
+                    {msg.outfits.map((outfit, oIdx) => (
+                      <View
+                        key={outfit.id || oIdx}
+                        style={[styles.outfitCard, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+                      >
+                        <View style={[styles.outfitCardHeader, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={[styles.outfitCardName, { color: colors.foreground, textAlign: isRtl ? 'right' : 'left' }]}>
+                              {outfit.name || t('stylist.curatedLook', { defaultValue: 'Curated Look' })}
                             </Text>
-                          ) : null}
-
-                          {/* Garment Thumbnails Row */}
-                          {garments.length > 0 && (
-                            <ScrollView
-                              horizontal
-                              showsHorizontalScrollIndicator={false}
-                              contentContainerStyle={[styles.garmentThumbsRow, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}
-                            >
-                              {garments.map((g, gIdx) => {
-                                const img = g.thumbnail_data_url || g.image_url;
-                                return (
-                                  <View key={gIdx} style={[styles.thumbBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                                    {img ? (
-                                      <Image source={{ uri: img }} style={styles.thumbImg} resizeMode="contain" />
-                                    ) : (
-                                      <Lucide.Shirt size={18} color={colors.mutedFg} />
-                                    )}
-                                    <Text style={[styles.thumbRole, { color: colors.mutedFg }]} numberOfLines={1}>
-                                      {g.role || g.name || 'Item'}
-                                    </Text>
-                                  </View>
-                                );
-                              })}
-                            </ScrollView>
-                          )}
-
-                          {/* Action Buttons */}
-                          <View style={[styles.outfitActions, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}>
-                            <TouchableOpacity
-                              style={[styles.saveOutfitBtn, { backgroundColor: colors.primary }]}
-                              onPress={() => handleSaveOutfit(outfit)}
-                            >
-                              <Lucide.BookmarkCheck size={13} color="#FFF" />
-                              <Text style={styles.saveOutfitBtnText}>
-                                {t('stylist.saveLook', { defaultValue: 'Save Look' })}
+                            {outfit.occasion && (
+                              <Text style={[styles.outfitOccasion, { color: colors.mutedFg, textAlign: isRtl ? 'right' : 'left' }]}>
+                                {outfit.occasion}
                               </Text>
-                            </TouchableOpacity>
-
-                            {onSelectOutfitForTryOn && (
-                              <TouchableOpacity
-                                style={[styles.tryOnBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-                                onPress={() => onSelectOutfitForTryOn(outfit)}
-                              >
-                                <Lucide.UserCheck size={13} color={colors.foreground} />
-                                <Text style={[styles.tryOnBtnText, { color: colors.foreground }]}>
-                                  {t('stylist.tryOn', { defaultValue: 'Try On' })}
-                                </Text>
-                              </TouchableOpacity>
                             )}
                           </View>
+                          {outfit.harmony_score !== undefined && (
+                            <View style={styles.harmonyPill}>
+                              <Text style={styles.harmonyText}>{outfit.harmony_score}% Harmony</Text>
+                            </View>
+                          )}
                         </View>
-                      );
-                    })}
+
+                        {outfit.reasoning ? (
+                          <Text style={[styles.outfitReasoning, { color: colors.foreground, textAlign: isRtl ? 'right' : 'left' }]}>
+                            {outfit.reasoning}
+                          </Text>
+                        ) : null}
+
+                        {/* Garment Thumbs */}
+                        {outfit.garments && outfit.garments.length > 0 && (
+                          <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={[styles.garmentThumbsRow, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}
+                          >
+                            {outfit.garments.map((g, gIdx) => {
+                              const img = g.image_url || g.thumbnail_data_url;
+                              return (
+                                <View key={g.id || gIdx} style={[styles.thumbBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                                  {img ? (
+                                    <Image source={{ uri: img }} style={styles.thumbImg} resizeMode="contain" />
+                                  ) : (
+                                    <Lucide.Shirt size={18} color={colors.mutedFg} />
+                                  )}
+                                  <Text style={[styles.thumbRole, { color: colors.mutedFg }]} numberOfLines={1}>
+                                    {g.role || g.name || 'item'}
+                                  </Text>
+                                </View>
+                              );
+                            })}
+                          </ScrollView>
+                        )}
+
+                        {/* Action buttons */}
+                        <View style={[styles.outfitActions, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}>
+                          <TouchableOpacity
+                            style={[styles.saveOutfitBtn, { backgroundColor: colors.accent }]}
+                            onPress={() => handleSaveOutfit(outfit)}
+                          >
+                            <Lucide.BookmarkCheck size={14} color="#FFF" />
+                            <Text style={styles.saveOutfitBtnText}>
+                              {t('stylist.saveLook', { defaultValue: 'Save Look' })}
+                            </Text>
+                          </TouchableOpacity>
+
+                          {onSelectOutfitForTryOn && (
+                            <TouchableOpacity
+                              style={[styles.tryOnBtn, { backgroundColor: colors.card, borderColor: colors.accent }]}
+                              onPress={() => onSelectOutfitForTryOn(outfit)}
+                            >
+                              <Lucide.UserCheck size={14} color={colors.accent} />
+                              <Text style={[styles.tryOnBtnText, { color: colors.accent }]}>
+                                {t('stylist.virtualFitting', { defaultValue: 'Try On' })}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      </View>
+                    ))}
                   </View>
                 )}
 
@@ -795,7 +832,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                 {msg.shopping_suggestions && msg.shopping_suggestions.length > 0 && (
                   <View style={[styles.shoppingBox, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
                     <View style={[styles.sectionHeaderRow, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}>
-                      <Lucide.ShoppingBag size={14} color={colors.primary} />
+                      <Lucide.ShoppingBag size={14} color={colors.accent} />
                       <Text style={[styles.sectionHeading, { color: colors.foreground }]}>
                         {t('stylist.shoppingSuggestions', { defaultValue: 'Shopping Suggestions' })}
                       </Text>
@@ -988,7 +1025,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
         </View>
       </ScrollView>
 
-      {/* Plan Event Outfit Modal */}
+      {/* Plan Event Outfit Modal with Interactive Date and Time Pickers */}
       <Modal visible={eventModalOpen} animationType="slide" transparent>
         <KeyboardAvoidingView
           style={styles.modalBackdrop}
@@ -1008,6 +1045,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingVertical: 8 }}>
+              {/* Event Name */}
               <View>
                 <Text style={[styles.fieldLabel, { color: colors.foreground, textAlign: isRtl ? 'right' : 'left' }]}>
                   {t('stylist.eventName', { defaultValue: 'Event Name' })}
@@ -1024,6 +1062,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                 />
               </View>
 
+              {/* Location */}
               <View>
                 <Text style={[styles.fieldLabel, { color: colors.foreground, textAlign: isRtl ? 'right' : 'left' }]}>
                   {t('stylist.location', { defaultValue: 'Location' })}
@@ -1040,39 +1079,117 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                 />
               </View>
 
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.fieldLabel, { color: colors.foreground, textAlign: isRtl ? 'right' : 'left' }]}>
+              {/* Date Picker Section */}
+              <View>
+                <View style={[styles.fieldLabelRow, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}>
+                  <Lucide.Calendar size={13} color={colors.accent} />
+                  <Text style={[styles.fieldLabel, { color: colors.foreground }]}>
                     {t('common.date', { defaultValue: 'Date' })}
                   </Text>
-                  <TextInput
-                    style={[
-                      styles.modalInput,
-                      { backgroundColor: colors.secondary, color: colors.foreground, borderColor: colors.border, textAlign: isRtl ? 'right' : 'left' },
-                    ]}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor={colors.mutedFg}
-                    value={eventForm.date}
-                    onChangeText={(val) => setEventForm((prev) => ({ ...prev, date: val }))}
-                  />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.fieldLabel, { color: colors.foreground, textAlign: isRtl ? 'right' : 'left' }]}>
-                    {t('common.time', { defaultValue: 'Time' })}
-                  </Text>
-                  <TextInput
-                    style={[
-                      styles.modalInput,
-                      { backgroundColor: colors.secondary, color: colors.foreground, borderColor: colors.border, textAlign: isRtl ? 'right' : 'left' },
-                    ]}
-                    placeholder="HH:MM"
-                    placeholderTextColor={colors.mutedFg}
-                    value={eventForm.time}
-                    onChangeText={(val) => setEventForm((prev) => ({ ...prev, time: val }))}
-                  />
-                </View>
+
+                {/* Quick Date Presets */}
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={[styles.presetsScroll, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}
+                >
+                  {[
+                    { label: t('common.today', { defaultValue: 'Today' }), val: getPresetDate('today') },
+                    { label: t('common.tomorrow', { defaultValue: 'Tomorrow' }), val: getPresetDate('tomorrow') },
+                    { label: t('common.saturday', { defaultValue: 'Saturday' }), val: getPresetDate('saturday') },
+                    { label: t('common.sunday', { defaultValue: 'Sunday' }), val: getPresetDate('sunday') },
+                    { label: t('common.nextWeek', { defaultValue: 'Next Week' }), val: getPresetDate('nextWeek') },
+                  ].map((p) => {
+                    const isSelected = eventForm.date === p.val;
+                    return (
+                      <TouchableOpacity
+                        key={p.label}
+                        style={[
+                          styles.presetChip,
+                          {
+                            backgroundColor: isSelected ? colors.primary : colors.secondary,
+                            borderColor: isSelected ? colors.primary : colors.border,
+                          },
+                        ]}
+                        onPress={() => setEventForm((prev) => ({ ...prev, date: p.val }))}
+                      >
+                        <Text style={[styles.presetChipText, { color: isSelected ? '#FFF' : colors.foreground }]}>
+                          {p.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+
+                <TextInput
+                  style={[
+                    styles.modalInput,
+                    { backgroundColor: colors.secondary, color: colors.foreground, borderColor: colors.border, textAlign: isRtl ? 'right' : 'left' },
+                  ]}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={colors.mutedFg}
+                  value={eventForm.date}
+                  onChangeText={(val) => setEventForm((prev) => ({ ...prev, date: val }))}
+                />
               </View>
 
+              {/* Time Picker Section */}
+              <View>
+                <View style={[styles.fieldLabelRow, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}>
+                  <Lucide.Clock size={13} color={colors.accent} />
+                  <Text style={[styles.fieldLabel, { color: colors.foreground }]}>
+                    {t('common.time', { defaultValue: 'Time' })}
+                  </Text>
+                </View>
+
+                {/* Quick Time Presets */}
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={[styles.presetsScroll, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}
+                >
+                  {[
+                    { label: t('stylist.morning', { defaultValue: 'Morning' }) + ' 09:00', val: '09:00' },
+                    { label: t('stylist.lunch', { defaultValue: 'Noon' }) + ' 12:30', val: '12:30' },
+                    { label: t('stylist.afternoon', { defaultValue: 'Afternoon' }) + ' 16:00', val: '16:00' },
+                    { label: t('stylist.evening', { defaultValue: 'Evening' }) + ' 19:30', val: '19:30' },
+                    { label: t('stylist.night', { defaultValue: 'Night' }) + ' 21:00', val: '21:00' },
+                  ].map((p) => {
+                    const isSelected = eventForm.time === p.val;
+                    return (
+                      <TouchableOpacity
+                        key={p.label}
+                        style={[
+                          styles.presetChip,
+                          {
+                            backgroundColor: isSelected ? colors.primary : colors.secondary,
+                            borderColor: isSelected ? colors.primary : colors.border,
+                          },
+                        ]}
+                        onPress={() => setEventForm((prev) => ({ ...prev, time: p.val }))}
+                      >
+                        <Text style={[styles.presetChipText, { color: isSelected ? '#FFF' : colors.foreground }]}>
+                          {p.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+
+                <TextInput
+                  style={[
+                    styles.modalInput,
+                    { backgroundColor: colors.secondary, color: colors.foreground, borderColor: colors.border, textAlign: isRtl ? 'right' : 'left' },
+                  ]}
+                  placeholder="HH:MM"
+                  placeholderTextColor={colors.mutedFg}
+                  value={eventForm.time}
+                  onChangeText={(val) => setEventForm((prev) => ({ ...prev, time: val }))}
+                />
+              </View>
+
+              {/* Dress Code / Demands */}
               <View>
                 <Text style={[styles.fieldLabel, { color: colors.foreground, textAlign: isRtl ? 'right' : 'left' }]}>
                   {t('stylist.dressCodeDemands', { defaultValue: 'Dress Code / Demands' })} *
@@ -1126,42 +1243,44 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Image Source Options Modal */}
+      {/* Image Picker Options Modal */}
       <Modal visible={imagePickerModalOpen} animationType="fade" transparent>
-        <TouchableOpacity
-          style={styles.modalBackdrop}
-          activeOpacity={1}
-          onPress={() => setImagePickerModalOpen(false)}
-        >
+        <View style={styles.modalBackdrop}>
           <View style={[styles.pickerOptionsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[styles.pickerTitle, { color: colors.foreground }]}>
-              {t('stylist.attachImageTitle', { defaultValue: 'Attach Image for Stylist' })}
+              {t('stylist.attachImageTitle', { defaultValue: 'Attach Image / Garment' })}
             </Text>
 
-            <TouchableOpacity style={styles.pickerOptionRow} onPress={handleTakePhoto}>
-              <View style={[styles.pickerIconWrap, { backgroundColor: colors.secondary }]}>
-                <Lucide.Camera size={20} color={colors.accent} />
+            <TouchableOpacity
+              style={[styles.pickerOptionRow, { borderBottomColor: colors.border, borderBottomWidth: 1 }]}
+              onPress={handleTakePhoto}
+            >
+              <View style={[styles.pickerIconWrap, { backgroundColor: 'rgba(31, 111, 107, 0.12)' }]}>
+                <Lucide.Camera size={22} color={colors.accent} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.pickerOptionLabel, { color: colors.foreground }]}>
+                <Text style={[styles.pickerOptionLabel, { color: colors.foreground, textAlign: isRtl ? 'right' : 'left' }]}>
                   {t('addItem.takePhoto', { defaultValue: 'Take Photo' })}
                 </Text>
-                <Text style={[styles.pickerOptionSub, { color: colors.mutedFg }]}>
-                  {t('stylist.takePhotoSub', { defaultValue: 'Snap garment or fit with camera' })}
+                <Text style={[styles.pickerOptionSub, { color: colors.mutedFg, textAlign: isRtl ? 'right' : 'left' }]}>
+                  {t('stylist.takePhotoSub', { defaultValue: 'Use camera to snap clothes or inspiration' })}
                 </Text>
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.pickerOptionRow} onPress={handlePickImageLibrary}>
-              <View style={[styles.pickerIconWrap, { backgroundColor: colors.secondary }]}>
-                <Lucide.Image size={20} color={colors.accent} />
+            <TouchableOpacity
+              style={[styles.pickerOptionRow, { borderBottomColor: colors.border, borderBottomWidth: 1 }]}
+              onPress={handlePickImageLibrary}
+            >
+              <View style={[styles.pickerIconWrap, { backgroundColor: 'rgba(31, 111, 107, 0.12)' }]}>
+                <Lucide.Image size={22} color={colors.accent} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.pickerOptionLabel, { color: colors.foreground }]}>
+                <Text style={[styles.pickerOptionLabel, { color: colors.foreground, textAlign: isRtl ? 'right' : 'left' }]}>
                   {t('addItem.chooseFromLibrary', { defaultValue: 'Pick from Photos' })}
                 </Text>
-                <Text style={[styles.pickerOptionSub, { color: colors.mutedFg }]}>
-                  {t('stylist.chooseFromLibrarySub', { defaultValue: 'Select from device gallery' })}
+                <Text style={[styles.pickerOptionSub, { color: colors.mutedFg, textAlign: isRtl ? 'right' : 'left' }]}>
+                  {t('stylist.chooseFromLibrarySub', { defaultValue: 'Choose image from gallery' })}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -1173,30 +1292,42 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                 setClosetPickerModalOpen(true);
               }}
             >
-              <View style={[styles.pickerIconWrap, { backgroundColor: colors.secondary }]}>
-                <Lucide.Shirt size={20} color={colors.accent} />
+              <View style={[styles.pickerIconWrap, { backgroundColor: 'rgba(31, 111, 107, 0.12)' }]}>
+                <Lucide.Shirt size={22} color={colors.accent} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.pickerOptionLabel, { color: colors.foreground }]}>
+                <Text style={[styles.pickerOptionLabel, { color: colors.foreground, textAlign: isRtl ? 'right' : 'left' }]}>
                   {t('stylist.pickFromCloset', { defaultValue: 'Pick from Closet' })}
                 </Text>
-                <Text style={[styles.pickerOptionSub, { color: colors.mutedFg }]}>
-                  {t('stylist.pickFromClosetSub', { defaultValue: 'Choose an item from your wardrobe' })}
+                <Text style={[styles.pickerOptionSub, { color: colors.mutedFg, textAlign: isRtl ? 'right' : 'left' }]}>
+                  {t('stylist.pickFromClosetSub', { defaultValue: 'Select one of your saved garments' })}
                 </Text>
               </View>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modalCancelBtn, { borderColor: colors.border, marginTop: 8, alignItems: 'center' }]}
+              onPress={() => setImagePickerModalOpen(false)}
+            >
+              <Text style={[styles.modalCancelText, { color: colors.foreground }]}>
+                {t('common.cancel', { defaultValue: 'Cancel' })}
+              </Text>
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
 
-      {/* Closet Item Picker Modal */}
+      {/* Closet Garment Picker Modal */}
       <Modal visible={closetPickerModalOpen} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
           <View style={[styles.closetPickerCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={[styles.modalHeader, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}>
-              <Text style={[styles.modalTitle, { color: colors.foreground }]}>
-                {t('stylist.selectClosetItem', { defaultValue: 'Select Wardrobe Item' })}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Lucide.Shirt size={20} color={colors.accent} />
+                <Text style={[styles.modalTitle, { color: colors.foreground }]}>
+                  {t('stylist.selectClosetItem', { defaultValue: 'Select Closet Item' })}
+                </Text>
+              </View>
               <TouchableOpacity onPress={() => setClosetPickerModalOpen(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Lucide.X size={20} color={colors.foreground} />
               </TouchableOpacity>
@@ -1575,10 +1706,31 @@ const styles = StyleSheet.create({
     fontFamily: fonts.displayBold || fonts.bodyBold,
     fontSize: fontSizes.md + 1,
   },
+  fieldLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
   fieldLabel: {
     fontFamily: fonts.bodySemiBold,
     fontSize: fontSizes.xs,
     marginBottom: 4,
+  },
+  presetsScroll: {
+    gap: 6,
+    paddingVertical: 4,
+    marginBottom: 6,
+  },
+  presetChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radii.full,
+    borderWidth: 1,
+  },
+  presetChipText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: fontSizes.xs - 1,
   },
   modalInput: {
     borderRadius: radii.md,

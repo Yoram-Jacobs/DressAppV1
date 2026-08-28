@@ -156,8 +156,8 @@ export function StylistScreen() {
 
   const tabs: { id: StylistTab; label: string; icon: any }[] = [
     { id: 'chat', label: t('stylist.chatPanel', { defaultValue: 'AI Chat' }), icon: Lucide.MessageSquare },
-    { id: 'daily', label: t('stylist.tabDaily', { defaultValue: 'Daily Look' }), icon: Lucide.SunMedium },
-    { id: 'planner', label: t('stylist.outfitPlanner', { defaultValue: 'Planner' }), icon: Lucide.Layers },
+    { id: 'planner', label: t('stylist.outfitPlanner', { defaultValue: 'Outfit Planner' }), icon: Lucide.Layers },
+    { id: 'daily', label: t('stylist.dailySuggestion', { defaultValue: 'Daily Look' }), icon: Lucide.SunMedium },
     { id: 'tryon', label: t('stylist.virtualFitting', { defaultValue: 'Try On' }), icon: Lucide.UserCheck },
   ];
 
