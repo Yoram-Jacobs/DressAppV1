@@ -410,9 +410,15 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
     raw_by_id = {c["id"]: c for c in raw_closet if c.get("id")}
     items = prop.get("items") or []
 
-    # 1. Sanitize and correct roles of LLM-returned items based on actual closet category
+    # 1. Sanitize and correct roles of LLM-returned items based on actual closet category.
+    #    Enforce BOTH ID-level deduplication AND role-level deduplication (max one item per
+    #    anatomical role). This prevents the LLM from slipping two footwear items into the
+    #    proposal instead of a shoe + a bottom.
     sanitized_items = []
-    seen_ids = set()
+    seen_ids: set[str] = set()
+    seen_roles: set[str] = set()  # Enforce one item per anatomical role
+    SINGLETON_ROLES = {"top", "bottom", "shoes", "dress", "outerwear"}  # roles limited to 1
+
     for it in items:
         cid = it.get("closet_item_id")
         if not cid or cid not in raw_by_id:
@@ -424,12 +430,25 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
         c_item = raw_by_id[cid]
         true_cat = norm_category(c_item.get("category"))
         true_role = "shoes" if true_cat in ("footwear", "shoes") else true_cat
+
+        # Drop duplicate role for singleton roles (e.g. second pair of shoes when
+        # a shoe is already present — the hydration step will supply the missing bottom)
+        if true_role in SINGLETON_ROLES and true_role in seen_roles:
+            logger.info(
+                "Dropping duplicate role '%s' (item %s) from outfit — role already filled",
+                true_role, cid
+            )
+            continue
+        seen_roles.add(true_role)
+
+        # Background-free image selection: clean_image_url > reconstructed > cutout > thumbnail > image_url
         clean_img = (
             c_item.get("clean_image_url")
             or c_item.get("reconstructed_image_url")
             or c_item.get("cutout_url")
-            or c_item.get("thumbnail_data_url")
+            or c_item.get("segmented_image_url")
             or c_item.get("image_url")
+            or c_item.get("thumbnail_data_url")
         )
 
         sanitized_items.append({
@@ -458,6 +477,7 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
     for c_item in raw_closet:
         cat = norm_category(c_item.get("category"))
         role = "shoes" if cat in ("footwear", "shoes") else cat
+
         closet_by_role.setdefault(role, []).append(c_item)
 
     missing_notes = []
