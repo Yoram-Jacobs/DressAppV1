@@ -784,7 +784,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                             {outfit.garments.map((g, gIdx) => {
                               const img = g.image_url || g.thumbnail_data_url;
                               return (
-                                <View key={g.id || gIdx} style={[styles.thumbBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                                <View key={g.id || gIdx} style={[styles.thumbBox, { backgroundColor: colors.cardOffWhite, borderColor: colors.border }]}>
                                   {img ? (
                                     <Image source={{ uri: img }} style={styles.thumbImg} resizeMode="contain" />
                                   ) : (
@@ -1359,13 +1359,13 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                   return (
                     <TouchableOpacity
                       key={item.id || item._id}
-                      style={[styles.closetItemCard, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+                      style={[styles.closetItemCard, { backgroundColor: colors.card, borderColor: colors.border }]}
                       onPress={() => handleSelectClosetItem(item)}
                     >
                       {img ? (
-                        <Image source={{ uri: img }} style={styles.closetItemThumb} resizeMode="contain" />
+                        <Image source={{ uri: img }} style={[styles.closetItemThumb, { backgroundColor: colors.cardOffWhite }]} resizeMode="contain" />
                       ) : (
-                        <View style={styles.closetItemThumbEmpty}>
+                        <View style={[styles.closetItemThumbEmpty, { backgroundColor: colors.cardOffWhite }]}>
                           <Lucide.Shirt size={24} color={colors.mutedFg} />
                         </View>
                       )}

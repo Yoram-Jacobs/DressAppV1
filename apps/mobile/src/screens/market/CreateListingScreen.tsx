@@ -144,9 +144,9 @@ export function CreateListingScreen() {
                   onPress={() => handleSelectItem(it)}
                 >
                   {img ? (
-                    <Image source={{ uri: img }} style={styles.itemPickThumb} />
+                    <Image source={{ uri: img }} style={[styles.itemPickThumb, { backgroundColor: colors.cardOffWhite }]} resizeMode="contain" />
                   ) : (
-                    <View style={[styles.itemPickThumb, { backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' }]}>
+                    <View style={[styles.itemPickThumb, { backgroundColor: colors.cardOffWhite, alignItems: 'center', justifyContent: 'center' }]}>
                       <Lucide.Shirt size={20} color={colors.mutedFg} />
                     </View>
                   )}

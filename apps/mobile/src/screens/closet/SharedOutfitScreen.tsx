@@ -200,7 +200,7 @@ export function SharedOutfitScreen() {
                   key={item.id || idx}
                   style={[styles.itemCard, { backgroundColor: colors.card, borderColor: colors.border }]}
                 >
-                  <View style={[styles.itemImageWrapper, { backgroundColor: colors.secondary }]}>
+                  <View style={[styles.itemImageWrapper, { backgroundColor: colors.cardOffWhite }]}>
                     {img ? (
                       <Image source={{ uri: img }} style={styles.itemImage} resizeMode="contain" />
                     ) : (

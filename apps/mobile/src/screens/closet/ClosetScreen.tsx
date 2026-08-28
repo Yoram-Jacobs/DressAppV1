@@ -368,9 +368,9 @@ export function ClosetScreen() {
           activeOpacity={0.8}
         >
           {imgUri ? (
-            <Image source={{ uri: imgUri }} style={styles.listThumb} />
+            <Image source={{ uri: imgUri }} style={[styles.listThumb, { backgroundColor: colors.cardOffWhite }]} resizeMode="contain" />
           ) : (
-            <View style={[styles.listThumb, { backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' }]}>
+            <View style={[styles.listThumb, { backgroundColor: colors.cardOffWhite, alignItems: 'center', justifyContent: 'center' }]}>
               <Lucide.Shirt size={20} color={colors.mutedFg} />
             </View>
           )}
@@ -417,11 +417,11 @@ export function ClosetScreen() {
         }}
         activeOpacity={0.85}
       >
-        <View style={styles.gridImgWrap}>
+        <View style={[styles.gridImgWrap, { backgroundColor: colors.cardOffWhite }]}>
           {imgUri ? (
-            <Image source={{ uri: imgUri }} style={styles.gridImg} />
+            <Image source={{ uri: imgUri }} style={[styles.gridImg, { backgroundColor: colors.cardOffWhite }]} resizeMode="contain" />
           ) : (
-            <View style={[styles.gridImg, { backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' }]}>
+            <View style={[styles.gridImg, { backgroundColor: colors.cardOffWhite, alignItems: 'center', justifyContent: 'center' }]}>
               <Lucide.Shirt size={24} color={colors.mutedFg} />
             </View>
           )}

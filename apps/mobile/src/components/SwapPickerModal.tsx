@@ -142,9 +142,9 @@ export function SwapPickerModal({
                   activeOpacity={0.8}
                 >
                   {img ? (
-                    <Image source={{ uri: img }} style={styles.thumb} />
+                    <Image source={{ uri: img }} style={[styles.thumb, { backgroundColor: colors.cardOffWhite }]} resizeMode="contain" />
                   ) : (
-                    <View style={[styles.thumb, styles.placeholder, { backgroundColor: colors.secondary }]}>
+                    <View style={[styles.thumb, styles.placeholder, { backgroundColor: colors.cardOffWhite }]}>
                       <Text style={{ color: colors.mutedFg, fontSize: 10 }}>{it.category || 'Garment'}</Text>
                     </View>
                   )}

@@ -102,7 +102,7 @@ export function ItemOutfitPairings({
                 {(outfit.items || []).slice(0, 4).map((it, idx) => {
                   const src = it.image_url || it.thumbnail_data_url;
                   return (
-                    <View key={it.id || idx} style={[styles.thumbBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <View key={it.id || idx} style={[styles.thumbBox, { backgroundColor: colors.cardOffWhite, borderColor: colors.border }]}>
                       {src ? (
                         <Image source={{ uri: src }} style={styles.thumbImage} resizeMode="contain" />
                       ) : (

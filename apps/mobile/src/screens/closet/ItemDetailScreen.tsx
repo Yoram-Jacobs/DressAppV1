@@ -654,7 +654,7 @@ export function ItemDetailScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* ── 1. Hero Image Card ──────────────────────────────────────── */}
-        <View style={[styles.heroCard, { backgroundColor: isDark ? '#18181b' : '#f4f4f5', borderColor: colors.border }]}>
+        <View style={[styles.heroCard, { backgroundColor: colors.cardOffWhite, borderColor: colors.border }]}>
           {currentImg ? (
             <Image source={{ uri: currentImg }} style={styles.heroImg} resizeMode="contain" />
           ) : (
@@ -745,7 +745,7 @@ export function ItemDetailScreen() {
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.galleryRow}>
             {/* Front View Thumbnail */}
-            <View style={[styles.galleryItemCard, { borderColor: colors.primary, backgroundColor: colors.secondary }]}>
+            <View style={[styles.galleryItemCard, { borderColor: colors.primary, backgroundColor: colors.cardOffWhite }]}>
               <Image source={{ uri: currentImg }} style={styles.galleryThumb} resizeMode="contain" />
               <Text style={[styles.galleryThumbLabel, { color: colors.foreground }]}>
                 {t('closet.frontView', { defaultValue: 'Front' })}

@@ -1615,7 +1615,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
         isSelected ? 'border-[hsl(var(--accent))]' : ''
       }`}
     >
-      <AspectRatio ratio={3 / 4} className="bg-secondary relative">
+      <AspectRatio ratio={3 / 4} className="bg-[#F5F2EB] dark:bg-[#F5F2EB] relative">
         {(() => {
           const thumbUrl = bestImageUrl(item);
           const polishing = isCleanImagePending(item);

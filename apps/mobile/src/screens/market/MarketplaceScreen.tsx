@@ -181,7 +181,7 @@ export function MarketplaceScreen() {
         onPress={() => navigation.navigate('ListingDetail', { listingId: item.id })}
         activeOpacity={0.8}
       >
-        <View style={[s.cardImageWrap, { backgroundColor: colors.secondary }]}>
+        <View style={[s.cardImageWrap, { backgroundColor: colors.cardOffWhite }]}>
           {thumb ? (
             <Image
               source={{ uri: thumb }}

@@ -1502,7 +1502,7 @@ export default function ItemDetail() {
         {/* ---------- Image column ---------- */}
         <div className="md:col-span-3 space-y-4">
           <Card className="rounded-[calc(var(--radius)+6px)] overflow-hidden shadow-editorial relative">
-            <AspectRatio ratio={3 / 4} className="bg-secondary">
+            <AspectRatio ratio={3 / 4} className="bg-[#F5F2EB] dark:bg-[#F5F2EB]">
               {preferredImage ? (
                 <img
                   src={preferredImage}

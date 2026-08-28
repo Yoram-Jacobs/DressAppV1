@@ -36,6 +36,8 @@ export const lightColors = {
   sidebar:       'hsl(40, 20%, 97%)',
   sidebarBorder: 'hsl(240, 6%, 88%)',
   textMuted:     'hsl(240, 5%, 45%)',  // alias for mutedFg
+  cardOffWhite:  '#F5F2EB',            // DressApp's signature off-white garment backdrop
+  itemCardBg:    '#F5F2EB',            // default items card background across app
 } as const;
 
 export const darkColors = {
@@ -65,7 +67,9 @@ export const darkColors = {
   sand:          'hsl(40, 15%, 20%)',
   sidebar:       'hsl(240, 10%, 10%)',
   sidebarBorder: 'hsl(240, 8%, 16%)',
-  textMuted:     'hsl(240, 5%, 60%)',  // alias for mutedFg
+  textMuted:     'hsl(240, 5%, 60%)',
+  cardOffWhite:  '#F5F2EB',            // DressApp's signature off-white garment backdrop
+  itemCardBg:    '#F5F2EB',            // default items card background across app
 } as const;
 
 // ---------------------------------------------------------------------------

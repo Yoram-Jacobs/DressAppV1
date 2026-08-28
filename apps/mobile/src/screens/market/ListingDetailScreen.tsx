@@ -273,7 +273,7 @@ export function ListingDetailScreen() {
 
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         {/* Hero Image Container */}
-        <View style={[s.heroImgCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={[s.heroImgCard, { backgroundColor: colors.cardOffWhite, borderColor: colors.border }]}>
           {mainImage ? (
             <Image source={{ uri: mainImage }} style={s.heroImg} resizeMode="contain" />
           ) : (
@@ -549,7 +549,7 @@ export function ListingDetailScreen() {
                     onPress={() => navigation.push('ListingDetail', { listingId: sim.id })}
                     activeOpacity={0.8}
                   >
-                    <View style={[s.simImgWrap, { backgroundColor: colors.secondary }]}>
+                    <View style={[s.simImgWrap, { backgroundColor: colors.cardOffWhite }]}>
                       {simImg ? (
                         <Image source={{ uri: simImg }} style={s.simImg} resizeMode="contain" />
                       ) : (

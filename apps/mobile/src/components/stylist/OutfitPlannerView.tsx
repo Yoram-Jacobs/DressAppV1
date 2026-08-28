@@ -367,7 +367,7 @@ export function OutfitPlannerView({ onTryOn }: { onTryOn?: (slots: PlannerSlotIt
                   style={[
                     styles.slotImageWrap,
                     {
-                      backgroundColor: isNone ? 'rgba(0,0,0,0.03)' : colors.secondary,
+                      backgroundColor: isNone ? 'rgba(0,0,0,0.03)' : colors.cardOffWhite,
                       borderColor: colors.border,
                       borderWidth: isNone ? 1 : 0,
                       borderStyle: isNone ? 'dashed' : 'solid',
@@ -523,10 +523,10 @@ export function OutfitPlannerView({ onTryOn }: { onTryOn?: (slots: PlannerSlotIt
                 const img = item.clean_image_url || item.thumbnail_data_url || item.image_url || item.segmented_image_url;
                 return (
                   <TouchableOpacity
-                    style={[styles.pickerItemCard, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+                    style={[styles.pickerItemCard, { backgroundColor: colors.card, borderColor: colors.border }]}
                     onPress={() => handleSelectPickerItem(item)}
                   >
-                    <View style={styles.pickerImgWrap}>
+                    <View style={[styles.pickerImgWrap, { backgroundColor: colors.cardOffWhite }]}>
                       {img ? (
                         <Image source={{ uri: img }} style={styles.pickerImg} resizeMode="contain" />
                       ) : (

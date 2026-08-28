@@ -165,7 +165,7 @@ export function OutfitsScreen() {
           activeOpacity={0.8}
         >
           {/* Garments Preview Thumbnails Grid */}
-          <View style={[styles.thumbCollage, { backgroundColor: colors.secondary }]}>
+          <View style={[styles.thumbCollage, { backgroundColor: colors.cardOffWhite }]}>
             {garments.length > 0 ? (
               <View style={styles.collageGrid}>
                 {garments.slice(0, 4).map((g, idx) => (
@@ -238,7 +238,7 @@ export function OutfitsScreen() {
                   key={idx}
                   style={[styles.garmentPillCard, { backgroundColor: colors.card, borderColor: colors.border }]}
                 >
-                  <View style={[styles.garmentImageWrap, { backgroundColor: colors.secondary }]}>
+                  <View style={[styles.garmentImageWrap, { backgroundColor: colors.cardOffWhite }]}>
                     {g.image_url ? (
                       <Image source={{ uri: g.image_url }} style={styles.garmentImage} resizeMode="contain" />
                     ) : (

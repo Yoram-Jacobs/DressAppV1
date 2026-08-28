@@ -2108,7 +2108,7 @@ const styles = StyleSheet.create({
   },
   cardImageBox: {
     height: 240,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F5F2EB',
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',

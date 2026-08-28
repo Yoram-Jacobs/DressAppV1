@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     width: 54,
     height: 54,
     borderRadius: radii.md,
-    backgroundColor: '#000',
+    backgroundColor: '#F5F2EB',
   },
   thumbPlaceholder: {
     alignItems: 'center',

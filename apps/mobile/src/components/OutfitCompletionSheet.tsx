@@ -93,10 +93,11 @@ export function OutfitCompletionSheet({
                 {item.thumbnail_data_url || item.image_url ? (
                   <Image
                     source={{ uri: item.thumbnail_data_url || item.image_url }}
-                    style={styles.anchorImg}
+                    style={[styles.anchorImg, { backgroundColor: colors.cardOffWhite }]}
+                    resizeMode="contain"
                   />
                 ) : (
-                  <View style={[styles.anchorImg, styles.anchorPlaceholder, { backgroundColor: colors.secondary }]}>
+                  <View style={[styles.anchorImg, styles.anchorPlaceholder, { backgroundColor: colors.cardOffWhite }]}>
                     <Text style={{ color: colors.mutedFg, fontSize: 10 }}>{item.category || 'Piece'}</Text>
                   </View>
                 )}
@@ -150,7 +151,8 @@ export function OutfitCompletionSheet({
                         {mItem.thumbnail_data_url || mItem.image_url ? (
                           <Image
                             source={{ uri: mItem.thumbnail_data_url || mItem.image_url }}
-                            style={styles.matchItemImg}
+                            style={[styles.matchItemImg, { backgroundColor: colors.cardOffWhite }]}
+                            resizeMode="contain"
                           />
                         ) : null}
                         <Text style={[styles.matchItemName, { color: colors.foreground }]} numberOfLines={1}>
