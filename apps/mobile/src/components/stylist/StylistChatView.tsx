@@ -82,7 +82,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
       id: 'msg_welcome',
       role: 'assistant',
       content: t('stylist.welcomeMsg', {
-        defaultValue: "Hello! I'm your AI Fashion Stylist. Ask me what to wear, request looks for an occasion, or tap a quick prompt below!",
+        defaultValue: "Hello! I'm your AI Fashion Stylist. Ask me what to wear, request looks for an occasion, or describe your outfit needs!",
       }),
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
@@ -91,34 +91,8 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [androidKeyboardHeight, setAndroidKeyboardHeight] = useState(0);
 
   const scrollRef = useRef<ScrollView>(null);
-
-  useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-    const showSub = Keyboard.addListener(showEvent, (e) => {
-      if (Platform.OS === 'android') {
-        setAndroidKeyboardHeight(e.endCoordinates.height);
-      }
-      setTimeout(() => {
-        scrollRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    });
-
-    const hideSub = Keyboard.addListener(hideEvent, () => {
-      if (Platform.OS === 'android') {
-        setAndroidKeyboardHeight(0);
-      }
-    });
-
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
 
   useEffect(() => {
     setMessages((prev) => {
@@ -129,7 +103,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
             role: 'assistant',
             content: t('stylist.welcomeMsg', {
               defaultValue:
-                "Hello! I'm your AI Fashion Stylist. Ask me what to wear, request looks for an occasion, or tap a quick prompt below!",
+                "Hello! I'm your AI Fashion Stylist. Ask me what to wear, request looks for an occasion, or describe your outfit needs!",
             }),
             timestamp: prev[0].timestamp,
           },
@@ -438,17 +412,14 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
 
   return (
     <KeyboardAvoidingView
-      style={[
-        styles.container,
-        Platform.OS === 'android' && { paddingBottom: androidKeyboardHeight },
-      ]}
+      style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <ScrollView
         ref={scrollRef}
         style={styles.messagesScroll}
-        contentContainerStyle={{ paddingBottom: spacing.lg }}
+        contentContainerStyle={{ padding: spacing.md, paddingBottom: spacing.xxl }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
@@ -641,69 +612,63 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
             </View>
           </View>
         )}
-      </ScrollView>
 
-      {/* Quick Suggestion Chips */}
-      <View style={styles.quickPromptsWrapper}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={[styles.quickPromptsRow, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}
-        >
-          {[
-            { id: 'date', label: t('stylist.prompt_date', { defaultValue: '✨ Suggest a look for a dinner date' }) },
-            { id: 'work', label: t('stylist.prompt_work', { defaultValue: '💼 Casual Friday office outfit' }) },
-            { id: 'rain', label: t('stylist.prompt_rain', { defaultValue: '🌧️ Stylish layering for chilly rain' }) },
-            { id: 'sneakers', label: t('stylist.prompt_sneakers', { defaultValue: '👟 What matches my sneakers?' }) },
-            { id: 'party', label: t('stylist.prompt_party', { defaultValue: '🎉 Elegant evening cocktail party' }) },
-            { id: 'coffee', label: t('stylist.prompt_coffee', { defaultValue: '☕ Weekend coffee walk' }) },
-          ].map((prompt, idx) => (
+        {/* User's Input Box rendered directly below the Stylist welcome greeting / conversation */}
+        <View style={[styles.inlineInputCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <TextInput
+            style={[
+              styles.inlineTextInput,
+              {
+                backgroundColor: colors.secondary,
+                color: colors.foreground,
+                borderColor: colors.border,
+                textAlign: isRtl ? 'right' : 'left',
+              },
+            ]}
+            value={inputQuery}
+            onChangeText={setInputQuery}
+            placeholder={
+              isRecording
+                ? t('stylist.listening', { defaultValue: 'Listening...' })
+                : t('stylist.composerPlaceholder', { defaultValue: 'Ask what to wear...' })
+            }
+            placeholderTextColor={colors.mutedFg}
+            multiline
+            maxLength={500}
+          />
+          <View style={[styles.inlineInputActions, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}>
             <TouchableOpacity
-              key={idx}
-              style={[styles.promptChip, { backgroundColor: colors.card, borderColor: colors.border }]}
-              onPress={() => handleSendText(prompt.label.replace(/^[^\s]+\s/, ''))}
+              style={[
+                styles.micBtn,
+                isRecording && { backgroundColor: '#EF4444' },
+                { backgroundColor: isRecording ? '#EF4444' : colors.secondary, borderColor: colors.border, borderWidth: 1 },
+              ]}
+              onPress={isRecording ? stopRecording : startRecording}
             >
-              <Text style={[styles.promptChipText, { color: colors.foreground }]}>{prompt.label}</Text>
+              <Lucide.Mic size={18} color={isRecording ? '#FFF' : colors.foreground} />
             </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
 
-      {/* Chatbox Input Bar */}
-      <View style={[styles.inputBarWrapper, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
-        <TouchableOpacity
-          style={[
-            styles.micBtn,
-            isRecording && { backgroundColor: '#EF4444' },
-            { backgroundColor: isRecording ? '#EF4444' : colors.secondary },
-          ]}
-          onPress={isRecording ? stopRecording : startRecording}
-        >
-          <Lucide.Mic size={18} color={isRecording ? '#FFF' : colors.foreground} />
-        </TouchableOpacity>
-
-        <TextInput
-          style={[styles.textInput, { backgroundColor: colors.secondary, color: colors.foreground, borderColor: colors.border }]}
-          value={inputQuery}
-          onChangeText={setInputQuery}
-          placeholder={isRecording ? t('stylist.listening', { defaultValue: 'Listening...' }) : t('stylist.composerPlaceholder', { defaultValue: 'Ask what to wear...' })}
-          placeholderTextColor={colors.mutedFg}
-          multiline
-          maxLength={500}
-        />
-
-        <TouchableOpacity
-          style={[
-            styles.sendBtn,
-            { backgroundColor: inputQuery.trim() ? colors.primary : colors.secondary },
-          ]}
-          onPress={() => handleSendText()}
-          disabled={!inputQuery.trim() || loading}
-        >
-          <Lucide.Send size={16} color={inputQuery.trim() ? '#FFF' : colors.mutedFg} />
-        </TouchableOpacity>
-      </View>
+            <TouchableOpacity
+              style={[
+                styles.inlineSendBtn,
+                { backgroundColor: inputQuery.trim() ? colors.primary : colors.secondary },
+              ]}
+              onPress={() => handleSendText()}
+              disabled={!inputQuery.trim() || loading}
+            >
+              <Text
+                style={[
+                  styles.inlineSendBtnText,
+                  { color: inputQuery.trim() ? '#FFF' : colors.mutedFg },
+                ]}
+              >
+                {t('common.send', { defaultValue: 'Send' })}
+              </Text>
+              <Lucide.Send size={15} color={inputQuery.trim() ? '#FFF' : colors.mutedFg} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -904,49 +869,49 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodySemiBold,
     fontSize: fontSizes.xs - 1,
   },
-  quickPromptsWrapper: {
-    paddingVertical: 6,
-  },
-  quickPromptsRow: {
-    paddingHorizontal: spacing.md,
-    gap: 6,
-  },
-  promptChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: radii.full,
+  inlineInputCard: {
+    borderRadius: radii.xl,
+    padding: spacing.md,
     borderWidth: 1,
+    marginTop: spacing.md,
+    marginBottom: spacing.xl,
+    gap: spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  promptChipText: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.xs,
+  inlineTextInput: {
+    minHeight: 64,
+    maxHeight: 140,
+    borderRadius: radii.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    borderWidth: 1,
+    fontSize: fontSizes.sm + 1,
+    fontFamily: fonts.body,
   },
-  inputBarWrapper: {
+  inlineInputActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderTopWidth: 1,
+    justifyContent: 'space-between',
     gap: spacing.sm,
   },
-  micBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  inlineSendBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  textInput: {
-    flex: 1,
-    maxHeight: 80,
+    gap: 6,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 10,
     borderRadius: radii.lg,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
-    fontFamily: fonts.body,
+  },
+  inlineSendBtnText: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: fontSizes.sm,
   },
-  sendBtn: {
+  micBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
