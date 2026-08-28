@@ -22,8 +22,14 @@ export function deriveSizeFromPreferences(user: any, item: { category?: string; 
   };
 
   // Footwear → shoe size
-  if (cat === 'footwear' || /shoe|sneaker|boot|sandal|heel|loafer/.test(blob)) {
-    return pick('shoe_size');
+  if (
+    cat === 'footwear' ||
+    cat === 'shoes' ||
+    cat === 'shoe' ||
+    /shoe|sneaker|boot|sandal|heel|loafer|slide|slipper|footwear/.test(cat) ||
+    /shoe|sneaker|boot|sandal|heel|loafer|slide|slipper|footwear/.test(blob)
+  ) {
+    return pick('shoe_size', 'shoe_size_eu', 'shoe_size_us', 'footwear_size');
   }
 
   // Underwear: bra for females / bra items, otherwise shirt size

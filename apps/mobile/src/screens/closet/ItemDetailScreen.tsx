@@ -68,6 +68,8 @@ import {
   labelForState,
 } from '@mobile/lib/taxonomy';
 import { useClosetStore, closetStore } from '@mobile/lib/stores/closetStore';
+import { useUserStore } from '@mobile/lib/stores';
+import { deriveSizeFromPreferences } from '@mobile/lib/size_preferences';
 import { TaxonomySelectModal } from '@mobile/components/TaxonomySelectModal';
 import { WeightedList, WeightedItem } from '@mobile/components/WeightedList';
 import { DppPanel } from '@mobile/components/DppPanel';
@@ -108,7 +110,7 @@ interface ItemFormState {
   reconstructed_image_url?: string | null;
 }
 
-function toFormState(data: any): ItemFormState {
+function toFormState(data: any, user?: any): ItemFormState {
   const normalisedColors: WeightedItem[] = Array.isArray(data?.colors) && data.colors.length > 0
     ? data.colors.map((c: any) => ({
         name: typeof c === 'string' ? c.trim() : (c.name || '').trim(),
@@ -121,7 +123,7 @@ function toFormState(data: any): ItemFormState {
   const normalisedMaterials: WeightedItem[] = Array.isArray(data?.fabric_materials) && data.fabric_materials.length > 0
     ? data.fabric_materials.map((m: any) => ({
         name: typeof m === 'string' ? m.trim() : (m.name || m.tag || '').trim(),
-        pct: typeof m === 'object' && m.pct != null ? m.pct : null,
+        pct: typeof m === 'object' && m.pct != null ? m.pct : (typeof m === 'object' && m.percentage != null ? m.percentage : null),
       }))
     : data?.material || data?.fabric
     ? [{ name: String(data.material || data.fabric).trim(), pct: 100 }]
@@ -131,20 +133,30 @@ function toFormState(data: any): ItemFormState {
     ? data.formality
     : (['casual', 'smart-casual', 'business', 'formal'].includes(data?.dress_code) ? data.dress_code : 'casual');
 
+  const cat = data?.category || 'Top';
+  const subCat = data?.sub_category || data?.subcategory || '';
+  const itemType = data?.item_type || '';
+
+  // Derive size from body measurements if not present
+  let resolvedSize = data?.size ? String(data.size).trim() : '';
+  if (!resolvedSize && user) {
+    resolvedSize = deriveSizeFromPreferences(user, { category: cat, sub_category: subCat, item_type: itemType });
+  }
+
   return {
     title: data?.title || data?.name || '',
     name: data?.name || data?.title || '',
     brand: data?.brand || '',
     caption: data?.caption || '',
-    category: data?.category || 'Top',
-    sub_category: data?.sub_category || data?.subcategory || '',
-    item_type: data?.item_type || '',
+    category: cat,
+    sub_category: subCat,
+    item_type: itemType,
     gender: data?.gender || 'unisex',
     dress_code: data?.dress_code || validFormality,
     formality: validFormality,
     season: Array.isArray(data?.season) ? data.season : data?.season ? [data.season] : ['all'],
     tradition: data?.tradition || '',
-    size: data?.size || '',
+    size: resolvedSize,
     color: data?.color || (normalisedColors[0]?.name || ''),
     colors: normalisedColors,
     pattern: data?.pattern || 'solid',
@@ -169,6 +181,7 @@ export function ItemDetailScreen() {
   const route = useRoute<RouteProp<ClosetStackParamList, 'ItemDetail'>>();
   const { colors, isDark } = useTheme();
   const { prewarm, deleteItem } = useClosetStore();
+  const { user } = useUserStore();
   const isRtl = I18nManager.isRTL;
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -177,8 +190,8 @@ export function ItemDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [item, setItem] = useState<any>(null);
-  const [form, setForm] = useState<ItemFormState>(toFormState(null));
-  const [originalForm, setOriginalForm] = useState<ItemFormState>(toFormState(null));
+  const [form, setForm] = useState<ItemFormState>(toFormState(null, user));
+  const [originalForm, setOriginalForm] = useState<ItemFormState>(toFormState(null, user));
 
   // View & Tab state
   const [viewingCutout, setViewingCutout] = useState(true);
@@ -201,6 +214,39 @@ export function ItemDetailScreen() {
   const [culturalTagDraft, setCulturalTagDraft] = useState('');
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  // Footwear & Shoe Size helpers
+  const isFootwear = /footwear|shoes|shoe/i.test(form.category) || /shoe|sneaker|boot|sandal|heel|loafer|slide|slipper/i.test(form.sub_category) || /shoe|sneaker|boot|sandal|heel|loafer|slide|slipper/i.test(form.title);
+  const userShoeSize = deriveSizeFromPreferences(user, { category: 'Footwear' });
+
+  // Smart tag recommendations based on garment fields
+  const suggestedTags = React.useMemo(() => {
+    const s = new Set<string>();
+    if (form.sub_category) s.add(form.sub_category.toLowerCase());
+    if (form.item_type && form.item_type !== form.sub_category) s.add(form.item_type.toLowerCase());
+    if (form.dress_code && form.dress_code !== 'casual') s.add(form.dress_code.toLowerCase());
+    if (form.pattern && form.pattern !== 'solid') s.add(form.pattern.toLowerCase());
+    if (form.color) s.add(form.color.toLowerCase());
+    if (form.brand) s.add(form.brand.toLowerCase());
+    if (form.season && Array.isArray(form.season)) {
+      form.season.filter((x) => x !== 'all').forEach((x) => s.add(x.toLowerCase()));
+    }
+    return Array.from(s).filter((st) => !form.tags.includes(st) && Boolean(st));
+  }, [form.sub_category, form.item_type, form.dress_code, form.pattern, form.color, form.brand, form.season, form.tags]);
+
+  const handleAddSpecificTag = (tag: string) => {
+    const trimmed = tag.trim();
+    if (!trimmed) return;
+    if (!form.tags.includes(trimmed)) {
+      setField('tags', [...form.tags, trimmed]);
+    }
+  };
+
+  const handleAddAllSuggestedTags = () => {
+    if (!suggestedTags.length) return;
+    const combined = Array.from(new Set([...form.tags, ...suggestedTags]));
+    setField('tags', combined);
+  };
 
   useEffect(() => {
     const showSub = Keyboard.addListener(
@@ -236,7 +282,7 @@ export function ItemDetailScreen() {
       const data = await api.getItem(itemId);
       if (data) {
         setItem(data);
-        const parsed = toFormState(data);
+        const parsed = toFormState(data, user);
         setForm(parsed);
         setOriginalForm(parsed);
       }
@@ -245,14 +291,26 @@ export function ItemDetailScreen() {
     } finally {
       setLoading(false);
     }
-  }, [itemId]);
+  }, [itemId, user]);
 
   useEffect(() => {
     loadItem();
   }, [loadItem]);
 
   const setField = <K extends keyof ItemFormState>(key: K, value: ItemFormState[K]) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [key]: value };
+      if (key === 'category' && typeof value === 'string') {
+        const isNewFootwear = /footwear|shoes|shoe/i.test(value);
+        if (isNewFootwear && user) {
+          const shoeSize = deriveSizeFromPreferences(user, { category: 'Footwear' });
+          if (shoeSize && (!prev.size || prev.size === 'M' || prev.size === 'L' || prev.size === 'S' || prev.size === 'XL')) {
+            next.size = shoeSize;
+          }
+        }
+      }
+      return next;
+    });
   };
 
   const handleUndo = () => {
@@ -1103,6 +1161,18 @@ export function ItemDetailScreen() {
                     placeholder={t('addItem.sizePlaceholder', { defaultValue: 'e.g. L' })}
                     placeholderTextColor={colors.mutedFg}
                   />
+                  {Boolean(userShoeSize && isFootwear && form.size !== userShoeSize) && (
+                    <TouchableOpacity
+                      onPress={() => setField('size', userShoeSize)}
+                      style={[styles.suggestedSizeBadge, { backgroundColor: isDark ? 'rgba(99,102,241,0.15)' : '#eef2ff' }]}
+                      activeOpacity={0.7}
+                    >
+                      <Lucide.Sparkles size={10} color={colors.accent} />
+                      <Text style={[styles.suggestedSizeText, { color: colors.accent }]}>
+                        {t('itemDetail.useProfileShoeSize', { defaultValue: 'From profile: {{size}}', size: userShoeSize })}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
 
                 <View style={styles.flex1}>
@@ -1326,9 +1396,46 @@ export function ItemDetailScreen() {
 
               {/* Tags Chip List */}
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { color: colors.mutedFg }]}>
-                  {t('itemDetail.edit.tags', { defaultValue: 'TAGS' })}
-                </Text>
+                <View style={styles.labelWithActionRow}>
+                  <Text style={[styles.inputLabel, { color: colors.mutedFg }]}>
+                    {t('itemDetail.edit.tags', { defaultValue: 'TAGS' })}
+                  </Text>
+                  {suggestedTags.length > 0 && (
+                    <TouchableOpacity
+                      onPress={handleAddAllSuggestedTags}
+                      style={styles.addSuggestedActionBtn}
+                      activeOpacity={0.7}
+                    >
+                      <Lucide.Sparkles size={11} color={colors.accent} />
+                      <Text style={[styles.addSuggestedActionText, { color: colors.accent }]}>
+                        {t('itemDetail.addAllSuggested', { defaultValue: 'Add suggested (+{{count}})', count: suggestedTags.length })}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {/* Suggested Tags Quick Bar */}
+                {suggestedTags.length > 0 && (
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.suggestedTagsScroll}
+                    style={styles.suggestedTagsScrollWrap}
+                  >
+                    {suggestedTags.map((st) => (
+                      <TouchableOpacity
+                        key={st}
+                        style={[styles.suggestedTagChip, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+                        onPress={() => handleAddSpecificTag(st)}
+                        activeOpacity={0.7}
+                      >
+                        <Lucide.Plus size={10} color={colors.accent} />
+                        <Text style={[styles.suggestedTagText, { color: colors.foreground }]}>{st}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
+
                 <View style={[styles.chipListContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
                   <View style={styles.chipRow}>
                     {form.tags.map((tg) => (
@@ -2005,5 +2112,57 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     ...shadows.lg,
+  },
+  suggestedSizeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radii.full,
+    alignSelf: 'flex-start',
+  },
+  suggestedSizeText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 10,
+  },
+  labelWithActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  addSuggestedActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+  },
+  addSuggestedActionText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
+  },
+  suggestedTagsScrollWrap: {
+    marginBottom: 6,
+  },
+  suggestedTagsScroll: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  suggestedTagChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radii.full,
+    borderWidth: 1,
+  },
+  suggestedTagText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 11,
   },
 });

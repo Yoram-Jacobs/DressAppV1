@@ -347,6 +347,26 @@ async def create_item(
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(400, f"Invalid image_base64: {exc}") from exc
 
+    tags_list = list(payload.tags) if payload.tags else []
+    if not tags_list:
+        auto_tags = set()
+        if payload.sub_category:
+            auto_tags.add(payload.sub_category.strip().lower())
+        elif payload.category:
+            auto_tags.add(payload.category.strip().lower())
+        if payload.dress_code:
+            auto_tags.add(payload.dress_code.strip().lower())
+        if payload.color:
+            auto_tags.add(payload.color.strip().lower())
+        if payload.brand:
+            auto_tags.add(payload.brand.strip().lower())
+        if payload.pattern and payload.pattern != "solid":
+            auto_tags.add(payload.pattern.strip().lower())
+        if payload.season and "all" not in payload.season:
+            for s in payload.season:
+                auto_tags.add(s.strip().lower())
+        tags_list = [t for t in auto_tags if t]
+
     item = ClosetItem(
         user_id=user["id"],
         source=payload.source,
@@ -376,7 +396,7 @@ async def create_item(
         marketplace_intent=payload.marketplace_intent,
         formality=payload.formality,
         cultural_tags=payload.cultural_tags,
-        tags=payload.tags,
+        tags=tags_list,
         original_image_url=payload.original_image_url,
         purchase_price_cents=payload.purchase_price_cents,
         purchase_currency=payload.purchase_currency,

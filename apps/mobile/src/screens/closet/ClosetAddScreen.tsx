@@ -114,6 +114,8 @@ export interface GarmentCard {
     marketplace_intent?: string;
     caption?: string;
     notes?: string;
+    tags?: string[];
+    cultural_tags?: string[];
   };
 }
 
@@ -420,6 +422,26 @@ export function ClosetAddScreen() {
             }))
           : [];
 
+        // 10. Tags & Cultural Tags derivation
+        const rawTags: string[] = Array.isArray(analysis.tags)
+          ? analysis.tags.filter((t: any) => typeof t === 'string' && t.trim()).map((t: string) => t.trim())
+          : (Array.isArray(item.tags) ? item.tags : []);
+
+        const smartTagsSet = new Set<string>(rawTags.map((t) => t.toLowerCase()));
+        if (subCatName) smartTagsSet.add(subCatName.toLowerCase());
+        if (finalDressCode) smartTagsSet.add(finalDressCode.toLowerCase());
+        if (finalPattern && finalPattern !== 'solid') smartTagsSet.add(finalPattern.toLowerCase());
+        if (primaryColor) smartTagsSet.add(primaryColor.toLowerCase());
+        if (analysis.brand || item.brand) smartTagsSet.add(String(analysis.brand || item.brand).toLowerCase().trim());
+        if (finalSeason && !finalSeason.includes('all')) {
+          finalSeason.forEach((s: string) => smartTagsSet.add(s.toLowerCase()));
+        }
+        const finalTags = Array.from(smartTagsSet).filter(Boolean);
+
+        const finalCulturalTags: string[] = Array.isArray(analysis.cultural_tags)
+          ? analysis.cultural_tags.filter((t: any) => typeof t === 'string' && t.trim()).map((t: string) => t.trim())
+          : (Array.isArray(item.cultural_tags) ? item.cultural_tags : (analysis.tradition ? [analysis.tradition] : []));
+
         return {
           id: `${tempCardId}_${idx}`,
           previewUrl: cropUrl,
@@ -454,6 +476,8 @@ export function ClosetAddScreen() {
             marketplace_intent: analysis.marketplace_intent || item.marketplace_intent || 'own',
             caption: detectedCaption,
             notes: (analysis.notes || detectedCaption).trim(),
+            tags: finalTags,
+            cultural_tags: finalCulturalTags,
           },
         };
       });
@@ -772,6 +796,8 @@ export function ClosetAddScreen() {
           marketplace_intent: validIntents.includes(fields.marketplace_intent || '') ? (fields.marketplace_intent as any) : 'own',
           caption: fields.caption?.trim() || fields.notes?.trim() || undefined,
           notes: fields.notes?.trim() || fields.caption?.trim() || undefined,
+          tags: Array.isArray(fields.tags) && fields.tags.length > 0 ? fields.tags : undefined,
+          cultural_tags: Array.isArray(fields.cultural_tags) && fields.cultural_tags.length > 0 ? fields.cultural_tags : undefined,
           image_base64: card.cropBase64 || card.base64 || undefined,
           image_mime: 'image/jpeg',
         };
