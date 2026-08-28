@@ -3,7 +3,7 @@
     "name": "DressApp",
     "slug": "dressapp",
     "owner": "krembo",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -29,7 +29,7 @@
         "backgroundColor": "#FAF8F5"
       },
       "package": "com.project.dressappV1",
-      "versionCode": 4,
+      "versionCode": 5,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",

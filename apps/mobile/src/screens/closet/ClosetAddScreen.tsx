@@ -169,6 +169,13 @@ export function ClosetAddScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    if (route.params?.source === 'camera') {
+      handleTakePhoto();
+      navigation.setParams({ source: undefined });
+    }
+  }, [route.params?.source]);
+
   // Collapsible Sections
   const [sections, setSections] = useState({
     basic: true,
@@ -458,6 +465,41 @@ export function ClosetAddScreen() {
   };
 
   // ── INGESTION HANDLERS ────────────────────────────────────────────────────
+  const handleTakePhoto = async () => {
+    try {
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(
+          t('common.permissionRequired', { defaultValue: 'Camera Permission' }),
+          t('addItem.cameraPermissionPrompt', { defaultValue: 'Camera permission is required to photograph your clothes.' })
+        );
+        return;
+      }
+
+      const res = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        quality: 0.8,
+        allowsEditing: false,
+      });
+
+      if (!res.canceled && res.assets && res.assets.length > 0) {
+        setShowLiveCamera(false);
+        for (const asset of res.assets) {
+          if (asset.uri) {
+            const { uri, base64 } = await compressAndResizeImage(asset.uri);
+            await analyzeSingleImage(base64, uri);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Camera launch error:', e);
+      Alert.alert(
+        t('common.error', { defaultValue: 'Error' }),
+        t('addItem.cameraError', { defaultValue: 'Failed to open camera.' })
+      );
+    }
+  };
+
   const handlePickFromGallery = async () => {
     try {
       const res = await ImagePicker.launchImageLibraryAsync({
@@ -920,16 +962,7 @@ export function ClosetAddScreen() {
                       <View style={styles.actionButtonsGrid}>
                         <TouchableOpacity
                           style={[styles.primaryActionBtn, { backgroundColor: colors.accent }]}
-                          onPress={async () => {
-                            if (!permission?.granted) {
-                              const p = await requestPermission();
-                              if (!p.granted) {
-                                Alert.alert(t('common.permissionRequired', { defaultValue: 'Camera permission is required.' }));
-                                return;
-                              }
-                            }
-                            setShowLiveCamera(true);
-                          }}
+                          onPress={handleTakePhoto}
                         >
                           <Lucide.Camera size={18} color="#FFF" />
                           <Text style={styles.primaryActionBtnText}>{t('addItem.takePhoto', { defaultValue: 'Take Photo' })}</Text>
@@ -1461,15 +1494,26 @@ export function ClosetAddScreen() {
               </View>
 
               {/* Bottom Ingestion Action: Add Another Item */}
-              <TouchableOpacity
-                style={[styles.addAnotherBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-                onPress={handlePickFromGallery}
-              >
-                <Lucide.Plus size={18} color={colors.accent} />
-                <Text style={[styles.addAnotherBtnText, { color: colors.foreground }]}>
-                  {t('addItem.addPhotos', { defaultValue: 'Add Another Photo / Garment' })}
-                </Text>
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
+                <TouchableOpacity
+                  style={[styles.addAnotherBtn, { flex: 1, backgroundColor: colors.card, borderColor: colors.border }]}
+                  onPress={handleTakePhoto}
+                >
+                  <Lucide.Camera size={16} color={colors.accent} />
+                  <Text style={[styles.addAnotherBtnText, { color: colors.foreground }]}>
+                    {t('addItem.takePhoto', { defaultValue: 'Take Photo' })}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.addAnotherBtn, { flex: 1, backgroundColor: colors.card, borderColor: colors.border }]}
+                  onPress={handlePickFromGallery}
+                >
+                  <Lucide.Upload size={16} color={colors.accent} />
+                  <Text style={[styles.addAnotherBtnText, { color: colors.foreground }]}>
+                    {t('addItem.uploadPhotos', { defaultValue: 'Upload Photos' })}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
         </ScrollView>
