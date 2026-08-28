@@ -38,6 +38,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -144,6 +145,13 @@ export function ClosetAddScreen() {
   const [importMode, setImportMode] = useState<'text' | 'file' | 'url'>('text');
   const [receiptText, setReceiptText] = useState('');
   const [importUrl, setImportUrl] = useState('');
+  const [importFile, setImportFile] = useState<{
+    uri: string;
+    name: string;
+    mimeType?: string;
+    size?: number;
+  } | null>(null);
+  const [importFilePreview, setImportFilePreview] = useState<string | null>(null);
   const [isExtractingDigital, setIsExtractingDigital] = useState(false);
 
   // URL Modal
@@ -538,6 +546,40 @@ export function ClosetAddScreen() {
     }
   };
 
+  const handlePickImportFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: [
+          'image/*',
+          'application/pdf',
+          'text/plain',
+          'text/html',
+          'text/csv',
+          'application/json',
+          'application/rtf',
+        ],
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        setImportFile({
+          uri: asset.uri,
+          name: asset.name,
+          mimeType: asset.mimeType || 'application/octet-stream',
+          size: asset.size,
+        });
+        if (asset.mimeType?.startsWith('image/') || /\.(jpg|jpeg|png|webp|heic)$/i.test(asset.name)) {
+          setImportFilePreview(asset.uri);
+        } else {
+          setImportFilePreview(null);
+        }
+      }
+    } catch (err) {
+      console.warn('Error picking document:', err);
+    }
+  };
+
   const handleDigitalExtract = async () => {
     setIsExtractingDigital(true);
     try {
@@ -545,12 +587,25 @@ export function ClosetAddScreen() {
       if (importMode === 'text') {
         if (!receiptText.trim()) {
           Alert.alert(t('common.error', { defaultValue: 'Error' }), t('addItem.import.pastePrompt', { defaultValue: 'Please paste receipt or order text.' }));
+          setIsExtractingDigital(false);
           return;
         }
         formData.append('text', receiptText.trim());
+      } else if (importMode === 'file') {
+        if (!importFile) {
+          Alert.alert(t('common.error', { defaultValue: 'Error' }), t('addItem.import.selectFilePrompt', { defaultValue: 'Please select a receipt or invoice file.' }));
+          setIsExtractingDigital(false);
+          return;
+        }
+        formData.append('file', {
+          uri: importFile.uri,
+          name: importFile.name || 'receipt_file',
+          type: importFile.mimeType || 'application/octet-stream',
+        } as any);
       } else if (importMode === 'url') {
         if (!importUrl.trim()) {
           Alert.alert(t('common.error', { defaultValue: 'Error' }), t('addItem.import.enterUrlPrompt', { defaultValue: 'Please enter a product URL.' }));
+          setIsExtractingDigital(false);
           return;
         }
         formData.append('url', importUrl.trim());
@@ -618,6 +673,8 @@ export function ClosetAddScreen() {
       setCards((prev) => [...prev, ...newCards]);
       setReceiptText('');
       setImportUrl('');
+      setImportFile(null);
+      setImportFilePreview(null);
       Alert.alert(t('common.success', { defaultValue: 'Extracted!' }), t('addItem.import.receiptParsed', { defaultValue: 'Successfully extracted items into your cards.' }));
     } catch (err: any) {
       Alert.alert(t('common.error', { defaultValue: 'Error' }), err?.response?.data?.detail || err?.message || 'Extraction failed.');
@@ -1021,7 +1078,7 @@ export function ClosetAddScreen() {
 
                   {/* Mode Pills */}
                   <View style={styles.subModePills}>
-                    {(['text', 'url'] as const).map((m) => (
+                    {(['text', 'file', 'url'] as const).map((m) => (
                       <TouchableOpacity
                         key={m}
                         style={[
@@ -1033,6 +1090,8 @@ export function ClosetAddScreen() {
                         <Text style={[styles.subModePillText, { color: importMode === m ? '#FFF' : colors.mutedFg }]}>
                           {m === 'text'
                             ? t('addItem.import.modes.text', { defaultValue: 'Paste Text' })
+                            : m === 'file'
+                            ? t('addItem.import.modes.file', { defaultValue: 'Upload File' })
                             : t('addItem.import.modes.url', { defaultValue: 'Web Link' })}
                         </Text>
                       </TouchableOpacity>
@@ -1051,6 +1110,81 @@ export function ClosetAddScreen() {
                       multiline
                       numberOfLines={5}
                     />
+                  )}
+
+                  {importMode === 'file' && (
+                    <View style={{ width: '100%' }}>
+                      {!importFile ? (
+                        <TouchableOpacity
+                          style={[
+                            styles.fileDropzone,
+                            {
+                              backgroundColor: colors.secondary,
+                              borderColor: colors.border,
+                            },
+                          ]}
+                          onPress={handlePickImportFile}
+                          activeOpacity={0.7}
+                        >
+                          <Lucide.UploadCloud size={36} color={colors.accent} />
+                          <Text style={[styles.fileDropzoneTitle, { color: colors.foreground }]}>
+                            {t('addItem.import.fileDropzoneTitle', { defaultValue: 'Drag & drop your receipt or invoice' })}
+                          </Text>
+                          <Text style={[styles.fileDropzoneBody, { color: colors.mutedFg }]}>
+                            {t('addItem.import.fileDropzoneBody', { defaultValue: 'Supports image, PDF, text, JSON, and document files' })}
+                          </Text>
+                        </TouchableOpacity>
+                      ) : (
+                        <View
+                          style={[
+                            styles.fileSelectedCard,
+                            {
+                              backgroundColor: colors.secondary,
+                              borderColor: colors.border,
+                            },
+                          ]}
+                        >
+                          {importFilePreview ? (
+                            <Image
+                              source={{ uri: importFilePreview }}
+                              style={styles.filePreviewThumb}
+                              resizeMode="cover"
+                            />
+                          ) : (
+                            <View style={[styles.fileIconBox, { backgroundColor: isDark ? '#333' : '#E5E7EB' }]}>
+                              <Lucide.FileText size={26} color={colors.accent} />
+                            </View>
+                          )}
+                          <View style={styles.fileInfoCol}>
+                            <Text style={[styles.fileNameText, { color: colors.foreground }]} numberOfLines={1}>
+                              {importFile.name}
+                            </Text>
+                            <Text style={[styles.fileMetaText, { color: colors.mutedFg }]}>
+                              {importFile.size
+                                ? importFile.size > 1048576
+                                  ? `${(importFile.size / 1048576).toFixed(1)} MB`
+                                  : `${Math.round(importFile.size / 1024)} KB`
+                                : ''}
+                            </Text>
+                          </View>
+                          <TouchableOpacity
+                            style={styles.fileActionBtn}
+                            onPress={handlePickImportFile}
+                          >
+                            <Lucide.RefreshCw size={18} color={colors.accent} />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.fileActionBtn}
+                            onPress={() => {
+                              setImportFile(null);
+                              setImportFilePreview(null);
+                            }}
+                          >
+                            <Lucide.X size={18} color={colors.destructive || '#EF4444'} />
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    </View>
                   )}
 
                   {importMode === 'url' && (
@@ -1863,6 +1997,67 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.xs,
     textAlignVertical: 'top',
     marginBottom: spacing.md,
+  },
+  fileDropzone: {
+    width: '100%',
+    minHeight: 150,
+    borderRadius: radii.xl,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    gap: 6,
+  },
+  fileDropzoneTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.sm,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  fileDropzoneBody: {
+    fontFamily: fonts.body,
+    fontSize: fontSizes.xs,
+    textAlign: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  fileSelectedCard: {
+    width: '100%',
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  filePreviewThumb: {
+    width: 52,
+    height: 52,
+    borderRadius: radii.md,
+  },
+  fileIconBox: {
+    width: 52,
+    height: 52,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fileInfoCol: {
+    flex: 1,
+    gap: 2,
+  },
+  fileNameText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.xs,
+  },
+  fileMetaText: {
+    fontFamily: fonts.body,
+    fontSize: fontSizes.xs - 1,
+  },
+  fileActionBtn: {
+    padding: 6,
   },
   urlInput: {
     width: '100%',
