@@ -60,3 +60,4 @@ graph TD
 | **Cutout / Clean Image** | Closet / Visuals | An isolated, transparent PNG asset (`clean_image_url`) guaranteed to have zero background for seamless layering on avatars and canvases. |
 | **Transparency Invariant** | Closet / Visuals | Architectural rule enforcing that all inpainting and clean assets store transparent PNGs without background bonding boxes. |
 | **StylingContext** | Stylist | The deep module (`styling_context.py`) synthesizing multi-modal grounding (wardrobe, sizing, weather, calendar, i18next) for all styling workflows. |
+| **MobileClosetRepository** | Mobile / Store | The deep module (`closetRepository.ts`) managing offline AsyncStorage hydration, SWR background revalidation, optimistic mutations, and instant slot summaries. |
