@@ -54,6 +54,11 @@ config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
 ];
 
+// Asset extensions
+if (!config.resolver.assetExts.includes('mp4')) {
+  config.resolver.assetExts.push('mp4');
+}
+
 // Source extensions
 config.resolver.sourceExts = [
   ...config.resolver.sourceExts,
