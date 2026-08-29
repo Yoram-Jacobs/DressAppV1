@@ -585,6 +585,45 @@ DISALLOWED_PAYWALL_DOMAINS = (
     "voguebusiness.com", "wsj.com", "ft.com", "bloomberg.com"
 )
 
+DEFAULT_BUCKET_IMAGES: dict[tuple[str, str], str] = {
+    # Men's Buckets
+    ("local", "male"): "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
+    ("runway", "male"): "https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=800&q=80",
+    ("street", "male"): "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=800&q=80",
+    ("sustainability", "male"): "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
+    ("influencers", "male"): "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=800&q=80",
+    ("vintage", "male"): "https://images.unsplash.com/photo-1542272604-780c96856592?auto=format&fit=crop&w=800&q=80",
+    ("maintenance_repairs", "male"): "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=800&q=80",
+
+    # Women's Buckets
+    ("local", "female"): "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80",
+    ("runway", "female"): "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80",
+    ("street", "female"): "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80",
+    ("sustainability", "female"): "https://images.unsplash.com/photo-1532453286298-9836439e1607?auto=format&fit=crop&w=800&q=80",
+    ("influencers", "female"): "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
+    ("vintage", "female"): "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80",
+    ("maintenance_repairs", "female"): "https://images.unsplash.com/photo-1520006403909-838d6b92c22e?auto=format&fit=crop&w=800&q=80",
+}
+
+
+def _get_fallback_image(bucket_slug: str | None, gender: str | None) -> str:
+    canonical = BUCKET_SLUG_ALIASES.get(bucket_slug or "", bucket_slug or "local")
+    g = "male" if (gender or "").lower() == "male" else "female"
+    return (
+        DEFAULT_BUCKET_IMAGES.get((canonical, g))
+        or DEFAULT_BUCKET_IMAGES.get(("local", g))
+        or "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80"
+    )
+
+
+def _ensure_card_image(card: dict[str, Any]) -> dict[str, Any]:
+    """Ensure card always has a valid non-empty representative image_url."""
+    if not card:
+        return card
+    if not card.get("image_url") or not str(card.get("image_url")).startswith("http"):
+        card["image_url"] = _get_fallback_image(card.get("bucket"), card.get("gender"))
+    return card
+
 
 def get_search_queries(
     bucket_slug: str,
@@ -717,7 +756,7 @@ SYSTEM_PROMPT = (
 # Helpers
 # ---------------------------------------------------------------------------
 async def browse_web(url: str) -> str:
-    """Agent tool to fetch and extract text and inline links from a webpage."""
+    """Agent tool to fetch and extract text, article featured images, and inline links from a webpage."""
     from urllib.parse import urljoin, urlparse, unquote
     try:
         headers = {
@@ -729,6 +768,19 @@ async def browse_web(url: str) -> str:
             resp = await client.get(url, follow_redirects=True)
             resp.raise_for_status()
             soup = BeautifulSoup(resp.text, 'html.parser')
+
+            # Extract OpenGraph / Twitter / Hero article image
+            article_image: str | None = None
+            og_img = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "og:image"})
+            tw_img = soup.find("meta", property="twitter:image") or soup.find("meta", attrs={"name": "twitter:image"})
+            if og_img and og_img.get("content"):
+                article_image = urljoin(url, og_img["content"].strip())
+            elif tw_img and tw_img.get("content"):
+                article_image = urljoin(url, tw_img["content"].strip())
+            else:
+                first_img = soup.find("img", src=True)
+                if first_img and first_img.get("src") and not first_img["src"].startswith("data:"):
+                    article_image = urljoin(url, first_img["src"].strip())
 
             is_yahoo = "search.yahoo.com" in url
 
@@ -764,6 +816,9 @@ async def browse_web(url: str) -> str:
 
             if is_yahoo and len(text) < 500:
                 return "Failed to fetch search page: anti-bot challenge or empty results."
+
+            if article_image and not is_yahoo:
+                return f"{text[:3500]}\n\n[Article Featured Image]: {article_image}"
 
             return text[:4000]
     except Exception as exc:
@@ -1092,25 +1147,27 @@ async def _generate_one(
                 return None
 
             source_url = _clean_url(card_data.get("source_url"))
+            image_url = _clean_url(card_data.get("image_url")) or _get_fallback_image(bucket["slug"], gender)
             return {
                 "headline": str(card_data["headline"])[:140],
                 "body": str(card_data["body"])[:400],
                 "tag": (card_data.get("tag") or bucket["label"]).upper()[:40],
                 "source_name": (card_data.get("source_name") or "")[:80] or None,
                 "source_url": source_url or (bucket.get("starter_websites") or [{}])[0].get("url"),
-                "image_url": _clean_url(card_data.get("image_url")),
+                "image_url": image_url,
                 "video_url": _clean_url(card_data.get("video_url")),
             }
         else:
             if parsed.get("headline") and parsed.get("body") and browsed_urls:
                 source_url = _clean_url(parsed.get("source_url"))
+                image_url = _clean_url(parsed.get("image_url")) or _get_fallback_image(bucket["slug"], gender)
                 return {
                     "headline": str(parsed["headline"])[:140],
                     "body": str(parsed["body"])[:400],
                     "tag": (parsed.get("tag") or bucket["label"]).upper()[:40],
                     "source_name": (parsed.get("source_name") or "")[:80] or None,
                     "source_url": source_url or (bucket.get("starter_websites") or [{}])[0].get("url"),
-                    "image_url": _clean_url(parsed.get("image_url")),
+                    "image_url": image_url,
                     "video_url": _clean_url(parsed.get("video_url")),
                 }
             history.append("Error: Invalid response format. Return either browse_web or finish with card.")
@@ -1134,8 +1191,14 @@ async def _already_today(bucket_slug: str, country_code: str | None = None, gend
 
 
 async def ensure_seed_data() -> None:
-    """Ensure database has canonical initial starting trend cards if empty."""
+    """Ensure database has canonical initial starting trend cards and heal missing images."""
     db = get_db()
+    # Heal existing seed/canonical documents missing image_url
+    for seed in CANONICAL_SEED_CARDS:
+        await db.trend_reports.update_many(
+            {"bucket": seed["bucket"], "gender": seed["gender"], "$or": [{"image_url": None}, {"image_url": ""}]},
+            {"$set": {"image_url": seed["image_url"]}},
+        )
     count = await db.trend_reports.count_documents({})
     if count == 0:
         logger.info("Seeding initial canonical Trend Scout cards for Men and Women...")
@@ -1334,7 +1397,7 @@ async def latest_trend_cards(
                 out.append(seed)
                 existing_slugs.add(seed["bucket"])
 
-    return out
+    return [_ensure_card_image(dict(c)) for c in out]
 
 
 async def fashion_scout_feed(
@@ -1392,14 +1455,14 @@ async def fashion_scout_feed(
     canon = canon[:limit]
 
     if language == "en":
-        return canon
+        return [_ensure_card_image(dict(c)) for c in canon]
 
     # On-demand translation with regionalization
     out: list[dict[str, Any]] = []
     for card in canon:
         canon_id = card.get("id")
         if not canon_id:
-            out.append(card)
+            out.append(_ensure_card_image(dict(card)))
             continue
         try:
             cached = await db.trend_reports.find_one(
@@ -1411,7 +1474,7 @@ async def fashion_scout_feed(
                 {"_id": 0},
             )
             if cached:
-                out.append(cached)
+                out.append(_ensure_card_image(dict(cached)))
                 continue
             translated = await _translate_card(
                 card, language=language, country=country
@@ -1423,12 +1486,12 @@ async def fashion_scout_feed(
                     )
                 except Exception:
                     pass
-                out.append({k: v for k, v in translated.items() if k != "_id"})
+                out.append(_ensure_card_image({k: v for k, v in translated.items() if k != "_id"}))
             else:
-                out.append(card)
+                out.append(_ensure_card_image(dict(card)))
         except Exception as exc:
             logger.warning("fashion_scout_feed translation failure: %s", exc)
-            out.append(card)
+            out.append(_ensure_card_image(dict(card)))
     return out
 
 
@@ -1498,7 +1561,7 @@ async def _translate_card(
         "tag": (parsed.get("tag") or card.get("tag") or "").upper()[:40],
         "source_name": (parsed.get("source_name") or card.get("source_name"))[:80] if (parsed.get("source_name") or card.get("source_name")) else None,
         "source_url": _clean_url(parsed.get("source_url")) or card.get("source_url"),
-        "image_url": _clean_url(parsed.get("image_url")) or card.get("image_url"),
+        "image_url": _clean_url(parsed.get("image_url")) or card.get("image_url") or _get_fallback_image(card.get("bucket"), card.get("gender")),
         "video_url": _clean_url(parsed.get("video_url")) or card.get("video_url"),
         "language": language,
         "country_code": (country or "").upper() or None,

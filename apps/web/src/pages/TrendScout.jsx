@@ -54,6 +54,43 @@ const BUCKET_KEYS = [
   'maintenance_repairs',
 ];
 
+const DEFAULT_FRONTEND_IMAGES = {
+  'local-male': 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+  'runway-male': 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=800&q=80',
+  'street-male': 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=800&q=80',
+  'sustainability-male': 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80',
+  'influencers-male': 'https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=800&q=80',
+  'vintage-male': 'https://images.unsplash.com/photo-1542272604-780c96856592?auto=format&fit=crop&w=800&q=80',
+  'maintenance_repairs-male': 'https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=800&q=80',
+
+  'local-female': 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80',
+  'runway-female': 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80',
+  'street-female': 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80',
+  'sustainability-female': 'https://images.unsplash.com/photo-1532453286298-9836439e1607?auto=format&fit=crop&w=800&q=80',
+  'influencers-female': 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80',
+  'vintage-female': 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80',
+  'maintenance_repairs-female': 'https://images.unsplash.com/photo-1520006403909-838d6b92c22e?auto=format&fit=crop&w=800&q=80',
+};
+
+function TrendCardMedia({ card, canonicalBucket }) {
+  const [imgError, setImgError] = useState(false);
+  const g = card.gender === 'male' ? 'male' : 'female';
+  const fallbackUrl = DEFAULT_FRONTEND_IMAGES[`${canonicalBucket}-${g}`] || DEFAULT_FRONTEND_IMAGES[`local-${g}`];
+  const srcToUse = (!imgError && card.image_url) ? card.image_url : fallbackUrl;
+
+  return (
+    <div className="relative aspect-[16/10] w-full overflow-hidden bg-secondary/50 border-b border-border/40">
+      <img
+        src={srcToUse}
+        alt={card.headline || card.title || 'Trend Scout'}
+        loading="lazy"
+        onError={() => setImgError(true)}
+        className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+      />
+    </div>
+  );
+}
+
 export default function TrendScout() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
@@ -295,7 +332,10 @@ export default function TrendScout() {
                 transition={{ delay: i * 0.03 }}
                 data-testid="trend-scout-card"
               >
-                <Card className="rounded-2xl shadow-editorial h-full overflow-hidden flex flex-col border border-border/60 hover:shadow-md transition-shadow">
+                <Card className="rounded-2xl shadow-editorial h-full overflow-hidden flex flex-col border border-border/60 hover:shadow-md transition-shadow group">
+                  {/* Card Representative Image */}
+                  <TrendCardMedia card={card} canonicalBucket={canonicalBucket} />
+
                   <div className="flex items-center justify-between px-5 py-3 border-b border-border/55 bg-secondary/30">
                     <div className="flex items-center gap-2">
                       <span className={`inline-flex items-center justify-center h-7 w-7 rounded-full ${visual.tone}`}>

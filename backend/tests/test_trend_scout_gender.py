@@ -103,12 +103,36 @@ async def test_latest_trend_cards_fallback():
     mock_cursor.limit.return_value = mock_cursor
     mock_db.trend_reports.find.return_value = mock_cursor
     mock_db.trend_reports.count_documents = AsyncMock(return_value=1)
+    mock_db.trend_reports.update_many = AsyncMock()
 
     with patch("app.services.trend_scout.get_db", return_value=mock_db):
         cards_male = await latest_trend_cards(gender="male", country="IL")
         assert len(cards_male) == 7
         assert all(c["gender"] == "male" for c in cards_male)
+        assert all(bool(c.get("image_url") and c["image_url"].startswith("http")) for c in cards_male)
 
         cards_female = await latest_trend_cards(gender="female", country="IL")
         assert len(cards_female) == 7
         assert all(c["gender"] == "female" for c in cards_female)
+        assert all(bool(c.get("image_url") and c["image_url"].startswith("http")) for c in cards_female)
+
+
+def test_card_images_guaranteed():
+    from app.services.trend_scout import _ensure_card_image, _get_fallback_image
+
+    # All canonical seed cards must have valid image URLs
+    for seed in CANONICAL_SEED_CARDS:
+        assert seed.get("image_url") is not None
+        assert seed["image_url"].startswith("https://")
+
+    # Card with missing image_url gets filled by _ensure_card_image
+    empty_card = {"bucket": "street", "gender": "male", "headline": "Test Card"}
+    filled = _ensure_card_image(empty_card)
+    assert filled["image_url"].startswith("https://")
+
+    # Fallback image lookup
+    fallback_male = _get_fallback_image("local", "male")
+    fallback_female = _get_fallback_image("local", "female")
+    assert fallback_male.startswith("https://")
+    assert fallback_female.startswith("https://")
+
