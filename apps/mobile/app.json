@@ -32,7 +32,7 @@
         "backgroundColor": "#FAF8F5"
       },
       "package": "com.project.dressappV1",
-      "versionCode": 8,
+      "versionCode": 9,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",

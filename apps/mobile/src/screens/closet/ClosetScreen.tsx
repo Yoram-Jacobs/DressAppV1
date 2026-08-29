@@ -33,7 +33,7 @@ import {
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';
@@ -96,6 +96,14 @@ export function ClosetScreen() {
     await prewarm({ force: true });
     setRefreshing(false);
   }, [prewarm]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!closetStore.isFresh()) {
+        prewarm({ force: items.length === 0 }).catch(() => {});
+      }
+    }, [prewarm, items.length])
+  );
 
   // Semantic search call
   const performSemanticSearch = async (query: string) => {

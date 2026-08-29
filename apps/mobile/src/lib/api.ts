@@ -30,16 +30,20 @@ const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL ?? 'https://dressapp.co'
 
 let _cachedToken: string | null = null;
 
+// Eagerly pre-hydrate token on startup
+SecureStore.getItemAsync(TOKEN_KEY).then((t) => {
+  _cachedToken = t;
+  if (t) emitAuthChange(true);
+}).catch(() => {});
+
 const { client, API_BASE, tokenStore, userStore } = createApiClient({
   // ── Token storage (SecureStore + In-Memory Cache) ─────────────────────
   getToken: () => {
     if (_cachedToken) return _cachedToken;
-    try {
-      _cachedToken = SecureStore.getItem(TOKEN_KEY) ?? null;
-      return _cachedToken;
-    } catch {
-      return null;
-    }
+    return SecureStore.getItemAsync(TOKEN_KEY).then((t) => {
+      _cachedToken = t;
+      return t;
+    });
   },
   setToken: async (t: string) => {
     _cachedToken = t;

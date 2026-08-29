@@ -11,7 +11,7 @@ import { _setSingleton } from './_singleton.js';
 
 /**
  * @param {object} adapters
- * @param {() => string|null} adapters.getToken
+ * @param {() => string|null|Promise<string|null>} adapters.getToken
  * @param {(token: string) => void} adapters.setToken
  * @param {() => void} adapters.clearToken
  * @param {() => object|null} [adapters.getUser]
@@ -54,8 +54,11 @@ export function createApiClient({
 
   const client = axios.create({ baseURL: API_BASE, timeout: 180000 });
 
-  client.interceptors.request.use((cfg) => {
-    const t = tokenStore.get();
+  client.interceptors.request.use(async (cfg) => {
+    let t = tokenStore.get();
+    if (t && typeof t.then === 'function') {
+      t = await t;
+    }
     if (t) cfg.headers.Authorization = `Bearer ${t}`;
     return cfg;
   });
