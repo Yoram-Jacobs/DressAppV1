@@ -196,7 +196,7 @@ def _run_inference(pil_full: Image.Image) -> np.ndarray:
     # Scale single-channel integer mask to original image size with nearest-neighbor
     mask_img = Image.fromarray(small_pred)
     full_mask_img = mask_img.resize((pil_full.size[0], pil_full.size[1]), Image.NEAREST)
-    pred = np.array(full_mask_img, dtype=np.int32)
+    pred = np.array(full_mask_img, dtype=np.uint8)
     return pred
 
 
@@ -883,6 +883,10 @@ async def parse_garments(image_bytes: bytes) -> list[dict[str, Any]]:
     except Exception as exc:  # noqa: BLE001
         logger.warning("clothing_parser: bad image bytes: %s", exc)
         return []
+    orig_W, orig_H = img.size
+    if max(orig_W, orig_H) > 1024:
+        scale = 1024.0 / max(orig_W, orig_H)
+        img = img.resize((max(1, int(orig_W * scale)), max(1, int(orig_H * scale))), Image.BILINEAR)
     W, H = img.size
 
     # 1. Self-hosted takes precedence (user's future dressapp.co box).
