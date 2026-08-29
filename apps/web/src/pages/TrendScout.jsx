@@ -60,13 +60,13 @@ const DEFAULT_FRONTEND_IMAGES = {
   'street-male': 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=800&q=80',
   'sustainability-male': 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80',
   'influencers-male': 'https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=800&q=80',
-  'vintage-male': 'https://images.unsplash.com/photo-1542272604-780c96856592?auto=format&fit=crop&w=800&q=80',
+  'vintage-male': 'https://www.heddels.com/wp-content/uploads/2022/08/wide-leg-raw-denim-jeans-a-buyers-guide-443x296.jpg',
   'maintenance_repairs-male': 'https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=800&q=80',
 
   'local-female': 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80',
   'runway-female': 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80',
   'street-female': 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80',
-  'sustainability-female': 'https://images.unsplash.com/photo-1532453286298-9836439e1607?auto=format&fit=crop&w=800&q=80',
+  'sustainability-female': 'https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=800&q=80',
   'influencers-female': 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80',
   'vintage-female': 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80',
   'maintenance_repairs-female': 'https://images.unsplash.com/photo-1520006403909-838d6b92c22e?auto=format&fit=crop&w=800&q=80',
@@ -79,7 +79,7 @@ function TrendCardMedia({ card, canonicalBucket }) {
   const srcToUse = (!imgError && card.image_url) ? card.image_url : fallbackUrl;
 
   return (
-    <div className="relative aspect-[16/10] w-full overflow-hidden bg-secondary/50 border-b border-border/40">
+    <div className="relative aspect-[16/10] w-full overflow-hidden bg-secondary/50 border-b border-border/40 select-none">
       <img
         src={srcToUse}
         alt={card.headline || card.title || 'Trend Scout'}
