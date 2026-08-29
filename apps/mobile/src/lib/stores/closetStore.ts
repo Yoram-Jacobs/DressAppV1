@@ -76,7 +76,7 @@ const FRESH_MS = 5 * 60 * 1000; // 5 mins
 let _state: ClosetState = {
   items: [],
   total: 0,
-  loading: true,
+  loading: false,
   error: null,
   lastFullSync: 0,
 };
@@ -284,10 +284,10 @@ export function useClosetStore(options: { prewarm?: boolean } = {}) {
   );
 
   useEffect(() => {
-    if (options.prewarm && !closetStore.isFresh() && !state.loading && state.items.length === 0) {
+    if (options.prewarm && !closetStore.isFresh()) {
       closetStore.prewarm().catch(() => {});
     }
-  }, [options.prewarm, state.loading, state.items.length]);
+  }, [options.prewarm]);
 
   return {
     ...state,
