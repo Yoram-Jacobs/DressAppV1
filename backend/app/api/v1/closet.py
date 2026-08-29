@@ -2454,11 +2454,13 @@ async def list_items(
         # successfully produced. If the thumbnail pipeline failed for
         # this item, keep one image URL so the grid still has something
         # to show (the user would otherwise see an empty card).
-        # We preserve reconstructed_image_url so the UI always has access
-        # to the high-fidelity AI-repaired image.
-        if isinstance(it.get("thumbnail_data_url"), str):
-            it.pop("original_image_url", None)
-            it.pop("segmented_image_url", None)
+        if isinstance(it.get("thumbnail_data_url"), str) and it.get("thumbnail_data_url"):
+            for img_key in ("original_image_url", "segmented_image_url", "reconstructed_image_url", "clean_image_url", "cutout_url"):
+                val = it.get(img_key)
+                if isinstance(val, str) and val.startswith("data:"):
+                    it.pop(img_key, None)
+            if isinstance(it.get("image_url"), str) and it["image_url"].startswith("data:"):
+                it["image_url"] = it["thumbnail_data_url"]
     total = await repos.count(db.closet_items, query)
     # Surface the response shape in logs so deployment/cache issues are
     # immediately diagnosable. If a user reports "I have 311 items but
@@ -3929,6 +3931,7 @@ class ItemChatAnalyseIn(BaseModel):
     history: list[ItemChatTurn] = []
     fill_empty_only: bool = False
     image_url: str | None = None
+    language: str | None = None
 
 
 class RepairItemIn(BaseModel):
@@ -4427,7 +4430,7 @@ async def chat_analyse_item(
     """Conversational Re-analyse & AI Eyes Assistant.
 
     Processes natural language instructions regarding the garment photo or metadata:
-    1. Image modification & inpainting (e.g. 'Remove the shoes', 'Complete the hole where the hand was', 'Remove the metal studs from the jacket') -> Invokes Nano Banana (gemini-2.5-flash-image)
+    1. Image modification & inpainting (e.g. 'Remove the shoes', 'Complete the hole where the hand was', 'Remove the metal studs from the jacket') -> Invokes Nano Banana (gemini-3.1-flash-lite-image)
     2. Clarifications -> Returns assistant questions if instruction is underspecified
     3. Metadata revision -> Updates form attributes according to instructions
     4. General garment styling/details Q&A
@@ -4451,7 +4454,14 @@ async def chat_analyse_item(
     if not raw:
         raise HTTPException(400, "Stored image is empty or could not be retrieved.")
 
-    user_lang = (user or {}).get("preferred_language") or "en"
+    user_lang = payload.language or (user or {}).get("preferred_language")
+    if not user_lang or user_lang == "en":
+        if any("\u0590" <= c <= "\u05FF" for c in user_msg):
+            user_lang = "he"
+        elif any("\u0600" <= c <= "\u06FF" for c in user_msg):
+            user_lang = "ar"
+        else:
+            user_lang = "en"
 
     # Build conversation context for Gemini
     from app.services.gemini_client import GeminiClient
@@ -4473,7 +4483,8 @@ async def chat_analyse_item(
 
     system_prompt = (
         "You are 'The Eyes', DressApp's intelligent garment vision and wardrobe analysis assistant.\n"
-        "The user is viewing their garment in the wardrobe and providing an instruction or question regarding the photo or attributes.\n\n"
+        f"The user is viewing their garment in the wardrobe. The user's active language is '{user_lang}'. "
+        "The user's instruction or question may be in Hebrew, Arabic, German, French, Spanish, English, or any other language.\n\n"
         f"Garment Context:\n"
         f"- Title: {item.get('title') or 'Unknown'}\n"
         f"- Category: {item.get('category') or 'Unknown'} / {item.get('sub_category') or ''}\n"
@@ -4484,20 +4495,24 @@ async def chat_analyse_item(
         f"- Quality: {item.get('quality') or 'Unknown'}\n\n"
         "Your task: Analyze the user's message and determine the correct action from the following 4 options:\n\n"
         "1. 'image_edit': The user is asking to modify, inpaint, remove, or reconstruct elements in the photo.\n"
-        "   Examples: 'Remove the shoes', 'Complete the hole where the hand was', 'Remove the metal studs from the jacket\\'s front', 'Remove the hanger', 'Repair the cut-off sleeve', 'Fill the gap in the hem'.\n"
+        "   Examples in multiple languages:\n"
+        "   - Hebrew: 'הסר את הנעליים', 'השלם את החור איפה שהייתה היד', 'הסר את הרקע', 'נקה את התמונה', 'הסר ניטים', 'תקן שרוול', 'הסר את הקולב', 'השלם חיתוך'\n"
+        "   - Arabic: 'ازالة الحذاء', 'إكمال الثقب', 'إزالة الخلفية', 'إصلاح الكم', 'إزالة الشماعة'\n"
+        "   - English: 'Remove the shoes', 'Complete the hole where the hand was', 'Remove the metal studs from the jacket\\'s front', 'Remove the hanger', 'Repair the cut-off sleeve', 'Fill the gap in the hem'\n"
+        "   CRITICAL REQUIREMENTS FOR 'image_edit':\n"
         "   - Set action: 'image_edit'\n"
-        "   - Set image_edit_prompt: A concise, highly specific inpainting / reconstruction directive for the image generative model to edit and isolate the garment cleanly against the neutral DressApp card background (#F5F2EB) with soft studio lighting, filling the frame and preserving all fabric texture, color fidelity, and silhouette details without dark vignettes or black backgrounds.\n"
-        "   - Set reply: A brief, friendly confirmation in the user's language describing what you are modifying.\n\n"
+        "   - Set image_edit_prompt: ALWAYS IN ENGLISH! Translate the user's intent into a concise, highly specific inpainting / outpainting instruction for Gemini Nano Banana (e.g. 'Remove the shoes and isolate the trousers cleanly on a neutral #F5F2EB background', 'Outpaint and fill the missing area where the hand was, preserving original fabric texture and color').\n"
+        f"   - Set reply: Write a brief, friendly confirmation in the user's language ('{user_lang}') describing what you are modifying.\n\n"
         "2. 'clarification': The user's request for image modification or editing is ambiguous or missing crucial specifics.\n"
         "   - Set action: 'clarification'\n"
-        "   - Set reply: A polite, direct question asking for the needed clarification.\n\n"
+        f"   - Set reply: A polite, direct question in '{user_lang}' asking for the needed clarification.\n\n"
         "3. 'metadata_update': The user is asking to update or re-classify attributes, materials, colors, brand, or category.\n"
         "   - Set action: 'metadata_update'\n"
         "   - Set metadata_updates: A dict of key-value changes (e.g. title, category, colors, fabric_materials, condition, etc.)\n"
-        "   - Set reply: A brief explanation of the updated fields.\n\n"
+        f"   - Set reply: A brief explanation of the updated fields in '{user_lang}'.\n\n"
         "4. 'answered': The user is asking a general styling, care, matching, or information question.\n"
         "   - Set action: 'answered'\n"
-        "   - Set reply: A helpful, expert styling/garment response in the user's language.\n\n"
+        f"   - Set reply: A helpful, expert styling/garment response in '{user_lang}'.\n\n"
         "IMPORTANT: You MUST respond in valid JSON format with keys:\n"
         "{\n"
         '  "action": "image_edit" | "clarification" | "metadata_update" | "answered",\n'
@@ -4509,7 +4524,7 @@ async def chat_analyse_item(
 
     user_parts = [
         raw,
-        f"Conversation History:\n{history_str}\nUser Prompt: {user_msg}\nPlease respond in language: {user_lang} (except JSON keys).",
+        f"Conversation History:\n{history_str}\nUser Prompt: {user_msg}\nPlease respond in language: {user_lang} (except JSON keys and image_edit_prompt which MUST be English).",
     ]
 
     try:
@@ -4518,24 +4533,80 @@ async def chat_analyse_item(
             system=system_prompt,
             response_mime_type="application/json",
         )
-        decision = json.loads(decision_raw)
+        clean_json = (decision_raw or "").strip()
+        import re as _re
+        if "```" in clean_json:
+            m = _re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", clean_json)
+            if m:
+                clean_json = m.group(1).strip()
+            else:
+                clean_json = _re.sub(r"^```(?:json)?\s*", "", clean_json)
+                clean_json = _re.sub(r"\s*```$", "", clean_json).strip()
+        decision = json.loads(clean_json)
     except Exception as exc:
         logger.warning("Gemini decision parsing failed in chat_analyse: %s", exc)
-        # Fallback heuristic
+        # Fallback heuristic (multilingual)
         low_msg = user_msg.lower()
-        if any(k in low_msg for k in ["remove", "complete", "fix", "hole", "stud", "shoe", "sleeve", "hand", "background", "erase", "repair"]):
+        image_keywords = [
+            # English
+            "remove", "complete", "fix", "hole", "stud", "shoe", "sleeve", "hand", "background", "erase", "repair", "clean", "cutout", "isolate", "crop", "inpaint",
+            # Hebrew
+            "הסר", "הסרה", "הורד", "הורדה", "מחק", "מחיקה", "תקן", "תיקון", "השלם", "השלמה", "חור", "רקע", "שרוול", "נעל", "נעליים", "יד", "נקה", "חתוך", "ניטים", "קולב",
+            # Arabic
+            "ازالة", "إزالة", "حذف", "مسح", "اصلاح", "إصلاح", "تعديل", "خلفية", "حذاء", "قص", "ثقب", "كم", "شماعة",
+        ]
+        is_edit = any(k in low_msg for k in image_keywords)
+        if is_edit:
+            prompt_en = user_msg
+            if "נעל" in user_msg or "נעליים" in user_msg or "shoe" in low_msg:
+                prompt_en = "Remove the shoes and footwear, isolate the garment cleanly on neutral background"
+            elif "חור" in user_msg or "יד" in user_msg or "השלם" in user_msg or "hole" in low_msg or "hand" in low_msg:
+                prompt_en = "Outpaint and complete the missing area where the hand was, preserving original fabric texture and color"
+            elif "ניטים" in user_msg or "stud" in low_msg:
+                prompt_en = "Remove the metal studs from the garment"
+            elif "רקע" in user_msg or "נקה" in user_msg or "background" in low_msg:
+                prompt_en = "Clean background and isolate the garment"
+
+            if user_lang == "he":
+                reply_text = f"מבצע עריכת תמונה: {user_msg}"
+            elif user_lang == "ar":
+                reply_text = f"جاري تعديل الصورة: {user_msg}"
+            elif user_lang == "de":
+                reply_text = f"Bearbeite Bild: {user_msg}"
+            elif user_lang == "es":
+                reply_text = f"Modificando imagen: {user_msg}"
+            elif user_lang == "fr":
+                reply_text = f"Modification de l'image : {user_msg}"
+            else:
+                reply_text = f"Processing image modification: {user_msg}"
+
             decision = {
                 "action": "image_edit",
-                "reply": f"Processing image modification: {user_msg}",
-                "image_edit_prompt": user_msg,
+                "reply": reply_text,
+                "image_edit_prompt": prompt_en,
             }
         else:
+            if user_lang == "he":
+                default_reply = "הבנתי. עדכן אותי אם תרצה שאערוך את התמונה או אעדכן את פרטי הפריט."
+            elif user_lang == "ar":
+                default_reply = "مفهوم. أخبرني إذا كنت ترغب في تعديل الصورة أو تحديث تفاصيل القطعة."
+            elif user_lang == "de":
+                default_reply = "Verstanden. Lass mich wissen, wenn du das Bild bearbeiten oder Details anpassen möchtest."
+            elif user_lang == "es":
+                default_reply = "Entendido. Avísame si quieres que edite la foto o ajuste los detalles."
+            elif user_lang == "fr":
+                default_reply = "Compris. Faites-moi savoir si vous souhaitez modifier la photo ou ajuster les détails."
+            else:
+                default_reply = "Understood. Let me know if you want me to edit the photo or refine the details."
+
             decision = {
                 "action": "answered",
-                "reply": "Understood. Let me know if you want me to edit the photo or refine the details.",
+                "reply": default_reply,
             }
 
     action = decision.get("action") or "answered"
+    if action not in ("image_edit", "metadata_update", "clarification", "answered"):
+        action = "answered"
     reply = decision.get("reply") or ""
     image_url_out = None
     clean_image_url_out = None
@@ -4629,7 +4700,7 @@ async def repair_item_image(
 
     Uses the item's stored analysis fields (title, category, color,
     material, pattern, brand, ...) to drive Nano Banana
-    (``gemini-2.5-flash-image``). An optional ``user_hint`` is woven into
+    (``gemini-3.1-flash-lite-image``). An optional ``user_hint`` is woven into
     the prompt so users who noticed a missing detail (e.g., "three-quarter
     sleeves") can steer the generation. Returns 503 cleanly when Nano
     Banana is unavailable.
@@ -5915,7 +5986,7 @@ async def edit_item_image(
     if not source_bytes:
         raise HTTPException(400, "Failed to retrieve source image bytes")
     if gemini_image_service is None:
-        # Nano Banana (gemini-2.5-flash-image) requires a direct
+        # Nano Banana (gemini-3.1-flash-lite-image) requires a direct
         # GEMINI_API_KEY. The legacy HF FLUX fallback was retired in May
         # 2026, so when the direct key is absent we surface a clean 503
         # instead of silently degrading.

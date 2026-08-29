@@ -75,7 +75,7 @@ async def test_chat_analyse_image_edit_success(mock_user):
                 return_value={
                     "image_b64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
                     "mime_type": "image/png",
-                    "model_used": "gemini-2.5-flash-image",
+                    "model_used": "gemini-3.1-flash-lite-image",
                 }
             )
 
@@ -180,5 +180,60 @@ async def test_chat_analyse_clarification(mock_user):
             data = response.json()
             assert data["action_taken"] == "clarification"
             assert "alter the sleeves" in data["reply"]
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.mark.anyio
+async def test_chat_analyse_hebrew_image_edit(mock_user):
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+    try:
+        mock_item = {
+            "id": "item_he_123",
+            "user_id": "user_123",
+            "title": "Cargo Pants",
+            "category": "bottom",
+            "image_url": "https://example.com/pants.png",
+        }
+        fake_png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4"
+
+        with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
+             patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
+             patch("app.services.gemini_client.GeminiClient") as MockGeminiClient, \
+             patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
+             patch("app.api.v1.closet.gemini_image_service") as mock_img_srv:
+
+            mock_find.return_value = mock_item
+            mock_read_bytes.return_value = fake_png
+            mock_billing.return_value = True
+
+            mock_gemini_instance = MagicMock()
+            mock_gemini_instance.vision = AsyncMock(
+                return_value=json.dumps({
+                    "action": "image_edit",
+                    "reply": "מבצע עריכת תמונה: מסיר את הנעליים.",
+                    "image_edit_prompt": "Remove the shoes and isolate cargo pants on neutral background",
+                })
+            )
+            MockGeminiClient.return_value = mock_gemini_instance
+
+            mock_img_srv.edit = AsyncMock(
+                return_value={
+                    "image_b64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+                    "mime_type": "image/png",
+                    "model_used": "gemini-3.1-flash-lite-image",
+                }
+            )
+
+            response = client.post(
+                "/api/v1/closet/item_he_123/chat-analyse",
+                json={"message": "הסר את הנעליים", "language": "he", "history": []}
+            )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert data["action_taken"] == "image_edit"
+            assert "מסיר את הנעליים" in data["reply"]
+            assert data["image_url"].startswith("data:image/png;base64,")
     finally:
         app.dependency_overrides.pop(get_current_user, None)

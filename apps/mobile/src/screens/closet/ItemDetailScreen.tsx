@@ -396,6 +396,7 @@ export function ItemDetailScreen() {
         history: updatedHistory.map((h) => ({ role: h.role, content: h.content })),
         fill_empty_only: isReceiptItem,
         image_url: activeImageUrl || undefined,
+        language: i18n.language || (isRtl ? 'he' : 'en'),
       });
 
       if (res?.item && (res.action_taken === 'metadata_update' || res.updated_fields)) {

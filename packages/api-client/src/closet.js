@@ -108,9 +108,12 @@ export const closet = {
     // client.defaults.baseURL is e.g. 'https://dressapp.co/api/v1' or '/api/v1'.
     const apiBase = (client.defaults.baseURL || '/api/v1').replace(/\/api\/v1\/?$/, '');
     const url = `${apiBase}/api/v1/closet/analyze`;
-    const token = tokenStore.get();
+    let token = tokenStore.get();
     return (async () => {
       try {
+        if (token && typeof token.then === 'function') {
+          token = await token;
+        }
         const resp = await fetch(url, {
           method: 'POST',
           headers: {
@@ -393,12 +396,14 @@ export const closet = {
       .post(`/closet/${itemId}/reanalyze`, null, { timeout: 90000, params })
       .then((r) => r.data);
   },
-  chatAnalyseItem: (itemId, { message, history = [], fill_empty_only = false } = {}) =>
+  chatAnalyseItem: (itemId, { message, history = [], fill_empty_only = false, image_url, language } = {}) =>
     client
       .post(`/closet/${itemId}/chat-analyse`, {
         message,
         history,
         fill_empty_only,
+        image_url,
+        language,
       }, { timeout: 90000 })
       .then((r) => r.data),
 

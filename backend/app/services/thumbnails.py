@@ -182,15 +182,9 @@ async def ensure_thumbnail_and_placeholder(item: dict[str, Any]) -> tuple[str | 
     thumb = existing_thumb
     place = existing_place
 
-    # Regenerate if thumbnail is missing, or not WebP format, or if placeholder is missing.
-    need_thumb = not isinstance(existing_thumb, str) or not existing_thumb.startswith("data:image/webp")
-    need_place = not isinstance(existing_place, str) or not existing_place.startswith("data:image/webp")
-
-    # If the source is PNG but the cached thumb is JPEG (from legacy formats), regenerate it.
-    if isinstance(existing_thumb, str) and existing_thumb.startswith("data:image/jpeg"):
-        source_is_png = isinstance(source, str) and source.startswith("data:image/png")
-        if source_is_png:
-            need_thumb = True
+    # Only generate if thumbnail / placeholder is missing
+    need_thumb = not isinstance(existing_thumb, str) or not existing_thumb.startswith("data:image")
+    need_place = not isinstance(existing_place, str) or not existing_place.startswith("data:image")
 
     if (need_thumb or need_place) and source:
         if need_thumb:
