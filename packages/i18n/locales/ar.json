@@ -513,6 +513,12 @@
       "refreshedAttributes": "تم تحديث الخصائص",
       "eyesBadge": "The Eyes"
     },
+    "tabs": {
+      "details": "تفاصيل",
+      "aiAnalysis": "AI",
+      "pairings": "تنسيقات",
+      "passport": "DPP"
+    },
     "back": "العودة إلى الخزانة",
     "editImage": "تعديل الصورة",
     "generateVariant": "إنشاء نسخة",

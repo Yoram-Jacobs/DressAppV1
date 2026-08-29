@@ -831,7 +831,7 @@ export function ItemDetailScreen() {
             onPress={() => setActiveTab('details')}
           >
             <Lucide.Sliders size={13} color={activeTab === 'details' ? colors.accent : colors.mutedFg} />
-            <Text style={[styles.tabText, { color: activeTab === 'details' ? colors.foreground : colors.mutedFg }]}>
+            <Text style={[styles.tabText, { color: activeTab === 'details' ? colors.foreground : colors.mutedFg }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
               {t('itemDetail.tabs.details', { defaultValue: 'Details' })}
             </Text>
           </TouchableOpacity>
@@ -841,7 +841,7 @@ export function ItemDetailScreen() {
             onPress={() => setActiveTab('ai')}
           >
             <Lucide.Sparkles size={13} color={activeTab === 'ai' ? colors.accent : colors.mutedFg} />
-            <Text style={[styles.tabText, { color: activeTab === 'ai' ? colors.foreground : colors.mutedFg }]}>
+            <Text style={[styles.tabText, { color: activeTab === 'ai' ? colors.foreground : colors.mutedFg }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
               {t('itemDetail.tabs.aiAnalysis', { defaultValue: 'AI' })}
             </Text>
           </TouchableOpacity>
@@ -851,7 +851,7 @@ export function ItemDetailScreen() {
             onPress={() => setActiveTab('pairings')}
           >
             <Lucide.Layers size={13} color={activeTab === 'pairings' ? colors.accent : colors.mutedFg} />
-            <Text style={[styles.tabText, { color: activeTab === 'pairings' ? colors.foreground : colors.mutedFg }]}>
+            <Text style={[styles.tabText, { color: activeTab === 'pairings' ? colors.foreground : colors.mutedFg }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
               {t('itemDetail.tabs.pairings', { defaultValue: 'Pairings' })}
             </Text>
           </TouchableOpacity>
@@ -861,7 +861,7 @@ export function ItemDetailScreen() {
             onPress={() => setActiveTab('dpp')}
           >
             <Lucide.QrCode size={13} color={activeTab === 'dpp' ? colors.accent : colors.mutedFg} />
-            <Text style={[styles.tabText, { color: activeTab === 'dpp' ? colors.foreground : colors.mutedFg }]}>
+            <Text style={[styles.tabText, { color: activeTab === 'dpp' ? colors.foreground : colors.mutedFg }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
               {t('itemDetail.tabs.passport', { defaultValue: 'DPP' })}
             </Text>
           </TouchableOpacity>

@@ -513,6 +513,12 @@
       "refreshedAttributes": "विशेषताएं ताज़ा की गईं",
       "eyesBadge": "The Eyes"
     },
+    "tabs": {
+      "details": "विवरण",
+      "aiAnalysis": "AI",
+      "pairings": "जोड़ी",
+      "passport": "DPP"
+    },
     "back": "अलमारी पर वापस",
     "editImage": "चित्र संपादित करें",
     "generateVariant": "वेरिएंट बनाएं",

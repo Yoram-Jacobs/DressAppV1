@@ -513,6 +513,12 @@
       "refreshedAttributes": "属性已刷新",
       "eyesBadge": "The Eyes"
     },
+    "tabs": {
+      "details": "详情",
+      "aiAnalysis": "AI",
+      "pairings": "搭配",
+      "passport": "DPP"
+    },
     "back": "返回衣橱",
     "editImage": "编辑图片",
     "generateVariant": "生成变体",

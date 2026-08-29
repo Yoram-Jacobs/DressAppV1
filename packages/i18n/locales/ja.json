@@ -513,6 +513,12 @@
       "refreshedAttributes": "属性を更新しました",
       "eyesBadge": "The Eyes"
     },
+    "tabs": {
+      "details": "詳細",
+      "aiAnalysis": "AI",
+      "pairings": "コーデ",
+      "passport": "DPP"
+    },
     "back": "クローゼットに戻る",
     "editImage": "画像を編集",
     "generateVariant": "バリエーションを生成",

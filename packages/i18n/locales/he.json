@@ -519,6 +519,12 @@
       "refreshedAttributes": "מאפיינים עודכנו",
       "eyesBadge": "The Eyes"
     },
+    "tabs": {
+      "details": "פרטים",
+      "aiAnalysis": "AI",
+      "pairings": "שילובים",
+      "passport": "DPP"
+    },
     "back": "חזור",
     "editImage": "ערוך תמונה",
     "generateVariant": "צור וריאציה",

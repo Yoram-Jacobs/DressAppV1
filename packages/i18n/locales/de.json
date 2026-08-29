@@ -513,6 +513,12 @@
       "refreshedAttributes": "Attribute aktualisiert",
       "eyesBadge": "The Eyes"
     },
+    "tabs": {
+      "details": "Details",
+      "aiAnalysis": "KI",
+      "pairings": "Kombis",
+      "passport": "DPP"
+    },
     "back": "Zurück zur Garderobe",
     "editImage": "Bild bearbeiten",
     "generateVariant": "Variante erstellen",

@@ -513,6 +513,12 @@
       "refreshedAttributes": "Atributos actualizados",
       "eyesBadge": "The Eyes"
     },
+    "tabs": {
+      "details": "Detalles",
+      "aiAnalysis": "IA",
+      "pairings": "Conjuntos",
+      "passport": "DPP"
+    },
     "back": "Volver al armario",
     "editImage": "Editar imagen",
     "generateVariant": "Generar variante",
