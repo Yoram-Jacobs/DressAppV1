@@ -376,12 +376,12 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "bucket": "local",
         "gender": "male",
         "country_code": "IL",
-        "headline": "Tel Aviv Menswear: Relaxed Linen Tailoring",
-        "body": "Israeli designers are reinventing smart-casual menswear with unstructured linen blazers and breezy monochrome palettes built for Mediterranean warmth.",
+        "headline": "חדשות אופנה וסטייל בתל אביב: מעצבים מקומיים",
+        "body": "עדכוני אופנה, מעצבים מקומיים וקולקציות חדשות בסצנת הסטייל של תל אביב עם התאמה לאקלים הים-תיכוני.",
         "tag": "LOCAL NEWS",
-        "source_name": "Time Out Tel Aviv (Style)",
-        "source_url": "https://timeout.co.il/category/style/fashion/",
-        "image_url": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
+        "source_name": "Time Out Tel Aviv",
+        "source_url": "https://timeout.co.il/topic/%D7%90%D7%95%D7%A4%D7%A0%D7%94/",
+        "image_url": "https://static.timeout.co.il/www/images/share_image.png",
         "date": "2026-08-01",
         "language": "en",
     },
@@ -390,12 +390,12 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "bucket": "runway",
         "gender": "male",
         "country_code": None,
-        "headline": "Fluid Drape & Boxy Shoulders Lead Menswear",
-        "body": "Global runway lookbooks showcase dropped-shoulder overcoats and relaxed trousers, balancing architectural volume with effortless daily movement.",
+        "headline": "Men’s Fashion Through the Decades: Tailoring & Silhouette Shifts",
+        "body": "Analysis of evolving silhouettes, architectural shoulders, and relaxed fluid drapes across runway lookbooks.",
         "tag": "RUNWAY",
         "source_name": "The Fashionisto",
-        "source_url": "https://www.thefashionisto.com/trends/mens-relaxed-tailoring-runway/",
-        "image_url": "https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=800&q=80",
+        "source_url": "https://www.thefashionisto.com/articles/fashion-through-the-decades-men/",
+        "image_url": "https://www.thefashionisto.com/wp-content/uploads/2024/10/Fashion-Through-the-Decades-Men-Featured.jpg",
         "date": "2026-08-01",
         "language": "en",
     },
@@ -404,12 +404,12 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "bucket": "street",
         "gender": "male",
         "country_code": None,
-        "headline": "Retro Runners & Technical Utility on City Streets",
-        "body": "Urban street style fuses archival trail silhouettes with loose-fit carpenter pants and muted tonal layers for functional modern versatility.",
+        "headline": "Streetwear Movements: Functional Utility & Retro Runners",
+        "body": "Urban street style fuses archival trail silhouettes with loose-fit carpenter trousers and tonal modular layering.",
         "tag": "STREET STYLE",
-        "source_name": "Hypebeast",
-        "source_url": "https://hypebeast.com/2026/8/street-style-retro-trail-runners-cargo-trends",
-        "image_url": "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=800&q=80",
+        "source_name": "Ape to Gentleman",
+        "source_url": "https://www.apetogentleman.com/mens-fashion-trends/",
+        "image_url": "https://www.apetogentleman.com/wp-content/uploads/2022/05/FALL-WINTER-TRENDS.jpg",
         "date": "2026-08-01",
         "language": "en",
     },
@@ -418,12 +418,12 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "bucket": "sustainability",
         "gender": "male",
         "country_code": None,
-        "headline": "Ethical Fibers & Regenerative Hemp Reshape Menswear",
-        "body": "Eco-conscious menswear collectives champion closed-loop organic cotton, regenerative hemp, and transparent ethical supply chain auditing.",
+        "headline": "Sustainable Menswear Brands: Ethical Sourcing & Traceability",
+        "body": "Investigating closed-loop organic cotton, regenerative hemp, and transparent ethical auditing in modern menswear.",
         "tag": "SUSTAINABILITY",
-        "source_name": "Good On You (Journal)",
-        "source_url": "https://goodonyou.eco/mens-sustainable-fashion-guide/",
-        "image_url": "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
+        "source_name": "Good On You",
+        "source_url": "https://goodonyou.eco/sustainable-menswear-brands/",
+        "image_url": "https://goodonyou.eco/wp-content/uploads/2021/12/MaggieZhou-Menswear-1200x630.jpg",
         "date": "2026-08-01",
         "language": "en",
     },
@@ -432,12 +432,12 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "bucket": "influencers",
         "gender": "male",
         "country_code": None,
-        "headline": "Timeless Smart-Casual: Elevated Minimalist Basics",
-        "body": "Tastemakers like Tim Dessaint and Johannes Huebl demonstrate how minimalist neutral knits and tailored chinos create versatile capsules.",
+        "headline": "Smart-Casual Tastemakers: Modern Luxury & Minimalist Tailoring",
+        "body": "Tastemakers demonstrate how relaxed blazers, structured neutral knits, and tailored trousers build cohesive capsule wardrobes.",
         "tag": "TASTEMAKERS",
-        "source_name": "Ape to Gentleman",
-        "source_url": "https://www.apetogentleman.com/minimalist-smart-casual-capsule-wardrobe/",
-        "image_url": "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=800&q=80",
+        "source_name": "The Fashionisto",
+        "source_url": "https://www.thefashionisto.com/story/amiri-fall-2026-campaign/",
+        "image_url": "https://www.thefashionisto.com/wp-content/uploads/2026/08/amiri-fall-winter-2026-campaign.jpg",
         "date": "2026-08-01",
         "language": "en",
     },
@@ -446,11 +446,11 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "bucket": "vintage",
         "gender": "male",
         "country_code": None,
-        "headline": "Archival Workwear & Heritage Denim Identification",
-        "body": "Deep dives into shuttle-loom selvedge weaving history, military surplus aesthetics, and vintage garment tags celebrate enduring craftsmanship.",
+        "headline": "Archival Workwear & Heritage Denim Buying Guides",
+        "body": "Deep dives into shuttle-loom selvedge denim history, military surplus construction, and vintage garment tags.",
         "tag": "VINTAGE & ARCHIVAL",
         "source_name": "Heddels",
-        "source_url": "https://www.heddels.com/guides/selvedge-denim-and-heritage-workwear-guide/",
+        "source_url": "https://www.heddels.com/buying-guides/",
         "image_url": "https://images.unsplash.com/photo-1542272604-780c96856592?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -460,11 +460,11 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "bucket": "maintenance_repairs",
         "gender": "male",
         "country_code": None,
-        "headline": "Sashiko Darning & Leather Cobbling Essentials",
-        "body": "Mastering raw denim chainstitch mending and leather conditioning extends premium wardrobe staples by decades with visible artisan character.",
+        "headline": "Garment Care & Cobbling Maintenance Guides",
+        "body": "Mastering denim chainstitch mending, leather conditioning, and shoe care to extend wardrobe investments by decades.",
         "tag": "MAINTENANCE & REPAIRS",
         "source_name": "Put This On",
-        "source_url": "https://putthison.com/guide-to-garment-care-leather-maintenance-repairs/",
+        "source_url": "https://putthison.com/all-articles/",
         "image_url": "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -476,12 +476,12 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "bucket": "local",
         "gender": "female",
         "country_code": "IL",
-        "headline": "Israeli Atelier Craft: Sculptural Earthy Neutrals",
-        "body": "Domestic Israeli designers and Tel Aviv fashion houses lead with breathable organic silks, draped terracotta neutrals, and artisan boutique jewelry.",
+        "headline": "הפקות אופנה ומעצבות ישראליות: גוונים ארציים ופיסוליות",
+        "body": "מעצבות ישראליות מובילות קו טבעי ונושם של משי אורגני, גווני טרקוטה ארציים ותכשיטי בוטיק ייחודיים.",
         "tag": "LOCAL NEWS",
-        "source_name": "Fashion Forward (Mako)",
-        "source_url": "https://fashionforward.mako.co.il/trends/israeli-atelier-craft-linen-neutrals/",
-        "image_url": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80",
+        "source_name": "Walla! Fashion",
+        "source_url": "https://fashion.walla.co.il/category/2131",
+        "image_url": "https://images.wcdn.co.il/f_auto,q_auto,w_1200,t_54/3/6/9/0/3690025-46.jpg",
         "date": "2026-08-01",
         "language": "en",
     },
@@ -490,12 +490,12 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "bucket": "runway",
         "gender": "female",
         "country_code": None,
-        "headline": "Couture Transparency & Kinetic Fringe Debuts",
-        "body": "International runway showcases blend sheer layering, sculptural corsetry, and kinetic fringe for romantic, confident eveningwear expressions.",
+        "headline": "Runway Lookbooks: Sculptural Volume & Silhouette Play",
+        "body": "International runway showcases blend sheer layering, sculptural corsetry, and kinetic fringe for confident eveningwear.",
         "tag": "RUNWAY",
-        "source_name": "Fashionista",
-        "source_url": "https://fashionista.com/runway-trends-couture-transparency-fringe/",
-        "image_url": "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80",
+        "source_name": "The Fashionisto",
+        "source_url": "https://www.thefashionisto.com/story/amiri-fall-2026-campaign/",
+        "image_url": "https://www.thefashionisto.com/wp-content/uploads/2026/08/amiri-fall-winter-2026-campaign.jpg",
         "date": "2026-08-01",
         "language": "en",
     },
@@ -504,12 +504,12 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "bucket": "street",
         "gender": "female",
         "country_code": None,
-        "headline": "Oversized Tailoring & Ballet Flats on Global Streets",
-        "body": "Fashion week attendees elevate voluminous blazers with delicate ballet flats, wide-leg poplin trousers, and metallic accent accessories.",
+        "headline": "Oversized Tailoring & Conscious Street Style Standards",
+        "body": "Fashion week attendees elevate voluminous blazers with delicate ballet flats, wide-leg poplin trousers, and verified ethical staples.",
         "tag": "STREET STYLE",
-        "source_name": "Style Du Monde",
-        "source_url": "https://www.styledumonde.com/street-style-oversized-tailoring-ballet-flats/",
-        "image_url": "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80",
+        "source_name": "Good On You",
+        "source_url": "https://goodonyou.eco/how-we-rate/",
+        "image_url": "https://goodonyou.eco/wp-content/uploads/2018/12/opengraph-1200x630.jpg",
         "date": "2026-08-01",
         "language": "en",
     },
@@ -518,11 +518,11 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "bucket": "sustainability",
         "gender": "female",
         "country_code": None,
-        "headline": "Fair-Wage Advocacy & Circular Bio-Materials",
+        "headline": "Circular Fashion Advocacy & The #NoNewClothes Challenge",
         "body": "Global slow-fashion leaders spotlight transparent garment worker standards and lab-grown mycelium leather alternatives in everyday staples.",
         "tag": "SUSTAINABILITY",
         "source_name": "Remake",
-        "source_url": "https://remake.world/stories/fair-wage-advocacy-and-circular-materials/",
+        "source_url": "https://remake.world/no-new-clothes-2024/",
         "image_url": "https://images.unsplash.com/photo-1532453286298-9836439e1607?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -532,12 +532,12 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "bucket": "influencers",
         "gender": "female",
         "country_code": None,
-        "headline": "Parisian-Scandi Blends: The Quiet Luxury Shift",
-        "body": "Tastemakers like Matilda Djerf showcase effortless Parisian-Scandi blends, combining crisp poplin shirts with vintage knitwear staples.",
+        "headline": "Quiet Luxury & Minimalist Tastemaker Staples",
+        "body": "Tastemakers showcase effortless Parisian-Scandi blends, combining crisp poplin shirts with vintage knitwear staples.",
         "tag": "TASTEMAKERS",
-        "source_name": "Elle Fashion",
-        "source_url": "https://www.elle.com/fashion/trends/parisian-scandi-quiet-luxury-guide/",
-        "image_url": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
+        "source_name": "Ape to Gentleman",
+        "source_url": "https://www.apetogentleman.com/mens-fashion-trends/",
+        "image_url": "https://www.apetogentleman.com/wp-content/uploads/2022/05/FALL-WINTER-TRENDS.jpg",
         "date": "2026-08-01",
         "language": "en",
     },
@@ -546,11 +546,11 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "bucket": "vintage",
         "gender": "female",
         "country_code": None,
-        "headline": "Archival Haute Couture & 90s Runway Retrospectives",
+        "headline": "Archival Heritage & Enduring Craftsmanship Retrospectives",
         "body": "Curated retrospectives examine historic fashion silhouettes, archive collector panels, and museum-grade textile preservation methodologies.",
         "tag": "VINTAGE & ARCHIVAL",
-        "source_name": "SHOWstudio",
-        "source_url": "https://www.showstudio.com/projects/archival-haute-couture-retrospectives/",
+        "source_name": "Heddels",
+        "source_url": "https://www.heddels.com/buying-guides/five-plus-one/",
         "image_url": "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -560,11 +560,11 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "bucket": "maintenance_repairs",
         "gender": "female",
         "country_code": None,
-        "headline": "Visible Mending & Zero-Waste Hem Alterations",
+        "headline": "Visible Mending & Survival Sewing Skills Tutorials",
         "body": "Creative Japanese boro embroidery, sweater defuzzing, and invisible zipper repairs empower sustainable closet longevity directly at home.",
         "tag": "MAINTENANCE & REPAIRS",
         "source_name": "Repair What You Wear",
-        "source_url": "https://repairwhatyouwear.com/visible-mending-and-hand-stitching-guide/",
+        "source_url": "https://repairwhatyouwear.com/core-mending-skills/",
         "image_url": "https://images.unsplash.com/photo-1520006403909-838d6b92c22e?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -1148,7 +1148,7 @@ async def _generate_one(
 
             source_url = _clean_url(card_data.get("source_url"))
             image_url = _clean_url(card_data.get("image_url")) or _get_fallback_image(bucket["slug"], gender)
-            return {
+            raw_card = {
                 "headline": str(card_data["headline"])[:140],
                 "body": str(card_data["body"])[:400],
                 "tag": (card_data.get("tag") or bucket["label"]).upper()[:40],
@@ -1157,11 +1157,13 @@ async def _generate_one(
                 "image_url": image_url,
                 "video_url": _clean_url(card_data.get("video_url")),
             }
+            verified = await verify_and_enrich_card(raw_card, bucket["slug"], gender)
+            return verified or raw_card
         else:
             if parsed.get("headline") and parsed.get("body") and browsed_urls:
                 source_url = _clean_url(parsed.get("source_url"))
                 image_url = _clean_url(parsed.get("image_url")) or _get_fallback_image(bucket["slug"], gender)
-                return {
+                raw_card = {
                     "headline": str(parsed["headline"])[:140],
                     "body": str(parsed["body"])[:400],
                     "tag": (parsed.get("tag") or bucket["label"]).upper()[:40],
@@ -1170,8 +1172,58 @@ async def _generate_one(
                     "image_url": image_url,
                     "video_url": _clean_url(parsed.get("video_url")),
                 }
+                verified = await verify_and_enrich_card(raw_card, bucket["slug"], gender)
+                return verified or raw_card
             history.append("Error: Invalid response format. Return either browse_web or finish with card.")
     return None
+
+
+async def verify_and_enrich_card(card: dict[str, Any] | None, bucket_slug: str, gender: str) -> dict[str, Any] | None:
+    """Validate that source_url is reachable (HTTP 200) and extract authentic article og:image."""
+    if not card or not card.get("source_url"):
+        return None
+    url = card["source_url"]
+    if not url.startswith("http"):
+        return None
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=8.0, headers=headers, follow_redirects=True) as client:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                logger.warning("Rejecting unreachable trend card URL: %s (status %d)", url, resp.status_code)
+                return None
+            final_url = str(resp.url)
+            resp_text = resp.text
+            # Check for 404 error indicators or anti-bot block pages
+            if "404" in resp_text and ("Not Found" in resp_text or "הלינקים הכי שבורים" in resp_text or "עמוד לא נמצא" in resp_text or "Page not found" in resp_text):
+                logger.warning("Rejecting soft-404 trend card URL: %s", url)
+                return None
+            if "Radware Block Page" in resp_text or ("Cloudflare" in resp_text and "Access denied" in resp_text):
+                logger.warning("Rejecting bot-blocked trend card URL: %s", url)
+                return None
+
+            soup = BeautifulSoup(resp_text, "html.parser")
+            og_img = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "og:image"})
+            tw_img = soup.find("meta", property="twitter:image") or soup.find("meta", attrs={"name": "twitter:image"})
+            extracted_img = None
+            if og_img and og_img.get("content"):
+                extracted_img = urllib.parse.urljoin(final_url, og_img["content"].strip())
+            elif tw_img and tw_img.get("content"):
+                extracted_img = urllib.parse.urljoin(final_url, tw_img["content"].strip())
+
+            card["source_url"] = final_url
+            if extracted_img and extracted_img.startswith("http"):
+                card["image_url"] = extracted_img
+            elif not card.get("image_url") or not str(card.get("image_url")).startswith("http"):
+                card["image_url"] = _get_fallback_image(bucket_slug, gender)
+
+            return card
+    except Exception as exc:
+        logger.warning("Verification failed for trend card URL %s: %s", url, exc)
+        return None
 
 
 async def _already_today(bucket_slug: str, country_code: str | None = None, gender: str = "female") -> bool:
