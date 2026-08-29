@@ -58,8 +58,12 @@ async def find_many(
     sort: list[tuple[str, int]] | None = None,
     limit: int = 100,
     skip: int = 0,
+    projection: dict[str, int] | None = None,
 ) -> list[dict[str, Any]]:
-    cursor = coll.find(query, {"_id": 0})
+    proj = {"_id": 0}
+    if projection:
+        proj.update(projection)
+    cursor = coll.find(query, proj)
     if sort:
         # Atlas M0 imposes a 32 MB in-memory sort cap. Closet documents
         # carry base64 crop thumbnails + reconstruction payloads, so the

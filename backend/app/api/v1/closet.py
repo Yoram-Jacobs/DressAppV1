@@ -2396,8 +2396,22 @@ async def list_items(
             "ids_only": True,
         }
 
+    _EXCLUDE_LIST_FIELDS = {
+        "crop_base64": 0,
+        "crop_mime": 0,
+        "clip_embedding": 0,
+        "variants": 0,
+        "reconstruction": 0,
+        "raw": 0,
+        "dpp_data": 0,
+    }
     items = await repos.find_many(
-        db.closet_items, query, sort=[("created_at", -1)], limit=limit, skip=skip
+        db.closet_items,
+        query,
+        sort=[("created_at", -1)],
+        limit=limit,
+        skip=skip,
+        projection=_EXCLUDE_LIST_FIELDS,
     )
 
     # --- thumbnail backfill + heavy-field strip ---
@@ -4649,7 +4663,9 @@ async def chat_analyse_item(
                     logger.warning("Unbinding background in chat-analyse failed: %s", mat_exc)
 
                 # Update in-memory reconstructed_image_url & clean_image_url
-                updated_doc["reconstructed_image_url"] = image_url_out
+                final_img = clean_image_url_out or image_url_out
+                updated_doc["reconstructed_image_url"] = final_img
+                image_url_out = final_img
                 if clean_image_url_out:
                     updated_doc["clean_image_url"] = clean_image_url_out
                     updated_doc["clean_image_status"] = "ready"
