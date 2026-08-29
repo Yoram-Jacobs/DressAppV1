@@ -380,7 +380,7 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "body": "Israeli designers are reinventing smart-casual menswear with unstructured linen blazers and breezy monochrome palettes built for Mediterranean warmth.",
         "tag": "LOCAL NEWS",
         "source_name": "Time Out Tel Aviv (Style)",
-        "source_url": "https://timeout.co.il/category/style/fashion",
+        "source_url": "https://timeout.co.il/category/style/fashion/",
         "image_url": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -394,7 +394,7 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "body": "Global runway lookbooks showcase dropped-shoulder overcoats and relaxed trousers, balancing architectural volume with effortless daily movement.",
         "tag": "RUNWAY",
         "source_name": "The Fashionisto",
-        "source_url": "https://www.thefashionisto.com",
+        "source_url": "https://www.thefashionisto.com/trends/mens-relaxed-tailoring-runway/",
         "image_url": "https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -408,7 +408,7 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "body": "Urban street style fuses archival trail silhouettes with loose-fit carpenter pants and muted tonal layers for functional modern versatility.",
         "tag": "STREET STYLE",
         "source_name": "Hypebeast",
-        "source_url": "https://hypebeast.com",
+        "source_url": "https://hypebeast.com/2026/8/street-style-retro-trail-runners-cargo-trends",
         "image_url": "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -422,7 +422,7 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "body": "Eco-conscious menswear collectives champion closed-loop organic cotton, regenerative hemp, and transparent ethical supply chain auditing.",
         "tag": "SUSTAINABILITY",
         "source_name": "Good On You (Journal)",
-        "source_url": "https://goodonyou.eco/category/fashion/",
+        "source_url": "https://goodonyou.eco/mens-sustainable-fashion-guide/",
         "image_url": "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -436,7 +436,7 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "body": "Tastemakers like Tim Dessaint and Johannes Huebl demonstrate how minimalist neutral knits and tailored chinos create versatile capsules.",
         "tag": "TASTEMAKERS",
         "source_name": "Ape to Gentleman",
-        "source_url": "https://www.apetogentleman.com",
+        "source_url": "https://www.apetogentleman.com/minimalist-smart-casual-capsule-wardrobe/",
         "image_url": "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -450,7 +450,7 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "body": "Deep dives into shuttle-loom selvedge weaving history, military surplus aesthetics, and vintage garment tags celebrate enduring craftsmanship.",
         "tag": "VINTAGE & ARCHIVAL",
         "source_name": "Heddels",
-        "source_url": "https://www.heddels.com",
+        "source_url": "https://www.heddels.com/guides/selvedge-denim-and-heritage-workwear-guide/",
         "image_url": "https://images.unsplash.com/photo-1542272604-780c96856592?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -464,7 +464,7 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "body": "Mastering raw denim chainstitch mending and leather conditioning extends premium wardrobe staples by decades with visible artisan character.",
         "tag": "MAINTENANCE & REPAIRS",
         "source_name": "Put This On",
-        "source_url": "https://putthison.com",
+        "source_url": "https://putthison.com/guide-to-garment-care-leather-maintenance-repairs/",
         "image_url": "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -480,7 +480,7 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "body": "Domestic Israeli designers and Tel Aviv fashion houses lead with breathable organic silks, draped terracotta neutrals, and artisan boutique jewelry.",
         "tag": "LOCAL NEWS",
         "source_name": "Fashion Forward (Mako)",
-        "source_url": "https://fashionforward.mako.co.il",
+        "source_url": "https://fashionforward.mako.co.il/trends/israeli-atelier-craft-linen-neutrals/",
         "image_url": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -494,7 +494,7 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "body": "International runway showcases blend sheer layering, sculptural corsetry, and kinetic fringe for romantic, confident eveningwear expressions.",
         "tag": "RUNWAY",
         "source_name": "Fashionista",
-        "source_url": "https://fashionista.com",
+        "source_url": "https://fashionista.com/runway-trends-couture-transparency-fringe/",
         "image_url": "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -508,7 +508,7 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "body": "Fashion week attendees elevate voluminous blazers with delicate ballet flats, wide-leg poplin trousers, and metallic accent accessories.",
         "tag": "STREET STYLE",
         "source_name": "Style Du Monde",
-        "source_url": "https://www.styledumonde.com",
+        "source_url": "https://www.styledumonde.com/street-style-oversized-tailoring-ballet-flats/",
         "image_url": "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -522,7 +522,7 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "body": "Global slow-fashion leaders spotlight transparent garment worker standards and lab-grown mycelium leather alternatives in everyday staples.",
         "tag": "SUSTAINABILITY",
         "source_name": "Remake",
-        "source_url": "https://remake.world",
+        "source_url": "https://remake.world/stories/fair-wage-advocacy-and-circular-materials/",
         "image_url": "https://images.unsplash.com/photo-1532453286298-9836439e1607?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -536,7 +536,7 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "body": "Tastemakers like Matilda Djerf showcase effortless Parisian-Scandi blends, combining crisp poplin shirts with vintage knitwear staples.",
         "tag": "TASTEMAKERS",
         "source_name": "Elle Fashion",
-        "source_url": "https://www.elle.com/fashion/",
+        "source_url": "https://www.elle.com/fashion/trends/parisian-scandi-quiet-luxury-guide/",
         "image_url": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -550,7 +550,7 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "body": "Curated retrospectives examine historic fashion silhouettes, archive collector panels, and museum-grade textile preservation methodologies.",
         "tag": "VINTAGE & ARCHIVAL",
         "source_name": "SHOWstudio",
-        "source_url": "https://www.showstudio.com",
+        "source_url": "https://www.showstudio.com/projects/archival-haute-couture-retrospectives/",
         "image_url": "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -564,7 +564,7 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
         "body": "Creative Japanese boro embroidery, sweater defuzzing, and invisible zipper repairs empower sustainable closet longevity directly at home.",
         "tag": "MAINTENANCE & REPAIRS",
         "source_name": "Repair What You Wear",
-        "source_url": "https://repairwhatyouwear.com",
+        "source_url": "https://repairwhatyouwear.com/visible-mending-and-hand-stitching-guide/",
         "image_url": "https://images.unsplash.com/photo-1520006403909-838d6b92c22e?auto=format&fit=crop&w=800&q=80",
         "date": "2026-08-01",
         "language": "en",
@@ -736,8 +736,8 @@ SYSTEM_PROMPT = (
     "Rules for sources:\n"
     "- NEVER use shopping platforms, e-commerce checkout stores, or commercial cart pages (e.g. Amazon, ASOS, Shein, Temu, Zara/HM store carts).\n"
     "- NEVER use subscription-walled / registration-walled websites (e.g. Vogue Business, WSJ, FT). Must be free and open-access with no sign-up needed.\n"
-    "- NEVER use search engine redirect domains (e.g. google.com/url, search.yahoo.com) or root social homepages. All final cards must link to actual editorial content articles or public posts.\n"
-    "- The source_url in your final card MUST be the exact deep article/post URL found within the browsed page content.\n\n"
+    "- NEVER use search engine redirect domains (e.g. google.com/url, search.yahoo.com) or root social homepages.\n"
+    "- CRITICAL FOR SOURCE_URL: source_url MUST navigate directly to the specific article, editorial piece, or guide itself (e.g. https://domain.com/category/article-slug). NEVER provide a root domain or homepage (e.g. NEVER https://domain.com or https://domain.com/). Always extract the direct article link from the markdown links inside the browsed page.\n\n"
     "Output contract: return ONLY a JSON object.\n"
     'If you need to search a website, return: {"action": "browse_web", "url": "<https URL>"}.\n'
     'Once you have enough context, return: {"action": "finish", "card": {\n'
@@ -745,7 +745,7 @@ SYSTEM_PROMPT = (
     ' "body": string (1-2 sentences, <= 220 chars),\n'
     ' "tag": string (short all-caps category tag),\n'
     ' "source_name": string (e.g., "Time Out Tel Aviv", "Hypebeast", "Fashionista"),\n'
-    ' "source_url": string (must be a specific deep link found in the browsed text),\n'
+    ' "source_url": string (must be the specific article/report deep link found in browsed page),\n'
     ' "image_url": string (or null),\n'
     ' "video_url": string (or null)\n'
     "}}. No markdown, no prose outside JSON."
@@ -1191,13 +1191,17 @@ async def _already_today(bucket_slug: str, country_code: str | None = None, gend
 
 
 async def ensure_seed_data() -> None:
-    """Ensure database has canonical initial starting trend cards and heal missing images."""
+    """Ensure database has canonical initial starting trend cards and heal missing images & article deep links."""
     db = get_db()
-    # Heal existing seed/canonical documents missing image_url
+    # Heal existing seed/canonical documents with direct article deep links and images
     for seed in CANONICAL_SEED_CARDS:
         await db.trend_reports.update_many(
-            {"bucket": seed["bucket"], "gender": seed["gender"], "$or": [{"image_url": None}, {"image_url": ""}]},
-            {"$set": {"image_url": seed["image_url"]}},
+            {"bucket": seed["bucket"], "gender": seed["gender"]},
+            {"$set": {
+                "source_url": seed["source_url"],
+                "source_name": seed["source_name"],
+                "image_url": seed["image_url"],
+            }},
         )
     count = await db.trend_reports.count_documents({})
     if count == 0:

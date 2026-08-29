@@ -117,13 +117,22 @@ async def test_latest_trend_cards_fallback():
         assert all(bool(c.get("image_url") and c["image_url"].startswith("http")) for c in cards_female)
 
 
-def test_card_images_guaranteed():
+def test_card_images_and_deep_links_guaranteed():
     from app.services.trend_scout import _ensure_card_image, _get_fallback_image
+    import urllib.parse
 
-    # All canonical seed cards must have valid image URLs
+    # All canonical seed cards must have valid image URLs and deep article source links
     for seed in CANONICAL_SEED_CARDS:
         assert seed.get("image_url") is not None
         assert seed["image_url"].startswith("https://")
+
+        # Must have specific source URL and not just root domain
+        source_url = seed.get("source_url")
+        assert source_url is not None
+        assert source_url.startswith("https://")
+        parsed = urllib.parse.urlparse(source_url)
+        path = (parsed.path or "").strip("/")
+        assert len(path) > 0, f"Seed card {seed['id']} has root domain source_url: {source_url}"
 
     # Card with missing image_url gets filled by _ensure_card_image
     empty_card = {"bucket": "street", "gender": "male", "headline": "Test Card"}
@@ -135,4 +144,5 @@ def test_card_images_guaranteed():
     fallback_female = _get_fallback_image("local", "female")
     assert fallback_male.startswith("https://")
     assert fallback_female.startswith("https://")
+
 
