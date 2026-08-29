@@ -13,6 +13,7 @@ let _state = {
   lastSync: 0,
   lastLanguage: null,
   lastCountry: null,
+  lastGender: null,
   loading: false,
   error: null,
 };
@@ -40,18 +41,19 @@ export const trendScoutStore = {
     return () => _listeners.delete(fn);
   },
 
-  async prewarm({ language, country, force = false } = {}) {
-    const isSameParams = _state.lastLanguage === language && _state.lastCountry === country;
+  async prewarm({ language, country, gender, force = false } = {}) {
+    const isSameParams = _state.lastLanguage === language && _state.lastCountry === country && _state.lastGender === gender;
     if (!force && isSameParams && _state.lastSync && Date.now() - _state.lastSync < FRESH_MS) {
       return _state;
     }
     _set({ loading: true, error: null });
     try {
-      const res = await api.fashionScoutFeed(50, { language, country });
+      const res = await api.fashionScoutFeed(50, { language, country, gender });
       _set({
         cards: res?.cards || [],
         lastLanguage: language,
         lastCountry: country,
+        lastGender: gender,
         lastSync: Date.now(),
       });
       return _state;
@@ -69,6 +71,7 @@ export const trendScoutStore = {
       lastSync: 0,
       lastLanguage: null,
       lastCountry: null,
+      lastGender: null,
       loading: false,
       error: null,
     };

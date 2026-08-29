@@ -13,7 +13,7 @@ import re
 from typing import Any
 
 from app.config import settings
-from app.services.gemini_client import GeminiClient
+from app.services.gemini_client import DEFAULT_VISION_MODEL, GeminiClient
 
 logger = logging.getLogger(__name__)
 
@@ -155,11 +155,22 @@ class GeminiStylistService:
         )
         if user_preferences_block:
             sys_msg = sys_msg + "\n\n" + user_preferences_block.strip() + "\n"
+        safe_profile = {}
+        if user_profile:
+            safe_profile = {
+                "name": user_profile.get("display_name") or user_profile.get("name"),
+                "preferred_language": user_profile.get("preferred_language"),
+                "sex": user_profile.get("sex"),
+                "age_group": user_profile.get("age_group"),
+                "body_measurements": user_profile.get("body_measurements"),
+                "style_preferences": user_profile.get("style_preferences"),
+                "modesty_level": user_profile.get("modesty_level"),
+            }
         context_block = {
             "weather": weather,
             "calendar_events": calendar_events or [],
             "cultural_rules": cultural_rules or [],
-            "user_profile": user_profile or {},
+            "user_profile": safe_profile,
             "closet_summary": closet_summary or [],
         }
         lang_code = ((user_profile or {}).get("preferred_language") or "en").lower()
@@ -178,7 +189,7 @@ class GeminiStylistService:
         prompt_text = (
             f"{lang_preamble}"
             f"USER_REQUEST:\n{user_text}\n\n"
-            f"CONTEXT:\n{json.dumps(context_block, ensure_ascii=False, indent=2)}\n\n"
+            f"CONTEXT:\n{json.dumps(context_block, ensure_ascii=False, indent=2, default=str)}\n\n"
             "Return the JSON object now."
         )
 
@@ -219,17 +230,18 @@ class GeminiStylistService:
                     response_mime_type="application/json",
                 )
             except Exception as exc:
-                if self.api_key and settings.GEMINI_API_KEY and self.api_key != settings.GEMINI_API_KEY:
-                    logger.warning("Custom Gemini key failed (%s), falling back to system key", exc)
+                logger.warning("Gemini stylist call failed (%s), attempting fallback with system key and default model", exc)
+                try:
                     fallback_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
                     raw = await fallback_client.vision(
                         system=sys_msg,
                         user_parts=user_parts,
-                        model=self.model,
+                        model=DEFAULT_VISION_MODEL,
                         response_mime_type="application/json",
                     )
-                else:
-                    raise
+                except Exception as fallback_exc:
+                    logger.error("Fallback Gemini stylist call failed: %s", fallback_exc)
+                    raise exc from fallback_exc
         return _parse_json(raw)
 
 

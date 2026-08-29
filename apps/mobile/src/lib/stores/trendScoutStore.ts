@@ -99,7 +99,7 @@ export const trendScoutStore = {
     return Date.now() - _state.lastFetch < FRESH_MS && _state.cards.length > 0;
   },
 
-  async prewarm(options: { language?: string; country?: string | null; force?: boolean } = {}): Promise<void> {
+  async prewarm(options: { language?: string; country?: string | null; gender?: string | null; force?: boolean } = {}): Promise<void> {
     if (!options.force && this.isFresh()) {
       return;
     }
@@ -109,6 +109,7 @@ export const trendScoutStore = {
       const res = await api.fashionScoutFeed(30, {
         language: options.language || 'en',
         country: options.country || undefined,
+        gender: options.gender || undefined,
       });
       const rawList = Array.isArray(res?.cards) ? res.cards : (Array.isArray(res) ? res : []);
       const cards = rawList.map((it: any, idx: number) => ({

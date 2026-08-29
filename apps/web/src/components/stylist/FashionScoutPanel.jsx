@@ -19,7 +19,9 @@ import { useLocation as useAppLocation } from '@/lib/location';
  * needed (they are concrete tokens, so they survive dead-code elimination).
  */
 const BUCKET_STYLES = {
-  'ss26-runway':
+  local:
+    'from-indigo-900 via-indigo-700 to-indigo-500',
+  runway:
     'from-[hsl(var(--accent))]/80 via-[hsl(var(--accent))]/60 to-[hsl(var(--accent))]/30',
   street:
     'from-slate-900 via-slate-700 to-slate-500',
@@ -27,6 +29,13 @@ const BUCKET_STYLES = {
     'from-emerald-800 via-emerald-600 to-emerald-400',
   influencers:
     'from-rose-800 via-rose-600 to-rose-400',
+  vintage:
+    'from-amber-900 via-amber-700 to-amber-500',
+  maintenance_repairs:
+    'from-teal-800 via-teal-600 to-teal-400',
+  // legacy aliases
+  'ss26-runway':
+    'from-[hsl(var(--accent))]/80 via-[hsl(var(--accent))]/60 to-[hsl(var(--accent))]/30',
   second_hand:
     'from-amber-900 via-amber-700 to-amber-500',
   recycling:
@@ -144,7 +153,7 @@ export function FashionScoutPanel() {
   const [refreshing, setRefreshing] = useState(false);
 
   // Regionalize the feed: user's preferred UI language + best-available
-  // country code (live device > persisted home_location).
+  // country code (live device > persisted home_location) + user gender.
   const language = (user?.preferred_language || i18n.language || 'en')
     .split('-')[0]
     .toLowerCase();
@@ -152,16 +161,15 @@ export function FashionScoutPanel() {
     (user?.address?.country_code || user?.home_location?.country_code || '')
       .toString()
       .toUpperCase() || null;
+  const userSex = (user?.sex || user?.gender || 'female').toLowerCase();
+  const gender = userSex === 'male' ? 'male' : 'female';
 
   const load = useCallback(async () => {
     try {
-      // Stylist panel shows the full daily set (~30) filtered by the
-      // viewer's relevance ranking. The backend reads our auth header
-      // and re-ranks the candidate pool by gender / profession /
-      // occupation / country before slicing to limit.
       const { cards: rows } = await api.fashionScoutFeed(30, {
         language,
         country,
+        gender,
       });
       setCards(rows || []);
     } catch {
@@ -169,7 +177,7 @@ export function FashionScoutPanel() {
     } finally {
       setLoading(false);
     }
-  }, [language, country]);
+  }, [language, country, gender]);
 
   useEffect(() => {
     load();
@@ -179,7 +187,7 @@ export function FashionScoutPanel() {
     if (refreshing) return;
     setRefreshing(true);
     try {
-      await api.trendsRunNowDev(true);
+      await api.trendsRunNowDev(true, gender, country);
       await load();
       toast.success(t('stylist.scoutRefreshed'));
     } catch (err) {

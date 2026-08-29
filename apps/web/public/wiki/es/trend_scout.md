@@ -1,26 +1,37 @@
-# Explorador de tendencias e inspiración personal
+# Radar de Tendencias e Inspiración Personal
 
-Descubra feeds de moda seleccionados diariamente y adaptados a sus preferencias de estilo.
+Descubre feeds de inteligencia de moda seleccionados y adaptados a tu ecosistema de género e identidad cultural local.
 
-## Descripción general
-Trend Scout agrega feeds de calles, pasarelas, sostenibilidad y personas influyentes, clasificándolos dinámicamente según su ocupación y reglas de estilo.
+## Resumen general
+El Radar de Tendencias (Trend Scout) organiza automáticamente 7 categorías de inteligencia de moda diferenciadas para los ecosistemas de moda masculina y femenina. Están profundamente ancladas en la ubicación del dispositivo del usuario (p. ej., Israel), utilizando fuentes editoriales de acceso abierto, diseñadores locales y creadores de tendencias consolidados.
+
+### Categorías del Ecosistema (7 Categorías)
+1. **Noticias Locales (Local News)**: Anclado en el país del dispositivo (p. ej., Israel), destacando editoriales de moda abiertas, sastrería artesanal y cobertura de diseñadores locales.
+2. **Pasarela Mundial (Runway)**: Reseñas estacionales de alta costura y colecciones prêt-à-porter globales.
+3. **Moda Urbana (Street Style)**: Estética urbana auténtica y propuestas de combinación de capas para el día a día.
+4. **Sostenibilidad (Sustainability)**: Moda ecológica, economía circular y prácticas textiles éticas.
+5. **Creadores de Tendencias (Influencers & Tastemakers)**: Análisis de personalidades influyentes globales y sus estilos característicos.
+6. **Moda Vintage y de Archivo (Vintage & Archival)**: Evolución histórica de la moda, piezas de archivo y prendas atemporales (sin enlaces comerciales ni tiendas online).
+7. **Cuidado y Reparación (Maintenance & Repairs)**: Guías prácticas para el cuidado de prendas, costura, zapatería y conservación de tejidos.
+
+## Reglas de Calidad e Higiene de Enlaces
+- **Sin enlaces de tiendas o comercio electrónico**: Restricción estricta de plataformas de compra (Amazon, Shein, ASOS, enlaces a carritos).
+- **Sin muros de pago ni registro obligatorio**: Filtrado de sitios que exijan suscripción o registro previo para leer.
+- **Enlaces directos y limpios**: Eliminación de redirecciones de motores de búsqueda (Google / Yahoo) para ofrecer el enlace auténtico a la fuente.
+
+## Calendario de Actualización
+- **Tarea mensual programada**: Se ejecuta automáticamente a medianoche UTC el día 1 de cada mes para renovar las categorías con datos en tiempo real.
+- **Actualización diaria o bajo demanda**: Disponible en cualquier momento desde el botón de actualización en la aplicación.
 
 ## Requisitos previos
-- Servicios de ubicación de región local habilitados.
-- Campo de ocupación del usuario completado en la configuración de su perfil.
+- Ubicación del dispositivo activada o país de residencia configurado en el perfil.
+- Suscripción activa en los planes Manager o Professional.
 
 ## Paso a paso
-1. **Abrir Explorador**: navegue a la pantalla Tendencias.
-2. **Explorar feeds**: explore tarjetas de colecciones de pasarela y tableros de estilo ecológicos.
-3. **Guarda looks**: marca ideas o encuentra huecos en tu armario que coincidan con las tendencias actuales.
-4. **Traducción automática**: los feeds se traducen automáticamente a su idioma activo.
+1. **Abrir el Radar**: Ve a la pantalla de Tendencias o al panel del Estilista.
+2. **Cambiar de género**: Alterna entre moda femenina y masculina cuando desees.
+3. **Filtrar por categoría**: Selecciona cualquiera de las 7 pestañas para enfocar tu feed.
+4. **Leer fuentes**: Haz clic en el enlace externo de cualquier tarjeta para consultar el artículo original.
 
 ## Resultados esperados
-Un feed actualizado diariamente de tarjetas de estilo relevantes que coinciden con su perfil demográfico regional.
-
-## Solución de problemas
-- **El feed no se actualiza**: el programador en segundo plano de Trend Scout actualiza el contenido una vez cada 24 horas.
-- **Tarjetas irrelevantes**: asegúrese de que la ocupación de su perfil y las preferencias de reglas de estilo sean precisas para mejorar la clasificación.
-
-## Limitaciones
-- Las clasificaciones demográficas personalizadas se calculan utilizando las preferencias del lado del servidor.
+Un feed editorial dinámico, actualizado y contextualizado con las tendencias que mejor reflejan tu estilo y tu entorno cultural.

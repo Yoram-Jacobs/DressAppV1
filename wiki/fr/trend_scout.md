@@ -1,26 +1,37 @@
-# Tendance et inspiration personnelle
+# Éclaireur de Tendances & Inspiration Personnelle
 
-Découvrez des flux de mode quotidiens adaptés à vos préférences de style.
+Découvrez des flux d'intelligence mode personnalisés, adaptés à votre écosystème de genre et à votre culture locale.
 
-## Aperçu
-Trend Scout regroupe les flux de rue, de défilé, de développement durable et d'influenceurs, en les triant de manière dynamique en fonction de vos règles de profession et de style.
+## Présentation
+L'Éclaireur de Tendances (Trend Scout) sélectionne automatiquement 7 catégories distinctes d'actualités et d'inspirations mode pour les écosystèmes masculin et féminin. Celles-ci sont profondément ancrées dans le pays de votre appareil (ex. Israël), s'appuyant sur des sources éditoriales en accès libre, des créateurs locaux et des personnalités influentes.
 
-## Conditions préalables
-- Services de localisation de région locale activés.
-- Champ d'occupation de l'utilisateur renseigné dans les paramètres de votre profil.
+### Catégories de l'Écosystème (7 Catégories)
+1. **Actualités Locales (Local News)**: Ancré dans le pays de votre appareil (ex. Israël), mettant en avant des éditoriaux de mode locaux ouverts, la confection artisanale et les créateurs régionaux.
+2. **Défilés Mondiaux (Runway)**: Revues saisonnières des collections Haute Couture et Prêt-à-Porter internationales.
+3. **Style Urbain (Street Style)**: Esthétique urbaine authentique et idées de superpositions au quotidien.
+4. **Mode Responsable (Sustainability)**: Éco-responsabilité, économie circulaire et pratiques textiles éthiques.
+5. **Influenceurs & Créateurs de Tendances (Influencers & Tastemakers)**: Portraits de personnalités inspirantes mondiales et décryptage de leurs styles signatures.
+6. **Vintage & Mode d'Archive (Vintage & Archival)**: Évolution historique de la mode, pièces d'archives et élégance intemporelle (sans liens marchands ou boutiques).
+7. **Entretien & Réparations (Maintenance & Repairs)**: Conseils pratiques pour le soin des vêtements, la couture, la cordonnerie et la longévité des étoffes.
 
-## Étape par étape
-1. **Ouvrir Scout** : accédez à l'écran Tendances.
-2. **Explorez les flux** : parcourez les cartes des collections de défilés et les tableaux de style respectueux de l'environnement.
-3. **Enregistrez les looks** : ajoutez des idées à vos favoris ou trouvez des lacunes dans votre garde-robe correspondant aux tendances actuelles.
-4. **Traduction automatique** : les flux sont automatiquement traduits dans votre langue active.
+## Règles de Qualité et d'Intégrité des Liens
+- **Aucun lien commercial ou e-commerce**: Exclusion stricte des plateformes d'achat (Amazon, Shein, ASOS, paniers d'achat).
+- **Aucun paywall ni inscription obligatoire**: Filtrage des sites payants ou nécessitant la création d'un compte pour lire l'article.
+- **Liens directs et vérifiés**: Suppression des redirections des moteurs de recherche (Google / Yahoo) afin d'exposer directement les URL sources.
 
-## Résultats attendus
-Un flux mis à jour quotidiennement de cartes de style pertinentes correspondant à votre profil démographique régional.
+## Fréquence d'Actualisation
+- **Tâche mensuelle programmée**: Exécution automatique à minuit UTC le 1er de chaque mois pour actualiser les catégories et renouveler les liens avec des données en temps réel.
+- **Actualisation quotidienne ou à la demande**: Disponible à tout moment via le bouton de rafraîchissement dans l'application.
 
-## Dépannage
-- **Le flux ne se met pas à jour** : le planificateur en arrière-plan Trend Scout met à jour le contenu une fois toutes les 24 heures.
-- **Cartes non pertinentes** : assurez-vous que votre profession de profil et vos préférences en matière de règles de style sont exactes pour améliorer le classement.
+## Prérequis
+- Localisation de l'appareil activée ou pays de résidence défini dans le profil.
+- Abonnement actif Manager ou Professional.
 
-## Limites
-- Les classements démographiques personnalisés sont calculés à l'aide des préférences côté serveur.
+## Guide Pas à Pas
+1. **Ouvrir l'Éclaireur**: Accédez à l'onglet Tendances ou au panneau Styliste.
+2. **Changer de genre**: Basculez entre Mode Féminine et Mode Masculine à tout moment.
+3. **Filtrer par catégorie**: Choisissez l'un des 7 onglets pour cibler votre flux.
+4. **Lire les sources**: Cliquez sur le badge externe d'une carte pour consulter l'article d'origine.
+
+## Résultats Attendus
+Un flux éditorial riche, actualisé et ancré localement, parfaitement aligné avec votre profil stylistique et votre identité culturelle.

@@ -248,6 +248,12 @@ async def update_me(
                 merged_keys.pop(key_name, None)
             else:
                 key_str = str(key_val).strip()
+                from app.services.auth import decrypt_api_key, encrypt_api_key
+                if key_str.startswith("gAAAAA"):
+                    unwrapped = decrypt_api_key(key_str)
+                    if unwrapped:
+                        key_str = unwrapped
+
                 if key_name == "google_ai" and key_str:
                     from app.services.gemini_client import GeminiClient
                     client = GeminiClient(api_key=key_str)
@@ -263,7 +269,6 @@ async def update_me(
                         ) from exc
 
                 # Encrypt new key
-                from app.services.auth import encrypt_api_key
                 merged_keys[key_name] = encrypt_api_key(key_str)
                 
         set_ops["ai_configuration"] = {

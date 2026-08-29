@@ -43,6 +43,7 @@ interface TrendItem {
   image_url?: string;
   source_url?: string;
   source_name?: string;
+  gender?: string;
   is_local?: boolean;
   city?: string;
   country?: string;
@@ -50,12 +51,13 @@ interface TrendItem {
 
 const BUCKETS = [
   { id: 'all', labelKey: 'trends.all', fallback: 'All News' },
-  { id: 'local', labelKey: 'trends.local', fallback: '📍 Local News' },
-  { id: 'runway', labelKey: 'trends.runway', fallback: 'Runway' },
-  { id: 'street', labelKey: 'trends.street', fallback: 'Street Style' },
-  { id: 'sustainability', labelKey: 'trends.sustainability', fallback: 'Sustainability' },
-  { id: 'influencers', labelKey: 'trends.influencers', fallback: 'Influencers' },
-  { id: 'second_hand', labelKey: 'trends.vintage', fallback: 'Vintage / Second Hand' },
+  { id: 'local', labelKey: 'trends.bucket.local', fallback: '📍 Local News' },
+  { id: 'runway', labelKey: 'trends.bucket.runway', fallback: 'Runway' },
+  { id: 'street', labelKey: 'trends.bucket.street', fallback: 'Street Style' },
+  { id: 'sustainability', labelKey: 'trends.bucket.sustainability', fallback: 'Sustainability' },
+  { id: 'influencers', labelKey: 'trends.bucket.influencers', fallback: 'Influencers' },
+  { id: 'vintage', labelKey: 'trends.bucket.vintage', fallback: 'Vintage / Archival' },
+  { id: 'maintenance_repairs', labelKey: 'trends.bucket.maintenance_repairs', fallback: 'Care & Repairs' },
 ] as const;
 
 export function TrendScoutScreen() {
@@ -64,9 +66,12 @@ export function TrendScoutScreen() {
   const navigation = useNavigation<any>();
 
   const { user } = useUserStore();
-  const { cards: items, loading, prewarm } = useTrendScoutStore({ prewarm: true });
+  const userSex = (user?.sex || user?.gender || 'female').toLowerCase();
+  const [selectedGender, setSelectedGender] = useState<'male' | 'female'>(userSex === 'male' ? 'male' : 'female');
   const [refreshing, setRefreshing] = useState(false);
   const [activeBucket, setActiveBucket] = useState<string>('all');
+
+  const { cards: items, loading, prewarm } = useTrendScoutStore({ prewarm: true });
 
   const userTier = ((user?.subscription?.is_active && user?.subscription?.tier) || user?.subscription_tier || 'free').toLowerCase();
   const isPaying = (user?.subscription?.is_active && userTier !== 'free') || userTier === 'manager' || userTier === 'professional' || userTier === 'pro';
@@ -74,15 +79,23 @@ export function TrendScoutScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await prewarm({ language: i18n.language, force: true });
+      await prewarm({ language: i18n.language, gender: selectedGender, force: true });
     } finally {
       setRefreshing(false);
     }
-  }, [prewarm, i18n.language]);
+  }, [prewarm, i18n.language, selectedGender]);
+
+  useEffect(() => {
+    prewarm({ language: i18n.language, gender: selectedGender });
+  }, [selectedGender, prewarm, i18n.language]);
 
   const filteredItems = items.filter((it) => {
+    if (it.gender && it.gender !== selectedGender) return false;
     if (activeBucket === 'all') return true;
-    if (activeBucket === 'local') return it.is_local || it.city || it.country;
+    if (activeBucket === 'local') return it.bucket === 'local' || it.bucket === 'news_flash' || it.is_local || it.city || it.country;
+    if (activeBucket === 'runway') return it.bucket === 'runway' || it.bucket === 'ss26-runway';
+    if (activeBucket === 'vintage') return it.bucket === 'vintage' || it.bucket === 'second_hand';
+    if (activeBucket === 'maintenance_repairs') return it.bucket === 'maintenance_repairs' || it.bucket === 'recycling';
     return it.bucket === activeBucket || (it.category || '').toLowerCase().includes(activeBucket);
   });
 
@@ -108,17 +121,17 @@ export function TrendScoutScreen() {
 
         <View style={styles.cardBody}>
           <View style={styles.badgeRow}>
-            {item.is_local || item.city ? (
+            {item.is_local || item.city || item.bucket === 'local' ? (
               <View style={[styles.localBadge, { backgroundColor: 'rgba(234, 88, 12, 0.15)' }]}>
                 <Lucide.MapPin size={11} color="#ea580c" />
                 <Text style={styles.localBadgeText}>
-                  {item.city || item.country || t('trends.localTag', { defaultValue: 'Local News' })}
+                  {item.city || item.country || t('trends.israelAnchor', { defaultValue: 'Israel 🇮🇱' })}
                 </Text>
               </View>
             ) : null}
 
             <Text style={[styles.category, { color: colors.accent }]}>
-              {item.bucket || item.category || 'Runway'}
+              {t(`trends.bucket.${item.bucket}`, { defaultValue: item.bucket || item.category || 'Runway' })}
             </Text>
           </View>
 
@@ -156,6 +169,42 @@ export function TrendScoutScreen() {
           {t('trends.title', { defaultValue: 'Trend Scout' })}
         </Text>
         <View style={{ width: 36 }} />
+      </View>
+
+      {/* ── Gender Toggle Bar ───────────────────────────────────────── */}
+      <View style={[styles.genderBar, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity
+          style={[
+            styles.genderPill,
+            selectedGender === 'female' && { backgroundColor: colors.primary, borderColor: colors.primary },
+          ]}
+          onPress={() => setSelectedGender('female')}
+        >
+          <Text
+            style={[
+              styles.genderText,
+              { color: selectedGender === 'female' ? colors.primaryFg : colors.mutedFg },
+            ]}
+          >
+            {t('trends.womensFashion', { defaultValue: "Women's Fashion" })}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.genderPill,
+            selectedGender === 'male' && { backgroundColor: colors.primary, borderColor: colors.primary },
+          ]}
+          onPress={() => setSelectedGender('male')}
+        >
+          <Text
+            style={[
+              styles.genderText,
+              { color: selectedGender === 'male' ? colors.primaryFg : colors.mutedFg },
+            ]}
+          >
+            {t('trends.mensFashion', { defaultValue: "Men's Fashion" })}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* ── Bucket Filter Pills ──────────────────────────────────────── */}
@@ -261,6 +310,27 @@ const styles = StyleSheet.create({
   topTitle: {
     fontFamily: fonts.displayBold,
     fontSize: fontSizes.lg,
+  },
+  genderBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2],
+    gap: spacing[2],
+    borderBottomWidth: 1,
+  },
+  genderPill: {
+    flex: 1,
+    paddingVertical: spacing[2],
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  genderText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.xs,
   },
   bucketBar: {
     minHeight: 52,

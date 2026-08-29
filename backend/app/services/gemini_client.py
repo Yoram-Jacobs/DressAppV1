@@ -68,8 +68,8 @@ except Exception as _exc:  # noqa: BLE001
 
 # Default model used when the caller doesn't specify one. Matches the
 # historical Gemini Flash routing through Emergent / litellm.
-DEFAULT_TEXT_MODEL = "gemini-3.5-flash-lite"
-DEFAULT_VISION_MODEL = "gemini-3.5-flash-lite"
+DEFAULT_TEXT_MODEL = "gemini-2.5-flash"
+DEFAULT_VISION_MODEL = "gemini-2.5-flash"
 
 # A type alias for "anything that can become a Part" — accepted by
 # :meth:`GeminiClient.vision` / ``stream_vision``.

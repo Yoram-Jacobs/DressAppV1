@@ -196,8 +196,16 @@ async def trigger_event_proposal(
         )
         return {"advice": advice}
     except Exception as exc:
-        logger.exception("Event proposal generation failed")
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.exception("Event proposal generation failed, falling back to deterministic advice: %s", exc)
+        try:
+            from app.services.stylist_scheduler_brain import get_rotation_prioritized_closet
+            from app.services.scheduler import _generate_fallback_advice
+            raw_closet = await get_rotation_prioritized_closet(user["id"], limit=40)
+            advice = _generate_fallback_advice(raw_closet, style_dress_for=payload.prompt)
+            return {"advice": advice}
+        except Exception as inner_exc:
+            logger.error("Failed to generate fallback event proposals: %s", inner_exc)
+            raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.post("/reject-item")
