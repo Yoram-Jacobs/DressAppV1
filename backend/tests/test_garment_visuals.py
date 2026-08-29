@@ -1,4 +1,4 @@
-﻿"""Unit tests for GarmentVisuals deep module (backend/app/services/garment_visuals.py)."""
+"""Unit tests for GarmentVisuals deep module (backend/app/services/garment_visuals.py)."""
 import base64
 import io
 import pytest
@@ -13,7 +13,7 @@ def _create_test_image_bytes(color=(255, 0, 0), size=(100, 100), mode="RGB") -> 
     return buf.getvalue()
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_extract_bytes_formats():
     raw = _create_test_image_bytes()
     b64_str = base64.b64encode(raw).decode("ascii")
@@ -32,7 +32,7 @@ async def test_extract_bytes_formats():
     assert b3 == raw
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_process_raw_upload_structure():
     raw = _create_test_image_bytes(size=(200, 200))
     res = await GarmentVisuals.process_raw_upload(raw, generate_cutout=False)
@@ -46,7 +46,7 @@ async def test_process_raw_upload_structure():
     assert res.clean_image_status == "skipped"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_ensure_transparent_cutout_fallback(monkeypatch):
     raw = _create_test_image_bytes(mode="RGBA", color=(0, 255, 0, 255))
 
@@ -61,7 +61,7 @@ async def test_ensure_transparent_cutout_fallback(monkeypatch):
     assert cutout.startswith("data:image/png;base64,")
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_invalid_bytes_handling():
     res = await GarmentVisuals.ensure_transparent_cutout("invalid-non-base64")
     assert res is None
