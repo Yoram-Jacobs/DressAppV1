@@ -306,32 +306,34 @@ async def update_me(
             if val is None or val == "":
                 set_ops[clearable] = None
 
-    # Automatic background cutout processing for face & body photos
+    # Automatic background cutout processing for face & body photos (only when newly uploaded)
     if "face_photo_url" in patch and patch["face_photo_url"] and isinstance(patch["face_photo_url"], str) and patch["face_photo_url"].startswith("data:image"):
-        try:
-            import base64
-            from app.services.background_matting import remove_background
-            b64_str = patch["face_photo_url"].split(",", 1)[-1]
-            img_bytes = base64.b64decode(b64_str)
-            mat_res = await remove_background(img_bytes)
-            if mat_res and mat_res.get("image_png"):
-                m_b64 = base64.b64encode(mat_res["image_png"]).decode("utf-8")
-                set_ops["face_photo_url"] = f"data:image/png;base64,{m_b64}"
-        except Exception:
-            pass
+        if patch["face_photo_url"] != user.get("face_photo_url") and patch["face_photo_url"] != user.get("avatar_url"):
+            try:
+                import base64
+                from app.services.background_matting import remove_background
+                b64_str = patch["face_photo_url"].split(",", 1)[-1]
+                img_bytes = base64.b64decode(b64_str)
+                mat_res = await remove_background(img_bytes)
+                if mat_res and mat_res.get("image_png"):
+                    m_b64 = base64.b64encode(mat_res["image_png"]).decode("utf-8")
+                    set_ops["face_photo_url"] = f"data:image/png;base64,{m_b64}"
+            except Exception:
+                pass
 
     if "body_photo_url" in patch and patch["body_photo_url"] and isinstance(patch["body_photo_url"], str) and patch["body_photo_url"].startswith("data:image"):
-        try:
-            import base64
-            from app.services.background_matting import remove_background
-            b64_str = patch["body_photo_url"].split(",", 1)[-1]
-            img_bytes = base64.b64decode(b64_str)
-            mat_res = await remove_background(img_bytes)
-            if mat_res and mat_res.get("image_png"):
-                m_b64 = base64.b64encode(mat_res["image_png"]).decode("utf-8")
-                set_ops["body_photo_url"] = f"data:image/png;base64,{m_b64}"
-        except Exception:
-            pass
+        if patch["body_photo_url"] != user.get("body_photo_url"):
+            try:
+                import base64
+                from app.services.background_matting import remove_background
+                b64_str = patch["body_photo_url"].split(",", 1)[-1]
+                img_bytes = base64.b64decode(b64_str)
+                mat_res = await remove_background(img_bytes)
+                if mat_res and mat_res.get("image_png"):
+                    m_b64 = base64.b64encode(mat_res["image_png"]).decode("utf-8")
+                    set_ops["body_photo_url"] = f"data:image/png;base64,{m_b64}"
+            except Exception:
+                pass
 
     set_ops["updated_at"] = datetime.now(timezone.utc).isoformat()
     if set_ops:

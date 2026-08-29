@@ -49,6 +49,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { api, tokenStore, emitAuthChange } from '@mobile/lib/api';
+import { closetStore } from '@mobile/lib/stores/closetStore';
 import { applyRtl } from '@mobile/lib/rtl';
 import { HelpFloater } from '@mobile/components/help';
 import type { MeStackParamList } from '@mobile/navigation/types';
@@ -334,12 +335,18 @@ export function ProfileScreen() {
         setCredits(u.credits ?? u.ai_configuration?.current_credits ?? 1000);
         setClosetBonus(u.closet_capacity_bonus || 0);
 
-        // Fetch closet count for limit progress
-        try {
-          const itemsRes = await (api as any).listCloset?.();
-          const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes?.items || []);
-          setClosetCount(itemsList.length);
-        } catch {}
+        // Fetch closet count for limit progress without blocking profile load
+        const cachedCount = closetStore.getSnapshot().items.length || closetStore.getSnapshot().total;
+        if (cachedCount > 0) {
+          setClosetCount(cachedCount);
+        } else {
+          (api as any).listCloset?.({ ids_only: true })
+            .then((itemsRes: any) => {
+              const count = Array.isArray(itemsRes?.ids) ? itemsRes.ids.length : (itemsRes?.total ?? 0);
+              if (count > 0) setClosetCount(count);
+            })
+            .catch(() => {});
+        }
 
         // Shopping
         if (u.shopping_assistant?.enabled !== undefined) setShoppingAssistantEnabled(u.shopping_assistant.enabled);

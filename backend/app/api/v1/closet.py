@@ -2424,20 +2424,27 @@ async def list_items(
     #      endpoint GET /closet/{id} still returns them in full.
     from app.services import thumbnails as _thumbs
 
-    updates = await _thumbs.backfill_thumbnails(items)
-    if updates:
-        import asyncio as _asyncio
+    async def _async_backfill():
+        try:
+            updates = await _thumbs.backfill_thumbnails(items)
+            if updates:
+                from pymongo import UpdateOne
+                ops = []
+                for (_id, _t, _p) in updates:
+                    up = {}
+                    if _t:
+                        up["thumbnail_data_url"] = _t
+                    if _p:
+                        up["placeholder_data_url"] = _p
+                    if up:
+                        ops.append(UpdateOne({"id": _id}, {"$set": up}))
+                if ops:
+                    await db.closet_items.bulk_write(ops, ordered=False)
+        except Exception as exc:
+            logger.debug("Background thumbnail backfill skipped: %s", exc)
 
-        async def _save_one(_id, _t, _p):
-            up = {}
-            if _t:
-                up["thumbnail_data_url"] = _t
-            if _p:
-                up["placeholder_data_url"] = _p
-            if up:
-                await db.closet_items.update_one({"id": _id}, {"$set": up})
-
-        await _asyncio.gather(*[_save_one(_id, _t, _p) for (_id, _t, _p) in updates])
+    import asyncio as _asyncio
+    _asyncio.create_task(_async_backfill())
 
     _HEAVY_FIELDS = (
         "clip_embedding",
@@ -4653,22 +4660,25 @@ async def chat_analyse_item(
 
                 # Unbind generated garment from background (transparent clean cutout)
                 try:
-                    from app.services.background_matting import remove_background
+                    from app.services.background_matting import remove_background, matte_crop
                     gen_raw_bytes = base64.b64decode(edit_res["image_b64"])
                     clean_res = await remove_background(gen_raw_bytes)
-                    if clean_res.get("success") and clean_res.get("image_png"):
-                        clean_b64 = base64.b64encode(clean_res["image_png"]).decode("ascii")
+                    matted_png = clean_res.get("image_png") if isinstance(clean_res, dict) else None
+                    if not matted_png:
+                        matted_png = await matte_crop(gen_raw_bytes)
+                    if matted_png:
+                        clean_b64 = base64.b64encode(matted_png).decode("ascii")
                         clean_image_url_out = f"data:image/png;base64,{clean_b64}"
                 except Exception as mat_exc:
                     logger.warning("Unbinding background in chat-analyse failed: %s", mat_exc)
 
                 # Update in-memory reconstructed_image_url & clean_image_url
+                # Always prefer the transparent clean cutout so clothes layer perfectly without background boxes
                 final_img = clean_image_url_out or image_url_out
                 updated_doc["reconstructed_image_url"] = final_img
+                updated_doc["clean_image_url"] = clean_image_url_out or final_img
+                updated_doc["clean_image_status"] = "ready"
                 image_url_out = final_img
-                if clean_image_url_out:
-                    updated_doc["clean_image_url"] = clean_image_url_out
-                    updated_doc["clean_image_status"] = "ready"
                 updated_doc["reconstruction_metadata"] = {
                     "method": "nano_banana_chat",
                     "prompt": edit_prompt,
@@ -5391,15 +5401,20 @@ async def update_item(
         # If clean_image_url is not provided, unbind the reconstructed image from its background
         if not patch.get("clean_image_url"):
             try:
-                from app.services.background_matting import remove_background
+                from app.services.background_matting import remove_background, matte_crop
                 recon_val = patch["reconstructed_image_url"]
                 recon_b64 = recon_val.split(",", 1)[1] if "," in recon_val else recon_val
                 raw_recon = base64.b64decode(recon_b64)
                 mat_res = await remove_background(raw_recon)
-                if mat_res.get("success") and mat_res.get("image_png"):
-                    cln_b64 = base64.b64encode(mat_res["image_png"]).decode("ascii")
+                matted_png = mat_res.get("image_png") if isinstance(mat_res, dict) else None
+                if not matted_png:
+                    matted_png = await matte_crop(raw_recon)
+                if matted_png:
+                    cln_b64 = base64.b64encode(matted_png).decode("ascii")
                     patch["clean_image_url"] = f"data:image/png;base64,{cln_b64}"
                     patch["clean_image_status"] = "ready"
+                    # Also set reconstructed_image_url to clean cutout so UI displays transparent piece
+                    patch["reconstructed_image_url"] = patch["clean_image_url"]
             except Exception as bg_exc:
                 logger.warning("Unbinding background in update_item failed: %s", bg_exc)
     # The `clear_reconstruction` flag is a command, not a value we persist.
@@ -6036,11 +6051,14 @@ async def edit_item_image(
     # Unbind generated clean image from background (transparent clean cutout)
     clean_variant_url: str | None = None
     try:
-        from app.services.background_matting import remove_background
+        from app.services.background_matting import remove_background, matte_crop
         gen_bytes = base64.b64decode(edit["image_b64"])
         matted = await remove_background(gen_bytes)
-        if matted.get("success") and matted.get("image_png"):
-            clean_b64 = base64.b64encode(matted["image_png"]).decode("ascii")
+        matted_png = matted.get("image_png") if isinstance(matted, dict) else None
+        if not matted_png:
+            matted_png = await matte_crop(gen_bytes)
+        if matted_png:
+            clean_b64 = base64.b64encode(matted_png).decode("ascii")
             clean_variant_url = f"data:image/png;base64,{clean_b64}"
     except Exception as mat_exc:
         logger.warning("Unbinding background in edit_item_image failed: %s", mat_exc)
@@ -6055,7 +6073,8 @@ async def edit_item_image(
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
     )
-    update_doc: dict[str, Any] = {"variants": variants, "reconstructed_image_url": variant_url}
+    final_variant = clean_variant_url or variant_url
+    update_doc: dict[str, Any] = {"variants": variants, "reconstructed_image_url": final_variant}
     if clean_variant_url:
         update_doc["clean_image_url"] = clean_variant_url
         update_doc["clean_image_status"] = "ready"

@@ -43,7 +43,7 @@ services:
       - rembg-cache:/models/u2net
       - static-uploads:/app/backend/static
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8001/api/v1/listings?status=active"]
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8001/api/v1/health"]
       interval: 30s
       timeout: 10s
       start_period: 60s
