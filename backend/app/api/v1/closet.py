@@ -4659,25 +4659,15 @@ async def chat_analyse_item(
                 image_url_out = f"data:{mime};base64,{edit_res['image_b64']}"
 
                 # Unbind generated garment from background (transparent clean cutout)
-                try:
-                    from app.services.background_matting import remove_background, matte_crop
-                    gen_raw_bytes = base64.b64decode(edit_res["image_b64"])
-                    clean_res = await remove_background(gen_raw_bytes)
-                    matted_png = clean_res.get("image_png") if isinstance(clean_res, dict) else None
-                    if not matted_png:
-                        matted_png = await matte_crop(gen_raw_bytes)
-                    if matted_png:
-                        clean_b64 = base64.b64encode(matted_png).decode("ascii")
-                        clean_image_url_out = f"data:image/png;base64,{clean_b64}"
-                except Exception as mat_exc:
-                    logger.warning("Unbinding background in chat-analyse failed: %s", mat_exc)
+                from app.services.garment_visuals import GarmentVisuals
+                clean_image_url_out = await GarmentVisuals.ensure_transparent_cutout(edit_res["image_b64"])
 
                 # Update in-memory reconstructed_image_url & clean_image_url
                 # Always prefer the transparent clean cutout so clothes layer perfectly without background boxes
                 final_img = clean_image_url_out or image_url_out
                 updated_doc["reconstructed_image_url"] = final_img
-                updated_doc["clean_image_url"] = clean_image_url_out or final_img
-                updated_doc["clean_image_status"] = "ready"
+                updated_doc["clean_image_url"] = final_img
+                updated_doc["clean_image_status"] = "ready" if clean_image_url_out else "fallback"
                 image_url_out = final_img
                 updated_doc["reconstruction_metadata"] = {
                     "method": "nano_banana_chat",
@@ -5400,23 +5390,12 @@ async def update_item(
         patch["reconstructed_image_url"] = compress_image_url_or_b64(patch["reconstructed_image_url"], max_dim=1024, quality=75)
         # If clean_image_url is not provided, unbind the reconstructed image from its background
         if not patch.get("clean_image_url"):
-            try:
-                from app.services.background_matting import remove_background, matte_crop
-                recon_val = patch["reconstructed_image_url"]
-                recon_b64 = recon_val.split(",", 1)[1] if "," in recon_val else recon_val
-                raw_recon = base64.b64decode(recon_b64)
-                mat_res = await remove_background(raw_recon)
-                matted_png = mat_res.get("image_png") if isinstance(mat_res, dict) else None
-                if not matted_png:
-                    matted_png = await matte_crop(raw_recon)
-                if matted_png:
-                    cln_b64 = base64.b64encode(matted_png).decode("ascii")
-                    patch["clean_image_url"] = f"data:image/png;base64,{cln_b64}"
-                    patch["clean_image_status"] = "ready"
-                    # Also set reconstructed_image_url to clean cutout so UI displays transparent piece
-                    patch["reconstructed_image_url"] = patch["clean_image_url"]
-            except Exception as bg_exc:
-                logger.warning("Unbinding background in update_item failed: %s", bg_exc)
+            from app.services.garment_visuals import GarmentVisuals
+            cln_url = await GarmentVisuals.ensure_transparent_cutout(patch["reconstructed_image_url"])
+            if cln_url:
+                patch["clean_image_url"] = cln_url
+                patch["clean_image_status"] = "ready"
+                patch["reconstructed_image_url"] = cln_url
     # The `clear_reconstruction` flag is a command, not a value we persist.
     # Pop it + translate into explicit null-sets on the related columns.
     if patch.pop("clear_reconstruction", False):
@@ -6049,19 +6028,8 @@ async def edit_item_image(
         f"data:{edit.get('mime_type', 'image/png')};base64,{edit['image_b64']}"
     )
     # Unbind generated clean image from background (transparent clean cutout)
-    clean_variant_url: str | None = None
-    try:
-        from app.services.background_matting import remove_background, matte_crop
-        gen_bytes = base64.b64decode(edit["image_b64"])
-        matted = await remove_background(gen_bytes)
-        matted_png = matted.get("image_png") if isinstance(matted, dict) else None
-        if not matted_png:
-            matted_png = await matte_crop(gen_bytes)
-        if matted_png:
-            clean_b64 = base64.b64encode(matted_png).decode("ascii")
-            clean_variant_url = f"data:image/png;base64,{clean_b64}"
-    except Exception as mat_exc:
-        logger.warning("Unbinding background in edit_item_image failed: %s", mat_exc)
+    from app.services.garment_visuals import GarmentVisuals
+    clean_variant_url = await GarmentVisuals.ensure_transparent_cutout(edit["image_b64"])
 
     variants = list(item.get("variants") or [])
     variants.append(
