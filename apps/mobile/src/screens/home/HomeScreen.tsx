@@ -89,12 +89,15 @@ export default function HomeScreen() {
   const isAdmin = (user?.roles || []).includes('admin') || (user as any)?.role === 'admin';
 
   const language = (i18n.language || 'en').split('-')[0].toLowerCase();
+  const userSex = (user?.sex || user?.gender || 'female').toLowerCase();
+  const gender = userSex === 'male' ? 'male' : 'female';
+  const country = (user?.address?.country_code || (user as any)?.country || 'IL').toString().toUpperCase();
 
   const onRefresh = async () => {
     setRefreshing(true);
     await Promise.all([
       closet.prewarm({ force: true }),
-      trendStore.prewarm({ language, force: true }),
+      trendStore.prewarm({ language, country, gender, force: true }),
       fetchBrowse({}, { force: true }),
     ]);
     setRefreshing(false);
@@ -104,7 +107,7 @@ export default function HomeScreen() {
     setRefreshing(true);
     try {
       await (api as any).trendsRefreshAdmin?.(true);
-      await trendStore.prewarm({ language, force: true });
+      await trendStore.prewarm({ language, country, gender, force: true });
     } catch {
       // ignore
     } finally {

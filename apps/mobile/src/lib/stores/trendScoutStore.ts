@@ -14,6 +14,7 @@ export interface TrendCard {
   bucket?: string;
   category?: string;
   label?: string;
+  tag?: string;
   title?: string;
   headline?: string;
   description?: string;
@@ -21,9 +22,11 @@ export interface TrendCard {
   image_url?: string;
   source_url?: string;
   source_name?: string;
+  gender?: string;
   is_local?: boolean;
   city?: string;
   country?: string;
+  country_code?: string;
   date?: string;
 }
 
