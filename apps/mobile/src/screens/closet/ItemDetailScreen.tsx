@@ -792,52 +792,61 @@ export function ItemDetailScreen() {
     return null;
   };
 
+  const [failedUrls, setFailedUrls] = useState<Set<string>>(new Set());
+
+  const isFailed = useCallback((u?: string | null) => {
+    if (!u) return false;
+    const resolved = resolveDisplayUrl(u);
+    return Boolean(resolved && failedUrls.has(resolved));
+  }, [failedUrls]);
+
   const activeGarment = allGroupPieces.find((p) => p.id === activeViewId) || item;
 
-  const reconstructedUrl =
-    resolveDisplayUrl(form.reconstructed_image_url) ||
-    resolveDisplayUrl(activeGarment?.reconstructed_image_url) ||
-    resolveDisplayUrl(item?.reconstructed_image_url);
+  const validRecon = !isFailed(form.reconstructed_image_url) ? resolveDisplayUrl(form.reconstructed_image_url) : null;
+  const validActiveRecon = !isFailed(activeGarment?.reconstructed_image_url) ? resolveDisplayUrl(activeGarment?.reconstructed_image_url) : null;
+  const validItemRecon = !isFailed(item?.reconstructed_image_url) ? resolveDisplayUrl(item?.reconstructed_image_url) : null;
+
+  const reconstructedUrl = validRecon || validActiveRecon || validItemRecon;
 
   const cleanCutoutUrl =
-    resolveDisplayUrl(form.clean_image_url) ||
-    resolveDisplayUrl(activeGarment?.clean_image_url) ||
-    resolveDisplayUrl(activeGarment?.segmented_image_url) ||
-    resolveDisplayUrl(activeGarment?.cutout_url) ||
-    resolveDisplayUrl(item?.clean_image_url) ||
-    resolveDisplayUrl(item?.segmented_image_url) ||
-    resolveDisplayUrl(item?.cutout_url);
+    (!isFailed(form.clean_image_url) ? resolveDisplayUrl(form.clean_image_url) : null) ||
+    (!isFailed(activeGarment?.clean_image_url) ? resolveDisplayUrl(activeGarment?.clean_image_url) : null) ||
+    (!isFailed(activeGarment?.segmented_image_url) ? resolveDisplayUrl(activeGarment?.segmented_image_url) : null) ||
+    (!isFailed(activeGarment?.cutout_url) ? resolveDisplayUrl(activeGarment?.cutout_url) : null) ||
+    (!isFailed(item?.clean_image_url) ? resolveDisplayUrl(item?.clean_image_url) : null) ||
+    (!isFailed(item?.segmented_image_url) ? resolveDisplayUrl(item?.segmented_image_url) : null) ||
+    (!isFailed(item?.cutout_url) ? resolveDisplayUrl(item?.cutout_url) : null);
 
   const variantUrl =
-    resolveDisplayUrl(form.image_variants?.webp?.large) ||
-    resolveDisplayUrl(activeGarment?.image_variants?.webp?.large) ||
-    resolveDisplayUrl(form.image_variants?.webp?.medium) ||
-    resolveDisplayUrl(activeGarment?.image_variants?.webp?.medium) ||
-    resolveDisplayUrl(form.image_variants?.avif?.medium) ||
-    resolveDisplayUrl(activeGarment?.image_variants?.avif?.medium) ||
-    resolveDisplayUrl(form.image_variants?.original) ||
-    resolveDisplayUrl(activeGarment?.image_variants?.original) ||
-    resolveDisplayUrl(item?.image_variants?.webp?.large) ||
-    resolveDisplayUrl(item?.image_variants?.webp?.medium) ||
-    resolveDisplayUrl(item?.image_variants?.avif?.medium) ||
-    resolveDisplayUrl(item?.image_variants?.original);
+    (!isFailed(form.image_variants?.webp?.large) ? resolveDisplayUrl(form.image_variants?.webp?.large) : null) ||
+    (!isFailed(activeGarment?.image_variants?.webp?.large) ? resolveDisplayUrl(activeGarment?.image_variants?.webp?.large) : null) ||
+    (!isFailed(form.image_variants?.webp?.medium) ? resolveDisplayUrl(form.image_variants?.webp?.medium) : null) ||
+    (!isFailed(activeGarment?.image_variants?.webp?.medium) ? resolveDisplayUrl(activeGarment?.image_variants?.webp?.medium) : null) ||
+    (!isFailed(form.image_variants?.avif?.medium) ? resolveDisplayUrl(form.image_variants?.avif?.medium) : null) ||
+    (!isFailed(activeGarment?.image_variants?.avif?.medium) ? resolveDisplayUrl(activeGarment?.image_variants?.avif?.medium) : null) ||
+    (!isFailed(form.image_variants?.original) ? resolveDisplayUrl(form.image_variants?.original) : null) ||
+    (!isFailed(activeGarment?.image_variants?.original) ? resolveDisplayUrl(activeGarment?.image_variants?.original) : null) ||
+    (!isFailed(item?.image_variants?.webp?.large) ? resolveDisplayUrl(item?.image_variants?.webp?.large) : null) ||
+    (!isFailed(item?.image_variants?.webp?.medium) ? resolveDisplayUrl(item?.image_variants?.webp?.medium) : null) ||
+    (!isFailed(item?.image_variants?.avif?.medium) ? resolveDisplayUrl(item?.image_variants?.avif?.medium) : null) ||
+    (!isFailed(item?.image_variants?.original) ? resolveDisplayUrl(item?.image_variants?.original) : null);
 
   const rawOriginalUrl =
-    resolveDisplayUrl(form.original_image_url) ||
-    resolveDisplayUrl(activeGarment?.original_image_url) ||
-    resolveDisplayUrl(form.image_url) ||
-    resolveDisplayUrl(activeGarment?.image_url) ||
-    resolveDisplayUrl(item?.original_image_url) ||
-    resolveDisplayUrl(item?.image_url) ||
+    (!isFailed(form.original_image_url) ? resolveDisplayUrl(form.original_image_url) : null) ||
+    (!isFailed(activeGarment?.original_image_url) ? resolveDisplayUrl(activeGarment?.original_image_url) : null) ||
+    (!isFailed(form.image_url) ? resolveDisplayUrl(form.image_url) : null) ||
+    (!isFailed(activeGarment?.image_url) ? resolveDisplayUrl(activeGarment?.image_url) : null) ||
+    (!isFailed(item?.original_image_url) ? resolveDisplayUrl(item?.original_image_url) : null) ||
+    (!isFailed(item?.image_url) ? resolveDisplayUrl(item?.image_url) : null) ||
     variantUrl;
 
   const fallbackThumb =
-    resolveDisplayUrl(form.thumbnail_data_url) ||
-    resolveDisplayUrl(activeGarment?.thumbnail_data_url) ||
-    resolveDisplayUrl(form.placeholder_data_url) ||
-    resolveDisplayUrl(activeGarment?.placeholder_data_url) ||
-    resolveDisplayUrl(item?.thumbnail_data_url) ||
-    resolveDisplayUrl(item?.placeholder_data_url);
+    (!isFailed(form.thumbnail_data_url) ? resolveDisplayUrl(form.thumbnail_data_url) : null) ||
+    (!isFailed(activeGarment?.thumbnail_data_url) ? resolveDisplayUrl(activeGarment?.thumbnail_data_url) : null) ||
+    (!isFailed(form.placeholder_data_url) ? resolveDisplayUrl(form.placeholder_data_url) : null) ||
+    (!isFailed(activeGarment?.placeholder_data_url) ? resolveDisplayUrl(activeGarment?.placeholder_data_url) : null) ||
+    (!isFailed(item?.thumbnail_data_url) ? resolveDisplayUrl(item?.thumbnail_data_url) : null) ||
+    (!isFailed(item?.placeholder_data_url) ? resolveDisplayUrl(item?.placeholder_data_url) : null);
 
   const hasReconstruction = Boolean(reconstructedUrl);
 
@@ -895,7 +904,16 @@ export function ItemDetailScreen() {
           {/* ── 1. Hero Image Card ──────────────────────────────────────── */}
         <View style={[styles.heroCard, { backgroundColor: colors.cardOffWhite, borderColor: colors.border }]}>
           {currentImg ? (
-            <Image source={{ uri: currentImg }} style={styles.heroImg} resizeMode="contain" />
+            <Image
+              source={{ uri: currentImg }}
+              style={styles.heroImg}
+              resizeMode="contain"
+              onError={() => {
+                if (currentImg) {
+                  setFailedUrls((prev) => new Set([...prev, currentImg]));
+                }
+              }}
+            />
           ) : (
             <View style={styles.noImgBox}>
               <Lucide.ImageOff size={48} color={colors.mutedFg} />
@@ -994,16 +1012,16 @@ export function ItemDetailScreen() {
                 const isSelected = piece.id === (activeViewId || item?.id);
                 const isHost = piece.group_role === 'host' || piece.id === piece.group_id || pIdx === 0;
                 const thumb =
-                  resolveDisplayUrl(piece.reconstructed_image_url) ||
-                  resolveDisplayUrl(piece.clean_image_url) ||
-                  resolveDisplayUrl(piece.segmented_image_url) ||
-                  resolveDisplayUrl(piece.cutout_url) ||
-                  resolveDisplayUrl(piece.image_variants?.webp?.medium) ||
-                  resolveDisplayUrl(piece.image_variants?.original) ||
-                  resolveDisplayUrl(piece.thumbnail_data_url) ||
-                  resolveDisplayUrl(piece.placeholder_data_url) ||
-                  resolveDisplayUrl(piece.original_image_url) ||
-                  resolveDisplayUrl(piece.image_url);
+                  (!isFailed(piece.reconstructed_image_url) ? resolveDisplayUrl(piece.reconstructed_image_url) : null) ||
+                  (!isFailed(piece.clean_image_url) ? resolveDisplayUrl(piece.clean_image_url) : null) ||
+                  (!isFailed(piece.segmented_image_url) ? resolveDisplayUrl(piece.segmented_image_url) : null) ||
+                  (!isFailed(piece.cutout_url) ? resolveDisplayUrl(piece.cutout_url) : null) ||
+                  (!isFailed(piece.image_variants?.webp?.medium) ? resolveDisplayUrl(piece.image_variants?.webp?.medium) : null) ||
+                  (!isFailed(piece.image_variants?.original) ? resolveDisplayUrl(piece.image_variants?.original) : null) ||
+                  (!isFailed(piece.thumbnail_data_url) ? resolveDisplayUrl(piece.thumbnail_data_url) : null) ||
+                  (!isFailed(piece.placeholder_data_url) ? resolveDisplayUrl(piece.placeholder_data_url) : null) ||
+                  (!isFailed(piece.original_image_url) ? resolveDisplayUrl(piece.original_image_url) : null) ||
+                  (!isFailed(piece.image_url) ? resolveDisplayUrl(piece.image_url) : null);
 
                 return (
                   <TouchableOpacity
@@ -1020,7 +1038,16 @@ export function ItemDetailScreen() {
                     activeOpacity={0.7}
                   >
                     {thumb ? (
-                      <Image source={{ uri: thumb }} style={styles.groupThumbImg} resizeMode="contain" />
+                      <Image
+                        source={{ uri: thumb }}
+                        style={styles.groupThumbImg}
+                        resizeMode="contain"
+                        onError={() => {
+                          if (thumb) {
+                            setFailedUrls((prev) => new Set([...prev, thumb]));
+                          }
+                        }}
+                      />
                     ) : (
                       <View style={styles.groupThumbFallback}>
                         <Lucide.Shirt size={20} color={colors.mutedFg} />

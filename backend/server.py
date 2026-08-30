@@ -12,6 +12,7 @@ import os
 import sys
 import uuid
 from datetime import datetime, timezone
+import mimetypes
 from pathlib import Path
 from typing import List
 
@@ -21,6 +22,14 @@ from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.middleware.cors import CORSMiddleware
+
+# Ensure accurate MIME types for StaticFiles (critical for mobile WebP/AVIF decoding)
+mimetypes.init()
+mimetypes.add_type("image/webp", ".webp")
+mimetypes.add_type("image/avif", ".avif")
+mimetypes.add_type("image/png", ".png")
+mimetypes.add_type("image/jpeg", ".jpg")
+mimetypes.add_type("image/jpeg", ".jpeg")
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
