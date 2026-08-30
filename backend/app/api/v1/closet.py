@@ -738,7 +738,7 @@ async def create_item(
 # outfit composition (preventing "wear the same polo twice" style
 # hallucinations).
 class PreflightPhotoIn(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
     image_base64: str | None = None
     # SHA-256 hex digest of the raw file bytes (64 lowercase chars).
     # Catches exact-byte re-uploads.
@@ -760,7 +760,7 @@ class PreflightPhotoIn(BaseModel):
 
 
 class PreflightIn(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
     photos: list[PreflightPhotoIn] = Field(default_factory=list, max_length=200)
 
 
