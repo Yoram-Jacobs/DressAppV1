@@ -101,8 +101,11 @@ async def ensure_indexes() -> None:
         [("bucket", 1), ("date", 1), ("language", 1), ("country_code", 1)], unique=True, sparse=True
     )
     await db.trend_reports.create_index(
-        [("origin_id", 1), ("language", 1), ("country_code", 1)], unique=True, sparse=True
+        [("origin_id", 1), ("language", 1), ("country_code", 1)],
+        unique=True,
+        partialFilterExpression={"origin_id": {"$type": "string"}},
     )
+
 
     # Phase U — professionals directory + ad campaigns
     await db.users.create_index(
