@@ -14,7 +14,7 @@
  *   - 13-language i18next support with zero hardcoded text
  */
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -46,7 +46,7 @@ import { OutfitCompletionSheet } from '@mobile/components/OutfitCompletionSheet'
 import { RichSelectionFloater } from '@mobile/components/closet/RichSelectionFloater';
 import { HelpFloater } from '@mobile/components/help';
 import { LoadingVideo } from '@mobile/components/common/LoadingVideo';
-import { labelForCategory, labelForIntent, labelForColor } from '@mobile/lib/taxonomy';
+import { labelForCategory, labelForIntent, labelForColor, getTaxonomyMismatches } from '@mobile/lib/taxonomy';
 import type { ClosetStackParamList } from '@mobile/navigation/types';
 
 type ClosetNavProp = NativeStackNavigationProp<ClosetStackParamList, 'Closet'>;
@@ -90,6 +90,149 @@ export function ClosetScreen() {
 
   // Outfit Completion Sheet
   const [completionOpen, setCompletionOpen] = useState(false);
+
+  // Drag and drop grouping (Multi-view Garment Support)
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [touchPos, setTouchPos] = useState({ x: 0, y: 0 });
+
+  const flatListRef = useRef<FlatList>(null);
+  const flatListLayoutRef = useRef<{ pageX: number; pageY: number } | null>(null);
+  const scrollOffsetRef = useRef(0);
+  const itemLayoutsRef = useRef<Map<string, { x: number; y: number; width: number; height: number }>>(new Map());
+  const lastTouchPosRef = useRef({ pageX: 0, pageY: 0 });
+
+  const handleScroll = (e: any) => {
+    scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
+  };
+
+  const registerItemLayout = (id: string, layout: { x: number; y: number; width: number; height: number }) => {
+    itemLayoutsRef.current.set(id, layout);
+  };
+
+  const startDrag = (id: string, startPageX: number, startPageY: number) => {
+    (flatListRef.current as any)?.measure((fx: number, fy: number, fwidth: number, fheight: number, fpageX: number, fpageY: number) => {
+      flatListLayoutRef.current = { pageX: fpageX, pageY: fpageY };
+      setDraggedId(id);
+      setIsDragging(true);
+      setTouchPos({ x: startPageX, y: startPageY });
+    });
+  };
+
+  const handleDragMove = (pageX: number, pageY: number) => {
+    setTouchPos({ x: pageX, y: pageY });
+
+    if (!flatListLayoutRef.current) return;
+
+    // Calculate touch coordinates relative to FlatList content container
+    const x = pageX - flatListLayoutRef.current.pageX;
+    const y = pageY - flatListLayoutRef.current.pageY + scrollOffsetRef.current;
+
+    // Find if we are dragging over any item
+    let foundOverId: string | null = null;
+    for (const [id, layout] of itemLayoutsRef.current.entries()) {
+      if (id === draggedId) continue;
+      if (
+        x >= layout.x &&
+        x <= layout.x + layout.width &&
+        y >= layout.y &&
+        y <= layout.y + layout.height
+      ) {
+        foundOverId = id;
+        break;
+      }
+    }
+    setDragOverId(foundOverId);
+  };
+
+  const handleDragEnd = () => {
+    const sourceId = draggedId;
+    const targetId = dragOverId;
+
+    setDraggedId(null);
+    setDragOverId(null);
+    setIsDragging(false);
+
+    if (sourceId && targetId && sourceId !== targetId) {
+      const sourceItem = items.find((it) => it.id === sourceId);
+      const targetItem = items.find((it) => it.id === targetId);
+
+      if (!sourceItem || !targetItem) return;
+
+      const backupSource = { ...sourceItem };
+      const backupTarget = { ...targetItem };
+
+      const runGrouping = () => {
+        const groupId = targetItem.group_id || targetId;
+        closetStore.upsert({ ...targetItem, group_id: groupId, group_role: 'host' });
+        closetStore.upsert({ ...sourceItem, group_id: groupId, group_role: 'member' });
+
+        (api as any).groupItems?.({ host_id: targetId, member_id: sourceId })
+          .then((res: any) => {
+            if (res?.status === 'success') {
+              if (res.host) closetStore.upsert(res.host);
+              if (res.member) closetStore.upsert(res.member);
+              Alert.alert(t('common.success', { defaultValue: 'Success' }));
+            } else {
+              closetStore.upsert(backupSource);
+              closetStore.upsert(backupTarget);
+            }
+          })
+          .catch((err: any) => {
+            console.warn('Failed to group items:', err);
+            closetStore.upsert(backupSource);
+            closetStore.upsert(backupTarget);
+          });
+      };
+
+      const normCategory = (cat?: string) => {
+        const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');
+        if (s === 'top' || s === 'tops') return 'top';
+        if (s === 'bottom' || s === 'bottoms') return 'bottom';
+        if (s === 'footwear' || s === 'shoes') return 'footwear';
+        if (s === 'accessory' || s === 'accessories') return 'accessories';
+        return s;
+      };
+
+      const sourceCategory = normCategory(sourceItem.category);
+      const targetCategory = normCategory(targetItem.category);
+      const isSameCategory = sourceCategory === targetCategory;
+
+      if (isSameCategory) {
+        const mismatches = getTaxonomyMismatches(sourceItem, targetItem);
+        if (mismatches.length > 0) {
+          const mismatchLabels = mismatches.map((m) => {
+            switch (m) {
+              case 'category': return t('itemDetail.edit.category', { defaultValue: 'Category' });
+              case 'sub_category': return t('itemDetail.edit.subCategory', { defaultValue: 'Sub-category' });
+              case 'brand': return t('itemDetail.edit.brand', { defaultValue: 'Brand' });
+              case 'gender': return t('itemDetail.edit.gender', { defaultValue: 'Gender' });
+              case 'dress_code': return t('itemDetail.edit.dressCode', { defaultValue: 'Dress Code' });
+              case 'season': return t('itemDetail.edit.season', { defaultValue: 'Season' });
+              default: return m;
+            }
+          });
+
+          Alert.alert(
+            t('closet.gatekeeperTitle', { defaultValue: 'Taxonomy Mismatch' }),
+            t('closet.gatekeeperBody', {
+              fields: mismatchLabels.join(', '),
+              defaultValue: `The items have mismatching fields (${mismatchLabels.join(', ')}). Are you sure you want to group them?`
+            }),
+            [
+              { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
+              { text: t('common.continue', { defaultValue: 'Continue' }), onPress: runGrouping }
+            ]
+          );
+        } else {
+          runGrouping();
+        }
+      } else {
+        runGrouping();
+      }
+    }
+  };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -360,6 +503,8 @@ export function ClosetScreen() {
 
   const renderItem = ({ item }: { item: ClosetItem }) => {
     const isSelected = selectedIds.has(item.id);
+    const isDragged = draggedId === item.id;
+    const isDragOver = dragOverId === item.id;
     const imgUri =
       item.thumbnail_data_url ||
       item.clean_image_url ||
@@ -371,9 +516,30 @@ export function ClosetScreen() {
     if (viewMode === 'list') {
       return (
         <TouchableOpacity
+          onLayout={(e) => {
+            registerItemLayout(item.id, e.nativeEvent.layout);
+          }}
+          onPressIn={(e) => {
+            lastTouchPosRef.current = {
+              pageX: e.nativeEvent.pageX,
+              pageY: e.nativeEvent.pageY,
+            };
+          }}
+          onLongPress={() => {
+            if (!selectMode) {
+              startDrag(item.id, lastTouchPosRef.current.pageX, lastTouchPosRef.current.pageY);
+            }
+          }}
+          delayLongPress={350}
           style={[
             styles.listItemCard,
-            { backgroundColor: colors.card, borderColor: isSelected ? colors.accent : colors.border },
+            {
+              backgroundColor: colors.card,
+              borderColor: isDragOver ? colors.accent : isSelected ? colors.accent : colors.border,
+              borderWidth: isDragOver ? 2.5 : isSelected ? 2 : 1,
+              opacity: isDragged ? 0.4 : 1,
+              transform: isDragOver ? [{ scale: 1.03 }] : isDragged ? [{ scale: 0.97 }] : [],
+            },
           ]}
           onPress={() => {
             if (selectMode) toggleSelect(item.id);
@@ -416,13 +582,30 @@ export function ClosetScreen() {
 
     return (
       <TouchableOpacity
+        onLayout={(e) => {
+          registerItemLayout(item.id, e.nativeEvent.layout);
+        }}
+        onPressIn={(e) => {
+          lastTouchPosRef.current = {
+            pageX: e.nativeEvent.pageX,
+            pageY: e.nativeEvent.pageY,
+          };
+        }}
+        onLongPress={() => {
+          if (!selectMode) {
+            startDrag(item.id, lastTouchPosRef.current.pageX, lastTouchPosRef.current.pageY);
+          }
+        }}
+        delayLongPress={350}
         style={[
           styles.gridCard,
           {
             width: itemWidth,
             backgroundColor: colors.card,
-            borderColor: isSelected ? colors.accent : colors.border,
-            borderWidth: isSelected ? 2 : 1,
+            borderColor: isDragOver ? colors.accent : isSelected ? colors.accent : colors.border,
+            borderWidth: isDragOver ? 2.5 : isSelected ? 2 : 1,
+            opacity: isDragged ? 0.4 : 1,
+            transform: isDragOver ? [{ scale: 1.05 }] : isDragged ? [{ scale: 0.95 }] : [],
           },
         ]}
         onPress={() => {
@@ -679,6 +862,7 @@ export function ClosetScreen() {
         </View>
       ) : (
         <FlatList
+          ref={flatListRef}
           key={`${viewMode}-${numColumns}`}
           data={displayItems}
           keyExtractor={(item) => item.id}
@@ -687,6 +871,8 @@ export function ClosetScreen() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           columnWrapperStyle={numColumns > 1 ? { gap: spacing[2], marginBottom: spacing[2] } : undefined}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -786,6 +972,51 @@ export function ClosetScreen() {
         anchorIds={Array.from(selectedIds)}
         anchorsHint={selectedItemsHint}
       />
+
+      {/* Drag & Drop Touch Overlay and Floating Preview */}
+      {isDragging && (
+        <View
+          style={StyleSheet.absoluteFill}
+          onTouchMove={(e) => {
+            const touch = e.nativeEvent.touches[0];
+            if (touch) {
+              handleDragMove(touch.pageX, touch.pageY);
+            }
+          }}
+          onTouchEnd={handleDragEnd}
+          onTouchCancel={handleDragEnd}
+        />
+      )}
+
+      {isDragging && draggedId && (() => {
+        const draggedItem = items.find(it => it.id === draggedId);
+        const draggedImg = draggedItem?.thumbnail_data_url ||
+          draggedItem?.clean_image_url ||
+          draggedItem?.reconstructed_image_url ||
+          draggedItem?.segmented_image_url ||
+          draggedItem?.original_image_url ||
+          draggedItem?.image_url;
+        return (
+          <View
+            style={[
+              styles.floatingPreview,
+              {
+                left: touchPos.x - 48,
+                top: touchPos.y - 48,
+                borderColor: colors.accent,
+                backgroundColor: colors.card,
+              }
+            ]}
+            pointerEvents="none"
+          >
+            {draggedImg ? (
+              <Image source={{ uri: draggedImg }} style={styles.floatingPreviewImg} resizeMode="contain" />
+            ) : (
+              <Lucide.Shirt size={24} color={colors.mutedFg} />
+            )}
+          </View>
+        );
+      })()}
     </SafeAreaView>
   );
 }
@@ -1111,5 +1342,25 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontFamily: fonts.bodyBold,
     fontSize: fontSizes.sm,
+  },
+  floatingPreview: {
+    position: 'absolute',
+    width: 96,
+    height: 96,
+    borderRadius: radii.xl,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+    zIndex: 9999,
+  },
+  floatingPreviewImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: radii.xl - 2,
   },
 });
