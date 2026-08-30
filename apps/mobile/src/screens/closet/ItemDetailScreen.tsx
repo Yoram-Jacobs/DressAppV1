@@ -828,7 +828,7 @@ export function ItemDetailScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.galleryRow}>
             {/* Front View Thumbnail */}
             <View style={[styles.galleryItemCard, { borderColor: colors.primary, backgroundColor: colors.cardOffWhite }]}>
-              <Image source={{ uri: currentImg }} style={styles.galleryThumb} resizeMode="contain" />
+              <Image source={{ uri: currentImg || '' }} style={styles.galleryThumb} resizeMode="contain" />
               <Text style={[styles.galleryThumbLabel, { color: colors.foreground }]}>
                 {t('closet.frontView', { defaultValue: 'Front' })}
               </Text>

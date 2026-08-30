@@ -39,6 +39,7 @@ import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
 import { useClosetStore } from '@mobile/lib/stores/closetStore';
+import { ConversationSidebar, StylistSession } from './ConversationSidebar';
 
 export interface OutfitGarment {
   id?: string;
@@ -94,6 +95,9 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
   ]);
 
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sessions, setSessions] = useState<StylistSession[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
 
@@ -229,44 +233,141 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
     return '';
   };
 
+  const loadSessions = async () => {
+    setSessionsLoading(true);
+    try {
+      const res = await api.stylistSessions();
+      const list = res?.sessions || [];
+      setSessions(list);
+      return list;
+    } catch {
+      return [];
+    } finally {
+      setSessionsLoading(false);
+    }
+  };
+
+  const loadMessagesForSession = async (sId: string) => {
+    setLoading(true);
+    try {
+      const history = await (api as any).stylistHistory(sId).catch(() => null);
+      if (history?.messages?.length) {
+        const mapped: ChatMessage[] = history.messages.map((m: any, idx: number) => {
+          const rawTxt = m.transcript || m.content || m.text || '';
+          const isFallbackError =
+            rawTxt.toLowerCase().includes('trouble putting that recommendation together') ||
+            rawTxt.toLowerCase().includes('rephrasing') ||
+            rawTxt.includes('התקשיתי בהרכבת ההמלצה') ||
+            rawTxt.includes('مشكلة في إعداد التوصية');
+          const content = isFallbackError
+            ? t('stylist.errorAdvice', {
+                defaultValue:
+                  "Sorry — I had trouble putting that recommendation together. Try rephrasing, or attach a photo so I can see what you're working with.",
+              })
+            : rawTxt;
+
+          return {
+            id: m.id || `hist_${idx}`,
+            role: m.role,
+            content,
+            outfits: hydrateOutfits(m.assistant_payload?.outfit_recommendations || m.outfits || []),
+            shopping_suggestions: m.assistant_payload?.shopping_suggestions || [],
+            do_dont: m.assistant_payload?.do_dont || [],
+            timestamp: m.created_at
+              ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : undefined,
+          };
+        });
+        setMessages(mapped);
+      } else {
+        setMessages([
+          {
+            id: 'msg_welcome',
+            role: 'assistant',
+            content: t('stylist.welcomeMsg', {
+              defaultValue:
+                "Hello! I'm your AI Fashion Stylist. Ask me what to wear, request looks for an occasion, or describe your outfit needs!",
+            }),
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          },
+        ]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectSession = async (id: string) => {
+    if (id === sessionId) {
+      setSidebarOpen(false);
+      return;
+    }
+    setSessionId(id);
+    setSidebarOpen(false);
+    await loadMessagesForSession(id);
+  };
+
+  const handleNewConversation = async () => {
+    try {
+      const fresh = await api.stylistCreateSession();
+      const freshId = fresh?.id || fresh?.session_id;
+      setSessionId(freshId);
+      setMessages([
+        {
+          id: 'msg_welcome',
+          role: 'assistant',
+          content: t('stylist.welcomeMsg', {
+            defaultValue:
+              "Hello! I'm your AI Fashion Stylist. Ask me what to wear, request looks for an occasion, or describe your outfit needs!",
+          }),
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+      setInputQuery('');
+      setAttachedImage(null);
+      setAttachedClosetItem(null);
+      setSidebarOpen(false);
+      if (fresh) {
+        setSessions((prev) => [fresh, ...prev.filter((s) => s.id !== freshId)]);
+      }
+    } catch {
+      // fallback
+    }
+  };
+
+  const handleDeleteSession = async (id: string) => {
+    try {
+      await api.stylistDeleteSession(id);
+      const remaining = sessions.filter((s) => s.id !== id);
+      setSessions(remaining);
+      if (id === sessionId) {
+        if (remaining.length > 0) {
+          setSessionId(remaining[0].id);
+          await loadMessagesForSession(remaining[0].id);
+        } else {
+          await handleNewConversation();
+        }
+      }
+    } catch {
+      // fallback
+    }
+  };
+
   // Initialize session and load history
   useEffect(() => {
     (async () => {
       try {
-        const session = await api.stylistCreateSession().catch(() => null);
-        const sId = session?.id ?? session?.session_id ?? null;
-        setSessionId(sId);
-
-        if (sId) {
-          const history = await api.stylistHistory(sId).catch(() => null);
-          if (history?.messages?.length) {
-            const mapped: ChatMessage[] = history.messages.map((m: any, idx: number) => {
-              const rawTxt = m.transcript || m.content || m.text || '';
-              const isFallbackError =
-                rawTxt.toLowerCase().includes('trouble putting that recommendation together') ||
-                rawTxt.toLowerCase().includes('rephrasing') ||
-                rawTxt.includes('התקשיתי בהרכבת ההמלצה') ||
-                rawTxt.includes('مشكلة في إعداد التوصية');
-              const content = isFallbackError
-                ? t('stylist.errorAdvice', {
-                    defaultValue:
-                      "Sorry — I had trouble putting that recommendation together. Try rephrasing, or attach a photo so I can see what you're working with.",
-                  })
-                : rawTxt;
-
-              return {
-                id: m.id || `hist_${idx}`,
-                role: m.role,
-                content,
-                outfits: hydrateOutfits(m.assistant_payload?.outfit_recommendations || m.outfits || []),
-                shopping_suggestions: m.assistant_payload?.shopping_suggestions || [],
-                do_dont: m.assistant_payload?.do_dont || [],
-                timestamp: m.created_at
-                  ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                  : undefined,
-              };
-            });
-            setMessages(mapped);
+        const rows = await loadSessions();
+        if (rows && rows.length > 0) {
+          const firstId = rows[0].id;
+          setSessionId(firstId);
+          await loadMessagesForSession(firstId);
+        } else {
+          const session = await api.stylistCreateSession().catch(() => null);
+          const sId = session?.id ?? session?.session_id ?? null;
+          setSessionId(sId);
+          if (session) {
+            setSessions([session]);
           }
         }
       } catch {
@@ -725,6 +826,51 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
+      {/* Sticky Chat Header Bar with Sidebar Toggle */}
+      <View style={[styles.chatHeaderBar, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+        <View style={styles.chatHeaderLeft}>
+          <TouchableOpacity
+            style={[styles.sidebarToggleBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => {
+              loadSessions();
+              setSidebarOpen(true);
+            }}
+            accessibilityLabel={t('stylist.openConversations', { defaultValue: 'Conversations history' })}
+          >
+            <Lucide.PanelLeft size={18} color={colors.foreground} />
+          </TouchableOpacity>
+
+          <View style={styles.chatHeaderTitleWrap}>
+            <Text style={[styles.chatHeaderSuperTitle, { color: colors.mutedFg }]}>
+              {t('stylist.label', { defaultValue: 'STYLIST' }).toUpperCase()}
+            </Text>
+            <Text style={[styles.chatHeaderMainTitle, { color: colors.foreground }]} numberOfLines={1}>
+              {sessions.find((s) => s.id === sessionId)?.title || t('stylist.hero', { defaultValue: 'Ask anything fashion' })}
+            </Text>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.chatHeaderNewBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={handleNewConversation}
+          accessibilityLabel={t('stylist.newConversation', { defaultValue: 'New conversation' })}
+        >
+          <Lucide.Plus size={16} color={colors.foreground} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Conversation History Drawer */}
+      <ConversationSidebar
+        visible={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        sessions={sessions}
+        activeId={sessionId}
+        onSelect={handleSelectSession}
+        onNew={handleNewConversation}
+        onDelete={handleDeleteSession}
+        loading={sessionsLoading}
+      />
+
       <ScrollView
         ref={scrollRef}
         style={styles.messagesScroll}
@@ -1919,5 +2065,51 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     marginTop: 4,
     textAlign: 'center',
+  },
+
+  // Chat Header Bar & Sidebar Toggle
+  chatHeaderBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  chatHeaderLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginRight: spacing.sm,
+  },
+  sidebarToggleBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chatHeaderTitleWrap: {
+    flex: 1,
+  },
+  chatHeaderSuperTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 10,
+    letterSpacing: 0.8,
+  },
+  chatHeaderMainTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: fontSizes.md,
+    marginTop: 1,
+  },
+  chatHeaderNewBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
