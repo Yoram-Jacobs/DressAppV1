@@ -107,7 +107,15 @@ interface ItemFormState {
   cultural_tags: string[];
   notes: string;
   formality: string;
+  clean_image_url?: string | null;
   reconstructed_image_url?: string | null;
+  original_image_url?: string | null;
+  image_url?: string | null;
+  thumbnail_data_url?: string | null;
+  placeholder_data_url?: string | null;
+  segmented_image_url?: string | null;
+  cutout_url?: string | null;
+  image_variants?: any;
 }
 
 function toFormState(data: any, user?: any): ItemFormState {
@@ -171,6 +179,7 @@ function toFormState(data: any, user?: any): ItemFormState {
     tags: Array.isArray(data?.tags) ? data.tags : [],
     cultural_tags: Array.isArray(data?.cultural_tags) ? data.cultural_tags : [],
     notes: data?.notes || '',
+    clean_image_url: data?.clean_image_url || null,
     reconstructed_image_url:
       data?.reconstructed_image_url &&
       data?.reconstructed_image_url !== 'None' &&
@@ -178,6 +187,13 @@ function toFormState(data: any, user?: any): ItemFormState {
       data?.reconstructed_image_url !== 'undefined'
         ? data.reconstructed_image_url
         : null,
+    original_image_url: data?.original_image_url || null,
+    image_url: data?.image_url || null,
+    thumbnail_data_url: data?.thumbnail_data_url || null,
+    placeholder_data_url: data?.placeholder_data_url || null,
+    segmented_image_url: data?.segmented_image_url || null,
+    cutout_url: data?.cutout_url || null,
+    image_variants: data?.image_variants || null,
   };
 }
 
@@ -764,6 +780,15 @@ export function ItemDetailScreen() {
     if (trimmed.startsWith('/')) {
       return `https://dressapp.co${trimmed}`;
     }
+    if (trimmed.startsWith('iVBORw0KGgo')) {
+      return `data:image/png;base64,${trimmed}`;
+    }
+    if (trimmed.startsWith('/9j/')) {
+      return `data:image/jpeg;base64,${trimmed}`;
+    }
+    if (trimmed.startsWith('UklGR')) {
+      return `data:image/webp;base64,${trimmed}`;
+    }
     return null;
   };
 
@@ -771,26 +796,53 @@ export function ItemDetailScreen() {
 
   const reconstructedUrl =
     resolveDisplayUrl(form.reconstructed_image_url) ||
-    resolveDisplayUrl(activeGarment?.reconstructed_image_url);
+    resolveDisplayUrl(activeGarment?.reconstructed_image_url) ||
+    resolveDisplayUrl(item?.reconstructed_image_url);
 
   const cleanCutoutUrl =
     resolveDisplayUrl(form.clean_image_url) ||
     resolveDisplayUrl(activeGarment?.clean_image_url) ||
     resolveDisplayUrl(activeGarment?.segmented_image_url) ||
-    resolveDisplayUrl(activeGarment?.cutout_url);
+    resolveDisplayUrl(activeGarment?.cutout_url) ||
+    resolveDisplayUrl(item?.clean_image_url) ||
+    resolveDisplayUrl(item?.segmented_image_url) ||
+    resolveDisplayUrl(item?.cutout_url);
+
+  const variantUrl =
+    resolveDisplayUrl(form.image_variants?.webp?.large) ||
+    resolveDisplayUrl(activeGarment?.image_variants?.webp?.large) ||
+    resolveDisplayUrl(form.image_variants?.webp?.medium) ||
+    resolveDisplayUrl(activeGarment?.image_variants?.webp?.medium) ||
+    resolveDisplayUrl(form.image_variants?.avif?.medium) ||
+    resolveDisplayUrl(activeGarment?.image_variants?.avif?.medium) ||
+    resolveDisplayUrl(form.image_variants?.original) ||
+    resolveDisplayUrl(activeGarment?.image_variants?.original) ||
+    resolveDisplayUrl(item?.image_variants?.webp?.large) ||
+    resolveDisplayUrl(item?.image_variants?.webp?.medium) ||
+    resolveDisplayUrl(item?.image_variants?.avif?.medium) ||
+    resolveDisplayUrl(item?.image_variants?.original);
 
   const rawOriginalUrl =
+    resolveDisplayUrl(form.original_image_url) ||
     resolveDisplayUrl(activeGarment?.original_image_url) ||
-    resolveDisplayUrl(activeGarment?.image_url);
+    resolveDisplayUrl(form.image_url) ||
+    resolveDisplayUrl(activeGarment?.image_url) ||
+    resolveDisplayUrl(item?.original_image_url) ||
+    resolveDisplayUrl(item?.image_url) ||
+    variantUrl;
 
   const fallbackThumb =
+    resolveDisplayUrl(form.thumbnail_data_url) ||
     resolveDisplayUrl(activeGarment?.thumbnail_data_url) ||
-    resolveDisplayUrl(activeGarment?.placeholder_data_url);
+    resolveDisplayUrl(form.placeholder_data_url) ||
+    resolveDisplayUrl(activeGarment?.placeholder_data_url) ||
+    resolveDisplayUrl(item?.thumbnail_data_url) ||
+    resolveDisplayUrl(item?.placeholder_data_url);
 
   const hasReconstruction = Boolean(reconstructedUrl);
 
-  const cutoutOrRepairedUrl = reconstructedUrl || cleanCutoutUrl || fallbackThumb || rawOriginalUrl;
-  const rawUrl = rawOriginalUrl || cutoutOrRepairedUrl;
+  const cutoutOrRepairedUrl = reconstructedUrl || cleanCutoutUrl || variantUrl || fallbackThumb || rawOriginalUrl;
+  const rawUrl = rawOriginalUrl || variantUrl || fallbackThumb || cutoutOrRepairedUrl;
 
   const currentImg = viewingCutout ? cutoutOrRepairedUrl : (rawUrl || cutoutOrRepairedUrl);
 
@@ -944,6 +996,10 @@ export function ItemDetailScreen() {
                 const thumb =
                   resolveDisplayUrl(piece.reconstructed_image_url) ||
                   resolveDisplayUrl(piece.clean_image_url) ||
+                  resolveDisplayUrl(piece.segmented_image_url) ||
+                  resolveDisplayUrl(piece.cutout_url) ||
+                  resolveDisplayUrl(piece.image_variants?.webp?.medium) ||
+                  resolveDisplayUrl(piece.image_variants?.original) ||
                   resolveDisplayUrl(piece.thumbnail_data_url) ||
                   resolveDisplayUrl(piece.placeholder_data_url) ||
                   resolveDisplayUrl(piece.original_image_url) ||

@@ -1127,17 +1127,18 @@ export function ClosetScreen() {
           draggedItem?.segmented_image_url ||
           draggedItem?.original_image_url ||
           draggedItem?.image_url;
+
+        const screenW = Dimensions.get('window').width;
+        const isRtl = I18nManager.isRTL;
+        const xPos = isRtl ? (screenW - touchPos.x - 48) : (touchPos.x - 48);
+
         return (
           <View
             style={[
               styles.floatingPreview,
               {
-                left: 0,
-                top: 0,
-                transform: [
-                  { translateX: touchPos.x - 48 },
-                  { translateY: touchPos.y - 48 },
-                ],
+                top: touchPos.y - 48,
+                start: xPos,
                 borderColor: colors.accent,
                 backgroundColor: colors.card,
               }
