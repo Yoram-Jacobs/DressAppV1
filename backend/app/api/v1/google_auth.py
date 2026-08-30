@@ -340,14 +340,19 @@ def _mobile_scheme_redirect(url: str) -> HTMLResponse:
     safe_url = _html.escape(url, quote=True)
     js_url = _json.dumps(url)
 
-    # Build Android Intent URI if this is a dressapp:// URL
+    # Build Android Intent URI
     intent_url = ""
     if url.startswith("dressapp://"):
         path_and_query = url[len("dressapp://"):]
-        intent_url = f"intent://{path_and_query}#Intent;scheme=dressapp;package=com.project.dressapp;end"
+        intent_url = f"intent://{path_and_query}#Intent;scheme=dressapp;end"
     elif url.startswith("exp://"):
+        path_and_query = url[len("exp://"):]
+        intent_url = f"intent://{path_and_query}#Intent;scheme=exp;package=host.exp.exponent;end"
+    else:
         intent_url = url
-    safe_intent_url = _html.escape(intent_url, quote=True) if intent_url else safe_url
+
+    primary_url = intent_url if intent_url else url
+    safe_primary_url = _html.escape(primary_url, quote=True)
     js_intent_url = _json.dumps(intent_url if intent_url else url)
 
     page = f"""<!DOCTYPE html>
@@ -428,7 +433,7 @@ def _mobile_scheme_redirect(url: str) -> HTMLResponse:
     <div class="spinner"></div>
     <h1>Signed In Successfully!</h1>
     <p>Returning to DressApp… If the app does not open automatically, tap below:</p>
-    <a id="btn-open" class="btn" href="{safe_url}">Open DressApp</a>
+    <a id="btn-open" class="btn" href="{safe_primary_url}">Open DressApp</a>
   </div>
 
   <script>
@@ -437,28 +442,26 @@ def _mobile_scheme_redirect(url: str) -> HTMLResponse:
       var intentUrl = {js_intent_url};
 
       function triggerRedirect() {{
-        // 1. Try standard custom scheme
+        var isAndroid = /Android/i.test(navigator.userAgent);
+        var target = (isAndroid && intentUrl) ? intentUrl : url;
         try {{
-          window.location.replace(url);
-        }} catch (e) {{}}
-
-        // 2. Try click simulation
-        var btn = document.getElementById('btn-open');
-        if (btn) {{
-          try {{ btn.click(); }} catch(e) {{}}
-        }}
-
-        // 3. For Android Chrome, try intent URI
-        if (/Android/i.test(navigator.userAgent) && intentUrl) {{
-          setTimeout(function() {{
-            try {{
-              window.location.href = intentUrl;
-            }} catch(e) {{}}
-          }}, 300);
+          window.location.href = target;
+        }} catch (e) {{
+          try {{ window.location.replace(url); }} catch(e2) {{}}
         }}
       }}
 
-      triggerRedirect();
+      var btn = document.getElementById('btn-open');
+      if (btn) {{
+        btn.addEventListener('click', function(e) {{
+          var isAndroid = /Android/i.test(navigator.userAgent);
+          var target = (isAndroid && intentUrl) ? intentUrl : url;
+          window.location.href = target;
+        }});
+      }}
+
+      // Attempt automatic redirect
+      setTimeout(triggerRedirect, 50);
     }})();
   </script>
 </body>
