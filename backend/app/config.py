@@ -163,7 +163,7 @@ class Settings:
     # The earlier HF FLUX fallback was retired in May 2026 — when the
     # direct key is absent we now return 503 instead of degrading.
     GEMINI_IMAGE_MODEL: str = os.environ.get(
-        "GEMINI_IMAGE_MODEL", "gemini-2.5-flash-image"
+        "GEMINI_IMAGE_MODEL", "gemini-3.1-flash-lite-image"
     )
 
     # --- The Eyes (garment vision analyzer) ---
@@ -499,7 +499,7 @@ class Settings:
     USE_LOCAL_CLOTHING_PARSER: bool = (
         not _LIGHTWEIGHT_DEPLOY
         and os.environ.get(
-            "USE_LOCAL_CLOTHING_PARSER", "true" if _HAS_LOCAL_ML else "false"
+            "USE_LOCAL_CLOTHING_PARSER", "false"
         ).lower()
         == "true"
         and os.environ.get("USE_CLOTHING_PARSER", "true").lower() == "true"
@@ -510,21 +510,12 @@ class Settings:
         os.environ.get("USE_CLOTHING_PARSER", "true").lower() == "true"
     )
 
-    # Patch M13 (May 2026) — Cold-start model warmup. Fires SegFormer +
-    # rembg + FashionCLIP loads in parallel as an asyncio background task
-    # from the FastAPI startup hook, so the FIRST user upload doesn't
-    # pay the cumulative 9-19s model-init tax that previously pushed
-    # cold-start /closet/analyze past the Kubernetes ingress 60s ceiling
-    # and triggered "502 Bad Gateway → Analysis failed" on first
-    # attempt. Default ``true`` on full-ML deploys, OFF on lightweight
-    # deploys (the lightweight container can't afford to preload models
-    # it doesn't need — it goes Gemini-only). Kill-switch via env var
-    # of the same name when triaging deploy-time issues.
+    # Cold-start model warmup. Off by default on single-pod VPS to keep RAM headroom under 2GB.
     WARMUP_MODELS_ON_STARTUP: bool = (
         not _LIGHTWEIGHT_DEPLOY
         and os.environ.get(
             "WARMUP_MODELS_ON_STARTUP",
-            "true" if _HAS_LOCAL_ML else "false",
+            "false",
         ).lower()
         == "true"
     )
