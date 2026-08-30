@@ -124,13 +124,12 @@ export default function LoginScreen() {
     if (busy) return;
     setBusy(true);
     try {
-      const data = await api.googleLoginStart({ mobile: true });
+      const returnUrl = Linking.createURL('auth/callback');
+      console.log('[LoginScreen] OAuth returnUrl:', returnUrl);
+      const data = await api.googleLoginStart({ mobile: true, returnUrl });
       if (!data?.authorization_url) {
         throw new Error('No authorization URL returned from server.');
       }
-
-      const returnUrl = Linking.createURL('auth/callback');
-      console.log('[LoginScreen] OAuth returnUrl:', returnUrl);
       console.log('[LoginScreen] Opening authorization_url:', data.authorization_url.substring(0, 100));
 
       const result = await WebBrowser.openAuthSessionAsync(

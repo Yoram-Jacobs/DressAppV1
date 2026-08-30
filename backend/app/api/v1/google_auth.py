@@ -345,6 +345,8 @@ def _mobile_scheme_redirect(url: str) -> HTMLResponse:
     if url.startswith("dressapp://"):
         path_and_query = url[len("dressapp://"):]
         intent_url = f"intent://{path_and_query}#Intent;scheme=dressapp;package=com.project.dressapp;end"
+    elif url.startswith("exp://"):
+        intent_url = url
     safe_intent_url = _html.escape(intent_url, quote=True) if intent_url else safe_url
     js_intent_url = _json.dumps(intent_url if intent_url else url)
 
@@ -478,6 +480,10 @@ def _smart_error_redirect(
     Alert.alert instead of leaving the user on a Chrome Custom Tab.
     """
     if state_data and state_data.get("mobile"):
+        custom_return_url = state_data.get("return_url")
+        if custom_return_url:
+            delimiter = "&" if ("#" in custom_return_url or "?" in custom_return_url) else "#"
+            return _mobile_scheme_redirect(f"{custom_return_url}{delimiter}error={reason}")
         return _mobile_scheme_redirect(f"dressapp://auth/callback#error={reason}")
     return _login_error_redirect(origin, reason)
 
@@ -496,6 +502,10 @@ async def google_login_start(
     mobile: bool = Query(
         default=False,
         description="When true (sent by the React Native app), the post-login redirect uses dressapp://auth/callback instead of the web /auth/callback so the Custom Tab hands control back to the app.",
+    ),
+    return_url: str | None = Query(
+        default=None,
+        description="Optional custom return URL (e.g. exp://... in Expo Go) for mobile auth callbacks.",
     ),
 ) -> dict[str, Any]:
     """Public endpoint that returns the Google authorization URL for the
@@ -520,6 +530,7 @@ async def google_login_start(
             "next": safe_next,
             "mobile": bool(mobile),
             "redirect_uri": redirect_uri,
+            "return_url": return_url,
         },
     )
 
@@ -860,8 +871,13 @@ async def _handle_login_callback(
         # IMPORTANT: Chrome blocks HTTP 3xx redirects to non-http(s) schemes
         # like dressapp://, so we serve a tiny HTML page with a JS redirect.
         # Web clients get the standard HTTP 307 redirect.
+        custom_return_url = state_data.get("return_url")
         if is_mobile:
-            final_url = f"dressapp://auth/callback#{params}"
+            if custom_return_url:
+                delimiter = "&" if ("#" in custom_return_url or "?" in custom_return_url) else "#"
+                final_url = f"{custom_return_url}{delimiter}{params}"
+            else:
+                final_url = f"dressapp://auth/callback#{params}"
         else:
             final_url = f"{origin}{LOGIN_FRONTEND_PATH}#{params}"
 
