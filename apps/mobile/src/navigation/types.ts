@@ -18,7 +18,7 @@ export type AuthStackParamList = {
 export type ClosetStackParamList = {
   Closet: undefined;
   ItemDetail: { itemId: string };
-  ClosetAdd: { source?: 'camera' | 'manual' };
+  ClosetAdd?: { source?: 'camera' | 'manual' } | undefined;
   DppScanner: undefined;
   Avatar: undefined;
   SharedOutfit: { outfitId: string };

@@ -165,7 +165,7 @@ export default function HomeScreen() {
           <Animated.View style={[s.pulsingAddBtnWrap, { transform: [{ scale: pulseAnim }] }]}>
             <TouchableOpacity
               style={[s.pulsingAddBtn, { backgroundColor: colors.primary }]}
-              onPress={() => navigation.navigate('ClosetTab', { screen: 'ClosetAdd', params: { source: 'camera' } })}
+              onPress={() => navigation.navigate('ClosetTab', { screen: 'ClosetAdd' })}
               activeOpacity={0.85}
               testID="home-add-item-button"
             >

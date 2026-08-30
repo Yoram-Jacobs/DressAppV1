@@ -53,7 +53,6 @@ function CaptureFab(props: any) {
         onPress={() =>
           nav.navigate('ClosetTab', {
             screen: 'ClosetAdd',
-            params: { source: 'camera' },
           })
         }
         activeOpacity={0.85}
