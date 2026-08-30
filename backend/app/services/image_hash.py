@@ -148,26 +148,37 @@ def compute_signatures(image_data) -> tuple[str | None, str | None]:
 
 # Field-priority chain used by the repair pipeline + any future
 # backfill caller. Order matters: the first non-empty wins.
+import hashlib
+
 AUTHORITATIVE_SOURCE_FIELDS: tuple[str, ...] = (
     "clean_image_url",
     "cutout_url",
     "reconstructed_image_url",
     "segmented_image_url",
     "original_image_url",
+    "thumbnail_data_url",
+    "image_url",
 )
 
+
+def compute_sha256(image_data: str | bytes | None) -> str | None:
+    """Compute SHA-256 hex digest of raw image bytes."""
+    if image_data is None:
+        return None
+    try:
+        if isinstance(image_data, bytes):
+            return hashlib.sha256(image_data).hexdigest()
+        m = _DATA_URL_RE.match(image_data.strip())
+        payload = m.group(1) if m else image_data.strip()
+        raw = base64.b64decode(payload, validate=False)
+        return hashlib.sha256(raw).hexdigest()
+    except Exception:
+        return None
 
 
 def best_authoritative_source(row: dict) -> str | None:
     """Return the first authoritative image source on a closet item,
-    or ``None`` if the row only has a (lossy) thumbnail.
-
-    ``row`` is a closet-item Mongo document or any dict that follows
-    the same key names. A ``None`` return is a signal to the repair
-    pipeline that this row *cannot* be safely re-fingerprinted from
-    available data — its hashes should be **cleared** (not
-    recomputed from the thumbnail) so the duplicate detector treats
-    it as un-fingerprinted instead of trusting a hallucinated hash.
+    falling back to clean_image_url or thumbnail_data_url.
     """
     if not isinstance(row, dict):
         return None
@@ -182,13 +193,7 @@ def compute_authoritative_signatures(
     row: dict,
 ) -> tuple[str | None, str | None, str | None]:
     """Compute (phash, color_sig, source_field_used) from the best
-    authoritative source on a closet item. Returns ``(None, None, None)``
-    when no authoritative source exists.
-
-    Returning the *field that was used* lets the repair endpoint
-    surface diagnostics ("recomputed from original_image_url" vs
-    "skipped — only thumbnail available") in its streaming log
-    without re-deriving the choice on the caller side.
+    authoritative source on a closet item.
     """
     for field in AUTHORITATIVE_SOURCE_FIELDS:
         val = row.get(field) if isinstance(row, dict) else None
@@ -198,6 +203,7 @@ def compute_authoritative_signatures(
         if ph or cs:
             return (ph, cs, field)
     return (None, None, None)
+
 
 
 

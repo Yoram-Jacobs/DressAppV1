@@ -84,10 +84,12 @@ export function ConversationSidebar({
   const [archivedIds, setArchivedIds] = useState<string[]>([]);
   const [unreadIds, setUnreadIds] = useState<string[]>([]);
   const [customTitles, setCustomTitles] = useState<Record<string, string>>({});
+  const [searchQuery, setSearchQuery] = useState('');
 
   // UI States
   const [showArchived, setShowArchived] = useState(false);
   const [actionSheetSession, setActionSheetSession] = useState<StylistSession | null>(null);
+
 
   // Rename Dialog
   const [renameModalOpen, setRenameModalOpen] = useState(false);
@@ -192,16 +194,23 @@ export function ConversationSidebar({
     );
   };
 
-  // Filter out empty 0-turn sessions with no snippet
+  // Filter out empty 0-turn sessions with no snippet, and apply search filter
   const validSessions = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
     return sessions.filter((s) => {
       const hasTurns = (s.turns && s.turns > 0);
       const hasSnippet = !!(s.snippet && s.snippet.trim().length > 0);
       const hasCustomTitle = !!customTitles[s.id];
       const hasRealTitle = s.title && !['Untitled chat', 'שיחה ללא שם', 'New conversation', 'Style advice'].includes(s.title);
-      return hasTurns || hasSnippet || hasCustomTitle || hasRealTitle;
+      const isValid = hasTurns || hasSnippet || hasCustomTitle || hasRealTitle;
+      if (!isValid) return false;
+      if (!q) return true;
+      const title = (customTitles[s.id] || s.title || '').toLowerCase();
+      const snippet = (s.snippet || '').toLowerCase();
+      return title.includes(q) || snippet.includes(q);
     });
-  }, [sessions, customTitles]);
+  }, [sessions, customTitles, searchQuery]);
+
 
   // Grouping logic (Today, Yesterday, Earlier)
   const { pinnedSessions, archivedSessions, groups } = useMemo(() => {
@@ -370,7 +379,7 @@ export function ConversationSidebar({
             isRtl ? { right: 0 } : { left: 0 },
           ]}
         >
-          {/* Top Capsule Button: + New conversation */}
+          {/* Top Area: + New conversation + Search input */}
           <View style={[styles.headerArea, { borderBottomColor: colors.border }]}>
             <TouchableOpacity
               style={[
@@ -391,7 +400,26 @@ export function ConversationSidebar({
                 {t('stylist.newConversation', { defaultValue: 'New conversation' })}
               </Text>
             </TouchableOpacity>
+
+            <View style={[styles.searchBox, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+              <Lucide.Search size={14} color={colors.mutedFg} />
+              <TextInput
+                style={[styles.searchInput, { color: colors.foreground, textAlign: isRtl ? 'right' : 'left' }]}
+                placeholder={t('stylist.searchChats', { defaultValue: 'Search conversations...' })}
+                placeholderTextColor={colors.mutedFg}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                returnKeyType="search"
+                autoCapitalize="none"
+              />
+              {searchQuery ? (
+                <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Lucide.X size={14} color={colors.mutedFg} />
+                </TouchableOpacity>
+              ) : null}
+            </View>
           </View>
+
 
           {/* Sessions List */}
           {loading ? (
@@ -669,6 +697,7 @@ const styles = StyleSheet.create({
     padding: spacing[3],
     paddingTop: spacing[8],
     borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: spacing[2],
   },
   newConversationBtn: {
     flexDirection: 'row',
@@ -683,6 +712,22 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodyBold,
     fontSize: fontSizes.sm,
   },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: radii.full,
+    borderWidth: 1,
+    paddingHorizontal: spacing[3],
+    height: 36,
+    gap: spacing[2],
+  },
+  searchInput: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: fontSizes.xs,
+    paddingVertical: 0,
+  },
+
   scrollArea: {
     flex: 1,
   },

@@ -108,22 +108,23 @@ def _resolve_api_key(explicit: str | None) -> str:
     return key
 
 
-def _coerce_interactions_input(parts: Iterable[Any]) -> list[dict[str, Any]]:
-    """Translate the wrapper's lightweight content syntax into Interactions API input content blocks."""
+def _coerce_content_parts(parts: Iterable[Any]) -> list[Any]:
+    """Translate the wrapper's lightweight content syntax into SDK content parts."""
     _require_sdk()
-    out: list[dict[str, Any]] = []
+    out: list[Any] = []
     for entry in parts:
         if entry is None:
             continue
         if isinstance(entry, str):
-            out.append({"type": "text", "text": entry})
+            out.append(entry)
         elif isinstance(entry, (bytes, bytearray)):
-            b64_data = base64.b64encode(entry).decode("utf-8")
-            out.append({
-                "type": "image",
-                "mime_type": "image/jpeg",
-                "data": b64_data,
-            })
+            # Detect JPEG vs PNG vs WebP
+            mime = "image/jpeg"
+            if entry.startswith(b"\x89PNG\r\n\x1a\n"):
+                mime = "image/png"
+            elif entry.startswith(b"RIFF") and len(entry) > 12 and entry[8:12] == b"WEBP":
+                mime = "image/webp"
+            out.append(_genai_types.Part.from_bytes(data=bytes(entry), mime_type=mime))
         elif (
             isinstance(entry, tuple)
             and len(entry) == 2
@@ -131,35 +132,22 @@ def _coerce_interactions_input(parts: Iterable[Any]) -> list[dict[str, Any]]:
             and isinstance(entry[1], str)
         ):
             blob, mime = entry
-            b64_data = base64.b64encode(blob).decode("utf-8")
-            out.append({
-                "type": "image",
-                "mime_type": mime or "image/jpeg",
-                "data": b64_data,
-            })
-        elif isinstance(entry, dict) and "type" in entry:
+            out.append(_genai_types.Part.from_bytes(data=bytes(blob), mime_type=mime or "image/jpeg"))
+        elif hasattr(entry, "inline_data") or hasattr(entry, "text"):
             out.append(entry)
+        elif isinstance(entry, dict) and "data" in entry and "mime_type" in entry:
+            try:
+                raw_b = base64.b64decode(entry["data"])
+                out.append(_genai_types.Part.from_bytes(data=raw_b, mime_type=entry["mime_type"]))
+            except Exception:
+                out.append(entry)
         else:
-            # Pre-built SDK part or similar
-            txt = getattr(entry, "text", None)
-            if txt:
-                out.append({"type": "text", "text": txt})
-            else:
-                inline = getattr(entry, "inline_data", None)
-                if inline and getattr(inline, "data", None):
-                    b64_data = base64.b64encode(inline.data).decode("utf-8")
-                    out.append({
-                        "type": "image",
-                        "mime_type": getattr(inline, "mime_type", "image/jpeg"),
-                        "data": b64_data,
-                    })
-                else:
-                    out.append(entry)
+            out.append(entry)
     return out
 
 
 class GeminiClient:
-    """Async wrapper around ``google.genai.Client`` using Interactions API.
+    """Async wrapper around ``google.genai.Client`` using standard Models API.
 
     Construct once per service (cheap, thread-safe). The wrapper holds
     a single SDK client and exposes three call surfaces:
@@ -178,7 +166,7 @@ class GeminiClient:
         self.api_key = _resolve_api_key(api_key)
         self._client = _genai.Client(api_key=self.api_key)
 
-    def _build_interactions_kwargs(
+    def _build_config(
         self,
         *,
         system: str | None,
@@ -186,32 +174,25 @@ class GeminiClient:
         max_tokens: int | None,
         response_mime_type: str | None,
         response_schema: dict[str, Any] | None,
-    ) -> dict[str, Any]:
-        kwargs: dict[str, Any] = {}
+    ) -> Any:
+        cfg_kwargs: dict[str, Any] = {}
         if system:
-            kwargs["system_instruction"] = system
-
-        gen_config: dict[str, Any] = {}
+            cfg_kwargs["system_instruction"] = system
         if temperature is not None:
-            gen_config["temperature"] = float(temperature)
+            cfg_kwargs["temperature"] = float(temperature)
         if max_tokens is not None:
-            gen_config["max_output_tokens"] = int(max_tokens)
-        if gen_config:
-            kwargs["generation_config"] = gen_config
+            cfg_kwargs["max_output_tokens"] = int(max_tokens)
+        if response_mime_type:
+            cfg_kwargs["response_mime_type"] = response_mime_type
+        if response_schema:
+            if hasattr(response_schema, "model_json_schema"):
+                cfg_kwargs["response_schema"] = response_schema.model_json_schema()
+            else:
+                cfg_kwargs["response_schema"] = response_schema
 
-        if response_mime_type or response_schema:
-            fmt = {
-                "type": "text",
-                "mime_type": response_mime_type or "application/json"
-            }
-            if response_schema:
-                if hasattr(response_schema, "model_json_schema"):
-                    fmt["schema"] = response_schema.model_json_schema()
-                else:
-                    fmt["schema"] = response_schema
-            kwargs["response_format"] = [fmt]
-
-        return kwargs
+        if cfg_kwargs and _genai_types is not None:
+            return _genai_types.GenerateContentConfig(**cfg_kwargs)
+        return None
 
     # ------------------------------------------------------------------ text
     async def text(
@@ -226,17 +207,17 @@ class GeminiClient:
         response_schema: dict[str, Any] | None = None,
     ) -> str:
         """Text-only completion. Returns the model's response text."""
-        kwargs = self._build_interactions_kwargs(
+        config = self._build_config(
             system=system,
             temperature=temperature,
             max_tokens=max_tokens,
             response_mime_type=response_mime_type,
             response_schema=response_schema,
         )
-        resp = await self._client.aio.interactions.create(
+        resp = await self._client.aio.models.generate_content(
             model=_normalise_model(model),
-            input=user_text,
-            **kwargs,
+            contents=user_text,
+            config=config,
         )
         return _coerce_text(resp)
 
@@ -255,21 +236,21 @@ class GeminiClient:
         """Multimodal completion (text + image parts). Non-streaming.
 
         ``user_parts`` is an iterable of strings (text), bytes (treated
-        as image/jpeg), ``(bytes, mime_type)`` tuples, or any SDK
+        as image/jpeg or png), ``(bytes, mime_type)`` tuples, or any SDK
         ``types.Part``. Order is preserved.
         """
-        kwargs = self._build_interactions_kwargs(
+        config = self._build_config(
             system=system,
             temperature=temperature,
             max_tokens=max_tokens,
             response_mime_type=response_mime_type,
             response_schema=response_schema,
         )
-        contents = _coerce_interactions_input(user_parts)
-        resp = await self._client.aio.interactions.create(
+        contents = _coerce_content_parts(user_parts)
+        resp = await self._client.aio.models.generate_content(
             model=_normalise_model(model),
-            input=contents,
-            **kwargs,
+            contents=contents,
+            config=config,
         )
         return _coerce_text(resp)
 
@@ -285,31 +266,24 @@ class GeminiClient:
         response_mime_type: str | None = None,
         response_schema: dict[str, Any] | None = None,
     ) -> AsyncIterator[str]:
-        """Streaming multimodal completion. Yields text deltas.
-
-        Consumes a stream of SSE events and yields text step.deltas.
-        """
-        kwargs = self._build_interactions_kwargs(
+        """Streaming multimodal completion. Yields text deltas."""
+        config = self._build_config(
             system=system,
             temperature=temperature,
             max_tokens=max_tokens,
             response_mime_type=response_mime_type,
             response_schema=response_schema,
         )
-        contents = _coerce_interactions_input(user_parts)
-        stream = await self._client.aio.interactions.create(
+        contents = _coerce_content_parts(user_parts)
+        stream = await self._client.aio.models.generate_content_stream(
             model=_normalise_model(model),
-            input=contents,
-            stream=True,
-            **kwargs,
+            contents=contents,
+            config=config,
         )
-        async for event in stream:
-            if event.event_type == "step.delta" and event.delta:
-                dtype = getattr(event.delta, "type", None) or (event.delta.get("type") if isinstance(event.delta, dict) else None)
-                if dtype == "text":
-                    text = getattr(event.delta, "text", None) or (event.delta.get("text") if isinstance(event.delta, dict) else None)
-                    if text:
-                        yield text
+        async for chunk in stream:
+            txt = getattr(chunk, "text", None)
+            if txt:
+                yield txt
 
 
 # ---------------------------------------------------------------------- helpers

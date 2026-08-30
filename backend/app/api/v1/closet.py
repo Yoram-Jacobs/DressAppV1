@@ -4356,20 +4356,70 @@ async def reanalyze_item(
     if colors_list and isinstance(colors_list, list):
         first_colour = colors_list[0]
         if isinstance(first_colour, dict) and first_colour.get("name"):
-            if not fill_empty_only or ("color" not in locked and not item.get("color")):
-                update_doc["color"] = first_colour["name"]
-    materials_list = analysis.get("fabric_materials") or []
-    if materials_list and isinstance(materials_list, list):
-        first_material = materials_list[0]
-        if isinstance(first_material, dict) and first_material.get("name"):
-            if not fill_empty_only or ("material" not in locked and not item.get("material")):
-                update_doc["material"] = first_material["name"]
+            if not fill_empty_onldef _get_localized_closet_msg(msg_type: str, lang: str, user_msg: str = "") -> str:
+    lang = (lang or "en").lower()
+    if lang not in ("he", "ar", "es", "fr", "de", "it", "pt", "ru", "zh", "ja", "hi"):
+        lang = "en"
 
-    # Construct updated item in memory so the frontend can preview/save it, but do NOT write to database automatically.
-    # This ensures the user must explicitly click the Save icon on the frontend to persist re-analysis edits.
-    updated_item = {**item, **update_doc}
-    return {"item": updated_item, "analysis": analysis}
-
+    messages = {
+        "image_edit_failed": {
+            "he": f"ניסיתי לערוך את התמונה ({user_msg}), אך נתקלתי בבעיה בעיבוד התמונה. אנא נסה שוב או נסח את הבקשה בצורה שונה.",
+            "ar": f"حاولت تعديل الصورة ({user_msg})، ولكن حدث خطأ أثناء المعالجة. يرجى المحاولة مرة أخرى.",
+            "en": f"I attempted to modify the image ({user_msg}), but encountered an issue during processing. Please try again or refine your prompt.",
+            "es": f"Intenté modificar la imagen ({user_msg}), pero ocurrió un problema durante el procesamiento. Por favor intenta de nuevo.",
+            "fr": f"J'ai essayé de modifier l'image ({user_msg}), mais un problème est survenu lors du traitement. Veuillez réessayer.",
+            "de": f"Ich habe versucht, das Bild zu bearbeiten ({user_msg}), aber bei der Verarbeitung ist ein Fehler aufgetreten. Bitte versuche es erneut.",
+            "it": f"Ho provato a modificare l'immagine ({user_msg}), ma si è verificato un problema durante l'elaborazione. Per favore riprova.",
+            "pt": f"Tentei modificar a imagem ({user_msg}), mas ocorreu um erro no processamento. Por favor tente novamente.",
+            "ru": f"Я попытался изменить изображение ({user_msg}), но произошла ошибка при обработке. Пожалуйста, попробуйте еще раз.",
+            "zh": f"我尝试修改图片（{user_msg}），但在处理过程中遇到了问题。请重试或修改提示词。",
+            "ja": f"画像の変更を試みました（{user_msg}）が、処理中に問題が発生しました。もう一度お試しください。",
+            "hi": f"मैंने छवि को संशोधित करने का प्रयास किया ({user_msg}), लेकिन प्रसंस्करण के दौरान एक समस्या आई। कृपया पुन: प्रयास करें।",
+        },
+        "image_edit_unavailable": {
+            "he": "עריכת תמונות אינה זמינה כעת בשרת. אנא ודא שהמערכת מוגדרת כראוי.",
+            "ar": "خدمة تعديل الصور غير متوفرة حالياً على الخادم. يرجى التأكد من تكوين النظام.",
+            "en": "Image editing is currently unavailable on this server. Please ensure the service is configured.",
+            "es": "La edición de imágenes no está disponible actualmente en este servidor.",
+            "fr": "La retouche d'image est actuellement indisponible sur ce serveur.",
+            "de": "Die Bildbearbeitung ist auf diesem Server derzeit nicht verfügbar.",
+            "it": "La modifica delle immagini non è al momento disponibile su questo server.",
+            "pt": "A edição de imagens não está disponível no momento neste servidor.",
+            "ru": "Редактирование изображений в настоящее время недоступно на этом сервере.",
+            "zh": "该服务器当前无法进行图像编辑。",
+            "ja": "現在このサーバーでは画像編集を利用できません。",
+            "hi": "इस सर्वर पर वर्तमान में छवि संपादन उपलब्ध नहीं है।",
+        },
+        "default_chat_reply": {
+            "he": "הבנתי. עדכן אותי אם תרצה שאערוך את התמונה או אעדכן את פרטי הפריט.",
+            "ar": "مفهوم. أخبرني إذا كنت ترغب في تعديل الصورة أو تحديث تفاصيل القطعة.",
+            "en": "Understood. Let me know if you want me to edit the photo or refine the details.",
+            "es": "Entendido. Avísame si quieres que edite la foto o ajuste los detalles.",
+            "fr": "Compris. Faites-moi savoir si vous souhaitez modifier la photo ou ajuster les détails.",
+            "de": "Verstanden. Lass mich wissen, wenn du das Bild bearbeiten oder Details anpassen möchtest.",
+            "it": "Ricevuto. Fammi sapere se desideri che modifichi la foto o aggiorni i dettagli.",
+            "pt": "Entendido. Avise-me se você quiser que eu edite a foto ou ajuste os detalhes.",
+            "ru": "Понятно. Дайте знать, если нужно отредактировать фото или уточнить детали.",
+            "zh": "明白了。如果您需要我编辑照片或调整详情，请告诉我。",
+            "ja": "了解しました。写真を編集したり詳細を調整したい場合はお知らせください。",
+            "hi": "समझ गया। अगर आप चाहते हैं कि मैं फ़ोटो संपादित करूँ या विवरण को परिष्कृत करूँ तो मुझे बताएं।",
+        },
+        "image_edit_processing": {
+            "he": f"מבצע עריכת תמונה: {user_msg}",
+            "ar": f"جاري تعديل الصورة: {user_msg}",
+            "en": f"Processing image modification: {user_msg}",
+            "es": f"Modificando imagen: {user_msg}",
+            "fr": f"Modification de l'image : {user_msg}",
+            "de": f"Bearbeite Bild: {user_msg}",
+            "it": f"Modifica dell'immagine in corso: {user_msg}",
+            "pt": f"Processando modificação da imagem: {user_msg}",
+            "ru": f"Выполняется редактирование изображения: {user_msg}",
+            "zh": f"正在处理图片修改：{user_msg}",
+            "ja": f"画像を変更中：{user_msg}",
+            "hi": f"छवि संशोधन संसाधित किया जा रहा है: {user_msg}",
+        }
+    }
+    return messages.get(msg_type, {}).get(lang) or messages.get(msg_type, {}).get("en", "")
 
 
 @router.post("/{item_id}/chat-analyse")
@@ -4447,12 +4497,12 @@ async def chat_analyse_item(
         "Your task: Analyze the user's message and determine the correct action from the following 4 options:\n\n"
         "1. 'image_edit': The user is asking to modify, inpaint, remove, or reconstruct elements in the photo.\n"
         "   Examples in multiple languages:\n"
-        "   - Hebrew: 'הסר את הנעליים', 'השלם את החור איפה שהייתה היד', 'הסר את הרקע', 'נקה את התמונה', 'הסר ניטים', 'תקן שרוול', 'הסר את הקולב', 'השלם חיתוך'\n"
-        "   - Arabic: 'ازالة الحذاء', 'إكمال الثقب', 'إزالة الخلفية', 'إصلاح الكم', 'إزالة الشماعة'\n"
-        "   - English: 'Remove the shoes', 'Complete the hole where the hand was', 'Remove the metal studs from the jacket\\'s front', 'Remove the hanger', 'Repair the cut-off sleeve', 'Fill the gap in the hem'\n"
+        "   - Hebrew: 'הסר את הנעליים', 'שחזר את הנעליים', 'השלם את החור איפה שהייתה היד', 'הסר את הרקע', 'נקה את התמונה', 'הסר ניטים', 'תקן שרוול', 'הסר את הקולב', 'השלם חיתוך'\n"
+        "   - Arabic: 'ازالة الحذاء', 'إصلاح الحذاء', 'إكمال الثقب', 'إزالة الخلفية', 'إصلاح الكم', 'إزالة الشماعة'\n"
+        "   - English: 'Remove the shoes', 'Restore the shoes', 'Complete the hole where the hand was', 'Remove the metal studs from the jacket\\'s front', 'Remove the hanger', 'Repair the cut-off sleeve', 'Fill the gap in the hem'\n"
         "   CRITICAL REQUIREMENTS FOR 'image_edit':\n"
         "   - Set action: 'image_edit'\n"
-        "   - Set image_edit_prompt: ALWAYS IN ENGLISH! Translate the user's intent into a concise, highly specific inpainting / outpainting instruction for Gemini Nano Banana (e.g. 'Remove the shoes and isolate the trousers cleanly on a neutral #F5F2EB background', 'Outpaint and fill the missing area where the hand was, preserving original fabric texture and color').\n"
+        "   - Set image_edit_prompt: ALWAYS IN ENGLISH! Translate the user's intent into a concise, highly specific inpainting / outpainting / reconstruction instruction for Gemini Nano Banana (e.g. 'Restore the footwear, clean commercial sneaker photo on solid neutral #F5F2EB off-white background', 'Outpaint and fill the missing area where the hand was, preserving original fabric texture and color').\n"
         f"   - Set reply: Write a brief, friendly confirmation in the user's language ('{user_lang}') describing what you are modifying.\n\n"
         "2. 'clarification': The user's request for image modification or editing is ambiguous or missing crucial specifics.\n"
         "   - Set action: 'clarification'\n"
@@ -4496,60 +4546,83 @@ async def chat_analyse_item(
         decision = json.loads(clean_json)
     except Exception as exc:
         logger.warning("Gemini decision parsing failed in chat_analyse: %s", exc)
+        # Fallback heuristic (multilingual)�פריט.",
+            "ar": "مفهوم. أخبرني إذا كنت ترغب في تعديل الصورة أو تحديث تفاصيل القطعة.",
+            "en": "Understood. Let me know if you want me to edit the photo or refine the details.",
+            "es": "Entendido. Avísame si quieres que edite la foto o ajuste los detalles.",
+            "fr": "Compris. Faites-moi savoir si vous souhaitez modifier la photo ou ajuster les détails.",
+            "de": "Verstanden. Lass mich wissen, wenn du das Bild bearbeiten oder Details anpassen möchtest.",
+            "it": "Ricevuto. Fammi sapere se desideri che modifichi la foto o aggiorni i dettagli.",
+            "pt": "Entendido. Avise-me se você quiser que eu edite a foto ou ajuste os detalhes.",
+            "ru": "Понятно. Дайте знать, если нужно отредактировать фото или уточнить детали.",
+            "zh": "明白了。如果您需要我编辑照片或调整详情，请告诉我。",
+            "ja": "了解しました。写真を編集したり詳細を調整したい場合はお知らせください。",
+            "hi": "समझ गया। अगर आप चाहते हैं कि मैं फ़ोटो संपादित करूँ या विवरण को परिष्कृत करूँ तो मुझे बताएं।",
+        },
+        "image_edit_processing": {
+            "he": f"מבצע עריכת תמונה: {user_msg}",
+            "ar": f"جاري تعديل الصورة: {user_msg}",
+            "en": f"Processing image modification: {user_msg}",
+            "es": f"Modificando imagen: {user_msg}",
+            "fr": f"Modification de l'image : {user_msg}",
+            "de": f"Bearbeite Bild: {user_msg}",
+            "it": f"Modifica dell'immagine in corso: {user_msg}",
+            "pt": f"Processando modificação da imagem: {user_msg}",
+            "ru": f"Выполняется редактирование изображения: {user_msg}",
+            "zh": f"正在处理图片修改：{user_msg}",
+            "ja": f"画像を変更中：{user_msg}",
+            "hi": f"छवि संशोधन संसाधित किया जा रहा है: {user_msg}",
+        }
+    }
+    return messages.get(msg_type, {}).get(lang) or messages.get(msg_type, {}).get("en", "")
+
         # Fallback heuristic (multilingual)
         low_msg = user_msg.lower()
+        item_cat = (item.get("category") or "").strip().lower()
+        is_shoes_item = any(k in item_cat for k in ("footwear", "shoes", "sneakers", "boots", "נעל", "נעליים", "חذاء"))
+
+        is_remove = any(k in low_msg for k in [
+            "remove", "erase", "cutout", "delete", "crop", "drop", "without",
+            "הסר", "הסרה", "הורד", "הורדה", "מחק", "מחיקה", "חתוך", "בלי",
+            "ازالة", "إزالة", "حذف", "مسح", "قص", "بدون",
+        ])
+        is_restore = any(k in low_msg for k in [
+            "restore", "reconstruct", "repair", "fix", "complete", "fill", "outpaint", "enhance", "clean",
+            "שחזר", "שחזור", "תקן", "תיקון", "השלם", "השלמה", "שפר", "נקה",
+            "اصلاح", "إصلاح", "استعادة", "تعديل", "اكمال", "إكمال",
+        ])
         image_keywords = [
             # English
-            "remove", "complete", "fix", "hole", "stud", "shoe", "sleeve", "hand", "background", "erase", "repair", "clean", "cutout", "isolate", "crop", "inpaint",
+            "remove", "complete", "fix", "hole", "stud", "shoe", "sleeve", "hand", "background", "erase", "repair", "clean", "cutout", "isolate", "crop", "inpaint", "restore", "reconstruct",
             # Hebrew
-            "הסר", "הסרה", "הורד", "הורדה", "מחק", "מחיקה", "תקן", "תיקון", "השלם", "השלמה", "חור", "רקע", "שרוול", "נעל", "נעליים", "יד", "נקה", "חתוך", "ניטים", "קולב",
+            "הסר", "הסרה", "הורד", "הורדה", "מחק", "מחיקה", "תקן", "תיקון", "השלם", "השלמה", "חור", "רקע", "שרוול", "נעל", "נעליים", "יד", "נקה", "חתוך", "ניטים", "קולב", "שחזר", "שחזור",
             # Arabic
-            "ازالة", "إزالة", "حذف", "مسح", "اصلاح", "إصلاح", "تعديل", "خلفية", "حذاء", "قص", "ثقب", "كم", "شماعة",
+            "ازالة", "إزالة", "حذف", "مسح", "اصلاح", "إصلاح", "تعديل", "خلفية", "حذاء", "قص", "ثقب", "كم", "شماعة", "استعادة", "اكمال",
         ]
         is_edit = any(k in low_msg for k in image_keywords)
         if is_edit:
             prompt_en = user_msg
-            if "נעל" in user_msg or "נעליים" in user_msg or "shoe" in low_msg:
-                prompt_en = "Remove the shoes and footwear, isolate the garment cleanly on neutral background"
+            if is_shoes_item and (is_restore or not is_remove or "שחזר" in user_msg or "restore" in low_msg):
+                prompt_en = f"Commercial product photograph of complete, restored {item.get('title') or 'pair of shoes'}, clean sneakers on solid neutral #F5F2EB off-white background, photorealistic crisp details"
+            elif is_remove and ("נעל" in user_msg or "נעליים" in user_msg or "shoe" in low_msg) and not is_shoes_item:
+                prompt_en = "Remove the shoes and footwear at the bottom, isolating the garment cleanly on neutral #F5F2EB background"
             elif "חור" in user_msg or "יד" in user_msg or "השלם" in user_msg or "hole" in low_msg or "hand" in low_msg:
-                prompt_en = "Outpaint and complete the missing area where the hand was, preserving original fabric texture and color"
+                prompt_en = "Outpaint and complete the missing area where the hand or cutout was, preserving original fabric texture and color"
             elif "ניטים" in user_msg or "stud" in low_msg:
                 prompt_en = "Remove the metal studs from the garment"
             elif "רקע" in user_msg or "נקה" in user_msg or "background" in low_msg:
-                prompt_en = "Clean background and isolate the garment"
+                prompt_en = "Clean background and isolate the garment cleanly on neutral #F5F2EB background"
+            elif is_restore:
+                prompt_en = f"Reconstruct and restore {item.get('title') or item.get('category') or 'garment'}, high-fidelity commercial fashion catalog photograph on neutral #F5F2EB background"
 
-            if user_lang == "he":
-                reply_text = f"מבצע עריכת תמונה: {user_msg}"
-            elif user_lang == "ar":
-                reply_text = f"جاري تعديل الصورة: {user_msg}"
-            elif user_lang == "de":
-                reply_text = f"Bearbeite Bild: {user_msg}"
-            elif user_lang == "es":
-                reply_text = f"Modificando imagen: {user_msg}"
-            elif user_lang == "fr":
-                reply_text = f"Modification de l'image : {user_msg}"
-            else:
-                reply_text = f"Processing image modification: {user_msg}"
-
+            reply_text = _get_localized_closet_msg("image_edit_processing", user_lang, user_msg=user_msg)
             decision = {
                 "action": "image_edit",
                 "reply": reply_text,
                 "image_edit_prompt": prompt_en,
             }
         else:
-            if user_lang == "he":
-                default_reply = "הבנתי. עדכן אותי אם תרצה שאערוך את התמונה או אעדכן את פרטי הפריט."
-            elif user_lang == "ar":
-                default_reply = "مفهوم. أخبرني إذا كنت ترغب في تعديل الصورة أو تحديث تفاصيل القطعة."
-            elif user_lang == "de":
-                default_reply = "Verstanden. Lass mich wissen, wenn du das Bild bearbeiten oder Details anpassen möchtest."
-            elif user_lang == "es":
-                default_reply = "Entendido. Avísame si quieres que edite la foto o ajuste los detalles."
-            elif user_lang == "fr":
-                default_reply = "Compris. Faites-moi savoir si vous souhaitez modifier la photo ou ajuster les détails."
-            else:
-                default_reply = "Understood. Let me know if you want me to edit the photo or refine the details."
-
+            default_reply = _get_localized_closet_msg("default_chat_reply", user_lang)
             decision = {
                 "action": "answered",
                 "reply": default_reply,
@@ -4565,7 +4638,7 @@ async def chat_analyse_item(
 
     if action == "image_edit":
         if gemini_image_service is None:
-            reply = "Image editing is currently unavailable on this server. Please ensure Nano Banana is configured."
+            reply = _get_localized_closet_msg("image_edit_unavailable", user_lang)
             action = "clarification"
         else:
             try:
@@ -4604,6 +4677,34 @@ async def chat_analyse_item(
                     "prompt": edit_prompt,
                     "model": edit_res.get("model_used"),
                     "updated_at": datetime.now(timezone.utc).isoformat(),
+                }
+            except Exception as edit_exc:
+                logger.warning("Nano Banana chat edit failed: %s", edit_exc)
+                reply = _get_localized_closet_msg("image_edit_failed", user_lang, user_msg=user_msg)
+                action = "clarification"
+
+    elif action == "metadata_update":
+        meta_updates = decision.get("metadata_updates") or {}
+        for k, v in meta_updates.items():
+            if k in (
+                "title", "name", "category", "sub_category", "item_type", "brand",
+                "gender", "dress_code", "season", "tradition", "colors", "color",
+                "fabric_materials", "material", "pattern", "state", "condition",
+                "quality", "repair_advice", "tags"
+            ):
+                updated_doc[k] = v
+
+    # Build preview item in memory (do not overwrite DB until user clicks Save)
+    updated_item = {**item, **updated_doc}
+
+    return {
+        "reply": reply,
+        "action_taken": action,
+        "image_url": image_url_out,
+        "clean_image_url": clean_image_url_out,
+        "updated_fields": updated_doc if updated_doc else None,
+        "item": updated_item,
+    } "updated_at": datetime.now(timezone.utc).isoformat(),
                 }
             except Exception as edit_exc:
                 logger.warning("Nano Banana chat edit failed: %s", edit_exc)
