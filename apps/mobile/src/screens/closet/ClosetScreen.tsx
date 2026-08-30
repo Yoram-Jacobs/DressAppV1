@@ -137,6 +137,8 @@ export function ClosetScreen() {
 
     let targetItem: ClosetItem | null = null;
 
+    const isRtl = I18nManager.isRTL;
+
     if (viewMode === 'list') {
       const rowHeight = 76;
       const rowIndex = Math.floor(relY / rowHeight);
@@ -146,7 +148,8 @@ export function ClosetScreen() {
     } else if (viewMode === 'compact') {
       const colWidth = itemWidth + spacing[2];
       const rowHeight = itemWidth + spacing[2];
-      const col = Math.floor(relX / colWidth);
+      const rawCol = Math.floor(relX / colWidth);
+      const col = isRtl ? 2 - rawCol : rawCol;
       const row = Math.floor(relY / rowHeight);
       if (col >= 0 && col < 3 && row >= 0) {
         const index = row * 3 + col;
@@ -158,7 +161,8 @@ export function ClosetScreen() {
       // 2-column Grid view
       const colWidth = itemWidth + spacing[2];
       const rowHeight = itemWidth + 68 + spacing[2];
-      const col = Math.floor(relX / colWidth);
+      const rawCol = Math.floor(relX / colWidth);
+      const col = isRtl ? 1 - rawCol : rawCol;
       const row = Math.floor(relY / rowHeight);
       if (col >= 0 && col < 2 && row >= 0) {
         const index = row * 2 + col;
@@ -329,6 +333,9 @@ export function ClosetScreen() {
 
     return sourcePool
       .filter((it) => {
+        // Exclude grouped member garments — only host/standalone cards are displayed in the root closet grid
+        if (it.group_role === 'member') return false;
+
         // Category filter
         if (activeCategory !== 'all') {
           const cat = (it.category || '').toLowerCase();

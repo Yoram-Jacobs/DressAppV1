@@ -739,6 +739,7 @@ async def create_item(
 # hallucinations).
 class PreflightPhotoIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
+    image_base64: str | None = None
     # SHA-256 hex digest of the raw file bytes (64 lowercase chars).
     # Catches exact-byte re-uploads.
     sha256: str | None = None
@@ -795,9 +796,27 @@ async def preflight_duplicates(
          backfill happens in the background as users use the app.
     """
     from app.services.image_hash import (
+        average_hash,
+        color_signature,
         compute_signatures,
         is_duplicate_match,
     )
+
+    for p in payload.photos:
+        if getattr(p, "image_base64", None):
+            try:
+                raw_b64 = p.image_base64
+                if raw_b64.startswith("data:"):
+                    raw_b64 = raw_b64.split(",", 1)[1]
+                img_bytes = base64.b64decode(raw_b64)
+                if not p.sha256:
+                    p.sha256 = hashlib.sha256(img_bytes).hexdigest()
+                if not p.phash:
+                    p.phash = average_hash(img_bytes)
+                if not p.color_sig:
+                    p.color_sig = color_signature(img_bytes)
+            except Exception as exc:
+                logger.warning("Failed to compute hash for preflight photo: %r", exc)
 
     # Surface every hit so we can confirm via prod logs when client
     # traffic to this endpoint has dropped to zero — that's the
@@ -4546,7 +4565,7 @@ async def chat_analyse_item(
         decision = json.loads(clean_json)
     except Exception as exc:
         logger.warning("Gemini decision parsing failed in chat_analyse: %s", exc)
-        # Fallback heuristic (multilingual)�פריט.",
+        # Fallback heuristic (multilingual)�פריט.",
             "ar": "مفهوم. أخبرني إذا كنت ترغب في تعديل الصورة أو تحديث تفاصيل القطعة.",
             "en": "Understood. Let me know if you want me to edit the photo or refine the details.",
             "es": "Entendido. Avísame si quieres que edite la foto o ajuste los detalles.",

@@ -544,7 +544,56 @@ export function ClosetAddScreen() {
       if (fingerprints.length === 0) return;
 
       const closetItems = closetStore.getSnapshot().items || [];
-      const { matches } = findDuplicatesInCloset(fingerprints, closetItems);
+      let { matches } = findDuplicatesInCloset(fingerprints, closetItems);
+
+      // Also query backend preflight so items in Mongo lacking client-side hashes
+      // are matched via server-side perceptual hash and colour signature
+      try {
+        const serverRes: any = await (api as any).preflightDuplicates?.({
+          photos: fingerprints.map((fp) => ({
+            image_base64: fp.base64,
+            sha256: fp.sha256,
+            filename: fp.filename,
+            size_bytes: fp.size_bytes,
+          })),
+        });
+
+        if (serverRes?.matches && Array.isArray(serverRes.matches) && serverRes.matches.length > 0) {
+          const serverMapped = serverRes.matches.map((sm: any) => {
+            const fp = fingerprints.find(
+              (f) => f.filename === sm.filename || f.sha256 === sm.sha256
+            ) || fingerprints[0];
+            return {
+              photo: {
+                uri: fp?.uri || '',
+                filename: sm.filename || fp?.filename,
+                sha256: sm.sha256 || fp?.sha256,
+                phash: sm.phash,
+              },
+              existing: {
+                id: sm.existing?.id || 'existing',
+                title: sm.existing?.title || 'Closet item',
+                item_type: sm.existing?.item_type || sm.existing?.sub_category,
+                color: sm.existing?.color,
+                thumbnail_data_url: sm.existing?.thumbnail_data_url,
+              },
+              matchKey: sm.sha256 || sm.filename || fp?.sha256 || fp?.filename,
+              matchType: 'visual' as const,
+            };
+          });
+
+          // Merge local and server matches without duplicates
+          const seenKeys = new Set(matches.map((m) => m.matchKey));
+          for (const sMatch of serverMapped) {
+            if (!seenKeys.has(sMatch.matchKey)) {
+              seenKeys.add(sMatch.matchKey);
+              matches.push(sMatch);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Server preflight check error (fallback to local):', err);
+      }
 
       if (matches.length > 0) {
         setPreflightMatches(matches);
@@ -570,10 +619,10 @@ export function ClosetAddScreen() {
     const survivors = fingerprints.filter((fp) => {
       const match = matches.find(
         (m) =>
-          (m.sha256 && fp.sha256 === m.sha256) ||
-          (m.phash && fp.phash === m.phash) ||
           m.matchKey === fp.sha256 ||
-          m.matchKey === fp.filename
+          m.matchKey === fp.filename ||
+          (m.photo?.sha256 && fp.sha256 === m.photo.sha256) ||
+          (m.photo?.filename && fp.filename === m.photo.filename)
       );
       if (!match) return true; // not a duplicate -> keep
       return decisions[match.matchKey] === 'add';
@@ -593,9 +642,10 @@ export function ClosetAddScreen() {
       const isDup = matches.some(
         (m) =>
           decisions[m.matchKey] === 'add' &&
-          ((m.sha256 && fp.sha256 === m.sha256) ||
-            (m.phash && fp.phash === m.phash) ||
-            m.matchKey === fp.sha256)
+          (m.matchKey === fp.sha256 ||
+            m.matchKey === fp.filename ||
+            (m.photo?.sha256 && fp.sha256 === m.photo.sha256) ||
+            (m.photo?.filename && fp.filename === m.photo.filename))
       );
       await analyzeSingleImage(fp.base64 || '', fp.uri, {
         isDuplicate: isDup,

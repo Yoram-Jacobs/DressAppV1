@@ -275,6 +275,9 @@ export function ItemDetailScreen() {
     };
   }, [activeTab]);
 
+  const [groupMembers, setGroupMembers] = useState<any[]>([]);
+  const [activeViewId, setActiveViewId] = useState<string | null>(null);
+
   const loadItem = useCallback(async () => {
     if (!itemId) return;
     setLoading(true);
@@ -282,7 +285,14 @@ export function ItemDetailScreen() {
       const data = await api.getItem(itemId);
       if (data) {
         setItem(data);
-        const parsed = toFormState(data, user);
+        const members = Array.isArray(data.group_members) ? data.group_members : [];
+        setGroupMembers(members);
+        const currentActive = activeViewId || data.id;
+        const validActive = currentActive === data.id || members.some((m: any) => m.id === currentActive);
+        const targetId = validActive ? currentActive : data.id;
+        setActiveViewId(targetId);
+        const activeTarget = targetId === data.id ? data : (members.find((m: any) => m.id === targetId) || data);
+        const parsed = toFormState(activeTarget, user);
         setForm(parsed);
         setOriginalForm(parsed);
       }
@@ -291,11 +301,59 @@ export function ItemDetailScreen() {
     } finally {
       setLoading(false);
     }
-  }, [itemId, user]);
+  }, [itemId, user, activeViewId]);
 
   useEffect(() => {
     loadItem();
-  }, [loadItem]);
+  }, [itemId]);
+
+  const handleSelectViewPiece = (piece: any) => {
+    if (!piece || piece.id === activeViewId) return;
+    setActiveViewId(piece.id);
+    const parsed = toFormState(piece, user);
+    setForm(parsed);
+    setOriginalForm(parsed);
+  };
+
+  const handleUngroupMember = (member: any) => {
+    Alert.alert(
+      t('itemDetail.ungroupTitle', { defaultValue: 'Remove from Group' }),
+      t('itemDetail.ungroupConfirm', {
+        defaultValue: 'Are you sure you want to remove this garment from the group? It will return to your closet as a standalone card.',
+      }),
+      [
+        { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
+        {
+          text: t('common.remove', { defaultValue: 'Remove' }),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              if (item?.id) {
+                await (api as any).groupEdit?.(item.id, { remove_member_ids: [member.id] });
+              } else {
+                await (api as any).patchItem?.(member.id, { group_id: null, group_role: null });
+              }
+              closetStore.upsert({ ...member, group_id: null, group_role: null });
+              if (activeViewId === member.id) {
+                setActiveViewId(item?.id || null);
+              }
+              await loadItem();
+              Alert.alert(
+                t('common.success', { defaultValue: 'Success' }),
+                t('itemDetail.ungroupSuccess', { defaultValue: 'Garment removed from group.' })
+              );
+            } catch (err: any) {
+              console.warn('Ungroup failed:', err);
+              Alert.alert(
+                t('common.error', { defaultValue: 'Error' }),
+                t('itemDetail.ungroupFailed', { defaultValue: 'Failed to remove from group.' })
+              );
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const setField = <K extends keyof ItemFormState>(key: K, value: ItemFormState[K]) => {
     setForm((prev) => {
@@ -683,19 +741,35 @@ export function ItemDetailScreen() {
     return url;
   };
 
+  const allGroupPieces = useMemo(() => {
+    if (!item) return [];
+    const members = Array.isArray(groupMembers) ? groupMembers : [];
+    const seen = new Set();
+    const result = [];
+    for (const p of [item, ...members]) {
+      if (p && p.id && !seen.has(p.id)) {
+        seen.add(p.id);
+        result.push(p);
+      }
+    }
+    return result;
+  }, [item, groupMembers]);
+
+  const activeGarment = allGroupPieces.find((p) => p.id === activeViewId) || item;
+
   const cleanUrl =
     resolveDisplayUrl(form.reconstructed_image_url) ||
-    resolveDisplayUrl(item?.reconstructed_image_url) ||
-    resolveDisplayUrl(item?.clean_image_url) ||
-    resolveDisplayUrl(item?.thumbnail_data_url) ||
-    resolveDisplayUrl(item?.image_url);
+    resolveDisplayUrl(activeGarment?.reconstructed_image_url) ||
+    resolveDisplayUrl(activeGarment?.clean_image_url) ||
+    resolveDisplayUrl(activeGarment?.thumbnail_data_url) ||
+    resolveDisplayUrl(activeGarment?.image_url);
 
   const rawUrl =
-    resolveDisplayUrl(item?.original_image_url) ||
-    resolveDisplayUrl(item?.image_url) ||
+    resolveDisplayUrl(activeGarment?.original_image_url) ||
+    resolveDisplayUrl(activeGarment?.image_url) ||
     cleanUrl;
 
-  const currentImg = (viewingCutout ? cleanUrl : rawUrl) || cleanUrl || resolveDisplayUrl(item?.thumbnail_data_url);
+  const currentImg = (viewingCutout ? cleanUrl : rawUrl) || cleanUrl || resolveDisplayUrl(activeGarment?.thumbnail_data_url);
 
   const timesWorn = item?.wear_count || item?.times_worn || 0;
   const priceUnits = form.price_cents || 0;
@@ -782,6 +856,89 @@ export function ItemDetailScreen() {
             </View>
           )}
         </View>
+
+        {/* ── 1.5 Group Views & Set Garments Strip ─────────────────────────── */}
+        {allGroupPieces.length > 1 && (
+          <View style={[styles.groupStripCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.groupStripHeader}>
+              <View style={styles.groupStripHeaderLeft}>
+                <Lucide.Layers size={14} color={colors.accent} />
+                <Text style={[styles.groupStripTitle, { color: colors.foreground }]}>
+                  {t('itemDetail.groupViewsTitle', { defaultValue: 'Grouped Garments & Views' })}
+                </Text>
+              </View>
+              <View style={[styles.groupCountBadge, { backgroundColor: colors.accent + '18' }]}>
+                <Text style={[styles.groupCountBadgeText, { color: colors.accent }]}>
+                  {allGroupPieces.length} {t('closet.views', { defaultValue: 'views' })}
+                </Text>
+              </View>
+            </View>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.groupThumbScroll}
+            >
+              {allGroupPieces.map((piece, pIdx) => {
+                const isSelected = piece.id === (activeViewId || item?.id);
+                const isHost = piece.group_role === 'host' || piece.id === piece.group_id || pIdx === 0;
+                const thumb = resolveDisplayUrl(piece.clean_image_url) ||
+                  resolveDisplayUrl(piece.thumbnail_data_url) ||
+                  resolveDisplayUrl(piece.original_image_url) ||
+                  resolveDisplayUrl(piece.image_url);
+
+                return (
+                  <TouchableOpacity
+                    key={piece.id}
+                    style={[
+                      styles.groupThumbItem,
+                      {
+                        borderColor: isSelected ? colors.accent : colors.border,
+                        backgroundColor: isSelected ? colors.cardOffWhite : colors.background,
+                        borderWidth: isSelected ? 2 : 1,
+                      },
+                    ]}
+                    onPress={() => handleSelectViewPiece(piece)}
+                    activeOpacity={0.7}
+                  >
+                    {thumb ? (
+                      <Image source={{ uri: thumb }} style={styles.groupThumbImg} resizeMode="contain" />
+                    ) : (
+                      <View style={styles.groupThumbFallback}>
+                        <Lucide.Shirt size={20} color={colors.mutedFg} />
+                      </View>
+                    )}
+
+                    {/* Cover Badge / Role indicator */}
+                    {isHost && (
+                      <View style={[styles.coverTag, { backgroundColor: colors.accent }]}>
+                        <Text style={styles.coverTagText}>{t('itemDetail.cover', { defaultValue: 'Cover' })}</Text>
+                      </View>
+                    )}
+
+                    <Text style={[styles.groupThumbLabel, { color: isSelected ? colors.accent : colors.mutedFg }]} numberOfLines={1}>
+                      {piece.sub_category || piece.category || piece.name || `View ${pIdx + 1}`}
+                    </Text>
+
+                    {/* Ungroup button on non-host pieces */}
+                    {!isHost && (
+                      <TouchableOpacity
+                        style={[styles.ungroupBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          handleUngroupMember(piece);
+                        }}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Lucide.X size={10} color={colors.mutedFg} />
+                      </TouchableOpacity>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
 
         {/* ── 2. Wardrobe Insights Card ─────────────────────────────────── */}
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -2188,5 +2345,95 @@ const styles = StyleSheet.create({
   suggestedTagText: {
     fontFamily: fonts.bodySemiBold,
     fontSize: 11,
+  },
+  groupStripCard: {
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  groupStripHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  groupStripHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  groupStripTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.xs,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  groupCountBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radii.full,
+  },
+  groupCountBadgeText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 11,
+  },
+  groupThumbScroll: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingVertical: 4,
+  },
+  groupThumbItem: {
+    width: 80,
+    height: 105,
+    borderRadius: radii.lg,
+    padding: 4,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    position: 'relative',
+  },
+  groupThumbImg: {
+    width: 68,
+    height: 68,
+    borderRadius: radii.md,
+  },
+  groupThumbFallback: {
+    width: 68,
+    height: 68,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  coverTag: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: radii.xs,
+  },
+  coverTagText: {
+    color: '#FFF',
+    fontFamily: fonts.bodyBold,
+    fontSize: 8,
+    textTransform: 'uppercase',
+  },
+  groupThumbLabel: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 10,
+    textAlign: 'center',
+    width: '100%',
+  },
+  ungroupBtn: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 18,
+    height: 18,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
   },
 });

@@ -357,6 +357,7 @@ export const closet = {
     client.post('/closet/search', body, { timeout: 30000 }).then((r) => r.data),
   polishCrop: (body) =>
     client.post('/closet/polish-crop', body, { timeout: 60000 }).then((r) => r.data),
+  preflightDuplicates: (body) => client.post('/closet/preflight', body).then((r) => r.data),
   groupItems: (body) => client.post('/closet/group', body).then((r) => r.data),
   groupEdit: (hostId, body) =>
     client.post(`/closet/${hostId}/group-edit`, body).then((r) => r.data),
