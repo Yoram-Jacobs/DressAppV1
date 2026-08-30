@@ -306,33 +306,75 @@ async def update_me(
             if val is None or val == "":
                 set_ops[clearable] = None
 
-    # Automatic storage upload & background cutout for avatar, face & body photos
+    # Automatic storage upload, background removal & tight normalization for avatar, face & body photos
     from app.services.upload_manager import UploadManager
+    from app.services.image_compression import compress_image_bytes
     import base64
+    import io
+    from PIL import Image, ImageOps
+
+    async def _segment_and_crop_profile_photo(raw_bytes: bytes, mode: str = "face") -> tuple[bytes, str, str]:
+        """
+        Remove background and crop to subject bounding box for profile face and full-body photos.
+        Returns (image_bytes, mime_type, extension).
+        """
+        try:
+            from app.services.background_matting import remove_background
+
+            orig = Image.open(io.BytesIO(raw_bytes))
+            orig = ImageOps.exif_transpose(orig).convert("RGB")
+
+            # Downscale input to 768px for fast inference (<1.5s on CPU)
+            max_dim = 768
+            w, h = orig.size
+            if max(w, h) > max_dim:
+                scale = max_dim / float(max(w, h))
+                orig = orig.resize((max(1, int(w * scale)), max(1, int(h * scale))), Image.LANCZOS)
+
+            buf = io.BytesIO()
+            orig.save(buf, format="JPEG", quality=88)
+
+            matted = await remove_background(buf.getvalue())
+            if matted and matted.get("image_png"):
+                cutout = Image.open(io.BytesIO(matted["image_png"])).convert("RGBA")
+                bbox = cutout.getbbox()
+                if bbox:
+                    bw, bh = bbox[2] - bbox[0], bbox[3] - bbox[1]
+                    pad_x = int(bw * 0.03)
+                    pad_y = int(bh * 0.03)
+                    cw, ch = cutout.size
+                    crop_box = (
+                        max(0, bbox[0] - pad_x),
+                        max(0, bbox[1] - pad_y),
+                        min(cw, bbox[2] + pad_x),
+                        min(ch, bbox[3] + pad_y),
+                    )
+                    cutout = cutout.crop(crop_box)
+
+                out_buf = io.BytesIO()
+                cutout.save(out_buf, format="PNG", optimize=True)
+                return out_buf.getvalue(), "image/png", "png"
+        except Exception as exc:
+            logger.warning("Profile photo segmentation fallback for %s: %s", mode, exc)
+
+        compressed = compress_image_bytes(raw_bytes, max_dim=1024, quality=80)
+        return compressed, "image/jpeg", "jpg"
 
     for photo_field in ("avatar_url", "face_photo_url", "body_photo_url"):
         val = patch.get(photo_field)
         if val and isinstance(val, str) and val.startswith("data:image"):
             try:
                 header, b64_str = val.split(",", 1)
-                mime = header.split(";")[0].replace("data:", "")
-                ext = "png" if "png" in mime else ("webp" if "webp" in mime else "jpg")
                 img_bytes = base64.b64decode(b64_str)
+                mode = "face" if photo_field in ("face_photo_url", "avatar_url") else "body"
 
-                # For face & body photos, optionally run background matting
-                if photo_field in ("face_photo_url", "body_photo_url"):
-                    try:
-                        from app.services.background_matting import remove_background
-                        mat_res = await remove_background(img_bytes)
-                        if mat_res and mat_res.get("image_png"):
-                            img_bytes = mat_res["image_png"]
-                            mime = "image/png"
-                            ext = "png"
-                    except Exception:
-                        pass
-
-                uploaded_url = await UploadManager.upload_bytes(img_bytes, mime, ext)
+                processed_bytes, mime, ext = await _segment_and_crop_profile_photo(img_bytes, mode=mode)
+                uploaded_url = await UploadManager.upload_bytes(processed_bytes, mime, ext)
                 set_ops[photo_field] = uploaded_url
+                if photo_field == "face_photo_url" and "avatar_url" not in patch:
+                    set_ops["avatar_url"] = uploaded_url
+                elif photo_field == "avatar_url" and "face_photo_url" not in patch:
+                    set_ops["face_photo_url"] = uploaded_url
             except Exception as photo_exc:
                 logger.warning("Failed to process/upload %s for user %s: %s", photo_field, user["id"], photo_exc)
 

@@ -15,12 +15,12 @@ import {
   ActivityIndicator,
   Linking,
   I18nManager,
-  Image,
   TextInput,
   ScrollView,
   Modal,
   Pressable,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';

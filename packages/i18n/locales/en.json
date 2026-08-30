@@ -644,6 +644,12 @@
       "culturalTagPlaceholder": "add cultural tag",
       "notes": "Notes"
     },
+    "groupViewsTitle": "Grouped Garments & Views",
+    "cover": "Cover",
+    "ungroupTitle": "Remove from Group",
+    "ungroupConfirm": "Are you sure you want to remove this garment from the group? It will return to your closet as a standalone card.",
+    "ungroupSuccess": "Garment removed from group successfully.",
+    "ungroupFailed": "Failed to remove garment from group.",
     "group": {
       "front": "Front",
       "back": "Back",

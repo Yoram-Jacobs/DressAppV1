@@ -37,8 +37,8 @@ import {
   Alert,
   I18nManager,
   Modal,
-  Image,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -49,6 +49,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { api, tokenStore, emitAuthChange } from '@mobile/lib/api';
+import { resolveImageUrl } from '@mobile/lib/imageUtils';
+import { userStore } from '@mobile/lib/stores';
 import { closetStore, closetRepo } from '@mobile/lib/stores/closetStore';
 import { applyRtl } from '@mobile/lib/rtl';
 import { HelpFloater } from '@mobile/components/help';
@@ -573,6 +575,7 @@ export function ProfileScreen() {
 
       const res = await api.patchMe(payload);
       if (res) {
+        userStore.setUser(res);
         // Update user local state directly from patch response without full wipe
         if (res.first_name !== undefined) setFirstName(res.first_name || '');
         if (res.last_name !== undefined) setLastName(res.last_name || '');
@@ -584,6 +587,15 @@ export function ProfileScreen() {
         if (res.occupation !== undefined) setOccupation(res.occupation || '');
         if (res.address?.city !== undefined) setCity(res.address.city || '');
         if (res.address?.country !== undefined) setCountry(res.address.country || '');
+        if (res.face_photo_url !== undefined || res.avatar_url !== undefined) {
+          setFacePhotoUrl(res.face_photo_url || res.avatar_url || '');
+        }
+        if (res.body_photo_url !== undefined) {
+          setBodyPhotoUrl(res.body_photo_url || '');
+        }
+        if (res.skin_tone !== undefined) {
+          setSkinTone(res.skin_tone || '#E0AC69');
+        }
         if (res.ai_configuration?.custom_keys) setCustomKeys(res.ai_configuration.custom_keys);
       }
       Alert.alert(
@@ -689,8 +701,8 @@ export function ProfileScreen() {
           <View style={styles.heroRow}>
             {/* User Face Photo replacing Logo/Default avatar */}
             <View style={[styles.avatarWrap, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
-              {facePhotoUrl ? (
-                <Image source={{ uri: facePhotoUrl }} style={styles.avatarImg} resizeMode="cover" />
+              {resolveImageUrl(facePhotoUrl) ? (
+                <Image source={{ uri: resolveImageUrl(facePhotoUrl) }} style={styles.avatarImg} resizeMode="cover" />
               ) : (
                 <Text style={[styles.avatarInitial, { color: colors.foreground }]}>
                   {firstName ? firstName.charAt(0).toUpperCase() : displayName ? displayName.charAt(0).toUpperCase() : 'D'}

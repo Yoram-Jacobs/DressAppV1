@@ -23,7 +23,6 @@ import {
   StyleSheet,
   RefreshControl,
   ScrollView,
-  Image,
   ActivityIndicator,
   I18nManager,
   Pressable,
@@ -33,6 +32,7 @@ import {
   Modal,
   Vibration,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -43,6 +43,7 @@ import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
 import { useClosetStore, closetStore, ClosetItem } from '@mobile/lib/stores/closetStore';
+import { closetRepo } from '@mobile/lib/repositories/closetRepository';
 import { OutfitCompletionSheet } from '@mobile/components/OutfitCompletionSheet';
 import { RichSelectionFloater } from '@mobile/components/closet/RichSelectionFloater';
 import { HelpFloater } from '@mobile/components/help';
@@ -251,7 +252,7 @@ export function ClosetScreen() {
       const backupSource = { ...sourceItem };
       const backupTarget = { ...targetItem };
 
-      const runGrouping = () => {
+      const runGrouping = async () => {
         const groupId = targetItem.group_id || targetId;
         closetStore.upsert({ ...targetItem, group_id: groupId, group_role: 'host' });
         closetStore.upsert({ ...sourceItem, group_id: groupId, group_role: 'member' });
@@ -260,25 +261,27 @@ export function ClosetScreen() {
           Vibration.vibrate(50);
         } catch {}
 
-        (api as any).groupItems?.({ host_id: targetId, member_id: sourceId })
-          .then((res: any) => {
-            if (res?.status === 'success' || res?.host) {
-              if (res.host) closetStore.upsert(res.host);
-              if (res.member) closetStore.upsert(res.member);
-              Alert.alert(
-                t('common.success', { defaultValue: 'Success' }),
-                t('closet.groupCreated', { defaultValue: 'Garments grouped successfully.' })
-              );
-            } else {
-              closetStore.upsert(backupSource);
-              closetStore.upsert(backupTarget);
-            }
-          })
-          .catch((err: any) => {
-            console.warn('Failed to group items:', err);
+        try {
+          const res = await (api as any).groupItems?.({ host_id: targetId, member_id: sourceId });
+          if (res?.status === 'success' || res?.host) {
+            if (res.host) closetStore.upsert(res.host);
+            if (res.member) closetStore.upsert(res.member);
+            await closetRepo.refresh({ force: true });
+            Alert.alert(
+              t('common.success', { defaultValue: 'Success' }),
+              t('closet.groupCreated', { defaultValue: 'Garments grouped successfully.' })
+            );
+          } else {
             closetStore.upsert(backupSource);
             closetStore.upsert(backupTarget);
-          });
+            Alert.alert(t('common.error', { defaultValue: 'Error' }), t('common.error', { defaultValue: 'Failed to group items' }));
+          }
+        } catch (err: any) {
+          console.warn('Failed to group items:', err);
+          closetStore.upsert(backupSource);
+          closetStore.upsert(backupTarget);
+          Alert.alert(t('common.error', { defaultValue: 'Error' }), err?.message || 'Failed to group items');
+        }
       };
 
       const normCategory = (cat?: string) => {
@@ -495,6 +498,7 @@ export function ClosetScreen() {
               await Promise.all(
                 memberIds.map((mid) => (api as any).groupItems?.({ host_id: hostId, member_id: mid }))
               );
+              await closetRepo.refresh({ force: true });
             } catch (err: any) {
               console.warn('Group items failed:', err);
             } finally {
@@ -625,21 +629,23 @@ export function ClosetScreen() {
               startDrag(item.id, lastTouchPosRef.current.pageX, lastTouchPosRef.current.pageY);
             }
           }}
-          onTouchMove={(e) => {
-            if (isDraggingRef.current) {
-              handleDragMove(e.nativeEvent.pageX, e.nativeEvent.pageY);
-            }
-          }}
-          onTouchEnd={() => {
-            if (isDraggingRef.current) {
-              handleDragEnd();
-            }
-          }}
-          onTouchCancel={() => {
-            if (isDraggingRef.current) {
-              handleDragEnd();
-            }
-          }}
+          {...({
+            onTouchMove: (e: any) => {
+              if (isDraggingRef.current) {
+                handleDragMove(e.nativeEvent.pageX, e.nativeEvent.pageY);
+              }
+            },
+            onTouchEnd: () => {
+              if (isDraggingRef.current) {
+                handleDragEnd();
+              }
+            },
+            onTouchCancel: () => {
+              if (isDraggingRef.current) {
+                handleDragEnd();
+              }
+            },
+          } as any)}
           delayLongPress={350}
           style={[
             styles.listItemCard,
@@ -703,21 +709,23 @@ export function ClosetScreen() {
             startDrag(item.id, lastTouchPosRef.current.pageX, lastTouchPosRef.current.pageY);
           }
         }}
-        onTouchMove={(e) => {
-          if (isDraggingRef.current) {
-            handleDragMove(e.nativeEvent.pageX, e.nativeEvent.pageY);
-          }
-        }}
-        onTouchEnd={() => {
-          if (isDraggingRef.current) {
-            handleDragEnd();
-          }
-        }}
-        onTouchCancel={() => {
-          if (isDraggingRef.current) {
-            handleDragEnd();
-          }
-        }}
+        {...({
+          onTouchMove: (e: any) => {
+            if (isDraggingRef.current) {
+              handleDragMove(e.nativeEvent.pageX, e.nativeEvent.pageY);
+            }
+          },
+          onTouchEnd: () => {
+            if (isDraggingRef.current) {
+              handleDragEnd();
+            }
+          },
+          onTouchCancel: () => {
+            if (isDraggingRef.current) {
+              handleDragEnd();
+            }
+          },
+        } as any)}
         delayLongPress={350}
         style={[
           styles.gridCard,

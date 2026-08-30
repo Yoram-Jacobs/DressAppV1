@@ -22,7 +22,6 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import {
   View,
   Text,
-  Image,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
@@ -34,6 +33,7 @@ import {
   Keyboard,
   Platform,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
@@ -68,6 +68,7 @@ import {
   labelForState,
 } from '@mobile/lib/taxonomy';
 import { useClosetStore, closetStore } from '@mobile/lib/stores/closetStore';
+import { closetRepo } from '@mobile/lib/repositories/closetRepository';
 import { useUserStore } from '@mobile/lib/stores';
 import { deriveSizeFromPreferences } from '@mobile/lib/size_preferences';
 import { TaxonomySelectModal } from '@mobile/components/TaxonomySelectModal';
@@ -219,6 +220,10 @@ export function ItemDetailScreen() {
   const [viewingCutout, setViewingCutout] = useState(true);
   const [activeTab, setActiveTab] = useState<'details' | 'ai' | 'pairings' | 'dpp'>('details');
 
+  // Group views state
+  const [groupMembers, setGroupMembers] = useState<any[]>([]);
+  const [activeViewId, setActiveViewId] = useState<string | null>(null);
+
   // AI & Pairings state
   const [analyzing, setAnalyzing] = useState(false);
   const [reanalyzeProgress, setReanalyzeProgress] = useState(0);
@@ -243,10 +248,19 @@ export function ItemDetailScreen() {
 
   const allGroupPieces = useMemo(() => {
     if (!item) return [];
-    const members = Array.isArray(groupMembers) ? groupMembers : [];
+    const membersFromState = Array.isArray(groupMembers) ? groupMembers : [];
+    const groupId = item.group_id;
+    let fallbackStoreMembers: any[] = [];
+    if (groupId) {
+      const storeItems = closetStore.getSnapshot().items || [];
+      fallbackStoreMembers = storeItems.filter(
+        (it) => it && (it.group_id === groupId || it.id === groupId) && it.id !== item.id
+      );
+    }
+    const combinedMembers = [...membersFromState, ...fallbackStoreMembers];
     const seen = new Set();
     const result = [];
-    for (const p of [item, ...members]) {
+    for (const p of [item, ...combinedMembers]) {
       if (p && p.id && !seen.has(p.id)) {
         seen.add(p.id);
         result.push(p);
@@ -311,18 +325,42 @@ export function ItemDetailScreen() {
     };
   }, [activeTab]);
 
-  const [groupMembers, setGroupMembers] = useState<any[]>([]);
-  const [activeViewId, setActiveViewId] = useState<string | null>(null);
-
   const loadItem = useCallback(async () => {
     if (!itemId) return;
-    setLoading(true);
     try {
+      // 1. Zero-latency instant hydration from local closetStore cache
+      const cached = (closetStore.getSnapshot().items || []).find((x) => x.id === itemId);
+      if (cached) {
+        setItem(cached);
+        const groupId = cached.group_id;
+        if (groupId) {
+          const storeMembers = (closetStore.getSnapshot().items || []).filter(
+            (it) => it && (it.group_id === groupId || it.id === groupId) && it.id !== cached.id
+          );
+          setGroupMembers(storeMembers);
+        }
+        const currentActive = activeViewId || cached.id;
+        setActiveViewId(currentActive);
+        const parsed = toFormState(cached, user);
+        setForm(parsed);
+        setOriginalForm(parsed);
+      }
+
+      setLoading(cached ? false : true);
+
+      // 2. Full network fetch for item + hydrated group_members
       const data = await api.getItem(itemId);
       if (data) {
         setItem(data);
         const members = Array.isArray(data.group_members) ? data.group_members : [];
-        setGroupMembers(members);
+        if (members.length > 0) {
+          setGroupMembers(members);
+        } else if (data.group_id) {
+          const storeMembers = (closetStore.getSnapshot().items || []).filter(
+            (it) => it && (it.group_id === data.group_id || it.id === data.group_id) && it.id !== data.id
+          );
+          setGroupMembers(storeMembers);
+        }
         const currentActive = activeViewId || data.id;
         const validActive = currentActive === data.id || members.some((m: any) => m.id === currentActive);
         const targetId = validActive ? currentActive : data.id;
@@ -366,19 +404,24 @@ export function ItemDetailScreen() {
             try {
               if (item?.id) {
                 await (api as any).groupEdit?.(item.id, { remove_member_ids: [member.id] });
-              } else {
-                await (api as any).patchItem?.(member.id, { group_id: null, group_role: null });
               }
+              await (api as any).patchItem?.(member.id, { group_id: null, group_role: null });
               closetStore.upsert({ ...member, group_id: null, group_role: null });
+              setGroupMembers((prev) => prev.filter((m) => m.id !== member.id));
               if (activeViewId === member.id) {
-                setActiveViewId(item?.id || null);
+                setActiveViewId(item?.id);
+                if (item) {
+                  const parsed = toFormState(item, user);
+                  setForm(parsed);
+                  setOriginalForm(parsed);
+                }
               }
-              await loadItem();
+              await closetRepo.refresh({ force: true });
               Alert.alert(
                 t('common.success', { defaultValue: 'Success' }),
                 t('itemDetail.ungroupSuccess', { defaultValue: 'Garment removed from group.' })
               );
-            } catch (err: any) {
+            } catch (err) {
               console.warn('Ungroup failed:', err);
               Alert.alert(
                 t('common.error', { defaultValue: 'Error' }),
@@ -946,11 +989,11 @@ export function ItemDetailScreen() {
 
             {!hasReconstruction && (
               <TouchableOpacity
-                style={[styles.heroActionBtn, { backgroundColor: colors.accent + '20', borderColor: colors.accent }]}
+                style={[styles.heroActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
                 onPress={() => setActiveTab('ai')}
               >
-                <Lucide.Wand2 size={13} color={colors.accent} />
-                <Text style={[styles.heroActionText, { color: colors.accent }]}>{t('itemDetail.cleanBackground.cta', { defaultValue: 'Repair' })}</Text>
+                <Lucide.Wand2 size={13} color={colors.foreground} />
+                <Text style={[styles.heroActionText, { color: colors.foreground }]}>{t('itemDetail.cleanBackground.cta', { defaultValue: 'Repair' })}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -996,8 +1039,8 @@ export function ItemDetailScreen() {
                   {t('itemDetail.groupViewsTitle', { defaultValue: 'Grouped Garments & Views' })}
                 </Text>
               </View>
-              <View style={[styles.groupCountBadge, { backgroundColor: colors.accent + '18' }]}>
-                <Text style={[styles.groupCountBadgeText, { color: colors.accent }]}>
+              <View style={[styles.groupCountBadge, { backgroundColor: 'transparent', borderColor: colors.border, borderWidth: 1 }]}>
+                <Text style={[styles.groupCountBadgeText, { color: colors.mutedFg }]}>
                   {allGroupPieces.length} {t('closet.views', { defaultValue: 'views' })}
                 </Text>
               </View>
@@ -2555,7 +2598,7 @@ const styles = StyleSheet.create({
     left: 6,
     paddingHorizontal: 4,
     paddingVertical: 1,
-    borderRadius: radii.xs,
+    borderRadius: radii.sm,
   },
   coverTagText: {
     color: '#FFF',

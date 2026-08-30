@@ -18,13 +18,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   RefreshControl,
-  Image,
   ActivityIndicator,
   Alert,
   ScrollView,
   I18nManager,
   Share,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';

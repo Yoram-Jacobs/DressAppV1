@@ -22,9 +22,9 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Image,
   I18nManager,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { TextInput } from 'react-native-paper';

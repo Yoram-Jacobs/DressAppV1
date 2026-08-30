@@ -11,34 +11,23 @@ import {
   Text,
   Modal,
   ScrollView,
-  Image,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';
 
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { labelForItemType, labelForColor } from '@mobile/lib/taxonomy';
+import type { DuplicateMatchResult } from '@mobile/lib/duplicateDetection';
 
-export interface DuplicateMatch {
-  matchKey: string;
-  filename?: string;
-  size_bytes?: number;
-  previewUrl?: string;
-  existing?: {
-    id: string;
-    title?: string;
-    item_type?: string;
-    color?: string;
-    thumbnail_data_url?: string;
-  };
-}
+export type DuplicateMatch = DuplicateMatchResult;
 
 interface DuplicatePreflightDialogProps {
   open: boolean;
-  matches: DuplicateMatch[];
+  matches: DuplicateMatchResult[];
   onResolve: (decisions: Record<string, 'skip' | 'add'>) => void;
 }
 

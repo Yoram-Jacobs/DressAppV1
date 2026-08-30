@@ -11,11 +11,11 @@ import {
   Text,
   Modal,
   ScrollView,
-  Image,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';
 

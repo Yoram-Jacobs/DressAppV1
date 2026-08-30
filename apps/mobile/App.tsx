@@ -51,7 +51,7 @@ function AppContent() {
 
   return (
     <>
-      <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} />
+      <StatusBar style={isDark ? 'light' : 'dark'} translucent />
       <PaperProvider>
         <RootNavigator />
       </PaperProvider>

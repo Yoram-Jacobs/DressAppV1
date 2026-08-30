@@ -19,12 +19,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Image,
   Alert,
   Modal,
   FlatList,
   I18nManager,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';
 

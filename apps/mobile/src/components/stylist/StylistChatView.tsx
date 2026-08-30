@@ -21,7 +21,6 @@ import {
   StyleSheet,
   ActivityIndicator,
   TextInput,
-  Image,
   Alert,
   Platform,
   I18nManager,
@@ -29,6 +28,7 @@ import {
   Keyboard,
   Modal,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Audio } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';

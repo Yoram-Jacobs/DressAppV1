@@ -10,11 +10,11 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   StyleSheet,
   Linking,
   I18nManager,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';

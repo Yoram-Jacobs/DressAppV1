@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';

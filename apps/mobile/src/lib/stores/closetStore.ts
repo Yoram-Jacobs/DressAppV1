@@ -1,4 +1,4 @@
-﻿/**
+/**
  * apps/mobile/src/lib/stores/closetStore.ts
  *
  * Singleton store layer re-exporting and bridging to the deep closetRepository.
@@ -48,7 +48,11 @@ export const closetStore = {
   },
 
   upsert(item: ClosetItem) {
-    return closetRepo.saveItem(item as any);
+    return closetRepo.upsert(item);
+  },
+
+  saveItem(item: ClosetItem) {
+    return closetRepo.saveItem(item);
   },
 
   remove(itemId: string) {

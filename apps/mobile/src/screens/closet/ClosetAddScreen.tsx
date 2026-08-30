@@ -23,7 +23,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Image,
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
@@ -32,6 +31,7 @@ import {
   TextInput as RNTextInput,
   Modal,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -669,8 +669,8 @@ export function ClosetAddScreen() {
         (m) =>
           m.matchKey === fp.sha256 ||
           m.matchKey === fp.filename ||
-          (m.photo?.sha256 && fp.sha256 === m.photo.sha256) ||
-          (m.photo?.filename && fp.filename === m.photo.filename)
+          (m.sha256 && fp.sha256 === m.sha256) ||
+          (m.filename && fp.filename === m.filename)
       );
       if (!match) return true; // not a duplicate -> keep
       return decisions[match.matchKey] === 'add';
@@ -692,8 +692,8 @@ export function ClosetAddScreen() {
           decisions[m.matchKey] === 'add' &&
           (m.matchKey === fp.sha256 ||
             m.matchKey === fp.filename ||
-            (m.photo?.sha256 && fp.sha256 === m.photo.sha256) ||
-            (m.photo?.filename && fp.filename === m.photo.filename))
+            (m.sha256 && fp.sha256 === m.sha256) ||
+            (m.filename && fp.filename === m.filename))
       );
       await analyzeSingleImage(fp.base64 || '', fp.uri, {
         isDuplicate: isDup,

@@ -18,9 +18,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   TextInput,
-  Image,
   I18nManager,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';
 

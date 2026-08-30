@@ -17,9 +17,9 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Image,
   I18nManager,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import * as Lucide from 'lucide-react-native';

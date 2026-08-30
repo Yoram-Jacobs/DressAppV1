@@ -68,15 +68,18 @@ function CaptureFab(props: any) {
 import { Image } from 'react-native';
 import { useUserStore } from '@mobile/lib/stores';
 
+import { resolveImageUrl } from '@mobile/lib/imageUtils';
+
 // Tab icon helper
 function tabIcon(source: string, focused: boolean, color: string, facePhotoUrl?: string | null) {
-  if (source === 'me' && facePhotoUrl) {
+  const resolvedUrl = resolveImageUrl(facePhotoUrl);
+  if (source === 'me' && resolvedUrl) {
     return (
       <View
         style={{
-          width: 24,
-          height: 24,
-          borderRadius: 12,
+          width: 26,
+          height: 26,
+          borderRadius: 13,
           borderWidth: focused ? 2 : 1,
           borderColor: focused ? color : 'rgba(0,0,0,0.18)',
           overflow: 'hidden',
@@ -85,7 +88,7 @@ function tabIcon(source: string, focused: boolean, color: string, facePhotoUrl?:
         }}
       >
         <Image
-          source={{ uri: facePhotoUrl }}
+          source={{ uri: resolvedUrl }}
           style={{ width: '100%', height: '100%' }}
           resizeMode="cover"
         />

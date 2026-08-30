@@ -19,16 +19,21 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
-  Image,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { DynamicAvatarSvg } from '@mobile/components/DynamicAvatarSvg';
 import { api } from '@mobile/lib/api';
+
+import { resolveImageUrl } from '@mobile/lib/imageUtils';
+import { userStore } from '@mobile/lib/stores';
+import { Modal } from 'react-native';
 
 const SKIN_TONE_PALETTE = [
   '#FDDBB4', '#F1C27D', '#E0AC69', '#C68642',
@@ -71,57 +76,110 @@ export function AvatarSection({
   const { colors, isDark } = useTheme();
 
   const [saving, setSaving] = useState(false);
+  const [processing, setProcessing] = useState<'face' | 'body' | null>(null);
+  const [pickerModalType, setPickerModalType] = useState<'face' | 'body' | null>(null);
+  const [viewMode, setViewMode] = useState<'real' | 'mannequin'>('real');
   const silhouette = (userGender || '').toLowerCase() === 'male' ? 'male' : 'female';
 
-  const pickImage = async (type: 'face' | 'body') => {
+  const compressImage = async (uri: string, maxDim: number): Promise<string> => {
     try {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permissionResult.granted) {
-        Alert.alert(
-          t('common.permissionDenied', { defaultValue: 'Permission Denied' }),
-          t('common.photoLibraryPermissionDesc', { defaultValue: 'Photo library access is needed to select an image.' })
-        );
-        return;
-      }
+      const manipResult = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: maxDim } }],
+        { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+      );
+      return manipResult.base64 ? `data:image/jpeg;base64,${manipResult.base64}` : manipResult.uri;
+    } catch (e) {
+      console.warn('Image manipulation failed, falling back to raw uri:', e);
+      return uri;
+    }
+  };
 
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsEditing: true,
-        aspect: type === 'face' ? [1, 1] : [3, 4],
-        quality: 0.7,
-        base64: true,
-      });
+  const handlePickFromSource = async (type: 'face' | 'body', source: 'camera' | 'library') => {
+    setPickerModalType(null);
+    try {
+      setProcessing(type);
+      let result: ImagePicker.ImagePickerResult;
+
+      if (source === 'camera') {
+        const perm = await ImagePicker.requestCameraPermissionsAsync();
+        if (!perm.granted) {
+          Alert.alert(
+            t('common.permissionDenied', { defaultValue: 'Permission Denied' }),
+            t('common.cameraPermissionDesc', { defaultValue: 'Camera permission is required.' })
+          );
+          setProcessing(null);
+          return;
+        }
+        result = await ImagePicker.launchCameraAsync({
+          allowsEditing: true,
+          aspect: type === 'face' ? [1, 1] : [3, 4],
+          quality: 0.8,
+        });
+      } else {
+        const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!perm.granted) {
+          Alert.alert(
+            t('common.permissionDenied', { defaultValue: 'Permission Denied' }),
+            t('common.photoLibraryPermissionDesc', { defaultValue: 'Photo library access is needed to select an image.' })
+          );
+          setProcessing(null);
+          return;
+        }
+        result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ['images'],
+          allowsEditing: true,
+          aspect: type === 'face' ? [1, 1] : [3, 4],
+          quality: 0.8,
+        });
+      }
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const asset = result.assets[0];
-        const dataUrl = asset.base64
-          ? `data:image/jpeg;base64,${asset.base64}`
-          : asset.uri;
-
+        const compressedDataUrl = await compressImage(asset.uri, type === 'face' ? 800 : 1024);
         if (type === 'face') {
-          setFacePhotoUrl(dataUrl);
+          setFacePhotoUrl(compressedDataUrl);
         } else {
-          setBodyPhotoUrl(dataUrl);
+          setBodyPhotoUrl(compressedDataUrl);
+          setViewMode('real');
         }
       }
-    } catch {
+    } catch (err) {
+      console.warn('Image picker error:', err);
       Alert.alert(
         t('common.error', { defaultValue: 'Error' }),
         t('avatar.selectImageFailed', { defaultValue: 'Failed to select image.' })
       );
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleRemovePhoto = (type: 'face' | 'body') => {
+    setPickerModalType(null);
+    if (type === 'face') {
+      setFacePhotoUrl('');
+    } else {
+      setBodyPhotoUrl('');
+      setViewMode('mannequin');
     }
   };
 
   const handleSaveAvatar = async () => {
     setSaving(true);
     try {
-      await api.patchMe({
+      const res = await api.patchMe({
         avatar_url: facePhotoUrl || undefined,
         face_photo_url: facePhotoUrl || undefined,
         body_photo_url: bodyPhotoUrl || undefined,
         avatar_gender: silhouette,
         skin_tone: skinTone,
       });
+      if (res) {
+        userStore.setUser(res);
+        if (res.face_photo_url || res.avatar_url) setFacePhotoUrl(res.face_photo_url || res.avatar_url || '');
+        if (res.body_photo_url) setBodyPhotoUrl(res.body_photo_url);
+      }
       Alert.alert(
         t('common.success', { defaultValue: 'Saved' }),
         t('avatar.savedSuccess', { defaultValue: 'Avatar & visual profile saved!' })
@@ -145,6 +203,9 @@ export function AvatarSection({
   const arm = bodyMeasurements?.armLength || 58;
   const ins = bodyMeasurements?.inseam || 76;
 
+  const resolvedFaceUrl = resolveImageUrl(facePhotoUrl);
+  const resolvedBodyUrl = resolveImageUrl(bodyPhotoUrl);
+
   return (
     <View style={styles.container}>
       {/* 2 Photo Upload Slots (Face & Body) */}
@@ -163,11 +224,24 @@ export function AvatarSection({
                 borderWidth: facePhotoUrl ? 2 : 1,
               },
             ]}
-            onPress={() => pickImage('face')}
+            onPress={() => setPickerModalType('face')}
             activeOpacity={0.8}
+            disabled={processing === 'face'}
           >
-            {facePhotoUrl ? (
-              <Image source={{ uri: facePhotoUrl }} style={styles.photoImage} resizeMode="cover" />
+            {processing === 'face' ? (
+              <View style={styles.photoPlaceholder}>
+                <ActivityIndicator size="small" color={colors.accent} />
+                <Text style={[styles.photoPlaceholderText, { color: colors.mutedFg }]}>
+                  {t('common.processing', { defaultValue: 'Compressing...' })}
+                </Text>
+              </View>
+            ) : resolvedFaceUrl ? (
+              <>
+                <Image source={{ uri: resolvedFaceUrl }} style={styles.photoImage} resizeMode="cover" />
+                <View style={[styles.photoOverlayBadge, { backgroundColor: 'rgba(0,0,0,0.6)' }]}>
+                  <Lucide.Camera size={12} color="#FFF" />
+                </View>
+              </>
             ) : (
               <View style={styles.photoPlaceholder}>
                 <Lucide.Camera size={26} color={colors.mutedFg} />
@@ -193,11 +267,24 @@ export function AvatarSection({
                 borderWidth: bodyPhotoUrl ? 2 : 1,
               },
             ]}
-            onPress={() => pickImage('body')}
+            onPress={() => setPickerModalType('body')}
             activeOpacity={0.8}
+            disabled={processing === 'body'}
           >
-            {bodyPhotoUrl ? (
-              <Image source={{ uri: bodyPhotoUrl }} style={styles.photoImage} resizeMode="cover" />
+            {processing === 'body' ? (
+              <View style={styles.photoPlaceholder}>
+                <ActivityIndicator size="small" color={colors.accent} />
+                <Text style={[styles.photoPlaceholderText, { color: colors.mutedFg }]}>
+                  {t('common.processing', { defaultValue: 'Compressing...' })}
+                </Text>
+              </View>
+            ) : resolvedBodyUrl ? (
+              <>
+                <Image source={{ uri: resolvedBodyUrl }} style={styles.photoImage} resizeMode="cover" />
+                <View style={[styles.photoOverlayBadge, { backgroundColor: 'rgba(0,0,0,0.6)' }]}>
+                  <Lucide.User size={12} color="#FFF" />
+                </View>
+              </>
             ) : (
               <View style={styles.photoPlaceholder}>
                 <Lucide.User size={26} color={colors.mutedFg} />
@@ -242,18 +329,50 @@ export function AvatarSection({
         </View>
 
         <View style={[styles.svgWrap, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <DynamicAvatarSvg
-            height={h}
-            shoulders={sh}
-            chest={ch}
-            waist={w}
-            hip={hp}
-            armLength={arm}
-            inseam={ins}
-            skinColor={skinTone}
-            gender={silhouette}
-            width={170}
-          />
+          {resolvedBodyUrl && viewMode === 'real' ? (
+            <View style={styles.bodyCutoutWrap}>
+              <Image
+                source={{ uri: resolvedBodyUrl }}
+                style={styles.bodyCutoutImage}
+                resizeMode="contain"
+              />
+              <TouchableOpacity
+                style={[styles.avatarTogglePill, { backgroundColor: colors.card, borderColor: colors.border }]}
+                onPress={() => setViewMode('mannequin')}
+              >
+                <Lucide.Layers size={12} color={colors.accent} />
+                <Text style={[styles.avatarToggleText, { color: colors.foreground }]}>
+                  {t('avatar.showMannequin', { defaultValue: 'Mannequin' })}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.mannequinWrap}>
+              <DynamicAvatarSvg
+                height={h}
+                shoulders={sh}
+                chest={ch}
+                waist={w}
+                hip={hp}
+                armLength={arm}
+                inseam={ins}
+                skinColor={skinTone}
+                gender={silhouette}
+                width={170}
+              />
+              {!!resolvedBodyUrl && (
+                <TouchableOpacity
+                  style={[styles.avatarTogglePill, { backgroundColor: colors.card, borderColor: colors.border }]}
+                  onPress={() => setViewMode('real')}
+                >
+                  <Lucide.User size={12} color={colors.accent} />
+                  <Text style={[styles.avatarToggleText, { color: colors.foreground }]}>
+                    {t('avatar.showRealBody', { defaultValue: 'Real Body' })}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
         </View>
 
         <Text style={[styles.avatarFootnote, { color: colors.mutedFg }]}>
@@ -280,6 +399,81 @@ export function AvatarSection({
           </>
         )}
       </TouchableOpacity>
+
+      {/* ── Photo Action Sheet Modal with 'X' Close Button ── */}
+      <Modal
+        visible={pickerModalType !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPickerModalType(null)}
+      >
+        <TouchableOpacity
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={() => setPickerModalType(null)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.foreground }]}>
+                {pickerModalType === 'face'
+                  ? t('profile.facePhoto', { defaultValue: 'Face Photo' })
+                  : t('profile.bodyPhoto', { defaultValue: 'Full-body Photo' })}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setPickerModalType(null)}
+                style={[styles.modalCloseBtn, { backgroundColor: colors.secondary, borderColor: colors.border, borderWidth: 1 }]}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <Lucide.X size={18} color={colors.foreground} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalOptionsList}>
+              <TouchableOpacity
+                style={[styles.modalOptionItem, { borderColor: colors.border }]}
+                onPress={() => pickerModalType && handlePickFromSource(pickerModalType, 'camera')}
+              >
+                <View style={[styles.modalOptionIconWrap, { backgroundColor: colors.secondary }]}>
+                  <Lucide.Camera size={18} color={colors.accent} />
+                </View>
+                <Text style={[styles.modalOptionText, { color: colors.foreground }]}>
+                  {t('profile.takePhoto', { defaultValue: 'Take photo' })}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalOptionItem, { borderColor: colors.border }]}
+                onPress={() => pickerModalType && handlePickFromSource(pickerModalType, 'library')}
+              >
+                <View style={[styles.modalOptionIconWrap, { backgroundColor: colors.secondary }]}>
+                  <Lucide.Image size={18} color={colors.accent} />
+                </View>
+                <Text style={[styles.modalOptionText, { color: colors.foreground }]}>
+                  {t('profile.uploadPhoto', { defaultValue: 'Upload from gallery' })}
+                </Text>
+              </TouchableOpacity>
+
+              {((pickerModalType === 'face' && !!facePhotoUrl) || (pickerModalType === 'body' && !!bodyPhotoUrl)) && (
+                <TouchableOpacity
+                  style={[styles.modalOptionItem, { borderColor: 'rgba(239,68,68,0.25)' }]}
+                  onPress={() => pickerModalType && handleRemovePhoto(pickerModalType)}
+                >
+                  <View style={[styles.modalOptionIconWrap, { backgroundColor: 'rgba(239,68,68,0.1)' }]}>
+                    <Lucide.Trash2 size={18} color="#EF4444" />
+                  </View>
+                  <Text style={[styles.modalOptionText, { color: '#EF4444' }]}>
+                    {t('profile.removePhoto', { defaultValue: 'Remove photo' })}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -310,6 +504,16 @@ const styles = StyleSheet.create({
   photoImage: {
     width: '100%',
     height: '100%',
+  },
+  photoOverlayBadge: {
+    position: 'absolute',
+    bottom: 6,
+    right: 6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   photoPlaceholder: {
     alignItems: 'center',
@@ -362,9 +566,49 @@ const styles = StyleSheet.create({
   svgWrap: {
     borderRadius: radii.md,
     borderWidth: 1,
-    paddingVertical: spacing.sm,
+    height: 280,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  bodyCutoutWrap: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xs,
+  },
+  bodyCutoutImage: {
+    width: '100%',
+    height: '100%',
+  },
+  mannequinWrap: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarTogglePill: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  avatarToggleText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 10,
   },
   avatarFootnote: {
     fontFamily: fonts.body,
@@ -382,6 +626,57 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     color: '#FFF',
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.sm,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    justifyContent: 'flex-end',
+  },
+  modalCard: {
+    borderTopLeftRadius: radii.xl,
+    borderTopRightRadius: radii.xl,
+    borderWidth: 1,
+    padding: spacing.lg,
+    paddingBottom: spacing.xl,
+    gap: spacing.md,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  modalTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.md,
+  },
+  modalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalOptionsList: {
+    gap: spacing.sm,
+  },
+  modalOptionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+  },
+  modalOptionIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalOptionText: {
     fontFamily: fonts.bodyBold,
     fontSize: fontSizes.sm,
   },

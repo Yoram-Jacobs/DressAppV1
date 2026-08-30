@@ -35,7 +35,6 @@ import {
   Animated,
   GestureResponderEvent,
   I18nManager,
-  Image,
   LayoutChangeEvent,
   PanResponder,
   PanResponderGestureState,
@@ -45,6 +44,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
@@ -54,6 +54,7 @@ import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
+import { resolveImageUrl } from '@mobile/lib/imageUtils';
 import { useUserStore } from '@mobile/lib/stores';
 import { DynamicAvatarSvg } from '@mobile/components/DynamicAvatarSvg';
 
@@ -429,9 +430,9 @@ export function AvatarScreen() {
           </View>
 
           <View style={s.avatarViewport}>
-            {avatarMode === 'photo' && bodyPhotoUrl ? (
+            {avatarMode === 'photo' && resolveImageUrl(bodyPhotoUrl) ? (
               <Image
-                source={{ uri: bodyPhotoUrl }}
+                source={{ uri: resolveImageUrl(bodyPhotoUrl) }}
                 style={s.photoPreview}
                 resizeMode="contain"
               />
@@ -479,8 +480,8 @@ export function AvatarScreen() {
           </Text>
           <View style={s.photoRow}>
             <View style={[s.photoThumb, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
-              {bodyPhotoUrl ? (
-                <Image source={{ uri: bodyPhotoUrl }} style={s.thumbImage} resizeMode="cover" />
+              {resolveImageUrl(bodyPhotoUrl) ? (
+                <Image source={{ uri: resolveImageUrl(bodyPhotoUrl) }} style={s.thumbImage} resizeMode="cover" />
               ) : (
                 <Lucide.Camera size={24} color={colors.mutedFg} />
               )}

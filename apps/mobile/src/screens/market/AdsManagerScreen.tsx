@@ -27,8 +27,8 @@ import {
   Modal,
   I18nManager,
   RefreshControl,
-  Image,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';

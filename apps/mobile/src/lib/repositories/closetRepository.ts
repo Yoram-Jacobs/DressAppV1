@@ -229,6 +229,24 @@ export const closetRepo = {
     return _inFlightSync;
   },
 
+  upsert(item: ClosetItem): void {
+    if (!item || !item.id) return;
+    setState((prev) => {
+      const items = prev.items || [];
+      const idx = items.findIndex((x) => x.id === item.id);
+      let nextItems: ClosetItem[];
+      if (idx >= 0) {
+        const prevItem = items[idx];
+        const merged = { ...prevItem, ...item };
+        nextItems = [...items];
+        nextItems[idx] = merged;
+      } else {
+        nextItems = [item, ...items];
+      }
+      return { ...prev, items: nextItems, total: nextItems.length };
+    });
+  },
+
   async saveItem(patch: Partial<ClosetItem> & { id: string }): Promise<ClosetItem> {
     if (!patch.id) throw new Error('Item ID is required');
 
@@ -246,9 +264,25 @@ export const closetRepo = {
       return { ...prev, items: nextItems, total: nextItems.length };
     });
 
-    // 3. Network write with rollback on error
+    // 3. Network write with sanitized payload to avoid Pydantic extra='forbid' 422 errors
+    const ALLOWED_PATCH_KEYS = new Set([
+      'source', 'group_id', 'group_role', 'name', 'title', 'caption',
+      'category', 'sub_category', 'item_type', 'brand', 'gender', 'dress_code',
+      'season', 'tradition', 'size', 'color', 'colors', 'material', 'fabric_materials',
+      'pattern', 'state', 'condition', 'quality', 'repair_advice', 'price_cents',
+      'currency', 'marketplace_intent', 'formality', 'cultural_tags', 'tags',
+      'wear_count', 'last_worn_at', 'notes', 'reconstructed_image_url',
+      'reconstruction_metadata', 'clean_image_url', 'clean_image_status', 'clear_reconstruction'
+    ]);
+    const sanitized: Record<string, any> = {};
+    for (const [k, v] of Object.entries(patch)) {
+      if (ALLOWED_PATCH_KEYS.has(k) && v !== undefined) {
+        sanitized[k] = v;
+      }
+    }
+
     try {
-      const res = await api.patchItem(patch.id, patch);
+      const res = await api.patchItem(patch.id, sanitized);
       const confirmed: ClosetItem = { ...optimisticUpdated, ...(res || {}) };
       setState((prev) => {
         const idx = prev.items.findIndex((x) => x.id === patch.id);

@@ -18,12 +18,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   RefreshControl,
-  Image,
   ActivityIndicator,
   I18nManager,
   TextInput,
   ScrollView,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';

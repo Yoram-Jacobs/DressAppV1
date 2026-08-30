@@ -4,9 +4,9 @@ import {
   Text, 
   StyleSheet, 
   TouchableOpacity, 
-  Image, 
   I18nManager,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@mobile/theme';

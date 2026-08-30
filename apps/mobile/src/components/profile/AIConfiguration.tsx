@@ -547,7 +547,7 @@ export function AIConfiguration({
               </TouchableOpacity>
               {apiKeyInput.trim().length > 0 && (
                 <TouchableOpacity
-                  style={[styles.modalCancelBtn, { borderColor: colors.accent, backgroundColor: colors.accent + '15' }]}
+                  style={[styles.modalCancelBtn, { borderColor: colors.accent, backgroundColor: colors.card }]}
                   onPress={handleValidateKey}
                   disabled={savingKey || validatingKey}
                 >
