@@ -1,15 +1,18 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Appearance, ColorSchemeName } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { lightColors, darkColors } from './tokens';
+import { useTranslation } from 'react-i18next';
+import { lightColors, darkColors, getLanguageFonts, FontTokens } from './tokens';
 
 export type ColorTokens = typeof lightColors | typeof darkColors;
+export type { FontTokens } from './tokens';
 export type ThemeMode = 'light' | 'dark' | 'system';
 
 const THEME_STORAGE_KEY = 'dressapp.theme_mode';
 
 interface ThemeContextValue {
   colors: ColorTokens;
+  fonts: FontTokens;
   isDark: boolean;
   scheme: ColorSchemeName;
   themeMode: ThemeMode;
@@ -22,6 +25,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
   const [systemScheme, setSystemScheme] = useState(Appearance.getColorScheme());
+  const { i18n } = useTranslation();
 
   useEffect(() => {
     // Load persisted theme
@@ -45,6 +49,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const scheme = themeMode === 'system' ? systemScheme : themeMode;
   const isDark = scheme === 'dark';
   const colors = isDark ? darkColors : lightColors;
+  const currentFonts = getLanguageFonts(i18n.language);
 
   const toggle = () => {
     const nextMode = isDark ? 'light' : 'dark';
@@ -52,7 +57,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ colors, isDark, scheme, themeMode, setThemeMode, toggle }}>
+    <ThemeContext.Provider value={{ colors, fonts: currentFonts, isDark, scheme, themeMode, setThemeMode, toggle }}>
       {children}
     </ThemeContext.Provider>
   );

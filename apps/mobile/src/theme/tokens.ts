@@ -72,10 +72,18 @@ export const darkColors = {
   itemCardBg:    '#F5F2EB',            // default items card background across app
 } as const;
 
-// ---------------------------------------------------------------------------
-// Typography
-// ---------------------------------------------------------------------------
-export const fonts = {
+export interface FontTokens {
+  readonly display: string;
+  readonly displayItalic: string;
+  readonly displayBold: string;
+  readonly body: string;
+  readonly bodyMedium: string;
+  readonly bodySemiBold: string;
+  readonly bodyBold: string;
+  readonly bodyExtraBold: string;
+}
+
+export const latinFonts: FontTokens = {
   display:         'PlayfairDisplay_400Regular',
   displayItalic:   'PlayfairDisplay_400Regular_Italic',
   displayBold:     'PlayfairDisplay_700Bold',
@@ -84,7 +92,38 @@ export const fonts = {
   bodySemiBold:    'Manrope_600SemiBold',
   bodyBold:        'Manrope_700Bold',
   bodyExtraBold:   'Manrope_800ExtraBold',
-} as const;
+};
+
+export const hebrewFonts: FontTokens = {
+  display:         'Heebo_700Bold',
+  displayItalic:   'Heebo_500Medium',
+  displayBold:     'Heebo_800ExtraBold',
+  body:            'Heebo_400Regular',
+  bodyMedium:      'Heebo_500Medium',
+  bodySemiBold:    'Heebo_600SemiBold',
+  bodyBold:        'Heebo_700Bold',
+  bodyExtraBold:   'Heebo_800ExtraBold',
+};
+
+export const arabicFonts: FontTokens = {
+  display:         'Cairo_700Bold',
+  displayItalic:   'Cairo_600SemiBold',
+  displayBold:     'Cairo_700Bold',
+  body:            'Cairo_400Regular',
+  bodyMedium:      'Cairo_600SemiBold',
+  bodySemiBold:    'Cairo_600SemiBold',
+  bodyBold:        'Cairo_700Bold',
+  bodyExtraBold:   'Cairo_700Bold',
+};
+
+export function getLanguageFonts(lang: string = 'en'): FontTokens {
+  const code = (lang || 'en').toLowerCase().split('-')[0];
+  if (code === 'he' || code === 'iw') return hebrewFonts;
+  if (code === 'ar') return arabicFonts;
+  return latinFonts;
+}
+
+export const fonts: FontTokens = latinFonts;
 
 export const fontSizes = {
   xs:   11,

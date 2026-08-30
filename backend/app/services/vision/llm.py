@@ -479,22 +479,7 @@ def _language_directive(code: str | None) -> str:
 
 
 def _user_prompt(code: str | None) -> str:
-    """Build the user-message prompt for ``analyze()``.
-
-    For non-English locales we prepend the **proven** ``OUTPUT
-    LANGUAGE = Name (xx)`` preamble (same format used by
-    ``stylist_brain.py`` and ``gemini_stylist.py``) at the TOP of the
-    user message, where the model sees it last before generating.
-    Listing the free-text fields explicitly forces the model to apply
-    the language rule to short label-like values (``name`` / ``title``)
-    that it otherwise leaves in English.
-
-    JSON keys and the schema's closed-vocabulary enums (``category``,
-    ``gender``, ``dress_code``, ``season``, ``pattern``, ``state``,
-    ``condition``, ``quality``) deliberately stay in English so the
-    downstream sanitiser / DB / UI lookups don't have to know every
-    locale's translation.
-    """
+    """Build the user-message prompt for ``analyze()``."""
     base = (
         "Analyse this photograph. If one garment is visible return a single "
         "JSON object; if multiple garments are visible return a JSON array "
@@ -504,16 +489,39 @@ def _user_prompt(code: str | None) -> str:
     if code == "en":
         return base
     lang_name = _LANG_NAMES.get(code, code)
-    return (
-        f"**OUTPUT LANGUAGE = {lang_name} ({code}).** Every free-text "
-        f"field (`name`, `title`, `caption`, `tags`, `repair_advice`, "
-        f"`sub_category`, `item_type`, `colors[*].name`, "
-        f"`fabric_materials[*].name`) MUST be written in fluent, "
-        f"idiomatic {lang_name}. JSON keys and enum tokens "
-        f"(`category`, `gender`, `dress_code`, `season`, `pattern`, "
-        f"`state`, `condition`, `quality`) stay in English.\n\n"
-        + base
-    )
+    if code in ("he", "iw"):
+        directive = (
+            "**OUTPUT LANGUAGE = Hebrew (עברית).** Every free-text field "
+            "(`name`, `title`, `caption`, `tags`, `repair_advice`, "
+            "`sub_category`, `item_type`, `colors[*].name`, "
+            "`fabric_materials[*].name`) MUST be written in fluent, "
+            "idiomatic modern Hebrew using standard Hebrew Unicode characters "
+            "(e.g. מכנסי קרגו, חולצת טי, שמלת מקסי, ג'ינס). Do not use non-Hebrew "
+            "diacritics, Yiddish ligatures, or transliteration characters from other scripts. "
+            "JSON keys and enum tokens (`category`, `gender`, `dress_code`, "
+            "`season`, `pattern`, `state`, `condition`, `quality`) stay in English.\n\n"
+        )
+    elif code == "ar":
+        directive = (
+            "**OUTPUT LANGUAGE = Arabic (العربية).** Every free-text field "
+            "(`name`, `title`, `caption`, `tags`, `repair_advice`, "
+            "`sub_category`, `item_type`, `colors[*].name`, "
+            "`fabric_materials[*].name`) MUST be written in fluent, "
+            "idiomatic modern Arabic using standard Arabic script. "
+            "JSON keys and enum tokens (`category`, `gender`, `dress_code`, "
+            "`season`, `pattern`, `state`, `condition`, `quality`) stay in English.\n\n"
+        )
+    else:
+        directive = (
+            f"**OUTPUT LANGUAGE = {lang_name} ({code}).** Every free-text "
+            f"field (`name`, `title`, `caption`, `tags`, `repair_advice`, "
+            f"`sub_category`, `item_type`, `colors[*].name`, "
+            f"`fabric_materials[*].name`) MUST be written in fluent, "
+            f"idiomatic {lang_name}. JSON keys and enum tokens "
+            f"(`category`, `gender`, `dress_code`, `season`, `pattern`, "
+            f"`state`, `condition`, `quality`) stay in English.\n\n"
+        )
+    return directive + base
 
 
 def _extract_json(raw: str) -> dict[str, Any] | list[dict[str, Any]]:
@@ -791,16 +799,39 @@ def _build_batch_prompts(
     code = (language or "en").lower()
     if code != "en":
         lang_name = _LANG_NAMES.get(code, code)
-        user_text = (
-            f"**OUTPUT LANGUAGE = {lang_name} ({code}).** Every free-text "
-            f"field (`name`, `title`, `caption`, `tags`, `repair_advice`, "
-            f"`sub_category`, `item_type`, `colors[*].name`, "
-            f"`fabric_materials[*].name`) MUST be written in fluent, "
-            f"idiomatic {lang_name}. JSON keys and enum tokens "
-            f"(`category`, `gender`, `dress_code`, `season`, `pattern`, "
-            f"`state`, `condition`, `quality`) stay in English.\n\n"
-            + user_text
-        )
+        if code in ("he", "iw"):
+            directive = (
+                "**OUTPUT LANGUAGE = Hebrew (עברית).** Every free-text field "
+                "(`name`, `title`, `caption`, `tags`, `repair_advice`, "
+                "`sub_category`, `item_type`, `colors[*].name`, "
+                "`fabric_materials[*].name`) MUST be written in fluent, "
+                "idiomatic modern Hebrew using standard Hebrew Unicode characters "
+                "(e.g. מכנסי קרגו, חולצת טי, שמלת מקסי, ג'ינס). Do not use non-Hebrew "
+                "diacritics, Yiddish ligatures, or transliteration characters from other scripts. "
+                "JSON keys and enum tokens (`category`, `gender`, `dress_code`, "
+                "`season`, `pattern`, `state`, `condition`, `quality`) stay in English.\n\n"
+            )
+        elif code == "ar":
+            directive = (
+                "**OUTPUT LANGUAGE = Arabic (العربية).** Every free-text field "
+                "(`name`, `title`, `caption`, `tags`, `repair_advice`, "
+                "`sub_category`, `item_type`, `colors[*].name`, "
+                "`fabric_materials[*].name`) MUST be written in fluent, "
+                "idiomatic modern Arabic using standard Arabic script. "
+                "JSON keys and enum tokens (`category`, `gender`, `dress_code`, "
+                "`season`, `pattern`, `state`, `condition`, `quality`) stay in English.\n\n"
+            )
+        else:
+            directive = (
+                f"**OUTPUT LANGUAGE = {lang_name} ({code}).** Every free-text "
+                f"field (`name`, `title`, `caption`, `tags`, `repair_advice`, "
+                f"`sub_category`, `item_type`, `colors[*].name`, "
+                f"`fabric_materials[*].name`) MUST be written in fluent, "
+                f"idiomatic {lang_name}. JSON keys and enum tokens "
+                f"(`category`, `gender`, `dress_code`, `season`, `pattern`, "
+                f"`state`, `condition`, `quality`) stay in English.\n\n"
+            )
+        user_text = directive + user_text
 
     system_prompt = (
         _build_system_prompt(one_pass=False)
@@ -817,10 +848,6 @@ def _build_batch_prompts(
             "`[` and end with `]`."
         )
         + hint_block
-    )
-    user_text = (
-        f"Analyse the {n} cropped garment image(s) below in order. "
-        f"Return a JSON array of {n} GarmentAnalysis entries."
     )
     return system_prompt, user_text
 
