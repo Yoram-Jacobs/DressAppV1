@@ -41,7 +41,10 @@ def _r2_configured() -> bool:
         settings.R2_ACCESS_KEY_ID
         and settings.R2_SECRET_ACCESS_KEY
         and settings.R2_ENDPOINT_URL
+        and "<account_id>" not in settings.R2_ENDPOINT_URL
+        and "<" not in settings.R2_ENDPOINT_URL
     )
+
 
 
 def _make_key(extension: str) -> str:

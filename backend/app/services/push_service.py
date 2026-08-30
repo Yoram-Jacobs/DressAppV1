@@ -34,7 +34,8 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
     """
     db = get_db()
     notif_id = str(uuid.uuid4())
-    now = datetime.now(timezone.utc).isoformat()
+    now_dt = datetime.now(timezone.utc)
+    now = now_dt.isoformat()
 
     # 1. Log simulated notification
     doc = {
@@ -44,11 +45,19 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
         "body": body,
         "read": False,
         "created_at": now,
+        "created_at_dt": now_dt,
         "updated_at": now,
     }
     if payload:
-        doc["payload"] = payload
+        def _strip_data_uris(obj: Any) -> Any:
+            if isinstance(obj, dict):
+                return {k: _strip_data_uris(v) for k, v in obj.items() if not (isinstance(v, str) and v.startswith("data:image"))}
+            elif isinstance(obj, list):
+                return [_strip_data_uris(x) for x in obj]
+            return obj
+        doc["payload"] = _strip_data_uris(payload)
     await db.simulated_notifications.insert_one(doc)
+
 
     # 2. Query user to find active web push subscriptions
     user = await db.users.find_one({"id": user_id})

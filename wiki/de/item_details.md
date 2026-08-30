@@ -7,7 +7,7 @@ Dieses Dokument bietet einen umfassenden technischen Überblick und eine Bedienu
 ## 1. Zusammenfassung & Mehrwert
 
 ### Überblick
-Das Panel **Artikeldetails** ist die Steuerzentrale zur Verwaltung einzelner Kleidungsstücke. Es verknüpft visuelle Bilddaten mit semantischen Metadaten und ermöglicht interaktive Bildbearbeitung mit **Nano Banana** (`gemini-2.5-flash-image`).
+Das Panel **Artikeldetails** ist die Steuerzentrale zur Verwaltung einzelner Kleidungsstücke. Es verknüpft visuelle Bilddaten mit semantischen Metadaten und ermöglicht interaktive Bildbearbeitung mit **Nano Banana** (`gemini-3.1-flash-lite-image`).
 
 ### Architekturfluss
 
@@ -24,7 +24,7 @@ graph TD
     Cards -->|AI Chat & Re-analyse| EyesAgent[The Eyes /chat-analyse]
     EyesAgent -->|Multimodal Gemini Vision| DecisionEngine{Intent Decision}
     
-    DecisionEngine -->|Image Edit| NanoBanana[Nano Banana gemini-2.5-flash-image]
+    DecisionEngine -->|Image Edit| NanoBanana[Nano Banana gemini-3.1-flash-lite-image]
     NanoBanana -->|Inpainted Image| ImagePreview[Live Preview & Apply Button]
     DecisionEngine -->|Metadata Update| AttributeRefill[Form State Refill & Badges]
     DecisionEngine -->|Clarification| ChatBubble[Assistant Clarifying Question]
@@ -101,5 +101,5 @@ graph TD
 ## 4. Technologie-Stack & KI-Services
 
 * **Entscheidungspipeline (`POST /api/v1/closet/{item_id}/chat-analyse`)**: Multimodale Auswertung via Gemini.
-* **Nano Banana (`gemini-2.5-flash-image`)**: Bild-zu-Bild-Inpainting mit Credit-Abzug.
+* **Nano Banana (`gemini-3.1-flash-lite-image`)**: Bild-zu-Bild-Inpainting mit Credit-Abzug.
 * **Vollständige Lokalisierung**: 13 Sprachen mit nativer RTL-Unterstützung.

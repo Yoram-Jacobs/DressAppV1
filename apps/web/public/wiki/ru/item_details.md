@@ -7,7 +7,7 @@ This document provides a comprehensive technical overview and operational guide 
 ## 1. Executive Summary & Value Proposition
 
 ### High-Level Overview
-The **Item Details** panel is the central command center for managing individual garments within a user's digital wardrobe. It bridges raw visual media (photos) with semantic metadata (category, fabric composition, color weights, brand, formality level, and notes). It enables users to refine automated AI-ingestion outputs, trigger non-generative background removal (matting), run conversational vision re-analyses, execute generative inpainting and object removal with **Nano Banana** (`gemini-2.5-flash-image`), and configure circular marketplace listing options.
+The **Item Details** panel is the central command center for managing individual garments within a user's digital wardrobe. It bridges raw visual media (photos) with semantic metadata (category, fabric composition, color weights, brand, formality level, and notes). It enables users to refine automated AI-ingestion outputs, trigger non-generative background removal (matting), run conversational vision re-analyses, execute generative inpainting and object removal with **Nano Banana** (`gemini-3.1-flash-lite-image`), and configure circular marketplace listing options.
 
 ### Architectural Flow
 
@@ -27,7 +27,7 @@ graph TD
     Cards -->|AI Chat & Re-analyse| EyesAgent[The Eyes /chat-analyse]
     EyesAgent -->|Multimodal Gemini Vision| DecisionEngine{Intent Decision}
     
-    DecisionEngine -->|Image Edit| NanoBanana[Nano Banana gemini-2.5-flash-image]
+    DecisionEngine -->|Image Edit| NanoBanana[Nano Banana gemini-3.1-flash-lite-image]
     NanoBanana -->|Inpainted / Reconstructed Image| ImagePreview[Live Preview & Apply Button]
     
     DecisionEngine -->|Metadata Update| AttributeRefill[Form State Refill & Badges]
@@ -126,7 +126,7 @@ The Item Details page utilizes an asymmetrical two-column layout tailored for de
   * *"Remove the metal studs from the jacket's front"*
   * *"Refine fabric composition to 100% cashmere"*
 * **Quick Prompt Starters**: Instant chips allow 1-tap requests (🪄 *Remove shoes*, ✂️ *Complete hole*, 💎 *Remove studs*, 🔍 *Refine fabric*).
-* **Nano Banana Inpainting**: Generative requests invoke `gemini-2.5-flash-image`, rendering an in-chat preview card with an **"Apply as garment photo"** button.
+* **Nano Banana Inpainting**: Generative requests invoke `gemini-3.1-flash-lite-image`, rendering an in-chat preview card with an **"Apply as garment photo"** button.
 * **Attribute Synchronization**: When metadata updates are requested, The Eyes automatically refreshes form fields with visual confirmation badges.
 * **1-Click Full Re-analyse**: A dedicated button at the bottom of the card runs a classic 1-click auto-analysis fallback.
 
@@ -167,7 +167,7 @@ The Item Details page utilizes an asymmetrical two-column layout tailored for de
   - Uses `GeminiClient` (`Interactions API`) to evaluate image bytes, metadata context, and conversation history.
   - Automatically routes to `image_edit`, `clarification`, `metadata_update`, or `answered`.
 * **Nano Banana Inpainting Engine (`GeminiImageService.edit`)**:
-  - Employs `gemini-2.5-flash-image` with visual conditioning from original/segmented pixels.
+  - Employs `gemini-3.1-flash-lite-image` with visual conditioning from original/segmented pixels.
   - Deducts 1 AI credit via `deduct_user_credits` on image generation calls.
 * **Form & State Management**:
   - Handled via local React state (`form` object). Changes trigger `setField(key, value)`.

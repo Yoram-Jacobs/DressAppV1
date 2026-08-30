@@ -2,7 +2,7 @@
 
 Takes a potentially-bad garment crop (from the multi-item extractor or a
 single upload) and decides whether it needs reconstruction. When it does,
-we use **Nano Banana** (`gemini-2.5-flash-image`, native Google SDK,
+we use **Nano Banana** (`gemini-3.1-flash-lite-image`, native Google SDK,
 requires ``GEMINI_API_KEY``). The earlier HF FLUX.1-schnell fallback was
 removed in May 2026 along with the rest of the HF runtime surface — if
 the direct Gemini key is absent, reconstruction returns ``None`` so the
@@ -207,7 +207,7 @@ async def reconstruct(
     Routes between image completion (edit) and full reconstruction (generate)
     based on the Quality Checker status.
     """
-    # Reconstruction now runs only on Nano Banana (`gemini-2.5-flash-image`).
+    # Reconstruction now runs only on Nano Banana (`gemini-3.1-flash-lite-image`).
     # The legacy HF FLUX.1-schnell fallback was retired in May 2026 — if no
     # direct ``GEMINI_API_KEY`` is configured we return ``None`` and the
     # caller keeps the original crop.

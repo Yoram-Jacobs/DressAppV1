@@ -7,7 +7,7 @@ Este documento ofrece una descripción técnica completa y una guía operativa p
 ## 1. Resumen Ejecutivo y Propuesta de Valor
 
 ### Visión General
-El panel de **Detalles de la Prenda** es el centro de control para gestionar cada artículo del armario digital, combinando fotos y metadatos con edición generativa mediante **Nano Banana** (`gemini-2.5-flash-image`).
+El panel de **Detalles de la Prenda** es el centro de control para gestionar cada artículo del armario digital, combinando fotos y metadatos con edición generativa mediante **Nano Banana** (`gemini-3.1-flash-lite-image`).
 
 ### Flujo Arquitectónico
 
@@ -24,7 +24,7 @@ graph TD
     Cards -->|AI Chat & Re-analyse| EyesAgent[The Eyes /chat-analyse]
     EyesAgent -->|Multimodal Gemini Vision| DecisionEngine{Intent Decision}
     
-    DecisionEngine -->|Image Edit| NanoBanana[Nano Banana gemini-2.5-flash-image]
+    DecisionEngine -->|Image Edit| NanoBanana[Nano Banana gemini-3.1-flash-lite-image]
     NanoBanana -->|Inpainted Image| ImagePreview[Live Preview & Apply Button]
     DecisionEngine -->|Metadata Update| AttributeRefill[Form State Refill & Badges]
     DecisionEngine -->|Clarification| ChatBubble[Assistant Clarifying Question]
@@ -101,5 +101,5 @@ graph TD
 ## 4. Pila Tecnológica y Motores IA
 
 * **Pipeline Multimodal (`POST /api/v1/closet/{item_id}/chat-analyse`)**.
-* **Motor Nano Banana (`gemini-2.5-flash-image`)**.
+* **Motor Nano Banana (`gemini-3.1-flash-lite-image`)**.
 * **Sincronización en 13 idiomas**.

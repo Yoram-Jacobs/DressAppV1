@@ -9,7 +9,7 @@
 ## 1. Managementsamenvatting & Waardepropositie
 
 ### Algemeen Overzicht
-GarmentVision vormt de optische intelligentiekern van DressApp. Het is een end-to-end, meertraps visiepijplijn die ongefilterde gebruikersfoto's verwerkt en schone, geïsoleerde, fotorealistische garderobe-items genereert. Verankerd in een hybride AI-architectuur combineert het snelle deterministische segmentatie (SegFormer `b3_clothes`) en achtergrondverwijdering (`u2netp` / rembg) met diepgaande multimodale analyse (Gemini) en generatief beeldherstel (Nano Banana / `gemini-2.5-flash-image`).
+GarmentVision vormt de optische intelligentiekern van DressApp. Het is een end-to-end, meertraps visiepijplijn die ongefilterde gebruikersfoto's verwerkt en schone, geïsoleerde, fotorealistische garderobe-items genereert. Verankerd in een hybride AI-architectuur combineert het snelle deterministische segmentatie (SegFormer `b3_clothes`) en achtergrondverwijdering (`u2netp` / rembg) met diepgaande multimodale analyse (Gemini) en generatief beeldherstel (Nano Banana / `gemini-3.1-flash-lite-image`).
 
 Wanneer kleding op foto's wordt geblokkeerd door haar, tassen of armen, of wordt afgesneden door het camerakader, diagnosticeert de **AI-kwaliteitscontroleur** van GarmentVision het defect en activeert automatisch **Beeldaanvulling** (inpainting/outpainting van ontbrekende zomen, mouwen en kragen) of **Volledige Studio-reconstructie** (het opnieuw genereren van afgesneden of onvolledige items tot ongerepte, opzichzelfstaande e-commerce catalogusfoto's).
 
@@ -23,8 +23,8 @@ graph TD
     D -->|image_quality_status & metadata| E[Beslissingsengine: should_reconstruct]
     
     E -->|complete| F[Standaard Vrijmaken: rembg]
-    E -->|needs_completion| G[Nano Banana Inpaint / Outpaint: gemini-2.5-flash-image]
-    E -->|needs_reconstruction| H[Nano Banana Studio-gen: gemini-2.5-flash-image]
+    E -->|needs_completion| G[Nano Banana Inpaint / Outpaint: gemini-3.1-flash-lite-image]
+    E -->|needs_reconstruction| H[Nano Banana Studio-gen: gemini-3.1-flash-lite-image]
     
     F --> I[Canvas-normalisatie: 3:4 Kaartpassing]
     G --> I
@@ -89,8 +89,8 @@ graph TD
 - **Kwaliteitscontroleur Prompting (`llm.py`):** Gestructureerd JSON-uitvoerschema dat `image_quality_status`, `image_quality_reason` en `reconstruction_prompt` afdwingt.
 - **Beslissingsengine (`reconstruction.py`):** Evalueert de LLM-status samen met een geometrische randcontact-beveiliging (`_EDGE_TOUCH_MARGIN = 40`) om ervoor te zorgen dat items die door de fotorand zijn afgesneden nooit ten onrechte als compleet worden gemarkeerd.
 - **Generatieve Herstel-engine (`gemini_image_service.py`):**
-  - **Inpaint / Outpaint (`edit`):** Verzendt de uitgesneden bytes en gestructureerde prompt naar `gemini-2.5-flash-image` om stoftextuur, patroon en kleur te behouden tijdens het uitbreiden van ontbrekende geometrie.
-  - **Studio-generatie (`generate`):** Vraagt `gemini-2.5-flash-image` aan met volledige beschrijvende metadata (type kledingstuk, materiaal, kleur, fournituren, halslijn) om een ongerept catalogusitem op een gebroken witte achtergrond te renderen.
+  - **Inpaint / Outpaint (`edit`):** Verzendt de uitgesneden bytes en gestructureerde prompt naar `gemini-3.1-flash-lite-image` om stoftextuur, patroon en kleur te behouden tijdens het uitbreiden van ontbrekende geometrie.
+  - **Studio-generatie (`generate`):** Vraagt `gemini-3.1-flash-lite-image` aan met volledige beschrijvende metadata (type kledingstuk, materiaal, kleur, fournituren, halslijn) om een ongerept catalogusitem op een gebroken witte achtergrond te renderen.
 
 ### Frontend-synchronisatie (`workStore.js` & `itemImage.js`)
 - **Gecentraliseerde Beeldresolutie (`itemImage.js`):** `bestImageUrl()` geeft de hoogste prioriteit aan `reconstructed_image_url`, waardoor met AI gerepareerde beelden direct tijdelijke ruwe thumbnails vervangen.

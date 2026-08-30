@@ -7,7 +7,7 @@
 ## 1. תקציר מנהלים והצעת ערך
 
 ### סקירה כללית
-פאנל **פרטי הפריט** הוא מרכז הבקרה הראשי לניהול פריטי לבוש במלתחה הדיגיטלית. הוא מחבר בין מדיה ויזואלית (תמונות) לבין מטא-דאטה סמנטי (קטגוריה, הרכב בדים, צבעים, מותג, רמת רשמיות והערות). הוא מאפשר למשתמשים לדייק תוצרי AI, לבצע הסרת רקע (matting), להריץ ניתוח חזותי אינטראקטיבי, לבצע השלמת תמונות והסרת עצמים בעזרת **Nano Banana** (`gemini-2.5-flash-image`), ולהגדיר אפשרויות מכירה/החלפה במרקטפלייס.
+פאנל **פרטי הפריט** הוא מרכז הבקרה הראשי לניהול פריטי לבוש במלתחה הדיגיטלית. הוא מחבר בין מדיה ויזואלית (תמונות) לבין מטא-דאטה סמנטי (קטגוריה, הרכב בדים, צבעים, מותג, רמת רשמיות והערות). הוא מאפשר למשתמשים לדייק תוצרי AI, לבצע הסרת רקע (matting), להריץ ניתוח חזותי אינטראקטיבי, לבצע השלמת תמונות והסרת עצמים בעזרת **Nano Banana** (`gemini-3.1-flash-lite-image`), ולהגדיר אפשרויות מכירה/החלפה במרקטפלייס.
 
 ### זרימה ארכיטקטונית
 
@@ -24,7 +24,7 @@ graph TD
     Cards -->|AI Chat & Re-analyse| EyesAgent[The Eyes /chat-analyse]
     EyesAgent -->|Multimodal Gemini Vision| DecisionEngine{Intent Decision}
     
-    DecisionEngine -->|Image Edit| NanoBanana[Nano Banana gemini-2.5-flash-image]
+    DecisionEngine -->|Image Edit| NanoBanana[Nano Banana gemini-3.1-flash-lite-image]
     NanoBanana -->|Inpainted Image| ImagePreview[Live Preview & Apply Button]
     DecisionEngine -->|Metadata Update| AttributeRefill[Form State Refill & Badges]
     DecisionEngine -->|Clarification| ChatBubble[Assistant Clarifying Question]
@@ -80,7 +80,7 @@ graph TD
   * *"הסר את ניטים ממתכת מחזית הז'קט"*
   * *"עדכן את הרכב הבד ל-100% קשמיר"*
 * **הצעות מהירות**: כפתורי קיצור מאפשרים שליחה בנגיעה אחת (🪄 הסר נעליים, ✂️ השלם חור, 💎 הסר ניטים, 🔍 עדכן הרכב בד).
-* **עריכת תמונה עם Nano Banana**: בקשות לשינוי ויזואלי מפעילות את `gemini-2.5-flash-image`, ומציגות תצוגה מקדימה בצ'אט עם כפתור **"החל כתמונת הבגד"**.
+* **עריכת תמונה עם Nano Banana**: בקשות לשינוי ויזואלי מפעילות את `gemini-3.1-flash-lite-image`, ומציגות תצוגה מקדימה בצ'אט עם כפתור **"החל כתמונת הבגד"**.
 * **סנכרון מאפיינים**: The Eyes מעדכן ישירות את שדות הטופס עם תגי אישור ויזואליים.
 * **ניתוח מחדש מלא בלחיצה אחת**: כפתור ייעודי בתחתית הכרטיסייה מאפשר ניתוח אוטומטי מהיר.
 
@@ -113,7 +113,7 @@ graph TD
   - שימוש ב-`GeminiClient` לניתוח התמונה, המטא-דאטה והיסטוריית השיחה.
   - ניתוב אוטומטי ל-`image_edit`, `clarification`, `metadata_update`, או `answered`.
 * **מנוע Inpainting של Nano Banana (`GeminiImageService.edit`)**:
-  - מופעל ע"י `gemini-2.5-flash-image` עם התניה ויזואלית על בסיס הפיקסלים המקוריים.
+  - מופעל ע"י `gemini-3.1-flash-lite-image` עם התניה ויזואלית על בסיס הפיקסלים המקוריים.
 * **ניהול מצב וסנכרון**:
   - ניהול ב-React State מקומי. שינויי תמונה נשמרים בזיכרון עד לחיצה על **שמור** לשמירה ב-MongoDB.
 * **סנכרון מלא ל-13 שפות**:

@@ -104,7 +104,7 @@
   "reconstructed_image_url": "data:image/png;base64,...",
   "reconstruction_metadata": {
     "method": "completion",                  // "completion" | "reconstruction"
-    "model": "gemini-2.5-flash-image",
+    "model": "gemini-3.1-flash-lite-image",
     "prompt": "...",
     "reasons": ["quality_checker:needs_completion", "reason:..."],
     "deferred": true

@@ -89,7 +89,10 @@ __pycache__/
 *$py.class
 venv/
 .venv/
+.venv*/
 backend/venv/
+backend/.venv*/
+
 
 # Archives & Large Model Weights
 **/*.zip

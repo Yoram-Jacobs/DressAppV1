@@ -9,7 +9,7 @@
 ## 1. エグゼクティブサマリーと提供価値
 
 ### 全体概要
-GarmentVisionは、DressAppの光学インテリジェンスの基幹です。一般的なユーザー写真からクリーンでフォトリアルなワードローブアイテムを自動生成する、エンドツーエンドの多段階ビジョンパイプラインです。ハイブリッドAIアーキテクチャを採用し、高速な決定論的セグメンテーション（SegFormer `b3_clothes`）と背景透過処理（`u2netp` / rembg）に、マルチモーダル推論（Gemini）および生成型画像修復（Nano Banana / `gemini-2.5-flash-image`）を融合させています。
+GarmentVisionは、DressAppの光学インテリジェンスの基幹です。一般的なユーザー写真からクリーンでフォトリアルなワードローブアイテムを自動生成する、エンドツーエンドの多段階ビジョンパイプラインです。ハイブリッドAIアーキテクチャを採用し、高速な決定論的セグメンテーション（SegFormer `b3_clothes`）と背景透過処理（`u2netp` / rembg）に、マルチモーダル推論（Gemini）および生成型画像修復（Nano Banana / `gemini-3.1-flash-lite-image`）を融合させています。
 
 ユーザー写真内の服が髪、バッグ、腕で遮られていたり、カメラのフレームで切れている場合、GarmentVisionの **AI品質チェッカー（AI Quality Checker）** が欠損を検知し、**画像補完（Image Completion）**（裾、袖、襟などの欠落部分をインペイント／アウトペイント）または **フルスタジオ再構築（Full Studio Reconstruction）**（一部しか写っていないアイテムを完璧なECカタログ風写真へと再生成）を自動起動します。
 
@@ -23,8 +23,8 @@ graph TD
     D -->|image_quality_status & メタデータ| E[判定エンジン: should_reconstruct]
     
     E -->|complete| F[標準マット処理: rembg]
-    E -->|needs_completion| G[Nano Banana インペイント / アウトペイント: gemini-2.5-flash-image]
-    E -->|needs_reconstruction| H[Nano Banana スタジオ生成: gemini-2.5-flash-image]
+    E -->|needs_completion| G[Nano Banana インペイント / アウトペイント: gemini-3.1-flash-lite-image]
+    E -->|needs_reconstruction| H[Nano Banana スタジオ生成: gemini-3.1-flash-lite-image]
     
     F --> I[キャンバス正規化: 3:4 カードフィット]
     G --> I
@@ -89,8 +89,8 @@ graph TD
 - **品質チェッカープロンプティング (`llm.py`):** `image_quality_status`、`image_quality_reason`、`reconstruction_prompt` を必須とする構造化JSON出力スキーマ。
 - **判定エンジン (`reconstruction.py`):** 画像端判定ガード（`_EDGE_TOUCH_MARGIN = 40`）を組み合わせ、写真の境界で切れている衣類が誤って完全（complete）と判定されるのを防止。
 - **生成型修復エンジン (`gemini_image_service.py`):**
-  - **インペイント / アウトペイント (`edit`):** クロップデータと構造化プロンプトを `gemini-2.5-flash-image` に渡し、生地の質感・柄・色を維持しながら欠損部分を自然に拡張。
-  - **スタジオ生成 (`generate`):** 詳細なメタデータ（衣類タイプ、素材、色、金具、ネックライン）をプロンプトとして `gemini-2.5-flash-image` に渡し、オフホワイト背景の高品質なカタログ写真を生成。
+  - **インペイント / アウトペイント (`edit`):** クロップデータと構造化プロンプトを `gemini-3.1-flash-lite-image` に渡し、生地の質感・柄・色を維持しながら欠損部分を自然に拡張。
+  - **スタジオ生成 (`generate`):** 詳細なメタデータ（衣類タイプ、素材、色、金具、ネックライン）をプロンプトとして `gemini-3.1-flash-lite-image` に渡し、オフホワイト背景の高品質なカタログ写真を生成。
 
 ### フロントエンド同期 (`workStore.js` & `itemImage.js`)
 - **一元的な画像解決 (`itemImage.js`):** `bestImageUrl()` が `reconstructed_image_url` を最優先とし、AI修復後の画像が一時的な切り抜きサムネイルを即座に上書き。

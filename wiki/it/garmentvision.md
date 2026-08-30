@@ -9,7 +9,7 @@
 ## 1. Sintesi esecutiva e proposta di valore
 
 ### Panoramica di alto livello
-GarmentVision costituisce il sistema ottico intelligente di DressApp. Si tratta di una pipeline di visione avanzata a più fasi progettata per acquisire immagini dell'utente e generare capi d'abbigliamento puliti, isolati e fotorealistici. Basata su un'architettura ibrida di intelligenza artificiale, combina la segmentazione deterministica ad alta velocità (SegFormer `b3_clothes`) e la rimozione dello sfondo (`u2netp` / rembg) con il ragionamento multimodale profondo (Gemini) e la riparazione generativa delle immagini (Nano Banana / `gemini-2.5-flash-image`).
+GarmentVision costituisce il sistema ottico intelligente di DressApp. Si tratta di una pipeline di visione avanzata a più fasi progettata per acquisire immagini dell'utente e generare capi d'abbigliamento puliti, isolati e fotorealistici. Basata su un'architettura ibrida di intelligenza artificiale, combina la segmentazione deterministica ad alta velocità (SegFormer `b3_clothes`) e la rimozione dello sfondo (`u2netp` / rembg) con il ragionamento multimodale profondo (Gemini) e la riparazione generativa delle immagini (Nano Banana / `gemini-3.1-flash-lite-image`).
 
 Quando i capi nelle foto dell'utente risultano coperti da capelli, borse, braccia o tagliati dall'inquadratura, il **Controllo Qualità IA (Quality Checker)** rileva il difetto e avvia automaticamente il **Completamento dell'immagine** (inpaint/outpaint di orli, maniche e colletti mancanti) o la **Ricostruzione Studio Completa** (rigenerazione da zero di capi gravemente mutilati in perfette foto da catalogo e-commerce).
 
@@ -23,8 +23,8 @@ graph TD
     D -->|image_quality_status e metadati| E[Motore decisionale: should_reconstruct]
     
     E -->|complete| F[Matting standard: rembg]
-    E -->|needs_completion| G[Nano Banana Inpaint / Outpaint: gemini-2.5-flash-image]
-    E -->|needs_reconstruction| H[Nano Banana Studio Gen: gemini-2.5-flash-image]
+    E -->|needs_completion| G[Nano Banana Inpaint / Outpaint: gemini-3.1-flash-lite-image]
+    E -->|needs_reconstruction| H[Nano Banana Studio Gen: gemini-3.1-flash-lite-image]
     
     F --> I[Normalizzazione su tela: formato card 3:4]
     G --> I

@@ -9,7 +9,7 @@
 ## 1. Resumen Ejecutivo y Propuesta de Valor
 
 ### Descripción General
-GarmentVision constituye el núcleo de inteligencia óptica de DressApp. Es un pipeline de visión integral y multietapa que procesa fotos de usuarios sin restricciones y produce prendas de armario limpias, aisladas y fotorrealistas. Fundamentado en una arquitectura de IA híbrida, combina una segmentación determinista de alta velocidad (SegFormer `b3_clothes`) y recorte de fondo (`u2netp` / rembg) con razonamiento multimodal profundo (Gemini) y reparación generativa de imágenes (Nano Banana / `gemini-2.5-flash-image`).
+GarmentVision constituye el núcleo de inteligencia óptica de DressApp. Es un pipeline de visión integral y multietapa que procesa fotos de usuarios sin restricciones y produce prendas de armario limpias, aisladas y fotorrealistas. Fundamentado en una arquitectura de IA híbrida, combina una segmentación determinista de alta velocidad (SegFormer `b3_clothes`) y recorte de fondo (`u2netp` / rembg) con razonamiento multimodal profundo (Gemini) y reparación generativa de imágenes (Nano Banana / `gemini-3.1-flash-lite-image`).
 
 Cuando la ropa en las fotos de los usuarios queda tapada por el cabello, bolsos o brazos, o recortada por el marco de la cámara, el **Comprobador de Calidad por IA** de GarmentVision diagnostica el defecto y activa automáticamente la **Compleción de Imagen** (inpainting/outpainting de dobladillos, mangas y cuellos faltantes) o la **Reconstrucción Completa de Estudio** (regenerando prendas cortadas o parciales en fotos de catálogo de comercio electrónico independientes e impecables).
 
@@ -23,8 +23,8 @@ graph TD
     D -->|image_quality_status y metadatos| E[Motor de Decisión: should_reconstruct]
     
     E -->|complete| F[Recorte Estándar: rembg]
-    E -->|needs_completion| G[Nano Banana Inpaint / Outpaint: gemini-2.5-flash-image]
-    E -->|needs_reconstruction| H[Nano Banana Generación Estudio: gemini-2.5-flash-image]
+    E -->|needs_completion| G[Nano Banana Inpaint / Outpaint: gemini-3.1-flash-lite-image]
+    E -->|needs_reconstruction| H[Nano Banana Generación Estudio: gemini-3.1-flash-lite-image]
     
     F --> I[Normalización de Lienzo: Ajuste Tarjeta 3:4]
     G --> I
@@ -89,8 +89,8 @@ graph TD
 - **Prompting del Comprobador de Calidad (`llm.py`):** Esquema de salida JSON estructurado que exige `image_quality_status`, `image_quality_reason` y `reconstruction_prompt`.
 - **Motor de Decisión (`reconstruction.py`):** Evalúa el estado del LLM junto con una protección geométrica de contacto con los bordes (`_EDGE_TOUCH_MARGIN = 40`) para garantizar que las prendas cortadas por el marco de la foto nunca se clasifiquen erróneamente como completas.
 - **Motor de Reparación Generativa (`gemini_image_service.py`):**
-  - **Inpaint / Outpaint (`edit`):** Envía los bytes recortados y el prompt estructurado a `gemini-2.5-flash-image` para preservar la textura de la tela, el patrón y el color mientras expande la geometría faltante.
-  - **Generación de Estudio (`generate`):** Solicita a `gemini-2.5-flash-image` con metadatos descriptivos completos (tipo de prenda, material, color, herrajes, escote) para renderizar una pieza de catálogo impecable sobre fondo blanco roto.
+  - **Inpaint / Outpaint (`edit`):** Envía los bytes recortados y el prompt estructurado a `gemini-3.1-flash-lite-image` para preservar la textura de la tela, el patrón y el color mientras expande la geometría faltante.
+  - **Generación de Estudio (`generate`):** Solicita a `gemini-3.1-flash-lite-image` con metadatos descriptivos completos (tipo de prenda, material, color, herrajes, escote) para renderizar una pieza de catálogo impecable sobre fondo blanco roto.
 
 ### Sincronización Frontend (`workStore.js` y `itemImage.js`)
 - **Resolución Centralizada de Imágenes (`itemImage.js`):** `bestImageUrl()` prioriza `reconstructed_image_url` con la máxima precedencia, garantizando que las imágenes reparadas por IA sustituyan de inmediato a las miniaturas temporales sin procesar.

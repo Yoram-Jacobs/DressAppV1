@@ -9,7 +9,7 @@
 ## 1. Executive Summary & Value Proposition
 
 ### High-Level Overview
-GarmentVision is the optical intelligence core of DressApp. It is an end-to-end, multi-stage vision pipeline that ingests unconstrained user photos and produces clean, isolated, photorealistic wardrobe items. Anchored in a hybrid AI architecture, it couples high-speed deterministic segmentation (SegFormer `b3_clothes`) and background matting (`u2netp` / rembg) with deep multi-modal reasoning (Gemini) and generative image repair (Nano Banana / `gemini-2.5-flash-image`).
+GarmentVision is the optical intelligence core of DressApp. It is an end-to-end, multi-stage vision pipeline that ingests unconstrained user photos and produces clean, isolated, photorealistic wardrobe items. Anchored in a hybrid AI architecture, it couples high-speed deterministic segmentation (SegFormer `b3_clothes`) and background matting (`u2netp` / rembg) with deep multi-modal reasoning (Gemini) and generative image repair (Nano Banana / `gemini-3.1-flash-lite-image`).
 
 When clothes in user photos are occluded by hair, bags, arms, or cropped out by the camera frame, GarmentVision's **AI Quality Checker** diagnoses the defect and automatically triggers **Image Completion** (inpainting/outpainting missing hems, sleeves, and collars) or **Full Studio Reconstruction** (regenerating severed or amputated items into pristine standalone e-commerce catalog photos).
 
@@ -23,8 +23,8 @@ graph TD
     D -->|image_quality_status & metadata| E[Decision Engine: should_reconstruct]
     
     E -->|complete| F[Standard Matting: rembg]
-    E -->|needs_completion| G[Nano Banana Inpaint / Outpaint: gemini-2.5-flash-image]
-    E -->|needs_reconstruction| H[Nano Banana Studio Gen: gemini-2.5-flash-image]
+    E -->|needs_completion| G[Nano Banana Inpaint / Outpaint: gemini-3.1-flash-lite-image]
+    E -->|needs_reconstruction| H[Nano Banana Studio Gen: gemini-3.1-flash-lite-image]
     
     F --> I[Canvas Normalization: 3:4 Card Fit]
     G --> I
@@ -89,8 +89,8 @@ graph TD
 - **Quality Checker Prompting (`llm.py`):** Structured JSON output schema enforcing `image_quality_status`, `image_quality_reason`, and `reconstruction_prompt`.
 - **Decision Engine (`reconstruction.py`):** Evaluates LLM status with a geometric edge-touch safety guard (`_EDGE_TOUCH_MARGIN = 40`) to ensure items cut off by the photo boundary are never falsely treated as complete.
 - **Generative Repair Engine (`gemini_image_service.py`):**
-  - **Inpaint / Outpaint (`edit`):** Passes the cropped bytes and structured prompt to `gemini-2.5-flash-image` to preserve fabric texture, pattern, and color while expanding missing geometry.
-  - **Studio Generation (`generate`):** Prompts `gemini-2.5-flash-image` with complete descriptive metadata (garment type, material, color, hardware, neckline) to render a pristine catalog piece on an off-white background.
+  - **Inpaint / Outpaint (`edit`):** Passes the cropped bytes and structured prompt to `gemini-3.1-flash-lite-image` to preserve fabric texture, pattern, and color while expanding missing geometry.
+  - **Studio Generation (`generate`):** Prompts `gemini-3.1-flash-lite-image` with complete descriptive metadata (garment type, material, color, hardware, neckline) to render a pristine catalog piece on an off-white background.
 
 ### Frontend Synchronization (`workStore.js` & `itemImage.js`)
 - **Centralized Resolution (`itemImage.js`):** `bestImageUrl()` prioritizes `reconstructed_image_url` at top precedence, ensuring AI-repaired images immediately supersede temporary raw crop thumbnails.

@@ -7,7 +7,7 @@ Ce document présente une vue d'ensemble technique et opérationnelle de la page
 ## 1. Résumé & Proposition de Valeur
 
 ### Vue d'ensemble
-Le panneau **Détails de l'article** centralise la gestion des vêtements, reliant les photos et les métadonnées avec des capacités d'édition IA avancées via **Nano Banana** (`gemini-2.5-flash-image`).
+Le panneau **Détails de l'article** centralise la gestion des vêtements, reliant les photos et les métadonnées avec des capacités d'édition IA avancées via **Nano Banana** (`gemini-3.1-flash-lite-image`).
 
 ### Flux Architectural
 
@@ -24,7 +24,7 @@ graph TD
     Cards -->|AI Chat & Re-analyse| EyesAgent[The Eyes /chat-analyse]
     EyesAgent -->|Multimodal Gemini Vision| DecisionEngine{Intent Decision}
     
-    DecisionEngine -->|Image Edit| NanoBanana[Nano Banana gemini-2.5-flash-image]
+    DecisionEngine -->|Image Edit| NanoBanana[Nano Banana gemini-3.1-flash-lite-image]
     NanoBanana -->|Inpainted Image| ImagePreview[Live Preview & Apply Button]
     DecisionEngine -->|Metadata Update| AttributeRefill[Form State Refill & Badges]
     DecisionEngine -->|Clarification| ChatBubble[Assistant Clarifying Question]
@@ -101,5 +101,5 @@ graph TD
 ## 4. Architecture Technique & Moteurs IA
 
 * **Pipeline de décision multimodale (`POST /api/v1/closet/{item_id}/chat-analyse`)**.
-* **Moteur Nano Banana (`gemini-2.5-flash-image`)**.
+* **Moteur Nano Banana (`gemini-3.1-flash-lite-image`)**.
 * **Synchronisation 13 langues**.

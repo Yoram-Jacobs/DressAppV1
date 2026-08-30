@@ -644,13 +644,33 @@ async def check_scheduler_triggers() -> None:
                     
                     body = "\n".join(body_lines)
 
+                    # Serialize lightweight proposal objects (no heavy image base64 strings)
+                    lightweight_proposals = []
+                    for prop in proposals[:3]:
+                        p_copy = {
+                            "name": prop.get("name"),
+                            "reasoning": prop.get("reasoning"),
+                            "items": [
+                                {
+                                    "id": it.get("id"),
+                                    "title": it.get("title") or it.get("name"),
+                                    "role": it.get("role") or it.get("category"),
+                                    "clean_image_url": it.get("clean_image_url") if (isinstance(it.get("clean_image_url"), str) and not it["clean_image_url"].startswith("data:")) else None,
+                                    "color": it.get("color"),
+                                }
+                                for it in prop.get("items", [])
+                            ]
+                        }
+                        lightweight_proposals.append(p_copy)
+
                     payload = {
                         "url": "/stylist?tab=match", 
                         "target_date": target_date_str,
                         "tag": f"daily-suggestions-{target_date_str}",
-                        "proposals": proposals[:3]
+                        "proposals": lightweight_proposals
                     }
                     await send_push_notification(user_id, title, body, payload)
+
                     
                     logger.info("Sent scheduled notification to user %s for %s", user_id, target_date_str)
 

@@ -40,10 +40,12 @@ const { client, API_BASE, tokenStore, userStore } = createApiClient({
   // ── Token storage (SecureStore + In-Memory Cache) ─────────────────────
   getToken: () => {
     if (_cachedToken) return _cachedToken;
-    return SecureStore.getItemAsync(TOKEN_KEY).then((t) => {
-      _cachedToken = t;
-      return t;
-    });
+    return SecureStore.getItemAsync(TOKEN_KEY)
+      .then((t) => {
+        _cachedToken = t;
+        return t;
+      })
+      .catch(() => null);
   },
   setToken: async (t: string) => {
     _cachedToken = t;

@@ -100,9 +100,9 @@ export function ClosetScreen() {
   useFocusEffect(
     useCallback(() => {
       if (!closetStore.isFresh()) {
-        prewarm({ force: items.length === 0 }).catch(() => {});
+        closetStore.prewarm().catch(() => {});
       }
-    }, [prewarm, items.length])
+    }, [])
   );
 
   // Semantic search call
@@ -360,7 +360,13 @@ export function ClosetScreen() {
 
   const renderItem = ({ item }: { item: ClosetItem }) => {
     const isSelected = selectedIds.has(item.id);
-    const imgUri = item.thumbnail_data_url || item.clean_image_url || item.image_url;
+    const imgUri =
+      item.thumbnail_data_url ||
+      item.clean_image_url ||
+      item.reconstructed_image_url ||
+      item.segmented_image_url ||
+      item.original_image_url ||
+      item.image_url;
 
     if (viewMode === 'list') {
       return (

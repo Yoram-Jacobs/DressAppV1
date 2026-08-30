@@ -9,7 +9,7 @@
 ## 1. 概述与核心价值
 
 ### 高层概览
-GarmentVision 是 DressApp 的光学智能中枢。这是一个端到端的多阶段计算机视觉管线，能够接收未经处理的用户原始照片，并输出干净、独立且具照片级真实感的衣橱单品。系统基于混合 AI 架构，将高速确定性图像分割（SegFormer `b3_clothes`）和背景抠图（`u2netp` / rembg）与深度多模态推理（Gemini）及生成式图像修复（Nano Banana / `gemini-2.5-flash-image`）有机融合。
+GarmentVision 是 DressApp 的光学智能中枢。这是一个端到端的多阶段计算机视觉管线，能够接收未经处理的用户原始照片，并输出干净、独立且具照片级真实感的衣橱单品。系统基于混合 AI 架构，将高速确定性图像分割（SegFormer `b3_clothes`）和背景抠图（`u2netp` / rembg）与深度多模态推理（Gemini）及生成式图像修复（Nano Banana / `gemini-3.1-flash-lite-image`）有机融合。
 
 当用户照片中的衣物被头发、包袋、手臂遮挡或被相机镜头边缘截断时，GarmentVision 的 **AI 质量检测器（AI Quality Checker）** 会自动诊断缺陷，并智能触发 **图像补全（Image Completion）**（对缺失的下摆、衣袖、领口进行局部重绘/外扩）或 **影棚级完全重构（Full Studio Reconstruction）**（将严重残缺或截断的单品重构为完美的独立电商目录图）。
 
@@ -23,8 +23,8 @@ graph TD
     D -->|image_quality_status 与元数据| E[决策引擎: should_reconstruct]
     
     E -->|complete| F[标准抠图: rembg]
-    E -->|needs_completion| G[Nano Banana 局部外扩/重绘: gemini-2.5-flash-image]
-    E -->|needs_reconstruction| H[Nano Banana 影棚级生成: gemini-2.5-flash-image]
+    E -->|needs_completion| G[Nano Banana 局部外扩/重绘: gemini-3.1-flash-lite-image]
+    E -->|needs_reconstruction| H[Nano Banana 影棚级生成: gemini-3.1-flash-lite-image]
     
     F --> I[画布标准化: 3:4 卡片适配]
     G --> I
@@ -89,8 +89,8 @@ graph TD
 - **质量检测提示词工程 (`llm.py`)：** 结构化 JSON 输出规范，严格约束 `image_quality_status`、`image_quality_reason` 及 `reconstruction_prompt`。
 - **决策引擎 (`reconstruction.py`)：** 结合 LLM 状态与几何触边保护机制（`_EDGE_TOUCH_MARGIN = 40`），确保被照片边缘截断的单品绝不会被误判为完整单品。
 - **生成式修复引擎 (`gemini_image_service.py`)：**
-  - **局部重绘与外扩 (`edit`)：** 将裁剪图与结构化提示词传入 `gemini-2.5-flash-image`，在精确保留面料纹理、图案与色彩的同时扩展补全缺失几何轮廓。
-  - **影棚级生成 (`generate`)：** 向 `gemini-2.5-flash-image` 传入详尽的结构化特征元数据（服装类型、材质、颜色、五金细节、领型），生成米白色背景下的高品质独立目录商品图。
+  - **局部重绘与外扩 (`edit`)：** 将裁剪图与结构化提示词传入 `gemini-3.1-flash-lite-image`，在精确保留面料纹理、图案与色彩的同时扩展补全缺失几何轮廓。
+  - **影棚级生成 (`generate`)：** 向 `gemini-3.1-flash-lite-image` 传入详尽的结构化特征元数据（服装类型、材质、颜色、五金细节、领型），生成米白色背景下的高品质独立目录商品图。
 
 ### 前端状态同步 (`workStore.js` 与 `itemImage.js`)
 - **统一图像解析 (`itemImage.js`)：** `bestImageUrl()` 赋予 `reconstructed_image_url` 最高优先级，确保 AI 修复重构后的图片能够第一时间替换临时裁剪缩略图。

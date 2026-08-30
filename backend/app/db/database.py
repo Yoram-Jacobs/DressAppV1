@@ -158,6 +158,13 @@ async def ensure_indexes() -> None:
     # --- AI Stylist Scheduler (Phase Scheduler) ---
     await db.outfits.create_index([("user_id", 1), ("created_at", -1)])
     await db.simulated_notifications.create_index([("user_id", 1), ("created_at", -1)])
+    # TTL: automatically expire simulated notifications after 30 days to bound storage
+    await db.simulated_notifications.create_index(
+        "created_at_dt",
+        expireAfterSeconds=30 * 24 * 3600,
+        name="simulated_notifications_ttl_30d",
+    )
+
 
     # --- token usage indexing for Admin panel queries ---
     await db.token_usage.create_index([("user_id", 1), ("created_at", -1)])

@@ -9,7 +9,7 @@
 ## 1. Synthèse Générale & Proposition de Valeur
 
 ### Vue d'Ensemble
-GarmentVision constitue le cœur d'intelligence optique de DressApp. Il s'agit d'un pipeline de vision de bout en bout en plusieurs étapes qui ingère des photos d'utilisateurs sans contraintes et génère des articles de garde-robe propres, isolés et photoréalistes. Ancré dans une architecture d'IA hybride, il associe une segmentation déterministe haute vitesse (SegFormer `b3_clothes`) et un détourage d'arrière-plan (`u2netp` / rembg) à un raisonnement multimodal approfondi (Gemini) et à une réparation d'image générative (Nano Banana / `gemini-2.5-flash-image`).
+GarmentVision constitue le cœur d'intelligence optique de DressApp. Il s'agit d'un pipeline de vision de bout en bout en plusieurs étapes qui ingère des photos d'utilisateurs sans contraintes et génère des articles de garde-robe propres, isolés et photoréalistes. Ancré dans une architecture d'IA hybride, il associe une segmentation déterministe haute vitesse (SegFormer `b3_clothes`) et un détourage d'arrière-plan (`u2netp` / rembg) à un raisonnement multimodal approfondi (Gemini) et à une réparation d'image générative (Nano Banana / `gemini-3.1-flash-lite-image`).
 
 Lorsque les vêtements sur les photos sont masqués par des cheveux, des sacs ou des bras, ou rognés par le cadre de la caméra, le **Contrôleur de Qualité IA** de GarmentVision diagnostique le défaut et déclenche automatiquement la **Complétion d'Image** (inpaint/outpaint des ourlets, manches et cols manquants) ou la **Reconstruction Studio Complète** (régénération des articles tronqués ou partiels en photos de catalogue e-commerce autonomes et immaculées).
 
@@ -23,8 +23,8 @@ graph TD
     D -->|image_quality_status & métadonnées| E[Moteur de Décision : should_reconstruct]
     
     E -->|complete| F[Détourage Standard : rembg]
-    E -->|needs_completion| G[Nano Banana Inpaint / Outpaint : gemini-2.5-flash-image]
-    E -->|needs_reconstruction| H[Nano Banana Studio Gen : gemini-2.5-flash-image]
+    E -->|needs_completion| G[Nano Banana Inpaint / Outpaint : gemini-3.1-flash-lite-image]
+    E -->|needs_reconstruction| H[Nano Banana Studio Gen : gemini-3.1-flash-lite-image]
     
     F --> I[Normalisation Canvas : Ajustement Carte 3:4]
     G --> I
@@ -89,8 +89,8 @@ graph TD
 - **Prompting du Contrôleur de Qualité (`llm.py`) :** Schéma de sortie JSON structuré imposant `image_quality_status`, `image_quality_reason` et `reconstruction_prompt`.
 - **Moteur de Décision (`reconstruction.py`) :** Évalue le statut LLM combiné à un garde-fou géométrique de contact avec les bords (`_EDGE_TOUCH_MARGIN = 40`) pour s'assurer que les articles coupés par le bord de la photo ne soient jamais traités à tort comme complets.
 - **Moteur de Réparation Générative (`gemini_image_service.py`) :**
-  - **Inpaint / Outpaint (`edit`) :** Transmet les octets recadrés et le prompt structuré à `gemini-2.5-flash-image` pour préserver la texture du tissu, les motifs et la couleur tout en complétant la géométrie manquante.
-  - **Génération Studio (`generate`) :** Interroge `gemini-2.5-flash-image` avec des métadonnées descriptives exhaustives (type de vêtement, matière, couleur, accessoires métalliques, encolure) pour restituer une pièce de catalogue immaculée sur fond blanc cassé.
+  - **Inpaint / Outpaint (`edit`) :** Transmet les octets recadrés et le prompt structuré à `gemini-3.1-flash-lite-image` pour préserver la texture du tissu, les motifs et la couleur tout en complétant la géométrie manquante.
+  - **Génération Studio (`generate`) :** Interroge `gemini-3.1-flash-lite-image` avec des métadonnées descriptives exhaustives (type de vêtement, matière, couleur, accessoires métalliques, encolure) pour restituer une pièce de catalogue immaculée sur fond blanc cassé.
 
 ### Synchronisation Frontend (`workStore.js` & `itemImage.js`)
 - **Résolution Centralisée d'Image (`itemImage.js`) :** `bestImageUrl()` donne la priorité absolue à `reconstructed_image_url`, garantissant que les images réparées par IA remplacent immédiatement les vignettes brutes temporaires.
