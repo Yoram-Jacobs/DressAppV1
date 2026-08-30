@@ -5436,16 +5436,19 @@ async def update_item(
     item_id: str, payload: UpdateItemIn, user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
     patch = payload.model_dump(exclude_none=True)
-    if "reconstructed_image_url" in patch and patch["reconstructed_image_url"]:
-        patch["reconstructed_image_url"] = compress_image_url_or_b64(patch["reconstructed_image_url"], max_dim=1024, quality=75)
-        # If clean_image_url is not provided, unbind the reconstructed image from its background
-        if not patch.get("clean_image_url"):
-            from app.services.garment_visuals import GarmentVisuals
-            cln_url = await GarmentVisuals.ensure_transparent_cutout(patch["reconstructed_image_url"])
-            if cln_url:
-                patch["clean_image_url"] = cln_url
-                patch["clean_image_status"] = "ready"
-                patch["reconstructed_image_url"] = cln_url
+    if "reconstructed_image_url" in patch:
+        if patch["reconstructed_image_url"] in ("None", "null", "undefined", ""):
+            patch["reconstructed_image_url"] = None
+        elif patch["reconstructed_image_url"]:
+            patch["reconstructed_image_url"] = compress_image_url_or_b64(patch["reconstructed_image_url"], max_dim=1024, quality=75)
+            # If clean_image_url is not provided, unbind the reconstructed image from its background
+            if not patch.get("clean_image_url"):
+                from app.services.garment_visuals import GarmentVisuals
+                cln_url = await GarmentVisuals.ensure_transparent_cutout(patch["reconstructed_image_url"])
+                if cln_url:
+                    patch["clean_image_url"] = cln_url
+                    patch["clean_image_status"] = "ready"
+                    patch["reconstructed_image_url"] = cln_url
     # The `clear_reconstruction` flag is a command, not a value we persist.
     # Pop it + translate into explicit null-sets on the related columns.
     if patch.pop("clear_reconstruction", False):

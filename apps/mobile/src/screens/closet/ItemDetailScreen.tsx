@@ -171,7 +171,13 @@ function toFormState(data: any, user?: any): ItemFormState {
     tags: Array.isArray(data?.tags) ? data.tags : [],
     cultural_tags: Array.isArray(data?.cultural_tags) ? data.cultural_tags : [],
     notes: data?.notes || '',
-    reconstructed_image_url: data?.reconstructed_image_url || null,
+    reconstructed_image_url:
+      data?.reconstructed_image_url &&
+      data?.reconstructed_image_url !== 'None' &&
+      data?.reconstructed_image_url !== 'null' &&
+      data?.reconstructed_image_url !== 'undefined'
+        ? data.reconstructed_image_url
+        : null,
   };
 }
 
@@ -735,32 +741,58 @@ export function ItemDetailScreen() {
     }
   };
 
-  const resolveDisplayUrl = (url?: string | null) => {
-    if (!url) return null;
-    if (url.startsWith('data:') || url.startsWith('http://') || url.startsWith('https://') || url.startsWith('file://')) {
-      return url;
+  const resolveDisplayUrl = (url?: string | null): string | null => {
+    if (!url || typeof url !== 'string') return null;
+    const trimmed = url.trim();
+    if (
+      !trimmed ||
+      trimmed === 'None' ||
+      trimmed === 'null' ||
+      trimmed === 'undefined' ||
+      trimmed === '[object Object]'
+    ) {
+      return null;
     }
-    if (url.startsWith('/')) {
-      return `https://dressapp.co${url}`;
+    if (
+      trimmed.startsWith('data:') ||
+      trimmed.startsWith('http://') ||
+      trimmed.startsWith('https://') ||
+      trimmed.startsWith('file://')
+    ) {
+      return trimmed;
     }
-    return url;
+    if (trimmed.startsWith('/')) {
+      return `https://dressapp.co${trimmed}`;
+    }
+    return null;
   };
 
   const activeGarment = allGroupPieces.find((p) => p.id === activeViewId) || item;
 
-  const cleanUrl =
+  const reconstructedUrl =
     resolveDisplayUrl(form.reconstructed_image_url) ||
-    resolveDisplayUrl(activeGarment?.reconstructed_image_url) ||
+    resolveDisplayUrl(activeGarment?.reconstructed_image_url);
+
+  const cleanCutoutUrl =
+    resolveDisplayUrl(form.clean_image_url) ||
     resolveDisplayUrl(activeGarment?.clean_image_url) ||
-    resolveDisplayUrl(activeGarment?.thumbnail_data_url) ||
+    resolveDisplayUrl(activeGarment?.segmented_image_url) ||
+    resolveDisplayUrl(activeGarment?.cutout_url);
+
+  const rawOriginalUrl =
+    resolveDisplayUrl(activeGarment?.original_image_url) ||
     resolveDisplayUrl(activeGarment?.image_url);
 
-  const rawUrl =
-    resolveDisplayUrl(activeGarment?.original_image_url) ||
-    resolveDisplayUrl(activeGarment?.image_url) ||
-    cleanUrl;
+  const fallbackThumb =
+    resolveDisplayUrl(activeGarment?.thumbnail_data_url) ||
+    resolveDisplayUrl(activeGarment?.placeholder_data_url);
 
-  const currentImg = (viewingCutout ? cleanUrl : rawUrl) || cleanUrl || resolveDisplayUrl(activeGarment?.thumbnail_data_url);
+  const hasReconstruction = Boolean(reconstructedUrl);
+
+  const cutoutOrRepairedUrl = reconstructedUrl || cleanCutoutUrl || fallbackThumb || rawOriginalUrl;
+  const rawUrl = rawOriginalUrl || cutoutOrRepairedUrl;
+
+  const currentImg = viewingCutout ? cutoutOrRepairedUrl : (rawUrl || cutoutOrRepairedUrl);
 
   const timesWorn = item?.wear_count || item?.times_worn || 0;
   const priceUnits = form.price_cents || 0;
@@ -818,7 +850,19 @@ export function ItemDetailScreen() {
             </View>
           )}
 
-          {/* Photo Actions Pill (Take Photo / Replace Photo) */}
+          {/* Reconstructed / Repaired Badge */}
+          {hasReconstruction && (
+            <View style={[styles.repairedBadge, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Lucide.Wand2 size={11} color={colors.accent} />
+              <Text style={[styles.repairedBadgeText, { color: colors.foreground }]}>
+                {viewingCutout
+                  ? t('itemDetail.repair.showingRepaired', { defaultValue: 'Repaired' })
+                  : t('itemDetail.repair.showingOriginal', { defaultValue: 'Original' })}
+              </Text>
+            </View>
+          )}
+
+          {/* Photo Actions Pill (Take Photo / Replace Photo / Repair Photo) */}
           <View style={styles.heroActionOverlay}>
             <TouchableOpacity style={[styles.heroActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={handleTakePhoto}>
               <Lucide.Camera size={13} color={colors.foreground} />
@@ -829,18 +873,34 @@ export function ItemDetailScreen() {
               <Lucide.Image size={13} color={colors.foreground} />
               <Text style={[styles.heroActionText, { color: colors.foreground }]}>{t('itemDetail.replacePhoto', { defaultValue: 'Replace photo' })}</Text>
             </TouchableOpacity>
+
+            {!hasReconstruction && (
+              <TouchableOpacity
+                style={[styles.heroActionBtn, { backgroundColor: colors.accent + '20', borderColor: colors.accent }]}
+                onPress={() => setActiveTab('ai')}
+              >
+                <Lucide.Wand2 size={13} color={colors.accent} />
+                <Text style={[styles.heroActionText, { color: colors.accent }]}>{t('itemDetail.cleanBackground.cta', { defaultValue: 'Repair' })}</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
-          {/* Toggle between AI cutout & original */}
-          {cleanUrl && rawUrl && cleanUrl !== rawUrl && (
+          {/* Toggle between AI cutout / repaired & original */}
+          {cutoutOrRepairedUrl && rawUrl && cutoutOrRepairedUrl !== rawUrl && (
             <View style={[styles.cutoutToggleWrap, { backgroundColor: colors.card }]}>
               <TouchableOpacity
                 style={[styles.cutoutToggleBtn, viewingCutout && { backgroundColor: colors.accent }]}
                 onPress={() => setViewingCutout(true)}
               >
-                <Lucide.Sparkles size={11} color={viewingCutout ? '#fff' : colors.mutedFg} />
+                {hasReconstruction ? (
+                  <Lucide.Wand2 size={11} color={viewingCutout ? '#fff' : colors.mutedFg} />
+                ) : (
+                  <Lucide.Sparkles size={11} color={viewingCutout ? '#fff' : colors.mutedFg} />
+                )}
                 <Text style={[styles.cutoutToggleText, { color: viewingCutout ? '#fff' : colors.mutedFg }]}>
-                  {t('itemDetail.cutout', { defaultValue: 'Cutout' })}
+                  {hasReconstruction
+                    ? t('itemDetail.repair.showRepaired', { defaultValue: 'Repaired' })
+                    : t('itemDetail.cutout', { defaultValue: 'Cutout' })}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -881,8 +941,11 @@ export function ItemDetailScreen() {
               {allGroupPieces.map((piece, pIdx) => {
                 const isSelected = piece.id === (activeViewId || item?.id);
                 const isHost = piece.group_role === 'host' || piece.id === piece.group_id || pIdx === 0;
-                const thumb = resolveDisplayUrl(piece.clean_image_url) ||
+                const thumb =
+                  resolveDisplayUrl(piece.reconstructed_image_url) ||
+                  resolveDisplayUrl(piece.clean_image_url) ||
                   resolveDisplayUrl(piece.thumbnail_data_url) ||
+                  resolveDisplayUrl(piece.placeholder_data_url) ||
                   resolveDisplayUrl(piece.original_image_url) ||
                   resolveDisplayUrl(piece.image_url);
 
@@ -2434,5 +2497,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
+  },
+  repairedBadge: {
+    position: 'absolute',
+    top: spacing.md,
+    left: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    ...shadows.sm,
+  },
+  repairedBadgeText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 10,
   },
 });
