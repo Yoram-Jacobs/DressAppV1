@@ -4375,7 +4375,26 @@ async def reanalyze_item(
     if colors_list and isinstance(colors_list, list):
         first_colour = colors_list[0]
         if isinstance(first_colour, dict) and first_colour.get("name"):
-            if not fill_empty_onldef _get_localized_closet_msg(msg_type: str, lang: str, user_msg: str = "") -> str:
+            if not fill_empty_only or ("color" not in locked and not item.get("color")):
+                update_doc["color"] = first_colour["name"]
+    materials_list = analysis.get("fabric_materials") or []
+    if materials_list and isinstance(materials_list, list):
+        first_material = materials_list[0]
+        if isinstance(first_material, dict) and first_material.get("name"):
+            if not fill_empty_only or ("material" not in locked and not item.get("material")):
+                update_doc["material"] = first_material["name"]
+
+    # Construct updated item in memory so the frontend can preview/save it, but do NOT write to database automatically.
+    # This ensures the user must explicitly click the Save icon on the frontend to persist re-analysis edits.
+    updated_item = {**item, **update_doc}
+
+    return {
+        "item": updated_item,
+        "updated_fields": update_doc if update_doc else None,
+    }
+
+
+def _get_localized_closet_msg(msg_type: str, lang: str, user_msg: str = "") -> str:
     lang = (lang or "en").lower()
     if lang not in ("he", "ar", "es", "fr", "de", "it", "pt", "ru", "zh", "ja", "hi"):
         lang = "en"
@@ -4515,10 +4534,6 @@ async def chat_analyse_item(
         f"- Quality: {item.get('quality') or 'Unknown'}\n\n"
         "Your task: Analyze the user's message and determine the correct action from the following 4 options:\n\n"
         "1. 'image_edit': The user is asking to modify, inpaint, remove, or reconstruct elements in the photo.\n"
-        "   Examples in multiple languages:\n"
-        "   - Hebrew: 'הסר את הנעליים', 'שחזר את הנעליים', 'השלם את החור איפה שהייתה היד', 'הסר את הרקע', 'נקה את התמונה', 'הסר ניטים', 'תקן שרוול', 'הסר את הקולב', 'השלם חיתוך'\n"
-        "   - Arabic: 'ازالة الحذاء', 'إصلاح الحذاء', 'إكمال الثقب', 'إزالة الخلفية', 'إصلاح الكم', 'إزالة الشماعة'\n"
-        "   - English: 'Remove the shoes', 'Restore the shoes', 'Complete the hole where the hand was', 'Remove the metal studs from the jacket\\'s front', 'Remove the hanger', 'Repair the cut-off sleeve', 'Fill the gap in the hem'\n"
         "   CRITICAL REQUIREMENTS FOR 'image_edit':\n"
         "   - Set action: 'image_edit'\n"
         "   - Set image_edit_prompt: ALWAYS IN ENGLISH! Translate the user's intent into a concise, highly specific inpainting / outpainting / reconstruction instruction for Gemini Nano Banana (e.g. 'Restore the footwear, clean commercial sneaker photo on solid neutral #F5F2EB off-white background', 'Outpaint and fill the missing area where the hand was, preserving original fabric texture and color').\n"
@@ -4565,36 +4580,6 @@ async def chat_analyse_item(
         decision = json.loads(clean_json)
     except Exception as exc:
         logger.warning("Gemini decision parsing failed in chat_analyse: %s", exc)
-        # Fallback heuristic (multilingual)�פריט.",
-            "ar": "مفهوم. أخبرني إذا كنت ترغب في تعديل الصورة أو تحديث تفاصيل القطعة.",
-            "en": "Understood. Let me know if you want me to edit the photo or refine the details.",
-            "es": "Entendido. Avísame si quieres que edite la foto o ajuste los detalles.",
-            "fr": "Compris. Faites-moi savoir si vous souhaitez modifier la photo ou ajuster les détails.",
-            "de": "Verstanden. Lass mich wissen, wenn du das Bild bearbeiten oder Details anpassen möchtest.",
-            "it": "Ricevuto. Fammi sapere se desideri che modifichi la foto o aggiorni i dettagli.",
-            "pt": "Entendido. Avise-me se você quiser que eu edite a foto ou ajuste os detalhes.",
-            "ru": "Понятно. Дайте знать, если нужно отредактировать фото или уточнить детали.",
-            "zh": "明白了。如果您需要我编辑照片或调整详情，请告诉我。",
-            "ja": "了解しました。写真を編集したり詳細を調整したい場合はお知らせください。",
-            "hi": "समझ गया। अगर आप चाहते हैं कि मैं फ़ोटो संपादित करूँ या विवरण को परिष्कृत करूँ तो मुझे बताएं।",
-        },
-        "image_edit_processing": {
-            "he": f"מבצע עריכת תמונה: {user_msg}",
-            "ar": f"جاري تعديل الصورة: {user_msg}",
-            "en": f"Processing image modification: {user_msg}",
-            "es": f"Modificando imagen: {user_msg}",
-            "fr": f"Modification de l'image : {user_msg}",
-            "de": f"Bearbeite Bild: {user_msg}",
-            "it": f"Modifica dell'immagine in corso: {user_msg}",
-            "pt": f"Processando modificação da imagem: {user_msg}",
-            "ru": f"Выполняется редактирование изображения: {user_msg}",
-            "zh": f"正在处理图片修改：{user_msg}",
-            "ja": f"画像を変更中：{user_msg}",
-            "hi": f"छवि संशोधन संसाधित किया जा रहा है: {user_msg}",
-        }
-    }
-    return messages.get(msg_type, {}).get(lang) or messages.get(msg_type, {}).get("en", "")
-
         # Fallback heuristic (multilingual)
         low_msg = user_msg.lower()
         item_cat = (item.get("category") or "").strip().lower()
@@ -4700,34 +4685,6 @@ async def chat_analyse_item(
             except Exception as edit_exc:
                 logger.warning("Nano Banana chat edit failed: %s", edit_exc)
                 reply = _get_localized_closet_msg("image_edit_failed", user_lang, user_msg=user_msg)
-                action = "clarification"
-
-    elif action == "metadata_update":
-        meta_updates = decision.get("metadata_updates") or {}
-        for k, v in meta_updates.items():
-            if k in (
-                "title", "name", "category", "sub_category", "item_type", "brand",
-                "gender", "dress_code", "season", "tradition", "colors", "color",
-                "fabric_materials", "material", "pattern", "state", "condition",
-                "quality", "repair_advice", "tags"
-            ):
-                updated_doc[k] = v
-
-    # Build preview item in memory (do not overwrite DB until user clicks Save)
-    updated_item = {**item, **updated_doc}
-
-    return {
-        "reply": reply,
-        "action_taken": action,
-        "image_url": image_url_out,
-        "clean_image_url": clean_image_url_out,
-        "updated_fields": updated_doc if updated_doc else None,
-        "item": updated_item,
-    } "updated_at": datetime.now(timezone.utc).isoformat(),
-                }
-            except Exception as edit_exc:
-                logger.warning("Nano Banana chat edit failed: %s", edit_exc)
-                reply = f"I attempted to modify the image ({user_msg}), but Nano Banana encountered an issue. Please try again or refine your prompt."
                 action = "clarification"
 
     elif action == "metadata_update":
