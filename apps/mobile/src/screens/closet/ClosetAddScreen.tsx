@@ -52,6 +52,13 @@ import { useClosetStore } from '@mobile/lib/stores/closetStore';
 import { ScanningPipelineOverlay } from '@mobile/components/ScanningPipelineOverlay';
 import { WeightedList, WeightedItem } from '@mobile/components/WeightedList';
 import { TaxonomySelectModal } from '@mobile/components/TaxonomySelectModal';
+import { DuplicatePreflightDialog } from '@mobile/components/DuplicatePreflightDialog';
+import {
+  findDuplicatesInCloset,
+  computeSha256,
+  PhotoFingerprint,
+  DuplicateMatchResult,
+} from '@mobile/lib/duplicateDetection';
 import { deriveSizeFromPreferences } from '@mobile/lib/size_preferences';
 import {
   CATEGORY_OPTIONS,
@@ -87,6 +94,8 @@ export interface GarmentCard {
   originalCropUrl?: string | null;
   reconstructedUrl?: string | null;
   useReconstructed?: boolean;
+  sourceSha256?: string;
+  isDuplicate?: boolean;
   status: 'scanning' | 'ready' | 'error' | 'saved';
   progress: number;
   label?: string | null;
@@ -166,6 +175,11 @@ export function ClosetAddScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
 
+  // Pre-flight duplicate check state
+  const [preflightOpen, setPreflightOpen] = useState(false);
+  const [preflightMatches, setPreflightMatches] = useState<DuplicateMatchResult[]>([]);
+  const [pendingFingerprints, setPendingFingerprints] = useState<PhotoFingerprint[]>([]);
+
   useEffect(() => {
     let active = true;
     api
@@ -239,7 +253,11 @@ export function ClosetAddScreen() {
   };
 
   // ── AI ANALYSIS HELPER ──────────────────────────────────────────────────
-  const analyzeSingleImage = async (base64Raw: string, previewUri: string) => {
+  const analyzeSingleImage = async (
+    base64Raw: string,
+    previewUri: string,
+    opts?: { isDuplicate?: boolean; sourceSha256?: string }
+  ) => {
     let cleanB64 = base64Raw ? base64Raw.replace(/^data:image\/[a-zA-Z]+;base64,/, '') : '';
     let targetPreview = previewUri;
     if (!cleanB64 && previewUri) {
@@ -248,12 +266,15 @@ export function ClosetAddScreen() {
       targetPreview = compressed.uri;
     }
     const tempCardId = `card_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const computedSha = opts?.sourceSha256 || (await computeSha256(cleanB64));
 
     // Create initial card
     const initialCard: GarmentCard = {
       id: tempCardId,
       previewUrl: targetPreview,
       base64: cleanB64,
+      sourceSha256: computedSha,
+      isDuplicate: opts?.isDuplicate || false,
       status: 'scanning',
       progress: 30,
       fields: {
@@ -450,6 +471,8 @@ export function ClosetAddScreen() {
           originalCropUrl: cropUrl,
           reconstructedUrl: analysis.reconstructed_image_url || item.reconstructed_image_url || null,
           useReconstructed: Boolean(analysis.reconstructed_image_url || item.reconstructed_image_url),
+          sourceSha256: computedSha,
+          isDuplicate: opts?.isDuplicate || false,
           status: 'ready',
           progress: 100,
           label: cardLabel,
@@ -496,6 +519,91 @@ export function ClosetAddScreen() {
     }
   };
 
+  // ── PRE-FLIGHT DUPLICATE CHECKER ──────────────────────────────────────────
+  const processSelectedPhotos = async (
+    assets: { uri: string; name?: string; size?: number }[]
+  ) => {
+    if (!assets || assets.length === 0) return;
+    try {
+      const fingerprints: PhotoFingerprint[] = [];
+      for (let i = 0; i < assets.length; i++) {
+        const asset = assets[i];
+        if (!asset.uri) continue;
+        const { uri, base64 } = await compressAndResizeImage(asset.uri);
+        const cleanB64 = base64.replace(/^data:image\/[a-zA-Z]+;base64,/, '');
+        const sha256 = await computeSha256(cleanB64);
+        fingerprints.push({
+          uri,
+          base64: cleanB64,
+          sha256,
+          filename: asset.name || `photo_${Date.now()}_${i}.jpg`,
+          size_bytes: asset.size,
+        });
+      }
+
+      if (fingerprints.length === 0) return;
+
+      const closetItems = closetStore.getSnapshot().items || [];
+      const { matches } = findDuplicatesInCloset(fingerprints, closetItems);
+
+      if (matches.length > 0) {
+        setPreflightMatches(matches);
+        setPendingFingerprints(fingerprints);
+        setPreflightOpen(true);
+      } else {
+        for (const fp of fingerprints) {
+          await analyzeSingleImage(fp.base64 || '', fp.uri, {
+            sourceSha256: fp.sha256 || undefined,
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('processSelectedPhotos error:', err);
+    }
+  };
+
+  const handleResolvePreflight = async (decisions: Record<string, 'skip' | 'add'>) => {
+    setPreflightOpen(false);
+    const matches = preflightMatches;
+    const fingerprints = pendingFingerprints;
+
+    const survivors = fingerprints.filter((fp) => {
+      const match = matches.find(
+        (m) =>
+          (m.sha256 && fp.sha256 === m.sha256) ||
+          (m.phash && fp.phash === m.phash) ||
+          m.matchKey === fp.sha256 ||
+          m.matchKey === fp.filename
+      );
+      if (!match) return true; // not a duplicate -> keep
+      return decisions[match.matchKey] === 'add';
+    });
+
+    if (survivors.length === 0) {
+      Alert.alert(
+        t('addItem.preflight.title', { defaultValue: 'Duplicates Skipped' }),
+        t('addItem.preflight.allSkipped', {
+          defaultValue: 'All selected photos were duplicates and were skipped.',
+        })
+      );
+      return;
+    }
+
+    for (const fp of survivors) {
+      const isDup = matches.some(
+        (m) =>
+          decisions[m.matchKey] === 'add' &&
+          ((m.sha256 && fp.sha256 === m.sha256) ||
+            (m.phash && fp.phash === m.phash) ||
+            m.matchKey === fp.sha256)
+      );
+      await analyzeSingleImage(fp.base64 || '', fp.uri, {
+        isDuplicate: isDup,
+        sourceSha256: fp.sha256 || undefined,
+      });
+    }
+  };
+
   // ── INGESTION HANDLERS ────────────────────────────────────────────────────
   const handleTakePhoto = async () => {
     try {
@@ -516,12 +624,12 @@ export function ClosetAddScreen() {
 
       if (!res.canceled && res.assets && res.assets.length > 0) {
         setShowLiveCamera(false);
-        for (const asset of res.assets) {
-          if (asset.uri) {
-            const { uri, base64 } = await compressAndResizeImage(asset.uri);
-            await analyzeSingleImage(base64, uri);
-          }
-        }
+        const validAssets = res.assets.filter((a) => a.uri).map((a) => ({
+          uri: a.uri,
+          name: a.fileName || undefined,
+          size: a.fileSize || undefined,
+        }));
+        await processSelectedPhotos(validAssets);
       }
     } catch (e) {
       console.warn('Camera launch error:', e);
@@ -542,12 +650,12 @@ export function ClosetAddScreen() {
 
       if (!res.canceled && res.assets && res.assets.length > 0) {
         setShowLiveCamera(false);
-        for (const asset of res.assets) {
-          if (asset.uri) {
-            const { uri, base64 } = await compressAndResizeImage(asset.uri);
-            await analyzeSingleImage(base64, uri);
-          }
-        }
+        const validAssets = res.assets.filter((a) => a.uri).map((a) => ({
+          uri: a.uri,
+          name: a.fileName || undefined,
+          size: a.fileSize || undefined,
+        }));
+        await processSelectedPhotos(validAssets);
       }
     } catch (e) {
       console.warn('Gallery pick error:', e);
@@ -562,8 +670,7 @@ export function ClosetAddScreen() {
       });
       if (photo?.uri) {
         setShowLiveCamera(false);
-        const { uri, base64 } = await compressAndResizeImage(photo.uri);
-        await analyzeSingleImage(base64, uri);
+        await processSelectedPhotos([{ uri: photo.uri }]);
       }
     } catch (e) {
       console.warn('Camera capture failed:', e);
@@ -800,6 +907,8 @@ export function ClosetAddScreen() {
           cultural_tags: Array.isArray(fields.cultural_tags) && fields.cultural_tags.length > 0 ? fields.cultural_tags : undefined,
           image_base64: card.cropBase64 || card.base64 || undefined,
           image_mime: 'image/jpeg',
+          source_sha256: card.sourceSha256 || undefined,
+          is_duplicate: card.isDuplicate || false,
         };
 
         await api.createItem(payload);
@@ -1798,6 +1907,12 @@ export function ClosetAddScreen() {
           setActiveModal(null);
         }}
         onClose={() => setActiveModal(null)}
+      />
+
+      <DuplicatePreflightDialog
+        open={preflightOpen}
+        matches={preflightMatches}
+        onResolve={handleResolvePreflight}
       />
     </SafeAreaView>
   );
