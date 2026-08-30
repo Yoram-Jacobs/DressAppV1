@@ -671,13 +671,36 @@ export function ItemDetailScreen() {
     );
   }
 
-  const cleanUrl = form.reconstructed_image_url || item?.clean_image_url || item?.thumbnail_data_url || item?.image_url;
-  const rawUrl = item?.original_image_url || item?.image_url || cleanUrl;
-  const currentImg = viewingCutout ? cleanUrl : rawUrl;
+  const resolveDisplayUrl = (url?: string | null) => {
+
+    if (!url) return null;
+    if (url.startsWith('data:') || url.startsWith('http://') || url.startsWith('https://') || url.startsWith('file://')) {
+      return url;
+    }
+    if (url.startsWith('/')) {
+      return `https://dressapp.co${url}`;
+    }
+    return url;
+  };
+
+  const cleanUrl =
+    resolveDisplayUrl(form.reconstructed_image_url) ||
+    resolveDisplayUrl(item?.reconstructed_image_url) ||
+    resolveDisplayUrl(item?.clean_image_url) ||
+    resolveDisplayUrl(item?.thumbnail_data_url) ||
+    resolveDisplayUrl(item?.image_url);
+
+  const rawUrl =
+    resolveDisplayUrl(item?.original_image_url) ||
+    resolveDisplayUrl(item?.image_url) ||
+    cleanUrl;
+
+  const currentImg = (viewingCutout ? cleanUrl : rawUrl) || cleanUrl || resolveDisplayUrl(item?.thumbnail_data_url);
 
   const timesWorn = item?.wear_count || item?.times_worn || 0;
   const priceUnits = form.price_cents || 0;
   const costPerWear = priceUnits > 0 ? priceUnits / Math.max(1, timesWorn) : 0;
+
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top']}>
