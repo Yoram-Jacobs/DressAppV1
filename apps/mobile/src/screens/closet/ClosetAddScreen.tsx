@@ -48,7 +48,7 @@ import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
-import { useClosetStore } from '@mobile/lib/stores/closetStore';
+import { closetStore, useClosetStore } from '@mobile/lib/stores/closetStore';
 import { ScanningPipelineOverlay } from '@mobile/components/ScanningPipelineOverlay';
 import { WeightedList, WeightedItem } from '@mobile/components/WeightedList';
 import { TaxonomySelectModal } from '@mobile/components/TaxonomySelectModal';

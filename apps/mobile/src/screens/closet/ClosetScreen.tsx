@@ -31,6 +31,7 @@ import {
   Alert,
   Dimensions,
   Modal,
+  Vibration,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -97,59 +98,96 @@ export function ClosetScreen() {
   const [isDragging, setIsDragging] = useState(false);
   const [touchPos, setTouchPos] = useState({ x: 0, y: 0 });
 
+  const isDraggingRef = useRef(false);
+  const draggedIdRef = useRef<string | null>(null);
+  const dragOverIdRef = useRef<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
-  const flatListLayoutRef = useRef<{ pageX: number; pageY: number } | null>(null);
+  const flatListContainerRef = useRef<View>(null);
+  const flatListLayoutRef = useRef<{ pageX: number; pageY: number; width: number; height: number } | null>(null);
   const scrollOffsetRef = useRef(0);
-  const itemLayoutsRef = useRef<Map<string, { x: number; y: number; width: number; height: number }>>(new Map());
   const lastTouchPosRef = useRef({ pageX: 0, pageY: 0 });
 
   const handleScroll = (e: any) => {
     scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
   };
 
-  const registerItemLayout = (id: string, layout: { x: number; y: number; width: number; height: number }) => {
-    itemLayoutsRef.current.set(id, layout);
-  };
-
   const startDrag = (id: string, startPageX: number, startPageY: number) => {
-    (flatListRef.current as any)?.measure((fx: number, fy: number, fwidth: number, fheight: number, fpageX: number, fpageY: number) => {
-      flatListLayoutRef.current = { pageX: fpageX, pageY: fpageY };
-      setDraggedId(id);
-      setIsDragging(true);
-      setTouchPos({ x: startPageX, y: startPageY });
-    });
+    try {
+      Vibration.vibrate(40);
+    } catch {}
+    draggedIdRef.current = id;
+    dragOverIdRef.current = null;
+    isDraggingRef.current = true;
+    setDraggedId(id);
+    setDragOverId(null);
+    setIsDragging(true);
+    setTouchPos({ x: startPageX, y: startPageY });
   };
 
   const handleDragMove = (pageX: number, pageY: number) => {
+    if (!isDraggingRef.current) return;
     setTouchPos({ x: pageX, y: pageY });
 
-    if (!flatListLayoutRef.current) return;
+    const layout = flatListLayoutRef.current;
+    const containerPageX = layout?.pageX ?? spacing[4];
+    const containerPageY = layout?.pageY ?? 180;
 
-    // Calculate touch coordinates relative to FlatList content container
-    const x = pageX - flatListLayoutRef.current.pageX;
-    const y = pageY - flatListLayoutRef.current.pageY + scrollOffsetRef.current;
+    const relX = pageX - containerPageX;
+    const relY = pageY - containerPageY + scrollOffsetRef.current;
 
-    // Find if we are dragging over any item
-    let foundOverId: string | null = null;
-    for (const [id, layout] of itemLayoutsRef.current.entries()) {
-      if (id === draggedId) continue;
-      if (
-        x >= layout.x &&
-        x <= layout.x + layout.width &&
-        y >= layout.y &&
-        y <= layout.y + layout.height
-      ) {
-        foundOverId = id;
-        break;
+    let targetItem: ClosetItem | null = null;
+
+    if (viewMode === 'list') {
+      const rowHeight = 76;
+      const rowIndex = Math.floor(relY / rowHeight);
+      if (rowIndex >= 0 && rowIndex < displayItems.length) {
+        targetItem = displayItems[rowIndex];
+      }
+    } else if (viewMode === 'compact') {
+      const colWidth = itemWidth + spacing[2];
+      const rowHeight = itemWidth + spacing[2];
+      const col = Math.floor(relX / colWidth);
+      const row = Math.floor(relY / rowHeight);
+      if (col >= 0 && col < 3 && row >= 0) {
+        const index = row * 3 + col;
+        if (index >= 0 && index < displayItems.length) {
+          targetItem = displayItems[index];
+        }
+      }
+    } else {
+      // 2-column Grid view
+      const colWidth = itemWidth + spacing[2];
+      const rowHeight = itemWidth + 68 + spacing[2];
+      const col = Math.floor(relX / colWidth);
+      const row = Math.floor(relY / rowHeight);
+      if (col >= 0 && col < 2 && row >= 0) {
+        const index = row * 2 + col;
+        if (index >= 0 && index < displayItems.length) {
+          targetItem = displayItems[index];
+        }
       }
     }
-    setDragOverId(foundOverId);
+
+    const foundId = targetItem && targetItem.id !== draggedIdRef.current ? targetItem.id : null;
+    if (foundId !== dragOverIdRef.current) {
+      dragOverIdRef.current = foundId;
+      setDragOverId(foundId);
+      if (foundId) {
+        try {
+          Vibration.vibrate(15);
+        } catch {}
+      }
+    }
   };
 
   const handleDragEnd = () => {
-    const sourceId = draggedId;
-    const targetId = dragOverId;
+    if (!isDraggingRef.current) return;
+    const sourceId = draggedIdRef.current;
+    const targetId = dragOverIdRef.current;
 
+    isDraggingRef.current = false;
+    draggedIdRef.current = null;
+    dragOverIdRef.current = null;
     setDraggedId(null);
     setDragOverId(null);
     setIsDragging(false);
@@ -168,12 +206,19 @@ export function ClosetScreen() {
         closetStore.upsert({ ...targetItem, group_id: groupId, group_role: 'host' });
         closetStore.upsert({ ...sourceItem, group_id: groupId, group_role: 'member' });
 
+        try {
+          Vibration.vibrate(50);
+        } catch {}
+
         (api as any).groupItems?.({ host_id: targetId, member_id: sourceId })
           .then((res: any) => {
-            if (res?.status === 'success') {
+            if (res?.status === 'success' || res?.host) {
               if (res.host) closetStore.upsert(res.host);
               if (res.member) closetStore.upsert(res.member);
-              Alert.alert(t('common.success', { defaultValue: 'Success' }));
+              Alert.alert(
+                t('common.success', { defaultValue: 'Success' }),
+                t('closet.groupCreated', { defaultValue: 'Garments grouped successfully.' })
+              );
             } else {
               closetStore.upsert(backupSource);
               closetStore.upsert(backupTarget);
@@ -516,9 +561,6 @@ export function ClosetScreen() {
     if (viewMode === 'list') {
       return (
         <TouchableOpacity
-          onLayout={(e) => {
-            registerItemLayout(item.id, e.nativeEvent.layout);
-          }}
           onPressIn={(e) => {
             lastTouchPosRef.current = {
               pageX: e.nativeEvent.pageX,
@@ -528,6 +570,21 @@ export function ClosetScreen() {
           onLongPress={() => {
             if (!selectMode) {
               startDrag(item.id, lastTouchPosRef.current.pageX, lastTouchPosRef.current.pageY);
+            }
+          }}
+          onTouchMove={(e) => {
+            if (isDraggingRef.current) {
+              handleDragMove(e.nativeEvent.pageX, e.nativeEvent.pageY);
+            }
+          }}
+          onTouchEnd={() => {
+            if (isDraggingRef.current) {
+              handleDragEnd();
+            }
+          }}
+          onTouchCancel={() => {
+            if (isDraggingRef.current) {
+              handleDragEnd();
             }
           }}
           delayLongPress={350}
@@ -582,9 +639,6 @@ export function ClosetScreen() {
 
     return (
       <TouchableOpacity
-        onLayout={(e) => {
-          registerItemLayout(item.id, e.nativeEvent.layout);
-        }}
         onPressIn={(e) => {
           lastTouchPosRef.current = {
             pageX: e.nativeEvent.pageX,
@@ -594,6 +648,21 @@ export function ClosetScreen() {
         onLongPress={() => {
           if (!selectMode) {
             startDrag(item.id, lastTouchPosRef.current.pageX, lastTouchPosRef.current.pageY);
+          }
+        }}
+        onTouchMove={(e) => {
+          if (isDraggingRef.current) {
+            handleDragMove(e.nativeEvent.pageX, e.nativeEvent.pageY);
+          }
+        }}
+        onTouchEnd={() => {
+          if (isDraggingRef.current) {
+            handleDragEnd();
+          }
+        }}
+        onTouchCancel={() => {
+          if (isDraggingRef.current) {
+            handleDragEnd();
           }
         }}
         delayLongPress={350}
@@ -861,26 +930,36 @@ export function ClosetScreen() {
           </Text>
         </View>
       ) : (
-        <FlatList
-          ref={flatListRef}
-          key={`${viewMode}-${numColumns}`}
-          data={displayItems}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          numColumns={numColumns}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          columnWrapperStyle={numColumns > 1 ? { gap: spacing[2], marginBottom: spacing[2] } : undefined}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={colors.accent}
-            />
-          }
-        />
+        <View
+          ref={flatListContainerRef}
+          style={{ flex: 1 }}
+          onLayout={() => {
+            flatListContainerRef.current?.measureInWindow?.((x, y, width, height) => {
+              flatListLayoutRef.current = { pageX: x, pageY: y, width, height };
+            });
+          }}
+        >
+          <FlatList
+            ref={flatListRef}
+            key={`${viewMode}-${numColumns}`}
+            data={displayItems}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            numColumns={numColumns}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            columnWrapperStyle={numColumns > 1 ? { gap: spacing[2], marginBottom: spacing[2] } : undefined}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.accent}
+              />
+            }
+          />
+        </View>
       )}
 
       {/* ── Rich Selection Floater ────────────────────────────────────── */}
@@ -976,15 +1055,14 @@ export function ClosetScreen() {
       {/* Drag & Drop Touch Overlay and Floating Preview */}
       {isDragging && (
         <View
-          style={StyleSheet.absoluteFill}
-          onTouchMove={(e) => {
-            const touch = e.nativeEvent.touches[0];
-            if (touch) {
-              handleDragMove(touch.pageX, touch.pageY);
-            }
+          style={[StyleSheet.absoluteFill, { zIndex: 9999 }]}
+          onStartShouldSetResponder={() => true}
+          onMoveShouldSetResponder={() => true}
+          onResponderMove={(e) => {
+            handleDragMove(e.nativeEvent.pageX, e.nativeEvent.pageY);
           }}
-          onTouchEnd={handleDragEnd}
-          onTouchCancel={handleDragEnd}
+          onResponderRelease={handleDragEnd}
+          onResponderTerminate={handleDragEnd}
         />
       )}
 
