@@ -219,8 +219,22 @@ export function ItemDetailScreen() {
   const isFootwear = /footwear|shoes|shoe/i.test(form.category) || /shoe|sneaker|boot|sandal|heel|loafer|slide|slipper/i.test(form.sub_category) || /shoe|sneaker|boot|sandal|heel|loafer|slide|slipper/i.test(form.title);
   const userShoeSize = deriveSizeFromPreferences(user, { category: 'Footwear' });
 
+  const allGroupPieces = useMemo(() => {
+    if (!item) return [];
+    const members = Array.isArray(groupMembers) ? groupMembers : [];
+    const seen = new Set();
+    const result = [];
+    for (const p of [item, ...members]) {
+      if (p && p.id && !seen.has(p.id)) {
+        seen.add(p.id);
+        result.push(p);
+      }
+    }
+    return result;
+  }, [item, groupMembers]);
+
   // Smart tag recommendations based on garment fields
-  const suggestedTags = React.useMemo(() => {
+  const suggestedTags = useMemo(() => {
     const s = new Set<string>();
     if (form.sub_category) s.add(form.sub_category.toLowerCase());
     if (form.item_type && form.item_type !== form.sub_category) s.add(form.item_type.toLowerCase());
@@ -721,16 +735,7 @@ export function ItemDetailScreen() {
     }
   };
 
-  if (loading) {
-    return (
-      <SafeAreaView style={[styles.root, styles.centerBox, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.accent} />
-      </SafeAreaView>
-    );
-  }
-
   const resolveDisplayUrl = (url?: string | null) => {
-
     if (!url) return null;
     if (url.startsWith('data:') || url.startsWith('http://') || url.startsWith('https://') || url.startsWith('file://')) {
       return url;
@@ -740,20 +745,6 @@ export function ItemDetailScreen() {
     }
     return url;
   };
-
-  const allGroupPieces = useMemo(() => {
-    if (!item) return [];
-    const members = Array.isArray(groupMembers) ? groupMembers : [];
-    const seen = new Set();
-    const result = [];
-    for (const p of [item, ...members]) {
-      if (p && p.id && !seen.has(p.id)) {
-        seen.add(p.id);
-        result.push(p);
-      }
-    }
-    return result;
-  }, [item, groupMembers]);
 
   const activeGarment = allGroupPieces.find((p) => p.id === activeViewId) || item;
 
@@ -774,6 +765,14 @@ export function ItemDetailScreen() {
   const timesWorn = item?.wear_count || item?.times_worn || 0;
   const priceUnits = form.price_cents || 0;
   const costPerWear = priceUnits > 0 ? priceUnits / Math.max(1, timesWorn) : 0;
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.root, styles.centerBox, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.accent} />
+      </SafeAreaView>
+    );
+  }
 
 
   return (
