@@ -5,7 +5,9 @@
  * Parity with web ConversationSidebar:
  *   - New conversation button at top
  *   - Groups: Pinned, Today, Yesterday, Earlier, Archived
- *   - Actions: Select, Pin/Unpin, Rename, Mark Read/Unread, Delete
+ *   - Bottom-sheet Action Modal for Three Dots menu (no clipping or sibling overlays)
+ *   - Actions: Select, Pin/Unpin, Rename, Mark Read/Unread, Archive/Unarchive, Delete
+ *   - Filters out empty/untitled chats with 0 messages
  *   - Full AsyncStorage persistence for client-side state
  *   - RTL-aware sliding drawer animation
  */
@@ -42,6 +44,7 @@ export interface StylistSession {
   id: string;
   title?: string;
   snippet?: string;
+  turns?: number;
   last_active_at?: string;
   updated_at?: string;
   created_at?: string;
@@ -56,37 +59,6 @@ interface ConversationSidebarProps {
   onNew: () => void;
   onDelete: (sessionId: string) => void;
   loading?: boolean;
-}
-
-/**
- * Group sessions into Today / Yesterday / Earlier buckets based on last_active_at
- */
-function groupSessions(sessions: StylistSession[]) {
-  const out: { today: StylistSession[]; yesterday: StylistSession[]; earlier: StylistSession[] } = {
-    today: [],
-    yesterday: [],
-    earlier: [],
-  };
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfYesterday = new Date(startOfToday.getTime() - 86400 * 1000);
-
-  for (const s of sessions) {
-    const raw = s.last_active_at || s.updated_at || s.created_at;
-    const ts = raw ? new Date(raw) : null;
-    if (!ts || Number.isNaN(ts.getTime())) {
-      out.earlier.push(s);
-      continue;
-    }
-    if (ts >= startOfToday) {
-      out.today.push(s);
-    } else if (ts >= startOfYesterday) {
-      out.yesterday.push(s);
-    } else {
-      out.earlier.push(s);
-    }
-  }
-  return out;
 }
 
 export function ConversationSidebar({
@@ -105,32 +77,44 @@ export function ConversationSidebar({
   const screenWidth = Dimensions.get('window').width;
   const drawerWidth = Math.min(screenWidth * 0.82, 340);
 
-  // Persistence States
+  const [slideAnim] = useState(() => new Animated.Value(0));
+
+  // Client-persisted states
   const [pinnedIds, setPinnedIds] = useState<string[]>([]);
   const [archivedIds, setArchivedIds] = useState<string[]>([]);
   const [unreadIds, setUnreadIds] = useState<string[]>([]);
   const [customTitles, setCustomTitles] = useState<Record<string, string>>({});
-  const [showArchived, setShowArchived] = useState(false);
 
-  // Rename Dialog State
+  // UI States
+  const [showArchived, setShowArchived] = useState(false);
+  const [actionSheetSession, setActionSheetSession] = useState<StylistSession | null>(null);
+
+  // Rename Dialog
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [renameTargetId, setRenameTargetId] = useState<string | null>(null);
   const [renameInput, setRenameInput] = useState('');
 
-  // Action Menu State
-  const [actionMenuTargetId, setActionMenuTargetId] = useState<string | null>(null);
-
-  // Slide Animation
-  const [slideAnim] = useState(new Animated.Value(0));
-
+  // Load client state on mount
   useEffect(() => {
-    // Load persisted local UI settings
-    AsyncStorage.getItem(STORAGE_PINNED).then((v) => v && setPinnedIds(JSON.parse(v))).catch(() => {});
-    AsyncStorage.getItem(STORAGE_ARCHIVED).then((v) => v && setArchivedIds(JSON.parse(v))).catch(() => {});
-    AsyncStorage.getItem(STORAGE_UNREAD).then((v) => v && setUnreadIds(JSON.parse(v))).catch(() => {});
-    AsyncStorage.getItem(STORAGE_TITLES).then((v) => v && setCustomTitles(JSON.parse(v))).catch(() => {});
+    (async () => {
+      try {
+        const [pinRaw, archRaw, unreadRaw, titlesRaw] = await Promise.all([
+          AsyncStorage.getItem(STORAGE_PINNED),
+          AsyncStorage.getItem(STORAGE_ARCHIVED),
+          AsyncStorage.getItem(STORAGE_UNREAD),
+          AsyncStorage.getItem(STORAGE_TITLES),
+        ]);
+        if (pinRaw) setPinnedIds(JSON.parse(pinRaw));
+        if (archRaw) setArchivedIds(JSON.parse(archRaw));
+        if (unreadRaw) setUnreadIds(JSON.parse(unreadRaw));
+        if (titlesRaw) setCustomTitles(JSON.parse(titlesRaw));
+      } catch {
+        // non-fatal
+      }
+    })();
   }, []);
 
+  // Slide drawer animation
   useEffect(() => {
     if (visible) {
       Animated.timing(slideAnim, {
@@ -145,88 +129,134 @@ export function ConversationSidebar({
         useNativeDriver: true,
       }).start();
     }
-  }, [visible, slideAnim]);
+  }, [visible]);
 
-  const togglePin = (id: string) => {
-    const next = pinnedIds.includes(id) ? pinnedIds.filter((x) => x !== id) : [...pinnedIds, id];
+  // Actions
+  const togglePin = async (id: string) => {
+    const next = pinnedIds.includes(id)
+      ? pinnedIds.filter((x) => x !== id)
+      : [...pinnedIds, id];
     setPinnedIds(next);
-    AsyncStorage.setItem(STORAGE_PINNED, JSON.stringify(next)).catch(() => {});
+    await AsyncStorage.setItem(STORAGE_PINNED, JSON.stringify(next)).catch(() => {});
   };
 
-  const toggleArchive = (id: string) => {
-    const next = archivedIds.includes(id) ? archivedIds.filter((x) => x !== id) : [...archivedIds, id];
+  const toggleArchive = async (id: string) => {
+    const next = archivedIds.includes(id)
+      ? archivedIds.filter((x) => x !== id)
+      : [...archivedIds, id];
     setArchivedIds(next);
-    AsyncStorage.setItem(STORAGE_ARCHIVED, JSON.stringify(next)).catch(() => {});
+    await AsyncStorage.setItem(STORAGE_ARCHIVED, JSON.stringify(next)).catch(() => {});
   };
 
-  const toggleUnread = (id: string) => {
-    const next = unreadIds.includes(id) ? unreadIds.filter((x) => x !== id) : [...unreadIds, id];
+  const toggleUnread = async (id: string) => {
+    const next = unreadIds.includes(id)
+      ? unreadIds.filter((x) => x !== id)
+      : [...unreadIds, id];
     setUnreadIds(next);
-    AsyncStorage.setItem(STORAGE_UNREAD, JSON.stringify(next)).catch(() => {});
+    await AsyncStorage.setItem(STORAGE_UNREAD, JSON.stringify(next)).catch(() => {});
   };
 
-  const handleStartRename = (id: string, currentTitle: string) => {
-    setRenameTargetId(id);
-    setRenameInput(currentTitle);
+  const handleStartRename = (session: StylistSession) => {
+    setActionSheetSession(null);
+    const currTitle = customTitles[session.id] || session.title || t('stylist.untitledChat', { defaultValue: 'Conversation' });
+    setRenameTargetId(session.id);
+    setRenameInput(currTitle);
     setRenameModalOpen(true);
-    setActionMenuTargetId(null);
   };
 
-  const handleSaveRename = () => {
+  const handleSaveRename = async () => {
     if (!renameTargetId) return;
     const trimmed = renameInput.trim();
     if (trimmed) {
       const next = { ...customTitles, [renameTargetId]: trimmed };
       setCustomTitles(next);
-      AsyncStorage.setItem(STORAGE_TITLES, JSON.stringify(next)).catch(() => {});
+      await AsyncStorage.setItem(STORAGE_TITLES, JSON.stringify(next)).catch(() => {});
     }
     setRenameModalOpen(false);
     setRenameTargetId(null);
   };
 
-  const confirmDelete = (id: string) => {
-    setActionMenuTargetId(null);
+  const confirmDelete = (sessionId: string) => {
+    setActionSheetSession(null);
     Alert.alert(
-      t('stylist.delete', { defaultValue: 'Delete' }),
-      t('stylist.deleteConfirm', { defaultValue: 'Are you sure you want to delete this conversation?' }),
+      t('stylist.deleteChatTitle', { defaultValue: 'Delete conversation?' }),
+      t('stylist.deleteChatConfirm', { defaultValue: 'This will permanently remove this stylist thread and its recommended outfits.' }),
       [
         { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
         {
           text: t('common.delete', { defaultValue: 'Delete' }),
           style: 'destructive',
-          onPress: () => onDelete(id),
+          onPress: () => onDelete(sessionId),
         },
       ]
     );
   };
 
-  // Filter & Group logic
-  const activeSessions = useMemo(() => {
-    return (sessions || []).filter((s) => !archivedIds.includes(s.id));
-  }, [sessions, archivedIds]);
+  // Filter out empty 0-turn sessions with no snippet
+  const validSessions = useMemo(() => {
+    return sessions.filter((s) => {
+      const hasTurns = (s.turns && s.turns > 0);
+      const hasSnippet = !!(s.snippet && s.snippet.trim().length > 0);
+      const hasCustomTitle = !!customTitles[s.id];
+      const hasRealTitle = s.title && !['Untitled chat', 'שיחה ללא שם', 'New conversation', 'Style advice'].includes(s.title);
+      return hasTurns || hasSnippet || hasCustomTitle || hasRealTitle;
+    });
+  }, [sessions, customTitles]);
 
-  const archivedSessions = useMemo(() => {
-    return (sessions || []).filter((s) => archivedIds.includes(s.id));
-  }, [sessions, archivedIds]);
+  // Grouping logic (Today, Yesterday, Earlier)
+  const { pinnedSessions, archivedSessions, groups } = useMemo(() => {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfYesterday = startOfToday - 86400000;
 
-  const pinnedSessions = useMemo(() => {
-    return activeSessions.filter((s) => pinnedIds.includes(s.id));
-  }, [activeSessions, pinnedIds]);
+    const pinned: StylistSession[] = [];
+    const archived: StylistSession[] = [];
+    const today: StylistSession[] = [];
+    const yesterday: StylistSession[] = [];
+    const earlier: StylistSession[] = [];
 
-  const regularSessions = useMemo(() => {
-    return activeSessions.filter((s) => !pinnedIds.includes(s.id));
-  }, [activeSessions, pinnedIds]);
+    for (const session of validSessions) {
+      if (archivedIds.includes(session.id)) {
+        archived.push(session);
+        continue;
+      }
+      if (pinnedIds.includes(session.id)) {
+        pinned.push(session);
+        continue;
+      }
 
-  const groups = useMemo(() => groupSessions(regularSessions), [regularSessions]);
-  const empty = !loading && (sessions || []).length === 0;
+      const rawDate = session.last_active_at || session.updated_at || session.created_at;
+      const ts = rawDate ? new Date(rawDate).getTime() : 0;
+
+      if (ts >= startOfToday) {
+        today.push(session);
+      } else if (ts >= startOfYesterday) {
+        yesterday.push(session);
+      } else {
+        earlier.push(session);
+      }
+    }
+
+    return {
+      pinnedSessions: pinned,
+      archivedSessions: archived,
+      groups: { today, yesterday, earlier },
+    };
+  }, [validSessions, pinnedIds, archivedIds]);
+
+  const empty =
+    pinnedSessions.length === 0 &&
+    archivedSessions.length === 0 &&
+    groups.today.length === 0 &&
+    groups.yesterday.length === 0 &&
+    groups.earlier.length === 0;
 
   const renderSessionRow = (session: StylistSession) => {
-    const isSessionActive = session.id === activeId;
+    const isActive = session.id === activeId;
     const isPinned = pinnedIds.includes(session.id);
-    const isArchived = archivedIds.includes(session.id);
     const isUnread = unreadIds.includes(session.id);
-    const title = customTitles[session.id] || session.title || t('stylist.untitledConversation', { defaultValue: 'Untitled chat' });
-    const snippet = (session.snippet || '').trim();
+    const title = customTitles[session.id] || session.title || session.snippet || t('stylist.untitledChat', { defaultValue: 'Conversation' });
+    const snippet = session.snippet;
 
     return (
       <TouchableOpacity
@@ -234,24 +264,29 @@ export function ConversationSidebar({
         style={[
           styles.sessionRow,
           {
-            backgroundColor: isSessionActive
-              ? isDark
-                ? 'rgba(45, 143, 127, 0.22)'
-                : 'rgba(45, 143, 127, 0.12)'
-              : colors.card,
-            borderColor: isSessionActive ? colors.accent : colors.border,
+            backgroundColor: isActive ? (isDark ? 'rgba(168, 85, 247, 0.18)' : '#F3E8FF') : colors.card,
+            borderColor: isActive ? colors.accent : colors.border,
           },
         ]}
         onPress={() => {
+          if (unreadIds.includes(session.id)) {
+            toggleUnread(session.id);
+          }
           onSelect(session.id);
-          onClose();
         }}
+        onLongPress={() => setActionSheetSession(session)}
         activeOpacity={0.7}
       >
+        {/* Left / Main text info */}
         <View style={styles.sessionMain}>
           <View style={styles.iconWrap}>
-            <Lucide.MessageSquare size={16} color={isUnread ? colors.accent : colors.mutedFg} />
-            {isUnread && <View style={[styles.unreadDot, { backgroundColor: colors.accent }]} />}
+            <Lucide.MessageSquare
+              size={15}
+              color={isActive ? colors.accent : colors.mutedFg}
+            />
+            {isUnread && (
+              <View style={[styles.unreadDot, { backgroundColor: colors.accent }]} />
+            )}
           </View>
 
           <View style={styles.sessionTextCol}>
@@ -259,8 +294,9 @@ export function ConversationSidebar({
               style={[
                 styles.sessionTitle,
                 {
-                  color: colors.foreground,
-                  fontFamily: isUnread || isSessionActive ? fonts.bodyBold : fonts.bodyMedium,
+                  color: isActive ? colors.accent : colors.foreground,
+                  fontFamily: isUnread || isActive ? fonts.bodyBold : fonts.bodyMedium,
+                  textAlign: isRtl ? 'right' : 'left',
                 },
               ]}
               numberOfLines={1}
@@ -268,29 +304,26 @@ export function ConversationSidebar({
               {title}
             </Text>
             {snippet ? (
-              <Text style={[styles.sessionSnippet, { color: colors.mutedFg }]} numberOfLines={1}>
+              <Text
+                style={[
+                  styles.sessionSnippet,
+                  { color: colors.mutedFg, textAlign: isRtl ? 'right' : 'left' },
+                ]}
+                numberOfLines={1}
+              >
                 {snippet}
               </Text>
             ) : null}
           </View>
         </View>
 
-        {/* Right Actions Bar */}
-        <View style={styles.actionsRow} onStartShouldSetResponder={() => true}>
-          {/* More Menu */}
-          <TouchableOpacity
-            style={styles.actionIconBtn}
-            onPress={() => setActionMenuTargetId(actionMenuTargetId === session.id ? null : session.id)}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Lucide.MoreVertical size={14} color={colors.mutedFg} />
-          </TouchableOpacity>
-
-          {/* Pin */}
+        {/* Action icons */}
+        <View style={styles.actionsRow}>
+          {/* Pin Button */}
           <TouchableOpacity
             style={styles.actionIconBtn}
             onPress={() => togglePin(session.id)}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
           >
             <Lucide.Pin
               size={14}
@@ -299,64 +332,15 @@ export function ConversationSidebar({
             />
           </TouchableOpacity>
 
-          {/* Delete */}
+          {/* Three Dots Menu Button (Opens Bottom Action Sheet) */}
           <TouchableOpacity
             style={styles.actionIconBtn}
-            onPress={() => confirmDelete(session.id)}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            onPress={() => setActionSheetSession(session)}
+            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
           >
-            <Lucide.Trash2 size={14} color={colors.mutedFg} />
+            <Lucide.MoreVertical size={15} color={colors.mutedFg} />
           </TouchableOpacity>
         </View>
-
-        {/* Action Menu Popover */}
-        {actionMenuTargetId === session.id && (
-          <View style={[styles.inlineMenu, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <TouchableOpacity
-              style={styles.inlineMenuItem}
-              onPress={() => {
-                toggleUnread(session.id);
-                setActionMenuTargetId(null);
-              }}
-            >
-              <Lucide.MessageSquare size={14} color={colors.foreground} />
-              <Text style={[styles.inlineMenuText, { color: colors.foreground }]}>
-                {isUnread
-                  ? t('stylist.markRead', { defaultValue: 'Mark as read' })
-                  : t('stylist.markUnread', { defaultValue: 'Mark as unread' })}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.inlineMenuItem}
-              onPress={() => handleStartRename(session.id, title)}
-            >
-              <Lucide.Edit2 size={14} color={colors.foreground} />
-              <Text style={[styles.inlineMenuText, { color: colors.foreground }]}>
-                {t('stylist.rename', { defaultValue: 'Rename' })}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.inlineMenuItem}
-              onPress={() => {
-                toggleArchive(session.id);
-                setActionMenuTargetId(null);
-              }}
-            >
-              {isArchived ? (
-                <Lucide.ArchiveRestore size={14} color={colors.foreground} />
-              ) : (
-                <Lucide.Archive size={14} color={colors.foreground} />
-              )}
-              <Text style={[styles.inlineMenuText, { color: colors.foreground }]}>
-                {isArchived
-                  ? t('stylist.unarchive', { defaultValue: 'Unarchive' })
-                  : t('stylist.archive', { defaultValue: 'Archive' })}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
       </TouchableOpacity>
     );
   };
@@ -387,7 +371,7 @@ export function ConversationSidebar({
           ]}
         >
           {/* Top Capsule Button: + New conversation */}
-          <View style={styles.headerArea}>
+          <View style={[styles.headerArea, { borderBottomColor: colors.border }]}>
             <TouchableOpacity
               style={[
                 styles.newConversationBtn,
@@ -487,6 +471,132 @@ export function ConversationSidebar({
         </Animated.View>
       </View>
 
+      {/* Three-Dots Floating Action Sheet Modal */}
+      <Modal
+        visible={!!actionSheetSession}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setActionSheetSession(null)}
+      >
+        <View style={styles.actionSheetOverlay}>
+          <Pressable
+            style={styles.actionSheetBackdrop}
+            onPress={() => setActionSheetSession(null)}
+          />
+          {actionSheetSession && (
+            <View
+              style={[
+                styles.actionSheetCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              {/* Action Sheet Header */}
+              <View style={styles.actionSheetHeader}>
+                <Text
+                  style={[styles.actionSheetTitle, { color: colors.foreground }]}
+                  numberOfLines={1}
+                >
+                  {customTitles[actionSheetSession.id] ||
+                    actionSheetSession.title ||
+                    actionSheetSession.snippet ||
+                    t('stylist.untitledChat', { defaultValue: 'Conversation' })}
+                </Text>
+              </View>
+
+              {/* Action Buttons */}
+              <View style={styles.actionSheetList}>
+                {/* Rename */}
+                <TouchableOpacity
+                  style={[styles.actionSheetItem, { borderBottomColor: colors.border }]}
+                  onPress={() => handleStartRename(actionSheetSession)}
+                >
+                  <Lucide.Edit3 size={18} color={colors.accent} />
+                  <Text style={[styles.actionSheetItemText, { color: colors.foreground }]}>
+                    {t('stylist.rename', { defaultValue: 'Rename conversation' })}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Mark as read / unread */}
+                <TouchableOpacity
+                  style={[styles.actionSheetItem, { borderBottomColor: colors.border }]}
+                  onPress={() => {
+                    toggleUnread(actionSheetSession.id);
+                    setActionSheetSession(null);
+                  }}
+                >
+                  <Lucide.MessageSquare size={18} color={colors.foreground} />
+                  <Text style={[styles.actionSheetItemText, { color: colors.foreground }]}>
+                    {unreadIds.includes(actionSheetSession.id)
+                      ? t('stylist.markRead', { defaultValue: 'Mark as read' })
+                      : t('stylist.markUnread', { defaultValue: 'Mark as unread' })}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Pin / Unpin */}
+                <TouchableOpacity
+                  style={[styles.actionSheetItem, { borderBottomColor: colors.border }]}
+                  onPress={() => {
+                    togglePin(actionSheetSession.id);
+                    setActionSheetSession(null);
+                  }}
+                >
+                  <Lucide.Pin size={18} color={colors.foreground} />
+                  <Text style={[styles.actionSheetItemText, { color: colors.foreground }]}>
+                    {pinnedIds.includes(actionSheetSession.id)
+                      ? t('stylist.unpin', { defaultValue: 'Unpin from top' })
+                      : t('stylist.pin', { defaultValue: 'Pin to top' })}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Archive / Unarchive */}
+                <TouchableOpacity
+                  style={[styles.actionSheetItem, { borderBottomColor: colors.border }]}
+                  onPress={() => {
+                    toggleArchive(actionSheetSession.id);
+                    setActionSheetSession(null);
+                  }}
+                >
+                  {archivedIds.includes(actionSheetSession.id) ? (
+                    <Lucide.ArchiveRestore size={18} color={colors.foreground} />
+                  ) : (
+                    <Lucide.Archive size={18} color={colors.foreground} />
+                  )}
+                  <Text style={[styles.actionSheetItemText, { color: colors.foreground }]}>
+                    {archivedIds.includes(actionSheetSession.id)
+                      ? t('stylist.unarchive', { defaultValue: 'Unarchive conversation' })
+                      : t('stylist.archive', { defaultValue: 'Archive conversation' })}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Delete (Destructive) */}
+                <TouchableOpacity
+                  style={[styles.actionSheetItem, { borderBottomWidth: 0 }]}
+                  onPress={() => confirmDelete(actionSheetSession.id)}
+                >
+                  <Lucide.Trash2 size={18} color="#EF4444" />
+                  <Text style={[styles.actionSheetItemText, { color: '#EF4444' }]}>
+                    {t('stylist.deleteChat', { defaultValue: 'Delete conversation' })}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Cancel Button */}
+              <TouchableOpacity
+                style={[
+                  styles.actionSheetCancelBtn,
+                  { backgroundColor: colors.background, borderColor: colors.border },
+                ]}
+                onPress={() => setActionSheetSession(null)}
+              >
+                <Text style={[styles.actionSheetCancelText, { color: colors.foreground }]}>
+                  {t('common.cancel', { defaultValue: 'Cancel' })}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </Modal>
+
       {/* Rename Dialog Modal */}
       <Modal visible={renameModalOpen} transparent animationType="fade">
         <View style={styles.dialogOverlay}>
@@ -559,7 +669,6 @@ const styles = StyleSheet.create({
     padding: spacing[3],
     paddingTop: spacing[8],
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e5e7eb',
   },
   newConversationBtn: {
     flexDirection: 'row',
@@ -613,7 +722,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[1],
   },
   sessionRow: {
-    position: 'relative',
     borderRadius: radii.lg,
     borderWidth: 1,
     paddingHorizontal: spacing[3],
@@ -626,7 +734,7 @@ const styles = StyleSheet.create({
   sessionMain: {
     flex: 1,
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: spacing[2],
     marginRight: spacing[2],
   },
@@ -658,45 +766,77 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRadius: radii.full,
   },
   actionIconBtn: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: radii.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  inlineMenu: {
-    position: 'absolute',
-    top: '100%',
-    right: spacing[2],
-    zIndex: 999,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    padding: spacing[1],
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 8,
-    minWidth: 140,
+
+  // Three-Dots Action Sheet Modal
+  actionSheetOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    justifyContent: 'flex-end',
   },
-  inlineMenuItem: {
+  actionSheetBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  actionSheetCard: {
+    borderTopLeftRadius: radii['2xl'],
+    borderTopRightRadius: radii['2xl'],
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    padding: spacing[4],
+    paddingBottom: spacing[8],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 24,
+  },
+  actionSheetHeader: {
+    paddingBottom: spacing[3],
+    marginBottom: spacing[2],
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(150, 150, 150, 0.2)',
+  },
+  actionSheetTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: fontSizes.md,
+    textAlign: 'center',
+  },
+  actionSheetList: {
+    borderRadius: radii.xl,
+    overflow: 'hidden',
+  },
+  actionSheetItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing[2],
-    paddingHorizontal: spacing[2.5],
-    paddingVertical: spacing[2],
-    borderRadius: radii.sm,
+    gap: spacing[3],
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[3],
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  inlineMenuText: {
+  actionSheetItemText: {
     fontFamily: fonts.bodyMedium,
-    fontSize: fontSizes.xs,
+    fontSize: fontSizes.sm,
   },
+  actionSheetCancelBtn: {
+    marginTop: spacing[3],
+    height: 46,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionSheetCancelText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.sm,
+  },
+
   archiveToggle: {
     flexDirection: 'row',
     alignItems: 'center',

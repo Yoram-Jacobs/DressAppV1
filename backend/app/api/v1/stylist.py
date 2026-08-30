@@ -309,13 +309,15 @@ async def stylist_endpoint(
         latency_ms=advice.get("latency_ms") or {},
     )
 
-    # Generate session title if it doesn't have one and we have user text/transcript
+    # Generate session title if it doesn't have a descriptive one and we have user text/transcript
     final_text = (text or advice.get("transcript") or "").strip()
-    if not session.get("title") and final_text:
+    current_title = session.get("title")
+    is_untitled = not current_title or current_title in ("Untitled chat", "שיחה ללא שם", "New conversation", "Style advice")
+    if is_untitled and final_text:
         try:
             title = await generate_session_title(
                 final_text,
-                language=user_profile["preferred_language"],
+                language=user_profile.get("preferred_language") or "en",
                 api_key=api_key_resolved
             )
             if title:

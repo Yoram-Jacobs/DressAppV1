@@ -248,14 +248,24 @@ export function ConversationSidebar({
     });
   };
 
-  // Filter & Group logic
+  // Filter & Group logic: exclude empty 0-turn sessions
+  const validSessions = useMemo(() => {
+    return (sessions || []).filter((s) => {
+      const hasTurns = (s.turns && s.turns > 0);
+      const hasSnippet = !!(s.snippet && s.snippet.trim().length > 0);
+      const hasCustomTitle = !!customTitles[s.id];
+      const hasRealTitle = s.title && !['Untitled chat', 'שיחה ללא שם', 'New conversation', 'Style advice'].includes(s.title);
+      return hasTurns || hasSnippet || hasCustomTitle || hasRealTitle;
+    });
+  }, [sessions, customTitles]);
+
   const activeSessions = useMemo(() => {
-    return (sessions || []).filter((s) => !archivedIds.includes(s.id));
-  }, [sessions, archivedIds]);
+    return validSessions.filter((s) => !archivedIds.includes(s.id));
+  }, [validSessions, archivedIds]);
 
   const archivedSessions = useMemo(() => {
-    return (sessions || []).filter((s) => archivedIds.includes(s.id));
-  }, [sessions, archivedIds]);
+    return validSessions.filter((s) => archivedIds.includes(s.id));
+  }, [validSessions, archivedIds]);
 
   const pinnedSessions = useMemo(() => {
     return activeSessions.filter((s) => pinnedIds.includes(s.id));
@@ -266,7 +276,7 @@ export function ConversationSidebar({
   }, [activeSessions, pinnedIds]);
 
   const groups = useMemo(() => groupSessions(regularSessions), [regularSessions]);
-  const empty = !loading && (sessions || []).length === 0;
+  const empty = !loading && validSessions.length === 0;
   return (
     <div className="flex flex-col h-full min-h-0 w-full">
       <div className="p-3 shrink-0">
