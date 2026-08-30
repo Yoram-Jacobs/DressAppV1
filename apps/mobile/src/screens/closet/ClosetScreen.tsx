@@ -107,6 +107,49 @@ export function ClosetScreen() {
   const scrollOffsetRef = useRef(0);
   const lastTouchPosRef = useRef({ pageX: 0, pageY: 0 });
 
+  const autoScrollIntervalRef = useRef<any>(null);
+
+  const stopAutoScroll = () => {
+    if (autoScrollIntervalRef.current) {
+      clearInterval(autoScrollIntervalRef.current);
+      autoScrollIntervalRef.current = null;
+    }
+  };
+
+  const checkAutoScroll = (pageY: number) => {
+    const screenHeight = Dimensions.get('window').height;
+    const topThreshold = 200;
+    const bottomThreshold = screenHeight - 160;
+
+    if (pageY < topThreshold) {
+      if (!autoScrollIntervalRef.current) {
+        autoScrollIntervalRef.current = setInterval(() => {
+          if (!isDraggingRef.current) {
+            stopAutoScroll();
+            return;
+          }
+          const nextOffset = Math.max(0, scrollOffsetRef.current - 15);
+          scrollOffsetRef.current = nextOffset;
+          flatListRef.current?.scrollToOffset({ offset: nextOffset, animated: false });
+        }, 16);
+      }
+    } else if (pageY > bottomThreshold) {
+      if (!autoScrollIntervalRef.current) {
+        autoScrollIntervalRef.current = setInterval(() => {
+          if (!isDraggingRef.current) {
+            stopAutoScroll();
+            return;
+          }
+          const nextOffset = scrollOffsetRef.current + 15;
+          scrollOffsetRef.current = nextOffset;
+          flatListRef.current?.scrollToOffset({ offset: nextOffset, animated: false });
+        }, 16);
+      }
+    } else {
+      stopAutoScroll();
+    }
+  };
+
   const handleScroll = (e: any) => {
     scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
   };
@@ -127,17 +170,21 @@ export function ClosetScreen() {
   const handleDragMove = (pageX: number, pageY: number) => {
     if (!isDraggingRef.current) return;
     setTouchPos({ x: pageX, y: pageY });
+    checkAutoScroll(pageY);
 
     const layout = flatListLayoutRef.current;
     const containerPageX = layout?.pageX ?? spacing[4];
     const containerPageY = layout?.pageY ?? 180;
 
-    const relX = pageX - containerPageX;
+    const isRtl = I18nManager.isRTL;
+    const screenWidth = Dimensions.get('window').width;
+
+    const relX = isRtl
+      ? (screenWidth - containerPageX) - pageX
+      : pageX - containerPageX;
     const relY = pageY - containerPageY + scrollOffsetRef.current;
 
     let targetItem: ClosetItem | null = null;
-
-    const isRtl = I18nManager.isRTL;
 
     if (viewMode === 'list') {
       const rowHeight = 76;
@@ -148,8 +195,7 @@ export function ClosetScreen() {
     } else if (viewMode === 'compact') {
       const colWidth = itemWidth + spacing[2];
       const rowHeight = itemWidth + spacing[2];
-      const rawCol = Math.floor(relX / colWidth);
-      const col = isRtl ? 2 - rawCol : rawCol;
+      const col = Math.floor(relX / colWidth);
       const row = Math.floor(relY / rowHeight);
       if (col >= 0 && col < 3 && row >= 0) {
         const index = row * 3 + col;
@@ -161,8 +207,7 @@ export function ClosetScreen() {
       // 2-column Grid view
       const colWidth = itemWidth + spacing[2];
       const rowHeight = itemWidth + 68 + spacing[2];
-      const rawCol = Math.floor(relX / colWidth);
-      const col = isRtl ? 1 - rawCol : rawCol;
+      const col = Math.floor(relX / colWidth);
       const row = Math.floor(relY / rowHeight);
       if (col >= 0 && col < 2 && row >= 0) {
         const index = row * 2 + col;
@@ -185,6 +230,7 @@ export function ClosetScreen() {
   };
 
   const handleDragEnd = () => {
+    stopAutoScroll();
     if (!isDraggingRef.current) return;
     const sourceId = draggedIdRef.current;
     const targetId = dragOverIdRef.current;
@@ -1086,8 +1132,12 @@ export function ClosetScreen() {
             style={[
               styles.floatingPreview,
               {
-                left: touchPos.x - 48,
-                top: touchPos.y - 48,
+                left: 0,
+                top: 0,
+                transform: [
+                  { translateX: touchPos.x - 48 },
+                  { translateY: touchPos.y - 48 },
+                ],
                 borderColor: colors.accent,
                 backgroundColor: colors.card,
               }

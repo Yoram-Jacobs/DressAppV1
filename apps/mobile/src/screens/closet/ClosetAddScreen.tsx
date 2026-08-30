@@ -93,8 +93,19 @@ export interface GarmentCard {
   cropBase64?: string;
   originalCropUrl?: string | null;
   reconstructedUrl?: string | null;
+  reconstructedB64?: string | null;
+  reconstructionMeta?: any;
   useReconstructed?: boolean;
+  reconstructionAdvised?: boolean;
+  needsReconstruction?: boolean;
+  reconstructionReasons?: string[];
+  fromOnePass?: boolean;
+  deferMatte?: boolean;
   sourceSha256?: string;
+  sourcePhash?: string;
+  sourceColorSig?: string;
+  sourceFilename?: string;
+  sourceSizeBytes?: number;
   isDuplicate?: boolean;
   status: 'scanning' | 'ready' | 'error' | 'saved';
   progress: number;
@@ -463,15 +474,52 @@ export function ClosetAddScreen() {
           ? analysis.cultural_tags.filter((t: any) => typeof t === 'string' && t.trim()).map((t: string) => t.trim())
           : (Array.isArray(item.cultural_tags) ? item.cultural_tags : (analysis.tradition ? [analysis.tradition] : []));
 
+        const rawReconUrl =
+          analysis.reconstructed_image_url ||
+          analysis.reconstructedUrl ||
+          item.reconstructed_image_url ||
+          item.reconstructedUrl ||
+          null;
+
+        const validReconUrl =
+          rawReconUrl &&
+          rawReconUrl !== 'None' &&
+          rawReconUrl !== 'null' &&
+          rawReconUrl !== 'undefined'
+            ? rawReconUrl
+            : null;
+
+        const rawReconB64 =
+          analysis.reconstructed_image_b64 ||
+          analysis.reconstructedB64 ||
+          item.reconstructed_image_b64 ||
+          (validReconUrl && validReconUrl.startsWith('data:') ? validReconUrl : null);
+
+        const recMeta =
+          analysis.reconstruction_metadata ||
+          item.reconstruction_metadata ||
+          null;
+
         return {
           id: `${tempCardId}_${idx}`,
-          previewUrl: cropUrl,
+          previewUrl: validReconUrl || cropUrl,
           base64: cleanB64,
           cropBase64: cropB64,
           originalCropUrl: cropUrl,
-          reconstructedUrl: analysis.reconstructed_image_url || item.reconstructed_image_url || null,
-          useReconstructed: Boolean(analysis.reconstructed_image_url || item.reconstructed_image_url),
+          reconstructedUrl: validReconUrl,
+          reconstructedB64: rawReconB64,
+          reconstructionMeta: recMeta,
+          useReconstructed: Boolean(validReconUrl || rawReconB64),
+          reconstructionAdvised: Boolean(analysis.reconstruction_advised || item.reconstruction_advised),
+          needsReconstruction: Boolean(analysis.needs_reconstruction || item.needs_reconstruction),
+          reconstructionReasons: analysis.reconstruction_reasons || item.reconstruction_reasons || [],
+          fromOnePass: Boolean(analysis.one_pass || item.one_pass || true),
+          deferMatte: Boolean(analysis.defer_matte || item.defer_matte),
           sourceSha256: computedSha,
+          sourcePhash: item.source_phash || analysis.source_phash,
+          sourceColorSig: item.source_color_sig || analysis.source_color_sig,
+          sourceFilename: item.source_filename || analysis.source_filename,
+          sourceSizeBytes: item.source_size_bytes || analysis.source_size_bytes,
           isDuplicate: opts?.isDuplicate || false,
           status: 'ready',
           progress: 100,
@@ -957,7 +1005,20 @@ export function ClosetAddScreen() {
           cultural_tags: Array.isArray(fields.cultural_tags) && fields.cultural_tags.length > 0 ? fields.cultural_tags : undefined,
           image_base64: card.cropBase64 || card.base64 || undefined,
           image_mime: 'image/jpeg',
+          reconstructed_image_b64: card.useReconstructed && (card.reconstructedB64 || card.reconstructedUrl)
+            ? (card.reconstructedB64 || card.reconstructedUrl)
+            : undefined,
+          reconstruction_metadata: card.reconstructionMeta || undefined,
+          reconstruction_advised: card.reconstructionAdvised || undefined,
+          needs_reconstruction: card.needsReconstruction || undefined,
+          reconstruction_reasons: (card.reconstructionReasons && card.reconstructionReasons.length > 0) ? card.reconstructionReasons : undefined,
+          from_one_pass: card.fromOnePass || undefined,
+          defer_matte: card.deferMatte || undefined,
           source_sha256: card.sourceSha256 || undefined,
+          source_phash: card.sourcePhash || undefined,
+          source_color_sig: card.sourceColorSig || undefined,
+          source_filename: card.sourceFilename || undefined,
+          source_size_bytes: card.sourceSizeBytes || undefined,
           is_duplicate: card.isDuplicate || false,
         };
 
