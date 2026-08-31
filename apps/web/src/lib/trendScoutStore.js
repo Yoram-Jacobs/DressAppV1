@@ -58,7 +58,13 @@ export const trendScoutStore = {
       });
       return _state;
     } catch (err) {
-      _set({ error: err });
+      _set({
+        error: err,
+        lastLanguage: language,
+        lastCountry: country,
+        lastGender: gender,
+        lastSync: Date.now(),
+      });
       return _state;
     } finally {
       _set({ loading: false });

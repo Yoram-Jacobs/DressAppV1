@@ -208,7 +208,7 @@ export default function Home() {
       if (prev && prev.closet === closetCount) return prev;
       return { closet: closetCount, market: prev?.market ?? 0 };
     });
-  }, [closet.total, closet.items]);
+  }, [closet.total, closet.items?.length]);
 
   const firstName = (user?.display_name || user?.email || "").split(/\s|@/)[0];
   // hero-banner-slider
@@ -565,21 +565,20 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
       {/* Home-banner-start */}
       <section
         id="home"
-        className="relative  mt-[var(--header-height)] overflow-hidden bg-accent-beige"
+        className="relative overflow-hidden bg-accent-beige"
       >
-        <div className="grid w-full grid-cols-1 lg:grid-cols-12">
+        <div className="grid w-full grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-4.5rem)]">
           {/* ================= LEFT CONTENT ================= */}
           <div
             className="
                   flex
-                  min-h-[calc(100vh-var(--header-height))]
                   items-center
                   px-5
-                  py-12
+                  py-10
                   sm:px-8
-                  sm:py-16
+                  sm:py-14
                   lg:col-span-5
-                  lg:min-h-[calc(100vh-var(--header-height))]
+                  lg:min-h-[calc(100vh-4.5rem)]
                   lg:px-10
                   xl:px-14"
           >
@@ -765,7 +764,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
             </motion.div>
           </div>
           {/* ================= RIGHT IMAGE SLIDER ================= */}
-          <div className="relative lg:col-span-7 h-full min-h-[560px] overflow-hidden lg:min-h-[calc(100vh-var(--header-height))]">
+          <div className="relative lg:col-span-7 h-[420px] sm:h-[520px] lg:h-auto min-h-[420px] lg:min-h-full overflow-hidden">
             <Swiper
               modules={[EffectFade, Autoplay, Navigation]}
               effect="fade"
@@ -780,11 +779,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
               {slides.map((image, index) => (
                 <SwiperSlide key={image}>
                   <div
-                    className="  absolute
-              inset-0
-              transition-all
-              duration-[1200ms]
-              ease-out"
+                    className="absolute inset-0 transition-all duration-[1200ms] ease-out"
                   >
                     <img
                       src={image}
@@ -813,7 +808,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
             <div
               className="
             absolute
-            left-3
+            start-3
             top-3
             z-10
             flex
@@ -828,7 +823,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
             text-white
             shadow-lg
             backdrop-blur-xl
-            sm:left-5
+            sm:start-5
             sm:top-5
             sm:p-4
           "
@@ -868,7 +863,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
             <div
               className="
             absolute
-            right-3
+            end-3
             top-3
             z-10
             rounded-full
@@ -884,7 +879,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
             tracking-[0.1em]
             text-[var(--primary-color)]
             shadow-sm
-            sm:right-5
+            sm:end-5
             sm:top-5
             sm:px-3.5
             sm:py-2
@@ -901,15 +896,15 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
               className="
             absolute
             bottom-[105px]
-            left-1/2
+            start-1/2
             z-10
             flex
             -translate-x-1/2
             items-center
             gap-1.5
             sm:bottom-[105px]
-            sm:right-7
-            sm:left-auto
+            sm:end-7
+            sm:start-auto
             sm:translate-x-0
           "
               aria-label={t("home.fashionBannerSlider", {
@@ -944,12 +939,13 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
               className="
             absolute
             bottom-5
-            right-4
+            end-4
             z-10
             max-w-[190px]
-            text-right
+            text-start
+            sm:text-end
             text-white
-            sm:right-5
+            sm:end-5
           "
             >
               <span className="mb-1 block font-sans text-[9px] font-semibold uppercase tracking-[0.08em] text-white/65 sm:text-[10px]">
@@ -970,7 +966,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
               className="
             absolute
             bottom-3
-            left-3
+            start-3
             z-10
             max-w-[calc(100%-24px)]
             rounded-sm
@@ -982,7 +978,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
             shadow-lg
             backdrop-blur-xl
             sm:bottom-5
-            sm:left-5
+            sm:start-5
             sm:p-4
           "
             >
@@ -1181,19 +1177,22 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                 </motion.p>
 
                 {/* Button */}
-                <motion.a
-                  href="/closet"
+                <motion.div
                   initial={{ opacity: 0, x: -40 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.5, ease: "easeOut" }}
-                  className="mt-2 inline-flex items-center justify-center rounded-[50px] border-none bg-[var(--primary-color)] px-[30px] py-[20px] text-[14px] font-bold leading-none text-[var(--white)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-[var(--white)] hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
                 >
-                  {t("home.closet.cta", {
-                    defaultValue: "Start Building Your Closet",
-                  })}
-                  <i className="fa-solid fa-arrow-right ms-2 rtl:rotate-180" />
-                </motion.a>
+                  <Link
+                    to="/closet"
+                    className="mt-2 inline-flex items-center justify-center rounded-[50px] border-none bg-[var(--primary-color)] px-[30px] py-[20px] text-[14px] font-bold leading-none text-[var(--white)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-[var(--white)] hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+                  >
+                    {t("home.closet.cta", {
+                      defaultValue: "Start Building Your Closet",
+                    })}
+                    <i className="fa-solid fa-arrow-right ms-2 rtl:rotate-180" />
+                  </Link>
+                </motion.div>
               </div>
             </div>
             {/* Right Visual */}
@@ -1534,17 +1533,20 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                 </motion.p>
 
                 {/* CTA */}
-                <motion.a
-                  href="/stylist"
+                <motion.div
                   initial={{ opacity: 0, x: 40 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.5, ease: "easeOut" }}
-                  className="inline-flex items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
                 >
-                  <i className="bi bi-stars mr-2" />
-                  {t("home.stylist.cta", { defaultValue: "Ask the stylist" })}
-                </motion.a>
+                  <Link
+                    to="/stylist"
+                    className="inline-flex items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+                  >
+                    <i className="bi bi-stars me-2" />
+                    {t("home.stylist.cta", { defaultValue: "Ask the stylist" })}
+                  </Link>
+                </motion.div>
               </div>
             </div>
           </div>
@@ -2036,19 +2038,22 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                 </motion.p>
 
                 {/* CTA */}
-                <motion.a
-                  href="#"
+                <motion.div
                   initial={{ opacity: 0, x: -40 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.5, ease: "easeOut" }}
-                  className="inline-flex items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
                 >
-                  <i className="bi bi-magic mr-2" />
-                  {t("home.aiEditor.cta", {
-                    defaultValue: "Open Fashion Editor",
-                  })}
-                </motion.a>
+                  <Link
+                    to="/stylist"
+                    className="inline-flex items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+                  >
+                    <i className="bi bi-magic me-2" />
+                    {t("home.aiEditor.cta", {
+                      defaultValue: "Open Fashion Editor",
+                    })}
+                  </Link>
+                </motion.div>
               </div>
             </div>
           </div>
@@ -2075,7 +2080,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
               {t("home.experts.tag", { defaultValue: "Meet The Specialists" })}
             </motion.span>
 
-            <a href="/experts" className="block no-underline">
+            <Link to="/experts" className="block no-underline">
               <motion.h2
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -2087,7 +2092,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                   defaultValue: "Talk To A Real Style Expert",
                 })}
               </motion.h2>
-            </a>
+            </Link>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -2103,15 +2108,15 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                 })}
               </p>
 
-              <a
-                href="/experts"
+              <Link
+                to="/experts"
                 className="inline-flex shrink-0 items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[15px] text-[14px] font-bold leading-[24px] text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
               >
                 {t("home.experts.viewAll", {
                   defaultValue: "View All Experts",
                 })}
                 <i className="fa-solid fa-arrow-right ms-2 rtl:rotate-180" />
-              </a>
+              </Link>
             </motion.div>
           </div>
 
@@ -2169,15 +2174,15 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                     {t(expert.bioKey, { defaultValue: expert.bioDefault })}
                   </p>
 
-                  <a
-                    href="#"
+                  <Link
+                    to="/experts"
                     className="inline-flex items-center justify-center gap-2 rounded-[50px] border border-[var(--primary-color)] bg-white px-5 py-2.5 text-[12px] font-bold text-[var(--primary-color)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-color)] hover:text-white"
                   >
                     {t("home.experts.bookSession", {
                       defaultValue: "Book Session",
                     })}
                     <i className="bi bi-arrow-right rtl:rotate-180" />
-                  </a>
+                  </Link>
                 </div>
               </motion.div>
             ))}
