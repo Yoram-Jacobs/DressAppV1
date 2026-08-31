@@ -90,7 +90,7 @@ export default function StyleSandbox({ isOpen, onClose, listingItem }) {
                 {isListingTop ? (
                   <div className="h-24 w-24 bg-card rounded-xl border-2 border-brand/50 p-1 flex flex-col items-center justify-center shadow-md relative">
                     <span className="absolute top-0.5 end-1.5 text-[8px] font-bold text-brand uppercase tracking-wider">{t('sandbox.listing', { defaultValue: 'Buy' })}</span>
-                    <img src={listingItem?.images?.[0] || listingItem?.image_url} alt="" className="max-h-full max-w-full object-contain" />
+                    <img src={bestImageUrl(listingItem)} alt="" className="max-h-full max-w-full object-contain" />
                   </div>
                 ) : (
                   <div className="h-24 w-24 bg-card rounded-xl border border-border/80 p-1 flex items-center justify-center shadow-sm relative">
@@ -108,7 +108,7 @@ export default function StyleSandbox({ isOpen, onClose, listingItem }) {
                 {isListingBottom ? (
                   <div className="h-24 w-24 bg-card rounded-xl border-2 border-brand/50 p-1 flex flex-col items-center justify-center shadow-md relative">
                     <span className="absolute top-0.5 end-1.5 text-[8px] font-bold text-brand uppercase tracking-wider">{t('sandbox.listing', { defaultValue: 'Buy' })}</span>
-                    <img src={listingItem?.images?.[0] || listingItem?.image_url} alt="" className="max-h-full max-w-full object-contain" />
+                    <img src={bestImageUrl(listingItem)} alt="" className="max-h-full max-w-full object-contain" />
                   </div>
                 ) : (
                   <div className="h-24 w-24 bg-card rounded-xl border border-border/80 p-1 flex items-center justify-center shadow-sm relative">
@@ -126,7 +126,7 @@ export default function StyleSandbox({ isOpen, onClose, listingItem }) {
                 {isListingShoe ? (
                   <div className="h-20 w-20 bg-card rounded-xl border-2 border-brand/50 p-1 flex flex-col items-center justify-center shadow-md relative">
                     <span className="absolute top-0.5 end-1.5 text-[8px] font-bold text-brand uppercase tracking-wider">{t('sandbox.listing', { defaultValue: 'Buy' })}</span>
-                    <img src={listingItem?.images?.[0] || listingItem?.image_url} alt="" className="max-h-full max-w-full object-contain" />
+                    <img src={bestImageUrl(listingItem)} alt="" className="max-h-full max-w-full object-contain" />
                   </div>
                 ) : (
                   <div className="h-20 w-20 bg-card rounded-xl border border-border/80 p-1 flex items-center justify-center shadow-sm relative">
@@ -138,6 +138,7 @@ export default function StyleSandbox({ isOpen, onClose, listingItem }) {
                   </div>
                 )}
               </div>
+
             </div>
           </div>
 

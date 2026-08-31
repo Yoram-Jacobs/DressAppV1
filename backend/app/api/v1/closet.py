@@ -3182,6 +3182,9 @@ async def backfill_marketplace_listings(
                 size=item.get("size"),
                 condition=listing_condition,
                 images=images,
+                clean_image_url=item.get("clean_image_url"),
+                reconstructed_image_url=item.get("reconstructed_image_url"),
+                thumbnail_data_url=item.get("thumbnail_data_url") or (images[0] if images else None),
                 location=location,
                 financial_metadata=FinancialMetadata(
                     list_price_cents=price_cents,
@@ -3192,6 +3195,7 @@ async def backfill_marketplace_listings(
                 auto_created=True,
                 status="active",
             )
+
             await repos.insert(db.listings, listing.model_dump())
             await db.closet_items.update_one(
                 {"id": item["id"], "user_id": user["id"]},
@@ -3441,6 +3445,9 @@ async def backfill_marketplace_listings_stream(
                     size=item.get("size"),
                     condition=listing_condition,
                     images=images,
+                    clean_image_url=item.get("clean_image_url"),
+                    reconstructed_image_url=item.get("reconstructed_image_url"),
+                    thumbnail_data_url=item.get("thumbnail_data_url") or (images[0] if images else None),
                     location=item.get("location"),
                     financial_metadata=FinancialMetadata(
                         list_price_cents=price_cents,
@@ -3451,6 +3458,7 @@ async def backfill_marketplace_listings_stream(
                     auto_created=True,
                     status="active",
                 )
+
                 await repos.insert(db.listings, listing.model_dump())
                 await db.closet_items.update_one(
                     {"id": cid, "user_id": user["id"]},

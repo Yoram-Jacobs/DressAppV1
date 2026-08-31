@@ -456,8 +456,12 @@ class Listing(BaseDoc):
     size: str | None = None
     condition: Condition = "good"
     images: list[str] = Field(default_factory=list)
+    clean_image_url: str | None = None
+    reconstructed_image_url: str | None = None
     thumbnail_data_url: str | None = None
     image_url: str | None = None
+
+
     location: dict[str, Any] | None = None
     ships_to: list[str] = Field(default_factory=list)
     financial_metadata: FinancialMetadata

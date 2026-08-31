@@ -31,22 +31,28 @@ export function bestImageUrl(item, opts = {}) {
   if (item.cutout_url) return item.cutout_url;
   if (item.segmented_image_url) return item.segmented_image_url;
 
-  // 4. Dynamic Transcoding Variants (AVIF/WebP)
+  // 4. Listing images array
+  if (Array.isArray(item.images) && item.images.length > 0 && typeof item.images[0] === 'string' && item.images[0]) {
+    return item.images[0];
+  }
+
+  // 5. Dynamic Transcoding Variants (AVIF/WebP)
   if (item.image_variants) {
     if (item.image_variants.avif?.medium) return item.image_variants.avif.medium;
     if (item.image_variants.webp?.medium) return item.image_variants.webp.medium;
     if (item.image_variants.original) return item.image_variants.original;
   }
 
-  // 5. Raw originals
+  // 6. Raw originals / generic image URL
   if (item.original_image_url) return item.original_image_url;
   if (item.image_url) return item.image_url;
 
-  // 6. Thumbnail (last resort — has white card background)
+  // 7. Thumbnail (has white card background)
   if (item.thumbnail_data_url) return item.thumbnail_data_url;
 
   if (item.photo_url) return item.photo_url;
   return null;
+
 }
 
 /**

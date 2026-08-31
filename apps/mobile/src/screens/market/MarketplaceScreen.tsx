@@ -161,8 +161,14 @@ export function MarketplaceScreen() {
 
   const s = makeStyles(colors);
 
-  const renderListingCard = ({ item }: { item: ListingItem }) => {
-    const thumb = item.thumbnail_data_url || item.image_url;
+  const renderListingCard = ({ item }: { item: any }) => {
+    const thumb =
+      item.clean_image_url ||
+      item.reconstructed_image_url ||
+      (Array.isArray(item.images) && item.images[0]) ||
+      item.thumbnail_data_url ||
+      item.image_url;
+
     const isFree = item.listing_type === 'donate' || item.price_cents === 0;
     const isSwap = item.listing_type === 'swap';
 

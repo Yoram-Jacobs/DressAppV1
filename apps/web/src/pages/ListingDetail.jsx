@@ -22,8 +22,10 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import { bestImageUrl } from '@/lib/itemImage';
 import { useAuth } from '@/lib/auth';
 import { PayPalCheckoutButton } from '@/lib/paypal';
+
 
 const fmt = (cents, cur = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format((cents || 0) / 100);
@@ -101,11 +103,12 @@ export default function ListingDetail() {
         <div className="md:col-span-3">
           <Card className="rounded-[calc(var(--radius)+6px)] overflow-hidden shadow-editorial">
             <AspectRatio ratio={3 / 4} className="bg-secondary">
-              {(listing.images || [])[0]
-                ? <img src={listing.images[0]} alt={listing.title} className="w-full h-full object-cover" />
+              {bestImageUrl(listing)
+                ? <img src={bestImageUrl(listing)} alt={listing.title} className="w-full h-full object-cover" />
                 : <div className="w-full h-full flex items-center justify-center text-muted-foreground">{t('market.noImage')}</div>}
             </AspectRatio>
           </Card>
+
         </div>
         <div className="md:col-span-2 space-y-4">
           <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
@@ -502,9 +505,10 @@ export default function ListingDetail() {
                   <Link key={s.id} to={`/market/${s.id}`} className="block group" data-testid="listing-similar-card">
                     <Card className="rounded-[calc(var(--radius)+6px)] overflow-hidden border-border shadow-editorial group-hover:shadow-editorial-md transition-shadow">
                       <AspectRatio ratio={3 / 4} className="bg-secondary relative">
-                        {(s.images || [])[0]
-                          ? <img src={s.images[0]} alt={s.title} className="w-full h-full object-cover" />
+                        {bestImageUrl(s)
+                          ? <img src={bestImageUrl(s)} alt={s.title} className="w-full h-full object-cover" />
                           : <div className="w-full h-full flex items-center justify-center text-muted-foreground caps-label">{t('market.noImage')}</div>}
+
                         {typeof s._score === 'number' && (
                           <Badge variant="outline"
                             className="absolute top-2 end-2 bg-background/85 backdrop-blur text-[10px] border-[hsl(var(--accent))]/50 flex items-center gap-1"

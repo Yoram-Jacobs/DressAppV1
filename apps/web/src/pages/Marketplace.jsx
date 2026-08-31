@@ -14,7 +14,9 @@ import { Plus, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { StreamingProgressChip } from '@/components/StreamingProgressChip';
 import { api } from '@/lib/api';
+import { bestImageUrl } from '@/lib/itemImage';
 import { labelForCategory, labelForSource, labelForIntent } from '@/lib/taxonomy';
+
 import { useLocation as useAppLocation } from '@/lib/location';
 import { useAuth } from '@/lib/auth';
 import {
@@ -231,10 +233,11 @@ export default function Marketplace() {
                 <Link key={l.id} to={`/market/${l.id}`} data-testid="marketplace-item-card">
                   <Card className="rounded-[calc(var(--radius)+6px)] overflow-hidden shadow-editorial hover:shadow-editorial-md transition-shadow">
                     <AspectRatio ratio={3 / 4} className="bg-secondary">
-                      {(l.images || [])[0]
-                        ? <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover" />
+                      {bestImageUrl(l)
+                        ? <img src={bestImageUrl(l)} alt={l.title} className="w-full h-full object-cover" />
                         : <div className="w-full h-full flex items-center justify-center text-muted-foreground caps-label">{t('market.noImage')}</div>}
                     </AspectRatio>
+
                     <CardContent className="p-3 space-y-2.5">
                       {/* Brand & Title */}
                       <div className="min-w-0">
@@ -467,8 +470,9 @@ function MyListings() {
             >
               <Link to={`/market/${l.id}`} className="block">
                 <AspectRatio ratio={3 / 4} className="bg-secondary">
-                  {(l.images || [])[0] ? <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover" /> : null}
+                  {bestImageUrl(l) ? <img src={bestImageUrl(l)} alt={l.title} className="w-full h-full object-cover" /> : null}
                 </AspectRatio>
+
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between gap-2">
                     <div className="font-medium text-sm truncate">{l.title}</div>

@@ -58,7 +58,7 @@ def calculate_distance_km(listing_loc: dict | None, lat: float | None, lng: floa
     return None
 
 def _sanitize_listing_browse_doc(doc: dict[str, Any]) -> dict[str, Any]:
-    """Ensure listing payloads are lightweight and memory-safe for mobile clients."""
+    """Ensure listing payloads are lightweight and memory-safe for mobile and web clients."""
     thumb = doc.get("thumbnail_data_url")
     if isinstance(thumb, str) and len(thumb) > 50000:
         doc["thumbnail_data_url"] = None
@@ -67,20 +67,36 @@ def _sanitize_listing_browse_doc(doc: dict[str, Any]) -> dict[str, Any]:
     if isinstance(images, list):
         safe_images = []
         for img in images:
-            if isinstance(img, str):
-                if img.startswith("http://") or img.startswith("https://"):
+            if isinstance(img, str) and img.strip():
+                if (
+                    img.startswith("http://")
+                    or img.startswith("https://")
+                    or img.startswith("/static/")
+                    or img.startswith("/uploads/")
+                    or img.startswith("/")
+                ):
                     safe_images.append(img)
                 elif img.startswith("data:image/") and len(img) <= 50000:
                     safe_images.append(img)
         doc["images"] = safe_images
 
-    if not doc.get("thumbnail_data_url"):
-        if doc.get("images") and len(doc["images"]) > 0:
-            doc["thumbnail_data_url"] = doc["images"][0]
-        elif doc.get("image_url"):
-            doc["thumbnail_data_url"] = doc["image_url"]
+    # Derive best thumbnail/clean image
+    best_img = (
+        doc.get("clean_image_url")
+        or doc.get("reconstructed_image_url")
+        or (doc.get("images")[0] if doc.get("images") and len(doc["images"]) > 0 else None)
+        or doc.get("thumbnail_data_url")
+        or doc.get("image_url")
+    )
+
+    if not doc.get("thumbnail_data_url") and best_img:
+        doc["thumbnail_data_url"] = best_img
+
+    if not doc.get("images") and best_img:
+        doc["images"] = [best_img]
 
     return doc
+
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/listings", tags=["listings"])
@@ -231,6 +247,10 @@ async def create_listing(
                 "region": home.get("region"),
             }
 
+    clean_img = (closet_item or {}).get("clean_image_url") if closet_item else None
+    reconstructed_img = (closet_item or {}).get("reconstructed_image_url") if closet_item else None
+    thumb_img = (closet_item or {}).get("thumbnail_data_url") if closet_item else (images[0] if images else None)
+
     listing = Listing(
         closet_item_id=payload.closet_item_id,
         seller_id=user["id"],
@@ -242,11 +262,15 @@ async def create_listing(
         size=payload.size,
         condition=payload.condition,
         images=images,
+        clean_image_url=clean_img,
+        reconstructed_image_url=reconstructed_img,
+        thumbnail_data_url=thumb_img,
         location=location,
         ships_to=payload.ships_to,
         financial_metadata=financial,
         shipping_fee_cents=payload.shipping_fee_cents,
     )
+
     doc = listing.model_dump()
     await repos.insert(db.listings, doc)
 
