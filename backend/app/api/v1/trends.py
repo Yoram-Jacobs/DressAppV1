@@ -47,11 +47,17 @@ def check_trend_scout_access(user: dict) -> None:
 async def get_latest_trends(
     per_bucket: int = Query(default=1, ge=1, le=5),
     gender: str | None = Query(default=None, regex="^(male|female)$"),
-    country: str | None = Query(default=None, max_length=4),
+    country: str | None = Query(default=None),
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Public-safe read: newest card(s) per bucket for the user's gender ecosystem."""
     check_trend_scout_access(user)
+    if country:
+        country = country.strip().upper()
+        if country in {"ISRAEL"}:
+            country = "IL"
+        elif country in {"UNITED STATES", "USA"}:
+            country = "US"
     if not country:
         user_countries = _country_codes(user)
         if user_countries:
@@ -102,7 +108,7 @@ async def get_last_refresh() -> dict[str, Any]:
 async def get_fashion_scout_feed(
     limit: int = Query(default=12, ge=1, le=50),
     language: str | None = Query(default=None, max_length=8),
-    country: str | None = Query(default=None, max_length=4),
+    country: str | None = Query(default=None),
     gender: str | None = Query(default=None, regex="^(male|female)$"),
     personalized: bool = Query(default=True),
     user: dict = Depends(get_current_user),
@@ -112,6 +118,12 @@ async def get_fashion_scout_feed(
     Returns cards matching the user's gender ecosystem and device country location.
     """
     check_trend_scout_access(user)
+    if country:
+        country = country.strip().upper()
+        if country in {"ISRAEL"}:
+            country = "IL"
+        elif country in {"UNITED STATES", "USA"}:
+            country = "US"
     if not gender and user:
         user_sex = (user.get("sex") or user.get("gender") or "female").lower()
         gender = "male" if user_sex == "male" else "female"

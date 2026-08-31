@@ -43,6 +43,9 @@ let webpackConfig = {
   webpack: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      'react': path.resolve(__dirname, '../../node_modules/react'),
+      'react-dom': path.resolve(__dirname, '../../node_modules/react-dom'),
+      'react-i18next': path.resolve(__dirname, '../../node_modules/react-i18next'),
       'tailwindcss': path.resolve(__dirname, 'node_modules/tailwindcss'),
       'lucide-react$': 'lucide-react/dist/cjs/lucide-react.js',
       'recharts$': 'recharts/lib/index.js',
@@ -52,6 +55,12 @@ let webpackConfig = {
       './aiNotice.js': path.resolve(__dirname, 'src/lib/aiNotice.jsx'),
     },
     configure: (webpackConfig) => {
+      // Remove ModuleScopePlugin so monorepo packages and root node_modules resolve cleanly
+      if (webpackConfig.resolve && webpackConfig.resolve.plugins) {
+        webpackConfig.resolve.plugins = webpackConfig.resolve.plugins.filter(
+          (plugin) => plugin.constructor.name !== 'ModuleScopePlugin'
+        );
+      }
 
       // Add ignored patterns to reduce watched directories
         webpackConfig.watchOptions = {
