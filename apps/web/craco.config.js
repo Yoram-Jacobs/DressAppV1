@@ -34,10 +34,7 @@ let webpackConfig = {
   },
   style: {
     postcss: {
-      plugins: [
-        require(path.resolve(__dirname, 'node_modules/tailwindcss'))(path.resolve(__dirname, 'tailwind.config.js')),
-        require('autoprefixer'),
-      ],
+      mode: "file",
     },
   },
   webpack: {
