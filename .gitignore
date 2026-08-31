@@ -102,10 +102,12 @@ backend/.venv*/
 *.pack
 *.deb
 *.dylib
-models/
+/models/
+!backend/app/models/
 *.safetensors
 *.onnx
 *.pt
 *.pth
 *.bin
 *.gguf
+

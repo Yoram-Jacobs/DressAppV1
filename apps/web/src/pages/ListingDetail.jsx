@@ -22,8 +22,10 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import { bestImageUrl } from '@/lib/itemImage';
 import { useAuth } from '@/lib/auth';
 import { PayPalCheckoutButton } from '@/lib/paypal';
+
 
 const fmt = (cents, cur = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format((cents || 0) / 100);

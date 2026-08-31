@@ -770,7 +770,13 @@ export default function Closet() {
       clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [((store.items || []).filter((it) => it && it.clean_image_status === 'pending').map((it) => it.id).sort().join(','))]);
+  }, [
+    (store.items || [])
+      .filter((it) => it && it.clean_image_status === "pending")
+      .map((it) => it.id)
+      .sort()
+      .join(","),
+  ]);
 
   const fetchSemantic = useCallback(async (text) => {
     setSemanticLoading(true);
@@ -920,7 +926,7 @@ export default function Closet() {
       return res.status === "rejected" && res.reason?.response?.status !== 404;
     });
     if (failedIds.length === 0) {
-      toast.success(`${ids.length} item${ids.length === 1 ? '' : 's'} deleted`);
+      toast.success(`${ids.length} item${ids.length === 1 ? "" : "s"} deleted`);
       return;
     }
     // Roll back the failed ones so the UI matches reality again.
@@ -1171,7 +1177,8 @@ export default function Closet() {
                             rounded-full text-gray-400
                             transition-colors
                             hover:bg-gray-100 hover:text-gray-700
-                          ">
+                          "
+                  >
                     <X className="h-4 w-4" />
                   </button>
                 )}
@@ -1314,130 +1321,145 @@ export default function Closet() {
           </div>
         </div>
         {/* Always render the floater, but change contents based on selectMode */}
-        {/* <div className='col-md-12'>
-              <div className="">
-                {!selectMode ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      className="rounded-xl shadow-sm"
-                      onClick={enterSelect}
-                      disabled={items.length === 0}
-                      data-testid="closet-select-mode-button"
-                    >
-                      <ListChecks className="h-4 w-4 me-0 md:me-2" /> <span className="hidden md:inline">{t('closet.bulkSelect')}</span>
-                    </Button>
-                    <Button
-                      asChild
-                      className="hidden md:flex rounded-xl shadow-sm bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-neutral-200"
-                      data-testid="closet-add-item-floater-button"
-                    >
-                      <Link to="/closet/add">
-                        <Plus className="h-4 w-4 me-2 text-yellow-400 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
-                        <span className="text-yellow-400 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] font-semibold">{t('closet.addItem', { defaultValue: 'Add item' })}</span>
-                      </Link>
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-2 px-2 text-sm font-medium">
-                      <CheckCircle2 className="h-4 w-4 text-[hsl(var(--accent))]" />
-                      <span data-testid="closet-selected-count">
-                        {selected.size}
+        <div className="absolute top-[45%] end-[40px] z-40 flex flex-wrap items-center gap-2  max-[575px]:bottom-3 max-[575px]:end-3 max-[575px]:px-2">
+          {!selectMode ? (
+            <>
+              <Button
+                className=""
+                onClick={enterSelect}
+                disabled={items.length === 0}
+                data-testid="closet-select-mode-button"
+              >
+                <ListChecks className="h-4 w-4" />{" "}
+                <span className="hidden md:inline">
+                  {t("closet.bulkSelect")}
+                </span>
+              </Button>
+              {/* <Button
+                asChild
+                className="hidden md:flex rounded-xl shadow-sm bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-neutral-200"
+                data-testid="closet-add-item-floater-button"
+              >
+                <Link to="/closet/add">
+                  <Plus className="h-4 w-4 me-2 text-yellow-400 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
+                  <span className="text-yellow-400 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] font-semibold">{t('closet.addItem', { defaultValue: 'Add item' })}</span>
+                </Link>
+              </Button> */}
+            </>
+          ) : (
+            <>
+              <div className="p-3 bg-white rounded-[12px] flex gap-2">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary-brand" />
+                  <span data-testid="closet-selected-count" className="font-bold text-[14px] text-dark-brand">{selected.size}</span>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={allVisibleSelected ? clearSelection : selectAllVisible}
+                  data-testid="closet-select-all-button"
+                >
+                  {allVisibleSelected ? (
+                    <>
+                      <Square className="h-4 w-4" />{" "}
+                      <span className="hidden md:inline">
+                        {t("common.clear")}
                       </span>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={allVisibleSelected ? clearSelection : selectAllVisible}
-                      data-testid="closet-select-all-button"
-                      className="rounded-lg"
-                    >
-                      {allVisibleSelected ? (
-                        <><Square className="h-4 w-4 md:me-1.5" /> <span className="hidden md:inline">{t('common.clear')}</span></>
-                      ) : (
-                        <><CheckSquare className="h-4 w-4 md:me-1.5" /> <span className="hidden md:inline">{t('common.selectAll')}</span></>
-                      )}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      className="rounded-lg"
-                      disabled={selected.size === 0}
-                      onClick={() => {
-                        const hints = items.filter((i) => selected.has(i.id));
-                        setCompletionAnchors(hints);
-                        setCompletionOpen(true);
-                      }}
-                      data-testid="closet-complete-outfit-button"
-                    >
-                      <Wand2 className="h-4 w-4 md:me-1.5" />
-                      <span className="hidden md:inline">{t('outfitCompletion.cta')}</span>
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      className="rounded-lg"
-                      disabled={selected.size < 2 || deleting}
-                      onClick={() => {
-                        setGroupOpen(true);
-                        setGroupHostId(Array.from(selected)[0] || '');
-                      }}
-                      data-testid="closet-group-selected-button"
-                    >
-                      <ListChecks className="h-4 w-4 md:me-1.5" />
-                      <span className="hidden md:inline">{t('closet.groupSelected', { defaultValue: 'Group' })}</span>
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      className="rounded-lg"
-                      disabled={selected.size === 0 || deleting}
-                      onClick={() => {
-                        setTagInput('');
-                        setTagOpen(true);
-                      }}
-                      data-testid="closet-tag-selected-button"
-                    >
-                      <Tag className="h-4 w-4 md:me-1.5" />
-                      <span className="hidden md:inline">{t('closet.tagSelected', { defaultValue: 'Tag' })}</span>
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      className="rounded-lg"
-                      disabled={selected.size === 0 || deleting}
-                      onClick={() => setConfirmOpen(true)}
-                      data-testid="closet-delete-selected-button"
-                    >
-                      {deleting ? (
-                        <Loader2 className="h-4 w-4 md:me-1.5 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4 md:me-1.5" />
-                      )}
-                      <span className="hidden md:inline">{t('common.delete')}</span>
-                    </Button>
-                    <div className="w-px h-6 bg-border mx-1 hidden md:block"></div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={cancelSelect}
-                      data-testid="closet-select-cancel-button"
-                      className="rounded-lg"
-                    >
-                      <X className="h-4 w-4 md:me-1.5" />
-                      <span className="hidden md:inline">{t('common.cancel', { defaultValue: 'Cancel' })}</span>
-                    </Button>
-                  </>
-                )}
+                    </>
+                  ) : (
+                    <>
+                      <CheckSquare className="h-4 w-4" />{" "}
+                      <span className="hidden md:inline">
+                        {t("common.selectAll")}
+                      </span>
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className=""
+                  disabled={selected.size === 0}
+                  onClick={() => {
+                    const hints = items.filter((i) => selected.has(i.id));
+                    setCompletionAnchors(hints);
+                    setCompletionOpen(true);
+                  }}
+                  data-testid="closet-complete-outfit-button"
+                >
+                  <Wand2 className="h-4 w-4" />
+                  <span className="hidden md:inline">
+                    {t("outfitCompletion.cta")}
+                  </span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="font-bold"
+                  disabled={selected.size < 2 || deleting}
+                  onClick={() => {
+                    setGroupOpen(true);
+                    setGroupHostId(Array.from(selected)[0] || "");
+                  }}
+                  data-testid="closet-group-selected-button"
+                >
+                  <ListChecks className="h-4 w-4" />
+                  <span className="hidden md:inline">
+                    {t("closet.groupSelected", { defaultValue: "Group" })}
+                  </span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="font-bold"
+                  disabled={selected.size === 0 || deleting}
+                  onClick={() => {
+                    setTagInput("");
+                    setTagOpen(true);
+                  }}
+                  data-testid="closet-tag-selected-button"
+                >
+                  <Tag className="h-4 w-4" />
+                  <span className="hidden md:inline">
+                    {t("closet.tagSelected", { defaultValue: "Tag" })}
+                  </span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="rounded-lg"
+                  disabled={selected.size === 0 || deleting}
+                  onClick={() => setConfirmOpen(true)}
+                  data-testid="closet-delete-selected-button"
+                >
+                  {deleting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                  <span className="hidden md:inline">{t("common.delete")}</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={cancelSelect}
+                  data-testid="closet-select-cancel-button"
+                  className="rounded-lg"
+                >
+                  <X className="h-4 w-4" />
+                  <span className="hidden md:inline">
+                    {t("common.cancel", { defaultValue: "Cancel" })}
+                  </span>
+                </Button>
               </div>
-            </div> */}
+            </>
+          )}
+        </div>
         {/* Semantic-results banner \u2014 only shown after a successful meaning search */}
         {semanticActive && (
           <div
@@ -1632,14 +1654,10 @@ export default function Closet() {
               shadow-none
               transition-all duration-200
               focus:outline-none
-              focus-visible:ring-2
-              focus-visible:ring-[hsl(var(--accent))]
-              focus-visible:ring-offset-2
 
               ${isSelected
                         ? `
-                    border-[hsl(var(--accent))]
-                    ring-2 ring-[hsl(var(--accent))]/20
+                    border-primary-brand
                   `
                         : `
                     border-gray-200
@@ -2367,7 +2385,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
 
     <Card
       className={`h-full relative overflow-hidden rounded-[12px] border border-gray-200 bg-white shadow-none transition-smooth ${isSelected
-          ? "border-[hsl(var(--accent))] ring-2 ring-[hsl(var(--accent))]/20"
+          ? "border-primary-brand"
           : ""
         }`}
     >
@@ -2437,7 +2455,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
         {/* SCORE */}
         {typeof score === "number" && (
           <span
-            className="absolute right-3 top-3 z-20 inline-flex items-center gap-1 rounded-full bg-[hsl(var(--accent))] px-2.5 py-1 text-[11px] font-semibold text-white"
+            className="absolute right-3 top-3 z-20 inline-flex items-center gap-1 rounded-full bg-primary-brand px-2.5 py-1 text-[11px] font-semibold text-white"
             data-testid="closet-item-score"
           >
             <Sparkles size={12} />
@@ -2448,7 +2466,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
         {/* CHECKBOX */}
         {showCheckbox && (
           <div
-            className={`absolute left-3 top-3 z-20 flex h-6 w-6 items-center justify-center rounded-full ${isSelected ? "text-[hsl(var(--accent))]" : "text-gray-300"
+            className={`absolute left-3 top-3 z-20 flex h-6 w-6 items-center justify-center rounded-full ${isSelected ? "text-primary-brand" : "text-text-brand"
               }`}
             aria-hidden="true"
             data-testid={
@@ -2467,7 +2485,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
 
         {/* SELECTED OVERLAY */}
         {showCheckbox && isSelected && (
-          <div className="pointer-events-none absolute inset-0 z-10 bg-[hsl(var(--accent))]/5" />
+          <div className="pointer-events-none absolute inset-0 z-10 bg-primary-shadow" />
         )}
 
         {/* DUPLICATE */}

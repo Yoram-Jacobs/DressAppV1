@@ -213,14 +213,19 @@ export const AppLayout = () => {
         />
       )}
       {/* <!-- back-to-top-button --> */}
-      <button
+<button
         id="backToTopBtn"
-        className={show ? "show" : ""}
         onClick={scrollToTop}
         aria-label="Back to top"
+        className={`fixed bottom-[30px] end-[30px] z-[999] flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border-none bg-[var(--primary-color)] text-white shadow-[var(--shadow-medium)] transition-smooth hover:bg-[var(--primary-hover)] hover:-translate-y-1 ${
+          show
+            ? "visible translate-y-0 opacity-100"
+            : "invisible translate-y-[15px] opacity-0"
+        }`}
       >
         <ArrowUp size={20} strokeWidth={2.5} />
       </button>
+
     </div>
   );
 };
