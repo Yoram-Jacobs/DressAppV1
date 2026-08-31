@@ -703,12 +703,19 @@ async def check_scheduler_triggers() -> None:
                         p_copy = {
                             "name": prop.get("name"),
                             "reasoning": prop.get("reasoning"),
+                            "why": prop.get("why"),
                             "items": [
                                 {
-                                    "id": it.get("id"),
+                                    # closet_item_id is CRITICAL — without it, the frontend saves
+                                    # outfits with null closet references (empty avatar mannequins).
+                                    "closet_item_id": it.get("closet_item_id") or it.get("id"),
+                                    "id": it.get("closet_item_id") or it.get("id"),
                                     "title": it.get("title") or it.get("name"),
+                                    "description": it.get("description") or it.get("title") or it.get("name"),
                                     "role": it.get("role") or it.get("category"),
-                                    "clean_image_url": it.get("clean_image_url") if (isinstance(it.get("clean_image_url"), str) and not it["clean_image_url"].startswith("data:")) else None,
+                                    "category": it.get("category") or it.get("role"),
+                                    "clean_image_url": it.get("clean_image_url") if (isinstance(it.get("clean_image_url"), str) and not it.get("clean_image_url", "").startswith("data:")) else None,
+                                    "image_url": it.get("image_url") if (isinstance(it.get("image_url"), str) and not it.get("image_url", "").startswith("data:")) else None,
                                     "color": it.get("color"),
                                 }
                                 for it in prop.get("items", [])

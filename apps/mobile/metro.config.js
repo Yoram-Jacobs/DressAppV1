@@ -38,11 +38,11 @@ const workspaceRoot = normalizePath(path.resolve(projectRoot, '../..'));
 const LLAMA_STUB = path.resolve(projectRoot, 'stubs/llama-stub.js');
 
 const config = getDefaultConfig(projectRoot);
-config.projectRoot = projectRoot;
 
 // ── Monorepo watchFolders ────────────────────────────────────────────────────
-// Watch workspace root for hoisted monorepo dependencies.
+// Watch workspace root and packages for hoisted monorepo dependencies.
 config.watchFolders = [
+  ...(config.watchFolders || []),
   workspaceRoot,
 ];
 
@@ -65,21 +65,12 @@ config.resolver.sourceExts = [
   'cjs',
 ];
 
-// Disable hierarchical lookup to prevent nested node_modules from instantiating duplicate react
-config.resolver.disableHierarchicalLookup = true;
-
-// Force singleton resolution for core packages in monorepo
+// llama.rn stub + singleton packages
 config.resolver.extraNodeModules = {
   'llama.rn': LLAMA_STUB,
   react: path.resolve(workspaceRoot, 'node_modules/react'),
   'react-native': path.resolve(workspaceRoot, 'node_modules/react-native'),
-  expo: path.resolve(workspaceRoot, 'node_modules/expo'),
   'react-native-safe-area-context': path.resolve(workspaceRoot, 'node_modules/react-native-safe-area-context'),
 };
 
-module.exports = withNativewind(config, {
-  // inline variables break PlatformColor in CSS variables
-  inlineVariables: false,
-  // We add className support manually
-  globalClassNamePolyfill: false,
-});
+module.exports = config;

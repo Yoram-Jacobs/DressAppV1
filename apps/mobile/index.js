@@ -1,18 +1,14 @@
 /**
  * apps/mobile/index.js
- *
- * React Native / Expo entry point.
- * registerRootComponent handles both AppRegistry.registerComponent()
- * and the Expo-specific setup (splash screen, etc.).
  */
-import { LogBox } from 'react-native';
-
-LogBox.ignoreLogs([
-  '[expo-av]: Expo AV has been deprecated',
-  'Expo AV has been deprecated',
-]);
-
-import { registerRootComponent } from 'expo';
+import { AppRegistry } from 'react-native';
+import registerRootComponent from 'expo/src/launch/registerRootComponent';
 import App from './App';
+
+AppRegistry.registerComponent('main', () => App);
+AppRegistry.registerComponent('dressapp', () => App);
+AppRegistry.registerComponent('DressApp', () => App);
+AppRegistry.registerComponent('apps/mobile/index', () => App);
+AppRegistry.registerComponent('index', () => App);
 
 registerRootComponent(App);
