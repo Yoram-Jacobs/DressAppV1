@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { client } from '@/lib/api/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Loader2, ShieldCheck, CircleAlert as AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function MockAtzmaiPayment() {

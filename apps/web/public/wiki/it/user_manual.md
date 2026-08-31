@@ -1,16 +1,12 @@
 # Manuale utente tecnico completo di DressApp
 
-<<<<<<< HEAD
 Manuale utente completo e guida di riferimento tecnico per l'ecosistema di guardaroba personale DressApp, il motore di styling, il marketplace circolare e i pannelli di amministrazione.
-=======
 Manuale utente completo e guida di riferimento tecnica per l'ecosistema di guardaroba personale DressApp, il motore di styling, il mercato circolare e i pannelli di amministrazione.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 1. Panoramica & Stack tecnologico
 
-<<<<<<< HEAD
 DressApp è un gestore del guardaroba personale, consulente di stile e marketplace circolare basato sull'intelligenza artificiale. Aiuta gli utenti a gestire i capi di abbigliamento in modo digitale, a ritagliarli e taggarli automaticamente, a ricevere consigli sugli outfit adattati al meteo e al calendario, a scansionare i Passaporti Digitali dei Prodotti (DPP) dell'UE e a scambiare capi.
 
 ### Proposta di valore principale
@@ -26,7 +22,6 @@ DressApp è un gestore del guardaroba personale, consulente di stile e marketpla
 - **Machine Learning locale & Taglie**: Elaborazione locale su CPU tramite U2-Net (`rembg`) per la rimozione dello sfondo, segmentazione degli abiti SegFormer-b2, embedding Fashion-CLIP e modello di regressione delle misure corporee fisiche ANSUR II (`body_predictor.py`). Facoltativamente, reindirizza a contenitori GPU self-hosted (SegFormer-b3 + BiRefNet) per operazioni rapide.
 - **STT/TTS conversazionale**: Riconoscimento vocale lato client (Web Speech API) come fallback, elaborazione audio multimodale sul server con Gemini 2.5 Flash, e motori Piper/Sherpa-ONNX offline integrati sul dispositivo.
 - **Servizi di integrazione esterna**: API OpenWeatherMap per il meteo, Google Calendar OAuth per l'esportazione degli impegni giornalieri, OpenStreetMap (Nominatim) per il completamento automatico degli indirizzi e API REST di PayPal per abbonamenti e pagamenti.
-=======
 DressApp è un gestore di guardaroba personale guidato dall'IA, un consulente di stile e un mercato circolare. Aiuta gli utenti a gestire i capi di abbigliamento digitalmente, a ritagliarli e a taggarli automaticamente, a ricevere consigli sugli outfit sensibili al meteo e al calendario, a scansionare i passaporti digitali dei prodotti dell'UE (DPP) e a scambiare vestiti.
 
 ### Proposta di valore fondamentale
@@ -42,13 +37,11 @@ DressApp è un gestore di guardaroba personale guidato dall'IA, un consulente di
 - **Apprendimento automatico & calcolo delle taglie locali**: Ritaglio dello sfondo locale U2-Net (`rembg`) tramite CPU, analisi dei vestiti SegFormer-b2, incorporazioni Fashion-CLIP e modello di regressione delle misure corporee fisiche ANSUR II (`body_predictor.py`). Facoltativamente, le richieste vengono reindirizzate a contenitori GPU auto-ospitati (SegFormer-b3 + BiRefNet) per operazioni rapide.
 - **STT/TTS conversazionale**: Riconoscimento vocale client Web Speech in fallback, modulazioni Gemini 2.5 Flash lato server e motori Piper/Sherpa-ONNX locali sul dispositivo per il funzionamento offline.
 - **Servizi di integrazione esterna**: API OpenWeatherMap per il meteo, Google Calendar OAuth per l'esportazione degli orari giornalieri, OpenStreetMap (Nominatim) per la compilazione automatica degli indirizzi e API REST PayPal Subscriptions/Checkout.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 2. Prerequisiti
 
-<<<<<<< HEAD
 ### Requisiti dell'ambiente host (Server)
 - **Hardware**: Server virtuale (VPS) con un minimo di 4 GB di RAM (ad esempio, il VPS Hetzner che ospita l'ambiente di produzione `dressapp.co`).
 - **Dipendenze**: Container Docker e Docker Compose (inclusi backend, frontend e terminazione TLS di Caddy).
@@ -81,7 +74,6 @@ MODALITÀ DI INSERIMENTO: Fotografia, Passaporti Digitali dei Prodotti e ricevut
 3. Il backend risolve l'URL ed esegue controlli di sicurezza SSRF (bloccando intervalli di IP privati).
 4. Il sistema analizza gli schemi JSON-LD per estrarre brand, composizione del materiale, tracciabilità della catena di fornitura, impronta di carbonio e linee guida per la cura del capo.
 5. Controlla i dati estratti mostrati nel pannello verde **Verified DPP Data** e fai clic su **Salva**.
-=======
 ### Requisiti dell'ambiente server (Host)
 - **Hardware**: Server VPS con un minimo di 4 GB di RAM (ad esempio, VPS Hetzner che ospita l'app in produzione `dressapp.co`).
 - **Dipendenze**: Docker e Docker Compose (inclusi backend, frontend e terminazione TLS di Caddy).
@@ -114,12 +106,10 @@ METODI DI CARICAMENTO: Fotografia, Pasaporto Digitale del Prodotto dell'UE (DPP)
 3. Il backend risolve l'URL ed esegue controlli di sicurezza SSRF (bloccando intervalli IP privati).
 4. Il sistema analizza gli schemi JSON-LD per estrarre il marchio, la composizione dei materiali, la tracciabilità della catena di fornitura, l'impronta di carbonio e le linee guida per la cura.
 5. Esamina i dati estratti visualizzati nel pannello a soffietto verde **Dati DPP verificati** e fai clic su **Salva**.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 #### C. Importazione di ricevute di acquisto digitali
 1. Apri la scheda **Importazione digitale** (Digital Import).
 2. Scegli una modalità: **Incolla testo**, **Carica immagine**, **Carica PDF** o inserisci un **Collegamento web**.
-<<<<<<< HEAD
 3. Il backend utilizza modelli di visione multimodali per estrarre i dati della transazione (marca, prezzo, taglia, categoria).
 4. I campi analizzati vengono bloccati per proteggerli da future analisi visive automatiche. Fai clic su **Salva** per confermare.
 
@@ -222,7 +212,6 @@ Crea, stratifica e rivedi gli outfit su un canevas di avatar interattivo in 2D.
    - *Abbinamento meteo* (adeguatezza alla stagione)
    - *Adeguatezza evento* (appropriato per l'attività)
    - *Adeguatezza luogo* (controlli sulle regole di pudore)
-=======
 3. Il backend utilizza modelli di visione multimodali per estrarre i dati della transazione (marchio, prezzo, taglia, categoria).
 4. I campi analizzati vengono bloccati per proteggerli da future rianalisi visive. Fai clic su **Salva** per confermare.
 
@@ -325,12 +314,10 @@ Crea outfit, combina strati e rivedi le proposte sulla tela interattiva dell'ava
    - *Allineamento climatico* (adeguatezza alla stagione).
    - *Allineamento degli eventi* (adeguatezza all'attività).
    - *Allineamento della posizione* (verifica del rispetto delle regole di modestia).
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 5. **Rinomina/Descrivi**: Fai clic sull'icona della matita per modificare i nomi e le descrizioni degli outfit.
 
 ---
 
-<<<<<<< HEAD
 ### 3.6 Assistente valigia
 Organizza la tua valigia per i viaggi senza caricare pesi inutili.
 
@@ -377,7 +364,6 @@ Monitoraggio della disponibilità del sistema, contabilità finanziaria e gestio
 3. **Fornitori**: Fai clic su **Verifica chiave** (Verify Key) per inviare una richiesta ping all'API di Gemini. Attiva l'interruttore **Eyes Vision Override** per alternare l'analisi delle immagini tra l'endpoint predefinito di Gemini e un contenitore locale di Gemma.
 4. **Utenti**: Visualizza crediti attivi, ruoli e totale pagamenti degli utenti. Utilizza azioni dirette per promuovere o declassare gli utenti.
 5. **Annunci**: Controlla lo stato delle inserzioni del mercato e disattiva articoli fraudolenti.
-=======
 ## 3.6 Assistente valigia e viaggi
 Organizza la tua lista bagagli per i viaggi in modo intelligente ed evita il sovrappeso.
 
@@ -424,32 +410,27 @@ Verifica del funzionamento del sistema, contabilità finanziaria e gestione dei 
 3. **Fornitori (Providers)**: Fai clic su **Verify Key** per inviare una prova all'API di Gemini. Cambia l'interruttore **Eyes Vision Override** per reindirizzare l'analisi delle immagini tra l'endpoint di Gemini predefinito e un contenitore locale di Gemma.
 4. **Utenti**: Visualizza il saldo dei crediti attivi, i ruoli e i pagamenti totali. Utilizza azioni dirette per promuovere o declassare gli utenti.
 5. **Annunci (Listings)**: Visualizza lo stato degli annunci e disattiva gli articoli in caso di frode.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 4. Risultati attesi
 
-<<<<<<< HEAD
 - **Inserimento capi**: I vestiti compaiono immediatamente nella griglia del tuo armadio (~16 ms). La rimozione dello sfondo fornisce file PNG trasparenti e puliti.
 - **Badge DPP Verificato**: La scansione di passaporti di prodotti validi mostra una scheda informativa verde con i dettagli ecologici.
 - **Capispalla sull'avatar**: I cappotti e le giacche si mostrano sovrapposti correttamente sopra le maglie nel canevas 2D senza coprire cappelli o scarpe.
 - **Risposta vocale**: I testi generati dallo stilista virtuale vengono riprodotti in audio in modo automatico con un indicatore visivo di onda sonora.
 - **Abbonamenti**: L'attivazione dell'account Pro rimuove immediatamente l'avviso di limite di 150 articoli.
-=======
 - **Caricamento**: Gli articoli appaiono immediatamente nella griglia del guardaroba (~16 ms). La rimozione dello sfondo viene eseguita in modo pulito e genera file PNG trasparenti.
 - **Verifica DPP**: La scansione di passaporti di prodotti validi mostra una scheda informativa verde con dettagli di sostenibilità.
 - **Avatar a strati**: I vestiti esterni sono rappresentati correttamente sopra le maglie sulla tela dell'avatar 2D senza interferire con scarpe o cappelli.
 - **Risposta vocale**: I testi di risposta dell'AI Stylist vengono letti automaticamente e sono accompagnati da un indicatore di onda sonora visivo.
 - **Abbonamenti**: L'aggiornamento a un piano Manager o Professional rimuove immediatamente il messaggio di avviso del limite di capacità del guardaroba.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 5. Risoluzione dei problemi
 
 ### HTTP 402 Payment Required
-<<<<<<< HEAD
 - **Problema**: Caricamento capi bloccato. Hai raggiunto il limite di memorizzazione di 150 abiti per l'account gratuito.
 - **Soluzione**: Vai a Profilo -> Abbonamento e passa a Pro, oppure condividi il tuo link di invito per ottenere +10 spazi extra per ogni registrazione completata.
 
@@ -468,7 +449,6 @@ Verifica del funzionamento del sistema, contabilità finanziaria e gestione dei 
 ### VPS saturo (Out of Memory - OOM)
 - **Problema**: Picchi di utilizzo di CPU o RAM durante il caricamento delle foto.
 - **Soluzione**: L'inserimento dei capi utilizza code sequenziali per batch superiori a 5 articoli. Assicurati che il server disponga di almeno 4 GB di RAM.
-=======
 - **Problema**: Caricamento degli elementi bloccato. Hai raggiunto il limite di base del guardaroba di 50 elementi (o fino a 200 elementi con i bonus di referral).
 - **Soluzione**: Vai alla **pagina dei prezzi** (`/pricing`) e abbonati al piano Manager o Professional, o condividi il tuo link di referral per ottenere +10 slot per registrazione (fino a un massimo di 200 articoli).
 
@@ -487,20 +467,16 @@ Verifica del funzionamento del sistema, contabilità finanziaria e gestione dei 
 ### VPS Out of Memory (OOM)
 - **Problema**: Carico elevato sulla CPU/memoria del server durante i processi di caricamento dei file.
 - **Soluzione**: Il processo di caricamento utilizza una coda sequenziale per i caricamenti di oltre 5 elementi alla volta. Assicurati che il server disponga di almeno 4 GB di RAM disponibili.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 6. Limitazioni
 
-<<<<<<< HEAD
 - **APIs Web Speech dei browser**: La sintesi vocale nativa è limitata a Google Chrome e Apple Safari; in altri browser l'app utilizza l'input di testo classico.
 - **Sintesi vocale offline**: Il modulo mobile offline Piper ONNX dispone di meno profili di voce rispetto al trattamento audio Gemini del server.
 - **Limiti dimensionali delle immagini**: Le immagini del profilo e dell'avatar vengono compresse localmente nel browser a un 82% di qualità per non superare il limite di 16 MB dei documenti in MongoDB.
 - **Lettura delle ricevute d'acquisto**: Le ricevute molto sfocate, stropicciate o scritte a mano possono fallire nell'estrazione dei dati.
-=======
 - **API vocali del browser**: La trascrizione vocale integrata è limitata ai browser Chrome e Safari; altri browser torneranno all'input di testo standard.
 - **Output vocale offline**: Il motore locale Piper ONNX sui dispositivi mobili utilizza meno profili vocali rispetto al modello audio Gemini del server.
 - **Limiti di dimensione delle immagini**: Le immagini caricate per il profilo o l'avatar vengono compresse localmente nel browser all'82% di qualità per rispettare il limite di 16 MB dei documenti MongoDB.
 - **Accuratezza dell'analisi delle ricevute**: Su ricevute molto sfocate, distorte o scritte a mano, l'estrazione dei dati della transazione potrebbe fallire.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad

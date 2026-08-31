@@ -1,24 +1,20 @@
-<<<<<<< HEAD
 # Profilo, Taglie e Configurazione (`/me`)
 
 Gestisci misure corporee, tono della pelle, ritagli foto corpo intero, preferenze di stile, credenziali modelli AI e integrazioni di sistema nella tua dashboard profilo personale.
 
 ## Panoramica
 La pagina **Profilo e Impostazioni** (`https://dressapp.co/me`) funge da hub di controllo centrale per il tuo ecosistema DressApp. Ospita i tuoi parametri antropometrici fisici, palcoscenico avatar prova digitale, vincoli di stile, preferenze localizzate, chiavi modelli AI e programmi notifiche push.
-=======
 # Profilo, Taglie & Configurazione (`/me`)
 
 Gestisci le tue misurazioni fisiche, tonalità della pelle, ritagli di foto del corpo, preferenze di stile, credenziali dei modelli di IA e integrazioni di sistema sul tuo pannello del profilo personale.
 
 ## Panoramica
 La pagina **Profilo & Impostazioni** (`https://dressapp.co/me`) funge da centro di controllo principale per l'ecosistema DressApp. Ospita i tuoi parametri fisici antropometrici, l'arena dell'avatar virtuale per l'indossamento digitale, le restrizioni di stile, le preferenze localizzate, le chiavi dei modelli di IA e i programmi delle notifiche push.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## Prerequisiti
 - Un account DressApp attivo.
-<<<<<<< HEAD
 - (Opzionale) Permessi fotocamera dispositivo per upload foto corpo intero.
 - (Opzionale) Permessi posizione per targeting campagne stilisti locali e previsioni meteo.
 
@@ -145,7 +141,6 @@ Gestisce impostazioni a livello di sistema, abbonamenti e integrazioni AI:
 - **Sfondo foto non rimosso**: Assicurati che la foto caricata sia corpo intero con illuminazione sfondo contrastante.
 - **Avvisi push non arrivano**: Conferma che permessi notifiche browser sono abilitati e un numero telefono è salvato sotto *Contatto*.
 - **Autocompletamento indirizzo non risponde**: Verifica che connessione internet sia attiva per query OpenStreetMap Nominatim.
-=======
 - (Facoltativo) Autorizzazioni della fotocamera del dispositivo per il caricamento di foto a corpo intero.
 - (Facoltativo) Autorizzazioni di posizione per il targeting locale di campagne di stylisti, restrizioni culturali e previsioni del tempo.
 
@@ -287,17 +282,13 @@ Gestisce le impostazioni a livello di sistema, gli abbonamenti e le integrazioni
 - **Sfondo della foto non rimosso**: Assicurati che la foto caricata sia a corpo intero con un'illuminazione di sfondo contrastante.
 - **Le notifiche push non arrivano**: Conferma che le autorizzazioni per le notifiche del browser siano abilitate e che sia registrato un numero di telefono sotto *Contatti*.
 - **Il completamento automatico dell'indirizzo non risponde**: Verifica che la connessione Internet sia attiva per le query OpenStreetMap Nominatim.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## Limitazioni
-<<<<<<< HEAD
 - Spazio account livello gratuito limitato a 150 articoli salvo espansione tramite bonus referral (+10 slot per invito) o abbonamento Pro.
 - Modalità chiave API personalizzata richiede chiavi valide con quota residua dal rispettivo provider.
 
 (Fine file)
-=======
 - Lo spazio dell'account gratuito è limitato a 50 articoli, a meno che non venga espanso tramite bonus di referral (+10 slot per invito fino a un massimo di 200 articoli) o eseguendo l'upgrade al livello Manager o Professional.
 - La modalità con chiavi API personalizzate richiede chiavi valide con quota rimanente dal rispettivo provider.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad

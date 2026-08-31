@@ -20,10 +20,7 @@ DressApp turns your real-world physical closet into a smart digital wardrobe on 
    - Allow **Camera** access to take photos of your clothes and scan QR tags.
    - Allow **Microphone** access to talk to your AI Stylist hands-free.
    - Allow **Location** access for accurate local weather and local stylist recommendations.
-<<<<<<< HEAD
-=======
    - Allow **Calendar** access for calendar-aware outfit proposals. 
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
@@ -48,8 +45,6 @@ Adding your wardrobe items to DressApp is fast and easy:
 1. Tap **Digital Import**.
 2. Paste receipt text, upload an order confirmation screenshot, or upload a PDF receipt from stores like Zara or Asos.
 3. The AI extracts brand, price, and item category automatically.
-<<<<<<< HEAD
-=======
 
 #### Option D: Import your closet from a different application - Desktop web browser
 Already have a closet or wardrobe on a different application? Great! You saved yourself so much work! 
@@ -59,7 +54,6 @@ Already have a closet or wardrobe on a different application? Great! You saved y
 3. Follow the simple setup.
 4. DressApp agent will automatically upload all your existing closet items to your DressApp closet. Depending on your wardrobe volume, it will take a few minutes. Sit back and relax while DressApp agent automatically scrolls through your closet. Don't touch it and don't navigate away from this page. You can open a new window to browse. Leave your old wardrobe page open while the process is running.
 5. A pop-up message will let you know when the import process is done. Now you can do much more with your closet assets :) 
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 

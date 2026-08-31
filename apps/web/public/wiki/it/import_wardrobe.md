@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Importa il tuo Guardaroba - Guida Dettagliata
 
 ## Panoramica
@@ -86,7 +85,6 @@ If you run into issues with importing:
 ---
 
 *Ultima aggiornamento: luglio 2026*
-=======
 # Importa il tuo guardaroba da altre app (Migrazione da concorrente)
 
 ## Panoramica
@@ -119,4 +117,3 @@ Se hai già catalogato i tuoi vestiti in un'altra app per il guardaroba (come Wh
 ## Limitazioni
 - **Solo desktop**: Non può essere eseguito su browser mobili a causa delle restrizioni API.
 - **Chiarezza visiva**: Layout di abbigliamento altamente distorti, scuri o sovrapposti sull'app concorrente potrebbero far fallire l'estrazione visiva del ritaglio e richiedere successive regolazioni manuali delle foto.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad

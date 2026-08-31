@@ -9,7 +9,7 @@ import {
   Compass,
   ShoppingBag,
   Store,
-  HelpCircle,
+  CircleHelp as HelpCircle,
   Send,
   Check,
   Trash2,
@@ -26,7 +26,7 @@ import {
   Loader2,
   CheckSquare,
   Square,
-} from "lucide-react";
+} from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

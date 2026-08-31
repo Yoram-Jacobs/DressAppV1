@@ -38,11 +38,11 @@ const workspaceRoot = normalizePath(path.resolve(projectRoot, '../..'));
 const LLAMA_STUB = path.resolve(projectRoot, 'stubs/llama-stub.js');
 
 const config = getDefaultConfig(projectRoot);
+config.projectRoot = projectRoot;
 
 // ── Monorepo watchFolders ────────────────────────────────────────────────────
-// Watch workspace root and packages for hoisted monorepo dependencies.
+// Watch workspace root for hoisted monorepo dependencies.
 config.watchFolders = [
-  ...(config.watchFolders || []),
   workspaceRoot,
 ];
 

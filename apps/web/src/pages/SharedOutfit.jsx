@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { BrandLogo } from '@/components/BrandLogo';
 import { LanguagePicker } from '@/components/LanguagePicker';
 import { api } from '@/lib/api';
-import { Loader2, AlertCircle, Sparkles, ImageOff } from 'lucide-react';
+import { Loader2, CircleAlert as AlertCircle, Sparkles, ImageOff } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import HarmonyBadge from '@/components/stylist/HarmonyBadge';
 

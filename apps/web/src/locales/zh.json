@@ -1,4 +1,4 @@
-﻿{
+{
   "brand": "DressApp",
   "nav": {
     "home": "首页",
@@ -149,6 +149,190 @@
         "headline": "先交换，再购买",
         "summary": "社区交换空间同比增长三倍，零售商终于开始倾听。"
       }
+    },
+    "experts": {
+      "tag": "认识造型专家",
+      "title": "与真正的时尚专家交流",
+      "description": "当AI需要专业的人工修饰时，预约DressApp认证造型师的1对1专属咨询。",
+      "viewAll": "查看所有专家",
+      "bookSession": "预约咨询",
+      "sessionsCount": "({{count}} 次咨询)",
+      "roles": {
+        "seniorFashionStylist": "资深时尚造型师",
+        "menswearConsultant": "男装时尚顾问",
+        "sustainableFashionAdvisor": "可持续时尚顾问",
+        "occasionWearExpert": "礼服与场合装专家"
+      },
+      "bios": {
+        "ameliaNovak": "适用于高端商务场合的编辑级精选造型。",
+        "marcusLee": "专为现代男士打造的利落考究剪裁建议。",
+        "sofiaReyes": "在不牺牲时尚感的前提下打造环保胶囊衣橱。",
+        "priyaSharma": "为婚礼、盛典及庆典活动打造的惊艳焦点造型。"
+      }
+    },
+    "aiEditor": {
+      "tag": "视觉造型工作室",
+      "heading": "您的AI时尚造型编辑器",
+      "description1": "在实时模特画布上拖放、替换和调整衣橱单品的配色。",
+      "description2": "微调风格强度滑块，让AI实时重新生成配饰与叠穿搭配。",
+      "cta": "打开时尚编辑器",
+      "title": "AI时尚编辑器",
+      "renderingLivePreview": "正在生成实时预览",
+      "exportLook": "导出造型",
+      "previewAlt": "AI搭配效果预览",
+      "aiMatch": "AI契合度 {{percent}}%",
+      "fabricTone": "面料色调",
+      "styleIntensity": "风格强烈度",
+      "percentValue": "{{percent}}%",
+      "silhouetteFit": "版型与剪裁",
+      "regenerate": "使用AI重新生成",
+      "tabs": {
+        "top": "上装",
+        "bottom": "下装",
+        "shoes": "鞋履",
+        "accessory": "配饰"
+      },
+      "tones": {
+        "forest": "森林绿",
+        "charcoal": "炭灰色",
+        "camel": "驼色",
+        "slate": "板岩蓝",
+        "ivory": "象牙白"
+      },
+      "silhouettes": {
+        "slim": "修身版型",
+        "relaxed": "宽松版型",
+        "oversized": "超大版型 (Oversized)"
+      }
+    },
+    "stylistPreview": {
+      "tag": "专属时尚顾问",
+      "heading": "每日智能AI造型助手",
+      "description": "根据天气、日程安排和个人品味，获取精心挑选的每日穿搭建议。",
+      "aiName": "DressApp AI 造型师",
+      "aiRole": "专属形象顾问",
+      "status": "在线",
+      "aiMessageWeather": "14°C & 小雨",
+      "aiMessageMeeting": "上午10点 商务会议",
+      "aiMessagePrefix": "早上好！考虑到今天有",
+      "aiMessageMiddle": "且有",
+      "aiMessageSuffix": "，建议选择兼顾干练专业与防雨防护的整洁造型。",
+      "inputPlaceholder": "告诉您的造型师您需要什么…",
+      "addImageAria": "添加图片",
+      "micAria": "使用麦克风",
+      "sendAria": "发送消息",
+      "tabs": {
+        "chat": "对话",
+        "outfitPlanner": "穿搭规划器",
+        "dailySuggestion": "每日穿搭推荐"
+      },
+      "recs": {
+        "blazer": {
+          "category": "外套",
+          "title": "深蓝机能西装外套（防水）",
+          "description": "适合正式商务会议，轻松应对细雨天气。"
+        },
+        "shirt": {
+          "category": "上装内搭",
+          "title": "有机棉白色正装衬衫",
+          "description": "利落、纯净、专业的百搭经典基础款。"
+        }
+      },
+      "chips": {
+        "dailySuggestion": "每日穿搭",
+        "planEventOutfit": "规划活动穿搭",
+        "trendScout": "潮流雷达"
+      },
+      "brandName": "DressApp AI 专属个人造型师",
+      "activeStatus": "已就绪，随时为您提供造型建议",
+      "userMessage": "“明天我该穿什么？”",
+      "aiMessageCalendarLead": "并且您的日历日程安排了"
+    },
+    "marketplace": {
+      "tag": "零浪费循环倡议",
+      "heading": "循环衣橱交易市集",
+      "description": "买卖、交换或捐赠。直接从您的数字衣橱变现闲置衣物。",
+      "activeListings": "在售商品",
+      "buySwap": "购买、交换",
+      "orDonate": "或捐赠",
+      "explore": "探索市集",
+      "conditionLine": "成色：{{condition}}",
+      "locationLine": "所在地：{{location}}",
+      "buy": "购买",
+      "swap": "交换",
+      "donate": "捐赠",
+      "prevAria": "上一件商品",
+      "nextAria": "下一件商品",
+      "feeNotice": "支付处理后收取7%的透明平台服务费，无任何隐藏费用。"
+    },
+    "howItWorks": {
+      "tag": "流畅体验",
+      "heading": "重塑衣橱数字化管理",
+      "description": "只需四个简单的现代化步骤，在先进人工智能的协助下轻松打造完美穿搭。",
+      "steps": {
+        "capture": {
+          "alt": "拍照识衣",
+          "title": "拍照录入衣物",
+          "description": "快速拍摄衣物照片，自动适应任何光线与背景。"
+        },
+        "analysis": {
+          "alt": "属性识别分析",
+          "title": "AI 智能属性分析",
+          "description": "视觉大模型即刻自动识别颜色、图案、面料、版型与服装品类。"
+        },
+        "closet": {
+          "alt": "智能衣橱",
+          "title": "构建专属数字衣橱",
+          "description": "自动分类归档衣物，享受如同Zara/COS般优雅整洁的线上画册排版。"
+        },
+        "styled": {
+          "alt": "每日造型",
+          "title": "获取每日定制搭配",
+          "description": "根据当地精确气象预测与日历会议，获取高度契合的每日穿搭方案。"
+        }
+      }
+    },
+    "closet": {
+      "tag": "您的数字衣橱",
+      "heading": "每一件衣物都有专属归宿",
+      "description1": "随手拍下任何衣物——DressApp自动解析面料、版型与色彩，如同专业造型师般为您精心归档。",
+      "description2": "告别被遗忘在角落的衣物。按关键词或场景搜索——例如“雨天周一保暖穿搭”，心仪单品立即呈现。",
+      "cta": "开始打造数字衣橱",
+      "recentlyAdded": "最近添加",
+      "recentlyAddedMore": "+{{count}}",
+      "garments": {
+        "blazer": {
+          "alt": "深蓝西装外套",
+          "category": "外套",
+          "name": "深蓝机能西装",
+          "meta": "编号 014 — 防水面料"
+        },
+        "sweater": {
+          "alt": "灰色针织毛衣",
+          "category": "针织衫",
+          "name": "美利奴羊毛圆领毛衣",
+          "meta": "编号 027 — 烟灰色"
+        },
+        "shirt": {
+          "alt": "白色衬衫",
+          "category": "上装",
+          "name": "全棉正装衬衫",
+          "meta": "编号 041 — 纯白"
+        }
+      },
+      "recent": {
+        "sneakers": "运动鞋",
+        "jeans": "牛仔裤",
+        "bag": "皮质手袋",
+        "scarf": "围巾"
+      }
+    },
+    "stylist": {
+      "tag": "懂你的共情设计智能",
+      "heading": "真正读懂生活节奏的AI造型师",
+      "description1": "日常穿搭不应脱离实际。DressApp 直连您的日历日程与实时精准天气，为您量身定制每日最佳穿搭方案。",
+      "description2": "不再因商务会谈着装不当而尴尬，也无需担忧突如其来的降雨。宛如随身拥有一位顶级专属时尚造型顾问，洞悉你衣橱里的每一件单品。",
+      "cta": "咨询造型师"
     }
   },
   "closet": {
@@ -475,7 +659,8 @@
       "fabric": "面料与成分",
       "market": "衣橱用途与定价"
     },
-    "noReadyCards": "没有可保存的已完成卡片。"
+    "noReadyCards": "没有可保存的已完成卡片。",
+    "gender": "性别分类"
   },
   "itemDetail": {
     "reanalyze": {
@@ -1345,7 +1530,7 @@
     "importWardrobePill": "导入衣橱",
     "mobileDesktopGuide": "衣橱导入功能可在DressApp桌面版中使用。请在桌面浏览器中打开您的账户以继续。",
     "deleteAccountLink": "删除我的账户",
-    "privacyPolicy": "隐私政策",
+    "privacyPolicy": "Privacy Policy",
     "termsOfService": "服务条款",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
@@ -1398,9 +1583,6 @@
     "inviteDesc": "与您的朋友和家人分享 DressApp",
     "bookmarkletDesc": "将下方按钮拖拽至书签栏。在移动端上，将其加入书签并命名为 'DressApp 购物助手'。浏览任何商品详情页时点击此书签即可使用。",
     "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
-<<<<<<< HEAD:frontend/src/locales/zh.json
-    "privacyPolicy": "Privacy Policy"
-=======
     "aiProvider": "AI Engine & Model Provider",
     "selectedModel": "Active AI Model",
     "bringYourOwnKey": "Bring Your Own API Key",
@@ -1492,7 +1674,6 @@
     "chooseLanguage": "Select Language",
     "planLabel": "{{tier}}套餐",
     "creditsLabel": "{{credits}}积分"
->>>>>>> e4839c3f30ce0fcd1ab5fcade0fc6c20eb2db39d:apps/web/src/locales/zh.json
   },
   "admin": {
     "title": "管理",
@@ -2341,12 +2522,23 @@
       "influencers": "意见领袖",
       "second_hand": "二手",
       "recycling": "回收",
-      "news_flash": "新闻速递"
+      "news_flash": "新闻速递",
+      "all": "全部",
+      "local": "本地风尚",
+      "runway": "秀场风向",
+      "vintage": "复古与档案馆",
+      "maintenance_repairs": "保养与修复"
     },
     "title": "时尚趋势与洞察",
     "subtitle": "浏览为您定制的风格美学、可持续时尚新闻和秀场评论。",
     "noTrendsTitle": "未找到趋势",
-    "noTrendsDesc": "我们无法找到任何活跃的趋势卡片。请稍后再来查看精选洞察。"
+    "noTrendsDesc": "我们无法找到任何活跃的趋势卡片。请稍后再来查看精选洞察。",
+    "womensFashion": "女士时尚",
+    "mensFashion": "男士时尚",
+    "men": "男士",
+    "women": "女士",
+    "israelAnchor": "以色列精选 🇮🇱",
+    "all": "全部"
   },
   "item": {
     "polishingPhoto": "正在优化照片…",
@@ -3170,7 +3362,31 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "description": "DressApp privacy policy — how we collect, use, and protect your data."
+    "description": "DressApp privacy policy — how we collect, use, and protect your data.",
+    "lastUpdated": "最近更新时间：2026年7月",
+    "sections": {
+      "intro": "1. 引言",
+      "dataCollection": "2. 数据收集",
+      "dataUse": "3. 数据用途",
+      "dataSharing": "4. 数据共享",
+      "aiUsage": "5. AI 与造型功能",
+      "storage": "6. 数据存储与安全",
+      "retention": "7. 数据保留",
+      "rights": "8. 您的权利",
+      "cookies": "9. Cookie 政策",
+      "contact": "10. 联系我们"
+    },
+    "intro": "DressApp 承诺保护您的个人隐私。本政策说明我们如何收集与使用您的信息。",
+    "dataCollection": "我们收集您直接提供的信息，包括姓名、邮箱、照片、身材尺寸及偏好数据。",
+    "dataUse": "您的数据用于提供和改进服务、个性化搭配推荐以及保障账户安全。",
+    "dataSharing": "我们绝不出售您的个人数据。仅在严格保密协议下与受信任的服务商共享有限必要信息。",
+    "aiUsage": "AI造型与身材预测功能均在安全服务器上处理，绝不向广告商或第三方泄露生物识别数据。",
+    "storage": "数据采用行业标准的静态与传输中加密技术进行安全存储与防护。",
+    "retention": "我们仅在提供服务所需的期间保留数据。您可以随时在设置中申请彻底注销并删除全部数据。",
+    "rights": "您依法享有查阅、更正、导出及彻底删除个人数据的全部权利。",
+    "cookies": "我们使用 Cookie 及同类技术以提升使用体验与分析应用性能。",
+    "contact": "如有任何隐私相关疑问，请通过应用设置或访问 dressapp.co 联系我们。",
+    "loadError": "无法加载隐私政策，请稍后重试。"
   },
   "pricing": {
     "title": "会员订阅计划",

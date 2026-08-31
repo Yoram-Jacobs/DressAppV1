@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Profiel, Maten en Configuratie (`/me`)
 
 Beheer lichaamsmetingen, huidskleur, full-body fotoknipperingen, stijlvoorkeuren, AI-modelcredentials en systeemintegraties in uw persoonlijke profieldashboard.
@@ -136,7 +135,6 @@ Beheert systeemniveau-instellingen, abonnementen en AI-integraties:
 - **Foto-achtergrond niet verwijderd**: Zorg ervoor dat uw geüploade foto full-body is met contrasterende achtergrondverlichting.
 - **Push-meldingen komen niet aan**: Bevestig dat browsermeldingstoestemmingen ingeschakeld zijn en een telefoonnummer is opgeslagen onder *Contact*.
 - **Adresautocompletie reageert niet**: Controleer of internetverbinding actief is voor OpenStreetMap Nominatim-query's.
-=======
 # Profiel, Maatvoering & Configuratie (`/me`)
 
 Beheer fysieke metingen, huidskleur, uitsnijdingen van lichaamsfoto's, stylingvoorkeuren, inloggegevens van AI-modellen en systeemintegraties op uw persoonlijke profieldashboard.
@@ -289,17 +287,13 @@ Beheert instellingen op systeemniveau, abonnements- en AI-integraties:
 - **Achtergrond van foto niet verwijderd**: Zorg ervoor dat uw geüploade foto een foto van het hele lichaam is met contrasterende achtergrondverlichting.
 - **Push-waarschuwingen komen niet aan**: Bevestig dat de browsermachtigingen voor meldingen zijn ingeschakeld en dat er een telefoonnummer is opgeslagen onder *Contact*.
 - **Automatisch aanvullen van adres reageert niet**: Controleer of de internetverbinding actief is voor OpenStreetMap Nominatim-zoekopdrachten.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## Beperkingen
-<<<<<<< HEAD
 - Gratis accountruimte is beperkt tot 150 items, tenzij uitgebreid via verwijzingsbonus (+10 slots per uitnodiging) of Pro-abonnement.
 - Aangepaste API-sleutelmodus vereist geldige sleutels met resterende quota van de betreffende provider.
 
 (End of file)
-=======
 - De accountruimte voor het gratis niveau is beperkt tot 50 items, tenzij deze wordt uitgebreid via een verwijzingsbonus (+10 plaatsen per uitnodiging tot maximaal 200 items) of door te upgraden naar het niveau Manager of Professional.
 - De modus voor aangepaste API-sleutels vereist geldige sleutels met resterend quotum van de respectieve provider.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad

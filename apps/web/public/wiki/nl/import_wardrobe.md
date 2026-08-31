@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Importeer je Garderobe - Gedetailleerde Gids
 
 ## Overzicht
@@ -86,7 +85,6 @@ If you run into issues with importing:
 ---
 
 *Laatste update: juli 2026*
-=======
 # Importeer uw garderobe uit andere apps (Migratie vanaf concurrenten)
 
 ## Overzicht
@@ -119,4 +117,3 @@ Als u uw kleding al heeft gecatalogiseerd in een andere garderobe-app (zoals Whe
 ## Beperkingen
 - **Alleen desktop**: Kan niet worden uitgevoerd op mobiele browsers vanwege API-beperkingen.
 - **Visuele helderheid**: Zeer vervormde, donkere of overlappende kledinglay-outs op de app van de concurrent kunnen ertoe leiden dat de visuele uitsnede mislukt en vereisen later handmatige foto-aanpassingen.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad

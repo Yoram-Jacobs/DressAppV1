@@ -1,6 +1,5 @@
 # Perfil, Tallas y Configuración (`/me`)
 
-<<<<<<< HEAD
 Gestione medidas corporales, tono de piel, recortes de fotos de cuerpo completo, preferencias de estilo, credenciales de modelos de IA e integraciones del sistema en su panel de control personal.
 
 ## Descripción General
@@ -136,7 +135,6 @@ Gestiona configuraciones a nivel de sistema, suscripciones e integraciones de IA
 - **Fondo de foto no eliminado**: Asegúrese de que su foto subida sea de cuerpo completo con iluminación de fondo contrastante.
 - **Alertas push no llegan**: Confirme que permisos de notificación del navegador están habilitados y un número de teléfono guardado bajo *Contacto*.
 - **Autocompletado de dirección no responde**: Verifique que la conexión a internet está activa para consultas OpenStreetMap Nominatim.
-=======
 Administre sus medidas físicas, tono de piel, recortes de fotos corporales, preferencias de estilo, credenciales de modelos de IA e integraciones de sistemas en su panel de perfil personal.
 
 ## Resumen general
@@ -287,17 +285,13 @@ Administra configuraciones a nivel de sistema, suscripciones e integraciones de 
 - **No se quitó el fondo de la foto**: Asegúrese de que su foto subida sea de cuerpo completo con iluminación de fondo contrastante.
 - **No llegan las alertas push**: Confirme que los permisos de notificación del navegador estén habilitados y que haya un número de teléfono guardado en *Contacto*.
 - **El autocompletado de direcciones no responde**: Compruebe que la conexión a Internet esté activa para las consultas de OpenStreetMap Nominatim.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## Limitaciones
-<<<<<<< HEAD
 - Espacio de cuenta nivel gratis limitado a 150 items a menos que se expanda vía bono de referido (+10 slots por invitación) o suscripción Pro.
 - Modo clave API personalizada requiere claves válidas con cuota restante del proveedor respectivo.
 
 (Fin del archivo)
-=======
 - El espacio de cuenta de nivel gratuito está limitado a 50 elementos a menos que se amplíe mediante bonos de recomendación (+10 espacios por invitación hasta un máximo de 200 elementos) o actualizando al nivel Manager o Professional.
 - El modo de clave de API personalizada requiere claves válidas con cuota restante del proveedor respectivo.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad

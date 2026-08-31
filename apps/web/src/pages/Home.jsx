@@ -180,35 +180,28 @@ export default function Home() {
     }
   };
 
+  const [liveListings, setLiveListings] = useState([]);
+
   useEffect(() => {
     (async () => {
       try {
-        // Read closet count straight from the global store (already
-        // populated by AppLayout's prewarm) — no extra round-trip.
-        // Marketplace count is still server-side because we don't
-        // store all listings client-side.
-        const market = await api.listListings({ limit: 1, status: "active" });
+        const market = await api.listListings({ limit: 10, status: "active" });
+        const list = market?.items || market?.listings || (Array.isArray(market) ? market : []);
+        setLiveListings(list);
         setCounts({
           closet: closet.total || (closet.items?.length ?? 0),
-          market: market.total || 0,
+          market: market.total || list.length || 0,
         });
       } catch {
         setCounts({ closet: closet.total || 0, market: 0 });
       }
     })();
-    // We intentionally only run this once per mount; closet.total
-    // updates flow through the dedicated effect below so the chip
-    // stays accurate after add/delete.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     fetchTrends();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language, country]);
 
-  // Keep the closet chip in sync with store mutations from elsewhere
-  // in the app (AddItem, ItemDetail delete, etc.) without a refetch.
   useEffect(() => {
     setCounts((prev) => {
       const closetCount = closet.total || (closet.items?.length ?? 0);
@@ -229,53 +222,86 @@ export default function Home() {
   const trendNextRef = useRef(null);
   const trendSwiperRef = useRef(null);
   const marketSwiperRef = useRef(null);
-  const marketplaceItems = [
+
+  const DEFAULT_MARKETPLACE_ITEMS = [
     {
-      id: 1,
-      badge: "Sell Only",
+      id: "demo-1",
+      badge: t("market.sellOnly", { defaultValue: "Sell Only" }),
       title: "Vintage Denim Jacket",
       price: "$140",
       condition: "Pristine (9.5/10)",
       location: "Copenhagen, DK",
       image: market1,
+      link: "/market",
     },
     {
-      id: 2,
-      badge: "Swap / Donate",
+      id: "demo-2",
+      badge: t("market.swap", { defaultValue: "Swap / Donate" }),
       title: "Silk Pattern Scarf",
       price: "$45",
       condition: "Excellent (9/10)",
       location: "Paris, FR",
       image: market2,
+      link: "/market",
     },
     {
-      id: 3,
-      badge: "Sell & Swap",
+      id: "demo-3",
+      badge: t("market.sellSwap", { defaultValue: "Sell & Swap" }),
       title: "Minimalist Sneakers",
       price: "$95",
       condition: "Very Good (8.5/10)",
       location: "Milan, IT",
       image: market3,
+      link: "/market",
     },
     {
-      id: 4,
-      badge: "Sell Only",
+      id: "demo-4",
+      badge: t("market.sellOnly", { defaultValue: "Sell Only" }),
       title: "Over-Sized Wool Coat",
       price: "$320",
       condition: "Perfect (10/10)",
       location: "Stockholm, SE",
       image: market4,
+      link: "/market",
     },
     {
-      id: 5,
-      badge: "Sell & Swap",
+      id: "demo-5",
+      badge: t("market.sellSwap", { defaultValue: "Sell & Swap" }),
       title: "Navy Tech Blazer",
       price: "$180",
       condition: "Excellent (9/10)",
       location: "Berlin, DE",
       image: closet1,
+      link: "/market",
     },
   ];
+
+  const displayMarketplaceItems = useMemo(() => {
+    if (!liveListings || liveListings.length === 0) return DEFAULT_MARKETPLACE_ITEMS;
+    return liveListings.map((item, idx) => {
+      const mode = item.mode || item.intent;
+      let badge = t("market.active", { defaultValue: "Active" });
+      if (item.source === "Retail") badge = t("market.retail", { defaultValue: "Retail" });
+      else if (mode === "sell" || mode === "for_sale") badge = t("market.sellOnly", { defaultValue: "Sell Only" });
+      else if (mode === "swap") badge = t("market.swap", { defaultValue: "Swap" });
+      else if (mode === "donate") badge = t("market.donate", { defaultValue: "Donate" });
+
+      const priceStr = item.price != null && item.price !== ""
+        ? `${item.currency === "ILS" ? "₪" : item.currency === "EUR" ? "€" : "$"}${item.price}`
+        : (mode === "donate" ? t("market.free", { defaultValue: "Free" }) : "");
+
+      return {
+        id: item.id || `live-${idx}`,
+        badge,
+        title: item.title || item.name || t("market.item", { defaultValue: "Wardrobe Item" }),
+        price: priceStr,
+        condition: item.condition || "Good",
+        location: item.location || item.city || "Global",
+        image: item.clean_image_url || item.image_url || (Array.isArray(item.images) && item.images[0]) || market1,
+        link: `/market`,
+      };
+    });
+  }, [liveListings, t]);
   const EXPERTS = [
     {
       id: "amelia-novak",
@@ -1655,7 +1681,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
               }}
               navigation={{ prevEl: null, nextEl: null }}
             >
-              {marketplaceItems.map((item, i) => (
+              {displayMarketplaceItems.map((item, i) => (
                 <SwiperSlide key={item.id} className="h-full">
                   <motion.div
                     initial={{ opacity: 0, y: 30 }}
@@ -1669,7 +1695,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                     className="group overflow-hidden rounded-[12px] border border-black/[0.06] my-[20px] bg-white transition-smooth hover:-translate-y-[5px] hover:shadow-md"
                   >
                     {/* Image */}
-                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-white">
+                    <Link to={item.link || "/market"} className="relative block aspect-[4/3] w-full overflow-hidden bg-white">
                       <img
                         src={item.image}
                         alt={item.title}
@@ -1678,13 +1704,13 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                       <span className="absolute start-3 top-3 rounded-full bg-[var(--primary-color)] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-white shadow-[var(--primary-shadow)]">
                         {item.badge}
                       </span>
-                    </div>
+                    </Link>
                     {/* Details */}
                     <div className="p-4">
                       <div className="flex items-center justify-between gap-3">
-                        <h6 className="m-0 min-w-0 truncate text-[15px] font-black leading-[1.3] text-[var(--dark-color)]">
+                        <Link to={item.link || "/market"} className="m-0 min-w-0 truncate text-[15px] font-black leading-[1.3] text-[var(--dark-color)] no-underline hover:text-[var(--primary-color)]">
                           {item.title}
-                        </h6>
+                        </Link>
                         <span className="shrink-0 text-[15px] font-black text-[var(--dark-color)]">
                           {item.price}
                         </span>
@@ -1701,26 +1727,26 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                         })}
                       </p>
                       <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          className="flex-1 rounded-[50px] border border-[var(--primary-color)] bg-[var(--primary-color)] px-3 py-2.5 text-[12px] font-bold text-white transition-smooth hover:-translate-y-[1px] hover:bg-[var(--primary-hover)]"
+                        <Link
+                          to="/market"
+                          className="flex-1 rounded-[50px] border border-[var(--primary-color)] bg-[var(--primary-color)] px-3 py-2.5 text-center text-[12px] font-bold text-white no-underline transition-smooth hover:-translate-y-[1px] hover:bg-[var(--primary-hover)]"
                         >
                           {t("home.marketplace.buy", { defaultValue: "Buy" })}
-                        </button>
-                        <button
-                          type="button"
-                          className="flex-1 rounded-[50px] border border-black/10 bg-white px-3 py-2.5 text-[12px] font-bold text-[var(--dark-color)] transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
+                        </Link>
+                        <Link
+                          to="/market"
+                          className="flex-1 rounded-[50px] border border-black/10 bg-white px-3 py-2.5 text-center text-[12px] font-bold text-[var(--dark-color)] no-underline transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
                         >
                           {t("home.marketplace.swap", { defaultValue: "Swap" })}
-                        </button>
-                        <button
-                          type="button"
-                          className="flex-1 rounded-[50px] border border-black/10 bg-white px-3 py-2.5 text-[12px] font-bold text-[var(--dark-color)] transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
+                        </Link>
+                        <Link
+                          to="/market"
+                          className="flex-1 rounded-[50px] border border-black/10 bg-white px-3 py-2.5 text-center text-[12px] font-bold text-[var(--dark-color)] no-underline transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
                         >
                           {t("home.marketplace.donate", {
                             defaultValue: "Donate",
                           })}
-                        </button>
+                        </Link>
                       </div>
                     </div>
                   </motion.div>

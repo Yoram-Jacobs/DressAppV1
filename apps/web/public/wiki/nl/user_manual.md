@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # DressApp — Volledige technische gebruikershandleiding
 
 Uitgebreide gebruikershandleiding en technische referentiegids voor het persoonlijke DressApp-garderobe-ecosysteem, de stylingsmotor, de circulaire marktplaats en de beheerderspanelen.
@@ -22,7 +21,6 @@ DressApp is een door AI aangedreven persoonlijke garderobemanager, stylingadvise
 - **Lokale machine learning & maten**: CPU-lokaal U2-Net (`rembg`) voor achtergrondverwijdering, SegFormer-b2 voor kledingsegmentatie, Fashion-CLIP-embeddings en het ANSUR II-regressiemodel voor fysieke lichaamsmaten (`body_predictor.py`). Optioneel routering naar zelfgehoste GPU-containers (SegFormer-b3 + BiRefNet) voor snelle bewerkingen.
 - **Conversational STT/TTS**: Realtime spraakherkenning via de Web Speech API van de client als fallback, Gemini 2.5 Flash aan de serverzijde voor multimodale verwerking en Piper/Sherpa-ONNX-engines op het apparaat voor offline spraakuitvoer.
 - **Externe integratiediensten**: OpenWeatherMap API voor weergegevens, Google Calendar OAuth voor het exporteren van dagschema's, OpenStreetMap (Nominatim) voor het automatisch aanvullen van adressen en PayPal Subscriptions/Checkout REST API's.
-=======
 # DressApp Volledige Technische Gebruikershandleiding
 
 Uitgebreide gebruikershandleiding en technische referentiegids voor het persoonlijke kledingkastecosysteem, stylingengine, circulaire marktplaats en administratiepanelen van DressApp.
@@ -46,13 +44,11 @@ DressApp is een door AI gestuurde persoonlijke kledingkastbeheerder, stylingadvi
 - **Lokale machine learning & maatvoering**: CPU-lokale U2-Net (`rembg`) achtergrondmatting, SegFormer-b2 kledingontleding, Fashion-CLIP-embeddings en ANSUR II regressiemodel voor fysieke lichaamsmetingen (`body_predictor.py`). Optioneel worden aanvragen gerouteerd naar zelfgehoste GPU-containers (SegFormer-b3 + BiRefNet) voor snelle bewerkingen.
 - **Conversationele STT/TTS**: Live spraakherkenning aan de clientzijde (Web Speech) als fallback, multimodale Gemini 2.5 Flash-modulaties aan de serverzijde en Piper/Sherpa-ONNX-engines op het apparaat voor offline werking.
 - **Externe integratiediensten**: OpenWeatherMap API voor weergegevens, Google Calendar OAuth voor het exporteren van dagelijkse schema's, OpenStreetMap (Nominatim) voor het automatisch aanvullen van adressen en REST API's voor PayPal Subscriptions/Checkout.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 2. Prerequisites (Vereisten)
 
-<<<<<<< HEAD
 ### Vereisten voor de hostomgeving
 - **Hardware**: Minimaal 4 GB RAM VPS (bijv. Hetzner VPS voor het hosten van de productie-omgeving `dressapp.co`).
 - **Afhankelijkheden**: Docker & Docker Compose-stack (inclusief backend, frontend en Caddy TLS-beëindiging).
@@ -62,7 +58,6 @@ DressApp is een door AI gestuurde persoonlijke kledingkastbeheerder, stylingadvi
 - **Webbrowser**: Google Chrome of Apple Safari (vereist voor volledige compatibiliteit met spraakfuncties).
 - **Machtigingen**: Toegang verlenen tot de camera (voor kledingfoto's en QR-scans) en de microfoon (voor spraakgesprekken).
 - **Netwerk**: Actieve verbinding voor de LLM-verwerking, waarbij IndexedDB-caching offline bladeren in de catalogus mogelijk maakt.
-=======
 ### Eisen aan de hostomgeving
 - **Hardware**: VPS met minimaal 4 GB RAM (bijv. Hetzner VPS voor het hosten van de productie `dressapp.co`).
 - **Afhankelijkheden**: Docker & Docker Compose (inclusief backend, frontend en Caddy TLS-beëindiging).
@@ -72,13 +67,11 @@ DressApp is een door AI gestuurde persoonlijke kledingkastbeheerder, stylingadvi
 - **Webbrowser**: Google Chrome of Apple Safari (vereist voor volledige compatibiliteit van spraakfuncties).
 - **Machtigingen**: Verleen cameramachtigingen (voor kledingfoto's en QR-scans) en microfoonmachtigingen (voor spraakgesprekken).
 - **Netwerk**: Actieve verbinding voor LLM-verwerking, waarbij IndexedDB-caching offline bladeren door de catalogus mogelijk maakt.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 3. Stap-voor-stap instructies
 
-<<<<<<< HEAD
 ### 3.1 Kleding toevoegen (Artikelen registreren)
 REGISTRATIEMETHODEN: Fotografie, EU-productpaspoorten en digitale aankoopbewijzen.
 
@@ -253,7 +246,6 @@ Systeembewaking, boekhouding en gebruikersaccountbeheer.
 3. **Aanbieders**: Klik op **Sleutel verifiëren** (Verify Key) om een directe ping naar de Gemini API te sturen. Activeer de schakelaar **Eyes Vision Override** om de afbeeldingsanalyse tussen het standaard Gemini-eindpunt and een lokale Gemma-container om te schakelen.
 4. **Gebruikers**: Geef actieve credits, gebruikersrollen en totale omzet weer. Gebruik directe acties om gebruikers te promoveren of te degraderen.
 5. **Advertenties**: Bekijk de status van marktplaatsadvertenties en schakel advertenties uit bij misbruik.
-=======
 ### 3.1 Kledingstukken invoeren (Items toevoegen)
 INVOERMETHODEN: Fotografie, EU Digitale Productpaspoorten (DPP) en digitale aankoopbewijzen.
 
@@ -428,32 +420,27 @@ Controle van de systeemwerking, financiële boekhouding en beheer van gebruikers
 3. **Aanbieders (Providers)**: Klik op **Verify Key** om een test-ping naar de Gemini API te sturen. Schakel de schakelaar **Eyes Vision Override** om om de beeldanalyse om te leiden tussen het standaard Gemini-eindpunt and een lokale Gemma-container.
 4. **Gebruikers**: Toon actieve credits, rollen en totale betalingen. Gebruik directe acties om gebruikers te promoveren of te degraderen.
 5. **Advertenties (Listings)**: Toon de status van advertenties en deactiveer items in geval van vermoeden van fraude.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 4. Verwachte resultaten
 
-<<<<<<< HEAD
 - **Import**: Artikelen worden direct in het kledingkast-raster geladen (~16 ms). De achtergrond wordt netjes verwijderd en levert transparante PNG's op.
 - **DPP-verificatie**: Het scannen van geldige productpaspoorten toont de groene infokaart met duurzaamheidsdetails.
 - **Avatar-bovenkleding**: Jassen en mantels worden correct over tops op de 2D-avatar-canvas weergegeven, zonder hoofddeksels of schoenen te oversnijden.
 - **Spraakantwoord**: Tekstuitvoer van de virtuele stylist wordt automatisch als audio uitgegeven, vergezeld van een visuele golfvorm.
 - **Abonnementen**: De activering van Pro verwijdert direct de waarschuwing voor de limiet van 150 artikelen.
-=======
 - **Invoer**: Items worden onmiddellijk in het kledingkastraster weergegeven (~16 ms). De achtergrondverwijdering verloopt netjes en levert transparante PNG-bestanden op.
 - **DPP-verificatie**: Het scannen van geldige productpaspoorten toont een groene informatiekaart met duurzaamheidsdetails.
 - **Avatar-lagen**: Buitenkleding wordt correct over tops weergegeven op het 2D-avatar-canvas, zonder clippingfouten bij hoofddeksels/schoenen.
 - **Spraakuitvoer**: Tekstuitvoer van de AI Stylist wordt automatisch voorgelezen, vergezeld van een visuele golfvormweergave.
 - **Abonnementen**: Na het upgraden naar de Manager- of Professional-plan verdwijnt de capaciteitswaarschuwing van de kledingkast direct.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 5. Problemen oplossen
 
 ### HTTP 402 Payment Required
-<<<<<<< HEAD
 - **Problem**: Import geblokkeerd. U hebt de maximale basislimiet van 150 kledingkast-artikelen bereikt.
 - **Oplossing**: Ga naar Profile -> Subscription en upgrade naar Pro, of deel uw uitnodigingslink om +10 plaatsen per registratie te ontvangen.
 
@@ -472,7 +459,6 @@ Controle van de systeemwerking, financiële boekhouding en beheer van gebruikers
 ### VPS-geheugenoverbelasting (Out of Memory - OOM)
 - **Probleem**: CPU-/RAM-pieken tijdens de afbeelding-upload.
 - **Oplossing**: De import verwerkt batches van meer dan 5 artikelen via sequentiële wachtrijsloten. Zorg ervoor dat de server over minimaal 4 GB RAM beschikt.
-=======
 - **Probleem**: Kledinginvoer geblokkeerd. U heeft de basislimiet van 50 items bereikt (of tot 200 items door verwijzingsbonussen).
 - **Oplossing**: Ga naar de **tarievenpagina** (`/pricing`) en neem een abonnement op de Manager- of Professional-plan, of deel uw verwijzingslink om +10 plaatsen per registratie te krijgen (tot maximaal 200 items).
 
@@ -491,20 +477,16 @@ Controle van de systeemwerking, financiële boekhouding en beheer van gebruikers
 ### Geheugentekort (OOM) bij VPS-servers
 - **Probleem**: Hoge CPU-/RAM-belasting bij uploadprocessen.
 - **Oplossing**: De invoer maakt gebruik van sequentiële wachtrijsloten voor batch-uploads van meer dan 5 items. Zorg ervoor dat de server over minimaal 4 GB RAM beschikt.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 6. Beperkingen
 
-<<<<<<< HEAD
 - **Browser-Web-Speech-API's**: De native spraak-naar-tekst-vertaling is beperkt tot Chrome en Safari; andere browsers maken gebruik van de standaard-tekstinvoer.
 - **Offline-spraaksynthese**: De mobiele offline-synthese via Piper ONNX maakt gebruik van minder spraakprofielen dan de Gemini-audioverwerking aan de serverzijde.
 - **Beperkingen van de afbeeldingsgrootte**: Avatars en profielafbeeldingen worden in de browser lokaal op 82% kwaliteit gecomprimeerd om in de MongoDB-limiet van 16 MB te passen.
 - **Kassabonanalyse**: Sterk wazige, vervormde of handgeschreven kassabonnen kunnen mislukken bij het gegevensextractieproces.
-=======
 - **Spraak-API's in de browser**: De geïntegreerde spraak-naar-tekst-transcriptie is beperkt tot Chrome en Safari; andere browsers vallen terug op standaard tekstinvoer.
 - **Offline spraakuitvoer**: De mobiele offline spraaksynthese via Piper ONNX gebruikt minder stemprofielen in vergelijking met het Gemini-audiomodel op de server.
 - **Afbeeldingsgroottebeperkingen**: Afbeeldingen die worden geüpload voor profiel of avatar worden in de browser gecomprimeerd tot een kwaliteit van 82% om binnen de limiet van 16 MB van MongoDB-documenten te passen.
 - **Bonanalyse**: Bij zeer wazige, vervormde of handgeschreven bonnen kan de gegevensextractie mislukken.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad

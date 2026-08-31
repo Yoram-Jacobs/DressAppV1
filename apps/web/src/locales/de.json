@@ -1,4 +1,4 @@
-﻿{
+{
   "brand": "DressApp",
   "nav": {
     "home": "Start",
@@ -133,6 +133,190 @@
         "headline": "Tauschen statt kaufen",
         "summary": "Community-Tauschräume wuchsen im Jahresvergleich um das Dreifache; der Handel hört endlich zu."
       }
+    },
+    "experts": {
+      "tag": "Treffen Sie die Spezialisten",
+      "title": "Sprechen Sie mit einem echten Stilexperten",
+      "description": "Buchen Sie eine 1:1-Session mit einem zertifizierten DressApp-Stylisten, wenn die KI einen menschlichen, redaktionellen Feinschliff benötigt.",
+      "viewAll": "Alle Experten anzeigen",
+      "bookSession": "Session buchen",
+      "sessionsCount": "({{count}} Sitzungen)",
+      "roles": {
+        "seniorFashionStylist": "Senior Fashion Stylist",
+        "menswearConsultant": "Herrenmode-Berater",
+        "sustainableFashionAdvisor": "Berater für nachhaltige Mode",
+        "occasionWearExpert": "Experte für festliche Mode"
+      },
+      "bios": {
+        "ameliaNovak": "Redaktionelle Looks für anspruchsvolle berufliche Situationen.",
+        "marcusLee": "Scharfe, moderne Schneiderberatung für den modernen Mann.",
+        "sofiaReyes": "Aufbau einer bewussten Garderobe ohne Kompromisse beim Stil.",
+        "priyaSharma": "Umwerfende Looks für Hochzeiten, Galas und festliche Anlässe."
+      }
+    },
+    "aiEditor": {
+      "tag": "Visuelles Styling-Studio",
+      "heading": "Ihr KI-gestützter Mode-Editor",
+      "description1": "Ziehen, tauschen und färben Sie echte Kleidungsstücke aus Ihrem Kleiderschrank auf einer Live-Modell-Leinwand neu ein.",
+      "description2": "Passen Sie den Stil-Intensitätsregler an und lassen Sie die KI Accessoires und Layering in Echtzeit neu generieren.",
+      "cta": "Mode-Editor öffnen",
+      "title": "KI-Mode-Editor",
+      "renderingLivePreview": "Live-Vorschau wird gerendert",
+      "exportLook": "Look exportieren",
+      "previewAlt": "KI-gestylte Outfit-Vorschau",
+      "aiMatch": "KI-Übereinstimmung {{percent}}%",
+      "fabricTone": "Stoffton",
+      "styleIntensity": "Stilintensität",
+      "percentValue": "{{percent}}%",
+      "silhouetteFit": "Silhouette & Passform",
+      "regenerate": "Mit KI neu generieren",
+      "tabs": {
+        "top": "Oberteil",
+        "bottom": "Unterteil",
+        "shoes": "Schuhe",
+        "accessory": "Accessoire"
+      },
+      "tones": {
+        "forest": "Waldgrün",
+        "charcoal": "Anthrazit",
+        "camel": "Kamelbraun",
+        "slate": "Schieferblau",
+        "ivory": "Elfenbein"
+      },
+      "silhouettes": {
+        "slim": "Körpernah",
+        "relaxed": "Locker",
+        "oversized": "Oversized"
+      }
+    },
+    "stylistPreview": {
+      "tag": "Persönlicher Mode-Assistent",
+      "heading": "Intelligenter KI-Stylist für jeden Tag",
+      "description": "Erhalten Sie kuratierte Outfit-Vorschläge passend zu Wetter, Terminen und Ihrem persönlichen Geschmack.",
+      "aiName": "DressApp KI-Stylist",
+      "aiRole": "Persönlicher Modeberater",
+      "status": "Online",
+      "aiMessageWeather": "14°C & Nieselregen",
+      "aiMessageMeeting": "10:00 Uhr Geschäftstermin",
+      "aiMessagePrefix": "Guten Morgen! Da es heute ",
+      "aiMessageMiddle": " ist und Sie ein ",
+      "aiMessageSuffix": " haben, empfehle ich einen professionellen Look mit wetterfestem Schutz.",
+      "inputPlaceholder": "Sagen Sie Ihrem Stylisten, was Sie brauchen…",
+      "addImageAria": "Bild hinzufügen",
+      "micAria": "Mikrofon verwenden",
+      "sendAria": "Nachricht senden",
+      "tabs": {
+        "chat": "Chat",
+        "outfitPlanner": "Outfit-Planer",
+        "dailySuggestion": "Tagesvorschlag"
+      },
+      "recs": {
+        "blazer": {
+          "category": "Oberbekleidung",
+          "title": "Navy Tech Blazer (Wasserdicht)",
+          "description": "Passt perfekt zu formellen Meetings und schützt vor Nieselregen."
+        },
+        "shirt": {
+          "category": "Oberteil",
+          "title": "Weißes Hemd aus Bio-Baumwolle",
+          "description": "Klassische, saubere und professionelle Basis."
+        }
+      },
+      "chips": {
+        "dailySuggestion": "Tagesvorschlag",
+        "planEventOutfit": "Event-Outfit planen",
+        "trendScout": "Trend-Scout"
+      },
+      "brandName": "DressApp KI-Personal-Stylist",
+      "activeStatus": "Aktiv & Bereit zur Beratung",
+      "userMessage": "„Was soll ich morgen anziehen?“",
+      "aiMessageCalendarLead": "und Ihr Kalender vermerkt ein"
+    },
+    "marketplace": {
+      "tag": "Zero-Waste-Initiative",
+      "heading": "Zirkulärer Kleiderschrank-Marktplatz",
+      "description": "Kaufen, verkaufen oder spenden. Monetarisieren Sie selten getragene Kleidung direkt aus Ihrer digitalen Garderobe.",
+      "activeListings": "Aktive Inserate",
+      "buySwap": "Kaufen, Tauschen",
+      "orDonate": "oder spenden",
+      "explore": "Marktplatz erkunden",
+      "conditionLine": "Zustand: {{condition}}",
+      "locationLine": "Standort: {{location}}",
+      "buy": "Kaufen",
+      "swap": "Tauschen",
+      "donate": "Spenden",
+      "prevAria": "Vorheriges Inserat",
+      "nextAria": "Nächstes Inserat",
+      "feeNotice": "Transparente 7% Plattformgebühr nach Zahlungsabwicklung. Keine versteckten Kosten."
+    },
+    "howItWorks": {
+      "tag": "Nahtloser Ablauf",
+      "heading": "Revolutionäre Garderobenverwaltung",
+      "description": "Sich perfekt zu kleiden ist jetzt ein moderner Vier-Schritte-Workflow, gesteuert von fortschrittlicher KI.",
+      "steps": {
+        "capture": {
+          "alt": "Kleidung fotografieren",
+          "title": "Kleidung erfassen",
+          "description": "Machen Sie ein schnelles Foto Ihrer Kleidung. Funktioniert bei jedem Licht und jedem Hintergrund."
+        },
+        "analysis": {
+          "alt": "Attributanalyse",
+          "title": "KI-Attributanalyse",
+          "description": "Unsere Bilderkennung erkennt Farben, Muster, Stoffe, Schnitte und Kategorien sofort und automatisch."
+        },
+        "closet": {
+          "alt": "Smarter Kleiderschrank",
+          "title": "Smarten Kleiderschrank aufbauen",
+          "description": "Ihre Kleidung wird automatisch und elegant katalogisiert – wie im Online-Lookbook."
+        },
+        "styled": {
+          "alt": "Täglicher Style",
+          "title": "Täglich perfekt gestylt",
+          "description": "Erhalten Sie täglich abgestimmte Outfits basierend auf Wetter, Ort und Ihrem Kalender."
+        }
+      }
+    },
+    "closet": {
+      "tag": "Ihre digitale Garderobe",
+      "heading": "Jedes Stück findet seinen Platz",
+      "description1": "Fotografieren Sie Ihre Kleidung – DressApp erfasst Stoff, Schnitt und Farbe wie ein professioneller Stylist.",
+      "description2": "Keine vergessenen Kleidungsstücke mehr. Suchen Sie nach Stichwort oder beschreiben Sie einfach einen Anlass.",
+      "cta": "Kleiderschrank digitalisieren",
+      "recentlyAdded": "Kürzlich hinzugefügt",
+      "recentlyAddedMore": "+{{count}}",
+      "garments": {
+        "blazer": {
+          "alt": "Navy Blazer",
+          "category": "Oberbekleidung",
+          "name": "Navy Tech Blazer",
+          "meta": "Nr. 014 — Wasserdicht"
+        },
+        "sweater": {
+          "alt": "Grauer Strickpullover",
+          "category": "Strickwaren",
+          "name": "Merino-Rundhalspullover",
+          "meta": "Nr. 027 — Aschgrau"
+        },
+        "shirt": {
+          "alt": "Weißes Hemd",
+          "category": "Oberteil",
+          "name": "Baumwollhemd",
+          "meta": "Nr. 041 — Kreideweiß"
+        }
+      },
+      "recent": {
+        "sneakers": "Sneakers",
+        "jeans": "Jeans",
+        "bag": "Ledertasche",
+        "scarf": "Schal"
+      }
+    },
+    "stylist": {
+      "tag": "Einfühlsame Design-Intelligenz",
+      "heading": "Der KI-Stylist, der das Leben versteht",
+      "description1": "Ihre Modeauswahl sollte nicht im luftleeren Raum existieren. DressApp verbindet sich direkt mit Ihren Kalender-Feeds und präzisen lokalen Wettervorhersagen, um jeden Tag optimale Outfits zu entwerfen.",
+      "description2": "Gehen Sie nie wieder unpassend gekleidet zu wichtigen Geschäftsterminen oder unvorbereitet bei plötzlichem Regen aus dem Haus. Es ist, als hätten Sie einen erstklassigen Modeberater auf Ihrem Smartphone, der vollen Zugriff auf Ihre Garderobe hat.",
+      "cta": "Stylist fragen"
     }
   },
   "closet": {
@@ -459,7 +643,8 @@
       "fabric": "Stoff & Zusammensetzung",
       "market": "Verwendungsabsicht & Preisgestaltung"
     },
-    "noReadyCards": "Keine fertigen Karten zum Speichern vorhanden."
+    "noReadyCards": "Keine fertigen Karten zum Speichern vorhanden.",
+    "gender": "Geschlecht"
   },
   "itemDetail": {
     "back": "Zurück zur Garderobe",
@@ -2264,12 +2449,23 @@
       "influencers": "Influencer",
       "second_hand": "Second-Hand",
       "recycling": "Recycling",
-      "news_flash": "Eilmeldung"
+      "news_flash": "Eilmeldung",
+      "all": "Alle",
+      "local": "Lokale Trends",
+      "runway": "Laufsteg",
+      "vintage": "Vintage & Archiv",
+      "maintenance_repairs": "Pflege & Reparatur"
     },
     "title": "Modetrends & Einblicke",
     "subtitle": "Durchstöbere kuratierte Stil-Ästhetiken, Nachhaltigkeits-News und Runway-Reviews, maßgeschneidert für dein Profil.",
     "noTrendsTitle": "Keine Trends gefunden",
-    "noTrendsDesc": "Wir konnten keine aktiven Trendkarten finden. Schau später wieder vorbei."
+    "noTrendsDesc": "Wir konnten keine aktiven Trendkarten finden. Schau später wieder vorbei.",
+    "womensFashion": "Damenmode",
+    "mensFashion": "Herrenmode",
+    "men": "Herren",
+    "women": "Damen",
+    "israelAnchor": "Ausgerichtet auf Israel 🇮🇱",
+    "all": "Alle"
   },
   "item": {
     "polishingPhoto": "Foto wird poliert…",
@@ -3093,7 +3289,31 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "description": "DressApp privacy policy — how we collect, use, and protect your data."
+    "description": "DressApp privacy policy — how we collect, use, and protect your data.",
+    "lastUpdated": "Zuletzt aktualisiert: Juli 2026",
+    "sections": {
+      "intro": "1. Einleitung",
+      "dataCollection": "2. Datenerhebung",
+      "dataUse": "3. Nutzung Ihrer Daten",
+      "dataSharing": "4. Weitergabe von Daten",
+      "aiUsage": "5. KI- & Stylist-Funktionen",
+      "storage": "6. Speicherung & Sicherheit",
+      "retention": "7. Datenaufbewahrung",
+      "rights": "8. Ihre Rechte",
+      "cookies": "9. Cookies & Technologien",
+      "contact": "10. Kontakt"
+    },
+    "intro": "DressApp („wir“, „unser“) verpflichtet sich zum Schutz Ihrer Privatsphäre. Diese Datenschutzerklärung erläutert die Erhebung und Verwendung Ihrer Daten.",
+    "dataCollection": "Wir erfassen von Ihnen bereitgestellte Daten wie Name, E-Mail, Profilfotos, Maße, Stilpräferenzen sowie Gerätedaten.",
+    "dataUse": "Ihre Daten werden verwendet, um unsere Dienste zu erbringen, personalisierte Looks zu generieren und die Plattformsicherheit zu gewährleisten.",
+    "dataSharing": "Wir verkaufen Ihre personenbezogenen Daten nicht. Weitergabe erfolgt nur an vertrauenswürdige Infrastruktur-Dienstleister.",
+    "aiUsage": "KI-Stylist- und Messfunktionen verarbeiten Körpermaße sicher. Keine biometrischen Daten werden an Werbepartner weitergegeben.",
+    "storage": "Daten werden mit moderner Verschlüsselung in Ruhe und bei der Übertragung nach Industriestandards gespeichert.",
+    "retention": "Wir bewahren Ihre Daten nur so lange wie nötig auf. Sie können jederzeit die vollständige Löschung Ihres Kontos anfordern.",
+    "rights": "Sie haben das Recht auf Auskunft, Berichtigung, Export und Löschung Ihrer Daten sowie Widerspruch.",
+    "cookies": "Wir nutzen Cookies und ähnliche Technologien zur Verbesserung der Benutzererfahrung und Analyse.",
+    "contact": "Bei Fragen zum Datenschutz kontaktieren Sie uns über die App-Einstellungen oder auf dressapp.co.",
+    "loadError": "Datenschutzerklärung konnte nicht geladen werden. Bitte versuchen Sie es später erneut."
   },
   "pricing": {
     "title": "Mitgliedschafts-Tarife",

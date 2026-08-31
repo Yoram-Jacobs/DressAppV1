@@ -17,7 +17,7 @@ module.exports = function (api) {
     plugins: [
       'react-native-reanimated/plugin',
       ['module-resolver', {
-        root: ['./src'],
+        root: ['./'],
         alias: {
           '@mobile': './src',
           '@dressapp/api-client': '../../packages/api-client/src/index.js',

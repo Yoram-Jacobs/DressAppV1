@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Importer votre garde-robe - Guide détaillé
 
 ## Vue d'ensemble
@@ -86,7 +85,6 @@ If you run into issues with importing:
 ---
 
 *Dernière mise à jour : juillet 2026*
-=======
 # Importer votre garde-robe depuis d'autres applications (Migration depuis un concurrent)
 
 ## Présentation générale
@@ -119,4 +117,3 @@ Si vos vêtements sont déjà répertoriés dans une autre application de garde-
 ## Limites
 - **Ordinateur de bureau uniquement** : Ne peut pas être exécuté sur les navigateurs mobiles en raison de restrictions d'API.
 - **Clarté visuelle** : Les dispositions de vêtements fortement déformées, sombres ou superposées sur l'application concurrente peuvent faire échouer l'extraction visuelle du recadrage et nécessiter des ajustements photo manuels ultérieurs.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad

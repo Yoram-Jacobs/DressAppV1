@@ -1,16 +1,12 @@
 # Manual Técnico Completo do Usuário DressApp
 
-<<<<<<< HEAD
 Manual do usuário abrangente e guia de referência técnica para o ecossistema de guarda-roupa pessoal DressApp, motor de estilo, mercado circular e painéis de administração.
-=======
 Manual abrangente do usuário e guia de referência técnica para o ecossistema de guarda-roupa pessoal DressApp, motor de estilização, mercado circular e painéis de administração.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 1. Visão Geral & Stack de Tecnologia
 
-<<<<<<< HEAD
 O DressApp é um gerenciador de guarda-roupa pessoal, consultor de estilo e mercado circular impulsionado por Inteligência Artificial (IA). Ele ajuda os usuários a gerenciar peças de vestuário digitalmente, recortá-las e etiquetá-las automaticamente, receber recomendações de roupas adaptadas ao clima e ao calendário, escanear Passaportes Digitais de Produtos (DPP) da UE e negociar peças.
 
 ### Proposta de Valor Principal
@@ -26,7 +22,6 @@ O DressApp é um gerenciador de guarda-roupa pessoal, consultor de estilo e merc
 - **Machine Learning Local & Tamanhos**: Remoção de fundo local em CPU via U2-Net (`rembg`), segmentação de roupas com SegFormer-b2, embeddings Fashion-CLIP e modelo de regressão para medidas corporais físicas ANSUR II (`body_predictor.py`). Opcionalmente, redireciona para contêineres GPU autohospedados (SegFormer-b3 + BiRefNet) para operações rápidas.
 - **STT/TTS Conversacional**: Reconhecimento de voz no lado do cliente (Web Speech API) como fallback, processamento no lado do servidor com Gemini 2.5 Flash para modulação de áudio multimodal, e motores Piper/Sherpa-ONNX offline integrados no dispositivo.
 - **Serviços de Integração Externa**: API OpenWeatherMap para obtenção de dados climáticos, Google Calendar OAuth para exportação de agendas diárias, OpenStreetMap (Nominatim) para autocompletar endereços e APIs REST do PayPal para assinaturas e pagamentos.
-=======
 O DressApp é um gerenciador de guarda-roupa pessoal guiado por IA, consultor de estilo e mercado circular. Ele ajuda os usuários a gerenciar roupas digitalmente, recortá-las e categorizá-las automaticamente, receber recomendações de roupas baseadas no clima e no calendário, escanear Passaportes Digitais de Produtos da UE (DPP) e negociar roupas.
 
 ### Proposta de Valor Principal
@@ -42,13 +37,11 @@ O DressApp é um gerenciador de guarda-roupa pessoal guiado por IA, consultor de
 - **Aprendizado de Máquina & Dimensionamento Locais**: Remoção de fundo local via CPU U2-Net (`rembg`), análise de roupas SegFormer-b2, incorporações Fashion-CLIP e modelo de regressão de medidas corporais físicas ANSUR II (`body_predictor.py`). Opcionalmente, as consultas são enviadas para contêineres de GPU autohospedados (SegFormer-b3 + BiRefNet) para operações rápidas.
 - **STT/TTS Conversacional**: Reconhecimento de voz cliente Web Speech como alternativa, modulações Gemini 2.5 Flash no lado do servidor e mecanismos Piper/Sherpa-ONNX locais no dispositivo para funcionamento offline.
 - **Serviços de Integração Externa**: API OpenWeatherMap para clima, Google Calendar OAuth para exportação de agendas diárias, OpenStreetMap (Nominatim) para autocompletar endereços e APIs REST PayPal Subscriptions/Checkout.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 2. Pré-requisitos
 
-<<<<<<< HEAD
 ### Requisitos do Ambiente Hospedeiro (Server)
 - **Hardware**: Servidor virtual (VPS) com no mínimo 4 GB de RAM (por exemplo, a VPS Hetzner que hospeda o ambiente de produção `dressapp.co`).
 - **Dependências**: Docker e Docker Compose (incluindo backend, frontend e terminação TLS do Caddy).
@@ -58,7 +51,6 @@ O DressApp é um gerenciador de guarda-roupa pessoal guiado por IA, consultor de
 - **Navegador Web**: Google Chrome ou Apple Safari (necessários para a compatibilidade completa de funções de voz).
 - **Permissões**: Conceder acesso à câmera (para fotos de roupas e escaneamento de códigos QR) e ao microfone (para conversa por voz).
 - **Rede**: Conexão ativa para o processamento do LLM, com cache de IndexedDB para navegação do catálogo offline.
-=======
 ### Requisitos do Ambiente do Servidor (Host)
 - **Hardware**: Servidor VPS com no mínimo 4 GB de RAM (por exemplo, VPS da Hetzner que hospeda a produção do `dressapp.co`).
 - **Dependências**: Docker e Docker Compose (incluindo backend, frontend e terminação TLS do Caddy).
@@ -68,13 +60,11 @@ O DressApp é um gerenciador de guarda-roupa pessoal guiado por IA, consultor de
 - **Navegador Web**: Google Chrome ou Apple Safari (necessário para total compatibilidade dos recursos de voz).
 - **Permissões**: Conceder permissão de câmera (para fotos de roupas e digitalização de códigos QR) e de microfone (for conversações de voz).
 - **Rede**: Conexão ativa para processamento do LLM, com armazenamento no IndexedDB que permite a navegação offline do catálogo.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 3. Instruções Passo a Passo
 
-<<<<<<< HEAD
 ### 3.1 Ingestão de Roupas (Adicionar Itens)
 MÉTODOS DE INGESTÃO: Fotografia, Passaportes Digitais de Produtos e recibos de compra digitais.
 
@@ -249,7 +239,6 @@ Monitoramento de disponibilidade do sistema, contabilidade financeira e gestão 
 3. **Provedores**: Clique em **Verificar Chave** (Verify Key) para testar diretamente a API do Gemini. Ative o interruptor **Eyes Vision Override** para alternar o processamento de imagens entre o ponto de conexão padrão do Gemini e um contêiner local do Gemma.
 4. **Usuários**: Consulte créditos ativos, papéis e histórico de pagamentos. Utilize ações diretas para promover ou rebaixar usuários.
 5. **Anúncios**: Revise os estados dos anúncios e desative itens suspeitos de fraude.
-=======
 ### 3.1 Ingestão de Roupas (Adicionando Itens)
 MÉTODOS DE INGESTÃO: Fotografia, Passaporte Digital do Produto da UE e Recibos de Compra Digitais.
 
@@ -424,13 +413,11 @@ Verificação do funcionamento do sistema, contabilidade financeira e gestão de
 3. **Provedores (Providers)**: Clique em **Verify Key** para enviar um teste à API do Gemini. Alterne o interruptor **Eyes Vision Override** para redirecionar o análise de imagens entre o endpoint de Gemini padrão e um contêiner local de Gemma.
 4. **Usuários**: Veja o saldo de créditos ativos, funções e pagamentos totais. Use ações diretas para promover ou rebaixar usuários.
 5. **Anúncios (Listings)**: Veja o estado dos anúncios e desative itens em caso de suspeita de fraude.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 4. Resultados Esperados
 
-<<<<<<< HEAD
 - **Ingestão**: Os itens aparecem imediatamente na grade do seu guarda-roupa (~16 ms). A remoção de fundo produz arquivos PNG transparentes e limpos.
 - **Selo DPP Verificado**: Ao escanear passaportes de produtos válidos é exibido um cartão de informações verde com detalhes de sustentabilidade.
 - **Roupas de Abrigo no Avatar**: Os casacos e jaquetas são exibidos sobrepostos corretamente acima das blusas na tela do avatar 2D sem tapar gorros ou sapatos.
@@ -460,7 +447,6 @@ Verificação do funcionamento do sistema, contabilidade financeira e gestão de
 ### VPS sem Memória (Out of Memory - OOM)
 - **Problema**: Picos de uso de CPU/RAM durante o upload de fotos.
 - **Solução**: A ingestão de roupas utiliza filas sequenciais para lotes de mais de 5 itens. Certifique-se de que o servidor tenha pelo menos 4 GB de RAM.
-=======
 - **Ingestão**: Itens aparecem imediatamente na grade do guarda-roupa (~16 ms). A remoção do fundo é executada limpamente e gera arquivos PNG transparentes.
 - **Verificação DPP**: A digitalização de passaportes de produtos válidos mostra um cartão verde de informações com detalhes de sustentabilidade.
 - **Camadas de Avatar**: Roupas externas são representadas corretamente sobre camisas na tela do avatar 2D sem clipping em sapatos ou chapéus.
@@ -490,20 +476,16 @@ Verificação do funcionamento do sistema, contabilidade financeira e gestão de
 ### Excesso de Memória (OOM) em Servidores VPS
 - **Problema**: Carga alta no processador/memória do servidor durante os processos de envio de arquivos.
 - **Solução**: O processo de upload usa uma fila sequencial para carregamento de mais de 5 itens de cada vez. Certifique-se de que o servidor tenha pelo menos 4 GB de RAM disponíveis.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 6. Limitações
 
-<<<<<<< HEAD
 - **APIs de Voz dos Navegadores**: O reconhecimento de voz nativo está limitado a Chrome e Safari; em outros navegadores o app utiliza a entrada de texto clássica.
 - **Sintese de Voz Offline**: O módulo móvel offline Piper ONNX dispõe de menos perfis de voz do que o processamento de áudio do Gemini no servidor.
 - **Limites de Tamanho de Imagem**: As fotos do avatar e de perfil são comprimidas localmente no navegador a 82% de qualidade para não ultrapassar o limite de 16 MB de documento no MongoDB.
 - **Leitura de Recibos de Compra**: Recibos que estejam muito borrados, distorcidos ou escritos à mão podem falhar na extração de dados.
-=======
 - **APIs de Voz no Navegador**: A transcrição de voz em texto integrada é limitada aos navegadores Chrome e Safari; outros navegadores voltarão ao teclado de texto padrão.
 - **Saída de Voz Offline**: O mecanismo Piper ONNX local em dispositivos móveis usa menos perfis de voz em comparação com o modelo de áudio Gemini do servidor.
 - **Limites de Tamanho de Imagem**: Imagens enviadas para o perfil ou o avatar são compactadas localmente no navegador a 82% de qualidade para cumprir o limite de 16 MB dos documentos do MongoDB.
 - **Precisão de Análise de Recibos**: Em recibos muito borrados, distorcidos ou escritos à mão, a extração de dados pode falhar.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad

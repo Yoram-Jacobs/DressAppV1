@@ -1,4 +1,4 @@
-﻿{
+{
   "brand": "DressApp",
   "nav": {
     "home": "Accueil",
@@ -133,6 +133,190 @@
         "headline": "Échangez avant d'acheter",
         "summary": "Les salles d'échange communautaires ont triplé d'une année sur l'autre ; les enseignes écoutent enfin."
       }
+    },
+    "experts": {
+      "tag": "Rencontrez les spécialistes",
+      "title": "Échangez avec un véritable expert du style",
+      "description": "Réservez une séance 1:1 avec un styliste certifié DressApp quand l'IA a besoin d'une touche humaine et éditoriale.",
+      "viewAll": "Voir tous les experts",
+      "bookSession": "Réserver une séance",
+      "sessionsCount": "({{count}} séances)",
+      "roles": {
+        "seniorFashionStylist": "Styliste de mode senior",
+        "menswearConsultant": "Consultant mode masculine",
+        "sustainableFashionAdvisor": "Conseiller en mode durable",
+        "occasionWearExpert": "Expert tenues d'occasion"
+      },
+      "bios": {
+        "ameliaNovak": "Des looks éditoriaux pour les contextes professionnels exigeants.",
+        "marcusLee": "Des conseils de tailleur modernes et nets pour l'homme d'aujourd'hui.",
+        "sofiaReyes": "Créer une garde-robe responsable sans compromis sur le style.",
+        "priyaSharma": "Des tenues spectaculaires pour mariages, galas et célébrations."
+      }
+    },
+    "aiEditor": {
+      "tag": "Studio de stylisme visuel",
+      "heading": "Votre éditeur de mode assisté par IA",
+      "description1": "Glissez, échangez et recolorez de vrais vêtements de votre dressing sur un mannequin virtuel.",
+      "description2": "Ajustez le curseur d'intensité de style et laissez l'IA régénérer les accessoires et les superpositions en temps réel.",
+      "cta": "Ouvrir l'éditeur de mode",
+      "title": "Éditeur de mode IA",
+      "renderingLivePreview": "Rendu de l'aperçu en direct",
+      "exportLook": "Exporter la tenue",
+      "previewAlt": "Aperçu de la tenue IA",
+      "aiMatch": "Compatibilité IA {{percent}}%",
+      "fabricTone": "Tonalité du tissu",
+      "styleIntensity": "Intensité du style",
+      "percentValue": "{{percent}}%",
+      "silhouetteFit": "Silhouette et coupe",
+      "regenerate": "Régénérer avec l'IA",
+      "tabs": {
+        "top": "Haut",
+        "bottom": "Bas",
+        "shoes": "Chaussures",
+        "accessory": "Accessoire"
+      },
+      "tones": {
+        "forest": "Vert forêt",
+        "charcoal": "Anthracite",
+        "camel": "Camel",
+        "slate": "Bleu ardoise",
+        "ivory": "Ivoire"
+      },
+      "silhouettes": {
+        "slim": "Ajusté",
+        "relaxed": "Décontracté",
+        "oversized": "Oversize"
+      }
+    },
+    "stylistPreview": {
+      "tag": "Assistant de mode personnel",
+      "heading": "Styliste IA intelligent pour tous les jours",
+      "description": "Recevez des propositions de tenues adaptées à la météo, à votre agenda et à votre style.",
+      "aiName": "Styliste IA DressApp",
+      "aiRole": "Conseiller en style personnel",
+      "status": "En ligne",
+      "aiMessageWeather": "14°C et bruine",
+      "aiMessageMeeting": "Réunion professionnelle à 10h00",
+      "aiMessagePrefix": "Bonjour ! Puisqu'il fait ",
+      "aiMessageMiddle": " et que vous avez une ",
+      "aiMessageSuffix": ", je recommande une tenue professionnelle et élégante avec protection pluie.",
+      "inputPlaceholder": "Dites à votre styliste ce dont vous avez besoin…",
+      "addImageAria": "Ajouter une image",
+      "micAria": "Utiliser le micro",
+      "sendAria": "Envoyer le message",
+      "tabs": {
+        "chat": "Discussion",
+        "outfitPlanner": "Planificateur de tenues",
+        "dailySuggestion": "Suggestion du jour"
+      },
+      "recs": {
+        "blazer": {
+          "category": "Vêtements d'extérieur",
+          "title": "Blazer technique marine (Imperméable)",
+          "description": "Idéal pour les réunions formelles, repousse les averses légères."
+        },
+        "shirt": {
+          "category": "Haut",
+          "title": "Chemise blanche en coton biologique",
+          "description": "Base classique, soignée et professionnelle."
+        }
+      },
+      "chips": {
+        "dailySuggestion": "Suggestion du jour",
+        "planEventOutfit": "Préparer une tenue d'événement",
+        "trendScout": "Éclaireur de tendances"
+      },
+      "brandName": "Styliste personnel IA DressApp",
+      "activeStatus": "Actif et prêt à vous conseiller",
+      "userMessage": "« Que devrais-je porter demain ? »",
+      "aiMessageCalendarLead": "et que votre agenda note une"
+    },
+    "marketplace": {
+      "tag": "Initiative Zéro Déchet",
+      "heading": "Place de marché circulaire pour garde-robe",
+      "description": "Achetez, vendez ou donnez. Monétisez les vêtements peu portés directement depuis votre dressing digital.",
+      "activeListings": "Annonces actives",
+      "buySwap": "Acheter, échanger",
+      "orDonate": "ou donner",
+      "explore": "Explorer la place de marché",
+      "conditionLine": "État : {{condition}}",
+      "locationLine": "Situé à {{location}}",
+      "buy": "Acheter",
+      "swap": "Échanger",
+      "donate": "Donner",
+      "prevAria": "Article précédent",
+      "nextAria": "Article suivant",
+      "feeNotice": "Frais transparents de 7% après traitement du paiement. Aucun frais caché."
+    },
+    "howItWorks": {
+      "tag": "Processus fluide",
+      "heading": "Révolutionner la gestion de garde-robe",
+      "description": "S'habiller avec style devient un processus en quatre étapes guidé par l'IA.",
+      "steps": {
+        "capture": {
+          "alt": "Photographier le vêtement",
+          "title": "Photographiez vos vêtements",
+          "description": "Prenez une photo rapide de vos vêtements. Fonctionne avec tout éclairage et arrière-plan."
+        },
+        "analysis": {
+          "alt": "Analyse des attributs",
+          "title": "Analyse d'attributs par IA",
+          "description": "Nos modèles de vision détectent instantanément les couleurs, motifs, matières, coupes et catégories."
+        },
+        "closet": {
+          "alt": "Dressing intelligent",
+          "title": "Construisez votre dressing intelligent",
+          "description": "Vos vêtements sont automatiquement catalogués avec l'élégance d'un lookbook en ligne."
+        },
+        "styled": {
+          "alt": "Style quotidien",
+          "title": "Soyez stylé chaque jour",
+          "description": "Recevez chaque jour des tenues coordonnées selon la météo locale et vos rendez-vous."
+        }
+      }
+    },
+    "closet": {
+      "tag": "Votre garde-robe numérique",
+      "heading": "Chaque pièce trouve sa place",
+      "description1": "Photographiez vos vêtements — DressApp identifie la matière, la coupe et la couleur comme un styliste.",
+      "description2": "Fini les vêtements oubliés. Cherchez par mot-clé ou décrivez simplement une envie : 'quelque chose de chaud pour un jour de pluie'.",
+      "cta": "Créer votre dressing",
+      "recentlyAdded": "Récemment ajoutés",
+      "recentlyAddedMore": "+{{count}}",
+      "garments": {
+        "blazer": {
+          "alt": "Blazer marine",
+          "category": "Vêtements d'extérieur",
+          "name": "Blazer technique marine",
+          "meta": "N° 014 — Imperméable"
+        },
+        "sweater": {
+          "alt": "Pull en maille gris",
+          "category": "Pulls et mailles",
+          "name": "Pull col rond en mérinos",
+          "meta": "N° 027 — Gris cendre"
+        },
+        "shirt": {
+          "alt": "Chemise blanche",
+          "category": "Haut",
+          "name": "Chemise habillée en coton",
+          "meta": "N° 041 — Blanc craie"
+        }
+      },
+      "recent": {
+        "sneakers": "Baskets",
+        "jeans": "Jean en denim",
+        "bag": "Sac en cuir",
+        "scarf": "Écharpe"
+      }
+    },
+    "stylist": {
+      "tag": "Intelligence de style empathique",
+      "heading": "Le styliste IA qui comprend votre vie",
+      "description1": "Vos choix de mode ne doivent pas exister dans le vide. DressApp se synchronise avec votre calendrier et la météo locale pour composer des tenues idéales au quotidien.",
+      "description2": "Ne soyez plus jamais pris au dépourvu pour un rendez-vous important ou une pluie soudaine. C'est comme avoir un styliste de renom dans votre poche, avec accès à tout votre dressing.",
+      "cta": "Demander au styliste"
     }
   },
   "closet": {
@@ -459,7 +643,8 @@
       "fabric": "Tissu et composition",
       "market": "Intention et tarification"
     },
-    "noReadyCards": "Aucune carte prête à être enregistrée."
+    "noReadyCards": "Aucune carte prête à être enregistrée.",
+    "gender": "Genre"
   },
   "itemDetail": {
     "back": "Retour au dressing",
@@ -1272,7 +1457,7 @@
     "importWardrobePill": "Importer la garde-robe",
     "mobileDesktopGuide": "L'importation de la garde-robe est disponible sur la version bureau de DressApp. Veuillez ouvrir votre compte dans un navigateur bureau pour continuer.",
     "deleteAccountLink": "Supprimer mon compte",
-    "privacyPolicy": "Politique de confidentialité",
+    "privacyPolicy": "Privacy Policy",
     "termsOfService": "Conditions d'utilisation",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
@@ -1325,9 +1510,6 @@
     "inviteDesc": "Partagez DressApp avec vos amis et votre famille",
     "bookmarkletDesc": "Faites glisser le bouton ci-dessous vers votre barre de favoris. Sur mobile, ajoutez-le à vos favoris et nommez-le 'Assistant shopping DressApp'. Cliquez dessus sur n'importe quelle page produit.",
     "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
-<<<<<<< HEAD:frontend/src/locales/fr.json
-    "privacyPolicy": "Privacy Policy"
-=======
     "aiProvider": "AI Engine & Model Provider",
     "selectedModel": "Active AI Model",
     "bringYourOwnKey": "Bring Your Own API Key",
@@ -1419,7 +1601,6 @@
     "chooseLanguage": "Select Language",
     "planLabel": "Forfait {{tier}}",
     "creditsLabel": "{{credits}} crédits"
->>>>>>> e4839c3f30ce0fcd1ab5fcade0fc6c20eb2db39d:apps/web/src/locales/fr.json
   },
   "admin": {
     "title": "Admin",
@@ -2268,12 +2449,23 @@
       "influencers": "Influenceurs",
       "second_hand": "Seconde main",
       "recycling": "Recyclage",
-      "news_flash": "Flash info"
+      "news_flash": "Flash info",
+      "all": "Tout",
+      "local": "Actualités locales",
+      "runway": "Défilés",
+      "vintage": "Vintage et archives",
+      "maintenance_repairs": "Entretien et réparations"
     },
     "title": "Tendances & Décryptages",
     "subtitle": "Découvrez des esthétiques sélectionnées, des actualités sur la durabilité et des analyses de défilés adaptées à votre profil.",
     "noTrendsTitle": "Aucune tendance trouvée",
-    "noTrendsDesc": "Nous n'avons trouvé aucune carte de tendance active. Revenez plus tard."
+    "noTrendsDesc": "Nous n'avons trouvé aucune carte de tendance active. Revenez plus tard.",
+    "womensFashion": "Mode féminine",
+    "mensFashion": "Mode masculine",
+    "men": "Hommes",
+    "women": "Femmes",
+    "israelAnchor": "Ancré en Israël 🇮🇱",
+    "all": "Tout"
   },
   "item": {
     "polishingPhoto": "Retouche en cours…",
@@ -3097,7 +3289,31 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "description": "DressApp privacy policy — how we collect, use, and protect your data."
+    "description": "DressApp privacy policy — how we collect, use, and protect your data.",
+    "lastUpdated": "Dernière mise à jour : Juillet 2026",
+    "sections": {
+      "intro": "1. Introduction",
+      "dataCollection": "2. Données collectées",
+      "dataUse": "3. Utilisation de vos données",
+      "dataSharing": "4. Partage des données",
+      "aiUsage": "5. Fonctionnalités d'IA et de stylisme",
+      "storage": "6. Stockage et sécurité des données",
+      "retention": "7. Conservation des données",
+      "rights": "8. Vos droits",
+      "cookies": "9. Cookies",
+      "contact": "10. Nous contacter"
+    },
+    "intro": "DressApp s'engage à protéger votre vie privée. Cette politique explique comment nous traitons vos données.",
+    "dataCollection": "Nous collectons les données fournies directement comme nom, e-mail, photos, mensurations et préférences de style.",
+    "dataUse": "Vos données sont utilisées pour fournir nos services, personnaliser les tenues et sécuriser la plateforme.",
+    "dataSharing": "Nous ne vendons pas vos données personnelles. Le partage est strictement limité aux prestataires techniques fiables.",
+    "aiUsage": "Les fonctions IA traitent les mensurations en toute sécurité. Aucune donnée biométrique n'est partagée avec des annonceurs.",
+    "storage": "Les données sont chiffrées au repos et en transit selon les normes industrielles.",
+    "retention": "Nous conservons vos données uniquement le temps nécessaire. Vous pouvez demander la suppression de votre compte à tout moment.",
+    "rights": "Vous disposees d'un droit d'accès, de rectification, d'exportation et de suppression de vos données.",
+    "cookies": "Nous utilisons des cookies pour améliorer votre expérience et analyser l'utilisation.",
+    "contact": "Pour toute question relative à la confidentialité, contactez-nous dans l'application ou sur dressapp.co.",
+    "loadError": "Impossible de charger la politique de confidentialité. Veuillez réessayer plus tard."
   },
   "pricing": {
     "title": "Plans d'Abonnement",

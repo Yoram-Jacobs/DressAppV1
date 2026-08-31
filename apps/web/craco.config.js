@@ -32,9 +32,22 @@ let webpackConfig = {
       },
     },
   },
+  style: {
+    postcss: {
+      plugins: [
+        require(path.resolve(__dirname, 'node_modules/tailwindcss'))(path.resolve(__dirname, 'tailwind.config.js')),
+        require('autoprefixer'),
+      ],
+    },
+  },
   webpack: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      'tailwindcss': path.resolve(__dirname, 'node_modules/tailwindcss'),
+      'lucide-react$': 'lucide-react/dist/cjs/lucide-react.js',
+      'recharts$': 'recharts/lib/index.js',
+      'motion-utils$': path.resolve(__dirname, '../../node_modules/motion-utils/dist/cjs/index.js'),
+      'motion-dom$': path.resolve(__dirname, '../../node_modules/motion-dom/dist/cjs/index.js'),
       // Override the package stub so the full Sonner toast fires on web
       './aiNotice.js': path.resolve(__dirname, 'src/lib/aiNotice.jsx'),
     },

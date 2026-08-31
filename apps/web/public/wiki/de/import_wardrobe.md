@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Eigene Garderobe importieren - Detaillierte Anleitung
 
 ## Übersicht
@@ -86,7 +85,6 @@ If you run into issues with importing:
 ---
 
 *Letzte Aktualisierung: Juli 2026*
-=======
 # Importieren Sie Ihre Garderobe aus anderen Apps (Migration von Mitbewerbern)
 
 ## Übersicht
@@ -119,4 +117,3 @@ Wenn Sie Ihre Kleidung bereits in einer anderen Garderoben-App (wie Whering, Acl
 ## Einschränkungen
 - **Nur Desktop**: Kann aufgrund von API-Einschränkungen nicht auf mobilen Browsern ausgeführt werden.
 - **Visuelle Klarheit**: Stark verzerrte, dunkle oder überlappende Kleidungslayouts auf der App des Mitbewerbers können bei der visuellen Zuschnitt-Extraktion fehlschlagen und erfordern später manuelle Fotoanpassungen.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
