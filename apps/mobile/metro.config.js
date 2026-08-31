@@ -65,10 +65,16 @@ config.resolver.sourceExts = [
   'cjs',
 ];
 
-// llama.rn stub — the only extraNodeModules entry needed.
-// Everything else resolves through normal hierarchical lookup + nodeModulesPaths.
+// Disable hierarchical lookup to prevent nested node_modules from instantiating duplicate react
+config.resolver.disableHierarchicalLookup = true;
+
+// Force singleton resolution for core packages in monorepo
 config.resolver.extraNodeModules = {
   'llama.rn': LLAMA_STUB,
+  react: path.resolve(workspaceRoot, 'node_modules/react'),
+  'react-native': path.resolve(workspaceRoot, 'node_modules/react-native'),
+  expo: path.resolve(workspaceRoot, 'node_modules/expo'),
+  'react-native-safe-area-context': path.resolve(workspaceRoot, 'node_modules/react-native-safe-area-context'),
 };
 
 module.exports = withNativewind(config, {

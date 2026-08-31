@@ -560,6 +560,34 @@ const RECENTLY_ADDED_THUMBS = [
 // (e.g. totalRecentCount - RECENTLY_ADDED_THUMBS.length); kept as a named
 // constant so it isn't a bare magic number in the JSX.
 const RECENTLY_ADDED_MORE_COUNT = 18;
+
+  const displayClosetGarments = useMemo(() => {
+    if (!closet.items || closet.items.length === 0) return CLOSET_GARMENTS;
+    return closet.items.slice(0, 3).map((item, idx) => ({
+      id: item.id || `closet-${idx}`,
+      image: item.clean_image_url || item.image_url || CLOSET_GARMENTS[idx % CLOSET_GARMENTS.length].image,
+      altKey: "home.closet.garments.shirt.alt",
+      altDefault: item.name || item.category || "Closet item",
+      categoryKey: "home.closet.garments.shirt.category",
+      categoryDefault: item.category || item.subcategory || "Wardrobe",
+      nameKey: "home.closet.garments.shirt.name",
+      nameDefault: item.name || item.brand || "Wardrobe Item",
+      metaKey: "home.closet.garments.shirt.meta",
+      metaDefault: item.color ? `${item.color}${item.season ? ' · ' + item.season : ''}` : `No. 00${idx + 1}`,
+    }));
+  }, [closet.items]);
+
+  const displayRecentlyAdded = useMemo(() => {
+    if (!closet.items || closet.items.length === 0) return RECENTLY_ADDED_THUMBS;
+    return closet.items.slice(0, 4).map((item, idx) => ({
+      id: item.id || `thumb-${idx}`,
+      image: item.clean_image_url || item.image_url || RECENTLY_ADDED_THUMBS[idx % RECENTLY_ADDED_THUMBS.length].image,
+      altKey: "home.closet.recent.sneakers",
+      altDefault: item.name || "Recent item",
+    }));
+  }, [closet.items]);
+
+  const recentlyAddedMoreCount = Math.max(0, (closet.total || closet.items?.length || 0) - displayRecentlyAdded.length);
   return (
     <>
       {/* Home-banner-start */}
@@ -1216,7 +1244,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                 </div>
                 {/* Garments */}
                 <div className="flex items-start justify-between gap-6 max-[991px]:gap-[14px] max-[575px]:flex-wrap max-[575px]:justify-center">
-                  {CLOSET_GARMENTS.map((garment) => (
+                  {displayClosetGarments.map((garment) => (
                     <div
                       key={garment.id}
                       className="group relative flex flex-1 flex-col items-center transition-transform duration-300 ease-in hover:-translate-y-2 max-[575px]:basis-[45%]"
@@ -1261,7 +1289,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                     })}
                   </span>
                   <div className="flex items-center">
-                    {RECENTLY_ADDED_THUMBS.map((thumb, i) => (
+                    {displayRecentlyAdded.map((thumb, i) => (
                       <div
                         key={thumb.id}
                         className={
@@ -1277,12 +1305,11 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                         />
                       </div>
                     ))}
-                    <div className="-ms-[14px] flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-[12px] border-[3px] border-[var(--accent-beige)] bg-[var(--dark-color)] text-[0.68rem] font-bold text-[var(--accent-beige)] shadow-[0_6px_14px_-6px_rgba(23,20,15,0.3)]">
-                      {t("home.closet.recentlyAddedMore", {
-                        count: RECENTLY_ADDED_MORE_COUNT,
-                        defaultValue: "+{{count}}",
-                      })}
-                    </div>
+                    {recentlyAddedMoreCount > 0 && (
+                      <div className="-ms-[14px] flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-[12px] border-[3px] border-[var(--accent-beige)] bg-[var(--dark-color)] text-[0.68rem] font-bold text-[var(--accent-beige)] shadow-[0_6px_14px_-6px_rgba(23,20,15,0.3)]">
+                        +{recentlyAddedMoreCount}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

@@ -20,6 +20,8 @@ module.exports = function (api) {
         root: ['./'],
         alias: {
           '@mobile': './src',
+          react: '../../node_modules/react',
+          'react-native': '../../node_modules/react-native',
           '@dressapp/api-client': '../../packages/api-client/src/index.js',
           '@dressapp/i18n': '../../packages/i18n/src/index.js',
           '@dressapp/types': '../../packages/types/src/index.js',

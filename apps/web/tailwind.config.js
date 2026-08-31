@@ -1,8 +1,18 @@
+const path = require("path");
+
+const toPosix = (p) => p.replace(/\\/g, "/");
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
 
-  content: ["./src/**/*.{js,jsx,ts,tsx}", "./public/index.html"],
+  content: [
+    toPosix(path.resolve(__dirname, "src/**/*.{js,jsx,ts,tsx}")),
+    toPosix(path.resolve(__dirname, "public/index.html")),
+    toPosix(path.resolve(__dirname, "../../packages/*/src/**/*.{js,jsx,ts,tsx}")),
+    "./src/**/*.{js,jsx,ts,tsx}",
+    "./public/index.html",
+  ],
 
   theme: {
     extend: {
