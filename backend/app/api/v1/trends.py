@@ -46,27 +46,26 @@ def check_trend_scout_access(user: dict) -> None:
 @router.get("/latest")
 async def get_latest_trends(
     per_bucket: int = Query(default=1, ge=1, le=5),
+    gender: str | None = Query(default=None, regex="^(male|female)$"),
+    country: str | None = Query(default=None, max_length=4),
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Public-safe read: newest card(s) per bucket for the Home page feed."""
+    """Public-safe read: newest card(s) per bucket for the user's gender ecosystem."""
     check_trend_scout_access(user)
-    country = None
-    user_countries = _country_codes(user)
-    if user_countries:
-        country = next(iter(user_countries))
-    cards = await latest_trend_cards(limit_per_bucket=per_bucket, country=country)
-    return {"cards": cards, "count": len(cards)}
+    if not country:
+        user_countries = _country_codes(user)
+        if user_countries:
+            country = next(iter(user_countries))
+    if not gender:
+        user_sex = (user.get("sex") or user.get("gender") or "female").lower()
+        gender = "male" if user_sex == "male" else "female"
+    cards = await latest_trend_cards(limit_per_bucket=per_bucket, country=country, gender=gender)
+    return {"cards": cards, "count": len(cards), "gender": gender, "country": country}
 
 
 @router.get("/last_refresh")
 async def get_last_refresh() -> dict[str, Any]:
-    """Diagnostics endpoint — when did each bucket last refresh?
-
-    Returns the newest ``created_at`` across all English Trend-Scout
-    cards plus a per-bucket map. Public-safe (the data here is the
-    same surface as ``/trends/latest``); used by the home-page admin
-    refresh button to show staleness *and* by support for triage.
-    """
+    """Diagnostics endpoint — when did each bucket last refresh?"""
     db = get_db()
     out_buckets: dict[str, str | None] = {}
     newest_iso: str | None = None
@@ -80,8 +79,7 @@ async def get_last_refresh() -> dict[str, Any]:
         out_buckets[bucket["slug"]] = ts
         if ts and (newest_iso is None or ts > newest_iso):
             newest_iso = ts
-    # Compute a friendly "stale_for_seconds" so the UI doesn't have to
-    # parse ISO strings.
+
     stale_for_seconds: int | None = None
     if newest_iso:
         try:
@@ -105,35 +103,33 @@ async def get_fashion_scout_feed(
     limit: int = Query(default=12, ge=1, le=50),
     language: str | None = Query(default=None, max_length=8),
     country: str | None = Query(default=None, max_length=4),
+    gender: str | None = Query(default=None, regex="^(male|female)$"),
     personalized: bool = Query(default=True),
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Newest-first flat feed for the Stylist right-panel news-flash.
+    """Newest-first flat feed for the Stylist right-panel and Trend Scout radar.
 
-    When the request is authenticated and ``personalized`` is true (the
-    default), cards are ranked by relevance to the viewer's
-    demographics (gender / profession / occupation / country) over a
-    wider candidate pool, then sliced to ``limit``. Anonymous (or
-    explicitly opted-out) requests fall back to strict newest-first.
-
-    Wrapped in a top-level guard so a transient DB / translator error
-    never returns a 500 to the user — we degrade to an empty feed
-    instead and log the underlying cause for support triage.
+    Returns cards matching the user's gender ecosystem and device country location.
     """
     check_trend_scout_access(user)
+    if not gender and user:
+        user_sex = (user.get("sex") or user.get("gender") or "female").lower()
+        gender = "male" if user_sex == "male" else "female"
     try:
         cards = await fashion_scout_feed(
             limit=limit,
             language=language,
             country=country,
+            gender=gender,
             user=user if personalized else None,
         )
     except Exception as exc:  # noqa: BLE001
         logger.exception(
-            "fashion_scout endpoint failed (limit=%s language=%s country=%s personalized=%s): %s",
+            "fashion_scout endpoint failed (limit=%s language=%s country=%s gender=%s personalized=%s): %s",
             limit,
             language,
             country,
+            gender,
             personalized,
             exc,
         )
@@ -142,6 +138,7 @@ async def get_fashion_scout_feed(
         "cards": cards,
         "count": len(cards),
         "language": language or "en",
+        "gender": gender or "female",
         "personalized": bool(user and personalized),
     }
 
@@ -150,26 +147,27 @@ async def get_fashion_scout_feed(
 async def run_trend_scout_now(
     force: bool = Query(default=False),
     country: str | None = Query(default=None, max_length=4),
+    gender: str | None = Query(default=None, regex="^(male|female)$"),
     x_device_type: str | None = Header(default=None),
     user: dict = Depends(require_admin),
 ) -> dict[str, Any]:
     """Admin-only trigger for an immediate Trend-Scout run (for testing)."""
     client_type = "mobile" if x_device_type == "mobile" else "desktop"
-    return await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country)
+    return await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country, gender=gender)
 
 
 @router.post("/run-now-dev")
 async def run_trend_scout_now_dev(
     force: bool = Query(default=True),
     country: str | None = Query(default=None, max_length=4),
+    gender: str | None = Query(default=None, regex="^(male|female)$"),
     x_device_type: str | None = Header(default=None),
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Dev helper: any authenticated user can trigger a run while we don't
-    yet have a dedicated admin UI. Disabled in production by simply not
-    exposing this route to non-dev deployments (toggle via config if needed).
+    yet have a dedicated admin UI.
     """
     if not user:
         raise HTTPException(401, "auth required")
     client_type = "mobile" if x_device_type == "mobile" else "desktop"
-    return await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country)
+    return await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country, gender=gender)

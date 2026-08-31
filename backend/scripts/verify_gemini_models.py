@@ -5,7 +5,7 @@ Three live calls:
 1. ``GeminiStylistService.advise(...)`` — must call **gemini-3.5-flash-lite**
    (settings.DEFAULT_STYLIST_MODEL).
 2. ``GeminiImageService.generate(prompt=...)`` — must call **nano banana**
-   (settings.GEMINI_IMAGE_MODEL = 'gemini-2.5-flash-image').
+   (settings.GEMINI_IMAGE_MODEL = 'gemini-3.1-flash-lite-image').
 3. ``GarmentVisionService.analyze(image_bytes=...)`` — must call
    **gemini-3.5-flash-lite** (settings.GARMENT_VISION_MODEL).
 

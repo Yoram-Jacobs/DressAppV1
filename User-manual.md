@@ -51,7 +51,7 @@ INGESTION PARADIGMS: Photography, EU Product Passports, and Digital Commerce Rec
 5. Once accepted, the server starts an NDJSON stream. A placeholders preview frame displays within 5-7 seconds, allowing you to edit the item details immediately while the backend completes tagging.
 6. **AI Quality Checker & Automatic Generative Repair**: Gemini's visual Quality Checker inspects each cropped garment for occlusions (bags, arms, hair) and camera frame cutoffs:
    - **Complete**: Intact, unoccluded garments are matted directly.
-   - **Image Completion**: If an item has missing side contours, occluded sections, or clipped hems/collars, `gemini-2.5-flash-image` (Nano Banana) automatically outpaints and completes the missing fabric into a full, symmetrical piece.
+   - **Image Completion**: If an item has missing side contours, occluded sections, or clipped hems/collars, `gemini-3.1-flash-lite-image` (Nano Banana) automatically outpaints and completes the missing fabric into a full, symmetrical piece.
    - **Full Studio Reconstruction**: Severely cut-off items (such as shoes showing only toe caps) are fully regenerated into pristine studio catalog photographs.
 7. Verify auto-detected tags (color, fabric, fit, pattern, occasion). If the cutout shape is incorrect, change the **Category** dropdown; this triggers SegFormer to automatically re-crop the garment.
 8. Click **Save** to optimistically paint the item in the closet grid immediately (~16ms) while background generative reconstructions and WebP thumbnails conclude in the background.
@@ -81,7 +81,7 @@ INGESTION PARADIGMS: Photography, EU Product Passports, and Digital Commerce Rec
    - *"Remove the metal studs from the jacket's front"*
    - *"Refine fabric composition to 100% cashmere"*
 3. **Quick Prompt Chips**: Tap quick starter chips (🪄 *Remove shoes*, ✂️ *Complete hole*, 💎 *Remove studs*, 🔍 *Refine fabric*) for instant 1-tap edits.
-4. **Nano Banana Inpainting (`gemini-2.5-flash-image`)**:
+4. **Nano Banana Inpainting (`gemini-3.1-flash-lite-image`)**:
    - The multimodal decision engine classifies visual edit requests and executes targeted inpainting against the original/segmented pixels.
    - Nano Banana reconstructs the missing or occluded regions, rendering a photorealistic preview card directly in the chat thread.
 5. **Interactive Application**: Tap **Apply as garment photo** to update the in-memory garment photo, then click **Save** in the action bar to persist the new image to MongoDB.

@@ -5,12 +5,11 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Body, Response, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Body, Response
 from pydantic import BaseModel
 
 from app.db.database import get_db
 from app.services.auth import get_current_user
-from app.services.calendar_service import calendar_service
 from app.services.stylist_scheduler_brain import (
     generate_scheduled_proposals,
     generate_event_proposals,
@@ -43,6 +42,7 @@ class SaveOutfitIn(BaseModel):
     garments: list[GarmentItemIn]
     usage: OutfitUsageIn
     is_fallback: bool | None = None
+    write_to_calendar: bool = False
 
 
 class EventProposalIn(BaseModel):
@@ -72,7 +72,6 @@ async def list_saved_outfits(
 @router.post("", status_code=201)
 async def save_outfit(
     payload: SaveOutfitIn,
-    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Save an outfit to the user's closet diary, updating worn stats for closet items."""
@@ -89,8 +88,19 @@ async def save_outfit(
         if g.closet_item_id:
             item = await db.closet_items.find_one({"id": g.closet_item_id})
             if item:
-                g_dict["title"] = g_dict.get("title") or item.get("title") or item.get("name") or g.role
-                g_dict["image_url"] = g_dict.get("image_url") or item.get("thumbnail_data_url") or item.get("segmented_image_url") or item.get("original_image_url")
+                variants = item.get("image_variants") or {}
+                webp_large = (variants.get("webp") or {}).get("large") if isinstance(variants, dict) else None
+                g_dict["image_url"] = (
+                    g_dict.get("image_url")
+                    or item.get("clean_image_url")
+                    or item.get("reconstructed_image_url")
+                    or item.get("cutout_url")
+                    or webp_large
+                    or item.get("thumbnail_data_url")
+                    or item.get("image_url")
+                    or item.get("segmented_image_url")
+                    or item.get("original_image_url")
+                )
         garments.append(g_dict)
 
     use_count = 1 if (payload.usage and payload.usage.date) else 0
@@ -128,30 +138,6 @@ async def save_outfit(
             },
         )
 
-    # Write event to Google Calendar if connected and usage is specified
-    if payload.usage and payload.usage.date and user.get("google_calendar_tokens", {}).get("refresh_token"):
-        garment_descriptions = [f"- {g['role']}: {g.get('title') or 'Garment'}" for g in garments]
-        desc = (payload.description or "") + "\n\nGarments:\n" + "\n".join(garment_descriptions)
-        
-        async def _create_and_save_event_id():
-            try:
-                event = await calendar_service.create_calendar_event(
-                    user,
-                    payload.name,
-                    desc,
-                    payload.usage.date,
-                    payload.usage.time,
-                )
-                if event and event.get("id"):
-                    await db.outfits.update_one(
-                        {"id": outfit_id},
-                        {"$set": {"google_calendar_event_id": event["id"]}}
-                    )
-            except Exception as e:
-                logger.error("Failed to save google_calendar_event_id: %s", e)
-                
-        background_tasks.add_task(_create_and_save_event_id)
-
     logger.info("Saved outfit id=%s user_id=%s", outfit_id, user["id"])
     return _safe_doc(doc)
 
@@ -159,7 +145,6 @@ async def save_outfit(
 @router.delete("/{outfit_id}")
 async def delete_saved_outfit(
     outfit_id: str,
-    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Delete a saved outfit."""
@@ -167,10 +152,6 @@ async def delete_saved_outfit(
     existing = await db.outfits.find_one({"id": outfit_id, "user_id": user["id"]})
     if not existing:
         raise HTTPException(status_code=404, detail="Outfit not found")
-        
-    event_id = existing.get("google_calendar_event_id")
-    if event_id and user.get("google_calendar_tokens", {}).get("refresh_token"):
-        background_tasks.add_task(calendar_service.delete_calendar_event, user, event_id)
         
     res = await db.outfits.delete_one({"id": outfit_id, "user_id": user["id"]})
     return {"deleted": True, "id": outfit_id}
@@ -215,8 +196,16 @@ async def trigger_event_proposal(
         )
         return {"advice": advice}
     except Exception as exc:
-        logger.exception("Event proposal generation failed")
-        raise HTTPException(status_code=500, detail=str(exc))
+        logger.exception("Event proposal generation failed, falling back to deterministic advice: %s", exc)
+        try:
+            from app.services.stylist_scheduler_brain import get_rotation_prioritized_closet
+            from app.services.scheduler import _generate_fallback_advice
+            raw_closet = await get_rotation_prioritized_closet(user["id"], limit=40)
+            advice = _generate_fallback_advice(raw_closet, style_dress_for=payload.prompt)
+            return {"advice": advice}
+        except Exception as inner_exc:
+            logger.error("Failed to generate fallback event proposals: %s", inner_exc)
+            raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.post("/reject-item")
@@ -258,33 +247,63 @@ async def clear_simulated_notifications(
 
 
 class WebPushSubscriptionIn(BaseModel):
-    endpoint: str
+    # Web Push (VAPID) fields — required for browser push, optional for mobile
+    endpoint: str | None = None
     expirationTime: int | None = None
-    keys: dict[str, str]
-
+    keys: dict[str, str] | None = None
+    # Expo Push Token — supplied by mobile app instead of VAPID fields
+    expo_push_token: str | None = None
 
 @router.post("/webpush/subscribe")
 async def webpush_subscribe(
     payload: WebPushSubscriptionIn,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Register a Web Push subscription for the current user."""
+    """Register a Web Push (VAPID) or Expo push token for the current user.
+
+    Mobile clients send only ``expo_push_token``.
+    Browser clients send ``endpoint`` + ``keys`` (VAPID).
+    Both paths co-exist; one user document can hold both.
+    """
     db = get_db()
-    sub_dict = payload.model_dump()
-    
-    # Atomically remove any duplicate subscription with this endpoint first to avoid duplicates
+
+    # ── Expo push token path (mobile) ──────────────────────────────────────
+    if payload.expo_push_token:
+        token = payload.expo_push_token
+        # Store/update the token atomically (upsert-style: pull then push)
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$pull": {"expo_push_tokens": token}},
+        )
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$push": {"expo_push_tokens": token}},
+        )
+        logger.info("Registered Expo push token for user_id=%s", user["id"])
+        return {"subscribed": True, "provider": "expo"}
+
+    # ── VAPID / Web Push path (browser) ────────────────────────────────────
+    if not payload.endpoint or not payload.keys:
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=422,
+            detail="Either expo_push_token or (endpoint + keys) must be provided.",
+        )
+
+    sub_dict = payload.model_dump(exclude={"expo_push_token"})
+
+    # Atomically remove any duplicate subscription with this endpoint
     await db.users.update_one(
         {"id": user["id"]},
-        {"$pull": {"web_push_subscriptions": {"endpoint": payload.endpoint}}}
+        {"$pull": {"web_push_subscriptions": {"endpoint": payload.endpoint}}},
     )
-    
     # Push the new subscription
     await db.users.update_one(
         {"id": user["id"]},
-        {"$push": {"web_push_subscriptions": sub_dict}}
+        {"$push": {"web_push_subscriptions": sub_dict}},
     )
     logger.info("Registered web push subscription for user_id=%s", user["id"])
-    return {"subscribed": True}
+    return {"subscribed": True, "provider": "vapid"}
 
 
 @router.post("/webpush/unsubscribe")
@@ -322,13 +341,13 @@ class UpdateOutfitIn(BaseModel):
     name: str | None = None
     description: str | None = None
     usage: UpdateOutfitUsageIn | None = None
+    write_to_calendar: bool | None = None
 
 
 @router.patch("/{outfit_id}")
 async def update_saved_outfit(
     outfit_id: str,
     payload: UpdateOutfitIn,
-    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Update a saved outfit's metadata (e.g. usage date, name)."""
@@ -365,56 +384,6 @@ async def update_saved_outfit(
         )
         
     res_doc = await db.outfits.find_one({"id": outfit_id, "user_id": user["id"]})
-    
-    # Sync update to Google Calendar
-    if user.get("google_calendar_tokens", {}).get("refresh_token"):
-        final_name = res_doc.get("name") or "Unnamed outfit"
-        final_desc = res_doc.get("description") or ""
-        final_usage = res_doc.get("usage") or {}
-        final_date = final_usage.get("date")
-        final_time = final_usage.get("time")
-        
-        event_id = res_doc.get("google_calendar_event_id")
-        
-        if final_date:
-            garment_descriptions = [f"- {g['role']}: {g.get('title') or 'Garment'}" for g in res_doc.get("garments", [])]
-            desc = final_desc + "\n\nGarments:\n" + "\n".join(garment_descriptions)
-            
-            if event_id:
-                background_tasks.add_task(
-                    calendar_service.update_calendar_event,
-                    user,
-                    event_id,
-                    final_name,
-                    desc,
-                    final_date,
-                    final_time
-                )
-            else:
-                async def _create_and_save_event_id():
-                    try:
-                        event = await calendar_service.create_calendar_event(
-                            user,
-                            final_name,
-                            desc,
-                            final_date,
-                            final_time
-                        )
-                        if event and event.get("id"):
-                            await db.outfits.update_one(
-                                {"id": outfit_id},
-                                {"$set": {"google_calendar_event_id": event["id"]}}
-                            )
-                    except Exception as e:
-                        logger.error("Failed to save google_calendar_event_id during patch: %s", e)
-                background_tasks.add_task(_create_and_save_event_id)
-        elif event_id:
-            background_tasks.add_task(calendar_service.delete_calendar_event, user, event_id)
-            await db.outfits.update_one(
-                {"id": outfit_id},
-                {"$set": {"google_calendar_event_id": None}}
-            )
-
     return _safe_doc(res_doc)
 
 

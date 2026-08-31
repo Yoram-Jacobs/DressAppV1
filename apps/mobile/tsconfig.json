@@ -1,0 +1,47 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "lib": [
+      "ESNext",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "strict": true,
+    "allowJs": true,
+    "jsx": "react-native",
+    "baseUrl": ".",
+    "paths": {
+      "@mobile/*": [
+        "src/*"
+      ],
+      "@dressapp/api-client": [
+        "../../packages/api-client/src/index.js"
+      ],
+      "@dressapp/i18n": [
+        "../../packages/i18n/src/index.js"
+      ],
+      "@dressapp/types": [
+        "../../packages/types/src/index.js"
+      ],
+      "@dressapp/eyes-native": [
+        "../../packages/eyes-native/src/index.ts"
+      ],
+      "lucide-react-native": [
+        "../../node_modules/lucide-react-native"
+      ],
+      "react-native-svg": [
+        "../../node_modules/react-native-svg"
+      ]
+    },
+    "typeRoots": [
+      "./node_modules/@types",
+      "../../node_modules/@types"
+    ]
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.d.ts",
+    "nativewind-env.d.ts"
+  ]
+}

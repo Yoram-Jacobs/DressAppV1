@@ -1,0 +1,19 @@
+{
+  "name": "build-android",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@bubblewrap/cli": "^1.24.1",
+    "nativewind": "5.0.0-preview.2",
+    "react-native-css": "0.0.0-nightly.5ce6396",
+    "tailwindcss": "^4"
+  }
+}

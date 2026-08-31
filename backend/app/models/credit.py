@@ -21,6 +21,35 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def prune_expired_buckets(
+    buckets: List["CreditBucket"], now_str: str | None = None
+) -> List["CreditBucket"]:
+    """Return a new list with all zero-value expired free buckets removed.
+
+    A free bucket is considered expired when its ``expires_at`` timestamp
+    is earlier than ``now``.  Paid buckets (``expires_at=None``) are never
+    pruned.  Buckets that still have credits remaining are always kept,
+    even if past their nominal expiry, because spend_credits already skips
+    them — removing them here would discard the information used by
+    get_credit_usage_summary to report ``free_expired``.
+
+    In practice the spend path drains free buckets to 0 before expiry, so
+    any bucket with ``amount > 0`` that is past its expiry date represents
+    credits the user earned but never spent.  We keep those for the summary
+    and only drop zero-amount expired entries, which are pure dead weight.
+    """
+    now = now_str or _now_iso()
+    return [
+        b for b in buckets
+        if not (
+            b.type == "free"
+            and b.expires_at is not None
+            and now > b.expires_at
+            and b.amount == 0
+        )
+    ]
+
+
 def get_total_credits(buckets: List[CreditBucket], now_str: str | None = None) -> int:
     """Get total available credits across all non-expired buckets."""
     now = now_str or _now_iso()

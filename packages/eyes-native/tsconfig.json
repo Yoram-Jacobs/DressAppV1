@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "typeRoots": ["./src/types", "../../node_modules/@types"],
+    "paths": {
+      "llama.rn": ["./src/types/llama.rn.d.ts"],
+      "expo-device": ["./src/types/expo-device.d.ts"],
+      "expo-file-system": ["../../node_modules/expo-file-system"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

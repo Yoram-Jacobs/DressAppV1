@@ -22,7 +22,7 @@ graph TD
 * **Key Components:** [schemas.py:User](file:///C:/DressApp_AG/backend/app/models/schemas.py), [quota_manager.py](file:///C:/DressApp_AG/backend/app/services/quota_manager.py).
 
 ### 2. Closet & Ingestion Context
-* **Responsibility:** Adding garments, background matting (`rembg`), clothing category segmentation (`SegFormer`), DPP QR parsing, conversational re-analysis (The Eyes), and generative inpainting/editing via Nano Banana (`gemini-2.5-flash-image`).
+* **Responsibility:** Adding garments, background matting (`rembg`), clothing category segmentation (`SegFormer`), DPP QR parsing, conversational re-analysis (The Eyes), and generative inpainting/editing via Nano Banana (`gemini-3.1-flash-lite-image`).
 * **Key Components:** [clothing_parser.py](file:///C:/DressApp_AG/backend/app/services/clothing_parser.py), [background_matting.py](file:///C:/DressApp_AG/backend/app/services/background_matting.py), [dpp_parser.py](file:///C:/DressApp_AG/backend/app/services/dpp_parser.py), [gemini_image_service.py](file:///C:/DressApp_AG/backend/app/services/gemini_image_service.py).
 
 ### 3. AI Stylist & Audio Context
@@ -50,9 +50,14 @@ graph TD
 | **Garment / Closet Item** | Closet | A unique article of clothing owned by a user, cataloged with 20+ attributes (season, material, fit, color, etc.) and a background-removed image cutout. |
 | **Ingestion Pipeline** | Closet | The automated pipeline that segments multiple clothes from a photo, applies matting, and auto-attributes them via Gemini. |
 | **The Eyes** | Closet / Vision | The multimodal vision assistant that analyzes garment photos, clarifies user editing intent, and guides re-analysis. |
-| **Nano Banana** | Vision / Inpainting | Generative image editing service powered by `gemini-2.5-flash-image` for object removal, hole completion, and catalog reconstruction. |
+| **Nano Banana** | Vision / Inpainting | Generative image editing service powered by `gemini-3.1-flash-lite-image` for object removal, hole completion, and catalog reconstruction. |
 | **DPP (Digital Product Passport)**| Closet | Standard-compliant product metadata (fabric composition, brand traceability, care instructions) parsed from QR codes. |
 | **Stylist Session** | Stylist | An active chat session (text or voice) where outfit recommendations are tailored to the user's local weather and calendar events. |
 | **Listing** | Marketplace | A closet item designated by a user for sale, trade, or donation on the community feed. |
 | **Ad Campaign** | Experts | A self-serve advertisement set up by an expert stylist or business, billing daily via PayPal for home feed ad placement. |
 | **Credits** | Billing | Pre-purchased virtual currency used to pay for premium stylist actions (such as high-quality outfit generation or Nano Banana image inpainting). |
+| **GarmentVisuals** | Closet / Visuals | The deep module (`garment_visuals.py`) managing decoding, matting, fallback recovery, compression, and thumbnailing. |
+| **Cutout / Clean Image** | Closet / Visuals | An isolated, transparent PNG asset (`clean_image_url`) guaranteed to have zero background for seamless layering on avatars and canvases. |
+| **Transparency Invariant** | Closet / Visuals | Architectural rule enforcing that all inpainting and clean assets store transparent PNGs without background bonding boxes. |
+| **StylingContext** | Stylist | The deep module (`styling_context.py`) synthesizing multi-modal grounding (wardrobe, sizing, weather, calendar, i18next) for all styling workflows. |
+| **MobileClosetRepository** | Mobile / Store | The deep module (`closetRepository.ts`) managing offline AsyncStorage hydration, SWR background revalidation, optimistic mutations, and instant slot summaries. |

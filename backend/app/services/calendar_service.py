@@ -41,7 +41,7 @@ SCOPES = [
     "openid",
     "email",
     "profile",
-    "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/calendar.events.readonly",
     "https://www.googleapis.com/auth/user.birthday.read",
     "https://www.googleapis.com/auth/user.phonenumbers.read",
     "https://www.googleapis.com/auth/user.addresses.read",
@@ -136,12 +136,18 @@ class CalendarService:
         ``callback_path`` lets callers pick which backend route Google
         redirects to (calendar-connect vs sign-in-login). When ``None`` we
         keep the original calendar-connect path for backwards compatibility.
-        Note: the env override (``GOOGLE_OAUTH_REDIRECT_URI``) only applies
-        when ``callback_path`` is not provided — sign-in-login uses a
-        different backend route, so it always derives from the request host.
         """
-        if callback_path is None and self.redirect_uri:
-            return self.redirect_uri
+        if self.redirect_uri:
+            # If callback_path is not specified or matches the default unified callback path,
+            # return self.redirect_uri verbatim.
+            if callback_path is None or callback_path == "/api/v1/auth/google/callback":
+                return self.redirect_uri
+            # If a custom callback path was requested (e.g. legacy), extract base origin and append path.
+            from urllib.parse import urlparse
+
+            parsed = urlparse(self.redirect_uri)
+            base = f"{parsed.scheme}://{parsed.netloc}"
+            return f"{base}{callback_path}"
         if request is None:
             return None
         base = _public_base_url(request)
@@ -193,18 +199,23 @@ class CalendarService:
 
     # -------------------- token exchange --------------------
     async def exchange_code(
-        self, code: str, request: Any = None, callback_path: str | None = None
+        self,
+        code: str,
+        request: Any = None,
+        callback_path: str | None = None,
+        redirect_uri: str | None = None,
     ) -> dict[str, Any]:
         """Swap an auth code for access+refresh tokens. Raises on failure.
 
         The ``redirect_uri`` MUST match the one used on authorization —
-        we resolve it the same way here (env override wins, else derived
-        from the current request's host) so the handshake succeeds on
-        preview, staging, prod, and any custom domain.
+        when ``redirect_uri`` is explicitly provided (e.g. from the signed
+        state JWT), we use it directly to guarantee byte-for-byte fidelity.
+        Otherwise we resolve it the standard way.
         """
-        redirect_uri = self.resolve_redirect_uri(
-            request, callback_path=callback_path
-        )
+        if not redirect_uri:
+            redirect_uri = self.resolve_redirect_uri(
+                request, callback_path=callback_path
+            )
         logger.info(
             "Google OAuth token exchange: redirect_uri=%s callback_path=%s",
             redirect_uri,
@@ -566,115 +577,23 @@ class CalendarService:
     async def create_calendar_event(
         self, user: dict, summary: str, description: str, date_str: str, time_str: str | None
     ) -> dict[str, Any] | None:
-        """Create a calendar event for a saved outfit on the user's primary Google Calendar."""
-        tokens = user.get("google_calendar_tokens") or {}
-        if not tokens.get("refresh_token"):
-            logger.info("create_calendar_event: no refresh token for user %s", user.get("id"))
-            return None
-
-        try:
-            service = await self._build_service(user["id"], tokens)
-            time_part = time_str or "09:00"
-            if len(time_part) == 5:
-                time_part += ":00"
-            dt_str = f"{date_str}T{time_part}"
-            try:
-                dt = datetime.fromisoformat(dt_str)
-            except ValueError:
-                dt = datetime.strptime(date_str, "%Y-%m-%d")
-                dt = dt.replace(hour=9, minute=0)
-
-            event_body = {
-                "summary": summary,
-                "description": description,
-                "start": {
-                    "dateTime": dt.isoformat(),
-                    "timeZone": "UTC",
-                },
-                "end": {
-                    "dateTime": (dt + timedelta(hours=1)).isoformat(),
-                    "timeZone": "UTC",
-                },
-            }
-
-            import asyncio
-            loop = asyncio.get_running_loop()
-            event = await loop.run_in_executor(
-                None,
-                lambda: service.events().insert(calendarId="primary", body=event_body).execute()
-            )
-            logger.info("Successfully created calendar event %s for user %s", event.get("id"), user.get("id"))
-            return event
-        except Exception as exc:
-            logger.error("Failed to create calendar event for user %s: %s", user.get("id"), exc)
-            return None
+        """No-op: Google Calendar integration is strictly read-only."""
+        logger.debug("create_calendar_event skipped: Google Calendar scope is read-only")
+        return None
 
     async def update_calendar_event(
         self, user: dict, event_id: str, summary: str, description: str, date_str: str, time_str: str | None
     ) -> dict[str, Any] | None:
-        """Update an existing calendar event on the user's primary Google Calendar."""
-        tokens = user.get("google_calendar_tokens") or {}
-        if not tokens.get("refresh_token"):
-            return None
-
-        try:
-            service = await self._build_service(user["id"], tokens)
-            time_part = time_str or "09:00"
-            if len(time_part) == 5:
-                time_part += ":00"
-            dt_str = f"{date_str}T{time_part}"
-            try:
-                dt = datetime.fromisoformat(dt_str)
-            except ValueError:
-                dt = datetime.strptime(date_str, "%Y-%m-%d")
-                dt = dt.replace(hour=9, minute=0)
-
-            event_body = {
-                "summary": summary,
-                "description": description,
-                "start": {
-                    "dateTime": dt.isoformat(),
-                    "timeZone": "UTC",
-                },
-                "end": {
-                    "dateTime": (dt + timedelta(hours=1)).isoformat(),
-                    "timeZone": "UTC",
-                },
-            }
-
-            import asyncio
-            loop = asyncio.get_running_loop()
-            event = await loop.run_in_executor(
-                None,
-                lambda: service.events().patch(calendarId="primary", eventId=event_id, body=event_body).execute()
-            )
-            logger.info("Successfully updated calendar event %s for user %s", event_id, user.get("id"))
-            return event
-        except Exception as exc:
-            logger.error("Failed to update calendar event %s for user %s: %s", event_id, user.get("id"), exc)
-            return None
+        """No-op: Google Calendar integration is strictly read-only."""
+        logger.debug("update_calendar_event skipped: Google Calendar scope is read-only")
+        return None
 
     async def delete_calendar_event(
         self, user: dict, event_id: str
     ) -> bool:
-        """Delete a calendar event from the user's primary Google Calendar."""
-        tokens = user.get("google_calendar_tokens") or {}
-        if not tokens.get("refresh_token"):
-            return False
-
-        try:
-            service = await self._build_service(user["id"], tokens)
-            import asyncio
-            loop = asyncio.get_running_loop()
-            await loop.run_in_executor(
-                None,
-                lambda: service.events().delete(calendarId="primary", eventId=event_id).execute()
-            )
-            logger.info("Successfully deleted calendar event %s for user %s", event_id, user.get("id"))
-            return True
-        except Exception as exc:
-            logger.error("Failed to delete calendar event %s for user %s: %s", event_id, user.get("id"), exc)
-            return False
+        """No-op: Google Calendar integration is strictly read-only."""
+        logger.debug("delete_calendar_event skipped: Google Calendar scope is read-only")
+        return False
 
 
 calendar_service = CalendarService()

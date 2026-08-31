@@ -182,7 +182,7 @@ SYSTEM_PROMPT = (
     '  "tradition": string|null,           // cultural/religious pattern if clearly present (e.g. "arabic","jewish","indian"), else null\n'
     '  "colors":           [{"name": string, "pct": integer 0..100}, ...],  // sum \u2248 100\n'
     '  "fabric_materials": [{"name": string, "pct": integer 0..100}, ...],  // sum \u2248 100; infer likely composition\n'
-    '  "pattern": string,                  // "solid","striped","plaid","floral","herringbone","polka","paisley","geometric","abstract"\n'
+    '  "pattern": string,                  // "solid","striped","plaid","floral","herringbone","polka_dot","paisley","geometric","animal_print","graphic","tie_dye","abstract"\n'
     '  "state": "new"|"used",\n'
     '  "condition": "bad"|"fair"|"good"|"excellent",\n'
     '  "quality": "budget"|"mid"|"premium"|"luxury",\n'
@@ -195,7 +195,7 @@ SYSTEM_PROMPT = (
     '                                                                              // • "needs_completion": Visible garment is mostly present, but has ANY missing side panels/contours, occlusions from hands, arms, bags, hair, or overlapping garments, clipped hems/waistbands, or uneven amputated borders. Needs image completion to outpaint/inpaint missing sections while preserving visible fabric and shape.\n'
     '                                                                              // • "needs_reconstruction": Severely truncated, severed (e.g. only shoe tips visible, tiny sliver, amputated torso), or heavily degraded so that inpainting is insufficient and a full new photorealistic generation from scratch is required.\n'
     '  "image_quality_reason": string|null, // Diagnostic note in English describing what is missing/occluded (e.g. "Right side contour cut by bag occlusion; hem clipped at bottom" or "Only toe caps visible, heels and openings missing"). Null if "complete".\n'
-    '  "reconstruction_prompt": string|null // Nano Banana prompt. If "needs_completion": clear instruction to outpaint and complete missing borders/hems/sleeves/sides into a symmetrical, whole garment on a neutral off-white background while preserving existing fabric and texture. If "needs_reconstruction": complete editorial product photograph prompt for the entire item on an off-white background. Null if "complete".\n'
+    '  "reconstruction_prompt": string|null // Nano Banana prompt. If "needs_completion": clear instruction to outpaint and complete missing borders/hems/sleeves/sides into a symmetrical, whole garment on a neutral DressApp card background (#F5F2EB) while preserving existing fabric and texture. If "needs_reconstruction": complete editorial product photograph prompt for the entire item on a neutral DressApp card background (#F5F2EB). Null if "complete".\n'
     "}\n\n"
     "Style rules for the free-text fields (`name`, `title`, `caption`, "
     "`tags`, `repair_advice`):\n"
@@ -212,9 +212,13 @@ SYSTEM_PROMPT = (
     "Imagine the user already owns ten black tees; pick a detail no "
     "other shirt in a closet would share (texture, weight, neckline, "
     "wash, hardware, vibe, era).\n"
-    "  4. VOICE \u2014 thoughtful editor, never salesy, never robotic. "
+    "  4. VOICE — thoughtful editor, never salesy, never robotic. "
     "No emojis, no markdown, no hashtags, no #tags inside text "
-    "fields."
+    "fields.\n"
+    "  5. FIELD RULES:\n"
+    "     • pattern: If the garment has printed text, slogans, artwork, graphics, typography, or illustrations, set pattern=\"graphic\". Only use \"solid\" if there is no graphic or pattern.\n"
+    "     • season: If the piece is versatile and wearable year-round (e.g. standard t-shirt, jeans, hoodie, sneakers), return [\"all\"]. Only restrict to specific seasons if clearly weather-bound (e.g. heavy winter down parka, summer swimwear).\n"
+    "     • gender: Default to \"unisex\" for standard t-shirts, hoodies, and casual pieces unless tailored explicitly for men or women."
 )
 
 
@@ -366,7 +370,8 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
             "type": "string",
             "enum": [
                 "solid", "striped", "plaid", "floral", "herringbone",
-                "polka", "paisley", "geometric", "abstract",
+                "polka", "polka_dot", "paisley", "geometric", "animal_print",
+                "graphic", "tie_dye", "abstract",
             ],
         },
         "state": {"type": "string", "enum": ["new", "used"]},
@@ -474,22 +479,7 @@ def _language_directive(code: str | None) -> str:
 
 
 def _user_prompt(code: str | None) -> str:
-    """Build the user-message prompt for ``analyze()``.
-
-    For non-English locales we prepend the **proven** ``OUTPUT
-    LANGUAGE = Name (xx)`` preamble (same format used by
-    ``stylist_brain.py`` and ``gemini_stylist.py``) at the TOP of the
-    user message, where the model sees it last before generating.
-    Listing the free-text fields explicitly forces the model to apply
-    the language rule to short label-like values (``name`` / ``title``)
-    that it otherwise leaves in English.
-
-    JSON keys and the schema's closed-vocabulary enums (``category``,
-    ``gender``, ``dress_code``, ``season``, ``pattern``, ``state``,
-    ``condition``, ``quality``) deliberately stay in English so the
-    downstream sanitiser / DB / UI lookups don't have to know every
-    locale's translation.
-    """
+    """Build the user-message prompt for ``analyze()``."""
     base = (
         "Analyse this photograph. If one garment is visible return a single "
         "JSON object; if multiple garments are visible return a JSON array "
@@ -499,16 +489,39 @@ def _user_prompt(code: str | None) -> str:
     if code == "en":
         return base
     lang_name = _LANG_NAMES.get(code, code)
-    return (
-        f"**OUTPUT LANGUAGE = {lang_name} ({code}).** Every free-text "
-        f"field (`name`, `title`, `caption`, `tags`, `repair_advice`, "
-        f"`sub_category`, `item_type`, `colors[*].name`, "
-        f"`fabric_materials[*].name`) MUST be written in fluent, "
-        f"idiomatic {lang_name}. JSON keys and enum tokens "
-        f"(`category`, `gender`, `dress_code`, `season`, `pattern`, "
-        f"`state`, `condition`, `quality`) stay in English.\n\n"
-        + base
-    )
+    if code in ("he", "iw"):
+        directive = (
+            "**OUTPUT LANGUAGE = Hebrew (עברית).** Every free-text field "
+            "(`name`, `title`, `caption`, `tags`, `repair_advice`, "
+            "`sub_category`, `item_type`, `colors[*].name`, "
+            "`fabric_materials[*].name`) MUST be written in fluent, "
+            "idiomatic modern Hebrew using standard Hebrew Unicode characters "
+            "(e.g. מכנסי קרגו, חולצת טי, שמלת מקסי, ג'ינס). Do not use non-Hebrew "
+            "diacritics, Yiddish ligatures, or transliteration characters from other scripts. "
+            "JSON keys and enum tokens (`category`, `gender`, `dress_code`, "
+            "`season`, `pattern`, `state`, `condition`, `quality`) stay in English.\n\n"
+        )
+    elif code == "ar":
+        directive = (
+            "**OUTPUT LANGUAGE = Arabic (العربية).** Every free-text field "
+            "(`name`, `title`, `caption`, `tags`, `repair_advice`, "
+            "`sub_category`, `item_type`, `colors[*].name`, "
+            "`fabric_materials[*].name`) MUST be written in fluent, "
+            "idiomatic modern Arabic using standard Arabic script. "
+            "JSON keys and enum tokens (`category`, `gender`, `dress_code`, "
+            "`season`, `pattern`, `state`, `condition`, `quality`) stay in English.\n\n"
+        )
+    else:
+        directive = (
+            f"**OUTPUT LANGUAGE = {lang_name} ({code}).** Every free-text "
+            f"field (`name`, `title`, `caption`, `tags`, `repair_advice`, "
+            f"`sub_category`, `item_type`, `colors[*].name`, "
+            f"`fabric_materials[*].name`) MUST be written in fluent, "
+            f"idiomatic {lang_name}. JSON keys and enum tokens "
+            f"(`category`, `gender`, `dress_code`, `season`, `pattern`, "
+            f"`state`, `condition`, `quality`) stay in English.\n\n"
+        )
+    return directive + base
 
 
 def _extract_json(raw: str) -> dict[str, Any] | list[dict[str, Any]]:
@@ -786,16 +799,39 @@ def _build_batch_prompts(
     code = (language or "en").lower()
     if code != "en":
         lang_name = _LANG_NAMES.get(code, code)
-        user_text = (
-            f"**OUTPUT LANGUAGE = {lang_name} ({code}).** Every free-text "
-            f"field (`name`, `title`, `caption`, `tags`, `repair_advice`, "
-            f"`sub_category`, `item_type`, `colors[*].name`, "
-            f"`fabric_materials[*].name`) MUST be written in fluent, "
-            f"idiomatic {lang_name}. JSON keys and enum tokens "
-            f"(`category`, `gender`, `dress_code`, `season`, `pattern`, "
-            f"`state`, `condition`, `quality`) stay in English.\n\n"
-            + user_text
-        )
+        if code in ("he", "iw"):
+            directive = (
+                "**OUTPUT LANGUAGE = Hebrew (עברית).** Every free-text field "
+                "(`name`, `title`, `caption`, `tags`, `repair_advice`, "
+                "`sub_category`, `item_type`, `colors[*].name`, "
+                "`fabric_materials[*].name`) MUST be written in fluent, "
+                "idiomatic modern Hebrew using standard Hebrew Unicode characters "
+                "(e.g. מכנסי קרגו, חולצת טי, שמלת מקסי, ג'ינס). Do not use non-Hebrew "
+                "diacritics, Yiddish ligatures, or transliteration characters from other scripts. "
+                "JSON keys and enum tokens (`category`, `gender`, `dress_code`, "
+                "`season`, `pattern`, `state`, `condition`, `quality`) stay in English.\n\n"
+            )
+        elif code == "ar":
+            directive = (
+                "**OUTPUT LANGUAGE = Arabic (العربية).** Every free-text field "
+                "(`name`, `title`, `caption`, `tags`, `repair_advice`, "
+                "`sub_category`, `item_type`, `colors[*].name`, "
+                "`fabric_materials[*].name`) MUST be written in fluent, "
+                "idiomatic modern Arabic using standard Arabic script. "
+                "JSON keys and enum tokens (`category`, `gender`, `dress_code`, "
+                "`season`, `pattern`, `state`, `condition`, `quality`) stay in English.\n\n"
+            )
+        else:
+            directive = (
+                f"**OUTPUT LANGUAGE = {lang_name} ({code}).** Every free-text "
+                f"field (`name`, `title`, `caption`, `tags`, `repair_advice`, "
+                f"`sub_category`, `item_type`, `colors[*].name`, "
+                f"`fabric_materials[*].name`) MUST be written in fluent, "
+                f"idiomatic {lang_name}. JSON keys and enum tokens "
+                f"(`category`, `gender`, `dress_code`, `season`, `pattern`, "
+                f"`state`, `condition`, `quality`) stay in English.\n\n"
+            )
+        user_text = directive + user_text
 
     system_prompt = (
         _build_system_prompt(one_pass=False)
@@ -812,10 +848,6 @@ def _build_batch_prompts(
             "`[` and end with `]`."
         )
         + hint_block
-    )
-    user_text = (
-        f"Analyse the {n} cropped garment image(s) below in order. "
-        f"Return a JSON array of {n} GarmentAnalysis entries."
     )
     return system_prompt, user_text
 
@@ -885,7 +917,8 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
             "type": "string",
             "enum": [
                 "solid", "striped", "plaid", "floral", "herringbone",
-                "polka", "paisley", "geometric", "abstract",
+                "polka", "polka_dot", "paisley", "geometric", "animal_print",
+                "graphic", "tie_dye", "abstract",
             ],
         },
         "state": {"type": "string", "enum": ["new", "used"]},
@@ -1017,7 +1050,7 @@ ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
         (
             'Analyze visual properties:\n'
             '- colors: list of [{"name": "color name", "pct": 0-100}] summing to 100\n'
-            '- pattern: solid | striped | plaid | floral | herringbone | polka | paisley | geometric | abstract\n'
+            '- pattern: solid | striped | plaid | floral | herringbone | polka_dot | paisley | geometric | animal_print | graphic | tie_dye | abstract\n'
             '- fabric_materials: list of [{"name": "fabric", "pct": 0-100}] summing to 100 (infer composition)'
         )
     ),

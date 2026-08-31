@@ -32,18 +32,32 @@ class UpdateUserIn(BaseModel):
     company_name: str | None = None
     phone: str | None = None
     date_of_birth: str | None = None
+    birthday: str | None = None
     sex: str | None = None
+    gender: str | None = None
     personal_status: str | None = None
+    marital_status: str | None = None
     address: dict[str, Any] | None = None
+    city: str | None = None
+    country: str | None = None
     units: dict[str, Any] | None = None
     face_photo_url: str | None = None
     body_photo_url: str | None = None
     skin_tone: str | None = None
     body_measurements: dict[str, Any] | None = None
+    measurements: dict[str, Any] | None = None
     hair: dict[str, Any] | None = None
 
     # --- Phase U: Professional ---
     professional: dict[str, Any] | None = None
+    is_stylist: bool | None = None
+    stylist_bio: str | None = None
+    hourly_rate: float | None = None
+    booking_url: str | None = None
+    specialties: list[str] | None = None
+
+    # --- Shopping Assistant ---
+    shopping_assistant: dict[str, Any] | None = None
 
     # --- Phase 4P: PayPal payouts ---
     paypal_receiver_email: str | None = None
@@ -57,6 +71,8 @@ class UpdateUserIn(BaseModel):
 
     # --- AI Stylist Scheduler Settings (Phase Scheduler) ---
     scheduler_settings: dict[str, Any] | None = None
+    scheduler_enabled: bool | None = None
+    morning_notification_time: str | None = None
 
     # --- AI Settings (F3 pay-as-you-go) ---
     ai_configuration: dict[str, Any] | None = None
@@ -76,6 +92,42 @@ async def get_me(user: dict = Depends(get_current_user)) -> dict[str, Any]:
     safe["google_connected"] = bool(user.get("google_oauth"))
     safe["has_password"] = bool(user.get("password_hash"))
     
+    # Normalize aliases so all frontends receive expected keys
+    if "date_of_birth" in safe and "birthday" not in safe:
+        safe["birthday"] = safe["date_of_birth"]
+    if "birthday" in safe and "date_of_birth" not in safe:
+        safe["date_of_birth"] = safe["birthday"]
+    if "sex" in safe and "gender" not in safe:
+        safe["gender"] = safe["sex"]
+    if "gender" in safe and "sex" not in safe:
+        safe["sex"] = safe["gender"]
+    if "personal_status" in safe and "marital_status" not in safe:
+        safe["marital_status"] = safe["personal_status"]
+    if "marital_status" in safe and "personal_status" not in safe:
+        safe["personal_status"] = safe["marital_status"]
+        
+    addr = safe.get("address") or safe.get("home_location") or {}
+    if isinstance(addr, dict):
+        if "city" not in safe and addr.get("city"):
+            safe["city"] = addr.get("city")
+        if "country" not in safe and addr.get("country"):
+            safe["country"] = addr.get("country")
+            
+    if "body_measurements" in safe and "measurements" not in safe:
+        safe["measurements"] = safe["body_measurements"]
+    if "measurements" in safe and "body_measurements" not in safe:
+        safe["body_measurements"] = safe["measurements"]
+
+    # Normalize subscription & tier
+    sub = safe.get("subscription") or {}
+    if isinstance(sub, dict):
+        if sub.get("is_active") and sub.get("tier"):
+            safe["subscription_tier"] = sub.get("tier")
+        else:
+            safe["subscription_tier"] = "free"
+    else:
+        safe["subscription_tier"] = "free"
+
     # Mask API keys to keep them secured
     if "ai_configuration" in safe:
         ai_config = dict(safe["ai_configuration"])
@@ -119,23 +171,7 @@ async def update_migration_flag(
 async def update_me(
     payload: UpdateUserIn, user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
-    """Partial profile update.
-
-    **Important — embedded-document merge semantics.** Mongo's
-    ``$set`` on a nested dict (e.g. ``body_measurements``) wholesale
-    replaces the dict, dropping every field not present in the
-    incoming payload. That's the opposite of what users expect from
-    a "PATCH" — and a real data-loss bug when a frontend form sends
-    only the fields it knows about (e.g. a cropped/pruned body
-    measurements blob from a partial form re-render).
-
-    To make the endpoint safe under all callers, we **deep-merge**
-    every dict-typed field into its existing value instead of
-    overwriting it. Scalar fields keep ``$set`` semantics. Setting
-    a dict field to ``{}`` explicitly is treated as "no change"
-    (use a dedicated reset endpoint if you ever need to fully wipe
-    a sub-document — none currently exists).
-    """
+    """Partial profile update."""
     patch = payload.model_dump(exclude_none=True)
     if "style_profile" in patch and patch["style_profile"] is not None:
         patch["style_profile"] = patch["style_profile"] if isinstance(
@@ -150,6 +186,7 @@ async def update_me(
     # partial PATCH cannot wipe values the frontend wasn't aware of.
     _MERGEABLE_DICT_FIELDS = (
         "body_measurements",
+        "measurements",
         "address",
         "units",
         "hair",
@@ -158,15 +195,44 @@ async def update_me(
         "style_profile",
         "cultural_context",
         "scheduler_settings",
+        "shopping_assistant",
     )
 
     db = get_db()
     set_ops: dict[str, Any] = {}
 
+    # Normalize aliases in incoming patch
+    if "birthday" in patch:
+        set_ops["date_of_birth"] = patch["birthday"]
+        set_ops["birthday"] = patch["birthday"]
+    if "date_of_birth" in patch:
+        set_ops["date_of_birth"] = patch["date_of_birth"]
+        set_ops["birthday"] = patch["date_of_birth"]
+    if "gender" in patch:
+        set_ops["sex"] = patch["gender"]
+        set_ops["gender"] = patch["gender"]
+    if "sex" in patch:
+        set_ops["sex"] = patch["sex"]
+        set_ops["gender"] = patch["sex"]
+    if "marital_status" in patch:
+        set_ops["personal_status"] = patch["marital_status"]
+        set_ops["marital_status"] = patch["marital_status"]
+    if "personal_status" in patch:
+        set_ops["personal_status"] = patch["personal_status"]
+        set_ops["marital_status"] = patch["personal_status"]
+    if "city" in patch:
+        set_ops["city"] = patch["city"]
+        set_ops["address.city"] = patch["city"]
+        set_ops["home_location.city"] = patch["city"]
+    if "country" in patch:
+        set_ops["country"] = patch["country"]
+        set_ops["address.country"] = patch["country"]
+        set_ops["home_location.country"] = patch["country"]
+
     if "ai_configuration" in patch and patch["ai_configuration"] is not None:
         ai_config = patch["ai_configuration"]
         existing_config = user.get("ai_configuration") or {}
-        provider_mode = ai_config.get("provider_mode") or existing_config.get("provider_mode") or "standard"
+        provider_mode = ai_config.get("provider_mode") or existing_config.get("provider_mode") or "custom_keys"
         
         # Merge custom keys
         existing_keys = existing_config.get("custom_keys") or {}
@@ -181,15 +247,35 @@ async def update_me(
                 # Remove key
                 merged_keys.pop(key_name, None)
             else:
+                key_str = str(key_val).strip()
+                from app.services.auth import decrypt_api_key, encrypt_api_key
+                if key_str.startswith("gAAAAA"):
+                    unwrapped = decrypt_api_key(key_str)
+                    if unwrapped:
+                        key_str = unwrapped
+
+                if key_name == "google_ai" and key_str:
+                    from app.services.gemini_client import GeminiClient
+                    client = GeminiClient(api_key=key_str)
+                    try:
+                        resp = await client.text("Test connection.", model="gemini-3.5-flash-lite")
+                        if not resp:
+                            raise ValueError("No response from Google Gemini")
+                    except Exception as exc:
+                        logger.warning("Gemini key validation failed during patch: %s", exc)
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"Google Gemini API key is invalid: {exc}",
+                        ) from exc
+
                 # Encrypt new key
-                from app.services.auth import encrypt_api_key
-                merged_keys[key_name] = encrypt_api_key(str(key_val))
+                merged_keys[key_name] = encrypt_api_key(key_str)
                 
         set_ops["ai_configuration"] = {
             "provider_mode": provider_mode,
             "custom_keys": merged_keys,
             "selected_provider": ai_config.get("selected_provider") or existing_config.get("selected_provider") or "google_ai",
-            "selected_model": ai_config.get("selected_model") or existing_config.get("selected_model") or "gemini-3.5-flash-lite",
+            "selected_model": ai_config.get("selected_model") or existing_config.get("selected_model") or "gemini-3.5-flash",
             "current_credits": ai_config.get("current_credits", existing_config.get("current_credits", 1000)),
             "credits_used_this_month": ai_config.get("credits_used_this_month", existing_config.get("credits_used_this_month", 0))
         }
@@ -220,32 +306,78 @@ async def update_me(
             if val is None or val == "":
                 set_ops[clearable] = None
 
-    # Automatic background cutout processing for face & body photos
-    if "face_photo_url" in patch and patch["face_photo_url"] and isinstance(patch["face_photo_url"], str) and patch["face_photo_url"].startswith("data:image"):
-        try:
-            import base64
-            from app.services.background_matting import remove_background
-            b64_str = patch["face_photo_url"].split(",", 1)[-1]
-            img_bytes = base64.b64decode(b64_str)
-            mat_res = await remove_background(img_bytes)
-            if mat_res and mat_res.get("image_png"):
-                m_b64 = base64.b64encode(mat_res["image_png"]).decode("utf-8")
-                set_ops["face_photo_url"] = f"data:image/png;base64,{m_b64}"
-        except Exception:
-            pass
+    # Automatic storage upload, background removal & tight normalization for avatar, face & body photos
+    from app.services.upload_manager import UploadManager
+    from app.services.image_compression import compress_image_bytes
+    import base64
+    import io
+    from PIL import Image, ImageOps
 
-    if "body_photo_url" in patch and patch["body_photo_url"] and isinstance(patch["body_photo_url"], str) and patch["body_photo_url"].startswith("data:image"):
+    async def _segment_and_crop_profile_photo(raw_bytes: bytes, mode: str = "face") -> tuple[bytes, str, str]:
+        """
+        Remove background and crop to subject bounding box for profile face and full-body photos.
+        Returns (image_bytes, mime_type, extension).
+        """
         try:
-            import base64
             from app.services.background_matting import remove_background
-            b64_str = patch["body_photo_url"].split(",", 1)[-1]
-            img_bytes = base64.b64decode(b64_str)
-            mat_res = await remove_background(img_bytes)
-            if mat_res and mat_res.get("image_png"):
-                m_b64 = base64.b64encode(mat_res["image_png"]).decode("utf-8")
-                set_ops["body_photo_url"] = f"data:image/png;base64,{m_b64}"
-        except Exception:
-            pass
+
+            orig = Image.open(io.BytesIO(raw_bytes))
+            orig = ImageOps.exif_transpose(orig).convert("RGB")
+
+            # Downscale input to 768px for fast inference (<1.5s on CPU)
+            max_dim = 768
+            w, h = orig.size
+            if max(w, h) > max_dim:
+                scale = max_dim / float(max(w, h))
+                orig = orig.resize((max(1, int(w * scale)), max(1, int(h * scale))), Image.LANCZOS)
+
+            buf = io.BytesIO()
+            orig.save(buf, format="JPEG", quality=88)
+
+            matted = await remove_background(buf.getvalue())
+            if matted and matted.get("image_png"):
+                cutout = Image.open(io.BytesIO(matted["image_png"])).convert("RGBA")
+                bbox = cutout.getbbox()
+                if bbox:
+                    bw, bh = bbox[2] - bbox[0], bbox[3] - bbox[1]
+                    pad_x = int(bw * 0.03)
+                    pad_y = int(bh * 0.03)
+                    cw, ch = cutout.size
+                    crop_box = (
+                        max(0, bbox[0] - pad_x),
+                        max(0, bbox[1] - pad_y),
+                        min(cw, bbox[2] + pad_x),
+                        min(ch, bbox[3] + pad_y),
+                    )
+                    cutout = cutout.crop(crop_box)
+
+                out_buf = io.BytesIO()
+                cutout.save(out_buf, format="PNG", optimize=True)
+                return out_buf.getvalue(), "image/png", "png"
+        except Exception as exc:
+            logger.warning("Profile photo segmentation fallback for %s: %s", mode, exc)
+
+        compressed = compress_image_bytes(raw_bytes, max_dim=1024, quality=80)
+        return compressed, "image/jpeg", "jpg"
+
+    for photo_field in ("avatar_url", "face_photo_url", "body_photo_url"):
+        val = patch.get(photo_field)
+        if val and isinstance(val, str) and val.startswith("data:image"):
+            try:
+                header, b64_str = val.split(",", 1)
+                img_bytes = base64.b64decode(b64_str)
+                mode = "face" if photo_field in ("face_photo_url", "avatar_url") else "body"
+
+                processed_bytes, mime, ext = await _segment_and_crop_profile_photo(img_bytes, mode=mode)
+                uploaded_url = await UploadManager.upload_bytes(processed_bytes, mime, ext)
+                set_ops[photo_field] = uploaded_url
+                if photo_field == "face_photo_url" and "avatar_url" not in patch:
+                    set_ops["avatar_url"] = uploaded_url
+                elif photo_field == "avatar_url" and "face_photo_url" not in patch:
+                    set_ops["face_photo_url"] = uploaded_url
+            except Exception as photo_exc:
+                logger.warning("Failed to process/upload %s for user %s: %s", photo_field, user["id"], photo_exc)
+
 
     set_ops["updated_at"] = datetime.now(timezone.utc).isoformat()
     if set_ops:
@@ -341,4 +473,48 @@ async def delete_me(
         logger.error("Failed to send deletion email: %s", exc)
 
     return {"deleted": True}
+
+
+class ValidateApiKeyRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    provider: str = "google_ai"
+    api_key: str
+
+
+@router.post("/validate-api-key")
+async def validate_api_key(
+    payload: ValidateApiKeyRequest,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Test user's API key against the provider before saving."""
+    key = (payload.api_key or "").strip()
+    if not key:
+        raise HTTPException(status_code=400, detail="API key cannot be empty.")
+
+    provider = payload.provider.lower()
+    if provider == "google_ai":
+        from app.services.gemini_client import GeminiClient
+        client = GeminiClient(api_key=key)
+        try:
+            resp = await client.text("Test connection.", model="gemini-3.5-flash-lite")
+            if resp:
+                return {
+                    "valid": True,
+                    "provider": "google_ai",
+                    "message": "Google Gemini API key is valid and connected successfully.",
+                }
+            raise ValueError("Empty response received from Gemini.")
+        except Exception as exc:
+            logger.warning("Google AI key validation failed: %s", exc)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid Google Gemini API key: {exc}",
+            ) from exc
+
+    return {
+        "valid": True,
+        "provider": provider,
+        "message": f"{provider} API key format accepted.",
+    }
+
 

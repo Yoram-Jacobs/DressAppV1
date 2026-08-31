@@ -56,6 +56,23 @@ class Settings:
     VAPID_PUBLIC_KEY: str = os.environ.get("VAPID_PUBLIC_KEY", "")
     VAPID_PRIVATE_KEY: str = os.environ.get("VAPID_PRIVATE_KEY", "")
     VAPID_CLAIM_EMAIL: str = os.environ.get("VAPID_CLAIM_EMAIL", "info@dressapp.co")
+
+    # --- Object Storage (Cloudflare R2 / any S3-compatible bucket) -----------
+    # All optional.  When R2_ACCESS_KEY_ID is absent, UploadManager writes to
+    # the local static/uploads/ directory (safe for dev; NOT for production —
+    # Docker containers are ephemeral and files are lost on restart).
+    # Production: populate these in /srv/AI-Stylist/deploy/.env
+    #   R2_ACCESS_KEY_ID      — R2 API token (Access Key ID)
+    #   R2_SECRET_ACCESS_KEY  — R2 API token (Secret Access Key)
+    #   R2_ENDPOINT_URL       — e.g. https://<account_id>.r2.cloudflarestorage.com
+    #   R2_BUCKET_NAME        — e.g. dressapp-media
+    #   R2_PUBLIC_URL         — CDN / r2.dev URL, e.g. https://media.dressapp.co
+    R2_ACCESS_KEY_ID: str | None = os.environ.get("R2_ACCESS_KEY_ID") or None
+    R2_SECRET_ACCESS_KEY: str | None = os.environ.get("R2_SECRET_ACCESS_KEY") or None
+    R2_ENDPOINT_URL: str | None = os.environ.get("R2_ENDPOINT_URL") or None
+    R2_BUCKET_NAME: str = os.environ.get("R2_BUCKET_NAME", "dressapp-media")
+    R2_PUBLIC_URL: str = os.environ.get("R2_PUBLIC_URL", "").rstrip("/")
+
     # CORS default covers BOTH production targets:
     #   * dressapp.co (Hetzner — full-fat ML stack)
     #   * ai-stylist-api.emergent.host (Emergent — lightweight pod, falls
@@ -146,7 +163,7 @@ class Settings:
     # The earlier HF FLUX fallback was retired in May 2026 — when the
     # direct key is absent we now return 503 instead of degrading.
     GEMINI_IMAGE_MODEL: str = os.environ.get(
-        "GEMINI_IMAGE_MODEL", "gemini-2.5-flash-image"
+        "GEMINI_IMAGE_MODEL", "gemini-3.1-flash-lite-image"
     )
 
     # --- The Eyes (garment vision analyzer) ---
@@ -482,7 +499,7 @@ class Settings:
     USE_LOCAL_CLOTHING_PARSER: bool = (
         not _LIGHTWEIGHT_DEPLOY
         and os.environ.get(
-            "USE_LOCAL_CLOTHING_PARSER", "true" if _HAS_LOCAL_ML else "false"
+            "USE_LOCAL_CLOTHING_PARSER", "false"
         ).lower()
         == "true"
         and os.environ.get("USE_CLOTHING_PARSER", "true").lower() == "true"
@@ -493,21 +510,12 @@ class Settings:
         os.environ.get("USE_CLOTHING_PARSER", "true").lower() == "true"
     )
 
-    # Patch M13 (May 2026) — Cold-start model warmup. Fires SegFormer +
-    # rembg + FashionCLIP loads in parallel as an asyncio background task
-    # from the FastAPI startup hook, so the FIRST user upload doesn't
-    # pay the cumulative 9-19s model-init tax that previously pushed
-    # cold-start /closet/analyze past the Kubernetes ingress 60s ceiling
-    # and triggered "502 Bad Gateway → Analysis failed" on first
-    # attempt. Default ``true`` on full-ML deploys, OFF on lightweight
-    # deploys (the lightweight container can't afford to preload models
-    # it doesn't need — it goes Gemini-only). Kill-switch via env var
-    # of the same name when triaging deploy-time issues.
+    # Cold-start model warmup. Off by default on single-pod VPS to keep RAM headroom under 2GB.
     WARMUP_MODELS_ON_STARTUP: bool = (
         not _LIGHTWEIGHT_DEPLOY
         and os.environ.get(
             "WARMUP_MODELS_ON_STARTUP",
-            "true" if _HAS_LOCAL_ML else "false",
+            "false",
         ).lower()
         == "true"
     )

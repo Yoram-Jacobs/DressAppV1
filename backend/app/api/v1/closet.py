@@ -269,6 +269,26 @@ _maybe_retry_stale_matte = closet_service.maybe_retry_stale_matte
 _run_background_matte = closet_service.run_background_matte
 _run_background_matte_and_analyze = closet_service.run_background_matte_and_analyze
 _run_background_reconstruction = closet_service.run_background_reconstruction
+
+
+def _get_item_image_url(item: dict[str, Any]) -> str | None:
+    """Extract clean_image_url as the primary image URL from a closet item document with full fallbacks."""
+    if not isinstance(item, dict):
+        return None
+    return (
+        item.get("clean_image_url")
+        or item.get("reconstructed_image_url")
+        or item.get("cutout_url")
+        or item.get("image_url")
+        or item.get("original_image_url")
+        or item.get("thumbnail_data_url")
+        or (item.get("image_variants") or {}).get("webp", {}).get("large")
+        or (item.get("image_variants") or {}).get("webp", {}).get("medium")
+        or (item.get("image_variants") or {}).get("original")
+        or None
+    )
+
+
 @router.post("", status_code=201)
 async def create_item(
     payload: CreateItemIn,
@@ -327,6 +347,26 @@ async def create_item(
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(400, f"Invalid image_base64: {exc}") from exc
 
+    tags_list = list(payload.tags) if payload.tags else []
+    if not tags_list:
+        auto_tags = set()
+        if payload.sub_category:
+            auto_tags.add(payload.sub_category.strip().lower())
+        elif payload.category:
+            auto_tags.add(payload.category.strip().lower())
+        if payload.dress_code:
+            auto_tags.add(payload.dress_code.strip().lower())
+        if payload.color:
+            auto_tags.add(payload.color.strip().lower())
+        if payload.brand:
+            auto_tags.add(payload.brand.strip().lower())
+        if payload.pattern and payload.pattern != "solid":
+            auto_tags.add(payload.pattern.strip().lower())
+        if payload.season and "all" not in payload.season:
+            for s in payload.season:
+                auto_tags.add(s.strip().lower())
+        tags_list = [t for t in auto_tags if t]
+
     item = ClosetItem(
         user_id=user["id"],
         source=payload.source,
@@ -356,7 +396,7 @@ async def create_item(
         marketplace_intent=payload.marketplace_intent,
         formality=payload.formality,
         cultural_tags=payload.cultural_tags,
-        tags=payload.tags,
+        tags=tags_list,
         original_image_url=payload.original_image_url,
         purchase_price_cents=payload.purchase_price_cents,
         purchase_currency=payload.purchase_currency,
@@ -600,7 +640,12 @@ async def create_item(
         # Map our fine-grained GarmentCondition to the simpler Listing condition.
         cond_map = {"excellent": "like_new", "good": "good", "fair": "fair", "bad": "fair"}
         listing_condition = cond_map.get(payload.condition or "", "good")
-        cover_image = doc.get("original_image_url") or doc.get("segmented_image_url")
+        cover_image = (
+            doc.get("clean_image_url")
+            or doc.get("segmented_image_url")
+            or doc.get("original_image_url")
+        )
+
         listing = Listing(
             closet_item_id=doc["id"],
             seller_id=user["id"],
@@ -641,6 +686,15 @@ async def create_item(
         logger.warning("Pre-generating thumbnail in create_item failed: %s", exc)
 
     await repos.insert(db.closet_items, doc)
+    # Drop analysis-phase temporaries immediately after save.
+    # original_image_url (raw upload) and segmented_image_url (SegFormer crop)
+    # are only needed during the /analyze pipeline, which completes before the
+    # user confirms saving. clean_image_url (rembg transparent PNG, set by the
+    # background matte task a few seconds later) is the sole display image.
+    await db.closet_items.update_one(
+        {"id": doc["id"]},
+        {"$unset": {"original_image_url": "", "segmented_image_url": ""}},
+    )
 
     if payload.in_suitcase:
         active_s = await db.suitcases.find_one({"user_id": user["id"], "status": {"$ne": "completed"}})
@@ -684,7 +738,8 @@ async def create_item(
 # outfit composition (preventing "wear the same polo twice" style
 # hallucinations).
 class PreflightPhotoIn(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
+    image_base64: str | None = None
     # SHA-256 hex digest of the raw file bytes (64 lowercase chars).
     # Catches exact-byte re-uploads.
     sha256: str | None = None
@@ -705,7 +760,7 @@ class PreflightPhotoIn(BaseModel):
 
 
 class PreflightIn(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
     photos: list[PreflightPhotoIn] = Field(default_factory=list, max_length=200)
 
 
@@ -741,9 +796,27 @@ async def preflight_duplicates(
          backfill happens in the background as users use the app.
     """
     from app.services.image_hash import (
+        average_hash,
+        color_signature,
         compute_signatures,
         is_duplicate_match,
     )
+
+    for p in payload.photos:
+        if getattr(p, "image_base64", None):
+            try:
+                raw_b64 = p.image_base64
+                if raw_b64.startswith("data:"):
+                    raw_b64 = raw_b64.split(",", 1)[1]
+                img_bytes = base64.b64decode(raw_b64)
+                if not p.sha256:
+                    p.sha256 = hashlib.sha256(img_bytes).hexdigest()
+                if not p.phash:
+                    p.phash = average_hash(img_bytes)
+                if not p.color_sig:
+                    p.color_sig = color_signature(img_bytes)
+            except Exception as exc:
+                logger.warning("Failed to compute hash for preflight photo: %r", exc)
 
     # Surface every hit so we can confirm via prod logs when client
     # traffic to this endpoint has dropped to zero — that's the
@@ -778,8 +851,8 @@ async def preflight_duplicates(
             "sub_category": 1,
             "color": 1,
             "thumbnail_data_url": 1,
-            "segmented_image_url": 1,
-            "original_image_url": 1,
+            "clean_image_url": 1,
+            "image_variants": 1,
             "source_sha256": 1,
             "source_phash": 1,
             "source_color_sig": 1,
@@ -828,24 +901,8 @@ async def preflight_duplicates(
             backfill_remaining += 1
             continue
         src = (
-            # Phase Z2.3 — ground-truth-first source priority.
-            # The lazy backfill used to prefer ``thumbnail_data_url``
-            # because it's the cheapest to decode, but that thumbnail
-            # is a ~15 KB downscaled centre-crop produced by
-            # ``_thumbs.backfill_thumbnails``. Phash + colour-sig
-            # computed from THAT image describe "a downscaled blob of
-            # a white-ish thing", not the user's actual upload, and
-            # collide trivially for any two white garments. The
-            # in-store duplicate detector then trusts those poisoned
-            # hashes as ground truth and hallucinates duplicates.
-            #
-            # We now require an authoritative source (original or
-            # full-resolution segmented cutout) and **skip** items
-            # that only have a thumbnail. A None phash is safe
-            # (``is_duplicate_match`` returns False on None); a
-            # thumbnail-derived phash is not.
-            row.get("original_image_url")
-            or row.get("segmented_image_url")
+            # Use clean_image_url as the authoritative single-source ground truth.
+            _get_item_image_url(row)
         )
         if not src:
             continue
@@ -956,7 +1013,10 @@ async def preflight_duplicates(
                     "sub_category": existing_match.get("sub_category"),
                     "color": existing_match.get("color"),
                     "thumbnail_data_url": (
-                        existing_match.get("thumbnail_data_url")
+                        existing_match.get("clean_image_url")
+                        or existing_match.get("thumbnail_data_url")
+                        or existing_match.get("cutout_url")
+                        or existing_match.get("image_url")
                         or existing_match.get("segmented_image_url")
                         or existing_match.get("original_image_url")
                     ),
@@ -1145,128 +1205,81 @@ async def analyze_item_image(
             # intensive model calls) without blocking fast detect IO.
 
             try:
-                # ── Phase 1: detect (fast, CPU-bound, no LLM) ──────────
-                # Start the stream OUTSIDE the lock so the detect frame
-                # (SegFormer + crop) is emitted immediately even when
-                # another analyse job is in flight.
                 streamer = garment_vision_service.analyze_outfits_stream(
                     raw_list, language=user_lang,
                 )
 
-                saw_detect = False
                 items_meta: list[dict[str, Any]] = []
-
-                # Consume frames until we have the detect frame, then
-                # stash the remaining item/done frames for phase 2.
-                pending_frames: list[dict[str, Any]] = []
 
                 async for frame in streamer:
                     ftype = frame.get("type")
                     if ftype == "detect":
-                        saw_detect = True
                         items_meta = frame.get("items_meta") or []
-                        # Emit detect immediately — no lock needed.
                         yield (json.dumps(frame, ensure_ascii=False) + "\n").encode("utf-8")
                     elif ftype == "field":
-                        # Patch M23 — per-attribute Gemma result.
-                        # Yield immediately so the frontend can fill form
-                        # fields progressively while the next group runs.
                         yield (json.dumps(frame, ensure_ascii=False) + "\n").encode("utf-8")
-                    elif ftype == "error":
-                        # Surface errors immediately.
-                        await try_refund()
-                        yield (json.dumps(frame, ensure_ascii=False) + "\n").encode("utf-8")
-                        return
-                    else:
-                        # item / item_skip / done — queue for phase 2
-                        pending_frames.append(frame)
-
-                if not saw_detect:
-                    yield (
-                        json.dumps(
-                            {
-                                "type": "error",
-                                "status": 503,
-                                "message": (
-                                    "Garment analyzer produced no "
-                                    "frames; please retry."
-                                ),
-                            },
-                            ensure_ascii=False,
+                    elif ftype == "item":
+                        idx = frame.get("index", -1)
+                        meta = (
+                            items_meta[idx]
+                            if 0 <= idx < len(items_meta)
+                            else {}
                         )
-                        + "\n"
-                    ).encode("utf-8")
-                    return
-
-                # ── Phase 2: LLM items (slow) — hold the lock ──────────
-                # By this point the detect frame has already been streamed
-                # to the client.  We now acquire the lock to serialise
-                # the expensive LLM calls (Gemma ~80 s, Gemini ~16 s).
-                async with _ANALYZE_LOCK:
-                    for frame in pending_frames:
-                        ftype = frame.get("type")
-                        if ftype == "item":
-                            idx = frame.get("index", -1)
-                            meta = (
-                                items_meta[idx]
-                                if 0 <= idx < len(items_meta)
-                                else {}
-                            )
-                            analysis = _safe_analysis(frame.get("analysis") or {})
-                            from app.services.vision import (
-                                _is_unidentifiable,
-                            )
-                            if _is_unidentifiable(analysis):
-                                out_frame = {
-                                    "type": "item_skip",
-                                    "index": idx,
-                                    "image_index": frame.get("image_index"),
-                                    "reason": "unidentifiable",
-                                }
-                            else:
-                                out_frame = {
-                                    "type": "item",
-                                    "index": idx,
-                                    "image_index": frame.get("image_index"),
-                                    "label": meta.get("label"),
-                                    "kind": meta.get("kind"),
-                                    "bbox": meta.get("bbox"),
-                                    "crop_base64": meta.get("crop_base64"),
-                                    "crop_mime": meta.get(
-                                        "crop_mime", "image/jpeg",
-                                    ),
-                                    "analysis": analysis,
-                                    "potential_duplicate": None,
-                                    "reconstruction_advised": False,
-                                    "one_pass": False,
-                                    "defer_matte": meta.get(
-                                        "defer_matte", False,
-                                    ),
-                                    "needs_reconstruction": frame.get(
-                                        "needs_reconstruction", False,
-                                    ),
-                                    "reconstruction_reasons": frame.get(
-                                        "reconstruction_reasons", [],
-                                    ),
-                                }
-                            yield (
-                                json.dumps(out_frame, ensure_ascii=False)
-                                + "\n"
-                            ).encode("utf-8")
-                        elif ftype == "item_skip":
-                            yield (
-                                json.dumps(frame, ensure_ascii=False) + "\n"
-                            ).encode("utf-8")
-                        elif ftype == "done":
-                            yield (
-                                json.dumps(frame, ensure_ascii=False) + "\n"
-                            ).encode("utf-8")
-                        elif ftype == "error":
-                            await try_refund()
-                            yield (
-                                json.dumps(frame, ensure_ascii=False) + "\n"
-                            ).encode("utf-8")
-                            return
+                        analysis = _safe_analysis(frame.get("analysis") or {})
+                        from app.services.vision import (
+                            _is_unidentifiable,
+                        )
+                        if _is_unidentifiable(analysis):
+                            out_frame = {
+                                "type": "item_skip",
+                                "index": idx,
+                                "image_index": frame.get("image_index"),
+                                "reason": "unidentifiable",
+                            }
+                        else:
+                            out_frame = {
+                                "type": "item",
+                                "index": idx,
+                                "image_index": frame.get("image_index"),
+                                "label": meta.get("label"),
+                                "kind": meta.get("kind"),
+                                "bbox": meta.get("bbox"),
+                                "crop_base64": meta.get("crop_base64"),
+                                "crop_mime": meta.get(
+                                    "crop_mime", "image/jpeg",
+                                ),
+                                "analysis": analysis,
+                                "potential_duplicate": None,
+                                "reconstruction_advised": False,
+                                "one_pass": False,
+                                "defer_matte": meta.get(
+                                    "defer_matte", False,
+                                ),
+                                "needs_reconstruction": frame.get(
+                                    "needs_reconstruction", False,
+                                ),
+                                "reconstruction_reasons": frame.get(
+                                    "reconstruction_reasons", [],
+                                ),
+                            }
+                        yield (
+                            json.dumps(out_frame, ensure_ascii=False)
+                            + "\n"
+                        ).encode("utf-8")
+                    elif ftype == "item_skip":
+                        yield (
+                            json.dumps(frame, ensure_ascii=False) + "\n"
+                        ).encode("utf-8")
+                    elif ftype == "done":
+                        yield (
+                            json.dumps(frame, ensure_ascii=False) + "\n"
+                        ).encode("utf-8")
+                    elif ftype == "error":
+                        await try_refund()
+                        yield (
+                            json.dumps(frame, ensure_ascii=False) + "\n"
+                        ).encode("utf-8")
+                        return
 
             except Exception as exc:  # noqa: BLE001
                 logger.exception("ndjson analyze stream error: %s", exc)
@@ -1297,93 +1310,70 @@ async def analyze_item_image(
         )
 
     async def _do_analyze() -> dict[str, Any]:
-        """Inner analyze body — same logic as the pre-M17 endpoint."""
-        # Production analyze pipeline: SegFormer crops the photo into
-        # per-garment regions, then N parallel Eyes calls analyse each
-        # crop. This is the only production path as of May 2026 --
-        # ``analyze_outfit_one_pass`` was retired after the CCP-Ninja
-        # benchmark showed it could not reliably emit multi-garment
-        # arrays (Gemini-2.5-Flash returned a single object for every
-        # image regardless of prompt phrasing). The single-pass
-        # function still exists for benchmark scripts; the production
-        # ``EYES_ONE_PASS`` flag was removed.
+        """Inner analyze body using analyze_outfits_stream."""
         try:
-            async with _ANALYZE_LOCK:
-                detections = []
-                for img_bytes in raw_list:
-                    dets = await garment_vision_service.analyze_outfit(
-                        img_bytes, language=user_lang,
+            items_out: list[dict[str, Any]] = []
+            items_meta: list[dict[str, Any]] = []
+            streamer = garment_vision_service.analyze_outfits_stream(
+                raw_list, language=user_lang,
+            )
+            from app.services.vision import _is_unidentifiable
+
+            async for frame in streamer:
+                ftype = frame.get("type")
+                if ftype == "detect":
+                    items_meta = frame.get("items_meta") or []
+                elif ftype == "item":
+                    idx = frame.get("index", -1)
+                    meta = (
+                        items_meta[idx]
+                        if 0 <= idx < len(items_meta)
+                        else {}
                     )
-                    detections.extend(dets)
+                    analysis = _safe_analysis(frame.get("analysis") or {})
+                    if not _is_unidentifiable(analysis):
+                        items_out.append(
+                            {
+                                "label": meta.get("label"),
+                                "kind": meta.get("kind"),
+                                "bbox": meta.get("bbox"),
+                                "crop_base64": meta.get("crop_base64"),
+                                "crop_mime": meta.get("crop_mime", "image/jpeg"),
+                                "analysis": analysis,
+                                "potential_duplicate": None,
+                                "reconstruction_advised": False,
+                                "one_pass": False,
+                                "defer_matte": meta.get("defer_matte", False),
+                                "needs_reconstruction": frame.get(
+                                    "needs_reconstruction", False,
+                                ),
+                                "reconstruction_reasons": frame.get(
+                                    "reconstruction_reasons", [],
+                                ),
+                            }
+                        )
+                elif ftype == "error":
+                    raise HTTPException(
+                        frame.get("status", 503),
+                        frame.get("message", "Garment analyzer is temporarily unavailable."),
+                    )
+
+            if not items_out:
+                raise HTTPException(
+                    422,
+                    "We couldn't identify any garment in this photo. "
+                    "Please try a clearer, well-lit shot.",
+                )
+            first = items_out[0]["analysis"] if items_out else _safe_analysis({})
+            return {"items": items_out, "count": len(items_out), **first}
+        except HTTPException:
+            raise
         except Exception as exc:  # noqa: BLE001
             logger.warning("Outfit analysis failed: %r", exc)
             raise HTTPException(
                 503,
                 "Garment analyzer is temporarily unavailable. Please try again.",
             ) from exc
-        items_out: list[dict[str, Any]] = []
-        dropped_unidentifiable = 0
-        from app.services.vision import _is_unidentifiable
-
-        # Phase Z2 — duplicate detection is now done up-front via
-        # /closet/preflight (SHA-256 + perceptual hash, runs in the
-        # browser BEFORE this analyze call). The legacy server-side
-        # attribute matcher (find_potential_duplicate) has been
-        # removed: by the time we reach this loop the user has
-        # already approved any pre-flight matches, so paying for a
-        # second round of duplicate detection here is pure waste.
-        for det in detections:
-            analysis = _safe_analysis(dict(det.get("analysis") or {}))
-            if _is_unidentifiable(analysis):
-                dropped_unidentifiable += 1
-                continue
-            items_out.append(
-                {
-                    "label": det.get("label"),
-                    "kind": det.get("kind"),
-                    "bbox": det.get("bbox"),
-                    "crop_base64": det.get("crop_base64"),
-                    "crop_mime": det.get("crop_mime", "image/jpeg"),
-                    "analysis": analysis,
-                    "potential_duplicate": None,  # always None — kept for backwards-compat with older frontend bundles
-                    # Phase O.6 field. ``reconstruction_advised`` is
-                    # produced by the legacy pipeline as a heuristic
-                    # output of ``should_reconstruct`` per crop;
-                    # absence / False means "no CTA needed".
-                    "reconstruction_advised": det.get(
-                        "reconstruction_advised", False,
-                    ),
-                    # Patch 9a (May 2026) — the ``one_pass`` field
-                    # used to signal that the response came from
-                    # the retired single-call path. With one-pass
-                    # retired this is always False; kept in the
-                    # response shape so older frontend bundles
-                    # that read it don't choke.
-                    "one_pass": False,
-                    # Patch 8 (May 2026) — flag for the legacy
-                    # multi-crop path when
-                    # ``settings.DEFER_REMBG_ON_ANALYZE`` is on.
-                    # The frontend echoes this back on /closet
-                    # save and the backend queues
-                    # ``_run_background_matte`` per item.
-                    "defer_matte": det.get("defer_matte", False),
-                    # Patch M14 (May 2026) — analyzer deferred Nano
-                    # Banana reconstruction; frontend echoes these
-                    # back on /closet save and the backend queues
-                    # ``_run_background_reconstruction`` per item.
-                    "needs_reconstruction": det.get("needs_reconstruction", False),
-                    "reconstruction_reasons": det.get("reconstruction_reasons", []),
-                }
-            )
-        if not items_out:
-            raise HTTPException(
-                422,
-                "We couldn't identify any garment in this photo. "
-                "Please try a clearer, well-lit shot.",
-            )
-        # Mirror the first item at the top level so older callers keep working.
-        first = items_out[0]["analysis"] if items_out else _safe_analysis({})
-        return {"items": items_out, "count": len(items_out), **first}
 
     async def _stream_with_keepalive():
         """Yield keepalive whitespace bytes while ``_do_analyze`` runs.
@@ -2021,14 +2011,12 @@ async def _run_reanalyze_items(
         try:
             variants = item_doc.get("image_variants") or {}
             image_url = (
-                item_doc.get("segmented_image_url")
+                item_doc.get("clean_image_url")
                 or item_doc.get("cutout_url")
-                or item_doc.get("clean_image_url")
                 or (variants.get("webp") or {}).get("large")
                 or (variants.get("webp") or {}).get("medium")
                 or item_doc.get("reconstructed_image_url")
                 or variants.get("original")
-                or item_doc.get("original_image_url")
                 or item_doc.get("image_url")
             )
             if not image_url:
@@ -2166,8 +2154,10 @@ async def save_migration_crops(
             brand=payload.app_name,
         )
         doc = item.model_dump()
-        doc["segmented_image_url"] = crop_data_url
-        doc["original_image_url"] = crop_data_url
+        # For imported items the crop is the only available image.
+        # Store it as clean_image_url (the primary display field) so the
+        # item renders immediately in the closet without waiting for rembg.
+        doc["clean_image_url"] = crop_data_url
 
         # Compute phash for future dedup
         try:
@@ -2355,8 +2345,22 @@ async def list_items(
             "ids_only": True,
         }
 
+    _EXCLUDE_LIST_FIELDS = {
+        "crop_base64": 0,
+        "crop_mime": 0,
+        "clip_embedding": 0,
+        "variants": 0,
+        "reconstruction": 0,
+        "raw": 0,
+        "dpp_data": 0,
+    }
     items = await repos.find_many(
-        db.closet_items, query, sort=[("created_at", -1)], limit=limit, skip=skip
+        db.closet_items,
+        query,
+        sort=[("created_at", -1)],
+        limit=limit,
+        skip=skip,
+        projection=_EXCLUDE_LIST_FIELDS,
     )
 
     # --- thumbnail backfill + heavy-field strip ---
@@ -2369,20 +2373,27 @@ async def list_items(
     #      endpoint GET /closet/{id} still returns them in full.
     from app.services import thumbnails as _thumbs
 
-    updates = await _thumbs.backfill_thumbnails(items)
-    if updates:
-        import asyncio as _asyncio
+    async def _async_backfill():
+        try:
+            updates = await _thumbs.backfill_thumbnails(items)
+            if updates:
+                from pymongo import UpdateOne
+                ops = []
+                for (_id, _t, _p) in updates:
+                    up = {}
+                    if _t:
+                        up["thumbnail_data_url"] = _t
+                    if _p:
+                        up["placeholder_data_url"] = _p
+                    if up:
+                        ops.append(UpdateOne({"id": _id}, {"$set": up}))
+                if ops:
+                    await db.closet_items.bulk_write(ops, ordered=False)
+        except Exception as exc:
+            logger.debug("Background thumbnail backfill skipped: %s", exc)
 
-        async def _save_one(_id, _t, _p):
-            up = {}
-            if _t:
-                up["thumbnail_data_url"] = _t
-            if _p:
-                up["placeholder_data_url"] = _p
-            if up:
-                await db.closet_items.update_one({"id": _id}, {"$set": up})
-
-        await _asyncio.gather(*[_save_one(_id, _t, _p) for (_id, _t, _p) in updates])
+    import asyncio as _asyncio
+    _asyncio.create_task(_async_backfill())
 
     _HEAVY_FIELDS = (
         "clip_embedding",
@@ -2413,11 +2424,13 @@ async def list_items(
         # successfully produced. If the thumbnail pipeline failed for
         # this item, keep one image URL so the grid still has something
         # to show (the user would otherwise see an empty card).
-        # We preserve reconstructed_image_url so the UI always has access
-        # to the high-fidelity AI-repaired image.
-        if isinstance(it.get("thumbnail_data_url"), str):
-            it.pop("original_image_url", None)
-            it.pop("segmented_image_url", None)
+        if isinstance(it.get("thumbnail_data_url"), str) and it.get("thumbnail_data_url"):
+            for img_key in ("original_image_url", "segmented_image_url", "reconstructed_image_url", "clean_image_url", "cutout_url"):
+                val = it.get(img_key)
+                if isinstance(val, str) and val.startswith("data:"):
+                    it.pop(img_key, None)
+            if isinstance(it.get("image_url"), str) and it["image_url"].startswith("data:"):
+                it["image_url"] = it["thumbnail_data_url"]
     total = await repos.count(db.closet_items, query)
     # Surface the response shape in logs so deployment/cache issues are
     # immediately diagnosable. If a user reports "I have 311 items but
@@ -2507,6 +2520,9 @@ async def repair_hashes_stream(
     proj = {
         "_id": 0,
         "id": 1,
+        "clean_image_url": 1,
+        "cutout_url": 1,
+        "reconstructed_image_url": 1,
         "original_image_url": 1,
         "segmented_image_url": 1,
         "source_phash": 1,
@@ -3061,8 +3077,12 @@ async def backfill_marketplace_listings(
             "id": 1, "title": 1, "description": 1, "category": 1,
             "size": 1, "condition": 1, "state": 1, "location": 1,
             "marketplace_intent": 1, "price_cents": 1,
-            "thumbnail_data_url": 1, "segmented_image_url": 1,
-            "reconstructed_image_url": 1, "original_image_url": 1,
+            "thumbnail_data_url": 1,
+            "clean_image_url": 1,
+            "reconstructed_image_url": 1,
+            "cutout_url": 1,
+            "image_url": 1,
+            "image_variants": 1,
             "auto_listing_id": 1, "source": 1,
         },
     )
@@ -3098,15 +3118,19 @@ async def backfill_marketplace_listings(
         try:
             images: list[str] = []
             for fld in (
-                "thumbnail_data_url",
-                "segmented_image_url",
+                "clean_image_url",
                 "reconstructed_image_url",
+                "cutout_url",
+                "thumbnail_data_url",
+                "image_url",
+                "segmented_image_url",
                 "original_image_url",
             ):
                 url = item.get(fld)
                 if isinstance(url, str) and url:
                     images.append(url)
                     break
+
 
             mode = INTENT_TO_MODE[item["marketplace_intent"]]
             price_cents = (
@@ -3253,8 +3277,12 @@ async def backfill_marketplace_listings_stream(
             "id": 1, "title": 1, "description": 1, "category": 1,
             "size": 1, "condition": 1, "state": 1, "location": 1,
             "marketplace_intent": 1, "price_cents": 1,
-            "thumbnail_data_url": 1, "segmented_image_url": 1,
-            "reconstructed_image_url": 1, "original_image_url": 1,
+            "thumbnail_data_url": 1,
+            "clean_image_url": 1,
+            "reconstructed_image_url": 1,
+            "cutout_url": 1,
+            "image_url": 1,
+            "image_variants": 1,
             "auto_listing_id": 1, "source": 1,
         },
     )
@@ -3378,15 +3406,19 @@ async def backfill_marketplace_listings_stream(
             try:
                 images: list[str] = []
                 for fld in (
-                    "thumbnail_data_url",
-                    "segmented_image_url",
+                    "clean_image_url",
                     "reconstructed_image_url",
+                    "cutout_url",
+                    "thumbnail_data_url",
+                    "image_url",
+                    "segmented_image_url",
                     "original_image_url",
                 ):
                     url = item.get(fld)
                     if isinstance(url, str) and url:
                         images.append(url)
                         break
+
 
                 mode = INTENT_TO_MODE[item["marketplace_intent"]]
                 price_cents = (
@@ -3868,6 +3900,8 @@ class ItemChatAnalyseIn(BaseModel):
     message: str
     history: list[ItemChatTurn] = []
     fill_empty_only: bool = False
+    image_url: str | None = None
+    language: str | None = None
 
 
 class RepairItemIn(BaseModel):
@@ -3937,23 +3971,17 @@ async def clean_item_background(
             "reason": "lightweight_deploy_no_matting",
         }
 
-    crop_url = (
-        item.get("segmented_image_url")
-        or (item.get("image_variants") or {}).get("webp", {}).get("large")
-        or (item.get("image_variants") or {}).get("webp", {}).get("medium")
-        or item.get("original_image_url")
-        or (item.get("image_variants") or {}).get("original")
-    )
+    crop_url = _get_item_image_url(item)
     if not crop_url:
         raise HTTPException(
             400, "Item has no cropped image to matte. Re-analyze the item first."
         )
-    
     crop_bytes = await _read_image_bytes_from_url(crop_url)
     if not crop_bytes:
         raise HTTPException(
             400, "Failed to retrieve the item image for background matting."
         )
+
 
     from app.services import clothing_parser as _cp
 
@@ -4260,21 +4288,7 @@ async def reanalyze_item(
     if not item:
         raise HTTPException(404, "Item not found")
 
-    # Prefer the matted/segmented crop because that's what's visible to
-    # the user in the closet — analysing the same pixels they're
-    # looking at avoids surprises. Fall back to original or transcoded variants.
-    variants = item.get("image_variants") or {}
-    image_url: str | None = (
-        item.get("segmented_image_url")
-        or item.get("cutout_url")
-        or item.get("clean_image_url")
-        or (variants.get("webp") or {}).get("large")
-        or (variants.get("webp") or {}).get("medium")
-        or item.get("reconstructed_image_url")
-        or variants.get("original")
-        or item.get("original_image_url")
-        or item.get("image_url")
-    )
+    image_url: str | None = _get_item_image_url(item)
     if not image_url:
         raise HTTPException(
             400,
@@ -4373,8 +4387,77 @@ async def reanalyze_item(
     # Construct updated item in memory so the frontend can preview/save it, but do NOT write to database automatically.
     # This ensures the user must explicitly click the Save icon on the frontend to persist re-analysis edits.
     updated_item = {**item, **update_doc}
-    return {"item": updated_item, "analysis": analysis}
 
+    return {
+        "item": updated_item,
+        "updated_fields": update_doc if update_doc else None,
+    }
+
+
+def _get_localized_closet_msg(msg_type: str, lang: str, user_msg: str = "") -> str:
+    lang = (lang or "en").lower()
+    if lang not in ("he", "ar", "es", "fr", "de", "it", "pt", "ru", "zh", "ja", "hi"):
+        lang = "en"
+
+    messages = {
+        "image_edit_failed": {
+            "he": f"ניסיתי לערוך את התמונה ({user_msg}), אך נתקלתי בבעיה בעיבוד התמונה. אנא נסה שוב או נסח את הבקשה בצורה שונה.",
+            "ar": f"حاولت تعديل الصورة ({user_msg})، ولكن حدث خطأ أثناء المعالجة. يرجى المحاولة مرة أخرى.",
+            "en": f"I attempted to modify the image ({user_msg}), but encountered an issue during processing. Please try again or refine your prompt.",
+            "es": f"Intenté modificar la imagen ({user_msg}), pero ocurrió un problema durante el procesamiento. Por favor intenta de nuevo.",
+            "fr": f"J'ai essayé de modifier l'image ({user_msg}), mais un problème est survenu lors du traitement. Veuillez réessayer.",
+            "de": f"Ich habe versucht, das Bild zu bearbeiten ({user_msg}), aber bei der Verarbeitung ist ein Fehler aufgetreten. Bitte versuche es erneut.",
+            "it": f"Ho provato a modificare l'immagine ({user_msg}), ma si è verificato un problema durante l'elaborazione. Per favore riprova.",
+            "pt": f"Tentei modificar a imagem ({user_msg}), mas ocorreu um erro no processamento. Por favor tente novamente.",
+            "ru": f"Я попытался изменить изображение ({user_msg}), но произошла ошибка при обработке. Пожалуйста, попробуйте еще раз.",
+            "zh": f"我尝试修改图片（{user_msg}），但在处理过程中遇到了问题。请重试或修改提示词。",
+            "ja": f"画像の変更を試みました（{user_msg}）が、処理中に問題が発生しました。もう一度お試しください。",
+            "hi": f"मैंने छवि को संशोधित करने का प्रयास किया ({user_msg}), लेकिन प्रसंस्करण के दौरान एक समस्या आई। कृपया पुन: प्रयास करें।",
+        },
+        "image_edit_unavailable": {
+            "he": "עריכת תמונות אינה זמינה כעת בשרת. אנא ודא שהמערכת מוגדרת כראוי.",
+            "ar": "خدمة تعديل الصور غير متوفرة حالياً على الخادم. يرجى التأكد من تكوين النظام.",
+            "en": "Image editing is currently unavailable on this server. Please ensure the service is configured.",
+            "es": "La edición de imágenes no está disponible actualmente en este servidor.",
+            "fr": "La retouche d'image est actuellement indisponible sur ce serveur.",
+            "de": "Die Bildbearbeitung ist auf diesem Server derzeit nicht verfügbar.",
+            "it": "La modifica delle immagini non è al momento disponibile su questo server.",
+            "pt": "A edição de imagens não está disponível no momento neste servidor.",
+            "ru": "Редактирование изображений в настоящее время недоступно на этом сервере.",
+            "zh": "该服务器当前无法进行图像编辑。",
+            "ja": "現在このサーバーでは画像編集を利用できません。",
+            "hi": "इस सर्वर पर वर्तमान में छवि संपादन उपलब्ध नहीं है।",
+        },
+        "default_chat_reply": {
+            "he": "הבנתי. עדכן אותי אם תרצה שאערוך את התמונה או אעדכן את פרטי הפריט.",
+            "ar": "مفهوم. أخبرني إذا كنت ترغب في تعديل الصورة أو تحديث تفاصيل القطعة.",
+            "en": "Understood. Let me know if you want me to edit the photo or refine the details.",
+            "es": "Entendido. Avísame si quieres que edite la foto o ajuste los detalles.",
+            "fr": "Compris. Faites-moi savoir si vous souhaitez modifier la photo ou ajuster les détails.",
+            "de": "Verstanden. Lass mich wissen, wenn du das Bild bearbeiten oder Details anpassen möchtest.",
+            "it": "Ricevuto. Fammi sapere se desideri che modifichi la foto o aggiorni i dettagli.",
+            "pt": "Entendido. Avise-me se você quiser que eu edite a foto ou ajuste os detalhes.",
+            "ru": "Понятно. Дайте знать, если нужно отредактировать фото или уточнить детали.",
+            "zh": "明白了。如果您需要我编辑照片或调整详情，请告诉我。",
+            "ja": "了解しました。写真を編集したり詳細を調整したい場合はお知らせください。",
+            "hi": "समझ गया। अगर आप चाहते हैं कि मैं फ़ोटो संपादित करूँ या विवरण को परिष्कृत करूँ तो मुझे बताएं।",
+        },
+        "image_edit_processing": {
+            "he": f"מבצע עריכת תמונה: {user_msg}",
+            "ar": f"جاري تعديل الصورة: {user_msg}",
+            "en": f"Processing image modification: {user_msg}",
+            "es": f"Modificando imagen: {user_msg}",
+            "fr": f"Modification de l'image : {user_msg}",
+            "de": f"Bearbeite Bild: {user_msg}",
+            "it": f"Modifica dell'immagine in corso: {user_msg}",
+            "pt": f"Processando modificação da imagem: {user_msg}",
+            "ru": f"Выполняется редактирование изображения: {user_msg}",
+            "zh": f"正在处理图片修改：{user_msg}",
+            "ja": f"画像を変更中：{user_msg}",
+            "hi": f"छवि संशोधन संसाधित किया जा रहा है: {user_msg}",
+        }
+    }
+    return messages.get(msg_type, {}).get(lang) or messages.get(msg_type, {}).get("en", "")
 
 
 @router.post("/{item_id}/chat-analyse")
@@ -4386,7 +4469,7 @@ async def chat_analyse_item(
     """Conversational Re-analyse & AI Eyes Assistant.
 
     Processes natural language instructions regarding the garment photo or metadata:
-    1. Image modification & inpainting (e.g. 'Remove the shoes', 'Complete the hole where the hand was', 'Remove the metal studs from the jacket') -> Invokes Nano Banana (gemini-2.5-flash-image)
+    1. Image modification & inpainting (e.g. 'Remove the shoes', 'Complete the hole where the hand was', 'Remove the metal studs from the jacket') -> Invokes Nano Banana (gemini-3.1-flash-lite-image)
     2. Clarifications -> Returns assistant questions if instruction is underspecified
     3. Metadata revision -> Updates form attributes according to instructions
     4. General garment styling/details Q&A
@@ -4402,18 +4485,7 @@ async def chat_analyse_item(
     if not user_msg:
         raise HTTPException(400, "Message cannot be empty")
 
-    variants = item.get("image_variants") or {}
-    image_url: str | None = (
-        item.get("reconstructed_image_url")
-        or item.get("segmented_image_url")
-        or item.get("cutout_url")
-        or item.get("clean_image_url")
-        or (variants.get("webp") or {}).get("large")
-        or (variants.get("webp") or {}).get("medium")
-        or variants.get("original")
-        or item.get("original_image_url")
-        or item.get("image_url")
-    )
+    image_url: str | None = payload.image_url or _get_item_image_url(item)
     if not image_url:
         raise HTTPException(400, "Item has no stored image. Please attach a photo first.")
 
@@ -4421,7 +4493,14 @@ async def chat_analyse_item(
     if not raw:
         raise HTTPException(400, "Stored image is empty or could not be retrieved.")
 
-    user_lang = (user or {}).get("preferred_language") or "en"
+    user_lang = payload.language or (user or {}).get("preferred_language")
+    if not user_lang or user_lang == "en":
+        if any("\u0590" <= c <= "\u05FF" for c in user_msg):
+            user_lang = "he"
+        elif any("\u0600" <= c <= "\u06FF" for c in user_msg):
+            user_lang = "ar"
+        else:
+            user_lang = "en"
 
     # Build conversation context for Gemini
     from app.services.gemini_client import GeminiClient
@@ -4443,7 +4522,8 @@ async def chat_analyse_item(
 
     system_prompt = (
         "You are 'The Eyes', DressApp's intelligent garment vision and wardrobe analysis assistant.\n"
-        "The user is viewing their garment in the wardrobe and providing an instruction or question regarding the photo or attributes.\n\n"
+        f"The user is viewing their garment in the wardrobe. The user's active language is '{user_lang}'. "
+        "The user's instruction or question may be in Hebrew, Arabic, German, French, Spanish, English, or any other language.\n\n"
         f"Garment Context:\n"
         f"- Title: {item.get('title') or 'Unknown'}\n"
         f"- Category: {item.get('category') or 'Unknown'} / {item.get('sub_category') or ''}\n"
@@ -4454,20 +4534,20 @@ async def chat_analyse_item(
         f"- Quality: {item.get('quality') or 'Unknown'}\n\n"
         "Your task: Analyze the user's message and determine the correct action from the following 4 options:\n\n"
         "1. 'image_edit': The user is asking to modify, inpaint, remove, or reconstruct elements in the photo.\n"
-        "   Examples: 'Remove the shoes', 'Complete the hole where the hand was', 'Remove the metal studs from the jacket\\'s front', 'Remove the hanger', 'Repair the cut-off sleeve', 'Fill the gap in the hem'.\n"
+        "   CRITICAL REQUIREMENTS FOR 'image_edit':\n"
         "   - Set action: 'image_edit'\n"
-        "   - Set image_edit_prompt: A concise, highly specific inpainting / reconstruction directive for the image generative model to edit and isolate the garment cleanly against a solid pure white background (#FFFFFF) with bright high-key lighting, filling the frame and preserving all fabric texture, color fidelity, and silhouette details without dark vignettes or black backgrounds.\n"
-        "   - Set reply: A brief, friendly confirmation in the user's language describing what you are modifying.\n\n"
+        "   - Set image_edit_prompt: ALWAYS IN ENGLISH! Translate the user's intent into a concise, highly specific inpainting / outpainting / reconstruction instruction for Gemini Nano Banana (e.g. 'Restore the footwear, clean commercial sneaker photo on solid neutral #F5F2EB off-white background', 'Outpaint and fill the missing area where the hand was, preserving original fabric texture and color').\n"
+        f"   - Set reply: Write a brief, friendly confirmation in the user's language ('{user_lang}') describing what you are modifying.\n\n"
         "2. 'clarification': The user's request for image modification or editing is ambiguous or missing crucial specifics.\n"
         "   - Set action: 'clarification'\n"
-        "   - Set reply: A polite, direct question asking for the needed clarification.\n\n"
+        f"   - Set reply: A polite, direct question in '{user_lang}' asking for the needed clarification.\n\n"
         "3. 'metadata_update': The user is asking to update or re-classify attributes, materials, colors, brand, or category.\n"
         "   - Set action: 'metadata_update'\n"
         "   - Set metadata_updates: A dict of key-value changes (e.g. title, category, colors, fabric_materials, condition, etc.)\n"
-        "   - Set reply: A brief explanation of the updated fields.\n\n"
+        f"   - Set reply: A brief explanation of the updated fields in '{user_lang}'.\n\n"
         "4. 'answered': The user is asking a general styling, care, matching, or information question.\n"
         "   - Set action: 'answered'\n"
-        "   - Set reply: A helpful, expert styling/garment response in the user's language.\n\n"
+        f"   - Set reply: A helpful, expert styling/garment response in '{user_lang}'.\n\n"
         "IMPORTANT: You MUST respond in valid JSON format with keys:\n"
         "{\n"
         '  "action": "image_edit" | "clarification" | "metadata_update" | "answered",\n'
@@ -4479,7 +4559,7 @@ async def chat_analyse_item(
 
     user_parts = [
         raw,
-        f"Conversation History:\n{history_str}\nUser Prompt: {user_msg}\nPlease respond in language: {user_lang} (except JSON keys).",
+        f"Conversation History:\n{history_str}\nUser Prompt: {user_msg}\nPlease respond in language: {user_lang} (except JSON keys and image_edit_prompt which MUST be English).",
     ]
 
     try:
@@ -4488,31 +4568,81 @@ async def chat_analyse_item(
             system=system_prompt,
             response_mime_type="application/json",
         )
-        decision = json.loads(decision_raw)
+        clean_json = (decision_raw or "").strip()
+        import re as _re
+        if "```" in clean_json:
+            m = _re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", clean_json)
+            if m:
+                clean_json = m.group(1).strip()
+            else:
+                clean_json = _re.sub(r"^```(?:json)?\s*", "", clean_json)
+                clean_json = _re.sub(r"\s*```$", "", clean_json).strip()
+        decision = json.loads(clean_json)
     except Exception as exc:
         logger.warning("Gemini decision parsing failed in chat_analyse: %s", exc)
-        # Fallback heuristic
+        # Fallback heuristic (multilingual)
         low_msg = user_msg.lower()
-        if any(k in low_msg for k in ["remove", "complete", "fix", "hole", "stud", "shoe", "sleeve", "hand", "background", "erase", "repair"]):
+        item_cat = (item.get("category") or "").strip().lower()
+        is_shoes_item = any(k in item_cat for k in ("footwear", "shoes", "sneakers", "boots", "נעל", "נעליים", "חذاء"))
+
+        is_remove = any(k in low_msg for k in [
+            "remove", "erase", "cutout", "delete", "crop", "drop", "without",
+            "הסר", "הסרה", "הורד", "הורדה", "מחק", "מחיקה", "חתוך", "בלי",
+            "ازالة", "إزالة", "حذف", "مسح", "قص", "بدون",
+        ])
+        is_restore = any(k in low_msg for k in [
+            "restore", "reconstruct", "repair", "fix", "complete", "fill", "outpaint", "enhance", "clean",
+            "שחזר", "שחזור", "תקן", "תיקון", "השלם", "השלמה", "שפר", "נקה",
+            "اصلاح", "إصلاح", "استعادة", "تعديل", "اكمال", "إكمال",
+        ])
+        image_keywords = [
+            # English
+            "remove", "complete", "fix", "hole", "stud", "shoe", "sleeve", "hand", "background", "erase", "repair", "clean", "cutout", "isolate", "crop", "inpaint", "restore", "reconstruct",
+            # Hebrew
+            "הסר", "הסרה", "הורד", "הורדה", "מחק", "מחיקה", "תקן", "תיקון", "השלם", "השלמה", "חור", "רקע", "שרוול", "נעל", "נעליים", "יד", "נקה", "חתוך", "ניטים", "קולב", "שחזר", "שחזור",
+            # Arabic
+            "ازالة", "إزالة", "حذف", "مسح", "اصلاح", "إصلاح", "تعديل", "خلفية", "حذاء", "قص", "ثقب", "كم", "شماعة", "استعادة", "اكمال",
+        ]
+        is_edit = any(k in low_msg for k in image_keywords)
+        if is_edit:
+            prompt_en = user_msg
+            if is_shoes_item and (is_restore or not is_remove or "שחזר" in user_msg or "restore" in low_msg):
+                prompt_en = f"Commercial product photograph of complete, restored {item.get('title') or 'pair of shoes'}, clean sneakers on solid neutral #F5F2EB off-white background, photorealistic crisp details"
+            elif is_remove and ("נעל" in user_msg or "נעליים" in user_msg or "shoe" in low_msg) and not is_shoes_item:
+                prompt_en = "Remove the shoes and footwear at the bottom, isolating the garment cleanly on neutral #F5F2EB background"
+            elif "חור" in user_msg or "יד" in user_msg or "השלם" in user_msg or "hole" in low_msg or "hand" in low_msg:
+                prompt_en = "Outpaint and complete the missing area where the hand or cutout was, preserving original fabric texture and color"
+            elif "ניטים" in user_msg or "stud" in low_msg:
+                prompt_en = "Remove the metal studs from the garment"
+            elif "רקע" in user_msg or "נקה" in user_msg or "background" in low_msg:
+                prompt_en = "Clean background and isolate the garment cleanly on neutral #F5F2EB background"
+            elif is_restore:
+                prompt_en = f"Reconstruct and restore {item.get('title') or item.get('category') or 'garment'}, high-fidelity commercial fashion catalog photograph on neutral #F5F2EB background"
+
+            reply_text = _get_localized_closet_msg("image_edit_processing", user_lang, user_msg=user_msg)
             decision = {
                 "action": "image_edit",
-                "reply": f"Processing image modification: {user_msg}",
-                "image_edit_prompt": user_msg,
+                "reply": reply_text,
+                "image_edit_prompt": prompt_en,
             }
         else:
+            default_reply = _get_localized_closet_msg("default_chat_reply", user_lang)
             decision = {
                 "action": "answered",
-                "reply": "Understood. Let me know if you want me to edit the photo or refine the details.",
+                "reply": default_reply,
             }
 
     action = decision.get("action") or "answered"
+    if action not in ("image_edit", "metadata_update", "clarification", "answered"):
+        action = "answered"
     reply = decision.get("reply") or ""
     image_url_out = None
+    clean_image_url_out = None
     updated_doc: dict[str, Any] = {}
 
     if action == "image_edit":
         if gemini_image_service is None:
-            reply = "Image editing is currently unavailable on this server. Please ensure Nano Banana is configured."
+            reply = _get_localized_closet_msg("image_edit_unavailable", user_lang)
             action = "clarification"
         else:
             try:
@@ -4535,8 +4665,17 @@ async def chat_analyse_item(
                 mime = edit_res.get("mime_type", "image/png")
                 image_url_out = f"data:{mime};base64,{edit_res['image_b64']}"
 
-                # Update in-memory reconstructed_image_url
-                updated_doc["reconstructed_image_url"] = image_url_out
+                # Unbind generated garment from background (transparent clean cutout)
+                from app.services.garment_visuals import GarmentVisuals
+                clean_image_url_out = await GarmentVisuals.ensure_transparent_cutout(edit_res["image_b64"])
+
+                # Update in-memory reconstructed_image_url & clean_image_url
+                # Always prefer the transparent clean cutout so clothes layer perfectly without background boxes
+                final_img = clean_image_url_out or image_url_out
+                updated_doc["reconstructed_image_url"] = final_img
+                updated_doc["clean_image_url"] = final_img
+                updated_doc["clean_image_status"] = "ready" if clean_image_url_out else "fallback"
+                image_url_out = final_img
                 updated_doc["reconstruction_metadata"] = {
                     "method": "nano_banana_chat",
                     "prompt": edit_prompt,
@@ -4545,7 +4684,7 @@ async def chat_analyse_item(
                 }
             except Exception as edit_exc:
                 logger.warning("Nano Banana chat edit failed: %s", edit_exc)
-                reply = f"I attempted to modify the image ({user_msg}), but Nano Banana encountered an issue. Please try again or refine your prompt."
+                reply = _get_localized_closet_msg("image_edit_failed", user_lang, user_msg=user_msg)
                 action = "clarification"
 
     elif action == "metadata_update":
@@ -4566,6 +4705,7 @@ async def chat_analyse_item(
         "reply": reply,
         "action_taken": action,
         "image_url": image_url_out,
+        "clean_image_url": clean_image_url_out,
         "updated_fields": updated_doc if updated_doc else None,
         "item": updated_item,
     }
@@ -4583,7 +4723,7 @@ async def repair_item_image(
 
     Uses the item's stored analysis fields (title, category, color,
     material, pattern, brand, ...) to drive Nano Banana
-    (``gemini-2.5-flash-image``). An optional ``user_hint`` is woven into
+    (``gemini-3.1-flash-lite-image``). An optional ``user_hint`` is woven into
     the prompt so users who noticed a missing detail (e.g., "three-quarter
     sleeves") can steer the generation. Returns 503 cleanly when Nano
     Banana is unavailable.
@@ -4622,16 +4762,9 @@ async def repair_item_image(
             f"{analysis.get('item_type') or ''} — {hint}"
         ).strip(" —")
 
-    # Use the segmented image as the visual conditioning when present so
-    # HF has SOME pixels to look at; otherwise we still fall back to the
-    # original crop or an empty byte string (text-to-image path).
-    crop_url = (
-        item.get("segmented_image_url")
-        or (item.get("image_variants") or {}).get("webp", {}).get("large")
-        or (item.get("image_variants") or {}).get("webp", {}).get("medium")
-        or item.get("original_image_url")
-        or (item.get("image_variants") or {}).get("original")
-    )
+    # Use the clean-cut rembg image for visual conditioning (what the user sees
+    # in the closet); fall back to other image fields if matte hasn't run yet.
+    crop_url = _get_item_image_url(item)
     crop_bytes = await _read_image_bytes_from_url(crop_url) if crop_url else b""
 
     from app.services.billing_service import deduct_user_credits
@@ -4677,11 +4810,15 @@ async def repair_item_image(
         "user_hint": payload.user_hint,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
-    update_doc = {
+    update_doc: dict[str, Any] = {
         "reconstructed_image_url": data_url,
         "reconstruction_metadata": meta,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
+    if out.get("clean_image_url"):
+        update_doc["clean_image_url"] = out["clean_image_url"]
+        update_doc["clean_image_status"] = "ready"
+
     if not preview:
         await db.closet_items.update_one(
             {"id": item_id},
@@ -4691,6 +4828,9 @@ async def repair_item_image(
     else:
         item["reconstructed_image_url"] = data_url
         item["reconstruction_metadata"] = meta
+        if out.get("clean_image_url"):
+            item["clean_image_url"] = out["clean_image_url"]
+            item["clean_image_status"] = "ready"
         
     return {"item": item, "reconstruction": out, "applied": True}
 
@@ -4887,7 +5027,11 @@ async def upload_group_member(
 
     if segmented_data_url:
         member_item["segmented_image_url"] = segmented_data_url
+        member_item["clean_image_url"] = segmented_data_url
         member_item["segmentation_model"] = segmentation_model
+    elif original_data_url:
+        member_item["clean_image_url"] = original_data_url
+
 
     # Get FashionCLIP embedding for member item
     if fashion_clip_service is not None:
@@ -5111,7 +5255,11 @@ async def group_edit(
 
         if segmented_data_url:
             member_item["segmented_image_url"] = segmented_data_url
+            member_item["clean_image_url"] = segmented_data_url
             member_item["segmentation_model"] = segmentation_model
+        elif original_data_url:
+            member_item["clean_image_url"] = original_data_url
+
 
         # Get FashionCLIP embedding
         if fashion_clip_service is not None:
@@ -5245,8 +5393,19 @@ async def update_item(
     item_id: str, payload: UpdateItemIn, user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
     patch = payload.model_dump(exclude_none=True)
-    if "reconstructed_image_url" in patch and patch["reconstructed_image_url"]:
-        patch["reconstructed_image_url"] = compress_image_url_or_b64(patch["reconstructed_image_url"], max_dim=1024, quality=75)
+    if "reconstructed_image_url" in patch:
+        if patch["reconstructed_image_url"] in ("None", "null", "undefined", ""):
+            patch["reconstructed_image_url"] = None
+        elif patch["reconstructed_image_url"]:
+            patch["reconstructed_image_url"] = compress_image_url_or_b64(patch["reconstructed_image_url"], max_dim=1024, quality=75)
+            # If clean_image_url is not provided, unbind the reconstructed image from its background
+            if not patch.get("clean_image_url"):
+                from app.services.garment_visuals import GarmentVisuals
+                cln_url = await GarmentVisuals.ensure_transparent_cutout(patch["reconstructed_image_url"])
+                if cln_url:
+                    patch["clean_image_url"] = cln_url
+                    patch["clean_image_status"] = "ready"
+                    patch["reconstructed_image_url"] = cln_url
     # The `clear_reconstruction` flag is a command, not a value we persist.
     # Pop it + translate into explicit null-sets on the related columns.
     if patch.pop("clear_reconstruction", False):
@@ -5407,8 +5566,12 @@ async def update_item(
                     group_items.sort(key=lambda x: 0 if x.get("group_role") == "host" else 1)
                     for g_item in group_items:
                         for fld in (
-                            "segmented_image_url",
+                            "clean_image_url",
                             "reconstructed_image_url",
+                            "cutout_url",
+                            "thumbnail_data_url",
+                            "image_url",
+                            "segmented_image_url",
                             "original_image_url",
                         ):
                             url = g_item.get(fld)
@@ -5417,15 +5580,19 @@ async def update_item(
                                 break
                 else:
                     for fld in (
-                        "thumbnail_data_url",
-                        "segmented_image_url",
+                        "clean_image_url",
                         "reconstructed_image_url",
+                        "cutout_url",
+                        "thumbnail_data_url",
+                        "image_url",
+                        "segmented_image_url",
                         "original_image_url",
                     ):
                         url = updated.get(fld)
                         if isinstance(url, str) and url:
                             images.append(url)
                             break
+
                 # Same condition vocab mapping as in create_item /
                 # backfill: GarmentCondition (excellent/good/fair/bad)
                 # → Listing condition (new/like_new/good/fair).
@@ -5832,21 +5999,14 @@ async def edit_item_image(
     )
     if not item:
         raise HTTPException(404, "Item not found")
-    variants = item.get("image_variants") or {}
-    source_url = (
-        item.get("segmented_image_url")
-        or (variants.get("webp") or {}).get("large")
-        or (variants.get("webp") or {}).get("medium")
-        or item.get("original_image_url")
-        or variants.get("original")
-    )
+    source_url = _get_item_image_url(item)
     if not source_url:
         raise HTTPException(400, "No source image on this item")
     source_bytes = await _read_image_bytes_from_url(source_url)
     if not source_bytes:
         raise HTTPException(400, "Failed to retrieve source image bytes")
     if gemini_image_service is None:
-        # Nano Banana (gemini-2.5-flash-image) requires a direct
+        # Nano Banana (gemini-3.1-flash-lite-image) requires a direct
         # GEMINI_API_KEY. The legacy HF FLUX fallback was retired in May
         # 2026, so when the direct key is absent we surface a clean 503
         # instead of silently degrading.
@@ -5877,19 +6037,30 @@ async def edit_item_image(
     variant_url = (
         f"data:{edit.get('mime_type', 'image/png')};base64,{edit['image_b64']}"
     )
+    # Unbind generated clean image from background (transparent clean cutout)
+    from app.services.garment_visuals import GarmentVisuals
+    clean_variant_url = await GarmentVisuals.ensure_transparent_cutout(edit["image_b64"])
+
     variants = list(item.get("variants") or [])
     variants.append(
         {
             "prompt": prompt,
             "url": variant_url,
+            "clean_url": clean_variant_url,
             "model": edit["model_used"],
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
     )
+    final_variant = clean_variant_url or variant_url
+    update_doc: dict[str, Any] = {"variants": variants, "reconstructed_image_url": final_variant}
+    if clean_variant_url:
+        update_doc["clean_image_url"] = clean_variant_url
+        update_doc["clean_image_status"] = "ready"
+
     await db.closet_items.update_one(
-        {"id": item_id, "user_id": user["id"]}, {"$set": {"variants": variants}}
+        {"id": item_id, "user_id": user["id"]}, {"$set": update_doc}
     )
-    return {"variant_url": variant_url, "variants": variants}
+    return {"variant_url": variant_url, "clean_url": clean_variant_url, "variants": variants}
 
 
 @router.post("/extract-pdf-text")

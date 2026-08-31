@@ -1,0 +1,75 @@
+# EAS Build Ignore File (EAS CLI archive filter)
+# See https://github.com/expo/fyi/blob/main/eas-build-archive.md
+
+# Monorepo Non-Mobile Subprojects (Saves ~4.5 GB from EAS archive)
+/backend/
+/apps/web/
+/apps/android-twa/
+/inference-server/
+/chrome-extension/
+/deploy/
+/docs/
+/wiki/
+/legal/
+/Eyes-GGUF/
+/agenthub/
+
+# Python Virtual Environments & Caches
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local Gradle, Android & Build Artifacts
+.gradle/
+.android/
+.code-review-graph/
+.cache/
+build/
+dist/
+/out/
+*.aab
+*.apk
+*.zip
+*.tar.gz
+*.tar
+*.tgz
+*.pack
+*.deb
+*.dylib
+
+# Model Weights & Checkpoints
+models/
+*.safetensors
+*.onnx
+*.pt
+*.pth
+*.bin
+*.gguf
+
+# IDE & Editor Configs
+.idea/
+.vscode/
+.run/
+.cursor/
+
+# Sensitive Credential & Secrets
+*.pem
+*.key
+*.keystore
+!apps/mobile/android/app/debug.keystore
+credentials.json
+*token.json*
+.env
+.env.*
+*.env
+
+# Logs & Dumps
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dump.rdb

@@ -20,6 +20,8 @@ from pydantic import BaseModel, ConfigDict
 
 from app.db.database import get_db
 from app.models.schemas import AiCreditPurchase, User, CreditBucket, CreditType
+from app.models.credit import prune_expired_buckets
+
 from app.services import paypal_client
 from app.services.auth import get_current_user
 from app.services.pricing import get_user_ai_balance, apply_credit_rollover as apply_daily_allocation
@@ -294,8 +296,8 @@ async def use_credits(
         if not success:
             return {"success": False, "error": "Failed to spend credits"}
         
-        # Update database
-        user_record["credit_buckets"] = [b.dict() for b in u_model.credit_buckets]
+        # Update database — prune zero-amount expired free buckets on the way out.
+        user_record["credit_buckets"] = [b.dict() for b in prune_expired_buckets(u_model.credit_buckets)]
         await db.users.update_one(
             {"id": user["id"]},
             {"$set": {"credit_buckets": user_record["credit_buckets"]}}

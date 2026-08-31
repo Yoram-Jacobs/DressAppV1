@@ -178,7 +178,7 @@ def _resize_for_inference(pil: Image.Image) -> Image.Image:
 
 
 def _run_inference(pil_full: Image.Image) -> np.ndarray:
-    """Return a class-id mask at the FULL original resolution."""
+    """Return a class-id mask at the FULL original resolution with minimal memory usage."""
     import torch
 
     _load_model()
@@ -187,13 +187,16 @@ def _run_inference(pil_full: Image.Image) -> np.ndarray:
     with torch.no_grad():
         outputs = _model(**inputs)
     logits = outputs.logits  # (1, C, H', W')
-    # Upsample directly to the ORIGINAL image size — masks then align
-    # pixel-for-pixel with the caller's image.
-    target_size = (pil_full.size[1], pil_full.size[0])  # (H, W)
-    upsampled = torch.nn.functional.interpolate(
-        logits, size=target_size, mode="bilinear", align_corners=False
-    )
-    pred = upsampled.argmax(dim=1).squeeze(0).cpu().numpy().astype(np.int32)
+
+    # Argmax directly on the model's output resolution to collapse 18 float32 channels
+    # to a single 2D integer class mask BEFORE resizing. This avoids allocating gigabytes
+    # of intermediate float32 tensors on high-resolution camera images.
+    small_pred = logits.argmax(dim=1).squeeze(0).cpu().numpy().astype(np.uint8)  # (H', W')
+
+    # Scale single-channel integer mask to original image size with nearest-neighbor
+    mask_img = Image.fromarray(small_pred)
+    full_mask_img = mask_img.resize((pil_full.size[0], pil_full.size[1]), Image.NEAREST)
+    pred = np.array(full_mask_img, dtype=np.uint8)
     return pred
 
 
@@ -880,6 +883,10 @@ async def parse_garments(image_bytes: bytes) -> list[dict[str, Any]]:
     except Exception as exc:  # noqa: BLE001
         logger.warning("clothing_parser: bad image bytes: %s", exc)
         return []
+    orig_W, orig_H = img.size
+    if max(orig_W, orig_H) > 1024:
+        scale = 1024.0 / max(orig_W, orig_H)
+        img = img.resize((max(1, int(orig_W * scale)), max(1, int(orig_H * scale))), Image.BILINEAR)
     W, H = img.size
 
     # 1. Self-hosted takes precedence (user's future dressapp.co box).

@@ -1,4 +1,4 @@
-"""Native Google Gemini image service — Nano Banana (gemini-2.5-flash-image).
+"""Native Google Gemini image service — Nano Banana (gemini-3.1-flash-lite-image).
 
 Why this exists as its own service:
 
@@ -224,9 +224,10 @@ class GeminiImageService:
         composed = (
             f"Commercial fashion catalog product photograph of a complete, isolated "
             f"{descriptor}. {user_prompt}. Centered composition filling the frame, "
-            "pure clean solid white background (#FFFFFF), bright high-key studio lighting, "
-            "crisp edges, photorealistic, preserve all fabric texture, color fidelity, "
-            "and silhouette details, no dark shadows, no dark vignette, no black backdrop, "
+            "seamless solid flat off-white DressApp neutral background (solid hex #F5F2EB, rgb 245 242 235), "
+            "pure clean flat backdrop with no texture, no shadows, no wall corners, no floor planes, no ground horizon, "
+            "studio lighting, crisp isolated edges, photorealistic, preserve all fabric texture, color fidelity, "
+            "and silhouette details, standalone garment completely unbonded from background, no dark shadows, no dark vignette, no black backdrop, "
             "no people, no mannequin body, no text, no logos, no watermarks."
         )
         return composed[:1000]

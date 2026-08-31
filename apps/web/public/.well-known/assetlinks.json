@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.project.dressapp",
+      "sha256_cert_fingerprints": [
+        "8F:5B:EF:0F:01:53:68:5C:65:C9:FA:BF:61:29:C3:DA:EE:A3:42:44:EB:A0:10:49:C4:1F:A7:4E:E0:D9:A8:67"
+      ]
+    }
+  }
+]

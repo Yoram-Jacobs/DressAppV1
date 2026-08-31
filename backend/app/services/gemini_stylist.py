@@ -13,12 +13,17 @@ import re
 from typing import Any
 
 from app.config import settings
-from app.services.gemini_client import GeminiClient
+from app.services.gemini_client import DEFAULT_VISION_MODEL, GeminiClient
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = """You are DressApp’s Stylist Agent — a witty, practical fashion
-consultant. You speak with warmth, never condescend, and always ground your
+SYSTEM_PROMPT = """You are a senior fashion designer, stylist , and celebrity dresser.
+You have 30 years of multi-national, cultural fashion and trends experience.
+ You have deep fashion knowledge, and rules like color matching, material matching, body fitting, pattern matching, and cultural and religious restrictions are natural to you.
+ You constantly keep up with the current local fashion and social trends.
+ Your ability to tailor a perfect outfit for an event and weather from the customer's own garments,
+ following the customer's restrictions and orders, is well known and admired. 
+ You are witty, practical fashion consultant. You speak with warmth, never condescend, and always ground your
 advice in the user’s actual closet, the weather, their calendar, and any
 cultural constraints provided.
 
@@ -47,6 +52,7 @@ Hard rules:
   clearly missing staple would dramatically improve the outfit.
 • Actively integrate relevant accessories (such as belts, hats/headwear, glasses/sunglasses, bags, and neckwear) from the user's closet into the outfit recommendations to complete and elevate the suggested looks.
 • FULL OUTFIT REQUIREMENT: Every outfit recommendation MUST be a COMPLETE outfit consisting of: 1) Either (a 'top' AND a 'bottom') OR a 'dress', and 2) 'shoes' (footwear). NEVER return an outfit consisting of only a single item (like only a T-shirt or only pants) without bottoms and shoes, UNLESS the user's closet is completely missing those categories. If bottoms or shoes are missing in the closet, append a clear note to the outfit's why/description reminding the user to add missing items to their closet.
+• ROLE AND ANATOMICAL ORDER: Each item's 'role' MUST strictly match its anatomical category (e.g., footwear/shoes MUST be role: 'shoes', shirts/tops MUST be role: 'top', pants/skirts MUST be role: 'bottom'). Never label shoes as 'top' or 'bottom'. In the 'items' array, list pieces strictly in top-to-bottom order: 'top' (or 'dress') first, 'outerwear' second, 'bottom' third, 'shoes' fourth, and 'accessory' fifth.
 • You are conducting a multi-turn conversation. The recent dialogue history is provided in the CONTEXT under 'user_profile.conversation_history'. Refer to this history to resolve pronouns (e.g., "it", "that", "the first one", "make it more casual"), maintain dialogue continuity, and answer follow-up questions fluently.
 """
 
@@ -149,11 +155,22 @@ class GeminiStylistService:
         )
         if user_preferences_block:
             sys_msg = sys_msg + "\n\n" + user_preferences_block.strip() + "\n"
+        safe_profile = {}
+        if user_profile:
+            safe_profile = {
+                "name": user_profile.get("display_name") or user_profile.get("name"),
+                "preferred_language": user_profile.get("preferred_language"),
+                "sex": user_profile.get("sex"),
+                "age_group": user_profile.get("age_group"),
+                "body_measurements": user_profile.get("body_measurements"),
+                "style_preferences": user_profile.get("style_preferences"),
+                "modesty_level": user_profile.get("modesty_level"),
+            }
         context_block = {
             "weather": weather,
             "calendar_events": calendar_events or [],
             "cultural_rules": cultural_rules or [],
-            "user_profile": user_profile or {},
+            "user_profile": safe_profile,
             "closet_summary": closet_summary or [],
         }
         lang_code = ((user_profile or {}).get("preferred_language") or "en").lower()
@@ -172,7 +189,7 @@ class GeminiStylistService:
         prompt_text = (
             f"{lang_preamble}"
             f"USER_REQUEST:\n{user_text}\n\n"
-            f"CONTEXT:\n{json.dumps(context_block, ensure_ascii=False, indent=2)}\n\n"
+            f"CONTEXT:\n{json.dumps(context_block, ensure_ascii=False, indent=2, default=str)}\n\n"
             "Return the JSON object now."
         )
 
@@ -205,12 +222,26 @@ class GeminiStylistService:
         with provider_activity.Track(
             "gemini-stylist", {"model": self.model, "has_image": bool(image_base64)}
         ):
-            raw = await self._client.vision(
-                system=sys_msg,
-                user_parts=user_parts,
-                model=self.model,
-                response_mime_type="application/json",
-            )
+            try:
+                raw = await self._client.vision(
+                    system=sys_msg,
+                    user_parts=user_parts,
+                    model=self.model,
+                    response_mime_type="application/json",
+                )
+            except Exception as exc:
+                logger.warning("Gemini stylist call failed (%s), attempting fallback with system key and default model", exc)
+                try:
+                    fallback_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+                    raw = await fallback_client.vision(
+                        system=sys_msg,
+                        user_parts=user_parts,
+                        model=DEFAULT_VISION_MODEL,
+                        response_mime_type="application/json",
+                    )
+                except Exception as fallback_exc:
+                    logger.error("Fallback Gemini stylist call failed: %s", fallback_exc)
+                    raise exc from fallback_exc
         return _parse_json(raw)
 
 

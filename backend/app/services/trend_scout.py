@@ -1,28 +1,23 @@
 """Trend-Scout / Fashion-Scout agent.
 
-Runs on a schedule (daily at 07:00 UTC) and generates short editorial cards
-for the home feed and the Stylist side panel.
+Runs on a monthly schedule (midnight UTC on the 1st of every month) as well as
+daily/on-demand refreshes. Curates gender-sensitive fashion intelligence:
+- Men's Fashion Ecosystem (7 buckets) for male users.
+- Women's Fashion Ecosystem (7 buckets) for female users.
 
-Phase R extends the schema so the stylist page can render a richer
-"news-flash" feed with optional media:
+Buckets:
+  1. local: Local News (anchored to device country e.g. Israel / IL)
+  2. runway: Runway (Worldwide Fashion News)
+  3. street: Street Style
+  4. sustainability: Sustainability
+  5. influencers: Mainstream Influencers & Tastemakers
+  6. vintage: Vintage & Archival Fashion (No shopping)
+  7. maintenance_repairs: Maintenance & Repairs (Garment care, mending, cobbling)
 
-    {
-      "bucket": "runway" | "street" | "sustainability" | "influencers"
-                 | "second_hand" | "recycling" | "news_flash",
-      "headline": str,
-      "body": str,
-      "tag": str,
-      "source_name": str | None,
-      "source_url": str | None,
-      "image_url": str | None,
-      "video_url": str | None,
-    }
-
-The agent does not yet call out to the live web (keeps things self-contained
-and deterministic). It asks Gemini for a plausible, editorial-voice
-observation *and* a suggestive source/media citation. When the generator
-returns a URL we keep it; otherwise the fields stay null and the UI
-gracefully falls back to a gradient tile.
+Enforces strict source rules:
+- Restricts shopping/e-commerce checkout platforms (Amazon, ASOS, Shein, cart/checkout links).
+- Restricts registration-walled / paywalled sites (no sign-up needed).
+- Exposes true authentic deep links, never search redirect wrappers.
 """
 from __future__ import annotations
 
@@ -30,6 +25,7 @@ import asyncio
 import json
 import logging
 import re
+import urllib.parse
 import uuid
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
@@ -45,100 +41,305 @@ logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# Buckets — prompts read like mini editorial briefs.
+# Men's and Women's Fashion Ecosystem Buckets Definition
 # ---------------------------------------------------------------------------
-BUCKETS: list[dict[str, Any]] = [
+MENS_BUCKETS: list[dict[str, Any]] = [
     {
-        "slug": "ss26-runway",
-        "label": "Runway",
+        "slug": "local",
+        "label": "Local News",
+        "gender": "male",
+        "focus": "Open-access local fashion editorials, domestic styling news, and local designer coverage.",
         "prompt": (
-            "Summarise ONE concrete SS26 runway trend worth a closet update."
-            " Focus on silhouette, fabric, or signature colour."
+            "Summarise ONE concrete menswear fashion news story or designer spotlight "
+            "deeply anchored to the local cultural identity of {country}. Focus on local fabrics, domestic tailoring, or boutique styling."
         ),
-        "starter_urls": [
-            "https://www.vogue.com/runway",
-            "https://www.elle.com/runway/",
-            "https://www.harpersbazaar.com/fashion/"
+        "starter_websites": [
+            {"name": "Walla Fashion", "url": "https://fashion.walla.co.il"},
+            {"name": "Time Out Tel Aviv (Style)", "url": "https://timeout.co.il/category/style/fashion"},
+            {"name": "Portfolio Magazine (Fashion)", "url": "https://www.prtfl.co.il/category/fashion"},
+        ],
+        "starter_influencers": [
+            {"name": "Asaf Liberfrund", "url": "https://www.instagram.com/thestreetvibe"},
+            {"name": "Barak Shamir", "url": "https://www.instagram.com/itsbarakshamir"},
+            {"name": "Omer Dror", "url": "https://www.instagram.com/omerdror"},
+        ],
+    },
+    {
+        "slug": "runway",
+        "label": "Runway",
+        "gender": "male",
+        "focus": "Free-to-access global menswear collections, lookbooks, and fashion week photography.",
+        "prompt": (
+            "Summarise ONE concrete global runway menswear trend worth a closet update. "
+            "Focus on silhouette, fabric drape, shoulder structure, or signature palette."
+        ),
+        "starter_websites": [
+            {"name": "The Fashionisto", "url": "https://www.thefashionisto.com"},
+            {"name": "Fucking Young!", "url": "https://fuckingyoung.es"},
+            {"name": "Male Model Scene (DSCENE)", "url": "https://www.malemodelscene.net"},
+        ],
+        "starter_influencers": [
+            {"name": "Alton Mason", "url": "https://www.instagram.com/altonmason"},
+            {"name": "Luka Sabbat", "url": "https://www.instagram.com/lukasabbat"},
+            {"name": "Jordan Daniels", "url": "https://www.tiktok.com/@jordandaniels_"},
         ],
     },
     {
         "slug": "street",
-        "label": "Street",
+        "label": "Street Style",
+        "gender": "male",
+        "focus": "Global urban culture, sneakers, and modern hype fashion.",
         "prompt": (
-            "Name ONE street-style shift that's actually being worn (not"
-            " editorial fantasy). Call out the key item and the styling move."
+            "Name ONE street-style menswear shift that is actively being worn. "
+            "Call out the key item (sneakers, utility pants, outerwear) and the styling move."
         ),
-        "starter_urls": [
-            "https://hypebeast.com/fashion",
-            "https://www.highsnobiety.com/",
-            "https://www.whowhatwear.com/"
+        "starter_websites": [
+            {"name": "Hypebeast", "url": "https://hypebeast.com"},
+            {"name": "Highsnobiety", "url": "https://www.highsnobiety.com"},
+            {"name": "Pause Magazine", "url": "https://pausemag.co.uk"},
+        ],
+        "starter_influencers": [
+            {"name": "Sangiev", "url": "https://www.youtube.com/c/sangiev"},
+            {"name": "Magnus Ronning", "url": "https://www.youtube.com/c/magnusronning"},
+            {"name": "Leo Mandella", "url": "https://www.instagram.com/gullyguyleo"},
         ],
     },
     {
         "slug": "sustainability",
         "label": "Sustainability",
+        "gender": "male",
+        "focus": "Non-profit directories, ethical brand editorials, and eco-fashion guides.",
         "prompt": (
-            "Pick ONE emerging sustainability story (resale, swap, materials,"
-            " repair, rental) and state the user-facing implication."
+            "Pick ONE emerging sustainable menswear story (closed-loop organic materials, "
+            "ethical brand directories, regenerative agriculture) and state the practical wardrobe implication."
         ),
-        "starter_urls": [
-            "https://www.vogue.com/fashion",
-            "https://www.whowhatwear.com/"
+        "starter_websites": [
+            {"name": "Good On You (Journal)", "url": "https://goodonyou.eco/category/fashion/"},
+            {"name": "Eco-Stylist", "url": "https://www.eco-stylist.com/mens-sustainable-fashion/"},
+            {"name": "Fashion Revolution", "url": "https://www.fashionrevolution.org"},
+        ],
+        "starter_influencers": [
+            {"name": "Brett Staniland", "url": "https://www.instagram.com/twinbrett"},
+            {"name": "Albert Múzquiz", "url": "https://www.tiktok.com/@albertmuzquiz"},
+            {"name": "Sam Manno", "url": "https://www.tiktok.com/@sammanno"},
         ],
     },
     {
         "slug": "influencers",
-        "label": "Influencers",
+        "label": "Mainstream Tastemakers",
+        "gender": "male",
+        "focus": "Everyday styling, smart-casual guides, and accessible menswear advice.",
         "prompt": (
-            "Highlight ONE global fashion influencer whose feed is shaping"
-            " how people are dressing right now. Name the person, their"
-            " signature move, and why it matters."
+            "Highlight ONE mainstream menswear tastemaker or smart-casual guide shaping accessible daily style. "
+            "Name the stylist/creator, the signature rotation move, and how to replicate it."
         ),
-        "starter_urls": [
-            "https://www.elle.com/culture/celebrities/",
-            "https://www.vogue.com/fashion",
-            "https://www.harpersbazaar.com/fashion/"
+        "starter_websites": [
+            {"name": "FashionBeans", "url": "https://www.fashionbeans.com"},
+            {"name": "Ape to Gentleman", "url": "https://www.apetogentleman.com"},
+            {"name": "Valet Magazine", "url": "https://www.valetmag.com"},
+        ],
+        "starter_influencers": [
+            {"name": "Mariano Di Vaio", "url": "https://www.instagram.com/marianodivaio"},
+            {"name": "Johannes Huebl", "url": "https://www.instagram.com/johanneshuebl"},
+            {"name": "Tim Dessaint", "url": "https://www.youtube.com/c/timdessaint"},
         ],
     },
     {
-        "slug": "second_hand",
-        "label": "Second-hand",
+        "slug": "vintage",
+        "label": "Vintage & Archival",
+        "gender": "male",
+        "focus": "Subcultural deep dives, heritage textiles, and vintage identification resources (No shopping).",
         "prompt": (
-            "Spotlight ONE concrete second-hand / vintage marketplace trend"
-            " (platform, category, buyer behaviour). Make it actionable."
+            "Spotlight ONE vintage or archival menswear deep dive (heritage selvedge denim, "
+            "military workwear history, archival labels, textile identification). Strictly educational, no commerce."
         ),
-        "starter_urls": [
-            "https://hypebeast.com/tags/vintage",
-            "https://www.highsnobiety.com/tag/vintage/"
+        "starter_websites": [
+            {"name": "Sabukaru Online", "url": "https://sabukaru.online/category/fashion"},
+            {"name": "Heddels", "url": "https://www.heddels.com"},
+            {"name": "Vintage Fashion Guild", "url": "https://vintagefashionguild.org"},
+        ],
+        "starter_influencers": [
+            {"name": "Christian (Frugal Aesthetic)", "url": "https://www.youtube.com/c/frugalaesthetic"},
+            {"name": "Bliss Foster", "url": "https://www.youtube.com/c/blissfoster"},
+            {"name": "Drew Joiner", "url": "https://www.youtube.com/c/drewjoiner"},
         ],
     },
     {
-        "slug": "recycling",
-        "label": "Recycling",
+        "slug": "maintenance_repairs",
+        "label": "Maintenance & Repairs",
+        "gender": "male",
+        "focus": "Menswear care guides, raw denim repair, darning, and cobbling tutorials.",
         "prompt": (
-            "Call out ONE innovative clothing-recycling or repair idea that"
-            " a home wardrobe could realistically adopt this month."
+            "Spotlight ONE practical menswear maintenance or repair technique "
+            "(raw denim darning, Goodyear welt shoe cobbling, sweater depilling, leather care) to extend garment lifespan."
         ),
-        "starter_urls": [
-            "https://www.vogue.com/fashion"
+        "starter_websites": [
+            {"name": "Put This On (Garment Care)", "url": "https://putthison.com"},
+            {"name": "Denimhunters", "url": "https://denimhunters.com"},
+            {"name": "Heddels (Repair Section)", "url": "https://www.heddels.com/category/education/maintenance-and-repair/"},
         ],
-    },
-    {
-        "slug": "news_flash",
-        "label": "News Flash",
-        "prompt": (
-            "Deliver ONE breaking fashion-industry headline worth sharing in"
-            " a news-flash ticker (brand move, collaboration, regulation,"
-            " launch). Be factual-sounding and editorial."
-        ),
-        "starter_urls": [
-            "https://hypebeast.com/fashion",
-            "https://www.highsnobiety.com/",
-            "https://www.harpersbazaar.com/fashion/",
-            "https://www.elle.com/fashion/"
+        "starter_influencers": [
+            {"name": "Trenton & Heath", "url": "https://www.youtube.com/c/trentonheath"},
+            {"name": "Indigo Proof", "url": "https://www.instagram.com/indigoproof"},
+            {"name": "Swiss Jeans Freak", "url": "https://www.instagram.com/swissjeansfreak"},
         ],
     },
 ]
+
+WOMENS_BUCKETS: list[dict[str, Any]] = [
+    {
+        "slug": "local",
+        "label": "Local News",
+        "gender": "female",
+        "focus": "Open-access Israeli designer showcases, local trend reporting, and boutique culture.",
+        "prompt": (
+            "Summarise ONE concrete womenswear fashion news story or designer showcase "
+            "deeply anchored to the local cultural identity of {country}. Focus on domestic designers, boutique culture, and regional styling."
+        ),
+        "starter_websites": [
+            {"name": "Fashion Forward (Mako)", "url": "https://fashionforward.mako.co.il"},
+            {"name": "AT Magazine", "url": "https://www.atmag.co.il"},
+            {"name": "Fashion Israel", "url": "https://www.fashion-israel.co.il"},
+        ],
+        "starter_influencers": [
+            {"name": "Meital Weinberg Adar", "url": "https://www.instagram.com/mmmwa"},
+            {"name": "Korin Avraham", "url": "https://www.instagram.com/yasalamfashionblog"},
+            {"name": "Dana Zarmon", "url": "https://www.instagram.com/danazarmon"},
+        ],
+    },
+    {
+        "slug": "runway",
+        "label": "Runway",
+        "gender": "female",
+        "focus": "Accessible reporting on couture, fashion weeks, and international designer debuts.",
+        "prompt": (
+            "Summarise ONE concrete international womenswear runway trend worth adopting into a personal closet. "
+            "Focus on texture, tailoring, colorway, or dramatic drape."
+        ),
+        "starter_websites": [
+            {"name": "L'Officiel USA", "url": "https://www.lofficielusa.com/fashion"},
+            {"name": "Fashionista", "url": "https://fashionista.com"},
+            {"name": "Crash Magazine", "url": "https://www.crash.fr/fashion/"},
+        ],
+        "starter_influencers": [
+            {"name": "Chiara Ferragni", "url": "https://www.instagram.com/chiaraferragni"},
+            {"name": "Leonie Hanne", "url": "https://www.instagram.com/leoniehanne"},
+            {"name": "Bryanboy", "url": "https://www.tiktok.com/@bryanboy"},
+        ],
+    },
+    {
+        "slug": "street",
+        "label": "Street Style",
+        "gender": "female",
+        "focus": "High-resolution photography of global fashion week attendees and subcultural trends.",
+        "prompt": (
+            "Name ONE global street style womenswear trend spotted at recent fashion weeks. "
+            "Highlight the signature silhouette, layer combination, and footwear."
+        ),
+        "starter_websites": [
+            {"name": "Style Du Monde", "url": "https://www.styledumonde.com"},
+            {"name": "Who What Wear", "url": "https://www.whowhatwear.com"},
+            {"name": "Refinery29 Fashion", "url": "https://www.refinery29.com/en-us/fashion"},
+        ],
+        "starter_influencers": [
+            {"name": "Caroline Daur", "url": "https://www.instagram.com/carodaur"},
+            {"name": "Aimee Song", "url": "https://www.youtube.com/c/aimeesong"},
+            {"name": "Tamara Kalinic", "url": "https://www.youtube.com/c/tamarakalinic"},
+        ],
+    },
+    {
+        "slug": "sustainability",
+        "label": "Sustainability",
+        "gender": "female",
+        "focus": "Slow-fashion publications, textile science, and fair-wage advocacy platforms.",
+        "prompt": (
+            "Spotlight ONE slow-fashion editorial, fair-wage milestone, or innovative circular textile "
+            "changing womenswear. State the direct takeaway for conscious shoppers."
+        ),
+        "starter_websites": [
+            {"name": "Remake", "url": "https://remake.world"},
+            {"name": "EcoCult", "url": "https://ecocult.com"},
+            {"name": "The Good Trade", "url": "https://www.thegoodtrade.com/category/style/"},
+        ],
+        "starter_influencers": [
+            {"name": "Aditi Mayer", "url": "https://www.instagram.com/aditimayer"},
+            {"name": "Aja Barber", "url": "https://www.instagram.com/ajabarber"},
+            {"name": "Alyssa Beltempo", "url": "https://www.youtube.com/c/alyssabeltempo"},
+        ],
+    },
+    {
+        "slug": "influencers",
+        "label": "Mainstream Tastemakers",
+        "gender": "female",
+        "focus": "Pop-culture trends, seasonal viral aesthetics, and everyday celebrity fashion.",
+        "prompt": (
+            "Highlight ONE viral style movement or aesthetic capsule (e.g. Scandi chic, modern tailoring, quiet luxury). "
+            "Name the tastemaker shaping it and how everyday wardrobes can channel the look."
+        ),
+        "starter_websites": [
+            {"name": "Elle Fashion", "url": "https://www.elle.com/fashion/"},
+            {"name": "Cosmopolitan Style", "url": "https://www.cosmopolitan.com/style-beauty/fashion/"},
+            {"name": "Glamour Fashion", "url": "https://www.glamour.com/fashion"},
+        ],
+        "starter_influencers": [
+            {"name": "Alix Earle", "url": "https://www.tiktok.com/@alixearle"},
+            {"name": "Emma Chamberlain", "url": "https://www.youtube.com/c/emmachamberlain"},
+            {"name": "Matilda Djerf", "url": "https://www.instagram.com/matildadjerf"},
+        ],
+    },
+    {
+        "slug": "vintage",
+        "label": "Vintage & Archival",
+        "gender": "female",
+        "focus": "Historical fashion journals, archival designer panels, and history-of-fashion media (No shopping).",
+        "prompt": (
+            "Spotlight ONE historical fashion retrospective or archival designer breakdown "
+            "(90s runway history, couture construction, vintage textile curation). Strictly educational, no shopping."
+        ),
+        "starter_websites": [
+            {"name": "SHOWstudio", "url": "https://www.showstudio.com"},
+            {"name": "The Vintage Woman Magazine", "url": "https://thevintagewomanmagazine.com"},
+            {"name": "Document Journal", "url": "https://www.documentjournal.com"},
+        ],
+        "starter_influencers": [
+            {"name": "Mina Le", "url": "https://www.youtube.com/c/minale99"},
+            {"name": "Hannah Louise Poston", "url": "https://www.youtube.com/c/hannahlouiseposton"},
+            {"name": "Macy Eleni", "url": "https://www.tiktok.com/@macyeleni"},
+        ],
+    },
+    {
+        "slug": "maintenance_repairs",
+        "label": "Maintenance & Repairs",
+        "gender": "female",
+        "focus": "Visible mending, upcycling, zero-waste alterations, and creative garment repair tutorials.",
+        "prompt": (
+            "Share ONE creative garment repair, visible mending (sashiko/boro embroidery), "
+            "or zero-waste hemline alteration tutorial that extends wardrobe lifespan at home."
+        ),
+        "starter_websites": [
+            {"name": "Repair What You Wear", "url": "https://repairwhatyouwear.com"},
+            {"name": "Fixing Fashion", "url": "https://fixing.fashion"},
+            {"name": "Gathered (Sewing Hub)", "url": "https://www.gathered.how/sewing-and-quilting/sewing"},
+        ],
+        "starter_influencers": [
+            {"name": "Lily Fulop", "url": "https://www.instagram.com/mindful_mending"},
+            {"name": "Shelby Orme", "url": "https://www.youtube.com/c/shelbizleee"},
+            {"name": "Leigh Thayer", "url": "https://www.youtube.com/@leighthayer"},
+        ],
+    },
+]
+
+ALL_BUCKETS: list[dict[str, Any]] = MENS_BUCKETS + WOMENS_BUCKETS
+
+# Backward-compatibility alias
+BUCKETS: list[dict[str, Any]] = WOMENS_BUCKETS
+
+BUCKET_SLUG_ALIASES: dict[str, str] = {
+    "ss26-runway": "runway",
+    "second_hand": "vintage",
+    "recycling": "maintenance_repairs",
+    "news_flash": "local",
+}
 
 
 COUNTRY_NAME_MAP: dict[str, str] = {
@@ -159,63 +360,368 @@ COUNTRY_NAME_MAP: dict[str, str] = {
     "IN": "India",
     "MX": "Mexico",
     "ZA": "South Africa",
+    "NL": "Netherlands",
+    "SE": "Sweden",
+    "CH": "Switzerland",
 }
 
-SEARCH_TEMPLATES: dict[str, list[str]] = {
-    "ss26-runway": [
-        "site:vogue.com/runway OR site:elle.com/runway runway fashion trends 2026",
-        "{country} runway fashion designer collection trends 2026",
-        "spring summer 2026 runway fashion show highlights {country} wmagazine thecut"
-    ],
-    "street": [
-        "instagram tiktok street style fashion trends 2026 whowhatwear refinery29",
-        "instagram tiktok facebook street style fashion {country} dazed i-d",
-        "streetwear trends 2026 {country} instagram tiktok highsnobiety hypebeast"
-    ],
-    "sustainability": [
-        "sustainable fashion resale upcycling vogue whowhatwear refinery29 fashionista",
-        "sustainable fashion {country} eco friendly clothing brand upcycling",
-        "instagram facebook sustainable fashion resale {country} thecut"
-    ],
-    "influencers": [
-        "instagram tiktok fashion influencer outfit trends 2026 whowhatwear refinery29",
-        "instagram tiktok twitter {country} fashion influencer hype dazed",
-        "top fashion creators instagram tiktok {country} dressing style fashionista"
-    ],
-    "second_hand": [
-        "vintage second hand clothing marketplace trends highsnobiety hypebeast grailed",
-        "best online vintage clothing shops resale platforms 2026 {country} fashionista",
-        "facebook vintage second hand clothing group marketplace {country} refinery29"
-    ],
-    "recycling": [
-        "clothing recycling repair upcycling diy wardrobe ideas 2026 whowhatwear",
-        "clothing recycling upcycling repair {country} fashionista",
-        "instagram clothing repair upcycling wardrobe {country} refinery29"
-    ],
-    "news_flash": [
-        "breaking fashion industry news collaboration launch 2026 hypebeast harpersbazaar gq wmagazine",
-        "breaking fashion news brand collaboration {country} thecut",
-        "twitter facebook breaking fashion brand news {country} dazed i-d"
-    ]
+
+# ---------------------------------------------------------------------------
+# Canonical Initial Seed Data (Instant Zero-Latency Fallback)
+# ---------------------------------------------------------------------------
+CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
+    # --- MEN'S ECOSYSTEM ---
+    {
+        "id": "seed-men-local-il",
+        "bucket": "local",
+        "gender": "male",
+        "country_code": "IL",
+        "headline": "חדשות אופנה וסטייל בתל אביב: מעצבים מקומיים",
+        "body": "עדכוני אופנה, מעצבים מקומיים וקולקציות חדשות בסצנת הסטייל של תל אביב עם התאמה לאקלים הים-תיכוני.",
+        "tag": "LOCAL NEWS",
+        "source_name": "Time Out Tel Aviv",
+        "source_url": "https://timeout.co.il/topic/%D7%90%D7%95%D7%A4%D7%A0%D7%94/",
+        "image_url": "https://static.timeout.co.il/www/images/share_image.png",
+        "date": "2026-08-01",
+        "language": "en",
+    },
+    {
+        "id": "seed-men-runway",
+        "bucket": "runway",
+        "gender": "male",
+        "country_code": None,
+        "headline": "Men’s Fashion Through the Decades: Tailoring & Silhouette Shifts",
+        "body": "Analysis of evolving silhouettes, architectural shoulders, and relaxed fluid drapes across runway lookbooks.",
+        "tag": "RUNWAY",
+        "source_name": "The Fashionisto",
+        "source_url": "https://www.thefashionisto.com/articles/fashion-through-the-decades-men/",
+        "image_url": "https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=800&q=80",
+        "date": "2026-08-01",
+        "language": "en",
+    },
+    {
+        "id": "seed-men-street",
+        "bucket": "street",
+        "gender": "male",
+        "country_code": None,
+        "headline": "Streetwear Movements: Functional Utility & Retro Runners",
+        "body": "Urban street style fuses archival trail silhouettes with loose-fit carpenter trousers and tonal modular layering.",
+        "tag": "STREET STYLE",
+        "source_name": "Ape to Gentleman",
+        "source_url": "https://www.apetogentleman.com/mens-fashion-trends/",
+        "image_url": "https://www.apetogentleman.com/wp-content/uploads/2022/05/FALL-WINTER-TRENDS.jpg",
+        "date": "2026-08-01",
+        "language": "en",
+    },
+    {
+        "id": "seed-men-sustainability",
+        "bucket": "sustainability",
+        "gender": "male",
+        "country_code": None,
+        "headline": "Sustainable Menswear Brands: Ethical Sourcing & Traceability",
+        "body": "Investigating closed-loop organic cotton, regenerative hemp, and transparent ethical auditing in modern menswear.",
+        "tag": "SUSTAINABILITY",
+        "source_name": "Good On You",
+        "source_url": "https://goodonyou.eco/sustainable-menswear-brands/",
+        "image_url": "https://goodonyou.eco/wp-content/uploads/2021/12/MaggieZhou-Menswear-1200x630.jpg",
+        "date": "2026-08-01",
+        "language": "en",
+    },
+    {
+        "id": "seed-men-influencers",
+        "bucket": "influencers",
+        "gender": "male",
+        "country_code": None,
+        "headline": "Smart-Casual Tastemakers: Modern Luxury & Minimalist Tailoring",
+        "body": "Tastemakers demonstrate how relaxed blazers, structured neutral knits, and tailored trousers build cohesive capsule wardrobes.",
+        "tag": "TASTEMAKERS",
+        "source_name": "The Fashionisto",
+        "source_url": "https://www.thefashionisto.com/story/amiri-fall-2026-campaign/",
+        "image_url": "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=800&q=80",
+        "date": "2026-08-01",
+        "language": "en",
+    },
+    {
+        "id": "seed-men-vintage",
+        "bucket": "vintage",
+        "gender": "male",
+        "country_code": None,
+        "headline": "Archival Workwear & Heritage Denim Buying Guides",
+        "body": "Deep dives into shuttle-loom selvedge denim history, military surplus construction, and vintage garment tags.",
+        "tag": "VINTAGE & ARCHIVAL",
+        "source_name": "Heddels",
+        "source_url": "https://www.heddels.com/buying-guides/",
+        "image_url": "https://www.heddels.com/wp-content/uploads/2022/08/wide-leg-raw-denim-jeans-a-buyers-guide-443x296.jpg",
+        "date": "2026-08-01",
+        "language": "en",
+    },
+    {
+        "id": "seed-men-repairs",
+        "bucket": "maintenance_repairs",
+        "gender": "male",
+        "country_code": None,
+        "headline": "Garment Care & Cobbling Maintenance Guides",
+        "body": "Mastering denim chainstitch mending, leather conditioning, and shoe care to extend wardrobe investments by decades.",
+        "tag": "MAINTENANCE & REPAIRS",
+        "source_name": "Put This On",
+        "source_url": "https://putthison.com/all-articles/",
+        "image_url": "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=800&q=80",
+        "date": "2026-08-01",
+        "language": "en",
+    },
+
+    # --- WOMEN'S ECOSYSTEM ---
+    {
+        "id": "seed-women-local-il",
+        "bucket": "local",
+        "gender": "female",
+        "country_code": "IL",
+        "headline": "הפקות אופנה ומעצבות ישראליות: גוונים ארציים ופיסוליות",
+        "body": "מעצבות ישראליות מובילות קו טבעי ונושם של משי אורגני, גווני טרקוטה ארציים ותכשיטי בוטיק ייחודיים.",
+        "tag": "LOCAL NEWS",
+        "source_name": "Walla! Fashion",
+        "source_url": "https://fashion.walla.co.il/category/2131",
+        "image_url": "https://images.wcdn.co.il/f_auto,q_auto,w_1200,t_54/3/6/9/0/3690025-46.jpg",
+        "date": "2026-08-01",
+        "language": "en",
+    },
+    {
+        "id": "seed-women-runway",
+        "bucket": "runway",
+        "gender": "female",
+        "country_code": None,
+        "headline": "Runway Lookbooks: Sculptural Volume & Silhouette Play",
+        "body": "International runway showcases blend sheer layering, sculptural corsetry, and kinetic fringe for confident eveningwear.",
+        "tag": "RUNWAY",
+        "source_name": "The Fashionisto",
+        "source_url": "https://www.thefashionisto.com/story/amiri-fall-2026-campaign/",
+        "image_url": "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80",
+        "date": "2026-08-01",
+        "language": "en",
+    },
+    {
+        "id": "seed-women-street",
+        "bucket": "street",
+        "gender": "female",
+        "country_code": None,
+        "headline": "Oversized Tailoring & Conscious Street Style Standards",
+        "body": "Fashion week attendees elevate voluminous blazers with delicate ballet flats, wide-leg poplin trousers, and verified ethical staples.",
+        "tag": "STREET STYLE",
+        "source_name": "Good On You",
+        "source_url": "https://goodonyou.eco/how-we-rate/",
+        "image_url": "https://goodonyou.eco/wp-content/uploads/2018/12/opengraph-1200x630.jpg",
+        "date": "2026-08-01",
+        "language": "en",
+    },
+    {
+        "id": "seed-women-sustainability",
+        "bucket": "sustainability",
+        "gender": "female",
+        "country_code": None,
+        "headline": "Circular Fashion Advocacy & The #NoNewClothes Challenge",
+        "body": "Global slow-fashion leaders spotlight transparent garment worker standards and lab-grown mycelium leather alternatives in everyday staples.",
+        "tag": "SUSTAINABILITY",
+        "source_name": "Remake",
+        "source_url": "https://remake.world/no-new-clothes-2024/",
+        "image_url": "https://images.unsplash.com/photo-1532453286298-9836439e1607?auto=format&fit=crop&w=800&q=80",
+        "date": "2026-08-01",
+        "language": "en",
+    },
+    {
+        "id": "seed-women-influencers",
+        "bucket": "influencers",
+        "gender": "female",
+        "country_code": None,
+        "headline": "Quiet Luxury & Minimalist Tastemaker Staples",
+        "body": "Tastemakers showcase effortless Parisian-Scandi blends, combining crisp poplin shirts with vintage knitwear staples.",
+        "tag": "TASTEMAKERS",
+        "source_name": "Ape to Gentleman",
+        "source_url": "https://www.apetogentleman.com/mens-fashion-trends/",
+        "image_url": "https://www.apetogentleman.com/wp-content/uploads/2022/05/FALL-WINTER-TRENDS.jpg",
+        "date": "2026-08-01",
+        "language": "en",
+    },
+    {
+        "id": "seed-women-vintage",
+        "bucket": "vintage",
+        "gender": "female",
+        "country_code": None,
+        "headline": "Archival Heritage & Enduring Craftsmanship Retrospectives",
+        "body": "Curated retrospectives examine historic fashion silhouettes, archive collector panels, and museum-grade textile preservation methodologies.",
+        "tag": "VINTAGE & ARCHIVAL",
+        "source_name": "Heddels",
+        "source_url": "https://www.heddels.com/buying-guides/five-plus-one/",
+        "image_url": "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80",
+        "date": "2026-08-01",
+        "language": "en",
+    },
+    {
+        "id": "seed-women-repairs",
+        "bucket": "maintenance_repairs",
+        "gender": "female",
+        "country_code": None,
+        "headline": "Visible Mending & Survival Sewing Skills Tutorials",
+        "body": "Creative Japanese boro embroidery, sweater defuzzing, and invisible zipper repairs empower sustainable closet longevity directly at home.",
+        "tag": "MAINTENANCE & REPAIRS",
+        "source_name": "Repair What You Wear",
+        "source_url": "https://repairwhatyouwear.com/core-mending-skills/",
+        "image_url": "https://images.unsplash.com/photo-1520006403909-838d6b92c22e?auto=format&fit=crop&w=800&q=80",
+        "date": "2026-08-01",
+        "language": "en",
+    },
+]
+
+
+# ---------------------------------------------------------------------------
+# Search Queries & Filtering
+# ---------------------------------------------------------------------------
+DISALLOWED_SHOPPING_DOMAINS = (
+    "amazon.", "ebay.", "shein.", "aliexpress.", "asos.com/shop", "temu.com",
+    "zara.com/shop", "hm.com/shop", "etsy.com", "target.com", "walmart.com",
+    "shop.", "store.", "cart", "checkout", "buy-now"
+)
+
+DISALLOWED_PAYWALL_DOMAINS = (
+    "voguebusiness.com", "wsj.com", "ft.com", "bloomberg.com"
+)
+
+DEFAULT_BUCKET_IMAGES: dict[tuple[str, str], str] = {
+    # Men's Buckets
+    ("local", "male"): "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
+    ("runway", "male"): "https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=800&q=80",
+    ("street", "male"): "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=800&q=80",
+    ("sustainability", "male"): "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
+    ("influencers", "male"): "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=800&q=80",
+    ("vintage", "male"): "https://www.heddels.com/wp-content/uploads/2022/08/wide-leg-raw-denim-jeans-a-buyers-guide-443x296.jpg",
+    ("maintenance_repairs", "male"): "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=800&q=80",
+
+    # Women's Buckets
+    ("local", "female"): "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80",
+    ("runway", "female"): "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80",
+    ("street", "female"): "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80",
+    ("sustainability", "female"): "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=800&q=80",
+    ("influencers", "female"): "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
+    ("vintage", "female"): "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80",
+    ("maintenance_repairs", "female"): "https://images.unsplash.com/photo-1520006403909-838d6b92c22e?auto=format&fit=crop&w=800&q=80",
 }
 
-def get_search_queries(bucket_slug: str, country_code: str | None, city: str | None = None) -> list[str]:
-    country = COUNTRY_NAME_MAP.get((country_code or "").upper(), "") if country_code else ""
-    templates = SEARCH_TEMPLATES.get(bucket_slug, ["fashion trends 2026"])
-    
-    queries = []
-    for t in templates:
-        if "{country}" in t:
-            place = f"{city} {country}" if (city and country) else (country or city or "")
-            if place:
-                queries.append(t.format(country=place).strip())
-        else:
-            queries.append(t)
-            
-    if not queries:
-        queries = [t.replace("{country}", "").strip() for t in templates]
-        
-    import urllib.parse
+
+def _get_fallback_image(bucket_slug: str | None, gender: str | None) -> str:
+    canonical = BUCKET_SLUG_ALIASES.get(bucket_slug or "", bucket_slug or "local")
+    g = "male" if (gender or "").lower() == "male" else "female"
+    return (
+        DEFAULT_BUCKET_IMAGES.get((canonical, g))
+        or DEFAULT_BUCKET_IMAGES.get(("local", g))
+        or "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80"
+    )
+
+
+def _ensure_card_image(card: dict[str, Any]) -> dict[str, Any]:
+    """Ensure card always has a valid non-empty representative image_url."""
+    if not card:
+        return card
+    if not card.get("image_url") or not str(card.get("image_url")).startswith("http"):
+        card["image_url"] = _get_fallback_image(card.get("bucket"), card.get("gender"))
+    return card
+
+
+def get_search_queries(
+    bucket_slug: str,
+    country_code: str | None,
+    city: str | None = None,
+    gender: str = "female"
+) -> list[str]:
+    """Build high-relevance search queries targeting open-access editorial fashion outlets."""
+    canonical_slug = BUCKET_SLUG_ALIASES.get(bucket_slug, bucket_slug)
+    country_name = COUNTRY_NAME_MAP.get((country_code or "").upper(), country_code or "Israel")
+    place = f"{city} {country_name}" if (city and country_name) else country_name
+    gender_word = "menswear men" if gender == "male" else "womenswear women"
+
+    if canonical_slug == "local":
+        if (country_code or "").upper() == "IL":
+            if gender == "male":
+                return [
+                    "site:fashion.walla.co.il OR site:timeout.co.il אופנת גברים תל אביב",
+                    "site:prtfl.co.il אופנה מעצבים ישראלים גברים",
+                    "Israeli menswear fashion designers Tel Aviv style",
+                ]
+            return [
+                "site:fashionforward.mako.co.il OR site:atmag.co.il אופנה מעצבים ישראלים",
+                "site:fashion-israel.co.il מגזין אופנה ישראלי",
+                "Israeli fashion designers boutique Tel Aviv style trends",
+            ]
+        return [
+            f"{place} {gender_word} fashion news local designers trends 2026",
+            f"top {gender_word} fashion magazines boutique style {place}",
+        ]
+
+    elif canonical_slug == "runway":
+        if gender == "male":
+            return [
+                "site:thefashionisto.com OR site:fuckingyoung.es runway menswear trends 2026",
+                "site:malemodelscene.net menswear runway fashion week lookbook 2026",
+            ]
+        return [
+            "site:lofficielusa.com OR site:fashionista.com runway fashion trends 2026",
+            "site:crash.fr fashion week couture runway highlights",
+        ]
+
+    elif canonical_slug == "street":
+        if gender == "male":
+            return [
+                "site:hypebeast.com OR site:highsnobiety.com street style menswear sneakers 2026",
+                "site:pausemag.co.uk street style urban fashion men",
+            ]
+        return [
+            "site:styledumonde.com OR site:whowhatwear.com street style fashion week women",
+            "site:refinery29.com/en-us/fashion street style outfits trends",
+        ]
+
+    elif canonical_slug == "sustainability":
+        if gender == "male":
+            return [
+                "site:goodonyou.eco OR site:eco-stylist.com mens sustainable ethical fashion",
+                "site:fashionrevolution.org ethical sustainable clothing guides",
+            ]
+        return [
+            "site:remake.world OR site:ecocult.com sustainable slow fashion women",
+            "site:thegoodtrade.com/category/style ethical conscious style",
+        ]
+
+    elif canonical_slug == "influencers":
+        if gender == "male":
+            return [
+                "site:fashionbeans.com OR site:apetogentleman.com mens style tastemaker outfits",
+                "site:valetmag.com everyday smart casual menswear capsule",
+            ]
+        return [
+            "site:elle.com/fashion OR site:cosmopolitan.com/style-beauty/fashion viral aesthetic trends",
+            "site:glamour.com/fashion fashion creators styling tips women",
+        ]
+
+    elif canonical_slug == "vintage":
+        if gender == "male":
+            return [
+                "site:sabukaru.online OR site:heddels.com vintage menswear archival workwear",
+                "site:vintagefashionguild.org vintage fashion history identification",
+            ]
+        return [
+            "site:showstudio.com OR site:thevintagewomanmagazine.com archival fashion history women",
+            "site:documentjournal.com fashion archive history retrospective",
+        ]
+
+    elif canonical_slug == "maintenance_repairs":
+        if gender == "male":
+            return [
+                "site:putthison.com OR site:denimhunters.com raw denim repair darning garment care",
+                "site:heddels.com/category/education/maintenance-and-repair cobbling denim mending",
+            ]
+        return [
+            "site:repairwhatyouwear.com OR site:fixing.fashion visible mending garment repair",
+            "site:gathered.how/sewing-and-quilting/sewing clothes mending upcycling guide",
+        ]
+
+    queries = [f"{gender_word} fashion trends 2026 {place}"]
     urls = []
     for q in queries:
         encoded = urllib.parse.quote_plus(q)
@@ -228,18 +734,18 @@ SYSTEM_PROMPT = (
     "You can browse the web to find real-time insights.\n"
     "Write for a reader who already dresses well and wants ONE actionable insight per card.\n\n"
     "Rules for sources:\n"
-    "- NEVER use 'Vogue Business' (which is subscription-walled). Instead, use 'Vogue Runway' for Vogue runway/fashion articles.\n"
-    "- NEVER use search engine domains (e.g. yahoo.com, google.com) or social media homepages (e.g. instagram.com, tiktok.com, facebook.com, twitter.com) as the final source_url. All final cards must link to actual content articles or specific posts.\n"
-    "- You MUST browse at least one actual deep fashion article/post link from the search results to get real content before calling 'finish'. Do not finish with only Yahoo Search results in history.\n"
-    "- The source_url in your final card MUST be the exact deep article/post URL found within the browsed page content (in markdown format, e.g. [title](url)).\n\n"
+    "- NEVER use shopping platforms, e-commerce checkout stores, or commercial cart pages (e.g. Amazon, ASOS, Shein, Temu, Zara/HM store carts).\n"
+    "- NEVER use subscription-walled / registration-walled websites (e.g. Vogue Business, WSJ, FT). Must be free and open-access with no sign-up needed.\n"
+    "- NEVER use search engine redirect domains (e.g. google.com/url, search.yahoo.com) or root social homepages.\n"
+    "- CRITICAL FOR SOURCE_URL: source_url MUST navigate directly to the specific article, editorial piece, or guide itself (e.g. https://domain.com/category/article-slug). NEVER provide a root domain or homepage (e.g. NEVER https://domain.com or https://domain.com/). Always extract the direct article link from the markdown links inside the browsed page.\n\n"
     "Output contract: return ONLY a JSON object.\n"
     'If you need to search a website, return: {"action": "browse_web", "url": "<https URL>"}.\n'
     'Once you have enough context, return: {"action": "finish", "card": {\n'
     ' "headline": string (<= 8 words),\n'
     ' "body": string (1-2 sentences, <= 220 chars),\n'
     ' "tag": string (short all-caps category tag),\n'
-    ' "source_name": string (e.g., "Vogue Runway", "Hypebeast"),\n'
-    ' "source_url": string (must be a specific deep link found in the browsed text),\n'
+    ' "source_name": string (e.g., "Time Out Tel Aviv", "Hypebeast", "Fashionista"),\n'
+    ' "source_url": string (must be the specific article/report deep link found in browsed page),\n'
     ' "image_url": string (or null),\n'
     ' "video_url": string (or null)\n'
     "}}. No markdown, no prose outside JSON."
@@ -250,7 +756,7 @@ SYSTEM_PROMPT = (
 # Helpers
 # ---------------------------------------------------------------------------
 async def browse_web(url: str) -> str:
-    """Agent tool to fetch and extract text and inline links from a webpage."""
+    """Agent tool to fetch and extract text, article featured images, and inline links from a webpage."""
     from urllib.parse import urljoin, urlparse, unquote
     try:
         headers = {
@@ -262,17 +768,30 @@ async def browse_web(url: str) -> str:
             resp = await client.get(url, follow_redirects=True)
             resp.raise_for_status()
             soup = BeautifulSoup(resp.text, 'html.parser')
-            
+
+            # Extract OpenGraph / Twitter / Hero article image
+            article_image: str | None = None
+            og_img = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "og:image"})
+            tw_img = soup.find("meta", property="twitter:image") or soup.find("meta", attrs={"name": "twitter:image"})
+            if og_img and og_img.get("content"):
+                article_image = urljoin(url, og_img["content"].strip())
+            elif tw_img and tw_img.get("content"):
+                article_image = urljoin(url, tw_img["content"].strip())
+            else:
+                first_img = soup.find("img", src=True)
+                if first_img and first_img.get("src") and not first_img["src"].startswith("data:"):
+                    article_image = urljoin(url, first_img["src"].strip())
+
             is_yahoo = "search.yahoo.com" in url
-            
+
             for tag in soup(["script", "style", "nav", "footer", "header", "noscript"]):
                 tag.extract()
-            
+
             for a in soup.find_all("a", href=True):
                 href = a["href"].strip()
                 if not href or href.startswith("#") or href.startswith("javascript:"):
                     continue
-                
+
                 if is_yahoo and "r.search.yahoo.com" in href and "/RU=" in href:
                     parsed = urlparse(href)
                     path_parts = parsed.path.split("/")
@@ -287,20 +806,24 @@ async def browse_web(url: str) -> str:
                         absolute_url = urljoin(url, href)
                 else:
                     absolute_url = urljoin(url, href)
-                    
+
                 link_text = a.get_text(strip=True)
                 if link_text:
                     a.replace_with(f" [{link_text}]({absolute_url}) ")
-                    
+
             text = soup.get_text(separator=' ', strip=True)
             text = " ".join(text.split())
-            
+
             if is_yahoo and len(text) < 500:
-                return "Failed to fetch Yahoo search page: Anti-bot challenge or empty results."
-                
+                return "Failed to fetch search page: anti-bot challenge or empty results."
+
+            if article_image and not is_yahoo:
+                return f"{text[:3500]}\n\n[Article Featured Image]: {article_image}"
+
             return text[:4000]
     except Exception as exc:
         return f"Failed to fetch {url}: {exc}"
+
 
 def _extract_json(raw: str) -> dict[str, Any]:
     if not raw:
@@ -325,43 +848,54 @@ def _extract_json(raw: str) -> dict[str, Any]:
 
 
 def _clean_url(value: Any) -> str | None:
-    """Keep only https URLs and strip obvious fabrications."""
+    """Keep only https URLs, unwrap search redirects, and strip shopping or paywalled domains."""
     if not value or not isinstance(value, str):
         return None
     v = value.strip()
     if not v.lower().startswith(("http://", "https://")):
         return None
-    # Normalize to https to avoid mixed-content warnings in the browser.
+
+    # Normalize to https
     if v.lower().startswith("http://"):
         v = "https://" + v[len("http://") :]
-    # Reject obviously-fake hosts (private or example.com) to keep the UI honest.
+
     lowered = v.lower()
     if "example.com" in lowered or "localhost" in lowered:
         return None
+
+    # Unwrap search redirects (e.g. google.com/url?q=... or url=...)
+    if "google.com/url" in lowered:
+        parsed = urllib.parse.urlparse(v)
+        qs = urllib.parse.parse_qs(parsed.query)
+        target = qs.get("url", qs.get("q", []))
+        if target:
+            v = target[0]
+            lowered = v.lower()
+
+    if "r.search.yahoo.com" in lowered and "/ru=" in lowered:
+        parsed = urllib.parse.urlparse(v)
+        for part in parsed.path.split("/"):
+            if part.lower().startswith("ru="):
+                v = urllib.parse.unquote(part[3:])
+                lowered = v.lower()
+                break
+
+    # Strip e-commerce shopping / cart platforms
+    if any(shop in lowered for shop in DISALLOWED_SHOPPING_DOMAINS):
+        return None
+
+    # Strip paywalled domains
+    if any(pw in lowered for pw in DISALLOWED_PAYWALL_DOMAINS):
+        return None
+
     return v[:300]
 
 
 # ---------------------------------------------------------------------------
-# Personalization (Phase TS-2)
-#
-# Until the real web-scouring integration lands (Tavily / Perplexity / etc,
-# tracked as a future tier-pricing milestone), the trend pool is
-# generated by an LLM and stored in ``trend_reports``. We can still
-# give the user a meaningfully better feed by **ranking the same pool
-# against their demographics** at read time — gender, occupation,
-# professional profile, and country.
-#
-# The ranker is intentionally simple: a deterministic keyword-overlap
-# score with a few content-aware boosts. This avoids another LLM call
-# on every read (cost + latency) and keeps the behaviour debuggable.
-# When the live web search ships, the same ranker will simply operate
-# on a richer, real-content pool.
+# Demographic Ranking & Filter Helpers
 # ---------------------------------------------------------------------------
 _BUCKET_AFFINITY: dict[str, dict[str, float]] = {
-    # Bucket → keyword → weight. Boosts the bucket when the user's
-    # keyword set hints at an interest in that subject. Weights kept
-    # small (≤ 2.0) so they nudge ranking rather than dominate it.
-    "ss26-runway": {
+    "runway": {
         "designer": 2.0, "stylist": 1.5, "fashion": 1.5, "model": 1.5,
         "editor": 1.0, "creative": 1.0, "luxury": 1.0,
     },
@@ -377,13 +911,15 @@ _BUCKET_AFFINITY: dict[str, dict[str, float]] = {
         "marketing": 1.5, "social": 1.5, "content": 1.5, "creator": 2.0,
         "influencer": 2.0, "brand": 1.0,
     },
-    "second_hand": {
-        "thrift": 2.0, "vintage": 2.0, "student": 1.5, "budget": 1.0,
+    "vintage": {
+        "thrift": 2.0, "vintage": 2.0, "student": 1.5, "budget": 1.0, "archival": 2.0,
     },
-    "recycling": {
-        "designer": 1.0, "engineer": 1.0, "tailor": 1.5, "diy": 1.5,
+    "maintenance_repairs": {
+        "designer": 1.0, "engineer": 1.0, "tailor": 1.5, "diy": 1.5, "repair": 2.0, "mending": 2.0,
     },
-    "news_flash": {},  # neutral
+    "local": {
+        "israel": 2.0, "tel aviv": 2.0, "local": 2.0, "boutique": 1.5,
+    },
 }
 
 _TOKEN_RE = re.compile(r"[a-z0-9]{3,}")
@@ -402,10 +938,8 @@ def _user_keyword_set(user: dict[str, Any]) -> set[str]:
         v = user.get(key)
         if isinstance(v, str):
             parts.append(v)
-    sex = user.get("sex")
+    sex = user.get("sex") or user.get("gender")
     if isinstance(sex, str):
-        # Map sex → likely fashion-feed keywords. Cards rarely tag
-        # gender explicitly so we look for the english noun forms.
         if sex == "female":
             parts.append("women womens woman")
         elif sex == "male":
@@ -431,56 +965,6 @@ def _user_keyword_set(user: dict[str, Any]) -> set[str]:
 def _country_codes(user: dict[str, Any]) -> set[str]:
     """Best-effort country code set for the viewer (upper-case, 2-letter)."""
     out: set[str] = set()
-    name_to_code = {
-        "AFGHANISTAN": "AF", "ALAND ISLANDS": "AX", "ALBANIA": "AL", "ALGERIA": "DZ", "AMERICAN SAMOA": "AS",
-        "ANDORRA": "AD", "ANGOLA": "AO", "ANGUILLA": "AI", "ANTARCTICA": "AQ", "ANTIGUA AND BARBUDA": "AG",
-        "ARGENTINA": "AR", "ARMENIA": "AM", "ARUBA": "AW", "AUSTRALIA": "AU", "AUSTRIA": "AT", "AZERBAIJAN": "AZ",
-        "BAHAMAS": "BS", "BAHRAIN": "BH", "BANGLADESH": "BD", "BARBADOS": "BB", "BELARUS": "BY", "BELGIUM": "BE",
-        "BELIZE": "BZ", "BENIN": "BJ", "BERMUDA": "BM", "BHUTAN": "BT", "BOLIVIA": "BO", "BONAIRE, SINT EUSTATIUS AND SABA": "BQ",
-        "BOSNIA AND HERZEGOVINA": "BA", "BOTSWANA": "BW", "BOUVET ISLAND": "BV", "BRAZIL": "BR", "BRITISH INDIAN OCEAN TERRITORY": "IO",
-        "BRUNEI DARUSSALAM": "BN", "BULGARIA": "BG", "BURKINA FASO": "BF", "BURUNDI": "BI", "CABO VERDE": "CV",
-        "CAMBODIA": "KH", "CAMEROON": "CM", "CANADA": "CA", "CAYMAN ISLANDS": "KY", "CENTRAL AFRICAN REPUBLIC": "CF",
-        "CHAD": "TD", "CHILE": "CL", "CHINA": "CN", "CHRISTMAS ISLAND": "CX", "COCOS (KEELING) ISLANDS": "CC",
-        "COLOMBIA": "CO", "COMOROS": "KM", "CONGO": "CG", "CONGO, DEMOCRATIC REPUBLIC OF THE": "CD", "COOK ISLANDS": "CK",
-        "COSTA RICA": "CR", "COTE D'IVOIRE": "CI", "CROATIA": "HR", "CUBA": "CU", "CURACAO": "CW", "CYPRUS": "CY",
-        "CZECHIA": "CZ", "DENMARK": "DK", "DJIBOUTI": "DJ", "DOMINICA": "DM", "DOMINICAN REPUBLIC": "DO",
-        "ECUADOR": "EC", "EGYPT": "EG", "EL SALVADOR": "SV", "EQUATORIAL GUINEA": "GQ", "ERITREA": "ER", "ESTONIA": "EE",
-        "ESWATINI": "SZ", "ETHIOPIA": "ET", "FALKLAND ISLANDS (MALVINAS)": "FK", "FAROE ISLANDS": "FO", "FIJI": "FJ",
-        "FINLAND": "FI", "FRANCE": "FR", "FRENCH GUIANA": "GF", "FRENCH POLYNESIA": "PF", "FRENCH SOUTHERN TERRITORIES": "TF",
-        "GABON": "GA", "GAMBIA": "GM", "GEORGIA": "GE", "GERMANY": "DE", "GHANA": "GH", "GIBRALTAR": "GI", "GREECE": "GR",
-        "GREENLAND": "GL", "GRENADA": "GD", "GUADELOUPE": "GP", "GUAM": "GU", "GUATEMALA": "GT", "GUERNSEY": "GG",
-        "GUINEA": "GN", "GUINEA-BISSAU": "GW", "GUYANA": "GY", "HAITI": "HT", "HEARD ISLAND AND MCDONALD ISLANDS": "HM",
-        "HOLY SEE": "VA", "HONDURAS": "HN", "HONG KONG": "HK", "HUNGARY": "HU", "ICELAND": "IS", "INDIA": "IN",
-        "INDONESIA": "ID", "IRAN": "IR", "IRAQ": "IQ", "IRELAND": "IE", "ISLE OF MAN": "IM", "ISRAEL": "IL",
-        "ITALY": "IT", "JAMAICA": "JM", "JAPAN": "JP", "JERSEY": "JE", "JORDAN": "JO", "KAZAKHSTAN": "KZ",
-        "KENYA": "KE", "KIRIBATI": "KI", "KOREA, DEMOCRATIC PEOPLE'S REPUBLIC OF": "KP", "KOREA, REPUBLIC OF": "KR",
-        "SOUTH KOREA": "KR", "NORTH KOREA": "KP", "KUWAIT": "KW", "KYRGYZSTAN": "KG", "LAO PEOPLE'S DEMOCRATIC REPUBLIC": "LA",
-        "LATVIA": "LV", "LEBANON": "LB", "LESOTHO": "LS", "LIBERIA": "LR", "LIBYA": "LY", "LIECHTENSTEIN": "LI",
-        "LITHUANIA": "LT", "LUXEMBOURG": "LU", "MACAO": "MO", "MADAGASCAR": "MG", "MALAWI": "MW", "MALAYSIA": "MY",
-        "MALDIVES": "MV", "MALI": "ML", "MALTA": "MT", "MARSHALL ISLANDS": "MH", "MARTINIQUE": "MQ", "MAURITANIA": "MR",
-        "MAURITIUS": "MU", "MAYOTTE": "YT", "MEXICO": "MX", "MICRONESIA": "FM", "MOLDOVA": "MD", "MONACO": "MC",
-        "MONGOLIA": "MN", "MONTENEGRO": "ME", "MONTSERRAT": "MS", "MOROCCO": "MA", "MOZAMBIQUE": "MZ", "MYANMAR": "MM",
-        "NAMIBIA": "NA", "NAURU": "NR", "NEPAL": "NP", "NETHERLANDS": "NL", "NEW CALEDONIA": "NC", "NEW ZEALAND": "NZ",
-        "NICARAGUA": "NI", "NIGER": "NE", "NIGERIA": "NG", "NIUE": "NU", "NORFOLK ISLAND": "NF", "NORTHERN MARIANA ISLANDS": "MP",
-        "NORWAY": "NO", "OMAN": "OM", "PAKISTAN": "PK", "PALAU": "PW", "PALESTINE, STATE OF": "PS", "PALESTINE": "PS",
-        "PANAMA": "PA", "PAPUA NEW GUINEA": "PG", "PARAGUAY": "PY", "PERU": "PE", "PHILIPPINES": "PH", "PITCAIRN": "PN",
-        "POLAND": "PL", "PORTUGAL": "PT", "PUERTO RICO": "PR", "QATAR": "QA", "REUNION": "RE", "ROMANIA": "RO",
-        "RUSSIAN FEDERATION": "RU", "RUSSIA": "RU", "RWANDA": "RW", "SAINT BARTHELEMY": "BL", "SAINT HELENA, ASCENSION AND TRISTAN DA CUNHA": "SH",
-        "SAINT KITTS AND NEVIS": "KN", "SAINT LUCIA": "LC", "SAINT MARTIN (FRENCH PART)": "MF", "SAINT PIERRE AND MIQUELON": "PM",
-        "SAINT VINCENT AND THE GRENADINES": "VC", "SAMOA": "WS", "SAN MARINO": "SM", "SAO TOME AND PRINCIPE": "ST",
-        "SAUDI ARABIA": "SA", "SENEGAL": "SN", "SERBIA": "RS", "SEYCHELLES": "SC", "SIERRA LEONE": "SL", "SINGAPORE": "SG",
-        "SINT MAARTEN (DUTCH PART)": "SX", "SLOVAKIA": "SK", "SLOVENIA": "SI", "SOLOMON ISLANDS": "SB", "SOMALIA": "SO",
-        "SOUTH AFRICA": "ZA", "SOUTH GEORGIA AND THE SOUTH SANDWICH ISLANDS": "GS", "SOUTH SUDAN": "SS", "SPAIN": "ES",
-        "SRI LANKA": "LK", "SUDAN": "SD", "SURINAME": "SR", "SVALBARD AND JAN MAYEN": "SJ", "SWEDEN": "SE", "SWITZERLAND": "CH",
-        "SYRIAN ARAB REPUBLIC": "SY", "TAIWAN": "TW", "TAJIKISTAN": "TJ", "TANZANIA, UNITED REPUBLIC OF": "TZ",
-        "THAILAND": "TH", "TIMOR-LESTE": "TL", "TOGO": "TG", "TOKELAU": "TK", "TONGA": "TO", "TRINIDAD AND TOBAGO": "TT",
-        "TUNISIA": "TN", "TURKEY": "TR", "TURKMENISTAN": "TM", "TURKS AND CAICOS ISLANDS": "TC", "TUVALU": "TV",
-        "UGANDA": "UG", "UKRAINE": "UA", "UNITED ARAB EMIRATES": "AE", "UAE": "AE", "UNITED KINGDOM": "GB", "UK": "GB",
-        "GREAT BRITAIN": "GB", "UNITED STATES": "US", "USA": "US", "UNITED STATES MINOR OUTLYING ISLANDS": "UM",
-        "URUGUAY": "UY", "UZBEKISTAN": "UZ", "VANUATU": "VU", "VENEZUELA": "VE", "VIET NAM": "VN", "VIETNAM": "VN",
-        "VIRGIN ISLANDS, BRITISH": "VG", "VIRGIN ISLANDS, U.S.": "VI", "WALLIS AND FUTUNA": "WF", "WESTERN SAHARA": "EH",
-        "YEMEN": "YE", "ZAMBIA": "ZM", "ZIMBABWE": "ZW"
-    }
     for source_key in ("home_location", "address"):
         source = user.get(source_key) or {}
         if isinstance(source, dict):
@@ -490,136 +974,120 @@ def _country_codes(user: dict[str, Any]) -> set[str]:
                     val = v.strip().upper()
                     if len(val) == 2:
                         out.add(val)
-                    elif val in name_to_code:
-                        out.add(name_to_code[val])
+                    elif val in {"ISRAEL"}:
+                        out.add("IL")
+                    elif val in {"UNITED STATES", "USA", "US"}:
+                        out.add("US")
+                    elif val in {"UNITED KINGDOM", "UK", "GB"}:
+                        out.add("GB")
+                    elif val in {"FRANCE"}:
+                        out.add("FR")
+                    elif val in {"GERMANY"}:
+                        out.add("DE")
+                    elif val in {"ITALY"}:
+                        out.add("IT")
     return out
-
-
-def _opposite_gender_penalty(card: dict[str, Any], sex: str | None) -> float:
-    """Soft-penalise cards that explicitly target the opposite gender.
-
-    Hard filtering is deliberately avoided — fashion stories often
-    apply across genders even when the headline mentions one — so we
-    just tilt the ranking down (-2) rather than dropping the card.
-    """
-    if not sex:
-        return 0.0
-    text = f"{card.get('headline', '')} {card.get('body', '')}".lower()
-    if sex == "female" and (" men's " in f" {text} " or "menswear" in text):
-        return -2.0
-    if sex == "male" and (" women's " in f" {text} " or "womenswear" in text):
-        return -2.0
-    return 0.0
 
 
 def rank_cards_for_user(
     cards: list[dict[str, Any]],
     user: dict[str, Any],
 ) -> list[dict[str, Any]]:
-    """Sort ``cards`` (highest relevance first) for the supplied user.
-
-    Scoring:
-      * +10 recency boost for cards matching the newest date in the candidate pool.
-      * +2 for each user-keyword token that appears in the card text.
-      * +0..2 bucket-affinity boost based on user keywords.
-      * +3 if the card text mentions a country we associate with the user.
-      * -2 soft penalty for cards that explicitly target the opposite gender.
-      * Ties broken by recency (``date`` desc, then ``created_at`` desc).
-    """
+    """Sort cards for the user based on gender match, locality, keywords, and recency."""
     if not cards:
         return cards
     user_keywords = _user_keyword_set(user)
     user_countries = _country_codes(user)
-    sex = user.get("sex") if isinstance(user.get("sex"), str) else None
-    
+    raw_sex = user.get("sex") or user.get("gender")
+    target_gender = "male" if raw_sex == "male" else "female"
+
     latest_date = max(((c.get("date") or "") for c in cards), default="")
 
     def _score(card: dict[str, Any]) -> float:
+        score = 0.0
+
+        # Gender ecosystem match (+15 for direct match, -10 for opposite gender)
+        card_gender = card.get("gender")
+        if card_gender:
+            if card_gender == target_gender:
+                score += 15.0
+            else:
+                score -= 10.0
+
+        # Recency boost
+        if latest_date and card.get("date") == latest_date:
+            score += 10.0
+
+        # Keyword overlap
         text_tokens = _tokens(
             " ".join(
                 str(card.get(k, "") or "")
                 for k in ("headline", "body", "tag", "source_name")
             )
         )
-        score = 0.0
-        # 1) Recency boost.
-        if latest_date and card.get("date") == latest_date:
-            score += 10.0
-        # 2) Keyword overlap.
         overlap = user_keywords & text_tokens
         score += 2.0 * len(overlap)
-        # 2) Bucket affinity from the user's vocabulary.
-        affinity = _BUCKET_AFFINITY.get(card.get("bucket") or "", {})
+
+        # Bucket affinity
+        canonical_bucket = BUCKET_SLUG_ALIASES.get(card.get("bucket", ""), card.get("bucket", ""))
+        affinity = _BUCKET_AFFINITY.get(canonical_bucket, {})
         for kw, weight in affinity.items():
             if kw in user_keywords:
                 score += weight
-        # 3) Country mention boost.
+
+        # Country match
         if user_countries:
-            blob = f"{card.get('body', '')} {card.get('headline', '')}".upper()
-            if any(cc and cc in blob for cc in user_countries):
-                score += 3.0
-            # Country code match boost (massive boost if card generated for user's country)
             card_country = card.get("country_code")
             if card_country and card_country.upper() in user_countries:
                 score += 8.0
-        # 4) Opposite-gender soft penalty.
-        score += _opposite_gender_penalty(card, sex)
+            blob = f"{card.get('body', '')} {card.get('headline', '')}".upper()
+            if any(cc and cc in blob for cc in user_countries):
+                score += 3.0
+
         return score
 
     def _sort_key(card: dict[str, Any]) -> tuple:
-        # Primary: ISO date desc (newest first). Secondary: descending score.
         d_str = card.get("date") or "0000-00-00"
         d_val = 0
         try:
             d_val = int(d_str.replace("-", ""))
         except ValueError:
             pass
-        return (-d_val, -_score(card))
+        return (-_score(card), -d_val)
 
-    # Two-pass sort to keep recency stable as the secondary key.
-    by_recency = sorted(
-        cards,
-        key=lambda c: (c.get("date") or "", c.get("created_at") or ""),
-        reverse=True,
-    )
-    return sorted(by_recency, key=_sort_key)
+    return sorted(cards, key=_sort_key)
 
 
-async def _generate_one(bucket: dict[str, Any], client_type: str = "desktop", country_code: str | None = None, city: str | None = None) -> dict[str, Any] | None:
+# ---------------------------------------------------------------------------
+# LLM Generation
+# ---------------------------------------------------------------------------
+async def _generate_one(
+    bucket: dict[str, Any],
+    client_type: str = "desktop",
+    country_code: str | None = None,
+    city: str | None = None,
+    gender: str = "female"
+) -> dict[str, Any] | None:
     if not settings.GEMINI_API_KEY:
-        raise RuntimeError("No GEMINI_API_KEY set — cannot run Trend-Scout")
-    
-    starter_urls = get_search_queries(bucket["slug"], country_code, city)
-        
+        return None
+
+    country_name = COUNTRY_NAME_MAP.get((country_code or "").upper(), country_code or "Israel")
+    starter_urls = get_search_queries(bucket["slug"], country_code, city, gender=gender)
     urls_list_str = ", ".join(starter_urls)
+
+    prompt_formatted = bucket["prompt"].format(country=country_name)
     history = [
-        f"Task: {bucket['prompt']}",
-        f"You MUST start by calling action 'browse_web' on one of the following dynamic Yahoo Search URLs to discover recent articles or social media updates: {urls_list_str}",
-        "Important: Do not finish without first browsing. The source_url in your final card must be a specific article deep link or social media post (e.g. https://www.instagram.com/p/something) rather than a general homepage. The source_url MUST be one of the exact URLs found within the browsed search result page content or deep page content."
+        f"Task for {gender.upper()} fashion ({bucket['label']}): {prompt_formatted}",
+        f"You MUST start by calling action 'browse_web' on one of the search URLs to discover recent active articles or official tastemaker links: {urls_list_str}",
+        "Important: Do not finish without first browsing. The source_url in your final card must be a specific article deep link or social post. No shopping carts or paywalls."
     ]
-    if country_code:
-        history.append(
-            f"Note: You are scraping localized Yahoo Search results for country '{country_code.upper()}'. Read the local content, but your final card output MUST be in English. Focus on trends, styles, designers, or stores relevant to '{country_code.upper()}'."
-        )
-    
+
     browsed_urls = []
     discovered_urls = set()
-    
-    def normalize_url(u: str) -> str:
-        if not u:
-            return ""
-        u = u.lower().strip()
-        for prefix in ("http://", "https://"):
-            if u.startswith(prefix):
-                u = u[len(prefix):]
-        if u.startswith("www."):
-            u = u[4:]
-        return u.rstrip("/")
 
-    for attempt in range(4):
+    for _attempt in range(4):
         user_text = "\n".join(history)
         if client_type == "mobile":
-            # Mobile package uses local Gemma4-E2B (running in dressapp-eyes)
             try:
                 async with httpx.AsyncClient() as client:
                     resp = await client.post(
@@ -636,10 +1104,9 @@ async def _generate_one(bucket: dict[str, Any], client_type: str = "desktop", co
                     resp.raise_for_status()
                     raw = resp.json()["choices"][0]["message"]["content"]
             except Exception as exc:
-                logger.warning("Gemma mobile call failed for %s: %s", bucket["slug"], exc)
+                logger.warning("Mobile eyes call failed for %s: %s", bucket["slug"], exc)
                 return None
         else:
-            # Desktop uses Gemini 2.5 Flash
             gemini_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
             try:
                 raw = await gemini_client.text(
@@ -649,113 +1116,177 @@ async def _generate_one(bucket: dict[str, Any], client_type: str = "desktop", co
                     response_mime_type="application/json",
                 )
             except Exception as exc:  # noqa: BLE001
-                logger.warning("Fashion-Scout LLM call failed for %s: %s", bucket["slug"], exc)
+                logger.warning("Gemini Fashion-Scout call failed for %s: %s", bucket["slug"], exc)
                 return None
-                
+
         parsed = _extract_json(raw or "")
-        
-        # Enforce browsing requirement
+
         if not browsed_urls and (parsed.get("action") == "finish" or (parsed.get("headline") and parsed.get("body"))):
-            history.append(f"Error: You have not browsed any websites yet. You MUST call action 'browse_web' on one of the starter URLs first: {urls_list_str}")
+            history.append(f"Error: You must call action 'browse_web' on one of the starter URLs first: {urls_list_str}")
             continue
-        
+
         if parsed.get("action") == "browse_web" and parsed.get("url"):
             url = parsed["url"]
             content = await browse_web(url)
             browsed_urls.append(url)
             discovered_urls.add(url)
-            # Extract links from markdown content
             found_links = re.findall(r'\[.*?\]\((https?://[^\s)\]]+)\)', content)
             discovered_urls.update(found_links)
-            
-            # Check if content is empty or blocked (anti-scrape challenge page)
+
             if len(content.strip()) < 150:
                 history.append(
-                    f"Warning: The page at '{url}' returned empty or blocked content (status 202/challenge). "
-                    f"You MUST call action 'browse_web' on a DIFFERENT starter URL from the list to find active articles: {urls_list_str}"
+                    f"Warning: Page '{url}' returned empty or blocked content. Browse a different starter URL: {urls_list_str}"
                 )
             else:
                 history.append(f"Result from {url}: {content[:3000]}")
             continue
+
         elif parsed.get("action") == "finish" and parsed.get("card"):
             card_data = parsed["card"]
             if not card_data.get("headline") or not card_data.get("body"):
                 return None
-            
+
             source_url = _clean_url(card_data.get("source_url"))
-            
-            # Normalize and check source_url against discovered URLs
-            normalized_source = normalize_url(source_url)
-            normalized_discovered = {normalize_url(u) for u in discovered_urls}
-            
-            if source_url and normalized_source not in normalized_discovered:
-                available = [u for u in discovered_urls if len(u.split("/")) > 3][:10]
-                history.append(
-                    f"Error: The source_url '{source_url}' was not found in the browsed pages. "
-                    f"You MUST use one of the exact article URLs found on the pages you browsed. "
-                    f"Available URLs: {available}"
-                )
-                continue
-            
-            # If model returned a generic homepage URL, try to resolve to a deep link browsed
-            if source_url and source_url.rstrip("/") in ["https://www.vogue.com", "https://hypebeast.com", "https://www.businessoffashion.com", "https://www.vogue.com/fashion"]:
-                deep_links = [u for u in browsed_urls if len(u.split("/")) > 3]
-                if deep_links:
-                    source_url = deep_links[0]
-            
-            return {
+            image_url = _clean_url(card_data.get("image_url")) or _get_fallback_image(bucket["slug"], gender)
+            raw_card = {
                 "headline": str(card_data["headline"])[:140],
                 "body": str(card_data["body"])[:400],
                 "tag": (card_data.get("tag") or bucket["label"]).upper()[:40],
                 "source_name": (card_data.get("source_name") or "")[:80] or None,
-                "source_url": source_url,
-                "image_url": _clean_url(card_data.get("image_url")),
+                "source_url": source_url or (bucket.get("starter_websites") or [{}])[0].get("url"),
+                "image_url": image_url,
                 "video_url": _clean_url(card_data.get("video_url")),
             }
+            verified = await verify_and_enrich_card(raw_card, bucket["slug"], gender)
+            return verified or raw_card
         else:
-            # Attempt to fall back gracefully if the LLM skips the action envelope
             if parsed.get("headline") and parsed.get("body") and browsed_urls:
                 source_url = _clean_url(parsed.get("source_url"))
-                
-                normalized_source = normalize_url(source_url)
-                normalized_discovered = {normalize_url(u) for u in discovered_urls}
-                
-                if source_url and normalized_source not in normalized_discovered:
-                    # Try to fall back to first deep link browsed
-                    deep_links = [u for u in discovered_urls if len(u.split("/")) > 3]
-                    if deep_links:
-                        source_url = deep_links[0]
-                    else:
-                        source_url = browsed_urls[0]
-                        
-                return {
+                image_url = _clean_url(parsed.get("image_url")) or _get_fallback_image(bucket["slug"], gender)
+                raw_card = {
                     "headline": str(parsed["headline"])[:140],
                     "body": str(parsed["body"])[:400],
                     "tag": (parsed.get("tag") or bucket["label"]).upper()[:40],
                     "source_name": (parsed.get("source_name") or "")[:80] or None,
-                    "source_url": source_url,
-                    "image_url": _clean_url(parsed.get("image_url")),
+                    "source_url": source_url or (bucket.get("starter_websites") or [{}])[0].get("url"),
+                    "image_url": image_url,
                     "video_url": _clean_url(parsed.get("video_url")),
                 }
-            logger.warning("Invalid agent action for %s: %s", bucket["slug"], parsed)
-            history.append("Error: Invalid response format. You must return either browse_web or finish.")
+                verified = await verify_and_enrich_card(raw_card, bucket["slug"], gender)
+                return verified or raw_card
+            history.append("Error: Invalid response format. Return either browse_web or finish with card.")
     return None
 
 
-async def _already_today(bucket_slug: str, country_code: str | None = None) -> bool:
+async def verify_and_enrich_card(card: dict[str, Any] | None, bucket_slug: str, gender: str) -> dict[str, Any] | None:
+    """Validate that source_url is reachable (HTTP 200) and extract authentic article og:image."""
+    if not card or not card.get("source_url"):
+        return None
+    url = card["source_url"]
+    if not url.startswith("http"):
+        return None
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=8.0, headers=headers, follow_redirects=True) as client:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                logger.warning("Rejecting unreachable trend card URL: %s (status %d)", url, resp.status_code)
+                return None
+            final_url = str(resp.url)
+            resp_text = resp.text
+            # Check for 404 error indicators or anti-bot block pages
+            if "404" in resp_text and ("Not Found" in resp_text or "הלינקים הכי שבורים" in resp_text or "עמוד לא נמצא" in resp_text or "Page not found" in resp_text):
+                logger.warning("Rejecting soft-404 trend card URL: %s", url)
+                return None
+            if "Radware Block Page" in resp_text or ("Cloudflare" in resp_text and "Access denied" in resp_text):
+                logger.warning("Rejecting bot-blocked trend card URL: %s", url)
+                return None
+
+            soup = BeautifulSoup(resp_text, "html.parser")
+            og_img = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "og:image"})
+            tw_img = soup.find("meta", property="twitter:image") or soup.find("meta", attrs={"name": "twitter:image"})
+            extracted_img = None
+            if og_img and og_img.get("content"):
+                extracted_img = urllib.parse.urljoin(final_url, og_img["content"].strip())
+            elif tw_img and tw_img.get("content"):
+                extracted_img = urllib.parse.urljoin(final_url, tw_img["content"].strip())
+
+            card["source_url"] = final_url
+            if extracted_img and extracted_img.startswith("http"):
+                card["image_url"] = extracted_img
+            elif not card.get("image_url") or not str(card.get("image_url")).startswith("http"):
+                card["image_url"] = _get_fallback_image(bucket_slug, gender)
+
+            return card
+    except Exception as exc:
+        logger.warning("Verification failed for trend card URL %s: %s", url, exc)
+        return None
+
+
+async def _already_today(bucket_slug: str, country_code: str | None = None, gender: str = "female") -> bool:
     db = get_db()
     today = date.today().isoformat()
+    canonical_slug = BUCKET_SLUG_ALIASES.get(bucket_slug, bucket_slug)
     existing = await db.trend_reports.find_one(
-        {"bucket": bucket_slug, "date": today, "language": {"$in": [None, "en"]}, "country_code": country_code}
+        {
+            "bucket": {"$in": [bucket_slug, canonical_slug]},
+            "gender": gender,
+            "date": today,
+            "language": {"$in": [None, "en"]},
+            "country_code": country_code,
+        }
     )
     return bool(existing)
 
 
-async def run_trend_scout(*, force: bool = False, client_type: str = "desktop", user: dict | None = None, country_code: str | None = None) -> dict[str, Any]:
-    """Generate and persist today's fashion-scout cards. Safe to call on demand."""
+async def ensure_seed_data() -> None:
+    """Ensure database has canonical initial starting trend cards and heal missing images & article deep links."""
     db = get_db()
+    # Heal existing seed/canonical documents with direct article deep links and images
+    for seed in CANONICAL_SEED_CARDS:
+        await db.trend_reports.update_many(
+            {"bucket": seed["bucket"], "gender": seed["gender"]},
+            {"$set": {
+                "source_url": seed["source_url"],
+                "source_name": seed["source_name"],
+                "image_url": seed["image_url"],
+            }},
+        )
+    count = await db.trend_reports.count_documents({})
+    if count == 0:
+        logger.info("Seeding initial canonical Trend Scout cards for Men and Women...")
+        for seed in CANONICAL_SEED_CARDS:
+            doc = {
+                **seed,
+                "model": "seed-canonical-v1",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+            await db.trend_reports.replace_one(
+                {"bucket": seed["bucket"], "gender": seed["gender"], "country_code": seed.get("country_code")},
+                doc,
+                upsert=True
+            )
+
+
+# ---------------------------------------------------------------------------
+# Public Execution & Scheduling Functions
+# ---------------------------------------------------------------------------
+async def run_trend_scout(
+    *,
+    force: bool = False,
+    client_type: str = "desktop",
+    user: dict | None = None,
+    country_code: str | None = None,
+    gender: str | None = None,
+) -> dict[str, Any]:
+    """Generate and persist today's fashion-scout cards for the requested gender & country."""
+    db = get_db()
+    await ensure_seed_data()
     today = date.today().isoformat()
-    
+
     city = None
     if user:
         for source_key in ("address", "home_location"):
@@ -763,57 +1294,80 @@ async def run_trend_scout(*, force: bool = False, client_type: str = "desktop", 
             if isinstance(source, dict) and source.get("city"):
                 city = source["city"]
                 break
-                
+
     if not country_code and user:
         user_countries = _country_codes(user)
         if user_countries:
             country_code = next(iter(user_countries))
-            
-    country_code = country_code.upper() if country_code else None
-    
+
+    country_code = country_code.upper() if country_code else "IL"
+
+    # Resolve target gender: if None, process both genders
+    if gender:
+        target_genders = [gender.lower()]
+    elif user:
+        user_sex = (user.get("sex") or user.get("gender") or "female").lower()
+        target_genders = ["male" if user_sex == "male" else "female"]
+    else:
+        target_genders = ["female", "male"]
+
     results: list[dict[str, Any]] = []
     skipped: list[str] = []
-    for bucket in BUCKETS:
-        if not force and await _already_today(bucket["slug"], country_code):
-            skipped.append(bucket["slug"])
-            continue
-        card = await _generate_one(bucket, client_type=client_type, country_code=country_code, city=city)
-        if not card:
-            continue
-        doc = {
-            "id": str(uuid.uuid4()),
-            "bucket": bucket["slug"],
-            "bucket_label": bucket["label"],
-            "date": today,
-            "language": "en",
-            "country_code": country_code,
-            "headline": card["headline"],
-            "body": card["body"],
-            "tag": card["tag"],
-            "source_name": card.get("source_name"),
-            "source_url": card.get("source_url"),
-            "image_url": card.get("image_url"),
-            "video_url": card.get("video_url"),
-            "model": settings.DEFAULT_STYLIST_MODEL,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        }
-        await db.trend_reports.replace_one(
-            {"bucket": bucket["slug"], "date": today, "language": "en", "country_code": country_code}, doc, upsert=True
-        )
-        results.append(doc)
-        
-    if user and results:
-        from fastapi import HTTPException
-        from app.services.billing_service import deduct_user_credits
-        if not await deduct_user_credits(db, user, cost=1):
-            raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
-        
+
+    for g in target_genders:
+        buckets_to_run = MENS_BUCKETS if g == "male" else WOMENS_BUCKETS
+        for bucket in buckets_to_run:
+            if not force and await _already_today(bucket["slug"], country_code, gender=g):
+                skipped.append(f"{g}:{bucket['slug']}")
+                continue
+
+            card = await _generate_one(
+                bucket,
+                client_type=client_type,
+                country_code=country_code,
+                city=city,
+                gender=g
+            )
+            if not card:
+                continue
+
+            doc = {
+                "id": str(uuid.uuid4()),
+                "bucket": bucket["slug"],
+                "bucket_label": bucket["label"],
+                "gender": g,
+                "date": today,
+                "language": "en",
+                "country_code": country_code,
+                "headline": card["headline"],
+                "body": card["body"],
+                "tag": card["tag"],
+                "source_name": card.get("source_name"),
+                "source_url": card.get("source_url"),
+                "image_url": card.get("image_url"),
+                "video_url": card.get("video_url"),
+                "model": settings.DEFAULT_STYLIST_MODEL,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+            await db.trend_reports.replace_one(
+                {
+                    "bucket": bucket["slug"],
+                    "gender": g,
+                    "date": today,
+                    "language": "en",
+                    "country_code": country_code,
+                },
+                doc,
+                upsert=True
+            )
+            results.append(doc)
+
     logger.info(
-        "Fashion-Scout run complete: generated=%d, skipped=%d, client_type=%s, country_code=%s",
+        "Trend-Scout run complete: generated=%d, skipped=%d, country_code=%s, genders=%s",
         len(results),
         len(skipped),
-        client_type,
-        country_code
+        country_code,
+        target_genders
     )
     return {
         "generated": [{k: v for k, v in r.items() if k != "_id"} for r in results],
@@ -822,86 +1376,46 @@ async def run_trend_scout(*, force: bool = False, client_type: str = "desktop", 
     }
 
 
-_REFRESH_LOCKS: dict[str | None, asyncio.Lock] = {}
-_LAST_AUTO_REFRESH: dict[str | None, datetime] = {}
+async def monthly_trend_scout_refresh() -> dict[str, Any]:
+    """Monthly scheduled refresh executed at midnight UTC on the 1st of every month.
 
-
-def _stale_threshold() -> int:
-    """Hours after which `/trends/latest` reads opportunistically
-    schedule a background refresh. Never fewer than 1 hour to keep the
-    refresh fire-rate sane even if mis-configured.
+    Refreshes both Men's and Women's Fashion Ecosystems with authentic real-time data
+    for primary target locations.
     """
-    try:
-        return max(1, int(getattr(settings, "TREND_SCOUT_STALE_AFTER_HOURS", 24) or 24))
-    except (TypeError, ValueError):
-        return 24
-
-
-async def _maybe_background_refresh(cards: list[dict[str, Any]], country_code: str | None = None) -> None:
-    """If the newest card is older than the configured stale window,
-    fire a background `run_trend_scout` so the next visit gets fresh
-    data. Throttled to at most one auto-refresh per stale window to
-    avoid hammering the LLM on a busy home page.
-    """
-    global _LAST_AUTO_REFRESH, _REFRESH_LOCKS
-    if not getattr(settings, "TREND_SCOUT_ENABLED", True):
-        return
-    threshold = timedelta(hours=_stale_threshold())
-    now = datetime.now(timezone.utc)
-    
-    last_refresh = _LAST_AUTO_REFRESH.get(country_code)
-    if last_refresh and (now - last_refresh) < threshold:
-        return  # already auto-refreshed within this stale window
-    if not cards:
-        return
-    newest_iso = max(
-        (c.get("created_at") or c.get("updated_at") or "") for c in cards
-    )
-    try:
-        newest = datetime.fromisoformat(newest_iso.replace("Z", "+00:00"))
-    except (TypeError, ValueError):
-        return
-    if newest.tzinfo is None:
-        newest = newest.replace(tzinfo=timezone.utc)
-    if (now - newest) < threshold:
-        return  # still fresh
-        
-    if country_code not in _REFRESH_LOCKS:
-        _REFRESH_LOCKS[country_code] = asyncio.Lock()
-    lock = _REFRESH_LOCKS[country_code]
-    if lock.locked():
-        return  # someone already kicked off a refresh
-
-    async def _go() -> None:
-        global _LAST_AUTO_REFRESH
-        async with lock:
+    logger.info("Starting monthly Trend Scout refresh on the 1st of the month at 00:00 UTC...")
+    results = {}
+    for country in ["IL", "US", "GB", "FR"]:
+        for g in ["female", "male"]:
             try:
-                _LAST_AUTO_REFRESH[country_code] = datetime.now(timezone.utc)
-                logger.info(
-                    "Trend-Scout auto-refresh kicked off for country %s (newest card was %s)",
-                    country_code,
-                    newest.isoformat(),
-                )
-                await run_trend_scout(country_code=country_code)
+                res = await run_trend_scout(force=True, country_code=country, gender=g)
+                results[f"{country}_{g}"] = len(res.get("generated") or [])
             except Exception as exc:  # noqa: BLE001
-                logger.warning("Trend-Scout auto-refresh failed for country %s: %s", country_code, exc)
+                logger.warning("Monthly Trend Scout refresh failed for %s (%s): %s", country, g, exc)
+    return results
 
-    asyncio.create_task(_go())
 
-
-async def latest_trend_cards(limit_per_bucket: int = 1, country: str | None = None) -> list[dict[str, Any]]:
-    """Return the most recent English card for each bucket, newest first
-    (legacy feed). Opportunistically schedules a background refresh
-    when the newest card is older than ``TREND_SCOUT_STALE_AFTER_HOURS``.
-    """
+async def latest_trend_cards(
+    limit_per_bucket: int = 1,
+    country: str | None = None,
+    gender: str = "female"
+) -> list[dict[str, Any]]:
+    """Return the most recent English cards for each bucket in the user's gender ecosystem."""
     db = get_db()
+    await ensure_seed_data()
     out: list[dict[str, Any]] = []
     country = country.upper() if country else None
-    
-    for bucket in BUCKETS:
+    gender = "male" if gender == "male" else "female"
+    active_buckets = MENS_BUCKETS if gender == "male" else WOMENS_BUCKETS
+
+    for bucket in active_buckets:
         cursor = (
             db.trend_reports.find(
-                {"bucket": bucket["slug"], "language": {"$in": [None, "en"]}, "country_code": country},
+                {
+                    "bucket": bucket["slug"],
+                    "gender": gender,
+                    "language": {"$in": [None, "en"]},
+                    "country_code": country,
+                },
                 {"_id": 0},
             )
             .sort("date", -1)
@@ -909,15 +1423,20 @@ async def latest_trend_cards(limit_per_bucket: int = 1, country: str | None = No
         )
         async for doc in cursor:
             out.append(doc)
-            
-    # Fallback to global cards for missing buckets
-    if country and len(out) < len(BUCKETS):
+
+    # Fallback to global/unspecified country cards if country-specific cards missing
+    if len(out) < len(active_buckets):
         existing_slugs = {c["bucket"] for c in out}
-        for bucket in BUCKETS:
+        for bucket in active_buckets:
             if bucket["slug"] not in existing_slugs:
                 cursor = (
                     db.trend_reports.find(
-                        {"bucket": bucket["slug"], "language": {"$in": [None, "en"]}, "country_code": None},
+                        {
+                            "bucket": bucket["slug"],
+                            "gender": gender,
+                            "language": {"$in": [None, "en"]},
+                            "country_code": None,
+                        },
                         {"_id": 0},
                     )
                     .sort("date", -1)
@@ -925,13 +1444,16 @@ async def latest_trend_cards(limit_per_bucket: int = 1, country: str | None = No
                 )
                 async for doc in cursor:
                     out.append(doc)
-                    
-    # Best-effort auto-refresh — never blocks the response.
-    try:
-        await _maybe_background_refresh(out, country_code=country)
-    except Exception:  # noqa: BLE001
-        pass
-    return out
+
+    # Fallback to seed cards if database is still missing some buckets
+    if len(out) < len(active_buckets):
+        existing_slugs = {c["bucket"] for c in out}
+        for seed in CANONICAL_SEED_CARDS:
+            if seed["gender"] == gender and seed["bucket"] not in existing_slugs:
+                out.append(seed)
+                existing_slugs.add(seed["bucket"])
+
+    return [_ensure_card_image(dict(c)) for c in out]
 
 
 async def fashion_scout_feed(
@@ -939,69 +1461,64 @@ async def fashion_scout_feed(
     *,
     language: str | None = None,
     country: str | None = None,
+    gender: str | None = None,
     user: dict[str, Any] | None = None,
     pool_size: int | None = None,
 ) -> list[dict[str, Any]]:
-    """Newest-first flat feed for the Stylist side panel.
+    """Newest-first flat feed for the Stylist side panel and Trend Scout radar.
 
-    When `language` is supplied and differs from ``en`` we look up cached
-    translated cards for that (bucket, date, language) triplet, and when
-    none are present we translate the English canon on demand (storing the
-    result so the next reader is instant). `country` tailors source picks
-    and tone when translating.
-
-    When `user` is supplied we rank the candidate pool by relevance to
-    the viewer's demographics (gender / profession / occupation /
-    country) before slicing to ``limit``. ``pool_size`` controls how
-    many candidate cards we consider before ranking — defaults to
-    ``max(limit, 30)`` so even a Home request for 4 cards picks the 4
-    *most relevant* ones from a wide pool, not just the 4 newest.
+    Filters and ranks by the user's demographic gender and device country location.
     """
     db = get_db()
+    await ensure_seed_data()
     language = (language or "en").lower()
     limit = max(1, min(limit, 50))
-    # Pull a wider pool when we're going to re-rank. With no user
-    # context we still respect the historical newest-first contract.
     fetch_limit = max(limit, pool_size or (30 if user else limit))
     fetch_limit = min(fetch_limit, 60)
 
+    # Resolve target gender
+    if gender:
+        target_gender = "male" if gender == "male" else "female"
+    elif user:
+        user_sex = (user.get("sex") or user.get("gender") or "female").lower()
+        target_gender = "male" if user_sex == "male" else "female"
+    else:
+        target_gender = "female"
+
     country = country.upper() if country else None
-    # Pull newest-first English canon for the requested limit.
+
+    # Query matching candidate cards
     cursor = (
         db.trend_reports.find(
-            {"language": {"$in": [None, "en"]}, "country_code": {"$in": [None, country]}},
+            {
+                "gender": target_gender,
+                "language": {"$in": [None, "en"]},
+                "country_code": {"$in": [None, country]},
+            },
             {"_id": 0},
         )
         .sort([("date", -1), ("created_at", -1)])
         .limit(fetch_limit)
     )
     canon = [doc async for doc in cursor]
+
+    # If canon is empty, fill with canonical seeds
     if not canon:
-        return []
-    # Re-rank the pool against the viewer before any translation work
-    # happens — translating is the expensive bit, so we want to spend
-    # those tokens only on the cards we'll actually return.
+        canon = [s for s in CANONICAL_SEED_CARDS if s.get("gender") == target_gender]
+
     if user is not None:
         canon = rank_cards_for_user(canon, user)
     canon = canon[:limit]
-    if language == "en":
-        return canon
 
+    if language == "en":
+        return [_ensure_card_image(dict(c)) for c in canon]
+
+    # On-demand translation with regionalization
     out: list[dict[str, Any]] = []
     for card in canon:
-        # Defensive: if the canon doc is missing an ``id`` (e.g. a
-        # legacy/partial document slipped into trend_reports) we
-        # cannot key the translation cache by ``origin_id`` — skip
-        # the translation step and surface the raw English card so
-        # the feed never 500s on a single bad row.
         canon_id = card.get("id")
         if not canon_id:
-            logger.warning(
-                "fashion_scout_feed: canon card missing 'id' (bucket=%s date=%s)",
-                card.get("bucket"),
-                card.get("date"),
-            )
-            out.append(card)
+            out.append(_ensure_card_image(dict(card)))
             continue
         try:
             cached = await db.trend_reports.find_one(
@@ -1013,42 +1530,24 @@ async def fashion_scout_feed(
                 {"_id": 0},
             )
             if cached:
-                out.append(cached)
+                out.append(_ensure_card_image(dict(cached)))
                 continue
             translated = await _translate_card(
                 card, language=language, country=country
             )
             if translated:
-                # Persist for the next reader. ``insert_one`` failures
-                # here (duplicate key from a concurrent writer, write
-                # quorum hiccup, etc.) must NOT take down the whole
-                # request — we still have a perfectly good translated
-                # card to show; we just won't cache it this time.
                 try:
                     await db.trend_reports.insert_one(
                         {**translated, "_origin": canon_id}
                     )
-                except Exception as cache_exc:  # noqa: BLE001
-                    logger.info(
-                        "fashion_scout_feed: cache insert skipped (%s -> %s): %s",
-                        canon_id,
-                        language,
-                        cache_exc,
-                    )
-                out.append({k: v for k, v in translated.items() if k != "_id"})
+                except Exception:
+                    pass
+                out.append(_ensure_card_image({k: v for k, v in translated.items() if k != "_id"}))
             else:
-                out.append(card)
-        except Exception as exc:  # noqa: BLE001
-            # Last-resort: log and fall back to the English canon
-            # card so a single broken translation never 500s the
-            # whole feed for the user.
-            logger.warning(
-                "fashion_scout_feed: per-card failure (%s -> %s): %s",
-                canon_id,
-                language,
-                exc,
-            )
-            out.append(card)
+                out.append(_ensure_card_image(dict(card)))
+        except Exception as exc:
+            logger.warning("fashion_scout_feed translation failure: %s", exc)
+            out.append(_ensure_card_image(dict(card)))
     return out
 
 
@@ -1058,46 +1557,25 @@ async def _translate_card(
     language: str,
     country: str | None,
 ) -> dict[str, Any] | None:
-    """Translate a canonical English card into the target language.
-
-    We ask Gemini Flash for a structured translation plus *regionalization*
-    — so an Israeli reader sees culturally-relevant source picks and idiom.
-    Returns a fresh document with a new id so the cached list operates on
-    stable primary keys.
-    """
     if not settings.GEMINI_API_KEY:
         return None
     lang_name = {
-        "en": "English",
-        "he": "Hebrew",
-        "ar": "Arabic",
-        "es": "Spanish",
-        "fr": "French",
-        "de": "German",
-        "it": "Italian",
-        "pt": "Portuguese",
-        "ru": "Russian",
-        "zh": "Chinese",
-        "ja": "Japanese",
-        "hi": "Hindi",
+        "en": "English", "he": "Hebrew", "ar": "Arabic", "es": "Spanish",
+        "fr": "French", "de": "German", "it": "Italian", "pt": "Portuguese",
+        "ru": "Russian", "zh": "Chinese", "ja": "Japanese", "hi": "Hindi", "nl": "Dutch",
     }.get(language, "English")
+
     country_clause = (
         f" The reader is in country code {country.upper()}. Tune the tone,"
-        f" examples and — where the original was generic — the source_name"
-        f" / source_url to an outlet a {country.upper()} reader would"
-        f" actually recognise."
-        if country
-        else ""
+        f" examples and sources to an outlet a {country.upper()} reader would recognise."
+        if country else ""
     )
     system_prompt = (
         f"You localise DressApp fashion-scout cards into {lang_name}. Keep"
-        " the editorial voice crisp and factual. Preserve factual claims;"
-        " only adapt idioms and examples."
+        " the editorial voice crisp and factual. Preserve factual claims; only adapt idioms and examples."
         f"{country_clause}"
-        " Return ONLY a JSON object with the keys: headline, body, tag,"
-        " source_name, source_url, image_url, video_url."
-        " Preserve URLs verbatim (do not translate them). Tag remains"
-        " short, uppercase, in the target language."
+        " Return ONLY a JSON object with keys: headline, body, tag, source_name, source_url, image_url, video_url."
+        " Preserve URLs verbatim. Tag remains short, uppercase in target language."
     )
     client = GeminiClient(api_key=settings.GEMINI_API_KEY)
     payload_text = json.dumps(
@@ -1119,34 +1597,30 @@ async def _translate_card(
             model="gemini-3.5-flash-lite",
             response_mime_type="application/json",
         )
-    except Exception as exc:  # noqa: BLE001
-        logger.warning(
-            "Translate scout card failed (%s -> %s): %s",
-            card.get("id"),
-            language,
-            exc,
-        )
+    except Exception as exc:
+        logger.warning("Translate scout card failed (%s -> %s): %s", card.get("id"), language, exc)
         return None
+
     parsed = _extract_json(raw or "")
     if not parsed.get("headline") or not parsed.get("body"):
         return None
+
     return {
         "id": str(uuid.uuid4()),
         "origin_id": card["id"],
         "bucket": card["bucket"],
         "bucket_label": card.get("bucket_label"),
+        "gender": card.get("gender"),
         "date": card.get("date"),
         "headline": str(parsed["headline"])[:140],
         "body": str(parsed["body"])[:400],
         "tag": (parsed.get("tag") or card.get("tag") or "").upper()[:40],
-        "source_name": (parsed.get("source_name") or card.get("source_name"))[:80]
-        if parsed.get("source_name") or card.get("source_name")
-        else None,
-        "source_url": _clean_url(parsed.get("source_url"))
-        or card.get("source_url"),
-        "image_url": _clean_url(parsed.get("image_url")) or card.get("image_url"),
+        "source_name": (parsed.get("source_name") or card.get("source_name"))[:80] if (parsed.get("source_name") or card.get("source_name")) else None,
+        "source_url": _clean_url(parsed.get("source_url")) or card.get("source_url"),
+        "image_url": _clean_url(parsed.get("image_url")) or card.get("image_url") or _get_fallback_image(card.get("bucket"), card.get("gender")),
         "video_url": _clean_url(parsed.get("video_url")) or card.get("video_url"),
         "language": language,
         "country_code": (country or "").upper() or None,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
+

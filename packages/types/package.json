@@ -1,0 +1,11 @@
+{
+  "name": "@dressapp/types",
+  "version": "0.1.0",
+  "private": false,
+  "main": "src/index.js",
+  "files": ["src"],
+  "dependencies": {
+    "zod": "^3.24.4"
+  },
+  "sideEffects": false
+}

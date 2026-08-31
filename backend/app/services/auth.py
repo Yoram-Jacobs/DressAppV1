@@ -124,7 +124,14 @@ def decrypt_api_key(encrypted_key: str) -> str | None:
     try:
         key = hashlib.sha256(settings.JWT_SECRET.encode()).digest()
         cipher = Fernet(base64.urlsafe_b64encode(key))
-        return cipher.decrypt(encrypted_key.encode()).decode()
+        res = cipher.decrypt(encrypted_key.encode()).decode()
+        # Handle cases where key was accidentally encrypted multiple times
+        while res and res.startswith("gAAAAA"):
+            try:
+                res = cipher.decrypt(res.encode()).decode()
+            except Exception:
+                break
+        return res
     except Exception as exc:
         logger.error("Failed to decrypt API key: %s", exc)
         return None

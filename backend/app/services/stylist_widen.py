@@ -292,7 +292,7 @@ def _build_viz_prompt(
     descriptor = ". ".join(descriptor_bits) or ""
     return (
         f"Editorial product photograph of a single {category}. {descriptor}. "
-        "Studio lighting, plain off-white backdrop, centered composition, "
+        "Studio lighting, neutral DressApp card background (#F5F2EB), centered composition, "
         "sharp focus, photorealistic, clean fabric texture, no people, "
         "no mannequin body parts, no text, no logos, no watermarks."
     )[:1000]

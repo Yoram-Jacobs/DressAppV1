@@ -103,16 +103,27 @@ async def process_image_pipeline(
             except Exception as e:
                 logger.warning(f"Failed to generate AVIF for {size_name}: {e}")
                 
-        # 4. Update MongoDB Document
+        # 4. Update MongoDB Document — store CDN variant URLs and strip all
+        # inline base64 fields.  Fields listed in $unset are removed from
+        # the document entirely; existing items that already have these
+        # fields as data-URLs will be cleaned up the first time their item
+        # passes through the encoder pipeline (i.e. on any re-analyze call).
         db = get_db()
         await db.closet_items.update_one(
             {"id": item_id, "user_id": user_id},
             {
                 "$set": {"image_variants": variants},
-                "$unset": {"original_image_url": "", "segmented_image_url": ""} 
+                "$unset": {
+                    # Belt-and-braces cleanup for items created before this
+                    # change that may still carry these fields from older builds.
+                    "clean_image_url": "",
+                    "reconstructed_image_url": "",
+                    "placeholder_data_url": "",
+                },
             }
         )
         logger.info(f"Successfully processed image variants for item {item_id}")
         
     except Exception as e:
         logger.error(f"Error in encoder pipeline for item {item_id}: {e}", exc_info=True)
+

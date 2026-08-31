@@ -34,47 +34,42 @@ _LANG_NAMES: dict[str, str] = {
 def _fallback_title(text: str) -> str:
     cleaned = re.sub(r"\s+", " ", (text or "").strip())
     if not cleaned:
-        return "New conversation"
+        return "Style advice"
+    # Remove leading common conversational prefixes like "Can you", "Please", "I need", "מה ללבוש", etc.
     words = cleaned.split()
-    return " ".join(words[:5])[:60]
+    return " ".join(words[:4])[:40]
 
 
 async def generate_session_title(text: str, language: str = "en", api_key: str | None = None) -> str:
-    """Return a crisp 3–5 word conversation title based on the first user turn."""
+    """Return a crisp 2–4 word conversation title based on the first user turn."""
     text = (text or "").strip()
     if not text:
-        return "New conversation"
+        return "Style advice"
     active_key = api_key or settings.GEMINI_API_KEY
     if not active_key:
         return _fallback_title(text)
 
     lang_code = (language or "en").lower()
-    lang_name = _LANG_NAMES.get(lang_code, "English")
+    lang_name = _LANG_NAMES.get(lang_code, "the same language as the user query")
     system_msg = (
-        "You summarise a user's stylist question into a very short thread "
-        f"title in {lang_name}. Return ONLY the title — no quotes, no "
-        "punctuation at the ends, no emoji, 3 to 5 words, Title Case where "
-        "the target language uses it. Do NOT prefix with words like 'Topic:' "
-        "or 'Title:'."
+        f"You are a fashion stylist thread title generator. Generate a concise, catchy, highly descriptive 2 to 4 word title in {lang_name} for this fashion conversation. "
+        "Return ONLY the plain title text without quotes, punctuation, markdown, emoji, or prefixes like 'Title:' or 'Topic:'. "
+        "Keep it under 35 characters."
     )
     client = GeminiClient(api_key=active_key)
     try:
-        # Flash is more than enough for a 5-word summary.
         raw = await client.text(
             system=system_msg,
-            user_text=text[:400],
-            model="gemini-3.5-flash-lite",
+            user_text=text[:300],
+            model="gemini-2.5-flash",
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning("Session title generation failed: %s", exc)
         return _fallback_title(text)
 
     title = (raw or "").strip()
-    # Strip surrounding quotes / brackets if the model added them
     title = title.strip(" \t\n\r\"'`“”‘’[](){}")
-    # If the model returned multiple lines, keep the first
     title = title.splitlines()[0].strip() if title else ""
-    if not title:
+    if not title or len(title) < 2:
         return _fallback_title(text)
-    # Hard cap at 60 chars as a safety net
-    return title[:60]
+    return title[:45]

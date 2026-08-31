@@ -41,11 +41,31 @@ async def create_session(user_id: str, title: str | None = None) -> dict[str, An
 
 
 async def list_sessions(user_id: str, limit: int = 50) -> list[dict[str, Any]]:
-    """Newest-first list of the user's sessions for the conversation sidebar."""
+    """Newest-first list of the user's sessions for the conversation sidebar.
+    Excludes and cleans up empty/0-turn sessions so users never see untitled empty chats."""
     db = get_db()
+    # Clean up empty sessions with 0 turns and no messages
+    try:
+        await db.stylist_sessions.delete_many({
+            "user_id": user_id,
+            "turns": {"$in": [0, None]},
+            "snippet": {"$in": [None, ""]},
+            "title": {"$in": [None, "", "Untitled chat", "שיחה ללא שם", "New conversation"]},
+        })
+    except Exception:
+        pass
+
     rows = await repos.find_many(
         db.stylist_sessions,
-        {"user_id": user_id, "archived": {"$ne": True}},
+        {
+            "user_id": user_id,
+            "archived": {"$ne": True},
+            "$or": [
+                {"turns": {"$gt": 0}},
+                {"snippet": {"$nin": [None, ""]}},
+                {"title": {"$nin": [None, "", "Untitled chat", "שיחה ללא שם", "New conversation"]}},
+            ],
+        },
         sort=[("last_active_at", -1)],
         limit=limit,
     )

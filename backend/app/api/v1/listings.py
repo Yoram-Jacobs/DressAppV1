@@ -57,6 +57,31 @@ def calculate_distance_km(listing_loc: dict | None, lat: float | None, lng: floa
         pass
     return None
 
+def _sanitize_listing_browse_doc(doc: dict[str, Any]) -> dict[str, Any]:
+    """Ensure listing payloads are lightweight and memory-safe for mobile clients."""
+    thumb = doc.get("thumbnail_data_url")
+    if isinstance(thumb, str) and len(thumb) > 50000:
+        doc["thumbnail_data_url"] = None
+
+    images = doc.get("images")
+    if isinstance(images, list):
+        safe_images = []
+        for img in images:
+            if isinstance(img, str):
+                if img.startswith("http://") or img.startswith("https://"):
+                    safe_images.append(img)
+                elif img.startswith("data:image/") and len(img) <= 50000:
+                    safe_images.append(img)
+        doc["images"] = safe_images
+
+    if not doc.get("thumbnail_data_url"):
+        if doc.get("images") and len(doc["images"]) > 0:
+            doc["thumbnail_data_url"] = doc["images"][0]
+        elif doc.get("image_url"):
+            doc["thumbnail_data_url"] = doc["image_url"]
+
+    return doc
+
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/listings", tags=["listings"])
 
@@ -163,8 +188,12 @@ async def create_listing(
             group_items.sort(key=lambda x: 0 if x.get("group_role") == "host" else 1)
             for g_item in group_items:
                 for fld in (
-                    "segmented_image_url",
+                    "clean_image_url",
                     "reconstructed_image_url",
+                    "cutout_url",
+                    "thumbnail_data_url",
+                    "image_url",
+                    "segmented_image_url",
                     "original_image_url",
                 ):
                     url = g_item.get(fld)
@@ -173,14 +202,19 @@ async def create_listing(
                         break
         else:
             for fld in (
-                "segmented_image_url",
+                "clean_image_url",
                 "reconstructed_image_url",
+                "cutout_url",
+                "thumbnail_data_url",
+                "image_url",
+                "segmented_image_url",
                 "original_image_url",
             ):
                 url = closet_item.get(fld)
                 if isinstance(url, str) and url:
                     images.append(url)
                     break
+
 
     # Default to seller's home location if not provided
     location = payload.location
@@ -286,6 +320,7 @@ async def browse_listings(
         async for doc in cursor:
             if "distance_m" in doc:
                 doc["distance_km"] = round(doc["distance_m"] / 1000, 1)
+            _sanitize_listing_browse_doc(doc)
             items.append(doc)
         total = await repos.count(db.listings, query)
         return {"items": items, "total": total, "limit": limit, "skip": skip}
@@ -294,11 +329,12 @@ async def browse_listings(
         db.listings, query, sort=[("created_at", -1)], limit=limit, skip=skip
     )
     # Calculate distance in Python for any listings that do have location info
-    if lat is not None and lng is not None:
-        for doc in items:
+    for doc in items:
+        if lat is not None and lng is not None:
             dist = calculate_distance_km(doc.get("location"), lat, lng)
             if dist is not None:
                 doc["distance_km"] = dist
+        _sanitize_listing_browse_doc(doc)
 
     total = await repos.count(db.listings, query)
     return {"items": items, "total": total, "limit": limit, "skip": skip}
@@ -413,6 +449,7 @@ async def browse_listings_stream(
             async for doc in cursor:
                 if "distance_m" in doc:
                     doc["distance_km"] = round(doc["distance_m"] / 1000, 1)
+                _sanitize_listing_browse_doc(doc)
                 yield (
                     json.dumps({"type": "item", "data": doc}) + "\n"
                 )
@@ -430,6 +467,7 @@ async def browse_listings_stream(
                     dist = calculate_distance_km(doc.get("location"), lat, lng)
                     if dist is not None:
                         doc["distance_km"] = dist
+                _sanitize_listing_browse_doc(doc)
                 yield (
                     json.dumps({"type": "item", "data": doc}) + "\n"
                 )
@@ -524,6 +562,7 @@ async def get_listing(listing_id: str) -> dict[str, Any]:
         logger.warning("seller hydrate failed: %s", exc)
     listing = dict(listing)
     listing["seller_public"] = seller_pub
+    _sanitize_listing_browse_doc(listing)
     return listing
 
 
@@ -590,6 +629,7 @@ async def get_similar_listings(
                 continue
             c2 = dict(c)
             c2["_score"] = round(score, 4)
+            _sanitize_listing_browse_doc(c2)
             scored.append(c2)
         scored.sort(key=lambda r: r["_score"], reverse=True)
     else:
@@ -602,7 +642,9 @@ async def get_similar_listings(
             cat = cat_map.get(c.get("closet_item_id") or "") or c.get("category")
             if seed_cat and cat and cat != seed_cat:
                 continue
-            scored.append(dict(c))
+            c2 = dict(c)
+            _sanitize_listing_browse_doc(c2)
+            scored.append(c2)
     return {
         "items": scored[: max(1, limit)],
         "total": len(scored),

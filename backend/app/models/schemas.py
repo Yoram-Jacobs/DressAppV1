@@ -96,7 +96,8 @@ from app.models.credit import (
     get_total_credits,
     get_aging_credit_buckets as _get_aging_credit_buckets,
     add_credit_bucket as _add_credit_bucket,
-    spend_credits as _spend_credits
+    spend_credits as _spend_credits,
+    prune_expired_buckets as _prune_expired_buckets,
 )
 
 
@@ -455,6 +456,8 @@ class Listing(BaseDoc):
     size: str | None = None
     condition: Condition = "good"
     images: list[str] = Field(default_factory=list)
+    thumbnail_data_url: str | None = None
+    image_url: str | None = None
     location: dict[str, Any] | None = None
     ships_to: list[str] = Field(default_factory=list)
     financial_metadata: FinancialMetadata
