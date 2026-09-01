@@ -1,6 +1,5 @@
 # Manual técnico completo del usuario de DressApp
 
-<<<<<<< HEAD
 Guía de referencia técnica y manual de usuario detallado para el ecosistema de armario personal, el motor de estilo, el mercado circular y los paneles de administración de DressApp.
 
 ---
@@ -22,7 +21,6 @@ DressApp es un gestor de armario personal, asesor de estilo y mercado circular i
 - **Aprendizaje automático local y tallas**: Procesamiento de fondos local en CPU mediante U2-Net (`rembg`), segmentación de ropa con SegFormer-b2, incrustaciones de Fashion-CLIP y modelo de regresión para medidas corporales físicas ANSUR II (`body_predictor.py`). Opcionalmente se puede redirigir a contenedores de GPU autohospedados (SegFormer-b3 + BiRefNet) para operaciones rápidas.
 - **STT/TTS conversacional**: Reconocimiento de voz en el lado del cliente (Web Speech API) como alternativa, procesamiento en el lado del servidor con Gemini 2.5 Flash para modulación de audio multimodal, y motores Piper/Sherpa-ONNX integrados sin conexión en el dispositivo.
 - **Servicios de integración externa**: API de OpenWeatherMap para la obtención de datos climáticos, Google Calendar OAuth para exportación de agendas diarias, OpenStreetMap (Nominatim) para autocompletado de direcciones y APIs REST de suscripciones y pago de PayPal.
-=======
 Manual de usuario completo y guía de referencia técnica para el ecosistema de armario personal de DressApp, el motor de estilismo, el mercado circular y los paneles de administración.
 
 ---
@@ -44,14 +42,12 @@ DressApp es un gestor de armario personal, asesor de estilo y mercado circular i
 - **Aprendizaje automático y tallas locales**: Matizado de fondo local U2-Net (`rembg`) por CPU, análisis de ropa SegFormer-b2, incrustaciones de Fashion-CLIP y modelo de regresión de medidas corporales físicas ANSUR II (`body_predictor.py`). Opcionalmente se redirige a contenedores de GPU autohospedados (SegFormer-b3 + BiRefNet) para operaciones rápidas.
 - **STT/TTS conversacional**: Reconocimiento de voz en el lado del cliente (Web Speech) como respaldo, modulaciones Gemini 2.5 Flash en el lado del servidor y motores Piper/Sherpa-ONNX sin conexión en el dispositivo.
 - **Servicios de integración externa**: API de OpenWeatherMap para clima, Google Calendar OAuth para exportación de agendas diarias, OpenStreetMap (Nominatim) para autocompletar direcciones y API REST de PayPal Subscriptions/Checkout.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 2. Requisitos previos
 
 ### Requisitos del entorno del servidor (Host)
-<<<<<<< HEAD
 - **Hardware**: Servidor virtual (VPS) con un mínimo de 4 GB de RAM (por ejemplo, el VPS de Hetzner que aloja el entorno de producción `dressapp.co`).
 - **Dependencias**: Contenedores de Docker y Docker Compose (incluyendo backend, frontend y terminación TLS de Caddy).
 - **Variables de entorno**: Configuración de claves de API (`GEMINI_API_KEY`, `DEEPGRAM_API_KEY`, `OPENWEATHER_API_KEY`, `PAYPAL_LIVE_CLIENT_ID/SECRET` y tokens OAuth de Google Calendar).
@@ -60,7 +56,6 @@ DressApp es un gestor de armario personal, asesor de estilo y mercado circular i
 - **Navegador web**: Google Chrome o Apple Safari (necesarios para la compatibilidad completa de funciones de voz).
 - **Permisos**: Conceder permisos de cámara (para fotos de ropa y escaneo de códigos QR) y de micrófono (para conversación por voz).
 - **Red**: Conexión activa para el procesamiento del LLM, con caché de IndexedDB para navegación del catálogo sin conexión.
-=======
 - **Hardware**: Servidor VPS con un mínimo de 4 GB de RAM (p. ej., VPS de Hetzner que aloja la app en producción `dressapp.co`).
 - **Dependencias**: Docker y Docker Compose (incluidos backend, frontend y terminación TLS de Caddy).
 - **Variables de entorno**: Configuración de claves API (`GEMINI_API_KEY`, `DEEPGRAM_API_KEY`, `OPENWEATHER_API_KEY`, `PAYPAL_LIVE_CLIENT_ID/SECRET` y tokens de Google Calendar OAuth).
@@ -69,13 +64,11 @@ DressApp es un gestor de armario personal, asesor de estilo y mercado circular i
 - **Navegador web**: Google Chrome o Apple Safari (necesario para la compatibilidad total de las funciones de voz).
 - **Permisos**: Otorgar permisos de cámara (para fotos de ropa y escaneo de códigos QR) y de micrófono (para conversación de voz).
 - **Red**: Conexión activa para el procesamiento de LLM, con almacenamiento en IndexedDB que permite la navegación sin conexión del catálogo.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 3. Instrucciones paso a paso
 
-<<<<<<< HEAD
 ### 3.1 Ingreso de prendas (Añadir artículos)
 MÉTODOS DE INGRESO: Fotografía, Pasaportes Digitales de Productos y recibos de compra digitales.
 
@@ -250,7 +243,6 @@ Monitoreo de disponibilidad del sistema, contabilidad financiera y gestión de c
 3. **Proveedores**: Haz clic en **Verificar clave** (Verify Key) para comprobar la API de Gemini. Activa el interruptor **Eyes Vision Override** para alternar el procesamiento de imágenes entre el punto de conexión estándar de Gemini y un contenedor local de Gemma.
 4. **Usuarios**: Consulta créditos activos, roles e historial de pagos. Utiliza acciones directas para promover o degradar usuarios.
 5. **Anuncios**: Revisa los estados de los anuncios y desactiva artículos sospechosos de fraude.
-=======
 ### 3.1 Carga de prendas (Agregar elementos)
 MÉTODOS DE CARGA: Fotografía, Pasaporte Digital de Producto de la UE y Recibos de Comercio Digital.
 
@@ -425,32 +417,27 @@ Verificación del funcionamiento del sistema, contabilidad financiera y gestión
 3. **Proveedores (Providers)**: Haga clic en **Verify Key** para enviar una prueba a la API de Gemini. Cambie el interruptor **Eyes Vision Override** para redirigir el análisis de imágenes entre el endpoint de Gemini predeterminado y un contenedor local de Gemma.
 4. **Usuarios**: Vea el saldo de créditos activos, roles y pagos totales. Utilice acciones directas para promover o degradar usuarios.
 5. **Anuncios (Listings)**: Vea el estado de los anuncios y desactive artículos en caso de fraude.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 4. Resultados esperados
 
-<<<<<<< HEAD
 - **Ingreso de prendas**: Los artículos aparecen de inmediato en la cuadrícula de tu armario (~16 ms). Los fondos se recortan limpiamente y se generan PNGs con transparencia.
 - **Insignia DPP Verificada**: Al escanear pasaportes de productos válidos se muestra una tarjeta de información verde con detalles ecológicos.
 - **Prendas de abrigo en el avatar**: Los abrigos y chaquetas se muestran superpuestos de forma correcta sobre los tops en el lienzo 2D sin tapar accesorios para el calzado o gorros.
 - **Respuesta de voz**: Los textos generados por el estilista se reproducen en audio de forma automática con un indicador visual de onda sonora.
 - **Suscripciones**: Activar la cuenta Pro elimina inmediatamente el aviso de límite de 150 artículos.
-=======
 - **Carga de elementos**: Los elementos aparecen de inmediato en la cuadrícula del armario (~16 ms). La eliminación del fondo se realiza limpiamente y genera archivos PNG transparentes.
 - **Verificación DPP**: El escaneo de pasaportes de productos válidos muestra una tarjeta de información verde con detalles de sostenibilidad.
 - **Capas de avatar**: La ropa exterior se representa correctamente sobre las camisas en el lienzo del avatar 2D sin interferir con calzado o sombreros.
 - **Respuesta de voz**: Los textos de respuesta del AI Stylist se leen automáticamente y se acompañan de un indicador de onda de sonido visual.
 - **Suscripciones**: La actualización a un plan Manager o Professional elimina inmediatamente el mensaje de advertencia del límite de capacidad del armario.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 5. Resolución de problemas
 
 ### HTTP 402 Payment Required
-<<<<<<< HEAD
 - **Problema**: Carga de prendas bloqueada. Has alcanzado el límite de almacenamiento de 150 prendas de la cuenta gratuita.
 - **Solución**: Ve a Perfil -> Suscripción y actualiza a Pro, o comparte tu enlace de invitación para obtener +10 espacios adicionales por cada registro.
 
@@ -469,7 +456,6 @@ Verificación del funcionamiento del sistema, contabilidad financiera y gestión
 ### Consumo excesivo de memoria del VPS (OOM)
 - **Problema**: Picos de uso de CPU/RAM durante la subida de fotos.
 - **Solución**: El ingreso de prendas utiliza colas secuenciales para lotes de más de 5 artículos. Asegúrate de que el servidor tenga al menos 4 GB de RAM.
-=======
 - **Problema**: Carga de elementos bloqueada. Ha alcanzado el límite base del armario de 50 elementos (o hasta 200 elementos con bonos de recomendación).
 - **Solución**: Vaya a la **página de precios** (`/pricing`) y suscríbase al plan Manager o Professional, o comparta su enlace de recomendación para obtener +10 espacios por registro (hasta un máximo de 200 elementos).
 
@@ -488,20 +474,16 @@ Verificación del funcionamiento del sistema, contabilidad financiera y gestión
 ### Exceso de memoria (OOM) en servidores VPS
 - **Problema**: Carga alta en el procesador/memoria del servidor durante los procesos de subida de archivos.
 - **Solución**: El proceso de carga utiliza una cola secuencial para subidas de más de 5 elementos a la vez. Asegúrese de que el servidor tenga al menos 4 GB de RAM disponibles.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 6. Limitaciones
 
-<<<<<<< HEAD
 - **APIs de voz de los navegadores**: El reconocimiento de voz a texto nativo está limitado a Chrome y Safari; en otros navegadores la app utiliza la entrada de texto clásica.
 - **Modulación de voz sin conexión**: El motor Piper ONNX móvil sin conexión utiliza menos perfiles de voz que el procesamiento de audio de Gemini en el servidor.
 - **Límites de tamaño de imagen**: Las fotos del avatar y de perfil se comprimen localmente en el navegador a un 82% de calidad para no sobrepasar el límite de 16 MB de MongoDB por documento.
 - **Lectura de recibos de compra**: Los recibos que estén muy borrosos, arrugados o escritos a mano pueden fallar en la extracción de datos.
-=======
 - **API de voz en el navegador**: La transcripción de voz a texto integrada está limitada a los navegadores Chrome y Safari; otros navegadores volverán al teclado de texto estándar.
 - **Salida de voz sin conexión**: El motor local Piper ONNX en dispositivos móviles utiliza menos perfiles de voz en comparación con el modelo de audio Gemini del servidor.
 - **Límites de tamaño de imagen**: Las imágenes subidas para el perfil o el avatar se comprimen localmente en el navegador a un 82% de calidad para cumplir con el límite de 16MB de los documentos de MongoDB.
 - **Precisión de análisis de recibos**: En recibos muy borrosos, distorsionados o escritos a mano, la extracción de datos de la transacción puede fallar.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad

@@ -97,8 +97,12 @@ async def ensure_indexes() -> None:
         await db.trend_reports.drop_index("bucket_1_date_1_language_1")
     except Exception:  # noqa: BLE001
         pass
+    try:
+        await db.trend_reports.drop_index("bucket_1_date_1_language_1_country_code_1")
+    except Exception:  # noqa: BLE001
+        pass
     await db.trend_reports.create_index(
-        [("bucket", 1), ("date", 1), ("language", 1), ("country_code", 1)], unique=True, sparse=True
+        [("bucket", 1), ("date", 1), ("language", 1), ("country_code", 1), ("gender", 1)], unique=True, sparse=True
     )
     await db.trend_reports.create_index(
         [("origin_id", 1), ("language", 1), ("country_code", 1)],

@@ -10,7 +10,7 @@ import {
   BarChart4,
   MapPin,
   Phone,
-  HelpCircle,
+  CircleHelp as HelpCircle,
   AlertTriangle,
   Layers,
   Wallet,
@@ -26,7 +26,7 @@ import {
   Bell,
   Chrome,
   Megaphone,
-} from "lucide-react";
+} from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";

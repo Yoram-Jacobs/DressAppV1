@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Importa tu armario - Guía detallada
 
 ## Resumen
@@ -86,7 +85,6 @@ If you run into issues with importing:
 ---
 
 *Última actualización: julio de 2026*
-=======
 # Importar su armario desde otras aplicaciones (Migración de competidores)
 
 ## Resumen
@@ -119,4 +117,3 @@ Si ya tiene su ropa catalogada en otra aplicación de armario (como Whering, Acl
 ## Limitaciones
 - **Solo para computadoras de escritorio**: No se puede ejecutar en navegadores móviles debido a restricciones de la API.
 - **Claridad visual**: Los diseños de ropa muy distorsionados, oscuros o superpuestos en la aplicación competidora pueden fallar en la extracción de recorte visual y requerir ajustes fotográficos manuales más adelante.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad

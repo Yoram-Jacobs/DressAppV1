@@ -180,42 +180,35 @@ export default function Home() {
     }
   };
 
+  const [liveListings, setLiveListings] = useState([]);
+
   useEffect(() => {
     (async () => {
       try {
-        // Read closet count straight from the global store (already
-        // populated by AppLayout's prewarm) — no extra round-trip.
-        // Marketplace count is still server-side because we don't
-        // store all listings client-side.
-        const market = await api.listListings({ limit: 1, status: "active" });
+        const market = await api.listListings({ limit: 10, status: "active" });
+        const list = market?.items || market?.listings || (Array.isArray(market) ? market : []);
+        setLiveListings(list);
         setCounts({
           closet: closet.total || (closet.items?.length ?? 0),
-          market: market.total || 0,
+          market: market.total || list.length || 0,
         });
       } catch {
         setCounts({ closet: closet.total || 0, market: 0 });
       }
     })();
-    // We intentionally only run this once per mount; closet.total
-    // updates flow through the dedicated effect below so the chip
-    // stays accurate after add/delete.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     fetchTrends();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language, country]);
 
-  // Keep the closet chip in sync with store mutations from elsewhere
-  // in the app (AddItem, ItemDetail delete, etc.) without a refetch.
   useEffect(() => {
     setCounts((prev) => {
       const closetCount = closet.total || (closet.items?.length ?? 0);
       if (prev && prev.closet === closetCount) return prev;
       return { closet: closetCount, market: prev?.market ?? 0 };
     });
-  }, [closet.total, closet.items]);
+  }, [closet.total, closet.items?.length]);
 
   const firstName = (user?.display_name || user?.email || "").split(/\s|@/)[0];
   // hero-banner-slider
@@ -229,53 +222,86 @@ export default function Home() {
   const trendNextRef = useRef(null);
   const trendSwiperRef = useRef(null);
   const marketSwiperRef = useRef(null);
-  const marketplaceItems = [
+
+  const DEFAULT_MARKETPLACE_ITEMS = [
     {
-      id: 1,
-      badge: "Sell Only",
+      id: "demo-1",
+      badge: t("market.sellOnly", { defaultValue: "Sell Only" }),
       title: "Vintage Denim Jacket",
       price: "$140",
       condition: "Pristine (9.5/10)",
       location: "Copenhagen, DK",
       image: market1,
+      link: "/market",
     },
     {
-      id: 2,
-      badge: "Swap / Donate",
+      id: "demo-2",
+      badge: t("market.swap", { defaultValue: "Swap / Donate" }),
       title: "Silk Pattern Scarf",
       price: "$45",
       condition: "Excellent (9/10)",
       location: "Paris, FR",
       image: market2,
+      link: "/market",
     },
     {
-      id: 3,
-      badge: "Sell & Swap",
+      id: "demo-3",
+      badge: t("market.sellSwap", { defaultValue: "Sell & Swap" }),
       title: "Minimalist Sneakers",
       price: "$95",
       condition: "Very Good (8.5/10)",
       location: "Milan, IT",
       image: market3,
+      link: "/market",
     },
     {
-      id: 4,
-      badge: "Sell Only",
+      id: "demo-4",
+      badge: t("market.sellOnly", { defaultValue: "Sell Only" }),
       title: "Over-Sized Wool Coat",
       price: "$320",
       condition: "Perfect (10/10)",
       location: "Stockholm, SE",
       image: market4,
+      link: "/market",
     },
     {
-      id: 5,
-      badge: "Sell & Swap",
+      id: "demo-5",
+      badge: t("market.sellSwap", { defaultValue: "Sell & Swap" }),
       title: "Navy Tech Blazer",
       price: "$180",
       condition: "Excellent (9/10)",
       location: "Berlin, DE",
       image: closet1,
+      link: "/market",
     },
   ];
+
+  const displayMarketplaceItems = useMemo(() => {
+    if (!liveListings || liveListings.length === 0) return DEFAULT_MARKETPLACE_ITEMS;
+    return liveListings.map((item, idx) => {
+      const mode = item.mode || item.intent;
+      let badge = t("market.active", { defaultValue: "Active" });
+      if (item.source === "Retail") badge = t("market.retail", { defaultValue: "Retail" });
+      else if (mode === "sell" || mode === "for_sale") badge = t("market.sellOnly", { defaultValue: "Sell Only" });
+      else if (mode === "swap") badge = t("market.swap", { defaultValue: "Swap" });
+      else if (mode === "donate") badge = t("market.donate", { defaultValue: "Donate" });
+
+      const priceStr = item.price != null && item.price !== ""
+        ? `${item.currency === "ILS" ? "₪" : item.currency === "EUR" ? "€" : "$"}${item.price}`
+        : (mode === "donate" ? t("market.free", { defaultValue: "Free" }) : "");
+
+      return {
+        id: item.id || `live-${idx}`,
+        badge,
+        title: item.title || item.name || t("market.item", { defaultValue: "Wardrobe Item" }),
+        price: priceStr,
+        condition: item.condition || "Good",
+        location: item.location || item.city || "Global",
+        image: item.clean_image_url || item.image_url || (Array.isArray(item.images) && item.images[0]) || market1,
+        link: `/market`,
+      };
+    });
+  }, [liveListings, t]);
   const EXPERTS = [
     {
       id: "amelia-novak",
@@ -534,26 +560,53 @@ const RECENTLY_ADDED_THUMBS = [
 // (e.g. totalRecentCount - RECENTLY_ADDED_THUMBS.length); kept as a named
 // constant so it isn't a bare magic number in the JSX.
 const RECENTLY_ADDED_MORE_COUNT = 18;
+
+  const displayClosetGarments = useMemo(() => {
+    if (!closet.items || closet.items.length === 0) return CLOSET_GARMENTS;
+    return closet.items.slice(0, 3).map((item, idx) => ({
+      id: item.id || `closet-${idx}`,
+      image: item.clean_image_url || item.image_url || CLOSET_GARMENTS[idx % CLOSET_GARMENTS.length].image,
+      altKey: "home.closet.garments.shirt.alt",
+      altDefault: item.name || item.category || "Closet item",
+      categoryKey: "home.closet.garments.shirt.category",
+      categoryDefault: item.category || item.subcategory || "Wardrobe",
+      nameKey: "home.closet.garments.shirt.name",
+      nameDefault: item.name || item.brand || "Wardrobe Item",
+      metaKey: "home.closet.garments.shirt.meta",
+      metaDefault: item.color ? `${item.color}${item.season ? ' · ' + item.season : ''}` : `No. 00${idx + 1}`,
+    }));
+  }, [closet.items]);
+
+  const displayRecentlyAdded = useMemo(() => {
+    if (!closet.items || closet.items.length === 0) return RECENTLY_ADDED_THUMBS;
+    return closet.items.slice(0, 4).map((item, idx) => ({
+      id: item.id || `thumb-${idx}`,
+      image: item.clean_image_url || item.image_url || RECENTLY_ADDED_THUMBS[idx % RECENTLY_ADDED_THUMBS.length].image,
+      altKey: "home.closet.recent.sneakers",
+      altDefault: item.name || "Recent item",
+    }));
+  }, [closet.items]);
+
+  const recentlyAddedMoreCount = Math.max(0, (closet.total || closet.items?.length || 0) - displayRecentlyAdded.length);
   return (
     <>
       {/* Home-banner-start */}
       <section
         id="home"
-        className="relative  mt-[var(--header-height)] overflow-hidden bg-accent-beige"
+        className="relative overflow-hidden bg-accent-beige"
       >
-        <div className="grid w-full grid-cols-1 lg:grid-cols-12">
+        <div className="grid w-full grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-4.5rem)]">
           {/* ================= LEFT CONTENT ================= */}
           <div
             className="
                   flex
-                  min-h-[calc(100vh-var(--header-height))]
                   items-center
                   px-5
-                  py-12
+                  py-10
                   sm:px-8
-                  sm:py-16
+                  sm:py-14
                   lg:col-span-5
-                  lg:min-h-[calc(100vh-var(--header-height))]
+                  lg:min-h-[calc(100vh-4.5rem)]
                   lg:px-10
                   xl:px-14"
           >
@@ -739,7 +792,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
             </motion.div>
           </div>
           {/* ================= RIGHT IMAGE SLIDER ================= */}
-          <div className="relative lg:col-span-7 h-full min-h-[560px] overflow-hidden lg:min-h-[calc(100vh-var(--header-height))]">
+          <div className="relative lg:col-span-7 h-[420px] sm:h-[520px] lg:h-auto min-h-[420px] lg:min-h-full overflow-hidden">
             <Swiper
               modules={[EffectFade, Autoplay, Navigation]}
               effect="fade"
@@ -754,11 +807,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
               {slides.map((image, index) => (
                 <SwiperSlide key={image}>
                   <div
-                    className="  absolute
-              inset-0
-              transition-all
-              duration-[1200ms]
-              ease-out"
+                    className="absolute inset-0 transition-all duration-[1200ms] ease-out"
                   >
                     <img
                       src={image}
@@ -787,7 +836,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
             <div
               className="
             absolute
-            left-3
+            start-3
             top-3
             z-10
             flex
@@ -802,7 +851,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
             text-white
             shadow-lg
             backdrop-blur-xl
-            sm:left-5
+            sm:start-5
             sm:top-5
             sm:p-4
           "
@@ -842,7 +891,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
             <div
               className="
             absolute
-            right-3
+            end-3
             top-3
             z-10
             rounded-full
@@ -858,7 +907,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
             tracking-[0.1em]
             text-[var(--primary-color)]
             shadow-sm
-            sm:right-5
+            sm:end-5
             sm:top-5
             sm:px-3.5
             sm:py-2
@@ -875,15 +924,15 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
               className="
             absolute
             bottom-[105px]
-            left-1/2
+            start-1/2
             z-10
             flex
             -translate-x-1/2
             items-center
             gap-1.5
             sm:bottom-[105px]
-            sm:right-7
-            sm:left-auto
+            sm:end-7
+            sm:start-auto
             sm:translate-x-0
           "
               aria-label={t("home.fashionBannerSlider", {
@@ -918,12 +967,13 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
               className="
             absolute
             bottom-5
-            right-4
+            end-4
             z-10
             max-w-[190px]
-            text-right
+            text-start
+            sm:text-end
             text-white
-            sm:right-5
+            sm:end-5
           "
             >
               <span className="mb-1 block font-sans text-[9px] font-semibold uppercase tracking-[0.08em] text-white/65 sm:text-[10px]">
@@ -944,7 +994,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
               className="
             absolute
             bottom-3
-            left-3
+            start-3
             z-10
             max-w-[calc(100%-24px)]
             rounded-sm
@@ -956,7 +1006,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
             shadow-lg
             backdrop-blur-xl
             sm:bottom-5
-            sm:left-5
+            sm:start-5
             sm:p-4
           "
             >
@@ -1155,19 +1205,22 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                 </motion.p>
 
                 {/* Button */}
-                <motion.a
-                  href="/closet"
+                <motion.div
                   initial={{ opacity: 0, x: -40 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.5, ease: "easeOut" }}
-                  className="mt-2 inline-flex items-center justify-center rounded-[50px] border-none bg-[var(--primary-color)] px-[30px] py-[20px] text-[14px] font-bold leading-none text-[var(--white)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-[var(--white)] hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
                 >
-                  {t("home.closet.cta", {
-                    defaultValue: "Start Building Your Closet",
-                  })}
-                  <i className="fa-solid fa-arrow-right ms-2 rtl:rotate-180" />
-                </motion.a>
+                  <Link
+                    to="/closet"
+                    className="mt-2 inline-flex items-center justify-center rounded-[50px] border-none bg-[var(--primary-color)] px-[30px] py-[20px] text-[14px] font-bold leading-none text-[var(--white)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-[var(--white)] hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+                  >
+                    {t("home.closet.cta", {
+                      defaultValue: "Start Building Your Closet",
+                    })}
+                    <i className="fa-solid fa-arrow-right ms-2 rtl:rotate-180" />
+                  </Link>
+                </motion.div>
               </div>
             </div>
             {/* Right Visual */}
@@ -1191,7 +1244,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                 </div>
                 {/* Garments */}
                 <div className="flex items-start justify-between gap-6 max-[991px]:gap-[14px] max-[575px]:flex-wrap max-[575px]:justify-center">
-                  {CLOSET_GARMENTS.map((garment) => (
+                  {displayClosetGarments.map((garment) => (
                     <div
                       key={garment.id}
                       className="group relative flex flex-1 flex-col items-center transition-transform duration-300 ease-in hover:-translate-y-2 max-[575px]:basis-[45%]"
@@ -1236,7 +1289,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                     })}
                   </span>
                   <div className="flex items-center">
-                    {RECENTLY_ADDED_THUMBS.map((thumb, i) => (
+                    {displayRecentlyAdded.map((thumb, i) => (
                       <div
                         key={thumb.id}
                         className={
@@ -1252,12 +1305,11 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                         />
                       </div>
                     ))}
-                    <div className="-ms-[14px] flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-[12px] border-[3px] border-[var(--accent-beige)] bg-[var(--dark-color)] text-[0.68rem] font-bold text-[var(--accent-beige)] shadow-[0_6px_14px_-6px_rgba(23,20,15,0.3)]">
-                      {t("home.closet.recentlyAddedMore", {
-                        count: RECENTLY_ADDED_MORE_COUNT,
-                        defaultValue: "+{{count}}",
-                      })}
-                    </div>
+                    {recentlyAddedMoreCount > 0 && (
+                      <div className="-ms-[14px] flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-[12px] border-[3px] border-[var(--accent-beige)] bg-[var(--dark-color)] text-[0.68rem] font-bold text-[var(--accent-beige)] shadow-[0_6px_14px_-6px_rgba(23,20,15,0.3)]">
+                        +{recentlyAddedMoreCount}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1508,17 +1560,20 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                 </motion.p>
 
                 {/* CTA */}
-                <motion.a
-                  href="/stylist"
+                <motion.div
                   initial={{ opacity: 0, x: 40 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.5, ease: "easeOut" }}
-                  className="inline-flex items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
                 >
-                  <i className="bi bi-stars mr-2" />
-                  {t("home.stylist.cta", { defaultValue: "Ask the stylist" })}
-                </motion.a>
+                  <Link
+                    to="/stylist"
+                    className="inline-flex items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+                  >
+                    <i className="bi bi-stars me-2" />
+                    {t("home.stylist.cta", { defaultValue: "Ask the stylist" })}
+                  </Link>
+                </motion.div>
               </div>
             </div>
           </div>
@@ -1655,7 +1710,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
               }}
               navigation={{ prevEl: null, nextEl: null }}
             >
-              {marketplaceItems.map((item, i) => (
+              {displayMarketplaceItems.map((item, i) => (
                 <SwiperSlide key={item.id} className="h-full">
                   <motion.div
                     initial={{ opacity: 0, y: 30 }}
@@ -1669,7 +1724,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                     className="group overflow-hidden rounded-[12px] border border-black/[0.06] my-[20px] bg-white transition-smooth hover:-translate-y-[5px] hover:shadow-md"
                   >
                     {/* Image */}
-                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-white">
+                    <Link to={item.link || "/market"} className="relative block aspect-[4/3] w-full overflow-hidden bg-white">
                       <img
                         src={item.image}
                         alt={item.title}
@@ -1678,13 +1733,13 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                       <span className="absolute start-3 top-3 rounded-full bg-[var(--primary-color)] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-white shadow-[var(--primary-shadow)]">
                         {item.badge}
                       </span>
-                    </div>
+                    </Link>
                     {/* Details */}
                     <div className="p-4">
                       <div className="flex items-center justify-between gap-3">
-                        <h6 className="m-0 min-w-0 truncate text-[15px] font-black leading-[1.3] text-[var(--dark-color)]">
+                        <Link to={item.link || "/market"} className="m-0 min-w-0 truncate text-[15px] font-black leading-[1.3] text-[var(--dark-color)] no-underline hover:text-[var(--primary-color)]">
                           {item.title}
-                        </h6>
+                        </Link>
                         <span className="shrink-0 text-[15px] font-black text-[var(--dark-color)]">
                           {item.price}
                         </span>
@@ -1701,26 +1756,26 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                         })}
                       </p>
                       <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          className="flex-1 rounded-[50px] border border-[var(--primary-color)] bg-[var(--primary-color)] px-3 py-2.5 text-[12px] font-bold text-white transition-smooth hover:-translate-y-[1px] hover:bg-[var(--primary-hover)]"
+                        <Link
+                          to="/market"
+                          className="flex-1 rounded-[50px] border border-[var(--primary-color)] bg-[var(--primary-color)] px-3 py-2.5 text-center text-[12px] font-bold text-white no-underline transition-smooth hover:-translate-y-[1px] hover:bg-[var(--primary-hover)]"
                         >
                           {t("home.marketplace.buy", { defaultValue: "Buy" })}
-                        </button>
-                        <button
-                          type="button"
-                          className="flex-1 rounded-[50px] border border-black/10 bg-white px-3 py-2.5 text-[12px] font-bold text-[var(--dark-color)] transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
+                        </Link>
+                        <Link
+                          to="/market"
+                          className="flex-1 rounded-[50px] border border-black/10 bg-white px-3 py-2.5 text-center text-[12px] font-bold text-[var(--dark-color)] no-underline transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
                         >
                           {t("home.marketplace.swap", { defaultValue: "Swap" })}
-                        </button>
-                        <button
-                          type="button"
-                          className="flex-1 rounded-[50px] border border-black/10 bg-white px-3 py-2.5 text-[12px] font-bold text-[var(--dark-color)] transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
+                        </Link>
+                        <Link
+                          to="/market"
+                          className="flex-1 rounded-[50px] border border-black/10 bg-white px-3 py-2.5 text-center text-[12px] font-bold text-[var(--dark-color)] no-underline transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
                         >
                           {t("home.marketplace.donate", {
                             defaultValue: "Donate",
                           })}
-                        </button>
+                        </Link>
                       </div>
                     </div>
                   </motion.div>
@@ -2010,19 +2065,22 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                 </motion.p>
 
                 {/* CTA */}
-                <motion.a
-                  href="#"
+                <motion.div
                   initial={{ opacity: 0, x: -40 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.5, ease: "easeOut" }}
-                  className="inline-flex items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
                 >
-                  <i className="bi bi-magic mr-2" />
-                  {t("home.aiEditor.cta", {
-                    defaultValue: "Open Fashion Editor",
-                  })}
-                </motion.a>
+                  <Link
+                    to="/stylist"
+                    className="inline-flex items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+                  >
+                    <i className="bi bi-magic me-2" />
+                    {t("home.aiEditor.cta", {
+                      defaultValue: "Open Fashion Editor",
+                    })}
+                  </Link>
+                </motion.div>
               </div>
             </div>
           </div>
@@ -2049,7 +2107,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
               {t("home.experts.tag", { defaultValue: "Meet The Specialists" })}
             </motion.span>
 
-            <a href="/experts" className="block no-underline">
+            <Link to="/experts" className="block no-underline">
               <motion.h2
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -2061,7 +2119,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                   defaultValue: "Talk To A Real Style Expert",
                 })}
               </motion.h2>
-            </a>
+            </Link>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -2077,15 +2135,15 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                 })}
               </p>
 
-              <a
-                href="/experts"
+              <Link
+                to="/experts"
                 className="inline-flex shrink-0 items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[15px] text-[14px] font-bold leading-[24px] text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
               >
                 {t("home.experts.viewAll", {
                   defaultValue: "View All Experts",
                 })}
                 <i className="fa-solid fa-arrow-right ms-2 rtl:rotate-180" />
-              </a>
+              </Link>
             </motion.div>
           </div>
 
@@ -2143,15 +2201,15 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                     {t(expert.bioKey, { defaultValue: expert.bioDefault })}
                   </p>
 
-                  <a
-                    href="#"
+                  <Link
+                    to="/experts"
                     className="inline-flex items-center justify-center gap-2 rounded-[50px] border border-[var(--primary-color)] bg-white px-5 py-2.5 text-[12px] font-bold text-[var(--primary-color)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-color)] hover:text-white"
                   >
                     {t("home.experts.bookSession", {
                       defaultValue: "Book Session",
                     })}
                     <i className="bi bi-arrow-right rtl:rotate-180" />
-                  </a>
+                  </Link>
                 </div>
               </motion.div>
             ))}

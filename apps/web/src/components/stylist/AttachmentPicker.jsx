@@ -24,7 +24,7 @@ import {
   Search,
   Check,
   Loader2,
-  AlertCircle,
+  CircleAlert as AlertCircle,
 } from 'lucide-react';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { bestImageUrl } from '@/lib/itemImage';

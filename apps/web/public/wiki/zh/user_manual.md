@@ -1,16 +1,12 @@
 # DressApp 完整技术用户手册
 
-<<<<<<< HEAD
 针对 DressApp 个人衣橱生态系统、搭配引擎、循环市场和管理面板的全面用户手册及技术参考指南。
-=======
 DressApp 个人衣橱生态系统、搭配引擎、循环市场和管理面板的全面用户手册和技术参考指南。
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 1. 概述与技术栈
 
-<<<<<<< HEAD
 DressApp 是一款由 AI 驱动的个人衣橱管理器、搭配顾问和循环市场。它帮助用户以数字方式管理衣服，进行自动裁剪和标签添加，接收考虑天气和日历事件的穿搭建议，扫描欧盟数字产品护照 (DPP)，以及进行衣物交易。
 
 ### 核心价值主张
@@ -26,7 +22,6 @@ DressApp 是一款由 AI 驱动的个人衣橱管理器、搭配顾问和循环�
 - **本地机器学习与尺码预测**：CPU 本地 U2-Net (`rembg`) 进行背景抠图、SegFormer-b2 进行服装分割、Fashion-CLIP 特征向量埋入，以及基于 ANSUR II 物理身体测量数据的回归模型 (`body_predictor.py`)。可选路由至自托管的 GPU 容器（SegFormer-b3 + BiRefNet）以实现快速操作。
 - **对话式 STT/TTS**：客户端实时 Web Speech API 语音识别（作为备用方案）、服务端多模态 Gemini 2.5 Flash 语音生成，以及设备上离线 Piper/Sherpa-ONNX 引擎。
 - **外部集成服务**：用于获取天气的 OpenWeatherMap API、用于导出每日计划的 Google 日历 OAuth 认证、用于地址自动补全的 OpenStreetMap (Nominatim) 以及 PayPal 订阅/结算 REST API。
-=======
 DressApp 是一款 AI 驱动的个人衣橱管理器、搭配顾问和循环市场。它帮助用户以数字化方式管理衣服，自动剪裁并标记标签，接收结合天气和日历的穿搭建议，扫描欧盟数字产品护照 (DPP) 并交易衣物。
 
 ### 核心价值主张
@@ -42,13 +37,11 @@ DressApp 是一款 AI 驱动的个人衣橱管理器、搭配顾问和循环市�
 - **本地机器学习与尺码预测**：基于 CPU 的本地 U2-Net (`rembg`) 背景抠图、SegFormer-b2 衣物分割、Fashion-CLIP 嵌入和 ANSUR II 身体数据回归模型 (`body_predictor.py`)。可选路由到自托管的 GPU 容器 (SegFormer-b3 + BiRefNet) 以进行快速操作。
 - **对话式 STT/TTS**：实时客户端 Web Speech 语音识别备用方案、服务端多模态 Gemini 2.5 Flash 生成、以及设备上离线的 Piper/Sherpa-ONNX 引擎。
 - **外部集成服务**：用于天气获取的 OpenWeatherMap API、用于每日日程导出的 Google Calendar OAuth、OpenStreetMap (Nominatim) 地址自动填充以及 PayPal Subscriptions/Checkout REST API。
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 2. 前提条件
 
-<<<<<<< HEAD
 ### 主机环境要求
 - **硬件**：至少 4 GB RAM 的 VPS（例如，托管生产环境 `dressapp.co` 的 Hetzner VPS）。
 - **依赖项**：Docker 和 Docker Compose 堆栈（包括后端、前端和 Caddy TLS 终止）。
@@ -237,7 +230,6 @@ DressApp 是一款 AI 驱动的个人衣橱管理器、搭配顾问和循环市�
 3. **服务商**：点击**验证密钥** (Verify Key) 向 Gemini API 发送直接 ping 测试。切换 **Eyes Vision Override** 开关，可以在默认的 Gemini 端点和本地 Gemma 容器之间切换图像解析路由。
 4. **用户**：查看用户的激活积分、角色和累计付款。可直接操作以升级用户角色（设置为管理员）或降级。
 5. **商品管理**：查看商品信息状态，并可停用欺诈或不适当的商品。
-=======
 ### 服务器宿主环境要求
 - **硬件**：最低 4 GB RAM VPS（例如，托管生产环境 `dressapp.co` 的 Hetzner VPS）。
 - **依赖项**：Docker 和 Docker Compose（包括后端、前端和 Caddy TLS 证书管理）。
@@ -426,13 +418,11 @@ DressApp 是一款 AI 驱动的个人衣橱管理器、搭配顾问和循环市�
 3. **服务商 (Providers)**：点击 **Verify Key** 向 Gemini API 发送测试 Ping。切换 **Eyes Vision Override** 开关，在默认的 Gemini 云端和本地的 Gemma 容器之间切换图像分析。
 4. **用户**：查看活跃额度、角色和累计付款。使用直接操作来提升或降低用户权限。
 5. **商品信息 (Listings)**：查看商品状态并编辑活跃标记以暂停欺诈商品。
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 4. 预期结果
 
-<<<<<<< HEAD
 - **导入单品**：单品会立即反映到衣橱网格中（约 16 毫秒）。去除背景效果清晰，生成透明的 PNG 图像。
 - **DPP 验证徽章**：扫描有效的数字产品护照会显示绿色的信息卡片，详细说明其可持续性细节。
 - **化身的外套叠穿**：在 2D 虚拟化身画布上，外套正确显示在内搭之上，不会与帽子或鞋子重叠导致混乱。
@@ -471,7 +461,6 @@ DressApp 是一款 AI 驱动的个人衣橱管理器、搭配顾问和循环市�
 - **离线语音合成**：移动端离线 Piper ONNX 语音合成拥有的语音角色比服务端 Gemini 语音生成少。
 - **图像大小限制**：虚拟化身和个人资料照片会在浏览器端自动压缩至 82% 质量，以适应 MongoDB 16MB 的文档大小限制。
 - **小票分析精度**：过分模糊、扭曲或手写的小票可能无法准确提取数据。
-=======
 - **物品导入**：物品立即出现在衣橱网格中（~16ms）。背景去除效果干净，可生成透明的 PNG 文件。
 - **DPP 验证**：扫描正确的二维码产品护照会显示绿色的可持续信息卡。
 - **头像多层渲染**：在 2D 头像画布上，外套正确盖在衬衫上方，且鞋帽和配饰无显示冲突。
@@ -510,4 +499,3 @@ DressApp 是一款 AI 驱动的个人衣橱管理器、搭配顾问和循环市�
 - **离线语音合成**：手机离线的 Piper ONNX 语音角色数量少于在线时的 Gemini 语音模型。
 - **图片尺寸限制**：上传的头像和配置文件图片在设备上本地压缩至 82% 质量，以契合 MongoDB 的 16MB 文件限制。
 - **小票分析范围**：非常模糊、扭曲或手写的小票可能无法被系统识别。
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad

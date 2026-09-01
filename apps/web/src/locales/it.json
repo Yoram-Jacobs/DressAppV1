@@ -1,4 +1,4 @@
-﻿{
+{
   "brand": "DressApp",
   "nav": {
     "home": "Home",
@@ -133,6 +133,190 @@
         "headline": "Scambia prima di comprare",
         "summary": "Le sale di swap di quartiere sono triplicate anno su anno; i retailer iniziano finalmente ad ascoltare."
       }
+    },
+    "experts": {
+      "tag": "Incontra gli specialisti",
+      "title": "Parla con un vero esperto di stile",
+      "description": "Prenota una sessione 1:1 con uno stilista certificato DressApp quando l'IA ha bisogno di un tocco umano ed editoriale.",
+      "viewAll": "Visualizza tutti gli esperti",
+      "bookSession": "Prenota sessione",
+      "sessionsCount": "({{count}} sessioni)",
+      "roles": {
+        "seniorFashionStylist": "Senior Fashion Stylist",
+        "menswearConsultant": "Consulente moda uomo",
+        "sustainableFashionAdvisor": "Consulente di moda sostenibile",
+        "occasionWearExpert": "Esperto di abiti da cerimonia"
+      },
+      "bios": {
+        "ameliaNovak": "Look editoriali per contesti professionali di alto livello.",
+        "marcusLee": "Consigli sartoriali moderni per il gentiluomo contemporaneo.",
+        "sofiaReyes": "Costruire un guardaroba consapevole senza rinunciare allo stile.",
+        "priyaSharma": "Look straordinari per matrimoni, serate di gala e celebrazioni."
+      }
+    },
+    "aiEditor": {
+      "tag": "Studio di styling visivo",
+      "heading": "Il tuo editor di moda con intelligenza artificiale",
+      "description1": "Trascina, scambia e ricolora i capi reali del tuo guardaroba su un manichino virtuale.",
+      "description2": "Regola l'intensità dello stile e lascia che l'IA rigeneri accessori e strati in tempo reale.",
+      "cta": "Apri editor di moda",
+      "title": "Editor di moda IA",
+      "renderingLivePreview": "Rendering dell'anteprima in tempo reale",
+      "exportLook": "Esporta look",
+      "previewAlt": "Anteprima outfit IA",
+      "aiMatch": "Corrispondenza IA {{percent}}%",
+      "fabricTone": "Tonalità tessuto",
+      "styleIntensity": "Intensità di stile",
+      "percentValue": "{{percent}}%",
+      "silhouetteFit": "Silhouette e vestibilità",
+      "regenerate": "Rigenera con IA",
+      "tabs": {
+        "top": "Sopra",
+        "bottom": "Sotto",
+        "shoes": "Scarpe",
+        "accessory": "Accessorio"
+      },
+      "tones": {
+        "forest": "Verde foresta",
+        "charcoal": "Antracite",
+        "camel": "Cammello",
+        "slate": "Blu ardesia",
+        "ivory": "Avorio"
+      },
+      "silhouettes": {
+        "slim": "Aderente",
+        "relaxed": "Rilassato",
+        "oversized": "Oversize"
+      }
+    },
+    "stylistPreview": {
+      "tag": "Assistente di stile personale",
+      "heading": "Stilista IA intelligente per ogni giorno",
+      "description": "Ricevi proposte di outfit curate in base al meteo, agli impegni e al tuo stile personale.",
+      "aiName": "Stilista IA DressApp",
+      "aiRole": "Consulente di stile personale",
+      "status": "Online",
+      "aiMessageWeather": "14°C e pioggerella",
+      "aiMessageMeeting": "Riunione di lavoro alle 10:00",
+      "aiMessagePrefix": "Buongiorno! Dato che oggi ",
+      "aiMessageMiddle": " e hai una ",
+      "aiMessageSuffix": ", consiglio un look professionale con protezione tecnica dalla pioggia.",
+      "inputPlaceholder": "Dì al tuo stilista di cosa hai bisogno…",
+      "addImageAria": "Aggiungi immagine",
+      "micAria": "Usa microfono",
+      "sendAria": "Invia messaggio",
+      "tabs": {
+        "chat": "Chat",
+        "outfitPlanner": "Pianificatore outfit",
+        "dailySuggestion": "Suggerimento del giorno"
+      },
+      "recs": {
+        "blazer": {
+          "category": "Capispalla",
+          "title": "Blazer tecnico blu navy (Impermeabile)",
+          "description": "Ideale per riunioni formali, protegge dalla pioggia leggera."
+        },
+        "shirt": {
+          "category": "Strato superiore",
+          "title": "Camicia bianca in cotone biologico",
+          "description": "Base classica, pulita e professionale."
+        }
+      },
+      "chips": {
+        "dailySuggestion": "Suggerimento del giorno",
+        "planEventOutfit": "Pianifica outfit per evento",
+        "trendScout": "Trend Scout"
+      },
+      "brandName": "Personal Stylist IA DressApp",
+      "activeStatus": "Attivo e pronto a consigliarti",
+      "userMessage": "“Cosa dovrei indossare domani?”",
+      "aiMessageCalendarLead": "e il tuo calendario indica una"
+    },
+    "marketplace": {
+      "tag": "Iniziativa Rifiuti Zero",
+      "heading": "Marketplace circolare per il guardaroba",
+      "description": "Compra, vendi o dona. Monetizza i capi poco usati direttamente dal tuo armadio digitale.",
+      "activeListings": "Annunci attivi",
+      "buySwap": "Acquista, scambia",
+      "orDonate": "o donare",
+      "explore": "Esplora marketplace",
+      "conditionLine": "Condizione: {{condition}}",
+      "locationLine": "Posizione: {{location}}",
+      "buy": "Acquista",
+      "swap": "Scambia",
+      "donate": "Dona",
+      "prevAria": "Articolo precedente",
+      "nextAria": "Articolo successivo",
+      "feeNotice": "Commissione trasparente del 7% dopo il pagamento. Nessun costo nascosto."
+    },
+    "howItWorks": {
+      "tag": "Processo fluido",
+      "heading": "Rivoluzionare la gestione del guardaroba",
+      "description": "Vestirsi con stile è ora un processo moderno in 4 passaggi guidato dall'IA.",
+      "steps": {
+        "capture": {
+          "alt": "Fotografa capo",
+          "title": "Fotografa i tuoi capi",
+          "description": "Scatta una foto veloce ai tuoi vestiti. Funziona con qualsiasi luce e sfondo."
+        },
+        "analysis": {
+          "alt": "Analisi attributi",
+          "title": "Analisi attributi IA",
+          "description": "I nostri modelli di visione rilevano colori, fantasie, tessuti, tagli e categorie all'istante."
+        },
+        "closet": {
+          "alt": "Armadio intelligente",
+          "title": "Costruisci il tuo armadio smart",
+          "description": "I tuoi capi vengono catalogati automaticamente con l'eleganza di un catalogo online."
+        },
+        "styled": {
+          "alt": "Stile quotidiano",
+          "title": "Vestiti con stile ogni giorno",
+          "description": "Ricevi outfit quotidiani abbinati in base al meteo locale e agli impegni in calendario."
+        }
+      }
+    },
+    "closet": {
+      "tag": "Il tuo guardaroba digitale",
+      "heading": "Ogni capo trova il suo posto",
+      "description1": "Fotografa i tuoi vestiti: DressApp riconosce tessuto, taglio e colore come un vero stilista.",
+      "description2": "Niente più capi dimenticati. Cerca per parola chiave o descrivi un'occasione: 'qualcosa di caldo per un lunedì di pioggia'.",
+      "cta": "Inizia a creare il tuo armadio",
+      "recentlyAdded": "Aggiunti di recente",
+      "recentlyAddedMore": "+{{count}}",
+      "garments": {
+        "blazer": {
+          "alt": "Blazer blu navy",
+          "category": "Capispalla",
+          "name": "Blazer tecnico blu navy",
+          "meta": "N. 014 — Impermeabile"
+        },
+        "sweater": {
+          "alt": "Maglione in maglia grigio",
+          "category": "Maglieria",
+          "name": "Girocollo in lana merino",
+          "meta": "N. 027 — Grigio cenere"
+        },
+        "shirt": {
+          "alt": "Camicia bianca",
+          "category": "Strato superiore",
+          "name": "Camicia elegante in cotone",
+          "meta": "N. 041 — Bianco gesso"
+        }
+      },
+      "recent": {
+        "sneakers": "Sneakers",
+        "jeans": "Jeans in denim",
+        "bag": "Borsa in pelle",
+        "scarf": "Sciarpa"
+      }
+    },
+    "stylist": {
+      "tag": "Intelligenza sartoriale empatica",
+      "heading": "Lo stilista IA che capisce la vita",
+      "description1": "Le tue scelte di stile non devono esistere nel vuoto. DressApp si collega al calendario e al meteo locale per creare outfit perfetti ogni giorno.",
+      "description2": "Non uscire mai più con l'abito sbagliato per una riunione importante o impreparato alla pioggia. È come avere un consulente di moda d'élite sempre a portata di mano.",
+      "cta": "Chiedi allo stilista"
     }
   },
   "closet": {
@@ -459,7 +643,8 @@
       "fabric": "Tessuto e composizione",
       "market": "Uso previsto e prezzo"
     },
-    "noReadyCards": "Nessuna scheda pronta da salvare."
+    "noReadyCards": "Nessuna scheda pronta da salvare.",
+    "gender": "Genere"
   },
   "itemDetail": {
     "back": "Torna all’armadio",
@@ -1272,7 +1457,7 @@
     "importWardrobePill": "Importa armadio",
     "mobileDesktopGuide": "L'importazione dell'armadio è disponibile nella versione desktop di DressApp. Apri il tuo account in un browser desktop per continuare.",
     "deleteAccountLink": "Elimina il mio account",
-    "privacyPolicy": "Informativa sulla privacy",
+    "privacyPolicy": "Privacy Policy",
     "termsOfService": "Termini di servizio",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
@@ -1325,9 +1510,6 @@
     "inviteDesc": "Condividi DressApp con i tuoi amici e familiari",
     "bookmarkletDesc": "Trascina il pulsante in basso sulla barra dei preferiti. Su dispositivo mobile, aggiungilo ai preferiti e nominalo 'Assistente shopping DressApp'. Cliccaci sopra quando sei su una pagina prodotto.",
     "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
-<<<<<<< HEAD:frontend/src/locales/it.json
-    "privacyPolicy": "Privacy Policy"
-=======
     "aiProvider": "AI Engine & Model Provider",
     "selectedModel": "Active AI Model",
     "bringYourOwnKey": "Bring Your Own API Key",
@@ -1419,7 +1601,6 @@
     "chooseLanguage": "Select Language",
     "planLabel": "Piano {{tier}}",
     "creditsLabel": "{{credits}} crediti"
->>>>>>> e4839c3f30ce0fcd1ab5fcade0fc6c20eb2db39d:apps/web/src/locales/it.json
   },
   "admin": {
     "title": "Amministratore",
@@ -2268,12 +2449,23 @@
       "influencers": "Influencer",
       "second_hand": "Usato",
       "recycling": "Riciclo",
-      "news_flash": "Ultim'ora"
+      "news_flash": "Ultim'ora",
+      "all": "Tutti",
+      "local": "Notizie locali",
+      "runway": "Sfilate",
+      "vintage": "Vintage e archivio",
+      "maintenance_repairs": "Cura e riparazioni"
     },
     "title": "Tendenze e Approfondimenti",
     "subtitle": "Esplora estetiche di stile curate, notizie sulla sostenibilità e recensioni di sfilate su misura per il tuo profilo.",
     "noTrendsTitle": "Nessuna tendenza trovata",
-    "noTrendsDesc": "Non abbiamo trovato schede di tendenza attive. Ricontrolla più tardi."
+    "noTrendsDesc": "Non abbiamo trovato schede di tendenza attive. Ricontrolla più tardi.",
+    "womensFashion": "Moda donna",
+    "mensFashion": "Moda uomo",
+    "men": "Uomo",
+    "women": "Donna",
+    "israelAnchor": "Focalizzato su Israele 🇮🇱",
+    "all": "Tutti"
   },
   "item": {
     "polishingPhoto": "Lucidatura foto…",
@@ -3097,7 +3289,31 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "description": "DressApp privacy policy — how we collect, use, and protect your data."
+    "description": "DressApp privacy policy — how we collect, use, and protect your data.",
+    "lastUpdated": "Ultimo aggiornamento: Luglio 2026",
+    "sections": {
+      "intro": "1. Introduzione",
+      "dataCollection": "2. Dati che raccogliamo",
+      "dataUse": "3. Come utilizziamo i tuoi dati",
+      "dataSharing": "4. Condivisione dei dati",
+      "aiUsage": "5. Funzionalità IA e styling",
+      "storage": "6. Archiviazione e sicurezza dei dati",
+      "retention": "7. Conservazione dei dati",
+      "rights": "8. I tuoi diritti",
+      "cookies": "9. Cookie",
+      "contact": "10. Contattaci"
+    },
+    "intro": "DressApp è impegnata a proteggere la tua privacy. Questa informativa spiega come trattiamo i tuoi dati.",
+    "dataCollection": "Raccogliamo le informazioni fornite come nome, email, foto, misure corporee e preferenze di stile.",
+    "dataUse": "I tuoi dati vengono utilizzati per fornire i servizi, personalizzare i look e garantire la sicurezza.",
+    "dataSharing": "Non vendiamo i tuoi dati personali. La condivisione avviene solo con partner tecnologici affidabili.",
+    "aiUsage": "Le funzioni IA elaborano foto e misure in modo sicuro. Nessun dato biometrico è condiviso con gli inserzionisti.",
+    "storage": "I dati sono archiviati in modo sicuro con crittografia sia in transito che a riposo.",
+    "retention": "Conserviamo i tuoi dati solo per il tempo necessario. Puoi richiedere la cancellazione dell'account in qualsiasi momento.",
+    "rights": "Hai il diritto di accedere, correggere, esportare ed eliminare i tuoi dati personali.",
+    "cookies": "Utilizziamo cookie e tecnologie simili per migliorare l'esperienza e analizzare l'utilizzo.",
+    "contact": "Per domande sulla privacy, contattaci tramite le impostazioni dell'app o su dressapp.co.",
+    "loadError": "Impossibile caricare l'informativa sulla privacy. Riprova più tardi."
   },
   "pricing": {
     "title": "Piani di Abbonamento",

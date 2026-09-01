@@ -1,4 +1,4 @@
-﻿{
+{
   "brand": "DressApp",
   "nav": {
     "home": "Thuis",
@@ -149,6 +149,190 @@
         "headline": "Ruil voordat u winkelt",
         "summary": "De gemeenschapsruilkamers groeiden driemaal op jaarbasis; retailers luisteren eindelijk."
       }
+    },
+    "experts": {
+      "tag": "Ontmoet de specialisten",
+      "title": "Praat met een echte stijlexpert",
+      "description": "Boek een 1-op-1 sessie met een gecertificeerde DressApp-stylist wanneer de AI een menselijke, redactionele finishing touch nodig heeft.",
+      "viewAll": "Bekijk alle experts",
+      "bookSession": "Sessie boeken",
+      "sessionsCount": "({{count}} sessies)",
+      "roles": {
+        "seniorFashionStylist": "Senior mode-stylist",
+        "menswearConsultant": "Herenmodeconsulent",
+        "sustainableFashionAdvisor": "Adviseur duurzame mode",
+        "occasionWearExpert": "Gelegenheidskleding expert"
+      },
+      "bios": {
+        "ameliaNovak": "Redactionele looks voor veeleisende professionele omgevingen.",
+        "marcusLee": "Scherp, modern kleermakersadvies voor de hedendaagse man.",
+        "sofiaReyes": "Bouwen aan een bewuste garderobe zonder in te leveren op stijl.",
+        "priyaSharma": "Verbluffende looks voor bruiloften, gala's en feesten."
+      }
+    },
+    "aiEditor": {
+      "tag": "Visuele stylingsstudio",
+      "heading": "Jouw AI-mode-editor",
+      "description1": "Sleep, wissel en kleur echte kledingstukken uit je kast op een live model canvas.",
+      "description2": "Pas de stijlintensiteit aan en laat de AI accessoires en laagjes in realtime genereren.",
+      "cta": "Open mode-editor",
+      "title": "AI-mode-editor",
+      "renderingLivePreview": "Live voorbeeld genereren",
+      "exportLook": "Look exporteren",
+      "previewAlt": "AI-outfit voorbeeld",
+      "aiMatch": "AI-match {{percent}}%",
+      "fabricTone": "Stofkleur",
+      "styleIntensity": "Stijlintensiteit",
+      "percentValue": "{{percent}}%",
+      "silhouetteFit": "Silhouet en pasvorm",
+      "regenerate": "Opnieuw genereren met AI",
+      "tabs": {
+        "top": "Bovenstuk",
+        "bottom": "Onderstuk",
+        "shoes": "Schoenen",
+        "accessory": "Accessoire"
+      },
+      "tones": {
+        "forest": "Bosgroen",
+        "charcoal": "Antraciet",
+        "camel": "Kameel",
+        "slate": "Leiblauw",
+        "ivory": "Ivoor"
+      },
+      "silhouettes": {
+        "slim": "Aansluitend",
+        "relaxed": "Losvallend",
+        "oversized": "Oversized"
+      }
+    },
+    "stylistPreview": {
+      "tag": "Persoonlijke mode-assistent",
+      "heading": "Slimme AI-stylist voor elke dag",
+      "description": "Ontvang samengestelde outfitvoorstellen afgestemd op weer, afspraken en jouw stijl.",
+      "aiName": "DressApp AI-Stylist",
+      "aiRole": "Persoonlijke stijlconsulent",
+      "status": "Online",
+      "aiMessageWeather": "14°C & motregen",
+      "aiMessageMeeting": "10:00 Zakelijke bijeenkomst",
+      "aiMessagePrefix": "Goedemorgen! Aangezien het vandaag ",
+      "aiMessageMiddle": " is en je een ",
+      "aiMessageSuffix": ", raad ik een professionele look aan met bescherming tegen het weer.",
+      "inputPlaceholder": "Vertel je stylist wat je nodig hebt…",
+      "addImageAria": "Afbeelding toevoegen",
+      "micAria": "Microfoon gebruiken",
+      "sendAria": "Bericht verzenden",
+      "tabs": {
+        "chat": "Chat",
+        "outfitPlanner": "Outfitplanner",
+        "dailySuggestion": "Dagelijkse suggestie"
+      },
+      "recs": {
+        "blazer": {
+          "category": "Buitenkleding",
+          "title": "Navy Tech Blazer (Waterdicht)",
+          "description": "Past bij formele vergaderingen en weert lichte regen af."
+        },
+        "shirt": {
+          "category": "Bovenlaag",
+          "title": "Wit overhemd van biologisch katoen",
+          "description": "Klassieke, frisse en professionele basis."
+        }
+      },
+      "chips": {
+        "dailySuggestion": "Dagelijkse suggestie",
+        "planEventOutfit": "Plan event outfit",
+        "trendScout": "Trend Scout"
+      },
+      "brandName": "DressApp AI Personal Stylist",
+      "activeStatus": "Actief & klaar voor advies",
+      "userMessage": "“Wat zal ik morgen aandoen?”",
+      "aiMessageCalendarLead": "en je agenda vermeldt een"
+    },
+    "marketplace": {
+      "tag": "Zero Waste Initiatief",
+      "heading": "Circulaire kledingkast marktplaats",
+      "description": "Koop, verkoop of doneer. Verdien aan weinig gedragen kleding rechtstreeks vanuit je digitale kast.",
+      "activeListings": "Actieve advertenties",
+      "buySwap": "Kopen, ruilen",
+      "orDonate": "of doneren",
+      "explore": "Ontdek de marktplaats",
+      "conditionLine": "Staat: {{condition}}",
+      "locationLine": "Locatie: {{location}}",
+      "buy": "Kopen",
+      "swap": "Ruilen",
+      "donate": "Doneren",
+      "prevAria": "Vorig item",
+      "nextAria": "Volgend item",
+      "feeNotice": "Transparante 7% platformkosten na betalingsverwerking. Geen verborgen kosten."
+    },
+    "howItWorks": {
+      "tag": "Naadloos proces",
+      "heading": "Garderobebeheer opnieuw uitgevonden",
+      "description": "Stijlvol kleden is nu een modern 4-stappenproces aangedreven door geavanceerde AI.",
+      "steps": {
+        "capture": {
+          "alt": "Kleding fotograferen",
+          "title": "Kleding vastleggen",
+          "description": "Maak een snelle foto van je kleding. Werkt perfect bij elk licht en elke achtergrond."
+        },
+        "analysis": {
+          "alt": "Attribuutanalyse",
+          "title": "AI-attribuutanalyse",
+          "description": "Onze beeldmodellen herkennen direct kleuren, patronen, stoffen, modellen en categorieën."
+        },
+        "closet": {
+          "alt": "Slimme kledingkast",
+          "title": "Bouw je slimme kledingkast",
+          "description": "Je kleding wordt automatisch gecatalogiseerd zoals in een luxe online lookbook."
+        },
+        "styled": {
+          "alt": "Dagelijkse stijl",
+          "title": "Krijg dagelijks stijladvies",
+          "description": "Ontvang dagelijks samengestelde outfits op basis van lokaal weer en agenda-afspraken."
+        }
+      }
+    },
+    "closet": {
+      "tag": "Jouw digitale garderobe",
+      "heading": "Elk stuk vindt zijn plek",
+      "description1": "Fotografeer elk kledingstuk — DressApp herkent de stof, snit en kleur zoals een stylist dat zou doen.",
+      "description2": "Geen vergeten kledingstukken meer. Zoek op trefwoord of omschrijf een gevoel: 'iets warms voor een regenachtige dag'.",
+      "cta": "Start met je kledingkast",
+      "recentlyAdded": "Recent toegevoegd",
+      "recentlyAddedMore": "+{{count}}",
+      "garments": {
+        "blazer": {
+          "alt": "Navy blazer",
+          "category": "Buitenkleding",
+          "name": "Navy Tech Blazer",
+          "meta": "Nr. 014 — Waterdicht"
+        },
+        "sweater": {
+          "alt": "Grijze gebreide trui",
+          "category": "Breigoed",
+          "name": "Merino trui met ronde hals",
+          "meta": "Nr. 027 — Asgrijs"
+        },
+        "shirt": {
+          "alt": "Wit overhemd",
+          "category": "Bovenlaag",
+          "name": "Katoenen overhemd",
+          "meta": "Nr. 041 — Krijtwit"
+        }
+      },
+      "recent": {
+        "sneakers": "Sneakers",
+        "jeans": "Spijkerbroek",
+        "bag": "Leren tas",
+        "scarf": "Sjaal"
+      }
+    },
+    "stylist": {
+      "tag": "Empathische ontwerpintelligentie",
+      "heading": "De AI-stylist die het leven begrijpt",
+      "description1": "Jouw kledingkeuzes moeten niet losstaan van de realiteit. DressApp koppelt met je agenda en weersverwachting om dagelijks optimale outfits te ontwerpen.",
+      "description2": "Stap nooit meer ongepast gekleed naar een belangrijke vergadering of onvoorbereid in een regenbui. Alsof je een topstylist in je zak hebt met zicht op je hele kledingkast.",
+      "cta": "Vraag de stylist"
     }
   },
   "closet": {
@@ -475,7 +659,8 @@
       "fabric": "Stof en samenstelling",
       "market": "Gebruiksdoel en prijs"
     },
-    "noReadyCards": "Geen voltooide kaarten om op te slaan."
+    "noReadyCards": "Geen voltooide kaarten om op te slaan.",
+    "gender": "Geslacht"
   },
   "itemDetail": {
     "reanalyze": {
@@ -1137,7 +1322,7 @@
     "importWardrobePill": "Garderobe importeren",
     "mobileDesktopGuide": "Garderobe-import is beschikbaar in de desktopversie van DressApp. Open je account in een desktopbrowser om verder te gaan.",
     "deleteAccountLink": "Verwijder mijn account",
-    "privacyPolicy": "Privacybeleid",
+    "privacyPolicy": "Privacy Policy",
     "termsOfService": "Servicevoorwaarden",
     "deleteAccountTitle": "Account verwijderen",
     "deleteAccountSubtitle": "Permanente accountverwijdering",
@@ -1398,9 +1583,6 @@
     "annualPlanDesc": "Bespaar 50% in vergelijking met maandelijkse facturering.",
     "perYear": " / jaar",
     "upgradeAnnualBtn": "Upgrade jaarlijks",
-<<<<<<< HEAD:frontend/src/locales/nl.json
-    "privacyPolicy": "Privacy Policy"
-=======
     "aiProvider": "AI Engine & Model Provider",
     "selectedModel": "Active AI Model",
     "bringYourOwnKey": "Bring Your Own API Key",
@@ -1492,7 +1674,6 @@
     "chooseLanguage": "Select Language",
     "planLabel": "{{tier}}-abonnement",
     "creditsLabel": "{{credits}} credits"
->>>>>>> e4839c3f30ce0fcd1ab5fcade0fc6c20eb2db39d:apps/web/src/locales/nl.json
   },
   "admin": {
     "title": "Beheerder",
@@ -2341,12 +2522,23 @@
       "influencers": "Beïnvloeders",
       "second_hand": "Tweedehands",
       "recycling": "Recycling",
-      "news_flash": "Nieuwsflits"
+      "news_flash": "Nieuwsflits",
+      "all": "Alles",
+      "local": "Lokaal nieuws",
+      "runway": "Catwalk",
+      "vintage": "Vintage & archief",
+      "maintenance_repairs": "Onderhoud & reparaties"
     },
     "title": "Modetrends en inzichten",
     "subtitle": "Blader door samengestelde stijlesthetiek, duurzaamheidsnieuws en catwalkrecensies die zijn afgestemd op uw profiel.",
     "noTrendsTitle": "Geen trends gevonden",
-    "noTrendsDesc": "We konden geen actieve trendkaarten vinden. Kom later terug voor samengestelde inzichten."
+    "noTrendsDesc": "We konden geen actieve trendkaarten vinden. Kom later terug voor samengestelde inzichten.",
+    "womensFashion": "Damesmode",
+    "mensFashion": "Herenmode",
+    "men": "Heren",
+    "women": "Dames",
+    "israelAnchor": "Gericht op Israël 🇮🇱",
+    "all": "Alles"
   },
   "item": {
     "polishingPhoto": "Foto polijsten…",
@@ -3170,7 +3362,31 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "description": "DressApp privacy policy — how we collect, use, and protect your data."
+    "description": "DressApp privacy policy — how we collect, use, and protect your data.",
+    "lastUpdated": "Laatst bijgewerkt: Juli 2026",
+    "sections": {
+      "intro": "1. Inleiding",
+      "dataCollection": "2. Gegevens die we verzamelen",
+      "dataUse": "3. Hoe we uw gegevens gebruiken",
+      "dataSharing": "4. Gegevens delen",
+      "aiUsage": "5. AI- en stylistfuncties",
+      "storage": "6. Gegevensopslag en beveiliging",
+      "retention": "7. Gegevensbewaring",
+      "rights": "8. Uw rechten",
+      "cookies": "9. Cookies",
+      "contact": "10. Contact"
+    },
+    "intro": "DressApp hecht veel waarde aan uw privacy. Dit beleid legt uit hoe wij uw gegevens verwerken.",
+    "dataCollection": "Wij verzamelen gegevens zoals naam, e-mail, foto's, lichaamsmaten, stijlvoorkeuren en apparaatinformatie.",
+    "dataUse": "Uw gegevens worden gebruikt om diensten te leveren, stijlen te personaliseren en veiligheid te waarborgen.",
+    "dataSharing": "Wij verkopen uw gegevens nooit aan derden. Delen gebeurt uitsluitend met betrouwbare infrastructuurpartners.",
+    "aiUsage": "AI-functies verwerken maten en foto's veilig. Er worden geen biometrische gegevens gedeeld met adverteerders.",
+    "storage": "Gegevens worden veilig opgeslagen met encryptie in rust en tijdens verzending.",
+    "retention": "Wij bewaren gegevens zolang nodig is. U kunt op elk moment verzoeken uw account te verwijderen.",
+    "rights": "U heeft het recht om uw gegevens in te zien, te corrigeren, te exporteren en te verwijderen.",
+    "cookies": "Wij gebruiken cookies om uw ervaring te verbeteren en het gebruik te analyseren.",
+    "contact": "Voor vragen over privacy kunt u contact opnemen via de app of op dressapp.co.",
+    "loadError": "Privacybeleid kon niet worden geladen. Probeer het later opnieuw."
   },
   "pricing": {
     "title": "Abonnementen & Tarieven",

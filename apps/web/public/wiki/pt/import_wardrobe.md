@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Importe seu Guarda-Roupa - Guia Detalhado
 
 ## Visão geral
@@ -86,7 +85,6 @@ If you run into issues with importing:
 ---
 
 *Última atualização: julho de 2026*
-=======
 # Importar seu guarda-roupa de outros aplicativos (Migração de concorrentes)
 
 ## Visão geral
@@ -119,4 +117,3 @@ Se você já tem suas roupas catalogadas em outro aplicativo de guarda-roupa (co
 ## Limitações
 - **Apenas desktop**: Não pode ser executado em navegadores móveis devido a restrições de API.
 - **Clareza visual**: Disposições de roupas muito distorcidas, escuras ou sobrepostas no aplicativo concorrente podem falhar na extração de corte visual e exigir ajustes manuais nas fotos posteriormente.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad

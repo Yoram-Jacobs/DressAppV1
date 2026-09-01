@@ -34,7 +34,6 @@ import {
   Ruler,
   Briefcase,
   Send,
-  Bot,
   User as UserIcon,
   Check,
   Image as ImageIcon,

@@ -20,8 +20,8 @@ import {
   AlertTriangle,
   Tag,
   Luggage,
-  Layers3,
-} from "lucide-react";
+  Layers as Layers3,
+} from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

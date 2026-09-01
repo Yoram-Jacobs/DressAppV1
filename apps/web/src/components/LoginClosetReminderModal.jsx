@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { HelpCircle, Sparkles, UploadCloud, ArrowRight, X } from 'lucide-react';
+import { CircleHelp as HelpCircle, Sparkles, UploadCloud, ArrowRight, X } from 'lucide-react';
 import { toast } from 'sonner';
 import OnboardingMigrationModal from './OnboardingMigrationModal';
 

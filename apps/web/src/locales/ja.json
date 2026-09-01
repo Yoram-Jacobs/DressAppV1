@@ -1,4 +1,4 @@
-﻿{
+{
   "brand": "DressApp",
   "nav": {
     "home": "ホーム",
@@ -133,6 +133,190 @@
         "headline": "買う前に交換しよう",
         "summary": "地域のスワップルームは前年比3倍に成長。小売もついに耳を傾け始めた。"
       }
+    },
+    "experts": {
+      "tag": "スタイリストのご紹介",
+      "title": "プロのスタイリストに相談",
+      "description": "AIの提案にプロの仕上げを加えたいときは、DressApp認定スタイリストの個別セッションをご予約ください。",
+      "viewAll": "すべてのスタイリストを見る",
+      "bookSession": "セッションを予約",
+      "sessionsCount": "({{count}}件のセッション)",
+      "roles": {
+        "seniorFashionStylist": "シニアファッションスタイリスト",
+        "menswearConsultant": "メンズウェアコンサルタント",
+        "sustainableFashionAdvisor": "サステナブルファッションアドバイザー",
+        "occasionWearExpert": "オケージョンウェアエキスパート"
+      },
+      "bios": {
+        "ameliaNovak": "洗練されたビジネスシーンに最適なエディトリアルルック。",
+        "marcusLee": "現代のジェントルマンのためのシャープでモダンなテーラリング。",
+        "sofiaReyes": "スタイルを犠牲にしない、サステナブルなワードローブの構築。",
+        "priyaSharma": "結婚式やガラ、パーティーで際立つ華やかなルック。"
+      }
+    },
+    "aiEditor": {
+      "tag": "ビジュアルスタイリングスタジオ",
+      "heading": "AIファッションエディター",
+      "description1": "リアルなモデルキャンバス上で、クローゼットのアイテムをドラッグ＆ドロップして自由にコーディネート。",
+      "description2": "スタイル強度スライダーを調整して、アクセサリーやレイヤリングをリアルタイムに自動生成。",
+      "cta": "ファッションエディターを開く",
+      "title": "AIファッションエディター",
+      "renderingLivePreview": "ライブプレビューをレンダリング中",
+      "exportLook": "ルックをエクスポート",
+      "previewAlt": "AIコーディネートプレビュー",
+      "aiMatch": "AIマッチ度 {{percent}}%",
+      "fabricTone": "生地のトーン",
+      "styleIntensity": "スタイル強度",
+      "percentValue": "{{percent}}%",
+      "silhouetteFit": "シルエットとフィット感",
+      "regenerate": "AIで再生成",
+      "tabs": {
+        "top": "トップス",
+        "bottom": "ボトムス",
+        "shoes": "シューズ",
+        "accessory": "アクセサリー"
+      },
+      "tones": {
+        "forest": "フォレストグリーン",
+        "charcoal": "チャコール",
+        "camel": "キャメル",
+        "slate": "スレートブルー",
+        "ivory": "アイボリー"
+      },
+      "silhouettes": {
+        "slim": "スリムフィット",
+        "relaxed": "リラックスフィット",
+        "oversized": "オーバーサイズ"
+      }
+    },
+    "stylistPreview": {
+      "tag": "パーソナルファッションアシスタント",
+      "heading": "毎日のスマートなAIスタイリスト",
+      "description": "天気やスケジュール、好みに合わせた毎日のコーディネート提案をお届けします。",
+      "aiName": "DressApp AIスタイリスト",
+      "aiRole": "パーソナルスタイルアドバイザー",
+      "status": "オンライン",
+      "aiMessageWeather": "14°C / 小雨",
+      "aiMessageMeeting": "10:00 ビジネスミーティング",
+      "aiMessagePrefix": "おはようございます！本日は",
+      "aiMessageMiddle": "があり、",
+      "aiMessageSuffix": "の予定があるため、防水性のある洗練されたプロフェッショナルルックをおすすめします。",
+      "inputPlaceholder": "スタイリストにリクエストを伝える…",
+      "addImageAria": "画像を追加",
+      "micAria": "マイクを使用",
+      "sendAria": "メッセージを送信",
+      "tabs": {
+        "chat": "チャット",
+        "outfitPlanner": "コーディネートプランナー",
+        "dailySuggestion": "今日のおすすめ"
+      },
+      "recs": {
+        "blazer": {
+          "category": "アウター",
+          "title": "ネイビーテックブレザー（防水）",
+          "description": "フォーマルな会議に適し、軽い雨を弾きます。"
+        },
+        "shirt": {
+          "category": "トップス",
+          "title": "オーガニックコットン ホワイトドレスシャツ",
+          "description": "清潔感のある上品なプロフェッショナルベース。"
+        }
+      },
+      "chips": {
+        "dailySuggestion": "今日のおすすめ",
+        "planEventOutfit": "イベントの服装を計画",
+        "trendScout": "トレンドスカウト"
+      },
+      "brandName": "DressApp AI パーソナルスタイリスト",
+      "activeStatus": "オンライン・相談可能",
+      "userMessage": "「明日は何を着ればいい？」",
+      "aiMessageCalendarLead": "カレンダーには次の予定が登録されています："
+    },
+    "marketplace": {
+      "tag": "ゼロウェイスト・イニシアチブ",
+      "heading": "循環型ワードローブマーケット",
+      "description": "購入、販売、寄付。デジタルクローゼットから不要なアイテムをスマートに活用。",
+      "activeListings": "出品中のアイテム",
+      "buySwap": "購入・交換",
+      "orDonate": "または寄付",
+      "explore": "マーケットを見る",
+      "conditionLine": "状態: {{condition}}",
+      "locationLine": "地域: {{location}}",
+      "buy": "購入",
+      "swap": "交換",
+      "donate": "寄付",
+      "prevAria": "前のアイテム",
+      "nextAria": "次のアイテム",
+      "feeNotice": "決済処理後に発生する透明な7%の手数料。隠れた費用はありません。"
+    },
+    "howItWorks": {
+      "tag": "シンプルな流れ",
+      "heading": "ワードローブ管理の革新",
+      "description": "最先端のAIによって、毎日のスタイリングが4つの簡単なステップで完了します。",
+      "steps": {
+        "capture": {
+          "alt": "洋服を撮影",
+          "title": "洋服を撮影して登録",
+          "description": "洋服をスマホで素早く撮影。どんな照明や背景でも綺麗に認識します。"
+        },
+        "analysis": {
+          "alt": "属性の自動分析",
+          "title": "AIによる属性解析",
+          "description": "AIがカラー、柄、素材、シルエット、カテゴリーを瞬時に自動判別します。"
+        },
+        "closet": {
+          "alt": "スマートクローゼット",
+          "title": "スマートクローゼットの構築",
+          "description": "お気に入りの洋服が、ブランドのルックブックのように美しく整理されます。"
+        },
+        "styled": {
+          "alt": "毎日のスタイリング",
+          "title": "毎日ぴったりの服を提案",
+          "description": "現在地の天気予報とカレンダーの予定に合わせた最適なコーディネートが届きます。"
+        }
+      }
+    },
+    "closet": {
+      "tag": "あなたのデジタルクローゼット",
+      "heading": "すべての服にぴったりの場所を",
+      "description1": "手持ちの服を撮影するだけで、DressAppが素材、カッティング、カラーを自動でスマートに整理。",
+      "description2": "クローゼットの奥で眠る服はもうありません。「雨の日に着る暖かい服」など言葉で簡単に検索可能。",
+      "cta": "クローゼットを作る",
+      "recentlyAdded": "最近追加されたアイテム",
+      "recentlyAddedMore": "+{{count}}",
+      "garments": {
+        "blazer": {
+          "alt": "ネイビーブレザー",
+          "category": "アウター",
+          "name": "ネイビーテックブレザー",
+          "meta": "No. 014 — 防水仕様"
+        },
+        "sweater": {
+          "alt": "グレーニットセーター",
+          "category": "ニットウェア",
+          "name": "メリノクルーネックセーター",
+          "meta": "No. 027 — アッシュグレー"
+        },
+        "shirt": {
+          "alt": "ホワイトドレスシャツ",
+          "category": "トップス",
+          "name": "コットンドレスシャツ",
+          "meta": "No. 041 — チョークホワイト"
+        }
+      },
+      "recent": {
+        "sneakers": "スニーカー",
+        "jeans": "デニムジーンズ",
+        "bag": "レザーバッグ",
+        "scarf": "スカーフ"
+      }
+    },
+    "stylist": {
+      "tag": "ライフスタイルに寄り添うデザイン知能",
+      "heading": "あなたの日常を深く理解するAIスタイリスト",
+      "description1": "毎日のコーディネートを、ただの思いつきで選ぶ必要はありません。DressAppがカレンダーと現地の天気に連動し、その日に最適な装いを提案します。",
+      "description2": "大事な商談での服装選びに迷ったり、突然の雨に慌てることはもうありません。クローゼットを知り尽くした世界最高峰のスタイリストがいつも手元にいる感覚です。",
+      "cta": "スタイリストに相談"
     }
   },
   "closet": {
@@ -459,7 +643,8 @@
       "fabric": "生地と構成比",
       "market": "用途と価格設定"
     },
-    "noReadyCards": "保存可能な完了カードがありません。"
+    "noReadyCards": "保存可能な完了カードがありません。",
+    "gender": "性別"
   },
   "itemDetail": {
     "back": "クローゼットに戻る",
@@ -1272,7 +1457,7 @@
     "importWardrobePill": "ワードローブをインポート",
     "mobileDesktopGuide": "ワードローブのインポートはDressAppのデスクトップ版で利用できます。続行するにはデスクトップブラウザでアカウントを開いてください。",
     "deleteAccountLink": "アカウントを削除",
-    "privacyPolicy": "プライバシーポリシー",
+    "privacyPolicy": "Privacy Policy",
     "termsOfService": "利用規約",
     "deleteAccountTitle": "Delete Account",
     "deleteAccountSubtitle": "Permanent Account Deletion",
@@ -1325,9 +1510,6 @@
     "inviteDesc": "DressAppをお友達やご家族と共有しましょう",
     "bookmarkletDesc": "下のボタンをブックマークバーにドラッグします。モバイルの場合は、ブックマークに追加し、「DressAppショッピングアシスタント」と名前を付けます。商品ページを表示中にクリックします。",
     "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
-<<<<<<< HEAD:frontend/src/locales/ja.json
-    "privacyPolicy": "Privacy Policy"
-=======
     "aiProvider": "AI Engine & Model Provider",
     "selectedModel": "Active AI Model",
     "bringYourOwnKey": "Bring Your Own API Key",
@@ -1419,7 +1601,6 @@
     "chooseLanguage": "Select Language",
     "planLabel": "{{tier}}プラン",
     "creditsLabel": "{{credits}}クレジット"
->>>>>>> e4839c3f30ce0fcd1ab5fcade0fc6c20eb2db39d:apps/web/src/locales/ja.json
   },
   "admin": {
     "title": "管理",
@@ -2268,12 +2449,23 @@
       "influencers": "インフルエンサー",
       "second_hand": "セカンドハンド",
       "recycling": "リサイクル",
-      "news_flash": "ニュース速報"
+      "news_flash": "ニュース速報",
+      "all": "すべて",
+      "local": "ローカルニュース",
+      "runway": "ランウェイ",
+      "vintage": "ヴィンテージ＆アーカイブ",
+      "maintenance_repairs": "お手入れと修理"
     },
     "title": "ファッショントレンド＆インサイト",
     "subtitle": "プロフィールに合わせてカスタマイズされたスタイル、サステナビリティニュース、ランウェイレビューを閲覧できます。",
     "noTrendsTitle": "トレンドが見つかりません",
-    "noTrendsDesc": "アクティブなトレンドカードが見つかりませんでした。後ほどもう一度ご確認ください。"
+    "noTrendsDesc": "アクティブなトレンドカードが見つかりませんでした。後ほどもう一度ご確認ください。",
+    "womensFashion": "レディースファッション",
+    "mensFashion": "メンズファッション",
+    "men": "メンズ",
+    "women": "レディース",
+    "israelAnchor": "イスラエル特化 🇮🇱",
+    "all": "すべて"
   },
   "item": {
     "polishingPhoto": "写真を仕上げ中…",
@@ -3098,7 +3290,31 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "description": "DressApp privacy policy — how we collect, use, and protect your data."
+    "description": "DressApp privacy policy — how we collect, use, and protect your data.",
+    "lastUpdated": "最終更新日: 2026年7月",
+    "sections": {
+      "intro": "1. はじめに",
+      "dataCollection": "2. 収集するデータ",
+      "dataUse": "3. データの利用目的",
+      "dataSharing": "4. データの共有",
+      "aiUsage": "5. AIおよびスタイリスト機能",
+      "storage": "6. データの保管とセキュリティ",
+      "retention": "7. データの保持期間",
+      "rights": "8. お客様の権利",
+      "cookies": "9. クッキー（Cookies）",
+      "contact": "10. お問い合わせ"
+    },
+    "intro": "DressAppはお客様のプライバシー保護に取り組んでいます。本ポリシーではデータの取り扱いについて説明します。",
+    "dataCollection": "氏名、メールアドレス、プロフィール写真、体型サイズ、スタイルの好みなどの情報を収集します。",
+    "dataUse": "サービス提供、パーソナライズされたスタイリング提案、安全性向上のためにデータを利用します。",
+    "dataSharing": "個人情報を第三者に販売することはありません。信頼できるインフラ提供元とのみ安全に連携します。",
+    "aiUsage": "AI機能はお客様のデータを安全に処理し、生体認証データが広告主に共有されることは一切ありません。",
+    "storage": "データは転送時および保管時に業界標準の暗号化によって安全に保護されます。",
+    "retention": "データはサービス提供に必要な期間のみ保持され、いつでもアカウントの完全削除をリクエストできます。",
+    "rights": "お客様には、個人データへのアクセス、訂正、エクスポート、削除を求める権利があります。",
+    "cookies": "ユーザー体験の向上と分析のためにクッキーおよび類似技術を使用しています。",
+    "contact": "プライバシーに関するお問い合わせは、アプリの設定または dressapp.co よりご連絡ください。",
+    "loadError": "プライバシーポリシーを読み込めませんでした。後でもう一度お試しください。"
   },
   "pricing": {
     "title": "メンバーシップ料金プラン",

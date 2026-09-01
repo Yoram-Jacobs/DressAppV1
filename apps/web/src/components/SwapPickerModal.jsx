@@ -25,7 +25,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Loader2, ShirtIcon } from 'lucide-react';
+import { CheckCircle2, Loader2, Shirt as ShirtIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { bestImageUrl } from '@/lib/itemImage';

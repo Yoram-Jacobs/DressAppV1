@@ -438,9 +438,9 @@ export default function Stylist() {
       source_workflow: isEvent ? 'event' : 'scheduled',
       prompt: isEvent ? (eventDetails.prompt || 'Event') : (user?.scheduler_settings?.style_dress_for || 'casual'),
       garments: (rec.items || []).map((it) => ({
-        closet_item_id: it.closet_item_id,
+        closet_item_id: it.closet_item_id || it.id,
         role: it.role,
-        title: it.description,
+        title: it.description || it.title || it.name,
       })),
       usage: {
         date: targetDate,
@@ -731,9 +731,9 @@ export default function Stylist() {
       source_workflow: isEvent ? 'event' : 'scheduled',
       prompt: isEvent ? 'Event' : (user?.scheduler_settings?.style_dress_for || 'casual'),
       garments: (rec.items || []).map((it) => ({
-        closet_item_id: it.closet_item_id,
+        closet_item_id: it.closet_item_id || it.id,
         role: it.role,
-        title: it.description,
+        title: it.description || it.title || it.name,
       })),
       usage: {
         date: targetDate,

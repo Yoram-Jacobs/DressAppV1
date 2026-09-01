@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
-import { MapPin, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { MapPin, Loader2, CheckCircle2, CircleAlert as AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';

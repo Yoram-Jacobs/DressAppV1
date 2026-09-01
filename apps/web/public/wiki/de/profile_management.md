@@ -1,34 +1,27 @@
 # Profil, Größen & Konfiguration (`/me`)
 
-<<<<<<< HEAD
 Verwalten Sie Körpermaße, Hautton, Körperfoto-Ausschnitte, Styling-Präferenzen, KI-Modell-Anmeldedaten und Systemintegrationen in Ihrem persönlichen Profil-Dashboard.
 
 ## Übersicht
 Die Seite **Profil & Einstellungen** (`https://dressapp.co/me`) dient als zentrale Steuerzentrale für Ihr DressApp-Ökosystem. Sie beherbergt Ihre physischen anthropometrischen Parameter, die digitale Anprobe-Avatar-Bühne, Stil-Einschränkungen, lokalisierte Präferenzen, KI-Modell-Schlüssel und Push-Benachrichtigungszeitpläne.
-=======
 Verwalten Sie physische Maße, Hautton, Körperfoto-Ausschnitte, Styling-Präferenzen, KI-Modell-Anmeldedaten und Systemintegrationen auf Ihrem persönlichen Profil-Dashboard.
 
 ## Übersicht
 Die Seite **Profil & Einstellungen** (`https://dressapp.co/me`) dient als zentrale Steuerzentrale für Ihr DressApp-Ökosystem. Sie enthält Ihre physischen anthropometrischen Parameter, Ihre digitale Try-on-Avatarbühne, Stilbeschränkungen, lokalisierte Präferenzen, KI-Modellschlüssel und Push-Benachrichtigungszeitpläne.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## Voraussetzungen
 - Ein aktives DressApp-Konto.
-<<<<<<< HEAD
 - (Optional) Gerätekamera-Berechtigungen für Ganzkörper-Foto-Upload.
 - (Optional) Standortberechtigungen für lokales Stylisten-Kampagnen-Targeting und Wettervorhersage.
-=======
 - (Optional) Kameraberechtigungen des Geräts für den Upload von Ganzkörperfotos.
 - (Optional) Standortberechtigungen für die Ausrichtung lokaler Stylisten-Kampagnen, kulturelle Einschränkungen und Wettervorhersagen.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## Schritt-für-Schritt-Anleitung: Seitenübersicht von oben nach unten
 
-<<<<<<< HEAD
 ### 1. Seitenkopf & Entdecken-Navigationsleiste
 Am oberen Rand des `/me`-Dashboards:
 - **Kopfzeile**: Zeigt Ihren Kontostatus und Titel an.
@@ -127,7 +120,6 @@ Verwaltet Systemeinstellungen, Abonnements und KI-Integrationen:
 - **Standortdienste-Karte**: GPS-Standortberechtigungen für entfernungsbasierte Experten-Feeds und hyperlokales Wetter umschalten.
 - **Freunde Einladen Button**: Teilbaren Empfehlungslink kopieren.
 - **Shopping Assistant**: Chrome Web Store Erweiterungsdetails aufrufen oder **Universal Bookmarklet** (`javascript:...`) für sofortige E-Commerce-Größenvergleiche generieren.
-=======
 ### 1. Seitenkopf & Erkundungs-Navigationsleiste
 Befindet sich oben auf dem `/me`-Dashboard:
 - **Seitenkopf**: Zeigt Ihren Kontostatus und Titel an.
@@ -241,56 +233,43 @@ Verwaltet Einstellungen auf Systemebene, Abonnements und KI-Integrationen:
 - **Standortdienste**: Aktivieren Sie GPS-Standortberechtigungen für entfernungsabgestimmte Experten-Feeds und hyperlokales Wetter.
 - **Freunde einladen**: Kopieren Sie den teilbaren Empfehlungslink.
 - **Einkaufsassistent**: Rufen Sie Details zur Erweiterung des Chrome Web Store ab oder generieren Sie ein **Universal Bookmarklet** (`javascript:...`) für sofortige Größenvergleiche im E-Commerce.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ### 5. Kontoaktionen & Diagnose
-<<<<<<< HEAD
 - **Abmelden**: Aus der aktuellen Sitzung abmelden.
 - **Mein Konto löschen**: Link zum dauerhaften Löschen von Kontodaten.
 - **Entwickler-Panel**: Diagnose-Akkordeon für Umgebungs-Tests.
-=======
 - **Abmelden**: Melden Sie sich von Ihrer aktuellen Sitzung ab.
 - **Mein Konto löschen**: Link zum dauerhaften Löschen von Kontodaten.
 - **Entwickler-Panel**: Diagnose-Akkordeon für Umgebungstests.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## Erwartete Ergebnisse
-<<<<<<< HEAD
 - Sofortige Synchronisation physischer Metriken, Hauttons und Fotoausschnitte über die 2D-Avatar-Anprobe-Leinwand.
 - Null Leerlauf-Netzwerkanfragen beim Navigieren zwischen Einstellungs-Panels.
 - Angepasste KI-Stylisten-Outfit-Vorschläge, abgestimmt auf Ihre Bescheidenheitsregeln und Ihren Zeitplan.
-=======
 - Sofortige Synchronisierung physischer Maße, des Hauttons und der Foto-Ausschnitte auf dem 2D-Avatar Try-On-Canvas.
 - Keine inaktiven Netzwerkanfragen beim Navigieren zwischen den Einstellungsbereichen.
 - Maßgeschneiderte AI Stylist-Outfit-Vorschläge, die auf Ihre Bescheidenheitsregeln und Ihren Zeitplan abgestimmt sind.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## Fehlerbehebung
-<<<<<<< HEAD
 - **Foto-Hintergrund nicht entfernt**: Stellen Sie sicher, dass Ihr hochgeladenes Foto ganzkörperig mit kontrastierender Hintergrundbeleuchtung ist.
 - **Push-Benachrichtigungen kommen nicht an**: Bestätigen Sie, dass Browser-Benachrichtigungsberechtigungen aktiviert sind und eine Telefonnummer unter *Kontakt* gespeichert ist.
 - **Adress-Autovervollständigung reagiert nicht**: Prüfen Sie, ob die Internetverbindung für OpenStreetMap Nominatim-Abfragen aktiv ist.
-=======
 - **Hintergrund des Fotos nicht entfernt**: Stellen Sie sicher, dass das hochgeladene Foto ein Ganzkörperfoto mit kontrastierender Hintergrundbeleuchtung ist.
 - **Push-Benachrichtigungen kommen nicht an**: Bestätigen Sie, dass die Benachrichtigungsberechtigungen des Browsers aktiviert sind und eine Telefonnummer unter *Kontakt* gespeichert ist.
 - **Automatische Vervollständigung der Adresse reagiert nicht**: Überprüfen Sie, ob eine aktive Internetverbindung für OpenStreetMap Nominatim-Abfragen vorhanden ist.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## Einschränkungen
-<<<<<<< HEAD
 - Kostenloses Kontingent ist auf 150 Artikel begrenzt, es sei denn, es wird durch Empfehlungsbonus (+10 Slots pro Einladung) oder Pro-Abonnement erweitert.
 - Benutzerdefinierter API-Schlüssel-Modus erfordert gültige Schlüssel mit verbleibendem Kontingent vom jeweiligen Anbieter.
 
 (Ende der Datei)
-=======
 - Der Speicherplatz für Free-Konten ist auf 50 Artikel begrenzt, es sei denn, er wird durch Empfehlungsboni erweitert (+10 Plätze pro Einladung, bis zu maximal 200 Artikel) oder durch ein Upgrade auf die Manager- oder Professional-Stufe.
 - Der Modus für benutzerdefinierte API-Schlüssel erfordert gültige Schlüssel mit verbleibendem Kontingent des jeweiligen Anbieters.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad

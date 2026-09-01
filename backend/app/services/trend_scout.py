@@ -593,7 +593,7 @@ DEFAULT_BUCKET_IMAGES: dict[tuple[str, str], str] = {
     ("sustainability", "male"): "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
     ("influencers", "male"): "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=800&q=80",
     ("vintage", "male"): "https://www.heddels.com/wp-content/uploads/2022/08/wide-leg-raw-denim-jeans-a-buyers-guide-443x296.jpg",
-    ("maintenance_repairs", "male"): "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=800&q=80",
+    ("maintenance_repairs", "male"): "https://images.unsplash.com/photo-1595642527925-4d41cb781653?auto=format&fit=crop&w=800&q=80",
 
     # Women's Buckets
     ("local", "female"): "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80",
@@ -1085,7 +1085,10 @@ async def _generate_one(
     browsed_urls = []
     discovered_urls = set()
 
-    for _attempt in range(4):
+    max_attempts = 6
+    for _attempt in range(max_attempts):
+        if _attempt == max_attempts - 1:
+            history.append("Warning: This is your final turn. You MUST call action 'finish' now with the final curated card.")
         user_text = "\n".join(history)
         if client_type == "mobile":
             try:

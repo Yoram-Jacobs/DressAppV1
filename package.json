@@ -2,7 +2,7 @@
   "name": "dressapp",
   "private": true,
   "workspaces": [
-    "apps/mobile",
+    "apps/*",
     "packages/*"
   ],
   "devDependencies": {
@@ -12,8 +12,8 @@
     "build": "npx turbo run build",
     "test": "npx turbo run test",
     "lint": "npx turbo run lint",
-    "dev:web": "npx turbo run dev --filter=apps/web",
-    "dev:mobile": "npx turbo run dev --filter=apps/mobile"
+    "dev:web": "yarn --cwd apps/web start",
+    "dev:mobile": "yarn --cwd apps/mobile start"
   },
   "resolutions": {
     "lightningcss": "1.30.1"

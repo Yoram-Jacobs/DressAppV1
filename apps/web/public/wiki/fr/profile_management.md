@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Profil, Tailles et Configuration (`/me`)
 
 Gérez les mesures corporelles, le teint, les découpes de photos corps entier, les préférences de style, les identifiants des modèles IA et les intégrations système sur votre tableau de bord personnel.
@@ -129,7 +128,6 @@ Gère les paramètres niveau système, abonnements et intégrations IA :
 - Synchronisation instantanée métriques physiques, teint et découpes photo sur canevas essayage Avatar 2D.
 - Zéro requêtes réseau inactives en naviguant entre panneaux paramètres.
 - Propositions tenues Styliste IA personnalisées alignées avec vos règles modestie et planning.
-=======
 # Profil, Tailles & Configuration (`/me`)
 
 Gérez vos mesures physiques, votre teint de peau, les détourages de photos corporelles, vos préférences de style, les identifiants de modèles d'IA et les intégrations système sur votre tableau de bord de profil personnel.
@@ -275,30 +273,23 @@ Gère les paramètres au niveau du système, les abonnements et les intégration
 - Synchronisation instantanée des mesures physiques, du teint de la peau et des détourages photo sur la zone d'essayage de l'avatar 2D.
 - Aucune requête réseau inactive lors de la navigation entre les panneaux de paramètres.
 - Propositions de tenues AI Stylist personnalisées alignées sur vos règles de pudeur et votre calendrier.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## Dépannage
-<<<<<<< HEAD
 - **Arrière-plan photo non supprimé** : Assurez-vous que votre photo téléchargée est corps entier avec éclairage arrière-plan contrasté.
 - **Alertes push non reçues** : Confirmez que permissions notifications navigateur sont activées et numéro téléphone sauvegardé sous *Contact*.
 - **Autocomplétion adresse ne répond pas** : Vérifiez que connexion internet est active pour requêtes OpenStreetMap Nominatim.
-=======
 - **L'arrière-plan de la photo n'est pas supprimé** : Assurez-vous que votre photo téléchargée est en pied (corps entier) avec un éclairage d'arrière-plan contrasté.
 - **Les alertes push n'arrivent pas** : Confirmez que les autorisations de notification du navigateur sont activées et qu'un numéro de téléphone est enregistré sous *Contact*.
 - **La saisie automatique de l'adresse ne répond pas** : Vérifiez que la connexion Internet est active pour les requêtes OpenStreetMap Nominatim.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## Limitations
-<<<<<<< HEAD
 - Espace compte niveau gratuit plafonné à 150 articles sauf expansion via bonus parrainage (+10 emplacements par invitation) ou abonnement Pro.
 - Mode clé API personnalisée requiert clés valides avec quota restant du fournisseur respectif.
 
 (Fichier terminé)
-=======
 - L'espace de compte de niveau gratuit est limité à 50 éléments, sauf s'il est augmenté via un bonus de parrainage (+10 emplacements par invitation jusqu'à un maximum de 200 éléments) ou une mise à niveau vers le niveau Manager ou Professional.
 - Le mode clé API personnalisée nécessite des clés valides avec un quota restant du fournisseur respectif.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad

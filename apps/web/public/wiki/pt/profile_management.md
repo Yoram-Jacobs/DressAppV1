@@ -1,23 +1,19 @@
-<<<<<<< HEAD
 # Perfil, Tamanhos e Configuração (`/me`)
 
 Gerencie medidas corporais, tom de pele, recortes de fotos de corpo inteiro, preferências de estilo, credenciais de modelos de IA e integrações de sistema no seu painel de perfil pessoal.
 
 ## Visão Geral
 A página **Perfil e Configurações** (`https://dressapp.co/me`) serve como centro de controle central para o seu ecossistema DressApp. Ela abriga seus parâmetros antropométricos físicos, palco de avatar de prova digital, restrições de estilo, preferências localizadas, chaves de modelos de IA e agendas de notificações push.
-=======
 # Perfil, Dimensionamento & Configuração (`/me`)
 
 Gerencie suas medições físicas, tom de pele, recortes de fotos corporais, preferências de estilo, credenciais de modelos de IA e integrações de sistemas no seu painel de perfil pessoal.
 
 ## Visão Geral
 A página **Perfil & Configurações** (`https://dressapp.co/me`) serve como o centro de controle principal para o seu ecossistema DressApp. Ela abriga seus parâmetros físicos antropométricos, palco do avatar virtual para prova digital, restrições de estilo, preferências localizadas, chaves de modelos de IA e cronogramas de notificações push.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## Pré-requisitos
-<<<<<<< HEAD
 - Uma conta DressApp ativa.
 - (Opcional) Permissões de câmera do dispositivo para upload de foto de corpo inteiro.
 - (Opcional) Permissões de localização para segmentação de campanhas de estilistas locais e previsão do tempo.
@@ -131,7 +127,6 @@ Gerencia configurações em nível de sistema, assinaturas e integrações de IA
 - **Sair**: Saia da sua sessão atual.
 - **Excluir Minha Conta**: Link para excluir permanentemente os dados da conta.
 - **Painel do Desenvolvedor**: Acordeão de diagnóstico para testes de ambiente.
-=======
 - Uma conta ativa do DressApp.
 - (Opcional) Permissões de câmera do dispositivo para upload de fotos de corpo inteiro.
 - (Opcional) Permissões de localização para direcionamento de campanhas de estilistas locais, restrições culturais e previsão do tempo.
@@ -260,43 +255,33 @@ Gerencia configurações no nível do sistema, assinaturas e integrações de IA
 - **Sair**: Sair da sua sessão atual.
 - **Excluir minha conta**: Link para purgar permanentemente os dados da conta.
 - **Painel do Desenvolvedor**: Sanfona de diagnóstico para testes de ambiente.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## Resultados Esperados
-<<<<<<< HEAD
 - Sincronização instantânea de métricas físicas, tom de pele e recortes de foto no canvas de prova do Avatar 2D.
 - Zero requisições de rede ociosas ao navegar entre painéis de configurações.
 - Propostas de look do Estilista IA personalizadas alinhadas com suas regras de modéstia e agenda.
-=======
 - Sincronização instantânea de métricas físicas, tom de pele e recortes de fotos na Tela de Prova do Avatar 2D.
 - Zero solicitações de rede ociosas ao navegar entre os painéis de configurações.
 - Propostas de roupas do AI Stylist personalizadas e alinhadas com suas regras de recato e cronograma.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## Solução de Problemas
-<<<<<<< HEAD
 - **Fundo da foto não removido**: Certifique-se de que sua foto carregada seja de corpo inteiro com iluminação de fundo contrastante.
 - **Alertas push não chegam**: Confirme que as permissões de notificação do navegador estão ativadas e um número de telefone salvo em *Contato*.
 - **Autocompletar de endereço não responde**: Verifique se a conexão com a internet está ativa para consultas OpenStreetMap Nominatim.
-=======
 - **Fundo da foto não removido**: Certifique-se de que a foto carregada seja de corpo inteiro com iluminação de fundo contrastante.
 - **Alertas push não chegando**: Confirme se as permissões de notificação do navegador estão ativadas e se um número de telefone está salvo em *Contato*.
 - **Preenchimento automático de endereço sem resposta**: Verifique se a conexão com a Internet está ativa para consultas do OpenStreetMap Nominatim.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## Limitações
-<<<<<<< HEAD
 - Espaço da conta nível grátis limitado a 150 itens, a menos que expandido via bônus de indicação (+10 slots por convite) ou assinatura Pro.
 - Modo chave API personalizada requer chaves válidas com cota restante do respectivo provedor.
 
 (Fim do arquivo)
-=======
 - O espaço da conta do nível gratuito é limitado a 50 itens, a menos que seja expandido via bônus de indicação (+10 vagas por convite até o limite máximo de 200 itens) ou atualizando para o nível Manager ou Professional.
 - O modo de chave de API personalizada requer chaves válidas com cota restante do respectivo provedor.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad

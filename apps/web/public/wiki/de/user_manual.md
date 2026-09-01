@@ -1,18 +1,14 @@
-<<<<<<< HEAD
 # DressApp — Vollständiges technisches Benutzerhandbuch
 
 Umfassendes Benutzerhandbuch und technischer Leitfaden für das persönliche Kleiderschrank-Ökosystem DressApp, die Styling-Engine, den zirkulären Marktplatz und die Administrations-Panels.
-=======
 # DressApp Vollständiges technisches Benutzerhandbuch
 
 Umfassendes Benutzerhandbuch und technische Referenz für das DressApp-Kleiderschrank-Ökosystem, die Styling-Engine, den Circular Marketplace und die Admin-Panels.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 1. Übersicht & Technologie-Stack
 
-<<<<<<< HEAD
 DressApp ist ein KI-gestützter persönlicher Kleiderschrank-Manager, Styling-Berater und zirkulärer Marktplatz. Die App hilft Benutzern, Kleidungsstücke digital zu verwalten, sie automatisch freizustellen und zu taggen, wetter- und kalenderbewusste Outfit-Empfehlungen zu erhalten, digitale EU-Produktpässe (DPP) zu scannen und Kleidungsstücke zu handeln.
 
 ### Kern-Wertversprechen
@@ -28,7 +24,6 @@ DressApp ist ein KI-gestützter persönlicher Kleiderschrank-Manager, Styling-Be
 - **Lokales maschinelles Lernen & Größenberechnung**: CPU-lokales U2-Net (`rembg`) für Hintergrundentfernung, SegFormer-b2 für Kleidungsanalyse, Fashion-CLIP-Embeddings und das ANSUR II-Regressionsmodell für physische Körpermaße (`body_predictor.py`). Optional Weiterleitung an selbst gehostete GPU-Container (SegFormer-b3 + BiRefNet) für schnelle Operationen.
 - **Konversations-STT/TTS**: Echtzeit-clientseitige Erkennung über die Web Speech API als Fallback, serverseitige Gemini 2.5 Flash-Verarbeitung für multimodale Audioübertragung und Piper/Sherpa-ONNX-Engines für die Offline-Sprachausgabe auf dem Gerät.
 - **Externe Integrationsdienste**: OpenWeatherMap API für Wetterdaten, Google Calendar OAuth für den Export des täglichen Zeitplans, OpenStreetMap (Nominatim) für die automatische Adressvervollständigung und PayPal Subscriptions/Checkout REST APIs.
-=======
 DressApp ist ein KI-gestützter persönlicher Kleiderschrank-Manager, Styling-Berater und zirkulärer Marktplatz. Es hilft Benutzern, Kleidungsstücke digital zu verwalten, sie automatisch freizustellen und zu taggen, wetter- und kalenderbezogene Outfit-Empfehlungen zu erhalten, digitale EU-Produktpässe (DPP) zu scannen und Kleidungsstücke zu handeln.
 
 ### Kernwertversprechen
@@ -44,14 +39,12 @@ DressApp ist ein KI-gestützter persönlicher Kleiderschrank-Manager, Styling-Be
 - **Lokales maschinelles Lernen & Größenberechnung**: CPU-lokales U2-Net (`rembg`) Hintergrund-Matting, SegFormer-b2 Kleidungsanalyse, Fashion-CLIP Embeddings und das ANSUR II Körpermaß-Regressionsmodell (`body_predictor.py`). Optional Weiterleitung an selbst gehostete GPU-Container (SegFormer-b3 + BiRefNet) für schnelle Operationen.
 - **Konversations-STT/TTS**: Live-Client-seitige Web Speech-Erkennung als Fallback, multimodale serverseitige Gemini 2.5 Flash-Modulationen und Piper/Sherpa-ONNX-Engines auf dem Gerät für die Offline-Nutzung.
 - **Externe Integrationsdienste**: OpenWeatherMap API für Wetterdaten, Google Calendar OAuth für den täglichen Zeitplanexport, OpenStreetMap (Nominatim) für Adressvervollständigung und PayPal Subscriptions/Checkout REST-APIs.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 2. Voraussetzungen
 
 ### Anforderungen an die Host-Umgebung
-<<<<<<< HEAD
 - **Hardware**: VPS mit mindestens 4 GB RAM (z. B. Hetzner VPS für das Hosting der Produktionsumgebung `dressapp.co`).
 - **Abhängigkeiten**: Docker & Docker Compose Stack (einschließlich Backend, Frontend und Caddy TLS-Terminierung).
 - **Umgebungsvariablen**: Konfiguration der API-Schlüssel (`GEMINI_API_KEY`, `DEEPGRAM_API_KEY`, `OPENWEATHER_API_KEY`, `PAYPAL_LIVE_CLIENT_ID/SECRET` und Google Calendar OAuth-Token).
@@ -60,7 +53,6 @@ DressApp ist ein KI-gestützter persönlicher Kleiderschrank-Manager, Styling-Be
 - **Webbrowser**: Google Chrome oder Apple Safari (erforderlich für die vollständige Kompatibilität der Sprachfunktionen).
 - **Berechtigungen**: Zugriff auf die Kamera gewähren (für Kleiderschnappschüsse und QR-Scans) sowie auf das Mikrofon (für Sprachgespräche).
 - **Netzwerk**: Aktive Verbindung für die LLM-Verarbeitung, wobei IndexedDB-Caching das Offline-Durchsuchen des Katalogs ermöglicht.
-=======
 - **Hardware**: VPS mit mindestens 4 GB RAM (z. B. Hetzner VPS für das Hosting von `dressapp.co`).
 - **Abhängigkeiten**: Docker & Docker Compose (einschließlich Backend, Frontend und Caddy-TLS-Terminierung).
 - **Umgebungsvariablen**: API-Schlüssel-Konfiguration (`GEMINI_API_KEY`, `DEEPGRAM_API_KEY`, `OPENWEATHER_API_KEY`, `PAYPAL_LIVE_CLIENT_ID/SECRET` und Google Calendar OAuth-Token).
@@ -69,13 +61,11 @@ DressApp ist ein KI-gestützter persönlicher Kleiderschrank-Manager, Styling-Be
 - **Webbrowser**: Google Chrome oder Apple Safari (erforderlich für die volle Kompatibilität der Sprachfunktionen).
 - **Berechtigungen**: Gewähren Sie Kameraberechtigungen (für Schnappschüsse und QR-Scans) und Mikrofonberechtigungen (für Sprach-Chats).
 - **Netzwerk**: Aktive Verbindung für LLM-Verarbeitung, wobei IndexedDB-Caching ein Offline-Durchsuchen des Katalogs ermöglicht.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 3. Schritt-für-Schritt-Anleitung
 
-<<<<<<< HEAD
 ### 3.1 Kleidungsstücke importieren (Artikel hinzufügen)
 IMPORT-METHODEN: Fotografie, EU-Produktpässe und digitale Kaufbelege.
 
@@ -250,7 +240,6 @@ Systemüberwachung, Buchhaltung und Benutzerkontenverwaltung.
 3. **Anbieter**: Klicken Sie auf **Schlüssel verifizieren** (Verify Key), um einen direkten Ping an die Gemini API zu senden. Aktivieren Sie den Schalter **Eyes Vision Override**, um die Bildanalyse zwischen dem standardmäßigen Gemini-Endpunkt und einem lokalen Gemma-Container umzuschalten.
 4. **Benutzer**: Zeigen Sie aktive Credits, Rollen und Gesamtumsätze an. Nutzen Sie Direktaktionen, um Benutzer zu befördern oder zurückzustufen.
 5. **Anzeigen**: Sehen Sie den Status von Marktplatz-Inseraten ein und schalten Sie Inserate bei Missbrauch stumm.
-=======
 ### 3.1 Erfassen von Kleidungsstücken (Artikel hinzufügen)
 ERFASSUNGSMETHODEN: Fotografie, digitale EU-Produktpässe (DPP) und digitale Kaufbelege.
 
@@ -425,32 +414,27 @@ Nehmen Sie am Peer-to-Peer-Circular-Fashion-Marktplatz teil.
 3. **Anbieter (Providers)**: Klicken Sie auf **Verify Key**, um einen Test-Ping an die Gemini API zu senden. Schalten Sie den Schalter **Eyes Vision Override** um, um die Bildanalyse zwischen dem standardmäßigen Gemini-Endpunkt und einem lokalen Gemma-Container umzuleiten.
 4. **Benutzer**: Zeigen Sie Guthaben, Rollen und Gesamtzahlungen an. Nutzen Sie Direktaktionen zur Beförderung oder Herabstufung von Benutzern.
 5. **Inserate (Listings)**: Zeigen Sie den Status von Inseraten an und deaktivieren Sie Artikel im Falle von Betrugsverdacht.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 4. Erwartete Ergebnisse
 
-<<<<<<< HEAD
 - **Import**: Artikel werden sofort in das Kleiderschrank-Raster geladen (~16 ms). Der Hintergrund wird sauber entfernt und liefert transparente PNGs.
 - **DPP-Verifizierung**: Das Scannen gültiger Produktpässe zeigt die grüne Infokarte mit Nachhaltigkeitsdetails.
 - **Avatar-Außenbekleidung**: Jacken und Mäntel werden korrekt über Oberteilen auf der 2D-Avatar-Leinwand dargestellt, ohne Kopfbedeckungen oder Schuhe zu überschneiden.
 - **Sprachantwort**: Textausgaben des virtuellen Stylisten werden automatisch als Audio ausgegeben, begleitet von einer visuellen Wellenform.
 - **Abonnements**: Die Aktivierung von Pro entfernt sofort die Warnung vor dem Limit von 150 Artikeln.
-=======
 - **Erfassung**: Artikel werden sofort im Schrank-Grid angezeigt (~16 ms). Die Hintergrundentfernung erfolgt sauber und liefert transparente PNG-Dateien.
 - **DPP-Verifizierung**: Das Scannen gültiger Produktpässe zeigt eine grüne Infokarte mit Nachhaltigkeitsdetails.
 - **Avatar-Schichten**: Außenbekleidung wird korrekt über Hemden auf dem 2D-Avatar-Canvas dargestellt, ohne Clipping-Fehler bei Kopfbedeckungen/Schuhen.
 - **Sprachausgabe**: Textausgaben des KI-Stylisten werden automatisch vorgelesen und von einer visuellen Wellenformanzeige begleitet.
 - **Abonnements**: Nach dem Upgrade auf den Manager- oder Professional-Plan verschwindet die Kapazitätswarnung des Kleiderschranks sofort.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 5. Fehlerbehebung
 
 ### HTTP 402 Payment Required
-<<<<<<< HEAD
 - **Problem**: Import blockiert. Sie haben das maximale Basislimit von 150 Kleiderschrank-Artikeln erreicht.
 - **Lösung**: Gehen Sie zu Profile -> Subscription und upgraden Sie auf Pro, oder teilen Sie Ihren Einladungslink, um +10 Plätze pro Registrierung zu erhalten.
 
@@ -469,7 +453,6 @@ Nehmen Sie am Peer-to-Peer-Circular-Fashion-Marktplatz teil.
 ### VPS-Speicherüberlastung (Out of Memory - OOM)
 - **Problem**: CPU-/RAM-Spitzen während des Bild-Uploads.
 - **Lösung**: Der Import verarbeitet Stapel von mehr als 5 Artikeln über sequentielle Warteschlangen-Sperren. Stellen Sie sicher, dass der Server über mindestens 4 GB RAM verfügt.
-=======
 - **Problem**: Ingestion blockiert. Sie haben das Basislimit von 50 Artikeln erreicht (oder bis zu 200 Artikel durch Empfehlungsboni).
 - **Lösung**: Gehen Sie zur **Preisseite** (`/pricing`) und abonnieren Sie den Manager- oder Professional-Plan, oder teilen Sie Ihren Empfehlungslink, um +10 Plätze pro Registrierung zu erhalten (bis zu maximal 200 Artikel).
 
@@ -488,20 +471,16 @@ Nehmen Sie am Peer-to-Peer-Circular-Fashion-Marktplatz teil.
 ### Arbeitsspeicher-Engpass (OOM) bei VPS-Servern
 - **Problem**: Hohe CPU-/RAM-Last bei Upload-Prozessen.
 - **Lösung**: Die Erfassung verwendet sequenzielle Sperren für Stapel-Uploads von mehr als 5 Artikeln. Stellen Sie sicher, dass der Server über mindestens 4 GB RAM verfügt.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 6. Einschränkungen
 
-<<<<<<< HEAD
 - **Browser-Web-Speech-APIs**: Die native Sprache-zu-Text-Übersetzung ist auf Chrome und Safari beschränkt; andere Browser nutzen die Standard-Texteingabe.
 - **Offline-Sprachsynthese**: Die mobile Offline-Synthese via Piper ONNX nutzt weniger Sprachprofile als die serverseitige Gemini-Audioverarbeitung.
 - **Einschränkungen der Bildgröße**: Avatare und Profilbilder werden im Browser lokal auf 82% Qualität komprimiert, um in das MongoDB-Limit von 16 MB zu passen.
 - **Beleganalyse**: Stark verschwommene, verzerrte oder handschriftliche Belege können beim Datenextraktionsprozess fehlschlagen.
-=======
 - **Sprach-APIs im Browser**: Die integrierte Sprache-zu-Text-Transkription ist auf Chrome und Safari beschränkt; andere Browser fallen auf Standard-Texteingabe zurück.
 - **Offline-Sprachausgabe**: Die mobile Offline-Sprachsynthese über Piper ONNX verwendet weniger Sprachprofile als das serverseitige Gemini-Audiomodell.
 - **Bildgrößenbeschränkungen**: Bild-Uploads für Profil und Avatar werden im Browser auf 82 % Qualität komprimiert, um in die 16-MB-Grenze von MongoDB-Dokumenten zu passen.
 - **Beleganalyse**: Bei sehr verschwommenen, verzerrten oder handschriftlichen Belegen kann die Datenextraktion fehlschlagen.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad

@@ -82,7 +82,7 @@ export const Footer = () => {
             <ul className="m-0 list-none space-y-3 p-0">
               <li>
                 <Link
-                  to="/about"
+                  to="/home"
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("footer.aboutUs", {
@@ -93,33 +93,33 @@ export const Footer = () => {
 
               <li>
                 <Link
-                  to="/careers"
+                  to="/experts"
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
-                  {t("footer.careers", {
-                    defaultValue: "Careers",
+                  {t("nav.experts", {
+                    defaultValue: "Experts & Stylists",
                   })}
                 </Link>
               </li>
 
               <li>
                 <Link
-                  to="/sustainability"
+                  to="/pricing"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
+                  {t("nav.pricing", {
+                    defaultValue: "Pricing & Plans",
+                  })}
+                </Link>
+              </li>
+
+              <li>
+                <Link
+                  to="/me/stats"
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("footer.sustainabilityReport", {
-                    defaultValue: "Sustainability Report",
-                  })}
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  to="/press-kit"
-                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
-                >
-                  {t("footer.pressKit", {
-                    defaultValue: "Press Kit",
+                    defaultValue: "Wardrobe Insights",
                   })}
                 </Link>
               </li>
@@ -214,22 +214,22 @@ export const Footer = () => {
 
               <li>
                 <Link
-                  to="/donations"
+                  to="/campaigns/mine"
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("footer.donationsTracker", {
-                    defaultValue: "Donations Tracker",
+                    defaultValue: "Campaigns & Offers",
                   })}
                 </Link>
               </li>
 
               <li>
                 <Link
-                  to="/zero-waste"
+                  to="/ads"
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("footer.zeroWastePolicy", {
-                    defaultValue: "Zero Waste Policy",
+                    defaultValue: "Ad Placement Hub",
                   })}
                 </Link>
               </li>
@@ -247,22 +247,11 @@ export const Footer = () => {
             <ul className="m-0 list-none space-y-3 p-0">
               <li>
                 <Link
-                  to="/help"
-                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
-                >
-                  {t("footer.helpCenter", {
-                    defaultValue: "Help Center",
-                  })}
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  to="/dpp-api"
+                  to="/extension/connect"
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("footer.dppApiSpecs", {
-                    defaultValue: "DPP API Specs",
+                    defaultValue: "Browser Extension Bridge",
                   })}
                 </Link>
               </li>
@@ -285,6 +274,17 @@ export const Footer = () => {
                 >
                   {t("footer.termsOfUse", {
                     defaultValue: "Terms of Use",
+                  })}
+                </Link>
+              </li>
+
+              <li>
+                <Link
+                  to="/me"
+                  className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
+                  {t("nav.settings", {
+                    defaultValue: "Account Settings",
                   })}
                 </Link>
               </li>
@@ -315,11 +315,11 @@ export const Footer = () => {
             <span className="text-xs text-white/30">|</span>
 
             <Link
-              to="/eu-transparency"
+              to="/terms"
               className="text-xs text-white/50 no-underline transition-smooth duration-200 hover:text-white"
             >
-              {t("footer.euTransparency", {
-                defaultValue: "EU Transparency Compliance",
+              {t("footer.termsOfUse", {
+                defaultValue: "Terms of Service",
               })}
             </Link>
           </div>

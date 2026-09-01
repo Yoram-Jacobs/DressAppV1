@@ -18,7 +18,6 @@ import {
   HeartHandshake,
   Trash2,
   X,
-  ZoomIn,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Manuel technique complet de l'utilisateur DressApp
 
 Guide d'utilisation complet et référence technique pour l'écosystème de garde-robe personnelle, le moteur de stylisme, le marché circulaire et les panneaux d'administration de DressApp.
@@ -36,7 +35,6 @@ DressApp est un gestionnaire de garde-robe personnel, un conseiller en stylisme 
 - **Navigateur Web** : Google Chrome ou Apple Safari (requis pour la compatibilité totale des fonctions vocales).
 - **Autorisations** : Autoriser l'accès à l'appareil photo (pour la prise de photos et le scan de QR codes) et au microphone (pour la conversation vocale).
 - **Réseau** : Connexion active pour le traitement du modèle de langage (LLM), la mise en cache IndexedDB permettant de naviguer dans le catalogue hors ligne.
-=======
 # Manuel d'utilisation technique complet de DressApp
 
 Manuel d'utilisation complet et guide de référence technique pour l'écosystème de garde-robe personnelle DressApp, le moteur de stylisme, le marché circulaire et les panneaux d'administration.
@@ -74,13 +72,11 @@ DressApp est un gestionnaire de garde-robe personnelle, un conseiller en stylism
 - **Navigateur Web** : Google Chrome ou Apple Safari (requis pour une compatibilité totale avec les fonctions vocales).
 - **Autorisations** : Accordez l'autorisation de caméra (pour les photos de vêtements et les scans de codes QR) et de microphone (pour les conversations vocales).
 - **Réseau** : Connexion active pour le traitement LLM, le cache IndexedDB permettant la navigation hors ligne dans le catalogue.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 3. Instructions étape par étape
 
-<<<<<<< HEAD
 ### 3.1 Numériser des vêtements (Ajouter des articles)
 MODALITÉS D'AJOUT : Photographie, Passeports numériques de produits (DPP) et reçus d'achat numériques.
 
@@ -255,7 +251,6 @@ Suivi de la disponibilité du système, comptabilité financière et gestion des
 3. **Fournisseurs** : Cliquez sur **Vérifier la clé** (Verify Key) pour tester directement l'API Gemini. Basculez le commutateur **Eyes Vision Override** pour basculer l'analyse d'image entre l'API Gemini par défaut et le conteneur local Gemma.
 4. **Utilisateurs** : Affichez les crédits actifs, les rôles et l'historique des paiements des utilisateurs. Utilisez les actions de promotion ou de rétrogradation de rôle.
 5. **Annonces** : Affichez le statut des annonces du marché et basculez les indicateurs d'activation pour suspendre les annonces suspectes ou frauduleuses.
-=======
 ### 3.1 Intégration des vêtements (Ajout d'éléments)
 MÉTHODES D'INTÉGRATION : Photographie, Passeport numérique de produit de l'UE et Reçus d'achat numériques.
 
@@ -430,32 +425,27 @@ Vérification du fonctionnement du système, comptabilité financière et gestio
 3. **Fournisseurs (Providers)** : Cliquez sur **Verify Key** pour envoyer un test à l'API de Gemini. Basculez l'interrupteur **Eyes Vision Override** pour rediriger l'analyse des images entre l'endpoint de Gemini par défaut et un conteneur local de Gemma.
 4. **Utilisateurs** : Affichez le solde de crédits actifs, les rôles et les paiements totaux. Utilisez des actions directes pour promouvoir ou rétrograder des utilisateurs.
 5. **Annonces (Listings)** : Affichez le statut des annonces et désactivez les articles en cas de fraude.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 4. Résultats attendus
 
-<<<<<<< HEAD
 - **Ajout d'articles** : Les vêtements apparaissent instantanément dans le dressing (~16ms). Les détours d'arrière-plan produisent des images PNG transparentes et nettes.
 - **Badge DPP Vérifié** : Le scan de codes QR valides affiche la carte d'information verte détaillant la durabilité du vêtement.
 - **Superposition sur l'avatar** : Les vestes se superposent correctement par-dessus les hauts sur le canevas d'avatar 2D sans chevaucher les chapeaux ou les chaussures.
 - **Réponse vocale** : Les textes du styliste virtuel sont accompagnés d'une lecture audio automatique et d'une onde sonore animée.
 - **Abonnements** : L'activation de la formule Pro supprime instantanément l'alerte de limite de 150 vêtements.
-=======
 - **Chargement d'éléments** : Les éléments apparaissent immédiatement dans la grille de la garde-robe (~16 ms). La suppression de l'arrière-plan s'effectue proprement et génère des fichiers PNG transparentes.
 - **Vérification DPP** : Le scannage de passeports de produits valides affiche une carte d'information verte avec des détails de durabilité.
 - **Couches de l'avatar** : Les vêtements extérieurs sont représentés correctement sur les chemises dans le canevas de l'avatar 2D sans interférer avec les chaussures ou les chapeaux.
 - **Réponse vocale** : Les textes de réponse de l'AI Stylist sont lus automatiquement et s'accompagnent d'un indicateur d'onde de son visuel.
 - **Abonnements** : La mise à niveau vers un plan Manager ou Professional supprime immédiatement le message d'avertissement de la limite de capacité de la garde-robe.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 5. Dépannage
 
 ### HTTP 402 Payment Required
-<<<<<<< HEAD
 - **Problème** : Ajout d'articles bloqué. Vous avez atteint le nombre maximal de 150 articles autorisés dans la formule gratuite.
 - **Solution** : Allez dans Profil -> Suscription et passez à la formule Pro, ou partagez votre lien de parrainage pour obtenir +10 places gratuites par inscription validée.
 
@@ -474,7 +464,6 @@ Vérification du fonctionnement du système, comptabilité financière et gestio
 ### VPS saturé (Out of Memory - OOM)
 - **Problème** : Pics d'utilisation du CPU ou de la RAM pendant le téléversement de photos.
 - **Solution** : Le système d'ajout utilise une file d'attente séquentielle pour les lots de plus de 5 images. Assurez-essuyez que le serveur dispose d'au moins 4 Go de RAM.
-=======
 - **Problème** : Chargement des éléments bloqué. Vous avez atteint la limite de base de la garde-robe de 50 éléments (ou jusqu'à 200 éléments avec des bonus de parrainage).
 - **Solution** : Accédez à la **page des tarifs** (`/pricing`) et abonnez-vous au plan Manager ou Professional, ou partagez votre lien de parrainage pour obtenir +10 emplacements par inscription (jusqu'à un maximum de 200 éléments).
 
@@ -493,20 +482,16 @@ Vérification du fonctionnement du système, comptabilité financière et gestio
 ### Excès de mémoire (OOM) sur les serveurs VPS
 - **Problème** : Charge élevée sur le processeur/mémoire du serveur lors des processus de téléchargement de fichiers.
 - **Solution** : Le processus de chargement utilise une file d'attente séquentielle pour les chargements de plus de 5 éléments à la fois. Assurez-vous que le serveur dispose d'au moins 4 Go de RAM disponibles.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
 
 ---
 
 ## 6. Limites de l'application
 
-<<<<<<< HEAD
 - **APIs Web Speech du navigateur** : Le moteur de dictée vocale natif est limité à Google Chrome et Apple Safari ; les autres navigateurs basculent sur une saisie de texte classique.
 - **Synthèse vocale hors ligne** : Le module mobile hors ligne Piper ONNX dispose de moins de profils de voix que le traitement audio Gemini du serveur.
 - **Limites de taille d'image** : Les images d'avatar et de profil sont compressées localement dans le navigateur à 82 % de qualité pour ne pas dépasser la limite de taille de document de 16 Mo de MongoDB.
 - **Précision de l'import de reçus** : Les reçus froissés, flous ou écrits à la main peuvent empêcher l'extraction correcte des données.
-=======
 - **API de voix dans le navigateur** : La transcription de la voix vers le texte intégrée est limitée aux navigateurs Chrome et Safari ; les autres navigateurs reviendront au clavier de texte standard.
 - **Sortie de voix hors ligne** : Le moteur local Piper ONNX sur les appareils mobiles utilise moins de profils de voix par rapport au modèle audio Gemini du serveur.
 - **Limites de taille d'image** : Les images téléchargées pour le profil ou l'avatar sont compressées localement dans le navigateur à une qualité de 82% pour respecter la limite de 16 Mo des documents de MongoDB.
 - **Précision de l'analyse des reçus** : Sur des reçus très flous, déformés ou écrits à la main, l'extraction des données de transaction peut échouer.
->>>>>>> 227ad69b4d375d333b9fc7004aded4a49d2e2aad
