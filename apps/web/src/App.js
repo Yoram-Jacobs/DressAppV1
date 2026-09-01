@@ -1,5 +1,7 @@
 // Existing global styles
 import '@/App.css';
+// Your custom styles
+import '@/style.css';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/sonner';
