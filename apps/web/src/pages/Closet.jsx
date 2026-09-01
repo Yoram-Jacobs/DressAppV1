@@ -966,7 +966,6 @@ export default function Closet() {
         className="
     relative isolate overflow-hidden
     bg-cover bg-center bg-no-repeat
-     mt-[var(--header-height)]
   "
         style={{
           backgroundImage: `url(${ClosetBanner})`,

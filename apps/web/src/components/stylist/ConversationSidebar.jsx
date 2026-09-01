@@ -60,27 +60,48 @@ function SessionRow({
   const snippet = (session.snippet || '').trim();
 
   return (
-    <motion.div layout initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className={cn('stylist-session-row', isActive ? 'stylist-session-row--active' : '',)}
-      onClick={() => onSelect(session.id)} data-testid={`stylist-session-row-${session.id}`}>
-      <div className="stylist-session-main">
-        <div className="stylist-session-icon-wrap">
-          <MessageSquare className={cn('stylist-session-icon', isUnread && 'stylist-session-icon--unread')} />
-          {isUnread && (<span className="stylist-session-unread-dot" />)}
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn(
+        'relative rounded-[12px] bg-white p-2.5 cursor-pointer transition-all duration-400 ease-out w-full',
+        isActive ? 'bg-[var(--primary-shadow)]' : '',
+      )}
+      onClick={() => onSelect(session.id)}
+      data-testid={`stylist-session-row-${session.id}`}
+    >
+      <div className="flex items-start gap-2 min-w-0 pr-24">
+        <div className="relative mt-[3px] flex-shrink-0">
+          <MessageSquare className={cn('h-3.5 w-3.5 text-[var(--text-color)]', isUnread && '!text-[var(--primary-color)]')} />
+          {isUnread && (
+            <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-[var(--primary-color)]" />
+          )}
         </div>
-        <div className="stylist-session-text">
-          <div className={cn('stylist-session-title', isUnread && 'stylist-session-title--unread',)}>
+        <div className="flex-1 min-w-0">
+          <div className={cn(
+            'text-[13.5px] font-semibold text-[var(--dark-color)] whitespace-nowrap overflow-hidden text-ellipsis',
+            isUnread && '!font-extrabold',
+          )}>
             {displayTitle}
           </div>
           {snippet ? (
-            <div className="stylist-session-snippet">{snippet}</div>
+            <div className="text-[11px] text-[var(--text-color)] whitespace-nowrap overflow-hidden text-ellipsis mt-0.5">{snippet}</div>
           ) : null}
         </div>
       </div>
-      <div className="stylist-session-actions" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 z-[2]"
+        onClick={(e) => e.stopPropagation()}
+      >
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button type="button" className="stylist-session-action-btn" aria-label={t('stylist.moreActions', { defaultValue: 'More actions' })}>
-              <MoreVertical className="stylist-session-action-icon" />
+            <button
+              type="button"
+              className="h-6 w-6 rounded-full flex items-center justify-center text-[var(--text-color)] bg-transparent border-none transition-all duration-400 hover:text-black"
+              aria-label={t('stylist.moreActions', { defaultValue: 'More actions' })}
+            >
+              <MoreVertical className="h-3.5 w-3.5" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
@@ -92,19 +113,33 @@ function SessionRow({
               <Edit2 className="h-4 w-4" />
               {t('stylist.rename', { defaultValue: 'Rename' })}
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => { if (window.confirm(t('stylist.deleteConfirm'))) onDelete(session.id); }}>
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => { if (window.confirm(t('stylist.deleteConfirm'))) onDelete(session.id); }}
+            >
               <Trash2 className="h-4 w-4" />
               {t('stylist.delete', { defaultValue: 'Delete' })}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <button type="button" onClick={() => onTogglePin(session.id)} className={cn('stylist-session-action-btn', isPinned && 'stylist-session-action-btn--pinned',)}
-          title={isPinned ? t('stylist.unpin', { defaultValue: 'Unpin' }) : t('stylist.pin', { defaultValue: 'Pin' })}>
-          <Pin className={cn('stylist-session-action-icon', isPinned && 'stylist-session-action-icon--filled')} />
+        <button
+          type="button"
+          onClick={() => onTogglePin(session.id)}
+          className={cn(
+            'h-6 w-6 rounded-full flex items-center justify-center text-[var(--text-color)] bg-transparent border-none transition-all duration-400 hover:text-black',
+            isPinned && '!text-[var(--primary-color)]',
+          )}
+          title={isPinned ? t('stylist.unpin', { defaultValue: 'Unpin' }) : t('stylist.pin', { defaultValue: 'Pin' })}
+        >
+          <Pin className={cn('h-3.5 w-3.5', isPinned && '[&]:fill-current')} />
         </button>
-        <button type="button" onClick={() => onToggleArchive(session.id)} className="stylist-session-action-btn"
-          title={isArchived ? t('stylist.unarchive', { defaultValue: 'Unarchive' }) : t('stylist.archive', { defaultValue: 'Archive' })}>
-          {isArchived ? <ArchiveRestore className="stylist-session-action-icon" /> : <Archive className="stylist-session-action-icon" />}
+        <button
+          type="button"
+          onClick={() => onToggleArchive(session.id)}
+          className="h-6 w-6 rounded-full flex items-center justify-center text-[var(--text-color)] bg-transparent border-none transition-all duration-400 hover:text-black"
+          title={isArchived ? t('stylist.unarchive', { defaultValue: 'Unarchive' }) : t('stylist.archive', { defaultValue: 'Archive' })}
+        >
+          {isArchived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
         </button>
       </div>
     </motion.div>
@@ -219,29 +254,29 @@ export function ConversationSidebar({
   const groups = useMemo(() => groupSessions(regularSessions), [regularSessions]);
   const empty = !loading && validSessions.length === 0;
   return (
-    <div className="stylist-sidebar-inner">
-      <div className="stylist-sidebar-newbtn-wrap">
-        <Button onClick={onNew} className="stylist-sidebar-newbtn" data-testid="stylist-new-conversation-btn">
+    <div className="flex flex-col p-5 h-full w-full gap-2">
+      <div className="">
+        <Button onClick={onNew} className="w-full h-11 !rounded-full !bg-[var(--primary-color)] !text-white !text-sm !font-bold shadow-[0_10px_22px_rgba(31,92,69,0.3)] transition-all hover:!bg-[var(--primary-hover)] hover:-translate-y-px">
           <i className="fa-solid fa-plus"></i>{t('stylist.newConversation')}
         </Button>
       </div>
       {loading ? (
-        <div className="stylist-sidebar-loading">
-          <Loader2 className="stylist-sidebar-loading-icon" />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-5 w-5 text-[var(--text-color)] animate-spin" />
         </div>
       ) : empty ? (
-        <div className="stylist-sidebar-empty">
-          <MessageSquare className="stylist-sidebar-empty-icon" />
+        <div className="flex-1 flex flex-col items-center justify-center p-4 text-center text-xs text-black/60 border border-dashed border-black/[0.12] rounded-2xl m-3">
+          <MessageSquare className="h-6 w-6 mb-2 opacity-40 text-[var(--text-color)]" />
           <div>{t('stylist.noConversations', { defaultValue: 'No conversations yet' })}</div>
         </div>
       ) : (
-        <div className="stylist-sidebar-groups">
+        <div className="flex flex-col gap-4">
           {pinnedSessions.length > 0 && (
-            <div classname="">
-              <span className="stylist-sidebar-label">
+            <div className="">
+              <span className="block text-[10px] font-extrabold tracking-[0.12em] uppercase text-[var(--primary-color)] mb-2">
                 {t('stylist.pinned', { defaultValue: 'Pinned' }).toUpperCase()}
               </span>
-              <div className="stylist-sidebar-list">
+              <div className="flex flex-col gap-2.5">
                 {pinnedSessions.map((s) => (
                   <SessionRow
                     key={s.id}
@@ -264,13 +299,13 @@ export function ConversationSidebar({
             </div>
           )}
           {archivedSessions.length > 0 && (
-            <div className="stylist-sidebar-archived-wrap">
-              <Button variant="ghost" size="sm" onClick={() => setShowArchived(!showArchived)} className="stylist-sidebar-archived-toggle">
+            <div className="">
+              <Button variant="ghost" size="sm" onClick={() => setShowArchived(!showArchived)} className="w-full flex items-center justify-between text-sm text-[var(--text-color)] rounded-[10px] !p-0 hover:text-[var(--dark-color)]  !transition-none !duration-0 hover:!translate-y-0 hover:!transform-none">
                 <span>{t('stylist.archivedChats', { defaultValue: 'Archived Chats' })} ({archivedSessions.length})</span>
-                <span className="stylist-sidebar-archived-toggle-label">{showArchived ? 'Hide' : 'Show'}</span>
+                <span className="text-[10px]">{showArchived ? 'Hide' : 'Show'}</span>
               </Button>
               {showArchived && (
-                <div className="stylist-sidebar-list stylist-sidebar-list--archived">
+                <div className="flex flex-col gap-2.5 mt-2">
                   {archivedSessions.map((s) => (
                     <SessionRow
                       key={s.id}
@@ -294,11 +329,11 @@ export function ConversationSidebar({
             </div>
           )}
           {groups.today.length > 0 && (
-            <div classname="">
-              <span className="stylist-sidebar-label">
+            <div className="">
+              <span className="block text-[10px] font-extrabold tracking-[0.12em] uppercase text-[var(--primary-color)] mb-2">
                 {t('stylist.today', { defaultValue: 'Today' }).toUpperCase()}
               </span>
-              <div className="stylist-sidebar-list">
+              <div className="flex flex-col gap-2.5">
                 {groups.today.map((s) => (
                   <SessionRow
                     key={s.id}
@@ -321,11 +356,11 @@ export function ConversationSidebar({
             </div>
           )}
           {groups.yesterday.length > 0 && (
-            <div classname="">
-              <span className="stylist-sidebar-label">
+            <div className="">
+              <span className="block text-[10px] font-extrabold tracking-[0.12em] uppercase text-[var(--primary-color)] mb-2">
                 {t('stylist.yesterday', { defaultValue: 'Yesterday' }).toUpperCase()}
               </span>
-              <div className="stylist-sidebar-list">
+              <div className="flex flex-col gap-2.5">
                 {groups.yesterday.map((s) => (
                   <SessionRow
                     key={s.id}
@@ -348,11 +383,11 @@ export function ConversationSidebar({
             </div>
           )}
           {groups.earlier.length > 0 && (
-            <div classname="">
-              <span className="stylist-sidebar-label">
+            <div className="">
+              <span className="block text-[10px] font-extrabold tracking-[0.12em] uppercase text-[var(--primary-color)] mb-2">
                 {t('stylist.earlier', { defaultValue: 'Earlier' }).toUpperCase()}
               </span>
-              <div className="stylist-sidebar-list">
+              <div className="flex flex-col gap-2.5">
                 {groups.earlier.map((s) => (
                   <SessionRow
                     key={s.id}
