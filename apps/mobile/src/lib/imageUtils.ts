@@ -44,7 +44,7 @@ export function getItemImageUrl(
     ? (itemPref === 'clean' || itemPref === 'original' ? 'original' : 'repaired')
     : undefined;
 
-  const effectiveMode = opts.viewMode || itemMode || (opts.useStoredPreference ? getMobileViewPreference() : 'repaired');
+  const effectiveMode = opts.viewMode || itemMode || (opts.useStoredPreference !== false ? getMobileViewPreference() : 'repaired');
 
   let raw: string | undefined = undefined;
 

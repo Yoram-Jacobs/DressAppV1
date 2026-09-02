@@ -734,7 +734,8 @@
     "tabPairings": "שילובים",
     "tabDPP": "דרכון מוצר",
     "suggestionsApplied": "הצעות ה-AI הוחלו על הטופס.",
-    "original": "מקורי"
+    "original": "מקורי",
+    "originalCrop": "חיתוך מקורי"
   },
   "stylist": {
     "colorMatching": "התאמת צבעים",

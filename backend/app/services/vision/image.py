@@ -250,6 +250,9 @@ def _orient_and_deskew_garment(img: Image.Image, mask: np.ndarray | None = None)
     Uses bilateral mirror symmetry search. Garments are designed to be
     symmetric along their vertical spine. When rotated upright, the left
     and right halves achieve maximum overlap (IoU).
+
+    Skips tilt-fixing for 0° to 5° item tilt, maintaining centering and
+    canvas expansion without altering straight garments.
     """
     try:
         import numpy as np
@@ -268,46 +271,47 @@ def _orient_and_deskew_garment(img: Image.Image, mask: np.ndarray | None = None)
 
         mask_cropped = mask_img.crop(bbox)
 
-        # Coarse search: -45 to +45 deg in steps of 3 deg
-        best_angle = 0.0
-        max_iou = -1.0
-
-        for deg in range(-45, 48, 3):
+        def _get_iou(deg: float, size: int = 100) -> float:
             rot = mask_cropped.rotate(deg, resample=Image.NEAREST, expand=True)
             b = rot.getbbox()
             if not b:
-                continue
-            c = rot.crop(b).resize((100, 100), resample=Image.NEAREST)
+                return 0.0
+            c = rot.crop(b).resize((size, size), resample=Image.NEAREST)
             arr = np.array(c) > 0
             flipped = np.fliplr(arr)
             inter = np.sum(arr & flipped)
             union = np.sum(arr | flipped)
-            iou = inter / float(max(1, union))
+            return inter / float(max(1, union))
+
+        iou_0 = _get_iou(0.0)
+        best_angle = 0.0
+        max_iou = iou_0
+
+        # Search within +/- 35 deg in steps of 2 deg
+        for deg in range(-35, 36, 2):
+            if deg == 0:
+                continue
+            iou = _get_iou(float(deg))
             if iou > max_iou:
                 max_iou = iou
                 best_angle = float(deg)
 
-        # Fine search: best_angle +/- 2 deg in steps of 0.5 deg
+        # Fine search around best_angle in steps of 0.5 deg
         refined_angle = best_angle
-        for offset in [-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0]:
-            deg = best_angle + offset
-            if abs(deg) > 45:
-                continue
-            rot = mask_cropped.rotate(deg, resample=Image.NEAREST, expand=True)
-            b = rot.getbbox()
-            if not b:
-                continue
-            c = rot.crop(b).resize((120, 120), resample=Image.NEAREST)
-            arr = np.array(c) > 0
-            flipped = np.fliplr(arr)
-            inter = np.sum(arr & flipped)
-            union = np.sum(arr | flipped)
-            iou = inter / float(max(1, union))
-            if iou > max_iou:
-                max_iou = iou
-                refined_angle = deg
+        refined_iou = max_iou
+        if abs(best_angle) > 5.0:
+            for offset in [-1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5]:
+                deg = best_angle + offset
+                if abs(deg) > 35:
+                    continue
+                iou = _get_iou(deg, size=120)
+                if iou > refined_iou:
+                    refined_iou = iou
+                    refined_angle = deg
 
-        if abs(refined_angle) > 2.0:
+        # Rule: Skip tilt-fixing for 0° to 5° item tilt.
+        # Also require at least +0.05 IoU improvement over 0° to prevent false rotation on straight garments.
+        if abs(refined_angle) > 5.0 and (refined_iou - iou_0 >= 0.05):
             img = img.rotate(refined_angle, resample=Image.BICUBIC, expand=True)
     except Exception as exc:
         logger.debug("_orient_and_deskew_garment failed: %s", exc)

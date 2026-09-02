@@ -728,7 +728,8 @@
     "tabPairings": "Pairings",
     "tabDPP": "Passport",
     "suggestionsApplied": "AI suggestions applied to form.",
-    "original": "Original"
+    "original": "Original",
+    "originalCrop": "Original crop"
   },
   "stylist": {
     "colorMatching": "Color Matching",
