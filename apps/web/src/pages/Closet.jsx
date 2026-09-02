@@ -1617,7 +1617,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
     >
       <AspectRatio ratio={3 / 4} className="bg-[#F5F2EB] dark:bg-[#F5F2EB] relative">
         {(() => {
-          const thumbUrl = bestImageUrl(item);
+          const thumbUrl = bestImageUrl(item, { useStoredPreference: true });
           const polishing = isCleanImagePending(item);
           if (thumbUrl) {
             return (

@@ -187,9 +187,10 @@ def _build_reconstruction_prompt(analysis: dict[str, Any]) -> str:
     prompt = (
         f"High-fidelity editorial product photograph of a complete, "
         f"full-length {descriptor}"
-        f"{extras_str}. Studio lighting, neutral DressApp card background (#F5F2EB), "
+        f"{extras_str}. Studio lighting, pure solid off-white background, "
         "garment-only product shot, centered composition, sharp focus, "
         "photorealistic, preserve fabric texture and pattern details, "
+        "NO scenery, NO landscape, NO background environment, NO room, NO mannequin, NO model, "
         "no text, no logos, no watermarks."
     )
     return prompt[:1000]
@@ -332,15 +333,18 @@ async def reconstruct(
         import base64 as _b64
         from app.services.vision.image import _fit_crop_to_card
         gen_raw = _b64.b64decode(image_b64)
-        # Apply 900x1200 0.90 safety margin normalization to reconstructed image
-        gen_fitted_bytes, _ = _fit_crop_to_card(gen_raw, crop_mime=out.get("mime_type", "image/png"))
-        image_b64 = _b64.b64encode(gen_fitted_bytes).decode("ascii")
-
-        clean_res = await remove_background(gen_fitted_bytes)
+        
+        # Remove background FIRST so any Nano Banana landscape/scenery is stripped into a pure transparent PNG
+        clean_res = await remove_background(gen_raw)
         if clean_res.get("success") and clean_res.get("image_png"):
             clean_fitted_bytes, _ = _fit_crop_to_card(clean_res["image_png"], crop_mime="image/png")
             clean_image_b64 = _b64.b64encode(clean_fitted_bytes).decode("ascii")
             clean_image_url = f"data:image/png;base64,{clean_image_b64}"
+            # Ensure reconstructed image_b64 is set to the transparent background-free PNG
+            image_b64 = clean_image_b64
+        else:
+            gen_fitted_bytes, _ = _fit_crop_to_card(gen_raw, crop_mime=out.get("mime_type", "image/png"))
+            image_b64 = _b64.b64encode(gen_fitted_bytes).decode("ascii")
     except Exception as unbind_exc:
         logger.warning("Unbinding reconstructed garment from background failed: %s", repr(unbind_exc))
 

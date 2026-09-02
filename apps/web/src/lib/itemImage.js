@@ -16,16 +16,32 @@
  * rendered on a white card background, which causes a white rectangle to appear
  * when overlaid on the avatar. All background-free sources are preferred first.
  */
+export function getStoredViewPreference() {
+  try {
+    return localStorage.getItem('dressapp_preferred_image_view') || 'repaired';
+  } catch (e) {
+    return 'repaired';
+  }
+}
+
+export function setStoredViewPreference(view) {
+  try {
+    localStorage.setItem('dressapp_preferred_image_view', view);
+  } catch (e) {}
+}
+
 export function bestImageUrl(item, opts = {}) {
   if (!item) return null;
 
+  const viewMode = opts.viewMode || (opts.skipReconstruction ? 'original' : (opts.useStoredPreference ? getStoredViewPreference() : 'repaired'));
+
   // 1. AI-reconstructed image (background-free studio quality)
-  if (!opts.skipReconstruction) {
+  if (viewMode !== 'original' && !opts.skipReconstruction) {
     if (item.reconstruct_image_url) return item.reconstruct_image_url;
     if (item.reconstructed_image_url) return item.reconstructed_image_url;
   }
 
-  // 2. Background-free clean cutout
+  // 2. Background-free clean cutout (Original crop)
   if (item.clean_image_url) return item.clean_image_url;
 
   // 3. Segmented / cutout forms
@@ -53,7 +69,6 @@ export function bestImageUrl(item, opts = {}) {
 
   if (item.photo_url) return item.photo_url;
   return null;
-
 }
 
 /**

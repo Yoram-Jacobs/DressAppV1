@@ -74,7 +74,7 @@ import { api } from '@/lib/api';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { closetStore } from '@/lib/closetStore';
 import { workStore } from '@/lib/workStore';
-import { bestImageUrl } from '@/lib/itemImage';
+import { bestImageUrl, getStoredViewPreference, setStoredViewPreference } from '@/lib/itemImage';
 import {
   labelForCategory,
   labelForDressCode,
@@ -548,7 +548,7 @@ export default function ItemDetail() {
   const [cleanBackgroundProgress, setCleanBackgroundProgress] = useState(0);
   const [dictating, setDictating] = useState(false);
   const [dictationInterim, setDictationInterim] = useState('');
-  const [showingOriginal, setShowingOriginal] = useState(false);
+  const [showingOriginal, setShowingOriginal] = useState(() => getStoredViewPreference() === 'original');
 
   // Phase V6 — photo add/replace state
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -1644,7 +1644,13 @@ export default function ItemDetail() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setShowingOriginal((s) => !s)}
+                  onClick={() => {
+                    setShowingOriginal((s) => {
+                      const next = !s;
+                      setStoredViewPreference(next ? 'original' : 'repaired');
+                      return next;
+                    });
+                  }}
                   className="absolute top-3 end-3 inline-flex items-center gap-1.5 rounded-full bg-background/90 backdrop-blur border border-border px-2.5 py-1 text-[11px] font-medium hover:bg-secondary transition-colors"
                   data-testid="item-detail-toggle-reconstruction"
                 >
