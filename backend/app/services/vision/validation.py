@@ -311,10 +311,15 @@ def _enforce_segformer_category(
         label, kind, current, old_subcategory, default,
     )
     analysis["category"] = default
-    # Wipe sub_category — if Gemini said "Overcoat" but the SegFormer
-    # mask is unambiguously a bottom, an "Overcoat" sub_category makes
-    # no sense and would mis-render in the closet card.
-    analysis["sub_category"] = None
+    # If the previous sub_category is incompatible, default to a sensible type for the category
+    if kind == "headwear":
+        analysis["sub_category"] = "Hat"
+    elif kind == "footwear":
+        analysis["sub_category"] = "Shoes"
+    elif kind == "bottom":
+        analysis["sub_category"] = "Pants"
+    else:
+        analysis["sub_category"] = None
     analysis["_category_overridden_by"] = "segformer"
     return analysis
 

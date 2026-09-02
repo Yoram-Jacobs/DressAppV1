@@ -27,11 +27,12 @@ import {
 import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
 
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
-import { useClosetStore } from '@mobile/lib/stores';
+import { useCloset } from '@mobile/lib/stores';
 
 export interface PlannerSlotItem {
   id: string;
@@ -63,7 +64,9 @@ export function OutfitPlannerView({ onTryOn }: { onTryOn?: (slots: PlannerSlotIt
   const { colors } = useTheme();
   const isRtl = I18nManager.isRTL;
 
-  const { items: closetItems } = useClosetStore({ prewarm: true });
+  const { items: closetItems } = useCloset({ autoPrewarm: true });
+
+
   const [shuffling, setShuffling] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
 

@@ -32,7 +32,7 @@ COPY apps/web/package.json apps/web/yarn.lock /app/apps/web/
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 WORKDIR /app/apps/web
 
-RUN yarn install --frozen-lockfile --network-timeout 600000
+RUN yarn add swiper@^11.2.10 && yarn install --network-timeout 600000
 
 # Copy the rest of the web app source
 COPY apps/web/ /app/apps/web/

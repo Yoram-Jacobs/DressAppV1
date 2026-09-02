@@ -29,8 +29,9 @@ export function TransactionLandingScreen() {
 
   useEffect(() => {
     // Fetch the specific transaction from the list endpoint (no single-tx endpoint exists)
-    api.listTransactions().then((data) => {
+    api.listTransactions().then((data: any) => {
       const list: Transaction[] = Array.isArray(data) ? data : (data?.transactions ?? []);
+
       setTx(list.find((t) => t.id === transactionId) ?? { id: transactionId });
     }).catch(() => setTx({ id: transactionId })).finally(() => setLoading(false));
   }, [transactionId]);

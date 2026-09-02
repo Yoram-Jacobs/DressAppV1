@@ -35,7 +35,8 @@ import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
-import { useClosetStore, useTrendScoutStore, useUserStore, useMarketplaceStore } from '@mobile/lib/stores';
+import { useCloset, useTrendScoutStore, useUserStore, useMarketplaceStore } from '@mobile/lib/stores';
+
 import { LanguagePicker } from '@mobile/components/LanguagePicker';
 import { HelpFloater } from '@mobile/components/help';
 import { AdTicker } from '@mobile/components/AdTicker';
@@ -79,7 +80,8 @@ export default function HomeScreen() {
   const isRtl = I18nManager.isRTL;
 
   const { user } = useUserStore();
-  const closet = useClosetStore({ prewarm: true });
+  const closet = useCloset({ autoPrewarm: true });
+
   const trendStore = useTrendScoutStore({ prewarm: true });
   const { totalBrowse: marketCount, fetchBrowse } = useMarketplaceStore({ prewarm: true });
 
@@ -96,10 +98,11 @@ export default function HomeScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     await Promise.all([
-      closet.prewarm({ force: true }),
+      closet.refresh({ force: true }),
       trendStore.prewarm({ language, country, gender, force: true }),
       fetchBrowse({}, { force: true }),
     ]);
+
     setRefreshing(false);
   };
 

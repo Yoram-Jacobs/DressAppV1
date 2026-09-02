@@ -184,7 +184,7 @@ class Settings:
         "GARMENT_VISION_PROVIDER", "gemini"
     )
     GARMENT_VISION_MODEL: str = os.environ.get(
-        "GARMENT_VISION_MODEL", "gemini-3.5-flash-lite"
+        "GARMENT_VISION_MODEL", "gemini-3.5-flash"
     )
     # When set, the HF path hits this OpenAI-compatible endpoint URL
     # instead of going through HF Inference Providers routing. Use this
@@ -205,13 +205,8 @@ class Settings:
     #              container (production Hetzner deploy reaches it at
     #              ``http://eyes:7860``). Failures auto-fall-back to
     #              Gemini so a flaky container never breaks AddItem.
-    #   "gemini" — direct Gemini 2.5 Flash via Emergent/Google chat
-    #              key. Used in the Emergent preview pod, which has
-    #              no Eyes container on its network.
-    # The legacy ``"qwen"`` value is **deprecated** — the Qwen Eyes
-    # path was never enabled in production and was physically removed
-    # in May 2026. Any persisted ``"qwen"`` override falls through to
-    # the env default via ``eyes_override._VALID_PROVIDERS``.
+    #   "gemini" — direct Gemini 3.5 Flash via Google chat key.
+    #              Used when Eyes container is unreachable or bypassed.
     EYES_PROVIDER: str = (
         os.environ.get("EYES_PROVIDER", "gemma") or "gemma"
     ).strip().lower()
@@ -221,42 +216,15 @@ class Settings:
     EYES_GEMMA_SPACE_URL: str | None = (
         os.environ.get("EYES_GEMMA_SPACE_URL") or None
     )
-    # Bearer secret shared between this backend and the self-hosted
-    # Eyes container (Hetzner deploy). Generated with ``openssl rand
-    # -hex 32`` and pasted into both this backend's env and the eyes
-    # container's env.
-    #
-    # **Why there is no ``EYES_HF_TOKEN`` here:** DressApp's Eyes
-    # container loads its GGUF artefacts from a bind-mounted disk
-    # directory, **not** from huggingface.co. The earlier
-    # ``EYES_HF_TOKEN`` setting was a sabotage artefact (May 2026)
-    # that drove a deprecated HF-download bootstrap. It has been
-    # deliberately removed. See
-    # ``quarantine/2026-05-sabotage/READ_THIS_FIRST.md``.
     EYES_API_TOKEN: str | None = (
         os.environ.get("EYES_API_TOKEN") or None
     )
-    # Free CPU Basic inference is slow (5-15s text-only, 30-90s if/when
-    # vision is added). Match the timeout to the worst case and let the
-    # circuit breaker fall back to Gemini instead of stalling AddItem.
     EYES_GEMMA_TIMEOUT_S: float = float(
         os.environ.get("EYES_GEMMA_TIMEOUT_S", "60") or "60"
     )
-    # --- Phase O.6 — Single-pass Eyes (RETIRED May 2026) ---
-    # The experimental "one Eyes call per upload" path was retired
-    # after the CCP-Ninja benchmark (/app/scripts/run_eyes_benchmark.py)
-    # showed Gemini-2.5-Flash will not reliably emit multi-garment
-    # arrays regardless of prompt phrasing: on all 30 test images it
-    # returned exactly one garment, collapsing recall to ~10%. The
-    # legacy SegFormer+per-crop pipeline (``analyze_outfit``) hit mean
-    # IoU 0.71 / recall 0.41 on the same set and remains the only
-    # production analyzer. The ``analyze_outfit_one_pass`` function
-    # is kept for benchmark scripts only. The env var ``EYES_ONE_PASS``
-    # is intentionally not read anywhere — leaving it set in a .env
-    # file has no effect.
     # Per-crop analyzer used inside the multi-item outfit pipeline.
     GARMENT_VISION_CROP_MODEL: str = os.environ.get(
-        "GARMENT_VISION_CROP_MODEL", "gemini-3.5-flash-lite"
+        "GARMENT_VISION_CROP_MODEL", "gemini-3.5-flash"
     )
     # Detection stays on Gemini Flash until we upgrade to a fine-tuned
     # vision model that does boxes well.
@@ -264,7 +232,7 @@ class Settings:
         "GARMENT_VISION_DETECT_PROVIDER", "gemini"
     )
     GARMENT_VISION_DETECT_MODEL: str = os.environ.get(
-        "GARMENT_VISION_DETECT_MODEL", "gemini-3.5-flash-lite"
+        "GARMENT_VISION_DETECT_MODEL", "gemini-3.5-flash"
     )
     # Hard cap on how many items we analyse per uploaded photo.
     GARMENT_VISION_MAX_ITEMS: int = int(
@@ -499,7 +467,7 @@ class Settings:
     USE_LOCAL_CLOTHING_PARSER: bool = (
         not _LIGHTWEIGHT_DEPLOY
         and os.environ.get(
-            "USE_LOCAL_CLOTHING_PARSER", "false"
+            "USE_LOCAL_CLOTHING_PARSER", "true" if _HAS_LOCAL_ML else "false"
         ).lower()
         == "true"
         and os.environ.get("USE_CLOTHING_PARSER", "true").lower() == "true"

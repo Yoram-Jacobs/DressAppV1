@@ -19,13 +19,13 @@
 export function bestImageUrl(item, opts = {}) {
   if (!item) return null;
 
-  // 1. Background-free clean cutout (highest priority for avatar overlay)
-  if (item.clean_image_url) return item.clean_image_url;
-
-  // 2. AI-reconstructed image (background removed)
+  // 1. AI-reconstructed background-free image (highest priority: pristine studio completion)
   if (!opts.skipReconstruction && item.reconstructed_image_url) {
     return item.reconstructed_image_url;
   }
+
+  // 2. Background-free clean cutout (standard cutout)
+  if (item.clean_image_url) return item.clean_image_url;
 
   // 3. Segmented / cutout forms
   if (item.cutout_url) return item.cutout_url;

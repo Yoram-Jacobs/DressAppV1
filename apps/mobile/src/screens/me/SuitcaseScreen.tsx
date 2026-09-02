@@ -35,7 +35,7 @@ import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
 import { useSuitcaseStore, suitcaseStore, SuitcaseItem } from '@mobile/lib/stores/suitcaseStore';
-import { useClosetStore } from '@mobile/lib/stores/closetStore';
+import { useCloset } from '@mobile/lib/repositories/closetRepository';
 
 const PURPOSES = [
   { id: 'vacation', labelKey: 'suitcase.vacation', fallback: '🏖️ Vacation / Leisure' },
@@ -52,7 +52,7 @@ export function SuitcaseScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const suitcaseState = useSuitcaseStore();
-  const { items: closetItems } = useClosetStore({ prewarm: true });
+  const { items: closetItems } = useCloset({ autoPrewarm: true });
 
   const [destination, setDestination] = useState(suitcaseState.activeSuitcase?.destination || 'Paris, France');
   const [selectedDuration, setSelectedDuration] = useState<number>(suitcaseState.activeSuitcase?.days || 5);

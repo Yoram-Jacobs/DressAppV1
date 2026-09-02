@@ -97,7 +97,7 @@ async def test_check_scheduler_triggers_skips_disabled_user():
 
 
 def test_generate_fallback_advice_categorization_and_completeness():
-    from app.services.scheduler import _generate_fallback_advice
+    from app.services.stylist_scheduler_brain import generate_fallback_advice
 
     closet = [
         {"id": "shoe1", "title": "Adidas Neo Grey Shoes", "category": "footwear", "tags": ["work"]},
@@ -106,9 +106,10 @@ def test_generate_fallback_advice_categorization_and_completeness():
         {"id": "shoe2", "title": "Dark Grey Sneakers", "category": "shoes", "tags": ["casual"]},
     ]
 
-    res = _generate_fallback_advice(closet, style_dress_for="work")
+    res = generate_fallback_advice(closet, style_dress_for="work")
     recs = res.get("outfit_recommendations", [])
     assert len(recs) > 0
+
 
     for outfit in recs:
         roles_in_outfit = {item["role"]: item["closet_item_id"] for item in outfit["items"]}

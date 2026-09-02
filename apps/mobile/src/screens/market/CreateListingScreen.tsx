@@ -34,7 +34,7 @@ import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
-import { useClosetStore, ClosetItem } from '@mobile/lib/stores/closetStore';
+import { useCloset, ClosetItem } from '@mobile/lib/repositories/closetRepository';
 import { labelForCategory, labelForCondition } from '@mobile/lib/taxonomy';
 
 const LISTING_TYPES = ['sale', 'swap', 'donate', 'rent'] as const;
@@ -43,7 +43,8 @@ export function CreateListingScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
-  const closet = useClosetStore({ prewarm: true });
+  const closet = useCloset({ autoPrewarm: true });
+
 
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [listingType, setListingType] = useState<'sale' | 'swap' | 'donate' | 'rent'>('sale');

@@ -93,7 +93,8 @@ export function ListingDetailScreen() {
 
     try {
       // Fetch user profile concurrently
-      api.getMe().then((u) => setCurrentUser(u)).catch(() => {});
+      api.getMe().then((u: any) => setCurrentUser(u)).catch(() => {});
+
 
       // Fetch full listing with safety timeout
       const fetchPromise = api.getListing(listingId);

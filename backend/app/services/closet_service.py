@@ -528,13 +528,16 @@ async def run_background_reconstruction(
         )
         return
 
-    recon_b64 = compress_b64_image(result['image_b64'], max_dim=1024, quality=75)
+    raw_b64 = result.get('clean_image_b64') or result.get('image_b64')
     try:
-        temp_raw = base64.b64decode(recon_b64)
-        temp_img = Image.open(io.BytesIO(temp_raw))
-        mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/jpeg"
+        from app.services.vision.image import _fit_crop_to_card
+        temp_raw = base64.b64decode(raw_b64)
+        fitted_bytes, mime = _fit_crop_to_card(temp_raw, crop_mime="image/png")
+        recon_b64 = base64.b64encode(fitted_bytes).decode("ascii")
     except Exception:
+        recon_b64 = compress_b64_image(raw_b64, max_dim=1024, quality=75)
         mime = result.get("mime_type", "image/png")
+
     data_url = f"data:{mime};base64,{recon_b64}"
     meta = {
         "method": "reconstruction",
@@ -551,6 +554,8 @@ async def run_background_reconstruction(
         {
             "$set": {
                 "reconstructed_image_url": data_url,
+                "clean_image_url": data_url,
+                "clean_image_status": "ready",
                 "reconstruction_metadata": meta,
                 "updated_at": datetime.now(timezone.utc).isoformat(),
                 "thumbnail_data_url": None,

@@ -51,7 +51,8 @@ import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { api, tokenStore, emitAuthChange } from '@mobile/lib/api';
 import { resolveImageUrl } from '@mobile/lib/imageUtils';
 import { userStore } from '@mobile/lib/stores';
-import { closetStore, closetRepo } from '@mobile/lib/stores/closetStore';
+import { closetRepo } from '@mobile/lib/repositories/closetRepository';
+
 import { applyRtl } from '@mobile/lib/rtl';
 import { HelpFloater } from '@mobile/components/help';
 import type { MeStackParamList } from '@mobile/navigation/types';

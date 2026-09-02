@@ -52,10 +52,11 @@ async def test_chat_analyse_image_edit_success(mock_user):
         fake_png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
 
         with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
-             patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
+             patch("app.services.closet_service.read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
              patch("app.services.gemini_client.GeminiClient") as MockGeminiClient, \
              patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
              patch("app.api.v1.closet.gemini_image_service") as mock_img_srv:
+
 
             mock_find.return_value = mock_item
             mock_read_bytes.return_value = fake_png
@@ -109,8 +110,9 @@ async def test_chat_analyse_metadata_update(mock_user):
         fake_png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4"
 
         with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
-             patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
+             patch("app.services.closet_service.read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
              patch("app.services.gemini_client.GeminiClient") as MockGeminiClient:
+
 
             mock_find.return_value = mock_item
             mock_read_bytes.return_value = fake_png
@@ -155,8 +157,9 @@ async def test_chat_analyse_clarification(mock_user):
         fake_png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4"
 
         with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
-             patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
+             patch("app.services.closet_service.read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
              patch("app.services.gemini_client.GeminiClient") as MockGeminiClient:
+
 
             mock_find.return_value = mock_item
             mock_read_bytes.return_value = fake_png
@@ -198,10 +201,11 @@ async def test_chat_analyse_hebrew_image_edit(mock_user):
         fake_png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4"
 
         with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
-             patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
+             patch("app.services.closet_service.read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
              patch("app.services.gemini_client.GeminiClient") as MockGeminiClient, \
              patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
              patch("app.api.v1.closet.gemini_image_service") as mock_img_srv:
+
 
             mock_find.return_value = mock_item
             mock_read_bytes.return_value = fake_png

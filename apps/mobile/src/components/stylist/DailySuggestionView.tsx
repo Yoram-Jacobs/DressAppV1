@@ -26,7 +26,8 @@ import * as Lucide from 'lucide-react-native';
 
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
-import { useClosetStore, useUserStore, useOutfitStore } from '@mobile/lib/stores';
+import { useCloset, useUserStore, useOutfitStore } from '@mobile/lib/stores';
+
 import { labelForDressCode } from '@mobile/lib/taxonomy';
 
 interface DailySuggestionViewProps {
@@ -412,7 +413,8 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
   const navigation = useNavigation<any>();
   const isRtl = I18nManager.isRTL;
 
-  const { items: closetItems } = useClosetStore({ prewarm: true });
+  const { items: closetItems } = useCloset({ autoPrewarm: true });
+
   const { user } = useUserStore();
   const { items: outfits } = useOutfitStore({ prewarm: true });
 

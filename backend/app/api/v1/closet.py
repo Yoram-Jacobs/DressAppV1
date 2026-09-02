@@ -260,33 +260,9 @@ class UpdateItemIn(BaseModel):
 
 # --- Closet Service Helpers & Background Tasks ---
 from app.services import closet_service
-
-_pick_segformer_mask_for_category = closet_service.pick_segformer_mask_for_category
-_bytes_from_data_url = closet_service.bytes_from_data_url
-_ensure_min_resolution = closet_service.ensure_min_resolution
-_read_image_bytes_from_url = closet_service.read_image_bytes_from_url
-_maybe_retry_stale_matte = closet_service.maybe_retry_stale_matte
-_run_background_matte = closet_service.run_background_matte
-_run_background_matte_and_analyze = closet_service.run_background_matte_and_analyze
-_run_background_reconstruction = closet_service.run_background_reconstruction
+from app.services.garment_visuals import resolve_garment_image_url
 
 
-def _get_item_image_url(item: dict[str, Any]) -> str | None:
-    """Extract clean_image_url as the primary image URL from a closet item document with full fallbacks."""
-    if not isinstance(item, dict):
-        return None
-    return (
-        item.get("clean_image_url")
-        or item.get("reconstructed_image_url")
-        or item.get("cutout_url")
-        or item.get("image_url")
-        or item.get("original_image_url")
-        or item.get("thumbnail_data_url")
-        or (item.get("image_variants") or {}).get("webp", {}).get("large")
-        or (item.get("image_variants") or {}).get("webp", {}).get("medium")
-        or (item.get("image_variants") or {}).get("original")
-        or None
-    )
 
 
 @router.post("", status_code=201)
@@ -470,13 +446,26 @@ async def create_item(
 
     # Phase Q — persist the reconstructed image (data URL) when supplied.
     if payload.reconstructed_image_b64:
-        if payload.reconstructed_image_b64.startswith("data:"):
-            doc["reconstructed_image_url"] = payload.reconstructed_image_b64
-        else:
-            mime = (payload.reconstruction_metadata or {}).get("mime_type", "image/png")
-            doc["reconstructed_image_url"] = (
-                f"data:{mime};base64,{payload.reconstructed_image_b64}"
-            )
+        try:
+            from app.services.vision.image import _fit_crop_to_card
+            b64_raw = payload.reconstructed_image_b64
+            if b64_raw.startswith("data:"):
+                b64_raw = b64_raw.split(",", 1)[1]
+            rec_bytes = base64.b64decode(b64_raw)
+            fitted_rec, fitted_mime = _fit_crop_to_card(rec_bytes, crop_mime="image/png")
+            fitted_b64 = base64.b64encode(fitted_rec).decode("ascii")
+            doc["reconstructed_image_url"] = f"data:{fitted_mime};base64,{fitted_b64}"
+            if not doc.get("clean_image_url"):
+                doc["clean_image_url"] = doc["reconstructed_image_url"]
+                doc["clean_image_status"] = "ready"
+        except Exception:
+            if payload.reconstructed_image_b64.startswith("data:"):
+                doc["reconstructed_image_url"] = payload.reconstructed_image_b64
+            else:
+                mime = (payload.reconstruction_metadata or {}).get("mime_type", "image/png")
+                doc["reconstructed_image_url"] = (
+                    f"data:{mime};base64,{payload.reconstructed_image_b64}"
+                )
 
     # Phase R (July 2026) — receipt-import provenance persistence.
     # Store receipt flags before any background task is queued so the
@@ -513,7 +502,7 @@ async def create_item(
     raw_for_bg: bytes | None = None
     if payload.crop_base64:
         if payload.crop_base64.startswith("data:"):
-            raw_for_bg = _bytes_from_data_url(payload.crop_base64)
+            raw_for_bg = closet_service.bytes_from_data_url(payload.crop_base64)
         else:
             try:
                 raw_for_bg = base64.b64decode(payload.crop_base64, validate=True)
@@ -530,7 +519,7 @@ async def create_item(
         # merges the VLM result while honouring receipt_locked_fields.
         doc["clean_image_status"] = "pending"
         background_tasks.add_task(
-            _run_background_matte_and_analyze,
+            closet_service.run_background_matte_and_analyze,
             item_id_for_bg,
             raw_for_bg,
             payload.category,
@@ -540,7 +529,7 @@ async def create_item(
         # Standard single-pass or deferred-matte path (no Gemini analysis).
         doc["clean_image_status"] = "pending"
         background_tasks.add_task(
-            _run_background_matte,
+            closet_service.run_background_matte,
             item_id_for_bg,
             raw_for_bg,
             payload.category,
@@ -601,12 +590,13 @@ async def create_item(
             "reconstruction_prompt": payload.reconstruction_prompt,
         }
         background_tasks.add_task(
-            _run_background_reconstruction,
+            closet_service.run_background_reconstruction,
             doc["id"],
             raw_bytes,
             recon_analysis,
             payload.reconstruction_reasons,
         )
+
 
     # Best-effort FashionCLIP embedding: persist a 512-d L2-normalised
     # vector so the closet can later be searched by similarity
@@ -902,8 +892,9 @@ async def preflight_duplicates(
             continue
         src = (
             # Use clean_image_url as the authoritative single-source ground truth.
-            _get_item_image_url(row)
+            resolve_garment_image_url(row)
         )
+
         if not src:
             continue
         # Decode ONCE per row and produce whichever signature(s) the
@@ -1047,10 +1038,8 @@ class AnalyzeIn(BaseModel):
     language: str | None = None
 
 
-_apply_defaults = closet_service._apply_defaults
-_safe_analysis = closet_service.safe_analysis
-
 @router.post("/analyze")
+
 async def analyze_item_image(
     payload: AnalyzeIn,
     request: Request,
@@ -1225,7 +1214,8 @@ async def analyze_item_image(
                             if 0 <= idx < len(items_meta)
                             else {}
                         )
-                        analysis = _safe_analysis(frame.get("analysis") or {})
+                        analysis = closet_service.safe_analysis(frame.get("analysis") or {})
+
                         from app.services.vision import (
                             _is_unidentifiable,
                         )
@@ -1330,7 +1320,7 @@ async def analyze_item_image(
                         if 0 <= idx < len(items_meta)
                         else {}
                     )
-                    analysis = _safe_analysis(frame.get("analysis") or {})
+                    analysis = closet_service.safe_analysis(frame.get("analysis") or {})
                     if not _is_unidentifiable(analysis):
                         items_out.append(
                             {
@@ -1364,7 +1354,8 @@ async def analyze_item_image(
                     "We couldn't identify any garment in this photo. "
                     "Please try a clearer, well-lit shot.",
                 )
-            first = items_out[0]["analysis"] if items_out else _safe_analysis({})
+            first = items_out[0]["analysis"] if items_out else closet_service.safe_analysis({})
+
             return {"items": items_out, "count": len(items_out), **first}
         except HTTPException:
             raise
@@ -1402,6 +1393,10 @@ async def analyze_item_image(
                 )
             except asyncio.TimeoutError:
                 yield b" "
+            except BaseException:
+                # If the task completed with an exception (e.g. HTTPException, validation, etc.),
+                # break out so the error envelope below is formatted and yielded cleanly as JSON.
+                break
         # Task complete — yield the final body (or an error envelope).
         try:
             body = task.result()
@@ -1956,8 +1951,9 @@ async def import_dpp(
     from app.services.dpp_parser import parse_dpp
 
     result = await parse_dpp(payload.qr_payload)
-    analysis = _safe_analysis(dict(result.get("analysis") or {}))
+    analysis = closet_service.safe_analysis(dict(result.get("analysis") or {}))
     dpp_data = result.get("dpp_data") or {}
+
 
     crop_bytes: bytes | None = result.get("image_bytes")
     crop_mime: str = result.get("image_mime") or "image/jpeg"
@@ -2023,7 +2019,7 @@ async def _run_reanalyze_items(
                 skipped += 1
                 continue
 
-            raw = await _read_image_bytes_from_url(image_url)
+            raw = await closet_service.read_image_bytes_from_url(image_url)
             if not raw:
                 skipped += 1
                 continue
@@ -2036,7 +2032,8 @@ async def _run_reanalyze_items(
                 skipped += 1
                 continue
 
-            analysis = _safe_analysis(parsed)
+            analysis = closet_service.safe_analysis(parsed)
+
             from app.services.vision import _is_unidentifiable
 
             if _is_unidentifiable(analysis):
@@ -3979,12 +3976,12 @@ async def clean_item_background(
             "reason": "lightweight_deploy_no_matting",
         }
 
-    crop_url = _get_item_image_url(item)
+    crop_url = resolve_garment_image_url(item)
     if not crop_url:
         raise HTTPException(
             400, "Item has no cropped image to matte. Re-analyze the item first."
         )
-    crop_bytes = await _read_image_bytes_from_url(crop_url)
+    crop_bytes = await closet_service.read_image_bytes_from_url(crop_url)
     if not crop_bytes:
         raise HTTPException(
             400, "Failed to retrieve the item image for background matting."
@@ -4043,9 +4040,10 @@ async def clean_item_background(
         seg_mask = None
         human_mask = None
         try:
-            seg_mask, human_mask = _pick_segformer_mask_for_category(
+            seg_mask, human_mask = closet_service.pick_segformer_mask_for_category(
                 garments, item.get("category")
             )
+
             if seg_mask is None and garments:
                 logger.info(
                     "/clean-background SegFormer parsed %d instance(s) for "
@@ -4296,14 +4294,14 @@ async def reanalyze_item(
     if not item:
         raise HTTPException(404, "Item not found")
 
-    image_url: str | None = _get_item_image_url(item)
+    image_url: str | None = resolve_garment_image_url(item)
     if not image_url:
         raise HTTPException(
             400,
             "Item has no stored image to re-analyse. "
             "Replace the photo first.",
         )
-    raw = await _read_image_bytes_from_url(image_url)
+    raw = await closet_service.read_image_bytes_from_url(image_url)
     if not raw:
         raise HTTPException(400, "Stored image is empty")
 
@@ -4318,7 +4316,8 @@ async def reanalyze_item(
             "Garment analyzer is temporarily unavailable. Please try again.",
         ) from exc
 
-    analysis = _safe_analysis(parsed)
+    analysis = closet_service.safe_analysis(parsed)
+
     from app.services.vision import _is_unidentifiable
 
     if _is_unidentifiable(analysis):
@@ -4493,11 +4492,12 @@ async def chat_analyse_item(
     if not user_msg:
         raise HTTPException(400, "Message cannot be empty")
 
-    image_url: str | None = payload.image_url or _get_item_image_url(item)
+    image_url: str | None = payload.image_url or resolve_garment_image_url(item)
     if not image_url:
         raise HTTPException(400, "Item has no stored image. Please attach a photo first.")
 
-    raw = await _read_image_bytes_from_url(image_url)
+    raw = await closet_service.read_image_bytes_from_url(image_url)
+
     if not raw:
         raise HTTPException(400, "Stored image is empty or could not be retrieved.")
 
@@ -4772,8 +4772,9 @@ async def repair_item_image(
 
     # Use the clean-cut rembg image for visual conditioning (what the user sees
     # in the closet); fall back to other image fields if matte hasn't run yet.
-    crop_url = _get_item_image_url(item)
-    crop_bytes = await _read_image_bytes_from_url(crop_url) if crop_url else b""
+    crop_url = resolve_garment_image_url(item)
+    crop_bytes = await closet_service.read_image_bytes_from_url(crop_url) if crop_url else b""
+
 
     from app.services.billing_service import deduct_user_credits
     if not await deduct_user_credits(db, user, cost=1):
@@ -5377,7 +5378,8 @@ async def get_item(
     )
     if not item:
         raise HTTPException(404, "Item not found")
-    await _maybe_retry_stale_matte(item, background_tasks)
+    await closet_service.maybe_retry_stale_matte(item, background_tasks)
+
 
     # Hydrate group members
     group_id = item.get("group_id")
@@ -6007,12 +6009,13 @@ async def edit_item_image(
     )
     if not item:
         raise HTTPException(404, "Item not found")
-    source_url = _get_item_image_url(item)
+    source_url = resolve_garment_image_url(item)
     if not source_url:
         raise HTTPException(400, "No source image on this item")
-    source_bytes = await _read_image_bytes_from_url(source_url)
+    source_bytes = await closet_service.read_image_bytes_from_url(source_url)
     if not source_bytes:
         raise HTTPException(400, "Failed to retrieve source image bytes")
+
     if gemini_image_service is None:
         # Nano Banana (gemini-3.1-flash-lite-image) requires a direct
         # GEMINI_API_KEY. The legacy HF FLUX fallback was retired in May
@@ -6295,7 +6298,7 @@ async def parse_receipt(
             if settings.USE_LOCAL_CLOTHING_PARSER:
                 try:
                     garments = await _cp.parse_garments(crop_bytes)
-                    seg_mask, human_mask = _pick_segformer_mask_for_category(garments, category)
+                    seg_mask, human_mask = closet_service.pick_segformer_mask_for_category(garments, category)
                 except Exception as exc:
                     logger.info("Background matte SegFormer skipped in visual receipt parse: %s", exc)
                     
@@ -6327,7 +6330,8 @@ async def parse_receipt(
                 crop_bytes,
                 language=user_lang,
             )
-            analysis_clean = _safe_analysis(analysis_raw)
+            analysis_clean = closet_service.safe_analysis(analysis_raw)
+
             crop_b64 = base64.b64encode(crop_bytes).decode("ascii")
             
             return {

@@ -48,8 +48,9 @@ import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
-import { closetStore, useClosetStore } from '@mobile/lib/stores/closetStore';
+import { closetRepo } from '@mobile/lib/repositories/closetRepository';
 import { ScanningPipelineOverlay } from '@mobile/components/ScanningPipelineOverlay';
+
 import { WeightedList, WeightedItem } from '@mobile/components/WeightedList';
 import { TaxonomySelectModal } from '@mobile/components/TaxonomySelectModal';
 import { DuplicatePreflightDialog } from '@mobile/components/DuplicatePreflightDialog';
@@ -82,6 +83,10 @@ import {
   labelForIntent,
 } from '@mobile/lib/taxonomy';
 import type { ClosetStackParamList } from '@mobile/navigation/types';
+import { resolveDisplayUrl } from '@mobile/lib/imageUtils';
+import { normalizeColors, normalizeFabricMaterials } from '@mobile/lib/garmentNormalizer';
+
+
 
 type ClosetAddNavProp = NativeStackNavigationProp<ClosetStackParamList, 'ClosetAdd'>;
 type ClosetAddRouteProp = RouteProp<ClosetStackParamList, 'ClosetAdd'>;
@@ -152,9 +157,9 @@ export function ClosetAddScreen() {
   const navigation = useNavigation<ClosetAddNavProp>();
   const route = useRoute<ClosetAddRouteProp>();
   const { colors, isDark } = useTheme();
-  const { prewarm } = useClosetStore();
 
   const isRtl = I18nManager.isRTL;
+
   const startOnCamera = route.params?.source === 'camera';
 
   // Navigation tab for ingestion
@@ -436,23 +441,18 @@ export function ClosetAddScreen() {
         }
 
         // 8. Colors & Percentages
-        const rawColors: WeightedItem[] = Array.isArray(analysis.colors) && analysis.colors.length > 0
-          ? analysis.colors.map((c: any) => ({
-              name: typeof c === 'string' ? c.trim() : (c.name || '').trim(),
-              pct: typeof c === 'object' && c.pct != null ? c.pct : 100,
-            }))
-          : (analysis.color
-              ? [{ name: String(analysis.color).trim(), pct: 100 }]
-              : (item.color ? [{ name: String(item.color).trim(), pct: 100 }] : []));
+        const rawColors: WeightedItem[] = normalizeColors(
+          analysis.colors,
+          analysis.color || item.color
+        );
         const primaryColor = rawColors[0]?.name || (analysis.color && String(analysis.color).trim()) || (item.color && String(item.color).trim()) || '';
 
         // 9. Fabric Materials & Percentages
-        const rawMaterials: WeightedItem[] = Array.isArray(analysis.fabric_materials)
-          ? analysis.fabric_materials.map((m: any) => ({
-              name: typeof m === 'string' ? m.trim() : (m.name || m.tag || '').trim(),
-              pct: typeof m === 'object' && m.pct != null ? m.pct : (typeof m === 'object' && m.percentage != null ? m.percentage : 100),
-            }))
-          : [];
+        const rawMaterials: WeightedItem[] = normalizeFabricMaterials(
+          analysis.fabric_materials,
+          analysis.material || analysis.fabric || item.material || item.fabric
+        );
+
 
         // 10. Tags & Cultural Tags derivation
         const rawTags: string[] = Array.isArray(analysis.tags)
@@ -481,13 +481,8 @@ export function ClosetAddScreen() {
           item.reconstructedUrl ||
           null;
 
-        const validReconUrl =
-          rawReconUrl &&
-          rawReconUrl !== 'None' &&
-          rawReconUrl !== 'null' &&
-          rawReconUrl !== 'undefined'
-            ? rawReconUrl
-            : null;
+        const validReconUrl = resolveDisplayUrl(rawReconUrl);
+
 
         const rawReconB64 =
           analysis.reconstructed_image_b64 ||
@@ -591,7 +586,8 @@ export function ClosetAddScreen() {
 
       if (fingerprints.length === 0) return;
 
-      const closetItems = closetStore.getSnapshot().items || [];
+      const closetItems = closetRepo.getSnapshot().items || [];
+
       let { matches } = findDuplicatesInCloset(fingerprints, closetItems);
 
       // Also query backend preflight so items in Mongo lacking client-side hashes
@@ -1065,8 +1061,9 @@ export function ClosetAddScreen() {
     };
 
     if (successCount > 0) {
-      await prewarm({ force: true });
+      await closetRepo.refresh({ force: true });
       Alert.alert(
+
         t('common.success', { defaultValue: 'Saved!' }),
         t('addItem.batchSaveSuccess', { count: successCount, defaultValue: `Successfully added ${successCount} garment(s) to your wardrobe!` }),
         [{ text: t('common.ok', { defaultValue: 'OK' }), onPress: handleBack }]

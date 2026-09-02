@@ -42,14 +42,15 @@ import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
-import { useClosetStore, closetStore, ClosetItem } from '@mobile/lib/stores/closetStore';
-import { closetRepo } from '@mobile/lib/repositories/closetRepository';
+import { closetRepo, useCloset, ClosetItem } from '@mobile/lib/repositories/closetRepository';
 import { OutfitCompletionSheet } from '@mobile/components/OutfitCompletionSheet';
 import { RichSelectionFloater } from '@mobile/components/closet/RichSelectionFloater';
 import { HelpFloater } from '@mobile/components/help';
 import { LoadingVideo } from '@mobile/components/common/LoadingVideo';
 import { labelForCategory, labelForIntent, labelForColor, getTaxonomyMismatches } from '@mobile/lib/taxonomy';
 import type { ClosetStackParamList } from '@mobile/navigation/types';
+import { resolveGarmentImageUrl } from '@mobile/lib/imageUtils';
+
 
 type ClosetNavProp = NativeStackNavigationProp<ClosetStackParamList, 'Closet'>;
 type ViewMode = 'grid' | 'compact' | 'list';
@@ -67,8 +68,9 @@ export function ClosetScreen() {
   const { colors, isDark } = useTheme();
   const isRtl = I18nManager.isRTL;
 
-  const { items, loading, prewarm, removeMany, deleteManyItems } = useClosetStore({ prewarm: true });
+  const { items, loading, refresh, deleteMany } = useCloset({ autoPrewarm: true });
   const [refreshing, setRefreshing] = useState(false);
+
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -254,8 +256,8 @@ export function ClosetScreen() {
 
       const runGrouping = async () => {
         const groupId = targetItem.group_id || targetId;
-        closetStore.upsert({ ...targetItem, group_id: groupId, group_role: 'host' });
-        closetStore.upsert({ ...sourceItem, group_id: groupId, group_role: 'member' });
+        closetRepo.upsert({ ...targetItem, group_id: groupId, group_role: 'host' });
+        closetRepo.upsert({ ...sourceItem, group_id: groupId, group_role: 'member' });
 
         try {
           Vibration.vibrate(50);
@@ -264,25 +266,26 @@ export function ClosetScreen() {
         try {
           const res = await (api as any).groupItems?.({ host_id: targetId, member_id: sourceId });
           if (res?.status === 'success' || res?.host) {
-            if (res.host) closetStore.upsert(res.host);
-            if (res.member) closetStore.upsert(res.member);
+            if (res.host) closetRepo.upsert(res.host);
+            if (res.member) closetRepo.upsert(res.member);
             await closetRepo.refresh({ force: true });
             Alert.alert(
               t('common.success', { defaultValue: 'Success' }),
               t('closet.groupCreated', { defaultValue: 'Garments grouped successfully.' })
             );
           } else {
-            closetStore.upsert(backupSource);
-            closetStore.upsert(backupTarget);
+            closetRepo.upsert(backupSource);
+            closetRepo.upsert(backupTarget);
             Alert.alert(t('common.error', { defaultValue: 'Error' }), t('common.error', { defaultValue: 'Failed to group items' }));
           }
         } catch (err: any) {
           console.warn('Failed to group items:', err);
-          closetStore.upsert(backupSource);
-          closetStore.upsert(backupTarget);
+          closetRepo.upsert(backupSource);
+          closetRepo.upsert(backupTarget);
           Alert.alert(t('common.error', { defaultValue: 'Error' }), err?.message || 'Failed to group items');
         }
       };
+
 
       const normCategory = (cat?: string) => {
         const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');
@@ -334,17 +337,18 @@ export function ClosetScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await prewarm({ force: true });
+    await refresh({ force: true });
     setRefreshing(false);
-  }, [prewarm]);
+  }, [refresh]);
 
   useFocusEffect(
     useCallback(() => {
-      if (!closetStore.isFresh()) {
-        closetStore.prewarm().catch(() => {});
+      if (!closetRepo.isFresh()) {
+        closetRepo.refresh().catch(() => {});
       }
     }, [])
   );
+
 
   // Semantic search call
   const performSemanticSearch = async (query: string) => {
@@ -478,16 +482,16 @@ export function ClosetScreen() {
             const memberIds = ids.slice(1);
             setGrouping(true);
 
-            // Optimistic update in closetStore
-            const allItems = closetStore.getSnapshot().items || [];
-            const hostItem = allItems.find((x) => x.id === hostId);
+            // Optimistic update in closetRepo
+            const allItems = closetRepo.getSnapshot().items || [];
+            const hostItem = allItems.find((x: any) => x.id === hostId);
             if (hostItem) {
-              closetStore.upsert({ ...hostItem, group_id: hostId, group_role: 'host' });
+              closetRepo.upsert({ ...hostItem, group_id: hostId, group_role: 'host' });
             }
             memberIds.forEach((mid) => {
-              const memItem = allItems.find((x) => x.id === mid);
+              const memItem = allItems.find((x: any) => x.id === mid);
               if (memItem) {
-                closetStore.upsert({ ...memItem, group_id: hostId, group_role: 'member' });
+                closetRepo.upsert({ ...memItem, group_id: hostId, group_role: 'member' });
               }
             });
 
@@ -530,15 +534,16 @@ export function ClosetScreen() {
     const ids = Array.from(selectedIds);
     setTagging(true);
 
-    const allItems = closetStore.getSnapshot().items || [];
+    const allItems = closetRepo.getSnapshot().items || [];
     ids.forEach((id) => {
-      const item = allItems.find((x) => x.id === id);
+      const item = allItems.find((x: any) => x.id === id);
       if (item) {
         const existing = Array.isArray(item.tags) ? item.tags : [];
         const merged = Array.from(new Set([...existing, ...newTags]));
-        closetStore.upsert({ ...item, tags: merged });
+        closetRepo.upsert({ ...item, tags: merged });
       }
     });
+
 
     setSelectedIds(new Set());
     setSelectMode(false);
@@ -575,8 +580,9 @@ export function ClosetScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteManyItems(Array.from(selectedIds));
+              await deleteMany(Array.from(selectedIds));
             } catch (err: any) {
+
               Alert.alert(
                 t('common.error', { defaultValue: 'Error' }),
                 err?.message || t('closet.batchDeleteFailed', { defaultValue: 'Some items could not be deleted. Please try again.' })
@@ -607,13 +613,8 @@ export function ClosetScreen() {
     const isSelected = selectedIds.has(item.id);
     const isDragged = draggedId === item.id;
     const isDragOver = dragOverId === item.id;
-    const imgUri =
-      item.thumbnail_data_url ||
-      item.clean_image_url ||
-      item.reconstructed_image_url ||
-      item.segmented_image_url ||
-      item.original_image_url ||
-      item.image_url;
+    const imgUri = resolveGarmentImageUrl(item, { prefer: 'thumbnail' });
+
 
     if (viewMode === 'list') {
       return (

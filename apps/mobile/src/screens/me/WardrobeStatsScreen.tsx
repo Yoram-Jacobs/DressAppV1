@@ -31,8 +31,10 @@ import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
-import { useClosetStore } from '@mobile/lib/stores/closetStore';
+import { useCloset } from '@mobile/lib/repositories/closetRepository';
 import { labelForColor, labelForCategory } from '@mobile/lib/taxonomy';
+
+
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -77,7 +79,7 @@ export function WardrobeStatsScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const navigation = useNavigation();
-  const closet = useClosetStore({ prewarm: true });
+  const closet = useCloset({ autoPrewarm: true });
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -101,8 +103,9 @@ export function WardrobeStatsScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([closet.prewarm({ force: true }), loadData()]);
+    await Promise.all([closet.refresh({ force: true }), loadData()]);
   };
+
 
   // Compute stats from closet items
   const { totalValuation, colorDistribution, materialDistribution, totalPieces } = useMemo(() => {

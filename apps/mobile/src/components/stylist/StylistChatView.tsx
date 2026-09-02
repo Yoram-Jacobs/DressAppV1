@@ -38,8 +38,9 @@ import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
-import { useClosetStore } from '@mobile/lib/stores/closetStore';
+import { useCloset } from '@mobile/lib/repositories/closetRepository';
 import { ConversationSidebar, StylistSession } from './ConversationSidebar';
+
 
 export interface OutfitGarment {
   id?: string;
@@ -78,8 +79,8 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
   const isRtl = I18nManager.isRTL;
-  const closetStore = useClosetStore();
-  const closetItems = closetStore.items || [];
+  const { items: closetItems } = useCloset();
+
 
   const [inputQuery, setInputQuery] = useState('');
   const [loading, setLoading] = useState(false);

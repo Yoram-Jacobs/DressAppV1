@@ -148,13 +148,8 @@ class GarmentVisionService:
                 # semantic PNG cutouts instead of bbox rectangles. Not
                 # serialised to JSON anywhere.
                 "mask": p.get("mask"),
-                # Full-res union of Face / Hair / limb pixels. Sliced
-                # to bbox by ``_bbox_crop_useful`` and subtracted from
-                # the dilated garment soft-mask inside
-                # ``apply_alpha_intersection`` so face / hair / arms /
-                # legs can't leak into the final matte. May be None
-                # if the parser couldn't build the human mask.
                 "_human_mask_full": p.get("_human_mask_full"),
+                "has_human_head": p.get("has_human_head", False),
                 "source": "clothing_parser",
             }
             for p in parser_items
@@ -2084,11 +2079,8 @@ class GarmentVisionService:
                 if count == 0:
                     logger.info("Gatekeeper: photo %d has 0 garments — dropping it", idx)
                     return idx, []
-                elif count == 1:
-                    logger.info("Gatekeeper: photo %d has 1 garment — bypassing SegFormer and routing to whole-image crop", idx)
-                    detections = [{"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment"}]
                 else:
-                    logger.info("Gatekeeper: photo %d has %d garments — running SegFormer detect_items", idx, count)
+                    logger.info("Gatekeeper: photo %d has %d garments — running detect_items", idx, count)
                     detections = await self.detect_items(img_bytes)
             except Exception as exc:
                 logger.warning("analyze_outfits_stream: detect_items / gatekeep failed for idx %d: %s", idx, repr(exc)[:160])

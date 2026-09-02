@@ -8,9 +8,9 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, StyleSheet, LogBox } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import { View, ActivityIndicator, StyleSheet, LogBox, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 import { Provider as PaperProvider } from 'react-native-paper';
 import {
   useFonts,
@@ -53,8 +53,9 @@ function AppContent() {
 
   return (
     <>
-      <StatusBar style={isDark ? 'light' : 'dark'} translucent />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
       <PaperProvider>
+
         <RootNavigator />
       </PaperProvider>
     </>
@@ -102,13 +103,14 @@ export function App() {
     };
   }, []);
 
-  if (!fontsLoaded && !fontError && !langHydrated) {
+  if ((!fontsLoaded && !fontError) || !langHydrated) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2d8f7f" />
       </View>
     );
   }
+
 
   return (
     <SafeAreaProvider>

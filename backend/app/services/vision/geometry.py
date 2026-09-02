@@ -323,60 +323,41 @@ def _looks_already_cropped(detections: list[dict[str, Any]]) -> bool:
     """Return True when the photo is already a tight single-item shot.
 
     This includes single-item product shots, standalone footwear/accessory
-    photos with no human present, or any photo containing only one category
-    of garment.
+    photos with no human present, or single-category item fragments.
     """
     if not detections:
         return True  # nothing detectable — safer to analyse whole frame
+    if len(detections) == 1:
+        return True
+
     frame_area = 1000 * 1000
 
     def _area(bbox: list[int]) -> int:
         y1, x1, y2, x2 = bbox
         return max(0, (x2 - x1)) * max(0, (y2 - y1))
 
-    has_human = False
     has_head = any(d.get("has_human_head", False) for d in detections)
     garment_kinds = {
         (d.get("category") or d.get("kind") or "garment").lower()
         for d in detections
-        if _area(d["bbox"]) >= frame_area * 0.03
+        if _area(d["bbox"]) >= frame_area * 0.02
     }
+
+    has_human = False
     if has_head or len(garment_kinds) > 1:
+        has_human = True
+    else:
         for d in detections:
             hm = d.get("_human_mask_full")
-            if hm is not None and hm.sum() >= 30000:
+            if hm is not None and hm.sum() >= 5000:
                 has_human = True
                 break
 
-    if not has_human and len(garment_kinds) <= 1:
-        return True
-
-    areas = [_area(d["bbox"]) for d in detections]
-    largest_area = max(areas) if areas else 0
-
-    # Signal 0 (NEW, takes precedence): any single detection that already
-    # covers >= the single-item threshold means the photo is dominated by
-    # one garment. Other small detections are SegFormer label-confusion
-    # fragments (e.g. labelling part of a patterned t-shirt as "Dress" and
-    # another part as "Upper-clothes"). Treat as single-item so we feed
-    # the WHOLE photo through rembg + Gemini once instead of shredding it
-    # into nonsensical sub-crops.
-    if largest_area >= frame_area * _SINGLE_ITEM_AREA_FRAC:
-        return True
-
-    # Signal 1: one dominant detection (only triggers when nothing crossed
-    # the threshold above — kept for the ``len == 1`` corner cases).
-    if len(detections) == 1:
-        if largest_area >= frame_area * _SINGLE_ITEM_AREA_FRAC:
-            return True
-        # A single tiny detection on a clean-looking frame also hints at
-        # an over-zealous sub-part crop.
-        if largest_area <= frame_area * 0.25:
-            return True
+    # If there is a human or multiple distinct garment kinds, it is an outfit / multi-garment photo!
+    if has_human or len(garment_kinds) > 1:
         return False
 
-    # Signal 3: heavily-overlapping detections imply one garment with
-    # conflicting class labels.
+    areas = [_area(d["bbox"]) for d in detections]
     sum_areas = sum(areas)
     ymins = [d["bbox"][0] for d in detections]
     xmins = [d["bbox"][1] for d in detections]
@@ -384,13 +365,20 @@ def _looks_already_cropped(detections: list[dict[str, Any]]) -> bool:
     xmaxs = [d["bbox"][3] for d in detections]
     union = max(1, (max(ymaxs) - min(ymins)) * (max(xmaxs) - min(xmins)))
     overlap_ratio = sum_areas / float(union)
+
+    # If detections heavily overlap in the same category on a flat lay, treat as 1 item
     if overlap_ratio >= 1.4:
         return True
 
-    # Signal 2: several detections of the same kind, all clustered inside
-    # a small area (collar / sleeve / hem hallucinations).
-    kinds = {(d.get("category") or d.get("kind") or "garment").lower() for d in detections}
-    if len(kinds) > 1:
-        return False
-    return union <= frame_area * _SUBPART_UNION_FRAC
+    # If only 1 kind and small cluster, it's subpart fragments of 1 garment
+    if len(garment_kinds) <= 1 and union <= frame_area * _SUBPART_UNION_FRAC:
+        return True
+
+    # If all detections are in the same kind and none is a human wearer, check if one dominant box dominates
+    largest_area = max(areas) if areas else 0
+    if len(garment_kinds) <= 1 and largest_area >= frame_area * _SINGLE_ITEM_AREA_FRAC:
+        return True
+
+    return False
+
 

@@ -10,33 +10,61 @@
 
 import axios from 'axios';
 
-// Mutable holders — overwritten once by createApiClient()
-export let client = axios.create({ baseURL: '/api/v1', timeout: 180000 });
-export let API_BASE = '/api/v1';
-export let tokenStore = {
+let _activeClient = axios.create({ baseURL: '/api/v1', timeout: 180000 });
+let _activeApiBase = '/api/v1';
+
+export const tokenStore = {
   get: () => null,
   set: () => {},
   clear: () => {},
 };
-export let userStore = {
+
+export const userStore = {
   get: () => null,
   set: () => {},
 };
 
+export const API_BASE = '/api/v1';
+
+/**
+ * Proxy that delegates all Axios calls to `_activeClient`.
+ * This avoids mutating internal Axios properties (like interceptors.handlers)
+ * which throws 'TypeError: property is not writable' in Hermes/strict mode.
+ */
+export const client = new Proxy(
+  function (...args) {
+    return _activeClient(...args);
+  },
+  {
+    get(target, prop) {
+      const val = _activeClient[prop];
+      if (typeof val === 'function') {
+        return val.bind(_activeClient);
+      }
+      return val;
+    },
+    set(target, prop, value) {
+      _activeClient[prop] = value;
+      return true;
+    },
+  }
+);
+
 /**
  * Called by createApiClient() after building the real axios instance.
- * Replaces the module-level exports so that domain modules already
- * imported see the configured values.
+ * Sets the active client reference and updates token/user stores.
  */
 export function _setSingleton(newClient, newApiBase, newTokenStore, newUserStore) {
-  // We can't re-assign `export let` from outside the module in ESM,
-  // so we mutate the properties of the singleton objects instead.
-  // For `client` (an axios instance) we copy all properties.
-  Object.assign(client.defaults, newClient.defaults);
-  // Swap interceptors
-  client.interceptors.request.handlers = newClient.interceptors.request.handlers;
-  client.interceptors.response.handlers = newClient.interceptors.response.handlers;
-  API_BASE = newApiBase;
-  Object.assign(tokenStore, newTokenStore);
-  Object.assign(userStore, newUserStore);
+  _activeClient = newClient;
+  _activeApiBase = newApiBase;
+  if (newTokenStore) {
+    tokenStore.get = newTokenStore.get;
+    tokenStore.set = newTokenStore.set;
+    tokenStore.clear = newTokenStore.clear;
+  }
+  if (newUserStore) {
+    userStore.get = newUserStore.get;
+    userStore.set = newUserStore.set;
+  }
 }
+

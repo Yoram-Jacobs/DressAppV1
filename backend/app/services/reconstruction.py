@@ -329,18 +329,28 @@ async def reconstruct(
     clean_image_url: str | None = None
     try:
         from app.services.background_matting import remove_background
+        from app.services.vision.image import _fit_crop_to_card
         import base64 as _b64
+
         gen_raw = _b64.b64decode(image_b64)
         clean_res = await remove_background(gen_raw)
         if clean_res.get("success") and clean_res.get("image_png"):
-            clean_image_b64 = _b64.b64encode(clean_res["image_png"]).decode("ascii")
+            # Normalize to 900x1200 canvas with 0.90 safety margin
+            fitted_png, _ = _fit_crop_to_card(clean_res["image_png"], crop_mime="image/png")
+            clean_image_b64 = _b64.b64encode(fitted_png).decode("ascii")
             clean_image_url = f"data:image/png;base64,{clean_image_b64}"
+            # Also keep image_b64 synchronized to the fitted cutout
+            image_b64 = clean_image_b64
+        else:
+            # Fit raw image to 900x1200 card canvas
+            fitted_raw, _ = _fit_crop_to_card(gen_raw, crop_mime=out.get("mime_type", "image/png"))
+            image_b64 = _b64.b64encode(fitted_raw).decode("ascii")
     except Exception as unbind_exc:
-        logger.warning("Unbinding reconstructed garment from background failed: %s", repr(unbind_exc))
+        logger.warning("Unbinding and normalizing reconstructed garment failed: %s", repr(unbind_exc))
 
     return {
         "image_b64": image_b64,
-        "mime_type": out.get("mime_type", "image/png"),
+        "mime_type": "image/png",
         "clean_image_b64": clean_image_b64,
         "clean_image_url": clean_image_url,
         "prompt": prompt,

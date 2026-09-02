@@ -18,9 +18,7 @@
  */
 
 const { getDefaultConfig } = require('expo/metro-config');
-const { withNativewind } = require('nativewind/metro');
 const path = require('path');
-const { existsSync } = require('fs');
 
 // ── Windows drive letter normalization ───────────────────────────────────────
 // Metro on Windows can produce doubled paths (C:\c:\...) when the drive
@@ -47,11 +45,11 @@ config.watchFolders = [
 ];
 
 // ── Module resolution ────────────────────────────────────────────────────────
-// Yarn hoists everything to root node_modules. List root FIRST since
-// that's where all the packages actually live.
+// Yarn hoists everything to root node_modules. Prevent hierarchical duplicate resolution.
+config.resolver.disableHierarchicalLookup = true;
 config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
-  path.resolve(projectRoot, 'node_modules'),
+  path.resolve(workspaceRoot, 'node_modules/expo/node_modules'),
 ];
 
 // Asset extensions
@@ -65,12 +63,33 @@ config.resolver.sourceExts = [
   'cjs',
 ];
 
-// llama.rn stub + singleton packages
+// llama.rn stub + singleton packages to prevent dual React / Expo runtime instances
 config.resolver.extraNodeModules = {
+  '@mobile': path.resolve(projectRoot, 'src'),
+  '@dressapp/api-client': path.resolve(workspaceRoot, 'packages/api-client/src/index.js'),
+  '@dressapp/i18n': path.resolve(workspaceRoot, 'packages/i18n/src/index.js'),
+  '@dressapp/types': path.resolve(workspaceRoot, 'packages/types/src/index.js'),
+  '@dressapp/eyes-native': path.resolve(workspaceRoot, 'packages/eyes-native/src/index.ts'),
   'llama.rn': LLAMA_STUB,
   react: path.resolve(workspaceRoot, 'node_modules/react'),
   'react-native': path.resolve(workspaceRoot, 'node_modules/react-native'),
   'react-native-safe-area-context': path.resolve(workspaceRoot, 'node_modules/react-native-safe-area-context'),
+  'react-native-reanimated': path.resolve(workspaceRoot, 'node_modules/react-native-reanimated'),
+  'react-native-screens': path.resolve(workspaceRoot, 'node_modules/react-native-screens'),
+  'react-native-svg': path.resolve(workspaceRoot, 'node_modules/react-native-svg'),
+  expo: path.resolve(workspaceRoot, 'node_modules/expo'),
+  'expo-modules-core': path.resolve(workspaceRoot, 'node_modules/expo/node_modules/expo-modules-core'),
+  '@expo/vector-icons': path.resolve(workspaceRoot, 'node_modules/@expo/vector-icons'),
+  '@react-navigation/native': path.resolve(workspaceRoot, 'node_modules/@react-navigation/native'),
+  '@react-navigation/native-stack': path.resolve(workspaceRoot, 'node_modules/@react-navigation/native-stack'),
+  '@react-navigation/bottom-tabs': path.resolve(workspaceRoot, 'node_modules/@react-navigation/bottom-tabs'),
+  axios: path.resolve(workspaceRoot, 'node_modules/axios'),
+  i18next: path.resolve(workspaceRoot, 'node_modules/i18next'),
+  'react-i18next': path.resolve(workspaceRoot, 'node_modules/react-i18next'),
 };
 
 module.exports = config;
+
+
+
+

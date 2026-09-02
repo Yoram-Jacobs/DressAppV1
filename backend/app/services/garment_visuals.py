@@ -1,4 +1,4 @@
-﻿"""backend/app/services/garment_visuals.py
+"""backend/app/services/garment_visuals.py
 
 Deep module: Garment Visuals & Cutout Pipeline.
 
@@ -87,7 +87,9 @@ class GarmentVisuals:
                 matted_png = await matte_crop(raw_bytes)
 
             if matted_png:
-                b64 = base64.b64encode(matted_png).decode("ascii")
+                from app.services.vision.image import _fit_crop_to_card
+                fitted_png, _ = _fit_crop_to_card(matted_png, crop_mime="image/png")
+                b64 = base64.b64encode(fitted_png).decode("ascii")
                 return f"data:image/png;base64,{b64}"
         except Exception as exc:
             logger.warning("GarmentVisuals transparent cutout extraction failed: %s", exc)
@@ -156,3 +158,63 @@ class GarmentVisuals:
             clean_image_status=status,
             raw_bytes=raw_bytes,
         )
+
+
+# ─── Garment image URL resolver ───────────────────────────────────────────────
+#
+# Python twin of resolveGarmentImageUrl in apps/mobile/src/lib/imageUtils.ts.
+#
+# Selects the best available display URL from any Garment / closet-item dict,
+# filtering out Python "None" strings, JSON "null" strings, and empty values.
+#
+# prefer:
+#   "cutout"    (default) — reconstructed → clean_image_url → segmented → variants → original → thumb
+#   "original"  — original_image_url → image_url → variants → reconstructed → cutout → thumb
+#   "thumbnail" — thumbnail_data_url → placeholder → reconstructed → cutout → original
+
+_SENTINEL_STRINGS: frozenset[str] = frozenset({"None", "null", "undefined", "[object Object]", ""})
+
+
+def _valid(url: str | None) -> str | None:
+    """Return url only if it is a non-empty, non-sentinel string."""
+    if not url or not isinstance(url, str):
+        return None
+    t = url.strip()
+    return None if t in _SENTINEL_STRINGS else t
+
+
+def _variants_url(item: dict) -> str | None:
+    variants = item.get("image_variants") or {}
+    return (
+        _valid(variants.get("webp", {}).get("large"))
+        or _valid(variants.get("webp", {}).get("medium"))
+        or _valid(variants.get("avif", {}).get("medium"))
+        or _valid(variants.get("original"))
+        or None
+    )
+
+
+def resolve_garment_image_url(
+    item: dict | None,
+    prefer: str = "cutout",
+) -> str | None:
+    """Return the best display URL for a Garment dict, or None if nothing is available."""
+    if not isinstance(item, dict):
+        return None
+
+    recon   = _valid(item.get("reconstructed_image_url"))
+    cutout = (
+        _valid(item.get("clean_image_url"))
+        or _valid(item.get("segmented_image_url"))
+        or _valid(item.get("cutout_url"))
+    )
+    variant = _variants_url(item)
+    orig    = _valid(item.get("original_image_url")) or _valid(item.get("image_url"))
+    thumb   = _valid(item.get("thumbnail_data_url")) or _valid(item.get("placeholder_data_url"))
+
+    if prefer == "thumbnail":
+        return thumb or recon or cutout or variant or orig
+    if prefer == "original":
+        return orig or variant or recon or cutout or thumb
+    # "cutout" (default)
+    return recon or cutout or variant or orig or thumb

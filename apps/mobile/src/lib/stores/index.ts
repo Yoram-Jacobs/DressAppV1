@@ -3,7 +3,6 @@
  */
 
 export * from './userStore';
-export * from './closetStore';
 export * from './outfitStore';
 export * from './marketplaceStore';
 export * from './expertsStore';
@@ -12,9 +11,12 @@ export * from './dailySuggestionsStore';
 export * from './adminStore';
 export * from './workStore';
 export * from './suitcaseStore';
+export { closetRepo, useCloset } from '../repositories/closetRepository';
+export type { ClosetItem, WardrobeSummary } from '../repositories/closetRepository';
 
 import { userStore } from './userStore';
-import { closetStore } from './closetStore';
+import { closetRepo } from '../repositories/closetRepository';
+
 import { outfitStore } from './outfitStore';
 import { marketplaceStore } from './marketplaceStore';
 import { expertsStore } from './expertsStore';
@@ -30,7 +32,7 @@ export async function prewarmAllStores(userId?: string): Promise<void> {
   try {
     await Promise.allSettled([
       userStore.prewarm(),
-      closetStore.prewarm(),
+      closetRepo.refresh(),
       outfitStore.prewarm(),
       marketplaceStore.prewarm(),
       marketplaceStore.fetchMyListings(),
@@ -50,7 +52,7 @@ export async function prewarmAllStores(userId?: string): Promise<void> {
 export function resetAllStores(): void {
   try {
     userStore.reset();
-    closetStore.reset();
+    closetRepo.reset();
     outfitStore.reset();
     marketplaceStore.reset();
     expertsStore.reset();
@@ -61,3 +63,4 @@ export function resetAllStores(): void {
     console.info('Reset stores error:', err);
   }
 }
+

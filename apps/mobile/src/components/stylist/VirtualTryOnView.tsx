@@ -30,7 +30,8 @@ import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens'
 import { DynamicAvatarSvg } from '@mobile/components/DynamicAvatarSvg';
 import { HarmonyBadge } from '@mobile/components/stylist/HarmonyBadge';
 import { api } from '@mobile/lib/api';
-import { useClosetStore, closetStore } from '@mobile/lib/stores/closetStore';
+import { closetRepo, useCloset } from '@mobile/lib/repositories/closetRepository';
+
 
 export interface TryOnItem {
   id: string;
@@ -268,14 +269,15 @@ export function VirtualTryOnView({
     })();
   }, []);
 
-  const { items: closetItems } = useClosetStore();
+  const { items: closetItems } = useCloset();
 
   const garmentList = useMemo(() => {
     const raw = activeOutfit.length > 0
       ? activeOutfit
       : (outfitData?.garments || outfitData?.items || []);
 
-    const allStoreItems = closetItems && closetItems.length > 0 ? closetItems : (closetStore.getSnapshot().items || []);
+    const allStoreItems = closetItems && closetItems.length > 0 ? closetItems : (closetRepo.getSnapshot().items || []);
+
 
     if (raw.length === 0) {
       return [

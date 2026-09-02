@@ -67,81 +67,23 @@ import {
   labelForPattern,
   labelForState,
 } from '@mobile/lib/taxonomy';
-import { useClosetStore, closetStore } from '@mobile/lib/stores/closetStore';
 import { closetRepo } from '@mobile/lib/repositories/closetRepository';
 import { useUserStore } from '@mobile/lib/stores';
+import { resolveDisplayUrl, resolveGarmentImageUrl } from '@mobile/lib/imageUtils';
+
+
 import { deriveSizeFromPreferences } from '@mobile/lib/size_preferences';
 import { TaxonomySelectModal } from '@mobile/components/TaxonomySelectModal';
 import { WeightedList, WeightedItem } from '@mobile/components/WeightedList';
 import { DppPanel } from '@mobile/components/DppPanel';
 import { ItemAIAnalysisCard, ReanalyzeChatTurn } from '@mobile/components/itemDetail/ItemAIAnalysisCard';
 import { ItemOutfitPairings, PairedOutfit } from '@mobile/components/itemDetail/ItemOutfitPairings';
+import { ItemFormState, normalizeGarmentFormState } from '@mobile/lib/garmentNormalizer';
 
 const STATE_OPTIONS = ['new', 'used'] as const;
 const ALL_CURRENCY_OPTIONS = ['ILS', 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'INR', 'CHF', 'AED', 'SAR'];
 
-interface ItemFormState {
-  title: string;
-  name: string;
-  brand: string;
-  caption: string;
-  category: string;
-  sub_category: string;
-  item_type: string;
-  gender: string;
-  dress_code: string;
-  season: string[];
-  tradition: string;
-  size: string;
-  color: string;
-  colors: WeightedItem[];
-  pattern: string;
-  fabric_materials: WeightedItem[];
-  state: string;
-  condition: string;
-  quality: string;
-  repair_advice: string;
-  price_cents: number;
-  currency: string;
-  marketplace_intent: string;
-  tags: string[];
-  cultural_tags: string[];
-  notes: string;
-  formality: string;
-  clean_image_url?: string | null;
-  reconstructed_image_url?: string | null;
-  original_image_url?: string | null;
-  image_url?: string | null;
-  thumbnail_data_url?: string | null;
-  placeholder_data_url?: string | null;
-  segmented_image_url?: string | null;
-  cutout_url?: string | null;
-  image_variants?: any;
-}
-
 function toFormState(data: any, user?: any): ItemFormState {
-  const normalisedColors: WeightedItem[] = Array.isArray(data?.colors) && data.colors.length > 0
-    ? data.colors.map((c: any) => ({
-        name: typeof c === 'string' ? c.trim() : (c.name || '').trim(),
-        pct: typeof c === 'object' && c.pct != null ? c.pct : null,
-      }))
-    : data?.color
-    ? [{ name: String(data.color).trim(), pct: 100 }]
-    : [];
-
-  const normalisedMaterials: WeightedItem[] = Array.isArray(data?.fabric_materials) && data.fabric_materials.length > 0
-    ? data.fabric_materials.map((m: any) => ({
-        name: typeof m === 'string' ? m.trim() : (m.name || m.tag || '').trim(),
-        pct: typeof m === 'object' && m.pct != null ? m.pct : (typeof m === 'object' && m.percentage != null ? m.percentage : null),
-      }))
-    : data?.material || data?.fabric
-    ? [{ name: String(data.material || data.fabric).trim(), pct: 100 }]
-    : [];
-
-  const validFormality = ['casual', 'smart-casual', 'business', 'formal'].includes(data?.formality)
-    ? data.formality
-    : (['casual', 'smart-casual', 'business', 'formal'].includes(data?.dress_code) ? data.dress_code : 'casual');
-
   const cat = data?.category || 'Top';
   const subCat = data?.sub_category || data?.subcategory || '';
   const itemType = data?.item_type || '';
@@ -152,58 +94,15 @@ function toFormState(data: any, user?: any): ItemFormState {
     resolvedSize = deriveSizeFromPreferences(user, { category: cat, sub_category: subCat, item_type: itemType });
   }
 
-  return {
-    title: data?.title || data?.name || '',
-    name: data?.name || data?.title || '',
-    brand: data?.brand || '',
-    caption: data?.caption || '',
-    category: cat,
-    sub_category: subCat,
-    item_type: itemType,
-    gender: data?.gender || 'unisex',
-    dress_code: data?.dress_code || validFormality,
-    formality: validFormality,
-    season: Array.isArray(data?.season) ? data.season : data?.season ? [data.season] : ['all'],
-    tradition: data?.tradition || '',
-    size: resolvedSize,
-    color: data?.color || (normalisedColors[0]?.name || ''),
-    colors: normalisedColors,
-    pattern: data?.pattern || 'solid',
-    fabric_materials: normalisedMaterials,
-    state: data?.state || 'used',
-    condition: data?.condition || 'good',
-    quality: data?.quality || 'mid',
-    repair_advice: data?.repair_advice || '',
-    price_cents: Math.round(Number(data?.price_cents ?? (data?.price ? data.price * 100 : 0)) / 100),
-    currency: data?.currency || 'USD',
-    marketplace_intent: data?.marketplace_intent || data?.intent || 'own',
-    tags: Array.isArray(data?.tags) ? data.tags : [],
-    cultural_tags: Array.isArray(data?.cultural_tags) ? data.cultural_tags : [],
-    notes: data?.notes || '',
-    clean_image_url: data?.clean_image_url || null,
-    reconstructed_image_url:
-      data?.reconstructed_image_url &&
-      data?.reconstructed_image_url !== 'None' &&
-      data?.reconstructed_image_url !== 'null' &&
-      data?.reconstructed_image_url !== 'undefined'
-        ? data.reconstructed_image_url
-        : null,
-    original_image_url: data?.original_image_url || null,
-    image_url: data?.image_url || null,
-    thumbnail_data_url: data?.thumbnail_data_url || null,
-    placeholder_data_url: data?.placeholder_data_url || null,
-    segmented_image_url: data?.segmented_image_url || null,
-    cutout_url: data?.cutout_url || null,
-    image_variants: data?.image_variants || null,
-  };
+  return normalizeGarmentFormState(data, { size: resolvedSize });
 }
+
 
 export function ItemDetailScreen() {
   const { t, i18n } = useTranslation();
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<ClosetStackParamList, 'ItemDetail'>>();
   const { colors, isDark } = useTheme();
-  const { prewarm, deleteItem } = useClosetStore();
   const { user } = useUserStore();
   const isRtl = I18nManager.isRTL;
   const scrollViewRef = useRef<ScrollView>(null);
@@ -252,11 +151,12 @@ export function ItemDetailScreen() {
     const groupId = item.group_id;
     let fallbackStoreMembers: any[] = [];
     if (groupId) {
-      const storeItems = closetStore.getSnapshot().items || [];
+      const storeItems = closetRepo.getSnapshot().items || [];
       fallbackStoreMembers = storeItems.filter(
         (it) => it && (it.group_id === groupId || it.id === groupId) && it.id !== item.id
       );
     }
+
     const combinedMembers = [...membersFromState, ...fallbackStoreMembers];
     const seen = new Set();
     const result = [];
@@ -328,14 +228,14 @@ export function ItemDetailScreen() {
   const loadItem = useCallback(async () => {
     if (!itemId) return;
     try {
-      // 1. Zero-latency instant hydration from local closetStore cache
-      const cached = (closetStore.getSnapshot().items || []).find((x) => x.id === itemId);
+      // 1. Zero-latency instant hydration from local closetRepo cache
+      const cached = (closetRepo.getSnapshot().items || []).find((x: any) => x.id === itemId);
       if (cached) {
         setItem(cached);
         const groupId = cached.group_id;
         if (groupId) {
-          const storeMembers = (closetStore.getSnapshot().items || []).filter(
-            (it) => it && (it.group_id === groupId || it.id === groupId) && it.id !== cached.id
+          const storeMembers = (closetRepo.getSnapshot().items || []).filter(
+            (it: any) => it && (it.group_id === groupId || it.id === groupId) && it.id !== cached.id
           );
           setGroupMembers(storeMembers);
         }
@@ -356,11 +256,12 @@ export function ItemDetailScreen() {
         if (members.length > 0) {
           setGroupMembers(members);
         } else if (data.group_id) {
-          const storeMembers = (closetStore.getSnapshot().items || []).filter(
-            (it) => it && (it.group_id === data.group_id || it.id === data.group_id) && it.id !== data.id
+          const storeMembers = (closetRepo.getSnapshot().items || []).filter(
+            (it: any) => it && (it.group_id === data.group_id || it.id === data.group_id) && it.id !== data.id
           );
           setGroupMembers(storeMembers);
         }
+
         const currentActive = activeViewId || data.id;
         const validActive = currentActive === data.id || members.some((m: any) => m.id === currentActive);
         const targetId = validActive ? currentActive : data.id;
@@ -406,8 +307,9 @@ export function ItemDetailScreen() {
                 await (api as any).groupEdit?.(item.id, { remove_member_ids: [member.id] });
               }
               await (api as any).patchItem?.(member.id, { group_id: null, group_role: null });
-              closetStore.upsert({ ...member, group_id: null, group_role: null });
+              closetRepo.upsert({ ...member, group_id: null, group_role: null });
               setGroupMembers((prev) => prev.filter((m) => m.id !== member.id));
+
               if (activeViewId === member.id) {
                 setActiveViewId(item?.id);
                 if (item) {
@@ -476,7 +378,7 @@ export function ItemDetailScreen() {
       if (res?.item) {
         const updated = toFormState(res.item);
         setForm(updated);
-        closetStore.upsert(res.item);
+        closetRepo.upsert(res.item);
         Alert.alert(
           t('common.success', { defaultValue: 'Success' }),
           t('itemDetail.reanalyze.success', { defaultValue: 'Analysis refreshed' }) + ' · ' + t('common.savePrompt', { defaultValue: 'Press Save to keep changes.' })
@@ -539,12 +441,13 @@ export function ItemDetailScreen() {
       if (res?.item && (res.action_taken === 'metadata_update' || res.updated_fields)) {
         const updated = toFormState(res.item);
         setForm(updated);
-        closetStore.upsert(res.item);
+        closetRepo.upsert(res.item);
         Alert.alert(
           t('common.success', { defaultValue: 'Success' }),
           t('itemDetail.reanalyze.success', { defaultValue: 'Analysis refreshed' }) + ' · ' + t('common.savePrompt', { defaultValue: 'Press Save to keep changes.' })
         );
       }
+
 
       const assistantTurn: ReanalyzeChatTurn = {
         role: 'assistant',
@@ -662,7 +565,7 @@ export function ItemDetailScreen() {
       };
 
       await api.patchItem(itemId, updates);
-      await prewarm({ force: true });
+      await closetRepo.refresh({ force: true });
       setOriginalForm(form);
       Alert.alert(
         t('common.success', { defaultValue: 'Saved' }),
@@ -697,9 +600,10 @@ export function ItemDetailScreen() {
           onPress: async () => {
             if (itemId) {
               try {
-                await deleteItem(itemId);
+                await closetRepo.deleteItem(itemId);
                 handleBack();
               } catch (err: any) {
+
                 Alert.alert(
                   t('common.error', { defaultValue: 'Error' }),
                   err?.message || t('itemDetail.deleteFailed', { defaultValue: 'Could not delete item. Please try again.' })
@@ -800,40 +704,9 @@ export function ItemDetailScreen() {
     }
   };
 
-  const resolveDisplayUrl = (url?: string | null): string | null => {
-    if (!url || typeof url !== 'string') return null;
-    const trimmed = url.trim();
-    if (
-      !trimmed ||
-      trimmed === 'None' ||
-      trimmed === 'null' ||
-      trimmed === 'undefined' ||
-      trimmed === '[object Object]'
-    ) {
-      return null;
-    }
-    if (
-      trimmed.startsWith('data:') ||
-      trimmed.startsWith('http://') ||
-      trimmed.startsWith('https://') ||
-      trimmed.startsWith('file://')
-    ) {
-      return trimmed;
-    }
-    if (trimmed.startsWith('/')) {
-      return `https://dressapp.co${trimmed}`;
-    }
-    if (trimmed.startsWith('iVBORw0KGgo')) {
-      return `data:image/png;base64,${trimmed}`;
-    }
-    if (trimmed.startsWith('/9j/')) {
-      return `data:image/jpeg;base64,${trimmed}`;
-    }
-    if (trimmed.startsWith('UklGR')) {
-      return `data:image/webp;base64,${trimmed}`;
-    }
-    return null;
-  };
+
+  // resolveDisplayUrl is imported from @mobile/lib/imageUtils
+
 
   const [failedUrls, setFailedUrls] = useState<Set<string>>(new Set());
 
@@ -845,58 +718,31 @@ export function ItemDetailScreen() {
 
   const activeGarment = allGroupPieces.find((p) => p.id === activeViewId) || item;
 
-  const validRecon = !isFailed(form.reconstructed_image_url) ? resolveDisplayUrl(form.reconstructed_image_url) : null;
-  const validActiveRecon = !isFailed(activeGarment?.reconstructed_image_url) ? resolveDisplayUrl(activeGarment?.reconstructed_image_url) : null;
-  const validItemRecon = !isFailed(item?.reconstructed_image_url) ? resolveDisplayUrl(item?.reconstructed_image_url) : null;
+  // Runtime-failure filter: resolveGarmentImageUrl resolves the URL; isFailed
+  // checks if that URL 404'd at runtime. We check the form-state source first,
+  // then activeGarment, then the persisted item as the final fallback.
+  const _resolve = (src: typeof form | null | undefined, prefer: 'cutout' | 'original' | 'thumbnail') => {
+    const candidate = resolveGarmentImageUrl(src, { prefer });
+    return candidate && !isFailed(candidate) ? candidate : null;
+  };
 
-  const reconstructedUrl = validRecon || validActiveRecon || validItemRecon;
+  const cutoutOrRepairedUrl =
+    _resolve(form, 'cutout') ||
+    _resolve(activeGarment, 'cutout') ||
+    _resolve(item, 'cutout');
 
-  const cleanCutoutUrl =
-    (!isFailed(form.clean_image_url) ? resolveDisplayUrl(form.clean_image_url) : null) ||
-    (!isFailed(activeGarment?.clean_image_url) ? resolveDisplayUrl(activeGarment?.clean_image_url) : null) ||
-    (!isFailed(activeGarment?.segmented_image_url) ? resolveDisplayUrl(activeGarment?.segmented_image_url) : null) ||
-    (!isFailed(activeGarment?.cutout_url) ? resolveDisplayUrl(activeGarment?.cutout_url) : null) ||
-    (!isFailed(item?.clean_image_url) ? resolveDisplayUrl(item?.clean_image_url) : null) ||
-    (!isFailed(item?.segmented_image_url) ? resolveDisplayUrl(item?.segmented_image_url) : null) ||
-    (!isFailed(item?.cutout_url) ? resolveDisplayUrl(item?.cutout_url) : null);
+  const rawUrl =
+    _resolve(form, 'original') ||
+    _resolve(activeGarment, 'original') ||
+    _resolve(item, 'original');
 
-  const variantUrl =
-    (!isFailed(form.image_variants?.webp?.large) ? resolveDisplayUrl(form.image_variants?.webp?.large) : null) ||
-    (!isFailed(activeGarment?.image_variants?.webp?.large) ? resolveDisplayUrl(activeGarment?.image_variants?.webp?.large) : null) ||
-    (!isFailed(form.image_variants?.webp?.medium) ? resolveDisplayUrl(form.image_variants?.webp?.medium) : null) ||
-    (!isFailed(activeGarment?.image_variants?.webp?.medium) ? resolveDisplayUrl(activeGarment?.image_variants?.webp?.medium) : null) ||
-    (!isFailed(form.image_variants?.avif?.medium) ? resolveDisplayUrl(form.image_variants?.avif?.medium) : null) ||
-    (!isFailed(activeGarment?.image_variants?.avif?.medium) ? resolveDisplayUrl(activeGarment?.image_variants?.avif?.medium) : null) ||
-    (!isFailed(form.image_variants?.original) ? resolveDisplayUrl(form.image_variants?.original) : null) ||
-    (!isFailed(activeGarment?.image_variants?.original) ? resolveDisplayUrl(activeGarment?.image_variants?.original) : null) ||
-    (!isFailed(item?.image_variants?.webp?.large) ? resolveDisplayUrl(item?.image_variants?.webp?.large) : null) ||
-    (!isFailed(item?.image_variants?.webp?.medium) ? resolveDisplayUrl(item?.image_variants?.webp?.medium) : null) ||
-    (!isFailed(item?.image_variants?.avif?.medium) ? resolveDisplayUrl(item?.image_variants?.avif?.medium) : null) ||
-    (!isFailed(item?.image_variants?.original) ? resolveDisplayUrl(item?.image_variants?.original) : null);
-
-  const rawOriginalUrl =
-    (!isFailed(form.original_image_url) ? resolveDisplayUrl(form.original_image_url) : null) ||
-    (!isFailed(activeGarment?.original_image_url) ? resolveDisplayUrl(activeGarment?.original_image_url) : null) ||
-    (!isFailed(form.image_url) ? resolveDisplayUrl(form.image_url) : null) ||
-    (!isFailed(activeGarment?.image_url) ? resolveDisplayUrl(activeGarment?.image_url) : null) ||
-    (!isFailed(item?.original_image_url) ? resolveDisplayUrl(item?.original_image_url) : null) ||
-    (!isFailed(item?.image_url) ? resolveDisplayUrl(item?.image_url) : null) ||
-    variantUrl;
-
-  const fallbackThumb =
-    (!isFailed(form.thumbnail_data_url) ? resolveDisplayUrl(form.thumbnail_data_url) : null) ||
-    (!isFailed(activeGarment?.thumbnail_data_url) ? resolveDisplayUrl(activeGarment?.thumbnail_data_url) : null) ||
-    (!isFailed(form.placeholder_data_url) ? resolveDisplayUrl(form.placeholder_data_url) : null) ||
-    (!isFailed(activeGarment?.placeholder_data_url) ? resolveDisplayUrl(activeGarment?.placeholder_data_url) : null) ||
-    (!isFailed(item?.thumbnail_data_url) ? resolveDisplayUrl(item?.thumbnail_data_url) : null) ||
-    (!isFailed(item?.placeholder_data_url) ? resolveDisplayUrl(item?.placeholder_data_url) : null);
-
-  const hasReconstruction = Boolean(reconstructedUrl);
-
-  const cutoutOrRepairedUrl = reconstructedUrl || cleanCutoutUrl || variantUrl || fallbackThumb || rawOriginalUrl;
-  const rawUrl = rawOriginalUrl || variantUrl || fallbackThumb || cutoutOrRepairedUrl;
+  const hasReconstruction = Boolean(
+    _resolve(form, 'cutout') && (form.reconstructed_image_url && !isFailed(form.reconstructed_image_url))
+  );
 
   const currentImg = viewingCutout ? cutoutOrRepairedUrl : (rawUrl || cutoutOrRepairedUrl);
+
+
 
   const timesWorn = item?.wear_count || item?.times_worn || 0;
   const priceUnits = form.price_cents || 0;
@@ -1054,17 +900,10 @@ export function ItemDetailScreen() {
               {allGroupPieces.map((piece, pIdx) => {
                 const isSelected = piece.id === (activeViewId || item?.id);
                 const isHost = piece.group_role === 'host' || piece.id === piece.group_id || pIdx === 0;
-                const thumb =
-                  (!isFailed(piece.reconstructed_image_url) ? resolveDisplayUrl(piece.reconstructed_image_url) : null) ||
-                  (!isFailed(piece.clean_image_url) ? resolveDisplayUrl(piece.clean_image_url) : null) ||
-                  (!isFailed(piece.segmented_image_url) ? resolveDisplayUrl(piece.segmented_image_url) : null) ||
-                  (!isFailed(piece.cutout_url) ? resolveDisplayUrl(piece.cutout_url) : null) ||
-                  (!isFailed(piece.image_variants?.webp?.medium) ? resolveDisplayUrl(piece.image_variants?.webp?.medium) : null) ||
-                  (!isFailed(piece.image_variants?.original) ? resolveDisplayUrl(piece.image_variants?.original) : null) ||
-                  (!isFailed(piece.thumbnail_data_url) ? resolveDisplayUrl(piece.thumbnail_data_url) : null) ||
-                  (!isFailed(piece.placeholder_data_url) ? resolveDisplayUrl(piece.placeholder_data_url) : null) ||
-                  (!isFailed(piece.original_image_url) ? resolveDisplayUrl(piece.original_image_url) : null) ||
-                  (!isFailed(piece.image_url) ? resolveDisplayUrl(piece.image_url) : null);
+                const thumb = (() => {
+                  const candidate = resolveGarmentImageUrl(piece, { prefer: 'cutout' });
+                  return candidate && !isFailed(candidate) ? candidate : null;
+                })();
 
                 return (
                   <TouchableOpacity
