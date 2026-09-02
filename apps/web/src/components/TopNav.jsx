@@ -37,7 +37,7 @@ export const TopNav = () => {
       className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-border shadow-xs"
     >
       {/* Desktop Header */}
-      <div className="hidden md:flex mx-auto max-w-7xl px-6 h-18 items-center justify-between gap-6">
+      <div className="hidden md:flex px-[40px] py-3 h-18 items-center justify-between gap-6">
         <Link
           to="/home"
           data-testid="brand-logo"

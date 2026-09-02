@@ -124,37 +124,53 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
   if (!rec) return null;
 
   return (
-    <div className={cn('outfit-card', draggable && 'outfit-card--draggable')} data-testid={`outfit-recommendation-${index}`}
-      draggable={draggable} onDragStart={onDragStart}>
-      <div className="outfit-card__stage">
+    <div
+      className={cn(
+        'relative overflow-hidden rounded-[12px] bg-white border border-[#ededed] shadow-none hover:shadow-[0_4px_6px_-1px_rgb(0_0_0_/_0.1),0_2px_4px_-2px_rgb(0_0_0_/_0.1)]',
+        draggable && 'cursor-grab select-none active:cursor-grabbing'
+      )}
+      data-testid={`outfit-recommendation-${index}`}
+      draggable={draggable}
+      onDragStart={onDragStart}
+    >
+      <div className="relative">
         <OutfitAvatarViewer
           shapeParams={user?.avatar_shape_params || {}}
           sex={user?.sex || 'female'}
           outfitItemsMap={outfitItemsMap}
-          onItemClick={onItemClick} />
+          onItemClick={onItemClick}
+        />
       </div>
-      <div className="outfit-card__body">
-        <div className="outfit-card__eyebrow">{t('stylist.outfitN', { n: index + 1 })}</div>
-        <div className="outfit-card__title font-display">{rec.name}</div>
+      <div className="p-5">
+        <div className="text-[var(--primary-color)] font-extrabold text-sm leading-6 mb-[3px]">
+          {t('stylist.outfitN', { n: index + 1 })}
+        </div>
+        <div className="font-display text-base font-semibold text-black">
+          {rec.name}
+        </div>
         {/* F1 — Colour Harmony Score Badge */}
         {outfitColors.length >= 2 && (
-          <div className="outfit-card__harmony">
+          <div className="mt-2">
             <HarmonyBadge colors={outfitColors} />
           </div>
         )}
-        {rec.why ? <p className="outfit-card__why">{rec.why}</p> : null}
-        <div className="outfit-card__footer">
+        {rec.why ? (
+          <p className="relative mt-2.5 text-xs leading-[22px] text-[var(--text-color)] border-l-2 border-[var(--primary-color)] p-[15px] italic font-semibold rounded-lg bg-[var(--accent-beige)] tracking-[0.5px]">
+            {rec.why}
+          </p>
+        ) : null}
+        <div className="flex items-center justify-between mt-[15px]">
           {onSave ? (
             <Button
               size="sm"
               onClick={() => onSave(rec)}
-              className="outfit-card__save-btn"
+              className="rounded-full text-xs font-semibold !bg-[var(--primary-color)] text-white !shadow-none px-[15px] py-[5px] transition-[background-color,transform] duration-150 ease-in-out hover:!bg-[var(--dark-color)] hover:-translate-y-px"
               data-testid={`outfit-recommendation-${index}-save-btn`}
             >
               {t('stylist.saveOutfit', { defaultValue: 'Save Outfit' })}
             </Button>
           ) : (
-            <div className="outfit-card__footer-spacer" />
+            <div className="w-px" />
           )}
           <ShareOutfitButton rec={rec} sessionId={sessionId} />
         </div>

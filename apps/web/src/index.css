@@ -414,3 +414,18 @@ img {
     opacity: 1;
   }
 }
+
+/* --- PREMIUM SCROLLBAR --- */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--light-bg);
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 20px;
+}

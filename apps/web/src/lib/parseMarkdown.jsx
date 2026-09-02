@@ -10,7 +10,7 @@ export function parseMarkdown(mdText) {
   const flushList = (key) => {
     if (listItems.length > 0) {
       elements.push(
-        <ul key={`list-${key}`} className="list-disc pl-5 space-y-1.5 my-3 text-muted-foreground text-sm">
+        <ul key={`list-${key}`} className="list-disc ps-5 space-y-1.5 my-3 text-text-brand text-[14px] font-semibold">
           {listItems.map((item, i) => <li key={i}>{parseInline(item)}</li>)}
         </ul>
       );
@@ -34,7 +34,7 @@ export function parseMarkdown(mdText) {
       }
 
       if (matchText.startsWith('**') && matchText.endsWith('**')) {
-        parts.push(<strong key={keyIdx++} className="font-semibold text-foreground">{matchText.slice(2, -2)}</strong>);
+        parts.push(<strong key={keyIdx++} className="font-bold text-dark-brand">{matchText.slice(2, -2)}</strong>);
       } else if (matchText.startsWith('`') && matchText.endsWith('`')) {
         parts.push(<code key={keyIdx++} className="px-1.5 py-0.5 rounded bg-secondary/50 text-xs font-mono">{matchText.slice(1, -1)}</code>);
       } else if (matchText.startsWith('[') && matchText.includes('](')) {
@@ -82,17 +82,17 @@ export function parseMarkdown(mdText) {
 
     if (line.startsWith('# ')) {
       flushList(idx);
-      elements.push(<h1 key={`h1-${idx}`} className="text-2xl font-bold text-primary mt-6 mb-3 pb-1 border-b border-border/50">{parseInline(line.slice(2))}</h1>);
+      elements.push(<h1 key={`h1-${idx}`} className="text-[20px] font-bold text-primary-brand mb-3 pb-3 border-b border-border">{parseInline(line.slice(2))}</h1>);
       continue;
     }
     if (line.startsWith('## ')) {
       flushList(idx);
-      elements.push(<h2 key={`h2-${idx}`} className="text-xl font-bold text-foreground mt-5 mb-2.5">{parseInline(line.slice(3))}</h2>);
+      elements.push(<h2 key={`h2-${idx}`} className="text-[18px] font-bold text-primary-brand mb-3">{parseInline(line.slice(3))}</h2>);
       continue;
     }
     if (line.startsWith('### ')) {
       flushList(idx);
-      elements.push(<h3 key={`h3-${idx}`} className="text-base font-semibold text-foreground mt-4 mb-2">{parseInline(line.slice(4))}</h3>);
+      elements.push(<h3 key={`h3-${idx}`} className="text-[16px] font-bold text-dark-brand mb-3">{parseInline(line.slice(4))}</h3>);
       continue;
     }
     if (line.startsWith('- ') || line.startsWith('* ')) { listItems.push(line.slice(2)); continue; }
@@ -110,7 +110,7 @@ export function parseMarkdown(mdText) {
     if (line === '') { flushList(idx); continue; }
     if (line === '---') {
       flushList(idx);
-      elements.push(<hr key={`hr-${idx}`} className="my-6 border-border/50" />);
+      elements.push(<hr key={`hr-${idx}`} className="!my-5 border-border" />);
       continue;
     }
     if (line.startsWith('> ')) {
@@ -123,9 +123,18 @@ export function parseMarkdown(mdText) {
     if (line.startsWith('|')) {
       const cells = line.split('|').map(c => c.trim()).filter(Boolean);
       if (cells.every(c => /^[-:]+$/.test(c))) continue;
+
+      // Check if the next line is also a table row
+      const nextLine = lines[idx + 1]?.trim() || '';
+      const isLastRow = !nextLine.startsWith('|');
+
       elements.push(
-        <div key={`tr-${idx}`} className="grid gap-2 text-sm text-muted-foreground border-b border-border/30 py-1.5"
-          style={{ gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))` }}>
+        <div
+          key={`tr-${idx}`}
+          className={`grid gap-2 text-[12px] text-text-brand pb-2 mb-2 font-semibold ${isLastRow ? '' : 'border-b border-border'
+            }`}
+          style={{ gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))` }}
+        >
           {cells.map((cell, ci) => <span key={ci}>{parseInline(cell)}</span>)}
         </div>
       );
@@ -133,7 +142,7 @@ export function parseMarkdown(mdText) {
     }
 
     flushList(idx);
-    elements.push(<p key={`p-${idx}`} className="text-sm text-muted-foreground leading-relaxed my-3">{parseInline(line)}</p>);
+    elements.push(<p key={`p-${idx}`} className="text-[14px] font-semibold text-text-brand leading-relaxed my-3">{parseInline(line)}</p>);
   }
 
   flushList(lines.length);

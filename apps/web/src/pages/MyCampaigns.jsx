@@ -21,6 +21,7 @@ import {
   DollarSign,
   FileText,
 } from 'lucide-react';
+import { PauseCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,

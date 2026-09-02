@@ -26,6 +26,7 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { labelForColor } from '@/lib/taxonomy';
+import { DialogOverlay } from '../ui/dialog';
 
 // ---------------------------------------------------------------------------
 // Colour name → HSL hue lookup (0..360). Only hue matters for harmony.
@@ -306,18 +307,13 @@ export function HarmonyBadge({ colors }) {
   const cfg = VERDICT_CONFIG[harmony.verdict];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="mt-2"
-    >
+    <div className="mt-2">
       {/* Pill button */}
       <button
         onClick={() => setExpanded((v) => !v)}
         className={cn(
           'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold',
-          'border transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]',
+          'border active:scale-[0.98]',
           cfg.bg, cfg.border, cfg.text
         )}
         data-testid="harmony-badge"
@@ -350,7 +346,7 @@ export function HarmonyBadge({ colors }) {
           >
             <div
               className={cn(
-                'mt-1.5 rounded-xl border p-3 space-y-2',
+                'mt-1.5 rounded-[12px] border p-3 space-y-2',
                 cfg.bg, cfg.border
               )}
             >
@@ -396,7 +392,7 @@ export function HarmonyBadge({ colors }) {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }
 
