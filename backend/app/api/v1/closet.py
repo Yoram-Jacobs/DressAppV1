@@ -2431,7 +2431,19 @@ async def list_items(
         )
         if recon_or_clean:
             it["reconstructed_image_url"] = recon_or_clean
-            it["thumbnail_data_url"] = recon_or_clean
+            # Only set thumbnail_data_url to recon_or_clean if it's a URL or tiny data-URL (< 15 KB).
+            # Huge inline data URLs (> 15 KB) in bulk list responses cause Android OOM crashes.
+            if isinstance(recon_or_clean, str):
+                if not recon_or_clean.startswith("data:") or len(recon_or_clean) <= 15000:
+                    it["thumbnail_data_url"] = recon_or_clean
+                elif not it.get("thumbnail_data_url") or len(str(it.get("thumbnail_data_url"))) > 15000:
+                    # Strip huge data-URL from list response
+                    it.pop("thumbnail_data_url", None)
+            if isinstance(it.get("reconstructed_image_url"), str) and len(it["reconstructed_image_url"]) > 15000 and it["reconstructed_image_url"].startswith("data:"):
+                # Avoid returning full-size data URLs in list response
+                it.pop("reconstructed_image_url", None)
+            if isinstance(it.get("clean_image_url"), str) and len(it["clean_image_url"]) > 15000 and it["clean_image_url"].startswith("data:"):
+                it.pop("clean_image_url", None)
         elif isinstance(it.get("thumbnail_data_url"), str) and it.get("thumbnail_data_url"):
             for img_key in ("original_image_url", "segmented_image_url", "cutout_url"):
                 val = it.get(img_key)
