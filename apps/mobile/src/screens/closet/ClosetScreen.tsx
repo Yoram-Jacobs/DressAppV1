@@ -70,6 +70,35 @@ export function ClosetScreen() {
   const { items, loading, prewarm, removeMany, deleteManyItems } = useClosetStore({ prewarm: true });
   const [refreshing, setRefreshing] = useState(false);
 
+  // Real-time polling for pending background reconstructions (Nano Banana) & clean cutouts
+  useEffect(() => {
+    const pendingItems = (items || []).filter(
+      (it: any) =>
+        it &&
+        (it.clean_image_status === 'pending' ||
+          (it.reconstruction_metadata?.deferred && !it.reconstructed_image_url))
+    );
+    if (pendingItems.length === 0) return;
+
+    const interval = setInterval(async () => {
+      let updatedAny = false;
+      for (const pItem of pendingItems) {
+        try {
+          const fresh = await (api as any).getItem?.((pItem as any).id);
+          if (fresh && fresh.id) {
+            closetStore.upsert(fresh as any);
+            updatedAny = true;
+          }
+        } catch {}
+      }
+      if (updatedAny) {
+        closetRepo.refresh({ force: false }).catch(() => {});
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [items]);
+
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchMode, setSearchMode] = useState<'keyword' | 'meaning'>('keyword');

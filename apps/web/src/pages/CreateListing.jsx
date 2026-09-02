@@ -155,8 +155,9 @@ export default function CreateListing() {
       };
       const linked = closet.find((c) => c.id === form.closet_item_id);
       const chosenImg =
-        linked?.clean_image_url ||
+        linked?.reconstruct_image_url ||
         linked?.reconstructed_image_url ||
+        linked?.clean_image_url ||
         linked?.cutout_url ||
         linked?.thumbnail_data_url ||
         linked?.image_url ||
@@ -198,14 +199,15 @@ export default function CreateListing() {
                   </SelectContent>
                 </Select>
                 {/* Visual confirmation of the linked closet item.
-                    Uses the clean image / cached thumbnail. */}
+                    Uses the reconstructed/clean image / cached thumbnail. */}
                 {(() => {
                   const linkedItem = closet.find((c) => c.id === form.closet_item_id);
                   if (!linkedItem) return null;
                   const thumb =
+                    linkedItem.reconstruct_image_url ||
+                    linkedItem.reconstructed_image_url ||
                     linkedItem.clean_image_url ||
                     linkedItem.thumbnail_data_url ||
-                    linkedItem.reconstructed_image_url ||
                     linkedItem.cutout_url ||
                     linkedItem.image_url ||
                     linkedItem.segmented_image_url ||

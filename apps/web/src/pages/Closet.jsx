@@ -571,7 +571,7 @@ export default function Closet() {
   const pollSignatureRef = useRef('');
   useEffect(() => {
     const pendingIds = (store.items || [])
-      .filter((it) => it && it.clean_image_status === 'pending')
+      .filter((it) => it && (it.clean_image_status === 'pending' || (it.reconstruction_metadata?.deferred && !it.reconstructed_image_url)))
       .map((it) => it.id);
     if (pendingIds.length === 0) {
       pollAttemptRef.current = 0;

@@ -184,7 +184,7 @@ class Settings:
         "GARMENT_VISION_PROVIDER", "gemini"
     )
     GARMENT_VISION_MODEL: str = os.environ.get(
-        "GARMENT_VISION_MODEL", "gemini-3.5-flash-lite"
+        "GARMENT_VISION_MODEL", "gemini-3.5-flash"
     )
     # When set, the HF path hits this OpenAI-compatible endpoint URL
     # instead of going through HF Inference Providers routing. Use this
@@ -205,7 +205,7 @@ class Settings:
     #              container (production Hetzner deploy reaches it at
     #              ``http://eyes:7860``). Failures auto-fall-back to
     #              Gemini so a flaky container never breaks AddItem.
-    #   "gemini" — direct Gemini 2.5 Flash via Emergent/Google chat
+    #   "gemini" — direct Gemini 3.5 Flash via Emergent/Google chat
     #              key. Used in the Emergent preview pod, which has
     #              no Eyes container on its network.
     # The legacy ``"qwen"`` value is **deprecated** — the Qwen Eyes
@@ -245,7 +245,7 @@ class Settings:
     # --- Phase O.6 — Single-pass Eyes (RETIRED May 2026) ---
     # The experimental "one Eyes call per upload" path was retired
     # after the CCP-Ninja benchmark (/app/scripts/run_eyes_benchmark.py)
-    # showed Gemini-2.5-Flash will not reliably emit multi-garment
+    # showed Gemini-3.5-Flash will not reliably emit multi-garment
     # arrays regardless of prompt phrasing: on all 30 test images it
     # returned exactly one garment, collapsing recall to ~10%. The
     # legacy SegFormer+per-crop pipeline (``analyze_outfit``) hit mean
@@ -256,7 +256,7 @@ class Settings:
     # file has no effect.
     # Per-crop analyzer used inside the multi-item outfit pipeline.
     GARMENT_VISION_CROP_MODEL: str = os.environ.get(
-        "GARMENT_VISION_CROP_MODEL", "gemini-3.5-flash-lite"
+        "GARMENT_VISION_CROP_MODEL", "gemini-3.5-flash"
     )
     # Detection stays on Gemini Flash until we upgrade to a fine-tuned
     # vision model that does boxes well.
@@ -264,7 +264,7 @@ class Settings:
         "GARMENT_VISION_DETECT_PROVIDER", "gemini"
     )
     GARMENT_VISION_DETECT_MODEL: str = os.environ.get(
-        "GARMENT_VISION_DETECT_MODEL", "gemini-3.5-flash-lite"
+        "GARMENT_VISION_DETECT_MODEL", "gemini-3.5-flash"
     )
     # Hard cap on how many items we analyse per uploaded photo.
     GARMENT_VISION_MAX_ITEMS: int = int(
@@ -499,7 +499,7 @@ class Settings:
     USE_LOCAL_CLOTHING_PARSER: bool = (
         not _LIGHTWEIGHT_DEPLOY
         and os.environ.get(
-            "USE_LOCAL_CLOTHING_PARSER", "false"
+            "USE_LOCAL_CLOTHING_PARSER", "true"
         ).lower()
         == "true"
         and os.environ.get("USE_CLOTHING_PARSER", "true").lower() == "true"

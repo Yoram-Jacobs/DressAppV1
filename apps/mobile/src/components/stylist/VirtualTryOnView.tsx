@@ -300,9 +300,10 @@ export function VirtualTryOnView({
       const subCategory = extractSubcategoryName(g, closetItem, t);
       const cAny = closetItem as any;
       const imageUrl =
+        cAny?.reconstructed_image_url ||
+        cAny?.reconstruct_image_url ||
         closetItem?.clean_image_url ||
         g.clean_image_url ||
-        cAny?.reconstructed_image_url ||
         cAny?.cutout_url ||
         closetItem?.thumbnail_data_url ||
         g.thumbnail_data_url ||

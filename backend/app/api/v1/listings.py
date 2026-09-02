@@ -82,8 +82,9 @@ def _sanitize_listing_browse_doc(doc: dict[str, Any]) -> dict[str, Any]:
 
     # Derive best thumbnail/clean image
     best_img = (
-        doc.get("clean_image_url")
+        doc.get("reconstruct_image_url")
         or doc.get("reconstructed_image_url")
+        or doc.get("clean_image_url")
         or (doc.get("images")[0] if doc.get("images") and len(doc["images"]) > 0 else None)
         or doc.get("thumbnail_data_url")
         or doc.get("image_url")

@@ -276,3 +276,24 @@ def _fit_crop_to_card(
         return buf.getvalue(), "image/png"
     except Exception:  # noqa: BLE001
         return crop_bytes, crop_mime
+
+
+def fit_image_data_url_to_card(
+    data_url: str | None,
+    canvas_w: int = _CARD_CANVAS_W,
+    canvas_h: int = _CARD_CANVAS_H,
+) -> str | None:
+    """Normalize a base64 data URL image to fit within a 900x1200 canvas with 0.90 safety margin."""
+    if not data_url or not isinstance(data_url, str) or not data_url.startswith("data:image/"):
+        return data_url
+    try:
+        header, encoded = data_url.split(",", 1)
+        mime = "image/png" if "png" in header.lower() else "image/jpeg"
+        import base64
+        raw_bytes = base64.b64decode(encoded.strip())
+        fitted_bytes, fitted_mime = _fit_crop_to_card(raw_bytes, crop_mime=mime, canvas_w=canvas_w, canvas_h=canvas_h)
+        fitted_b64 = base64.b64encode(fitted_bytes).decode("ascii")
+        return f"data:{fitted_mime};base64,{fitted_b64}"
+    except Exception:
+        return data_url
+

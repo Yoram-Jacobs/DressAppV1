@@ -4679,7 +4679,8 @@ async def chat_analyse_item(
 
                 # Update in-memory reconstructed_image_url & clean_image_url
                 # Always prefer the transparent clean cutout so clothes layer perfectly without background boxes
-                final_img = clean_image_url_out or image_url_out
+                from app.services.vision.image import fit_image_data_url_to_card
+                final_img = fit_image_data_url_to_card(clean_image_url_out or image_url_out)
                 updated_doc["reconstructed_image_url"] = final_img
                 updated_doc["clean_image_url"] = final_img
                 updated_doc["clean_image_status"] = "ready" if clean_image_url_out else "fallback"
@@ -5406,14 +5407,17 @@ async def update_item(
             patch["reconstructed_image_url"] = None
         elif patch["reconstructed_image_url"]:
             patch["reconstructed_image_url"] = compress_image_url_or_b64(patch["reconstructed_image_url"], max_dim=1024, quality=75)
+            from app.services.vision.image import fit_image_data_url_to_card
+            patch["reconstructed_image_url"] = fit_image_data_url_to_card(patch["reconstructed_image_url"])
             # If clean_image_url is not provided, unbind the reconstructed image from its background
             if not patch.get("clean_image_url"):
                 from app.services.garment_visuals import GarmentVisuals
                 cln_url = await GarmentVisuals.ensure_transparent_cutout(patch["reconstructed_image_url"])
                 if cln_url:
-                    patch["clean_image_url"] = cln_url
+                    cln_fitted = fit_image_data_url_to_card(cln_url)
+                    patch["clean_image_url"] = cln_fitted
                     patch["clean_image_status"] = "ready"
-                    patch["reconstructed_image_url"] = cln_url
+                    patch["reconstructed_image_url"] = cln_fitted
     # The `clear_reconstruction` flag is a command, not a value we persist.
     # Pop it + translate into explicit null-sets on the related columns.
     if patch.pop("clear_reconstruction", False):

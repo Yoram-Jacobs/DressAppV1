@@ -163,8 +163,9 @@ export function MarketplaceScreen() {
 
   const renderListingCard = ({ item }: { item: any }) => {
     const thumb =
-      item.clean_image_url ||
+      item.reconstruct_image_url ||
       item.reconstructed_image_url ||
+      item.clean_image_url ||
       (Array.isArray(item.images) && item.images[0]) ||
       item.thumbnail_data_url ||
       item.image_url;

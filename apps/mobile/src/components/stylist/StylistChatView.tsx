@@ -187,7 +187,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
           id: item.closet_item_id || matched?.id || item.id || `g_${Math.random()}`,
           name: item.description || item.title || matched?.name || matched?.title || item.role,
           role: item.role || matched?.category || 'Item',
-          image_url: matched?.clean_image_url || matched?.cutout_url || matched?.thumbnail_data_url || matched?.image_url || item.image_url,
+          image_url: matched?.reconstructed_image_url || matched?.reconstruct_image_url || matched?.clean_image_url || matched?.cutout_url || matched?.thumbnail_data_url || matched?.image_url || item.image_url,
           thumbnail_data_url: matched?.thumbnail_data_url || item.thumbnail_data_url,
         };
       });
@@ -1125,6 +1125,8 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                 source={{
                   uri:
                     attachedImage?.uri ||
+                    attachedClosetItem?.reconstructed_image_url ||
+                    attachedClosetItem?.reconstruct_image_url ||
                     attachedClosetItem?.clean_image_url ||
                     attachedClosetItem?.image_url ||
                     attachedClosetItem?.thumbnail_data_url,
@@ -1548,7 +1550,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                     (item.category || '').toLowerCase().includes(closetSearch.toLowerCase())
                 )
                 .map((item: any) => {
-                  const img = item.clean_image_url || item.image_url || item.thumbnail_data_url;
+                  const img = item.reconstructed_image_url || item.reconstruct_image_url || item.clean_image_url || item.image_url || item.thumbnail_data_url;
                   return (
                     <TouchableOpacity
                       key={item.id || item._id}

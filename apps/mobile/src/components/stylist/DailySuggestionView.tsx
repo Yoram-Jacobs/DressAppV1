@@ -159,9 +159,11 @@ function MiniAvatarOutfit({
       );
       const slot = resolveSlot(g.role, g.category, g.name, closetItem);
       const url =
+        closetItem?.reconstructed_image_url ||
+        closetItem?.reconstruct_image_url ||
+        g.reconstructed_image_url ||
         closetItem?.clean_image_url ||
         g.clean_image_url ||
-        closetItem?.reconstructed_image_url ||
         closetItem?.cutout_url ||
         closetItem?.thumbnail_data_url ||
         g.thumbnail_data_url ||
