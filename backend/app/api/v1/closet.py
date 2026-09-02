@@ -2420,12 +2420,16 @@ async def list_items(
         raw = it.get("raw")
         if isinstance(raw, dict):
             raw.pop("preview", None)
-        # Strip heavy *_image_url fields ONLY when a thumbnail was
-        # successfully produced. If the thumbnail pipeline failed for
-        # this item, keep one image URL so the grid still has something
-        # to show (the user would otherwise see an empty card).
-        if isinstance(it.get("thumbnail_data_url"), str) and it.get("thumbnail_data_url"):
-            for img_key in ("original_image_url", "segmented_image_url", "reconstructed_image_url", "clean_image_url", "cutout_url"):
+        recon_or_clean = (
+            it.get("reconstructed_image_url")
+            or it.get("reconstruct_image_url")
+            or it.get("clean_image_url")
+        )
+        if recon_or_clean:
+            it["reconstructed_image_url"] = recon_or_clean
+            it["thumbnail_data_url"] = recon_or_clean
+        elif isinstance(it.get("thumbnail_data_url"), str) and it.get("thumbnail_data_url"):
+            for img_key in ("original_image_url", "segmented_image_url", "cutout_url"):
                 val = it.get(img_key)
                 if isinstance(val, str) and val.startswith("data:"):
                     it.pop(img_key, None)

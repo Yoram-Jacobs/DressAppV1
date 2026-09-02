@@ -206,6 +206,53 @@ async def ensure_indexes() -> None:
     except Exception as e:
         logger.warning("MongoDB listing location backfill failed: %s", e)
 
+    # Backfill legacy closet items and listings to prioritize reconstructed_image_url -> clean_image_url
+    try:
+        legacy_closet_count = 0
+        async for item in db.closet_items.find({
+            "$or": [
+                {"reconstruct_image_url": {"$exists": True, "$ne": None}},
+                {"reconstructed_image_url": {"$exists": True, "$ne": None}},
+                {"clean_image_url": {"$exists": True, "$ne": None}},
+            ]
+        }):
+            recon = item.get("reconstruct_image_url") or item.get("reconstructed_image_url")
+            clean = item.get("clean_image_url")
+            best = recon or clean
+            if best:
+                update_fields = {}
+                if recon and not item.get("reconstructed_image_url"):
+                    update_fields["reconstructed_image_url"] = recon
+                if item.get("thumbnail_data_url") != best:
+                    update_fields["thumbnail_data_url"] = best
+                if update_fields:
+                    await db.closet_items.update_one({"id": item["id"]}, {"$set": update_fields})
+                    legacy_closet_count += 1
+        if legacy_closet_count > 0:
+            logger.info("MongoDB migration: backfilled reconstructed/clean image priority for %d legacy closet items", legacy_closet_count)
+
+        legacy_listing_count = 0
+        async for listing in db.listings.find({}):
+            recon = listing.get("reconstruct_image_url") or listing.get("reconstructed_image_url")
+            clean = listing.get("clean_image_url")
+            best = recon or clean
+            if best:
+                update_fields = {}
+                if recon and not listing.get("reconstructed_image_url"):
+                    update_fields["reconstructed_image_url"] = recon
+                if listing.get("thumbnail_data_url") != best:
+                    update_fields["thumbnail_data_url"] = best
+                images = listing.get("images") or []
+                if not images or (isinstance(images, list) and len(images) > 0 and images[0] != best):
+                    update_fields["images"] = [best] + [i for i in images if i != best]
+                if update_fields:
+                    await db.listings.update_one({"id": listing["id"]}, {"$set": update_fields})
+                    legacy_listing_count += 1
+        if legacy_listing_count > 0:
+            logger.info("MongoDB migration: backfilled reconstructed/clean image priority for %d legacy listings", legacy_listing_count)
+    except Exception as e:
+        logger.warning("MongoDB legacy image priority backfill failed: %s", e)
+
     logger.info("MongoDB indexes ensured")
 
 
