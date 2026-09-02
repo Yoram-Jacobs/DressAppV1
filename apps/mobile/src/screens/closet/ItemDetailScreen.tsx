@@ -344,6 +344,9 @@ export function ItemDetailScreen() {
         const parsed = toFormState(cached, user);
         setForm(parsed);
         setOriginalForm(parsed);
+        if (cached.preferred_image_view) {
+          setViewingCutout(cached.preferred_image_view !== 'clean' && cached.preferred_image_view !== 'original');
+        }
       }
 
       setLoading(cached ? false : true);
@@ -369,6 +372,9 @@ export function ItemDetailScreen() {
         const parsed = toFormState(activeTarget, user);
         setForm(parsed);
         setOriginalForm(parsed);
+        if (data.preferred_image_view) {
+          setViewingCutout(data.preferred_image_view !== 'clean' && data.preferred_image_view !== 'original');
+        }
       }
     } catch (e: any) {
       console.warn('Failed to load item:', e);
@@ -607,6 +613,15 @@ export function ItemDetailScreen() {
     }
   };
 
+  const handleToggleView = (showCutout: boolean) => {
+    setViewingCutout(showCutout);
+    const pref = showCutout ? 'reconstructed' : 'clean';
+    if (itemId) {
+      api.patchItem(itemId, { preferred_image_view: pref }).catch(() => {});
+      closetStore.upsert({ id: itemId, preferred_image_view: pref } as any);
+    }
+  };
+
   const handleSave = async () => {
     if (!itemId) return;
     setSaving(true);
@@ -659,6 +674,7 @@ export function ItemDetailScreen() {
         cultural_tags: form.cultural_tags,
         notes: form.notes.trim() || undefined,
         reconstructed_image_url: form.reconstructed_image_url || undefined,
+        preferred_image_view: viewingCutout ? 'reconstructed' : 'clean',
       };
 
       await api.patchItem(itemId, updates);
@@ -1003,7 +1019,7 @@ export function ItemDetailScreen() {
             <View style={[styles.cutoutToggleWrap, { backgroundColor: colors.card }]}>
               <TouchableOpacity
                 style={[styles.cutoutToggleBtn, viewingCutout && { backgroundColor: colors.accent }]}
-                onPress={() => setViewingCutout(true)}
+                onPress={() => handleToggleView(true)}
               >
                 {hasReconstruction ? (
                   <Lucide.Wand2 size={11} color={viewingCutout ? '#fff' : colors.mutedFg} />
@@ -1018,7 +1034,7 @@ export function ItemDetailScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.cutoutToggleBtn, !viewingCutout && { backgroundColor: colors.accent }]}
-                onPress={() => setViewingCutout(false)}
+                onPress={() => handleToggleView(false)}
               >
                 <Lucide.Camera size={11} color={!viewingCutout ? '#fff' : colors.mutedFg} />
                 <Text style={[styles.cutoutToggleText, { color: !viewingCutout ? '#fff' : colors.mutedFg }]}>

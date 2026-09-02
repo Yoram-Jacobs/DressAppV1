@@ -1414,7 +1414,12 @@
     "upgradeClubBtn": "Upgrade to DressApp Club",
     "signOutConfirm": "Are you sure you want to sign out of DressApp?",
     "importWardrobe": "Import Wardrobe",
-    "chooseLanguage": "Select Language"
+    "chooseLanguage": "Select Language",
+    "groups": {
+      "identity": "Identity",
+      "subscription": "Subscription",
+      "more": "More"
+    }
   },
   "admin": {
     "title": "Admin",

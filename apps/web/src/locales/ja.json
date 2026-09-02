@@ -1415,7 +1415,12 @@
     "importWardrobe": "ワードローブをインポート",
     "chooseLanguage": "Select Language",
     "planLabel": "{{tier}}プラン",
-    "creditsLabel": "{{credits}}クレジット"
+    "creditsLabel": "{{credits}}クレジット",
+    "groups": {
+      "identity": "アイデンティティ",
+      "subscription": "サブスクリプション",
+      "more": "その他"
+    }
   },
   "admin": {
     "title": "管理",

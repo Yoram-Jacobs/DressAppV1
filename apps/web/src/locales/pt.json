@@ -1488,7 +1488,12 @@
     "importWardrobe": "Importar guarda-roupa",
     "chooseLanguage": "Select Language",
     "planLabel": "Plano {{tier}}",
-    "creditsLabel": "{{credits}} créditos"
+    "creditsLabel": "{{credits}} créditos",
+    "groups": {
+      "identity": "Identidade",
+      "subscription": "Assinatura",
+      "more": "Mais"
+    }
   },
   "admin": {
     "title": "Administrador",

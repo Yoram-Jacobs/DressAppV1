@@ -250,6 +250,27 @@ async def ensure_indexes() -> None:
                     legacy_listing_count += 1
         if legacy_listing_count > 0:
             logger.info("MongoDB migration: backfilled reconstructed/clean image priority for %d legacy listings", legacy_listing_count)
+
+        # Normalize clean_image_url and reconstructed_image_url (deskew + 0.90 safety margin) for all closet items
+        from app.services.vision.image import fit_image_data_url_to_card
+        normalized_item_count = 0
+        async for item in db.closet_items.find({}):
+            update_fields = {}
+            clean = item.get("clean_image_url")
+            recon = item.get("reconstructed_image_url")
+            if clean and isinstance(clean, str) and clean.startswith("data:image/"):
+                norm_clean = fit_image_data_url_to_card(clean)
+                if norm_clean and norm_clean != clean:
+                    update_fields["clean_image_url"] = norm_clean
+            if recon and isinstance(recon, str) and recon.startswith("data:image/"):
+                norm_recon = fit_image_data_url_to_card(recon)
+                if norm_recon and norm_recon != recon:
+                    update_fields["reconstructed_image_url"] = norm_recon
+                query = {"id": item["id"]} if item.get("id") else {"_id": item["_id"]}
+                await db.closet_items.update_one(query, {"$set": update_fields})
+                normalized_item_count += 1
+        if normalized_item_count > 0:
+            logger.info("MongoDB migration: normalized clean/reconstructed images for %d closet items", normalized_item_count)
     except Exception as e:
         logger.warning("MongoDB legacy image priority backfill failed: %s", e)
 

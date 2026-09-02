@@ -1415,7 +1415,12 @@
     "importWardrobe": "Importer une garde-robe",
     "chooseLanguage": "Select Language",
     "planLabel": "Forfait {{tier}}",
-    "creditsLabel": "{{credits}} crédits"
+    "creditsLabel": "{{credits}} crédits",
+    "groups": {
+      "identity": "Identité",
+      "subscription": "Abonnement",
+      "more": "Plus"
+    }
   },
   "admin": {
     "title": "Admin",

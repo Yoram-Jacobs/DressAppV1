@@ -1415,7 +1415,12 @@
     "importWardrobe": "Importa guardaroba",
     "chooseLanguage": "Select Language",
     "planLabel": "Piano {{tier}}",
-    "creditsLabel": "{{credits}} crediti"
+    "creditsLabel": "{{credits}} crediti",
+    "groups": {
+      "identity": "Identità",
+      "subscription": "Abbonamento",
+      "more": "Altro"
+    }
   },
   "admin": {
     "title": "Amministratore",

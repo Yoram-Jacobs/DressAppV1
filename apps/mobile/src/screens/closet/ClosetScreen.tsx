@@ -49,6 +49,7 @@ import { RichSelectionFloater } from '@mobile/components/closet/RichSelectionFlo
 import { HelpFloater } from '@mobile/components/help';
 import { LoadingVideo } from '@mobile/components/common/LoadingVideo';
 import { labelForCategory, labelForIntent, labelForColor, getTaxonomyMismatches } from '@mobile/lib/taxonomy';
+import { getItemImageUrl } from '@mobile/lib/imageUtils';
 import type { ClosetStackParamList } from '@mobile/navigation/types';
 
 type ClosetNavProp = NativeStackNavigationProp<ClosetStackParamList, 'Closet'>;
@@ -636,13 +637,7 @@ export function ClosetScreen() {
     const isSelected = selectedIds.has(item.id);
     const isDragged = draggedId === item.id;
     const isDragOver = dragOverId === item.id;
-    const imgUri =
-      item.thumbnail_data_url ||
-      item.clean_image_url ||
-      item.reconstructed_image_url ||
-      item.segmented_image_url ||
-      item.original_image_url ||
-      item.image_url;
+    const imgUri = getItemImageUrl(item);
 
     if (viewMode === 'list') {
       return (
@@ -1158,12 +1153,7 @@ export function ClosetScreen() {
 
       {isDragging && draggedId && (() => {
         const draggedItem = items.find(it => it.id === draggedId);
-        const draggedImg = draggedItem?.thumbnail_data_url ||
-          draggedItem?.clean_image_url ||
-          draggedItem?.reconstructed_image_url ||
-          draggedItem?.segmented_image_url ||
-          draggedItem?.original_image_url ||
-          draggedItem?.image_url;
+        const draggedImg = getItemImageUrl(draggedItem);
 
         const screenW = Dimensions.get('window').width;
         const isRtl = I18nManager.isRTL;
@@ -1341,7 +1331,7 @@ const styles = StyleSheet.create({
   },
   gridImgWrap: {
     width: '100%',
-    aspectRatio: 1,
+    aspectRatio: 3 / 4,
     position: 'relative',
   },
   gridImg: {

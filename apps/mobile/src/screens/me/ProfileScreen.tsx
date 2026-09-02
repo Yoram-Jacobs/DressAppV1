@@ -103,14 +103,16 @@ export function ProfileScreen() {
   const [userId, setUserId] = useState<string>('');
   const [langModalOpen, setLangModalOpen] = useState(false);
 
-  // Active accordion section
-  const [expandedSection, setExpandedSection] = useState<string | null>('demographics');
+  const isRtl = I18nManager.isRTL;
 
-  // Accordion groups collapsed state
+  // Active accordion section
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+
+  // Accordion groups collapsed state (always start collapsed)
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({
-    identity: false,
-    subscription: false,
-    more: false,
+    identity: true,
+    subscription: true,
+    more: true,
   });
 
   // Demographics State
@@ -870,9 +872,9 @@ export function ProfileScreen() {
                   </View>
                 </View>
                 {collapsedGroups.identity ? (
-                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                  <Lucide.ChevronRight size={18} color={colors.mutedFg} style={isRtl ? { transform: [{ rotate: '180deg' }] } : undefined} />
                 ) : (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
                 )}
               </TouchableOpacity>
 
@@ -1167,9 +1169,9 @@ export function ProfileScreen() {
                   </View>
                 </View>
                 {collapsedGroups.subscription ? (
-                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                  <Lucide.ChevronRight size={18} color={colors.mutedFg} style={isRtl ? { transform: [{ rotate: '180deg' }] } : undefined} />
                 ) : (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
                 )}
               </TouchableOpacity>
 
@@ -1364,9 +1366,9 @@ export function ProfileScreen() {
                   </View>
                 </View>
                 {collapsedGroups.more ? (
-                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                  <Lucide.ChevronRight size={18} color={colors.mutedFg} style={isRtl ? { transform: [{ rotate: '180deg' }] } : undefined} />
                 ) : (
-                  <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                  <Lucide.ChevronDown size={18} color={colors.mutedFg} />
                 )}
               </TouchableOpacity>
 

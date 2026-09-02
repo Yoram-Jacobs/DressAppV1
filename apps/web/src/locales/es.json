@@ -1415,7 +1415,12 @@
     "importWardrobe": "Importar armario",
     "chooseLanguage": "Select Language",
     "planLabel": "Plan {{tier}}",
-    "creditsLabel": "{{credits}} créditos"
+    "creditsLabel": "{{credits}} créditos",
+    "groups": {
+      "identity": "Identidad",
+      "subscription": "Suscripción",
+      "more": "Más"
+    }
   },
   "admin": {
     "title": "Administrador",

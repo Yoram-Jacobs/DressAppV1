@@ -190,6 +190,100 @@ _CARD_CANVAS_W = 900
 _CARD_CANVAS_H = 1200
 
 
+def _extract_garment_mask(img: Image.Image) -> np.ndarray:
+    """Extract binary mask of garment (255 for garment, 0 for background).
+
+    Works for both RGBA cutouts and RGB photos with neutral/solid backgrounds.
+    """
+    import cv2
+    import numpy as np
+
+    has_alpha = (
+        img.mode in ("RGBA", "LA")
+        or (img.mode == "P" and "transparency" in img.info)
+    )
+    if has_alpha:
+        img_rgba = img.convert("RGBA")
+        alpha = np.array(img_rgba.split()[-1])
+        coverage = np.mean(alpha > 30)
+        if 0.02 < coverage < 0.95:
+            return (alpha > 30).astype(np.uint8) * 255
+
+    # RGB fallback: segment by color contrast against corners/borders
+    rgb = np.array(img.convert("RGB"))
+    h, w = rgb.shape[:2]
+    if h < 10 or w < 10:
+        return np.ones((h, w), dtype=np.uint8) * 255
+
+    border_pixels = np.concatenate([
+        rgb[0, :],
+        rgb[h - 1, :],
+        rgb[:, 0],
+        rgb[:, w - 1],
+    ], axis=0).astype(np.float32)
+
+    bg_color = np.median(border_pixels, axis=0)
+    diff = rgb.astype(np.float32) - bg_color
+    dist = np.sqrt(np.sum(diff ** 2, axis=2))
+    mask = (dist > 22).astype(np.uint8) * 255
+
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+
+    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask)
+    if num_labels > 1:
+        min_area = (h * w) * 0.01
+        clean_mask = np.zeros_like(mask)
+        for i in range(1, num_labels):
+            if stats[i, cv2.CC_STAT_AREA] >= min_area:
+                clean_mask[labels == i] = 255
+        if np.any(clean_mask):
+            mask = clean_mask
+
+    return mask
+
+
+def _orient_and_deskew_garment(img: Image.Image, mask: np.ndarray | None = None) -> Image.Image:
+    """Detect tilt/skew angle of the garment and rotate it upright.
+
+    Fits the major long axis of the garment mask and rotates
+    slanted garments (e.g. 35° tilt) straight upright (0° vertical).
+    """
+    try:
+        import cv2
+        import numpy as np
+
+        if mask is None:
+            mask = _extract_garment_mask(img)
+
+        pts = np.column_stack(np.where(mask > 20))
+        if len(pts) < 100:
+            return img
+
+        pts_xy = np.column_stack((pts[:, 1], pts[:, 0])).astype(np.float32)
+        [vx, vy, x0, y0] = cv2.fitLine(pts_xy, cv2.DIST_L2, 0, 0.01, 0.01)
+        line_angle = float(np.degrees(np.arctan2(vy[0], vx[0])))
+
+        if line_angle < 0:
+            line_angle += 180
+
+        # Rotate major axis to align with vertical (90 degrees)
+        rot_needed = line_angle - 90.0
+
+        while rot_needed > 45:
+            rot_needed -= 90
+        while rot_needed < -45:
+            rot_needed += 90
+
+        if abs(rot_needed) > 2.0:
+            img = img.rotate(rot_needed, resample=Image.BICUBIC, expand=True)
+    except Exception as exc:
+        logger.debug("_orient_and_deskew_garment failed: %s", exc)
+
+    return img
+
+
 def _fit_crop_to_card(
     crop_bytes: bytes,
     *,
@@ -197,37 +291,13 @@ def _fit_crop_to_card(
     canvas_w: int = _CARD_CANVAS_W,
     canvas_h: int = _CARD_CANVAS_H,
 ) -> tuple[bytes, str]:
-    """Rescale a per-item crop and center it on a fixed-aspect canvas.
+    """Rescale a per-item crop, deskew upright, extend to 90% canvas, and center.
 
-    The frontend renders each garment card inside an
-    ``aspect-[3/4]`` portrait window with ``object-cover``. Without
-    normalisation, crop bytes coming out of the pipeline span a wide
-    range of aspect ratios:
-
-      * wide footwear / belt crops → ``object-cover`` clips the heel
-        and toe out of view;
-      * narrow earring / strap crops → the item shrinks to a thin
-        sliver inside the card;
-      * the rembg matte from a tiny-bbox accessory can come back at
-        full source resolution (rembg composites alpha onto the
-        original full-res RGB), so the card receives a multi-MB
-        image where the visible garment occupies only a fraction of
-        the frame.
-
-    This helper produces a uniform 3:4 portrait canvas containing
-    the crop, scaled to fit (either up OR down) so the longer side
-    of the garment touches the canvas edge, then centered. Aspect
-    ratio is always preserved so the item never gets squished or
-    clipped. RGBA inputs preserve their alpha on a fully transparent
-    canvas; RGB inputs are pasted onto a neutral white canvas and
-    stay JPEG. Returns ``(out_bytes, out_mime)``.
-
-    Example: a 25x120 shoe matte → upscaled to 250x1200 (the larger
-    side hits the canvas height), then centered horizontally on the
-    900x1200 canvas with ~325px of transparent padding on each side.
-
-    On any decode / re-encode failure we fall back to the original
-    bytes + mime so a single bad crop can never break the response.
+    1. Extracts garment mask (works for both RGBA cutouts and RGB studio/phone photos).
+    2. Aligns major symmetry axis straight upright.
+    3. Crops tight to non-background garment boundaries.
+    4. Dynamically scales with a 0.90 safety margin, reaching up to 1080px height.
+    5. Centers on fixed 900x1200 portrait canvas.
     """
     try:
         img = Image.open(io.BytesIO(crop_bytes))
@@ -235,17 +305,32 @@ def _fit_crop_to_card(
     except Exception:  # noqa: BLE001
         return crop_bytes, crop_mime
 
-    has_alpha = (
-        img.mode in ("RGBA", "LA")
-        or (img.mode == "P" and "transparency" in img.info)
-    )
     try:
-        if has_alpha:
-            img = img.convert("RGBA")
+        import numpy as np
+        mask = _extract_garment_mask(img)
+        pts = np.column_stack(np.where(mask > 0))
+        if len(pts) > 100:
+            rgba = img.convert("RGBA")
+            rgba.putalpha(Image.fromarray(mask, mode="L"))
+            rgba = _orient_and_deskew_garment(rgba, mask=mask)
+            bbox = rgba.getbbox()
+            if bbox and (bbox[2] - bbox[0] > 4) and (bbox[3] - bbox[1] > 4):
+                img = rgba.crop(bbox)
         else:
-            img = img.convert("RGB")
-    except Exception:  # noqa: BLE001
-        return crop_bytes, crop_mime
+            has_alpha = (
+                img.mode in ("RGBA", "LA")
+                or (img.mode == "P" and "transparency" in img.info)
+            )
+            if has_alpha:
+                img = img.convert("RGBA")
+                img = _orient_and_deskew_garment(img)
+                bbox = img.getbbox()
+                if bbox and (bbox[2] - bbox[0] > 4) and (bbox[3] - bbox[1] > 4):
+                    img = img.crop(bbox)
+            else:
+                img = img.convert("RGB")
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("_fit_crop_to_card extraction failed: %s", exc)
 
     iw, ih = img.size
     if iw <= 0 or ih <= 0:
@@ -267,10 +352,9 @@ def _fit_crop_to_card(
 
     try:
         canvas = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
-        # Support pasting both RGB and RGBA correctly
         if img.mode != "RGBA":
             img = img.convert("RGBA")
-        canvas.paste(img, (ox, oy))
+        canvas.paste(img, (ox, oy), mask=img)
         buf = io.BytesIO()
         canvas.save(buf, format="PNG", optimize=True)
         return buf.getvalue(), "image/png"

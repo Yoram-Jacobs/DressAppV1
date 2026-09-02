@@ -1488,7 +1488,12 @@
     "importWardrobe": "Garderobe importeren",
     "chooseLanguage": "Select Language",
     "planLabel": "{{tier}}-abonnement",
-    "creditsLabel": "{{credits}} credits"
+    "creditsLabel": "{{credits}} credits",
+    "groups": {
+      "identity": "Identiteit",
+      "subscription": "Abonnement",
+      "more": "Meer"
+    }
   },
   "admin": {
     "title": "Beheerder",

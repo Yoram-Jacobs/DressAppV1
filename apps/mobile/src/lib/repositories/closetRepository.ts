@@ -56,6 +56,9 @@ export interface ClosetItem {
   reconstructed_image_url?: string;
   clean_image_url?: string;
   segmented_image_url?: string;
+  image_quality_status?: string;
+  reconstruction_metadata?: any;
+  preferred_image_view?: string;
   wear_count?: number;
   worn_count?: number;
   dpp_data?: any;
@@ -98,8 +101,46 @@ let _state: ClosetRepoState = {
 let _inFlightSync: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
+let _reconstructionPollTimer: any = null;
+
+function checkPendingReconstructions() {
+  const pending = _state.items.some(
+    (it) =>
+      !it.reconstructed_image_url &&
+      (it.image_quality_status === 'needs_reconstruction' ||
+        it.image_quality_status === 'needs_completion' ||
+        (it as any).reconstruction_metadata?.deferred)
+  );
+
+  if (pending && !_reconstructionPollTimer) {
+    _reconstructionPollTimer = setInterval(async () => {
+      const stillPending = _state.items.some(
+        (it) =>
+          !it.reconstructed_image_url &&
+          (it.image_quality_status === 'needs_reconstruction' ||
+            it.image_quality_status === 'needs_completion' ||
+            (it as any).reconstruction_metadata?.deferred)
+      );
+
+      if (!stillPending) {
+        clearInterval(_reconstructionPollTimer);
+        _reconstructionPollTimer = null;
+        return;
+      }
+
+      try {
+        await closetRepo.refresh({ force: true });
+      } catch {}
+    }, 3000);
+  } else if (!pending && _reconstructionPollTimer) {
+    clearInterval(_reconstructionPollTimer);
+    _reconstructionPollTimer = null;
+  }
+}
+
 function notify() {
   listeners.forEach((l) => l());
+  checkPendingReconstructions();
 }
 
 function setState(updater: (prev: ClosetRepoState) => ClosetRepoState) {
@@ -272,7 +313,8 @@ export const closetRepo = {
       'pattern', 'state', 'condition', 'quality', 'repair_advice', 'price_cents',
       'currency', 'marketplace_intent', 'formality', 'cultural_tags', 'tags',
       'wear_count', 'last_worn_at', 'notes', 'reconstructed_image_url',
-      'reconstruction_metadata', 'clean_image_url', 'clean_image_status', 'clear_reconstruction'
+      'reconstruction_metadata', 'clean_image_url', 'clean_image_status', 'clear_reconstruction',
+      'preferred_image_view'
     ]);
     const sanitized: Record<string, any> = {};
     for (const [k, v] of Object.entries(patch)) {

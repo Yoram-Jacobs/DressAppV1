@@ -249,6 +249,8 @@ class UpdateItemIn(BaseModel):
     wear_count: int | None = None
     last_worn_at: str | None = None
     notes: str | None = None
+    # View preference ('clean' vs 'reconstructed')
+    preferred_image_view: str | None = None
     # Phase Q — reconstruction knobs
     reconstructed_image_url: str | None = None
     reconstruction_metadata: dict[str, Any] | None = None
@@ -474,9 +476,11 @@ async def create_item(
             doc["reconstructed_image_url"] = payload.reconstructed_image_b64
         else:
             mime = (payload.reconstruction_metadata or {}).get("mime_type", "image/png")
-            doc["reconstructed_image_url"] = (
-                f"data:{mime};base64,{payload.reconstructed_image_b64}"
-            )
+    # Normalize all image data URLs (deskew upright + 0.90 safety margin on 900x1200 canvas)
+    from app.services.vision.image import fit_image_data_url_to_card
+    for img_key in ("clean_image_url", "reconstructed_image_url", "segmented_image_url", "cutout_url"):
+        if doc.get(img_key) and isinstance(doc[img_key], str) and doc[img_key].startswith("data:image/"):
+            doc[img_key] = fit_image_data_url_to_card(doc[img_key]) or doc[img_key]
 
     # Phase R (July 2026) — receipt-import provenance persistence.
     # Store receipt flags before any background task is queued so the

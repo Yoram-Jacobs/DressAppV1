@@ -1505,7 +1505,12 @@
     "importWardrobe": "导入衣橱",
     "chooseLanguage": "Select Language",
     "planLabel": "{{tier}}套餐",
-    "creditsLabel": "{{credits}}积分"
+    "creditsLabel": "{{credits}}积分",
+    "groups": {
+      "identity": "身份信息",
+      "subscription": "订阅会员",
+      "more": "更多"
+    }
   },
   "admin": {
     "title": "管理",

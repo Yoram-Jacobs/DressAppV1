@@ -1415,7 +1415,12 @@
     "importWardrobe": "वॉर्डरोब आयात करें",
     "chooseLanguage": "Select Language",
     "planLabel": "{{tier}} प्लान",
-    "creditsLabel": "{{credits}} क्रेडिट्स"
+    "creditsLabel": "{{credits}} क्रेडिट्स",
+    "groups": {
+      "identity": "पहचान",
+      "subscription": "सदस्यता",
+      "more": "अधिक"
+    }
   },
   "admin": {
     "title": "व्यवस्थापक",

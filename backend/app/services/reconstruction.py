@@ -190,8 +190,8 @@ def _build_reconstruction_prompt(analysis: dict[str, Any]) -> str:
         f"{extras_str}. Studio lighting, pure solid off-white background, "
         "garment-only product shot, centered composition, sharp focus, "
         "photorealistic, preserve fabric texture and pattern details, "
-        "NO scenery, NO landscape, NO background environment, NO room, NO mannequin, NO model, "
-        "no text, no logos, no watermarks."
+        "CRITICAL: NO landscape, NO background scenery, NO outdoor environment, NO room, NO mannequin, NO model, "
+        "NO scenery of any kind, NO text, NO logos, NO watermarks."
     )
     return prompt[:1000]
 

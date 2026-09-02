@@ -1488,7 +1488,12 @@
     "importWardrobe": "Импорт гардероба",
     "chooseLanguage": "Select Language",
     "planLabel": "Тариф {{tier}}",
-    "creditsLabel": "{{credits}} кредитов"
+    "creditsLabel": "{{credits}} кредитов",
+    "groups": {
+      "identity": "Идентификация",
+      "subscription": "Подписка",
+      "more": "Ещё"
+    }
   },
   "admin": {
     "title": "Админ",

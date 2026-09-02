@@ -1415,7 +1415,12 @@
     "importWardrobe": "استيراد خزانة الملابس",
     "chooseLanguage": "Select Language",
     "planLabel": "خطة {{tier}}",
-    "creditsLabel": "{{credits}} رصيد"
+    "creditsLabel": "{{credits}} رصيد",
+    "groups": {
+      "identity": "الهوية",
+      "subscription": "الاشتراك",
+      "more": "المزيد"
+    }
   },
   "admin": {
     "title": "الإدارة",

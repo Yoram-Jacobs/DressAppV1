@@ -1,4 +1,4 @@
-﻿"""backend/app/services/garment_visuals.py
+"""backend/app/services/garment_visuals.py
 
 Deep module: Garment Visuals & Cutout Pipeline.
 
@@ -87,7 +87,9 @@ class GarmentVisuals:
                 matted_png = await matte_crop(raw_bytes)
 
             if matted_png:
-                b64 = base64.b64encode(matted_png).decode("ascii")
+                from app.services.vision.image import _fit_crop_to_card
+                fitted_png, _ = _fit_crop_to_card(matted_png, crop_mime="image/png")
+                b64 = base64.b64encode(fitted_png).decode("ascii")
                 return f"data:image/png;base64,{b64}"
         except Exception as exc:
             logger.warning("GarmentVisuals transparent cutout extraction failed: %s", exc)

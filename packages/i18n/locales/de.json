@@ -1505,7 +1505,12 @@
     "importWardrobe": "Garderobe importieren",
     "chooseLanguage": "Select Language",
     "planLabel": "{{tier}}-Tarif",
-    "creditsLabel": "{{credits}} Credits"
+    "creditsLabel": "{{credits}} Credits",
+    "groups": {
+      "identity": "Identität",
+      "subscription": "Abonnement",
+      "more": "Mehr"
+    }
   },
   "admin": {
     "title": "Admin",
