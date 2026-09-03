@@ -1,5 +1,6 @@
 // craco.config.js
 const path = require("path");
+const { getLoaders, loaderByName } = require("@craco/craco");
 require("dotenv").config();
 
 // Check if we're in development/preview mode (not production build)
@@ -35,6 +36,9 @@ let webpackConfig = {
   webpack: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      'lucide-react': path.resolve(__dirname, 'node_modules/lucide-react/dist/cjs/lucide-react.js'),
+      'recharts': path.resolve(__dirname, 'node_modules/recharts/lib/index.js'),
+      'motion-utils': require.resolve('motion-utils'),
       // Override the package stub so the full Sonner toast fires on web
       './aiNotice.js': path.resolve(__dirname, 'src/lib/aiNotice.jsx'),
     },
@@ -65,6 +69,23 @@ let webpackConfig = {
           fullySpecified: false,
         },
       });
+
+      // Ensure postcss-loader uses local tailwindcss v3, not root v4
+      try {
+        const { matches } = getLoaders(webpackConfig, loaderByName('postcss-loader'));
+        const localTw = require(path.resolve(__dirname, 'node_modules/tailwindcss'));
+        for (const m of matches) {
+          if (m?.loader?.options?.postcssOptions?.plugins) {
+            const plugins = m.loader.options.postcssOptions.plugins;
+            const twIdx = plugins.indexOf('tailwindcss');
+            if (twIdx !== -1) {
+              plugins[twIdx] = localTw;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Could not override tailwindcss in postcss-loader:', err);
+      }
 
       return webpackConfig;
     },

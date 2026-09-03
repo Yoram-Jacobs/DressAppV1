@@ -253,6 +253,7 @@ def _generate_fallback_advice(
                         "clean_image_url": top_clean,
                         "image_url": top_clean,
                         "thumbnail_data_url": top.get("thumbnail_data_url") or top_clean,
+                        "id": top.get("id"),
                         "closet_item_id": top.get("id")
                     },
                     {
@@ -266,6 +267,7 @@ def _generate_fallback_advice(
                         "clean_image_url": bottom_clean,
                         "image_url": bottom_clean,
                         "thumbnail_data_url": bottom.get("thumbnail_data_url") or bottom_clean,
+                        "id": bottom.get("id"),
                         "closet_item_id": bottom.get("id")
                     },
                 ]
@@ -282,6 +284,7 @@ def _generate_fallback_advice(
                         "clean_image_url": shoe_clean,
                         "image_url": shoe_clean,
                         "thumbnail_data_url": chosen_shoe.get("thumbnail_data_url") or shoe_clean,
+                        "id": chosen_shoe.get("id"),
                         "closet_item_id": chosen_shoe.get("id")
                     })
                 if chosen_acc:
@@ -297,6 +300,7 @@ def _generate_fallback_advice(
                         "clean_image_url": acc_clean,
                         "image_url": acc_clean,
                         "thumbnail_data_url": chosen_acc.get("thumbnail_data_url") or acc_clean,
+                        "id": chosen_acc.get("id"),
                         "closet_item_id": chosen_acc.get("id")
                     })
 
@@ -347,6 +351,7 @@ def _generate_fallback_advice(
                     "clean_image_url": dress_clean,
                     "image_url": dress_clean,
                     "thumbnail_data_url": dress.get("thumbnail_data_url") or dress_clean,
+                    "id": dress.get("id"),
                     "closet_item_id": dress.get("id")
                 },
             ]
@@ -363,6 +368,7 @@ def _generate_fallback_advice(
                     "clean_image_url": shoe_clean,
                     "image_url": shoe_clean,
                     "thumbnail_data_url": chosen_shoe.get("thumbnail_data_url") or shoe_clean,
+                    "id": chosen_shoe.get("id"),
                     "closet_item_id": chosen_shoe.get("id")
                 })
             if chosen_acc:
@@ -378,6 +384,7 @@ def _generate_fallback_advice(
                     "clean_image_url": acc_clean,
                     "image_url": acc_clean,
                     "thumbnail_data_url": chosen_acc.get("thumbnail_data_url") or acc_clean,
+                    "id": chosen_acc.get("id"),
                     "closet_item_id": chosen_acc.get("id")
                 })
 
@@ -650,12 +657,19 @@ async def check_scheduler_triggers() -> None:
                         p_copy = {
                             "name": prop.get("name"),
                             "reasoning": prop.get("reasoning"),
+                            "why": prop.get("why"),
                             "items": [
                                 {
-                                    "id": it.get("id"),
-                                    "title": it.get("title") or it.get("name"),
+                                    "id": it.get("closet_item_id") or it.get("id"),
+                                    "closet_item_id": it.get("closet_item_id") or it.get("id"),
+                                    "title": it.get("title") or it.get("name") or it.get("description"),
+                                    "name": it.get("name") or it.get("title") or it.get("description"),
+                                    "description": it.get("description") or it.get("title") or it.get("name"),
                                     "role": it.get("role") or it.get("category"),
-                                    "clean_image_url": it.get("clean_image_url") if (isinstance(it.get("clean_image_url"), str) and not it["clean_image_url"].startswith("data:")) else None,
+                                    "category": it.get("category") or it.get("role"),
+                                    "clean_image_url": it.get("clean_image_url") if (isinstance(it.get("clean_image_url"), str) and not it.get("clean_image_url", "").startswith("data:")) else None,
+                                    "image_url": it.get("image_url") if (isinstance(it.get("image_url"), str) and not it.get("image_url", "").startswith("data:")) else None,
+                                    "thumbnail_data_url": it.get("thumbnail_data_url") if (isinstance(it.get("thumbnail_data_url"), str) and not it.get("thumbnail_data_url", "").startswith("data:")) else None,
                                     "color": it.get("color"),
                                 }
                                 for it in prop.get("items", [])

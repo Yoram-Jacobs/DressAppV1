@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import logging
+import re
+import uuid
 from datetime import datetime, timezone
 from typing import Any
 
@@ -85,22 +87,51 @@ async def save_outfit(
     garments = []
     for g in payload.garments:
         g_dict = g.model_dump()
-        if g.closet_item_id:
-            item = await db.closet_items.find_one({"id": g.closet_item_id})
-            if item:
-                variants = item.get("image_variants") or {}
-                webp_large = (variants.get("webp") or {}).get("large") if isinstance(variants, dict) else None
-                g_dict["image_url"] = (
-                    g_dict.get("image_url")
-                    or item.get("clean_image_url")
-                    or item.get("reconstructed_image_url")
-                    or item.get("cutout_url")
-                    or webp_large
-                    or item.get("thumbnail_data_url")
-                    or item.get("image_url")
-                    or item.get("segmented_image_url")
-                    or item.get("original_image_url")
-                )
+        cid = g.closet_item_id or g_dict.get("id")
+        item = None
+        if cid:
+            item = await db.closet_items.find_one({"id": cid, "user_id": user["id"]})
+            if not item:
+                item = await db.closet_items.find_one({"id": cid})
+
+        # If not found by ID, attempt to resolve by title in user's closet
+        title_val = g_dict.get("title")
+        if not item and title_val and title_val != "Garment":
+            item = await db.closet_items.find_one({
+                "user_id": user["id"],
+                "title": {"$regex": f"^{re.escape(title_val)}$", "$options": "i"}
+            })
+            if not item:
+                item = await db.closet_items.find_one({
+                    "user_id": user["id"],
+                    "title": {"$regex": re.escape(title_val), "$options": "i"}
+                })
+
+        # Fallback to an available item matching the role for this user
+        if not item and g.role:
+            role_cat = "Footwear" if g.role.lower() in ("shoes", "footwear") else g.role.title()
+            item = await db.closet_items.find_one({"user_id": user["id"], "category": role_cat})
+
+        if item:
+            g_dict["closet_item_id"] = item["id"]
+            g_dict["id"] = item["id"]
+            if not g_dict.get("title") or g_dict.get("title") == "Garment":
+                g_dict["title"] = item.get("title") or item.get("name")
+            variants = item.get("image_variants") or {}
+            webp_large = (variants.get("webp") or {}).get("large") if isinstance(variants, dict) else None
+            best_img = (
+                g_dict.get("image_url")
+                or item.get("clean_image_url")
+                or item.get("reconstructed_image_url")
+                or item.get("cutout_url")
+                or webp_large
+                or item.get("thumbnail_data_url")
+                or item.get("image_url")
+                or item.get("segmented_image_url")
+                or item.get("original_image_url")
+            )
+            g_dict["image_url"] = best_img
+            g_dict["clean_image_url"] = best_img
         garments.append(g_dict)
 
     use_count = 1 if (payload.usage and payload.usage.date) else 0
@@ -112,6 +143,7 @@ async def save_outfit(
         "source_workflow": payload.source_workflow,
         "prompt": payload.prompt,
         "garments": garments,
+        "items": garments,
         "usage": payload.usage.model_dump(),
         "use_count": use_count,
         "created_at": now,

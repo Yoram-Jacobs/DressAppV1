@@ -153,10 +153,15 @@ function MiniAvatarOutfit({
       dress: null,
     };
     for (const g of garments) {
-      const targetId = g.closet_item_id || g.id;
-      const closetItem: any = closetItems.find(
+      let closetItem: any = closetItems.find(
         (it: any) => it && (it.id === targetId || it._id === targetId || String(it.id) === String(targetId))
       );
+      if (!closetItem && (g.title || g.description)) {
+        const titleStr = (g.title || g.description || '').toLowerCase();
+        closetItem = closetItems.find(
+          (it: any) => it && (it.title || it.name || '').toLowerCase() === titleStr
+        );
+      }
       const slot = resolveSlot(g.role, g.category, g.name, closetItem);
       const url =
         closetItem?.reconstructed_image_url ||

@@ -114,12 +114,29 @@ const formatMonthDay = (date, t) => {
   return `${monthStr} ${date.getDate()}`;
 };
 
-const getOutfitPiecesMap = (o) => {
+const getOutfitPiecesMap = (o, closetItems = []) => {
   const map = {};
-  if (Array.isArray(o?.garments)) {
-    o.garments.forEach((g) => {
+  const garments = Array.isArray(o?.garments) && o.garments.length > 0 ? o.garments : (Array.isArray(o?.items) ? o.items : []);
+  if (Array.isArray(garments)) {
+    garments.forEach((g) => {
       if (g && g.role) {
-        map[g.role] = { image_url: g.image_url };
+        let img = g.image_url || g.clean_image_url || g.thumbnail_data_url;
+        let cid = g.closet_item_id || g.id;
+        if (Array.isArray(closetItems) && closetItems.length > 0) {
+          const ci = closetItems.find(c => 
+            (cid && (c.id === cid || c._id === cid)) ||
+            (g.title && (c.title === g.title || c.name === g.title))
+          );
+          if (ci) {
+            img = img || ci.clean_image_url || ci.reconstructed_image_url || ci.cutout_url || ci.thumbnail_data_url || ci.image_url;
+            cid = cid || ci.id;
+          }
+        }
+        map[g.role] = { 
+          id: cid,
+          closet_item_id: cid,
+          image_url: img 
+        };
       }
     });
   }
@@ -443,11 +460,16 @@ export default function Stylist() {
       description: rec.why || '',
       source_workflow: isEvent ? 'event' : 'scheduled',
       prompt: isEvent ? (eventDetails.prompt || 'Event') : (user?.scheduler_settings?.style_dress_for || 'casual'),
-      garments: (rec.items || []).map((it) => ({
-        closet_item_id: it.closet_item_id,
-        role: it.role,
-        title: it.description,
-      })),
+      garments: (rec.items || []).map((it) => {
+        const cid = it.closet_item_id || it.id;
+        const ci = Array.isArray(closetItems) ? closetItems.find(c => c.id === cid || c._id === cid) : null;
+        return {
+          closet_item_id: cid,
+          role: it.role || ci?.category?.toLowerCase() || 'top',
+          title: it.title || it.description || it.name || ci?.title || ci?.name || '',
+          image_url: it.clean_image_url || it.image_url || ci?.clean_image_url || ci?.image_url || '',
+        };
+      }),
       usage: {
         date: targetDate,
         time: isEvent ? (eventDetails.time || '12:00') : (user?.scheduler_settings?.time || '08:00'),
@@ -740,11 +762,16 @@ export default function Stylist() {
       name: displayName,
       source_workflow: isEvent ? 'event' : 'scheduled',
       prompt: isEvent ? 'Event' : (user?.scheduler_settings?.style_dress_for || 'casual'),
-      garments: (rec.items || []).map((it) => ({
-        closet_item_id: it.closet_item_id,
-        role: it.role,
-        title: it.description,
-      })),
+      garments: (rec.items || []).map((it) => {
+        const cid = it.closet_item_id || it.id;
+        const ci = Array.isArray(closetItems) ? closetItems.find(c => c.id === cid || c._id === cid) : null;
+        return {
+          closet_item_id: cid,
+          role: it.role || ci?.category?.toLowerCase() || 'top',
+          title: it.title || it.description || it.name || ci?.title || ci?.name || '',
+          image_url: it.clean_image_url || it.image_url || ci?.clean_image_url || ci?.image_url || '',
+        };
+      }),
       usage: {
         date: targetDate,
         time: user?.scheduler_settings?.time || '08:00',
@@ -2023,7 +2050,7 @@ export default function Stylist() {
               <AvatarViewer
                 shapeParams={user?.avatar_shape_params || {}}
                 sex={user?.sex || 'female'}
-                outfitItems={getOutfitPiecesMap(selectedOutfitForDetail)}
+                outfitItems={getOutfitPiecesMap(selectedOutfitForDetail, closetItems)}
               />
             </div>
 
@@ -2160,7 +2187,7 @@ export default function Stylist() {
                               {labelForRole(g.role, t)}
                             </div>
                             <div className="font-medium text-foreground truncate group-hover/item:text-[hsl(var(--accent))] transition-colors">
-                              {g.title || g.description || t('addItem.preflight.untitled', { defaultValue: 'Garment' })}
+                              {g.title || g.description || (Array.isArray(closetItems) && closetItems.find(it => it.id === g.closet_item_id)?.title) || t('addItem.preflight.untitled', { defaultValue: 'Garment' })}
                             </div>
                           </div>
                           <ChevronRight className="h-4 w-4 rtl:rotate-180 text-muted-foreground/60 shrink-0 group-hover/item:translate-x-0.5 transition-transform" />
@@ -2331,7 +2358,7 @@ export default function Stylist() {
                             className="w-28 sm:w-32 rounded-xl border border-border/80 bg-card overflow-hidden flex flex-col group hover:shadow-md transition-shadow cursor-pointer select-none"
                           >
                             <div className="relative w-full aspect-[4/5] bg-secondary/5 overflow-hidden shrink-0">
-                              <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={getOutfitPiecesMap(o)} />
+                              <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={getOutfitPiecesMap(o, closetItems)} />
                             </div>
                             <div className="p-2 flex-1 flex flex-col justify-center min-w-0">
                               <div className="text-[11px] font-semibold truncate text-foreground text-center">
@@ -2505,7 +2532,7 @@ export default function Stylist() {
                                     <AvatarViewer
                                       shapeParams={user?.avatar_shape_params || {}}
                                       sex={user?.sex || 'female'}
-                                      outfitItems={getOutfitPiecesMap(dayOutfit)}
+                                      outfitItems={getOutfitPiecesMap(dayOutfit, closetItems)}
                                     />
                                   </div>
                                 ) : (
@@ -2689,7 +2716,7 @@ export default function Stylist() {
                           <AvatarViewer
                             shapeParams={user?.avatar_shape_params || {}}
                             sex={user?.sex || 'female'}
-                            outfitItems={getOutfitPiecesMap(dayOutfit)}
+                            outfitItems={getOutfitPiecesMap(dayOutfit, closetItems)}
                           />
                         </div>
                         <div className="absolute inset-0 bg-background/90 opacity-0 hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center">
@@ -2737,7 +2764,7 @@ export default function Stylist() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-10 h-12 bg-secondary/10 rounded-lg overflow-hidden border border-border/40 shrink-0">
-                      <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={getOutfitPiecesMap(dayOutfit)} />
+                      <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={getOutfitPiecesMap(dayOutfit, closetItems)} />
                     </div>
                     <div className="min-w-0 text-start">
                       <div className="text-[9px] caps-label text-rose-600 font-semibold">{t('calendar.scheduled', { defaultValue: 'Scheduled' })}</div>
@@ -2829,7 +2856,7 @@ export default function Stylist() {
                         )}
                       >
                         <div className="w-full aspect-[4/5] bg-secondary/5 rounded-lg overflow-hidden relative shrink-0">
-                          <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={getOutfitPiecesMap(o)} />
+                          <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={getOutfitPiecesMap(o, closetItems)} />
                           {isAlreadyScheduled && (
                             <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
                               <Badge className="rounded-full bg-[hsl(var(--accent))] text-white border-0 scale-90">
