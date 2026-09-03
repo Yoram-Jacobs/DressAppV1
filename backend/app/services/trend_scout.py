@@ -1661,42 +1661,90 @@ async def fashion_scout_feed(
     if language == "en":
         return [_ensure_card_image(dict(c)) for c in canon]
 
-    # On-demand translation with regionalization
-    out: list[dict[str, Any]] = []
-    for card in canon:
-        canon_id = card.get("id")
-        if not canon_id:
-            out.append(_ensure_card_image(dict(card)))
-            continue
-        try:
-            cached = await db.trend_reports.find_one(
-                {
-                    "origin_id": canon_id,
-                    "language": language,
-                    **({"country_code": country.upper()} if country else {}),
-                },
-                {"_id": 0},
-            )
-            if cached:
-                out.append(_ensure_card_image(dict(cached)))
-                continue
-            translated = await _translate_card(
-                card, language=language, country=country
-            )
-            if translated:
-                try:
-                    await db.trend_reports.insert_one(
-                        {**translated, "_origin": canon_id}
-                    )
-                except Exception:
-                    pass
-                out.append(_ensure_card_image({k: v for k, v in translated.items() if k != "_id"}))
-            else:
-                out.append(_ensure_card_image(dict(card)))
-        except Exception as exc:
-            logger.warning("fashion_scout_feed translation failure: %s", exc)
-            out.append(_ensure_card_image(dict(card)))
-    return out
+    # Fast batch query: Check MongoDB cache for all canon IDs in one single index lookup
+    canon_ids = [c.get("id") for c in canon if c.get("id")]
+    cached_docs = await db.trend_reports.find(
+        {
+            "$or": [
+                {"origin_id": {"$in": canon_ids}, "language": language},
+                {"_origin": {"$in": canon_ids}, "language": language},
+            ]
+        },
+        {"_id": 0},
+    ).to_list(length=100)
+
+    cached_map: dict[str, dict[str, Any]] = {}
+    for doc in cached_docs:
+        oid = doc.get("origin_id") or doc.get("_origin")
+        if oid and oid not in cached_map:
+            cached_map[oid] = doc
+
+    # Helper to translate a single card with a strict timeout
+    sem = asyncio.Semaphore(4)
+
+    async def _safe_translate(card_to_trans: dict[str, Any]) -> dict[str, Any]:
+        cid = card_to_trans.get("id")
+        # If card is already in target language or missing id, return directly
+        if not cid or card_to_trans.get("language") == language:
+            return _ensure_card_image(dict(card_to_trans))
+        # If already cached
+        if cid in cached_map:
+            return _ensure_card_image(dict(cached_map[cid]))
+
+        async with sem:
+            try:
+                translated = await asyncio.wait_for(
+                    _translate_card(card_to_trans, language=language, country=country),
+                    timeout=3.5,
+                )
+                if translated:
+                    doc_to_save = {
+                        **translated,
+                        "origin_id": cid,
+                        "_origin": cid,
+                        "language": language,
+                        "country_code": country.upper() if country else None,
+                    }
+                    try:
+                        await db.trend_reports.update_one(
+                            {"origin_id": cid, "language": language},
+                            {"$set": doc_to_save},
+                            upsert=True,
+                        )
+                    except Exception:
+                        pass
+                    return _ensure_card_image({k: v for k, v in doc_to_save.items() if k != "_id"})
+            except Exception as exc:
+                logger.warning("Translation for card %s timed out or failed: %s", cid, exc)
+        return _ensure_card_image(dict(card_to_trans))
+
+    # Priority slice: translate the first 8 cards concurrently
+    priority_cards = canon[:8]
+    background_cards = canon[8:]
+
+    # Run priority translations concurrently with asyncio.gather
+    translated_priority = await asyncio.gather(*[_safe_translate(c) for c in priority_cards])
+
+    # For any remaining cards, return cached version or canonical version immediately
+    remaining_out: list[dict[str, Any]] = []
+    need_background_trans: list[dict[str, Any]] = []
+    for c in background_cards:
+        cid = c.get("id")
+        if cid and cid in cached_map:
+            remaining_out.append(_ensure_card_image(dict(cached_map[cid])))
+        else:
+            remaining_out.append(_ensure_card_image(dict(c)))
+            if cid and c.get("language") != language:
+                need_background_trans.append(c)
+
+    # If some background cards need translation, schedule in background without blocking this response
+    if need_background_trans:
+        async def _trans_remaining(cards_batch: list[dict[str, Any]]):
+            for bg_c in cards_batch:
+                await _safe_translate(bg_c)
+        asyncio.create_task(_trans_remaining(need_background_trans))
+
+    return list(translated_priority) + remaining_out
 
 
 async def _translate_card(

@@ -153,7 +153,14 @@ async def run_trend_scout_now(
 ) -> dict[str, Any]:
     """Admin-only trigger for an immediate Trend-Scout run (for testing)."""
     client_type = "mobile" if x_device_type == "mobile" else "desktop"
-    return await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country, gender=gender)
+    res = await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country, gender=gender)
+    try:
+        if user and user.get("id"):
+            from app.services.sync_service import broadcast_sync_event
+            await broadcast_sync_event(user["id"], "trend_scout_updated", {"action": "refresh", "gender": gender, "country": country})
+    except Exception as exc:
+        logger.warning("Failed to broadcast trend_scout_updated: %s", exc)
+    return res
 
 
 @router.post("/run-now-dev")
@@ -170,4 +177,11 @@ async def run_trend_scout_now_dev(
     if not user:
         raise HTTPException(401, "auth required")
     client_type = "mobile" if x_device_type == "mobile" else "desktop"
-    return await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country, gender=gender)
+    res = await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country, gender=gender)
+    try:
+        if user and user.get("id"):
+            from app.services.sync_service import broadcast_sync_event
+            await broadcast_sync_event(user["id"], "trend_scout_updated", {"action": "refresh", "gender": gender, "country": country})
+    except Exception as exc:
+        logger.warning("Failed to broadcast trend_scout_updated: %s", exc)
+    return res

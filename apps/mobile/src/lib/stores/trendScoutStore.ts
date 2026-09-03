@@ -116,7 +116,7 @@ export const trendScoutStore = {
 
     setState((prev) => ({ ...prev, loading: prev.cards.length === 0, error: null }));
     try {
-      const res = await api.fashionScoutFeed(30, {
+      const res = await api.fashionScoutFeed(15, {
         language: options.language || 'en',
         country: options.country || undefined,
         gender: options.gender || undefined,

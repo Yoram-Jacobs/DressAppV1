@@ -47,7 +47,15 @@ export function useUniversalSync(isLoggedIn: boolean = true) {
           break;
 
         case 'trend_scout_updated':
-          trendScoutStore.prewarm({ force: true }).catch(() => {});
+          try {
+            const u = userStore.getSnapshot().user;
+            const lang = (u?.language || 'en').split('-')[0].toLowerCase();
+            const cntry = (u?.address?.country_code || (u as any)?.country || 'IL').toString().toUpperCase();
+            const g = (u?.sex || u?.gender || 'female').toLowerCase();
+            trendScoutStore.prewarm({ language: lang, country: cntry, gender: g, force: true }).catch(() => {});
+          } catch {
+            trendScoutStore.prewarm({ force: true }).catch(() => {});
+          }
           break;
 
         case 'lookbook_updated':

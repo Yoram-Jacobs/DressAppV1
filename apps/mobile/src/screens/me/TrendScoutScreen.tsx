@@ -149,10 +149,20 @@ export function TrendScoutScreen() {
     }
   };
 
+  const BackIcon = I18nManager.isRTL ? Lucide.ArrowRight : Lucide.ArrowLeft;
+
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('MainTabs' as any, { screen: 'ClosetTab' });
+    }
+  };
+
   const country = (user?.address?.country_code || (user as any)?.country || 'IL').toString().toUpperCase();
   const language = (i18n.language || 'en').split('-')[0].toLowerCase();
 
-  const { cards: items, loading, prewarm } = useTrendScoutStore({ prewarm: true });
+  const { cards: items, loading, prewarm } = useTrendScoutStore({ prewarm: false });
 
   const userTier = ((user?.subscription?.is_active && user?.subscription?.tier) || user?.subscription_tier || 'free').toLowerCase();
   const isPaying = (user?.subscription?.is_active && userTier !== 'free') || userTier === 'manager' || userTier === 'professional' || userTier === 'pro';
@@ -161,8 +171,8 @@ export function TrendScoutScreen() {
     if (refreshing) return;
     setRefreshing(true);
     try {
-      await prewarm({ language, country, gender: selectedGender, force: true });
       api.trendsRunNowDev(true, selectedGender, country).catch(() => {});
+      await prewarm({ language, country, gender: selectedGender, force: true });
     } catch {
       await prewarm({ language, country, gender: selectedGender, force: true });
     } finally {
@@ -269,8 +279,13 @@ export function TrendScoutScreen() {
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top']}>
       {/* ── Top Bar ─────────────────────────────────────────────────── */}
       <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} accessibilityLabel="Back">
-          <Lucide.ArrowLeft size={20} color={colors.foreground} />
+        <TouchableOpacity
+          onPress={handleBack}
+          style={styles.backBtn}
+          accessibilityLabel="Back"
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
+          <BackIcon size={20} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={[styles.topTitle, { color: colors.foreground }]}>
           {t('trends.title', { defaultValue: 'Trend Scout' })}
