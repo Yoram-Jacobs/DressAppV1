@@ -43,6 +43,12 @@ let webpackConfig = {
       './aiNotice.js': path.resolve(__dirname, 'src/lib/aiNotice.jsx'),
     },
     configure: (webpackConfig) => {
+      // Remove ModuleScopePlugin to allow aliases and monorepo packages outside src/
+      if (webpackConfig.resolve && webpackConfig.resolve.plugins) {
+        webpackConfig.resolve.plugins = webpackConfig.resolve.plugins.filter(
+          (plugin) => plugin.constructor && plugin.constructor.name !== 'ModuleScopePlugin'
+        );
+      }
 
       // Add ignored patterns to reduce watched directories
         webpackConfig.watchOptions = {
