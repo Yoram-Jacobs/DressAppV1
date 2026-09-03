@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from app.services.auth import get_current_user, decode_access_token
+from app.services.auth import get_current_user, decode_token
 from app.services.sync_service import (
     broadcast_sync_event,
     get_user_sync_status,
@@ -33,7 +33,7 @@ async def get_user_from_header_or_query(
     if current_user:
         return current_user
     if token:
-        payload = decode_access_token(token)
+        payload = decode_token(token)
         if payload and "sub" in payload:
             from app.db.database import get_db
             db = get_db()
@@ -57,7 +57,7 @@ async def sync_stream(
     if not token:
         raise HTTPException(status_code=401, detail="Token parameter required for SSE stream")
     
-    payload = decode_access_token(token)
+    payload = decode_token(token)
     if not payload or "sub" not in payload:
         raise HTTPException(status_code=401, detail="Invalid token")
     
