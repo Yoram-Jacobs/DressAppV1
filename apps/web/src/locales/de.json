@@ -822,7 +822,9 @@
     "harmonyFit": "Farb- & Passform-Harmonie",
     "fitted": "Angelegt",
     "hidden": "Versteckt",
-    "selectGarmentSlot": "{{role}} auswählen"
+    "selectGarmentSlot": "{{role}} auswählen",
+    "realPhoto": "Echtes Foto",
+    "mannequin": "Schaufensterpuppe"
   },
   "outfitCompletion": {
     "cta": "Outfit vervollständigen",
@@ -2258,7 +2260,22 @@
       "my_digital_avatar": "Mein digitaler Avatar",
       "this_3d_avatar_is_generated": "Dieser 3D-Avatar wird basierend auf deinen Körpermaßen erstellt. Aktualisiere deine Maße im Profil, damit sich die Form automatisch anpasst.",
       "tip": "Tipp:",
-      "you_can_drag_to_rotate": "Du kannst ziehen, um zu drehen, und scrollen, um zu zoomen. Die Form, die du hier siehst, steuert unsere Physik-Engine für die virtuelle Anprobe."
+      "you_can_drag_to_rotate": "Du kannst ziehen, um zu drehen, und scrollen, um zu zoomen. Die Form, die du hier siehst, steuert unsere Physik-Engine für die virtuelle Anprobe.",
+      "vector_mannequin": "Schaufensterpuppe",
+      "real_photo": "Echtes Foto",
+      "avatar_saved_successfully": "Digitales Avatar-Profil erfolgreich gespeichert!",
+      "failed_to_save_measurements": "Fehler beim Speichern der Maße. Bitte versuchen Sie es erneut.",
+      "subtitle_description": "Kalibrieren Sie Ihre Körpermaße oder laden Sie ein Ganzkörperfoto hoch.",
+      "female": "Weiblich",
+      "male": "Männlich",
+      "height": "Körpergröße",
+      "shoulders": "Schulterbreite",
+      "chest": "Brustumfang",
+      "waist": "Taillenumfang",
+      "hip": "Hüftumfang",
+      "arm_length": "Armlänge",
+      "inseam": "Schrittlänge",
+      "info_note": "Körpermaße kalibrieren die Physik der virtuellen Anprobe und Größenempfehlungen in der gesamten App."
     }
   },
   "trends": {

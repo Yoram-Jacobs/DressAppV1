@@ -37,7 +37,10 @@ export interface UserProfile {
   location?: string;
   city?: string;
   country?: string;
-  avatar_url?: string;
+  avatar_url?: string | null;
+  body_photo_url?: string | null;
+  face_photo_url?: string | null;
+  skin_tone?: string | null;
   avatar_shape_params?: any;
   scheduler_settings?: {
     enabled: boolean;

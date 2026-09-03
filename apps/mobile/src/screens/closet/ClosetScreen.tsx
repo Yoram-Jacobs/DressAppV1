@@ -48,6 +48,7 @@ import { OutfitCompletionSheet } from '@mobile/components/OutfitCompletionSheet'
 import { RichSelectionFloater } from '@mobile/components/closet/RichSelectionFloater';
 import { HelpFloater } from '@mobile/components/help';
 import { LoadingVideo } from '@mobile/components/common/LoadingVideo';
+import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
 import { labelForCategory, labelForIntent, labelForColor, getTaxonomyMismatches } from '@mobile/lib/taxonomy';
 import { getItemImageUrl } from '@mobile/lib/imageUtils';
 import type { ClosetStackParamList } from '@mobile/navigation/types';
@@ -123,6 +124,9 @@ export function ClosetScreen() {
   // Outfit Completion Sheet
   const [completionOpen, setCompletionOpen] = useState(false);
 
+  // Fast Scroll to Top floater state
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
   // Drag and drop grouping (Multi-view Garment Support)
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -182,7 +186,13 @@ export function ClosetScreen() {
   };
 
   const handleScroll = (e: any) => {
-    scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
+    const y = e.nativeEvent.contentOffset.y;
+    scrollOffsetRef.current = y;
+    if (y > 250 && !showScrollTop) {
+      setShowScrollTop(true);
+    } else if (y <= 250 && showScrollTop) {
+      setShowScrollTop(false);
+    }
   };
 
   const startDrag = (id: string, startPageX: number, startPageY: number) => {
@@ -1065,6 +1075,12 @@ export function ClosetScreen() {
           deleting={loading}
         />
       )}
+
+      {/* ── Fast Scroll To Top Floater ─────────────────────────────── */}
+      <ScrollToTopFloater
+        visible={showScrollTop && !selectMode}
+        onPress={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true })}
+      />
 
       {/* ── Batch Tagging Modal ────────────────────────────────────────── */}
       <Modal visible={tagModalOpen} transparent animationType="fade">

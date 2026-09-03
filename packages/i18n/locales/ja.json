@@ -908,7 +908,9 @@
     "harmonyFit": "カラーとシルエットの調和",
     "fitted": "試着中",
     "hidden": "非表示",
-    "selectGarmentSlot": "{{role}}を選択"
+    "selectGarmentSlot": "{{role}}を選択",
+    "realPhoto": "リアル写真",
+    "mannequin": "マネキン"
   },
   "outfitCompletion": {
     "cta": "コーデを完成",
@@ -2491,21 +2493,21 @@
       "this_3d_avatar_is_generated": "この3Dアバターはあなたの体型測定値に基づいて生成されています。サイズが変わった場合はプロフィールで更新すると自動的に形が反映されます。",
       "tip": "ヒント:",
       "you_can_drag_to_rotate": "ドラッグして回転、スクロールでズームできます。ここで表示される形状がバーチャル試着の物理エンジンを駆動します。",
-      "avatar_saved_successfully": "Digital avatar profile saved successfully!",
-      "failed_to_save_measurements": "Failed to save measurements. Please try again.",
-      "subtitle_description": "Calibrate your body measurements or upload a full-body photo.",
-      "vector_mannequin": "Mannequin",
-      "real_photo": "Real Photo",
-      "female": "Female",
-      "male": "Male",
-      "height": "Height",
-      "shoulders": "Shoulder Width",
-      "chest": "Chest Circumference",
-      "waist": "Waist Circumference",
-      "hip": "Hip Circumference",
-      "arm_length": "Arm Length",
-      "inseam": "Inseam (Leg Length)",
-      "info_note": "Body measurements calibrate virtual garment try-on physics and size recommendations across the app."
+      "avatar_saved_successfully": "デジタルアバターのプロフィールを正常に保存しました！",
+      "failed_to_save_measurements": "測定値の保存に失敗しました。もう一度お試しください。",
+      "subtitle_description": "体型測定値を調整するか、全身写真をアップロードしてください。",
+      "vector_mannequin": "マネキン",
+      "real_photo": "リアル写真",
+      "female": "女性",
+      "male": "男性",
+      "height": "身長",
+      "shoulders": "肩幅",
+      "chest": "胸囲",
+      "waist": "ウエスト",
+      "hip": "ヒップ",
+      "arm_length": "腕の長さ",
+      "inseam": "股下",
+      "info_note": "体型測定値により、アプリ全体のバーチャル試着の物理挙動とサイズ提案が最適化されます。"
     }
   },
   "trends": {

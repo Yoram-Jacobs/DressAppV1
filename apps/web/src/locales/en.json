@@ -916,7 +916,9 @@
     "harmonyFit": "Color & Fit Harmony",
     "fitted": "Fitted",
     "hidden": "Hidden",
-    "selectGarmentSlot": "Select {{role}}"
+    "selectGarmentSlot": "Select {{role}}",
+    "realPhoto": "Real Photo",
+    "mannequin": "Mannequin"
   },
   "outfitCompletion": {
     "cta": "Complete the outfit",

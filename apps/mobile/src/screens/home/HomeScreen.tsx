@@ -39,6 +39,7 @@ import { useClosetStore, useTrendScoutStore, useUserStore, useMarketplaceStore }
 import { LanguagePicker } from '@mobile/components/LanguagePicker';
 import { HelpFloater } from '@mobile/components/help';
 import { AdTicker } from '@mobile/components/AdTicker';
+import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
 import type { MainTabsParamList, ClosetStackParamList } from '@mobile/navigation/types';
 
 type HomeNavProp = CompositeNavigationProp<
@@ -134,11 +135,27 @@ export default function HomeScreen() {
 
   const s = makeStyles(colors);
 
+  // Fast Scroll to Top floater state
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const handleScroll = (e: any) => {
+    const y = e?.nativeEvent?.contentOffset?.y ?? 0;
+    if (y > 250 && !showScrollTop) {
+      setShowScrollTop(true);
+    } else if (y <= 250 && showScrollTop) {
+      setShowScrollTop(false);
+    }
+  };
+
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
       <ScrollView
+        ref={scrollViewRef}
         contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -380,6 +397,12 @@ export default function HomeScreen() {
           <AdTicker placement="home-footer" />
         </View>
       </ScrollView>
+
+      {/* ── Fast Scroll To Top Floater ─────────────────────────────── */}
+      <ScrollToTopFloater
+        visible={showScrollTop}
+        onPress={() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })}
+      />
     </SafeAreaView>
   );
 }

@@ -4,7 +4,7 @@
  *  - Experts tab: api.listProfessionals() → directory list with contact info & business details.
  *  - Campaigns tab: campaignApi.getCampaignFeed() → local promotional campaigns with sort and detail navigation.
  */
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -30,6 +30,7 @@ import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens'
 import { useExpertsStore } from '@mobile/lib/stores';
 import { labelForProfession } from '@mobile/lib/taxonomy';
 import { HelpFloater } from '@mobile/components/help';
+import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
 import { api, campaignApi } from '@mobile/lib/api';
 
 export interface Professional {
@@ -87,6 +88,19 @@ export function ExpertsDirectoryScreen() {
   const [campaignsRefreshing, setCampaignsRefreshing] = useState(false);
   const [campaignSort, setCampaignSort] = useState<SortOption>('newest');
   const [showSortModal, setShowSortModal] = useState(false);
+
+  // Fast Scroll to Top floater state
+  const flatListRef = useRef<FlatList>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const handleScroll = (e: any) => {
+    const y = e?.nativeEvent?.contentOffset?.y ?? 0;
+    if (y > 250 && !showScrollTop) {
+      setShowScrollTop(true);
+    } else if (y <= 250 && showScrollTop) {
+      setShowScrollTop(false);
+    }
+  };
 
   // Refresh experts
   const onRefreshExperts = useCallback(async () => {
@@ -471,10 +485,13 @@ export function ExpertsDirectoryScreen() {
             </View>
           ) : (
             <FlatList
+              ref={flatListRef}
               data={filteredPros}
               renderItem={renderPro}
               keyExtractor={(i) => i.id}
               contentContainerStyle={s.list}
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
               refreshControl={
                 <RefreshControl
                   refreshing={expertsRefreshing}
@@ -515,10 +532,13 @@ export function ExpertsDirectoryScreen() {
             </View>
           ) : (
             <FlatList
+              ref={flatListRef}
               data={campaigns}
               renderItem={renderCampaign}
               keyExtractor={(i) => i.id}
               contentContainerStyle={s.list}
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
               refreshControl={
                 <RefreshControl
                   refreshing={campaignsRefreshing}
@@ -586,6 +606,12 @@ export function ExpertsDirectoryScreen() {
           </View>
         </Pressable>
       </Modal>
+
+      {/* ── Fast Scroll To Top Floater ─────────────────────────────── */}
+      <ScrollToTopFloater
+        visible={showScrollTop}
+        onPress={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true })}
+      />
     </SafeAreaView>
   );
 }

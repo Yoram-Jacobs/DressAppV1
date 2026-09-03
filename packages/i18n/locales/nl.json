@@ -908,7 +908,9 @@
     "harmonyFit": "Kleur- en pasharmonie",
     "fitted": "Gepast",
     "hidden": "Verborgen",
-    "selectGarmentSlot": "Kies {{role}}"
+    "selectGarmentSlot": "Kies {{role}}",
+    "realPhoto": "Echte foto",
+    "mannequin": "Mannequin"
   },
   "outfitCompletion": {
     "cta": "Maak de outfit compleet",
@@ -2491,21 +2493,21 @@
       "this_3d_avatar_is_generated": "Deze 3D-avatar wordt gegenereerd op basis van uw lichaamsafmetingen. Update uw afmetingen in uw profiel om te zien hoe de vorm zich automatisch aanpast.",
       "tip": "Tip:",
       "you_can_drag_to_rotate": "U kunt slepen om te roteren en scrollen om te zoomen. De vorm die je hier ziet, drijft onze virtuele proeffysica-engine aan.",
-      "avatar_saved_successfully": "Digital avatar profile saved successfully!",
-      "failed_to_save_measurements": "Failed to save measurements. Please try again.",
-      "subtitle_description": "Calibrate your body measurements or upload a full-body photo.",
+      "avatar_saved_successfully": "Digitaal avatarprofiel succesvol opgeslagen!",
+      "failed_to_save_measurements": "Opslaan van afmetingen mislukt. Probeer het opnieuw.",
+      "subtitle_description": "Kalibreer uw lichaamsmaten of upload een foto van het gehele lichaam.",
       "vector_mannequin": "Mannequin",
-      "real_photo": "Real Photo",
-      "female": "Female",
-      "male": "Male",
-      "height": "Height",
-      "shoulders": "Shoulder Width",
-      "chest": "Chest Circumference",
-      "waist": "Waist Circumference",
-      "hip": "Hip Circumference",
-      "arm_length": "Arm Length",
-      "inseam": "Inseam (Leg Length)",
-      "info_note": "Body measurements calibrate virtual garment try-on physics and size recommendations across the app."
+      "real_photo": "Echte foto",
+      "female": "Vrouw",
+      "male": "Man",
+      "height": "Lengte",
+      "shoulders": "Schouderbreedte",
+      "chest": "Borstomtrek",
+      "waist": "Tailleomtrek",
+      "hip": "Heupomtrek",
+      "arm_length": "Armlengte",
+      "inseam": "Binnenbeenlengte",
+      "info_note": "Lichaamsmaten kalibreren de fysica van virtueel passen en maatadviezen in de hele app."
     }
   },
   "trends": {

@@ -1072,14 +1072,30 @@ async def _generate_one(
         return None
 
     country_name = COUNTRY_NAME_MAP.get((country_code or "").upper(), country_code or "Israel")
-    starter_urls = get_search_queries(bucket["slug"], country_code, city, gender=gender)
-    urls_list_str = ", ".join(starter_urls)
+    
+    starter_urls: list[str] = []
+    for s in bucket.get("starter_websites", []):
+        if s.get("url"):
+            starter_urls.append(s["url"])
+    for s in bucket.get("starter_influencers", []):
+        if s.get("url"):
+            starter_urls.append(s["url"])
+
+    query_strings = get_search_queries(bucket["slug"], country_code, city, gender=gender)
+    for q in query_strings:
+        if q.startswith("http://") or q.startswith("https://"):
+            starter_urls.append(q)
+        else:
+            encoded = urllib.parse.quote_plus(q)
+            starter_urls.append(f"https://search.yahoo.com/search?q={encoded}")
+
+    urls_list_str = ", ".join(starter_urls[:6])
 
     prompt_formatted = bucket["prompt"].format(country=country_name)
     history = [
         f"Task for {gender.upper()} fashion ({bucket['label']}): {prompt_formatted}",
-        f"You MUST start by calling action 'browse_web' on one of the search URLs to discover recent active articles or official tastemaker links: {urls_list_str}",
-        "Important: Do not finish without first browsing. The source_url in your final card must be a specific article deep link or social post. No shopping carts or paywalls."
+        f"You can start by calling action 'browse_web' on one of the starter URLs to discover recent active articles or official tastemaker links: {urls_list_str}",
+        "Important: Return ONE concrete, actionable trend insight. The source_url in your final card must be a specific article deep link, guide, or tastemaker post. No shopping carts or paywalls."
     ]
 
     browsed_urls = []
@@ -1087,46 +1103,33 @@ async def _generate_one(
 
     for _attempt in range(4):
         user_text = "\n".join(history)
-        if client_type == "mobile":
-            try:
-                async with httpx.AsyncClient() as client:
-                    resp = await client.post(
-                        "http://eyes:7860/v1/chat/completions",
-                        json={
-                            "messages": [
-                                {"role": "system", "content": SYSTEM_PROMPT},
-                                {"role": "user", "content": user_text}
-                            ],
-                            "temperature": 0.3,
-                        },
-                        timeout=30.0
-                    )
-                    resp.raise_for_status()
-                    raw = resp.json()["choices"][0]["message"]["content"]
-            except Exception as exc:
-                logger.warning("Mobile eyes call failed for %s: %s", bucket["slug"], exc)
-                return None
-        else:
-            gemini_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
-            try:
-                raw = await gemini_client.text(
-                    system=SYSTEM_PROMPT,
-                    user_text=user_text,
-                    model="gemini-3.5-flash-lite",
-                    response_mime_type="application/json",
-                )
-            except Exception as exc:  # noqa: BLE001
-                logger.warning("Gemini Fashion-Scout call failed for %s: %s", bucket["slug"], exc)
-                return None
+        gemini_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+        try:
+            raw = await gemini_client.text(
+                system=SYSTEM_PROMPT,
+                user_text=user_text,
+                model="gemini-3.5-flash-lite",
+                response_mime_type="application/json",
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Gemini Fashion-Scout call failed for %s: %s", bucket["slug"], exc)
+            return None
 
         parsed = _extract_json(raw or "")
 
-        if not browsed_urls and (parsed.get("action") == "finish" or (parsed.get("headline") and parsed.get("body"))):
-            history.append(f"Error: You must call action 'browse_web' on one of the starter URLs first: {urls_list_str}")
+        if not browsed_urls and _attempt < 2 and (parsed.get("action") == "finish" or (parsed.get("headline") and parsed.get("body"))):
+            history.append(f"Notice: Try calling action 'browse_web' on one of the starter URLs first to get the freshest editorial article: {urls_list_str}")
             continue
 
         if parsed.get("action") == "browse_web" and parsed.get("url"):
             url = parsed["url"]
+            if not url.startswith("http"):
+                if "." in url and " " not in url:
+                    url = f"https://{url}"
+                else:
+                    encoded = urllib.parse.quote_plus(url)
+                    url = f"https://search.yahoo.com/search?q={encoded}"
+
             content = await browse_web(url)
             browsed_urls.append(url)
             discovered_urls.add(url)
@@ -1141,8 +1144,8 @@ async def _generate_one(
                 history.append(f"Result from {url}: {content[:3000]}")
             continue
 
-        elif parsed.get("action") == "finish" and parsed.get("card"):
-            card_data = parsed["card"]
+        elif (parsed.get("action") == "finish" and parsed.get("card")) or (parsed.get("headline") and parsed.get("body")):
+            card_data = parsed.get("card") if isinstance(parsed.get("card"), dict) else parsed
             if not card_data.get("headline") or not card_data.get("body"):
                 return None
 
@@ -1160,20 +1163,6 @@ async def _generate_one(
             verified = await verify_and_enrich_card(raw_card, bucket["slug"], gender)
             return verified or raw_card
         else:
-            if parsed.get("headline") and parsed.get("body") and browsed_urls:
-                source_url = _clean_url(parsed.get("source_url"))
-                image_url = _clean_url(parsed.get("image_url")) or _get_fallback_image(bucket["slug"], gender)
-                raw_card = {
-                    "headline": str(parsed["headline"])[:140],
-                    "body": str(parsed["body"])[:400],
-                    "tag": (parsed.get("tag") or bucket["label"]).upper()[:40],
-                    "source_name": (parsed.get("source_name") or "")[:80] or None,
-                    "source_url": source_url or (bucket.get("starter_websites") or [{}])[0].get("url"),
-                    "image_url": image_url,
-                    "video_url": _clean_url(parsed.get("video_url")),
-                }
-                verified = await verify_and_enrich_card(raw_card, bucket["slug"], gender)
-                return verified or raw_card
             history.append("Error: Invalid response format. Return either browse_web or finish with card.")
     return None
 
@@ -1248,7 +1237,7 @@ async def ensure_seed_data() -> None:
     # Heal existing seed/canonical documents with direct article deep links and images
     for seed in CANONICAL_SEED_CARDS:
         await db.trend_reports.update_many(
-            {"bucket": seed["bucket"], "gender": seed["gender"]},
+            {"id": seed["id"]},
             {"$set": {
                 "source_url": seed["source_url"],
                 "source_name": seed["source_name"],

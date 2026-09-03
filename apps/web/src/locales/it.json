@@ -822,7 +822,9 @@
     "harmonyFit": "Armonia di colore e vestibilità",
     "fitted": "Indossato",
     "hidden": "Nascosto",
-    "selectGarmentSlot": "Seleziona {{role}}"
+    "selectGarmentSlot": "Seleziona {{role}}",
+    "realPhoto": "Foto reale",
+    "mannequin": "Manichino"
   },
   "outfitCompletion": {
     "cta": "Completa l'outfit",
@@ -2258,7 +2260,22 @@
       "my_digital_avatar": "Il mio avatar digitale",
       "this_3d_avatar_is_generated": "Questo avatar 3D è generato in base alle tue misure corporee. Aggiorna le tue misure nel profilo per vedere la forma adattarsi automaticamente.",
       "tip": "Suggerimento:",
-      "you_can_drag_to_rotate": "Puoi trascinare per ruotare e scorrere per ingrandire. La forma che vedi aqui gestisce il nostro motore fisico per la prova virtuale."
+      "you_can_drag_to_rotate": "Puoi trascinare per ruotare e scorrere per ingrandire. La forma che vedi aqui gestisce il nostro motore fisico per la prova virtuale.",
+      "vector_mannequin": "Manichino",
+      "real_photo": "Foto reale",
+      "avatar_saved_successfully": "Profilo dell'avatar digitale salvato con successo!",
+      "failed_to_save_measurements": "Impossibile salvare le misure. Riprova.",
+      "subtitle_description": "Calibra le misure del tuo corpo o carica una foto a figura intera.",
+      "female": "Femmina",
+      "male": "Maschio",
+      "height": "Altezza",
+      "shoulders": "Larghezza spalle",
+      "chest": "Circonferenza torace",
+      "waist": "Circonferenza vita",
+      "hip": "Circonferenza fianchi",
+      "arm_length": "Lunghezza braccio",
+      "inseam": "Cavallo (lunghezza gamba)",
+      "info_note": "Le misure corporee calibrano la fisica della prova virtuale dei capi e i consigli sulle taglie in tutta l'app."
     }
   },
   "trends": {

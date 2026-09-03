@@ -908,7 +908,9 @@
     "harmonyFit": "Harmonie de couleur et coupe",
     "fitted": "Essayé",
     "hidden": "Masqué",
-    "selectGarmentSlot": "Sélectionner {{role}}"
+    "selectGarmentSlot": "Sélectionner {{role}}",
+    "realPhoto": "Photo réelle",
+    "mannequin": "Mannequin"
   },
   "outfitCompletion": {
     "cta": "Compléter la tenue",
@@ -2484,21 +2486,21 @@
       "this_3d_avatar_is_generated": "Cet avatar 3D est généré sur la base de vos mesures corporelles. Mettez à jour vos mesures dans votre profil pour voir la forme s'adapter automatiquement.",
       "tip": "Conseil :",
       "you_can_drag_to_rotate": "Vous pouvez glisser pour faire pivoter et faire défiler pour zoomer. La forme que vous voyez ici alimente notre moteur physique de mise à l'essai virtuelle.",
-      "avatar_saved_successfully": "Digital avatar profile saved successfully!",
-      "failed_to_save_measurements": "Failed to save measurements. Please try again.",
-      "subtitle_description": "Calibrate your body measurements or upload a full-body photo.",
+      "avatar_saved_successfully": "Profil de l'avatar numérique enregistré avec succès !",
+      "failed_to_save_measurements": "Échec de l'enregistrement des mesures. Veuillez réessayer.",
+      "subtitle_description": "Calibrez vos mensurations ou téléchargez une photo en pied.",
       "vector_mannequin": "Mannequin",
-      "real_photo": "Real Photo",
-      "female": "Female",
-      "male": "Male",
-      "height": "Height",
-      "shoulders": "Shoulder Width",
-      "chest": "Chest Circumference",
-      "waist": "Waist Circumference",
-      "hip": "Hip Circumference",
-      "arm_length": "Arm Length",
-      "inseam": "Inseam (Leg Length)",
-      "info_note": "Body measurements calibrate virtual garment try-on physics and size recommendations across the app."
+      "real_photo": "Photo réelle",
+      "female": "Femme",
+      "male": "Homme",
+      "height": "Taille",
+      "shoulders": "Largeur des épaules",
+      "chest": "Tour de poitrine",
+      "waist": "Tour de taille",
+      "hip": "Tour de hanches",
+      "arm_length": "Longueur des bras",
+      "inseam": "Entrejambe",
+      "info_note": "Les mensurations calibrent la physique de l'essayage virtuel et les recommandations de taille dans toute l'application."
     }
   },
   "trends": {

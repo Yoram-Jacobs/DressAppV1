@@ -10,7 +10,7 @@
  *   - 13-language i18next support with zero hardcoded text
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -32,6 +32,8 @@ import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { useTrendScoutStore, useUserStore } from '@mobile/lib/stores';
+import { api } from '@mobile/lib/api';
+import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
 
 interface TrendItem {
   id?: string;
@@ -133,6 +135,19 @@ export function TrendScoutScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeBucket, setActiveBucket] = useState<string>('all');
 
+  // Fast Scroll to Top floater state
+  const flatListRef = useRef<FlatList>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const handleScroll = (e: any) => {
+    const y = e?.nativeEvent?.contentOffset?.y ?? 0;
+    if (y > 250 && !showScrollTop) {
+      setShowScrollTop(true);
+    } else if (y <= 250 && showScrollTop) {
+      setShowScrollTop(false);
+    }
+  };
+
   const country = (user?.address?.country_code || (user as any)?.country || 'IL').toString().toUpperCase();
   const language = (i18n.language || 'en').split('-')[0].toLowerCase();
 
@@ -142,13 +157,17 @@ export function TrendScoutScreen() {
   const isPaying = (user?.subscription?.is_active && userTier !== 'free') || userTier === 'manager' || userTier === 'professional' || userTier === 'pro';
 
   const onRefresh = useCallback(async () => {
+    if (refreshing) return;
     setRefreshing(true);
     try {
+      await api.trendsRunNowDev(true, selectedGender, country);
+      await prewarm({ language, country, gender: selectedGender, force: true });
+    } catch {
       await prewarm({ language, country, gender: selectedGender, force: true });
     } finally {
       setRefreshing(false);
     }
-  }, [prewarm, language, country, selectedGender]);
+  }, [prewarm, language, country, selectedGender, refreshing]);
 
   useEffect(() => {
     prewarm({ language, country, gender: selectedGender });
@@ -258,39 +277,56 @@ export function TrendScoutScreen() {
         <View style={{ width: 36 }} />
       </View>
 
-      {/* ── Gender Toggle Bar ───────────────────────────────────────── */}
+      {/* ── Gender Toggle & Refresh Bar ─────────────────────────────── */}
       <View style={[styles.genderBar, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity
-          style={[
-            styles.genderPill,
-            selectedGender === 'female' && { backgroundColor: colors.primary, borderColor: colors.primary },
-          ]}
-          onPress={() => setSelectedGender('female')}
-        >
-          <Text
+        <View style={[styles.genderPillsContainer, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+          <TouchableOpacity
             style={[
-              styles.genderText,
-              { color: selectedGender === 'female' ? colors.primaryFg : colors.mutedFg },
+              styles.genderPill,
+              selectedGender === 'female' && { backgroundColor: colors.primary, borderColor: colors.primary },
             ]}
+            onPress={() => setSelectedGender('female')}
           >
-            {t('trends.womensFashion', { defaultValue: "Women's Fashion" })}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.genderPill,
-            selectedGender === 'male' && { backgroundColor: colors.primary, borderColor: colors.primary },
-          ]}
-          onPress={() => setSelectedGender('male')}
-        >
-          <Text
+            <Text
+              style={[
+                styles.genderText,
+                { color: selectedGender === 'female' ? colors.primaryFg : colors.mutedFg },
+              ]}
+            >
+              {t('trends.womensFashion', { defaultValue: "Women's Fashion" })}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[
-              styles.genderText,
-              { color: selectedGender === 'male' ? colors.primaryFg : colors.mutedFg },
+              styles.genderPill,
+              selectedGender === 'male' && { backgroundColor: colors.primary, borderColor: colors.primary },
             ]}
+            onPress={() => setSelectedGender('male')}
           >
-            {t('trends.mensFashion', { defaultValue: "Men's Fashion" })}
-          </Text>
+            <Text
+              style={[
+                styles.genderText,
+                { color: selectedGender === 'male' ? colors.primaryFg : colors.mutedFg },
+              ]}
+            >
+              {t('trends.mensFashion', { defaultValue: "Men's Fashion" })}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.refreshBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
+          onPress={onRefresh}
+          disabled={refreshing}
+          accessibilityLabel={t('stylist.refreshScout', { defaultValue: 'Refresh Trends' })}
+          accessibilityRole="button"
+          activeOpacity={0.7}
+        >
+          {refreshing ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Lucide.RotateCw size={18} color={colors.foreground} />
+          )}
         </TouchableOpacity>
       </View>
 
@@ -334,11 +370,14 @@ export function TrendScoutScreen() {
         </View>
       ) : (
         <FlatList
+          ref={flatListRef}
           data={displayItems}
           renderItem={renderItem}
           keyExtractor={(it, idx) => it.id || String(idx)}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -371,6 +410,12 @@ export function TrendScoutScreen() {
           }
         />
       )}
+
+      {/* ── Fast Scroll To Top Floater ─────────────────────────────── */}
+      <ScrollToTopFloater
+        visible={showScrollTop}
+        onPress={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true })}
+      />
     </SafeAreaView>
   );
 }
@@ -406,6 +451,14 @@ const styles = StyleSheet.create({
     gap: spacing[2],
     borderBottomWidth: 1,
   },
+  genderPillsContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 3,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+  },
   genderPill: {
     flex: 1,
     paddingVertical: spacing[2],
@@ -418,6 +471,15 @@ const styles = StyleSheet.create({
   genderText: {
     fontFamily: fonts.bodyBold,
     fontSize: fontSizes.xs,
+  },
+  refreshBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.sm,
   },
   bucketBar: {
     minHeight: 52,

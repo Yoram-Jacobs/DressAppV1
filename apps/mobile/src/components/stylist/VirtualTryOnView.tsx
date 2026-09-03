@@ -31,6 +31,8 @@ import { DynamicAvatarSvg } from '@mobile/components/DynamicAvatarSvg';
 import { HarmonyBadge } from '@mobile/components/stylist/HarmonyBadge';
 import { api } from '@mobile/lib/api';
 import { useClosetStore, closetStore } from '@mobile/lib/stores/closetStore';
+import { useUserStore } from '@mobile/lib/stores';
+import { resolveImageUrl, getItemImageUrl } from '@mobile/lib/imageUtils';
 
 export interface TryOnItem {
   id: string;
@@ -137,7 +139,7 @@ const resolveSlot = (role?: string, category?: string, name?: string, closetItem
   // 9. Tops
   if (
     cCat.includes('top') || cCat.includes('shirt') || cSub.includes('shirt') || cSub.includes('tee') || cSub.includes('top') ||
-    r.includes('top') || r.includes('shirt') || r.includes('tee') || r.includes('blouse') || r.includes('polo') ||
+    r.includes('top') || r.includes('upper') || r.includes('shirt') || r.includes('tee') || r.includes('blouse') || r.includes('polo') ||
     n.includes('shirt') || n.includes('tee') || n.includes('t-shirt') || n.includes('top') || n.includes('polo') || n.includes('blouse') || n.includes('tank') ||
     n.includes('חולצה') || n.includes('טי שירט') || n.includes('גופייה') || n.includes('פולו') || n.includes('סוודר') || n.includes('قميص') || n.includes('تي شيرت')
   ) {
@@ -269,6 +271,20 @@ export function VirtualTryOnView({
   }, []);
 
   const { items: closetItems } = useClosetStore();
+  const { user } = useUserStore();
+
+  const bodyPhotoUrl = user?.body_photo_url || avatarParams?.body_photo_url || null;
+  const resolvedBodyPhoto = resolveImageUrl(bodyPhotoUrl);
+
+  const [avatarMode, setAvatarMode] = useState<'photo' | 'mannequin'>(
+    user?.body_photo_url || avatarParams?.body_photo_url ? 'photo' : 'mannequin'
+  );
+
+  useEffect(() => {
+    if (user?.body_photo_url || avatarParams?.body_photo_url) {
+      setAvatarMode('photo');
+    }
+  }, [user?.body_photo_url, avatarParams?.body_photo_url]);
 
   const garmentList = useMemo(() => {
     const raw = activeOutfit.length > 0
@@ -299,7 +315,8 @@ export function VirtualTryOnView({
       const color = extractColorFromGarment(g, closetItem);
       const subCategory = extractSubcategoryName(g, closetItem, t);
       const cAny = closetItem as any;
-      const imageUrl =
+      const rawImageUrl =
+        (closetItem && getItemImageUrl(closetItem)) ||
         cAny?.reconstructed_image_url ||
         cAny?.reconstruct_image_url ||
         closetItem?.clean_image_url ||
@@ -315,6 +332,7 @@ export function VirtualTryOnView({
         g.image_url ||
         cAny?.original_image_url;
 
+      const imageUrl = resolveImageUrl(rawImageUrl);
 
       return {
         id: targetId || `item_${idx}`,
@@ -476,20 +494,75 @@ export function VirtualTryOnView({
 
         {/* ── Visual Fitting Stage (Avatar + Garments Overlays) ─────────────── */}
         <View style={[styles.stageBox, { backgroundColor: isDark ? '#18181b' : '#f4f4f5' }]}>
+          {/* Avatar Mode Switcher (Real Photo / Mannequin) if user has uploaded body photo */}
+          {Boolean(resolvedBodyPhoto) && (
+            <View style={styles.avatarModeSwitchRow}>
+              <TouchableOpacity
+                style={[
+                  styles.avatarModeBtn,
+                  avatarMode === 'photo'
+                    ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                    : { backgroundColor: colors.secondary, borderColor: colors.border },
+                ]}
+                onPress={() => setAvatarMode('photo')}
+                activeOpacity={0.8}
+              >
+                <Lucide.Camera size={13} color={avatarMode === 'photo' ? '#fff' : colors.mutedFg} />
+                <Text
+                  style={[
+                    styles.avatarModeBtnText,
+                    { color: avatarMode === 'photo' ? '#fff' : colors.mutedFg },
+                  ]}
+                >
+                  {t('stylist.realPhoto', { defaultValue: t('pages.avatarPage.real_photo', { defaultValue: 'Real Photo' }) })}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.avatarModeBtn,
+                  avatarMode === 'mannequin'
+                    ? { backgroundColor: colors.accent, borderColor: colors.accent }
+                    : { backgroundColor: colors.secondary, borderColor: colors.border },
+                ]}
+                onPress={() => setAvatarMode('mannequin')}
+                activeOpacity={0.8}
+              >
+                <Lucide.User size={13} color={avatarMode === 'mannequin' ? '#fff' : colors.mutedFg} />
+                <Text
+                  style={[
+                    styles.avatarModeBtnText,
+                    { color: avatarMode === 'mannequin' ? '#fff' : colors.mutedFg },
+                  ]}
+                >
+                  {t('stylist.mannequin', { defaultValue: t('pages.avatarPage.vector_mannequin', { defaultValue: 'Mannequin' }) })}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           <View style={styles.avatarViewport}>
-            <DynamicAvatarSvg
-              height={avatarParams.height || 170}
-              shoulders={avatarParams.shoulders || 40}
-              chest={avatarParams.chest || 90}
-              waist={avatarParams.waist || 72}
-              hip={avatarParams.hip || 96}
-              armLength={avatarParams.armLength || 60}
-              inseam={avatarParams.inseam || 78}
-              skinColor={avatarParams.skinTone || avatarParams.skinColor || '#C68642'}
-              gender={avatarParams.gender || 'male'}
-              width={220}
-              showGuideLines={false}
-            />
+            {avatarMode === 'photo' && resolvedBodyPhoto ? (
+              <Image
+                source={{ uri: resolvedBodyPhoto }}
+                style={styles.realBodyPhoto}
+                resizeMode="contain"
+              />
+            ) : (
+              <DynamicAvatarSvg
+                height={avatarParams.height || 170}
+                shoulders={avatarParams.shoulders || 40}
+                chest={avatarParams.chest || 90}
+                waist={avatarParams.waist || 72}
+                hip={avatarParams.hip || 96}
+                armLength={avatarParams.armLength || 60}
+                inseam={avatarParams.inseam || 78}
+                skinColor={avatarParams.skinTone || avatarParams.skinColor || user?.skin_tone || '#C68642'}
+                gender={avatarParams.gender || user?.sex || 'male'}
+                width={220}
+                showGuideLines={false}
+              />
+            )}
 
             {/* ── Garment Layer Overlays ─────────────────────────────────── */}
             {garmentsMap.headwear?.image_url && visibleLayers.headwear !== false && (
@@ -648,7 +721,7 @@ export function VirtualTryOnView({
                       activeOpacity={0.7}
                     >
                       {g.image_url ? (
-                        <Image source={{ uri: g.image_url }} style={styles.layerThumb} resizeMode="contain" />
+                        <Image source={{ uri: resolveImageUrl(g.image_url) }} style={styles.layerThumb} resizeMode="contain" />
                       ) : (
                         <Lucide.Shirt size={20} color={colors.mutedFg} />
                       )}
@@ -878,6 +951,26 @@ const styles = StyleSheet.create({
     marginVertical: spacing.sm,
     direction: 'ltr',
   },
+  avatarModeSwitchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+    zIndex: 40,
+  },
+  avatarModeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
+    borderRadius: radii.full,
+    borderWidth: 1,
+  },
+  avatarModeBtnText: {
+    fontSize: 11,
+    fontFamily: fonts.bodyMedium,
+  },
   avatarViewport: {
     width: 240,
     height: 450,
@@ -885,6 +978,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
     direction: 'ltr',
+  },
+  realBodyPhoto: {
+    width: 220,
+    height: 440,
+    position: 'absolute',
+    top: 5,
+    zIndex: 1,
   },
   garmentImg: {
     width: '100%',

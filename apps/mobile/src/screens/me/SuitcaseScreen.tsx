@@ -12,7 +12,7 @@
  *   - 13-language i18next support with zero hardcoded text
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -36,6 +36,7 @@ import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens'
 import { api } from '@mobile/lib/api';
 import { useSuitcaseStore, suitcaseStore, SuitcaseItem } from '@mobile/lib/stores/suitcaseStore';
 import { useClosetStore } from '@mobile/lib/stores/closetStore';
+import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
 
 const PURPOSES = [
   { id: 'vacation', labelKey: 'suitcase.vacation', fallback: '🏖️ Vacation / Leisure' },
@@ -63,6 +64,19 @@ export function SuitcaseScreen() {
   // Chat state
   const [chatInput, setChatInput] = useState('');
   const [chatting, setChatting] = useState(false);
+
+  // Fast Scroll to Top floater state
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const handleScroll = (e: any) => {
+    const y = e?.nativeEvent?.contentOffset?.y ?? 0;
+    if (y > 250 && !showScrollTop) {
+      setShowScrollTop(true);
+    } else if (y <= 250 && showScrollTop) {
+      setShowScrollTop(false);
+    }
+  };
 
   useEffect(() => {
     suitcaseStore.prewarm({ t });
@@ -175,8 +189,11 @@ export function SuitcaseScreen() {
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
       >
         {/* ── Trip Setup Card ────────────────────────────────────────── */}
@@ -397,6 +414,12 @@ export function SuitcaseScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* ── Fast Scroll To Top Floater ─────────────────────────────── */}
+      <ScrollToTopFloater
+        visible={showScrollTop}
+        onPress={() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })}
+      />
     </SafeAreaView>
   );
 }

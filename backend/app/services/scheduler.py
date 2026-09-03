@@ -729,6 +729,10 @@ def start_scheduler() -> None:
             "Trend-Scout daily scheduled (at %02d:%02d UTC)", hour, minute
         )
 
+        if settings.TREND_SCOUT_RUN_ON_STARTUP:
+            asyncio.create_task(_safe_run())
+            logger.info("Trend-Scout run on startup triggered in background")
+
         # Trend-Scout monthly refresh (midnight on the 1st of every month)
         _scheduler.add_job(
             _safe_monthly_run,

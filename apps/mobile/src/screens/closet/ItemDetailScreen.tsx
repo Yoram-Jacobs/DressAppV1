@@ -1974,11 +1974,11 @@ export function ItemDetailScreen() {
 
           {/* Scroll to Top floating button */}
           <TouchableOpacity
-            style={[styles.floatingScrollTopBtn, { backgroundColor: colors.accent }]}
+            style={[styles.floatingScrollTopBtn, { backgroundColor: colors.brand || '#9333ea' }]}
             onPress={() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })}
             activeOpacity={0.8}
           >
-            <Lucide.ArrowUp size={18} color="#FFF" />
+            <Lucide.ArrowUp size={20} color="#FFF" strokeWidth={2.5} />
           </TouchableOpacity>
         </View>
       )}

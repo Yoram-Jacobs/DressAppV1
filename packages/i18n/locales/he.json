@@ -925,7 +925,9 @@
     "harmonyPercent": "{{score}}% התאמה",
     "harmonyFit": "הרמוניית צבע וגזרה",
     "fitted": "נמדד",
-    "hidden": "מוסתר"
+    "hidden": "מוסתר",
+    "realPhoto": "תמונה אמיתית",
+    "mannequin": "מנקין"
   },
   "outfitCompletion": {
     "cta": "השלם את הלוק",
@@ -2535,21 +2537,21 @@
       "this_3d_avatar_is_generated": "אוואטר תלת-ממדי זה מיוצר על בסיס מידות הגוף שלך. עדכן את המידות בפרופיל שלך כדי לראות את האוואטר משתנה באופן אוטומטי.",
       "tip": "טיפ:",
       "you_can_drag_to_rotate": "ניתן לגרור כדי לסובב ולגלול כדי להתקרב. הצורה שאתה רואה כאן מפעילה את מנוע הפיזיקה של המדידה הוירטואלית.",
-      "avatar_saved_successfully": "Digital avatar profile saved successfully!",
-      "failed_to_save_measurements": "Failed to save measurements. Please try again.",
-      "subtitle_description": "Calibrate your body measurements or upload a full-body photo.",
-      "vector_mannequin": "Mannequin",
-      "real_photo": "Real Photo",
-      "female": "Female",
-      "male": "Male",
-      "height": "Height",
-      "shoulders": "Shoulder Width",
-      "chest": "Chest Circumference",
-      "waist": "Waist Circumference",
-      "hip": "Hip Circumference",
-      "arm_length": "Arm Length",
-      "inseam": "Inseam (Leg Length)",
-      "info_note": "Body measurements calibrate virtual garment try-on physics and size recommendations across the app."
+      "avatar_saved_successfully": "פרופיל האוואטר הדיגיטלי נשמר בהצלחה!",
+      "failed_to_save_measurements": "שמירת המידות נכשלה. אנא נסה שוב.",
+      "subtitle_description": "כייל את מידות הגוף שלך או העלה תמונת גוף מלאה.",
+      "vector_mannequin": "מנקין",
+      "real_photo": "תמונה אמיתית",
+      "female": "נקבה",
+      "male": "זכר",
+      "height": "גובה",
+      "shoulders": "רוחב כתפיים",
+      "chest": "היקף חזה",
+      "waist": "היקף מותניים",
+      "hip": "היקף ירכיים",
+      "arm_length": "אורך זרוע",
+      "inseam": "אורך פנים הרגל",
+      "info_note": "מידות הגוף מכיילות את פיזיקת המדידה הוירטואלית והמלצות המידה ברחבי האפליקציה."
     }
   },
   "trends": {

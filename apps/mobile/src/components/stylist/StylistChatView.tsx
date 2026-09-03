@@ -40,6 +40,7 @@ import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
 import { useClosetStore } from '@mobile/lib/stores/closetStore';
 import { ConversationSidebar, StylistSession } from './ConversationSidebar';
+import { getItemImageUrl, resolveImageUrl } from '@mobile/lib/imageUtils';
 
 export interface OutfitGarment {
   id?: string;
@@ -183,11 +184,22 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
         const matched = item.closet_item_id
           ? closetItems.find((c) => c.id === item.closet_item_id)
           : null;
+        const rawImg =
+          (matched && getItemImageUrl(matched)) ||
+          matched?.reconstructed_image_url ||
+          (matched as any)?.reconstruct_image_url ||
+          matched?.clean_image_url ||
+          matched?.cutout_url ||
+          matched?.thumbnail_data_url ||
+          matched?.image_url ||
+          item.clean_image_url ||
+          item.image_url;
+        const resolvedImg = resolveImageUrl(rawImg);
         return {
           id: item.closet_item_id || matched?.id || item.id || `g_${Math.random()}`,
           name: item.description || item.title || matched?.name || matched?.title || item.role,
           role: item.role || matched?.category || 'Item',
-          image_url: matched?.reconstructed_image_url || (matched as any)?.reconstruct_image_url || matched?.clean_image_url || matched?.cutout_url || matched?.thumbnail_data_url || matched?.image_url || item.image_url,
+          image_url: resolvedImg,
           thumbnail_data_url: matched?.thumbnail_data_url || item.thumbnail_data_url,
         };
       });
@@ -806,7 +818,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
           closet_item_id: g.id || g.closet_item_id,
           role: g.role || 'item',
           title: g.name || g.title,
-          image_url: g.image_url || g.thumbnail_data_url,
+          image_url: resolveImageUrl(g.image_url || g.thumbnail_data_url),
         })),
         usage: {
           date: new Date().toISOString().split('T')[0],
@@ -967,7 +979,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                             contentContainerStyle={[styles.garmentThumbsRow, isRtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' }]}
                           >
                             {outfit.garments.map((g, gIdx) => {
-                              const img = g.image_url || g.thumbnail_data_url;
+                              const img = resolveImageUrl(g.image_url || g.thumbnail_data_url);
                               return (
                                 <View key={g.id || gIdx} style={[styles.thumbBox, { backgroundColor: colors.cardOffWhite, borderColor: colors.border }]}>
                                   {img ? (
@@ -1125,11 +1137,14 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                 source={{
                   uri:
                     attachedImage?.uri ||
-                    attachedClosetItem?.reconstructed_image_url ||
-                    attachedClosetItem?.reconstruct_image_url ||
-                    attachedClosetItem?.clean_image_url ||
-                    attachedClosetItem?.image_url ||
-                    attachedClosetItem?.thumbnail_data_url,
+                    (attachedClosetItem && getItemImageUrl(attachedClosetItem)) ||
+                    resolveImageUrl(
+                      attachedClosetItem?.reconstructed_image_url ||
+                      attachedClosetItem?.reconstruct_image_url ||
+                      attachedClosetItem?.clean_image_url ||
+                      attachedClosetItem?.image_url ||
+                      attachedClosetItem?.thumbnail_data_url
+                    ),
                 }}
                 style={styles.attachedThumbnail}
                 resizeMode="cover"
@@ -1550,7 +1565,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                     (item.category || '').toLowerCase().includes(closetSearch.toLowerCase())
                 )
                 .map((item: any) => {
-                  const img = item.reconstructed_image_url || item.reconstruct_image_url || item.clean_image_url || item.image_url || item.thumbnail_data_url;
+                  const img = getItemImageUrl(item) || resolveImageUrl(item.image_url || item.thumbnail_data_url);
                   return (
                     <TouchableOpacity
                       key={item.id || item._id}

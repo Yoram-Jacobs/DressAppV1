@@ -895,7 +895,9 @@
     "harmonyFit": "Harmonia de cores e caimento",
     "fitted": "Provado",
     "hidden": "Oculto",
-    "selectGarmentSlot": "Selecionar {{role}}"
+    "selectGarmentSlot": "Selecionar {{role}}",
+    "realPhoto": "Foto real",
+    "mannequin": "Manequim"
   },
   "outfitCompletion": {
     "cta": "Completar o look",
@@ -2331,7 +2333,22 @@
       "my_digital_avatar": "O meu avatar digital",
       "this_3d_avatar_is_generated": "Este avatar 3D é gerado com base nas suas medidas corporais. Atualize as suas medidas no seu perfil para ver a forma adaptar-se automaticamente.",
       "tip": "Dica:",
-      "you_can_drag_to_rotate": "Pode arrastar para rodar e fazer scroll para fazer zoom. A forma que vê aqui controla o nosso motor físico de experimentação virtual."
+      "you_can_drag_to_rotate": "Pode arrastar para rodar e fazer scroll para fazer zoom. A forma que vê aqui controla o nosso motor físico de experimentação virtual.",
+      "vector_mannequin": "Manequim",
+      "real_photo": "Foto real",
+      "avatar_saved_successfully": "Perfil do avatar digital guardado com sucesso!",
+      "failed_to_save_measurements": "Falha ao guardar as medidas. Por favor, tente novamente.",
+      "subtitle_description": "Calibre as medidas do seu corpo ou carregue uma foto de corpo inteiro.",
+      "female": "Feminino",
+      "male": "Masculino",
+      "height": "Altura",
+      "shoulders": "Largura dos ombros",
+      "chest": "Circunferência do peito",
+      "waist": "Circunferência da cintura",
+      "hip": "Circunferência do quadril",
+      "arm_length": "Comprimento do braço",
+      "inseam": "Comprimento interno da perna",
+      "info_note": "As medidas corporales calibram a física da prova virtual e as recomendações de tamanho em toda a aplicação."
     }
   },
   "trends": {

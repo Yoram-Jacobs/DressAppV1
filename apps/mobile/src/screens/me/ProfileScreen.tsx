@@ -26,7 +26,7 @@
  *   - Sign out & Delete Account flows
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -54,6 +54,7 @@ import { userStore } from '@mobile/lib/stores';
 import { closetStore, closetRepo } from '@mobile/lib/stores/closetStore';
 import { applyRtl } from '@mobile/lib/rtl';
 import { HelpFloater } from '@mobile/components/help';
+import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
 import type { MeStackParamList } from '@mobile/navigation/types';
 
 import {
@@ -107,6 +108,19 @@ export function ProfileScreen() {
 
   // Active accordion section
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+
+  // Fast Scroll to Top floater state
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const handleScroll = (e: any) => {
+    const y = e?.nativeEvent?.contentOffset?.y ?? 0;
+    if (y > 250 && !showScrollTop) {
+      setShowScrollTop(true);
+    } else if (y <= 250 && showScrollTop) {
+      setShowScrollTop(false);
+    }
+  };
 
   // Accordion groups collapsed state (always start collapsed)
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({
@@ -695,8 +709,11 @@ export function ProfileScreen() {
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         {/* User Hero Banner */}
         <View style={[styles.heroCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -1660,6 +1677,12 @@ export function ProfileScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* ── Fast Scroll To Top Floater ─────────────────────────────── */}
+      <ScrollToTopFloater
+        visible={showScrollTop}
+        onPress={() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })}
+      />
     </SafeAreaView>
   );
 }

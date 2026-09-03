@@ -28,6 +28,7 @@ import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { useClosetStore, useUserStore, useOutfitStore } from '@mobile/lib/stores';
 import { labelForDressCode } from '@mobile/lib/taxonomy';
+import { getItemImageUrl, resolveImageUrl } from '@mobile/lib/imageUtils';
 
 interface DailySuggestionViewProps {
   onTryOn?: (outfit: any) => void;
@@ -120,7 +121,7 @@ const resolveSlot = (role?: string, category?: string, name?: string, closetItem
   // 9. Tops
   if (
     cCat.includes('top') || cCat.includes('shirt') || cSub.includes('shirt') || cSub.includes('tee') || cSub.includes('top') ||
-    r.includes('top') || r.includes('shirt') || r.includes('tee') || r.includes('blouse') || r.includes('polo') ||
+    r.includes('top') || r.includes('upper') || r.includes('shirt') || r.includes('tee') || r.includes('blouse') || r.includes('polo') ||
     n.includes('shirt') || n.includes('tee') || n.includes('t-shirt') || n.includes('top') || n.includes('polo') || n.includes('blouse') || n.includes('tank') ||
     n.includes('חולצה') || n.includes('טי שירט') || n.includes('גופייה') || n.includes('פולו') || n.includes('סוודר') || n.includes('قميص') || n.includes('تي شيرت')
   ) {
@@ -130,18 +131,21 @@ const resolveSlot = (role?: string, category?: string, name?: string, closetItem
   return 'accessory';
 };
 
-// ─── Mini Avatar Outfit Component (Layered Outfit on Silhouette) ───────────
+// ─── Mini Avatar Outfit Component (Layered Outfit on Silhouette or Photo) ────
 
 function MiniAvatarOutfit({
   outfit,
   closetItems,
   skinColor = '#C68642',
+  bodyPhotoUrl,
 }: {
   outfit: any;
   closetItems: any[];
   skinColor?: string;
+  bodyPhotoUrl?: string | null;
 }) {
   const garments = outfit?.garments || outfit?.items || [];
+  const resolvedBodyPhoto = resolveImageUrl(bodyPhotoUrl);
 
   const pieceMap = useMemo(() => {
     const map: Record<string, string | null> = {
@@ -164,7 +168,8 @@ function MiniAvatarOutfit({
         );
       }
       const slot = resolveSlot(g.role, g.category, g.name, closetItem);
-      const url =
+      const rawUrl =
+        (closetItem && getItemImageUrl(closetItem)) ||
         closetItem?.reconstructed_image_url ||
         closetItem?.reconstruct_image_url ||
         g.reconstructed_image_url ||
@@ -175,6 +180,7 @@ function MiniAvatarOutfit({
         g.thumbnail_data_url ||
         closetItem?.image_url ||
         g.image_url;
+      const url = resolveImageUrl(rawUrl);
       if (url && slot in map && !map[slot]) {
         map[slot] = url;
       }
@@ -184,15 +190,25 @@ function MiniAvatarOutfit({
 
   return (
     <View style={miniStyles.avatarWrap}>
-      {/* Silhouette Head */}
-      <View style={[miniStyles.head, { backgroundColor: skinColor }]} />
-      {/* Silhouette Torso */}
-      <View style={[miniStyles.torso, { backgroundColor: skinColor }]} />
-      {/* Silhouette Legs */}
-      <View style={miniStyles.legsRow}>
-        <View style={[miniStyles.leg, { backgroundColor: skinColor }]} />
-        <View style={[miniStyles.leg, { backgroundColor: skinColor }]} />
-      </View>
+      {resolvedBodyPhoto ? (
+        <Image
+          source={{ uri: resolvedBodyPhoto }}
+          style={miniStyles.photoAvatar}
+          resizeMode="contain"
+        />
+      ) : (
+        <>
+          {/* Silhouette Head */}
+          <View style={[miniStyles.head, { backgroundColor: skinColor }]} />
+          {/* Silhouette Torso */}
+          <View style={[miniStyles.torso, { backgroundColor: skinColor }]} />
+          {/* Silhouette Legs */}
+          <View style={miniStyles.legsRow}>
+            <View style={[miniStyles.leg, { backgroundColor: skinColor }]} />
+            <View style={[miniStyles.leg, { backgroundColor: skinColor }]} />
+          </View>
+        </>
+      )}
 
       {/* Layered Cutouts */}
       {pieceMap.dress ? (
@@ -231,6 +247,14 @@ const miniStyles = StyleSheet.create({
     position: 'relative',
     justifyContent: 'flex-start',
     direction: 'ltr',
+  },
+  photoAvatar: {
+    width: 34,
+    height: 48,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: 1,
   },
   head: {
     width: 9,
@@ -623,7 +647,8 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
                     <MiniAvatarOutfit
                       outfit={dayOutfit}
                       closetItems={closetItems}
-                      skinColor={user?.avatar_shape_params?.skinTone || '#C68642'}
+                      skinColor={user?.avatar_shape_params?.skinTone || user?.skin_tone || '#C68642'}
+                      bodyPhotoUrl={user?.body_photo_url}
                     />
                   ) : null}
                 </View>

@@ -908,7 +908,9 @@
     "harmonyFit": "Harmonia de cores e caimento",
     "fitted": "Provado",
     "hidden": "Oculto",
-    "selectGarmentSlot": "Selecionar {{role}}"
+    "selectGarmentSlot": "Selecionar {{role}}",
+    "realPhoto": "Foto real",
+    "mannequin": "Manequim"
   },
   "outfitCompletion": {
     "cta": "Completar o look",
@@ -2491,21 +2493,21 @@
       "this_3d_avatar_is_generated": "Este avatar 3D é gerado com base nas suas medidas corporais. Atualize as suas medidas no seu perfil para ver a forma adaptar-se automaticamente.",
       "tip": "Dica:",
       "you_can_drag_to_rotate": "Pode arrastar para rodar e fazer scroll para fazer zoom. A forma que vê aqui controla o nosso motor físico de experimentação virtual.",
-      "avatar_saved_successfully": "Digital avatar profile saved successfully!",
-      "failed_to_save_measurements": "Failed to save measurements. Please try again.",
-      "subtitle_description": "Calibrate your body measurements or upload a full-body photo.",
-      "vector_mannequin": "Mannequin",
-      "real_photo": "Real Photo",
-      "female": "Female",
-      "male": "Male",
-      "height": "Height",
-      "shoulders": "Shoulder Width",
-      "chest": "Chest Circumference",
-      "waist": "Waist Circumference",
-      "hip": "Hip Circumference",
-      "arm_length": "Arm Length",
-      "inseam": "Inseam (Leg Length)",
-      "info_note": "Body measurements calibrate virtual garment try-on physics and size recommendations across the app."
+      "avatar_saved_successfully": "Perfil do avatar digital guardado com sucesso!",
+      "failed_to_save_measurements": "Falha ao guardar as medidas. Por favor, tente novamente.",
+      "subtitle_description": "Calibre as medidas do seu corpo ou carregue uma foto de corpo inteiro.",
+      "vector_mannequin": "Manequim",
+      "real_photo": "Foto real",
+      "female": "Feminino",
+      "male": "Masculino",
+      "height": "Altura",
+      "shoulders": "Largura dos ombros",
+      "chest": "Circunferência do peito",
+      "waist": "Circunferência da cintura",
+      "hip": "Circunferência do quadril",
+      "arm_length": "Comprimento do braço",
+      "inseam": "Comprimento interno da perna",
+      "info_note": "As medidas corporales calibram a física da prova virtual e as recomendações de tamanho em toda a aplicação."
     }
   },
   "trends": {

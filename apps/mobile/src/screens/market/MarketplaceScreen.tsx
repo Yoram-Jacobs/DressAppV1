@@ -10,7 +10,7 @@
  *   - Action to create listing from closet items
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -35,6 +35,7 @@ import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { useMarketplaceStore, ListingItem, TransactionItem } from '@mobile/lib/stores/marketplaceStore';
 import { labelForCategory, labelForIntent, labelForCondition } from '@mobile/lib/taxonomy';
 import { HelpFloater } from '@mobile/components/help';
+import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
 import type { MarketStackParamList } from '@mobile/navigation/types';
 
 type MarketNavProp = NativeStackNavigationProp<MarketStackParamList, 'Marketplace'>;
@@ -84,6 +85,19 @@ export function MarketplaceScreen() {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+
+  // Fast Scroll to Top floater state
+  const flatListRef = useRef<FlatList>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const handleScroll = (e: any) => {
+    const y = e?.nativeEvent?.contentOffset?.y ?? 0;
+    if (y > 250 && !showScrollTop) {
+      setShowScrollTop(true);
+    } else if (y <= 250 && showScrollTop) {
+      setShowScrollTop(false);
+    }
+  };
 
   const {
     browseItems,
@@ -412,6 +426,7 @@ export function MarketplaceScreen() {
             </View>
           ) : (
             <FlatList
+              ref={flatListRef}
               key="market_browse_grid_2col"
               data={filteredBrowse}
               renderItem={renderListingCard}
@@ -423,6 +438,8 @@ export function MarketplaceScreen() {
               maxToRenderPerBatch={8}
               windowSize={5}
               removeClippedSubviews={true}
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
               refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
               }
@@ -442,6 +459,7 @@ export function MarketplaceScreen() {
         </>
       ) : activeMainTab === 'my_listings' ? (
         <FlatList
+          ref={flatListRef}
           key="market_my_grid_2col"
           data={myListings}
           renderItem={renderListingCard}
@@ -453,6 +471,8 @@ export function MarketplaceScreen() {
           maxToRenderPerBatch={8}
           windowSize={5}
           removeClippedSubviews={true}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
@@ -473,10 +493,13 @@ export function MarketplaceScreen() {
         />
       ) : (
         <FlatList
+          ref={flatListRef}
           data={transactions}
           renderItem={renderTransactionCard}
           keyExtractor={(item) => item.id}
           contentContainerStyle={s.listContent}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
@@ -490,6 +513,12 @@ export function MarketplaceScreen() {
           }
         />
       )}
+
+      {/* ── Fast Scroll To Top Floater ─────────────────────────────── */}
+      <ScrollToTopFloater
+        visible={showScrollTop}
+        onPress={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true })}
+      />
     </SafeAreaView>
   );
 }

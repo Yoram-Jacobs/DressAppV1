@@ -908,7 +908,9 @@
     "harmonyFit": "Гармония цвета и кроя",
     "fitted": "Надето",
     "hidden": "Скрыто",
-    "selectGarmentSlot": "Выбрать {{role}}"
+    "selectGarmentSlot": "Выбрать {{role}}",
+    "realPhoto": "Реальное фото",
+    "mannequin": "Манекен"
   },
   "outfitCompletion": {
     "cta": "Завершить образ",
@@ -2491,21 +2493,21 @@
       "this_3d_avatar_is_generated": "Этот 3D аватар создан на основе параметров вашего тела. Обновите параметры в профиле для автоматической адаптации фигуры.",
       "tip": "Совет:",
       "you_can_drag_to_rotate": "Вы можете вращать аватар перетаскиванием и приближать/удалять прокруткой. Фигура, которую вы видите здесь, управляет физическим движком виртуальной примерки.",
-      "avatar_saved_successfully": "Digital avatar profile saved successfully!",
-      "failed_to_save_measurements": "Failed to save measurements. Please try again.",
-      "subtitle_description": "Calibrate your body measurements or upload a full-body photo.",
-      "vector_mannequin": "Mannequin",
-      "real_photo": "Real Photo",
-      "female": "Female",
-      "male": "Male",
-      "height": "Height",
-      "shoulders": "Shoulder Width",
-      "chest": "Chest Circumference",
-      "waist": "Waist Circumference",
-      "hip": "Hip Circumference",
-      "arm_length": "Arm Length",
-      "inseam": "Inseam (Leg Length)",
-      "info_note": "Body measurements calibrate virtual garment try-on physics and size recommendations across the app."
+      "avatar_saved_successfully": "Профиль цифрового аватара успешно сохранен!",
+      "failed_to_save_measurements": "Не удалось сохранить параметры. Пожалуйста, попробуйте еще раз.",
+      "subtitle_description": "Откалибруйте параметры тела или загрузите фото в полный рост.",
+      "vector_mannequin": "Манекен",
+      "real_photo": "Реальное фото",
+      "female": "Женский",
+      "male": "Мужской",
+      "height": "Рост",
+      "shoulders": "Ширина плеч",
+      "chest": "Обхват груди",
+      "waist": "Обхват талии",
+      "hip": "Обхват бедер",
+      "arm_length": "Длина руки",
+      "inseam": "Длина внутреннего шва (длина ноги)",
+      "info_note": "Параметры тела калибруют физику виртуальной примерки и рекомендации по размерам во всем приложении."
     }
   },
   "trends": {
