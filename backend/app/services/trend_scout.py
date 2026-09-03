@@ -620,7 +620,8 @@ def _ensure_card_image(card: dict[str, Any]) -> dict[str, Any]:
     """Ensure card always has a valid non-empty representative image_url."""
     if not card:
         return card
-    if not card.get("image_url") or not str(card.get("image_url")).startswith("http"):
+    img = str(card.get("image_url") or "").strip()
+    if not img.startswith("http") or "ynet-pic1.ynet.co.il" in img or "example.com" in img:
         card["image_url"] = _get_fallback_image(card.get("bucket"), card.get("gender"))
     return card
 
@@ -730,14 +731,19 @@ def get_search_queries(
 
 
 SYSTEM_PROMPT = (
-    "You are DressApp's Fashion-Scout — an independent agent searching for fashion trends.\n"
-    "You can browse the web to find real-time insights.\n"
-    "Write for a reader who already dresses well and wants ONE actionable insight per card.\n\n"
-    "Rules for sources:\n"
-    "- NEVER use shopping platforms, e-commerce checkout stores, or commercial cart pages (e.g. Amazon, ASOS, Shein, Temu, Zara/HM store carts).\n"
-    "- NEVER use subscription-walled / registration-walled websites (e.g. Vogue Business, WSJ, FT). Must be free and open-access with no sign-up needed.\n"
-    "- NEVER use search engine redirect domains (e.g. google.com/url, search.yahoo.com) or root social homepages.\n"
-    "- CRITICAL FOR SOURCE_URL: source_url MUST navigate directly to the specific article, editorial piece, or guide itself (e.g. https://domain.com/category/article-slug). NEVER provide a root domain or homepage (e.g. NEVER https://domain.com or https://domain.com/). Always extract the direct article link from the markdown links inside the browsed page.\n\n"
+    "You are DressApp's Fashion-Scout — an elite, independent fashion intelligence agent searching the live web.\n"
+    "You find real-time, actionable insights for stylish readers.\n\n"
+    "RESTRICTIONS:\n"
+    "- NO marketplaces, e-commerce stores, or commercial shopping carts (e.g., Amazon, ASOS, Shein, Temu, eBay, Zara/H&M cart or checkout pages). Never link to product shopping pages.\n"
+    "- NO sign-in walled websites or paywalled sources (e.g. Vogue Business, WSJ, FT, or sites requiring mandatory registration/paywall). Content must be 100% free and open-access to readers.\n"
+    "- NO hard-coded or hallucinated images. Never invent an image URL, path, or image domain.\n"
+    "- NO irrelevant articles. Content must be strictly about fashion trends, designer collections, runway reports, street style, local designers, textiles, sustainable fashion, or garment maintenance & repair. Never include politics, general celebrity gossip, or unrelated news.\n\n"
+    "MUST ACHIEVE:\n"
+    "- Up-to-date articles with relevant content: Research recent fashion journalism, lookbooks, reviews, or designer announcements from 2026.\n"
+    "- Valid article web link: source_url must be an authentic, direct deep link navigating specifically to the article itself. Never provide a homepage, search redirect, or top-level domain.\n"
+    "- Card image: Original image taken directly from the article itself (from metadata og:image/twitter:image or featured article photo).\n"
+    "- Carefully formulated summary: A punchy, captivating headline (<= 8 words) and an engaging, factual 1-2 sentence body (<= 220 chars) providing one concrete, actionable wardrobe takeaway for stylish readers.\n"
+    "- Honor i18next localization: Formulate summaries cleanly in the requested language, respecting grammatical rules, natural flow, and typography.\n\n"
     "Output contract: return ONLY a JSON object.\n"
     'If you need to search a website, return: {"action": "browse_web", "url": "<https URL>"}.\n'
     'Once you have enough context, return: {"action": "finish", "card": {\n'
@@ -1103,19 +1109,27 @@ async def _generate_one(
         f"the newest, vibrant articles about {gender.upper()} fashion in the '{bucket['label']}' category ({bucket['focus']}).\n"
         f"Geographic focus: {place}.\n"
         f"{avoid_topics}\n\n"
-        f"Instructions:\n"
-        f"1. Search the live web for fresh articles, designer announcements, lookbooks, fashion week highlights, or cultural reports published recently in 2026.\n"
-        f"2. Formulate dynamic Google search queries to uncover specific editorial stories.\n"
-        f"3. Return ONLY a valid JSON object matching this structure:\n"
-        f"{{\n"
-        f'  "headline": "Punchy, exciting headline (<= 8 words)",\n'
-        f'  "body": "1-2 engaging sentences detailing the trend and practical wardrobe takeaways (<= 220 characters)",\n'
+        "RESTRICTIONS:\n"
+        "- NO marketplaces, online stores, or shopping platforms (no Amazon, ASOS, Shein, eBay, Zara carts, product buy pages).\n"
+        "- NO sign-in walled or paywalled websites. Must be freely readable with no mandatory login.\n"
+        "- NO hard-coded or hallucinated images. Never invent image URLs, paths, or domain names.\n"
+        "- NO irrelevant articles. Must be strictly relevant to fashion, style, clothing design, runway, or textile craftsmanship.\n\n"
+        "MUST ACHIEVE:\n"
+        "- Up-to-date articles with relevant content: Focus on recent 2026 fashion news, designer collections, or trend movements.\n"
+        "- Valid article web link: source_url MUST be an authentic, direct deep link to the specific article discovered during search.\n"
+        "- Card image: Original image taken directly from the article itself (from metadata or page body), or null if not directly accessible.\n"
+        "- Carefully formulated summary: A punchy, captivating headline (<= 8 words) and an engaging, factual 1-2 sentence body (<= 220 characters).\n"
+        "- Honor i18next localization: Formulate clearly for seamless downstream localization.\n\n"
+        "Return ONLY a valid JSON object matching this structure:\n"
+        "{\n"
+        '  "headline": "Punchy, exciting headline (<= 8 words)",\n'
+        '  "body": "1-2 engaging sentences detailing the trend and practical wardrobe takeaways (<= 220 characters)",\n'
         f'  "tag": "{bucket["label"].upper()}",\n'
-        f'  "source_name": "Actual publication, magazine, or designer name",\n'
-        f'  "source_url": "Direct URL of the specific online article or editorial piece discovered",\n'
-        f'  "image_url": "Direct image URL if available, or null"\n'
-        f"}}\n"
-        f"Important: Ensure source_url points to a specific article, guide, or review discovered in search. No shopping carts or paywalls."
+        '  "source_name": "Actual publication, magazine, or designer name",\n'
+        '  "source_url": "Direct URL of the specific online article or editorial piece discovered",\n'
+        '  "image_url": "Direct authentic image URL from the article itself, or null"\n'
+        "}\n"
+        "Important: Return ONE concrete, actionable trend insight. The source_url in your final card must be a specific article deep link. No shopping carts or paywalls."
     )
 
     card_data = None
@@ -1236,8 +1250,47 @@ async def _generate_one(
     return None
 
 
+async def _is_image_url_valid(url: str | None) -> bool:
+    """Actively verify that an image URL resolves, returns HTTP 200, and contains valid non-empty image content."""
+    if not url or not isinstance(url, str):
+        return False
+    u = url.strip()
+    if not u.startswith("http://") and not u.startswith("https://"):
+        return False
+    # Strictly reject known broken or hallucinated domains
+    if "ynet-pic1.ynet.co.il" in u or "example.com" in u or "localhost" in u:
+        return False
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "image/webp,image/avif,image/jpeg,image/png,*/*;q=0.8",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=4.0, headers=headers, follow_redirects=True) as client:
+            resp = await client.get(u)
+            if resp.status_code == 200 and len(resp.content) > 200:
+                ct = resp.headers.get("content-type", "").lower()
+                if "image" in ct or "octet-stream" in ct or resp.content[:4] in (b"\xff\xd8\xff", b"\x89PNG", b"RIFF", b"GIF8"):
+                    return True
+            return False
+    except Exception:
+        return False
+
+
+def _sanitize_localized_text(text: str, target_lang: str) -> str:
+    """Detect and clean up any accidental mixed-script corruption (e.g. קampaigת -> קמפיין)."""
+    if not text:
+        return text
+    cleaned = text
+    if target_lang in ("he", "heb"):
+        # Fix corrupt mixed Latin-Hebrew tokens
+        cleaned = re.sub(r'קampaig[תn]?', 'קמפיין', cleaned)
+        cleaned = re.sub(r'ב?מיקונ[oO][sS]', 'מיקונוס', cleaned)
+        cleaned = re.sub(r'\b[קכ]ampaig[a-zA-Z\u0590-\u05FF]*\b', 'קמפיין', cleaned)
+    return cleaned
+
+
 async def verify_and_enrich_card(card: dict[str, Any] | None, bucket_slug: str, gender: str) -> dict[str, Any] | None:
-    """Validate that source_url is reachable, follow redirects to canonical article URL, and extract authentic og:image."""
+    """Validate that source_url is reachable, follow redirects to canonical article URL, and extract verified authentic image."""
     if not card or not card.get("source_url"):
         return None
     url = card["source_url"]
@@ -1255,32 +1308,52 @@ async def verify_and_enrich_card(card: dict[str, Any] | None, bucket_slug: str, 
             if clean_final:
                 card["source_url"] = clean_final
 
+            verified_img = None
             if resp.status_code == 200:
                 resp_text = resp.text
                 if not ("404" in resp_text and ("Not Found" in resp_text or "עמוד לא נמצא" in resp_text or "Page not found" in resp_text)):
                     soup = BeautifulSoup(resp_text, "html.parser")
                     og_img = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "og:image"})
                     tw_img = soup.find("meta", property="twitter:image") or soup.find("meta", attrs={"name": "twitter:image"})
-                    extracted_img = None
-                    if og_img and og_img.get("content"):
-                        extracted_img = urllib.parse.urljoin(final_url, og_img["content"].strip())
-                    elif tw_img and tw_img.get("content"):
-                        extracted_img = urllib.parse.urljoin(final_url, tw_img["content"].strip())
 
-                    if extracted_img and extracted_img.startswith("http"):
-                        card["image_url"] = extracted_img
+                    candidate_images: list[str] = []
+                    if og_img and og_img.get("content"):
+                        candidate_images.append(urllib.parse.urljoin(final_url, og_img["content"].strip()))
+                    if tw_img and tw_img.get("content"):
+                        candidate_images.append(urllib.parse.urljoin(final_url, tw_img["content"].strip()))
+
+                    # Look for authentic content images inside article or main tags
+                    for img in soup.find_all("img"):
+                        src = img.get("src") or img.get("data-src") or img.get("data-original")
+                        if src:
+                            full_img = urllib.parse.urljoin(final_url, src.strip())
+                            if full_img.startswith("http") and not any(skip in full_img.lower() for skip in ["logo", "icon", "avatar", "weather", "pixel"]):
+                                candidate_images.append(full_img)
+
+                    # Also test Gemini's candidate image if provided
+                    if card.get("image_url") and str(card.get("image_url")).startswith("http"):
+                        candidate_images.append(str(card["image_url"]))
+
+                    # Verify each candidate image URL with a real HTTP check
+                    for c_img in candidate_images:
+                        if await _is_image_url_valid(c_img):
+                            verified_img = c_img
+                            break
 
                     og_site = soup.find("meta", property="og:site_name") or soup.find("meta", attrs={"name": "og:site_name"})
                     if og_site and og_site.get("content") and not card.get("source_name"):
                         card["source_name"] = og_site["content"].strip()
 
-            if not card.get("image_url") or not str(card.get("image_url")).startswith("http"):
+            # Ensure card has a verified reachable image, never an unreachable or hallucinated one
+            if verified_img:
+                card["image_url"] = verified_img
+            elif not card.get("image_url") or not await _is_image_url_valid(card.get("image_url")):
                 card["image_url"] = _get_fallback_image(bucket_slug, gender)
 
             return card
     except Exception as exc:
         logger.warning("Verification failed for trend card URL %s: %s", url, exc)
-        if not card.get("image_url") or not str(card.get("image_url")).startswith("http"):
+        if not card.get("image_url") or not await _is_image_url_valid(card.get("image_url")):
             card["image_url"] = _get_fallback_image(bucket_slug, gender)
         return card
 
@@ -1642,11 +1715,17 @@ async def _translate_card(
         if country else ""
     )
     system_prompt = (
-        f"You localise DressApp fashion-scout cards into {lang_name}. Keep"
-        " the editorial voice crisp and factual. Preserve factual claims; only adapt idioms and examples."
-        f"{country_clause}"
-        " Return ONLY a JSON object with keys: headline, body, tag, source_name, source_url, image_url, video_url."
-        " Preserve URLs verbatim. Tag remains short, uppercase in target language."
+        f"You are DressApp's Expert Fashion Localizer & Translator specializing in {lang_name}.\n"
+        f"Your mission is to carefully formulate and localize the fashion trend card into natural, fluent, elegant {lang_name} while strictly honoring i18next localization standards.\n\n"
+        "CRITICAL LANGUAGE, FONT & GRAMMAR RULES:\n"
+        "1. COMPLETE & NATURAL TRANSLATION: Formulate a carefully crafted, engaging summary. Every headline and body sentence must be completely translated into natural, idiomatic target language.\n"
+        "2. ABSOLUTELY NO HYBRID OR CORRUPTED WORDS: NEVER mix Latin and Hebrew/Arabic letters inside a single word (e.g., NEVER produce mangled monstrosities like 'קampaigת' or 'במיקונos'). Standard nouns like 'campaign' must be translated properly (in Hebrew: 'קמפיין', in Arabic: 'חملة'). Proper locations like 'Mykonos' must be correctly transliterated ('מיקונוס' / 'ميكونوس').\n"
+        "3. BRAND NAMES & PROPER NOUNS: Established brand names (e.g., 'CANDID', 'Chanel', 'Bogart') may remain in Latin or standard transliteration, but all surrounding verbs, prepositions, and adjectives must strictly follow target language grammar and spelling.\n"
+        "4. GRAMMAR, TONE & TYPOGRAPHY: Ensure correct grammatical gender agreement, subject-verb order, and natural punctuation for {lang_name}. For RTL languages (Hebrew, Arabic), ensure the text flows seamlessly without bidirectional layout artifacts.\n"
+        "5. EDITORIAL TONE: Keep the tone stylish, refined, inspiring, and concise (headline <= 8 words, body 1-2 sentences <= 220 characters).\n"
+        "6. PRESERVE METADATA: Do NOT alter, hallucinate, or translate source_url or image_url. Keep tag short, informative, and in all-caps target language (e.g. 'חדשות מקומיות' for LOCAL NEWS).\n\n"
+        f"{country_clause}\n"
+        "Return ONLY a valid JSON object with keys: headline, body, tag, source_name, source_url, image_url, video_url."
     )
     client = GeminiClient(api_key=settings.GEMINI_API_KEY)
     payload_text = json.dumps(
@@ -1665,7 +1744,7 @@ async def _translate_card(
         raw = await client.text(
             system=system_prompt,
             user_text=payload_text,
-            model="gemini-3.5-flash-lite",
+            model="gemini-2.5-flash",
             response_mime_type="application/json",
         )
     except Exception as exc:
@@ -1676,6 +1755,14 @@ async def _translate_card(
     if not parsed.get("headline") or not parsed.get("body"):
         return None
 
+    headline = _sanitize_localized_text(str(parsed["headline"]).strip(), language)[:140]
+    body = _sanitize_localized_text(str(parsed["body"]).strip(), language)[:400]
+
+    # Ensure verified image is preserved from canonical card
+    verified_img = card.get("image_url")
+    if not verified_img or not str(verified_img).startswith("http") or "ynet-pic1.ynet.co.il" in str(verified_img):
+        verified_img = _get_fallback_image(card.get("bucket"), card.get("gender"))
+
     return {
         "id": str(uuid.uuid4()),
         "origin_id": card["id"],
@@ -1683,12 +1770,12 @@ async def _translate_card(
         "bucket_label": card.get("bucket_label"),
         "gender": card.get("gender"),
         "date": card.get("date"),
-        "headline": str(parsed["headline"])[:140],
-        "body": str(parsed["body"])[:400],
+        "headline": headline,
+        "body": body,
         "tag": (parsed.get("tag") or card.get("tag") or "").upper()[:40],
         "source_name": (parsed.get("source_name") or card.get("source_name"))[:80] if (parsed.get("source_name") or card.get("source_name")) else None,
         "source_url": _clean_url(parsed.get("source_url")) or card.get("source_url"),
-        "image_url": _clean_url(parsed.get("image_url")) or card.get("image_url") or _get_fallback_image(card.get("bucket"), card.get("gender")),
+        "image_url": verified_img,
         "video_url": _clean_url(parsed.get("video_url")) or card.get("video_url"),
         "language": language,
         "country_code": (country or "").upper() or None,
